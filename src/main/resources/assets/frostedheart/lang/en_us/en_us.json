@@ -444,15 +444,16 @@
 
   "tips.frostedheart.empty.title": "Oops, there's nothing here",
   "tips.frostedheart.error.desc": "Please check if the Modpack is installed properly or report this issue",
-  "tips.frostedheart.error.other": "[Error] An unknown error occurred",
+  "tips.frostedheart.error.other": "[Error]",
   "tips.frostedheart.error.display": "[Error] Unable to display tip",
+  "tips.frostedheart.error.invalid_id": "Tip id contains illegal characters: \n\\/:*?\"<>|",
   "tips.frostedheart.error.save": "[Error] Unable to save file",
   "tips.frostedheart.error.load": "[Error] Unable to load file",
   "tips.frostedheart.error.load.no_id": "Tip id is empty/blank",
   "tips.frostedheart.error.load.duplicate_id": "Tip id is duplicate",
   "tips.frostedheart.error.load.file_not_exists": "File does not exists",
   "tips.frostedheart.error.load.tip_not_exists": "Tip '%s' does not exists",
-  "tips.frostedheart.error.load.empty": "No content to display",
+  "tips.frostedheart.error.load.empty": "No text to display",
   "tips.frostedheart.error.load.invalid_json": "Invalid JSON file format",
   "tips.frostedheart.error.load.invalid_image": "Invalid texture ResourceLocation '%s'",
   "tips.frostedheart.error.load.invalid_digit": "Invalid hexadecimal number '%s'",
@@ -470,7 +471,7 @@
   "gui.frostedheart.tip_editor.contents": "Contents",
   "gui.frostedheart.tip_editor.font_color": "Font Color",
   "gui.frostedheart.tip_editor.background_color": "Background Color",
-  "gui.frostedheart.tip_editor.display_time": "Display Time",
+  "gui.frostedheart.tip_editor.display_time": "Display Time(ms)",
   "gui.frostedheart.tip_editor.always_visible": "Always Visible",
   "gui.frostedheart.tip_editor.once_only": "Once Only",
   "gui.frostedheart.tip_editor.hide": "Hide",
@@ -479,5 +480,7 @@
   "gui.frostedheart.tip_editor.delete_last_line": "Delete the last line",
   "gui.frostedheart.tip_editor.convert_and_copy": "Convert content to localization key values and copy to clipboard",
   "gui.frostedheart.tip_editor.send": "Send this tip to all players",
-  "gui.frostedheart.tip_editor.no_permission": "You don't have permission to use this button"
+  "gui.frostedheart.tip_editor.no_permission": "You don't have permission to use this button",
+  "gui.frostedheart.tip_editor.info.enter": "Press Enter to complete this line",
+  "gui.frostedheart.tip_editor.info.resource_location": "Fill in the full texture Resource Location \nExample: 'minecraft:textures/item/apple.png'"
 }

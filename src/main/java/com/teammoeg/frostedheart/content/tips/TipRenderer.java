@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.content.tips;
 
-import com.teammoeg.frostedheart.content.tips.client.gui.TipEditorScreen;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.chorda.util.client.ClientUtils;
@@ -33,7 +32,6 @@ public class TipRenderer {
     public static final List<Class<? extends Screen>> SCREEN_BLACKLIST = new ArrayList<>();
     static {
         SCREEN_BLACKLIST.add(CommandBlockEditScreen.class);
-        SCREEN_BLACKLIST.add(TipEditorScreen.class);
     }
 
     /**

@@ -10,7 +10,6 @@ import com.mojang.logging.LogUtils;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.client.ColorHelper;
 import com.teammoeg.chorda.util.lang.Components;
-import com.teammoeg.frostedheart.util.client.Lang;
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -40,13 +39,17 @@ public class Tip {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static final Component ERROR_DESC = Component.translatable("tips.frostedheart.error.desc");
-    public static final Tip EMPTY = Tip.builder("empty").error(ErrorType.OTHER, Lang.tips("error.not_exists").component(), ERROR_DESC).build();
+    public static final Tip EMPTY = Tip.builder("empty").error(ErrorType.OTHER,Component.translatable("tips.frostedheart.error.other"), ERROR_DESC).build();
 
+
+    /**
+     * Tip 的 ID
+     */
+    private final String id;
     /**
      * 显示内容
      */
     private final List<Component> contents;
-    private final String id;
     /**
      * 在条目列表中的分类
      */
@@ -128,6 +131,11 @@ public class Tip {
     }
 
     public boolean saveAsFile() {
+        if (isTipIdInvalid(this.id)) {
+            builder("exception").error(ErrorType.LOAD, Component.literal("ID: " + this.id), Component.translatable("tips.frostedheart.error.invalid_id")).build().forceDisplay();
+            return false;
+        }
+
         File file = new File(TipManager.TIP_PATH, this.id + ".json");
         try (FileWriter writer = new FileWriter(file)) {
             String json = GSON.toJson(toJson());
@@ -192,7 +200,7 @@ public class Tip {
         Tip.Builder builder = builder("exception");
         if (!filePath.exists()) {
             LOGGER.error("File does not exists '{}'", filePath);
-            builder.error(ErrorType.LOAD, Components.str(filePath.toString()), Lang.tips("error.file_not_exists", ERROR_DESC).component());
+            builder.error(ErrorType.LOAD, Component.literal(filePath.toString()),Component.translatable("tips.frostedheart.error.load.file_not_exists", ERROR_DESC));
         } else {
             try {
                 String content = new String(Files.readAllBytes(Paths.get(String.valueOf(filePath))));
@@ -201,19 +209,23 @@ public class Tip {
 
             } catch (JsonSyntaxException e) {
                 LOGGER.error("Invalid JSON format '{}'", filePath, e);
-                builder.error(ErrorType.LOAD, e, Components.str(builder.id), Lang.tips("error.invalid_json", ERROR_DESC).component());
+                builder.error(ErrorType.LOAD, e, Component.literal(builder.id),Component.translatable("tips.frostedheart.error.load.invalid_json", ERROR_DESC));
 
             } catch (Exception e) {
                 LOGGER.error("Unable to load file '{}'", filePath, e);
-                builder.error(ErrorType.LOAD, e, Components.str(builder.id), Lang.tips("error.other").component(), ERROR_DESC);
+                builder.error(ErrorType.LOAD, e, Component.literal(builder.id),Component.translatable("tips.frostedheart.error.other"), ERROR_DESC);
             }
         }
         return builder.build();
     }
 
+    public static boolean isTipIdInvalid(String id) {
+        return id.matches(".*[<>:\"/\\\\|?*§].*");
+    }
+
     public static class Builder {
         private final List<Component> contents = new ArrayList<>();
-        private String id;
+        private String id = "";
         private String category = "";
         private String nextTip = "";
         private ResourceLocation image;
@@ -230,6 +242,10 @@ public class Tip {
         private boolean editable = true;
 
         public Builder(String id) {
+            if (isTipIdInvalid(id)) {
+                error(ErrorType.LOAD, Component.literal("ID: " + id), Component.translatable("tips.frostedheart.error.invalid_id"));
+                return;
+            }
             this.id = id;
             setTemporary();
         }
@@ -376,7 +392,7 @@ public class Tip {
                 this.contents.addAll(list);
             }
             if (id.isBlank()) {
-                error(ErrorType.OTHER, Components.str("NBT does not contain tip"));
+                error(ErrorType.OTHER, Component.literal("NBT does not contain tip"));
             }
             return this;
         }
@@ -387,15 +403,18 @@ public class Tip {
             if (json.has("id")) {
                 String s = json.get("id").getAsString();
                 if (s.isBlank()) {
-                    error(ErrorType.LOAD, Lang.tips("error.load.no_id").component());
+                    error(ErrorType.LOAD,Component.translatable("tips.frostedheart.error.load.no_id"));
                     return this;
                 } else if (TipManager.INSTANCE.hasTip(s)) {
-                    error(ErrorType.LOAD, Components.str("ID: " + s), Lang.tips("error.load.duplicate_id").component());
+                    error(ErrorType.LOAD, Component.literal("ID: " + s), Component.translatable("tips.frostedheart.error.load.duplicate_id"));
+                    return this;
+                } else if (isTipIdInvalid(s)) {
+                    error(ErrorType.LOAD, Component.literal("ID: " + s), Component.translatable("tips.frostedheart.error.invalid_id"));
                     return this;
                 }
                 id = s;
             } else {
-                error(ErrorType.LOAD, Lang.tips("error.load.no_id").component());
+                error(ErrorType.LOAD,Component.translatable("tips.frostedheart.error.load.no_id"));
                 return this;
             }
 
@@ -409,7 +428,7 @@ public class Tip {
                 }
             }
             if (this.contents.isEmpty()) {
-                error(ErrorType.LOAD, Components.str("ID: " + id), Lang.tips("error.load.empty").component());
+                error(ErrorType.LOAD, Component.literal("ID: " + id), Component.translatable("tips.frostedheart.error.load.empty"));
                 return this;
             }
 
@@ -420,7 +439,7 @@ public class Tip {
                     if (image != null) {
                         image(image);
                     } else {
-                        error(ErrorType.LOAD, Components.str("ID: " + id), Lang.tips("error.load.invalid_image", location).component());
+                        error(ErrorType.LOAD, Component.literal("ID: " + id), Component.translatable("tips.frostedheart.error.load.invalid_image", location));
                         return this;
                     }
                 }
@@ -442,7 +461,7 @@ public class Tip {
 
         public Builder error(ErrorType type, Collection<Component> descriptions) {
             clearContents()
-                    .line(Lang.tips("error." + type.key).component())
+                    .line(Component.translatable("tips.frostedheart.error." + type.key))
                     .lines(descriptions)
                     .color(ColorHelper.RED, ColorHelper.BLACK)
                     .alwaysVisible(true)
@@ -458,7 +477,7 @@ public class Tip {
 
         public Builder error(ErrorType type, Exception exception, Component... descriptions) {
             var desc = new ArrayList<>(List.of(descriptions));
-            desc.add(Components.str(exception.getMessage()));
+            desc.add(Component.literal(exception.getMessage()));
             return error(type, desc);
         }
 
@@ -474,18 +493,18 @@ public class Tip {
                     }
                 } catch (IOException e) {
                     LOGGER.error("Invalid texture resource location {}", location, e);
-                    error(ErrorType.LOAD, e, Lang.tips("error.load.invalid_image", location).component());
+                    error(ErrorType.LOAD, e,Component.translatable("tips.frostedheart.error.load.invalid_image", location));
                 }
             }
             this.image = null;
-            error(ErrorType.LOAD, Lang.tips("error.load.invalid_image", location).component());
+            error(ErrorType.LOAD,Component.translatable("tips.frostedheart.error.load.invalid_image", location));
         }
 
         private int getColorOrElse(JsonObject json, String name, int defColor) {
             try {
                 return Integer.parseUnsignedInt(json.get(name).getAsString(), 16);
             } catch (NumberFormatException e) {
-                error(ErrorType.LOAD, Lang.tips("error.load.invalid_digit", name).component());
+                error(ErrorType.LOAD,Component.translatable("tips.frostedheart.error.load.invalid_digit", name));
                 return defColor;
             }
         }

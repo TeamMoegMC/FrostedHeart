@@ -75,11 +75,6 @@ public class Lang {
         return tooltip(name, args).component();
     }
 
-    @Deprecated
-    public static MutableComponent translateTips(String name, Object... args) {
-        return tips(name, args).component();
-    }
-
     // New methods from Create
 
     public static String asId(String name) {
@@ -161,10 +156,6 @@ public class Lang {
 
     public static LangBuilder tooltip(String suffix, Object... args) {
         return translate("tooltip", suffix, args);
-    }
-
-    public static LangBuilder tips(String suffix, Object... args) {
-        return translate("tips", suffix, args);
     }
 
     public static LangBuilder waypoint(String suffix, Object... args) {

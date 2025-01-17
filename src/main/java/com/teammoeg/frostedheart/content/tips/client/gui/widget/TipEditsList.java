@@ -14,6 +14,7 @@ import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.content.tips.TipRenderer;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.client.ColorHelper;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -31,29 +32,47 @@ import java.util.List;
 
 public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.EditEntry> {
     private final Font font;
-    private String cachedId;
+    private String cachedId = "";
 
     public TipEditsList(Minecraft pMinecraft, int pWidth, int pHeight, int pY0, int pY1, int pItemHeight) {
         super(pMinecraft, pWidth, pHeight, pY0, pY1, pItemHeight);
         this.font = pMinecraft.font;
         setRenderHeader(true, 10);
 
-        var idEntry = new StringEntry("id", Component.translatable("gui.frostedheart.tip_editor.id"));
+        var idEntry = (StringEntry)children().get(addEntry(new StringEntry("id", Component.translatable("gui.frostedheart.tip_editor.id"))));
         idEntry.input.setMaxLength(240);
-        idEntry.input.setResponder((s) -> {
-            if (TipManager.INSTANCE.hasTip(s)) {
+        idEntry.input.setResponder(s -> {
+            if (TipManager.INSTANCE.hasTip(s) || Tip.isTipIdInvalid(s)) {
                 idEntry.input.setTextColor(ColorHelper.RED);
-                updatePreview();
             } else {
                 idEntry.input.setTextColor(ColorHelper.WHITE);
+            }
+            updatePreview();
+        });
+
+        addEntry(new MultiComponentEntry("contents", Component.translatable("gui.frostedheart.tip_editor.contents")));
+
+        var nextTipEntry = (StringEntry)children().get(addEntry(new StringEntry("nextTip", Component.translatable("gui.frostedheart.tip_editor.next_tip"))));
+        nextTipEntry.input.setResponder(s -> {
+            if (Tip.isTipIdInvalid(s)) {
+                nextTipEntry.input.setTextColor(ColorHelper.RED);
+                updatePreview(
+                        Component.translatable("tips.frostedheart.error.invalid_id").withStyle(ChatFormatting.RED),
+                        Component.translatable("tips.frostedheart.error.load.tip_not_exists", s).withStyle(ChatFormatting.GOLD));
+            } else if (!TipManager.INSTANCE.hasTip(s)) {
+                nextTipEntry.input.setTextColor(0xFFFF9F00);
+                updatePreview(Component.translatable("tips.frostedheart.error.load.tip_not_exists", s).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+            } else {
+                nextTipEntry.input.setTextColor(ColorHelper.WHITE);
                 updatePreview();
             }
         });
-        addEntry(idEntry);
+
         addEntry(new StringEntry("category", Component.translatable("gui.frostedheart.tip_editor.category")));
-        addEntry(new StringEntry("nextTip", Component.translatable("gui.frostedheart.tip_editor.next_tip")));
-        addEntry(new StringEntry("image", Component.translatable("gui.frostedheart.tip_editor.image")));
-        addEntry(new MultiComponentEntry("contents", Component.translatable("gui.frostedheart.tip_editor.contents")));
+
+        var imageEntry = (StringEntry)children().get(addEntry(new StringEntry("image", Component.translatable("gui.frostedheart.tip_editor.image"))));
+        imageEntry.input.setResponder(s -> updatePreview(Component.translatable("gui.frostedheart.tip_editor.info.resource_location")));
+
         addEntry(new ColorEntry("fontColor", Component.translatable("gui.frostedheart.tip_editor.font_color"), ColorHelper.CYAN));
         addEntry(new ColorEntry("backgroundColor", Component.translatable("gui.frostedheart.tip_editor.background_color"), ColorHelper.BLACK));
         addEntry(new IntegerEntry("displayTime", Component.translatable("gui.frostedheart.tip_editor.display_time")));
@@ -66,12 +85,16 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
     public void updatePreview(Component... infos) {
         TipRenderer.TIP_QUEUE.clear();
         TipRenderer.forceClose();
-        Tip tip = Tip.builder("").fromJson(getJson()).lines(infos).alwaysVisible(true).build();
+        var builder = Tip.builder("").fromJson(this.toJson());
+        if (infos.length > 0) {
+            builder.line(Component.literal("---------")).lines(infos);
+        }
+        Tip tip = builder.alwaysVisible(true).build();
         this.cachedId = tip.getId();
         tip.forceDisplay();
     }
 
-    public JsonObject getJson() {
+    public JsonObject toJson() {
         JsonObject json = new JsonObject();
         children().forEach(e -> json.add(e.property, e.getValue()));
         return json;
@@ -130,10 +153,14 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
     }
 
     public class MultiComponentEntry extends StringEntry {
+        public static final String PREFIX = "tips.frostedheart.";
         protected final IconButton addButton;
         protected final IconButton deleteButton;
         protected final IconButton translationButton;
-        protected final List<String> contents = new ArrayList<>();
+        private final List<String> contents = new ArrayList<>();
+        private final List<String> translationContents = new ArrayList<>();
+
+        private boolean translation;
 
         public MultiComponentEntry(String property, Component message) {
             super(property, message);
@@ -147,45 +174,57 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
                     return super.keyPressed(pKeyCode, pScanCode, pModifiers);
                 }
             };
-            this.input.setResponder(b -> updatePreview());
+            this.input.setResponder(s -> {
+                if (contents.isEmpty()) {
+                    updatePreview(Component.translatable("gui.frostedheart.tip_editor.info.enter"), Component.translatable("tips.frostedheart.error.load.empty").withStyle(ChatFormatting.GOLD));
+                } else {
+                    updatePreview(Component.translatable("gui.frostedheart.tip_editor.info.enter"));
+                }
+            });
             this.input.setMaxLength(1024);
 
             this.addButton = new IconButton(0, 0, IconButton.Icon.CHECK, ColorHelper.CYAN, Component.translatable("gui.frostedheart.tip_editor.add_line"), b -> {
-                if (input.getValue().isBlank()) return;
+                if (cachedId.isBlank()) return;
 
-                contents.add(this.input.getValue());
+                String value = this.input.getValue().isBlank() ? " " : this.input.getValue();
+                contents.add(value);
+                String key = PREFIX + cachedId;
+                if (contents.size() == 1) {
+                    key += ".title";
+                } else {
+                    key += ".desc" + contents.size();
+                }
+                translationContents.add("\"" + key + "\": \"" + value + "\"");
+
                 input.setValue("");
-                updatePreview();
+                updatePreview(Component.translatable("gui.frostedheart.tip_editor.info.enter"));
             });
 
             this.deleteButton = new IconButton(0, 0, IconButton.Icon.TRASH_CAN, ColorHelper.CYAN, Component.translatable("gui.frostedheart.tip_editor.delete_last_line"), b -> {
                 if (!contents.isEmpty()) {
                     contents.remove(contents.size() - 1);
+                    translationContents.remove(contents.size());
                     updatePreview();
                 }
             });
 
             this.translationButton = new ActionStateIconButton(0, 0, IconButton.Icon.LIST, ColorHelper.CYAN, Component.translatable("gui.frostedheart.tip_editor.convert_and_copy"), Component.translatable("gui.frostedheart.copied"), b -> {
                 if (!contents.isEmpty()) {
-                    String prefix = "tips.frostedheart." + cachedId;
                     StringBuilder copy = new StringBuilder();
-                    List<String> converted = new ArrayList<>();
-
-                    converted.add(prefix + ".title");
-                    copy.append('\"').append(prefix).append(".title\": \"").append(contents.get(0)).append("\",\n");
-                    for (int i = 1; i < contents.size(); i++) {
-                        //tips.frostedheart.example.desc1
-                        String s = prefix + ".desc" + i;
-                        converted.add(s);
-                        copy.append('\"').append(s).append("\": \"").append(contents.get(i)).append("\",\n");
+                    for (String content : translationContents) {
+                        copy.append(content).append("\",\n");
                     }
-
-                    contents.clear();
-                    contents.addAll(converted);
                     ClientUtils.mc().keyboardHandler.setClipboard(copy.substring(0, copy.length()-2)); // 删除最后一行的逗号和换行
+
+                    translation = !translation;
                     updatePreview();
                 }
             });
+        }
+
+        public List<String> getContents() {
+            var c = translation ? translationContents : contents;
+            return c.isEmpty() ? List.of(" ") : c;
         }
 
         @Override
@@ -202,7 +241,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         @Override
         public JsonElement getValue() {
             JsonArray contents = new JsonArray();
-            this.contents.forEach(contents::add);
+            getContents().forEach(contents::add);
             return contents;
         }
 
@@ -223,7 +262,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         public StringEntry(String property, Component message) {
             super(property, message);
             this.input = new EditBox(font, 0, 0, 64, 12, message);
-            this.input.setResponder(b -> updatePreview());
+            this.input.setResponder(s -> updatePreview());
             this.input.setMaxLength(1024);
         }
 

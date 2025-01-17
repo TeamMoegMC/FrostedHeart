@@ -922,15 +922,16 @@
 
   "tips.frostedheart.empty.title": "哎呀，这里什么都没有",
   "tips.frostedheart.error.desc": "请检查整合包是否正确安装，或向我们报告这个bug",
-  "tips.frostedheart.error.other": "出现未知错误",
+  "tips.frostedheart.error.other": "错误",
   "tips.frostedheart.error.display": "错误：无法显示提示",
+  "tips.frostedheart.error.invalid_id": "提示ID中不能包含以下字符: \n\\/:*?\"<>|",
   "tips.frostedheart.error.save": "错误：无法保存文件",
   "tips.frostedheart.error.load": "错误：无法加载文件",
   "tips.frostedheart.error.load.no_id": "提示ID为空",
   "tips.frostedheart.error.load.duplicate_id": "重复的提示ID",
   "tips.frostedheart.error.load.file_not_exists": "文件不存在",
   "tips.frostedheart.error.load.tip_not_exists": "提示 '%s' 不存在",
-  "tips.frostedheart.error.load.empty": "没有内容可供显示",
+  "tips.frostedheart.error.load.empty": "没有文本内容可供显示",
   "tips.frostedheart.error.load.invalid_json": "无效的Json格式",
   "tips.frostedheart.error.load.invalid_image": "无效的纹理资源路径 '%s'",
   "tips.frostedheart.error.load.invalid_digit": "无效的16进制数字 '%s'",
@@ -948,7 +949,7 @@
   "gui.frostedheart.tip_editor.contents": "内容",
   "gui.frostedheart.tip_editor.font_color": "文本颜色",
   "gui.frostedheart.tip_editor.background_color": "背景颜色",
-  "gui.frostedheart.tip_editor.display_time": "显示时长",
+  "gui.frostedheart.tip_editor.display_time": "显示时长(ms)",
   "gui.frostedheart.tip_editor.always_visible": "始终可见(只能被手动关闭)",
   "gui.frostedheart.tip_editor.once_only": "只显示一次",
   "gui.frostedheart.tip_editor.hide": "在提示列表隐藏此提示",
@@ -957,6 +958,7 @@
   "gui.frostedheart.tip_editor.delete_last_line": "删除最后一行",
   "gui.frostedheart.tip_editor.convert_and_copy": "将内容转换为本地化键值并复制到剪贴板",
   "gui.frostedheart.tip_editor.send": "将此提示发送给所有玩家",
-  "gui.frostedheart.tip_editor.no_permission": "你没有权限使用这个按钮"
-
+  "gui.frostedheart.tip_editor.no_permission": "你没有权限使用这个按钮",
+  "gui.frostedheart.tip_editor.info.enter": "按下回车键换行",
+  "gui.frostedheart.tip_editor.info.resource_location": "填入完整的纹理资源路径(Resource Location) \n示例: 'minecraft:textures/item/apple.png'"
 }

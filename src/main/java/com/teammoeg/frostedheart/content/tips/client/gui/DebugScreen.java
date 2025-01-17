@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.content.tips.client.gui;
 
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FrostedHud;
-import com.teammoeg.chorda.widget.ColorEditbox;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.chorda.widget.IconButton;
@@ -89,9 +88,6 @@ public class DebugScreen extends Screen {
             String message = debug();
             ClientUtils.getPlayer().sendSystemMessage(Components.str(message));
         });
-        var colorPicker = new ColorEditbox(font, 50, 50, 64, 20, Components.str(""),false, ColorHelper.CYAN);
-        addRenderableWidget(colorPicker);
-//        addRenderableWidget(new TextLabelWidget(10, 10, 50, 50, Component.literal("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), ClientUtils.font()));
     }
 
     // 方便热重载debug

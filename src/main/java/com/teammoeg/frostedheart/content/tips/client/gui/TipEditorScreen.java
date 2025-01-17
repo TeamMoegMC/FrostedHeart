@@ -46,7 +46,7 @@ public class TipEditorScreen extends Screen {
         addWidget(list);
         // 保存按钮
         addRenderableWidget(new ActionStateIconButton(ClientUtils.screenWidth()/2 - 30, ClientUtils.screenHeight()-25, IconButton.Icon.FOLDER, ColorHelper.CYAN, 2, Component.translatable("gui.frostedheart.save_as_file"), Component.translatable("gui.frostedheart.saved"), (b) -> {
-            var json = list.getJson();
+            var json = list.toJson();
             if (json != null) {
                 Tip.builder("").fromJson(json).build().saveAsFile();
                 TipManager.INSTANCE.loadFromFile();
@@ -54,7 +54,7 @@ public class TipEditorScreen extends Screen {
         }));
         // 发送按钮
         ActionStateIconButton sendButton = new ActionStateIconButton(ClientUtils.screenWidth()/2 + 5, ClientUtils.screenHeight()-25, IconButton.Icon.GIVE, ColorHelper.CYAN, 2, Component.translatable("gui.frostedheart.tip_editor.send"), Component.translatable("gui.frostedheart.sent"), (b) -> {
-            var json = list.getJson();
+            var json = list.toJson();
             if (json != null) {
                 Tip tip = Tip.builder("").fromJson(json).build();
                 FHNetwork.sendToServer(new DisplayCustomTipRequestPacket(tip));

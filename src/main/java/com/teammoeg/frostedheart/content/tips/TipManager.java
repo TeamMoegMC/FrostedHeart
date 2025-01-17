@@ -7,9 +7,9 @@ import com.google.gson.annotations.Expose;
 import com.mojang.logging.LogUtils;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
-import com.teammoeg.frostedheart.util.client.Lang;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -76,7 +76,7 @@ public class TipManager {
         if (tip != null) {
             return tip;
         }
-        return Tip.builder(id).error(Tip.ErrorType.DISPLAY, Lang.tips("error.load.tip_not_exists", id).component(), Tip.ERROR_DESC).build();
+        return Tip.builder(id).error(Tip.ErrorType.DISPLAY, Component.translatable("tips.frostedheart.error.load.tip_not_exists", id), Tip.ERROR_DESC).build();
     }
 
     /**
@@ -104,7 +104,7 @@ public class TipManager {
                 Tip tip = Tip.fromJsonFile(tipFile);
                 if (loadedTips.containsKey(tip.getId())) {
                     // 重复id
-                    Tip d = Tip.builder("duplicate").error(Tip.ErrorType.LOAD, Components.str(tip.getId()), Lang.tips("error.load.duplicate_id").component()).build();
+                    Tip d = Tip.builder("duplicate").error(Tip.ErrorType.LOAD, Components.str(tip.getId()), Component.translatable("tips.frostedheart.error.load.duplicate_id")).build();
                     display.force(d);
                 } else {
                     loadedTips.put(tip.getId(), tip);
