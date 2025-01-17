@@ -30,9 +30,7 @@ import com.teammoeg.chorda.widget.IconButton;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.client.ColorHelper;
 import com.teammoeg.chorda.util.client.Point;
-import com.teammoeg.chorda.CShaders;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
@@ -410,87 +408,4 @@ public class CGuis {
 		CGuis.blitColored(pose, x, y, icon.size.width, icon.size.height, icon.x, icon.y, icon.size.width, icon.size.height, IconButton.TEXTURE_WIDTH, IconButton.TEXTURE_HEIGHT, color);
 	}
 
-	/**
-	 * 圆角矩形
-	 * @param guiGraphics The GuiGraphics object.
-	 * @param x1 The x coordinate of the top left corner of the rectangle.
-	 * @param y1 The y coordinate of the top left corner of the rectangle.
-	 * @param width The width of the rectangle.
-	 * @param height The height of the rectangle.
-	 * @param radius 圆角大小，范围0-1
-	 * @param color The color of the rectangle.
-	 */
-	public static void fillRoundRect(GuiGraphics guiGraphics, int x1, int y1, int width, int height, float radius, int color) {
-		int x2 = x1 + width;
-		int y2 = y1 + height;
-
-		final float ratio = (float) height / (float) width;
-
-		RenderSystem.setShader(CShaders::getRoundRectShader);
-		ShaderInstance shader = CShaders.getRoundRectShader();
-		shader.safeGetUniform("Ratio").set(ratio);
-		shader.safeGetUniform("Radius").set(radius * ratio);
-
-		Matrix4f matrix4f = guiGraphics.pose().last().pose();
-		BufferBuilder builder = Tesselator.getInstance().getBuilder();
-		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-		builder.vertex(matrix4f, x1, y1, 0).uv(0, 0).color(color).endVertex();
-		builder.vertex(matrix4f, x1, y2, 0).uv(0, 1).color(color).endVertex();
-		builder.vertex(matrix4f, x2, y2, 0).uv(1, 1).color(color).endVertex();
-		builder.vertex(matrix4f, x2, y1, 0).uv(1, 0).color(color).endVertex();
-		BufferUploader.drawWithShader(builder.end());
-	}
-
-	/**
-	 * 绘制圆环
-	 * @param guiGraphics The GuiGraphics object.
-	 * @param x 圆环中心x坐标
-	 * @param y 圆环中心y坐标
-	 * @param innerRadius 内半径
-	 * @param outerRadius 外半径
-	 * @param startAngle 起始角度
-	 * @param endAngle 结束角度
-	 * @param color 颜色
-	 */
-	public static void drawRing(GuiGraphics guiGraphics, int x, int y, float innerRadius, float outerRadius,float startAngle,float endAngle, int color) {
-		float x2 = (int) (x + outerRadius);
-		float y2 = (int) (y + outerRadius);
-		float x1 = (int) (x - outerRadius);
-		float y1 = (int) (y - outerRadius);
-
-		RenderSystem.setShader(CShaders::getRingShader);
-		ShaderInstance shader = CShaders.getRingShader();
-		shader.safeGetUniform("innerRadius").set(innerRadius/outerRadius/2);
-		shader.safeGetUniform("outerRadius").set(0.5f);
-
-
-		shader.safeGetUniform("startAngle").set(startAngle);
-		shader.safeGetUniform("endAngle").set(endAngle);
-
-		RenderSystem.enableBlend();
-		Matrix4f matrix4f = guiGraphics.pose().last().pose();
-		BufferBuilder builder = Tesselator.getInstance().getBuilder();
-		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-		builder.vertex(matrix4f, x1, y1, 0).uv(0, 0).color(color).endVertex();
-		builder.vertex(matrix4f, x1, y2, 0).uv(0, 1).color(color).endVertex();
-		builder.vertex(matrix4f, x2, y2, 0).uv(1, 1).color(color).endVertex();
-		builder.vertex(matrix4f, x2, y1, 0).uv(1, 0).color(color).endVertex();
-		BufferUploader.drawWithShader(builder.end());
-	}
-
-	public static void blitRound(GuiGraphics guiGraphics, ResourceLocation atlasLocation, int x, int y, int width, int height) {
-		int x2 = x + width;
-		int y2 = y + height;
-
-		RenderSystem.setShaderTexture(0, atlasLocation);
-		RenderSystem.setShader(CShaders::getRoundShader);
-		Matrix4f matrix4f = guiGraphics.pose().last().pose();
-		BufferBuilder builder = Tesselator.getInstance().getBuilder();
-		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-		builder.vertex(matrix4f, (float)x, (float)y, 0).uv(0, 0);
-		builder.vertex(matrix4f, (float)x, (float)y2, 0).uv(0, 1);
-		builder.vertex(matrix4f, (float)x2, (float)y2, 0).uv(1, 1);
-		builder.vertex(matrix4f, (float)x2, (float)y, 0).uv(1, 0);
-		BufferUploader.drawWithShader(builder.end());
-	}
 }

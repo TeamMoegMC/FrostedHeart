@@ -1,4 +1,4 @@
-package com.teammoeg.chorda;
+package com.teammoeg.frostedheart;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -14,8 +14,8 @@ import java.io.IOException;
 import java.util.Objects;
 
 @OnlyIn(Dist.CLIENT)
-@Mod.EventBusSubscriber(value = Dist.CLIENT, modid = Chorda.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class CShaders {
+@Mod.EventBusSubscriber(value = Dist.CLIENT, modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+public class FHShaders {
 
     @Nullable
     private static ShaderInstance roundRect;
@@ -44,7 +44,7 @@ public class CShaders {
         event.registerShader(
                 new ShaderInstance(
                         provider,
-                        Chorda.rl("ring"),
+                        FHMain.rl("ring"),
                         DefaultVertexFormat.POSITION_TEX_COLOR
                 ),
                 (shader) -> ring = shader
@@ -52,7 +52,7 @@ public class CShaders {
         event.registerShader(
                 new ShaderInstance(
                         provider,
-                        Chorda.rl("round_rect"),
+                        FHMain.rl("round_rect"),
                         DefaultVertexFormat.POSITION_TEX_COLOR
                 ),
                 (shader) -> roundRect = shader
@@ -60,7 +60,7 @@ public class CShaders {
         event.registerShader(
                 new ShaderInstance(
                         provider,
-                        Chorda.rl("round"),
+                        FHMain.rl("round"),
                         DefaultVertexFormat.POSITION_TEX
                 ),
                 (shader) -> round = shader

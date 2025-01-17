@@ -150,6 +150,76 @@ public class FHItems {
                     .lang("Wandering Refugee Spawn Egg")
                     .model(AssetLookup.existingItemModel())
                     .register();
+    /*
+    antifreeze.png
+cable.png
+deflection_coil.png
+engine_oil.png
+ferrocerium_fire_starter.png
+insulator.png
+iron_fence_remains.png
+iron_parts.png
+iron_plating.png
+iron_truss_remains.png
+lead_acid_battery.png
+moly_lubricant.png
+rust_remover.png
+silicone_grease.png
+stator.png
+thinner.png
+     */
+    // add these as simple taggedIngredient, with the tag FHTags.GARBAGE.tag
+    public static ItemEntry<Item> ANTIFREEZE =
+            taggedIngredient("antifreeze",
+                    FHTags.Items.GARBAGE.tag);
+    public static ItemEntry<Item> CABLE =
+            taggedIngredient("cable",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> DEFLECTION_COIL =
+            taggedIngredient("deflection_coil",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> ENGINE_OIL =
+            taggedIngredient("engine_oil",
+                    FHTags.Items.GARBAGE.tag);
+    public static ItemEntry<Item> FERROCERIUM_FIRE_STARTER =
+            taggedIngredient("ferrocerium_fire_starter",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> INSULATOR =
+            taggedIngredient("insulator",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> IRON_FENCE_REMAINS =
+            taggedIngredient("iron_fence_remains",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> IRON_PARTS =
+            taggedIngredient("iron_parts",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> IRON_PLATING =
+            taggedIngredient("iron_plating",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> IRON_TRUSS_REMAINS =
+            taggedIngredient("iron_truss_remains",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> LEAD_ACID_BATTERY =
+            taggedIngredient("lead_acid_battery", FHTags.Items.GARBAGE.tag);
+    public static ItemEntry<Item> MOLY_LUBRICANT =
+            taggedIngredient("moly_lubricant", FHTags.Items.GARBAGE.tag);
+    public static ItemEntry<Item> RUST_REMOVER =
+            taggedIngredient("rust_remover", FHTags.Items.GARBAGE.tag);
+    public static ItemEntry<Item> SILICONE_GREASE =
+            taggedIngredient("silicone_grease", FHTags.Items.GARBAGE.tag);
+    public static ItemEntry<Item> STATOR =
+            taggedIngredient("stator", FHTags.Items.GARBAGE.tag);
+    public static ItemEntry<Item> THINNER =
+            taggedIngredient("thinner", FHTags.Items.GARBAGE.tag);
+
 
     static {
         REGISTRATE.setCreativeTab(FHTabs.INGREDIENTS);

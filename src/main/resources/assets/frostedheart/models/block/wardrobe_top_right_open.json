@@ -1,0 +1,92 @@
+{
+	"credit": "Made with Blockbench",
+	"textures": {
+		"1": "frostedheart:block/wardrobe",
+		"particle": "frostedheart:block/wardrobe"
+	},
+	"elements": [
+		{
+			"from": [-2.05, 0, -9.05],
+			"to": [-1.05, 3, -7.05],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0.95, 2.5, 4]},
+			"faces": {
+				"west": {"uv": [12.5, 11, 12, 11.75], "texture": "#1"},
+				"up": {"uv": [13, 11, 12.5, 11.25], "rotation": 90, "texture": "#1"}
+			}
+		},
+		{
+			"from": [-1.05, 0, -11.05],
+			"to": [0.95, 14, 4.95],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0.95, 6.5, 4]},
+			"faces": {
+				"north": {"uv": [12, 8, 11.5, 11.5], "texture": "#1"},
+				"east": {"uv": [8, 7, 4, 10.5], "texture": "#1"},
+				"south": {"uv": [11.5, 8, 11, 11.5], "texture": "#1"},
+				"west": {"uv": [4, 7, 0, 10.5], "texture": "#1"},
+				"up": {"uv": [16, 10, 12, 10.5], "rotation": 90, "texture": "#1"}
+			}
+		},
+		{
+			"from": [0, 0, 4],
+			"to": [16, 14, 16],
+			"rotation": {"angle": 0, "axis": "z", "origin": [0, 28, 0]},
+			"faces": {
+				"north": {"uv": [4, 0, 0, 3.5], "texture": "#1"},
+				"east": {"uv": [11, 7, 8, 10.5], "texture": "#1"},
+				"south": {"uv": [8, 0, 4, 3.5], "texture": "#1"},
+				"west": {"uv": [11, 0, 8, 3.5], "texture": "#1"}
+			}
+		},
+		{
+			"from": [0, 14, 0],
+			"to": [16, 16, 16],
+			"rotation": {"angle": 0, "axis": "z", "origin": [0, 16, 0]},
+			"faces": {
+				"north": {"uv": [16, 8, 12, 8.5], "texture": "#1"},
+				"east": {"uv": [16, 9.5, 12, 10], "texture": "#1"},
+				"south": {"uv": [16, 9, 12, 9.5], "texture": "#1"},
+				"west": {"uv": [16, 8.5, 12, 9], "texture": "#1"},
+				"up": {"uv": [11, 4, 15, 0], "texture": "#1"},
+				"down": {"uv": [11, 4, 15, 8], "texture": "#1"}
+			}
+		}
+	],
+	"display": {
+		"thirdperson_righthand": {
+			"rotation": [75, 34, 0],
+			"scale": [0.2, 0.2, 0.2]
+		},
+		"thirdperson_lefthand": {
+			"rotation": [75, 34, 0],
+			"scale": [0.2, 0.2, 0.2]
+		},
+		"firstperson_righthand": {
+			"rotation": [0, 106, 0],
+			"scale": [0.3, 0.3, 0.3]
+		},
+		"firstperson_lefthand": {
+			"rotation": [0, 106, 0],
+			"scale": [0.3, 0.3, 0.3]
+		},
+		"ground": {
+			"translation": [0, 3, 0],
+			"scale": [0.25, 0.25, 0.25]
+		},
+		"gui": {
+			"rotation": [30, 225, 0],
+			"translation": [-2.25, 28, 0],
+			"scale": [0.425, 0.425, 0.425]
+		},
+		"fixed": {
+			"scale": [0.4, 0.4, 0.4]
+		}
+	},
+	"groups": [
+		{
+			"name": "doorup",
+			"origin": [15.05, 30.5, 4],
+			"color": 0,
+			"children": [0, 1, 2, 3]
+		}
+	]
+}

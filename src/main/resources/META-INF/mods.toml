@@ -132,3 +132,56 @@ See our official website.
     versionRange="[6.6.0,)"
     ordering="BEFORE"
     side="BOTH"
+
+
+[[mods]] #mandatory
+modId = "chorda" #mandatory
+version = "${file.jarVersion}" #mandatory
+displayName = "Chorda" #mandatory
+displayURL="https://www.curseforge.com/minecraft/mc-mods/chorda"
+logoFile="logo.png"
+authors = "Developed by TeamMoeg, with the help of many contributors. See description below."
+description = '''
+The Library Mod for TeamMoeg Projects.
+'''
+[[dependencies.frostedheart]]
+    modId = "forge"
+    mandatory = true
+    versionRange = "[37,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.frostedheart]]
+    modId = "minecraft"
+    mandatory = true
+    versionRange = "[1.20.1,1.20.4)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.frostedheart]]
+    modId="immersiveengineering"
+    mandatory=true
+    versionRange="[1.20.1-10.1.0,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="create"
+    mandatory=true
+    versionRange="[0.5.1.j,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="flywheel"
+    mandatory=true
+    versionRange="[0.6.10-7,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="curios"
+    mandatory=true
+    versionRange="[5.9.1+1.20.1,)"
+    ordering="BEFORE"
+    side="BOTH"

@@ -34,6 +34,7 @@ import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.block.WardrobeBlock;
 import com.teammoeg.frostedheart.item.FHBlockItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
@@ -120,8 +121,6 @@ public class FHBlocks {
         return register(name, block, name, item);
     }
 
-    // Registrate style
-
     static {
         REGISTRATE.setCreativeTab(FHTabs.NATURAL_BLOCKS);
     }
@@ -134,7 +133,6 @@ public class FHBlocks {
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.CONDENSED_BALL_IRON_ORE.get(), ConstantValue.exactly(4))))
             .simpleItem()
             .register();
-    // next
     public static final BlockEntry<Block> CONDENSED_COPPER_ORE_BLOCK = REGISTRATE.block("condensed_copper_ore_block", Block::new)
             .initialProperties(() -> SNOW_BLOCK)
             .tag(FHTags.Blocks.CONDENSED_ORES.tag)
@@ -1669,7 +1667,6 @@ public class FHBlocks {
         REGISTRATE.setCreativeTab(FHTabs.FUNCTIONAL_BLOCKS);
     }
 
-    // Machine Blocks
     // RELIC_CHEST
     public static final BlockEntry<RelicChestBlock> RELIC_CHEST = REGISTRATE.block("relic_chest", RelicChestBlock::new)
             .properties(t -> t.mapColor(MapColor.METAL)
@@ -1866,6 +1863,15 @@ public class FHBlocks {
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .item()
             .transform(ModelGen.customItemModel())
+            .register();
+    // WARDROBE, "wardrobe", like Blocks.SPRUCE_DOOR
+    public static final BlockEntry<WardrobeBlock> WARDROBE = REGISTRATE.block("wardrobe", WardrobeBlock::new)
+            .initialProperties(() -> Blocks.SPRUCE_DOOR)
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
             .register();
 
     // Town blocks, registrate
