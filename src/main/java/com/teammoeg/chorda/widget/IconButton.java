@@ -4,6 +4,7 @@ import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.util.CGuis;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.client.ColorHelper;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
@@ -17,7 +18,8 @@ public class IconButton extends Button {
     public static final int TEXTURE_HEIGHT = 80;
     public static final int TEXTURE_WIDTH = 80;
 
-    public final Icon icon;
+    @Setter
+    private Icon icon;
     public int color;
     // 为什么是int? 混素达咩(
     private int scale;
