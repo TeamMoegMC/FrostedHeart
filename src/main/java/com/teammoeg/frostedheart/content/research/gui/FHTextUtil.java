@@ -19,20 +19,21 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import com.teammoeg.frostedheart.FHMain;
-
 import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
 public class FHTextUtil {
+
+    private FHTextUtil() {
+    }
 
     public static List<Component> get(List<String> orig, String type, Supplier<String> pid) {
         String s = pid.get();
@@ -86,8 +87,5 @@ public class FHTextUtil {
         }
 
         return ClientTextComponentUtils.parse(orig);
-    }
-
-    private FHTextUtil() {
     }
 }

@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.content.research.handler;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
@@ -30,7 +29,7 @@ public class ResearchCommonEvents {
     @SubscribeEvent
     public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
         //Common capabilities
-        event.addCapability(new ResourceLocation(FHMain.MODID, "rsenergy"   ), FHCapabilities.ENERGY.provider());
+        event.addCapability(new ResourceLocation(FHMain.MODID, "rsenergy"), FHCapabilities.ENERGY.provider());
     }
 
     @SubscribeEvent
@@ -88,6 +87,7 @@ public class ResearchCommonEvents {
             EnergyCore.applySleep((ServerPlayer) event.getEntity());
         }
     }
+
     @SubscribeEvent
     public static void tickEnergy(TickEvent.PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == TickEvent.Phase.START
@@ -101,7 +101,10 @@ public class ResearchCommonEvents {
     @SubscribeEvent
     public static void respawn(PlayerEvent.PlayerRespawnEvent event) {
         if (event.getEntity() instanceof ServerPlayer && !(event.getEntity() instanceof FakePlayer)) {
-            EnergyCore.getCapability(event.getEntity()).ifPresent(t->{t.onrespawn();t.sendUpdate((ServerPlayer) event.getEntity());});
+            EnergyCore.getCapability(event.getEntity()).ifPresent(t -> {
+                t.onrespawn();
+                t.sendUpdate((ServerPlayer) event.getEntity());
+            });
         }
     }
 }

@@ -19,26 +19,25 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import java.text.DecimalFormat;
-
 import com.teammoeg.chorda.util.lang.Components;
-import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
-import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.util.client.Lang;
-import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.FHResearch;
+import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
+import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechTextButton;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditUtils;
-
+import com.teammoeg.frostedheart.util.client.Lang;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import net.minecraft.client.gui.GuiGraphics;
+
+import java.text.DecimalFormat;
 
 public class ResearchDashboardPanel extends Panel {
 
@@ -52,6 +51,18 @@ public class ResearchDashboardPanel extends Panel {
     ResearchDetailPanel detailPanel;
     RTextField techpoint;
     RTextField availableInsightLevel;
+
+    public ResearchDashboardPanel(ResearchDetailPanel panel) {
+        super(panel);
+        this.setOnlyInteractWithWidgetsInside(true);
+        this.setOnlyRenderWidgetsInside(true);
+        detailPanel = panel;
+        techpoint = new RTextField(this).setMaxWidth(100).setMaxLine(1).setColor(TechIcons.text);
+        techpoint.setPos(40, 28);
+        availableInsightLevel = new RTextField(this).setMaxWidth(100).setMaxLine(1).setColor(TechIcons.text);
+        availableInsightLevel.setPos(60, 28);
+    }
+
     public static synchronized String toReadable(long num) {
         int unit = -1;
         double lnum = num;
@@ -70,16 +81,6 @@ public class ResearchDashboardPanel extends Panel {
         } else {
             return df3.format(lnum) + read.charAt(unit);
         }
-    }
-    public ResearchDashboardPanel(ResearchDetailPanel panel) {
-        super(panel);
-        this.setOnlyInteractWithWidgetsInside(true);
-        this.setOnlyRenderWidgetsInside(true);
-        detailPanel = panel;
-        techpoint = new RTextField(this).setMaxWidth(100).setMaxLine(1).setColor(TechIcons.text);
-        techpoint.setPos(40, 28);
-        availableInsightLevel = new RTextField(this).setMaxWidth(100).setMaxLine(1).setColor(TechIcons.text);
-        availableInsightLevel.setPos(60, 28);
     }
 
     @Override

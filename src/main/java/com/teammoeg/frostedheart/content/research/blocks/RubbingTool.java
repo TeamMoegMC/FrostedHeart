@@ -19,32 +19,35 @@
 
 package com.teammoeg.frostedheart.content.research.blocks;
 
-import java.util.List;
-
-import com.teammoeg.frostedheart.item.FHBaseItem;
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.Research;
+import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.util.client.Lang;
-
-import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.ClipContext.Fluid;
-import net.minecraft.world.phys.HitResult.Type;
-import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult.Type;
+
+import java.util.List;
 
 public class RubbingTool extends FHBaseItem {
+
+    public RubbingTool(Properties properties) {
+        super(properties);
+    }
 
     public static int getPoint(ItemStack stack) {
         return stack.getOrCreateTag().getInt("points");
@@ -70,10 +73,6 @@ public class RubbingTool extends FHBaseItem {
             stack.getOrCreateTag().remove("research");
         else
             stack.getOrCreateTag().putString("research", rs);
-    }
-
-    public RubbingTool(Properties properties) {
-        super(properties);
     }
 
     @Override

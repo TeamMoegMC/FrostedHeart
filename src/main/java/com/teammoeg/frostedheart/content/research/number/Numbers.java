@@ -19,27 +19,31 @@
 
 package com.teammoeg.frostedheart.content.research.number;
 
-import java.util.function.Function;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.teammoeg.chorda.util.io.registry.JsonSerializerRegistry;
-
 import net.minecraft.network.FriendlyByteBuf;
+
+import java.util.function.Function;
 
 public class Numbers {
     static JsonSerializerRegistry<IResearchNumber> registry = new JsonSerializerRegistry<>();
 
     static {
-        registry.register(ConstResearchNumber.class, "value", ConstResearchNumber::valueOf,Numbers::nopserializer, ConstResearchNumber::valueOf);
-        registry.register(ExpResearchNumber.class, "exp", ExpResearchNumber::new,Numbers::nopserializer, ExpResearchNumber::new);
+        registry.register(ConstResearchNumber.class, "value", ConstResearchNumber::valueOf, Numbers::nopserializer, ConstResearchNumber::valueOf);
+        registry.register(ExpResearchNumber.class, "exp", ExpResearchNumber::new, Numbers::nopserializer, ExpResearchNumber::new);
     }
+
+    private Numbers() {
+    }
+
     private static JsonObject nopserializer(IResearchNumber obj) {
-    	JsonObject jo=new JsonObject();
-    	jo.add("exp", obj.serialize());
-    	return jo;
+        JsonObject jo = new JsonObject();
+        jo.add("exp", obj.serialize());
+        return jo;
     }
+
     public static IResearchNumber deserialize(JsonElement je) {
         if (je.isJsonPrimitive()) {
             JsonPrimitive jp = (JsonPrimitive) je;
@@ -55,14 +59,11 @@ public class Numbers {
         return registry.read(data);
     }
 
-    public static void registerNumberType(Class<? extends IResearchNumber> cls, String type, Function<JsonObject, IResearchNumber> json, Function<IResearchNumber,JsonObject> obj, Function<FriendlyByteBuf, IResearchNumber> packet) {
-        registry.register(cls, type, json,obj, packet);
+    public static void registerNumberType(Class<? extends IResearchNumber> cls, String type, Function<JsonObject, IResearchNumber> json, Function<IResearchNumber, JsonObject> obj, Function<FriendlyByteBuf, IResearchNumber> packet) {
+        registry.register(cls, type, json, obj, packet);
     }
 
     public static void write(IResearchNumber e, FriendlyByteBuf pb) {
         registry.write(pb, e);
-    }
-
-    private Numbers() {
     }
 }

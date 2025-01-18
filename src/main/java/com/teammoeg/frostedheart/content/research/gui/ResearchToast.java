@@ -19,16 +19,15 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import java.util.List;
-
+import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.client.gui.GuiGraphics;
-import com.teammoeg.frostedheart.content.research.research.Research;
-
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
+
+import java.util.List;
 
 public class ResearchToast implements Toast {
     private final Research r;
@@ -39,14 +38,14 @@ public class ResearchToast implements Toast {
     }
 
     public Toast.Visibility render(GuiGraphics matrixStack, ToastComponent gui, long time) {
-    	matrixStack.blit(TEXTURE, 0, 0, 0, 0, this.width(), this.height());
+        matrixStack.blit(TEXTURE, 0, 0, 0, 0, this.width(), this.height());
 
         if (r != null) {
             List<FormattedCharSequence> list = gui.getMinecraft().font.split(r.getName(), 125);
             int i = 16776960;
             if (list.size() == 1) {
-            	matrixStack.drawString(gui.getMinecraft().font, Lang.translateMessage("toast.research_complete"), 30, 7, i | -16777216);
-            	matrixStack.drawString(gui.getMinecraft().font, list.get(0), 30, 18, -1);
+                matrixStack.drawString(gui.getMinecraft().font, Lang.translateMessage("toast.research_complete"), 30, 7, i | -16777216);
+                matrixStack.drawString(gui.getMinecraft().font, list.get(0), 30, 18, -1);
             } else {
                 int j = 1500;
                 float f = 300.0F;
@@ -58,7 +57,7 @@ public class ResearchToast implements Toast {
                     int l = this.height() / 2 - list.size() * 9 / 2;
 
                     for (FormattedCharSequence ireorderingprocessor : list) {
-                    	matrixStack.drawString(gui.getMinecraft().font, ireorderingprocessor, 30, l, 16777215 | i1);
+                        matrixStack.drawString(gui.getMinecraft().font, ireorderingprocessor, 30, l, 16777215 | i1);
                         l += 9;
                     }
                 }

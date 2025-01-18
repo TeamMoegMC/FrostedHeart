@@ -19,15 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.teammoeg.chorda.util.lang.Components;
-import com.teammoeg.frostedheart.util.client.Lang;
-import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechTextButton;
@@ -35,7 +27,7 @@ import com.teammoeg.frostedheart.content.research.gui.ThickLine;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditUtils;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchEditorDialog;
-
+import com.teammoeg.frostedheart.util.client.Lang;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -45,170 +37,17 @@ import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ResearchHierarchyPanel extends Panel {
-    public static class MoreResearchHierarchyLine extends ThickLine {
-        List<Research> r;
-
-        public MoreResearchHierarchyLine(List<Research> r) {
-            this.r = r;
-        }
-
-        public boolean doShow() {
-            return r.stream().allMatch(Research::isCompleted);
-        }
-
-        @Override
-        public void draw(GuiGraphics matrixStack, int x, int y) {
-            if (doShow())
-                color = TechIcons.text;
-            else
-                color = Color4I.rgb(0xADA691);
-            super.draw(matrixStack, x, y);
-        }
-    }
-
-    public static class ResearchCombinatorLine extends ResearchHierarchyLine {
-
-        public ResearchCombinatorLine(Research r) {
-            super(r);
-        }
-
-        public boolean doShow() {
-            return r.isUnlocked();
-        }
-
-    }
-
-    public static class ResearchDetailButton extends Button {
-
-        ResearchPanel researchScreen;
-        Research research;
-
-        public ResearchDetailButton(ResearchHierarchyPanel panel, Research research) {
-            super(panel, research.getName(), research.getIcon().asFtbIcon());
-            this.research = research;
-            this.researchScreen = panel.researchPanel;
-            setSize(36, 36);
-        }
-
-        @Override
-        public void addMouseOverText(TooltipList list) {
-            list.add(research.getName().copy().withStyle(ChatFormatting.BOLD));
-            if (!research.isUnlocked()) {
-                list.add(Lang.translateTooltip("research_is_locked").withStyle(ChatFormatting.RED));
-                for (Research parent : research.getParents()) {
-                    if (!parent.isCompleted()) {
-                        list.add(parent.getName().copy().withStyle(ChatFormatting.GRAY));
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-            // this.drawBackground(matrixStack, theme, x, y, w, h);
-            GuiHelper.setupDrawing();
-            TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
-            if (FHResearch.editor || research.isShowable()) {
-                this.drawIcon(matrixStack, theme, x + 2, y + 2, 32, 32);
-                if (research.isCompleted()) {
-                    matrixStack.pose().pushPose();
-                    matrixStack.pose().translate(0, 0, 300);
-                    GuiHelper.setupDrawing();
-                    TechIcons.FIN.draw(matrixStack, x + 2, y + 2, 32, 32);
-                    matrixStack.pose().popPose();
-                }
-            } else
-                TechIcons.Question.draw(matrixStack, x + 2, y + 2, 32, 32);
-        }
-
-        @Override
-        public void onClicked(MouseButton mouseButton) {
-            if ((research.isShowable() && !research.isHidden()) || FHResearch.isEditor())
-                this.researchScreen.detailframe.open(research);
-            // this.researchScreen.refreshWidgets();
-        }
-    }
-
-    public static class ResearchHierarchyLine extends ThickLine {
-        Research r;
-
-        public ResearchHierarchyLine(Research r) {
-            this.r = r;
-        }
-
-        public boolean doShow() {
-            return r.isCompleted();
-        }
-
-        @Override
-        public void draw(GuiGraphics matrixStack, int x, int y) {
-            if (doShow())
-                color = TechIcons.text;
-            else
-                color = Color4I.rgb(0xADA691);
-            super.draw(matrixStack, x, y);
-        }
-    }
-
-    public static class ResearchSimpleButton extends Button {
-
-        ResearchPanel researchScreen;
-        Research research;
-        Research parent;
-
-        public ResearchSimpleButton(ResearchHierarchyPanel panel, Research research) {
-            super(panel, research.getName(), research.getFTBIcon());
-            this.research = research;
-            this.researchScreen = panel.researchPanel;
-            setSize(24, 24);
-            
-        }
-
-        @Override
-        public void addMouseOverText(TooltipList list) {
-            list.add(research.getName().copy().withStyle(ChatFormatting.BOLD));
-            if ((parent == null && !research.isUnlocked()) || (parent != null && !parent.isUnlocked())) {
-                list.add(Lang.translateTooltip("research_is_locked").withStyle(ChatFormatting.RED));
-                for (Research parent : research.getParents()) {
-                    if (!parent.isCompleted()) {
-                        list.add(parent.getName().copy().withStyle(ChatFormatting.GRAY));
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-            GuiHelper.setupDrawing();
-            TechIcons.SLOT.draw(matrixStack, x, y, w, h);
-            if (FHResearch.editor || research.isShowable()) {
-                this.drawIcon(matrixStack, theme, x + 4, y + 4, 16, 16);
-                if (research.isCompleted()) {
-                    matrixStack.pose().pushPose();
-                    matrixStack.pose().translate(0, 0, 300);
-                    GuiHelper.setupDrawing();
-                    TechIcons.FIN.draw(matrixStack, x + 4, y + 4, 16, 16);
-                    matrixStack.pose().popPose();
-                }
-            } else
-                TechIcons.Question.draw(matrixStack, x + 4, y + 4, 16, 16);
-        }
-
-        @Override
-        public void onClicked(MouseButton mouseButton) {
-            researchScreen.selectResearch(research);
-        }
-
-        public void setChildren(Research p) {
-            parent = p;
-        }
-    }
-
     private static int[] ButtonPos = new int[]{76, 44, 108, 12, 140};
     public ResearchPanel researchPanel;
-
     List<ThickLine> lines = new ArrayList<>();
 
     public ResearchHierarchyPanel(ResearchPanel panel) {
@@ -229,14 +68,14 @@ public class ResearchHierarchyPanel extends Panel {
                         // TODO Add parent
                         Research r = researchPanel.selectedResearch;
                         ResearchEditorDialog.RESEARCH_LIST.open(this, "Edit parents", r.getParents(), s -> {
-                        	try {
-                        		//System.out.println(s);
-                            r.setParents(s.stream().map(Research::getId).collect(Collectors.toList()));
-                            FHResearch.reindex();
-                            EditUtils.saveResearch(r);
-                        	}catch(Throwable t) {
-                        		t.printStackTrace();
-                        	}
+                            try {
+                                //System.out.println(s);
+                                r.setParents(s.stream().map(Research::getId).collect(Collectors.toList()));
+                                FHResearch.reindex();
+                                EditUtils.saveResearch(r);
+                            } catch (Throwable t) {
+                                t.printStackTrace();
+                            }
                         });
                     }
                 };
@@ -399,7 +238,7 @@ public class ResearchHierarchyPanel extends Panel {
         // }
         if (haveHScroll) {
             researchPanel.hierarchyBar.unhide();
-           // researchPanel.hierarchyBar.setMaxValue(trmost + 24);
+            // researchPanel.hierarchyBar.setMaxValue(trmost + 24);
         } else
             researchPanel.hierarchyBar.hide();
 
@@ -434,5 +273,164 @@ public class ResearchHierarchyPanel extends Panel {
     @Override
     public boolean isEnabled() {
         return researchPanel.canEnable(this);
+    }
+
+    public static class MoreResearchHierarchyLine extends ThickLine {
+        List<Research> r;
+
+        public MoreResearchHierarchyLine(List<Research> r) {
+            this.r = r;
+        }
+
+        public boolean doShow() {
+            return r.stream().allMatch(Research::isCompleted);
+        }
+
+        @Override
+        public void draw(GuiGraphics matrixStack, int x, int y) {
+            if (doShow())
+                color = TechIcons.text;
+            else
+                color = Color4I.rgb(0xADA691);
+            super.draw(matrixStack, x, y);
+        }
+    }
+
+    public static class ResearchCombinatorLine extends ResearchHierarchyLine {
+
+        public ResearchCombinatorLine(Research r) {
+            super(r);
+        }
+
+        public boolean doShow() {
+            return r.isUnlocked();
+        }
+
+    }
+
+    public static class ResearchDetailButton extends Button {
+
+        ResearchPanel researchScreen;
+        Research research;
+
+        public ResearchDetailButton(ResearchHierarchyPanel panel, Research research) {
+            super(panel, research.getName(), research.getIcon().asFtbIcon());
+            this.research = research;
+            this.researchScreen = panel.researchPanel;
+            setSize(36, 36);
+        }
+
+        @Override
+        public void addMouseOverText(TooltipList list) {
+            list.add(research.getName().copy().withStyle(ChatFormatting.BOLD));
+            if (!research.isUnlocked()) {
+                list.add(Lang.translateTooltip("research_is_locked").withStyle(ChatFormatting.RED));
+                for (Research parent : research.getParents()) {
+                    if (!parent.isCompleted()) {
+                        list.add(parent.getName().copy().withStyle(ChatFormatting.GRAY));
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+            // this.drawBackground(matrixStack, theme, x, y, w, h);
+            GuiHelper.setupDrawing();
+            TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
+            if (FHResearch.editor || research.isShowable()) {
+                this.drawIcon(matrixStack, theme, x + 2, y + 2, 32, 32);
+                if (research.isCompleted()) {
+                    matrixStack.pose().pushPose();
+                    matrixStack.pose().translate(0, 0, 300);
+                    GuiHelper.setupDrawing();
+                    TechIcons.FIN.draw(matrixStack, x + 2, y + 2, 32, 32);
+                    matrixStack.pose().popPose();
+                }
+            } else
+                TechIcons.Question.draw(matrixStack, x + 2, y + 2, 32, 32);
+        }
+
+        @Override
+        public void onClicked(MouseButton mouseButton) {
+            if ((research.isShowable() && !research.isHidden()) || FHResearch.isEditor())
+                this.researchScreen.detailframe.open(research);
+            // this.researchScreen.refreshWidgets();
+        }
+    }
+
+    public static class ResearchHierarchyLine extends ThickLine {
+        Research r;
+
+        public ResearchHierarchyLine(Research r) {
+            this.r = r;
+        }
+
+        public boolean doShow() {
+            return r.isCompleted();
+        }
+
+        @Override
+        public void draw(GuiGraphics matrixStack, int x, int y) {
+            if (doShow())
+                color = TechIcons.text;
+            else
+                color = Color4I.rgb(0xADA691);
+            super.draw(matrixStack, x, y);
+        }
+    }
+
+    public static class ResearchSimpleButton extends Button {
+
+        ResearchPanel researchScreen;
+        Research research;
+        Research parent;
+
+        public ResearchSimpleButton(ResearchHierarchyPanel panel, Research research) {
+            super(panel, research.getName(), research.getFTBIcon());
+            this.research = research;
+            this.researchScreen = panel.researchPanel;
+            setSize(24, 24);
+
+        }
+
+        @Override
+        public void addMouseOverText(TooltipList list) {
+            list.add(research.getName().copy().withStyle(ChatFormatting.BOLD));
+            if ((parent == null && !research.isUnlocked()) || (parent != null && !parent.isUnlocked())) {
+                list.add(Lang.translateTooltip("research_is_locked").withStyle(ChatFormatting.RED));
+                for (Research parent : research.getParents()) {
+                    if (!parent.isCompleted()) {
+                        list.add(parent.getName().copy().withStyle(ChatFormatting.GRAY));
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+            GuiHelper.setupDrawing();
+            TechIcons.SLOT.draw(matrixStack, x, y, w, h);
+            if (FHResearch.editor || research.isShowable()) {
+                this.drawIcon(matrixStack, theme, x + 4, y + 4, 16, 16);
+                if (research.isCompleted()) {
+                    matrixStack.pose().pushPose();
+                    matrixStack.pose().translate(0, 0, 300);
+                    GuiHelper.setupDrawing();
+                    TechIcons.FIN.draw(matrixStack, x + 4, y + 4, 16, 16);
+                    matrixStack.pose().popPose();
+                }
+            } else
+                TechIcons.Question.draw(matrixStack, x + 4, y + 4, 16, 16);
+        }
+
+        @Override
+        public void onClicked(MouseButton mouseButton) {
+            researchScreen.selectResearch(research);
+        }
+
+        public void setChildren(Research p) {
+            parent = p;
+        }
     }
 }

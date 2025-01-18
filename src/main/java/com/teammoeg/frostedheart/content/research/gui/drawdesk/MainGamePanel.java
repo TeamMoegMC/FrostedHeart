@@ -19,10 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
-import com.teammoeg.frostedheart.util.client.Lang;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
-
+import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.content.research.gui.TechButton;
@@ -31,13 +28,14 @@ import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardStat;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardType;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.ClientResearchGame;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
-import com.teammoeg.chorda.util.client.ClientUtils;
-
+import com.teammoeg.frostedheart.util.client.Lang;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 
 class MainGamePanel extends Panel {
     ClientResearchGame rg;
@@ -187,7 +185,7 @@ class MainGamePanel extends Panel {
         }
 
 
-        if ((reset.isMouseOver() || rg.getLevel() == -1) && EnergyCore.getEnergy(ClientUtils.getPlayer())<=0) {
+        if ((reset.isMouseOver() || rg.getLevel() == -1) && EnergyCore.getEnergy(ClientUtils.getPlayer()) <= 0) {
 
             if (lstatus != 1) {
                 status.setText(Lang.translateGui("minigame.tired_to_research"));
@@ -231,12 +229,12 @@ class MainGamePanel extends Panel {
         return enabled;
     }
 
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
     @Override
     public void onClosed() {
         rg.deinit();
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
     }
 }

@@ -19,37 +19,134 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.frostedheart.util.client.Lang;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Icon;
+import dev.ftb.mods.ftblibrary.icon.Icons;
+import dev.ftb.mods.ftblibrary.ui.*;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.chorda.util.lang.Components;
-import com.teammoeg.frostedheart.util.client.Lang;
-
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
-import dev.ftb.mods.ftblibrary.ui.SimpleButton;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
-import dev.ftb.mods.ftblibrary.ui.WidgetType;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
-
 /**
  * @author LatvianModder, khjxiaogu
  */
 public class EditListDialog<T> extends EditDialog {
+    public static final Editor<Collection<String>> STRING_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, "", EditPrompt.TEXT_EDITOR, e -> e, c).open();
+    private final Consumer<Collection<T>> callback;
+    private final Component title;
+    private final Panel configPanel;
+    private final Button buttonAccept, buttonCancel;
+    private final List<T> list;
+    private final Editor<T> editor;
+    private final PanelScrollBar scroll;
+    private final T def;
+    private final Function<T, String> read;
+    private final Function<T, Icon> toicon;
+    boolean modified;
+    public EditListDialog(Widget p, String label, Collection<T> vx, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
+        this(p, label, vx, null, editor, toread, null, li);
+    }
+    public EditListDialog(Widget p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
+        this(p, label, vx, def, editor, toread, null, li);
+    }
+
+    public EditListDialog(Widget p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Function<T, Icon> icon, Consumer<Collection<T>> li) {
+        super(p);
+        callback = li;
+        if (vx != null)
+            list = new ArrayList<>(vx);
+        else
+            list = new ArrayList<>();
+        title = Components.str(label).withStyle(ChatFormatting.BOLD);
+        this.editor = editor;
+        this.def = def;
+        this.read = toread;
+        this.toicon = icon;
+        int sw = 387;
+        int sh = 203;
+        this.setSize(sw, sh);
+        configPanel = new Panel(this) {
+            @Override
+            public void addWidgets() {
+                for (int i = 0; i < list.size(); i++) {
+                    add(new ButtonConfigValue(this, i));
+                }
+                add(new ButtonAddValue(this));
+            }
+
+            @Override
+            public void alignWidgets() {
+                for (Widget w : widgets) {
+                    w.setWidth(width - 16);
+                }
+                align(WidgetLayout.VERTICAL);
+                //scroll.setMaxValue();
+            }
+        };
+
+        scroll = new PanelScrollBar(this, configPanel);
+        buttonAccept = new SimpleButton(this, Lang.translateKey("gui.accept"), Icons.ACCEPT, (widget, button) -> {
+            callback.accept(list);
+            modified = false;
+            close();
+        });
+        buttonCancel = new SimpleButton(this, Lang.translateKey("gui.cancel"), Icons.CANCEL, (widget, button) -> close());
+    }
+
+    @Override
+    public void addWidgets() {
+        add(buttonAccept);
+        add(buttonCancel);
+        add(configPanel);
+        add(scroll);
+    }
+
+    @Override
+    public void alignWidgets() {
+        configPanel.setPosAndSize(5, 20, width - 10, height - 20);
+        configPanel.alignWidgets();
+        scroll.setPosAndSize(width - 16, 20, 16, height - 20);
+
+        buttonAccept.setPos(width - 18, 2);
+        buttonCancel.setPos(width - 38, 2);
+    }
+
+    @Override
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+        theme.drawGui(matrixStack, x, y, w, h, WidgetType.NORMAL);
+
+        theme.drawString(matrixStack, getTitle(), x, y - 10);
+    }
+
+    @Override
+    public Component getTitle() {
+        return title;
+    }
+
+    @Override
+    public void onClose() {
+    }
+
+    @Override
+    public void onClosed() {
+        if (modified) {
+            ConfirmDialog.EDITOR.open(this, "Unsaved changes, discard?", true, e -> {
+                if (!e) open();
+            });
+        }
+    }
+
     public class ButtonAddValue extends Button {
         public ButtonAddValue(Panel panel) {
             super(panel);
@@ -147,115 +244,6 @@ public class EditListDialog<T> extends EditDialog {
                     parent.refreshWidgets();
                 });
             }
-        }
-    }
-
-    public static final Editor<Collection<String>> STRING_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, "", EditPrompt.TEXT_EDITOR, e -> e, c).open();
-
-    private final Consumer<Collection<T>> callback;
-
-    private final Component title;
-    private final Panel configPanel;
-    private final Button buttonAccept, buttonCancel;
-    private final List<T> list;
-    private final Editor<T> editor;
-    private final PanelScrollBar scroll;
-    private final T def;
-    private final Function<T, String> read;
-    private final Function<T, Icon> toicon;
-    boolean modified;
-
-    public EditListDialog(Widget p, String label, Collection<T> vx, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
-        this(p, label, vx, null, editor, toread, null, li);
-    }
-
-    public EditListDialog(Widget p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
-        this(p, label, vx, def, editor, toread, null, li);
-    }
-
-    public EditListDialog(Widget p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Function<T, Icon> icon, Consumer<Collection<T>> li) {
-        super(p);
-        callback = li;
-        if (vx != null)
-            list = new ArrayList<>(vx);
-        else
-            list = new ArrayList<>();
-        title = Components.str(label).withStyle(ChatFormatting.BOLD);
-        this.editor = editor;
-        this.def = def;
-        this.read = toread;
-        this.toicon = icon;
-        int sw = 387;
-        int sh = 203;
-        this.setSize(sw, sh);
-        configPanel = new Panel(this) {
-            @Override
-            public void addWidgets() {
-                for (int i = 0; i < list.size(); i++) {
-                    add(new ButtonConfigValue(this, i));
-                }
-                add(new ButtonAddValue(this));
-            }
-
-            @Override
-            public void alignWidgets() {
-                for (Widget w : widgets) {
-                    w.setWidth(width - 16);
-                }
-                align(WidgetLayout.VERTICAL);
-                //scroll.setMaxValue();
-            }
-        };
-
-        scroll = new PanelScrollBar(this, configPanel);
-        buttonAccept = new SimpleButton(this, Lang.translateKey("gui.accept"), Icons.ACCEPT, (widget, button) -> {
-            callback.accept(list);
-            modified = false;
-            close();
-        });
-        buttonCancel = new SimpleButton(this, Lang.translateKey("gui.cancel"), Icons.CANCEL, (widget, button) -> close());
-    }
-
-    @Override
-    public void addWidgets() {
-        add(buttonAccept);
-        add(buttonCancel);
-        add(configPanel);
-        add(scroll);
-    }
-
-    @Override
-    public void alignWidgets() {
-        configPanel.setPosAndSize(5, 20, width - 10, height - 20);
-        configPanel.alignWidgets();
-        scroll.setPosAndSize(width - 16, 20, 16, height - 20);
-
-        buttonAccept.setPos(width - 18, 2);
-        buttonCancel.setPos(width - 38, 2);
-    }
-
-    @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        theme.drawGui(matrixStack, x, y, w, h, WidgetType.NORMAL);
-
-        theme.drawString(matrixStack, getTitle(), x, y - 10);
-    }
-
-    @Override
-    public Component getTitle() {
-        return title;
-    }
-
-    @Override
-    public void onClose() {
-    }
-
-    @Override
-    public void onClosed() {
-        if (modified) {
-            ConfirmDialog.EDITOR.open(this, "Unsaved changes, discard?", true, e -> {
-                if (!e) open();
-            });
         }
     }
 }

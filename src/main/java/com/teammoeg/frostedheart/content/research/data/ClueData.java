@@ -22,47 +22,49 @@ package com.teammoeg.frostedheart.content.research.data;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.util.io.codec.CompressDifferCodec;
-
 import lombok.ToString;
 import net.minecraft.nbt.CompoundTag;
 
 @ToString
-public class ClueData{
-	public static final Codec<ClueData> FULL_CODEC=RecordCodecBuilder.create(t->t.group(
-			Codec.BOOL.fieldOf("completed").forGetter(o->o.completed),
-			CompoundTag.CODEC.fieldOf("data").forGetter(o->o.data)).apply(t, ClueData::new));
-	public static final Codec<ClueData> CODEC=new CompressDifferCodec<>(RecordCodecBuilder.create(t->t.group(
-			Codec.BOOL.fieldOf("completed").forGetter(o->o.completed)).apply(t, ClueData::new)), FULL_CODEC);
-	boolean completed;
-	CompoundTag data;
-	
-	public ClueData() {
-		super();
-	}
+public class ClueData {
+    public static final Codec<ClueData> FULL_CODEC = RecordCodecBuilder.create(t -> t.group(
+            Codec.BOOL.fieldOf("completed").forGetter(o -> o.completed),
+            CompoundTag.CODEC.fieldOf("data").forGetter(o -> o.data)).apply(t, ClueData::new));
+    public static final Codec<ClueData> CODEC = new CompressDifferCodec<>(RecordCodecBuilder.create(t -> t.group(
+            Codec.BOOL.fieldOf("completed").forGetter(o -> o.completed)).apply(t, ClueData::new)), FULL_CODEC);
+    boolean completed;
+    CompoundTag data;
 
-	public ClueData(boolean completed, CompoundTag data) {
-		super();
-		
-		this.completed = completed;
-		this.data = data;
-	}
-	
-	public ClueData(boolean completed) {
-		super();
-		this.completed = completed;
-	}
+    public ClueData() {
+        super();
+    }
 
-	public boolean isCompleted() {
-		return completed;
-	}
-	public void setCompleted(boolean completed) {
-		this.completed = completed;
-	}
-	public CompoundTag getData() {
-		return data;
-	}
-	public void setData(CompoundTag data) {
-		this.data = data;
-	}
+    public ClueData(boolean completed, CompoundTag data) {
+        super();
+
+        this.completed = completed;
+        this.data = data;
+    }
+
+    public ClueData(boolean completed) {
+        super();
+        this.completed = completed;
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
+    }
+
+    public CompoundTag getData() {
+        return data;
+    }
+
+    public void setData(CompoundTag data) {
+        this.data = data;
+    }
 
 }

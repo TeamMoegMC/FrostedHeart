@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import java.util.function.Consumer;
-
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Panel;
+
+import java.util.function.Consumer;
 
 public class LabeledOpenEditorButton<T> extends LabeledPane<OpenEditorButton<T>> {
 

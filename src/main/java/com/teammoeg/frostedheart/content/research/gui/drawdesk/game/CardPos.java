@@ -23,16 +23,24 @@ import net.minecraft.network.FriendlyByteBuf;
 
 public class CardPos {
     private static CardPos[][] cache = new CardPos[11][11];
+
     static {
         for (int i = 0; i < 11; i++)
             for (int j = 0; j < 11; j++)
                 cache[i][j] = new CardPos(i - 1, j - 1);
 
     }
+
     final int x;
     final int y;
 
     private int hash = 0;
+
+    private CardPos(int x, int y) {
+        super();
+        this.x = x;
+        this.y = y;
+    }
 
     public static CardPos valueOf(int x, int y) {
         int i = x + 1;
@@ -44,12 +52,6 @@ public class CardPos {
 
     public static CardPos valueOf(FriendlyByteBuf pb) {
         return valueOf(pb.readByte(), pb.readByte());
-    }
-
-    private CardPos(int x, int y) {
-        super();
-        this.x = x;
-        this.y = y;
     }
 
     @Override

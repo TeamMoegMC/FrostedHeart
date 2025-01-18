@@ -19,21 +19,6 @@
 
 package com.teammoeg.frostedheart.content.research.research.effects;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.google.common.collect.ImmutableSet;
-import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.team.TeamDataHolder;
-import com.teammoeg.frostedheart.content.research.ResearchListeners;
-import com.teammoeg.frostedheart.content.research.data.ResearchData;
-import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.util.client.ClientUtils;
-
 import blusunrize.immersiveengineering.api.ManualHelper;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
@@ -41,21 +26,35 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMulti
 import blusunrize.immersiveengineering.common.register.IEItems;
 import blusunrize.lib.manual.ManualEntry;
 import blusunrize.lib.manual.gui.ManualScreen;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.MutableComponent;
+import com.google.common.collect.ImmutableSet;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.data.ResearchData;
+import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.content.research.gui.FHIcons;
+import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Allows forming multiblock
  */
 public class EffectBuilding extends Effect {
-	public static final MapCodec<EffectBuilding> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
-	ResourceLocation.CODEC.xmap(MultiblockHandler::getByUniqueName, IMultiblock::getUniqueName).fieldOf("multiblock").forGetter(o->o.multiblock))
-	.apply(t,EffectBuilding::new));
+    public static final MapCodec<EffectBuilding> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+                    ResourceLocation.CODEC.xmap(MultiblockHandler::getByUniqueName, IMultiblock::getUniqueName).fieldOf("multiblock").forGetter(o -> o.multiblock))
+            .apply(t, EffectBuilding::new));
     IMultiblock multiblock;
 
     EffectBuilding() {
@@ -71,9 +70,9 @@ public class EffectBuilding extends Effect {
     }
 
     public EffectBuilding(BaseData data, IMultiblock multiblock) {
-		super(data);
-		this.multiblock = multiblock;
-	}
+        super(data);
+        this.multiblock = multiblock;
+    }
 
     @Override
     public String getBrief() {
@@ -106,7 +105,7 @@ public class EffectBuilding extends Effect {
     }
 
     @Override
-    public boolean grant(TeamDataHolder team,TeamResearchData trd, Player triggerPlayer, boolean isload) {
+    public boolean grant(TeamDataHolder team, TeamResearchData trd, Player triggerPlayer, boolean isload) {
         trd.building.add(multiblock);
         return true;
 

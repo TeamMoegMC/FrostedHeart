@@ -19,23 +19,14 @@
 
 package com.teammoeg.frostedheart.content.research.research;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.team.CTeamDataManager;
-import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.util.utility.OptionalLazy;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.FHRegisteredItem;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
@@ -46,17 +37,16 @@ import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.content.research.number.IResearchNumber;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.chorda.util.io.CodecUtil;
-import com.teammoeg.chorda.util.utility.OptionalLazy;
-
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftblibrary.icon.Icon;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
-import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Only Definition of research.
@@ -64,84 +54,74 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * @author khjxiaogu
  */
 public class Research implements FHRegisteredItem {
-    public static final Codec<Research> CODEC=RecordCodecBuilder.create(t->t.group(
-    	FHIcons.CODEC.optionalFieldOf("icon",FHIcons.nop()).forGetter(o->o.icon),
-    	ResearchCategory.CODEC.fieldOf("category").forGetter(o->o.category),
-    	Codec.list(Codec.STRING).optionalFieldOf("parents",Arrays.asList()).forGetter(o->new ArrayList<>(o.parents)),
-    	Codec.list(Clue.CODEC).optionalFieldOf("clues",Arrays.asList()).forGetter(o->o.clues),
-    	Codec.list(CodecUtil.INGREDIENT_SIZE_CODEC).optionalFieldOf("ingredients",Arrays.asList()).forGetter(o->o.requiredItems),
-    	Codec.list(Effect.CODEC).optionalFieldOf("effects").forGetter(o->o.effects.size()>0?Optional.of(o.effects):Optional.empty()),
-    	Codec.STRING.optionalFieldOf("name","").forGetter(o->o.name),
-    	Codec.list(Codec.STRING).optionalFieldOf("desc",Arrays.asList()).forGetter(o->o.desc),
-    	Codec.list(Codec.STRING).optionalFieldOf("descAlt",Arrays.asList()).forGetter(o->o.fdesc),
-    	CodecUtil.<Research>booleans("flags")
-    	.flag("showAltDesc", o->o.showfdesc)
-    	.flag("hideEffects", o->o.hideEffects)
-    	.flag("locked", o->o.inCompletable)
-    	.flag("hidden", o->o.isHidden)
-    	.flag("keepShow", o->o.alwaysShow)
-    	.flag("infinite", o->o.isInfinite()).build(),
-    	Codec.INT.fieldOf("points").forGetter(o->o.points)
-    	).apply(t,Research::new));
-    private String id;// id of this research
-	/**
+    public static final Codec<Research> CODEC = RecordCodecBuilder.create(t -> t.group(
+            FHIcons.CODEC.optionalFieldOf("icon", FHIcons.nop()).forGetter(o -> o.icon),
+            ResearchCategory.CODEC.fieldOf("category").forGetter(o -> o.category),
+            Codec.list(Codec.STRING).optionalFieldOf("parents", Arrays.asList()).forGetter(o -> new ArrayList<>(o.parents)),
+            Codec.list(Clue.CODEC).optionalFieldOf("clues", Arrays.asList()).forGetter(o -> o.clues),
+            Codec.list(CodecUtil.INGREDIENT_SIZE_CODEC).optionalFieldOf("ingredients", Arrays.asList()).forGetter(o -> o.requiredItems),
+            Codec.list(Effect.CODEC).optionalFieldOf("effects").forGetter(o -> o.effects.size() > 0 ? Optional.of(o.effects) : Optional.empty()),
+            Codec.STRING.optionalFieldOf("name", "").forGetter(o -> o.name),
+            Codec.list(Codec.STRING).optionalFieldOf("desc", Arrays.asList()).forGetter(o -> o.desc),
+            Codec.list(Codec.STRING).optionalFieldOf("descAlt", Arrays.asList()).forGetter(o -> o.fdesc),
+            CodecUtil.<Research>booleans("flags")
+                    .flag("showAltDesc", o -> o.showfdesc)
+                    .flag("hideEffects", o -> o.hideEffects)
+                    .flag("locked", o -> o.inCompletable)
+                    .flag("hidden", o -> o.isHidden)
+                    .flag("keepShow", o -> o.alwaysShow)
+                    .flag("infinite", o -> o.isInfinite()).build(),
+            Codec.INT.fieldOf("points").forGetter(o -> o.points)
+    ).apply(t, Research::new));
+    /**
      * The icon for this research.<br>
      */
     FHIcon icon;
-
-    private ResearchCategory category=ResearchCategory.RESCUE;
-    private HashSet<String> parents = new HashSet<>();// parent researches
-    private HashSet<String> children = new HashSet<>();// child researches, this is set automatically,
-    // should not set manually.
-    private List<Clue> clues = new ArrayList<>();// research clues
-
     /**
      * The required items.<br>
      */
     List<IngredientWithSize> requiredItems = new ArrayList<>();
-
     List<IResearchNumber> requiredItemsCountOverride = new ArrayList<>();
-    private List<Effect> effects = new ArrayList<>();// effects of this research
     /**
      * The name.<br>
      */
     String name = "";
-
     /**
      * The desc.<br>
      */
-    List<String> desc=new ArrayList<>();
-
+    List<String> desc = new ArrayList<>();
     /**
      * The fdesc.<br>
      */
     List<String> fdesc = new ArrayList<>();
-
     /**
      * The showfdesc.<br>
      */
     boolean showfdesc;
-
     /**
      * The hide effects.<br>
      */
     boolean hideEffects;
-
-    private boolean inCompletable = false;
     /**
      * The is hidden.<br>
      */
     boolean isHidden = false;
-
     /**
      * The always show.<br>
      */
     boolean alwaysShow = false;
-
     /**
      * The points.<br>
      */
     int points = 1000;// research point
+    private String id;// id of this research
+    private ResearchCategory category = ResearchCategory.RESCUE;
+    private HashSet<String> parents = new HashSet<>();// parent researches
+    private HashSet<String> children = new HashSet<>();// child researches, this is set automatically,
+    // should not set manually.
+    private List<Clue> clues = new ArrayList<>();// research clues
+    private List<Effect> effects = new ArrayList<>();// effects of this research
+    private boolean inCompletable = false;
     /**
      * The is infinite.<br>
      */
@@ -156,30 +136,30 @@ public class Research implements FHRegisteredItem {
     }
 
     public Research(FHIcon icon, ResearchCategory category, List<String> parents, List<Clue> clues, List<IngredientWithSize> requiredItems, Optional<List<Effect>> effects, String name,
-		List<String> desc, List<String> fdesc, boolean[] flags, int points) {
-		super();
-		this.icon = icon;
-		this.category = category;
-		if(parents!=null)
-			this.parents.addAll(parents);
-		//System.out.println(parents);
-		this.clues.addAll(clues);
-		
-		this.requiredItems.addAll(requiredItems);
-		effects.ifPresent(this.effects::addAll);
+                    List<String> desc, List<String> fdesc, boolean[] flags, int points) {
+        super();
+        this.icon = icon;
+        this.category = category;
+        if (parents != null)
+            this.parents.addAll(parents);
+        //System.out.println(parents);
+        this.clues.addAll(clues);
 
-		this.name = name;
-		this.desc.addAll(desc);
-		this.fdesc.addAll(fdesc);
-		this.showfdesc = flags[0];
-		this.hideEffects = flags[1];
-		this.inCompletable = flags[2];
-		this.isHidden = flags[3];
-		this.alwaysShow = flags[4];
-		this.setInfinite(flags[5]);
-		this.points = points;
+        this.requiredItems.addAll(requiredItems);
+        effects.ifPresent(this.effects::addAll);
+
+        this.name = name;
+        this.desc.addAll(desc);
+        this.fdesc.addAll(fdesc);
+        this.showfdesc = flags[0];
+        this.hideEffects = flags[1];
+        this.inCompletable = flags[2];
+        this.isHidden = flags[3];
+        this.alwaysShow = flags[4];
+        this.setInfinite(flags[5]);
+        this.points = points;
 //		System.out.println(effects);
-	}
+    }
 
     /**
      * Instantiates a new Research.<br>
@@ -266,7 +246,7 @@ public class Research implements FHRegisteredItem {
         deleteInTree();
         //this.effects.forEach(Effect::deleteSelf);
         //this.clues.forEach(Clue::deleteSelf);
-        CTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(FHSpecialDataTypes.RESEARCH_DATA).resetData(e,this));
+        CTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(FHSpecialDataTypes.RESEARCH_DATA).resetData(e, this));
 
         FHResearch.delete(this);
     }
@@ -288,9 +268,9 @@ public class Research implements FHRegisteredItem {
         }
         int i = 0;
         effects.removeIf(Objects::isNull);
-        effects.forEach(t->t.init());
+        effects.forEach(t -> t.init());
         clues.removeIf(Objects::isNull);
-        clues.forEach(t->t.init(this));
+        clues.forEach(t -> t.init(this));
        /* for (Effect e : effects) {
             e.parent = this;
             FHResearch.effects.register(e);
@@ -330,12 +310,12 @@ public class Research implements FHRegisteredItem {
     }
 
     /**
-     * Get children.
+     * set category.
      *
-     * @return children<br>
+     * @param category value to set category to.
      */
-    public Collection<Research> getChildren() {
-        return children.stream().map(FHResearch::getResearch).filter(Objects::nonNull).collect(Collectors.toSet());
+    public void setCategory(ResearchCategory category) {
+        this.category = category;
     }
 
     /*
@@ -343,6 +323,15 @@ public class Research implements FHRegisteredItem {
      * return time;
      * }
      */
+
+    /**
+     * Get children.
+     *
+     * @return children<br>
+     */
+    public Collection<Research> getChildren() {
+        return children.stream().map(FHResearch::getResearch).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
 
     /**
      * Get clues.
@@ -362,6 +351,7 @@ public class Research implements FHRegisteredItem {
     public long getCurrentPoints() {
         return getData().getTotalCommitted(this);
     }
+
     @OnlyIn(Dist.CLIENT)
     public boolean isInProgress() {
         OptionalLazy<Research> r = ClientResearchDataAPI.getData().get().getCurrentResearch();
@@ -370,6 +360,7 @@ public class Research implements FHRegisteredItem {
         }
         return false;
     }
+
     /**
      * Get data.
      *
@@ -421,9 +412,10 @@ public class Research implements FHRegisteredItem {
     public FHIcon getIcon() {
         return icon;
     }
+
     public Icon getFTBIcon() {
-    	if(icon==null)
-    		return null;
+        if (icon == null)
+            return null;
         return icon.asFtbIcon();
     }
 
@@ -436,6 +428,14 @@ public class Research implements FHRegisteredItem {
         return id;
     }
 
+    /**
+     * set id.
+     *
+     * @param id value to set id to.
+     */
+    public void setId(String id) {
+        this.id = id;
+    }
 
     /**
      * Get name.
@@ -463,9 +463,32 @@ public class Research implements FHRegisteredItem {
     public Set<Research> getParents() {
         return parents.stream().filter(Objects::nonNull).map(FHResearch::getResearch).filter(Objects::nonNull).collect(Collectors.toSet());
     }
+
+    /**
+     * set parents.
+     *
+     * @param collect value to set parents to.
+     */
+    public void setParents(Collection<String> collect) {
+        this.parents.clear();
+        this.parents.addAll(collect);
+    }
+
+    /**
+     * set parents.
+     *
+     * @param parents value to set parents to.
+     */
+    @SafeVarargs
+    public final void setParents(String... parents) {
+        this.parents.clear();
+        this.parents.addAll(Arrays.asList(parents));
+    }
+
     public Set<String> getParentIds() {
         return parents;
     }
+
     /**
      * Get progress fraction.
      *
@@ -494,9 +517,6 @@ public class Research implements FHRegisteredItem {
         return points;
     }
 
-
-
-
     /**
      * Checks for unclaimed reward.<br>
      *
@@ -504,7 +524,7 @@ public class Research implements FHRegisteredItem {
      */
     @OnlyIn(Dist.CLIENT)
     public boolean hasUnclaimedReward() {
-    	ResearchData rd=getData();
+        ResearchData rd = getData();
         if (!this.isCompleted()) return false;
         for (Effect e : this.getEffects())
             if (!rd.isEffectGranted(e)) return true;
@@ -549,7 +569,6 @@ public class Research implements FHRegisteredItem {
         return hideEffects;
     }
 
-
     /**
      * Checks if is in completable.<br>
      *
@@ -557,6 +576,15 @@ public class Research implements FHRegisteredItem {
      */
     public boolean isInCompletable() {
         return inCompletable;
+    }
+
+    /**
+     * set in completable.
+     *
+     * @param inCompletable value to set in completable to.
+     */
+    public void setInCompletable(boolean inCompletable) {
+        this.inCompletable = inCompletable;
     }
 
     /**
@@ -607,8 +635,6 @@ public class Research implements FHRegisteredItem {
         return true;
     }
 
-
-
     /**
      * Packet init, this would be call after everything is ready and packet is taking effect.
      */
@@ -644,33 +670,7 @@ public class Research implements FHRegisteredItem {
      */
     @OnlyIn(Dist.CLIENT)
     public void resetData() {
-    	ClientResearchDataAPI.getData().get().resetData(null,this);
-    }
-    /**
-     * set category.
-     *
-     * @param category value to set category to.
-     */
-    public void setCategory(ResearchCategory category) {
-        this.category = category;
-    }
-
-    /**
-     * set id.
-     *
-     * @param id value to set id to.
-     */
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    /**
-     * set in completable.
-     *
-     * @param inCompletable value to set in completable to.
-     */
-    public void setInCompletable(boolean inCompletable) {
-        this.inCompletable = inCompletable;
+        ClientResearchDataAPI.getData().get().resetData(null, this);
     }
 
     /**
@@ -694,27 +694,6 @@ public class Research implements FHRegisteredItem {
     }
 
     /**
-     * set parents.
-     *
-     * @param collect value to set parents to.
-     */
-    public void setParents(Collection<String> collect) {
-        this.parents.clear();
-        this.parents.addAll(collect);
-    }
-
-    /**
-     * set parents.
-     *
-     * @param parents value to set parents to.
-     */
-    @SafeVarargs
-    public final void setParents(String... parents) {
-        this.parents.clear();
-        this.parents.addAll(Arrays.asList(parents));
-    }
-
-    /**
      * To string.<br>
      *
      * @return returns to string
@@ -723,17 +702,17 @@ public class Research implements FHRegisteredItem {
         return "Research[" + id + "]";
     }
 
-	public void addParent(Research r) {
-		addParent(r.getId());
-		
-	}
+    public void addParent(Research r) {
+        addParent(r.getId());
 
-	public boolean isInfinite() {
-		return infinite;
-	}
+    }
 
-	public void setInfinite(boolean infinite) {
-		this.infinite = infinite;
-	}
+    public boolean isInfinite() {
+        return infinite;
+    }
+
+    public void setInfinite(boolean infinite) {
+        this.infinite = infinite;
+    }
 
 }

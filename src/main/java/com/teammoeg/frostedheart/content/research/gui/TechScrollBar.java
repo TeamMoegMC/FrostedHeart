@@ -19,15 +19,8 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
+import dev.ftb.mods.ftblibrary.ui.*;
 import net.minecraft.client.gui.GuiGraphics;
-
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.WidgetType;
-
-import dev.ftb.mods.ftblibrary.ui.ScrollBar.Plane;
 
 public class TechScrollBar extends PanelScrollBar {
     // Have to do this hack since FTBL fields are private.

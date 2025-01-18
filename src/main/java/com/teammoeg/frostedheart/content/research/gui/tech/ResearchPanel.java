@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ClientResearchData;
@@ -27,8 +26,6 @@ import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
-
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.ScrollBar.Plane;
 import dev.ftb.mods.ftblibrary.ui.Theme;
@@ -36,6 +33,7 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.gui.GuiGraphics;
 
 public abstract class ResearchPanel extends Panel {
 
@@ -96,6 +94,7 @@ public abstract class ResearchPanel extends Panel {
         list.zOffsetItemTooltip = 500;
         super.addMouseOverText(list);
     }
+
     @Override
     public void addWidgets() {
         int sw = 387;
@@ -143,7 +142,7 @@ public abstract class ResearchPanel extends Panel {
     @Override
     public void drawWidget(GuiGraphics arg0, Theme arg1, Widget arg2, int arg3, int arg4, int arg5, int arg6) {
         //CGuis.setupDrawing();
-        
+
         super.drawWidget(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
     }
 
@@ -151,6 +150,10 @@ public abstract class ResearchPanel extends Panel {
     @Override
     public boolean isEnabled() {
         return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     @Override
@@ -188,10 +191,6 @@ public abstract class ResearchPanel extends Panel {
         } else if (FHResearch.isEditor() || (research.isUnlocked() && !research.isHidden())) {
             detailframe.open(research);
         }
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
     }
 
     public void setModal(Panel p) {

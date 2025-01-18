@@ -19,10 +19,8 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
-
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -30,8 +28,44 @@ import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class ResearchCategoryPanel extends Panel {
+    public static final int CAT_PANEL_HEIGHT = 40;
+    public ResearchPanel researchScreen;
+
+    public ResearchCategoryPanel(ResearchPanel panel) {
+        super(panel);
+        researchScreen = panel;
+    }
+
+    @Override
+    public void addWidgets() {
+        int k = 0;
+        for (ResearchCategory r : ResearchCategory.ALL.values()) {
+            CategoryButton button = new CategoryButton(this, r);
+            button.setPosAndSize(k * 40, 0, 30, 21);
+            add(button);
+            k++;
+        }
+    }
+
+    @Override
+    public void alignWidgets() {
+
+    }
+
+    @Override
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+        super.draw(matrixStack, theme, x, y, w, h);
+        //drawBackground(matrixStack, theme, x, y, w, h);
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return researchScreen.canEnable(this);
+    }
+
     public static class CategoryButton extends Button {
 
         ResearchCategory category;
@@ -69,42 +103,6 @@ public class ResearchCategoryPanel extends Panel {
             categoryPanel.researchScreen.selectCategory(category);
 
         }
-    }
-
-    public static final int CAT_PANEL_HEIGHT = 40;
-
-    public ResearchPanel researchScreen;
-
-    public ResearchCategoryPanel(ResearchPanel panel) {
-        super(panel);
-        researchScreen = panel;
-    }
-
-    @Override
-    public void addWidgets() {
-        int k = 0;
-        for (ResearchCategory r : ResearchCategory.ALL.values()) {
-            CategoryButton button = new CategoryButton(this, r);
-            button.setPosAndSize(k * 40, 0, 30, 21);
-            add(button);
-            k++;
-        }
-    }
-
-    @Override
-    public void alignWidgets() {
-
-    }
-
-    @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        super.draw(matrixStack, theme, x, y, w, h);
-        //drawBackground(matrixStack, theme, x, y, w, h);
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return researchScreen.canEnable(this);
     }
 
 }

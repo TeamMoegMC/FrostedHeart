@@ -22,13 +22,15 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchEditorDialog;
-
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 
 public class EditUtils {
+
+    private EditUtils() {
+    }
 
     public static void editResearch(Widget p, Research r) {
         if (r != null) {
@@ -45,8 +47,5 @@ public class EditUtils {
     public static void saveResearch(Research r) {
         r.doIndex();
         FHResearch.save(r);
-    }
-
-    private EditUtils() {
     }
 }

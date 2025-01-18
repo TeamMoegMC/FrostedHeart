@@ -19,13 +19,12 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
-import java.util.function.Supplier;
-
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.research.FHResearch;
-
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 // send when player join
 public class FHResearchSyncEndPacket implements CMessage {

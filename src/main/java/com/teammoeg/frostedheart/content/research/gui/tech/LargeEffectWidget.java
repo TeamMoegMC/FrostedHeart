@@ -19,20 +19,18 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import net.minecraft.client.gui.GuiGraphics;
-
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class LargeEffectWidget extends EffectWidget {
 
-    public LargeEffectWidget(Panel panel, Effect e,Research r) {
+    public LargeEffectWidget(Panel panel, Effect e, Research r) {
         super(panel, e, r);
         super.setSize(36, 36);
     }

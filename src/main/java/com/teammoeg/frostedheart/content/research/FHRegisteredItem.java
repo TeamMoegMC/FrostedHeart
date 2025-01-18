@@ -23,5 +23,5 @@ package com.teammoeg.frostedheart.content.research;
  * Our own registry.
  */
 public interface FHRegisteredItem {
-    public String getId() ;
+    public String getId();
 }

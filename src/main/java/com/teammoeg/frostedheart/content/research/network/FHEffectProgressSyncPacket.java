@@ -19,30 +19,29 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
-import java.util.function.Supplier;
-
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.function.Supplier;
+
 // send when player join
-public record FHEffectProgressSyncPacket(boolean data,int id,int index) implements CMessage {
-    
+public record FHEffectProgressSyncPacket(boolean data, int id, int index) implements CMessage {
+
     public FHEffectProgressSyncPacket(FriendlyByteBuf buffer) {
-        this(buffer.readBoolean(),buffer.readVarInt(),buffer.readVarInt());
+        this(buffer.readBoolean(), buffer.readVarInt(), buffer.readVarInt());
     }
 
-    public FHEffectProgressSyncPacket(TeamDataHolder team,Research rs,Effect eff) {
-    	this(team.getData(FHSpecialDataTypes.RESEARCH_DATA).isEffectGranted(rs, eff),FHResearch.researches.getIntId(rs),rs.getEffects().indexOf(eff));
+    public FHEffectProgressSyncPacket(TeamDataHolder team, Research rs, Effect eff) {
+        this(team.getData(FHSpecialDataTypes.RESEARCH_DATA).isEffectGranted(rs, eff), FHResearch.researches.getIntId(rs), rs.getEffects().indexOf(eff));
     }
 
 
@@ -55,10 +54,10 @@ public record FHEffectProgressSyncPacket(boolean data,int id,int index) implemen
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             Research r = FHResearch.getResearch(id);
-            Effect e=r.getEffects().get(index);
-            TeamDataClosure<TeamResearchData> trd=ClientResearchDataAPI.getData();
+            Effect e = r.getEffects().get(index);
+            TeamDataClosure<TeamResearchData> trd = ClientResearchDataAPI.getData();
             if (data)
-                e.grant(null,trd.get(), null, false);
+                e.grant(null, trd.get(), null, false);
             else
                 e.revoke(trd.get());
             trd.get().getData(r).setEffectGranted(e, data);

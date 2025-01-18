@@ -19,14 +19,13 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import java.util.function.Consumer;
-
-import net.minecraft.client.gui.GuiGraphics;
-
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+
+import java.util.function.Consumer;
 
 public class FramedPanel extends Panel {
     Component title;

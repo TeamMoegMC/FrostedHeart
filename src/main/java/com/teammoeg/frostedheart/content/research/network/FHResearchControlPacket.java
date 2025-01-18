@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
-import java.util.function.Supplier;
-
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.frostedheart.content.research.FHResearch;
@@ -28,27 +26,21 @@ import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.Research;
-
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 
-public class FHResearchControlPacket implements CMessage {
-    public enum Operator {
-        COMMIT_ITEM,
-        START,
-        PAUSE
-    }
+import java.util.function.Supplier;
 
+public class FHResearchControlPacket implements CMessage {
     public final Operator status;
     private final int researchID;
-
-
     public FHResearchControlPacket(Operator status, Research research) {
         super();
         this.status = status;
         this.researchID = FHResearch.researches.getIntId(research);
     }
+
 
     public FHResearchControlPacket(FriendlyByteBuf buffer) {
         researchID = buffer.readVarInt();
@@ -64,7 +56,7 @@ public class FHResearchControlPacket implements CMessage {
 
         context.get().enqueueWork(() -> {
             Research r = FHResearch.researches.getById(researchID);
-            if(r==null)return;
+            if (r == null) return;
             ServerPlayer spe = context.get().getSender();
             TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(spe);
             switch (status) {
@@ -72,17 +64,23 @@ public class FHResearchControlPacket implements CMessage {
 
                     ResearchData rd = trd.get().getData(r);
                     if (rd.canResearch()) return;
-                    if (trd.get().commitItem(spe,trd.team(),r)) {
-                        trd.get().setCurrentResearch(trd.team(),r);
+                    if (trd.get().commitItem(spe, trd.team(), r)) {
+                        trd.get().setCurrentResearch(trd.team(), r);
                     }
                     return;
                 case START:
-                    trd.get().setCurrentResearch(trd.team(),r);
+                    trd.get().setCurrentResearch(trd.team(), r);
                     return;
                 case PAUSE:
-                    trd.get().clearCurrentResearch(trd.team(),true);
+                    trd.get().clearCurrentResearch(trd.team(), true);
             }
         });
         context.get().setPacketHandled(true);
+    }
+
+    public enum Operator {
+        COMMIT_ITEM,
+        START,
+        PAUSE
     }
 }

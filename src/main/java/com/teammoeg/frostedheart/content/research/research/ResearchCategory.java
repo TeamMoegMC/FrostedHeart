@@ -19,16 +19,15 @@
 
 package com.teammoeg.frostedheart.content.research.research;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.mojang.serialization.Codec;
+import com.teammoeg.chorda.util.io.codec.CompressDifferCodec;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.util.io.codec.CompressDifferCodec;
-
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public enum ResearchCategory {
 
@@ -37,16 +36,17 @@ public enum ResearchCategory {
     PRODUCTION("production"),
     ARS("ars"),
     EXPLORATION("exploration");
-	
+
     public static final Map<ResourceLocation, ResearchCategory> ALL = new HashMap<>();
+    public static final Codec<ResearchCategory> CODEC = new CompressDifferCodec<>(ResourceLocation.CODEC.xmap(
+            o -> ALL.get(o),
+            o -> o.getId()),
+            Codec.BYTE.xmap(i -> ResearchCategory.values()[i], i -> (byte) i.ordinal()));
+
     static {
         for (ResearchCategory rc : ResearchCategory.values())
             ResearchCategory.ALL.put(rc.id, rc);
     }
-    public static final Codec<ResearchCategory> CODEC=new CompressDifferCodec<>(ResourceLocation.CODEC.xmap(
-    		o->ALL.get(o),
-    		o->o.getId()),
-    	Codec.BYTE.xmap(i->ResearchCategory.values()[i], i->(byte)i.ordinal()));
 
     private final ResourceLocation id;
     private final Component name;

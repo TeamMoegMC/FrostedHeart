@@ -19,12 +19,6 @@
 
 package com.teammoeg.frostedheart.content.research.research.effects;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -34,31 +28,32 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.client.Lang;
-
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Blocks;
+
+import java.util.*;
 
 /**
  * Reward the research team executes command
  */
 public class EffectCommand extends Effect {
-	public static final MapCodec<EffectCommand> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
-	Codec.list(Codec.STRING).fieldOf("rewards").forGetter(o->o.rewards))
-	.apply(t,EffectCommand::new));
+    public static final MapCodec<EffectCommand> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+                    Codec.list(Codec.STRING).fieldOf("rewards").forGetter(o -> o.rewards))
+            .apply(t, EffectCommand::new));
 
     List<String> rewards;
 
     public EffectCommand(BaseData data, List<String> rewards) {
-		super(data);
-		this.rewards = new ArrayList<>(rewards);
-	}
+        super(data);
+        this.rewards = new ArrayList<>(rewards);
+    }
 
-	public EffectCommand(String... cmds) {
+    public EffectCommand(String... cmds) {
         super();
         rewards = new ArrayList<>();
 
@@ -89,7 +84,7 @@ public class EffectCommand extends Effect {
     }
 
     @Override
-    public boolean grant(TeamDataHolder team,TeamResearchData trd, Player triggerPlayer, boolean isload) {
+    public boolean grant(TeamDataHolder team, TeamResearchData trd, Player triggerPlayer, boolean isload) {
         if (triggerPlayer == null || isload)
             return false;
 
@@ -100,7 +95,7 @@ public class EffectCommand extends Effect {
         overrides.put("x", pos.getX());
         overrides.put("y", pos.getY());
         overrides.put("z", pos.getZ());
-        team.getTeam().map(t->t.getId()).ifPresent(t->overrides.put("t", t));
+        team.getTeam().map(t -> t.getId()).ifPresent(t -> overrides.put("t", t));
         Commands cmds = CTeamDataManager.getServer().getCommands();
         CommandSourceStack source = CTeamDataManager.getServer().createCommandSourceStack();
         for (String s : rewards) {

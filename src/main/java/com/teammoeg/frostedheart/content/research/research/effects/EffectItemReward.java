@@ -19,42 +19,41 @@
 
 package com.teammoeg.frostedheart.content.research.research.effects;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.io.CodecUtil;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.util.io.CodecUtil;
-
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Component;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Reward the research team item rewards
  */
 public class EffectItemReward extends Effect {
-	public static final MapCodec<EffectItemReward> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
-	Codec.list(CodecUtil.ITEMSTACK_STRING_CODEC).fieldOf("rewards").forGetter(o->o.rewards))
-	.apply(t,EffectItemReward::new));
+    public static final MapCodec<EffectItemReward> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+                    Codec.list(CodecUtil.ITEMSTACK_STRING_CODEC).fieldOf("rewards").forGetter(o -> o.rewards))
+            .apply(t, EffectItemReward::new));
     List<ItemStack> rewards;
 
     public EffectItemReward(BaseData data, List<ItemStack> rewards) {
-		super(data);
-		this.rewards = new ArrayList<>(rewards);
-	}
+        super(data);
+        this.rewards = new ArrayList<>(rewards);
+    }
 
-	public EffectItemReward(ItemStack... stacks) {
+    public EffectItemReward(ItemStack... stacks) {
         super();
         rewards = new ArrayList<>();
 
@@ -101,7 +100,7 @@ public class EffectItemReward extends Effect {
     }
 
     @Override
-    public boolean grant(TeamDataHolder team,TeamResearchData trd,  Player triggerPlayer, boolean isload) {
+    public boolean grant(TeamDataHolder team, TeamResearchData trd, Player triggerPlayer, boolean isload) {
         if (triggerPlayer == null || isload) return false;
         for (ItemStack s : rewards) {
             CUtils.giveItem(triggerPlayer, s.copy());

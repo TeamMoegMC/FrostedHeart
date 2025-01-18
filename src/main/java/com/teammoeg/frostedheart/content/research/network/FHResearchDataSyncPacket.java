@@ -19,29 +19,28 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
-import java.util.function.Supplier;
-
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.team.CClientTeamDataManager;
+import com.teammoeg.chorda.util.io.codec.DataOps;
+import com.teammoeg.chorda.util.io.codec.ObjectWriter;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.chorda.util.io.codec.DataOps;
-import com.teammoeg.chorda.util.io.codec.ObjectWriter;
-
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.function.Supplier;
+
 // send when player join
 public class FHResearchDataSyncPacket implements CMessage {
-	Object dat;
+    Object dat;
 
 
-	public FHResearchDataSyncPacket(FriendlyByteBuf buffer) {
-		this.dat = (ObjectWriter.readObject(buffer));
+    public FHResearchDataSyncPacket(FriendlyByteBuf buffer) {
+        this.dat = (ObjectWriter.readObject(buffer));
     }
 
     public FHResearchDataSyncPacket(TeamResearchData team) {
@@ -65,8 +64,8 @@ public class FHResearchDataSyncPacket implements CMessage {
         context.get().setPacketHandled(true);
     }
 
-	@Override
-	public void encode(FriendlyByteBuf buffer) {
-		ObjectWriter.writeObject(buffer, dat);
-	}
+    @Override
+    public void encode(FriendlyByteBuf buffer) {
+        ObjectWriter.writeObject(buffer, dat);
+    }
 }

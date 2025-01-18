@@ -19,16 +19,15 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import java.util.function.Consumer;
-
-import net.minecraft.client.gui.GuiGraphics;
-
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.CursorType;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.gui.GuiGraphics;
+
+import java.util.function.Consumer;
 
 public abstract class TristateButton extends Button {
     boolean enabled;
@@ -71,44 +70,44 @@ public abstract class TristateButton extends Button {
         return enabled;
     }
 
-    public Icon getLocked() {
-        return locked;
-    }
-
-    public Icon getNormal() {
-        return normal;
-    }
-
-    public Icon getOver() {
-        return over;
-    }
-
-    public Consumer<TooltipList> getTooltips() {
-        return tooltips;
-    }
-
-    public void resetTooltips() {
-        this.tooltips = null;
-    }
-
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public Icon getLocked() {
+        return locked;
     }
 
     public void setLocked(Icon locked) {
         this.locked = locked;
     }
 
+    public Icon getNormal() {
+        return normal;
+    }
+
     public void setNormal(Icon normal) {
         this.normal = normal;
+    }
+
+    public Icon getOver() {
+        return over;
     }
 
     public void setOver(Icon over) {
         this.over = over;
     }
 
+    public Consumer<TooltipList> getTooltips() {
+        return tooltips;
+    }
+
     public void setTooltips(Consumer<TooltipList> tooltips) {
         this.tooltips = tooltips;
+    }
+
+    public void resetTooltips() {
+        this.tooltips = null;
     }
 
 }

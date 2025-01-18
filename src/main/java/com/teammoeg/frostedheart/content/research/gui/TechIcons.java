@@ -19,19 +19,16 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import net.minecraft.client.gui.GuiGraphics;
-
-import com.google.common.io.Files;
 import com.teammoeg.frostedheart.FHMain;
-
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.icon.PartIcon;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class TechIcons {
     public static final ImageIcon ALL = (ImageIcon) Icon
@@ -77,6 +74,9 @@ public class TechIcons {
         internals.put("inf", INF);
     }
 
+    public TechIcons() {
+    }
+
     public static void drawTexturedRect(GuiGraphics matrixStack, int x, int y, int w, int h, boolean hl) {
         int vw = w / 4;
         int vwr = w % 4;
@@ -111,8 +111,5 @@ public class TechIcons {
 
         BUTTON_FRAME.draw(matrixStack, x, y, w, h);
 
-    }
-
-    public TechIcons() {
     }
 }

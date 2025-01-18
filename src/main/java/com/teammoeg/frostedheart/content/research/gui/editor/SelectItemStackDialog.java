@@ -19,63 +19,305 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import com.google.common.collect.Iterators;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.client.Lang;
+import dev.ftb.mods.ftblibrary.config.ui.ResourceSearchMode;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Icon;
+import dev.ftb.mods.ftblibrary.icon.Icons;
+import dev.ftb.mods.ftblibrary.icon.ItemIcon;
+import dev.ftb.mods.ftblibrary.ui.*;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.TagParser;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Iterators;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.teammoeg.chorda.util.CRegistries;
-import com.teammoeg.chorda.util.lang.Components;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.util.client.ClientUtils;
-
-import dev.ftb.mods.ftblibrary.config.ui.ResourceSearchMode;
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.icon.ItemIcon;
-import dev.ftb.mods.ftblibrary.ui.BlankPanel;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
-import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
-import dev.ftb.mods.ftblibrary.ui.TextBox;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
-import dev.ftb.mods.ftblibrary.ui.WidgetType;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.language.I18n;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.nbt.TagParser;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
-
 /**
  * @author LatvianModder, khjxiaogu
  */
 public class SelectItemStackDialog extends EditDialog {
 
-	private class ButtonCaps extends ButtonStackConfig {
+    public static final ExecutorService ITEM_SEARCH = Executors.newSingleThreadExecutor(task -> {
+        Thread thread = new Thread(task, "FH-ItemSearch");
+        thread.setDaemon(true);
+        return thread;
+    });
+    public static Editor<ItemStack> EDITOR = (p, l, v, c) -> new SelectItemStackDialog(p, l, v, c).open();
+    public static final Editor<Collection<ItemStack>> STACK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, new ItemStack(Items.AIR), EDITOR, SelectItemStackDialog::fromItemStack, ItemIcon::getItemIcon, c).open();
+    public static Editor<Block> EDITOR_BLOCK = (p, l, v, c) -> new SelectItemStackDialog(p, l + " (Blocks only)", new ItemStack(v), e -> {
+        Block b = Block.byItem(e.getItem());
+        if (b != Blocks.AIR)
+            c.accept(b);
+    }).open();
+    public static final Editor<Collection<Block>> BLOCK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, Blocks.AIR, EDITOR_BLOCK, e -> e.getName().getString(), e -> ItemIcon.getItemIcon(e.asItem()), c).open();
+    private static ResourceSearchMode activeMode = null;
+    public final List<ResourceSearchMode> modes = new ArrayList<>();
+    private final Consumer<ItemStack> callback;
+    private final Button buttonCancel, buttonAccept;
+    private final Panel panelStacks;
+    private final PanelScrollBar scrollBar;
+    private final TextBox searchBox;
+    private final Panel tabs;
+    public long update = Long.MAX_VALUE;
+    private ItemStack current;
+
+    {
+        modes.add(new ResourceSearchMode() {
+
+            @Override
+            public Collection<ItemStack> getAllResources() {
+                return CRegistries.getItems().stream().filter(t -> t != null && t != Items.AIR).map(ItemStack::new).collect(Collectors.toList());
+            }
+
+            @Override
+            public MutableComponent getDisplayName() {
+                return Lang.translateKey("ftblibrary.select_item.list_mode.all");
+            }
+
+            @Override
+            public Icon getIcon() {
+                return Icons.COMPASS;
+            }
+        });
+        modes.add(new ResourceSearchMode() {
+
+            @Override
+            public Collection<ItemStack> getAllResources() {
+                return ClientUtils.getPlayer().getInventory().items.stream().filter(t -> t != null && !t.isEmpty()).map(ItemStack::copy).collect(Collectors.toList());
+            }
+
+            @Override
+            public MutableComponent getDisplayName() {
+                return Components.str("Inventory");
+            }
+
+            @Override
+            public Icon getIcon() {
+                return ItemIcon.getItemIcon(Items.CHEST);
+            }
+        });
+        modes.add(new ResourceSearchMode() {
+
+            @Override
+            public Collection<ItemStack> getAllResources() {
+                return CRegistries.getBlocks().stream().map(Block::asItem).filter(Objects::nonNull).filter(t -> t != Items.AIR).map(ItemStack::new).collect(Collectors.toList());
+            }
+
+            @Override
+            public MutableComponent getDisplayName() {
+                return Components.str("Blocks");
+            }
+
+            @Override
+            public Icon getIcon() {
+                return ItemIcon.getItemIcon(Blocks.STONE.asItem());
+            }
+        });
+    }
+    public SelectItemStackDialog(Widget p, String label, ItemStack orig, Consumer<ItemStack> cb) {
+        super(p);
+        setSize(211, 150);
+        callback = cb;
+        current = orig == null ? new ItemStack(Items.AIR) : orig.copy();
+
+        int bsize = width / 2 - 10;
+
+        buttonCancel = new SimpleTextButton(this, Lang.translateKey("gui.cancel"), Icon.empty()) {
+            @Override
+            public void onClicked(MouseButton button) {
+                playClickSound();
+                close();
+            }
+
+            @Override
+            public boolean renderTitleInCenter() {
+                return true;
+            }
+        };
+
+        buttonCancel.setPosAndSize(27, height - 24, bsize, 16);
+
+        buttonAccept = new SimpleTextButton(this, Lang.translateKey("gui.accept"), Icon.empty()) {
+            @Override
+            public void onClicked(MouseButton button) {
+                playClickSound();
+                callback.accept(current);
+                close();
+            }
+
+            @Override
+            public boolean renderTitleInCenter() {
+                return true;
+            }
+        };
+
+        buttonAccept.setPosAndSize(width - bsize + 11, height - 24, bsize, 16);
+
+        panelStacks = new BlankPanel(this) {
+            @Override
+            public void addWidgets() {
+                update = System.currentTimeMillis() + 100L;
+            }
+
+            @Override
+            public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+                theme.drawPanelBackground(matrixStack, x, y, w, h);
+            }
+        };
+
+        panelStacks.setPosAndSize(28, 24, 9 * 19 + 1, 5 * 19 + 1);
+
+        scrollBar = new PanelScrollBar(this, panelStacks);
+        scrollBar.setCanAlwaysScroll(true);
+        scrollBar.setScrollStep(20);
+
+        searchBox = new TextBox(this) {
+            @Override
+            public void onTextChanged() {
+                panelStacks.refreshWidgets();
+            }
+        };
+
+        searchBox.setPosAndSize(27, 7, width - 16, 12);
+        searchBox.ghostText = I18n.get("gui.search_box");
+        searchBox.setFocused(true);
+
+        tabs = new Panel(this) {
+            @Override
+            public void addWidgets() {
+                add(new ButtonSwitchMode(this));
+                add(new ButtonEditData(this));
+
+                add(new ButtonCount(this));
+
+
+                add(new ButtonNBT(this));
+                add(new ButtonCaps(this));
+            }
+
+            @Override
+            public void alignWidgets() {
+                for (Widget widget : widgets) {
+                    widget.setSize(20, 20);
+                }
+
+                setHeight(align(WidgetLayout.VERTICAL));
+            }
+        };
+
+        tabs.setPosAndSize(0, 8, 20, 0);
+
+        updateItemWidgets(Collections.emptyList());
+    }
+
+    private static String fromItemStack(ItemStack s) {
+        return s.getHoverName().getString() + " x " + s.getCount();
+    }
+
+    private static String fromNBT(Tag nbt) {
+        if (nbt == null)
+            return "";
+        return nbt.toString();
+    }
+
+    @Override
+    public void addWidgets() {
+        add(tabs);
+        add(panelStacks);
+        add(scrollBar);
+        add(searchBox);
+        add(buttonCancel);
+        add(buttonAccept);
+    }
+
+    @Override
+    public void alignWidgets() {
+    }
+
+    @Override
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+        theme.drawGui(matrixStack, x, y, w, h, WidgetType.NORMAL);
+
+        long now = System.currentTimeMillis();
+
+        if (now >= update) {
+            update = Long.MAX_VALUE;
+            CompletableFuture.supplyAsync(() -> this.getItems(searchBox.getText().toLowerCase(), panelStacks), ITEM_SEARCH)
+                    .thenAcceptAsync(this::updateItemWidgets, Minecraft.getInstance());
+        }
+    }
+
+    public List<Widget> getItems(String search, Panel panel) {
+
+        if (activeMode == null) {
+            return Collections.emptyList();
+        }
+
+        Collection<ItemStack> items = activeMode.getAllResources();
+        List<Widget> widgets = new ArrayList<>(search.isEmpty() ? items.size() + 1 : 64);
+
+        String mod = "";
+        if (search.startsWith("@")) {
+            mod = search.substring(1);
+        }
+
+        ItemStackButton button = new ItemStackButton(panel, ItemStack.EMPTY);
+
+        if (button.shouldAdd(search, mod)) {
+            widgets.add(new ItemStackButton(panel, ItemStack.EMPTY));
+        }
+
+        for (ItemStack stack : items) {
+            if (true) {
+                button = new ItemStackButton(panel, stack);
+
+                if (button.shouldAdd(search, mod)) {
+                    widgets.add(button);
+                    int j = widgets.size() - 1;
+                    button.setPos(1 + (j % 9) * 19, 1 + (j / 9) * 19);
+                }
+            }
+        }
+
+        return widgets;
+    }
+
+    @Override
+    public void onClose() {
+    }
+
+    private void updateItemWidgets(List<Widget> items) {
+        panelStacks.getWidgets().clear();
+        panelStacks.addAll(items);
+        scrollBar.setPosAndSize(panelStacks.posX + panelStacks.width + 25, panelStacks.posY - 1, 16, panelStacks.height + 2);
+        scrollBar.setValue(0);
+        //scrollBar.setMaxValue(1 + Mth.ceil(panelStacks.getWidgets().size() / 9F) * 19);
+    }
+
+    private class ButtonCaps extends ButtonStackConfig {
         public ButtonCaps(Panel panel) {
             super(panel, Lang.translateKey("ftblibrary.select_item.caps"), ItemIcon.getItemIcon(Items.ANVIL));
         }
@@ -102,6 +344,7 @@ public class SelectItemStackDialog extends EditDialog {
             });
         }
     }
+
     private class ButtonCount extends ButtonStackConfig {
         public ButtonCount(Panel panel) {
             super(panel, Lang.translateKey("ftblibrary.select_item.count"), ItemIcon.getItemIcon(Items.PAPER));
@@ -121,7 +364,7 @@ public class SelectItemStackDialog extends EditDialog {
 
         @Override
         public void drawIcon(GuiGraphics guiGraphics, Theme theme, int x, int y, int w, int h) {
-            guiGraphics.renderItem(current,x, y, w, h);
+            guiGraphics.renderItem(current, x, y, w, h);
             //CGuis.drawItem(matrixStack, current, x, y, w / 16F, h / 16F, true, null);
         }
 
@@ -257,270 +500,5 @@ public class SelectItemStackDialog extends EditDialog {
 
             return stack.getHoverName().getString().toLowerCase().contains(search);
         }
-    }
-
-    public static Editor<ItemStack> EDITOR = (p, l, v, c) -> new SelectItemStackDialog(p, l, v, c).open();
-
-    public static Editor<Block> EDITOR_BLOCK = (p, l, v, c) -> new SelectItemStackDialog(p, l + " (Blocks only)", new ItemStack(v), e -> {
-        Block b = Block.byItem(e.getItem());
-        if (b != Blocks.AIR)
-            c.accept(b);
-    }).open();
-
-    public static final ExecutorService ITEM_SEARCH = Executors.newSingleThreadExecutor(task -> {
-        Thread thread = new Thread(task, "FH-ItemSearch");
-        thread.setDaemon(true);
-        return thread;
-    });
-
-    public final List<ResourceSearchMode> modes = new ArrayList<>();
-
-    {
-        modes.add(new ResourceSearchMode() {
-
-            @Override
-            public Collection<ItemStack> getAllResources() {
-                return CRegistries.getItems().stream().filter(t->t!=null&&t!=Items.AIR).map(ItemStack::new).collect(Collectors.toList());
-            }
-
-            @Override
-            public MutableComponent getDisplayName() {
-                return Lang.translateKey("ftblibrary.select_item.list_mode.all");
-            }
-
-            @Override
-            public Icon getIcon() {
-                return Icons.COMPASS;
-            }
-        });
-        modes.add(new ResourceSearchMode() {
-
-            @Override
-            public Collection<ItemStack> getAllResources() {
-                return ClientUtils.getPlayer().getInventory().items.stream().filter(t->t!=null&&!t.isEmpty()).map(ItemStack::copy).collect(Collectors.toList());
-            }
-
-            @Override
-            public MutableComponent getDisplayName() {
-                return Components.str("Inventory");
-            }
-
-            @Override
-            public Icon getIcon() {
-                return ItemIcon.getItemIcon(Items.CHEST);
-            }
-        });
-        modes.add(new ResourceSearchMode() {
-
-            @Override
-            public Collection<ItemStack> getAllResources() {
-                return CRegistries.getBlocks().stream().map(Block::asItem).filter(Objects::nonNull).filter(t->t!=Items.AIR).map(ItemStack::new).collect(Collectors.toList());
-            }
-
-            @Override
-            public MutableComponent getDisplayName() {
-                return Components.str("Blocks");
-            }
-
-            @Override
-            public Icon getIcon() {
-                return ItemIcon.getItemIcon(Blocks.STONE.asItem());
-            }
-        });
-    }
-
-    private static ResourceSearchMode activeMode = null;
-
-    public static final Editor<Collection<ItemStack>> STACK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, new ItemStack(Items.AIR), EDITOR, SelectItemStackDialog::fromItemStack, ItemIcon::getItemIcon, c).open();
-
-    public static final Editor<Collection<Block>> BLOCK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, Blocks.AIR, EDITOR_BLOCK, e -> e.getName().getString(), e -> ItemIcon.getItemIcon(e.asItem()), c).open();
-
-    private final Consumer<ItemStack> callback;
-    private ItemStack current;
-    private final Button buttonCancel, buttonAccept;
-    private final Panel panelStacks;
-    private final PanelScrollBar scrollBar;
-    private final TextBox searchBox;
-    private final Panel tabs;
-    public long update = Long.MAX_VALUE;
-
-    private static String fromItemStack(ItemStack s) {
-        return s.getHoverName().getString() + " x " + s.getCount();
-    }
-    private static String fromNBT(Tag nbt) {
-        if (nbt == null)
-            return "";
-        return nbt.toString();
-    }
-
-    public SelectItemStackDialog(Widget p, String label, ItemStack orig, Consumer<ItemStack> cb) {
-        super(p);
-        setSize(211, 150);
-        callback = cb;
-        current = orig == null ? new ItemStack(Items.AIR) : orig.copy();
-
-        int bsize = width / 2 - 10;
-
-        buttonCancel = new SimpleTextButton(this, Lang.translateKey("gui.cancel"), Icon.empty()) {
-            @Override
-            public void onClicked(MouseButton button) {
-                playClickSound();
-                close();
-            }
-
-            @Override
-            public boolean renderTitleInCenter() {
-                return true;
-            }
-        };
-
-        buttonCancel.setPosAndSize(27, height - 24, bsize, 16);
-
-        buttonAccept = new SimpleTextButton(this, Lang.translateKey("gui.accept"), Icon.empty()) {
-            @Override
-            public void onClicked(MouseButton button) {
-                playClickSound();
-                callback.accept(current);
-                close();
-            }
-
-            @Override
-            public boolean renderTitleInCenter() {
-                return true;
-            }
-        };
-
-        buttonAccept.setPosAndSize(width - bsize + 11, height - 24, bsize, 16);
-
-        panelStacks = new BlankPanel(this) {
-            @Override
-            public void addWidgets() {
-                update = System.currentTimeMillis() + 100L;
-            }
-
-            @Override
-            public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-                theme.drawPanelBackground(matrixStack, x, y, w, h);
-            }
-        };
-
-        panelStacks.setPosAndSize(28, 24, 9 * 19 + 1, 5 * 19 + 1);
-
-        scrollBar = new PanelScrollBar(this, panelStacks);
-        scrollBar.setCanAlwaysScroll(true);
-        scrollBar.setScrollStep(20);
-
-        searchBox = new TextBox(this) {
-            @Override
-            public void onTextChanged() {
-                panelStacks.refreshWidgets();
-            }
-        };
-
-        searchBox.setPosAndSize(27, 7, width - 16, 12);
-        searchBox.ghostText = I18n.get("gui.search_box");
-        searchBox.setFocused(true);
-
-        tabs = new Panel(this) {
-            @Override
-            public void addWidgets() {
-                add(new ButtonSwitchMode(this));
-                add(new ButtonEditData(this));
-
-                add(new ButtonCount(this));
-
-
-                add(new ButtonNBT(this));
-                add(new ButtonCaps(this));
-            }
-
-            @Override
-            public void alignWidgets() {
-                for (Widget widget : widgets) {
-                    widget.setSize(20, 20);
-                }
-
-                setHeight(align(WidgetLayout.VERTICAL));
-            }
-        };
-
-        tabs.setPosAndSize(0, 8, 20, 0);
-
-        updateItemWidgets(Collections.emptyList());
-    }
-
-    @Override
-    public void addWidgets() {
-        add(tabs);
-        add(panelStacks);
-        add(scrollBar);
-        add(searchBox);
-        add(buttonCancel);
-        add(buttonAccept);
-    }
-
-    @Override
-    public void alignWidgets() {
-    }
-
-    @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        theme.drawGui(matrixStack, x, y, w, h, WidgetType.NORMAL);
-
-        long now = System.currentTimeMillis();
-
-        if (now >= update) {
-            update = Long.MAX_VALUE;
-            CompletableFuture.supplyAsync(() -> this.getItems(searchBox.getText().toLowerCase(), panelStacks), ITEM_SEARCH)
-                    .thenAcceptAsync(this::updateItemWidgets, Minecraft.getInstance());
-        }
-    }
-
-    public List<Widget> getItems(String search, Panel panel) {
-
-        if (activeMode == null) {
-            return Collections.emptyList();
-        }
-
-        Collection<ItemStack> items = activeMode.getAllResources();
-        List<Widget> widgets = new ArrayList<>(search.isEmpty() ? items.size() + 1 : 64);
-
-        String mod = "";
-        if (search.startsWith("@")) {
-            mod = search.substring(1);
-        }
-
-        ItemStackButton button = new ItemStackButton(panel, ItemStack.EMPTY);
-
-        if (button.shouldAdd(search, mod)) {
-            widgets.add(new ItemStackButton(panel, ItemStack.EMPTY));
-        }
-
-        for (ItemStack stack : items) {
-            if (true) {
-                button = new ItemStackButton(panel, stack);
-
-                if (button.shouldAdd(search, mod)) {
-                    widgets.add(button);
-                    int j = widgets.size() - 1;
-                    button.setPos(1 + (j % 9) * 19, 1 + (j / 9) * 19);
-                }
-            }
-        }
-
-        return widgets;
-    }
-
-
-    @Override
-    public void onClose() {
-    }
-
-    private void updateItemWidgets(List<Widget> items) {
-        panelStacks.getWidgets().clear();
-        panelStacks.addAll(items);
-        scrollBar.setPosAndSize(panelStacks.posX + panelStacks.width + 25, panelStacks.posY - 1, 16, panelStacks.height + 2);
-        scrollBar.setValue(0);
-        //scrollBar.setMaxValue(1 + Mth.ceil(panelStacks.getWidgets().size() / 9F) * 19);
     }
 }

@@ -19,19 +19,18 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
-import java.util.function.Supplier;
-
 import com.teammoeg.chorda.network.NBTMessage;
-import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.io.NBTSerializable;
-
-import net.minecraft.world.entity.player.Player;
+import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 public class FHEnergyDataSyncPacket extends NBTMessage {
     public FHEnergyDataSyncPacket(Player pe) {
@@ -48,7 +47,7 @@ public class FHEnergyDataSyncPacket extends NBTMessage {
             // Update client-side nbt
             Player player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
             if (player != null) {
-                EnergyCore.getCapability(player).ifPresent(t->t.deserializeNBT(super.getTag()));
+                EnergyCore.getCapability(player).ifPresent(t -> t.deserializeNBT(super.getTag()));
             }
         });
         context.get().setPacketHandled(true);

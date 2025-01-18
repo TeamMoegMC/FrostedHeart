@@ -19,11 +19,8 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import java.util.function.Consumer;
-
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
-
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -31,6 +28,8 @@ import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+
+import java.util.function.Consumer;
 
 public class ConfirmDialog extends BaseEditDialog {
     public static Editor<Boolean> EDITOR = (p, l, v, c) -> new ConfirmDialog(p, l, v, c).open();

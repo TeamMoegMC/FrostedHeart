@@ -20,16 +20,18 @@
 package com.teammoeg.frostedheart.content.research.api;
 
 import com.teammoeg.chorda.team.CClientTeamDataManager;
-import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.team.TeamDataClosure;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-
 import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class ClientResearchDataAPI {
+
+    private ClientResearchDataAPI() {
+    }
 
     @OnlyIn(Dist.CLIENT)
     public static TeamDataClosure<TeamResearchData> getData() {
@@ -41,8 +43,5 @@ public class ClientResearchDataAPI {
     public static CompoundTag getVariants() {
         return getData().get().getVariants();
 
-    }
-
-    private ClientResearchDataAPI() {
     }
 }

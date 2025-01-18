@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.research.blocks;
 
 import com.teammoeg.frostedheart.item.FHBaseItem;
-
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 

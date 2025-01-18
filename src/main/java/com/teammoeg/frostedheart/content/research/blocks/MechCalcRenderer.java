@@ -19,26 +19,24 @@
 
 package com.teammoeg.frostedheart.content.research.blocks;
 
-import java.util.List;
-
-import org.joml.Quaternionf;
-
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.chorda.model.DynamicBlockModelReference;
-
 import blusunrize.immersiveengineering.api.IEProperties.VisibilityList;
 import blusunrize.immersiveengineering.client.models.obj.callback.DynamicSubmodelCallbacks;
 import blusunrize.immersiveengineering.client.utils.RenderUtils;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.model.data.ModelData;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.chorda.model.DynamicBlockModelReference;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
-import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.client.model.data.ModelData;
+import org.joml.Quaternionf;
+
+import java.util.List;
 
 public class MechCalcRenderer implements BlockEntityRenderer<MechCalcTileEntity> {
     public static DynamicBlockModelReference MODEL;
@@ -51,15 +49,15 @@ public class MechCalcRenderer implements BlockEntityRenderer<MechCalcTileEntity>
     @Override
     public void render(MechCalcTileEntity te, float partialTicks, PoseStack matrixStack,
                        MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
- 
+
         BlockPos blockPos = te.getBlockPos();
         BlockState state = te.getLevel().getBlockState(blockPos);
         //if (state.getBlock() != FHBlocks.MECHANICAL_CALCULATOR.get())
         //    return;
         Direction rd = te.getDirection().getClockWise();
-       
+
         matrixStack.pushPose();
-        matrixStack.rotateAround(new Quaternionf().rotateY(te.getDirection().toYRot()/180F*Mth.PI), 0.5f, 0.5f, 0.5f);
+        matrixStack.rotateAround(new Quaternionf().rotateY(te.getDirection().toYRot() / 180F * Mth.PI), 0.5f, 0.5f, 0.5f);
         double forward = ((double) te.process / 1067) / 16d;
         matrixStack.translate(rd.getStepX() * forward, 0, rd.getStepZ() * forward);
         List<BakedQuad> quads = MODEL.apply(ModelData.builder().with(DynamicSubmodelCallbacks.getProperty(), register).build());
@@ -83,12 +81,12 @@ public class MechCalcRenderer implements BlockEntityRenderer<MechCalcTileEntity>
                 dx = -1;
                 break;
         }
-        matrixStack.mulPose(new Quaternionf().rotateY(deg*Mth.PI/180f));
+        matrixStack.mulPose(new Quaternionf().rotateY(deg * Mth.PI / 180f));
         matrixStack.translate(dx, 0, dz);
 
         matrixStack.translate(0, 13.75 / 16, 7d / 16);
         float rotn = ((te.process) % 160) * 2.25f;
-        Quaternionf rot = new Quaternionf().rotateX((rotn*Mth.PI/180f));
+        Quaternionf rot = new Quaternionf().rotateX((rotn * Mth.PI / 180f));
         matrixStack.mulPose(rot);
 
         matrixStack.translate(0, -1.5 / 16, -1.5 / 16);

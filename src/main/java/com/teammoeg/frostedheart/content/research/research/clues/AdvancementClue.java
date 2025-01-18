@@ -22,27 +22,26 @@ package com.teammoeg.frostedheart.content.research.research.clues;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.util.io.CodecUtil;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.io.CodecUtil;
-
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.advancements.CriterionProgress;
 import net.minecraft.client.multiplayer.ClientAdvancements;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 
 public class AdvancementClue extends TickListenerClue {
-	public static final MapCodec<AdvancementClue> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		ListenerClue.BASE_CODEC.forGetter(o->o.getData()),
-		ResourceLocation.CODEC.fieldOf("advancement").forGetter(o->o.advancement),
-		CodecUtil.defaultValue(Codec.STRING, "").fieldOf("criterion").forGetter(o->o.criterion)
-		).apply(t,AdvancementClue::new));
+    public static final MapCodec<AdvancementClue> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+            ListenerClue.BASE_CODEC.forGetter(o -> o.getData()),
+            ResourceLocation.CODEC.fieldOf("advancement").forGetter(o -> o.advancement),
+            CodecUtil.defaultValue(Codec.STRING, "").fieldOf("criterion").forGetter(o -> o.criterion)
+    ).apply(t, AdvancementClue::new));
     ResourceLocation advancement = new ResourceLocation("minecraft:story/root");
     String criterion = "";
 
@@ -51,10 +50,10 @@ public class AdvancementClue extends TickListenerClue {
     }
 
     public AdvancementClue(BaseData data, ResourceLocation advancement, String criterion) {
-		super(data);
-		this.advancement = advancement;
-		this.criterion = criterion;
-	}
+        super(data);
+        this.advancement = advancement;
+        this.criterion = criterion;
+    }
 
     public AdvancementClue(String name, float contribution) {
         super(name, contribution);

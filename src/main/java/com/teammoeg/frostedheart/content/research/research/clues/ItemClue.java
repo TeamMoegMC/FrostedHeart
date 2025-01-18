@@ -36,25 +36,24 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.chat.Component;
 
 public class ItemClue extends Clue {
-	public static final MapCodec<ItemClue> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		Clue.BASE_CODEC.forGetter(o->o.getData()),
-		CodecUtil.defaultValue(Codec.BOOL, false).fieldOf("consume").forGetter(o->o.consume),
-		CodecUtil.INGREDIENT_SIZE_CODEC.fieldOf("item").forGetter(o->o.stack)
-		).apply(t,ItemClue::new));
-	
+    public static final MapCodec<ItemClue> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+            Clue.BASE_CODEC.forGetter(o -> o.getData()),
+            CodecUtil.defaultValue(Codec.BOOL, false).fieldOf("consume").forGetter(o -> o.consume),
+            CodecUtil.INGREDIENT_SIZE_CODEC.fieldOf("item").forGetter(o -> o.stack)
+    ).apply(t, ItemClue::new));
+
     boolean consume;
     IngredientWithSize stack;
-    
+
     ItemClue() {
         super();
     }
 
     public ItemClue(BaseData data, boolean consume, IngredientWithSize stack) {
-		super(data);
-		this.consume = consume;
-		this.stack = stack;
-	}
-
+        super(data);
+        this.consume = consume;
+        this.stack = stack;
+    }
 
 
     public ItemClue(String name, String desc, String hint, float contribution, IngredientWithSize stack) {
@@ -63,7 +62,7 @@ public class ItemClue extends Clue {
     }
 
     @Override
-    public void end(TeamDataHolder team,Research parent) {
+    public void end(TeamDataHolder team, Research parent) {
     }
 
     @Override
@@ -98,15 +97,15 @@ public class ItemClue extends Clue {
     }
 
     @Override
-    public void start(TeamDataHolder team,Research parent) {
+    public void start(TeamDataHolder team, Research parent) {
     }
 
 
-    public int test(TeamDataHolder t,Research r, ItemStack stack) {
-    	TeamResearchData trd=t.getData(FHSpecialDataTypes.RESEARCH_DATA);
-        if (!trd.isClueCompleted(r,this))
+    public int test(TeamDataHolder t, Research r, ItemStack stack) {
+        TeamResearchData trd = t.getData(FHSpecialDataTypes.RESEARCH_DATA);
+        if (!trd.isClueCompleted(r, this))
             if (this.stack.test(stack)) {
-            	trd.setClueCompleted(t, r, 0, consume);
+                trd.setClueCompleted(t, r, 0, consume);
                 if (consume)
                     return this.stack.getCount();
             }

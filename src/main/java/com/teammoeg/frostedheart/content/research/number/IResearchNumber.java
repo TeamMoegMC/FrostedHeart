@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.content.research.number;
 
-import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.chorda.util.io.Writeable;
+import com.teammoeg.frostedheart.content.research.data.ResearchData;
 
-public interface IResearchNumber extends Writeable{
+public interface IResearchNumber extends Writeable {
     default int getInt(ResearchData rd) {
         return (int) getVal(rd);
     }

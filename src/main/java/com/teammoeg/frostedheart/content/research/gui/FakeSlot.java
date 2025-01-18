@@ -19,12 +19,8 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import java.util.function.Consumer;
-
 import com.teammoeg.chorda.util.CGuis;
-import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.chorda.util.client.ClientUtils;
-
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
@@ -32,9 +28,12 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.crafting.Ingredient;
+
+import java.util.function.Consumer;
 
 public class FakeSlot extends Widget {
     ItemStack[] i;
@@ -80,9 +79,9 @@ public class FakeSlot extends Widget {
         if (i == null) return;
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
-        
-        CGuis.drawItem(matrixStack, cur, x, y,100, w / 16F, h / 16F, true, cnt==0?null:String.valueOf(cnt));
-        
+
+        CGuis.drawItem(matrixStack, cur, x, y, 100, w / 16F, h / 16F, true, cnt == 0 ? null : String.valueOf(cnt));
+
         matrixStack.pose().pushPose();
         matrixStack.pose().translate(0, 0, 200);
         if (overlay != null)
@@ -97,6 +96,10 @@ public class FakeSlot extends Widget {
 
     public Consumer<TooltipList> getTooltip() {
         return tooltip;
+    }
+
+    public void setTooltip(Consumer<TooltipList> tooltip) {
+        this.tooltip = tooltip;
     }
 
     @Override
@@ -136,10 +139,6 @@ public class FakeSlot extends Widget {
 
     public void setSlot(ItemStack iss) {
         this.i = new ItemStack[]{iss};
-    }
-
-    public void setTooltip(Consumer<TooltipList> tooltip) {
-        this.tooltip = tooltip;
     }
 
 }

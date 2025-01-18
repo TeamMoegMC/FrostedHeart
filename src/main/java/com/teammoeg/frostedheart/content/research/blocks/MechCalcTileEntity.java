@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.research.blocks;
 
-import java.util.List;
-
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.teammoeg.chorda.team.TeamDataClosure;
@@ -29,25 +27,26 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.client.Lang;
-
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
-import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import java.util.List;
+
 public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggleInformation {
-    int processMax = 6400;
     public int process = 0;
+    int processMax = 6400;
     int currentPoints = 0;
     int lastact;
     int maxPoints = 100;
@@ -58,7 +57,7 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
 
     int ticsSlp;//ticks since last sound play
 
-    public MechCalcTileEntity(BlockPos pos,BlockState state) {
+    public MechCalcTileEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.MECH_CALC.get(), pos, state);
     }
 
@@ -100,7 +99,7 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
 
     @Override
     protected void read(CompoundTag tag, boolean client) {
-    	super.read(tag, client);
+        super.read(tag, client);
         process = tag.getInt("process");
         currentPoints = tag.getInt("pts");
         lastact = tag.getInt("last_calc");
@@ -118,8 +117,8 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
 
     public InteractionResult onClick(Player pe) {
         if (!pe.level().isClientSide) {
-        	TeamDataClosure<TeamResearchData> trd= ResearchDataAPI.getData(pe);
-            currentPoints = (int)trd.get().doResearch(trd.team(),currentPoints);
+            TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(pe);
+            currentPoints = (int) trd.get().doResearch(trd.team(), currentPoints);
             updatePoints();
         }
         return InteractionResult.sidedSuccess(pe.level().isClientSide);
@@ -134,7 +133,6 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
     public void requireNetworkUpdate() {
         requireUpdate = true;
     }
-
 
 
     @Override

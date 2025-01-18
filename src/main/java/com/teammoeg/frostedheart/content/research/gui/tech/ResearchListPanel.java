@@ -19,22 +19,63 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import com.teammoeg.frostedheart.util.client.Lang;
-import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.content.research.research.Research;
-
+import com.teammoeg.frostedheart.util.client.Lang;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class ResearchListPanel extends Panel {
+
+    public static final int RESEARCH_HEIGHT = 18;
+    public static final int RES_PANEL_WIDTH = 80;
+    public ResearchPanel researchScreen;
+    public PanelScrollBar scroll;
+    public ResearchList rl;
+
+    public ResearchListPanel(ResearchPanel panel) {
+        super(panel);
+        researchScreen = panel;
+    }
+
+    @Override
+    public void addWidgets() {
+        rl = new ResearchList(this);
+        scroll = new TechScrollBar(this, rl);
+        add(rl);
+        add(scroll);
+        scroll.setX(106);
+        scroll.setSize(8, height);
+
+    }
+
+    @Override
+    public void alignWidgets() {
+
+    }
+
+    @Override
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+        super.draw(matrixStack, theme, x, y, w, h);
+    }
+
+    @Override
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+        //theme.drawPanelBackground(matrixStack, x, y, w, h);
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return researchScreen.canEnable(this);
+    }
 
     public static class ResearchButton extends Button {
 
@@ -93,6 +134,7 @@ public class ResearchListPanel extends Panel {
             listPanel.researchScreen.selectResearch(research);
         }
     }
+
     public static class ResearchList extends Panel {
         public ResearchPanel researchScreen;
 
@@ -121,50 +163,6 @@ public class ResearchListPanel extends Panel {
         public void alignWidgets() {
         }
 
-    }
-
-    public static final int RESEARCH_HEIGHT = 18;
-    public static final int RES_PANEL_WIDTH = 80;
-    public ResearchPanel researchScreen;
-
-    public PanelScrollBar scroll;
-
-    public ResearchList rl;
-
-    public ResearchListPanel(ResearchPanel panel) {
-        super(panel);
-        researchScreen = panel;
-    }
-
-    @Override
-    public void addWidgets() {
-        rl = new ResearchList(this);
-        scroll = new TechScrollBar(this, rl);
-        add(rl);
-        add(scroll);
-        scroll.setX(106);
-        scroll.setSize(8, height);
-
-    }
-
-    @Override
-    public void alignWidgets() {
-
-    }
-
-    @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        super.draw(matrixStack, theme, x, y, w, h);
-    }
-
-    @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        //theme.drawPanelBackground(matrixStack, x, y, w, h);
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return researchScreen.canEnable(this);
     }
 }
 

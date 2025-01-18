@@ -46,7 +46,7 @@ public class LabeledPane<T extends Widget> extends Panel {
     @Override
     public void alignWidgets() {
         setSize(super.align(WidgetLayout.HORIZONTAL), 20);
-        
-        label.setY((20-8)/2);
+
+        label.setY((20 - 8) / 2);
     }
 }

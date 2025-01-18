@@ -19,11 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import java.util.List;
-
 import com.teammoeg.chorda.util.lang.Components;
-import net.minecraft.client.gui.GuiGraphics;
-
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.Bits;
@@ -32,14 +28,15 @@ import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.util.Mth;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
+import net.minecraft.util.Mth;
+
+import java.util.List;
 
 public class RTextField extends Widget {
 
-    private Component component = Components.str("");
-    private FormattedText[] formattedText = new FormattedText[0];
     public int textFlags = 0;
     public int minWidth = 0;
     public int maxWidth = 5000;
@@ -47,6 +44,8 @@ public class RTextField extends Widget {
     public float scale = 1.0F;
     public Color4I textColor = Icon.empty();
     public int maxLine = 0;
+    private Component component = Components.str("");
+    private FormattedText[] formattedText = new FormattedText[0];
 
     public RTextField(Panel panel) {
         super(panel);

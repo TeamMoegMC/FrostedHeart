@@ -19,11 +19,10 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
+import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskScreen;
-import com.teammoeg.chorda.util.client.ClientUtils;
-
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
@@ -47,8 +46,8 @@ public abstract class EditDialog extends Panel {
         try {
             onClose();
         } catch (Throwable ex) {
-        	ex.printStackTrace();
-            FHMain.LOGGER.error("Error closing dialog",ex);
+            ex.printStackTrace();
+            FHMain.LOGGER.error("Error closing dialog", ex);
         }
         try {
             if (previous != null) {
@@ -64,24 +63,24 @@ public abstract class EditDialog extends Panel {
         try {
             onClosed();
         } catch (Throwable ex) {
-        	ex.printStackTrace();
+            ex.printStackTrace();
             throw new RuntimeException("Error on dialog close", ex);
         }
     }
 
     @Override
     public boolean keyPressed(Key key) {
-    	 try {
-	        if (key.esc()) {
-	            close();
-	            //this.closeGui(true);
-	            return true;
-	        }
-	        return super.keyPressed(key);
-    	 } catch (Throwable ex) {
-    		 ex.printStackTrace();
-             throw new RuntimeException("Error on dialog close", ex);
-         }
+        try {
+            if (key.esc()) {
+                close();
+                //this.closeGui(true);
+                return true;
+            }
+            return super.keyPressed(key);
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+            throw new RuntimeException("Error on dialog close", ex);
+        }
     }
 
     public abstract void onClose();
