@@ -61,7 +61,7 @@ public class FHResearchDataSyncPacket implements CMessage {
                 // Grant Effects on Client
                 // TODO: Why not just sync the UnlockLists through TeamResearchData.Codec, so that the above line is all we need?
                  TeamDataClosure<TeamResearchData> closure = CClientTeamDataManager.INSTANCE.getInstance().getDataHolder(FHSpecialDataTypes.RESEARCH_DATA);
-                 closure.get().grantAllEffects(closure.team());
+                 closure.get().initResearch(closure.team());
             } catch (Exception e) {
                 FHMain.LOGGER.error("Failed to load data when syncing research data", e);
             }

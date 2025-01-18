@@ -98,7 +98,8 @@ public class FHNetwork {
     public static synchronized <T extends CMessage> void registerMessage(String name, Class<T> msg) {
         classesId.put(msg, FHMain.rl(name));
         try {
-            Constructor<T> ctor = msg.getConstructor(FriendlyByteBuf.class);
+            Constructor<T> ctor = msg.getDeclaredConstructor(FriendlyByteBuf.class);
+            ctor.setAccessible(true);
             CHANNEL.registerMessage(++iid, msg, CMessage::encode, pb -> {
                 try {
                     return ctor.newInstance(pb);
