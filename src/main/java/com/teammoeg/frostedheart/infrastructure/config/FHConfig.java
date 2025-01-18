@@ -262,6 +262,7 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Integer> maxBodyTempChange;
 
         public final ForgeConfigSpec.ConfigValue<Float> nutritionConsumptionRate;
+        public final ForgeConfigSpec.ConfigValue<Float> nutritionGainRate;
 
 
         Server(ForgeConfigSpec.Builder builder) {
@@ -313,6 +314,8 @@ public class FHConfig {
                     .define("resetWaterLevelInDeath", true);
             nutritionConsumptionRate = builder.comment("The rate of nutrition consumption.")
                     .define("nutritionConsumptionRate", 1.0f);
+            nutritionGainRate = builder.comment("The rate of nutrition gain by eating food.")
+                    .define("nutritionGainRate", 40.0f);
             builder.pop();
 
             builder.push("Worldgen");

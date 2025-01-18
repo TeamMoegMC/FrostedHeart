@@ -23,7 +23,6 @@ import java.util.UUID;
 
 public class NutritionCapability implements NBTSerializable {
 
-    public static final float SCALE = 40.0f;
 
     public record Nutrition(float fat , float carbohydrate, float protein , float vegetable){
         public Nutrition(){
@@ -122,18 +121,24 @@ public class NutritionCapability implements NBTSerializable {
         syncToClientOnRestore(player);
     }
 
+    /**
+     * 如一个食物营养值为0.1，0，0，0.2，饱食度是4，那么这个食物给玩家增加的基础营养值就是0.1*4,0,0,0.2*4
+     * 再乘以营养增加比例，默认是40
+     * @param player 玩家
+     * @param food 食物
+     */
     public void eat(Player player, ItemStack food) {
         if(!food.isEdible()) return;
         Level level = player.level();
         NutritionRecipe wRecipe = NutritionRecipe.getRecipeFromItem(level, food);
+        if(wRecipe == null) return;
         int nutrition = food.getFoodProperties(player).getNutrition();
-        //因为只看食物自己的属性会比较低，加的点数不够一分钟的消耗，所以需要再乘一个系数
-        Nutrition n = wRecipe.getNutrition().scale(nutrition).scale(SCALE);
+        Nutrition recipeNutrition = wRecipe.getNutrition();
+        Nutrition n = recipeNutrition.scale(nutrition).scale(FHConfig.SERVER.nutritionGainRate.get());
         modifyNutrition(player, n);
     }
 
     public void consume(Player player) {
-        // 这个比例可以放到Config里
         float radio = - 0.1f * FHConfig.SERVER.nutritionConsumptionRate.get();
 
         Nutrition nutrition = get();
