@@ -38,6 +38,21 @@ public abstract class UnlockList<T> implements Iterable<T> {
         load(nbt);
     }
 
+    public UnlockList(List<String> strings) {
+        this();
+        for (String s : strings) {
+            add(getObject(s));
+        }
+    }
+
+    public List<String> getStrings() {
+        List<String> strings = new ArrayList<>();
+        for (T t : this) {
+            strings.add(getString(t));
+        }
+        return strings;
+    }
+
     public void add(T key) {
         s.add(key);
     }

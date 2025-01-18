@@ -22,11 +22,14 @@ package com.teammoeg.frostedheart.content.research;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.chorda.util.CRegistries;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.io.CodecUtil;
 import com.teammoeg.chorda.util.utility.OptionalLazy;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
@@ -34,6 +37,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.blocks.RubbingTool;
+import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.research.recipe.InspireRecipe;
@@ -282,8 +286,17 @@ public class ResearchListeners {
     }
 
     public static class BlockUnlockList extends UnlockList<Block> {
+        public static final Codec<BlockUnlockList> CODEC = RecordCodecBuilder.create(
+                instance -> instance.group(
+                        Codec.list(Codec.STRING).fieldOf("unlocked").forGetter(BlockUnlockList::getStrings)
+                ).apply(instance, BlockUnlockList::new)
+        );
         public BlockUnlockList() {
             super();
+        }
+
+        public BlockUnlockList(List<String> strings) {
+            super(strings);
         }
 
         public BlockUnlockList(ListTag nbt) {
@@ -302,12 +315,21 @@ public class ResearchListeners {
     }
 
     public static class CategoryUnlockList extends UnlockList<ResourceLocation> {
+        public static final Codec<CategoryUnlockList> CODEC = RecordCodecBuilder.create(
+                instance -> instance.group(
+                        Codec.list(Codec.STRING).fieldOf("unlocked").forGetter(CategoryUnlockList::getStrings)
+                ).apply(instance, CategoryUnlockList::new)
+        );
         public CategoryUnlockList() {
             super();
         }
 
         public CategoryUnlockList(ListTag nbt) {
             super(nbt);
+        }
+
+        public CategoryUnlockList(List<String> strings) {
+            super(strings);
         }
 
         @Override
@@ -406,6 +428,11 @@ public class ResearchListeners {
     }
 
     public static class MultiblockUnlockList extends UnlockList<IMultiblock> {
+        public static final Codec<MultiblockUnlockList> CODEC = RecordCodecBuilder.create(
+                instance -> instance.group(
+                        Codec.list(Codec.STRING).fieldOf("unlocked").forGetter(MultiblockUnlockList::getStrings)
+                ).apply(instance, MultiblockUnlockList::new)
+        );
 
         public MultiblockUnlockList() {
             super();
@@ -413,6 +440,10 @@ public class ResearchListeners {
 
         public MultiblockUnlockList(ListTag nbt) {
             super(nbt);
+        }
+
+        public MultiblockUnlockList(List<String> strings) {
+            super(strings);
         }
 
         @Override
@@ -429,6 +460,11 @@ public class ResearchListeners {
     }
 
     public static class RecipeUnlockList extends UnlockList<Recipe<?>> {
+        public static final Codec<RecipeUnlockList> CODEC = RecordCodecBuilder.create(
+                instance -> instance.group(
+                        Codec.list(Codec.STRING).fieldOf("unlocked").forGetter(RecipeUnlockList::getStrings)
+                ).apply(instance, RecipeUnlockList::new)
+        );
 
         public RecipeUnlockList() {
             super();
@@ -436,6 +472,10 @@ public class ResearchListeners {
 
         public RecipeUnlockList(ListTag nbt) {
             super(nbt);
+        }
+
+        public RecipeUnlockList(List<String> strings) {
+            super(strings);
         }
 
         @Override

@@ -46,6 +46,10 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class IngredientEditor extends BaseEditDialog {
+    public static final Editor<Ingredient> EDITOR_JSON = (p, l, v, c) -> EditPrompt.JSON_EDITOR.open(p, l, v == null ? null : v.toJson(), e -> c.accept(Ingredient.fromJson(e)));
+    public static final Editor<IngredientWithSize> EDITOR = (p, l, v, c) -> new IngredientEditor(p, l, v, c).open();
+    public static final Editor<List<IngredientWithSize>> LIST_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EDITOR, IngredientEditor::getDesc, e -> FHIcons.getIcon(e).asFtbIcon(), e -> c.accept(new ArrayList<>(e))).open();
+
     public static final Editor<ItemValue> EDITOR_ITEMLIST = (p, l, v, c) -> SelectItemStackDialog.EDITOR.open(p, l, (v == null || v.item == null) ? new ItemStack(Items.AIR) : v.item, s -> {
         s = s.copy();
         s.setCount(1);
@@ -135,9 +139,6 @@ public class IngredientEditor extends BaseEditDialog {
         igd.addEditor("Edit as JSON", EDITOR_JSON);
         igd.open();
     };
-    public static final Editor<Ingredient> EDITOR_JSON = (p, l, v, c) -> EditPrompt.JSON_EDITOR.open(p, l, v == null ? null : v.toJson(), e -> c.accept(Ingredient.fromJson(e)));
-    public static final Editor<IngredientWithSize> EDITOR = (p, l, v, c) -> new IngredientEditor(p, l, v, c).open();
-    public static final Editor<List<IngredientWithSize>> LIST_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EDITOR, IngredientEditor::getDesc, e -> FHIcons.getIcon(e).asFtbIcon(), e -> c.accept(new ArrayList<>(e))).open();
 
     String label;
 

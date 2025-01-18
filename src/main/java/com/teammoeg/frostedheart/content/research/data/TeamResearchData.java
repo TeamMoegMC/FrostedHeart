@@ -68,7 +68,11 @@ public class TeamResearchData implements SpecialData {
                     CodecUtil.defaultValue(Codec.INT, 0).fieldOf("active").forGetter(o -> o.activeResearchId),
                     CodecUtil.defaultValue(Codec.INT, 0).fieldOf("insight").forGetter(o -> o.insight),
                     CodecUtil.defaultValue(Codec.INT, 0).fieldOf("insightLevel").forGetter(o -> o.insightLevel),
-                    CodecUtil.defaultValue(Codec.INT, 0).fieldOf("usedInsightLevel").forGetter(o -> o.usedInsightLevel)
+                    CodecUtil.defaultValue(Codec.INT, 0).fieldOf("usedInsightLevel").forGetter(o -> o.usedInsightLevel),
+                    BlockUnlockList.CODEC.optionalFieldOf("blockUnlockList", new BlockUnlockList()).forGetter(o -> o.block),
+                    RecipeUnlockList.CODEC.optionalFieldOf("recipeUnlockList", new RecipeUnlockList()).forGetter(o -> o.crafting),
+                    MultiblockUnlockList.CODEC.optionalFieldOf("multiblockUnlockList", new MultiblockUnlockList()).forGetter(o -> o.building),
+                    CategoryUnlockList.CODEC.optionalFieldOf("categoryUnlockList", new CategoryUnlockList()).forGetter(o -> o.categories)
             ).apply(t, TeamResearchData::new));
     /**
      * The crafting.<br>
@@ -126,12 +130,16 @@ public class TeamResearchData implements SpecialData {
     public TeamResearchData(SpecialDataHolder team) {
     }
 
-    public TeamResearchData(CompoundTag variants, List<ResearchData> rdata, int activeResearchId, int insight, int insightLevel, int usedInsightLevel) {
+    public TeamResearchData(CompoundTag variants, List<ResearchData> rdata, int activeResearchId,
+                            int insight, int insightLevel, int usedInsightLevel,
+                            BlockUnlockList block, RecipeUnlockList crafting,
+                            MultiblockUnlockList building, CategoryUnlockList categories
+    ) {
         super();
-        crafting.clear();
-        building.clear();
-        block.clear();
-        categories.clear();
+        this.crafting = crafting;
+        this.block = block;
+        this.building = building;
+        this.categories = categories;
         this.rdata.addAll(rdata);
         this.activeResearchId = activeResearchId;
         this.insight = insight;
@@ -330,6 +338,12 @@ public class TeamResearchData implements SpecialData {
             rd.setLevel(lvl + 1);
         }
 
+    }
+
+    public void grantAllEffects(TeamDataHolder holder) {
+        for (Research rs : FHResearch.getAllResearch()) {
+            grantEffects(holder, null, rs);
+        }
     }
 
     private void sendClueProgressPacket(TeamDataHolder team, Research par, int clue, boolean trig) {

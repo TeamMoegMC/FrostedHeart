@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.chorda.team.CClientTeamDataManager;
+import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.chorda.util.io.codec.DataOps;
 import com.teammoeg.chorda.util.io.codec.ObjectWriter;
 import com.teammoeg.frostedheart.FHMain;
@@ -55,7 +56,12 @@ public class FHResearchDataSyncPacket implements CMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             try {
+                // Sync Server Data to Client
                 CClientTeamDataManager.INSTANCE.getInstance().setData(FHSpecialDataTypes.RESEARCH_DATA, FHSpecialDataTypes.RESEARCH_DATA.loadData(DataOps.COMPRESSED, dat));
+                // Grant Effects on Client
+                // TODO: Why not just sync the UnlockLists through TeamResearchData.Codec, so that the above line is all we need?
+                // TeamDataClosure<TeamResearchData> closure = CClientTeamDataManager.INSTANCE.getInstance().getDataHolder(FHSpecialDataTypes.RESEARCH_DATA);
+                // closure.get().grantAllEffects(closure.team());
             } catch (Exception e) {
                 FHMain.LOGGER.error("Failed to load data when syncing research data", e);
             }
