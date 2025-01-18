@@ -17,7 +17,7 @@ public class FrostedHeartMixinPlugin implements IMixinConfigPlugin, MixinPluginS
 
     @Override
     public String getRefMapperConfig() {
-        return "";
+        return null;
     }
 
     @Override
