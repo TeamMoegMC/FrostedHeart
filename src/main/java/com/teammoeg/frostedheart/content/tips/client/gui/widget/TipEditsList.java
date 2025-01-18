@@ -42,7 +42,11 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         var idEntry = (StringEntry)children().get(addEntry(new StringEntry("id", Component.translatable("gui.frostedheart.tip_editor.id"))));
         idEntry.input.setMaxLength(240);
         idEntry.input.setResponder(s -> {
-            if (TipManager.INSTANCE.hasTip(s) || Tip.isTipIdInvalid(s)) {
+            if (TipManager.INSTANCE.hasTip(s)) {
+                idEntry.input.setTextColor(ColorHelper.RED);
+                updatePreview(Component.translatable("tips.frostedheart.error.load.duplicate_id").withStyle(ChatFormatting.RED));
+                return;
+            } else if (Tip.isTipIdInvalid(s)) {
                 idEntry.input.setTextColor(ColorHelper.RED);
             } else {
                 idEntry.input.setTextColor(ColorHelper.WHITE);
@@ -59,7 +63,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
                 updatePreview(
                         Component.translatable("tips.frostedheart.error.invalid_id").withStyle(ChatFormatting.RED),
                         Component.translatable("tips.frostedheart.error.load.tip_not_exists", s).withStyle(ChatFormatting.GOLD));
-            } else if (!TipManager.INSTANCE.hasTip(s)) {
+            } else if (!s.isBlank() && !TipManager.INSTANCE.hasTip(s)) {
                 nextTipEntry.input.setTextColor(0xFFFF9F00);
                 updatePreview(Component.translatable("tips.frostedheart.error.load.tip_not_exists", s).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
             } else {
@@ -132,7 +136,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
             this.input.setResponder(s -> {
                 try {
                     input.setTextColor(ColorHelper.WHITE);
-                    Integer.parseUnsignedInt(s, 16);
+                    Integer.parseInt(s);
                 } catch (NumberFormatException e) {
                     input.setTextColor(ColorHelper.RED);
                 }
@@ -146,7 +150,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
             try {
                 value = Integer.parseInt(input.getValue());
             } catch (NumberFormatException e) {
-                value = ColorHelper.CYAN;
+                value = 0;
             }
             return new JsonPrimitive(value);
         }
