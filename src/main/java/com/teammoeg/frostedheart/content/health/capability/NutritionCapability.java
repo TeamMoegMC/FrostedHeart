@@ -23,6 +23,8 @@ import java.util.UUID;
 
 public class NutritionCapability implements NBTSerializable {
 
+    public static final float SCALE = 40.0f;
+
     public record Nutrition(float fat , float carbohydrate, float protein , float vegetable){
         public Nutrition(){
             this(0);
@@ -126,7 +128,7 @@ public class NutritionCapability implements NBTSerializable {
         NutritionRecipe wRecipe = NutritionRecipe.getRecipeFromItem(level, food);
         int nutrition = food.getFoodProperties(player).getNutrition();
         //因为只看食物自己的属性会比较低，加的点数不够一分钟的消耗，所以需要再乘一个系数
-        Nutrition n = wRecipe.getNutrition().scale(nutrition).scale(40.0f);
+        Nutrition n = wRecipe.getNutrition().scale(nutrition).scale(SCALE);
         modifyNutrition(player, n);
     }
 
