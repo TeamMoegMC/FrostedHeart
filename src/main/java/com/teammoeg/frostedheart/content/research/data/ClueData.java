@@ -23,8 +23,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.util.io.codec.CompressDifferCodec;
 
+import lombok.ToString;
 import net.minecraft.nbt.CompoundTag;
 
+@ToString
 public class ClueData{
 	public static final Codec<ClueData> FULL_CODEC=RecordCodecBuilder.create(t->t.group(
 			Codec.BOOL.fieldOf("completed").forGetter(o->o.completed),

@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.chorda.util.evaluator.IEnvironment;
 import com.teammoeg.chorda.util.io.CodecUtil;
+import lombok.Getter;
 
 public class ResearchData implements IEnvironment {
 
@@ -149,13 +150,41 @@ public class ResearchData implements IEnvironment {
     		this(flags[0],flags[1],level,committed,clueData,BitSet.valueOf(effectData));
     	}
     }
+	@Getter
     boolean active;// is all items fulfilled?
+	@Getter
     boolean finished;
     int level;
     private int committed;// points committed
+	@Getter
     private Map<String, ClueData> clueData = new HashMap<>();
+	@Getter
     private Map<String, Boolean> effectData = new HashMap<>();
-    public static final Codec<ResearchData> CODEC=RecordCodecBuilder.create(t->t.group(
+
+
+	public List<String> getFieldNames() {
+		return List.of("active","finished","level","committed","clueData","effectData");
+	}
+
+	public Object getField(String key) {
+        return switch (key) {
+            case "active" -> active;
+            case "finished" -> finished;
+            case "level" -> level;
+            case "committed" -> committed;
+            case "clueData" -> clueData;
+            case "effectData" -> effectData;
+            default -> "no such field";
+        };
+    }
+
+	@Override
+	public String toString() {
+		return "ResearchData [active=" + active + ", finished=" + finished + ", level=" + level + ", committed=" + committed
+				+ ", clueData=" + clueData + ", effectData=" + effectData + "]";
+	}
+
+	public static final Codec<ResearchData> CODEC=RecordCodecBuilder.create(t->t.group(
     	Codec.INT.fieldOf("committed").forGetter(o->o.committed),
     	CodecUtil.<ResearchData>booleans("flags")
     	.flag("active", o->o.active)

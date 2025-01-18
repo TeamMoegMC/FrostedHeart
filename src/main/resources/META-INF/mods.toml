@@ -64,6 +64,13 @@ See our official website.
     side = "BOTH"
 
 [[dependencies.frostedheart]]
+    modId="chorda"
+    mandatory=true
+    versionRange="[0.1.0,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
     modId="immersiveengineering"
     mandatory=true
     versionRange="[1.20.1-10.1.0,)"
@@ -136,7 +143,7 @@ See our official website.
 
 [[mods]] #mandatory
 modId = "chorda" #mandatory
-version = "${file.jarVersion}" #mandatory
+version = "0.1.0" #mandatory
 displayName = "Chorda" #mandatory
 displayURL="https://www.curseforge.com/minecraft/mc-mods/chorda"
 logoFile="logo.png"
