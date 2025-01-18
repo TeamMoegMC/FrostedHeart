@@ -316,7 +316,7 @@ public class FHResearch {
 		}
 //		System.out.println(CodecUtil.INGREDIENT_CODEC.encodeStart(DataOps.COMPRESSED, Ingredient.of(Items.ACACIA_BOAT)));
 		FriendlyByteBuf pb=new FriendlyByteBuf(Unpooled.buffer());
-		Object prein=Research.CODEC.encodeStart(DataOps.COMPRESSED, new Research()).resultOrPartial(System.out::println).get();
+		Object prein=Research.CODEC.encodeStart(DataOps.COMPRESSED, new Research()).resultOrPartial(FHMain.LOGGER::debug).get();
 //		System.out.println(prein);
 		ObjectWriter.writeObject(pb,prein);
 //		System.out.println();
