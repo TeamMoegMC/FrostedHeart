@@ -65,13 +65,13 @@ public abstract class Effect extends AutoIDItem{
 		}
 	    
 	}
-	public static final MapCodec<BaseData> BASE_CODEC=CodecUtil.debugCodec(RecordCodecBuilder.mapCodec(t->
+	public static final MapCodec<BaseData> BASE_CODEC=RecordCodecBuilder.mapCodec(t->
 	t.group(
 		Codec.STRING.optionalFieldOf("name","").forGetter(o->o.name),
 		Codec.list(Codec.STRING).optionalFieldOf("tooltip",Arrays.asList()).forGetter(o->o.tooltip),
 		FHIcons.CODEC.optionalFieldOf("icon").forGetter(o->Optional.ofNullable(o.icon)),
 		Codec.STRING.fieldOf("id").forGetter(o->o.nonce),
-		Codec.BOOL.optionalFieldOf("hidden",false).forGetter(o->o.hidden)).apply(t, BaseData::new)));
+		Codec.BOOL.optionalFieldOf("hidden",false).forGetter(o->o.hidden)).apply(t, BaseData::new));
     private static TypedCodecRegistry<Effect> registry = new TypedCodecRegistry<>();
     public static final Codec<Effect> CODEC=registry.codec();
     static {

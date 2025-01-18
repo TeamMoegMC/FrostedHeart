@@ -17,13 +17,12 @@
  *
  */
 
-package com.teammoeg.chorda.block;
+package com.teammoeg.frostedheart.content.steamenergy.pipe;
 
 import java.util.Map;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Maps;
-import com.teammoeg.chorda.blockentity.CPipeBlockEntity;
 import com.teammoeg.chorda.util.CUtils;
 
 import net.minecraft.Util;
@@ -253,7 +252,7 @@ public class CPipeBlock<T extends CPipeBlock<T>> extends PipeBlock implements Si
 		BlockState updated=updateBlockState(state, null, null, worldIn, pos);
 		worldIn.setBlock(pos, updated, 2);
 		worldIn.sendBlockUpdated(pos, state, updated, 2);
-		System.out.println("update pipe "+pos);
+//		System.out.println("update pipe "+pos);
 		checkNewConnection(worldIn,pos,state,updated);
 		//System.out.println(pos+" requested update "+updated.getValue(PROPERTY_BY_DIRECTION.get(Direction.UP)));
 		//if(state!=updated) {

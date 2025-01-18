@@ -43,8 +43,8 @@ public class HeatBlockEntity extends SmartBlockEntity implements HeatNetworkProv
 
         Lang.tooltip("heat_stats").forGoggles(tooltip);
 
-        if (!TemperatureGoogleRenderer.lastHeatNetworkData.invalid()) {
-            ClientHeatNetworkData data = TemperatureGoogleRenderer.lastHeatNetworkData;
+        if (TemperatureGoogleRenderer.hasHeatNetworkData()) {
+            ClientHeatNetworkData data = TemperatureGoogleRenderer.getHeatNetworkData();
 
             Lang.translate("tooltip", "pressure.network")
                     .style(GRAY)

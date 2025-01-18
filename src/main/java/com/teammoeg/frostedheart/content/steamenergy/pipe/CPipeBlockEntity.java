@@ -1,4 +1,4 @@
-package com.teammoeg.chorda.blockentity;
+package com.teammoeg.frostedheart.content.steamenergy.pipe;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import net.minecraft.core.BlockPos;

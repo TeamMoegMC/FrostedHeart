@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
@@ -101,7 +102,7 @@ public class WaterLevelAndEffectRecipe implements Recipe<Inventory>, Comparable<
                 try {
                     compoundTag = NbtUtils.snbtToStructure(nbt.toString());
                 } catch (CommandSyntaxException e) {
-                    System.out.println(recipeId + ": no nbt.");
+                    FHMain.LOGGER.error("Water level recipe " + recipeId + " has no nbt.");
                 }
                 //todo debug
             }

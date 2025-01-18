@@ -80,7 +80,19 @@ public class TemperatureGoogleRenderer {
     public static int hoverTicks = 0;
     public static BlockPos lastHovered = null;
     public static BlockPos lastHeatNetworkPos = null;
-    public static ClientHeatNetworkData lastHeatNetworkData = null;
+    private static ClientHeatNetworkData lastHeatNetworkData = null;
+
+    public static boolean hasHeatNetworkData() {
+        return lastHeatNetworkData != null && !lastHeatNetworkData.invalid();
+    }
+
+    public static ClientHeatNetworkData getHeatNetworkData() {
+        return lastHeatNetworkData;
+    }
+
+    public static void setHeatNetworkData(ClientHeatNetworkData data) {
+        lastHeatNetworkData = data;
+    }
 
     public static void renderOverlay(ForgeGui gui, GuiGraphics graphics, float partialTicks, int width,
                                      int height) {
