@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IProcessBE;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
@@ -143,7 +143,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
     LazyOptional<IItemHandler> invHandlerDown = LazyOptional.of(() -> new IEInventoryHandler(1, this, 3, false, true));
 
     public static Fluid getProtein() {
-        Fluid f = CRegistries.getFluid(pr);
+        Fluid f = CRegistryHelper.getFluid(pr);
         return f == Fluids.EMPTY ? Fluids.WATER : f;
     }
 

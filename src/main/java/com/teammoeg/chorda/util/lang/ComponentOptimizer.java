@@ -6,7 +6,9 @@ import java.util.List;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-
+/**
+ * A convenience method to merge style-char pair to style-string pair, merging items with same style, optimize network or storage.
+ * */
 public class ComponentOptimizer {
 	StringBuilder sb=new StringBuilder();
 	Style sty=Style.EMPTY;

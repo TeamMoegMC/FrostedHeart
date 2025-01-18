@@ -9,10 +9,12 @@ import com.mojang.serialization.*;
 import com.mojang.serialization.codecs.EitherMapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.io.codec.*;
-import com.teammoeg.chorda.util.misc.ConstructorCodec;
+import com.teammoeg.chorda.util.misc.CodecWithFactory;
 import com.teammoeg.chorda.util.io.codec.BooleansCodec.BooleanCodecBuilder;
+import com.teammoeg.chorda.util.io.nbtbuilder.ArrayNBTBuilder;
+
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 import net.minecraft.ResourceLocationException;
@@ -135,11 +137,11 @@ public class CodecUtil {
 	public static final Codec<ItemStack>  ITEMSTACK_STRING_CODEC = new AlternativeCodecBuilder<>(ItemStack.class)
 			.add(ITEMSTACK_CODEC)
 			.add(ResourceLocation.CODEC.comapFlatMap(t->{
-				Item it= CRegistries.getItem(t);
+				Item it= CRegistryHelper.getItem(t);
 				if(it==Items.AIR||it==null)return DataResult.error(()->"Not a item");
 				return DataResult.success(new ItemStack(it,1));
 				
-			}, t-> CRegistries.getRegistryName(t.getItem()))).build();
+			}, t-> CRegistryHelper.getRegistryName(t.getItem()))).build();
 	public static final Codec<CompoundTag> COMPOUND_TAG_CODEC=CodecUtil.convertSchema(NbtOps.INSTANCE).comapFlatMap(t->{
 		if(t instanceof CompoundTag)
 			return DataResult.success((CompoundTag)t);
@@ -153,7 +155,7 @@ public class CodecUtil {
 			return DataResult.success(Ingredient.fromJson(o));
 		if(o.isJsonPrimitive()) {
 			try {
-			Item i= CRegistries.getItem(new ResourceLocation(o.getAsString()));
+			Item i= CRegistryHelper.getItem(new ResourceLocation(o.getAsString()));
 			if(i!=null&&i!=Items.AIR)
 				return DataResult.success(Ingredient.of(i));
 			}catch(ResourceLocationException rle) {
@@ -407,8 +409,8 @@ public class CodecUtil {
 		return result.getOrThrow(true, s->{}).getFirst();
 	}
 	public static <A> A initEmpty(Codec<A> codec) {
-		if(codec instanceof ConstructorCodec)
-			return ((ConstructorCodec<A>) codec).getInstance();
+		if(codec instanceof CodecWithFactory)
+			return ((CodecWithFactory<A>) codec).getInstance();
 		return decodeOrThrow(codec.decode(NbtOps.INSTANCE,new CompoundTag()));
 	}
 	public static <T> void encodeNBT(Codec<T> codec,CompoundTag nbt,String key,T value) {

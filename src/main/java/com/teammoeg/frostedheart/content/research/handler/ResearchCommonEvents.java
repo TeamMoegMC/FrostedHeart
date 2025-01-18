@@ -1,8 +1,11 @@
 package com.teammoeg.frostedheart.content.research.handler;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
+
+import com.teammoeg.chorda.events.TeamLoadedEvent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
@@ -80,7 +83,10 @@ public class ResearchCommonEvents {
         }
 
     }
-
+    @SubscribeEvent
+    public static void initData(TeamLoadedEvent ev) {
+    	ev.getTeamData().getOptional(FHSpecialDataTypes.RESEARCH_DATA).ifPresent(t->t.initResearch(ev.getTeamData()));
+    }
     @SubscribeEvent
     public static void checkSleep(SleepingTimeCheckEvent event) {
         if (event.getEntity().getSleepTimer() >= 100 && !event.getEntity().getCommandSenderWorld().isClientSide) {

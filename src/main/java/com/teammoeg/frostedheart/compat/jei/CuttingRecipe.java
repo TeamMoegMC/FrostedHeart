@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.world.Container;
@@ -52,7 +52,7 @@ public class CuttingRecipe implements Recipe<Container> {
 
     @Override
     public ResourceLocation getId() {
-        return new ResourceLocation(FHMain.MODID, "cutting/" + CRegistries.getRegistryName(out.getItem()).getPath());
+        return new ResourceLocation(FHMain.MODID, "cutting/" + CRegistryHelper.getRegistryName(out.getItem()).getPath());
     }
 
     @Override

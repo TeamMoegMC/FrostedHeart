@@ -20,7 +20,9 @@
 package com.teammoeg.chorda.util.utility;
 
 import java.util.function.Supplier;
-
+/**
+ * Stores supplier reference, can modify any time.
+ * */
 public class ReferenceSupplier<T> implements Supplier<T> {
     Supplier<T> ref;
 

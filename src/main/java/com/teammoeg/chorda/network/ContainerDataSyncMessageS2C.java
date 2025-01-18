@@ -5,16 +5,16 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.menu.CContainer;
-import com.teammoeg.chorda.util.utility.CContainerData;
-import com.teammoeg.chorda.util.utility.CContainerData.OtherDataSlotEncoder;
+import com.teammoeg.chorda.menu.CBaseMenu;
+import com.teammoeg.chorda.util.utility.CCustomMenuSlot;
+import com.teammoeg.chorda.util.utility.CCustomMenuSlot.OtherDataSlotEncoder;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.io.SerializeUtil;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent.Context;
 
-public record CContainerDataSync(List<ContainerDataPair> data) implements CMessage {
+public record ContainerDataSyncMessageS2C(List<ContainerDataPair> data) implements CMessage {
 
 	private static record ContainerDataPair(int slotIndex,OtherDataSlotEncoder<?> conv,Object data){
 		public ContainerDataPair(FriendlyByteBuf buf,int slotIndex,OtherDataSlotEncoder<?> conv) {
@@ -23,12 +23,12 @@ public record CContainerDataSync(List<ContainerDataPair> data) implements CMessa
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public void write(FriendlyByteBuf buffer) {
 			buffer.writeVarInt(slotIndex);
-			CContainerData.encoders.write(buffer, conv);
+			CCustomMenuSlot.encoders.write(buffer, conv);
 			((OtherDataSlotEncoder)conv).write(buffer, data);
 		}
 	}
 	
-	public CContainerDataSync() {
+	public ContainerDataSyncMessageS2C() {
 		this(new ArrayList<>());
 	}
 	public void add(int slotIndex,OtherDataSlotEncoder<?> conv,Object data) {
@@ -42,8 +42,8 @@ public record CContainerDataSync(List<ContainerDataPair> data) implements CMessa
 		return !this.data.isEmpty();
 	}
 
-	public CContainerDataSync(FriendlyByteBuf buf) {
-		this(SerializeUtil.readList(buf, t->new ContainerDataPair(buf,buf.readVarInt(), CContainerData.encoders.read(buf))));
+	public ContainerDataSyncMessageS2C(FriendlyByteBuf buf) {
+		this(SerializeUtil.readList(buf, t->new ContainerDataPair(buf,buf.readVarInt(), CCustomMenuSlot.encoders.read(buf))));
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public record CContainerDataSync(List<ContainerDataPair> data) implements CMessa
 	@Override
 	public void handle(Supplier<Context> context) {
 		context.get().enqueueWork(()->{
-			if(ClientUtils.getPlayer().containerMenu instanceof CContainer container) {
+			if(ClientUtils.getPlayer().containerMenu instanceof CBaseMenu container) {
 				container.processPacket(this);
 				context.get().setPacketHandled(true);
 			}

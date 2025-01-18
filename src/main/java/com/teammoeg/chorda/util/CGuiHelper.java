@@ -62,9 +62,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.ForgeRenderTypes;
 
 /**
- * Convenience functions for rendering
+ * Convenience functions for gui rendering
  */
-public class CGuis {
+public class CGuiHelper {
 	public static final Function<Direction, Quaternionf> DIR_TO_FACING = Util
 			.memoize(dir -> new Quaternionf().rotateAxis(-(float) (dir.toYRot() / 180 * Math.PI), 0, 1, 0));
 
@@ -404,8 +404,8 @@ public class CGuis {
 	 * @param color 图标的颜色
 	 */
 	public static void renderIcon(PoseStack pose, IconButton.Icon icon, int x, int y, int color) {
-		CGuis.bindTexture(IconButton.ICON_LOCATION);
-		CGuis.blitColored(pose, x, y, icon.size.width, icon.size.height, icon.x, icon.y, icon.size.width, icon.size.height, IconButton.TEXTURE_WIDTH, IconButton.TEXTURE_HEIGHT, color);
+		CGuiHelper.bindTexture(IconButton.ICON_LOCATION);
+		CGuiHelper.blitColored(pose, x, y, icon.size.width, icon.size.height, icon.x, icon.y, icon.size.width, icon.size.height, IconButton.TEXTURE_WIDTH, IconButton.TEXTURE_HEIGHT, color);
 	}
 
 }

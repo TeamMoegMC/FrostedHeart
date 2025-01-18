@@ -12,7 +12,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.network.NetworkHooks;
 
-public record CMenuComponent<S extends IMultiblockState,C extends AbstractContainerMenu>(MultiblockContainer<S,C> cont) implements IMultiblockComponent<S> {
+public record CMenuComponent<S extends IMultiblockState,C extends AbstractContainerMenu>(MultiblockMenuType<S,C> cont) implements IMultiblockComponent<S> {
 	
 
 	@Override

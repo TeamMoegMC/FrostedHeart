@@ -108,7 +108,7 @@ public class Lang {
         return builder().add(stack.getDisplayName()
                 .copy());
     }
-
+    
     public static LangBuilder number(double d) {
         return builder().text(LangNumberFormat.format(d));
     }

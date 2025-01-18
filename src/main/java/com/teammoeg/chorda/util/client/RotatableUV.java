@@ -5,7 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
 public class RotatableUV extends TexturedUV {
-	int cX,cY;
+	final int cX,cY;
 	public RotatableUV(ResourceLocation rl,int x, int y, int w, int h,int cX, int cY) {
 		super(rl, x, y, w, h);
 		this.cX=cX;

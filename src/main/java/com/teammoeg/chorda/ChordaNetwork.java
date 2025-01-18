@@ -1,7 +1,7 @@
 package com.teammoeg.chorda;
 
-import com.teammoeg.chorda.network.CContainerDataSync;
-import com.teammoeg.chorda.network.CContainerOperation;
+import com.teammoeg.chorda.network.ContainerDataSyncMessageS2C;
+import com.teammoeg.chorda.network.ContainerOperationMessageC2S;
 import com.teammoeg.chorda.network.CMessage;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -69,8 +69,8 @@ public class ChordaNetwork {
         CHANNEL = NetworkRegistry.newSimpleChannel(Chorda.rl("network"), () -> VERSION, VERSION::equals, VERSION::equals);
 
         //Fundamental Message
-        registerMessage("container_operation", CContainerOperation.class);
-        registerMessage("container_sync", CContainerDataSync.class);
+        registerMessage("container_operation", ContainerOperationMessageC2S.class);
+        registerMessage("container_sync", ContainerDataSyncMessageS2C.class);
 
     }
 

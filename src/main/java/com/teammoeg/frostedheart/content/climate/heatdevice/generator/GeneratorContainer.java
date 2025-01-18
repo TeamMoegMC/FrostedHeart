@@ -21,9 +21,9 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import java.util.Optional;
 
-import com.teammoeg.chorda.menu.CContainer;
-import com.teammoeg.chorda.util.utility.CContainerData;
-import com.teammoeg.chorda.util.utility.CContainerData.CDataSlot;
+import com.teammoeg.chorda.menu.CBaseMenu;
+import com.teammoeg.chorda.util.utility.CCustomMenuSlot;
+import com.teammoeg.chorda.util.utility.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.chorda.util.ie.CMultiblockHelper;
 import com.teammoeg.chorda.util.client.Point;
 
@@ -38,24 +38,24 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
-public abstract class GeneratorContainer<R extends GeneratorState, T extends GeneratorLogic<T, R>> extends CContainer {
-    public CDataSlot<Integer> process = CContainerData.SLOT_INT.create(this);
-    public CDataSlot<Integer> processMax = CContainerData.SLOT_INT.create(this);
-    public CDataSlot<Float> overdrive = CContainerData.SLOT_FIXED.create(this);
-    public CDataSlot<Float> power = CContainerData.SLOT_FIXED.create(this);
-    public CDataSlot<Float> tempLevel = CContainerData.SLOT_FIXED.create(this);
-    public CDataSlot<Float> rangeLevel = CContainerData.SLOT_FIXED.create(this);
-    public CDataSlot<Integer> tempDegree = CContainerData.SLOT_INT.create(this);
-    public CDataSlot<Integer> rangeBlock = CContainerData.SLOT_INT.create(this);
-    public CDataSlot<Boolean> isBroken = CContainerData.SLOT_BOOL.create(this);
-    public CDataSlot<Boolean> isWorking = CContainerData.SLOT_BOOL.create(this);
-    public CDataSlot<Boolean> isOverdrive = CContainerData.SLOT_BOOL.create(this);
-    public CDataSlot<BlockPos> pos = CContainerData.SLOT_BLOCKPOS.create(this);
+public abstract class GeneratorContainer<R extends GeneratorState, T extends GeneratorLogic<T, R>> extends CBaseMenu {
+    public CDataSlot<Integer> process = CCustomMenuSlot.SLOT_INT.create(this);
+    public CDataSlot<Integer> processMax = CCustomMenuSlot.SLOT_INT.create(this);
+    public CDataSlot<Float> overdrive = CCustomMenuSlot.SLOT_FIXED.create(this);
+    public CDataSlot<Float> power = CCustomMenuSlot.SLOT_FIXED.create(this);
+    public CDataSlot<Float> tempLevel = CCustomMenuSlot.SLOT_FIXED.create(this);
+    public CDataSlot<Float> rangeLevel = CCustomMenuSlot.SLOT_FIXED.create(this);
+    public CDataSlot<Integer> tempDegree = CCustomMenuSlot.SLOT_INT.create(this);
+    public CDataSlot<Integer> rangeBlock = CCustomMenuSlot.SLOT_INT.create(this);
+    public CDataSlot<Boolean> isBroken = CCustomMenuSlot.SLOT_BOOL.create(this);
+    public CDataSlot<Boolean> isWorking = CCustomMenuSlot.SLOT_BOOL.create(this);
+    public CDataSlot<Boolean> isOverdrive = CCustomMenuSlot.SLOT_BOOL.create(this);
+    public CDataSlot<BlockPos> pos = CCustomMenuSlot.SLOT_BLOCKPOS.create(this);
 
     public GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<R> ctx) {
         super(type, id, inventoryPlayer.player, 2);
         R state = ctx.mbContext().getState();
-        BlockPos master= CMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel());
+        BlockPos master= CMultiblockHelper.getAbsoluteMaster(ctx.mbContext());
         /*if (state.getOwner() == null) {
             state.setOwner(CTeamDataManager.get(inventoryPlayer.player).getId());
             state.regist(inventoryPlayer.player.level(),master);
@@ -79,7 +79,7 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
         //System.out.println(optdata);
         pos.bind(() -> ctx.clickedPos());
         this.validator = new Validator(ctx.clickedPos(), 8).and(ctx.mbContext().isValid());
-        IItemHandler handler = state.getData(CMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel())).map(t -> t.inventory).orElseGet(() -> null);
+        IItemHandler handler = state.getData(CMultiblockHelper.getAbsoluteMaster(ctx.mbContext())).map(t -> t.inventory).orElseGet(() -> null);
         createSlots(handler, inventoryPlayer);
     }
 

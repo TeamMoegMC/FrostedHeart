@@ -4,13 +4,13 @@ import java.util.function.IntFunction;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.util.misc.ConstructorCodec;
+import com.teammoeg.chorda.util.misc.CodecWithFactory;
 import com.teammoeg.chorda.util.io.CodecUtil;
 
 public class LeveledValue {
 	public static Codec<LeveledValue> createCodec(IntFunction<Float> maxValue) {
 		
-		return new ConstructorCodec<>(RecordCodecBuilder.create(t->t.group(
+		return new CodecWithFactory<>(RecordCodecBuilder.create(t->t.group(
 			CodecUtil.defaultValue(Codec.INT, 0).fieldOf("level").forGetter(o->o.level),
 			CodecUtil.defaultValue(Codec.FLOAT, 0f).fieldOf("value").forGetter(o->o.value)
 			).apply(t,(i,v)->new LeveledValue(maxValue,i,v))),()->new LeveledValue(maxValue));

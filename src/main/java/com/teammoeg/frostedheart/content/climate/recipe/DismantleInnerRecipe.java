@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.climate.recipe;
 import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
@@ -74,7 +74,7 @@ public class DismantleInnerRecipe extends CustomRecipe {
             if (!tags.getBoolean("inner_bounded")) {
                 ResourceLocation item = new ResourceLocation(tags.getString("inner_cover"));
                 CompoundTag tag = tags.getCompound("inner_cover_tag");
-                Item buff = CRegistries.getItem(item);
+                Item buff = CRegistryHelper.getItem(item);
                 if (buff == null)
                     return ItemStack.EMPTY;
                 ItemStack buffitem = new ItemStack(buff);

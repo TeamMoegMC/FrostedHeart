@@ -5,7 +5,11 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-
+/**
+ * Random generate values in a sequence, each number would only exist once per round
+ * if all number is used, it would be reloaded.
+ * 
+ * */
 public class RandomSequence {
 	LinkedList<Integer> llist=new LinkedList<>();
 	List<Integer> ilist=new ArrayList<>();

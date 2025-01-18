@@ -26,7 +26,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-public abstract class CBlockEntityContainer<T extends BlockEntity> extends CContainer {
+public abstract class CBlockEntityMenu<T extends BlockEntity> extends CBaseMenu {
 	protected T blockEntity;
 	public Container inv;
 
@@ -34,7 +34,7 @@ public abstract class CBlockEntityContainer<T extends BlockEntity> extends CCont
 		return blockEntity;
 	}
 
-	protected CBlockEntityContainer(MenuType<?> pMenuType, T blockEntity, int pContainerId, Player player, int inv_start) {
+	protected CBlockEntityMenu(MenuType<?> pMenuType, T blockEntity, int pContainerId, Player player, int inv_start) {
 		super(pMenuType, pContainerId,player, inv_start);
 		if (blockEntity instanceof IIEInventory)
 			inv = new BlockEntityInventory(blockEntity, this);

@@ -36,7 +36,9 @@ import net.minecraftforge.common.util.NonNullSupplier;
 
 /**
  * An modified version for LazyOptional by forge, compatibilities for null return
+ * @deprecated use {@link net.minecraftforge.common.util.Lazy Lazy} instead
  */
+@Deprecated
 public class OptionalLazy<T> {
     private static final @Nonnull
     OptionalLazy<Void> EMPTY = new OptionalLazy<>(null);

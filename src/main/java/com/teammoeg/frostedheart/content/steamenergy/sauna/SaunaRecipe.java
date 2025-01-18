@@ -24,7 +24,7 @@ import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -105,7 +105,7 @@ public class SaunaRecipe extends IESerializableRecipe {
                 duration = GsonHelper.getAsInt(effectJson, "duration");
                 amplifier = GsonHelper.getAsInt(effectJson, "amplifier");
                 // Get Effect from effectID from Registry
-                effect = CRegistries.getEffect(effectID);
+                effect = CRegistryHelper.getEffect(effectID);
             }
             return new SaunaRecipe(id, Ingredient.fromJson(json.get("input")), GsonHelper.getAsInt(json, "time"),
                     effect, duration, amplifier);

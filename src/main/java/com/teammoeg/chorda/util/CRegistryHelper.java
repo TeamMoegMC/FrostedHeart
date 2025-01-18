@@ -21,7 +21,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.Collection;
 import java.util.stream.Stream;
 
-public class CRegistries {
+public class CRegistryHelper {
 	public static String getPath(Block v) {
 		return getRegistryName(v).getPath();
 	}

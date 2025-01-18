@@ -182,8 +182,8 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
 	            else
 	                level = 3;
 	        } else if (tile.getNextLevelMultiblock() != null) {
-	            validStructure = tile.nextLevelHasValidStructure(Minecraft.getInstance().level, helper);
-	            List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper);
+	            validStructure = tile.nextLevelHasValidStructure(Minecraft.getInstance().level, helper.getContext());
+	            List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper.getContext());
 	            BitSet cost = IngredientUtils.checkItemList(ClientUtils.mc().player, upgcost);
 	            hasResearch = ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock());
 	            Vec3i v3i = tile.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);

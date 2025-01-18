@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -47,7 +47,7 @@ public class StructureUtils {
     }
 
     public static Block getChest() {
-        Block b = CRegistries.getBlock(new ResourceLocation("stone_age", "stone_chest"));
+        Block b = CRegistryHelper.getBlock(new ResourceLocation("stone_age", "stone_chest"));
         if (b == null || b == Blocks.AIR)
             return Blocks.TRAPPED_CHEST;
         return b;
@@ -71,6 +71,6 @@ public class StructureUtils {
     }
 
     public static void RemapRL(Block org, ResourceLocation dest) {
-        remap.put(org, CRegistries.getBlock(dest));
+        remap.put(org, CRegistryHelper.getBlock(dest));
     }
 }

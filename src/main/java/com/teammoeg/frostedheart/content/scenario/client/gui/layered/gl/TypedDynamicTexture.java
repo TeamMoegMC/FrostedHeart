@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.teammoeg.chorda.util.CGuis;
+import com.teammoeg.chorda.util.CGuiHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.util.client.ClientUtils;
 
@@ -19,7 +19,7 @@ public class TypedDynamicTexture {
         this.texture = new DynamicTexture(texture);
         resourceLocation = FHMain.rl("fhscenario/generated_"+this.hashCode());
         ClientUtils.mc().textureManager.register(resourceLocation, this.texture);
-        this.renderType= CGuis.RenderStateAccess.createTempType(resourceLocation);
+        this.renderType= CGuiHelper.RenderStateAccess.createTempType(resourceLocation);
 	}
 	public void close() {
 		texture.close();
@@ -39,8 +39,8 @@ public class TypedDynamicTexture {
         vertexconsumer.vertex(matrix4f, x+w, y+h, 0F).color(1, 1, 1, alpha).uv(u2, v2).endVertex();
         vertexconsumer.vertex(matrix4f, x+w, y, 0F).color(1, 1, 1, alpha).uv(u2,v1).endVertex();
         vertexconsumer.vertex(matrix4f, x, y, 0F).color(1, 1, 1, alpha).uv(u1, v1).endVertex();*/
-		CGuis.bindTexture(resourceLocation);
-		CGuis.blit(graphics.pose(), x, y, w, h, uOffset, vOffset, uWidth, vHeight, texture.getPixels().getWidth(), texture.getPixels().getHeight(), alpha);
+		CGuiHelper.bindTexture(resourceLocation);
+		CGuiHelper.blit(graphics.pose(), x, y, w, h, uOffset, vOffset, uWidth, vHeight, texture.getPixels().getWidth(), texture.getPixels().getHeight(), alpha);
 	}
 
 }

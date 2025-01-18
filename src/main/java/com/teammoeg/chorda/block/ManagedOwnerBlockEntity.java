@@ -18,7 +18,10 @@
  */
 
 package com.teammoeg.chorda.block;
-
-public interface ManagedOwnerTile {
+/**
+ * A marker interface to claim a blockentity that manages owner data on its own
+ * The program would not automatically call methods to set its owner.
+ * */
+public interface ManagedOwnerBlockEntity {
 
 }

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.world;
 
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -40,6 +40,6 @@ public class FHBiomes {
     }
 
     public static ResourceKey<Biome> makeKey(Biome biome) {
-        return ResourceKey.create(Registries.BIOME, CRegistries.getRegistryName(biome));
+        return ResourceKey.create(Registries.BIOME, CRegistryHelper.getRegistryName(biome));
     }
 }

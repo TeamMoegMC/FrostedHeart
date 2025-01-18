@@ -41,7 +41,7 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.io.FileUtil;
 
 import com.teammoeg.frostedheart.content.world.FHFeatures;
@@ -82,7 +82,7 @@ public class DebugCommand {
                                     String[] parts = line.split(",");
                                     if (parts.length == 0) break;
                                     ResourceLocation item = new ResourceLocation(parts[0]);
-                                    Item it = CRegistries.getItem(item);
+                                    Item it = CRegistryHelper.getItem(item);
 
                                     if (it == null || it == Items.AIR) {
                                         ps.println(item + "," + parts[1]);
@@ -97,7 +97,7 @@ public class DebugCommand {
                                 }
                             }
                         }
-                        for (Item ix : CRegistries.getItems()) {
+                        for (Item ix : CRegistryHelper.getItems()) {
                             if (ix == null || ix == Items.AIR) continue;
                             if (items.contains(ix)) continue;
                             if (!ix.isEdible()) continue;
@@ -105,7 +105,7 @@ public class DebugCommand {
                             items.add(ix);
                             FoodProperties f = ix.getFoodProperties();
                             if (f != null)
-                                ps.println(CRegistries.getRegistryName(ix) + "," + f.getNutrition());
+                                ps.println(CRegistryHelper.getRegistryName(ix) + "," + f.getNutrition());
                         }
                     } catch (Exception e) {
                         FHMain.LOGGER.error("Error while exporting food values");

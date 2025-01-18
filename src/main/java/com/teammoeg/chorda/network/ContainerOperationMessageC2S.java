@@ -2,15 +2,15 @@ package com.teammoeg.chorda.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.menu.CContainer;
+import com.teammoeg.chorda.menu.CBaseMenu;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent.Context;
 
-public record CContainerOperation(int containerId, short buttonId, int state) implements CMessage {
+public record ContainerOperationMessageC2S(int containerId, short buttonId, int state) implements CMessage {
 
-	public CContainerOperation(FriendlyByteBuf buf) {
+	public ContainerOperationMessageC2S(FriendlyByteBuf buf) {
 		this(buf.readVarInt(),buf.readShort(),buf.readVarInt());
 	}
 
@@ -28,7 +28,7 @@ public record CContainerOperation(int containerId, short buttonId, int state) im
 			ServerPlayer player=ctx.getSender();
 			//System.out.print("received operation packet "+this);
 			//System.out.print("player container "+player.containerMenu.containerId+ ":"+player.containerMenu);
-			if(player.containerMenu.containerId==containerId&&player.containerMenu instanceof CContainer container) {
+			if(player.containerMenu.containerId==containerId&&player.containerMenu instanceof CBaseMenu container) {
 				//System.out.println("calling message received");
 				container.receiveMessage(buttonId, state);
 			}

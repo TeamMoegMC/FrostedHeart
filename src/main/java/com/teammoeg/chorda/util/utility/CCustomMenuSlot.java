@@ -6,7 +6,7 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.menu.CContainer;
+import com.teammoeg.chorda.menu.CBaseMenu;
 import com.teammoeg.chorda.util.io.registry.IdRegistry;
 
 import net.minecraft.core.BlockPos;
@@ -20,13 +20,13 @@ import net.minecraftforge.fluids.FluidStack;
  * a utility class for menu data sync and type convertion
  * 
  * */
-public class CContainerData {
+public class CCustomMenuSlot {
 	public static final IdRegistry<OtherDataSlotEncoder<?>> encoders=new IdRegistry<>();
 	public static interface DataSlotConverter<A> extends IntFunction<A>{
 		int apply(A a);
 		A getDefault();
-		default CDataSlot<A> create(CContainer container) {
-			return CContainerData.create(container,this);
+		default CDataSlot<A> create(CBaseMenu container) {
+			return CCustomMenuSlot.create(container,this);
 		}
 	}
 	public static interface OtherDataSlotEncoder<A>{
@@ -37,8 +37,8 @@ public class CContainerData {
 		default boolean isSame(A data,A data2) {
 			return Objects.equals(data, data2);
 		};
-		default CDataSlot<A> create(CContainer container) {
-			return CContainerData.create(container,this);
+		default CDataSlot<A> create(CBaseMenu container) {
+			return CCustomMenuSlot.create(container,this);
 		}
 	}
 	public static interface MultipleDataSlotConverter<A>{
@@ -49,8 +49,8 @@ public class CContainerData {
 		default boolean isSame(A data,A data2) {
 			return Objects.equals(data, data2);
 		};
-		default CDataSlot<A> create(CContainer container) {
-			return CContainerData.create(container,this);
+		default CDataSlot<A> create(CBaseMenu container) {
+			return CCustomMenuSlot.create(container,this);
 		}
 	}
 	public interface CDataSlot<T>{
@@ -398,18 +398,18 @@ public class CContainerData {
 	static {
 		encoders.register(SLOT_TANK);
 	}
-	public static <T> CDataSlot<T> create(CContainer container, DataSlotConverter<T> type) {
+	public static <T> CDataSlot<T> create(CBaseMenu container, DataSlotConverter<T> type) {
 		SingleDataSlot<T> slot=new SingleDataSlot<>(type);
 		container.addDataSlot(slot);
 		return slot;
 		
 	}
-	public static <T> CDataSlot<T> create(CContainer container, MultipleDataSlotConverter<T> type) {
+	public static <T> CDataSlot<T> create(CBaseMenu container, MultipleDataSlotConverter<T> type) {
 		MultiDataSlot<T> slot=new MultiDataSlot<>(type);
 		container.addDataSlots(slot);
 		return slot;
 	}
-	public static <T> CDataSlot<T> create(CContainer container, OtherDataSlotEncoder<T> type) {
+	public static <T> CDataSlot<T> create(CBaseMenu container, OtherDataSlotEncoder<T> type) {
 		OtherDataSlot<T> slot=new OtherDataSlot<>(type);
 		container.addDataSlot(slot);
 		return slot;

@@ -33,7 +33,9 @@ import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraftforge.client.model.data.ModelData;
-
+/**
+ * A reference key for dynamic model registry, this should be constructed during constructor and before assets reloaded
+ * */
 public record DynamicBlockModelReference(ResourceLocation name) implements Supplier<BakedModel>,Function<ModelData,List<BakedQuad>>
 {
 

@@ -35,7 +35,7 @@ import org.apache.logging.log4j.MarkerManager;
 
 public class BaseDataHolder<T extends BaseDataHolder<T>> implements SpecialDataHolder<T>, NBTSerializable {
 
-	public static final Marker TEAM_MARKER = MarkerManager.getMarker("Team Data");
+	public static final Marker TEAM_MARKER = MarkerManager.getMarker("Data");
 
 	public BaseDataHolder() {
 	}

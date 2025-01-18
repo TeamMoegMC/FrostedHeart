@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
 import blusunrize.immersiveengineering.common.gui.IESlot;
-import com.teammoeg.chorda.menu.CBlockEntityContainer;
+import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
 import net.minecraft.world.Container;
@@ -29,7 +29,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-public class DrawDeskContainer extends CBlockEntityContainer<DrawingDeskTileEntity> {
+public class DrawDeskContainer extends CBlockEntityMenu<DrawingDeskTileEntity> {
     public DrawDeskContainer(int id, Inventory inventoryPlayer, DrawingDeskTileEntity tile) {
         super(FHMenuTypes.DRAW_DESK.get(), tile, id, inventoryPlayer.player, 3);
 

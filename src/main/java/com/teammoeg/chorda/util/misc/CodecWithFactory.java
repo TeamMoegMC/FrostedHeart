@@ -7,19 +7,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 
-public class ConstructorCodec<A> implements Codec<A>{
-	Codec<A> codec;
-	Supplier<A> constructor;
-
-
-	public ConstructorCodec(Codec<A> codec, Supplier<A> constructor) {
-		super();
-		this.codec = codec;
-		this.constructor = constructor;
-	}
+public record CodecWithFactory<A>(Codec<A> codec, Supplier<A> factory) implements Codec<A>{
 
 	public A getInstance() {
-		return constructor.get();
+		return factory.get();
 	}
 	@Override
 	public <T> DataResult<T> encode(A input, DynamicOps<T> ops, T prefix) {
@@ -29,7 +20,7 @@ public class ConstructorCodec<A> implements Codec<A>{
 
 	@Override
 	public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
-		return DataResult.success(Pair.of(codec.parse(ops, input).result().orElseGet(()->constructor.get()),input));
+		return DataResult.success(Pair.of(codec.parse(ops, input).result().orElseGet(factory),input));
 	}
 
 

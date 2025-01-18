@@ -25,7 +25,7 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.function.Predicate;
 
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.utility.FHLeveledTool;
 import com.teammoeg.frostedheart.util.client.Lang;
@@ -92,7 +92,7 @@ public class CoreSpade extends FHLeveledTool {
                             int BlockY = y + y2;
                             int BlockZ = z + z2;
                             ore = world.getBlockState(mutable.set(BlockX, BlockY, BlockZ));
-                            if (!CRegistries.getRegistryName(ore.getBlock()).getNamespace().equals("minecraft") && tagdet.test(ore)) {
+                            if (!CRegistryHelper.getRegistryName(ore.getBlock()).getNamespace().equals("minecraft") && tagdet.test(ore)) {
                                 founded.merge(ore.getBlock().getDescriptionId(), 1, Integer::sum);
                             }
                         }

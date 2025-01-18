@@ -23,7 +23,7 @@ import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.model.DynamicBlockModelReference;
-import com.teammoeg.chorda.util.CGuis;
+import com.teammoeg.chorda.util.CGuiHelper;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelperMaster;
@@ -58,7 +58,7 @@ public class T1GeneratorRenderer implements BlockEntityRenderer<MultiblockBlockE
             matrixStack.pushPose();
             bufferIn = BERenderUtils.mirror(orientation, matrixStack, bufferIn);
             Direction facing = orientation.front();
-            matrixStack.rotateAround(CGuis.DIR_TO_FACING.apply(facing), 0.5f, 0.5f, 0.5f);
+            matrixStack.rotateAround(CGuiHelper.DIR_TO_FACING.apply(facing), 0.5f, 0.5f, 0.5f);
             List<BakedQuad> quads = FUEL.getAllQuads();
             RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
             matrixStack.popPose();

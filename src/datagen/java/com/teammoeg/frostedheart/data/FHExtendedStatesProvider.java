@@ -27,7 +27,7 @@ import blusunrize.immersiveengineering.data.models.NongeneratedModels;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 
 import blusunrize.immersiveengineering.data.DataGenUtils;
 import blusunrize.immersiveengineering.data.models.IEOBJBuilder;
@@ -67,7 +67,7 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
 
     protected String name(Block b)
     {
-        return CRegistries.getRegistryName(b).getPath();
+        return CRegistryHelper.getRegistryName(b).getPath();
     }
 
     public void simpleBlockItem(Block b, ModelFile model)

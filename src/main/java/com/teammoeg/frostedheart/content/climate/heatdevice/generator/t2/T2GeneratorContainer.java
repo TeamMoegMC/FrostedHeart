@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorContainer;
-import com.teammoeg.chorda.util.utility.CContainerData;
-import com.teammoeg.chorda.util.utility.CContainerData.CDataSlot;
+import com.teammoeg.chorda.util.utility.CCustomMenuSlot;
+import com.teammoeg.chorda.util.utility.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.chorda.util.client.Point;
 
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
@@ -34,7 +34,7 @@ public class T2GeneratorContainer extends GeneratorContainer<T2GeneratorState, T
     static final Point pin = new Point(29, 63);
     static final Point pout = new Point(112, 55);
     FluidTank tank;
-    CDataSlot<FluidStack> slot_tank= CContainerData.SLOT_TANK.create(this);
+    CDataSlot<FluidStack> slot_tank= CCustomMenuSlot.SLOT_TANK.create(this);
     public T2GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<T2GeneratorState> ctx) {
         super(type, id, inventoryPlayer, ctx);
         tank = ctx.mbContext().getState().tank;

@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
@@ -50,7 +50,7 @@ public class InnerExtension implements ICraftingCategoryExtension {
     public void setRecipe(IRecipeLayoutBuilder builder, ICraftingGridHelper craftingGridHelper, IFocusGroup focuses) {
         List<ItemStack> armors = new ArrayList<>();
         ArrayList<ItemStack> armorsout = new ArrayList<>();
-        CRegistries.getItems().stream().map(ItemStack::new).filter(i -> inner.matches(i)).forEach(armors::add);
+        CRegistryHelper.getItems().stream().map(ItemStack::new).filter(i -> inner.matches(i)).forEach(armors::add);
         armorsout.ensureCapacity(armors.size());
         builder.setShapeless();
         armors.forEach(e -> {

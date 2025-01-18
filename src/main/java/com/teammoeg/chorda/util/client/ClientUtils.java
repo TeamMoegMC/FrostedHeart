@@ -36,8 +36,9 @@ import net.minecraftforge.common.util.Size2i;
  * Rendering not related client functions, used for get/set client data, spawning particles
  * */
 public class ClientUtils {
-    public static float spgamma;
-    public static boolean applyspg;
+    public static float OverwriteGammaValue;
+    public static boolean DoApplyGammaValue;
+    private static long previousTick = 0;
 
     public static LocalPlayer getPlayer() {
         return mc().player;
@@ -117,7 +118,7 @@ public class ClientUtils {
         return getWorld().dimension().location();
     }
 
-    private static long previousTick = 0;
+
     public static boolean isGameTimeUpdated() {
         boolean flag = previousTick != gameTick();
         previousTick = gameTick();

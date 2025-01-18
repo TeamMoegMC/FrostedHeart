@@ -14,7 +14,7 @@ import com.teammoeg.frostedheart.content.scenario.runner.trigger.MovementTrigger
 import com.teammoeg.frostedheart.content.scenario.runner.trigger.OrTrigger;
 import com.teammoeg.frostedheart.content.scenario.runner.trigger.VariantTrigger;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -28,7 +28,7 @@ import net.minecraft.core.BlockPos;
 
 public class MCCommands {
 	public void giveItem(ScenarioCommandContext runner, @Param("i") String item, @Param("n") String nbt, @Param("c") int count) throws CommandSyntaxException {
-		Item i = CRegistries.getItem(new ResourceLocation(item));
+		Item i = CRegistryHelper.getItem(new ResourceLocation(item));
 		if (count == 0) count = 1;
 		ItemStack is = new ItemStack(i, count);
 		if (nbt != null)

@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.tips.client.gui.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.chorda.util.CGuis;
+import com.teammoeg.chorda.util.CGuiHelper;
 import com.teammoeg.chorda.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.chorda.util.client.AnimationUtil;
@@ -134,8 +134,8 @@ public class TipWidget extends AbstractWidget {
 
         // 图片
         if (context.hasImage) {
-            CGuis.bindTexture(tip.getImage());
-            CGuis.blitColored(
+            CGuiHelper.bindTexture(tip.getImage());
+            CGuiHelper.blitColored(
                     pose,
                     getX() + (super.getWidth() / 2) - (context.imageSize.width / 2),
                     getY() + border + (context.totalLineSize * RenderContext.LINE_SPACE),
@@ -162,8 +162,8 @@ public class TipWidget extends AbstractWidget {
         }
 
         // 标题和内容
-        CGuis.drawStrings(graphics, ClientUtils.font(), context.titleLines, getX(), getY(), context.fontColor, RenderContext.LINE_SPACE, false, false);
-        CGuis.drawStrings(graphics, ClientUtils.font(), context.contentLines, getX(), getY()+6 + (context.titleLines.size() * RenderContext.LINE_SPACE), context.fontColor, RenderContext.LINE_SPACE, false, false);
+        CGuiHelper.drawStrings(graphics, ClientUtils.font(), context.titleLines, getX(), getY(), context.fontColor, RenderContext.LINE_SPACE, false, false);
+        CGuiHelper.drawStrings(graphics, ClientUtils.font(), context.contentLines, getX(), getY()+6 + (context.titleLines.size() * RenderContext.LINE_SPACE), context.fontColor, RenderContext.LINE_SPACE, false, false);
 
         pose.popPose();
         graphics.setColor(1, 1, 1, 1);

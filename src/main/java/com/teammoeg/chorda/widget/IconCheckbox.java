@@ -1,7 +1,7 @@
 package com.teammoeg.chorda.widget;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.chorda.util.CGuis;
+import com.teammoeg.chorda.util.CGuiHelper;
 import com.teammoeg.chorda.util.client.ColorHelper;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Checkbox;
@@ -38,8 +38,8 @@ public class IconCheckbox extends Checkbox {
         RenderSystem.enableDepthTest();
         pGuiGraphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();
-        CGuis.bindTexture(IconButton.ICON_LOCATION);
-        CGuis.blitColored(pGuiGraphics.pose(), getX(), getY(), getWidth(), getHeight(), icon.x*scale, icon.y*scale, getWidth(), getHeight(), IconButton.TEXTURE_WIDTH*scale, IconButton.TEXTURE_HEIGHT*scale, ColorHelper.CYAN, alpha);
+        CGuiHelper.bindTexture(IconButton.ICON_LOCATION);
+        CGuiHelper.blitColored(pGuiGraphics.pose(), getX(), getY(), getWidth(), getHeight(), icon.x*scale, icon.y*scale, getWidth(), getHeight(), IconButton.TEXTURE_WIDTH*scale, IconButton.TEXTURE_HEIGHT*scale, ColorHelper.CYAN, alpha);
         pGuiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 

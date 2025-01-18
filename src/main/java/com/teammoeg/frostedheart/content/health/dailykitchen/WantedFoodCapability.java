@@ -42,7 +42,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.io.NBTSerializable;
 
 import net.minecraft.world.item.Item;
@@ -103,12 +103,12 @@ public class WantedFoodCapability implements NBTSerializable{
     }
 
     private static StringTag turnItemToStringNBT(Item item){
-        return StringTag.valueOf(Objects.requireNonNull(CRegistries.getRegistryName(item)).toString());
+        return StringTag.valueOf(Objects.requireNonNull(CRegistryHelper.getRegistryName(item)).toString());
     }
 
     private static Item turnStringNBTToItem(Tag nbt){
         ResourceLocation itemResourceLocation = new ResourceLocation(nbt.getAsString());
-        return CRegistries.getItem(itemResourceLocation);
+        return CRegistryHelper.getItem(itemResourceLocation);
     }
 
 	@Override

@@ -58,7 +58,7 @@ public abstract class PacketBufferSerializerRegistry<T extends PacketWritable, C
 		return types.fullTypeOf(cls);
 	}
 
-	public void register(Class<? extends T> cls, String type, Function<R, T> read, BiFunction<T, C, R> write, Function<FriendlyByteBuf, T> packet) {
+	public synchronized void register(Class<? extends T> cls, String type, Function<R, T> read, BiFunction<T, C, R> write, Function<FriendlyByteBuf, T> packet) {
 		pbs.register(cls, packet);
 		types.register(cls, type);
     	super.register( type,read, write);

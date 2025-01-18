@@ -27,7 +27,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.chorda.team.TeamDataHolder;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.chorda.util.io.CodecUtil;
 import com.teammoeg.chorda.util.utility.OptionalLazy;
@@ -305,12 +305,12 @@ public class ResearchListeners {
 
         @Override
         public Block getObject(String s) {
-            return CRegistries.getBlock(new ResourceLocation(s));
+            return CRegistryHelper.getBlock(new ResourceLocation(s));
         }
 
         @Override
         public String getString(Block item) {
-            return CRegistries.getRegistryName(item).toString();
+            return CRegistryHelper.getRegistryName(item).toString();
         }
     }
 

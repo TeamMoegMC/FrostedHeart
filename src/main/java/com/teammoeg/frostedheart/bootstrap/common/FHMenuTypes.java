@@ -23,9 +23,9 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.menu.ClientContainerConstructor;
-import com.teammoeg.chorda.menu.MultiBlockMenuConstructor;
-import com.teammoeg.chorda.menu.MultiblockContainer;
+import com.teammoeg.chorda.menu.MultiblockMenuClientFactory;
+import com.teammoeg.chorda.menu.MultiBlockMenuServerFactory;
+import com.teammoeg.chorda.menu.MultiblockMenuType;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorContainer;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorContainer;
@@ -65,8 +65,8 @@ public class FHMenuTypes {
 	public static final RegistryObject<MenuType<TradeContainer>> TRADE_GUI = CONTAINERS.register("trade", () -> IForgeMenuType.create(TradeContainer::new));
 	public static final RegistryObject<MenuType<HeatStatContainer>> HEAT_STAT = CONTAINERS.register("heat_stat", () -> IForgeMenuType.create(HeatStatContainer::new));
 
-	public static final MultiblockContainer<T1GeneratorState, T1GeneratorContainer> GENERATOR_T1 = registerMultiblock("generator",T1GeneratorContainer::new,T1GeneratorContainer::new);
-	public static final MultiblockContainer<T2GeneratorState, T2GeneratorContainer> GENERATOR_T2 = registerMultiblock("generator_t2", T2GeneratorContainer::new, T2GeneratorContainer::new);
+	public static final MultiblockMenuType<T1GeneratorState, T1GeneratorContainer> GENERATOR_T1 = registerMultiblock("generator",T1GeneratorContainer::new,T1GeneratorContainer::new);
+	public static final MultiblockMenuType<T2GeneratorState, T2GeneratorContainer> GENERATOR_T2 = registerMultiblock("generator_t2", T2GeneratorContainer::new, T2GeneratorContainer::new);
 
 	public static final RegistryObject<MenuType<RelicChestContainer>> RELIC_CHEST = register(RelicChestTileEntity.class, ("relic_chest"), RelicChestContainer::new);
 	public static final RegistryObject<MenuType<DrawDeskContainer>> DRAW_DESK = register(DrawingDeskTileEntity.class, ("draw_desk"), DrawDeskContainer::new);
@@ -84,16 +84,16 @@ public class FHMenuTypes {
 		}));
 	}
 
-	public static <S extends IMultiblockState, C extends AbstractContainerMenu> MultiblockContainer<S, C> registerMultiblock(
+	public static <S extends IMultiblockState, C extends AbstractContainerMenu> MultiblockMenuType<S, C> registerMultiblock(
 		String name,
-		MultiBlockMenuConstructor<S, C> container,
-		ClientContainerConstructor<C> client) {
+		MultiBlockMenuServerFactory<S, C> container,
+		MultiblockMenuClientFactory<C> client) {
 		RegistryObject<MenuType<C>> typeRef = CONTAINERS.register(name,() -> {
 			Mutable<MenuType<C>> typeBox = new MutableObject<>();
-			MenuType<C> type = new MenuType<>((id, inv) -> client.construct(typeBox.getValue(), id, inv), FeatureFlagSet.of());
+			MenuType<C> type = new MenuType<>((id, inv) -> client.create(typeBox.getValue(), id, inv), FeatureFlagSet.of());
 			typeBox.setValue(type);
 			return type;
 		});
-		return new MultiblockContainer<>(typeRef, container);
+		return new MultiblockMenuType<>(typeRef, container);
 	}
 }

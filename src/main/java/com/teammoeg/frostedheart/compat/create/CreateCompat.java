@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.compat.create;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.kinetics.BlockStressDefaults;
 import com.simibubi.create.content.kinetics.BlockStressValues;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.world.level.block.Blocks;
@@ -33,7 +33,7 @@ public class CreateCompat {
         BlockStressDefaults.setDefaultImpact(AllBlocks.MECHANICAL_PLOUGH.getId(), 4.0);
         BlockStressDefaults.setDefaultImpact(AllBlocks.ANDESITE_FUNNEL.getId(), 4.0);
         BlockStressDefaults.setDefaultImpact(AllBlocks.BRASS_FUNNEL.getId(), 4.0);
-        BlockStressDefaults.setDefaultImpact(CRegistries.getRegistryName(Blocks.DISPENSER), 4.0);
+        BlockStressDefaults.setDefaultImpact(CRegistryHelper.getRegistryName(Blocks.DISPENSER), 4.0);
         BlockStressValues.registerProvider(FHMain.MODID, new FHStress());
 
     }

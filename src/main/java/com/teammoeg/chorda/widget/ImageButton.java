@@ -1,4 +1,4 @@
-package com.teammoeg.chorda.util.client;
+package com.teammoeg.chorda.widget;
 
 import com.teammoeg.chorda.util.lang.Components;
 import com.mojang.blaze3d.systems.RenderSystem;

@@ -20,7 +20,7 @@ public class TypedCodecRegistry<T> extends TypeRegistry<T> {
 	List<Codec<T>> codecCodecList=new ArrayList<>();
 	Codec<T> byName=new KeyMapCodec<T,String>(Codec.STRING,o->this.typeOf(o.getClass()),this::getCodec);
 	Codec<T> byInt=Codec.INT.dispatch(this::idOf,codecCodecList::get);
-	public <A extends T> void register(Class<A> cls, String type,MapCodec<A> codec) {
+	public synchronized <A extends T>  void register(Class<A> cls, String type,MapCodec<A> codec) {
 		codecs.put(type, (MapCodec<T>) codec);
 		codecList.add((MapCodec<T>) codec);
 		codecCodecList.add((Codec<T>)codec.codec());

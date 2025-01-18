@@ -22,7 +22,7 @@ package com.teammoeg.chorda.util.mixin;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.teammoeg.chorda.block.ManagedOwnerTile;
+import com.teammoeg.chorda.block.ManagedOwnerBlockEntity;
 
 import net.minecraft.world.level.block.entity.BlockEntity;
 
@@ -44,7 +44,7 @@ public interface IOwnerTile {
     }
 
     static void trySetOwner(BlockEntity te, UUID id) {
-        if (te instanceof IOwnerTile && !(te instanceof ManagedOwnerTile)) {
+        if (te instanceof IOwnerTile && !(te instanceof ManagedOwnerBlockEntity)) {
             if (((IOwnerTile) te).getStoredOwner() == null) {
                 ((IOwnerTile) te).setStoredOwner(id);
                 if(te instanceof IOwnerChangeListener) {

@@ -63,7 +63,7 @@ public class CustomSerializerRegistry<T, U> {
         return info.getFirst();
     }
 
-    protected void putSerializer(String type, U s) {
+    protected  void  putSerializer(String type, U s) {
         fromJson.put(type, s);
     }
 
@@ -81,7 +81,7 @@ public class CustomSerializerRegistry<T, U> {
         return fromPacket.get(id).apply(pb);
     }
 
-    public void register(Class<? extends T> cls, String type, U json, Function<FriendlyByteBuf, T> packet) {
+    public synchronized void register(Class<? extends T> cls, String type, U json, Function<FriendlyByteBuf, T> packet) {
         putSerializer(type, json);
         int id = fromPacket.size();
         fromPacket.add(packet);

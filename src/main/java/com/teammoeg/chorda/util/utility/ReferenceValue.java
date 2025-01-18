@@ -22,6 +22,11 @@ package com.teammoeg.chorda.util.utility;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
+/**
+ * @deprecated use {@link org.apache.commons.lang3.mutable.MutableObject MutableObject} instead
+ * */
+
+@Deprecated
 public class ReferenceValue<T> {
     public T val;
 
@@ -31,6 +36,7 @@ public class ReferenceValue<T> {
 
     public ReferenceValue(T val) {
         super();
+        
         this.val = val;
     }
 

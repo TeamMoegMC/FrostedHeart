@@ -6,6 +6,7 @@ import net.minecraft.util.Mth;
 import java.text.NumberFormat;
 import java.util.Locale;
 
+
 public class LangNumberFormat {
 
     private NumberFormat format = NumberFormat.getNumberInstance(Locale.ROOT);
@@ -14,7 +15,7 @@ public class LangNumberFormat {
     public NumberFormat get() {
         return format;
     }
-
+   
     public void update() {
         format = NumberFormat.getInstance(Minecraft.getInstance()
                 .getLanguageManager()

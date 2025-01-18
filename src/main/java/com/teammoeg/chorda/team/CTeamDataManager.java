@@ -37,6 +37,8 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.events.TeamLoadedEvent;
+
 import org.apache.commons.io.FileUtils;
 
 import com.mojang.authlib.GameProfile;
@@ -53,6 +55,7 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.players.GameProfileCache;
 import net.minecraft.world.level.storage.LevelResource;
+import net.minecraftforge.common.MinecraftForge;
 
 /**
  * The data manager for all team data.
@@ -68,7 +71,7 @@ public class CTeamDataManager {
     public static final LevelResource dataFolder = new LevelResource("fhdata");
     static final LevelResource oldDataFolder = new LevelResource("fhresearch");
     private Map<UUID, UUID> dataByFTBId = new HashMap<>();
-    private Map<UUID, TeamDataHolder> dataByChordaId = new HashMap<>();
+    private Map<UUID, TeamDataHolder> dataByOwnId = new HashMap<>();
     
     public static RecipeManager getRecipeManager() {
         if (getServer() != null)
@@ -86,7 +89,7 @@ public class CTeamDataManager {
      * @return the data collection
      */
     public Collection<TeamDataHolder> getAllData() {
-        return dataByChordaId.values();
+        return dataByOwnId.values();
     }
 
     /**
@@ -96,10 +99,10 @@ public class CTeamDataManager {
      * @return the data stream
      */
     public <T extends SpecialData> Stream<T> getAllData(SpecialDataType<T> type) {
-        return dataByChordaId.values().stream().map(t->t.getOptional(type)).filter(Optional::isPresent).map(Optional::get);
+        return dataByOwnId.values().stream().map(t->t.getOptional(type)).filter(Optional::isPresent).map(Optional::get);
     }
     public <T extends SpecialData> void forAllData(SpecialDataType<T> type,BiConsumer<T,TeamDataHolder> consumer) {
-        dataByChordaId.values().stream().forEach(t->{
+        dataByOwnId.values().stream().forEach(t->{
         	Optional<T> opt=t.getOptional(type);
         	if(opt.isPresent()) {
         		consumer.accept( opt.get(),t);
@@ -151,7 +154,7 @@ public class CTeamDataManager {
             GameProfile owner = getServer().getProfileCache().get(team.getOwner()).orElse(null);
             
             if (owner != null&&(!getServer().usesAuthentication()||getServer().isSingleplayer()))
-                for (Entry<UUID, TeamDataHolder> dat : dataByChordaId.entrySet()) {
+                for (Entry<UUID, TeamDataHolder> dat : dataByOwnId.entrySet()) {
                     if (owner.getName().equals(dat.getValue().getOwnerName())) {
                         this.transferByRid(dat.getKey(), team);
                         cn=dat.getKey();
@@ -159,7 +162,7 @@ public class CTeamDataManager {
                     }
                 }
         }
-        TeamDataHolder data= dataByChordaId.computeIfAbsent(cn, c -> new TeamDataHolder(c, OptionalLazy.of(()->team)));
+        TeamDataHolder data= dataByOwnId.computeIfAbsent(cn, c -> new TeamDataHolder(c, OptionalLazy.of(()->team)));
         if (data.getOwnerName() == null) {
             GameProfileCache cache = getServer().getProfileCache();
             if (cache != null) {
@@ -181,7 +184,7 @@ public class CTeamDataManager {
      */
     @Nullable
     public TeamDataHolder get(UUID id) {
-        return dataByChordaId.get(id);
+        return dataByOwnId.get(id);
     }
 
     /**
@@ -207,7 +210,7 @@ public class CTeamDataManager {
         }
         if(strm1!=null) {
         	dataByFTBId.clear();
-        	dataByChordaId.clear();
+        	dataByOwnId.clear();
 	        strm1.forEach(f->{
 	            UUID tud;
 	            try {
@@ -223,11 +226,11 @@ public class CTeamDataManager {
 	                	tud=nbt.getUUID("teamId");
 	                final UUID ftbid=tud;
 	                TeamDataHolder trd = new TeamDataHolder(nbt.getUUID("uuid"),OptionalLazy.ofOptional(() -> FTBTeamsAPI.api().getManager().getTeamByID(ftbid)));
-	
 	                trd.deserialize(nbt, false);
 	                dataByFTBId.put(ftbid, trd.getId());
-	                dataByChordaId.put(trd.getId(), trd);
-                    Chorda.LOGGER.debug("Data file for team " + trd.getId().toString() + " loaded.");
+	                dataByOwnId.put(trd.getId(), trd);
+                    MinecraftForge.EVENT_BUS.post(new TeamLoadedEvent(trd));
+	                Chorda.LOGGER.debug("Data file for team " + trd.getId().toString() + " loaded.");
 	            } catch (IllegalArgumentException ex) {
 	                ex.printStackTrace();
 	                Chorda.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
@@ -245,7 +248,7 @@ public class CTeamDataManager {
     public void save() {
     	Path local=getServer().getWorldPath(dataFolder);
         Set<String> files = new HashSet<>(Arrays.asList(local.toFile().list((d, s) -> s.endsWith(".nbt"))));
-        for (Entry<UUID, TeamDataHolder> entry : dataByChordaId.entrySet()) {
+        for (Entry<UUID, TeamDataHolder> entry : dataByOwnId.entrySet()) {
             String fn = entry.getKey().toString() + ".nbt";
             File f = local.resolve(fn).toFile();
             try {
@@ -279,7 +282,7 @@ public class CTeamDataManager {
      */
     public void transfer(UUID orig, Team team) {
     	UUID rid=dataByFTBId.remove(orig);
-        TeamDataHolder odata = dataByChordaId.get(rid);
+        TeamDataHolder odata = dataByOwnId.get(rid);
         if (odata != null) {
             odata.setTeam(OptionalLazy.of(()->team));
             odata.setOwnerName(getServer().getProfileCache().get(team.getOwner()).map(GameProfile::getName).orElse(null));
@@ -291,7 +294,7 @@ public class CTeamDataManager {
 
     }
     public void transferByRid(UUID rid, Team team) {
-        TeamDataHolder odata = dataByChordaId.get(rid);
+        TeamDataHolder odata = dataByOwnId.get(rid);
         if (odata != null) {
             odata.setTeam(OptionalLazy.of(()->team));
             odata.setOwnerName(getServer().getProfileCache().get(team.getOwner()).map(GameProfile::getName).orElse(null));

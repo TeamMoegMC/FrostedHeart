@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.teammoeg.chorda.util.lang.ComponentOptimizer;
-import com.teammoeg.chorda.util.misc.MultipleRoundHelper;
+import com.teammoeg.chorda.util.misc.Persentage2FractionHelper;
 
 import com.teammoeg.chorda.util.lang.Components;
 import net.minecraft.network.chat.Component;
@@ -19,11 +19,11 @@ public class FineProgressBarBuilder {
 	private static final Style def_style= FHTextIcon.applyFont(Style.EMPTY);
 	List<ProgressElement> elm=new ArrayList<>();
 	MutableComponent parent= Components.str("");
-	MultipleRoundHelper rounder;
+	Persentage2FractionHelper rounder;
 	int len;
 	public FineProgressBarBuilder(int length) {
 		len=length;
-		rounder=new MultipleRoundHelper(length);
+		rounder=new Persentage2FractionHelper(length);
 	}
 	public FineProgressBarBuilder addElement(int color,String icon,float percent) {
 		elm.add(new ProgressElement(color,rounder.getPercentRounded(percent),icon));

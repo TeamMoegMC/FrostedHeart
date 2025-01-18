@@ -1,18 +1,25 @@
 package com.teammoeg.chorda.util.ie;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.MultiblockRegistration;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelper;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockLevel;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockBE;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockLogic;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.blockimpl.MultiblockContext;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.blockimpl.WrappingMultiblockContext;
+
 import com.teammoeg.chorda.util.CUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.Level;
 
 public class CMultiblockHelper {
-
+	private static final Supplier<RuntimeException> noMultiblockExists=()->new IllegalStateException("Multiblock is not valid");
 	private CMultiblockHelper() {
 	}
 	public static Optional<IMultiblockBEHelper<?>> getBEHelper(Level level,BlockPos pos){
@@ -29,17 +36,33 @@ public class CMultiblockHelper {
 			return Optional.of(te.getHelper());
 		return Optional.empty();
 	}
-	public static Optional<IMultiblockLogic<?>> getMultiblockLogic(IMultiblockLevel level){
-		return getBEHelper(level).map(t->t.getMultiblock().logic());
-	}
-	public static Vec3i getSize(IMultiblockLevel level) {
-		return getBEHelper(level).map(t->t.getMultiblock().getSize().apply(level.getRawLevel())).orElse(Vec3i.ZERO);
-	}
-	public static BlockPos getMasterPos(IMultiblockLevel level) {
-		return getBEHelper(level).map(t->t.getMultiblock().masterPosInMB()).orElse(BlockPos.ZERO);
-	}
-	public static BlockPos getAbsoluteMaster(IMultiblockLevel level) {
-		return getBEHelper(level).map(t->level.toAbsolute(t.getMultiblock().masterPosInMB())).orElse(BlockPos.ZERO);
+	public static Optional<MultiblockRegistration<?>> getMultiblockOptional(IMultiblockContext<?> ctx){
+		unwrap(ctx);
+		if(ctx instanceof MultiblockContext mbctx) {
+			return Optional.of(mbctx.multiblock());
+		}
+		return getBEHelper(ctx.getLevel()).map(t->t.getMultiblock());
 	}
 	
+	public static MultiblockRegistration<?> getMultiblock(IMultiblockContext<?> ctx){
+		return getMultiblockOptional(ctx).orElseThrow(noMultiblockExists);
+	}
+	public static Optional<IMultiblockLogic<?>> getMultiblockLogic(IMultiblockContext<?> ctx){
+		return getMultiblockOptional(ctx).map(t->t.logic());
+	}
+	public static Vec3i getSize(IMultiblockContext<?> ctx) {
+		return getMultiblock(ctx).size(ctx.getLevel().getRawLevel());
+	}
+	public static BlockPos getMasterPos(IMultiblockContext<?> ctx) {
+		return getMultiblock(ctx).masterPosInMB();
+	}
+	public static BlockPos getAbsoluteMaster(IMultiblockContext<?> ctx) {
+		return ctx.getLevel().toAbsolute(getMasterPos(ctx));
+	}
+	private static IMultiblockContext<?> unwrap(IMultiblockContext<?> ctx){
+		while(ctx instanceof WrappingMultiblockContext wctx) {
+			ctx=wctx.inner();
+		}
+		return ctx;
+	}
 }

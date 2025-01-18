@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.ApiUtils;
@@ -120,7 +120,7 @@ public class IncubateRecipe extends IESerializableRecipe {
         super(Lazy.of(()->ItemStack.EMPTY), IEType.get(), IncubatorTileEntity.food);
         isFood = true;
         List<ItemLike> items = new ArrayList<>();
-        for (Item i : CRegistries.getItems()) {
+        for (Item i : CRegistryHelper.getItems()) {
             if (i.isEdible())
                 items.add(i);
         }

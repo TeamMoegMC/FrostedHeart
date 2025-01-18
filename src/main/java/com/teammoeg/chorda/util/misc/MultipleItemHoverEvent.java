@@ -6,7 +6,7 @@ import net.minecraft.network.chat.HoverEvent.ItemStackInfo;
 import net.minecraft.world.item.ItemStack;
 /*
  * client only event to display multiple items
- * 
+ * This is a hack and can not be sent by network
  * */
 public class MultipleItemHoverEvent extends ItemStackInfo {
 	List<ItemStack> stacks;

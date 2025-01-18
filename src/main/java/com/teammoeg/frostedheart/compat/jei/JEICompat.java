@@ -38,7 +38,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
@@ -346,7 +346,7 @@ public class JEICompat implements IModPlugin {
         checkNotNull(world, "minecraft world");
         RecipeManager recipeManager = world.getRecipeManager();
 
-        CuttingCategory.matching = CRegistries.getItemHolders().filter(t->t.containsTag(CuttingCategory.ktag)).map(t->t.get()).collect(Collectors.toList());
+        CuttingCategory.matching = CRegistryHelper.getItemHolders().filter(t->t.containsTag(CuttingCategory.ktag)).map(t->t.get()).collect(Collectors.toList());
 
         registration.addRecipes(GeneratorFuelCategory.UID, CUtils.filterRecipes(recipeManager,GeneratorRecipe.TYPE));
         registration.addRecipes(GeneratorSteamCategory.UID,new ArrayList<>(GeneratorSteamRecipe.recipeList.values()));

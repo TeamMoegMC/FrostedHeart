@@ -10,8 +10,8 @@ import net.minecraftforge.common.util.LazyOptional;
 
 public class CNBTCapabilityProvider<C extends NBTSerializable> implements ICapabilitySerializable<CompoundTag>{
 	LazyOptional<C> lazyCap;
-	CNBTCapability<C> capability;
-	public CNBTCapabilityProvider(CNBTCapability<C> capability) {
+	CNBTCapabilityType<C> capability;
+	public CNBTCapabilityProvider(CNBTCapabilityType<C> capability) {
 		super();
 		this.capability = capability;
 		this.lazyCap=capability.createCapability();

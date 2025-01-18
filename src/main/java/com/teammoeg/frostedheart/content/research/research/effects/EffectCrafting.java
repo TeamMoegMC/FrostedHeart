@@ -27,7 +27,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.chorda.util.CMath;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.io.CodecUtil;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
@@ -167,7 +167,7 @@ public class EffectCrafting extends Effect {
     private void initItem() {
         unlocks.clear();
         for (Recipe<?> r : CTeamDataManager.getRecipeManager().getRecipes()) {
-            ItemStack result = r.getResultItem(CRegistries.getAccess());
+            ItemStack result = r.getResultItem(CRegistryHelper.getAccess());
             if (result == null) {
                 LogUtils.getLogger().debug("Error null recipe " + r);
             }

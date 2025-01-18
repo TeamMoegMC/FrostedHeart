@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.bootstrap.reference;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 
@@ -41,7 +41,7 @@ import net.minecraftforge.fml.ModList;
 
 public enum FHArmorMaterial implements ArmorMaterial {
     HIDE("hide", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(FHItems.raw_hide.get())),
-    HAY("hay", 4, new int[]{1, 1, 1, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(ModList.get().isLoaded("charcoal_pit") ? CRegistries.getItem(new ResourceLocation("charcoal_pit", "straw")) : Items.WHEAT)),
+    HAY("hay", 4, new int[]{1, 1, 1, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(ModList.get().isLoaded("charcoal_pit") ? CRegistryHelper.getItem(new ResourceLocation("charcoal_pit", "straw")) : Items.WHEAT)),
     WOOL("wool", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(Items.WHITE_WOOL)),
     WEATHER("weather", 15, new int[]{2, 5, 6, 2}, 9, SoundEvents.ARMOR_EQUIP_IRON, 0.0F, 0.0F, () -> Ingredient.of(Items.IRON_INGOT));
 

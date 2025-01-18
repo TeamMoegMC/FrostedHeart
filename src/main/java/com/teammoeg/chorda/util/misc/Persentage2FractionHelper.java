@@ -1,12 +1,19 @@
 package com.teammoeg.chorda.util.misc;
-
-public class MultipleRoundHelper {
+/**
+ * A utility for rounding percentage into fractions of custom value preserves total parts.
+ * 
+ * */
+public class Persentage2FractionHelper {
 	private float reminder=0;
 	private int maximum;
 	private int originMax;
-	public MultipleRoundHelper(int maximum) {
-		this.originMax=this.maximum=maximum;
+	public Persentage2FractionHelper(int denum) {
+		this.originMax=this.maximum=denum;
 	}
+	/**
+	 * round fraction numer with decimal to integer
+	 * 
+	 * */
 	public int getRounded(float value) {
 		value-=reminder;
 		int retval=Math.round(value);
@@ -19,6 +26,10 @@ public class MultipleRoundHelper {
 	public int getReminder() {
 		return maximum;
 	}
+	/*
+	* round percentage to fraction numer
+	* @Param value percentage value, 100% is 1 and etc
+	*/
 	public int getPercentRounded(float value) {
 		return getRounded(value*originMax);
 	}

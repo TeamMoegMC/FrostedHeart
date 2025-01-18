@@ -41,7 +41,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.FHVersion;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.client.GuiClickedEvent;
-import com.teammoeg.chorda.util.client.RenderHelper;
+import com.teammoeg.chorda.util.client.CameraHelper;
 import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -348,19 +348,19 @@ public class FHClientEvents {
             });
 
             if (pe != null && pe.getEffect(FHMobEffects.NYCTALOPIA.get()) != null) {
-                ClientUtils.applyspg = true;
-                ClientUtils.spgamma = Mth.clamp((float) (double) (ClientUtils.mc().options.gamma().get()), 0f, 1f) * 0.1f
+                ClientUtils.DoApplyGammaValue = true;
+                ClientUtils.OverwriteGammaValue = Mth.clamp((float) (double) (ClientUtils.mc().options.gamma().get()), 0f, 1f) * 0.1f
                         - 1f;
             } else {
-                ClientUtils.applyspg = false;
-                ClientUtils.spgamma = Mth.clamp((float) (double) ClientUtils.mc().options.gamma().get(), 0f, 1f);
+                ClientUtils.DoApplyGammaValue = false;
+                ClientUtils.OverwriteGammaValue = Mth.clamp((float) (double) ClientUtils.mc().options.gamma().get(), 0f, 1f);
             }
         }
     }
 
     @SubscribeEvent
     public static void unloadWorld(LevelEvent.Unload event) {
-        ClientUtils.applyspg = false;
+        ClientUtils.DoApplyGammaValue = false;
     }
 
     /*
@@ -454,10 +454,10 @@ public class FHClientEvents {
     public static void onWorldRender(RenderLevelStageEvent event) {
         if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_LEVEL) {
             //获取渲染信息
-            RenderHelper.projectionMatrix = event.getProjectionMatrix();
-            RenderHelper.poseStack = event.getPoseStack();
-            RenderHelper.frustum = event.getFrustum();
-            RenderHelper.camera = event.getCamera();
+            CameraHelper.projectionMatrix = event.getProjectionMatrix();
+            CameraHelper.poseStack = event.getPoseStack();
+            CameraHelper.frustum = event.getFrustum();
+            CameraHelper.camera = event.getCamera();
         }
     }
 

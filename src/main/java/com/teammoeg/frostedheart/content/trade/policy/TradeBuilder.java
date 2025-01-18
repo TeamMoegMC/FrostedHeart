@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.trade.policy.actions.AddFlagValueAction;
 import com.teammoeg.frostedheart.content.trade.policy.actions.SetFlagAction;
@@ -339,7 +339,7 @@ public class TradeBuilder implements FinishedRecipe {
          * @return returns buy
          */
         public GroupBuilder buy(int maxstore, float recover, int price, Item item) {
-            return this.buy(CRegistries.getRegistryName(item).toString(), maxstore, recover, price, Ingredient.of(item));
+            return this.buy(CRegistryHelper.getRegistryName(item).toString(), maxstore, recover, price, Ingredient.of(item));
         }
 
         /**
@@ -352,7 +352,7 @@ public class TradeBuilder implements FinishedRecipe {
          * @return returns buy
          */
         public GroupBuilder buy(int maxstore, float recover, int price, ItemStack item) {
-            return this.buy(CRegistries.getRegistryName(item.getItem()).toString(), maxstore, recover, price, Ingredient.of(item));
+            return this.buy(CRegistryHelper.getRegistryName(item.getItem()).toString(), maxstore, recover, price, Ingredient.of(item));
         }
 
         /**
@@ -498,7 +498,7 @@ public class TradeBuilder implements FinishedRecipe {
          * @return returns sell
          */
         public GroupBuilder sell(int maxstore, float recover, int price, Item item) {
-            return this.sell(CRegistries.getRegistryName(item).toString(), maxstore, recover, price, new ItemStack(item));
+            return this.sell(CRegistryHelper.getRegistryName(item).toString(), maxstore, recover, price, new ItemStack(item));
         }
 
         /**
@@ -512,7 +512,7 @@ public class TradeBuilder implements FinishedRecipe {
          * @return returns sell
          */
         public GroupBuilder sell(int maxstore, float recover, int price, Item item, int count) {
-            return this.sell(CRegistries.getRegistryName(item).toString(), maxstore, recover, price, new ItemStack(item, count));
+            return this.sell(CRegistryHelper.getRegistryName(item).toString(), maxstore, recover, price, new ItemStack(item, count));
         }
 
         /**
@@ -525,7 +525,7 @@ public class TradeBuilder implements FinishedRecipe {
          * @return returns sell
          */
         public GroupBuilder sell(int maxstore, float recover, int price, ItemStack item) {
-            return this.sell(CRegistries.getRegistryName(item.getItem()).toString(), maxstore, recover, price, item);
+            return this.sell(CRegistryHelper.getRegistryName(item.getItem()).toString(), maxstore, recover, price, item);
         }
 
         /**
@@ -669,7 +669,7 @@ public class TradeBuilder implements FinishedRecipe {
         if (weight > 0)
             arg0.addProperty("weight", weight);
         if (prof != null && prof != VillagerProfession.NONE)
-            arg0.addProperty("profession", CRegistries.getRegistryName(prof).toString());
+            arg0.addProperty("profession", CRegistryHelper.getRegistryName(prof).toString());
         if (exp != null)
             arg0.add("exps", SerializeUtil.toJsonList(Arrays.stream(exp).boxed().collect(Collectors.toList()), JsonPrimitive::new));
     }

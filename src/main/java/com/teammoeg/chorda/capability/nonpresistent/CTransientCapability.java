@@ -2,7 +2,7 @@ package com.teammoeg.chorda.capability.nonpresistent;
 
 import org.objectweb.asm.Type;
 
-import com.teammoeg.chorda.capability.CCapability;
+import com.teammoeg.chorda.capability.CCapabilityType;
 import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
@@ -14,7 +14,7 @@ import net.minecraftforge.common.util.NonNullSupplier;
  * Used to register capablity that have special data storage like item nbt, block entities...
  * Coresponding capability class should not implement INBTSerializable.
  * */
-public class CTransientCapability<C> implements CCapability {
+public class CTransientCapability<C> implements CCapabilityType {
 	private Class<C> capClass;
 	private Capability<C> capability;
 

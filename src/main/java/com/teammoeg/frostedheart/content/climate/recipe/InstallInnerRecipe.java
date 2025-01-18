@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
 import com.google.gson.JsonObject;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.chorda.util.io.JsonHelper;
 
@@ -99,7 +99,7 @@ public class InstallInnerRecipe extends CustomRecipe {
     }
 
     public ResourceLocation getBuffType() {
-        return Optional.fromNullable(type.getItems()[0]).transform(e -> CRegistries.getRegistryName(e.getItem()))
+        return Optional.fromNullable(type.getItems()[0]).transform(e -> CRegistryHelper.getRegistryName(e.getItem()))
                 .or(new ResourceLocation("minecraft", "air"));
     }
 
@@ -132,7 +132,7 @@ public class InstallInnerRecipe extends CustomRecipe {
         if (!armoritem.isEmpty() && !buffstack.isEmpty()) {
             ItemStack ret = armoritem.copy();
             ret.setCount(1);
-            ItemNBTHelper.putString(ret, "inner_cover", CRegistries.getRegistryName(buffstack.getItem()).toString());
+            ItemNBTHelper.putString(ret, "inner_cover", CRegistryHelper.getRegistryName(buffstack.getItem()).toString());
             CompoundTag nbt = buffstack.getTag();
             ret.getTag().put("inner_cover_tag", nbt != null ? nbt : new CompoundTag());
             return ret;

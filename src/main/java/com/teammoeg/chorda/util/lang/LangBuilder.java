@@ -10,6 +10,8 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.List;
 
 /**
@@ -24,7 +26,7 @@ import java.util.List;
 public class LangBuilder {
     String namespace;
     MutableComponent component;
-
+    NumberFormat currentNumberFormat=LangNumberFormat.numberFormat.get();
     public LangBuilder(String namespace) {
         this.namespace = namespace;
     }
@@ -128,9 +130,34 @@ public class LangBuilder {
     public LangBuilder text(int color, String literalText) {
         return add(Components.literal(literalText).withStyle(s -> s.withColor(color)));
     }
-
+    /**
+     * set number format for number
+     * use # to represent optional digits, 0 to represent mandatory digits
+     * such as #,##0.## would cause a minimum fraction digit of 0 and maximum fraction digit of 2 and a seperator by 3, more digits would have more seperators
+     * @see java.text.DecimalFormat
+     * 
+     * */
+    public LangBuilder setNumberFormat(String format) {
+    	currentNumberFormat=new DecimalFormat(format);
+    	return this;
+    }
+    /**
+     * use number format for current locale
+     * */
+    public LangBuilder useLocalNumberFormat() {
+    	currentNumberFormat=LangNumberFormat.numberFormat.get();
+    	return this;
+    }
+    public LangBuilder number(long d) {
+        return add(Components.literal(currentNumberFormat.format(d)));
+    }
     public LangBuilder number(double d) {
-        return add(Components.literal(LangNumberFormat.format(d)));
+        return add(Components.literal(currentNumberFormat.format(d)));
+    }
+
+    
+    public LangBuilder number(Number d) {
+        return add(Components.literal(currentNumberFormat.format(d)));
     }
 
     /**

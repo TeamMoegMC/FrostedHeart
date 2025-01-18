@@ -22,7 +22,9 @@ package com.teammoeg.chorda.util.utility;
 import java.util.function.Supplier;
 
 import net.minecraft.nbt.CompoundTag;
-
+/**
+ * worker runs with a interval of tick
+ * */
 public class LazyTickWorker {
     public int tMax;
     public int tCur = 0;

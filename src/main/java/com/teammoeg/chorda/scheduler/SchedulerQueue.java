@@ -89,8 +89,8 @@ public class SchedulerQueue {
         while (taskNum > 0) {
             ScheduledData data = tasks.get(curpos);
             BlockEntity te = CUtils.getExistingTileEntity(world, data.pos);
-            if ((te instanceof ScheduledTaskTileEntity)) {
-                ((ScheduledTaskTileEntity) te).executeTask();
+            if (te instanceof ScheduledTaskTileEntity ste&&ste.isStillValid()) {
+                ste.executeTask();
             } else {
                 data.forRemoval = true;
             }

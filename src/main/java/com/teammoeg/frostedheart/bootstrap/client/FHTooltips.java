@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.recipe.InspireRecipe;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.ChatFormatting;
@@ -64,7 +64,7 @@ public class FHTooltips {
     public static void register(Item item) {
         Function<Item, TooltipModifier> factory = FHMain.REGISTRATE.getTooltipModifierFactory();
         if (factory != null) {
-            TooltipModifier.REGISTRY.registerDeferred(CRegistries.getRegistryName(item), factory);
+            TooltipModifier.REGISTRY.registerDeferred(CRegistryHelper.getRegistryName(item), factory);
         }
     }
 

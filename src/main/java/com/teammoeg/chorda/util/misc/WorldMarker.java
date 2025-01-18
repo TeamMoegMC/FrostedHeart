@@ -15,7 +15,11 @@ import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
-
+/**
+ * A storage pattern to mark a very custom section of the world,
+ * Works like Set&lt;BlockPos&gt;
+ * 
+ * */
 public class WorldMarker {
 	public static class ChunkMarker{
 		public static final Codec<ChunkMarker> CODEC=RecordCodecBuilder.create(t->t.group(Codec.list(CodecUtil.defaultValue(Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of), null)).fieldOf("data").forGetter(o->o.getList())).apply(t, ChunkMarker::new));

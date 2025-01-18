@@ -53,7 +53,7 @@ public final class T1GeneratorLogic extends GeneratorLogic<T1GeneratorLogic, T1G
      * @return
      */
     private boolean findTileEntity(IMultiblockContext<T1GeneratorState> ctx) {
-        Vec3i vec = CMultiblockHelper.getSize(ctx.getLevel());
+        Vec3i vec = CMultiblockHelper.getSize(ctx);
         int xLow = -1, xHigh = vec.getX(), yLow = 0, yHigh = vec.getY(), zLow = -1, zHigh = vec.getZ();
         int blastBlockCount = 0, alloySmelterCount = 0;
         BlockPos.MutableBlockPos blockpos = new BlockPos.MutableBlockPos();

@@ -5,7 +5,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 
 @FunctionalInterface
-public interface ClientContainerConstructor<C extends AbstractContainerMenu>
+public interface MultiblockMenuClientFactory<C extends AbstractContainerMenu>
 {
-	C construct(MenuType<C> type, int windowId, Inventory inventoryPlayer);
+	C create(MenuType<C> type, int windowId, Inventory inventoryPlayer);
 }

@@ -11,8 +11,8 @@ import net.minecraftforge.common.util.LazyOptional;
 
 public class CCodecCapabilityProvider<T> implements ICapabilitySerializable<Tag> {
 	LazyOptional<T> lazyCap;
-	CCodecCapability<T> capability;
-	public CCodecCapabilityProvider(CCodecCapability<T> capability) {
+	CCodecCapabilityType<T> capability;
+	public CCodecCapabilityProvider(CCodecCapabilityType<T> capability) {
 		this.capability=capability;
 		this.lazyCap=capability.createCapability();
 	}

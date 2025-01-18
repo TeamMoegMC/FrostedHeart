@@ -1,4 +1,4 @@
-package com.teammoeg.chorda.util.io;
+package com.teammoeg.chorda.util.io.nbtbuilder;
 
 import java.util.List;
 import java.util.UUID;

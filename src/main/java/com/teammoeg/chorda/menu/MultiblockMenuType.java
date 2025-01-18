@@ -13,12 +13,12 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.registries.RegistryObject;
 
-public class MultiblockContainer<S extends IMultiblockState, C extends AbstractContainerMenu>
+public class MultiblockMenuType<S extends IMultiblockState, C extends AbstractContainerMenu>
 {
 	private final RegistryObject<MenuType<C>> type;
-	private final MultiBlockMenuConstructor<S, C> factory;
+	private final MultiBlockMenuServerFactory<S, C> factory;
 
-	public MultiblockContainer(RegistryObject<MenuType<C>> type, MultiBlockMenuConstructor<S, C> factory) {
+	public MultiblockMenuType(RegistryObject<MenuType<C>> type, MultiBlockMenuServerFactory<S, C> factory) {
 		super();
 		this.type = type;
 		this.factory = factory;
@@ -32,7 +32,7 @@ public class MultiblockContainer<S extends IMultiblockState, C extends AbstractC
 
 			@Override
 			public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-				return factory.construct(getType(), pContainerId, pPlayerInventory, new IEContainerMenu.MultiblockMenuContext<S>(ctx, ctx.getLevel().toAbsolute(relativeClicked)));
+				return factory.create(getType(), pContainerId, pPlayerInventory, new IEContainerMenu.MultiblockMenuContext<S>(ctx, ctx.getLevel().toAbsolute(relativeClicked)));
 			}
 
 			@Override

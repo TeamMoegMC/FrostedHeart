@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 
 import blusunrize.immersiveengineering.api.IETags;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.trade.policy.TradeBuilder;
@@ -66,7 +66,7 @@ public class FHRecipeProvider extends RecipeProvider {
 						if(parts.length==0)break;
 						ResourceLocation id=new ResourceLocation(FHMain.MODID,"diet_value/"+parts[0].replaceAll(":","/"));
 						ResourceLocation item=new ResourceLocation(parts[0]);
-						Item it= CRegistries.getItem(item);
+						Item it= CRegistryHelper.getItem(item);
 						if(it==null||it==Items.AIR) {
 							FHMain.LOGGER.warn("TWR Recipe: " + item + " not exist");
 							FHMain.LOGGER.info(item+","+parts[1]);

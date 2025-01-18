@@ -26,9 +26,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import com.teammoeg.chorda.ChordaNetwork;
-import com.teammoeg.chorda.network.CContainerDataSync;
-import com.teammoeg.chorda.network.CContainerOperation;
-import com.teammoeg.chorda.util.utility.CContainerData.SyncableDataSlot;
+import com.teammoeg.chorda.network.ContainerDataSyncMessageS2C;
+import com.teammoeg.chorda.network.ContainerOperationMessageC2S;
+import com.teammoeg.chorda.util.utility.CCustomMenuSlot.SyncableDataSlot;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
@@ -43,7 +43,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.util.Lazy;
 
-public abstract class CContainer extends AbstractContainerMenu {
+public abstract class CBaseMenu extends AbstractContainerMenu {
 	public static class Validator implements Predicate<Player> {
 		Vec3 initial;
 		int distsqr;
@@ -91,7 +91,7 @@ public abstract class CContainer extends AbstractContainerMenu {
 				ranges.add(new Range(beginInclusive,endExclusive,reversed));
 				return this;
 			}
-			public Function<ItemStack,Boolean> build(CContainer t){
+			public Function<ItemStack,Boolean> build(CBaseMenu t){
 				return i->{
 					for(Range r:ranges) {
 						if(t.moveItemStackTo(i, r.start(), r.end(), r.reverse()))
@@ -110,7 +110,7 @@ public abstract class CContainer extends AbstractContainerMenu {
 	protected Lazy<Function<ItemStack,Boolean>> moveFunction = Lazy.of(()->defineQuickMoveStack().build(this));
 	protected List<SyncableDataSlot<?>> specialDataSlots=new ArrayList<>();
 	private Player player;
-	public CContainer(MenuType<?> pMenuType, int pContainerId, Player player, int inv_start) {
+	public CBaseMenu(MenuType<?> pMenuType, int pContainerId, Player player, int inv_start) {
 		super(pMenuType, pContainerId);
 		this.INV_START = inv_start;
 		this.player=player;
@@ -177,13 +177,13 @@ public abstract class CContainer extends AbstractContainerMenu {
 		
 	}
 	public void sendMessage(int btnId,int state) {
-		ChordaNetwork.sendToServer(new CContainerOperation(this.containerId,(short) btnId,state));
+		ChordaNetwork.sendToServer(new ContainerOperationMessageC2S(this.containerId,(short) btnId,state));
 	}
 	public void sendMessage(int btnId,boolean state) {
-		ChordaNetwork.sendToServer(new CContainerOperation(this.containerId,(short) btnId,state?1:0));
+		ChordaNetwork.sendToServer(new ContainerOperationMessageC2S(this.containerId,(short) btnId,state?1:0));
 	}
 	public void sendMessage(int btnId,float state) {
-		ChordaNetwork.sendToServer(new CContainerOperation(this.containerId,(short) btnId,Float.floatToRawIntBits(state)));
+		ChordaNetwork.sendToServer(new ContainerOperationMessageC2S(this.containerId,(short) btnId,Float.floatToRawIntBits(state)));
 	}
 
 	@Override
@@ -199,7 +199,7 @@ public abstract class CContainer extends AbstractContainerMenu {
 		specialDataSlots.add(slot);
 	}
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public void processPacket(CContainerDataSync packet) {
+	public void processPacket(ContainerDataSyncMessageS2C packet) {
 		packet.forEach((i,o)->{
 			((SyncableDataSlot)specialDataSlots.get(i)).setValue(o);
 		});
@@ -207,7 +207,7 @@ public abstract class CContainer extends AbstractContainerMenu {
 	@Override
 	public void broadcastChanges() {
 		super.broadcastChanges();
-		CContainerDataSync packet=new CContainerDataSync();
+		ContainerDataSyncMessageS2C packet=new ContainerDataSyncMessageS2C();
 		for(int i=0;i<specialDataSlots.size();i++) {
 			SyncableDataSlot<?> slot= specialDataSlots.get(i);
 			if(slot.checkForUpdate()) {

@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.research.FHResearch;
@@ -64,7 +64,7 @@ public class SelectDialog<T> extends EditDialog {
         ).open();
 
     };
-    public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, CRegistries::getEntities, EntityType::getDescription, e -> new String[]{e.getDescription().getString(), CRegistries.getRegistryName(e).toString()}
+    public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, CRegistryHelper::getEntities, EntityType::getDescription, e -> new String[]{e.getDescription().getString(), CRegistryHelper.getRegistryName(e).toString()}
     ).open();
     public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, () -> ForgeRegistries.ITEMS.tags().getTagNames().map(t -> t.location()).map(ResourceLocation::toString).collect(Collectors.toSet())).open();
     public PanelScrollBar scroll;

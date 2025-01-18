@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.agriculture;
 
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.world.level.block.state.BlockState;
@@ -46,7 +46,7 @@ public class WolfBerryBushBlock extends FHBerryBushBlock {
     }
     ResourceLocation wolfBerries=new ResourceLocation(FHMain.MODID,"wolfberries");
     public ItemStack getCloneItemStack(BlockGetter worldIn, BlockPos pos, BlockState state) {
-        return new ItemStack(CRegistries.getItem(wolfBerries));
+        return new ItemStack(CRegistryHelper.getItem(wolfBerries));
     }
 
     public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
@@ -56,7 +56,7 @@ public class WolfBerryBushBlock extends FHBerryBushBlock {
             return InteractionResult.PASS;
         } else if (i > 2) {
             int j = 1 + worldIn.random.nextInt(2);
-            popResource(worldIn, pos, new ItemStack(CRegistries.getItem(wolfBerries), j + (flag ? 1 : 0)));
+            popResource(worldIn, pos, new ItemStack(CRegistryHelper.getItem(wolfBerries), j + (flag ? 1 : 0)));
             worldIn.playSound(null, pos, SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES, SoundSource.BLOCKS, 1.0F, 0.8F + worldIn.random.nextFloat() * 0.4F);
             worldIn.setBlock(pos, state.setValue(AGE, 1), 2);
             return InteractionResult.sidedSuccess(worldIn.isClientSide);

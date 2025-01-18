@@ -12,7 +12,7 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class RenderHelper {
+public class CameraHelper {
     public static Matrix4f projectionMatrix;
     public static PoseStack poseStack;
     public static Frustum frustum;

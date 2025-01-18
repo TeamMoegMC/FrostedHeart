@@ -3,7 +3,7 @@ package com.teammoeg.chorda.capability.codec;
 import org.objectweb.asm.Type;
 
 import com.mojang.serialization.Codec;
-import com.teammoeg.chorda.capability.CCapability;
+import com.teammoeg.chorda.capability.CCapabilityType;
 import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
@@ -13,13 +13,13 @@ import net.minecraftforge.common.util.NonNullSupplier;
 /**
  * Basic codec serialized capability type
  * */
-public class CCodecCapability<C> implements CCapability {
+public class CCodecCapabilityType<C> implements CCapabilityType {
 	private Class<C> capClass;
 	private Capability<C> capability;
 	private NonNullSupplier<C> factory;
 	private Codec<C> codec;
 
-	public CCodecCapability(Class<C> capClass, NonNullSupplier<C> factory, Codec<C> codec) {
+	public CCodecCapabilityType(Class<C> capClass, NonNullSupplier<C> factory, Codec<C> codec) {
 		super();
 		this.capClass = capClass;
 		this.factory = factory;

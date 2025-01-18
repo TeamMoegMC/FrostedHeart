@@ -33,7 +33,7 @@ public abstract class CBlockEntity extends IEBaseBlockEntity implements Syncable
 
     public void syncData() {
         this.setChanged();
-        
+        // level.markAndNotifyBlock(worldPosition, level.getChunkAt(pos), getBlockState(), getBlockState(), 4, 128);
         level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
         
     }

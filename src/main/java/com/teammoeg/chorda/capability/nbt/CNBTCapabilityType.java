@@ -2,7 +2,7 @@ package com.teammoeg.chorda.capability.nbt;
 
 import org.objectweb.asm.Type;
 
-import com.teammoeg.chorda.capability.CCapability;
+import com.teammoeg.chorda.capability.CCapabilityType;
 import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
 import com.teammoeg.chorda.util.io.NBTSerializable;
 
@@ -16,11 +16,11 @@ import net.minecraftforge.common.util.NonNullSupplier;
  * Basic nbt capability type
  * 
  * */
-public class CNBTCapability<C extends NBTSerializable> implements CCapability {
+public class CNBTCapabilityType<C extends NBTSerializable> implements CCapabilityType {
 	private Class<C> capClass;
 	private Capability<C> capability;
 	private NonNullSupplier<C> factory;
-	public CNBTCapability(Class<C> capClass, NonNullSupplier<C> factory) {
+	public CNBTCapabilityType(Class<C> capClass, NonNullSupplier<C> factory) {
 		super();
 		this.capClass = capClass;
 		this.factory = factory;

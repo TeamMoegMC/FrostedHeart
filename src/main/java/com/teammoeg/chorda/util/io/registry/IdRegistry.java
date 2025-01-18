@@ -17,7 +17,7 @@ public class IdRegistry<T> {
 	public T read(FriendlyByteBuf pb) {
 	   return get( pb.readByte());
 	}
-	public T register(T from) {
+	public synchronized T register(T from) {
 		if(types.containsKey(from))return from;
 		int id=fromPacket.size();
 		fromPacket.add(from);

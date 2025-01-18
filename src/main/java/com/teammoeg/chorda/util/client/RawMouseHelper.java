@@ -31,10 +31,9 @@ public class RawMouseHelper {
         if (isLeftPressed()) {
             leftClicked++;
             return leftClicked == 1;
-        } else {
-            leftClicked = 0;
-            return false;
         }
+		leftClicked = 0;
+		return false;
     }
 
     private static int rightClicked = 0;
@@ -42,10 +41,9 @@ public class RawMouseHelper {
         if (isRightPressed()) {
             rightClicked++;
             return rightClicked == 1;
-        } else {
-            rightClicked = 0;
-            return false;
         }
+		rightClicked = 0;
+		return false;
     }
 
     public static int getScaledX() {

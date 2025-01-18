@@ -1,7 +1,10 @@
 package com.teammoeg.chorda.util.misc;
 
 import com.teammoeg.chorda.util.utility.RandomBase;
-
+/**
+ * A Mersenne Twister Algorithm implement of MT19937
+ * 
+ * */
 public class MersenneTwister extends RandomBase{
 
     /** Serializable version identifier. */

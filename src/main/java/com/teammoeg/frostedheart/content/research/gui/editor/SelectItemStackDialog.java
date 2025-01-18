@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import com.google.common.collect.Iterators;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
@@ -89,7 +89,7 @@ public class SelectItemStackDialog extends EditDialog {
 
             @Override
             public Collection<ItemStack> getAllResources() {
-                return CRegistries.getItems().stream().filter(t -> t != null && t != Items.AIR).map(ItemStack::new).collect(Collectors.toList());
+                return CRegistryHelper.getItems().stream().filter(t -> t != null && t != Items.AIR).map(ItemStack::new).collect(Collectors.toList());
             }
 
             @Override
@@ -123,7 +123,7 @@ public class SelectItemStackDialog extends EditDialog {
 
             @Override
             public Collection<ItemStack> getAllResources() {
-                return CRegistries.getBlocks().stream().map(Block::asItem).filter(Objects::nonNull).filter(t -> t != Items.AIR).map(ItemStack::new).collect(Collectors.toList());
+                return CRegistryHelper.getBlocks().stream().map(Block::asItem).filter(Objects::nonNull).filter(t -> t != Items.AIR).map(ItemStack::new).collect(Collectors.toList());
             }
 
             @Override
@@ -495,7 +495,7 @@ public class SelectItemStackDialog extends EditDialog {
             }
 
             if (!mod.isEmpty()) {
-                return CRegistries.getRegistryName(stack.getItem()).getNamespace().contains(mod);
+                return CRegistryHelper.getRegistryName(stack.getItem()).getNamespace().contains(mod);
             }
 
             return stack.getHoverName().getString().toLowerCase().contains(search);
