@@ -22,7 +22,6 @@
  */
 package com.teammoeg.chorda.team;
 
-import com.teammoeg.chorda.ChordaNetwork;
 import com.teammoeg.chorda.util.utility.OptionalLazy;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHNetwork;

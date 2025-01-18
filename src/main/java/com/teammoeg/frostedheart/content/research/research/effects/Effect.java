@@ -85,7 +85,7 @@ public abstract class Effect extends AutoIDItem{
         registerEffectType(EffectExperience.class, "experience", EffectExperience.CODEC);
     }
     public static <T extends Effect> void registerEffectType(Class<T> cls, String type, MapCodec<T> json) {
-        registry.register(cls, type, CodecUtil.debugCodec(json));
+        registry.register(cls, type, json);
     }
 
     String name = "";

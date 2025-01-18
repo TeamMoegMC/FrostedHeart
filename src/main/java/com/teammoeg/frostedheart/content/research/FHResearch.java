@@ -64,10 +64,17 @@ import net.minecraftforge.network.PacketDistributor.PacketTarget;
  * Main Research System.
  */
 public class FHResearch {
+	/**
+	 * Registry holder for all defined Research in config.
+	 */
 	public static FHRegistry<Research> researches = new FHRegistry<>();
-	/*public static FHRegistry<Clue> clues = new FHRegistry<>();
-	public static FHRegistry<Effect> effects = new FHRegistry<>();*/
+	/**
+	 * Cache for all Researches.
+	 */
 	private static OptionalLazy<List<Research>> allResearches = OptionalLazy.of(() -> researches.all());
+	/**
+	 * Editing mode.
+	 */
 	public static boolean editor = false;
 
 	public static void clearAll() {
@@ -82,6 +89,10 @@ public class FHResearch {
 			allResearches = OptionalLazy.of(() -> researches.all());
 	}
 
+	/**
+	 * Delete a Research from config JSON
+	 * @param r Research to delete
+	 */
 	public static void delete(Research r) {
 		researches.remove(r);
 		clearCache();
@@ -176,6 +187,9 @@ public class FHResearch {
 		return available;
 	}
 
+	/**
+	 * Initialization steps after Research data is loaded.
+	 */
 	public static void init() {
 		ClientResearchData.last = null;
 		ResearchListeners.reload();
@@ -238,6 +252,11 @@ public class FHResearch {
 		//effects.deserialize(cnbt.getList("effects", Tag.TAG_STRING));
 	}
 
+	/**
+	 * Load Research from config JSON
+	 * @param r Research to load
+	 * @return Loaded Research
+	 */
 	public static Research load(Research r) {
 		File folder = FMLPaths.CONFIGDIR.get().toFile();
 		File rf = new File(folder, "fhresearches");
@@ -264,6 +283,9 @@ public class FHResearch {
 		return researches.getById(iid);
 	}
 
+	/**
+	 * Load all Research from config JSON
+	 */
 	public static void loadAll() {
 		File folder = FMLPaths.CONFIGDIR.get().toFile();
 		File rf = new File(folder, "fhresearches");
@@ -415,37 +437,44 @@ public class FHResearch {
 		FHNetwork.send(target, new FHResearchSyncEndPacket());
 	}
 
-	private static final LevelResource dataFolder = new LevelResource("fhdata");
-
+	/**
+	 * Load Research data from disk.
+	 */
 	public static void load() {
 		FHResearch.editor = false;
-		Path local = CTeamDataManager.getServer().getWorldPath(dataFolder);
+		Path local = CTeamDataManager.getServer().getWorldPath(CTeamDataManager.dataFolder);
 		File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
 		FHResearch.clearAll();
 		if (regfile.exists()) {
 			try {
 				FHResearch.load(NbtIo.readCompressed(regfile));
+				FHMain.LOGGER.info("Research registries loaded.");
 			} catch (IOException e) {
 				e.printStackTrace();
 				FHMain.LOGGER.fatal("CANNOT READ RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
 
 			}
-		} else
-			FHMain.LOGGER.error("NO REGISTRY FOUND");
+		} else {
+			FHMain.LOGGER.error("No registry file found when loading research data.");
+		}
 		FHResearch.init();
+		FHMain.LOGGER.info("RESEARCH DATA INITIALIZED");
 		local.toFile().mkdirs();
 		try {
 			File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
 			if (dbg.exists() && FileUtil.readString(dbg).equals("true"))
 				FHResearch.editor = true;
 		} catch (IOException e2) {
-			// TODO Auto-generated catch block
+			FHMain.LOGGER.error("Cannot read editor status");
 			e2.printStackTrace();
 		}
 	}
 
+	/**
+	 * Save Research data to disk.
+	 */
 	public static void save() {
-		Path local = CTeamDataManager.getServer().getWorldPath(dataFolder);
+		Path local = CTeamDataManager.getServer().getWorldPath(CTeamDataManager.dataFolder);
 		File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
 		File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
 		try {
@@ -454,11 +483,12 @@ public class FHResearch {
 			else if (dbg.exists())
 				FileUtil.transfer("false", dbg);
 		} catch (IOException e2) {
-			// TODO Auto-generated catch block
+			FHMain.LOGGER.error("Cannot save editor status");
 			e2.printStackTrace();
 		}
 		try {
 			NbtIo.writeCompressed(FHResearch.save(new CompoundTag()), regfile);
+			FHMain.LOGGER.info("Research Registries saved.");
 		} catch (IOException e1) {
 			e1.printStackTrace();
 			FHMain.LOGGER.fatal("CANNOT SAVE RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");

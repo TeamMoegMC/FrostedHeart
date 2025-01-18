@@ -65,7 +65,7 @@ public class CTeamDataManager {
 
     public static CTeamDataManager INSTANCE;
     private final MinecraftServer server;
-    static final LevelResource dataFolder = new LevelResource("fhdata");
+    public static final LevelResource dataFolder = new LevelResource("fhdata");
     static final LevelResource oldDataFolder = new LevelResource("fhresearch");
     private Map<UUID, UUID> dataByFTBId = new HashMap<>();
     private Map<UUID, TeamDataHolder> dataByChordaId = new HashMap<>();
@@ -227,6 +227,7 @@ public class CTeamDataManager {
 	                trd.deserialize(nbt, false);
 	                dataByFTBId.put(ftbid, trd.getId());
 	                dataByChordaId.put(trd.getId(), trd);
+                    Chorda.LOGGER.debug("Data file for team " + trd.getId().toString() + " loaded.");
 	            } catch (IllegalArgumentException ex) {
 	                ex.printStackTrace();
 	                Chorda.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
@@ -250,10 +251,10 @@ public class CTeamDataManager {
             try {
                 NbtIo.writeCompressed(entry.getValue().serialize(false), f);
                 files.remove(fn);
+                Chorda.LOGGER.debug("Data file for team " + entry.getKey().toString() + " saved.");
             } catch (IOException e) {
-
-                e.printStackTrace();
                 Chorda.LOGGER.error("Unable to save data file for team " + entry.getKey().toString() + ", ignoring...");
+                e.printStackTrace();
             }
         }
         for (String todel : files) {
