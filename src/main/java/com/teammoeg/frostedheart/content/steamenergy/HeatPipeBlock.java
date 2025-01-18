@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.teammoeg.chorda.block.CEntityBlock;
-import com.teammoeg.chorda.block.CPipeBlock;
+import com.teammoeg.frostedheart.content.steamenergy.pipe.CPipeBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 import net.minecraft.core.BlockPos;

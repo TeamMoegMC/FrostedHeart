@@ -418,7 +418,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         } else if (interval == 0) {
         	clearConnection(level);
             // Connect all pipes and endpoints again
-        	System.out.println("full rebuild triggered");
+        	// System.out.println("full rebuild triggered");
             if (onConnect != null)
                 onConnect.run();
             interval = -1;

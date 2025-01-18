@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.mojang.datafixers.util.Either;
+import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -172,8 +173,10 @@ public class EffectCrafting extends Effect {
         unlocks.clear();
         for (Recipe<?> r : CTeamDataManager.getRecipeManager().getRecipes()) {
         	ItemStack result=r.getResultItem(CRegistries.getAccess());
-        	if(result==null)System.out.println("error null recipe "+r);
-            if (result!=null&&ingredient.test(result)) {
+        	if(result==null) {
+                LogUtils.getLogger().debug("Error null recipe "+r);
+            }
+            if (ingredient.test(result)) {
                 unlocks.add(r);
             }
         }

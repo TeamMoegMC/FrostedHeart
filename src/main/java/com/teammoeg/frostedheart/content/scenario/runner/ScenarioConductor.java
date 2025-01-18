@@ -38,6 +38,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.ListTag;
 import net.minecraftforge.common.util.LazyOptional;
+import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
 /**
@@ -47,6 +48,7 @@ import org.apache.logging.log4j.MarkerManager;
  * You should define triggers in script file and activate triggers to make it execute.
  * */
 public class ScenarioConductor implements NBTSerializable{
+	Marker MARKER = MarkerManager.getMarker("Scenario Conductor");
     //Sence control
     private transient Act currentAct;
     public Map<ActNamespace,Act> acts=new HashMap<>();
@@ -203,8 +205,8 @@ public class ScenarioConductor implements NBTSerializable{
 			data.currentLabel=new ExecuteTarget(old.getScenario().name(),null);
 		currentAct=data;
 		copyExecuteInfo(currentAct,old);
-		System.out.println("new:"+data);
-		System.out.println("old:"+old);
+		FHMain.LOGGER.info(MARKER, "Entering new act: "+data);
+		FHMain.LOGGER.info(MARKER, "Quiting old act: "+old);
 		old.stop();
 		
 	}
@@ -271,7 +273,7 @@ public class ScenarioConductor implements NBTSerializable{
 	public void load(CompoundTag data, boolean isPacket) {
 		getContext().varData.load(data.getCompound("vars"));
     	getContext().takeSnapshot();
-    	FHMain.LOGGER.info(MarkerManager.getMarker("Scenario Conductor"), data.getCompound("vars"));
+    	FHMain.LOGGER.info(MARKER, data.getCompound("vars"));
     	ListTag lacts=data.getList("acts", Tag.TAG_COMPOUND);
     	//Act initact=acts.get(init);
     	for(Tag v:lacts) {

@@ -36,8 +36,6 @@ import com.teammoeg.frostedheart.content.research.research.effects.EffectCraftin
 import com.teammoeg.frostedheart.content.research.research.effects.EffectShowCategory;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
-import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.FHVersion;
@@ -56,7 +54,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -462,26 +459,6 @@ public class FHClientEvents {
             RenderHelper.frustum = event.getFrustum();
             RenderHelper.camera = event.getCamera();
         }
-    }
-
-    @SubscribeEvent
-    public static void onPlayerLoggedIn(ClientPlayerNetworkEvent.LoggingIn event) {
-        // default tip
-        if (!TipManager.INSTANCE.hasTip("default")) {
-            Tip.builder("default").line(Components.str("Default Tip")).image(new ResourceLocation(FHMain.MODID, "textures/item/debug_item.png")).build().saveAsFile();
-            TipManager.INSTANCE.loadFromFile();
-        }
-        TipManager.INSTANCE.display().clearRenderQueue();
-        TipManager.INSTANCE.display().general("default");
-//        if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) == 0) {
-//            TipDisplayManager.displayTip("music_warning", false);
-//        }
-    }
-
-    @SubscribeEvent
-    public static void onPlayerLoggedOut(ClientPlayerNetworkEvent.LoggingOut event) {
-        TipManager.INSTANCE.display().clearRenderQueue();
-        ClientWaypointManager.clear();
     }
 
 //    @SubscribeEvent

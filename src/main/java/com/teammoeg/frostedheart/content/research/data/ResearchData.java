@@ -190,7 +190,7 @@ public class ResearchData implements IEnvironment {
     		clueData.add(this.clueData.get(c.getNonce()));
     	int i=0;
     	for(Effect e:r.getEffects()) {
-    		effectData.set(i++,this.effectData.get(e.getNonce()));
+    		effectData.set(i++,this.effectData.getOrDefault(e.getNonce(), false));
     	}
     	return new ResearchDataPacket(active,finished,level,committed,clueData,effectData);
     }

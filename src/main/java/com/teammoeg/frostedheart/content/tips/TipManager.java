@@ -91,7 +91,6 @@ public class TipManager {
      */
     public void loadFromFile() {
         TIP_PATH.mkdirs();
-        display.clearRenderQueue();
         loadedTips.clear();
 
         // 加载所有 tip 文件

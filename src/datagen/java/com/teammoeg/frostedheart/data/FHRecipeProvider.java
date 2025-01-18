@@ -28,7 +28,6 @@ import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 
 import blusunrize.immersiveengineering.api.IETags;
-import com.teammoeg.caupona.CPFluids;
 import com.teammoeg.chorda.util.CRegistries;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
@@ -70,13 +69,13 @@ public class FHRecipeProvider extends RecipeProvider {
 						Item it= CRegistries.getItem(item);
 						if(it==null||it==Items.AIR) {
 							FHMain.LOGGER.warn("TWR Recipe: " + item + " not exist");
-							ps.println(item+","+parts[1]);
+							FHMain.LOGGER.info(item+","+parts[1]);
 						}else {
 							FoodProperties f=it.getFoodProperties();
 							if(f==null)
-								ps.println(item+","+parts[1]);
+								FHMain.LOGGER.info("Food Value: " + item+","+parts[1]);
 							else
-								ps.println(item+","+f.getNutrition());
+								FHMain.LOGGER.info("Food Nutrition: " + item+","+f.getNutrition());
 						}
 						NutritionRecipeBuilder dvb=new NutritionRecipeBuilder().item(it);
 						float grain=Float.parseFloat(parts[2])*10f;
@@ -94,14 +93,14 @@ public class FHRecipeProvider extends RecipeProvider {
 			e.printStackTrace();
 		}
 
-		CPFluids.getAll().filter(o->!Arrays.stream(ovride).anyMatch(CRegistries.getRegistryName(o).getPath()::equals)).forEach(f-> {
-
-				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+ CRegistries.getRegistryName(f).getPath()+"_thermos"),Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"thermos"))),f,2,2));
-		});
-		CPFluids.getAll().filter(o-> CRegistries.getRegistryName(o).getPath().equals("dilute_soup")).forEach(f-> {
-
-				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+ CRegistries.getRegistryName(f).getPath()+"_thermos"),Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"thermos"))),f,3,2));
-		});
+//		CPFluids.getAll().filter(o->!Arrays.stream(ovride).anyMatch(CRegistries.getRegistryName(o).getPath()::equals)).forEach(f-> {
+//
+//				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+ CRegistries.getRegistryName(f).getPath()+"_thermos"),Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"thermos"))),f,2,2));
+//		});
+//		CPFluids.getAll().filter(o-> CRegistries.getRegistryName(o).getPath().equals("dilute_soup")).forEach(f-> {
+//
+//				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+ CRegistries.getRegistryName(f).getPath()+"_thermos"),Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"thermos"))),f,3,2));
+//		});
 		
 
 		recipeTrade(out);

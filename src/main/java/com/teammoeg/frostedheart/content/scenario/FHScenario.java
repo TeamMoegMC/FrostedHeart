@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 import org.objectweb.asm.Type;
 
 import com.teammoeg.frostedheart.FHMain;
@@ -63,13 +65,14 @@ import net.minecraftforge.forgespi.language.ModFileScanData.AnnotationData;
 import net.minecraftforge.network.PacketDistributor;
 
 public class FHScenario {
+	static Marker MARKER = MarkerManager.getMarker("Scenario Conductor");
 	public static ScenarioExecutor<ScenarioCommandContext> server = new ScenarioExecutor<>(ScenarioCommandContext.class);
 	private static final List<ScenarioProvider> scenarioProviders = new ArrayList<>();
 	public static Map<Player,Map<EventTriggerType,List<IVarTrigger>>> triggers=new HashMap<>();
 	//private static Map<ServerPlayerEntity,ScenarioConductor> runners=new HashMap<>();
 	public static void startFor(ServerPlayer pe,String lang) {
 		ScenarioConductor sr = get(pe);
-		System.out.println("From saved: "+pe.getLanguage()+" From packet: "+lang);
+		FHMain.LOGGER.debug(MARKER, "From saved: "+pe.getLanguage()+" From packet: "+lang);
 		sr.init(pe,lang);
 		
 

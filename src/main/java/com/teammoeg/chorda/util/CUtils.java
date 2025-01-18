@@ -20,9 +20,11 @@
 package com.teammoeg.chorda.util;
 
 import com.google.common.collect.ImmutableList;
+import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.capability.nbt.CNBTCapability;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -252,7 +254,7 @@ public class CUtils {
             return copyCollection;
 
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            System.err.println("Failed to copy the collection due to an error: " + e.getMessage());
+            Chorda.LOGGER.error("Failed to copy the collection due to an error: " + e.getMessage());
             e.printStackTrace();
         }
         return null;

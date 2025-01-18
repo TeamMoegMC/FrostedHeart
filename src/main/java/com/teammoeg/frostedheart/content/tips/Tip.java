@@ -131,8 +131,14 @@ public class Tip {
     }
 
     public boolean saveAsFile() {
-        if (isTipIdInvalid(this.id)) {
-            builder("exception").error(ErrorType.LOAD, Component.literal("ID: " + this.id), Component.translatable("tips.frostedheart.error.invalid_id")).build().forceDisplay();
+        if (this.id.isBlank()) {
+            builder("exception").error(ErrorType.SAVE, Component.translatable("tips.frostedheart.error.load.no_id")).build().forceDisplay();
+            return false;
+        } else if (isTipIdInvalid(this.id)) {
+            builder("exception").error(ErrorType.SAVE, Component.literal("ID: " + this.id), Component.translatable("tips.frostedheart.error.invalid_id")).build().forceDisplay();
+            return false;
+        } else if (TipManager.INSTANCE.hasTip(this.id)) {
+            builder("exception").error(ErrorType.SAVE, Component.literal("ID: " + this.id), Component.translatable("tips.frostedheart.error.load.duplicate_id")).build().forceDisplay();
             return false;
         }
 
@@ -244,7 +250,6 @@ public class Tip {
         public Builder(String id) {
             if (isTipIdInvalid(id)) {
                 error(ErrorType.LOAD, Component.literal("ID: " + id), Component.translatable("tips.frostedheart.error.invalid_id"));
-                return;
             }
             this.id = id;
             setTemporary();
@@ -392,7 +397,7 @@ public class Tip {
                 this.contents.addAll(list);
             }
             if (id.isBlank()) {
-                error(ErrorType.OTHER, Component.literal("NBT does not contain tip"));
+                error(ErrorType.OTHER, Component.literal("NBT does not contain a tip"));
             }
             return this;
         }
@@ -404,13 +409,8 @@ public class Tip {
                 String s = json.get("id").getAsString();
                 if (s.isBlank()) {
                     error(ErrorType.LOAD,Component.translatable("tips.frostedheart.error.load.no_id"));
-                    return this;
-                } else if (TipManager.INSTANCE.hasTip(s)) {
-                    error(ErrorType.LOAD, Component.literal("ID: " + s), Component.translatable("tips.frostedheart.error.load.duplicate_id"));
-                    return this;
                 } else if (isTipIdInvalid(s)) {
                     error(ErrorType.LOAD, Component.literal("ID: " + s), Component.translatable("tips.frostedheart.error.invalid_id"));
-                    return this;
                 }
                 id = s;
             } else {

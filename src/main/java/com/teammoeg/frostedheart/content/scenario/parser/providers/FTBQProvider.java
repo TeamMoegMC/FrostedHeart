@@ -72,7 +72,7 @@ public class FTBQProvider extends StringScenarioProvider {
 		if(param.containsKey("call"))
 			b.append("@Return\n");
 		//b.append("@EndAct\n");
-		System.out.println(b.toString());
+		// System.out.println(b.toString());
 		return b.toString();
 	}
 

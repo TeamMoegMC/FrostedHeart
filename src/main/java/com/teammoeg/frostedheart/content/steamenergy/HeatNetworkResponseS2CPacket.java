@@ -40,7 +40,7 @@ public class HeatNetworkResponseS2CPacket implements CMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // on the client side, update HeatNetwork's fields
-            TemperatureGoogleRenderer.lastHeatNetworkData = data;
+            TemperatureGoogleRenderer.setHeatNetworkData(data);
         });
         context.get().setPacketHandled(true);
     }
