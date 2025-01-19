@@ -225,6 +225,11 @@ thinner.png
         REGISTRATE.setCreativeTab(FHTabs.INGREDIENTS);
     }
 
+    // ice_chips
+    public static ItemEntry<FHSnowballItem> ICE_CHIP =
+            REGISTRATE.item("ice_chip", FHSnowballItem::new)
+                    .tag(forgeItemTag("raw_materials/ice"))
+                    .register();
     // Soil drops
     public static ItemEntry<Item> PEAT =
             taggedIngredient("peat",

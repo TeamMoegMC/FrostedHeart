@@ -51,6 +51,9 @@
     "frostedheart:ruined_striped_bordered",
     "frostedheart:ruined_striped_borderless",
     "#frostedheart:machines/metal",
-    "#frostedheart:permafrost"
+    "#frostedheart:permafrost",
+    "frostedheart:generator_t1",
+    "frostedheart:generator_t2",
+    "frostedheart:radiator"
   ]
 }

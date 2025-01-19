@@ -25,6 +25,7 @@ import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.tterrag.registrate.providers.ProviderType;
@@ -146,6 +147,11 @@ public class FHRegistrateTags {
                 .addTag(BlockTags.SNOW)
                 .addTag(FHTags.Blocks.SOIL.tag)
                 .addTag(FHTags.Blocks.PERMAFROST.tag);
+
+        prov.tag(BlockTags.MINEABLE_WITH_PICKAXE)
+                .add(FHMultiblocks.Multiblock.GENERATOR_T1.getBlock())
+                .add(FHMultiblocks.Multiblock.GENERATOR_T2.getBlock())
+                .add(FHMultiblocks.Multiblock.RADIATOR.getBlock());
 
         for (FHTags.Blocks tag : FHTags.Blocks.values()) {
             if (tag.alwaysDatagen) {

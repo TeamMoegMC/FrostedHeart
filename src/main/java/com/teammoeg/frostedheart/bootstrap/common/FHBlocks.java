@@ -125,6 +125,15 @@ public class FHBlocks {
         REGISTRATE.setCreativeTab(FHTabs.NATURAL_BLOCKS);
     }
 
+    // thin_ice
+    public static final BlockEntry<Block> THIN_ICE = REGISTRATE.block("thin_ice", Block::new)
+            .initialProperties(() -> Blocks.ICE)
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.ICE_CHIP.get(), ConstantValue.exactly(4))))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
     // Condensed ore blocks
     public static final BlockEntry<Block> CONDENSED_IRON_ORE_BLOCK = REGISTRATE.block("condensed_iron_ore_block", Block::new)
             .initialProperties(() -> SNOW_BLOCK)
