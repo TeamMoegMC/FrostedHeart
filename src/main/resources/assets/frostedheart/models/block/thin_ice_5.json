@@ -1,7 +1,7 @@
 {
-	"parent": "minecraft:block/cube_all",
-	"render_type": "translucent",
+	"parent": "frostedheart:template_culled_translucent_cube",
 	"textures": {
-		"all": "frostedheart:block/thin_ice_5"
+		"0": "frostedheart:block/thin_ice_5",
+		"particle": "frostedheart:block/thin_ice_5"
 	}
 }
