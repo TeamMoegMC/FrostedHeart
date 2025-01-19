@@ -129,7 +129,7 @@ public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity {
 
     @Override
     public void writeCustomNBT(CompoundTag compoundNBT, boolean isPacket){
-        compoundNBT.putUUID("teamID", this.teamID);
+        if(this.teamID != null) compoundNBT.putUUID("teamID", this.teamID);
     }
 
 }
