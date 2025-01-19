@@ -128,6 +128,7 @@ public class FHBlocks {
     // thin_ice
     public static final BlockEntry<Block> THIN_ICE = REGISTRATE.block("thin_ice", Block::new)
             .initialProperties(() -> Blocks.ICE)
+            .tag(BlockTags.ICE, BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.ICE_CHIP.get(), ConstantValue.exactly(4))))
             .item()

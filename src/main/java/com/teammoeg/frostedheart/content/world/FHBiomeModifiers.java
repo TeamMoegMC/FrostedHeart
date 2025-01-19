@@ -90,8 +90,8 @@ public class FHBiomeModifiers {
 
             // TODO: spawn rates
             spawns.addSpawn(MobCategory.CREATURE, new MobSpawnSettings.SpawnerData(EntityType.POLAR_BEAR, 5, 1, 3));
-            spawns.addSpawn(MobCategory.MONSTER, new MobSpawnSettings.SpawnerData(EntityType.STRAY, 20, 1, 3));
-            spawns.addSpawn(MobCategory.CREATURE, new MobSpawnSettings.SpawnerData(FHEntityTypes.WANDERING_REFUGEE.get(), 100, 1, 1));
+            // spawns.addSpawn(MobCategory.MONSTER, new MobSpawnSettings.SpawnerData(EntityType.STRAY, 20, 1, 3));
+            spawns.addSpawn(MobCategory.CREATURE, new MobSpawnSettings.SpawnerData(FHEntityTypes.WANDERING_REFUGEE.get(), 1, 1, 5));
 
         }
 

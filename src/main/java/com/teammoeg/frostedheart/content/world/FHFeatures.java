@@ -61,6 +61,7 @@ public class FHFeatures {
         public static final ResourceKey<PlacedFeature> CLAY_PERMAFROST_PATCH = key("clay_permafrost_patch");
         public static final ResourceKey<PlacedFeature> GRAVEL_PERMAFROST_PATCH = key("gravel_permafrost_patch");
         public static final ResourceKey<PlacedFeature> SPACECRAFT = key("spacecraft");
+        // public static final ResourceKey<PlacedFeature> THIN_ICE_PATCH = key("thin_ice_patch");
 
         private static ResourceKey<PlacedFeature> key(String name)
         {
