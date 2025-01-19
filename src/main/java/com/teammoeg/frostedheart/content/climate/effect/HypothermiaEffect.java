@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.climate.effect;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
+import com.teammoeg.frostedheart.bootstrap.reference.FHDamageSources;
 import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
 
 import net.minecraft.world.entity.LivingEntity;
@@ -55,13 +56,13 @@ public class HypothermiaEffect extends MobEffect {
             ((ServerPlayer) entityLivingBaseIn).causeFoodExhaustion(amplifier < 2 ? 0.044f * (amplifier + 1) : 0.132f);
             if (amplifier > 1) {
                 if (entityLivingBaseIn.getHealth() > 20.0F) {
-                    entityLivingBaseIn.hurt(FHDamageTypes.createSource(entityLivingBaseIn.level(), FHDamageTypes.HYPOTHERMIA, entityLivingBaseIn), 1F);
+                    entityLivingBaseIn.hurt(FHDamageSources.hypothermia(entityLivingBaseIn.level()), 1F);
                 } else if (entityLivingBaseIn.getHealth() > 10.0F) {
-                    entityLivingBaseIn.hurt(FHDamageTypes.createSource(entityLivingBaseIn.level(), FHDamageTypes.HYPOTHERMIA, entityLivingBaseIn), 0.5F);
+                    entityLivingBaseIn.hurt(FHDamageSources.hypothermia(entityLivingBaseIn.level()), 0.5F);
                 } else if (entityLivingBaseIn.getHealth() > 5.0F) {
-                    entityLivingBaseIn.hurt(FHDamageTypes.createSource(entityLivingBaseIn.level(), FHDamageTypes.HYPOTHERMIA, entityLivingBaseIn), 0.3F);
+                    entityLivingBaseIn.hurt(FHDamageSources.hypothermia(entityLivingBaseIn.level()), 0.3F);
                 } else {
-                    entityLivingBaseIn.hurt(FHDamageTypes.createSource(entityLivingBaseIn.level(), FHDamageTypes.HYPOTHERMIA, entityLivingBaseIn), 0.2F);
+                    entityLivingBaseIn.hurt(FHDamageSources.hypothermia(entityLivingBaseIn.level()), 0.2F);
                 }
             }
         }
