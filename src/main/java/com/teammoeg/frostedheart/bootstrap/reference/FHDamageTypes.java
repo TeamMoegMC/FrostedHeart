@@ -24,11 +24,8 @@ import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
+
 public class FHDamageTypes {
     public static final ResourceKey<DamageType> HYPOTHERMIA = create("hypothermia");
     public static final ResourceKey<DamageType> HYPERTHERMIA = create("hyperthermia");
@@ -38,14 +35,5 @@ public class FHDamageTypes {
     public static final ResourceKey<DamageType> HYPERTHERMIA_INSTANT = create("hyperthermia_instant");
     public static ResourceKey<DamageType> create(String name) {
     	return ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation(FHMain.MODID,name));
-    }
-    public static DamageSource createSource(Level level,ResourceKey<DamageType> type,Entity source,Entity dest) {
-    	return new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(type),dest,source);
-    }
-    public static DamageSource createSource(Level level,ResourceKey<DamageType> type,Entity dest) {
-    	return new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(type),dest);
-    }
-    public static DamageSource createSource(Level level,ResourceKey<DamageType> type,Vec3 pos) {
-    	return new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(type),pos);
     }
 }

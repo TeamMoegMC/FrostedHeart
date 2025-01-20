@@ -1,9 +1,0 @@
-{
-  "type": "frostedheart:water_level_and_effect",
-  "fluid": "caupona:rice_pudding",
-  "ingredient": {
-    "tag": "frostedheart:thermos"
-  },
-  "waterLevel": 2,
-  "waterSaturationLevel": 2
-}

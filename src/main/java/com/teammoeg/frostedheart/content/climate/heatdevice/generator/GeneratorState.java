@@ -1,8 +1,10 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import java.util.Optional;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
@@ -13,7 +15,7 @@ public class GeneratorState extends HeatingState {
      * Remaining ticks to explode
      */
     int explodeTicks;
-
+    public HeatEndpoint ep = new HeatEndpoint(200, 0);
     public GeneratorState() {
         super();
     }
@@ -35,7 +37,7 @@ public class GeneratorState extends HeatingState {
      * @return the GeneratorData from the owned team.
      */
     public final Optional<GeneratorData> getDataNoCheck() {
-        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA));
+        return getTeamData().map(t -> t.getData(FHSpecialDataTypes.GENERATOR_DATA));
     }
 
     /**
@@ -43,15 +45,17 @@ public class GeneratorState extends HeatingState {
      * @return the GeneratorData from the owned team with the given origin.
      */
     public final Optional<GeneratorData> getData(BlockPos origin) {
-        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA)).filter(t -> origin.equals(t.actualPos));
+        return getTeamData().map(t -> t.getData(FHSpecialDataTypes.GENERATOR_DATA)).filter(t -> origin.equals(t.actualPos));
     }
     public final void tickData(Level level,BlockPos origin) {
         Optional<TeamDataHolder> data= getTeamData();
         if(data.isPresent()) {
         	TeamDataHolder teamData=data.get();
-        	GeneratorData dat=teamData.getData(SpecialDataTypes.GENERATOR_DATA);
+        	GeneratorData dat=teamData.getData(FHSpecialDataTypes.GENERATOR_DATA);
         	if(origin.equals(dat.actualPos)) {
         		dat.tick(level, teamData);
+        		ep.setHeat(dat.lastPower);
+        		dat.lastPower=0;
         	}
         	
         }
@@ -72,8 +76,10 @@ public class GeneratorState extends HeatingState {
      */
     public void regist(Level level, BlockPos origin) {
         getDataNoCheck().ifPresent(t -> {
-            if (!origin.equals(t.actualPos))
+            if (!origin.equals(t.actualPos)) {
                 t.onPosChange();
+                onDataChange();
+            }
             t.actualPos = origin;
             t.dimension = level.dimension();
         });
@@ -88,9 +94,11 @@ public class GeneratorState extends HeatingState {
      */
     public void tryRegist(Level level, BlockPos origin) {
         getDataNoCheck().ifPresent(t -> {
-            if (BlockPos.ZERO.equals(t.actualPos)) {
-                if (!origin.equals(t.actualPos))
+            if (t.actualPos==null) {
+                if (!origin.equals(t.actualPos)) {
                     t.onPosChange();
+                    onDataChange();
+                }
                 t.actualPos = origin;
                 t.dimension = level.dimension();
             }
@@ -105,6 +113,9 @@ public class GeneratorState extends HeatingState {
     @Override
     public int getUpwardRange() {
         return Mth.ceil(getRangeLevel() * 4 + 1);
+    }
+    public void onDataChange() {
+    	
     }
 
 }

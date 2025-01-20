@@ -20,12 +20,12 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
-import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
-import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
-import com.teammoeg.frostedheart.base.block.PipeTileEntity;
+import com.teammoeg.chorda.block.CTickableBlockEntity;
+import com.teammoeg.frostedheart.content.steamenergy.pipe.CPipeBlock;
+import com.teammoeg.frostedheart.content.steamenergy.pipe.CPipeBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -37,8 +37,8 @@ import java.util.List;
 
 import static net.minecraft.ChatFormatting.GRAY;
 
-public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnector, IHaveGoggleInformation {
-    HeatNetwork network;
+public class HeatPipeTileEntity extends CPipeBlockEntity implements NetworkConnector, IHaveGoggleInformation, CTickableBlockEntity {
+	ConnectorNetworkRevalidator<HeatPipeTileEntity> networkHandler=new ConnectorNetworkRevalidator<>(this);
     int cnt = 1;
 
     public HeatPipeTileEntity(BlockPos l, BlockState state) {
@@ -47,30 +47,20 @@ public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnect
 
     @Override
     public boolean canConnectTo(Direction to) {
-        return this.getState().getValue(FluidPipeBlock.PROPERTY_BY_DIRECTION.get(to));
+        return this.getState().getValue(CPipeBlock.PROPERTY_BY_DIRECTION.get(to));
     }
 	@Override
 	public void setNetwork(HeatNetwork network) {
-		this.network = network;
+		this.networkHandler.setNetwork(network);
 	}
     @Override
     public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
     }
 
-    /*@Override
+    @Override
     public void tick() {
-        if (cnt > 0) {
-            cnt--;
-        } else {
-            cnt = 10;
-            BlockState bs = this.getBlockState();
-            for (Direction dir : Direction.values()) {
-                if (bs.getValue(FluidPipeBlock.PROPERTY_BY_DIRECTION.get(dir))) {
-                    onFaceChange(dir, true);
-                }
-            }
-        }
-    }*/
+    	networkHandler.tick();
+    }
 
     @Override
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
@@ -78,16 +68,13 @@ public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnect
 
     @Override
     public void onFaceChange(Direction dir, boolean isConnect) {
-        if (network == null) return;
-        if (isConnect)
-            network.startPropagation(this, dir);
-        else
-            network.requestUpdate();
+    	//System.out.println(dir+":"+isConnect);
+    	networkHandler.onConnectionChange(dir, isConnect);
     }
 
     @Override
     public HeatNetwork getNetwork() {
-        return network;
+        return networkHandler.getNetwork();
     }
 
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
@@ -96,30 +83,41 @@ public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnect
 
         Lang.tooltip("heat_stats").forGoggles(tooltip);
 
-        Lang.translate("tooltip", "pressure")
-                .style(GRAY)
-                .forGoggles(tooltip);
+        if (TemperatureGoogleRenderer.hasHeatNetworkData()) {
+            ClientHeatNetworkData data = TemperatureGoogleRenderer.getHeatNetworkData();
 
-        if (network != null) {
-            output = network.getTotalEndpointOutput();
-            intake = network.getTotalEndpointIntake();
+            Lang.translate("tooltip", "pressure")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+            Lang.number(data.totalEndpointIntake)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.intake")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            Lang.number(data.totalEndpointOutput)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.output")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            // show number of endpoints
+            Lang.number(data.endpoints.size())
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.endpoints")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+        } else {
+            Lang.translate("tooltip", "pressure.no_network")
+                    .style(ChatFormatting.RED)
+                    .forGoggles(tooltip);
         }
-
-        Lang.number(intake)
-                .translate("generic", "unit.pressure")
-                .style(ChatFormatting.AQUA)
-                .space()
-                .add(Lang.translate("tooltip", "pressure.intake")
-                        .style(ChatFormatting.DARK_GRAY))
-                .forGoggles(tooltip, 1);
-
-        Lang.number(output)
-                .translate("generic", "unit.pressure")
-                .style(ChatFormatting.AQUA)
-                .space()
-                .add(Lang.translate("tooltip", "pressure.output")
-                        .style(ChatFormatting.DARK_GRAY))
-                .forGoggles(tooltip, 1);
 
         return true;
 

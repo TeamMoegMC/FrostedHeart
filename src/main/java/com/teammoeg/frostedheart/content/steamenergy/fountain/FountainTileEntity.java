@@ -20,15 +20,15 @@
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
+import com.teammoeg.chorda.block.CBlockInterfaces;
+import com.teammoeg.chorda.block.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -44,15 +44,15 @@ import net.minecraftforge.common.util.LazyOptional;
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
-public class FountainTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity, FHBlockInterfaces.IActiveState {
+public class FountainTileEntity extends IEBaseBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState {
 
     public static final int RANGE_PER_NOZZLE = 1;
     public static final int MAX_HEIGHT = 5;
     private static final UUID WARMTH_EFFECT_UUID = UUID.fromString("95c1f024-8f3a-4828-aaa7-a86733cffbf2");
     private static final float POWER_CAP = 400;
     private static final float REFILL_THRESHOLD = 200;
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 10, 1);
-    LazyOptional<HeatConsumerEndpoint> heatcap = LazyOptional.of(() -> network);
+    HeatEndpoint network = new HeatEndpoint(10, 10, 0, 1);
+    LazyOptional<HeatEndpoint> heatcap = LazyOptional.of(() -> network);
     private float power = 0;
     private boolean refilling = false;
     private int height = 0;
@@ -163,7 +163,7 @@ public class FountainTileEntity extends IEBaseBlockEntity implements FHTickableB
             if (level.random.nextInt(4) == 0) {
                 BlockPos water = findWater();
                 if (water != null) {
-                    ClientUtils.spawnSteamParticles(level, water);
+                    FHClientUtils.spawnSteamParticles(level, water);
                 }
             }
         }
@@ -264,4 +264,9 @@ public class FountainTileEntity extends IEBaseBlockEntity implements FHTickableB
         ChunkHeatData.removeTempAdjust(level, worldPosition);
         heatAdjusted = false;
     }
+	@Override
+	public void invalidateCaps() {
+		heatcap.invalidate();
+		super.invalidateCaps();
+	}
 }

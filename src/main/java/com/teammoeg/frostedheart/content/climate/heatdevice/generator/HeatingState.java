@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
-import com.teammoeg.frostedheart.base.multiblock.components.OwnerState;
+import com.teammoeg.chorda.multiblock.components.OwnerState;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;

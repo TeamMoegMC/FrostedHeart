@@ -24,8 +24,8 @@ import java.util.Arrays;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
@@ -51,7 +51,7 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
     private IDrawableAnimated FIRE;
 
     public GeneratorFuelCategory(IGuiHelper guiHelper) {
-        this.ICON = guiHelper.createDrawableIngredient(VanillaTypes.ITEM_STACK,new ItemStack(FHMultiblocks.Logic.GENERATOR_T1.blockItem().get()));
+        this.ICON = guiHelper.createDrawableIngredient(VanillaTypes.ITEM_STACK,new ItemStack(FHMultiblocks.Registration.GENERATOR_T1.blockItem().get()));
         ResourceLocation guiMain = new ResourceLocation(FHMain.MODID, "textures/gui/generator_t1.png");
         this.BACKGROUND = guiHelper.createDrawable(guiMain, 24, 3, 134, 72);
         IDrawableStatic tfire = guiHelper.createDrawable(guiMain, 179, 0, 9, 13);

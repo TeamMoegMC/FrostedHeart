@@ -5,8 +5,8 @@ import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
-import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
@@ -69,16 +69,6 @@ public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity {
         double spaceRating = HouseBlockEntity.calculateSpaceRating(this.volume, this.area);
         double temperatureRating = HouseBlockEntity.calculateTemperatureRating(this.temperature);
         return this.rating = spaceRating*0.15 + temperatureRating*0.15 + chestRating*0.35 + rackRating*0.35;
-    }
-
-    @Override
-    public void readCustomNBT(CompoundTag compoundNBT, boolean b) {
-
-    }
-
-    @Override
-    public void writeCustomNBT(CompoundTag compoundNBT, boolean b) {
-
     }
 
     @Override

@@ -19,13 +19,12 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import net.minecraft.client.gui.GuiGraphics;
-
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class SwitchButton extends Button {
     boolean state;
@@ -51,6 +50,10 @@ public class SwitchButton extends Button {
         return state;
     }
 
+    public void setState(boolean state) {
+        this.state = state;
+    }
+
     @Override
     public void onClicked(MouseButton arg0) {
         state = !state;
@@ -59,10 +62,6 @@ public class SwitchButton extends Button {
 
     public void onSwitched() {
 
-    }
-
-    public void setState(boolean state) {
-        this.state = state;
     }
 
 

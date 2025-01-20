@@ -20,17 +20,23 @@
 package com.teammoeg.frostedheart.content.steamenergy.charger;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
+import com.teammoeg.chorda.block.CBlockInterfaces;
+import com.teammoeg.chorda.block.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.ExperienceOrb;
@@ -44,17 +50,20 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
 
-public class ChargerTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity, FHBlockInterfaces.IActiveState {
+import static net.minecraft.ChatFormatting.GRAY;
+
+public class ChargerTileEntity extends IEBaseBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState, IHaveGoggleInformation, HeatNetworkProvider {
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(-10, 200, 5);
+    HeatEndpoint network = new HeatEndpoint(-10, 200, 0, 5);
     float power;
-    LazyOptional<HeatConsumerEndpoint> heatcap = LazyOptional.of(() -> network);
+    LazyOptional<HeatEndpoint> heatcap = LazyOptional.of(() -> network);
 
 
     public ChargerTileEntity(BlockPos pos, BlockState state) {
@@ -87,7 +96,7 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements FHTickableBl
 
     public void drawEffect() {
         if (level != null && level.isClientSide) {
-            ClientUtils.spawnSteamParticles(level, this.getBlockPos());
+            FHClientUtils.spawnSteamParticles(level, this.getBlockPos());
         }
     }
 
@@ -100,7 +109,7 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements FHTickableBl
     }
 
     public ChargerRecipe findRecipe(ItemStack is) {
-        for (ChargerRecipe cr : FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ChargerRecipe.TYPE)) {
+        for (ChargerRecipe cr : CUtils.filterRecipes(this.getLevel().getRecipeManager(), ChargerRecipe.TYPE)) {
             if (cr.input.test(is)) {
                 return cr;
             }
@@ -123,7 +132,7 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements FHTickableBl
                         power -= cr.cost;
                         is.setCount(is.getCount() - cr.input.getCount());
                         ItemStack gain = cr.output.copy();
-                        FHUtils.giveItem(pe, gain);
+                        CUtils.giveItem(pe, gain);
                         setChanged();
                         this.markContainingBlockForUpdate(null);
                     }
@@ -141,7 +150,7 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements FHTickableBl
                             splitAndSpawnExperience(pe.getCommandSenderWorld(), pe.blockPosition(), sr.getExperience());
                             is.setCount(is.getCount() - 1);
                             ItemStack gain = sr.assemble(null, this.level.registryAccess()).copy();
-                            FHUtils.giveItem(pe, gain);
+                            CUtils.giveItem(pe, gain);
                             setChanged();
                             this.markContainingBlockForUpdate(null);
                         }
@@ -159,7 +168,7 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements FHTickableBl
                             splitAndSpawnExperience(pe.getCommandSenderWorld(), pe.blockPosition(), sr.getExperience());
                             is.setCount(is.getCount() - 1);
                             ItemStack gain = sr.assemble(null, this.level.registryAccess()).copy();
-                            FHUtils.giveItem(pe, gain);
+                            CUtils.giveItem(pe, gain);
                             setChanged();
                             this.markContainingBlockForUpdate(null);
                         }
@@ -183,14 +192,14 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements FHTickableBl
         if (!level.isClientSide) {
             float actual = network.drainHeat(Math.min(200, (getMaxPower() - power) / 0.8F));
             if (actual > 0) {
-                power += (float) (actual * 0.8);
+                power += (float) (actual * 8);
                 this.setActive(true);
                 setChanged();
                 this.markContainingBlockForUpdate(null);
             } else
                 this.setActive(false);
         } else if (getIsActive()) {
-            ClientUtils.spawnSteamParticles(this.getLevel(), worldPosition);
+            FHClientUtils.spawnSteamParticles(this.getLevel(), worldPosition);
         }
     }
 
@@ -198,5 +207,53 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements FHTickableBl
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         nbt.putFloat("power", power);
         network.save(nbt, descPacket);
+    }
+	@Override
+	public void invalidateCaps() {
+		heatcap.invalidate();
+		super.invalidateCaps();
+	}
+
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        float output = 0;
+        float intake = 0;
+
+        Lang.tooltip("heat_stats").forGoggles(tooltip);
+
+        if (network.hasValidNetwork()) {
+            output = network.getNetwork().getTotalEndpointOutput();
+            intake = network.getNetwork().getTotalEndpointIntake();
+            Lang.translate("tooltip", "pressure")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+        } else {
+            Lang.translate("tooltip", "pressure.no_network")
+                    .style(ChatFormatting.RED)
+                    .forGoggles(tooltip);
+        }
+
+        Lang.number(intake)
+                .translate("generic", "unit.pressure")
+                .style(ChatFormatting.AQUA)
+                .space()
+                .add(Lang.translate("tooltip", "pressure.intake")
+                        .style(ChatFormatting.DARK_GRAY))
+                .forGoggles(tooltip, 1);
+
+        Lang.number(output)
+                .translate("generic", "unit.pressure")
+                .style(ChatFormatting.AQUA)
+                .space()
+                .add(Lang.translate("tooltip", "pressure.output")
+                        .style(ChatFormatting.DARK_GRAY))
+                .forGoggles(tooltip, 1);
+
+        return true;
+
+    }
+
+    @Override
+    public @Nullable HeatNetwork getNetwork() {
+        return network.getNetwork();
     }
 }

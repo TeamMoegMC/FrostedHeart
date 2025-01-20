@@ -21,14 +21,13 @@ package com.teammoeg.frostedheart.content.scenario.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
-import com.teammoeg.frostedheart.content.scenario.runner.ActNamespace;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class ClientLinkClickedPacket implements FHMessage {
+public class ClientLinkClickedPacket implements CMessage {
     final String link;
     public ClientLinkClickedPacket(FriendlyByteBuf buffer) {
     	link=buffer.readUtf();

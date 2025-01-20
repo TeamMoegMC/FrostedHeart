@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

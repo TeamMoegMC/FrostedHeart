@@ -23,10 +23,10 @@ import java.util.function.Supplier;
 
 import org.jetbrains.annotations.NotNull;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -43,7 +43,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.fluids.FluidUtil;
 
-public class GasVentBlock extends FHBaseBlock implements FHEntityBlock<GasVentTileEntity>{
+public class GasVentBlock extends CBlock implements CEntityBlock<GasVentTileEntity> {
 
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 

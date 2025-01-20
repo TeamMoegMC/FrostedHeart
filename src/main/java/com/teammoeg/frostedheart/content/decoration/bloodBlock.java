@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.decoration;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.chorda.block.CBlock;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -16,9 +16,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
-
-public class bloodBlock extends FHBaseBlock {
+public class bloodBlock extends CBlock {
     private static IntegerProperty BLDT = IntegerProperty.create("bloodtype", 0, 3);
     private static IntegerProperty BLDC = IntegerProperty.create("bloodcolor", 0, 1);
     public bloodBlock(Properties blockProps) {

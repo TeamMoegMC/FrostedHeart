@@ -19,24 +19,21 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import java.util.function.Consumer;
-
-import net.minecraft.client.gui.GuiGraphics;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
-
-import dev.ftb.mods.ftblibrary.icon.Color4I;
+import com.teammoeg.chorda.util.CGuiHelper;
+import com.teammoeg.chorda.util.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.crafting.Ingredient;
+
+import java.util.function.Consumer;
 
 public class FakeSlot extends Widget {
     ItemStack[] i;
@@ -81,10 +78,10 @@ public class FakeSlot extends Widget {
     public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         if (i == null) return;
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
-        GuiHelper.setupDrawing();
-        
-        FHGuiHelper.drawItem(matrixStack, cur, x, y,100, w / 16F, h / 16F, true, cnt==0?null:String.valueOf(cnt));
-        
+        dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
+
+        CGuiHelper.drawItem(matrixStack, cur, x, y, 100, w / 16F, h / 16F, true, cnt == 0 ? null : String.valueOf(cnt));
+
         matrixStack.pose().pushPose();
         matrixStack.pose().translate(0, 0, 200);
         if (overlay != null)
@@ -99,6 +96,10 @@ public class FakeSlot extends Widget {
 
     public Consumer<TooltipList> getTooltip() {
         return tooltip;
+    }
+
+    public void setTooltip(Consumer<TooltipList> tooltip) {
+        this.tooltip = tooltip;
     }
 
     @Override
@@ -138,10 +139,6 @@ public class FakeSlot extends Widget {
 
     public void setSlot(ItemStack iss) {
         this.i = new ItemStack[]{iss};
-    }
-
-    public void setTooltip(Consumer<TooltipList> tooltip) {
-        this.tooltip = tooltip;
     }
 
 }

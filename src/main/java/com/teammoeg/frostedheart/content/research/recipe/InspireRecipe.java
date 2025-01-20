@@ -19,23 +19,44 @@
 
 package com.teammoeg.frostedheart.content.research.recipe;
 
-import com.google.gson.JsonObject;
-
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.item.crafting.Ingredient;
+import com.google.gson.JsonObject;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
 import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.registries.RegistryObject;
 
 public class InspireRecipe extends IESerializableRecipe {
+    public static RegistryObject<RecipeType<InspireRecipe>> TYPE;
+    public static Lazy<TypeWithClass<InspireRecipe>> IEType = Lazy.of(() -> new TypeWithClass<>(TYPE, InspireRecipe.class));
+    public static RegistryObject<IERecipeSerializer<InspireRecipe>> SERIALIZER;
+    public Ingredient item;
+    public int inspire;
+
+    public InspireRecipe(ResourceLocation id, Ingredient item, int inspire) {
+        super(Lazy.of(() -> ItemStack.EMPTY), IEType.get(), id);
+        this.item = item;
+        this.inspire = inspire;
+    }
+
+    @Override
+    protected IERecipeSerializer<InspireRecipe> getIESerializer() {
+        return SERIALIZER.get();
+    }
+
+    @Override
+    public ItemStack getResultItem(RegistryAccess pRegistryAccess) {
+        return ItemStack.EMPTY;
+    }
+
     public static class Serializer extends IERecipeSerializer<InspireRecipe> {
 
 
@@ -50,7 +71,7 @@ public class InspireRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public InspireRecipe readFromJson(ResourceLocation arg0, JsonObject arg1,IContext ctx) {
+        public InspireRecipe readFromJson(ResourceLocation arg0, JsonObject arg1, IContext ctx) {
             return new InspireRecipe(arg0, Ingredient.fromJson(arg1.get("item")), arg1.get("amount").getAsInt());
         }
 
@@ -60,27 +81,5 @@ public class InspireRecipe extends IESerializableRecipe {
             buffer.writeInt(recipe.inspire);
         }
 
-    }
-    public static RegistryObject<RecipeType<InspireRecipe>> TYPE;
-    public static Lazy<TypeWithClass<InspireRecipe>> IEType=Lazy.of(()->new TypeWithClass<>(TYPE, InspireRecipe.class));
-    public static RegistryObject<IERecipeSerializer<InspireRecipe>> SERIALIZER;
-    public Ingredient item;
-
-    public int inspire;
-
-    public InspireRecipe(ResourceLocation id, Ingredient item, int inspire) {
-        super(Lazy.of(()->ItemStack.EMPTY), IEType.get(), id);
-        this.item = item;
-        this.inspire = inspire;
-    }
-
-    @Override
-    protected IERecipeSerializer<InspireRecipe> getIESerializer() {
-        return SERIALIZER.get();
-    }
-
-    @Override
-    public ItemStack getResultItem(RegistryAccess pRegistryAccess) {
-        return ItemStack.EMPTY;
     }
 }

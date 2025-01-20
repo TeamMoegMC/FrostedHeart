@@ -5,7 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
+import com.teammoeg.chorda.util.io.NBTSerializable;
 
 import net.minecraft.nbt.CompoundTag;
 
@@ -57,26 +58,26 @@ public class ChunkTownResourceCapability implements NBTSerializable {
     }
 
     public enum ChunkTownResourceType {
-        STONE(TownResourceType.STONE, 1.0, 100),
-        ORE_IRON(TownResourceType.ORE_IRON, 0.25, 50),
-        COAL(TownResourceType.COAL, 0.3, 500);
+        STONE(ItemResourceType.STONE, 1.0, 100),
+        METAL(ItemResourceType.METAL, 0.25, 50),
+        FUEL(ItemResourceType.FUEL, 0.3, 500);
 
-        final TownResourceType type;
+        final ItemResourceType type;
         final int maxAbundance;
         final double generatingChance;
 
-        ChunkTownResourceType(TownResourceType type){
+        ChunkTownResourceType(ItemResourceType type){
             this.type = type;
             this.maxAbundance = 0;
             this.generatingChance = 0;
         }
-        ChunkTownResourceType(TownResourceType type, double generatingChance, int maxAbundance){
+        ChunkTownResourceType(ItemResourceType type, double generatingChance, int maxAbundance){
             this.type = type;
             this.maxAbundance = maxAbundance;
             this.generatingChance = generatingChance;
         }
 
-        public TownResourceType getType(){
+        public ItemResourceType getType(){
             return type;
         }
         public int getMaxAbundance(){

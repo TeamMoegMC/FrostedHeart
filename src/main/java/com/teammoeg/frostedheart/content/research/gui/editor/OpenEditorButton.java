@@ -19,14 +19,13 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import java.util.function.Consumer;
-
-import com.teammoeg.frostedheart.util.lang.Lang;
-
+import com.teammoeg.chorda.util.lang.Components;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+
+import java.util.function.Consumer;
 
 public class OpenEditorButton<T> extends SimpleTextButton {
     private final String lbl;
@@ -39,14 +38,14 @@ public class OpenEditorButton<T> extends SimpleTextButton {
     }
 
     public OpenEditorButton(Panel panel, String label, Editor<T> e, T val, Icon ic, Consumer<T> cb) {
-        super(panel, Lang.str(label), ic);
+        super(panel, Components.str(label), ic);
         lbl = label;
         edi = e;
         this.val = val;
         this.cb = cb;
     }
 
-	@Override
+    @Override
     public void onClicked(MouseButton arg0) {
         edi.open(this, lbl, val, cb);
     }

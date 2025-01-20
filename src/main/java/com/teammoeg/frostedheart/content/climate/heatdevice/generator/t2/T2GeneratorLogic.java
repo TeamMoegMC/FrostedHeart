@@ -31,12 +31,12 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorD
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import com.teammoeg.chorda.util.client.ClientUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -75,7 +75,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
             if (random.nextFloat() < (isOverdrive ? 0.8F : 0.5F)) {
                 ClientUtils.spawnT2FireParticles(level, blockpos);
                 Vec3 wind = new Vec3(0, 0, 0);
-                ClientUtils.spawnInvertedConeSteam(level, blockpos, wind);
+                FHClientUtils.spawnInvertedConeSteam(level, blockpos, wind);
             }
         }
     }
@@ -85,7 +85,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     	//System.out.println(position);
     	//System.out.println(capability);
         if (FHCapabilities.HEAT_EP.isCapability(capability) && NETWORK_CAP.equalsOrNullFace(position)) {
-           return getData(ctx).map(t -> t.epcap).orElseGet(LazyOptional::empty).cast();
+           return ctx.getState().heatCap.cast(ctx);
         } else if (capability == ForgeCapabilities.FLUID_HANDLER && FLUID_INPUT_CAP.equals(position)) {
             LazyOptional<IFluidHandler> tankCap = ctx.getState().tankCap;
             return tankCap.cast();
@@ -96,24 +96,23 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     @Override
     protected boolean tickFuel(IMultiblockContext<T2GeneratorState> ctx) {
         if (!ctx.getState().manager.hasBounded()) {
-            ctx.getState().manager.bind(ctx.getLevel().forciblyGetBlockEntity(BlockPos.ZERO), c -> {
+            ctx.getState().manager.setReconnector(() -> {
                 BlockPos networkPos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
                 Direction dir = NETWORK_CAP.side().forFront(ctx.getLevel().getOrientation());
                // System.out.println(networkPos.relative(dir)+"-"+dir);
-                c.connect(ctx.getLevel().getRawLevel(),networkPos.relative(dir), dir.getOpposite());
+                ctx.getState().manager.connectTo(ctx.getLevel().getRawLevel(),networkPos.relative(dir),networkPos, dir.getOpposite());
             });
         }
        
-        getData(ctx).ifPresent(t->{
-        	if(!t.ep.hasValidNetwork()) {
-                BlockPos pos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
-                Level level = ctx.getLevel().getRawLevel();
-                ctx.getState().manager.addEndpoint(t.ep, 0, level, pos);
-            }
-        });
-        if (ctx.getState().manager.getNumEndpoints() <= 1 && !ctx.getState().manager.isUpdateRequested()) {
+ 
+    	if(!ctx.getState().ep.hasValidNetwork()) {
+            BlockPos pos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
+            Level level = ctx.getLevel().getRawLevel();
+            ctx.getState().manager.addEndpoint(ctx.getState().heatCap.cast(ctx), 0, level, pos);
+        }
+        
+        if (ctx.getState().manager.getNetworkSize()<=2) {
             ctx.getState().manager.requestSlowUpdate();
-            
         }
         ctx.getState().manager.tick(ctx.getLevel().getRawLevel());
         boolean active = super.tickFuel(ctx);

@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.chorda.util.io.SerializeUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;

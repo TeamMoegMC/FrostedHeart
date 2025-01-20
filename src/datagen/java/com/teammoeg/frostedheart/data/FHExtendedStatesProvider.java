@@ -27,10 +27,8 @@ import blusunrize.immersiveengineering.data.models.NongeneratedModels;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.chorda.util.CRegistryHelper;
 
-import blusunrize.immersiveengineering.common.register.IEBlocks;
 import blusunrize.immersiveengineering.data.DataGenUtils;
 import blusunrize.immersiveengineering.data.models.IEOBJBuilder;
 import blusunrize.immersiveengineering.data.models.SplitModelBuilder;
@@ -69,7 +67,7 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
 
     protected String name(Block b)
     {
-        return RegistryUtils.getRegistryName(b).getPath();
+        return CRegistryHelper.getRegistryName(b).getPath();
     }
 
     public void simpleBlockItem(Block b, ModelFile model)

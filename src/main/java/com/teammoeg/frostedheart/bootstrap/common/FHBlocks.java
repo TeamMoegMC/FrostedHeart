@@ -34,7 +34,8 @@ import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.item.FHBlockItem;
+import com.teammoeg.frostedheart.content.climate.block.WardrobeBlock;
+import com.teammoeg.frostedheart.item.FHBlockItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
@@ -57,6 +58,7 @@ import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskBlock;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcBlock;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
+import com.teammoeg.frostedheart.content.steamenergy.creative.CreativeHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainBlock;
 import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainNozzleBlock;
@@ -120,12 +122,20 @@ public class FHBlocks {
         return register(name, block, name, item);
     }
 
-    // Registrate style
-
     static {
         REGISTRATE.setCreativeTab(FHTabs.NATURAL_BLOCKS);
     }
 
+    // thin_ice
+    public static final BlockEntry<Block> THIN_ICE = REGISTRATE.block("thin_ice", Block::new)
+            .initialProperties(() -> Blocks.ICE)
+            .tag(BlockTags.ICE, BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.ICE_CHIP.get(), ConstantValue.exactly(4))))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
     // Condensed ore blocks
     public static final BlockEntry<Block> CONDENSED_IRON_ORE_BLOCK = REGISTRATE.block("condensed_iron_ore_block", Block::new)
             .initialProperties(() -> SNOW_BLOCK)
@@ -134,7 +144,6 @@ public class FHBlocks {
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.CONDENSED_BALL_IRON_ORE.get(), ConstantValue.exactly(4))))
             .simpleItem()
             .register();
-    // next
     public static final BlockEntry<Block> CONDENSED_COPPER_ORE_BLOCK = REGISTRATE.block("condensed_copper_ore_block", Block::new)
             .initialProperties(() -> SNOW_BLOCK)
             .tag(FHTags.Blocks.CONDENSED_ORES.tag)
@@ -1669,7 +1678,6 @@ public class FHBlocks {
         REGISTRATE.setCreativeTab(FHTabs.FUNCTIONAL_BLOCKS);
     }
 
-    // Machine Blocks
     // RELIC_CHEST
     public static final BlockEntry<RelicChestBlock> RELIC_CHEST = REGISTRATE.block("relic_chest", RelicChestBlock::new)
             .properties(t -> t.mapColor(MapColor.METAL)
@@ -1725,6 +1733,19 @@ public class FHBlocks {
             .model(AssetLookup.existingItemModel())
             .build()
             .register();
+    public static final BlockEntry<CreativeHeaterBlock> CREATIVE_HEATER = REGISTRATE.block("creative_heater", CreativeHeaterBlock::new)
+            .properties(t -> t.mapColor(MapColor.STONE)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops()
+                    .strength(2, 10)
+                    .noOcclusion())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
+
     // CHARGER
     public static final BlockEntry<ChargerBlock> CHARGER = REGISTRATE.block("charger", ChargerBlock::new)
             .properties(t -> t.mapColor(MapColor.STONE)
@@ -1853,6 +1874,15 @@ public class FHBlocks {
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .item()
             .transform(ModelGen.customItemModel())
+            .register();
+    // WARDROBE, "wardrobe", like Blocks.SPRUCE_DOOR
+    public static final BlockEntry<WardrobeBlock> WARDROBE = REGISTRATE.block("wardrobe", WardrobeBlock::new)
+            .initialProperties(() -> Blocks.SPRUCE_DOOR)
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
             .register();
 
     // Town blocks, registrate

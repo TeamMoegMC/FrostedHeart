@@ -19,14 +19,14 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import com.teammoeg.frostedheart.base.menu.FHBlockEntityContainer;
+import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 
 import blusunrize.immersiveengineering.common.gui.IESlot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
-public class IncubatorT1Container extends FHBlockEntityContainer<IncubatorTileEntity> {
+public class IncubatorT1Container extends CBlockEntityMenu<IncubatorTileEntity> {
 
     public IncubatorT1Container(int id, Inventory inventoryPlayer, IncubatorTileEntity tile) {
         super(FHMenuTypes.INCUBATOR_T1.get(), tile, id,inventoryPlayer.player, 4);

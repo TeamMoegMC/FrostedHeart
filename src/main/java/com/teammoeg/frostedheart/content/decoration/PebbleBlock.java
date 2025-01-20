@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.decoration;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.chorda.block.CBlock;
 
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.Block;
@@ -17,7 +17,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 
-public class PebbleBlock extends FHBaseBlock {
+public class PebbleBlock extends CBlock {
     private static Integer typeCount = 7;
     private static IntegerProperty TYPE = IntegerProperty.create("pebbletype", 0, typeCount - 1);
     private static Integer colorCount = 3;

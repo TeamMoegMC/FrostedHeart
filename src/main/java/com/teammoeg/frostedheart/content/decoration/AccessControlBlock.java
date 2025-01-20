@@ -19,13 +19,13 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.chorda.block.CBlock;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.material.MapColor;
 
-public class AccessControlBlock extends FHBaseBlock {
+public class AccessControlBlock extends CBlock {
     public AccessControlBlock() {
         super(Block.Properties.of().mapColor(MapColor.METAL).sound(SoundType.STONE).requiresCorrectToolForDrops()
                 .strength(0, 2000).noOcclusion());

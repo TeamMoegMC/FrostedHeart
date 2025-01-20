@@ -36,7 +36,7 @@ import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
-import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.chorda.util.CUtils;
 
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
@@ -225,7 +225,7 @@ public class TradeContainer extends AbstractContainerMenu {
                     int price = cnt * sd.getPrice();
                     if (poffer >= price) {
                         poffer -= price;
-                        FHUtils.giveItem(pe, ItemHandlerHelper.copyStackWithSize(sd.getItem(), cnt));
+                        CUtils.giveItem(pe, ItemHandlerHelper.copyStackWithSize(sd.getItem(), cnt));
                         sd.reduceStock(data, cnt);
                         data.totaltraded += price;
                     }

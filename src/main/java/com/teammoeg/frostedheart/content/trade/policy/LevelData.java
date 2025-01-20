@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.trade.policy;
 
 import com.google.gson.JsonElement;
-import com.teammoeg.frostedheart.util.io.Writeable;
+import com.teammoeg.chorda.util.io.Writeable;
 
 import net.minecraft.network.FriendlyByteBuf;
 

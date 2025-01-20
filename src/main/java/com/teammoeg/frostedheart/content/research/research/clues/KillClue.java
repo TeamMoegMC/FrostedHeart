@@ -19,16 +19,15 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -36,10 +35,10 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 
 public class KillClue extends ListenerClue {
-	public static final MapCodec<KillClue> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		ListenerClue.BASE_CODEC.forGetter(o->o.getData()),
-		CodecUtil.registryCodec(()->BuiltInRegistries.ENTITY_TYPE).fieldOf("entity").forGetter(o->o.type)
-		).apply(t,KillClue::new));
+    public static final MapCodec<KillClue> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+            ListenerClue.BASE_CODEC.forGetter(o -> o.getData()),
+            CodecUtil.registryCodec(() -> BuiltInRegistries.ENTITY_TYPE).fieldOf("entity").forGetter(o -> o.type)
+    ).apply(t, KillClue::new));
     EntityType<?> type;
 
     KillClue() {
@@ -52,9 +51,9 @@ public class KillClue extends ListenerClue {
     }
 
     public KillClue(BaseData data, EntityType<?> type) {
-		super(data);
-		this.type = type;
-	}
+        super(data);
+        this.type = type;
+    }
 
     @Override
     public String getBrief(Research parent) {
@@ -77,7 +76,7 @@ public class KillClue extends ListenerClue {
     }
 
     @Override
-    public void initListener(TeamDataHolder t,Research parent) {
+    public void initListener(TeamDataHolder t, Research parent) {
         ResearchListeners.getKillClues().add(super.getClueClosure(parent), t.getId());
     }
 
@@ -89,7 +88,7 @@ public class KillClue extends ListenerClue {
     }
 
     @Override
-    public void removeListener(TeamDataHolder t,Research parent) {
+    public void removeListener(TeamDataHolder t, Research parent) {
         ResearchListeners.getKillClues().remove(super.getClueClosure(parent), t.getId());
     }
 

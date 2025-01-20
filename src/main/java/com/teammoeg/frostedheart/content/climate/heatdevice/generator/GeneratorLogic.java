@@ -24,15 +24,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.teammoeg.frostedheart.compat.ie.IngredientUtils;
+import com.teammoeg.chorda.util.ie.IngredientUtils;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.compat.ie.MultiBlockAccess;
+import com.teammoeg.chorda.util.ie.CMultiblockHelper;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.ie.MultiBlockAccess;
 
 import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.MultiblockRegistration;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelper;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.CapabilityPosition;
@@ -81,7 +82,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
      * Get the GeneratorData from context
      */
     public Optional<GeneratorData> getData(IMultiblockContext<R> ctx) {
-        return ctx.getState().getData(FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
+        return ctx.getState().getData(CMultiblockHelper.getAbsoluteMaster(ctx));
     }
 
     /**
@@ -96,14 +97,13 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
     }
 
     public void upgradeStructure(IMultiblockContext<R> ctx, ServerPlayer entityplayer) {
-        IMultiblockBEHelper helper = FHMultiblockHelper.getBEHelper(ctx.getLevel()).get();
-        if (!nextLevelHasValidStructure(ctx.getLevel().getRawLevel(), helper))
+        if (!nextLevelHasValidStructure(ctx.getLevel().getRawLevel(), ctx))
             return;
         if (!ResearchListeners.hasMultiblock(ctx.getState().getOwner(), getNextLevelMultiblock()))
             return;
-        if (!IngredientUtils.costItems(entityplayer, getUpgradeCost(ctx.getLevel().getRawLevel(), helper)))
+        if (!IngredientUtils.costItems(entityplayer, getUpgradeCost(ctx.getLevel().getRawLevel(), ctx)))
             return;
-        BlockPos negMasterOffset = FHMultiblockHelper.getMasterPos(ctx.getLevel()).subtract(getNextLevelMultiblock().getMasterFromOriginOffset());
+        BlockPos negMasterOffset = CMultiblockHelper.getMasterPos(ctx).subtract(getNextLevelMultiblock().getMasterFromOriginOffset());
         Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, ctx.getLevel().getOrientation().front());
         ((MultiBlockAccess) getNextLevelMultiblock()).setPlayer(entityplayer);
         ((MultiBlockAccess) getNextLevelMultiblock()).callForm(ctx.getLevel().getRawLevel(), ctx.getLevel().toAbsolute(negMasterOffset), rot, Mirror.NONE, ctx.getLevel().getOrientation().front().getOpposite());
@@ -157,7 +157,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
             return false;
         }*/
     public GeneratorRecipe findRecipe(IMultiblockContext<R> ctx, ItemStack input) {
-        for (GeneratorRecipe recipe : FHUtils.filterRecipes(ctx.getLevel().getRawLevel().getRecipeManager(), GeneratorRecipe.TYPE))
+        for (GeneratorRecipe recipe : CUtils.filterRecipes(ctx.getLevel().getRawLevel().getRecipeManager(), GeneratorRecipe.TYPE))
             if (recipe.input.test(input))
                 return recipe;
         return null;
@@ -176,7 +176,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
         return repair;
     }
 
-    public List<IngredientWithSize> getUpgradeCost(Level level, IMultiblockBEHelper<R> ctx) {
+    public List<IngredientWithSize> getUpgradeCost(Level level, IMultiblockContext<R> ctx) {
         IETemplateMultiblock ietm = getNextLevelMultiblock();
         if (ietm != null) {
             if (upgrade == null) {
@@ -207,12 +207,13 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
 
     public abstract IETemplateMultiblock getNextLevelMultiblock();
 
-    public boolean nextLevelHasValidStructure(Level level, IMultiblockBEHelper<R> helper) {
+    public boolean nextLevelHasValidStructure(Level level, IMultiblockContext<R> ctx) {
         IETemplateMultiblock ietm = getNextLevelMultiblock();
+        MultiblockRegistration<?> curmb=CMultiblockHelper.getMultiblock(ctx);
         if (ietm == null)
             return false;
-        Vec3i csize = helper.getMultiblock().size(level);
-        BlockPos masterOrigin = helper.getMultiblock().getMasterPosInMB().get();
+        Vec3i csize = curmb.size(level);
+        BlockPos masterOrigin = curmb.masterPosInMB();
         Vec3i nsize = ietm.getSize(level);
         BlockPos masterOffset = ietm.getMasterFromOriginOffset().subtract(masterOrigin);
         BlockPos negMasterOffset = masterOrigin.subtract(ietm.getMasterFromOriginOffset());
@@ -224,7 +225,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
                     if (aabb.contains(x, y, z))
                         continue;
                     BlockPos cpos = negMasterOffset.offset(x, y, z);
-                    if (helper.getContext().getLevel().getBlockState(cpos).getBlock() != Blocks.AIR) {
+                    if (ctx.getLevel().getBlockState(cpos).getBlock() != Blocks.AIR) {
                         return false;
                     }
                 }
@@ -234,11 +235,11 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
     }
 
     public void tryRegist(IMultiblockContext<R> ctx) {
-        ctx.getState().tryRegist(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
+        ctx.getState().tryRegist(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx));
     }
 
     public void regist(IMultiblockContext<R> ctx) {
-        ctx.getState().regist(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
+        ctx.getState().regist(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx));
     }
 
     /**
@@ -252,7 +253,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
         boolean lastIsBroken = data.map(t -> t.isBroken).orElse(false);
 
         // Tick the GeneratorData
-        ctx.getState().tickData(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
+        ctx.getState().tickData(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx));
         boolean isActive = data.map(t -> t.isActive).orElse(false);
 
         // If newly broken, start exploding for 100 ticks
@@ -263,7 +264,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
 
         Level level = ctx.getLevel().getRawLevel();
         if (ctx.getState().explodeTicks > 0) {
-            Vec3i size = FHMultiblockHelper.getSize(ctx.getLevel());
+            Vec3i size = CMultiblockHelper.getSize(ctx);
             // Every 5 ticks, send explosion packet to nearby players
             if (ctx.getState().explodeTicks % 5 == 0) {
                 BlockPos pos = ctx.getLevel().toAbsolute(new BlockPos(level.random.nextInt(size.getX()),

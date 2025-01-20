@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.decoration;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.chorda.block.CBlock;
 
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.Block;
@@ -20,7 +20,7 @@ import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 
-public class PackageBlock extends FHBaseBlock {
+public class PackageBlock extends CBlock {
     private static Integer typeCount = 4;
     private static IntegerProperty TYPE = IntegerProperty.create("packagetype", 0, typeCount - 1);
     private static Integer colorCount = 3;

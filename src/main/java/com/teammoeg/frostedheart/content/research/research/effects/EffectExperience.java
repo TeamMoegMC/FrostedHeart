@@ -19,39 +19,39 @@
 
 package com.teammoeg.frostedheart.content.research.research.effects;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.lang.Lang;
-
+import com.teammoeg.frostedheart.util.client.Lang;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Reward the research team executes command
  */
 public class EffectExperience extends Effect {
-	public static final MapCodec<EffectExperience> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
-	Codec.INT.fieldOf("experience").forGetter(o->o.exp))
-	.apply(t,EffectExperience::new));
+    public static final MapCodec<EffectExperience> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+                    Codec.INT.fieldOf("experience").forGetter(o -> o.exp))
+            .apply(t, EffectExperience::new));
     int exp;
 
     public EffectExperience(BaseData data, int exp) {
-		super(data);
-		this.exp = exp;
-	}
+        super(data);
+        this.exp = exp;
+    }
 
 
-	public EffectExperience(int xp) {
+    public EffectExperience(int xp) {
         super();
         exp = xp;
     }
@@ -76,12 +76,12 @@ public class EffectExperience extends Effect {
     @Override
     public List<Component> getDefaultTooltip() {
         List<Component> tooltip = new ArrayList<>();
-        tooltip.add(Lang.str("+" + exp));
+        tooltip.add(Components.str("+" + exp));
         return tooltip;
     }
 
     @Override
-    public boolean grant(TeamDataHolder team,TeamResearchData trd,  Player triggerPlayer, boolean isload) {
+    public boolean grant(TeamDataHolder team, TeamResearchData trd, Player triggerPlayer, boolean isload) {
         if (triggerPlayer == null || isload)
             return false;
 

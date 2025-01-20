@@ -21,22 +21,23 @@ package com.teammoeg.frostedheart.content.town;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.util.io.codec.DataOps;
-import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
+import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.chorda.team.CTeamDataManager;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.chorda.team.CClientTeamDataManager;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.chorda.util.io.codec.DataOps;
+import com.teammoeg.chorda.util.io.codec.ObjectWriter;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class TeamTownDataS2CPacket implements FHMessage {
+public class TeamTownDataS2CPacket implements CMessage {
 	Object data;
 
     public TeamTownDataS2CPacket(Player player) {
-    	this(FHTeamDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA));
+    	this(CTeamDataManager.get(player).getData(FHSpecialDataTypes.TOWN_DATA));
     }
 
 	public TeamTownDataS2CPacket(FriendlyByteBuf buffer) {
@@ -44,11 +45,21 @@ public class TeamTownDataS2CPacket implements FHMessage {
 	}
 
 	public TeamTownDataS2CPacket(TeamTownData townData) {
-		data=SpecialDataTypes.TOWN_DATA.saveData(DataOps.COMPRESSED, townData);
+		try {
+			data= FHSpecialDataTypes.TOWN_DATA.saveData(DataOps.COMPRESSED, townData);
+		} catch (Exception e) {
+			FHMain.LOGGER.error("Failed to save town data when syncing town data", e);
+		}
     }
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> FHClientTeamDataManager.INSTANCE.getInstance().setData(SpecialDataTypes.TOWN_DATA,SpecialDataTypes.TOWN_DATA.loadData(DataOps.COMPRESSED, data)));
+        context.get().enqueueWork(() -> {
+			try {
+				CClientTeamDataManager.INSTANCE.getInstance().setData(FHSpecialDataTypes.TOWN_DATA, FHSpecialDataTypes.TOWN_DATA.loadData(DataOps.COMPRESSED, data));
+			} catch (Exception e) {
+				FHMain.LOGGER.error("Failed to load data when syncing town data", e);
+			}
+		});
         context.get().setPacketHandled(true);
     }
 

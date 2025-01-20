@@ -1,9 +1,0 @@
-{
-  "type": "frostedheart:water_level_and_effect",
-  "fluid": "caupona:dilute_soup",
-  "ingredient": {
-    "tag": "frostedheart:thermos"
-  },
-  "waterLevel": 3,
-  "waterSaturationLevel": 2
-}

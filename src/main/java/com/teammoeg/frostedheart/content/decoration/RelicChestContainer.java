@@ -19,13 +19,13 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import com.teammoeg.frostedheart.base.menu.FHBlockEntityContainer;
+import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 
-public class RelicChestContainer extends FHBlockEntityContainer<RelicChestTileEntity> {
+public class RelicChestContainer extends CBlockEntityMenu<RelicChestTileEntity> {
     public RelicChestContainer(int id, Inventory inventoryPlayer, RelicChestTileEntity tile) {
         super(FHMenuTypes.RELIC_CHEST.get(), tile, id,inventoryPlayer.player, 15);
 

@@ -25,7 +25,7 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.content.trade.policy.actions.AddFlagValueAction;
 import com.teammoeg.frostedheart.content.trade.policy.actions.SetFlagAction;
 import com.teammoeg.frostedheart.content.trade.policy.actions.SetFlagValueAction;
-import com.teammoeg.frostedheart.util.io.registry.JsonSerializerRegistry;
+import com.teammoeg.chorda.util.io.registry.JsonSerializerRegistry;
 
 import net.minecraft.network.FriendlyByteBuf;
 

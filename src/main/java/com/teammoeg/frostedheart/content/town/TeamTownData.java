@@ -23,12 +23,13 @@ import blusunrize.immersiveengineering.common.util.Utils;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.base.team.SpecialData;
-import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.team.SpecialData;
+import com.teammoeg.chorda.team.SpecialDataHolder;
+import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.town.mine.MineBlockEntity;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.frostedheart.content.town.resource.TownResourceHolder;
+import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
@@ -55,11 +56,11 @@ import java.util.stream.Collectors;
 public class TeamTownData implements SpecialData{
 	public static final Codec<TeamTownData> CODEC=RecordCodecBuilder.create(t->t.group(
             CodecUtil.defaultValue(Codec.STRING, "Default Town").fieldOf("name").forGetter(o->o.name),
-			CodecUtil.defaultValue(CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT), ImmutableMap.of()).fieldOf("resource").forGetter(o->o.resources),
-			CodecUtil.defaultValue(CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT), ImmutableMap.of()).fieldOf("backupResource").forGetter(o->o.backupResources),
+			CodecUtil.defaultValue(TownResourceHolder.CODEC, new TownResourceHolder()).fieldOf("resources").forGetter(o->o.resources),
 			CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "data", TownWorkerData.CODEC), ImmutableMap.of()).fieldOf("blocks").forGetter(o->o.blocks),
 			CodecUtil.defaultValue(CodecUtil.mapCodec("uuid",UUIDUtil.CODEC,"data",Resident.CODEC), ImmutableMap.of()).fieldOf("residents").forGetter(o->o.residents)
     ).apply(t, TeamTownData::new));
+//    public static final Codec<TeamTownData> CODEC = CodecUtil.debugCodec(CODEC_TOWN);
     /**
      * The town name.
      */
@@ -68,24 +69,22 @@ public class TeamTownData implements SpecialData{
      * The town residents.
      */
     Map<UUID, Resident> residents = new LinkedHashMap<>();
-	/**
-     * Resource generated from resident
-     */
-    Map<TownResourceType, Integer> resources = new EnumMap<>(TownResourceType.class);
     /**
-     * Resource provided by player
+     * Town resources.
+     * Including normal resources and town services.
+     * Including resources gathered from town and resources gathered from player.
+     * Must be changed by TownResourceManager.
      */
-    Map<TownResourceType, Integer> backupResources = new EnumMap<>(TownResourceType.class);
+    TownResourceHolder resources = new TownResourceHolder();
     /**
      * Town blocks and their worker data
      */
     Map<BlockPos, TownWorkerData> blocks = new LinkedHashMap<>();
     
-	public TeamTownData(String name, Map<TownResourceType, Integer> resources, Map<TownResourceType, Integer> backupResources, Map<BlockPos, TownWorkerData> blocks, Map<UUID, Resident> residents) {
+	public TeamTownData(String name, TownResourceHolder resources, Map<BlockPos, TownWorkerData> blocks, Map<UUID, Resident> residents) {
 		super();
 		this.name = name;
-		this.resources.putAll(resources);
-		this.backupResources.putAll(backupResources);
+		this.resources = resources;
 		this.blocks.putAll(blocks);
 		this.residents.putAll(residents);
 	}
@@ -110,7 +109,6 @@ public class TeamTownData implements SpecialData{
     public void tick(ServerLevel world) {
         removeNonTownBlocks(world);
         PriorityQueue<TownWorkerData> pq = new PriorityQueue<>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
-        this.resources.put(TownResourceType.STORAGE, 0);//每次工作都重置城镇总资源容量，从Warehouse处重新获取
         for(TownWorkerData workerData : blocks.values()){
             if(world.isLoaded(workerData.getPos())){
                 workerData.toTileEntity(world);
@@ -124,27 +122,28 @@ public class TeamTownData implements SpecialData{
             }
         }
         //pq.addAll(blocks.values());
-        TeamTown itt = new TeamTown(this);
+        TeamTown teamTown = new TeamTown(this);
+        teamTown.resources.resetAllServices();
         for (TownWorkerData t : pq) {
-            t.firstWork(itt);
+            t.firstWork(teamTown);
         }
         for (TownWorkerData t : pq) {
-            t.beforeWork(itt);
+            t.beforeWork(teamTown);
         }
         for (TownWorkerData t : pq) {
-            t.work(itt);
+            t.work(teamTown);
         }
         for (TownWorkerData t : pq) {
-            t.afterWork(itt);
+            t.afterWork(teamTown);
         }
         for (TownWorkerData t : pq) {
-            t.lastWork(itt);
+            t.lastWork(teamTown);
         }
         //for (TownWorkerData t : pq) {
         //    t.setData(world);
         //}
         //在目前的运行逻辑中，work方法不会改变任何应存储在TileEntity中的信息，因此暂时将此内容放在所有work之前。
-        itt.finishWork();
+        //teamTown.finishWork();此方法已随旧的TownResource一并弃用
     }
 
     public void tickMorning(ServerLevel world){
@@ -395,18 +394,6 @@ public class TeamTownData implements SpecialData{
             }
         }
         availableWorkers.forEach(TempDataHolder::saveResidents);
-    }
-
-    //debug
-    @Override
-    public String toString() {
-        return "TeamTownData{" +
-                "name='" + name + '\'' +
-                ", resources=" + resources +
-                ", backupResources=" + backupResources +
-                ", blocks=" + blocks +
-                ", residents=" + residents +
-                '}';
     }
 
 

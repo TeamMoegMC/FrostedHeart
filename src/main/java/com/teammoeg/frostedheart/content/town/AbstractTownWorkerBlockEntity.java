@@ -1,18 +1,22 @@
 package com.teammoeg.frostedheart.content.town;
 
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
-import com.teammoeg.frostedheart.base.scheduler.ScheduledTaskTileEntity;
-import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
+import com.teammoeg.chorda.block.CBlockInterfaces;
+import com.teammoeg.chorda.blockentity.CBlockEntity;
+import com.teammoeg.chorda.scheduler.ScheduledTaskTileEntity;
+import com.teammoeg.chorda.scheduler.SchedulerQueue;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-public abstract class AbstractTownWorkerBlockEntity extends FHBaseTileEntity implements
-        TownBlockEntity, ScheduledTaskTileEntity, FHBlockInterfaces.IActiveState {
+public abstract class AbstractTownWorkerBlockEntity extends CBlockEntity implements
+        TownBlockEntity, ScheduledTaskTileEntity, CBlockInterfaces.IActiveState {
+    @Getter
+    @Setter
     public TownWorkerState workerState = TownWorkerState.NOT_INITIALIZED;
     public OccupiedArea occupiedArea;
     protected boolean addedToSchedulerQueue = false;
@@ -105,13 +109,6 @@ public abstract class AbstractTownWorkerBlockEntity extends FHBaseTileEntity imp
                 }
             }
         }
-    }
-
-    public void setWorkerState(TownWorkerState workerState) {
-        this.workerState = workerState;
-    }
-    public TownWorkerState getWorkerState() {
-        return workerState;
     }
 
     public static TownWorkerState getWorkerState(CompoundTag nbt){

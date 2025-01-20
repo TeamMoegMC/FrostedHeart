@@ -19,15 +19,15 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 
-public class SmokeBlockT1 extends FHBaseBlock {
+public class SmokeBlockT1 extends CBlock {
 
     public SmokeBlockT1(Properties blockProps) {
         super(blockProps);

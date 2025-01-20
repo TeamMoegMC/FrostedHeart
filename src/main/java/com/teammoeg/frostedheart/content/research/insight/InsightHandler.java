@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.content.research.insight;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.network.FHInsightSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.network.PacketDistributor;

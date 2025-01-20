@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
+import com.teammoeg.frostedheart.bootstrap.reference.FHDamageSources;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -26,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.util.mixin.IFeedStore;
+import com.teammoeg.chorda.util.mixin.IFeedStore;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -65,7 +66,7 @@ public class AnimalMixin_Feeding extends Mob {
                 if (hxteTimer < 20) {
                     hxteTimer++;
                 } else {
-                    this.hurt(FHDamageTypes.createSource(level(), FHDamageTypes.BLIZZARD, this), 1);
+                    this.hurt(FHDamageSources.blizzard(level()), 1);
                 }
             } else {
                 float temp = WorldTemperature.block(this.getCommandSenderWorld(), this.blockPosition());
@@ -82,7 +83,11 @@ public class AnimalMixin_Feeding extends Mob {
                                 }
                             }
                         hxteTimer = 0;
-                        this.hurt(FHDamageTypes.createSource(level(), temp > 0 ? FHDamageTypes.HYPERTHERMIA : FHDamageTypes.HYPOTHERMIA, this), 2);
+                        if (temp > 0) {
+                            this.hurt(FHDamageSources.hyperthermia(level()), 2);
+                        } else {
+                            this.hurt(FHDamageSources.hypothermia(level()), 2);
+                        }
                     }
                 } else if (hxteTimer > 0)
                     hxteTimer--;

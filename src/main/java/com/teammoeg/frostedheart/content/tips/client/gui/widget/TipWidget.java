@@ -1,12 +1,13 @@
 package com.teammoeg.frostedheart.content.tips.client.gui.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.chorda.util.CGuiHelper;
+import com.teammoeg.chorda.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.frostedheart.util.client.AnimationUtil;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHColorHelper;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.client.AnimationUtil;
+import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.ColorHelper;
+import com.teammoeg.frostedheart.util.client.Lang;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -43,12 +44,17 @@ public class TipWidget extends AbstractWidget {
 
     private TipWidget() {
         super(0, 0, 0, 0, Component.literal("tip"));
-        this.closeButton = new IconButton(0, 0, IconButton.Icon.CROSS, FHColorHelper.CYAN, Lang.gui("close").component(),
-                b -> close()
-        );
-        this.pinButton = new IconButton(0, 0, IconButton.Icon.LOCK, FHColorHelper.CYAN, Lang.gui("pin").component(),
-                b -> this.alwaysVisibleOverride = true
-        );
+        this.closeButton = new IconButton(0, 0, IconButton.Icon.CROSS, ColorHelper.CYAN, Lang.gui("close").component(),
+                b -> {
+                    close();
+                    b.setFocused(false);
+                });
+        this.pinButton = new IconButton(0, 0, IconButton.Icon.LOCK, ColorHelper.CYAN, Lang.gui("pin").component(),
+                b -> {
+                    this.alwaysVisibleOverride = true;
+                    b.setFocused(false);
+                });
+        this.visible = false;
         this.closeButton.visible = false;
         this.pinButton.visible = false;
         this.context = new RenderContext();
@@ -128,8 +134,8 @@ public class TipWidget extends AbstractWidget {
 
         // 图片
         if (context.hasImage) {
-            FHGuiHelper.bindTexture(tip.getImage());
-            FHGuiHelper.blitColored(
+            CGuiHelper.bindTexture(tip.getImage());
+            CGuiHelper.blitColored(
                     pose,
                     getX() + (super.getWidth() / 2) - (context.imageSize.width / 2),
                     getY() + border + (context.totalLineSize * RenderContext.LINE_SPACE),
@@ -156,8 +162,8 @@ public class TipWidget extends AbstractWidget {
         }
 
         // 标题和内容
-        FHGuiHelper.drawStrings(graphics, ClientUtils.font(), context.titleLines, getX(), getY(), context.fontColor, RenderContext.LINE_SPACE, false);
-        FHGuiHelper.drawStrings(graphics, ClientUtils.font(), context.contentLines, getX(), getY()+6 + (context.titleLines.size() * RenderContext.LINE_SPACE), context.fontColor, RenderContext.LINE_SPACE, false);
+        CGuiHelper.drawStrings(graphics, ClientUtils.font(), context.titleLines, getX(), getY(), context.fontColor, RenderContext.LINE_SPACE, false, false);
+        CGuiHelper.drawStrings(graphics, ClientUtils.font(), context.contentLines, getX(), getY()+6 + (context.titleLines.size() * RenderContext.LINE_SPACE), context.fontColor, RenderContext.LINE_SPACE, false, false);
 
         pose.popPose();
         graphics.setColor(1, 1, 1, 1);
@@ -184,8 +190,10 @@ public class TipWidget extends AbstractWidget {
         context.clear();
         state = State.IDLE;
         alwaysVisibleOverride = false;
+        visible = false;
         pinButton.visible = false;
         closeButton.visible = false;
+        setFocused(false);
         pinButton.setFocused(false);
         closeButton.setFocused(false);
         pinButton.setAlpha(1F);
@@ -259,8 +267,8 @@ public class TipWidget extends AbstractWidget {
         float pPitch;
 
         void update(Tip tip) {
-            BGColor = FHColorHelper.setAlpha(tip.getBackgroundColor(), (isGuiOpened() ? 0.8F : 0.5F));
-            fontColor = tip.getFontColor();
+            BGColor = ColorHelper.setAlpha(tip.getBackgroundColor(), (isGuiOpened() ? 0.8F : 0.5F));
+            fontColor = ColorHelper.setAlpha(tip.getFontColor(), 1.0F);
 
             // 跟随视角晃动
             Minecraft MC = ClientUtils.mc();
@@ -287,11 +295,11 @@ public class TipWidget extends AbstractWidget {
 
             // 文本换行
             var contents = tip.getContents();
-            titleLines = ClientUtils.font().split(contents.get(0), width-24);
+            titleLines = ClientUtils.font().split(contents.get(0), width);
             contentLines = new ArrayList<>();
             if (contents.size() > 1)
                 for (int i = 1; i < contents.size(); i++)
-                    contentLines.addAll(ClientUtils.font().split(contents.get(i), width-24));
+                    contentLines.addAll(ClientUtils.font().split(contents.get(i), width));
             totalLineSize = titleLines.size() + contentLines.size();
             int height = (totalLineSize * RenderContext.LINE_SPACE);
 

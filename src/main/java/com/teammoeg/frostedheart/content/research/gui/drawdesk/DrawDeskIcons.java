@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardType;
-
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import net.minecraft.resources.ResourceLocation;
@@ -51,6 +50,9 @@ public class DrawDeskIcons {
         }
     }
 
+    private DrawDeskIcons() {
+    }
+
     public static Icon getIcon(CardType ct, int card, boolean active) {
         if (active)
             return icons[getIconIndex(ct, card)];
@@ -69,9 +71,6 @@ public class DrawDeskIcons {
                 return card + 2;
         }
         return -1;
-    }
-
-    private DrawDeskIcons() {
     }
 
 }

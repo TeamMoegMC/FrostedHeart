@@ -23,10 +23,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.teammoeg.chorda.util.client.*;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.mixin.client.BossHealthOverlayAccess;
-import com.teammoeg.frostedheart.util.client.*;
 import net.minecraft.client.gui.screens.Screen;
 import org.lwjgl.opengl.GL11;
 
@@ -44,7 +44,7 @@ import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
-import com.teammoeg.frostedheart.util.client.UV.Transition;
+import com.teammoeg.chorda.util.client.UV.Transition;
 
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import net.minecraft.client.AttackIndicatorStatus;
@@ -66,15 +66,15 @@ import net.minecraft.world.item.ItemStack;
 
 public class FrostedHud {
     static final class Atlases {
-        static final AtlasUV health_bar =       new AtlasUV("hud/atlantes/hp.png", 32, 32, 10, 100, 320, 320);
-        static final AtlasUV maxhealth_bar =    new AtlasUV("hud/atlantes/maxhp.png", 32, 32, 10, 100, 320, 320);
-        static final AtlasUV absorption_bar =   new AtlasUV("hud/atlantes/absorption.png", 36, 36, 10, 100, 360, 360);
-        static final AtlasUV hunger_bar =       new AtlasUV("hud/atlantes/hunger.png", 16, 32, 10, 100, 160, 320);
-        static final AtlasUV thirst_bar =       new AtlasUV("hud/atlantes/thirst.png", 16, 32, 10, 100, 160, 320);
-        static final AtlasUV oxygen_bar =       new AtlasUV("hud/atlantes/oxygen.png", 16, 32, 10, 100, 160, 320);
-        static final AtlasUV defence_bar =      new AtlasUV("hud/atlantes/defence.png", 16, 32, 10, 100, 160, 320);
-        static final AtlasUV horse_health_bar = new AtlasUV("hud/atlantes/horsehp.png", 32, 32, 10, 100, 320, 320);
-        static final AtlasUV horse_jump_bar =   new AtlasUV("hud/atlantes/jump.png", 36, 36, 10, 100, 360, 360);
+        static final AtlasUV health_bar =       new AtlasUV(FHMain.rl("textures/gui/hud/atlantes/hp.png"), 32, 32, 10, 100, 320, 320);
+        static final AtlasUV maxhealth_bar =    new AtlasUV(FHMain.rl("textures/gui/hud/atlantes/maxhp.png"), 32, 32, 10, 100, 320, 320);
+        static final AtlasUV absorption_bar =   new AtlasUV(FHMain.rl("textures/gui/hud/atlantes/absorption.png"), 36, 36, 10, 100, 360, 360);
+        static final AtlasUV hunger_bar =       new AtlasUV(FHMain.rl("textures/gui/hud/atlantes/hunger.png"), 16, 32, 10, 100, 160, 320);
+        static final AtlasUV thirst_bar =       new AtlasUV(FHMain.rl("textures/gui/hud/atlantes/thirst.png"), 16, 32, 10, 100, 160, 320);
+        static final AtlasUV oxygen_bar =       new AtlasUV(FHMain.rl("textures/gui/hud/atlantes/oxygen.png"), 16, 32, 10, 100, 160, 320);
+        static final AtlasUV defence_bar =      new AtlasUV(FHMain.rl("textures/gui/hud/atlantes/defence.png"), 16, 32, 10, 100, 160, 320);
+        static final AtlasUV horse_health_bar = new AtlasUV(FHMain.rl("textures/gui/hud/atlantes/horsehp.png"), 32, 32, 10, 100, 320, 320);
+        static final AtlasUV horse_jump_bar =   new AtlasUV(FHMain.rl("textures/gui/hud/atlantes/jump.png"), 36, 36, 10, 100, 360, 360);
     }
     static final class BarPos {
         static final Point exp_bar = new Point(-112 + 19, -26);

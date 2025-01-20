@@ -19,11 +19,14 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.debug;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.CUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -39,7 +42,7 @@ import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.function.Supplier;
 
-public class DebugHeaterBlock extends FHBaseBlock implements FHEntityBlock<DebugHeaterTileEntity> {
+public class DebugHeaterBlock extends CBlock implements CEntityBlock<DebugHeaterTileEntity> {
     public DebugHeaterBlock(Properties blockProps) {
         super(blockProps);
     }
@@ -60,7 +63,7 @@ public class DebugHeaterBlock extends FHBaseBlock implements FHEntityBlock<Debug
         if (item.getItem().equals(Item.byBlock(this))) {
             state = state.cycle(BlockStateProperties.LEVEL_FLOWING);
             world.setBlockAndUpdate(pos, state);
-            player.displayClientMessage(Lang.str(String.valueOf(state.getValue(BlockStateProperties.LEVEL_FLOWING))), true);
+            player.displayClientMessage(Components.str(String.valueOf(state.getValue(BlockStateProperties.LEVEL_FLOWING))), true);
             return InteractionResult.SUCCESS;
         }
         return superResult;
@@ -69,5 +72,25 @@ public class DebugHeaterBlock extends FHBaseBlock implements FHEntityBlock<Debug
     @Override
     public Supplier<BlockEntityType<DebugHeaterTileEntity>> getBlock() {
         return FHBlockEntityTypes.DEBUGHEATER;
+    }
+
+    @Override
+    public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
+                                boolean isMoving) {
+        super.neighborChanged(state, worldIn, pos, blockIn, fromPos, isMoving);
+        //Direction d = CUtils.dirBetween(fromPos, pos);
+        //System.out.println("changed")2
+        if(!worldIn.isClientSide)
+            worldIn.scheduleTick(pos, this, 10);
+
+    }
+
+    @Override
+    public void tick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource pRandom) {
+        //System.out.println("ticked "+pos);
+        super.tick(state, worldIn, pos, pRandom);
+        DebugHeaterTileEntity te= CUtils.getExistingTileEntity(worldIn, pos, DebugHeaterTileEntity.class);
+        if(te!=null)
+            te.getNetwork().startConnectionFromBlock(te);
     }
 }

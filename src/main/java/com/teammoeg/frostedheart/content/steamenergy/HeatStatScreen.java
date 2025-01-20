@@ -114,9 +114,9 @@ public class HeatStatScreen extends BaseScreen {
             theme.drawContainerSlot(matrixStack, x, y, w, h);
             ic.draw(matrixStack, x + 4, y + 2, 24, 24);
             if (isIntake)
-                theme.drawString(matrixStack, val, x + 32 - theme.getStringWidth(val), y + 30);
+            	theme.drawString(matrixStack, val, x + 32 - theme.getStringWidth(val), y + 30, epd.canCostMore ? Color4I.RED : Color4I.GREEN, 0);
             else
-                theme.drawString(matrixStack, val, x + 32 - theme.getStringWidth(val), y + 30, epd.canCostMore ? Color4I.RED : Color4I.GREEN, 0);
+            	theme.drawString(matrixStack, val, x + 32 - theme.getStringWidth(val), y + 30);
         }
 
         @Override
@@ -147,7 +147,7 @@ public class HeatStatScreen extends BaseScreen {
             int offset = 0;
             int i = 0;
             for (HeatEndpoint r : screen.cx.data) {
-                if ((isIntake && r.avgIntake == -1) || (!isIntake && r.avgOutput == -1)) continue;
+                if ((isIntake && r.avgIntake == 0) || (!isIntake && r.avgOutput == 0)) continue;
                 EndPointSlot button = new EndPointSlot(this, r, isIntake);
                 add(button);
                 button.setPos(i * 33, offset);

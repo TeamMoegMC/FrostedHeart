@@ -19,16 +19,15 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import java.util.function.Consumer;
-import java.util.function.Function;
-
-import com.teammoeg.frostedheart.util.lang.Lang;
-
+import com.teammoeg.chorda.util.lang.Components;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class EditBtnDialog extends BaseEditDialog {
     public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new EditBtnDialog(p, l, v, "Select Tag", c, SelectDialog.EDITOR_ITEM_TAGS).open();
@@ -39,7 +38,7 @@ public class EditBtnDialog extends BaseEditDialog {
     public EditBtnDialog(Widget panel, String label, String val, String sel, Consumer<String> onFinished, Editor<String> onbtn) {
         super(panel);
         box = new LabeledTextBoxAndBtn(this, label, val, sel, e -> onbtn.open(panel, sel, box.getText(), e));
-        ok = new SimpleTextButton(this, Lang.str("OK"), Icon.empty()) {
+        ok = new SimpleTextButton(this, Components.str("OK"), Icon.empty()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -52,7 +51,7 @@ public class EditBtnDialog extends BaseEditDialog {
             }
 
         };
-        cancel = new SimpleTextButton(this, Lang.str("Cancel"), Icon.empty()) {
+        cancel = new SimpleTextButton(this, Components.str("Cancel"), Icon.empty()) {
 
             @Override
             public void onClicked(MouseButton arg0) {

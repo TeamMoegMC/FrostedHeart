@@ -19,43 +19,42 @@
 
 package com.teammoeg.frostedheart.content.research.research.effects;
 
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.lang.Lang;
-
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.network.chat.MutableComponent;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.entity.player.Player;
+
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Effect on numerical stats of the team's machines or abilities
  */
 public class EffectStats extends Effect {
+    public static final MapCodec<EffectStats> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+            Codec.STRING.fieldOf("vars").forGetter(o -> o.vars),
+            Codec.DOUBLE.fieldOf("val").forGetter(o -> o.val),
+            Codec.BOOL.fieldOf("percent").forGetter(o -> o.isPercentage)
+    ).apply(t, EffectStats::new));
     private static FHIcon addIcon = FHIcons.getDelegateIcon("plus");
-	public static final MapCodec<EffectStats> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
-	Codec.STRING.fieldOf("vars").forGetter(o->o.vars),
-	Codec.DOUBLE.fieldOf("val").forGetter(o->o.val),
-	Codec.BOOL.fieldOf("percent").forGetter(o->o.isPercentage)
-	).apply(t,EffectStats::new));
-    public EffectStats(BaseData data, String vars, double val, boolean isPercentage) {
-		super(data);
-		this.vars = vars;
-		this.val = val;
-		this.isPercentage = isPercentage;
-	}
-
-	String vars;
+    String vars;
     double val;
     boolean isPercentage = false;
+    public EffectStats(BaseData data, String vars, double val, boolean isPercentage) {
+        super(data);
+        this.vars = vars;
+        this.val = val;
+        this.isPercentage = isPercentage;
+    }
 
     EffectStats() {
         this.vars = "";
@@ -97,14 +96,14 @@ public class EffectStats extends Effect {
         } else
             vtext = NumberFormat.getInstance().format(val);
         if (val > 0) {
-            tooltip.add(Lang.str("+" + vtext));
+            tooltip.add(Components.str("+" + vtext));
         } else
-            tooltip.add(Lang.str(vtext));
+            tooltip.add(Components.str(vtext));
         return tooltip;
     }
 
     @Override
-    public boolean grant(TeamDataHolder team,TeamResearchData trd,  Player triggerPlayer, boolean isload) {
+    public boolean grant(TeamDataHolder team, TeamResearchData trd, Player triggerPlayer, boolean isload) {
         if (isload) return false;
         double var = trd.getVariants().getDouble(vars);
         if (isPercentage)

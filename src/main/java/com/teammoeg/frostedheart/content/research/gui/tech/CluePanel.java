@@ -20,20 +20,19 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import com.ibm.icu.text.NumberFormat;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import net.minecraft.client.gui.GuiGraphics;
-
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
-
+import com.teammoeg.frostedheart.util.client.Lang;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 public class CluePanel extends Panel {
@@ -108,7 +107,7 @@ public class CluePanel extends Panel {
         }
         contribute = new TextField(this)
                 .setMaxWidth(width)
-                .setText(Lang.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
+                .setText(Components.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
                 .setColor(TechIcons.text);
         contribute.setPos(0, offset);
         offset += contribute.height + 2;

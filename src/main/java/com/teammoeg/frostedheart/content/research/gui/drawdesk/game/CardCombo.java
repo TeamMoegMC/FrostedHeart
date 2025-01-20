@@ -24,6 +24,13 @@ class CardCombo {
     final int c1;
     final int c2;
 
+    CardCombo(CardType ct, int c1, int c2) {
+        super();
+        this.ct = ct;
+        this.c1 = c1;
+        this.c2 = c2;
+    }
+
     static CardCombo add(int t) {
         return new CardCombo(CardType.ADDING, 0, t);
     }
@@ -38,13 +45,6 @@ class CardCombo {
 
     static CardCombo simpleW(int t) {
         return new CardCombo(CardType.SIMPLE, 0, t);
-    }
-
-    CardCombo(CardType ct, int c1, int c2) {
-        super();
-        this.ct = ct;
-        this.c1 = c1;
-        this.c2 = c2;
     }
 
     void place(Card c1, Card c2) {

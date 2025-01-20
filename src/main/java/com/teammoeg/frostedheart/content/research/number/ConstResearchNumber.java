@@ -19,21 +19,26 @@
 
 package com.teammoeg.frostedheart.content.research.number;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
-
 import net.minecraft.network.FriendlyByteBuf;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class ConstResearchNumber implements IResearchNumber {
     private static Cache<Number, ConstResearchNumber> cb = CacheBuilder.newBuilder().expireAfterAccess(20, TimeUnit.SECONDS).build();
     final Number n;
+
+    public ConstResearchNumber(Number n) {
+        super();
+        this.n = n;
+
+    }
 
     public static ConstResearchNumber valueOf(JsonObject buffer) {
         return valueOf(buffer.get("value").getAsNumber());
@@ -51,12 +56,6 @@ public class ConstResearchNumber implements IResearchNumber {
 
     public static ConstResearchNumber valueOf(FriendlyByteBuf buffer) {
         return valueOf(buffer.readDouble());
-    }
-
-    public ConstResearchNumber(Number n) {
-        super();
-        this.n = n;
-
     }
 
     @Override

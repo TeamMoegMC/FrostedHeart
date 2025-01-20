@@ -21,13 +21,13 @@ package com.teammoeg.frostedheart.content.scenario.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class ClientScenarioResponsePacket implements FHMessage {
+public class ClientScenarioResponsePacket implements CMessage {
     boolean isSkipped;
     int status;
 

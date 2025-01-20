@@ -5,12 +5,10 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.chorda.util.io.NBTSerializable;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
@@ -28,10 +26,9 @@ public class WaterLevelCapability implements NBTSerializable {
 
     @Override
     public void save(CompoundTag nbt, boolean isPacket) {
-        CompoundTag compound = new CompoundTag();
-        compound.putInt("PlayerWaterLevel", this.getWaterLevel());
-        compound.putInt("PlayerWaterSaturationLevel", this.getWaterSaturationLevel());
-        compound.putFloat("PlayerWaterExhaustionLevel", this.getWaterExhaustionLevel());
+        nbt.putInt("PlayerWaterLevel", this.getWaterLevel());
+        nbt.putInt("PlayerWaterSaturationLevel", this.getWaterSaturationLevel());
+        nbt.putFloat("PlayerWaterExhaustionLevel", this.getWaterExhaustionLevel());
     }
 
     @Override

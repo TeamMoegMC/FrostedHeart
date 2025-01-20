@@ -4,8 +4,8 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
-import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;

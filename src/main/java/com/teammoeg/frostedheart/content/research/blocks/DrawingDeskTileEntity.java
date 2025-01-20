@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.content.research.blocks;
 
-import java.util.Optional;
-import java.util.Random;
-
-import com.teammoeg.frostedheart.content.research.recipe.ResearchPaperRecipe;
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
+import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskContainer;
@@ -30,26 +30,25 @@ import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardPos;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.GenerateInfo;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.ResearchGame;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-
-import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
-import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
+import com.teammoeg.frostedheart.content.research.recipe.ResearchPaperRecipe;
+import com.teammoeg.frostedheart.util.client.Lang;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.NonNullList;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+
+import java.util.Optional;
+import java.util.Random;
 
 public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProvider, IIEInventory {
     public static final int INK_SLOT = 2;
@@ -60,7 +59,7 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
     protected NonNullList<ItemStack> inventory = NonNullList.withSize(3, ItemStack.EMPTY);
     ResearchGame game = new ResearchGame();
 
-    public DrawingDeskTileEntity(BlockPos pos,BlockState state) {
+    public DrawingDeskTileEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.DRAWING_DESK.get(), pos, state);
     }
 
@@ -96,9 +95,9 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
         if (inventory.get(PAPER_SLOT).isEmpty()) return;
         int lvl = ResearchListeners.fetchGameLevel(player);
         if (lvl < 0) return;
-        Optional<ResearchPaperRecipe> pr = FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.get(PAPER_SLOT))).findAny();
+        Optional<ResearchPaperRecipe> pr = CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.get(PAPER_SLOT))).findAny();
         if (!pr.isPresent()) return;
-        if (EnergyCore.getEnergy(player)<=0) return;
+        if (EnergyCore.getEnergy(player) <= 0) return;
         if (!damageInk(player, 5, lvl)) return;
         EnergyCore.costEnergy(player, 1);
         inventory.get(PAPER_SLOT).shrink(1);
@@ -119,7 +118,7 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
         ItemStack is = inventory.get(PAPER_SLOT);
         if (is.isEmpty()) return false;
         int lvl = ResearchListeners.fetchGameLevel();
-        return FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.maxlevel >= lvl && r.paper.test(is));
+        return CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.maxlevel >= lvl && r.paper.test(is));
     }
 
     @Override
@@ -129,7 +128,7 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
         else if (slot == INK_SLOT)
             return item.getItem() instanceof IPen && ((IPen) item.getItem()).canUse(null, item, 1);
         else if (slot == PAPER_SLOT)
-            return FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.paper.test(item));
+            return CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.paper.test(item));
         else
             return false;
     }
@@ -181,15 +180,15 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
         }
     }
 
-	@Override
-	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-		return new DrawDeskContainer(pContainerId,pPlayerInventory,this);
-	}
+    @Override
+    public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
+        return new DrawDeskContainer(pContainerId, pPlayerInventory, this);
+    }
 
 
-	@Override
-	public Component getDisplayName() {
-		return Lang.translateKey("gui.frostedheart.draw_desk");
-	}
+    @Override
+    public Component getDisplayName() {
+        return Lang.translateKey("gui.frostedheart.draw_desk");
+    }
 
 }

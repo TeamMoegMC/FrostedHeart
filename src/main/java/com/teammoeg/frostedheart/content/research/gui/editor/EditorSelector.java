@@ -19,13 +19,13 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
+import dev.ftb.mods.ftblibrary.ui.Widget;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
-
-import dev.ftb.mods.ftblibrary.ui.Widget;
 
 public class EditorSelector<T> extends BaseEditDialog {
     private final Map<String, Editor<? extends T>> editors = new LinkedHashMap<>();

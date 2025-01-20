@@ -19,22 +19,21 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
+import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
+import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.network.NetworkEvent;
+
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
-import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardPos;
-
-import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.network.NetworkEvent;
-
 // send when data update
-public class FHDrawingDeskOperationPacket implements FHMessage {
+public class FHDrawingDeskOperationPacket implements CMessage {
     private final BlockPos pos;
     private final byte op;
     private final CardPos pos1;
@@ -97,7 +96,7 @@ public class FHDrawingDeskOperationPacket implements FHMessage {
             ServerLevel world = Objects.requireNonNull(context.get().getSender()).serverLevel();
             BlockEntity tile = Utils.getExistingTileEntity(world, pos);
             if (tile instanceof DrawingDeskTileEntity) {
-               // ResearchGame rg = ((DrawingDeskTileEntity) tile).getGame();
+                // ResearchGame rg = ((DrawingDeskTileEntity) tile).getGame();
                 boolean flag = true;
                 switch (op) {
                     case 0:

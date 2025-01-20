@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.tips;
 
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.ClientUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -12,6 +12,7 @@ import net.minecraft.client.gui.screens.inventory.CommandBlockEditScreen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -47,8 +48,12 @@ public class TipRenderer {
         TipWidget.INSTANCE.close();
     }
 
-    @SubscribeEvent
-    public static void onGuiInit(ScreenEvent.Init event) {
+    public static void forceClose() {
+        TipWidget.INSTANCE.resetState();
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onGuiInit(ScreenEvent.Init.Post event) {
         if (!FHConfig.CLIENT.renderTips.get())
             return;
         if (SCREEN_BLACKLIST.contains(event.getScreen().getClass()))
@@ -60,11 +65,6 @@ public class TipRenderer {
             event.addListener(TipWidget.INSTANCE.pinButton);
             event.addListener(TipWidget.INSTANCE);
 
-            // 原版的物品和tooltip顺序可能在screen渲染之后,
-            // 而我为了确保tip始终渲染在所有layout的最上层将
-            // z轴偏移了+800,这导致了tip的半透明背景会因为渲
-            // 染顺序而剔除这些元素
-            //
             // 将tipWidget和按钮从screen的渲染列表中移除
             event.getScreen().renderables.remove(TipWidget.INSTANCE.closeButton);
             event.getScreen().renderables.remove(TipWidget.INSTANCE.pinButton);

@@ -1,12 +1,12 @@
 package com.teammoeg.frostedheart.content.health.tooltip;
 
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.frostedheart.base.tooltip.KeyControlledDesc;
+import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
-import com.teammoeg.frostedheart.util.lang.Components;
-import com.teammoeg.frostedheart.util.lang.FineProgressBarBuilder;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.frostedheart.util.client.FineProgressBarBuilder;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -34,8 +34,8 @@ public class FoodNutritionStats implements TooltipModifier {
     public void modify(ItemTooltipEvent context) {
         List<Component> stats = getFoodStats(item, context.getItemStack(), context.getEntity());
         KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>(),
-                GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_LEFT_CONTROL,
-                "A", "Ctrl",
+                GLFW.GLFW_KEY_N, GLFW.GLFW_KEY_LEFT_CONTROL,
+                "N", "Ctrl",
                 "holdForNutrition", "holdForControls"
                 );
         if (!stats.isEmpty()) {

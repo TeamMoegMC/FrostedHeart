@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 
 import com.lowdragmc.lowdraglib.LDLib;
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.ChunkPos;
@@ -29,7 +29,7 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 
-public class FHNotifyChunkHeatUpdatePacket implements FHMessage {
+public class FHNotifyChunkHeatUpdatePacket implements CMessage {
     private final ChunkPos chunkPos;
 
     public FHNotifyChunkHeatUpdatePacket(ChunkPos chunkPos) {

@@ -1,7 +1,7 @@
 {
 	"parent": "minecraft:block/block",
 	"textures": {
-		"particle": "frostedheart:block/multiblocks/crudegeneratorstone"
+		"particle": "frostedheart:block/multiblocks/generatoriibottom"
 	},
 	"loader": "immersiveengineering:basic_split",
 	"dynamic": false,

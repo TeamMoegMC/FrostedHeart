@@ -5,10 +5,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.mojang.logging.LogUtils;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
-import com.teammoeg.frostedheart.util.lang.Lang;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -39,15 +40,15 @@ public class TipManager {
     public static final File CONFIG_PATH = new File(FMLPaths.CONFIGDIR.get().toFile(), "fhtips");
     public static final File TIP_PATH = new File(CONFIG_PATH, "tips");
     public static final File TIP_STATE_FILE = new File(CONFIG_PATH, "tip_states.json");
-    public static final TipManager INSTANCE = new TipManager();
 
+    public static final TipManager INSTANCE = new TipManager();
     private final Map<String, Tip> loadedTips = new HashMap<>();
     private final DisplayManager display;
     private final StateManager state;
 
     private TipManager() {
-        this.display = new DisplayManager(this);
-        this.state = new StateManager(this);
+        this.display = new DisplayManager();
+        this.state = new StateManager();
         loadFromFile();
     }
 
@@ -75,7 +76,7 @@ public class TipManager {
         if (tip != null) {
             return tip;
         }
-        return Tip.builder(id).error(Tip.ErrorType.OTHER, Lang.str(id), Lang.tips("error.tip_not_exists").component()).build();
+        return Tip.builder(id).error(Tip.ErrorType.DISPLAY, Component.translatable("tips.frostedheart.error.load.tip_not_exists", id), Tip.ERROR_DESC).build();
     }
 
     /**
@@ -90,7 +91,6 @@ public class TipManager {
      */
     public void loadFromFile() {
         TIP_PATH.mkdirs();
-        display.clearRenderQueue();
         loadedTips.clear();
 
         // 加载所有 tip 文件
@@ -103,35 +103,30 @@ public class TipManager {
                 Tip tip = Tip.fromJsonFile(tipFile);
                 if (loadedTips.containsKey(tip.getId())) {
                     // 重复id
-                    Tip d = Tip.builder("duplicate").error(Tip.ErrorType.LOAD, Lang.str(tip.getId()), Lang.tips("error.load.duplicate_id").component()).build();
+                    Tip d = Tip.builder("duplicate").error(Tip.ErrorType.LOAD, Components.str(tip.getId()), Component.translatable("tips.frostedheart.error.load.duplicate_id")).build();
                     display.force(d);
                 } else {
                     loadedTips.put(tip.getId(), tip);
                     sum++;
                 }
             }
-            LOGGER.debug("{} tips loaded", sum);
+            LOGGER.debug("{} tip(s) loaded", sum);
         }
         state.loadFromFile();
     }
 
     private void displayException(Tip.ErrorType type, String id, Exception e) {
-        Tip exception = Tip.builder("exception").error(type, e, Lang.str(id)).build();
+        Tip exception = Tip.builder("exception").error(type, e, Components.str("ID: " + id)).build();
         display.force(exception);
     }
 
-    public static class DisplayManager {
-        private final TipManager manager;
-
-        private DisplayManager(TipManager manager) {
-            this.manager = manager;
-        }
+    public class DisplayManager {
 
         /**
          * 添加对应 id 的 tip 到渲染队列中
          */
         public void general(String id) {
-            general(manager.getTip(id));
+            general(getTip(id));
         }
 
         /**
@@ -139,7 +134,7 @@ public class TipManager {
          */
         public void general(Tip tip) {
             if (tip == null) return;
-            if (tip.isOnceOnly() && manager.state.isUnlocked(tip)) return;
+            if (tip.isOnceOnly() && state.isUnlocked(tip)) return;
 
             // 渲染队列已有此 tip 时返回
             for (Tip queue : TipRenderer.TIP_QUEUE) {
@@ -148,7 +143,7 @@ public class TipManager {
 
             // 更改非临时 tip 的状态
             if (!tip.isTemporary()) {
-                manager.state.setLockState(tip, true);
+                state.setLockState(tip, true);
             }
 
             if (tip.isPin() && !TipRenderer.TIP_QUEUE.isEmpty()) {
@@ -170,7 +165,7 @@ public class TipManager {
          * 无视 tip 的状态，在渲染队列中强制添加此 tip
          */
         public void force(String id) {
-            force(manager.getTip(id));
+            force(getTip(id));
         }
 
         /**
@@ -178,13 +173,12 @@ public class TipManager {
          */
         public void force(Tip tip) {
             if (!tip.isTemporary()) {
-                manager.state.setLockState(tip, true);
+                state.setLockState(tip, true);
             }
 
-            if (tip.isPin()) {
+            if (tip.isPin() && !TipRenderer.TIP_QUEUE.isEmpty()) {
                 Tip last = TipRenderer.TIP_QUEUE.get(0);
                 TipWidget.INSTANCE.close();
-                TipRenderer.TIP_QUEUE.add(0, last);
                 TipRenderer.TIP_QUEUE.add(0, last);
                 TipRenderer.TIP_QUEUE.add(0, tip);
             } else {
@@ -242,14 +236,9 @@ public class TipManager {
         }
     }
 
-    public static class StateManager {
+    public class StateManager {
         private static final Type STATE_TYPE = new TypeToken<Set<State>>(){}.getType();
-        private final TipManager manager;
         private final Map<Tip, State> tipStates = new HashMap<>();
-
-        private StateManager(TipManager manager) {
-            this.manager = manager;
-        }
 
         /**
          * 加载 {@code tip_states.json} 文件
@@ -257,24 +246,24 @@ public class TipManager {
         protected void loadFromFile() {
             tipStates.clear();
             // 为所有已加载的tip创建空的TipState
-            manager.loadedTips.forEach((id, tip) -> tipStates.put(tip, new State(tip)));
+            loadedTips.forEach((id, tip) -> tipStates.put(tip, new State(tip)));
             try (FileReader reader = new FileReader(TIP_STATE_FILE)) {
                 Set<State> stateList = GSON.fromJson(reader, STATE_TYPE);
                 if (stateList == null) {
                     // 文件存在但是无法正确读取
                     if (TIP_STATE_FILE.exists()) {
                         String message = "The file '" + TIP_STATE_FILE + "' already exists but cannot be read correctly, it may be corrupted";
-                        manager.displayException(Tip.ErrorType.LOAD, "tip_states.json", new Exception(message));
+                        displayException(Tip.ErrorType.LOAD, "tip_states.json", new Exception(message));
                         LOGGER.warn(message);
                     }
                     return;
                 }
                 // 将对应的空TipState替换为文件中储存的TipState
                 tipStates.putAll(stateList.stream()
-                        .collect(Collectors.toMap(state -> manager.getTip(state.id), s -> s)));
+                        .collect(Collectors.toMap(state -> getTip(state.id), s -> s)));
             } catch (IOException e) {
                 LOGGER.error("Unable to load file: '{}'", TIP_STATE_FILE, e);
-                manager.displayException(Tip.ErrorType.LOAD, "tip_states.json", e);
+                displayException(Tip.ErrorType.LOAD, "tip_states.json", e);
             }
         }
 
@@ -287,7 +276,7 @@ public class TipManager {
                 writer.write(json);
             } catch (IOException e) {
                 LOGGER.error("Unable to save file: '{}'", TIP_STATE_FILE, e);
-                manager.displayException(Tip.ErrorType.SAVE, "tip_states.json", e);
+                displayException(Tip.ErrorType.SAVE, "tip_states.json", e);
             }
         }
 
@@ -336,7 +325,7 @@ public class TipManager {
          */
         private Optional<State> getState(Tip tip) {
             State state = null;
-            if (tip != null && manager.loadedTips.containsValue(tip) && !tip.isTemporary()) {
+            if (tip != null && loadedTips.containsValue(tip) && !tip.isTemporary()) {
                 if (tipStates.get(tip) != null) {
                     state = tipStates.get(tip);
                 } else {

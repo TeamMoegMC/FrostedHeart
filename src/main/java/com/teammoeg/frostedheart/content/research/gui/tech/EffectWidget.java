@@ -19,23 +19,18 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import java.util.List;
-
-import net.minecraft.client.gui.GuiGraphics;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
+import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.WidgetType;
+import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+
+import java.util.List;
 
 public class EffectWidget extends Widget {
     List<Component> tooltips;
@@ -43,13 +38,14 @@ public class EffectWidget extends Widget {
     FHIcon icon;
     Effect e;
     Research r;
-    public EffectWidget(Panel panel, Effect e,Research r) {
+
+    public EffectWidget(Panel panel, Effect e, Research r) {
         super(panel);
         tooltips = e.getTooltip();
         title = e.getName();
         icon = e.getIcon();
         this.e = e;
-        this.r=r;
+        this.r = r;
         this.setSize(16, 16);
     }
 

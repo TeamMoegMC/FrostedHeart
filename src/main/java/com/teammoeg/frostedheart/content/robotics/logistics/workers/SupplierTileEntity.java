@@ -1,13 +1,12 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
-import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
-import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
+import com.teammoeg.chorda.block.CTickableBlockEntity;
+import com.teammoeg.chorda.blockentity.CBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemChangeListener;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemHandlerListener;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticInternalPushTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
-import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
@@ -18,7 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.items.ItemStackHandler;
 
 @SuppressWarnings("unused")
-public class SupplierTileEntity extends FHBaseTileEntity implements TaskableLogisticStorage,ItemChangeListener,FHTickableBlockEntity {
+public class SupplierTileEntity extends CBlockEntity implements TaskableLogisticStorage,ItemChangeListener, CTickableBlockEntity {
 	ItemStackHandler container=new ItemStackHandler(27);
 	ItemHandlerListener handler=new ItemHandlerListener(container,this);
 	LogisticTask[] tasks=new LogisticTask[27];

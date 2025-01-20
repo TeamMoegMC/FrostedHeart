@@ -11,15 +11,17 @@ import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.compat.ie.IngredientUtils;
+import com.teammoeg.chorda.util.ie.IngredientUtils;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
-import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.ie.CMultiblockHelper;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.util.client.AtlasUV;
-import com.teammoeg.frostedheart.util.client.Point;
-import com.teammoeg.frostedheart.util.client.RotatableUV;
+import com.teammoeg.chorda.util.client.AtlasUV;
+import com.teammoeg.chorda.util.client.Point;
+import com.teammoeg.chorda.util.client.RotatableUV;
 
 import blusunrize.immersiveengineering.api.Lib;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -46,7 +48,7 @@ import net.minecraft.world.item.ItemStack;
 public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<T, R>> extends IEContainerScreen<GeneratorContainer<R, T>> {
     public static final int TEXW = 512;
     public static final int TEXH = 256;
-    private static final ResourceLocation TEXTURE = Lang.makeTextureLocation("general_generator");
+    private static final ResourceLocation TEXTURE = FHClientUtils.makeTextureLocation("general_generator");
     private static final AtlasUV rangeicons = new AtlasUV(TEXTURE, 256, 0, 128, 64, 2, 5, TEXW, TEXH);
     private static final Point rangePoint = new Point(24, 61);
     private static final RotatableUV minorPointer = new RotatableUV(TEXTURE, 276, 192, 20, 20, 10, 10, TEXW, TEXH);
@@ -144,7 +146,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
     @Override
     public void init() {
         super.init();
-        Optional<IMultiblockBEHelper<?>> ohelper = FHMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue());
+        Optional<IMultiblockBEHelper<?>> ohelper = CMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue());
         
        
         this.addRenderableWidget(new MasterGeneratorGuiButtonBoolean(leftPos + 5, topPos + 24, 11, 22, menu.isWorking.asSupplier(), 472, 148,
@@ -167,7 +169,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
 	            int i = 0;
 	            for (IngredientWithSize iws : tile.getRepairCost()) {
 	                ItemStack[] iss = iws.getMatchingStacks();
-	                MutableComponent iftc = Lang.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
+	                MutableComponent iftc = Components.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
 	                if (cost.get(i))
 	                    iftc = iftc.withStyle(ChatFormatting.GREEN);
 	                else
@@ -180,8 +182,8 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
 	            else
 	                level = 3;
 	        } else if (tile.getNextLevelMultiblock() != null) {
-	            validStructure = tile.nextLevelHasValidStructure(Minecraft.getInstance().level, helper);
-	            List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper);
+	            validStructure = tile.nextLevelHasValidStructure(Minecraft.getInstance().level, helper.getContext());
+	            List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper.getContext());
 	            BitSet cost = IngredientUtils.checkItemList(ClientUtils.mc().player, upgcost);
 	            hasResearch = ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock());
 	            Vec3i v3i = tile.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
@@ -194,7 +196,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
 	                int i = 0;
 	                for (IngredientWithSize iws : upgcost) {
 	                    ItemStack[] iss = iws.getMatchingStacks();
-	                    MutableComponent iftc = Lang.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
+	                    MutableComponent iftc = Components.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
 	                    if (cost.get(i))
 	                        iftc = iftc.withStyle(ChatFormatting.GREEN);
 	                    else

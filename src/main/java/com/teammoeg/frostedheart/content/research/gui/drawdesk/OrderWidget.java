@@ -19,14 +19,13 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
-import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardStat;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.ClientResearchGame;
-
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class OrderWidget extends Widget {
     ClientResearchGame rg;

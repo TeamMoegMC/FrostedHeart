@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.town;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -21,7 +21,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
-public abstract class AbstractTownWorkerBlock extends FHBaseBlock {
+public abstract class AbstractTownWorkerBlock extends CBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
     public static final Properties TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY = Block.Properties
             .of()

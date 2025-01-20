@@ -23,14 +23,12 @@ import java.util.Optional;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.base.team.SpecialData;
-import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.team.SpecialData;
+import com.teammoeg.chorda.team.SpecialDataHolder;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
-import com.teammoeg.frostedheart.content.steamenergy.HeatProviderEndPoint;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -49,7 +47,7 @@ import net.minecraftforge.items.ItemStackHandler;
  * Generator data and utility functions.
  * Automatically maintained by the special data system,
  * which is shared by the team.
- * See {@link com.teammoeg.frostedheart.base.team.SpecialDataTypes}
+ * See {@link FHSpecialDataTypes}
  */
 public class GeneratorData implements SpecialData {
     public static final int INPUT_SLOT = 0;
@@ -73,7 +71,7 @@ public class GeneratorData implements SpecialData {
             Codec.FLOAT.fieldOf("rangeLevel").forGetter(o -> o.RLevel),
             CompoundTag.CODEC.fieldOf("items").forGetter(o -> o.inventory.serializeNBT()),
             CodecUtil.defaultValue(CodecUtil.ITEMSTACK_CODEC, ItemStack.EMPTY).fieldOf("res").forGetter(o -> o.currentItem),
-            CodecUtil.BLOCKPOS.fieldOf("actualPos").forGetter(o -> o.actualPos),
+            CodecUtil.BLOCKPOS.optionalFieldOf("actualPos").forGetter(o -> Optional.ofNullable(o.actualPos)),
             ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o -> o.dimension == null ? Optional.empty() : Optional.of(o.dimension.location()))
     ).apply(t, GeneratorData::new));
     public final ItemStackHandler inventory = new ItemStackHandler(2);
@@ -84,21 +82,21 @@ public class GeneratorData implements SpecialData {
     public float steamLevel;
     public int steamProcess;
     public int heated, ranged;
+    public float lastPower;
     public float power;
     public Fluid fluid;
     public boolean isWorking, isOverdrive, isActive, isBroken;
     public float TLevel, RLevel;
-    public ItemStack currentItem;
-    public BlockPos actualPos = BlockPos.ZERO;
-    public HeatProviderEndPoint ep = new HeatProviderEndPoint(200);
-    public LazyOptional<HeatProviderEndPoint> epcap = LazyOptional.of(() -> ep);
+    public ItemStack currentItem = ItemStack.EMPTY;
+    public BlockPos actualPos = null;
+    
     public ResourceKey<Level> dimension;
 
     public GeneratorData(SpecialDataHolder teamData) {
     }
 
 
-    public GeneratorData(int process, int processMax, int steamProcess, int overdriveLevel, boolean[] flags, float steamLevel, float power, int heated, int ranged, Optional<Fluid> fluid, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, BlockPos actualPos, Optional<ResourceLocation> dimension) {
+    public GeneratorData(int process, int processMax, int steamProcess, int overdriveLevel, boolean[] flags, float steamLevel, float power, int heated, int ranged, Optional<Fluid> fluid, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, Optional<BlockPos> actualPos, Optional<ResourceLocation> dimension) {
         super();
         this.process = process;
         this.processMax = processMax;
@@ -117,7 +115,7 @@ public class GeneratorData implements SpecialData {
         this.RLevel = rLevel;
         this.inventory.deserializeNBT(inventory);
         this.currentItem = currentItem;
-        this.actualPos = actualPos;
+        this.actualPos = actualPos.orElse(null);
         this.dimension = dimension.map(t -> ResourceKey.create(Registries.DIMENSION, t)).orElse(null);
     }
 
@@ -125,7 +123,7 @@ public class GeneratorData implements SpecialData {
         if (stack.isEmpty())
             return false;
         if (slot == INPUT_SLOT) {
-            for (GeneratorRecipe recipet : FHUtils.filterRecipes(w.getRecipeManager(), GeneratorRecipe.TYPE))
+            for (GeneratorRecipe recipet : CUtils.filterRecipes(w.getRecipeManager(), GeneratorRecipe.TYPE))
                 if (recipet.input.test(stack)) {
                     return true;
                 }
@@ -160,14 +158,14 @@ public class GeneratorData implements SpecialData {
     }
 
     protected double getEfficiency(SpecialDataHolder<?> teamData) {
-        return teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
+        return teamData.getData(FHSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
     }
 
     public GeneratorRecipe getRecipe(Level w) {
         if (inventory.getStackInSlot(INPUT_SLOT).isEmpty())
             return null;
         GeneratorRecipe recipe = null;
-        for (GeneratorRecipe recipet : FHUtils.filterRecipes(w.getRecipeManager(), GeneratorRecipe.TYPE))
+        for (GeneratorRecipe recipet : CUtils.filterRecipes(w.getRecipeManager(), GeneratorRecipe.TYPE))
             if (recipet.input.test(inventory.getStackInSlot(INPUT_SLOT))) {
                 recipe = recipet;
                 break;
@@ -184,7 +182,7 @@ public class GeneratorData implements SpecialData {
     public int getSlotLimit(int slot) {
         return 64;
     }
-
+    
     /**
      * Core tick function for generator called in HeatingLogic#tickFuel
      * It does the internal logic for fuel and heating.
@@ -194,8 +192,9 @@ public class GeneratorData implements SpecialData {
     public void tick(Level w,SpecialDataHolder<?> teamData) {
         isActive = tickFuelProcess(w,teamData);
         tickHeatedProcess(w);
+        lastPower=0;
         if (isActive && power > 0)
-            ep.setHeat((float) (power * getHeatEfficiency(teamData)));
+            lastPower=((float) (power * getHeatEfficiency(teamData)));
     }
 
     public void tickHeatedProcess(Level world) {
@@ -236,7 +235,7 @@ public class GeneratorData implements SpecialData {
         if (!isWorking || isBroken)
             return false;
         boolean hasFuel = true;
-        overdriveLevel -= 5 * (teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER) + 1);
+        overdriveLevel -= 5 * (teamData.getData(FHSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER) + 1);
 
         	
         if (isOverdrive) {
@@ -282,7 +281,7 @@ public class GeneratorData implements SpecialData {
 
     protected double getHeatEfficiency(SpecialDataHolder<?> teamData) {
 
-        return 1 + teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_HEAT);
+        return 1 + teamData.getData(FHSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_HEAT);
     }
 
     public float getMaxTemperatureLevel() {

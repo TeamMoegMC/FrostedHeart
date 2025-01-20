@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.*;
-import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
-import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.compat.ftbq.FHGuiProviders;
 import com.teammoeg.frostedheart.compat.ie.FHManual;
 import com.teammoeg.frostedheart.compat.tetra.TetraClient;
@@ -33,7 +33,7 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyph
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestExtension;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestModel;
-import com.teammoeg.frostedheart.base.model.DynamicBlockModelReference;
+import com.teammoeg.chorda.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.client.FHScreens;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
@@ -46,7 +46,7 @@ import com.teammoeg.frostedheart.content.climate.particle.SteamParticle;
 import com.teammoeg.frostedheart.content.climate.particle.WetSteamParticle;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
-import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
@@ -118,14 +118,16 @@ public class FHClientEventsMod {
 	public static void registerKeys(RegisterKeyMappingsEvent ev) {
         FHKeyMappings.key_skipDialog.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
         FHKeyMappings.key_InfraredView.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
+        FHKeyMappings.key_health.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
 		ev.register(FHKeyMappings.key_skipDialog.get());
         ev.register(FHKeyMappings.key_InfraredView.get());
+        ev.register(FHKeyMappings.key_health.get());
 	}
 
 	@SubscribeEvent
 	public static void onLayerRegister(final RegisterLayerDefinitions event) {
 		event.registerLayerDefinition(HeaterVestModel.HEATER_VEST_LAYER, () -> HeaterVestModel.createLayer());
-	}
+	} 
 
 	@SubscribeEvent
 	public static void onLayerAdd(final AddLayers event) {
@@ -135,14 +137,17 @@ public class FHClientEventsMod {
 	@SubscribeEvent
 	public static void registerModels(ModelEvent.RegisterAdditional ev)
 	{
+		FHMain.LOGGER.info("===========Dynamic Model Register========");
 		DynamicBlockModelReference.registeredModels.forEach(rl->{
-			ev.register(new ResourceLocation(rl.getNamespace(),rl.getPath().substring(0,rl.getPath().lastIndexOf(".")).substring(7)));
+			ev.register(rl);
+			FHMain.LOGGER.info(rl);
 		});
 	}
 	@SubscribeEvent
 	public static void registerBERenders(RegisterRenderers event){
-        event.registerBlockEntityRenderer(FHMultiblocks.Logic.GENERATOR_T1.masterBE().get(), T1GeneratorRenderer::new);
-        event.registerBlockEntityRenderer(FHMultiblocks.Logic.GENERATOR_T2.masterBE().get(), T2GeneratorRenderer::new);
+		FHMain.LOGGER.info("===========Dynamic Block Renderers========");
+        event.registerBlockEntityRenderer(FHMultiblocks.Registration.GENERATOR_T1.masterBE().get(), T1GeneratorRenderer::new);
+        event.registerBlockEntityRenderer(FHMultiblocks.Registration.GENERATOR_T2.masterBE().get(), T2GeneratorRenderer::new);
         event.registerBlockEntityRenderer(FHBlockEntityTypes.MECH_CALC.get(), MechCalcRenderer::new);
 	}
 
@@ -151,7 +156,7 @@ public class FHClientEventsMod {
         for (ResourceLocation location : event.getModels().keySet()) {
             // Now find all armors
             ResourceLocation item = new ResourceLocation(location.getNamespace(), location.getPath());
-            if (RegistryUtils.getItem(item) instanceof ArmorItem) {
+            if (CRegistryHelper.getItem(item) instanceof ArmorItem) {
                 ModelResourceLocation itemModelResourceLocation = new ModelResourceLocation(item, "inventory");
                 BakedModel model = event.getModels().get(itemModelResourceLocation);
                 if (model == null) {

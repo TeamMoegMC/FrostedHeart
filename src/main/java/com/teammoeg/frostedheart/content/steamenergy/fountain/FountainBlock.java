@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
@@ -40,7 +40,7 @@ import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.function.Supplier;
 
-public class FountainBlock extends FHBaseBlock implements FHEntityBlock<FountainTileEntity> {
+public class FountainBlock extends CBlock implements CEntityBlock<FountainTileEntity> {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public FountainBlock(Properties blockProps) {
@@ -52,7 +52,7 @@ public class FountainBlock extends FHBaseBlock implements FHEntityBlock<Fountain
     public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, RandomSource rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
         if (stateIn.getValue(LIT)) {
-            ClientUtils.spawnSteamParticles(worldIn, pos);
+            FHClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }
 

@@ -19,40 +19,107 @@
 
 package com.teammoeg.frostedheart.content.research.research.effects;
 
+import com.teammoeg.frostedheart.content.research.gui.FHIcons.IconEditor;
+import com.teammoeg.frostedheart.content.research.gui.editor.*;
+import dev.ftb.mods.ftblibrary.icon.Icon;
+import dev.ftb.mods.ftblibrary.icon.ItemIcon;
+import dev.ftb.mods.ftblibrary.ui.Widget;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Recipe;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.teammoeg.frostedheart.content.research.gui.FHIcons;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.IconEditor;
-import com.teammoeg.frostedheart.content.research.gui.editor.BaseEditDialog;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditListDialog;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditUtils;
-import com.teammoeg.frostedheart.content.research.gui.editor.Editor;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditorSelector;
-import com.teammoeg.frostedheart.content.research.gui.editor.IngredientEditor;
-import com.teammoeg.frostedheart.content.research.gui.editor.LabeledOpenEditorButton;
-import com.teammoeg.frostedheart.content.research.gui.editor.LabeledSelection;
-import com.teammoeg.frostedheart.content.research.gui.editor.LabeledTextBox;
-import com.teammoeg.frostedheart.content.research.gui.editor.LabeledTextBoxAndBtn;
-import com.teammoeg.frostedheart.content.research.gui.editor.NumberBox;
-import com.teammoeg.frostedheart.content.research.gui.editor.OpenEditorButton;
-import com.teammoeg.frostedheart.content.research.gui.editor.RealBox;
-import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
-import com.teammoeg.frostedheart.content.research.gui.editor.SelectItemStackDialog;
-
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.icon.ItemIcon;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.resources.ResourceLocation;
-
 public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
+    public static final Editor<EffectBuilding> BUILD = (p, l, v, c) -> new Building(p, l, v, c).open();
+    public static final Editor<EffectCrafting> CRAFT = (p, l, v, c) -> new Crafting(p, l, v, c).open();
+    public static final Editor<EffectItemReward> ITEM = (p, l, v, c) -> new ItemReward(p, l, v, c).open();
+    public static final Editor<EffectStats> STATS = (p, l, v, c) -> new Stats(p, l, v, c).open();
+    public static final Editor<EffectUse> USE = (p, l, v, c) -> new Use(p, l, v, c).open();
+    public static final Editor<EffectShowCategory> CAT = (p, l, v, c) -> new Category(p, l, v, c).open();
+    public static final Editor<EffectCommand> COMMAND = (p, l, v, c) -> new Command(p, l, v, c).open();
+    public static final Editor<EffectExperience> EXP = (p, l, v, c) -> new Exp(p, l, v, c).open();
+    public static final Editor<Effect> EDITOR = (p, l, v, c) -> {
+        if (v instanceof EffectBuilding)
+            BUILD.open(p, l, (EffectBuilding) v, c::accept);
+        else if (v instanceof EffectCrafting)
+            CRAFT.open(p, l, (EffectCrafting) v, c::accept);
+        else if (v instanceof EffectItemReward)
+            ITEM.open(p, l, (EffectItemReward) v, c::accept);
+        else if (v instanceof EffectStats)
+            STATS.open(p, l, (EffectStats) v, c::accept);
+        else if (v instanceof EffectUse)
+            USE.open(p, l, (EffectUse) v, c::accept);
+        else if (v instanceof EffectShowCategory)
+            CAT.open(p, l, (EffectShowCategory) v, c::accept);
+        else if (v instanceof EffectCommand)
+            COMMAND.open(p, l, (EffectCommand) v, c::accept);
+        else if (v instanceof EffectExperience)
+            EXP.open(p, l, (EffectExperience) v, c::accept);
+        else
+            new EditorSelector<>(p, l, c)
+                    .addEditor("Building", BUILD)
+                    .addEditor("Craft", CRAFT)
+                    .addEditor("Item Reward", ITEM)
+                    .addEditor("Add Stats", STATS)
+                    .addEditor("Add Usage", USE)
+                    .addEditor("Recipe Category", CAT)
+                    .addEditor("Add Command", COMMAND)
+                    .addEditor("Add Experience", EXP)
+                    .open();
+
+    };
+    public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, Effect::getBrief, Effect::getFtbIcon, c).open();
+    protected LabeledTextBoxAndBtn nonce;
+    protected LabeledTextBox name;
+    protected LabeledSelection<Boolean> sd;
+    String lbl;
+    T e;
+    Consumer<T> cb;
+
+    public EffectEditor(Widget panel, String lbl, T e, Consumer<T> cb) {
+        super(panel);
+
+        this.lbl = lbl;
+
+
+        if (e == null) {
+            e = createEffect();
+        }
+        this.e = e;
+        nonce = new LabeledTextBoxAndBtn(this, "nonce", e.getNonce(), "Random", t -> t.accept(Long.toHexString(UUID.randomUUID().getMostSignificantBits())));
+        name = new LabeledTextBox(this, "name", e.name);
+        sd = LabeledSelection.createBool(this, "Hide", e.isHidden());
+        this.cb = cb;
+    }
+
+    @Override
+    public void addWidgets() {
+        add(EditUtils.getTitle(this, lbl));
+        add(nonce);
+        add(name);
+        add(new OpenEditorButton<>(this, "Edit Description", EditListDialog.STRING_LIST, e.tooltip, s -> e.tooltip = new ArrayList<>(s)));
+        add(new OpenEditorButton<>(this, "Edit icon", IconEditor.EDITOR, e.icon == null ? e.getDefaultIcon() : e.icon, s -> e.icon = s));
+        add(sd);
+    }
+
+    public abstract T createEffect();
+
+    @Override
+    public void onClose() {
+        e.name = name.getText();
+        e.hidden = sd.getSelection();
+        e.setNonce(nonce.getText());
+
+        cb.accept(e);
+
+    }
+
     private static class Building extends EffectEditor<EffectBuilding> {
 
         public Building(Widget panel, String lbl, EffectBuilding e, Consumer<EffectBuilding> cb) {
@@ -79,6 +146,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
+
     private static class Category extends EffectEditor<EffectShowCategory> {
         LabeledTextBox category;
 
@@ -106,6 +174,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
+
     private static class Command extends EffectEditor<EffectCommand> {
         public Command(Widget panel, String lbl, EffectCommand e, Consumer<EffectCommand> cb) {
             super(panel, lbl, e, cb);
@@ -129,6 +198,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
+
     private static class Crafting extends EffectEditor<EffectCrafting> {
 
         public Crafting(Widget panel, String lbl, EffectCrafting e, Consumer<EffectCrafting> cb) {
@@ -140,8 +210,8 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
             super.addWidgets();
             add(EditUtils.getTitle(this, "Only the first in the following takes effects"));
             add(new OpenEditorButton<Ingredient>(this, "Edit Item",
-            		IngredientEditor.EDITOR_INGREDIENT,
-            		e.ingredient, s -> {
+                    IngredientEditor.EDITOR_INGREDIENT,
+                    e.ingredient, s -> {
                 e.ingredient = s;
             }));
             add(new OpenEditorButton<>(this, "Edit Recipe IDs", EditListDialog.STRING_LIST, e.unlocks.stream().map(Recipe::getId).map(String::valueOf).collect(Collectors.toList()), s -> {
@@ -158,6 +228,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
+
     private static class Exp extends EffectEditor<EffectExperience> {
         NumberBox val;
 
@@ -186,13 +257,14 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
-    private static class ItemReward extends EffectEditor<EffectItemReward> {
-        private static String fromItemStack(ItemStack s) {
-            return s.getHoverName().getString() + " x " + s.getCount();
-        }
 
+    private static class ItemReward extends EffectEditor<EffectItemReward> {
         public ItemReward(Widget panel, String lbl, EffectItemReward e, Consumer<EffectItemReward> cb) {
             super(panel, lbl, e, cb);
+        }
+
+        private static String fromItemStack(ItemStack s) {
+            return s.getHoverName().getString() + " x " + s.getCount();
         }
 
         @Override
@@ -206,12 +278,14 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         public EffectItemReward createEffect() {
             return new EffectItemReward();
         }
+
         @Override
         public void onClose() {
             super.onClose();
 //            System.out.println(e.rewards);
         }
     }
+
     private static class Stats extends EffectEditor<EffectStats> {
         LabeledSelection<Boolean> perc;
         LabeledTextBox name;
@@ -248,6 +322,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
+
     private static class Use extends EffectEditor<EffectUse> {
 
         public Use(Widget panel, String lbl, EffectUse e, Consumer<EffectUse> cb) {
@@ -265,98 +340,6 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         public EffectUse createEffect() {
             return new EffectUse();
         }
-
-    }
-    public static final Editor<EffectBuilding> BUILD = (p, l, v, c) -> new Building(p, l, v, c).open();
-
-    public static final Editor<EffectCrafting> CRAFT = (p, l, v, c) -> new Crafting(p, l, v, c).open();
-    public static final Editor<EffectItemReward> ITEM = (p, l, v, c) -> new ItemReward(p, l, v, c).open();
-    public static final Editor<EffectStats> STATS = (p, l, v, c) -> new Stats(p, l, v, c).open();
-    public static final Editor<EffectUse> USE = (p, l, v, c) -> new Use(p, l, v, c).open();
-    public static final Editor<EffectShowCategory> CAT = (p, l, v, c) -> new Category(p, l, v, c).open();
-    public static final Editor<EffectCommand> COMMAND = (p, l, v, c) -> new Command(p, l, v, c).open();
-    public static final Editor<EffectExperience> EXP = (p, l, v, c) -> new Exp(p, l, v, c).open();
-
-    public static final Editor<Effect> EDITOR = (p, l, v, c) -> {
-        if (v instanceof EffectBuilding)
-            BUILD.open(p, l, (EffectBuilding) v, c::accept);
-        else if (v instanceof EffectCrafting)
-            CRAFT.open(p, l, (EffectCrafting) v, c::accept);
-        else if (v instanceof EffectItemReward)
-            ITEM.open(p, l, (EffectItemReward) v, c::accept);
-        else if (v instanceof EffectStats)
-            STATS.open(p, l, (EffectStats) v, c::accept);
-        else if (v instanceof EffectUse)
-            USE.open(p, l, (EffectUse) v, c::accept);
-        else if (v instanceof EffectShowCategory)
-            CAT.open(p, l, (EffectShowCategory) v, c::accept);
-        else if (v instanceof EffectCommand)
-            COMMAND.open(p, l, (EffectCommand) v, c::accept);
-        else if (v instanceof EffectExperience)
-            EXP.open(p, l, (EffectExperience) v, c::accept);
-        else
-            new EditorSelector<>(p, l, c)
-                    .addEditor("Building", BUILD)
-                    .addEditor("Craft", CRAFT)
-                    .addEditor("Item Reward", ITEM)
-                    .addEditor("Add Stats", STATS)
-                    .addEditor("Add Usage", USE)
-                    .addEditor("Recipe Category", CAT)
-                    .addEditor("Add Command", COMMAND)
-                    .addEditor("Add Experience", EXP)
-                    .open();
-
-    };
-
-    public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, Effect::getBrief, Effect::getFtbIcon, c).open();
-
-    String lbl;
-
-    T e;
-
-    Consumer<T> cb;
-
-    protected LabeledTextBoxAndBtn nonce;
-
-    protected LabeledTextBox name;
-
-    protected LabeledSelection<Boolean> sd;
-
-    public EffectEditor(Widget panel, String lbl, T e, Consumer<T> cb) {
-        super(panel);
-
-        this.lbl = lbl;
-
-
-        if (e == null) {
-            e = createEffect();
-        }
-        this.e = e;
-        nonce = new LabeledTextBoxAndBtn(this, "nonce", e.getNonce(), "Random", t -> t.accept(Long.toHexString(UUID.randomUUID().getMostSignificantBits())));
-        name = new LabeledTextBox(this, "name", e.name);
-        sd = LabeledSelection.createBool(this, "Hide", e.isHidden());
-        this.cb = cb;
-    }
-
-    @Override
-    public void addWidgets() {
-        add(EditUtils.getTitle(this, lbl));
-        add(nonce);
-        add(name);
-        add(new OpenEditorButton<>(this, "Edit Description", EditListDialog.STRING_LIST, e.tooltip, s -> e.tooltip = new ArrayList<>(s)));
-        add(new OpenEditorButton<>(this, "Edit icon", IconEditor.EDITOR, e.icon == null ? e.getDefaultIcon() : e.icon, s -> e.icon = s));
-        add(sd);
-    }
-
-    public abstract T createEffect();
-
-    @Override
-    public void onClose() {
-        e.name = name.getText();
-        e.hidden = sd.getSelection();
-        e.setNonce(nonce.getText());
-        
-        cb.accept(e);
 
     }
 }

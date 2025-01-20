@@ -20,10 +20,10 @@
 package com.teammoeg.frostedheart.content.steamenergy.debug;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.HeatHandler;
-import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -65,9 +65,9 @@ public class HeatDebugItem extends Item {
                     if (((HeatNetworkProvider) te).getNetwork() != null)
                         HeatHandler.openHeatScreen((ServerPlayer) playerIn, ((HeatNetworkProvider) te).getNetwork());
                     else
-                        playerIn.sendSystemMessage(Lang.str("EnergyNetwork " + ((HeatNetworkProvider) te).getNetwork()));
+                        playerIn.sendSystemMessage(Components.str("EnergyNetwork " + ((HeatNetworkProvider) te).getNetwork()));
                 } else if (te != null) {
-                    playerIn.sendSystemMessage(Lang.str("EnergyEndpoint " + te.getCapability(FHCapabilities.HEAT_EP.capability(), raytraceresult.getDirection()).orElse(null)));
+                    playerIn.sendSystemMessage(Components.str("EnergyEndpoint " + te.getCapability(FHCapabilities.HEAT_EP.capability(), raytraceresult.getDirection()).orElse(null)));
                 }
             }
             return InteractionResultHolder.success(itemstack);

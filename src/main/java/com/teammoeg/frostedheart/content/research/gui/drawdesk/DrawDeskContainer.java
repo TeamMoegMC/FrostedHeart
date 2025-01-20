@@ -19,56 +19,19 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
-import com.teammoeg.frostedheart.base.menu.FHBlockEntityContainer;
+import blusunrize.immersiveengineering.common.gui.IESlot;
+import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
-
-import blusunrize.immersiveengineering.common.gui.IESlot;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-public class DrawDeskContainer extends FHBlockEntityContainer<DrawingDeskTileEntity> {
-    interface Enabled {
-        void setEnabled(boolean enabled);
-    }
-
-    public static class EnableIESlot extends IESlot implements Enabled {
-        boolean enabled = true;
-
-        public EnableIESlot(AbstractContainerMenu containerMenu, Container inv, int id, int x, int y) {
-            super(containerMenu, inv, id, x, y);
-        }
-
-        public boolean isActive() {
-            return enabled;
-        }
-
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
-    }
-
-    public static class EnableSlot extends Slot implements Enabled {
-        boolean enabled = true;
-
-        public EnableSlot(Container inventoryIn, int index, int xPosition, int yPosition) {
-            super(inventoryIn, index, xPosition, yPosition);
-        }
-
-        public boolean isActive() {
-            return enabled;
-        }
-
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
-    }
-
+public class DrawDeskContainer extends CBlockEntityMenu<DrawingDeskTileEntity> {
     public DrawDeskContainer(int id, Inventory inventoryPlayer, DrawingDeskTileEntity tile) {
-        super(FHMenuTypes.DRAW_DESK.get(), tile, id,inventoryPlayer.player, 3);
+        super(FHMenuTypes.DRAW_DESK.get(), tile, id, inventoryPlayer.player, 3);
 
         this.addSlot(new EnableIESlot(this, inv, DrawingDeskTileEntity.PAPER_SLOT, 114, 161) {// paper
             @Override
@@ -105,6 +68,42 @@ public class DrawDeskContainer extends FHBlockEntityContainer<DrawingDeskTileEnt
         for (Slot s : this.slots) {
             if (s instanceof Enabled)
                 ((Enabled) s).setEnabled(en);
+        }
+    }
+
+    interface Enabled {
+        void setEnabled(boolean enabled);
+    }
+
+    public static class EnableIESlot extends IESlot implements Enabled {
+        boolean enabled = true;
+
+        public EnableIESlot(AbstractContainerMenu containerMenu, Container inv, int id, int x, int y) {
+            super(containerMenu, inv, id, x, y);
+        }
+
+        public boolean isActive() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+    }
+
+    public static class EnableSlot extends Slot implements Enabled {
+        boolean enabled = true;
+
+        public EnableSlot(Container inventoryIn, int index, int xPosition, int yPosition) {
+            super(inventoryIn, index, xPosition, yPosition);
+        }
+
+        public boolean isActive() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
         }
     }
     

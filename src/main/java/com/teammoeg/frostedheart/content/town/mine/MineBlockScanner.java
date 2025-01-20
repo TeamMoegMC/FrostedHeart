@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
-import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;

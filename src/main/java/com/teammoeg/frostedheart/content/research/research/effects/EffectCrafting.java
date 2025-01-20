@@ -19,60 +19,54 @@
 
 package com.teammoeg.frostedheart.content.research.research.effects;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.mojang.datafixers.util.Either;
+import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.team.CTeamDataManager;
+import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.chorda.util.CMath;
+import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.chorda.util.io.CodecUtil;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.MathUtils;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
-
+import com.teammoeg.frostedheart.util.client.Lang;
 import mezz.jei.library.util.RecipeUtil;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.ItemLike;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
 public class EffectCrafting extends Effect {
-	public static final MapCodec<EffectCrafting> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		
-		CodecUtil.<EffectCrafting,Ingredient,List<ResourceLocation>>either(
-			CodecUtil.INGREDIENT_CODEC.fieldOf("item"),
-			Codec.list(ResourceLocation.CODEC).optionalFieldOf("recipes",Arrays.asList()),
-			o->o.ingredient,
-			o->o.unlocks.stream().map(Recipe::getId).collect(Collectors.toList())
-		),
-		Effect.BASE_CODEC.forGetter(Effect::getBaseData))
-	.apply(t,EffectCrafting::new));
+    public static final MapCodec<EffectCrafting> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+
+                    CodecUtil.<EffectCrafting, Ingredient, List<ResourceLocation>>either(
+                            CodecUtil.INGREDIENT_CODEC.fieldOf("item"),
+                            Codec.list(ResourceLocation.CODEC).optionalFieldOf("recipes", Arrays.asList()),
+                            o -> o.ingredient,
+                            o -> o.unlocks.stream().map(Recipe::getId).collect(Collectors.toList())
+                    ),
+                    Effect.BASE_CODEC.forGetter(Effect::getBaseData))
+            .apply(t, EffectCrafting::new));
     List<Recipe<?>> unlocks = new ArrayList<>();
     Ingredient ingredient = null;
+
     EffectCrafting() {
     }
 
@@ -88,24 +82,26 @@ public class EffectCrafting extends Effect {
         this.ingredient = Ingredient.of(item);
     }
 
-    public EffectCrafting(Either<Ingredient,List<ResourceLocation>> unlocks,BaseData data) {
-		super(data);
-		
-		unlocks.ifLeft(t->{this.ingredient=t;});
-		unlocks.ifRight(o->o.stream().map(FHTeamDataManager.getRecipeManager()::byKey).filter(Optional::isPresent).map(Optional::get).forEach(this.unlocks::add));
-	}
+    public EffectCrafting(Either<Ingredient, List<ResourceLocation>> unlocks, BaseData data) {
+        super(data);
+
+        unlocks.ifLeft(t -> {
+            this.ingredient = t;
+        });
+        unlocks.ifRight(o -> o.stream().map(CTeamDataManager.getRecipeManager()::byKey).filter(Optional::isPresent).map(Optional::get).forEach(this.unlocks::add));
+    }
 
     public EffectCrafting(ResourceLocation recipe) {
         super("@gui." + FHMain.MODID + ".effect.crafting", new ArrayList<>());
-        Optional<? extends Recipe<?>> r = FHTeamDataManager.getRecipeManager().byKey(recipe);
+        Optional<? extends Recipe<?>> r = CTeamDataManager.getRecipeManager().byKey(recipe);
 
         r.ifPresent(iRecipe -> unlocks.add(iRecipe));
     }
 
     @Override
     public String getBrief() {
-        if (ingredient != null&&!ingredient.isEmpty())
-            return "Craft " + ingredient.getItems()[0].getDisplayName()+ (ingredient.getItems().length > 1 ? " ..." : "");
+        if (ingredient != null && !ingredient.isEmpty())
+            return "Craft " + ingredient.getItems()[0].getDisplayName() + (ingredient.getItems().length > 1 ? " ..." : "");
         if (!unlocks.isEmpty())
             return "Craft" + unlocks.get(0).getId() + (unlocks.size() > 1 ? " ..." : "");
         return "Craft nothing";
@@ -115,14 +111,14 @@ public class EffectCrafting extends Effect {
     public FHIcon getDefaultIcon() {
         if (ingredient != null)
             return FHIcons.getIcon(FHIcons.getIcon(ingredient), FHIcons.getIcon(Items.CRAFTING_TABLE));
-		Set<ItemStack> stacks = new HashSet<>();
-		for (Recipe<?> r : unlocks) {
-		    if (!RecipeUtil.getResultItem(r).isEmpty()) {
-		        stacks.add(RecipeUtil.getResultItem(r));
-		    }
-		}
-		if (!stacks.isEmpty())
-		    return FHIcons.getIcon(FHIcons.getStackIcons(stacks), FHIcons.getIcon(Items.CRAFTING_TABLE));
+        Set<ItemStack> stacks = new HashSet<>();
+        for (Recipe<?> r : unlocks) {
+            if (!RecipeUtil.getResultItem(r).isEmpty()) {
+                stacks.add(RecipeUtil.getResultItem(r));
+            }
+        }
+        if (!stacks.isEmpty())
+            return FHIcons.getIcon(FHIcons.getStackIcons(stacks), FHIcons.getIcon(Items.CRAFTING_TABLE));
         return FHIcons.getIcon(FHIcons.getDelegateIcon("question"), FHIcons.getIcon(Items.CRAFTING_TABLE));
     }
 
@@ -136,7 +132,7 @@ public class EffectCrafting extends Effect {
         List<Component> tooltip = new ArrayList<>();
 
         if (ingredient != null)
-            tooltip.add(MathUtils.selectElementByTime(ingredient.getItems()).getHoverName());
+            tooltip.add(CMath.selectElementByTime(ingredient.getItems()).getHoverName());
         else {
             Set<ItemStack> stacks = new HashSet<>();
             for (Recipe<?> r : unlocks) {
@@ -156,29 +152,30 @@ public class EffectCrafting extends Effect {
     }
 
     @Override
-    public boolean grant(TeamDataHolder team,TeamResearchData trd,  Player triggerPlayer, boolean isload) {
+    public boolean grant(TeamDataHolder team, TeamResearchData trd, Player triggerPlayer, boolean isload) {
         trd.crafting.addAll(unlocks);
         return true;
     }
 
     @Override
     public void init() {
-    	if(ingredient!=null)
-    		initItem();
+        if (ingredient != null)
+            initItem();
         ResearchListeners.recipe.addAll(unlocks);
     }
 
     private void initItem() {
         unlocks.clear();
-        for (Recipe<?> r : FHTeamDataManager.getRecipeManager().getRecipes()) {
-        	ItemStack result=r.getResultItem(RegistryUtils.getAccess());
-        	if(result==null)System.out.println("error null recipe "+r);
-            if (result!=null&&ingredient.test(result)) {
+        for (Recipe<?> r : CTeamDataManager.getRecipeManager().getRecipes()) {
+            ItemStack result = r.getResultItem(CRegistryHelper.getAccess());
+            if (result == null) {
+                LogUtils.getLogger().debug("Error null recipe " + r);
+            }
+            if (ingredient.test(result)) {
                 unlocks.add(r);
             }
         }
     }
-
 
 
     @OnlyIn(Dist.CLIENT)
@@ -186,7 +183,7 @@ public class EffectCrafting extends Effect {
     public void onClick(ResearchData parent) {
         if (!parent.isEffectGranted(this)) return;
         if (ingredient != null)
-            JEICompat.showJEIFor(MathUtils.selectElementByTime(ingredient.getItems()));
+            JEICompat.showJEIFor(CMath.selectElementByTime(ingredient.getItems()));
     }
 
     @Override
@@ -194,7 +191,7 @@ public class EffectCrafting extends Effect {
         if (ingredient != null) {
             initItem();
         } else {
-            unlocks.replaceAll(o -> FHTeamDataManager.getRecipeManager().byKey(o.getId()).orElse(null));
+            unlocks.replaceAll(o -> CTeamDataManager.getRecipeManager().byKey(o.getId()).orElse(null));
             unlocks.removeIf(Objects::isNull);
         }
     }
@@ -207,24 +204,24 @@ public class EffectCrafting extends Effect {
     public void setList(Collection<String> ls) {
         unlocks.clear();
         for (String s : ls) {
-            Optional<? extends Recipe<?>> r = FHTeamDataManager.getRecipeManager().byKey(new ResourceLocation(s));
+            Optional<? extends Recipe<?>> r = CTeamDataManager.getRecipeManager().byKey(new ResourceLocation(s));
 
             r.ifPresent(iRecipe -> unlocks.add(iRecipe));
         }
     }
 
-	public List<Recipe<?>> getUnlocks() {
-		return unlocks;
-	}
+    public List<Recipe<?>> getUnlocks() {
+        return unlocks;
+    }
 
-	public Ingredient getIngredient() {
-		return ingredient;
-	}
+    public Ingredient getIngredient() {
+        return ingredient;
+    }
 
-	@Override
-	public String toString() {
-		return "EffectCrafting [name=" + name + ", tooltip=" + tooltip + ", icon=" + icon + ", nonce=" + nonce
-				+ ", hidden=" + hidden + "]";
-	}
+    @Override
+    public String toString() {
+        return "EffectCrafting [name=" + name + ", tooltip=" + tooltip + ", icon=" + icon + ", nonce=" + nonce
+                + ", hidden=" + hidden + "]";
+    }
 
 }

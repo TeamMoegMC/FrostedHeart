@@ -3,11 +3,10 @@ package com.teammoeg.frostedheart.content.climate.player;
 import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.frostedheart.base.item.FHBaseClothesItem;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.chorda.util.io.NBTSerializable;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -200,7 +199,8 @@ public class PlayerTemperatureData implements NBTSerializable  {
 			case HANDS -> player.getMainHandItem(); // Main hand
 			default -> ItemStack.EMPTY; // Default to empty
 		};
-		System.out.printf("Part %s Cond %f\n", bodyPart, clothesOfParts.get(bodyPart).getThermalConductivity(equipment));
+		// TODO remove out
+//		System.out.printf("Part %s Cond %f\n", bodyPart, clothesOfParts.get(bodyPart).getThermalConductivity(equipment));
 		return clothesOfParts.get(bodyPart).getThermalConductivity(equipment);
 	}
 

@@ -19,9 +19,10 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -197,7 +198,7 @@ public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
     @Override
     public Component getDisplayName() {
         if (hired) {
-            return Lang.str(this.firstName + " " + this.lastName);
+            return Components.str(this.firstName + " " + this.lastName);
         }
         return super.getDisplayName();
     }

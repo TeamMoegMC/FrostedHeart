@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.climate.food;
 
 import com.google.common.collect.ImmutableList;
+import com.teammoeg.frostedheart.bootstrap.reference.FHDamageSources;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
@@ -28,7 +29,7 @@ import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.water.item.DrinkContainerItem;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.core.NonNullList;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
@@ -158,9 +159,9 @@ public class FoodTemperatureHandler {
 
             // Adjust body temperature
             if (heat > 1) {
-                event.getEntity().hurt(FHDamageTypes.createSource(event.getEntity().level(), FHDamageTypes.HYPERTHERMIA_INSTANT, event.getEntity()), (heat) * 2);
+                event.getEntity().hurt(FHDamageSources.hyperthermiaInstant(event.getEntity().level()), (heat) * 2);
             } else if (heat < -1)
-                event.getEntity().hurt(FHDamageTypes.createSource(event.getEntity().level(), FHDamageTypes.HYPOTHERMIA_INSTANT, event.getEntity()), (heat) * 2);
+                event.getEntity().hurt(FHDamageSources.hypothermiaInstant(event.getEntity().level()), (heat) * 2);
             if (heat > 0) {
                 if (current >= max)
                     return;

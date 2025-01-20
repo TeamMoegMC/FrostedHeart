@@ -26,8 +26,8 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.util.ShapeType;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.HeatingLogic;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.chorda.util.ie.CMultiblockHelper;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -74,7 +74,8 @@ public class RadiatorLogic extends HeatingLogic<RadiatorLogic, RadiatorState> {
     @Override
     public <T> LazyOptional<T> getCapability(IMultiblockContext<RadiatorState> ctx, CapabilityPosition position, Capability<T> cap) {
         if (FHCapabilities.HEAT_EP.isCapability(cap) && position.posInMultiblock().getY() == 0) {
-            return ctx.getState().heatcap.cast();
+        	
+            return ctx.getState().heatCap.cast(ctx);
         }
         return super.getCapability(ctx, position, cap);
     }
@@ -82,14 +83,15 @@ public class RadiatorLogic extends HeatingLogic<RadiatorLogic, RadiatorState> {
     @Override
     public void tickEffects(IMultiblockContext<RadiatorState> ctx, BlockPos master, boolean isActive) {
         Level level = ctx.getLevel().getRawLevel();
-        BlockPos pos = FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel());
+        BlockPos pos = CMultiblockHelper.getAbsoluteMaster(ctx);
         if (level != null && level.isClientSide && isActive && level.random.nextFloat() < 0.2) {
-            ClientUtils.spawnSteamParticles(level, pos);
+            FHClientUtils.spawnSteamParticles(level, pos);
         }
     }
 
     @Override
     public RadiatorState createInitialState(IInitialMultiblockContext<RadiatorState> capabilitySource) {
+    	
         return new RadiatorState();
     }
 

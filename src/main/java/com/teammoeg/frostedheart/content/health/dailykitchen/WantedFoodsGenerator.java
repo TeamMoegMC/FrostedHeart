@@ -24,8 +24,9 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.tags.ItemTags;
@@ -68,7 +69,7 @@ class WantedFoodsGenerator {
         for (Item food : foodsEaten) {
             if (wantedFoodsNumber.contains(i) && (isNotBadFood(food)) && !(food instanceof ItemFluidContainer/*Don't eat thermos!*/)) {
                 wantedFoods.add(food);
-                wantedFoodsText.append(Lang.translateKey(food.getDescriptionId())).append(Lang.str("  "));
+                wantedFoodsText.append(Lang.translateKey(food.getDescriptionId())).append(Components.str("  "));
             }
             i++;
         }

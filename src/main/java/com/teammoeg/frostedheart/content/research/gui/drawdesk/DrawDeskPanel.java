@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
-import com.teammoeg.frostedheart.util.lang.Lang;
-import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
@@ -31,13 +29,14 @@ import com.teammoeg.frostedheart.content.research.network.FHDrawingDeskOperation
 import com.teammoeg.frostedheart.content.research.network.FHResearchControlPacket;
 import com.teammoeg.frostedheart.content.research.network.FHResearchControlPacket.Operator;
 import com.teammoeg.frostedheart.content.research.research.Research;
-
+import com.teammoeg.frostedheart.util.client.Lang;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class DrawDeskPanel extends Panel {
     DrawDeskScreen dd;
@@ -138,6 +137,10 @@ public class DrawDeskPanel extends Panel {
         return enabled;
     }
 
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
     @Override
     public boolean keyPressed(Key k) {
         if (showHelp && k.esc()) {
@@ -151,10 +154,6 @@ public class DrawDeskPanel extends Panel {
         showHelp = true;
         mgp.setEnabled(false);
 
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
     }
 
 

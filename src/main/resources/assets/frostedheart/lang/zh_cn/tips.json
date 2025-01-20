@@ -1,23 +1,4 @@
 {
-  "tips.frostedheart.empty.title": "哎呀，这里什么都没有",
-  "tips.frostedheart.error.desc": "请检查整合包是否正确安装，或向我们报告这个bug",
-  "tips.frostedheart.error.other": "错误",
-  "tips.frostedheart.error.display": "错误：无法显示提示",
-  "tips.frostedheart.error.save": "错误：无法保存文件",
-  "tips.frostedheart.error.load": "错误：无法加载文件",
-  "tips.frostedheart.error.no_id": "提示ID为空或不存在",
-  "tips.frostedheart.error.duplicate_id": "重复的提示ID",
-  "tips.frostedheart.error.file_not_exists": "文件不存在",
-  "tips.frostedheart.error.tip_not_exists": "提示不存在",
-  "tips.frostedheart.error.empty": "没有内容可供显示",
-  "tips.frostedheart.error.invalid_json": "无效的Json格式",
-  "tips.frostedheart.error.invalid_image": "无效的纹理资源路径 '%s'",
-  "tips.frostedheart.error.invalid_digit": "无效的16进制数字 '%s'",
-
-  "gui.frostedheart.tip_editor.title": "提示编辑器",
-  "gui.frostedheart.close": "关闭",
-  "gui.frostedheart.pin": "固定",
-
   "tips.frostedheart.default.title": "欢迎来到冬季救援！",
   "tips.frostedheart.default.desc1": "在你游玩时这里会显示各种提示，记得仔细阅读！",
   "tips.frostedheart.default.desc2": "按下Tab键，或打开任意GUI后点击右上角按钮即可关闭该提示。",

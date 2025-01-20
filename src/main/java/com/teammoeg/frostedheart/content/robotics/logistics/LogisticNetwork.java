@@ -12,7 +12,7 @@ import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.ILogisticsStorage;
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.TaskableLogisticStorage;
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.TileEntityLogisticsStorage;
-import com.teammoeg.frostedheart.util.ResultCacheIterator;
+import com.teammoeg.chorda.util.misc.ResultCacheIterator;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;

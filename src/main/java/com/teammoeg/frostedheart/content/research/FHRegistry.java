@@ -19,25 +19,16 @@
 
 package com.teammoeg.frostedheart.content.research;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
-import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
-import com.teammoeg.frostedheart.util.utility.OptionalLazy;
-
-import net.minecraft.nbt.Tag;
+import com.teammoeg.chorda.util.io.RegistryListedMap;
+import com.teammoeg.chorda.util.utility.OptionalLazy;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.nbt.Tag;
+
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Our own registry type to reduce network and storage cost.
@@ -45,58 +36,56 @@ import net.minecraft.network.FriendlyByteBuf;
  * @param <T> the generic type of registry
  * @author khjxiaogu
  */
-public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
-   /* private static final class RegisteredSupplier<T extends FHRegisteredItem> implements Supplier<T> {
-        private final String key;
-        private final Function<String, T> getter;
+public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T> {
+    /* private static final class RegisteredSupplier<T extends FHRegisteredItem> implements Supplier<T> {
+         private final String key;
+         private final Function<String, T> getter;
 
-        public RegisteredSupplier(String key, Function<String, T> getter) {
-            this.key = key;
-            this.getter = getter;
-        }
+         public RegisteredSupplier(String key, Function<String, T> getter) {
+             this.key = key;
+             this.getter = getter;
+         }
 
-        @SuppressWarnings("rawtypes")
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            RegisteredSupplier other = (RegisteredSupplier) obj;
-            if (key == null) {
-                if (other.key != null)
-                    return false;
-            } else if (!key.equals(other.key))
-                return false;
-            return getter == other.getter;
-        }
+         @SuppressWarnings("rawtypes")
+         @Override
+         public boolean equals(Object obj) {
+             if (this == obj)
+                 return true;
+             if (obj == null)
+                 return false;
+             if (getClass() != obj.getClass())
+                 return false;
+             RegisteredSupplier other = (RegisteredSupplier) obj;
+             if (key == null) {
+                 if (other.key != null)
+                     return false;
+             } else if (!key.equals(other.key))
+                 return false;
+             return getter == other.getter;
+         }
 
-        @Override
-        public T get() {
-            return getter.apply(key);
-        }
+         @Override
+         public T get() {
+             return getter.apply(key);
+         }
 
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((key == null) ? 0 : key.hashCode());
-            return result;
-        }
+         @Override
+         public int hashCode() {
+             final int prime = 31;
+             int result = 1;
+             result = prime * result + ((key == null) ? 0 : key.hashCode());
+             return result;
+         }
 
-    }*/
+     }*/
     private ArrayList<T> items = new ArrayList<>();//registered objects
     private Map<String, Integer> rnames = new HashMap<>();//registry mappings
-    private ArrayList<String> rnamesl = new ArrayList<>();//reverse mappings
-    private Map<String, OptionalLazy<T>> cache = new HashMap<>();//object cache
+    private final Function<String, OptionalLazy<T>> cacheGen = (n) -> OptionalLazy.of(() -> getByName(n));
+    private Function<String, T> strLazyGetter = x -> lazyGet(x).orElse(null);
     /*public Codec<Supplier<T>> SUPPLIER_CODEC=new CompressDifferCodec<Supplier<T>>(Codec.STRING.xmap(this::get,o->((RegisteredSupplier<T>)o).key),
     	Codec.INT.xmap(this::get, o->this.getIntId(((RegisteredSupplier<T>)o).key)));*/
-    
-    private final Function<String, OptionalLazy<T>> cacheGen = (n) -> OptionalLazy.of(() -> getByName(n));
-
-    private Function<String, T> strLazyGetter = x -> lazyGet(x).orElse(null);
+    private ArrayList<String> rnamesl = new ArrayList<>();//reverse mappings
+    private Map<String, OptionalLazy<T>> cache = new HashMap<>();//object cache
 
 /*    public static <T extends FHRegisteredItem> String serializeSupplier(Supplier<T> s) {
         if (s instanceof RegisteredSupplier) {
@@ -123,6 +112,7 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
         pb.writeVarInt(-1);
     }
 */
+
     /**
      * Instantiates a new FHRegistry.<br>
      */
@@ -184,6 +174,36 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
             items.add(null);
     }
 
+    public <E> List<E> toList(Map<String,E> data){
+    	return new RegistryListedMap<String,E>(data,rnamesl.size()){
+
+			@Override
+			public String getKey(int id) {
+				return FHRegistry.this.getStrId(id);
+			}
+    		
+    	};
+    }
+    public <E> void fromList(List<E> data,BiConsumer<String,E> map){
+    	int id=0;
+    	for(E elm:data) {
+    		final int curid=id;
+    		if(elm!=null)
+    			map.accept(getStrId(curid),elm);
+    		id++;
+    	}
+    }
+    @Override
+	public String toString() {
+		return "FHRegistry [items=" + items + "]";
+	}
+
+	/**
+     * Get by numeric id.
+     *
+     * @param id the id<br>
+     * @return item<br>
+     */
     public T get(int id) {
         if (id < 0)
             return null;
@@ -202,26 +222,34 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
     public T get(String id) {
         return get(getIntId(id));
     }
+
     public int getIntId(String obj) {
-    	return rnames.getOrDefault(obj, -1);
+        return rnames.getOrDefault(obj, -1);
+    }
+    public String getStrId(int id) {
+    	if(id<0||id>=rnamesl.size())
+    		return null;
+        return rnamesl.get(id);
     }
     public void replace(T research) {
-    	cache.remove(research.getId());
-    	register(research);
+        cache.remove(research.getId());
+        register(research);
     }
+
     public int getIntId(T obj) {
-    	return getIntId(obj.getId());
+        return getIntId(obj.getId());
     }
+
     /**
      * Get by numeric id.
      *
      * @param id the id<br>
      * @return by id<br>
      */
-    public T getById(int id) {
-    	if(id<0||id>=items.size())return null;
+    /*public T getById(int id) {
+        if (id < 0 || id >= items.size()) return null;
         return items.get(id);
-    }
+    }*/
 
     /**
      * Get by name.
@@ -275,15 +303,15 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
     public void register(T item) {
         String lid = item.getId();
         int index = getIntId(lid);
-        
+
         ensure();
         if (index == -1) {
             rnames.put(item.getId(), rnamesl.size());
-           // System.out.println(lid+" registered index"+rnamesl.size()+"");
+            // System.out.println(lid+" registered index"+rnamesl.size()+"");
             rnamesl.add(item.getId());
             items.add(item);
         } else {
-        	//System.out.println(lid+" re-registered index"+index+"");
+            //System.out.println(lid+" re-registered index"+index+"");
             items.set(index, item);
         }
     }
@@ -327,8 +355,8 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
         return () -> null;
     }*/
 
-	@Override
-	public Iterator<T> iterator() {
-		return items.stream().filter(Objects::nonNull).iterator();
-	}
+    @Override
+    public Iterator<T> iterator() {
+        return items.stream().filter(Objects::nonNull).iterator();
+    }
 }

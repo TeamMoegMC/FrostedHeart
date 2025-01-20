@@ -5,6 +5,6 @@
   "loader": "forge:obj",
   "model": "frostedheart:models/block/multiblocks/generator_t2.obj",
   "textures": {
-    "particle": "frostedheart:block/multiblocks/crudegeneratorstone"
+    "particle": "frostedheart:block/multiblocks/generatoriibottom"
   }
 }

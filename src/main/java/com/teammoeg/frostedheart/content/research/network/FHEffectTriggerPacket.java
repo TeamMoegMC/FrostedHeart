@@ -19,21 +19,20 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
-import java.util.function.Supplier;
-
-import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.chorda.team.CTeamDataManager;
+import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.Research;
-
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 
-public class FHEffectTriggerPacket implements FHMessage {
+import java.util.function.Supplier;
+
+public class FHEffectTriggerPacket implements CMessage {
     private final int researchID;
 
     public FHEffectTriggerPacket(FriendlyByteBuf buffer) {
@@ -52,15 +51,15 @@ public class FHEffectTriggerPacket implements FHMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
 
         context.get().enqueueWork(() -> {
-            Research r = FHResearch.researches.getById(researchID);
+            Research r = FHResearch.researches.get(researchID);
 
             ServerPlayer spe = context.get().getSender();
-        	TeamDataHolder data=FHTeamDataManager.get(spe);
-            TeamResearchData trd = data.getData(SpecialDataTypes.RESEARCH_DATA);
+            TeamDataHolder data = CTeamDataManager.get(spe);
+            TeamResearchData trd = data.getData(FHSpecialDataTypes.RESEARCH_DATA);
             if (trd.getData(r).isCompleted()) {
-            	
-            	trd.grantEffects(data, spe,r);
-                
+
+                trd.grantEffects(data, spe, r);
+
             }
         });
         context.get().setPacketHandled(true);

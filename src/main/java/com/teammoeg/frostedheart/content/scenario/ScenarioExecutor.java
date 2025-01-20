@@ -32,12 +32,14 @@ import java.util.function.Supplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 import org.joml.Vector3f;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.util.client.Point;
-import com.teammoeg.frostedheart.util.client.Rect;
+import com.teammoeg.chorda.util.client.Point;
+import com.teammoeg.chorda.util.client.Rect;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.core.BlockPos;
@@ -45,6 +47,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.core.Vec3i;
 
 public class ScenarioExecutor<T> {
+    static Marker MARKER = MarkerManager.getMarker("Scenario Executor");
     private static class MethodInfo<T> implements ScenarioMethod<T> {
         private static class ParamInfo {
             String[] paramName;
@@ -161,7 +164,6 @@ public class ScenarioExecutor<T> {
     public interface ScenarioMethod<T> {
         void execute(T scenarioVM, Map<String, String> param);
     }
-    static Logger LOGGER = LogManager.getLogger("ScenarioExecutor");
     Class<T> objcls;
     public ScenarioExecutor(Class<T> objcls) {
 		super();
@@ -295,7 +297,7 @@ public class ScenarioExecutor<T> {
             registerInst(ctor.newInstance());
         } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException |
                  IllegalArgumentException e) {
-            FHMain.LOGGER.error("Error registering scenario class",e);
+            FHMain.LOGGER.error(MARKER, "Error registering scenario class",e);
         } catch (InvocationTargetException e) {
             throw new RuntimeException("Error registering scenario class" + e.getTargetException());
         }
@@ -314,7 +316,7 @@ public class ScenarioExecutor<T> {
                 		registerCommand(met.getName(), new MethodInfo<>(Modifier.isStatic(met.getModifiers()) ? null : clazz, met, this));
                 } catch (ScenarioExecutionException ex) {
                     ex.printStackTrace();
-                    LOGGER.warn(ex.getMessage());
+                    FHMain.LOGGER.warn(MARKER, ex.getMessage());
                 }
             }
         }
@@ -328,15 +330,14 @@ public class ScenarioExecutor<T> {
                 } catch (ScenarioExecutionException ex) {
 
                     ex.printStackTrace();
-                    LOGGER.warn(ex.getMessage());
+                    FHMain.LOGGER.warn(MARKER, ex.getMessage());
                 }
             }
         }
     }
     static class Test{
     	public void test(ScenarioConductor sr,@Param("s")String s,@Param("s")Rect r,@Param("")Rect r1) {
-    		System.out.println(s+":"+r+":"+r1);
-
+    		FHMain.LOGGER.error(s+":"+r+":"+r1);
     	}
     }
     public static void main(String[] args) throws SecurityException {

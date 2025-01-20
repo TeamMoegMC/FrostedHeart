@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.content.climate.recipe.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.content.research.recipe.InspireRecipe;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceAmountRecipe;
 import com.teammoeg.frostedheart.content.research.recipe.ResearchPaperRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
@@ -75,6 +76,7 @@ public class FHRecipes {
         TradePolicy.SERIALIZER = RECIPE_SERIALIZERS.register("trade", TradePolicy.Serializer::new);
         WaterLevelAndEffectRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("water_level_and_effect", WaterLevelAndEffectRecipe.Serializer::new);
         NutritionRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("diet_override", NutritionRecipe.Serializer::new);
+        ItemResourceAmountRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("item_resource_amount", ItemResourceAmountRecipe.Serializer::new);
         GeneratorRecipe.TYPE = createRecipeType("generator");
         GeneratorSteamRecipe.TYPE = createRecipeType("steam_generator");
         ChargerRecipe.TYPE = createRecipeType("charger");
@@ -86,6 +88,7 @@ public class FHRecipes {
         TradePolicy.TYPE = createRecipeType("trade");
         WaterLevelAndEffectRecipe.TYPE = createRecipeType("water_level_and_effect");
         NutritionRecipe.TYPE = createRecipeType("diet_override");
+        ItemResourceAmountRecipe.TYPE = createRecipeType("item_resource_amount");
     }
     public static <T extends Recipe<?>> RegistryObject<RecipeType<T>> createRecipeType(String name){
     	return RECIPE_TYPES.register(name,()->RecipeType.simple(new ResourceLocation(FHMain.MODID,name)));

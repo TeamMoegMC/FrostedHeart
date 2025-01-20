@@ -5,7 +5,7 @@ import java.awt.Color;
 
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
-import com.teammoeg.frostedheart.util.client.Rect;
+import com.teammoeg.chorda.util.client.Rect;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 

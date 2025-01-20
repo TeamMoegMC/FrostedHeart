@@ -23,14 +23,14 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
-import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.content.water.item.DurableDrinkContainerItem;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.material.Fluid;

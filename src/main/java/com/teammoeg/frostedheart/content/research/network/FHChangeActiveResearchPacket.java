@@ -19,19 +19,18 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
-import java.util.function.Supplier;
-
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchUtils;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.research.Research;
-
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.function.Supplier;
+
 // send when data update
-public class FHChangeActiveResearchPacket implements FHMessage {
+public class FHChangeActiveResearchPacket implements CMessage {
     private final int id;
 
     public FHChangeActiveResearchPacket() {

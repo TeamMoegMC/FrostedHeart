@@ -19,42 +19,41 @@
 
 package com.teammoeg.frostedheart.content.research.research.effects;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.chorda.util.io.CodecUtil;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
-
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Allows the research team to use certain machines
  */
 public class EffectUse extends Effect {
-	public static final MapCodec<EffectUse> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
-	Codec.list(CodecUtil.registryCodec(()->BuiltInRegistries.BLOCK)).fieldOf("blocks").forGetter(o->o.blocks))
-	.apply(t,EffectUse::new));
+    public static final MapCodec<EffectUse> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+                    Codec.list(CodecUtil.registryCodec(() -> BuiltInRegistries.BLOCK)).fieldOf("blocks").forGetter(o -> o.blocks))
+            .apply(t, EffectUse::new));
     List<Block> blocks;
 
     public EffectUse(BaseData data, List<Block> blocks) {
-		super(data);
-		this.blocks = new ArrayList<>(blocks);
-	}
+        super(data);
+        this.blocks = new ArrayList<>(blocks);
+    }
 
-	EffectUse() {
+    EffectUse() {
         super();
         this.blocks = new ArrayList<>();
     }
@@ -94,7 +93,7 @@ public class EffectUse extends Effect {
     }
 
     @Override
-    public boolean grant(TeamDataHolder team,TeamResearchData trd,  Player triggerPlayer, boolean isload) {
+    public boolean grant(TeamDataHolder team, TeamResearchData trd, Player triggerPlayer, boolean isload) {
         trd.block.addAll(blocks);
         return true;
     }

@@ -5,6 +5,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.core.BlockPos;
@@ -17,7 +18,7 @@ import java.util.stream.Stream;
 public class MineBlockEntity extends AbstractTownWorkerBlockEntity {
     private int avgLightLevel;
     private int validStoneOrOre;
-    private Map<TownResourceType, Double> resources;
+    private Map<ItemResourceType, Double> resources;
     private double temperature;
     private double rating;
 
@@ -119,17 +120,5 @@ public class MineBlockEntity extends AbstractTownWorkerBlockEntity {
 
     public static void setLinkedBase(TownWorkerData mineData, BlockPos pos){
         mineData.setDataFromTown("linkedBasePos", LongTag.valueOf(pos.asLong()));
-    }
-
-
-
-    @Override
-    public void readCustomNBT(CompoundTag compoundNBT, boolean b) {
-
-    }
-
-    @Override
-    public void writeCustomNBT(CompoundTag compoundNBT, boolean b) {
-
     }
 }

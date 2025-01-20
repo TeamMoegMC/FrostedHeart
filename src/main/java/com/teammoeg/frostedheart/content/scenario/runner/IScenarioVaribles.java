@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.scenario.runner;
 
-import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
+import com.teammoeg.chorda.util.evaluator.IEnvironment;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;

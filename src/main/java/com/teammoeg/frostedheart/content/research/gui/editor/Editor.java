@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import java.util.function.Consumer;
-
 import dev.ftb.mods.ftblibrary.ui.Widget;
+
+import java.util.function.Consumer;
 
 @FunctionalInterface
 public interface Editor<T> {

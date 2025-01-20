@@ -22,10 +22,11 @@ package com.teammoeg.frostedheart.content.town;
 import java.util.*;
 import java.util.Map.Entry;
 
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.chorda.team.CTeamDataManager;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
+import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
@@ -38,16 +39,8 @@ import net.minecraft.core.BlockPos;
  * You may use this to access or modify town data.
  */
 public class TeamTown implements Town, TownWithResident {
-    /** Linked to town data resources. */
-    Map<TownResourceType, Integer> storage;
-    /** Linked to town data backup resources. */
-    Map<TownResourceType, Integer> backupStorage;
-    /** Service, only live in one tick cycle. */
-    Map<TownResourceType, Integer> service = new EnumMap<>(TownResourceType.class);
-    /** Costed service, only live in one tick cycle. */
-    Map<TownResourceType, Integer> costedService = new EnumMap<>(TownResourceType.class);
-    /** Max storage, only live in one tick cycle. */
-    Map<TownResourceType, Integer> maxStorage = new EnumMap<>(TownResourceType.class);
+    /** Used to manage town resource. */
+    TownResourceManager resources;
     /** The town data, actual data stored on disk. */
     TeamTownData data;
 
@@ -67,7 +60,7 @@ public class TeamTown implements Town, TownWithResident {
      * @return the town
      */
     public static TeamTown from(Player player) {
-        TeamTownData data = FHTeamDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA);
+        TeamTownData data = CTeamDataManager.get(player).getData(FHSpecialDataTypes.TOWN_DATA);
         return new TeamTown(data);
     }
 
@@ -77,7 +70,7 @@ public class TeamTown implements Town, TownWithResident {
      * @return the town
      */
     public static TeamTown from(Team team) {
-        TeamTownData data = FHTeamDataManager.getDataByTeam(team).getData(SpecialDataTypes.TOWN_DATA);
+        TeamTownData data = CTeamDataManager.getDataByTeam(team).getData(FHSpecialDataTypes.TOWN_DATA);
         return new TeamTown(data);
     }
 
@@ -87,14 +80,14 @@ public class TeamTown implements Town, TownWithResident {
      */
     public TeamTown(TeamTownData td) {
         super();
-        this.storage = td.resources;
-        this.backupStorage = td.backupResources;
+        this.resources = new TownResourceManager(td.resources);
         this.data = td;
     }
 
+    /*
     @Override
     public double add(TownResourceType name, double val, boolean simulate) {
-        int newVal = storage.getOrDefault(name, 0);
+        int newVal = resources.getOrDefault(name, 0);
         newVal += (int) (val * 1000);
         int max = getIntMaxStorage(name) - backupStorage.getOrDefault(name, 0);
         int remain = 0;
@@ -103,20 +96,20 @@ public class TeamTown implements Town, TownWithResident {
             newVal = max;
         }
         if (!simulate)
-            storage.put(name, newVal);
+            resources.put(name, newVal);
         return val - remain / 1000d;
     }
 
     @Override
     public double addService(TownResourceType name, double val) {
-        storage.merge(name, (int) val * 1000, Integer::sum);
+        resources.merge(name, (int) val * 1000, Integer::sum);
         return val;
     }
 
     @Override
     public double cost(TownResourceType name, double val, boolean simulate) {
         int servVal = service.getOrDefault(name, 0);
-        int curVal = storage.getOrDefault(name, 0);
+        int curVal = resources.getOrDefault(name, 0);
         int buVal = backupStorage.getOrDefault(name, 0);
         int remain = 0;
         servVal -= (int) (val * 1000);
@@ -139,9 +132,9 @@ public class TeamTown implements Town, TownWithResident {
                 service.remove(name);
             }
             if (curVal > 0) {
-                storage.put(name, curVal);
+                resources.put(name, curVal);
             } else {
-                storage.remove(name);
+                resources.remove(name);
             }
             if (buVal > 0) {
                 backupStorage.put(name, buVal);
@@ -155,7 +148,7 @@ public class TeamTown implements Town, TownWithResident {
     @Override
     public double costAsService(TownResourceType name, double val, boolean simulate) {
         int toCost = (int) (val * 1000);
-        int curVal = storage.getOrDefault(name, 0);
+        int curVal = resources.getOrDefault(name, 0);
         //int buVal=backupStorage.getOrDefault(name, 0);
         int servVal = service.getOrDefault(name, 0);
         int remain = 0;
@@ -171,10 +164,10 @@ public class TeamTown implements Town, TownWithResident {
             curVal = 0;
         }
 		
-		/*if(buVal<0) {
-			remain=-buVal;
-			buVal=0;
-		}*/
+		//if(buVal<0) {
+		//	remain=-buVal;
+		//	buVal=0;
+		//}
         costedRC -= remain;
         int costed = toCost - remain;
         if (!simulate) {
@@ -184,15 +177,15 @@ public class TeamTown implements Town, TownWithResident {
                 service.remove(name);
             }
             if (curVal > 0) {
-                storage.put(name, curVal);
+                resources.put(name, curVal);
             } else {
-                storage.remove(name);
+                resources.remove(name);
             }
-			/*if(buVal>0) {
-				backupStorage.put(name, buVal);
-			}else {
-				backupStorage.remove(name);
-			}*/
+			//if(buVal>0) {
+			//	backupStorage.put(name, buVal);
+			//}else {
+			//	backupStorage.remove(name);
+			//}
             if (costedRC > 0) {
                 costedRC += costedService.getOrDefault(name, 0);
                 costedService.put(name, costedRC);
@@ -223,8 +216,8 @@ public class TeamTown implements Town, TownWithResident {
     }
 
     public void finishWork() {
-        storage.putAll(costedService);
-        for (Entry<TownResourceType, Integer> ent : storage.entrySet()) {
+        resources.putAll(costedService);
+        for (Entry<TownResourceType, Integer> ent : resources.entrySet()) {
             int max = getIntMaxStorage(ent.getKey());
             if (ent.getValue() > max) {
                 ent.setValue(max);
@@ -232,25 +225,25 @@ public class TeamTown implements Town, TownWithResident {
         }
     }
 
-    @Override
+
     public double get(TownResourceType name) {
-        int val = storage.getOrDefault(name, 0);
+        int val = resources.getOrDefault(name, 0);
         val += backupStorage.getOrDefault(name, 0);
         val += service.getOrDefault(name, 0);
 
         return val / 1000d;
     }
+    */
 
-    public Map<TownResourceType, Double> getResources() {
-        Map<TownResourceType, Double> ret = new EnumMap<>(TownResourceType.class);
-        for (Entry<TownResourceType, Integer> ent : storage.entrySet()) {
-            int val = ent.getValue();
-            val += backupStorage.getOrDefault(ent.getKey(), 0);
-            val += service.getOrDefault(ent.getKey(), 0);
-            ret.put(ent.getKey(), val / 1000d);
-        }
-        return ret;
+    /**
+     * Get the resource manager.
+     * Use methods in TownResourceManager to change resources in town.
+     * @return the town resource manager
+     */
+    public TownResourceManager getResourceManager() {
+        return resources;
     }
+
 
     /**
      * Get the blocks and their worker data.
@@ -346,10 +339,6 @@ public class TeamTown implements Town, TownWithResident {
      */
     public void setName(String name) {
         this.data.name = name;
-    }
-
-    private int getIntMaxStorage(TownResourceType name) {
-        return maxStorage.computeIfAbsent(name, t -> t.getIntMaxStorage(this));
     }
 
     @Override

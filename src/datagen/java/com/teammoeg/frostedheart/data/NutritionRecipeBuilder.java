@@ -19,6 +19,11 @@ import net.minecraftforge.registries.ForgeRegistries;
 import javax.annotation.Nullable;
 
 public class  NutritionRecipeBuilder  implements RecipeBuilder {
+	// In CSV
+	// Gr=谷物
+	// Va=蔬菜
+	// Oi=油脂
+	// Pt=蛋白
 	private float fat,carbohydrate,protein,vegetable;
 	protected Item item;
 	private final Advancement.Builder advancement = Advancement.Builder.recipeAdvancement();

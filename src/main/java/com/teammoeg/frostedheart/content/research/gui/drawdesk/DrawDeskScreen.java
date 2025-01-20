@@ -19,14 +19,13 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
-import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.content.research.gui.ResearchGui;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditDialog;
 import com.teammoeg.frostedheart.content.research.gui.tech.ResearchPanel;
-
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class DrawDeskScreen extends BaseScreen implements ResearchGui {
     DrawDeskContainer cx;

@@ -19,13 +19,11 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import com.teammoeg.chorda.util.CGuiHelper;
+import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
-
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
@@ -57,9 +55,9 @@ public class RequirementSlot extends Widget {
     @Override
     public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
-        GuiHelper.setupDrawing();
+        dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
-        FHGuiHelper.drawItem(matrixStack,cur, x, y,200, w / 16F, h / 16F, true, cnt!=0?String.valueOf(cnt):null);
+        CGuiHelper.drawItem(matrixStack, cur, x, y, 200, w / 16F, h / 16F, true, cnt != 0 ? String.valueOf(cnt) : null);
     }
 
     @Override

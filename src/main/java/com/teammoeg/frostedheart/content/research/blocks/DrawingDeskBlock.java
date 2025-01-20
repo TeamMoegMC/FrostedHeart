@@ -19,52 +19,50 @@
 
 package com.teammoeg.frostedheart.content.research.blocks;
 
-import java.util.UUID;
-import java.util.function.Supplier;
-
-import javax.annotation.Nullable;
-
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.base.block.FHEntityBlock;
-import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
-
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.material.PushReaction;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.team.CTeamDataManager;
+import com.teammoeg.chorda.util.mixin.IOwnerTile;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.util.client.Lang;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
-import net.minecraft.core.Direction;
-import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
-import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.network.NetworkHooks;
-import net.minecraft.core.Vec3i;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.Level;
 
-public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvider,FHEntityBlock<DrawingDeskTileEntity> {
+import javax.annotation.Nullable;
+import java.util.UUID;
+import java.util.function.Supplier;
+
+public class DrawingDeskBlock extends CBlock implements IModelOffsetProvider, CEntityBlock<DrawingDeskTileEntity> {
 
     public static final BooleanProperty IS_NOT_MAIN = BooleanProperty.create("not_multi_main");
     public static final DirectionProperty FACING = DirectionProperty.create("facing", Direction.Plane.HORIZONTAL);
@@ -72,6 +70,12 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
 
     static final VoxelShape shape = Block.box(0, 0, 0, 16, 15, 16);
     static final VoxelShape shape2 = Block.box(0, 0, 0, 16, 12, 16);
+
+    public DrawingDeskBlock(Properties blockProps) {
+        super(blockProps);
+        this.registerDefaultState(this.stateDefinition.any().setValue(IS_NOT_MAIN, false).setValue(BOOK, false));
+        super.setLightOpacity(0);
+    }
 
     private static Direction getNeighbourDirection(boolean b, Direction directionIn) {
         return !b ? directionIn : directionIn.getOpposite();
@@ -81,14 +85,11 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
         worldIn.setBlock(pos, state.setValue(BOOK, hasBook), 3);
     }
 
-    public DrawingDeskBlock(Properties blockProps) {
-        super(blockProps);
-        this.registerDefaultState(this.stateDefinition.any().setValue(IS_NOT_MAIN, false).setValue(BOOK, false));
-        super.setLightOpacity(0);
+    public Supplier<BlockEntityType<DrawingDeskTileEntity>> getBlock() {
+        return FHBlockEntityTypes.DRAWING_DESK;
     }
-	public Supplier<BlockEntityType<DrawingDeskTileEntity>> getBlock(){
-		return FHBlockEntityTypes.DRAWING_DESK;
-	};
+
+    ;
 
     @Override
     public boolean triggerEvent(BlockState state, Level worldIn, BlockPos pos, int id, int param) {
@@ -141,7 +142,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
     }
 
     @Override
-    public boolean hasTileEntity(BlockPos p,BlockState state) {
+    public boolean hasTileEntity(BlockPos p, BlockState state) {
         return !state.getValue(IS_NOT_MAIN);
     }
 
@@ -162,10 +163,10 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
                     pos = pos.relative(getNeighbourDirection(state.getValue(IS_NOT_MAIN), state.getValue(FACING)));
                 }
                 BlockEntity ii = Utils.getExistingTileEntity(worldIn, pos);
-                UUID crid = FHTeamDataManager.get(player).getId();
+                UUID crid = CTeamDataManager.get(player).getId();
                 IOwnerTile.trySetOwner(ii, crid);
                 if (crid != null && crid.equals(IOwnerTile.getOwner(ii)))
-                	NetworkHooks.openScreen((ServerPlayer) player, (MenuProvider)ii,ii.getBlockPos());
+                    NetworkHooks.openScreen((ServerPlayer) player, (MenuProvider) ii, ii.getBlockPos());
                 else
                     player.displayClientMessage(Lang.translateMessage("research.not_owned"), true);
             }

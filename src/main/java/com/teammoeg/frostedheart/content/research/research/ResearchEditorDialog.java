@@ -19,28 +19,12 @@
 
 package com.teammoeg.frostedheart.content.research.research;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.IconEditor;
-import com.teammoeg.frostedheart.content.research.gui.editor.BaseEditDialog;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditListDialog;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditUtils;
-import com.teammoeg.frostedheart.content.research.gui.editor.Editor;
-import com.teammoeg.frostedheart.content.research.gui.editor.IngredientEditor;
-import com.teammoeg.frostedheart.content.research.gui.editor.LabeledSelection;
-import com.teammoeg.frostedheart.content.research.gui.editor.LabeledTextBox;
-import com.teammoeg.frostedheart.content.research.gui.editor.LabeledTextBoxAndBtn;
-import com.teammoeg.frostedheart.content.research.gui.editor.NumberBox;
-import com.teammoeg.frostedheart.content.research.gui.editor.OpenEditorButton;
-import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
+import com.teammoeg.frostedheart.content.research.gui.editor.*;
 import com.teammoeg.frostedheart.content.research.research.clues.ClueEditor;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectEditor;
-import com.teammoeg.frostedheart.util.lang.Lang;
-
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
@@ -48,6 +32,11 @@ import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.client.gui.GuiGraphics;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class ResearchEditorDialog extends BaseEditDialog {
     public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(), Research::getFTBIcon, c).open();
@@ -85,7 +74,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
     public void addWidgets() {
         add(EditUtils.getTitle(this, "Edit/New Research"));
         add(id);
-        add(new SimpleTextButton(this, Lang.str("Reset id"), Icon.empty()) {
+        add(new SimpleTextButton(this, Components.str("Reset id"), Icon.empty()) {
             @Override
             public void onClicked(MouseButton arg0) {
                 id.setText(r.getId());
@@ -116,13 +105,13 @@ public class ResearchEditorDialog extends BaseEditDialog {
             r.getEffects().addAll(s);
             r.doIndex();
         }));
-        add(new OpenEditorButton<>(this, "Edit Clues", ClueEditor.EDITOR_LIST, r.getClues().stream().map(to->to.getClueClosure(r)).collect(Collectors.toList()), s -> {
-           // r.getClues().forEach(Clue::deleteSelf);
+        add(new OpenEditorButton<>(this, "Edit Clues", ClueEditor.EDITOR_LIST, r.getClues().stream().map(to -> to.getClueClosure(r)).collect(Collectors.toList()), s -> {
+            // r.getClues().forEach(Clue::deleteSelf);
             r.getClues().clear();
-            s.forEach(t->r.getClues().add(t.clue()));
+            s.forEach(t -> r.getClues().add(t.clue()));
             r.doIndex();
         }));
-        add(new SimpleTextButton(this, Lang.str("Remove"), Icon.empty()) {
+        add(new SimpleTextButton(this, Components.str("Remove"), Icon.empty()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -156,7 +145,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         } else {
             r.name = name.getText();
             r.setCategory(cat.getSelection());
-            r.points = (int)pts.getNum();
+            r.points = (int) pts.getNum();
             r.alwaysShow = showed.getSelection();
             r.hideEffects = hide.getSelection();
             r.showfdesc = alt.getSelection();

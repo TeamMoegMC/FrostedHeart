@@ -20,10 +20,10 @@
 package com.teammoeg.frostedheart.content.utility.incinerator;
 
 import com.simibubi.create.foundation.fluid.FluidHelper;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
-import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
+import com.teammoeg.chorda.block.CBlockInterfaces.IActiveState;
+import com.teammoeg.chorda.blockentity.CBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
+import com.teammoeg.chorda.block.CTickableBlockEntity;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundTag;
@@ -43,7 +43,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveState, FHTickableBlockEntity {
+public class OilBurnerTileEntity extends CBlockEntity implements IActiveState, CTickableBlockEntity {
     TagKey<Fluid> burnable = FluidTags.create(new ResourceLocation("frostedheart", "flammable_fluid"));
     FluidTank input = new FluidTank(10000, s -> s.getFluid().is(burnable));
     int vals;

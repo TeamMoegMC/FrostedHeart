@@ -19,11 +19,10 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import net.minecraft.client.gui.GuiGraphics;
-
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.IconProperties;
 import dev.ftb.mods.ftblibrary.icon.IconWithParent;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class VLineIcon extends IconWithParent {
     int x;

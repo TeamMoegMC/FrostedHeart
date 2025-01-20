@@ -1,12 +1,12 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.chorda.util.io.SerializeUtil;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkHooks;
 
 public class HeatHandler {
     public static void openHeatScreen(ServerPlayer spe, HeatNetwork network) {
-        NetworkHooks.openScreen(spe, network, e -> SerializeUtil.writeList(e, network.endpoints,
+        NetworkHooks.openScreen(spe, network, e -> SerializeUtil.writeList(e, network.getEndpoints(),
                 HeatEndpoint::writeNetwork));
     }
 }

@@ -19,22 +19,17 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.util.io.codec.DataOps;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class FHInsightSyncPacket implements FHMessage {
+public class FHInsightSyncPacket implements CMessage {
     int insight;
     int insightLevel;
     int usedInsightLevel;
@@ -46,7 +41,7 @@ public class FHInsightSyncPacket implements FHMessage {
     }
 
     public FHInsightSyncPacket(TeamDataHolder team) {
-        TeamResearchData data = team.getData(SpecialDataTypes.RESEARCH_DATA);
+        TeamResearchData data = team.getData(FHSpecialDataTypes.RESEARCH_DATA);
         this.insight = data.getInsight();
         this.insightLevel = data.getInsightLevel();
         this.usedInsightLevel = data.getUsedInsightLevel();

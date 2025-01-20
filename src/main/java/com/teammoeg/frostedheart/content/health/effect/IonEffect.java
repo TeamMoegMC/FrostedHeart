@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.health.effect;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
+import com.teammoeg.frostedheart.bootstrap.reference.FHDamageSources;
 import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
 
 import net.minecraft.world.entity.LivingEntity;
@@ -47,7 +48,7 @@ public class IonEffect extends MobEffect {
 
     @Override
     public void applyEffectTick(LivingEntity entityLivingBaseIn, int amplifier) {
-        entityLivingBaseIn.hurt(FHDamageTypes.createSource(entityLivingBaseIn.level(), FHDamageTypes.RAD, entityLivingBaseIn), (float) (1 + (amplifier) * 0.5));
+        entityLivingBaseIn.hurt(FHDamageSources.radiation(entityLivingBaseIn.level()), (float) (1 + (amplifier) * 0.5));
     }
 
 }

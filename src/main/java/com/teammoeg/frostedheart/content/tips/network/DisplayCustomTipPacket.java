@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.tips.network;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import net.minecraft.network.FriendlyByteBuf;
@@ -8,7 +8,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public record DisplayCustomTipPacket(Tip tip) implements FHMessage {
+public record DisplayCustomTipPacket(Tip tip) implements CMessage {
 
     public DisplayCustomTipPacket(FriendlyByteBuf buffer) {
         this(Tip.builder("").fromNBT(buffer.readNbt()).build());

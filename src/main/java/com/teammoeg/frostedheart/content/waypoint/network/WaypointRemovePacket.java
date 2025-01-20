@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.waypoint.network;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.WaypointManager;
 import net.minecraft.network.FriendlyByteBuf;
@@ -9,7 +9,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public record WaypointRemovePacket(String id) implements FHMessage {
+public record WaypointRemovePacket(String id) implements CMessage {
 
     public WaypointRemovePacket(FriendlyByteBuf buffer) {
         this(buffer.readUtf());

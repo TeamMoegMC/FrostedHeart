@@ -3,9 +3,7 @@ package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.OrderedRenderableContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 public abstract class GLLayerContent extends OrderedRenderableContent {
 

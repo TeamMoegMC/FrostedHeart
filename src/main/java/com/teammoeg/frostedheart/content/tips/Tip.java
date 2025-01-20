@@ -7,9 +7,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.logging.LogUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHColorHelper;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.ColorHelper;
+import com.teammoeg.chorda.util.lang.Components;
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -17,8 +17,6 @@ import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.util.Size2i;
 import org.slf4j.Logger;
@@ -33,7 +31,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -41,13 +38,18 @@ import java.util.List;
 public class Tip {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    public static final Tip EMPTY = Tip.builder("empty").error(ErrorType.OTHER, Lang.tips("error.not_exists").component()).build();
+    public static final Component ERROR_DESC = Component.translatable("tips.frostedheart.error.desc");
+    public static final Tip EMPTY = Tip.builder("empty").error(ErrorType.OTHER,Component.translatable("tips.frostedheart.error.other"), ERROR_DESC).build();
 
+
+    /**
+     * Tip 的 ID
+     */
+    private final String id;
     /**
      * 显示内容
      */
     private final List<Component> contents;
-    private final String id;
     /**
      * 在条目列表中的分类
      */
@@ -116,11 +118,30 @@ public class Tip {
         this.backgroundColor = builder.BGColor;
     }
 
+    public void display() {
+        TipManager.INSTANCE.display().general(this);
+    }
+
+    public void forceDisplay() {
+        TipManager.INSTANCE.display().force(this);
+    }
+
     public boolean hasNext() {
         return TipManager.INSTANCE.hasTip(nextTip);
     }
 
     public boolean saveAsFile() {
+        if (this.id.isBlank()) {
+            builder("exception").error(ErrorType.SAVE, Component.translatable("tips.frostedheart.error.load.no_id")).build().forceDisplay();
+            return false;
+        } else if (isTipIdInvalid(this.id)) {
+            builder("exception").error(ErrorType.SAVE, Component.literal("ID: " + this.id), Component.translatable("tips.frostedheart.error.invalid_id")).build().forceDisplay();
+            return false;
+        } else if (TipManager.INSTANCE.hasTip(this.id)) {
+            builder("exception").error(ErrorType.SAVE, Component.literal("ID: " + this.id), Component.translatable("tips.frostedheart.error.load.duplicate_id")).build().forceDisplay();
+            return false;
+        }
+
         File file = new File(TipManager.TIP_PATH, this.id + ".json");
         try (FileWriter writer = new FileWriter(file)) {
             String json = GSON.toJson(toJson());
@@ -128,7 +149,7 @@ public class Tip {
             return true;
         } catch (IOException e) {
             LOGGER.error("Unable to save file: '{}'", file, e);
-            Tip.builder("exception").error(ErrorType.SAVE, e, Lang.str(file.getName())).forceDisplay();
+            Tip.builder("exception").error(ErrorType.SAVE, e).build().forceDisplay();
             return false;
         }
     }
@@ -152,7 +173,7 @@ public class Tip {
         nbt.putInt("fontColor", fontColor);
         nbt.putInt("backgroundColor", backgroundColor);
         var toAddContents = new ListTag();
-        this.contents.stream().map(content -> StringTag.valueOf(getKeyOrElseStr(content))).forEach(toAddContents::add);
+        this.contents.stream().map(content -> StringTag.valueOf(Components.getKeyOrElseStr(content))).forEach(toAddContents::add);
         nbt.put("contents", toAddContents);
         return nbt;
     }
@@ -171,17 +192,9 @@ public class Tip {
         json.addProperty("fontColor", Integer.toHexString(fontColor).toUpperCase());
         json.addProperty("backgroundColor", Integer.toHexString(backgroundColor).toUpperCase());
         var toAddContents = new JsonArray();
-        this.contents.stream().map(Tip::getKeyOrElseStr).forEach(toAddContents::add);
+        this.contents.stream().map(Components::getKeyOrElseStr).forEach(toAddContents::add);
         json.add("contents", toAddContents);
         return json;
-    }
-
-    private static String getKeyOrElseStr(Component component) {
-        if (component instanceof MutableComponent c && (c.getContents() instanceof TranslatableContents t)) {
-            return t.getKey();
-        } else {
-            return component.getString();
-        }
     }
 
     public static Tip.Builder builder(String id) {
@@ -193,7 +206,7 @@ public class Tip {
         Tip.Builder builder = builder("exception");
         if (!filePath.exists()) {
             LOGGER.error("File does not exists '{}'", filePath);
-            builder.error(ErrorType.LOAD, Lang.str(filePath.toString()), Lang.tips("error.file_not_exists").component());
+            builder.error(ErrorType.LOAD, Component.literal(filePath.toString()),Component.translatable("tips.frostedheart.error.load.file_not_exists", ERROR_DESC));
         } else {
             try {
                 String content = new String(Files.readAllBytes(Paths.get(String.valueOf(filePath))));
@@ -202,19 +215,23 @@ public class Tip {
 
             } catch (JsonSyntaxException e) {
                 LOGGER.error("Invalid JSON format '{}'", filePath, e);
-                builder.error(ErrorType.LOAD, e, Lang.str(builder.id), Lang.tips("error.invalid_json").component());
+                builder.error(ErrorType.LOAD, e, Component.literal(builder.id),Component.translatable("tips.frostedheart.error.load.invalid_json", ERROR_DESC));
 
             } catch (Exception e) {
                 LOGGER.error("Unable to load file '{}'", filePath, e);
-                builder.error(ErrorType.LOAD, e, Lang.str(builder.id), Lang.tips("error.other").component());
+                builder.error(ErrorType.LOAD, e, Component.literal(builder.id),Component.translatable("tips.frostedheart.error.other"), ERROR_DESC);
             }
         }
         return builder.build();
     }
 
+    public static boolean isTipIdInvalid(String id) {
+        return id.matches(".*[<>:\"/\\\\|?*§].*");
+    }
+
     public static class Builder {
         private final List<Component> contents = new ArrayList<>();
-        private String id;
+        private String id = "";
         private String category = "";
         private String nextTip = "";
         private ResourceLocation image;
@@ -225,22 +242,17 @@ public class Tip {
         private boolean pin;
         private boolean temporary;
         private int displayTime = 30000;
-        private int fontColor = FHColorHelper.CYAN;
-        private int BGColor = FHColorHelper.BLACK;
+        private int fontColor = ColorHelper.CYAN;
+        private int BGColor = ColorHelper.BLACK;
 
         private boolean editable = true;
 
         public Builder(String id) {
+            if (isTipIdInvalid(id)) {
+                error(ErrorType.LOAD, Component.literal("ID: " + id), Component.translatable("tips.frostedheart.error.invalid_id"));
+            }
             this.id = id;
             setTemporary();
-        }
-
-        public void display() {
-            TipManager.INSTANCE.display().general(build());
-        }
-
-        public void forceDisplay() {
-            TipManager.INSTANCE.display().force(build());
         }
 
         public Tip build() {
@@ -269,6 +281,10 @@ public class Tip {
             if (!editable) return this;
             this.contents.addAll(texts);
             return this;
+        }
+
+        public Builder lines(Component... texts) {
+            return lines(List.of(texts));
         }
 
         public Builder clearContents() {
@@ -377,29 +393,28 @@ public class Tip {
                 if (!location.isBlank()) image(ResourceLocation.tryParse(location));
 
                 var contents = nbt.getList("contents", Tag.TAG_STRING);
-                var list = contents.stream().map(tag -> Lang.translateOrElseStr(tag.getAsString())).toList();
+                var list = contents.stream().map(tag -> Components.translateOrElseStr(tag.getAsString())).toList();
                 this.contents.addAll(list);
             }
             if (id.isBlank()) {
-                error(ErrorType.OTHER, Lang.str("NBT does not contain tip"));
+                error(ErrorType.OTHER, Component.literal("NBT does not contain a tip"));
             }
             return this;
         }
 
         public Builder fromJson(JsonObject json) {
-            if (!editable) return this;
+            if (!editable || json == null) return this;
 
             if (json.has("id")) {
                 String s = json.get("id").getAsString();
                 if (s.isBlank()) {
-                    error(ErrorType.LOAD, Lang.str(id), Lang.tips("error.no_id").component());
-                    id = "exception";
-                    return this;
+                    error(ErrorType.LOAD,Component.translatable("tips.frostedheart.error.load.no_id"));
+                } else if (isTipIdInvalid(s)) {
+                    error(ErrorType.LOAD, Component.literal("ID: " + s), Component.translatable("tips.frostedheart.error.invalid_id"));
                 }
                 id = s;
             } else {
-                error(ErrorType.LOAD, Lang.str(id), Lang.tips("error.no_id").component());
-                id = "exception";
+                error(ErrorType.LOAD,Component.translatable("tips.frostedheart.error.load.no_id"));
                 return this;
             }
 
@@ -408,12 +423,12 @@ public class Tip {
                 if (jsonContents != null) {
                     for (int i = 0; i < jsonContents.size(); i++) {
                         String s = jsonContents.get(i).getAsString();
-                        line(Lang.translateOrElseStr(s));
+                        line(Components.translateOrElseStr(s));
                     }
                 }
             }
             if (this.contents.isEmpty()) {
-                error(ErrorType.LOAD, Lang.str(id), Lang.tips("error.empty").component());
+                error(ErrorType.LOAD, Component.literal("ID: " + id), Component.translatable("tips.frostedheart.error.load.empty"));
                 return this;
             }
 
@@ -424,32 +439,31 @@ public class Tip {
                     if (image != null) {
                         image(image);
                     } else {
-                        error(ErrorType.LOAD, Lang.str(id), Lang.tips("error.invalid_image", location).component());
+                        error(ErrorType.LOAD, Component.literal("ID: " + id), Component.translatable("tips.frostedheart.error.load.invalid_image", location));
                         return this;
                     }
                 }
             }
 
             if (json.has("category"       )) category     (json.get("category").getAsString());
-            if (json.has("next"           )) nextTip      (json.get("next").getAsString());
+            if (json.has("nextTip"        )) nextTip      (json.get("nextTip").getAsString());
             if (json.has("alwaysVisible"  )) alwaysVisible(json.get("alwaysVisible").getAsBoolean());
             if (json.has("onceOnly"       )) onceOnly     (json.get("onceOnly").getAsBoolean());
             if (json.has("hide"           )) hide         (json.get("hide").getAsBoolean());
             if (json.has("pin"            )) pin          (json.get("pin").getAsBoolean());
-            if (json.has("visibleTime"    )) displayTime  (Math.max(json.get("visibleTime").getAsInt(), 0));
-            if (json.has("fontColor"      )) fontColor    (getColorOrElse(json, "fontColor", FHColorHelper.CYAN));
-            if (json.has("backgroundColor")) BGColor      (getColorOrElse(json, "backgroundColor", FHColorHelper.BLACK));
+            if (json.has("displayTime"    )) displayTime  (Math.max(json.get("displayTime").getAsInt(), 0));
+            if (json.has("fontColor"      )) fontColor    (getColorOrElse(json, "fontColor", ColorHelper.CYAN));
+            if (json.has("backgroundColor")) BGColor      (getColorOrElse(json, "backgroundColor", ColorHelper.BLACK));
 
             temporary = false;
             return this;
         }
 
-        public Builder error(ErrorType type, Component... descriptions) {
+        public Builder error(ErrorType type, Collection<Component> descriptions) {
             clearContents()
-                    .line(Lang.tips("error." + type.key).component())
-                    .lines(Arrays.asList(descriptions))
-                    .line(Lang.tips("error.desc").component())
-                    .color(FHColorHelper.RED, FHColorHelper.BLACK)
+                    .line(Component.translatable("tips.frostedheart.error." + type.key))
+                    .lines(descriptions)
+                    .color(ColorHelper.RED, ColorHelper.BLACK)
                     .alwaysVisible(true)
                     .setTemporary()
                     .pin(true);
@@ -457,9 +471,14 @@ public class Tip {
             return this;
         }
 
+        public Builder error(ErrorType type, Component... descriptions) {
+            return error(type, List.of(descriptions));
+        }
+
         public Builder error(ErrorType type, Exception exception, Component... descriptions) {
-            return error(type, descriptions)
-                    .line(Lang.str(exception.getMessage()));
+            var desc = new ArrayList<>(List.of(descriptions));
+            desc.add(Component.literal(exception.getMessage()));
+            return error(type, desc);
         }
 
         private void imageSize(ResourceLocation location) {
@@ -474,18 +493,18 @@ public class Tip {
                     }
                 } catch (IOException e) {
                     LOGGER.error("Invalid texture resource location {}", location, e);
-                    error(ErrorType.LOAD, e, Lang.tips("error.invalid_image").component());
+                    error(ErrorType.LOAD, e,Component.translatable("tips.frostedheart.error.load.invalid_image", location));
                 }
             }
             this.image = null;
-            error(ErrorType.LOAD, Lang.tips("error.invalid_image").component());
+            error(ErrorType.LOAD,Component.translatable("tips.frostedheart.error.load.invalid_image", location));
         }
 
         private int getColorOrElse(JsonObject json, String name, int defColor) {
             try {
                 return Integer.parseUnsignedInt(json.get(name).getAsString(), 16);
             } catch (NumberFormatException e) {
-                line(Lang.tips("error.invalid_digit", name).component());
+                error(ErrorType.LOAD,Component.translatable("tips.frostedheart.error.load.invalid_digit", name));
                 return defColor;
             }
         }

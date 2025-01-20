@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.utility.heatervest;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.model.FHArmorBaseModel;
+import com.teammoeg.chorda.model.CArmorModel;
 
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.model.HumanoidModel;
@@ -36,7 +36,7 @@ import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.world.entity.LivingEntity;
 
-public class HeaterVestModel<T extends LivingEntity> extends FHArmorBaseModel<T> {
+public class HeaterVestModel<T extends LivingEntity> extends CArmorModel<T> {
 	public static final ModelLayerLocation HEATER_VEST_LAYER=new ModelLayerLocation(FHMain.rl("heater_vest"), "main");
     public static LayerDefinition createLayer() {
         MeshDefinition mesh = HumanoidModel.createMesh(CubeDeformation.NONE, 0.0F);

@@ -4,14 +4,12 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.health.network.PlayerNutritionSyncPacket;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
-import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.chorda.util.io.NBTSerializable;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -19,13 +17,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.network.PacketDistributor;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
 
 public class NutritionCapability implements NBTSerializable {
+
 
     public record Nutrition(float fat , float carbohydrate, float protein , float vegetable){
         public Nutrition(){
@@ -49,8 +46,7 @@ public class NutritionCapability implements NBTSerializable {
     }
 
     @Override
-    public void save(CompoundTag nbt, boolean isPacket) {
-        CompoundTag compound = new CompoundTag();
+    public void save(CompoundTag compound, boolean isPacket) {
         compound.putFloat("fat", nutrition.fat);
         compound.putFloat("carbohydrate", nutrition.carbohydrate);
         compound.putFloat("protein", nutrition.protein);
@@ -125,18 +121,24 @@ public class NutritionCapability implements NBTSerializable {
         syncToClientOnRestore(player);
     }
 
+    /**
+     * 如一个食物营养值为0.1，0，0，0.2，饱食度是4，那么这个食物给玩家增加的基础营养值就是0.1*4,0,0,0.2*4
+     * 再乘以营养增加比例，默认是40
+     * @param player 玩家
+     * @param food 食物
+     */
     public void eat(Player player, ItemStack food) {
         if(!food.isEdible()) return;
         Level level = player.level();
         NutritionRecipe wRecipe = NutritionRecipe.getRecipeFromItem(level, food);
+        if(wRecipe == null) return;
         int nutrition = food.getFoodProperties(player).getNutrition();
-        //因为只看食物自己的属性会比较低，加的点数不够一分钟的消耗，所以需要再乘一个系数
-        Nutrition n = wRecipe.getNutrition().scale(nutrition).scale(40.0f);
+        Nutrition recipeNutrition = wRecipe.getNutrition();
+        Nutrition n = recipeNutrition.scale(nutrition).scale(FHConfig.SERVER.nutritionGainRate.get());
         modifyNutrition(player, n);
     }
 
     public void consume(Player player) {
-        // 这个比例可以放到Config里
         float radio = - 0.1f * FHConfig.SERVER.nutritionConsumptionRate.get();
 
         Nutrition nutrition = get();

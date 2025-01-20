@@ -2,14 +2,14 @@ package com.teammoeg.frostedheart.content.scenario.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.chorda.util.io.SerializeUtil;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class ServerSenarioActPacket implements FHMessage {
+public class ServerSenarioActPacket implements CMessage {
     private final String title;
     private final String subtitle;
     public ServerSenarioActPacket(FriendlyByteBuf buffer) {

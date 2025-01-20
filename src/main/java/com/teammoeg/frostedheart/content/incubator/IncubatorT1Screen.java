@@ -24,7 +24,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableList;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.info.FluidInfoArea;
@@ -36,7 +36,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 public class IncubatorT1Screen extends IEContainerScreen<IncubatorT1Container> {
-    private static final ResourceLocation TEXTURE = Lang.makeTextureLocation("incubator");
+    private static final ResourceLocation TEXTURE = FHClientUtils.makeTextureLocation("incubator");
     private IncubatorTileEntity tile;
 
     public IncubatorT1Screen(IncubatorT1Container container, Inventory inv, Component title) {

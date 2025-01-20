@@ -21,10 +21,11 @@ package com.teammoeg.frostedheart.infrastructure.command;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -45,17 +46,18 @@ public class TemperatureCommand {
         LiteralArgumentBuilder<CommandSourceStack> get = Commands.literal("get").executes((ct) -> {
                     Player player = ct.getSource().getPlayerOrException();
                     PlayerTemperatureData.getCapability(player).ifPresent(data -> {
-                        ct.getSource().sendSuccess(()-> Lang.str("Body Temperature: " + data.getBodyTemp()), true);
-                        ct.getSource().sendSuccess(()-> Lang.str("Environment Temperature: " + data.getEnvTemp()), true);
-                        ct.getSource().sendSuccess(()-> Lang.str("Feel Temperature: " + data.getFeelTemp()), true);
-                        ct.getSource().sendSuccess(()-> Lang.str("Previous Temperature: " + data.getPreviousTemp()), true);
-                        ct.getSource().sendSuccess(()-> Lang.str("Self-Heating Difficulty: " + data.getDifficulty().name()), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Body Temperature: " + data.getBodyTemp()), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Environment Temperature: " + data.getEnvTemp()), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Feel Temperature: " + data.getFeelTemp()), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Previous Temperature: " + data.getPreviousTemp()), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Self-Heating Difficulty: " + data.getDifficulty().name()), true);
                     });
                     return Command.SINGLE_SUCCESS;
                 });
 
         // Set difficulty
         LiteralArgumentBuilder<CommandSourceStack> set = Commands.literal("set")
+                // Set difficulty
                 .then(Commands.literal("difficulty")
                         .then(Commands.literal("easy").executes((ct) -> {
                             Player player = ct.getSource().getPlayerOrException();
@@ -82,6 +84,36 @@ public class TemperatureCommand {
                             Player player = ct.getSource().getPlayerOrException();
                             PlayerTemperatureData.getCapability(player).ifPresent(data -> {
                                 data.setDifficulty(FHTemperatureDifficulty.hardcore);
+                            });
+                            return Command.SINGLE_SUCCESS;
+                        }))
+                )
+                // Set bodyTemp
+                .then(Commands.literal("bodyTemp")
+                        .then(Commands.argument("value", FloatArgumentType.floatArg()).executes((ct) -> {
+                            Player player = ct.getSource().getPlayerOrException();
+                            PlayerTemperatureData.getCapability(player).ifPresent(data -> {
+                                data.setBodyTemp(ct.getArgument("amount", Float.class));
+                            });
+                            return Command.SINGLE_SUCCESS;
+                        }))
+                )
+                // Set envTemp
+                .then(Commands.literal("envTemp")
+                        .then(Commands.argument("value", FloatArgumentType.floatArg()).executes((ct) -> {
+                            Player player = ct.getSource().getPlayerOrException();
+                            PlayerTemperatureData.getCapability(player).ifPresent(data -> {
+                                data.setEnvTemp(ct.getArgument("amount", Float.class));
+                            });
+                            return Command.SINGLE_SUCCESS;
+                        }))
+                )
+                // Set feelTemp
+                .then(Commands.literal("feelTemp")
+                        .then(Commands.argument("value", FloatArgumentType.floatArg()).executes((ct) -> {
+                            Player player = ct.getSource().getPlayerOrException();
+                            PlayerTemperatureData.getCapability(player).ifPresent(data -> {
+                                data.setFeelTemp(ct.getArgument("amount", Float.class));
                             });
                             return Command.SINGLE_SUCCESS;
                         }))

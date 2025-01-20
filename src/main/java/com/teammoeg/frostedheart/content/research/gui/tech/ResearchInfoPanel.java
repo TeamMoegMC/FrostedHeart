@@ -19,11 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.teammoeg.frostedheart.util.lang.Lang;
-import net.minecraft.client.gui.GuiGraphics;
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
@@ -37,14 +33,17 @@ import com.teammoeg.frostedheart.content.research.network.FHResearchControlPacke
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectBuilding;
-
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import com.teammoeg.frostedheart.util.client.Lang;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import net.minecraft.client.gui.GuiGraphics;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ResearchInfoPanel extends Panel {
 
@@ -142,7 +141,7 @@ public class ResearchInfoPanel extends Panel {
                         if (!(effect instanceof EffectBuilding))
                             continue;
                         if (effect.isHidden()) continue;
-                        LargeEffectWidget button = new LargeEffectWidget(fp, effect,detailPanel.research);
+                        LargeEffectWidget button = new LargeEffectWidget(fp, effect, detailPanel.research);
                         button.setPos(xoffset, offset);
                         fp.add(button);
                         xoffset += 32;
@@ -165,7 +164,7 @@ public class ResearchInfoPanel extends Panel {
                             continue;
                         }
                         if (effect.isHidden()) continue;
-                        EffectWidget button = new EffectWidget(fp, effect,detailPanel.research);
+                        EffectWidget button = new EffectWidget(fp, effect, detailPanel.research);
                         button.setPos(xoffset, offset);
                         fp.add(button);
                         xoffset += 17;

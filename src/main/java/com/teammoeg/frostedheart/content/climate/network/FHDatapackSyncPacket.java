@@ -24,14 +24,14 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager.DataType;
-import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.util.io.IdDataPair;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.chorda.util.io.IdDataPair;
+import com.teammoeg.chorda.util.io.SerializeUtil;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class FHDatapackSyncPacket implements FHMessage {
+public class FHDatapackSyncPacket implements CMessage {
     List<IdDataPair<?>> entries;
     DataType<?> type;
     public FHDatapackSyncPacket(DataType<?> type) {

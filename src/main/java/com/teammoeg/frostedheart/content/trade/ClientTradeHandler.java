@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.trade;
 
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;

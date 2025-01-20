@@ -19,17 +19,14 @@
 
 package com.teammoeg.frostedheart.content.research.blocks;
 
-import com.teammoeg.frostedheart.base.item.FHBaseItem;
-
+import com.teammoeg.frostedheart.item.FHBaseItem;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-
-import net.minecraft.world.item.Item.Properties;
 
 public class FHReusablePen extends FHBaseItem implements IPen {
     int lvl;
 
-    public FHReusablePen( Properties properties, int lvl) {
+    public FHReusablePen(Properties properties, int lvl) {
         super(properties);
         this.lvl = lvl;
     }

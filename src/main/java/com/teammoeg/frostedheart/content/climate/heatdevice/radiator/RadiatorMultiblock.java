@@ -19,24 +19,20 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.radiator;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
+import com.teammoeg.chorda.multiblock.CMultiblock;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class RadiatorMultiblock extends FHBaseMultiblock {
+public class RadiatorMultiblock extends CMultiblock {
     public RadiatorMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/heat_radiator"),
                 new BlockPos(0, 0, 0), new BlockPos(0, 0, 0), new BlockPos(1, 3, 1),
-                FHMultiblocks.Logic.RADIATOR);
+                FHMultiblocks.Registration.RADIATOR);
     }
 
     @Override

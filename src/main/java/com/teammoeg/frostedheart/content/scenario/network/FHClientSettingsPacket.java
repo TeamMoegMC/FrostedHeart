@@ -21,16 +21,15 @@ package com.teammoeg.frostedheart.content.scenario.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import com.teammoeg.frostedheart.content.scenario.runner.IScenarioVaribles;
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVariables;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class FHClientSettingsPacket implements FHMessage {
+public class FHClientSettingsPacket implements CMessage {
     double scale;
     int scaledWidth;
     int scaledHeight;

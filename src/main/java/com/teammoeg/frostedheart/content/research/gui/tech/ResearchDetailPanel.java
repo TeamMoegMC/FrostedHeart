@@ -19,69 +19,27 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import java.util.List;
-
-import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.content.research.research.Research;
-
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
-import dev.ftb.mods.ftblibrary.ui.TextField;
-import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
+import java.util.List;
+
 public class ResearchDetailPanel extends Panel {
-    public static class DescPanel extends Panel {
-        ResearchDetailPanel detailPanel;
-
-        public DescPanel(ResearchDetailPanel panel) {
-            super(panel);
-            detailPanel = panel;
-        }
-
-        @Override
-        public void addWidgets() {
-            List<Component> itxs = detailPanel.research.getDesc();
-            int offset = 0;
-            for (Component itx : itxs) {
-                TextField desc = new TextField(this);
-                add(desc);
-                desc.setMaxWidth(width);
-                desc.setPosAndSize(0, offset, width, height);
-                desc.setText(itx);
-                desc.setColor(TechIcons.text);
-                offset += desc.height + 2;
-            }
-            if (offset + 3 > height) {
-                detailPanel.scrolldetail.unhide();
-               // detailPanel.scrolldetail.setMaxValue(offset + 3);
-            } else
-                detailPanel.scrolldetail.hide();
-            //this.setHeight(offset+3);
-
-        }
-
-        @Override
-        public void alignWidgets() {
-
-        }
-    }
+    public PanelScrollBar scrollInfo;
+    public TechScrollBar scrolldetail;
     Research research;
     FHIcon icon;
     ResearchDashboardPanel dashboardPanel;
     ResearchInfoPanel infoPanel;
     DescPanel descPanel;
-
     ResearchPanel researchScreen;
-    public PanelScrollBar scrollInfo;
-
-    public TechScrollBar scrolldetail;
 
     public ResearchDetailPanel(ResearchPanel panel) {
         super(panel);
@@ -192,5 +150,41 @@ public class ResearchDetailPanel extends Panel {
         researchScreen.setModal(this);
         //researchScreen.refreshWidgets();
 
+    }
+
+    public static class DescPanel extends Panel {
+        ResearchDetailPanel detailPanel;
+
+        public DescPanel(ResearchDetailPanel panel) {
+            super(panel);
+            detailPanel = panel;
+        }
+
+        @Override
+        public void addWidgets() {
+            List<Component> itxs = detailPanel.research.getDesc();
+            int offset = 0;
+            for (Component itx : itxs) {
+                TextField desc = new TextField(this);
+                add(desc);
+                desc.setMaxWidth(width);
+                desc.setPosAndSize(0, offset, width, height);
+                desc.setText(itx);
+                desc.setColor(TechIcons.text);
+                offset += desc.height + 2;
+            }
+            if (offset + 3 > height) {
+                detailPanel.scrolldetail.unhide();
+                // detailPanel.scrolldetail.setMaxValue(offset + 3);
+            } else
+                detailPanel.scrolldetail.hide();
+            //this.setHeight(offset+3);
+
+        }
+
+        @Override
+        public void alignWidgets() {
+
+        }
     }
 }

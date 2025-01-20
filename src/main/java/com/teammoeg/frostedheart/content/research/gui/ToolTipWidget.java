@@ -19,11 +19,11 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import java.util.function.Consumer;
-
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+
+import java.util.function.Consumer;
 
 public class ToolTipWidget extends Widget {
     Consumer<TooltipList> csm;

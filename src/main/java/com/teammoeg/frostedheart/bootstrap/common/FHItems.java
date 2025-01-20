@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
-import static com.teammoeg.frostedheart.FHMain.*;
-import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.*;
-
 import java.util.function.Function;
 
 import com.simibubi.create.AllTags;
@@ -29,12 +26,12 @@ import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.item.ItemDescription;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.item.DyedItemList;
-import com.teammoeg.frostedheart.base.item.FHArmorMaterial;
-import com.teammoeg.frostedheart.base.item.FHBaseArmorItem;
-import com.teammoeg.frostedheart.base.item.FHBaseClothesItem;
-import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.base.item.FHToolMaterials;
+import com.teammoeg.frostedheart.item.DyedItemList;
+import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
+import com.teammoeg.frostedheart.item.FHBaseArmorItem;
+import com.teammoeg.frostedheart.content.climate.player.FHBaseClothesItem;
+import com.teammoeg.frostedheart.item.FHBaseItem;
+import com.teammoeg.frostedheart.item.FHToolMaterials;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
@@ -51,7 +48,6 @@ import com.teammoeg.frostedheart.content.utility.DebugItem;
 import com.teammoeg.frostedheart.content.utility.KnifeItem;
 import com.teammoeg.frostedheart.content.utility.MushroomBed;
 import com.teammoeg.frostedheart.content.utility.SoilThermometer;
-import com.teammoeg.frostedheart.content.utility.SpearItem;
 import com.teammoeg.frostedheart.content.utility.SteamBottleItem;
 import com.teammoeg.frostedheart.content.utility.ThermometerItem;
 import com.teammoeg.frostedheart.content.utility.ThermosItem;
@@ -68,7 +64,6 @@ import com.teammoeg.frostedheart.content.water.item.WoodenCupItem;
 import com.tterrag.registrate.util.entry.ItemEntry;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.food.FoodProperties;
@@ -90,7 +85,6 @@ import net.minecraftforge.registries.RegistryObject;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
 import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.forgeItemTag;
@@ -156,11 +150,86 @@ public class FHItems {
                     .lang("Wandering Refugee Spawn Egg")
                     .model(AssetLookup.existingItemModel())
                     .register();
+    /*
+    antifreeze.png
+cable.png
+deflection_coil.png
+engine_oil.png
+ferrocerium_fire_starter.png
+insulator.png
+iron_fence_remains.png
+iron_parts.png
+iron_plating.png
+iron_truss_remains.png
+lead_acid_battery.png
+moly_lubricant.png
+rust_remover.png
+silicone_grease.png
+stator.png
+thinner.png
+     */
+    // add these as simple taggedIngredient, with the tag FHTags.GARBAGE.tag
+    public static ItemEntry<Item> ANTIFREEZE =
+            taggedIngredient("antifreeze",
+                    FHTags.Items.GARBAGE.tag);
+    public static ItemEntry<Item> CABLE =
+            taggedIngredient("cable",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> DEFLECTION_COIL =
+            taggedIngredient("deflection_coil",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> ENGINE_OIL =
+            taggedIngredient("engine_oil",
+                    FHTags.Items.GARBAGE.tag);
+    public static ItemEntry<Item> FERROCERIUM_FIRE_STARTER =
+            taggedIngredient("ferrocerium_fire_starter",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> INSULATOR =
+            taggedIngredient("insulator",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> IRON_FENCE_REMAINS =
+            taggedIngredient("iron_fence_remains",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> IRON_PARTS =
+            taggedIngredient("iron_parts",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> IRON_PLATING =
+            taggedIngredient("iron_plating",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> IRON_TRUSS_REMAINS =
+            taggedIngredient("iron_truss_remains",
+                    FHTags.Items.GARBAGE.tag,
+                    FHTags.Items.IGNITION_METAL.tag);
+    public static ItemEntry<Item> LEAD_ACID_BATTERY =
+            taggedIngredient("lead_acid_battery", FHTags.Items.GARBAGE.tag);
+    public static ItemEntry<Item> MOLY_LUBRICANT =
+            taggedIngredient("moly_lubricant", FHTags.Items.GARBAGE.tag);
+    public static ItemEntry<Item> RUST_REMOVER =
+            taggedIngredient("rust_remover", FHTags.Items.GARBAGE.tag);
+    public static ItemEntry<Item> SILICONE_GREASE =
+            taggedIngredient("silicone_grease", FHTags.Items.GARBAGE.tag);
+    public static ItemEntry<Item> STATOR =
+            taggedIngredient("stator", FHTags.Items.GARBAGE.tag);
+    public static ItemEntry<Item> THINNER =
+            taggedIngredient("thinner", FHTags.Items.GARBAGE.tag);
+
 
     static {
         REGISTRATE.setCreativeTab(FHTabs.INGREDIENTS);
     }
 
+    // ice_chips
+    public static ItemEntry<FHSnowballItem> ICE_CHIP =
+            REGISTRATE.item("ice_chip", FHSnowballItem::new)
+                    .tag(forgeItemTag("raw_materials/ice"))
+                    .register();
     // Soil drops
     public static ItemEntry<Item> PEAT =
             taggedIngredient("peat",
@@ -1450,10 +1519,6 @@ public class FHItems {
             REGISTRATE.item("makeshift_hoe", p -> new HoeItem(FHToolMaterials.FLINT, 0, -3.0F, new Item.Properties()))
                     .tag(ItemTags.HOES)
                     .register();
-    public static final ItemEntry<SpearItem> MAKESHIFT_SPEAR =
-            REGISTRATE.item("makeshift_spear", p -> new SpearItem(FHToolMaterials.FLINT, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/makeshift_spear.png"),new Item.Properties()))
-                    .tag(forgeItemTag("spears"), forgeItemTag("spears/flint"))
-                    .register();
     public static final ItemEntry<KnifeItem> BRONZE_KNIFE =
             REGISTRATE.item("bronze_knife", p -> new KnifeItem(FHToolMaterials.ALLOY, 1, -1.5F, new Item.Properties()))
                     .tag(ItemTags.SWORDS, forgeItemTag("knifes"), forgeItemTag("knifes/bronze"))
@@ -1473,10 +1538,6 @@ public class FHItems {
     public static final ItemEntry<HoeItem> BRONZE_HOE =
             REGISTRATE.item("bronze_hoe", p -> new HoeItem(FHToolMaterials.ALLOY, 0, -3.0F, new Item.Properties()))
                     .tag(ItemTags.HOES, forgeItemTag("hoes"), forgeItemTag("hoes/bronze"))
-                    .register();
-    public static final ItemEntry<SpearItem> BRONZE_SPEAR =
-            REGISTRATE.item("bronze_spear", p -> new SpearItem(FHToolMaterials.ALLOY, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/bronze_spear.png"), new Item.Properties()))
-                    .tag(forgeItemTag("spears"), forgeItemTag("spears/bronze"))
                     .register();
     public static final ItemEntry<SwordItem> BRONZE_SWORD =
             REGISTRATE.item("bronze_sword", p -> new SwordItem(FHToolMaterials.ALLOY, 3, -2.4F, new Item.Properties()))

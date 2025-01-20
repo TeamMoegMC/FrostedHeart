@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.town;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -29,6 +31,8 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.mine.MineWorker;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
+import com.teammoeg.frostedheart.content.town.resource.ResourceActionResult;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseWorker;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.nbt.CompoundTag;
@@ -53,8 +57,32 @@ public enum TownWorkerType {
     DUMMY(null, null, -1),
     HOUSE(FHBlocks.HOUSE::get, (town, workData) -> {
         double residentNum = workData.getCompound("tileEntity").getList("residents", 10).size();
-        double actualCost = town.cost(TownResourceType.PREP_FOOD, residentNum, false);
-        return Math.abs(residentNum - actualCost) < 0.001;
+        ItemResourceType[] foodTypes = new ItemResourceType[]{ItemResourceType.FOOD_GRAINS, ItemResourceType.FOOD_FRUIT_AND_VEGETABLES, ItemResourceType.FOOD_PROTEIN, ItemResourceType.FOOD_EDIBLE_OIL};
+        Map<ItemResourceType, Double> foodAmounts = new HashMap<>();
+        double totalFoods = 0;
+        for(ItemResourceType foodType : foodTypes){
+            foodAmounts.put(foodType, town.getResourceManager().get(foodType));
+            totalFoods += (foodAmounts.get(foodType));
+        }
+        if(residentNum > totalFoods) return false;
+        double toCost = residentNum * 5;
+        foodAmounts.clear();//清空这个Map的内容，之后当做costedFoods来使用
+        //duck_egg: 未来或许会按照食物的质量(result.averageLevel)和均衡程度，影响房屋内居民的健康。但目前仅做一个基础的cost内容，以消除编译错误。
+        for(ItemResourceType foodType : foodTypes){
+            ResourceActionResult result = town.getResourceManager().costHighestLevelToEmpty(foodType, residentNum);
+            foodAmounts.put(foodType, result.actualAmount());
+            toCost -= result.actualAmount();
+        }
+        if(toCost <= 0){
+            return true;
+        }
+        for(ItemResourceType foodType : foodTypes){
+            ResourceActionResult result = town.getResourceManager().costHighestLevelToEmpty(foodType, toCost);
+            foodAmounts.merge(foodType, result.actualAmount(), Double::sum);
+            toCost -= result.actualAmount();
+        }
+        return true;
+
     }, 0),
     WAREHOUSE(FHBlocks.WAREHOUSE::get, new WarehouseWorker(), 0),
     MINE(FHBlocks.MINE::get, new MineWorker(), 0, true,

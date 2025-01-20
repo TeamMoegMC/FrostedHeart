@@ -19,12 +19,12 @@
 
 package com.teammoeg.frostedheart.content.town.house;
 
-import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.MathUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import com.teammoeg.chorda.util.CMath;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -40,7 +40,7 @@ import java.util.function.Supplier;
 /**
  * A house in the town.
  */
-public class HouseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<HouseBlockEntity>{
+public class HouseBlock extends AbstractTownWorkerBlock implements CEntityBlock<HouseBlockEntity> {
     public HouseBlock(Properties blockProps) {
         super(blockProps);
     }
@@ -49,7 +49,7 @@ public class HouseBlock extends AbstractTownWorkerBlock implements FHEntityBlock
     public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, RandomSource rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
         if (stateIn.getValue(AbstractTownWorkerBlock.LIT)) {
-            ClientUtils.spawnSteamParticles(worldIn, pos);
+            FHClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }
 
@@ -61,19 +61,19 @@ public class HouseBlock extends AbstractTownWorkerBlock implements FHEntityBlock
                 return InteractionResult.FAIL;
             }
             te.refresh();
-            player.displayClientMessage(Lang.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.displayClientMessage(Lang.str(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
-            player.displayClientMessage(Lang.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.displayClientMessage(Lang.str("Raw temperature: " +
-                    MathUtils.round(te.getTemperature(), 2)), false);
-            player.displayClientMessage(Lang.str("Temperature modifier: " +
-                    MathUtils.round(te.getTemperatureModifier(), 2)), false);
-            player.displayClientMessage(Lang.str("Effective temperature: " +
-                    MathUtils.round(te.getEffectiveTemperature(), 2)), false);
-            player.displayClientMessage(Lang.str("Volume: " + (te.getVolume())), false);
-            player.displayClientMessage(Lang.str("Area: " + (te.getArea())), false);
-            player.displayClientMessage(Lang.str("Rating: " +
-                    MathUtils.round(te.getRating(), 2)), false);
+            player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.displayClientMessage(Components.str(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
+            player.displayClientMessage(Components.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(Components.str("Raw temperature: " +
+                    CMath.round(te.getTemperature(), 2)), false);
+            player.displayClientMessage(Components.str("Temperature modifier: " +
+                    CMath.round(te.getTemperatureModifier(), 2)), false);
+            player.displayClientMessage(Components.str("Effective temperature: " +
+                    CMath.round(te.getEffectiveTemperature(), 2)), false);
+            player.displayClientMessage(Components.str("Volume: " + (te.getVolume())), false);
+            player.displayClientMessage(Components.str("Area: " + (te.getArea())), false);
+            player.displayClientMessage(Components.str("Rating: " +
+                    CMath.round(te.getRating(), 2)), false);
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

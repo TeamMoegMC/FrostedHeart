@@ -19,16 +19,10 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk.game;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-import java.util.function.Consumer;
-
 import net.minecraft.nbt.CompoundTag;
+
+import java.util.*;
+import java.util.function.Consumer;
 
 public class ResearchGame {
     Card[][] cards = new Card[9][9];
@@ -156,6 +150,10 @@ public class ResearchGame {
 
     public int getLvl() {
         return lvl;
+    }
+
+    public void setLvl(int lvl) {
+        this.lvl = lvl;
     }
 
     private void getPlacable(Set<CardPos> ret) {
@@ -323,10 +321,6 @@ public class ResearchGame {
             }
         cnbt.putIntArray("cards", arr);
         return cnbt;
-    }
-
-    public void setLvl(int lvl) {
-        this.lvl = lvl;
     }
 
     public boolean tryCombine(CardPos c1, CardPos c2) {

@@ -3,11 +3,12 @@ package com.teammoeg.frostedheart.content.waypoint.waypoints;
 import com.google.gson.JsonElement;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.RenderHelper;
-import com.teammoeg.frostedheart.util.io.Writeable;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.CameraHelper;
+import com.teammoeg.chorda.util.io.Writeable;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
@@ -82,13 +83,13 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
         this.id = ID;
         this.color = color;
         this.target = target;
-        this.displayName = Lang.str(ID);
+        this.displayName = Components.str(ID);
         this.focus = false;
         this.enable = true;
         this.valid = true;
 
         if (ClientUtils.getWorld() != null) {
-            this.dimension = ClientUtils.getWorld().dimension().location();
+            this.dimension = ClientUtils.getDimLocation();
         } else {
             this.dimension = Level.OVERWORLD.location();
         }
@@ -187,7 +188,7 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     public abstract void onServerRemove();
 
     private void updateScreenPos() {
-        Vec2 pos = RenderHelper.worldPosToScreenPos(getTarget());
+        Vec2 pos = CameraHelper.worldPosToScreenPos(getTarget());
         //限制区域避免覆盖其他HUD元素
         float x = Mth.clamp(pos.x, 10, ClientUtils.screenWidth() -10);
         float y = Mth.clamp(pos.y, 25, ClientUtils.screenHeight()-25);
@@ -214,11 +215,11 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     }
 
     protected MutableComponent distanceTranslation() {
-        return Lang.translateWaypoint("distance", (int)getDistance());
+        return Lang.waypoint("distance", (int)getDistance()).component();
     }
 
     protected MutableComponent posTranslation() {
-        return Lang.translateWaypoint("position", String.format("%.2f", getTarget().x), String.format("%.2f", getTarget().y), String.format("%.2f", getTarget().z));
+        return Lang.waypoint("position", String.format("%.2f", getTarget().x), String.format("%.2f", getTarget().y), String.format("%.2f", getTarget().z)).component();
     }
 
     @Override

@@ -1,16 +1,17 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipManager;
-import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
+import com.teammoeg.chorda.widget.IconButton;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.ColumbiatWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.SunStationWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.Waypoint;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHColorHelper;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.ColorHelper;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Renderable;
@@ -32,26 +33,33 @@ public class DebugScreen extends Screen {
         super(Component.literal(""));
     }
 
+    public static void openDebugScreen() {
+        if (Minecraft.getInstance().player != null) {
+            Minecraft.getInstance().setScreen(new DebugScreen());
+        }
+    }
+
     @Override
     public void init() {
+        super.init();
         buttons.clear();
 
-        addButton(IconButton.Icon.CROSS, FHColorHelper.CYAN, "Clear Tip Render Queue", (b) ->
+        addButton(IconButton.Icon.CROSS, ColorHelper.CYAN, "Clear Tip Render Queue", (b) ->
             TipManager.INSTANCE.display().clearRenderQueue()
         );
-        addButton(IconButton.Icon.HISTORY, FHColorHelper.RED, "Reset State For All Tips", (b) ->
+        addButton(IconButton.Icon.HISTORY, ColorHelper.RED, "Reset State For All Tips", (b) ->
             TipManager.INSTANCE.state().resetAll()
         );
-        addButton(IconButton.Icon.HISTORY, FHColorHelper.CYAN, "Reload All Tips", (b) ->
+        addButton(IconButton.Icon.HISTORY, ColorHelper.CYAN, "Reload All Tips", (b) ->
             TipManager.INSTANCE.loadFromFile()
         );
-        addButton(IconButton.Icon.WRENCH, FHColorHelper.CYAN, "Open Tip Editor UI", (b) ->
+        addButton(IconButton.Icon.WRENCH, ColorHelper.CYAN, "Open Tip Editor UI", (b) ->
             ClientUtils.mc().setScreen(new TipEditorScreen())
         );
-        addButton(IconButton.Icon.BOX_ON, FHColorHelper.CYAN, "Create a Random Waypoint", (b) -> {
+        addButton(IconButton.Icon.BOX_ON, ColorHelper.CYAN, "Create a Random Waypoint", (b) -> {
             Random random = new Random();
             String uuid = UUID.randomUUID().toString();
-            Waypoint waypoint = new Waypoint(new Vec3((random.nextFloat()-0.5F)*1280, Math.abs(random.nextFloat())*256, (random.nextFloat()-0.5F)*1280), uuid, FHColorHelper.setAlpha(random.nextInt(), 1F));
+            Waypoint waypoint = new Waypoint(new Vec3((random.nextFloat()-0.5F)*1280, Math.abs(random.nextFloat())*256, (random.nextFloat()-0.5F)*1280), uuid, ColorHelper.setAlpha(random.nextInt(), 1F));
             waypoint.focus = random.nextBoolean();
             ClientWaypointManager.putWaypoint(waypoint);
         });
@@ -61,32 +69,31 @@ public class DebugScreen extends Screen {
         addButton(IconButton.Icon.BOX_ON, 0xFFF6F1D5, "Create Columbiat Waypoint", (b) ->
             ClientWaypointManager.putWaypoint(new ColumbiatWaypoint())
         );
-        addButton(IconButton.Icon.BOX, FHColorHelper.RED, "Remove The Waypoint You Are Looking At", (b) ->
+        addButton(IconButton.Icon.BOX, ColorHelper.RED, "Remove The Waypoint You Are Looking At", (b) ->
             ClientWaypointManager.getHovered().ifPresent((hovered) -> ClientWaypointManager.removeWaypoint(hovered.getId()))
         );
-        addButton(IconButton.Icon.SIGHT, FHColorHelper.CYAN, "Create a Waypoint From The Block You Are Looking At", (b) -> {
+        addButton(IconButton.Icon.SIGHT, ColorHelper.CYAN, "Create a Waypoint From The Block You Are Looking At", (b) -> {
             HitResult block = ClientUtils.getPlayer().pick(128, ClientUtils.partialTicks(), false);
             if (block.getType() == HitResult.Type.BLOCK) {
-                Waypoint waypoint = new Waypoint(((BlockHitResult)block).getBlockPos(), "picked_block", FHColorHelper.CYAN);
+                Waypoint waypoint = new Waypoint(((BlockHitResult)block).getBlockPos(), "picked_block", ColorHelper.CYAN);
                 waypoint.focus = true;
                 waypoint.displayName = ClientUtils.getWorld().getBlockState(((BlockHitResult)block).getBlockPos()).getBlock().getName();
                 ClientWaypointManager.putWaypoint(waypoint);
             }
         });
-        addButton(IconButton.Icon.TRADE, FHColorHelper.CYAN, "Toggle Debug Overlay", (b) ->
+        addButton(IconButton.Icon.TRADE, ColorHelper.CYAN, "Toggle Debug Overlay", (b) ->
             FrostedHud.renderDebugOverlay = !FrostedHud.renderDebugOverlay
         );
-        addButton(IconButton.Icon.LEAVE, FHColorHelper.CYAN, "Do Something", (b) -> {
+        addButton(IconButton.Icon.LEAVE, ColorHelper.CYAN, "Do Something", (b) -> {
             String message = debug();
-            ClientUtils.getPlayer().sendSystemMessage(Lang.str(message));
+            ClientUtils.getPlayer().sendSystemMessage(Components.str(message));
         });
-        super.init();
-//        addRenderableWidget(new TextLabelWidget(10, 10, 50, 50, Component.literal("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), ClientUtils.font()));
     }
 
     // 方便热重载debug
     private String debug() {
-        Tip tip = Tip.builder("test").line(Lang.str("test")).line(Lang.str("aaaaaaaaaaaaa")).nextTip("default").build();
+        buttons.get(0).setScale(2);
+        Tip tip = Tip.builder("test").line(Components.str("test")).line(Components.str("aaaaaaaaaaaaa")).nextTip("default").build();
         TipManager.INSTANCE.display().general(tip);
         return tip.getNextTip();
     }

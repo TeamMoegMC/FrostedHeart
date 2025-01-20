@@ -19,30 +19,30 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.research.Research;
 
 /**
  * Very Custom Clue trigger by code or manually.
  */
 public class CustomClue extends Clue {
-	public static final MapCodec<CustomClue> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		Clue.BASE_CODEC.forGetter(o->o.getData())
-		).apply(t,CustomClue::new));
+    public static final MapCodec<CustomClue> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+            Clue.BASE_CODEC.forGetter(o -> o.getData())
+    ).apply(t, CustomClue::new));
+
     public CustomClue() {
         super();
     }
 
 
     public CustomClue(BaseData data) {
-		super(data);
-	}
+        super(data);
+    }
 
 
-	public CustomClue(String name, float contribution) {
+    public CustomClue(String name, float contribution) {
         super(name, contribution);
     }
 
@@ -51,7 +51,7 @@ public class CustomClue extends Clue {
     }
 
     @Override
-    public void end(TeamDataHolder team,Research parent) {
+    public void end(TeamDataHolder team, Research parent) {
     }
 
     @Override
@@ -65,7 +65,7 @@ public class CustomClue extends Clue {
     }
 
     @Override
-    public void start(TeamDataHolder team,Research parent) {
+    public void start(TeamDataHolder team, Research parent) {
     }
 
 }

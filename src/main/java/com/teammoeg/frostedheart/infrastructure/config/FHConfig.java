@@ -231,7 +231,6 @@ public class FHConfig {
         public final ForgeConfigSpec.EnumValue<FHTemperatureDifficulty> tdiffculty;
         public final ForgeConfigSpec.ConfigValue<Double> tempSpeed;
         public final ForgeConfigSpec.BooleanValue keepEquipments;
-        public final ForgeConfigSpec.ConfigValue<Double> taskPerTick;
         public final ForgeConfigSpec.ConfigValue<Double> waterReducingRate;
         public final ForgeConfigSpec.IntValue weaknessEffectAmplifier;
         public final ForgeConfigSpec.BooleanValue resetWaterLevelInDeath;
@@ -263,6 +262,7 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Integer> maxBodyTempChange;
 
         public final ForgeConfigSpec.ConfigValue<Float> nutritionConsumptionRate;
+        public final ForgeConfigSpec.ConfigValue<Float> nutritionGainRate;
 
 
         Server(ForgeConfigSpec.Builder builder) {
@@ -314,6 +314,8 @@ public class FHConfig {
                     .define("resetWaterLevelInDeath", true);
             nutritionConsumptionRate = builder.comment("The rate of nutrition consumption.")
                     .define("nutritionConsumptionRate", 1.0f);
+            nutritionGainRate = builder.comment("The rate of nutrition gain by eating food.")
+                    .define("nutritionGainRate", 40.0f);
             builder.pop();
 
             builder.push("Worldgen");
@@ -366,8 +368,6 @@ public class FHConfig {
             fixEssJeiIssue = builder
                     .comment("Fixes JEI and Bukkit server compat issue, don't touch unless you know what you are doing.")
                     .define("fixEssJeiIssue", true);
-            taskPerTick = builder.comment("Range Detection tasks to execute per tick")
-                    .defineInRange("taskPerTick", 1, 0.005, Integer.MAX_VALUE);
             developers = builder
                     .comment("Special array of players")
                     .defineList("Player Whitelist", DEFAULT_WHITELIST, s -> true);

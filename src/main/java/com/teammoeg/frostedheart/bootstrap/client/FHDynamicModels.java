@@ -23,12 +23,12 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1Gener
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.model.DynamicBlockModelReference;
+import com.teammoeg.chorda.model.DynamicBlockModelReference;
 
 public class FHDynamicModels {
     public static void setup() {
-        T1GeneratorRenderer.FUEL = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/multiblocks/generator_fuel.obj");
-        T2GeneratorRenderer.FUEL = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/multiblocks/generator_t2_fuel.obj" );
-        MechCalcRenderer.MODEL   = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/mechanical_calculator_movable.obj");
+        T1GeneratorRenderer.FUEL = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/multiblocks/generator_fuel").register();
+        T2GeneratorRenderer.FUEL = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/multiblocks/generator_t2_fuel").register();
+        MechCalcRenderer.MODEL   = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/mechanical_calculator_movable").register();
     }
 }
