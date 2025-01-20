@@ -42,7 +42,6 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
 import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
-import com.teammoeg.frostedheart.content.climate.player.WardrobeBlock;
 import com.teammoeg.frostedheart.content.decoration.BoneBlock;
 import com.teammoeg.frostedheart.content.decoration.OddMark;
 import com.teammoeg.frostedheart.content.decoration.PackageBlock;
@@ -1952,19 +1951,6 @@ public class FHBlocks {
             .build()
     );
 
-    public static final BlockEntry<WardrobeBlock> WARDROBE = REGISTRATE.block("wardrobe", WardrobeBlock::new)
-            .initialProperties(() -> IRON_BLOCK)
-            .properties(t -> t.mapColor(MapColor.COLOR_PINK)
-                    .sound(SoundType.WOOD)
-                    .requiresCorrectToolForDrops()
-                    .strength(35, 600)
-                    .noOcclusion())
-            .tag(FHTags.Blocks.METAL_MACHINES.tag)
-            .blockstate(FHBlockStateGen.simpleCubeAll("wardrobe"))
-            .transform(tagBlockAndItem("storage_blocks/wardrobe"))
-            .tag(Tags.Items.STORAGE_BLOCKS)
-            .build()
-            .register();
 
     /*
     public static final BlockEntry<Block> ELECTRUM_BLOCK = REGISTRATE.block("electrum_block", Block::new)

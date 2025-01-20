@@ -1,17 +1,17 @@
-package com.teammoeg.frostedheart.content.climate.player;
+package com.teammoeg.frostedheart.content.climate.block;
 
-import com.teammoeg.frostedheart.base.menu.FHBlockEntityContainer;
+import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
-import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
+import com.teammoeg.frostedheart.content.climate.block.WardrobeBlockEntity;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.event.level.NoteBlockEvent;
 
-public class WardrobeContainer extends FHBlockEntityContainer<WardrobeBlockEntity> {
+public class WardrobeContainer extends CBlockEntityMenu<WardrobeBlockEntity> {
 
-    public WardrobeContainer(int id, Inventory inventoryPlayer, PlayerTemperatureData ptd, WardrobeBlockEntity tile) {
+    public WardrobeContainer(int id, Inventory inventoryPlayer, WardrobeBlockEntity tile) {
         super(FHMenuTypes.WARDROBE.get(), tile, id,inventoryPlayer.player, 15);
 
         for (int j = 0; j < 1; ++j) {
@@ -20,6 +20,7 @@ public class WardrobeContainer extends FHBlockEntityContainer<WardrobeBlockEntit
             }
         }
 //        super.addPlayerInventory(inventoryPlayer, 9, id, id);
+        PlayerTemperatureData ptd = PlayerTemperatureData.getCapability(inventoryPlayer.player).resolve().get();
 
         for(int k=0;k<4;++k) {
             this.addSlot(new Slot(ptd.clothesOfParts.get(PlayerTemperatureData.BodyPart.TORSO), k, 44+k*18, 19+18));

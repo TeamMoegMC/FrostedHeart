@@ -1,8 +1,12 @@
 package com.teammoeg.frostedheart.content.climate.block;
 
 import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -17,6 +21,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.*;
@@ -27,11 +32,14 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.function.Supplier;
 
-public class WardrobeBlock extends Block {
+public class WardrobeBlock extends CBlock implements CEntityBlock<WardrobeBlockEntity> {
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
     public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
@@ -41,6 +49,12 @@ public class WardrobeBlock extends Block {
         super(blockProps);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(OPEN, Boolean.FALSE).setValue(HINGE, DoorHingeSide.LEFT).setValue(POWERED, Boolean.FALSE).setValue(HALF, DoubleBlockHalf.LOWER));
     }
+
+    @Override
+    public Supplier<BlockEntityType<WardrobeBlockEntity>> getBlock() {
+        return FHBlockEntityTypes.WARDROBE;
+    }
+
 
     @Override
     public VoxelShape getShape(BlockState pState, BlockGetter pLevel, BlockPos pPos, CollisionContext pContext) {
@@ -154,6 +168,17 @@ public class WardrobeBlock extends Block {
         pLevel.setBlock(otherHalfPos, otherHalf, 10);
         this.playSound(pPlayer, pLevel, pPos, pState.getValue(OPEN));
         pLevel.gameEvent(pPlayer, this.isOpen(pState) ? GameEvent.BLOCK_OPEN : GameEvent.BLOCK_CLOSE, pPos);
+
+        if (!pLevel.isClientSide) {
+            // Open the Wardrobe GUI
+            System.out.println("Opening GUI");
+            WardrobeBlockEntity tile = (WardrobeBlockEntity) pLevel.getBlockEntity(pPos);
+            if (tile != null) {
+                System.out.println("Tile is not null");
+                NetworkHooks.openScreen((ServerPlayer) pPlayer, tile, pPos);
+                pLevel.playSound(null, pPos, SoundEvents.LAVA_EXTINGUISH, SoundSource.BLOCKS, 0.3F, 1.5F);
+            }
+        }
         return InteractionResult.sidedSuccess(pLevel.isClientSide);
     }
 

@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
-import com.teammoeg.frostedheart.content.climate.player.WardrobeBlockEntity;
-import com.teammoeg.frostedheart.content.climate.player.WardrobeContainer;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
@@ -44,6 +42,8 @@ import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
+import com.teammoeg.frostedheart.content.climate.block.WardrobeBlockEntity;
+import com.teammoeg.frostedheart.content.climate.block.WardrobeContainer;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
 import net.minecraft.world.entity.player.Inventory;
@@ -75,20 +75,10 @@ public class FHMenuTypes {
 	public static final RegistryObject<MenuType<SaunaContainer>> SAUNA = register(SaunaTileEntity.class, ("sauna_vent"), SaunaContainer::new);
 	public static final RegistryObject<MenuType<IncubatorT1Container>> INCUBATOR_T1 = register(IncubatorTileEntity.class, ("incubator"), IncubatorT1Container::new);
 	public static final RegistryObject<MenuType<IncubatorT2Container>> INCUBATOR_T2 = register(HeatIncubatorTileEntity.class, ("heat_incubator"), IncubatorT2Container::new);
-
-	public static final RegistryObject<MenuType<WardrobeContainer>> WARDROBE = register_with_player_temperature_data(WardrobeBlockEntity.class, ("wardrobe"), WardrobeContainer::new);
+	public static final RegistryObject<MenuType<WardrobeContainer>> WARDROBE = register(WardrobeBlockEntity.class, ("wardrobe"), WardrobeContainer::new);
 
 	@SuppressWarnings("unchecked")
 	public static <T extends AbstractContainerMenu, BE extends BlockEntity> RegistryObject<MenuType<T>> register(Class<BE> BEClass, String name, BEMenuFactory<T, BE> factory) {
-		return CONTAINERS.register(name, () -> IForgeMenuType.create((id, inv, pb) -> {
-			BlockEntity be = inv.player.level().getBlockEntity(pb.readBlockPos());
-			if (BEClass.isInstance(be))
-				return factory.get(id, inv, (BE) be);
-			return null;
-		}));
-	}
-
-	public static <T extends AbstractContainerMenu, BE extends BlockEntity> RegistryObject<MenuType<T>> register_with_player_temperature_data(Class<BE> BEClass, String name, BEMenuFactory<T, BE> factory) {
 		return CONTAINERS.register(name, () -> IForgeMenuType.create((id, inv, pb) -> {
 			BlockEntity be = inv.player.level().getBlockEntity(pb.readBlockPos());
 			if (BEClass.isInstance(be))
