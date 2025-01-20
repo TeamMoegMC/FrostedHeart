@@ -6,6 +6,7 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1Gener
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorState;
+import com.teammoeg.frostedheart.content.climate.player.WardrobeScreen;
 import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
@@ -19,6 +20,7 @@ import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 
+import java.awt.*;
 import java.util.function.Function;
 
 public class FHScreens {
@@ -33,6 +35,7 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.SAUNA.get(), SaunaScreen::new);
         MenuScreens.register(FHMenuTypes.INCUBATOR_T1.get(), IncubatorT1Screen::new);
         MenuScreens.register(FHMenuTypes.INCUBATOR_T2.get(), IncubatorT2Screen::new);
+        MenuScreens.register(FHMenuTypes.WARDROBE.get(), WardrobeScreen::new);
     }
 
     public static <C extends AbstractContainerMenu, S extends BaseScreen> void

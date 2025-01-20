@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.kinetics.base.HalfShaftInstance;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.player.WardrobeBlockEntity;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
@@ -130,6 +131,10 @@ public class FHBlockEntityTypes {
     );
     public static final RegistryObject<BlockEntityType<HuntingBaseBlockEntity>> HUNTING_BASE = REGISTER.register(
             "hunting_base", makeType(HuntingBaseBlockEntity::new, FHBlocks.HUNTING_BASE::get)
+    );
+
+    public static final RegistryObject<BlockEntityType<WardrobeBlockEntity>> WARDROBE = REGISTER.register(
+            "wardrobe", makeType(WardrobeBlockEntity::new, FHBlocks.WARDROBE::get)
     );
 
     private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntitySupplier<T> create, Supplier<Block> valid) {

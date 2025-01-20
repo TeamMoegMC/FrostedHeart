@@ -41,6 +41,7 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
 import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
+import com.teammoeg.frostedheart.content.climate.player.WardrobeBlock;
 import com.teammoeg.frostedheart.content.decoration.BoneBlock;
 import com.teammoeg.frostedheart.content.decoration.OddMark;
 import com.teammoeg.frostedheart.content.decoration.PackageBlock;
@@ -1920,4 +1921,34 @@ public class FHBlocks {
 //            .put(FHBlocks.PEAT.get(), PEAT_PERMAFROST)
             .build()
     );
+
+    public static final BlockEntry<WardrobeBlock> WARDROBE = REGISTRATE.block("wardrobe", WardrobeBlock::new)
+            .initialProperties(() -> IRON_BLOCK)
+            .properties(t -> t.mapColor(MapColor.COLOR_PINK)
+                    .sound(SoundType.WOOD)
+                    .requiresCorrectToolForDrops()
+                    .strength(35, 600)
+                    .noOcclusion())
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .blockstate(FHBlockStateGen.simpleCubeAll("wardrobe"))
+            .transform(tagBlockAndItem("storage_blocks/wardrobe"))
+            .tag(Tags.Items.STORAGE_BLOCKS)
+            .build()
+            .register();
+
+    /*
+    public static final BlockEntry<Block> ELECTRUM_BLOCK = REGISTRATE.block("electrum_block", Block::new)
+            .initialProperties(() -> IRON_BLOCK)
+            .properties(p -> p.mapColor(MapColor.COLOR_YELLOW).requiresCorrectToolForDrops())
+            .transform(pickaxeOnly())
+            .tag(BlockTags.NEEDS_IRON_TOOL)
+            .tag(Tags.Blocks.STORAGE_BLOCKS)
+            .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll("electrum_block"))
+            .transform(tagBlockAndItem("storage_blocks/electrum"))
+            .tag(Tags.Items.STORAGE_BLOCKS)
+            .build()
+            .lang("Block of Electrum")
+            .register();
+     */
 }

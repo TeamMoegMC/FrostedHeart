@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -23,60 +24,6 @@ import java.util.EnumMap;
 import java.util.Map;
 
 // https://ierga.com/hr/wp-content/uploads/sites/2/2017/10/ASHRAE-55-2013.pdf
-
-
-
-class BodyPartClothingData {
-	String name;
-	final ItemStack[] clothes;
-	BodyPartClothingData(String name, int max_count) {
-		this.name = name;
-		this.clothes = new ItemStack[max_count];
-		reset();
-	}
-
-	void set(ListTag itemsTag) {
-		for (int i = 0; i < itemsTag.size() && i < clothes.length; i++) {
-			clothes[i] = ItemStack.of((CompoundTag) itemsTag.get(i));
-		}
-	}
-
-	void reset() {
-		Arrays.fill(clothes, ItemStack.EMPTY);
-	}
-
-	float getThermalConductivity(ItemStack equipment) {
-		float res=0f;
-		float rate=0.4f;
-		if(equipment.getItem() instanceof FHBaseClothesItem) {
-			res += rate * ((FHBaseClothesItem) equipment.getItem()).getWarmthLevel();
-			rate -= 0.1f;
-		}
-		for(ItemStack it : this.clothes) {
-			if(!it.isEmpty()) {
-				res += rate * ((FHBaseClothesItem) it.getItem()).getWarmthLevel();
-				rate -= 0.1f;
-			}
-		}
-		return 100/(100+res);
-	}
-
-	float getWindResistance(ItemStack equipment) {
-		float res=0f;
-		float rate=0.3f-this.clothes.length*0.1f;
-		if(equipment.getItem() instanceof FHBaseClothesItem) {
-			rate += 0.1f;
-			res += rate * ((FHBaseClothesItem) equipment.getItem()).getWarmthLevel();
-		}
-		for(ItemStack it : this.clothes) {
-			if(!it.isEmpty()) {
-				rate += 0.1f;
-				res += rate * ((FHBaseClothesItem) it.getItem()).getWindResistance();
-			}
-		}
-		return res;
-	}
-}
 
 public class PlayerTemperatureData implements NBTSerializable  {
 	public enum BodyPart {
@@ -108,7 +55,7 @@ public class PlayerTemperatureData implements NBTSerializable  {
 	private final Map<BodyPart, Pair<String, Float>> temperatureOfParts = new EnumMap<>(BodyPart.class);
 	private final Map<BodyPart, String> namesOfParts = new EnumMap<>(BodyPart.class);
 
-	private final Map<BodyPart, BodyPartClothingData> clothesOfParts = new EnumMap<>(BodyPart.class);
+	public final Map<BodyPart, BodyPartClothingData> clothesOfParts = new EnumMap<>(BodyPart.class);
 
 	public PlayerTemperatureData() {
 		clothesOfParts.put(BodyPart.HEAD, new BodyPartClothingData("head_clothing", 1));
