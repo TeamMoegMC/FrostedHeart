@@ -193,7 +193,12 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T> {
     		id++;
     	}
     }
-    /**
+    @Override
+	public String toString() {
+		return "FHRegistry [items=" + items + "]";
+	}
+
+	/**
      * Get by numeric id.
      *
      * @param id the id<br>

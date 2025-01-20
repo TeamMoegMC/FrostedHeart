@@ -45,6 +45,7 @@ public record FHResearchDataUpdatePacket(Object rd, int id) implements CMessage 
 
     public FHResearchDataUpdatePacket(Research rs, ResearchData rd) {
         this(CodecUtil.encodeOrThrow(ResearchData.NETWORK_CODEC.encodeStart(DataOps.COMPRESSED, rd.write(rs))), FHResearch.researches.getIntId(rs));
+                                                 
     }
 
     public void encode(FriendlyByteBuf buffer) {
@@ -55,10 +56,16 @@ public record FHResearchDataUpdatePacket(Object rd, int id) implements CMessage 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             Research rs = FHResearch.researches.get(id);
+            //System.out.println(FHResearch.researches);
+            //System.out.println(id);
+            //System.out.println(rd);
+            //System.out.println(rs);
             ResearchData old = rs.getData();
             ResearchDataPacket datax = CodecUtil.decodeOrThrow(ResearchData.NETWORK_CODEC.decode(DataOps.COMPRESSED, rd));
             boolean status = old.isCompleted();
+            //System.out.println(old);
             old.read(rs, datax);
+            //System.out.println(old);
             ResearchUtils.refreshResearchGui();
             MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, old.isCompleted(), status != old.isCompleted()));
 

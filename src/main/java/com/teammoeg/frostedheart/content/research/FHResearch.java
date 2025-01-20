@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.data.ClientResearchData;
+import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.events.ResearchLoadEvent;
 import com.teammoeg.frostedheart.content.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.content.research.network.FHResearchSyncEndPacket;
@@ -158,7 +159,6 @@ public class FHResearch {
                 locked.add(r);
                 continue;
             }
-
             if (r.isCompleted())
                 unlocked.add(r);
             else if (r.isUnlocked())

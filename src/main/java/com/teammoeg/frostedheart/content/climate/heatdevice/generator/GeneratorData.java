@@ -71,7 +71,7 @@ public class GeneratorData implements SpecialData {
             Codec.FLOAT.fieldOf("rangeLevel").forGetter(o -> o.RLevel),
             CompoundTag.CODEC.fieldOf("items").forGetter(o -> o.inventory.serializeNBT()),
             CodecUtil.defaultValue(CodecUtil.ITEMSTACK_CODEC, ItemStack.EMPTY).fieldOf("res").forGetter(o -> o.currentItem),
-            CodecUtil.BLOCKPOS.optionalFieldOf("actualPos",BlockPos.ZERO).forGetter(o -> o.actualPos),
+            CodecUtil.BLOCKPOS.optionalFieldOf("actualPos").forGetter(o -> Optional.ofNullable(o.actualPos)),
             ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o -> o.dimension == null ? Optional.empty() : Optional.of(o.dimension.location()))
     ).apply(t, GeneratorData::new));
     public final ItemStackHandler inventory = new ItemStackHandler(2);
@@ -96,7 +96,7 @@ public class GeneratorData implements SpecialData {
     }
 
 
-    public GeneratorData(int process, int processMax, int steamProcess, int overdriveLevel, boolean[] flags, float steamLevel, float power, int heated, int ranged, Optional<Fluid> fluid, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, BlockPos actualPos, Optional<ResourceLocation> dimension) {
+    public GeneratorData(int process, int processMax, int steamProcess, int overdriveLevel, boolean[] flags, float steamLevel, float power, int heated, int ranged, Optional<Fluid> fluid, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, Optional<BlockPos> actualPos, Optional<ResourceLocation> dimension) {
         super();
         this.process = process;
         this.processMax = processMax;
@@ -115,7 +115,7 @@ public class GeneratorData implements SpecialData {
         this.RLevel = rLevel;
         this.inventory.deserializeNBT(inventory);
         this.currentItem = currentItem;
-        this.actualPos = actualPos;
+        this.actualPos = actualPos.orElse(null);
         this.dimension = dimension.map(t -> ResourceKey.create(Registries.DIMENSION, t)).orElse(null);
     }
 

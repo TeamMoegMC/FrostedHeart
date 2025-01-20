@@ -61,7 +61,7 @@ public final class DiscreteListCodec<A> implements Codec<List<A>> {
     @Override
     public <T> DataResult<Pair<List<A>, T>> decode(final DynamicOps<T> ops, final T input) {
     	if(ops.compressMaps()) {
-    		ops.getMap(input).flatMap(map->{
+    		return ops.getMap(input).flatMap(map->{
                 List<A> list=new ArrayList<>();
                 final Stream.Builder<T> failed = Stream.builder();
                 final MutableObject<DataResult<Unit>> result = new MutableObject<>(DataResult.success(Unit.INSTANCE, Lifecycle.stable()));
