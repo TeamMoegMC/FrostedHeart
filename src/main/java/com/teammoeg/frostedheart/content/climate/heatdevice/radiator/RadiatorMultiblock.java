@@ -32,7 +32,7 @@ public class RadiatorMultiblock extends CMultiblock {
     public RadiatorMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/heat_radiator"),
                 new BlockPos(0, 0, 0), new BlockPos(0, 0, 0), new BlockPos(1, 3, 1),
-                FHMultiblocks.Logic.RADIATOR);
+                FHMultiblocks.Registration.RADIATOR);
     }
 
     @Override

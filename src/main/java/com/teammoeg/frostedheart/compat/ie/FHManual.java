@@ -19,13 +19,13 @@ public class FHManual {
         {
             ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
 
-            builder.addSpecialElement(new ManualEntry.SpecialElementData("generator", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.Multiblock.GENERATOR_T1)));
+            builder.addSpecialElement(new ManualEntry.SpecialElementData("generator", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR_T1)));
             builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator"));
             man.addEntry(CATEGORY, builder.create(), 0);
         }
         {
             ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
-            builder.addSpecialElement(new ManualEntry.SpecialElementData("generator_2", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.Multiblock.GENERATOR_T2)));
+            builder.addSpecialElement(new ManualEntry.SpecialElementData("generator_2", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR_T2)));
             builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator_t2"));
             man.addEntry(CATEGORY, builder.create(), 1);
         }

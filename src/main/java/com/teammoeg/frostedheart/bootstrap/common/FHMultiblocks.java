@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import com.teammoeg.chorda.block.CActiveMultiblockBlock;
+import com.teammoeg.chorda.events.IERegistryEvent;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
@@ -36,37 +39,27 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockS
 import blusunrize.immersiveengineering.api.multiblocks.blocks.registry.MultiblockItem;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.IEMultiblockBuilder;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.NonMirrorableWithActiveBlock;
 import blusunrize.immersiveengineering.common.register.IEBlocks;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
-
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class FHMultiblocks {
-	public static class Multiblock{
-		public static IETemplateMultiblock GENERATOR_T1 = new T1GeneratorMultiblock();
-		public static IETemplateMultiblock GENERATOR_T2 = new T2GeneratorMultiblock();
-		public static IETemplateMultiblock RADIATOR = new RadiatorMultiblock();
-		public static void init() {
-			MultiblockHandler.registerMultiblock(GENERATOR_T1);
-			MultiblockHandler.registerMultiblock(RADIATOR);
-			MultiblockHandler.registerMultiblock(GENERATOR_T2);
-		}
-
-	}
-	public static class Logic{
+	public static class Registration{
 		public static final MultiblockRegistration<T1GeneratorState> GENERATOR_T1 = stone(new T1GeneratorLogic(), "generator_t1",false)
-			.structure(() -> FHMultiblocks.Multiblock.GENERATOR_T1)
+			.structure(() -> FHMultiblocks.GENERATOR_T1)
 			.notMirrored()
 			.component(FHMenuTypes.GENERATOR_T1.createComponent())
 			.build();
 		public static final MultiblockRegistration<T2GeneratorState> GENERATOR_T2 = metal(new T2GeneratorLogic(), "generator_t2")
-			.structure(() -> FHMultiblocks.Multiblock.GENERATOR_T2)
+			.structure(() -> FHMultiblocks.GENERATOR_T2)
 			.notMirrored()
 			.component(FHMenuTypes.GENERATOR_T2.createComponent())
 			.build();
 		public static final MultiblockRegistration<RadiatorState> RADIATOR = metal(new RadiatorLogic(), "radiator")
-			.structure(() -> FHMultiblocks.Multiblock.RADIATOR)
+			.structure(() -> FHMultiblocks.RADIATOR)
 			.notMirrored()
 			.build();
 		
@@ -82,7 +75,7 @@ public class FHMultiblocks {
 				.notMirrored()
 				.customBlock(
 					FHBlocks.BLOCKS, FHItems.ITEMS,
-					r -> new NonMirrorableWithActiveBlock<>(properties, r),
+					r -> new CActiveMultiblockBlock<>(properties, r),
 					MultiblockItem::new)
 				.defaultBEs(FHBlockEntityTypes.REGISTER);
 		}
@@ -92,10 +85,19 @@ public class FHMultiblocks {
 				.defaultBEs(FHBlockEntityTypes.REGISTER)
 				.customBlock(
 					FHBlocks.BLOCKS, FHItems.ITEMS,
-					r -> new NonMirrorableWithActiveBlock<>(IEBlocks.METAL_PROPERTIES_NO_OCCLUSION.get(), r),
+					r -> new CActiveMultiblockBlock<>(IEBlocks.METAL_PROPERTIES_NO_OCCLUSION.get(), r),
 					MultiblockItem::new);
 		}
 
+	}
+	public static IETemplateMultiblock GENERATOR_T1 = new T1GeneratorMultiblock();
+	public static IETemplateMultiblock GENERATOR_T2 = new T2GeneratorMultiblock();
+	public static IETemplateMultiblock RADIATOR = new RadiatorMultiblock();
+	@SubscribeEvent
+	public void registerMultiblocks(IERegistryEvent event) {
+		MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR_T1);
+		MultiblockHandler.registerMultiblock(FHMultiblocks.RADIATOR);
+		MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR_T2);
 	}
 
 

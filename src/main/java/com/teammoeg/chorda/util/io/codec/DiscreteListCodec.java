@@ -15,6 +15,7 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.Lifecycle;
 import com.mojang.serialization.ListBuilder;
+import com.mojang.serialization.RecordBuilder;
 
 public final class DiscreteListCodec<A> implements Codec<List<A>> {
     private final Codec<A> elementCodec;
@@ -34,6 +35,17 @@ public final class DiscreteListCodec<A> implements Codec<List<A>> {
 
 	@Override
     public <T> DataResult<T> encode(final List<A> input, final DynamicOps<T> ops, final T prefix) {
+		if(ops.compressMaps()) {
+			 final RecordBuilder<T> builder = ops.mapBuilder();
+			 int i=0;
+			 for (final A a : input) {
+				 final int cri=i;
+				 if(!empty.test(a))
+					 builder.add(ops.createInt(i), elementCodec.encodeStart(ops, a));
+				 i++;
+			 }
+			 return builder.build(prefix);
+		}
         final ListBuilder<T> builder = ops.listBuilder();
         int i=0;
         for (final A a : input) {
@@ -48,6 +60,28 @@ public final class DiscreteListCodec<A> implements Codec<List<A>> {
 
     @Override
     public <T> DataResult<Pair<List<A>, T>> decode(final DynamicOps<T> ops, final T input) {
+    	if(ops.compressMaps()) {
+    		ops.getMap(input).flatMap(map->{
+                List<A> list=new ArrayList<>();
+                final Stream.Builder<T> failed = Stream.builder();
+                final MutableObject<DataResult<Unit>> result = new MutableObject<>(DataResult.success(Unit.INSTANCE, Lifecycle.stable()));
+    			map.entries().forEach(t->{
+                    final DataResult<Pair<A, T>> element = elementCodec.decode(ops, t.getSecond());
+                    final DataResult<Number> key=ops.getNumberValue(t.getFirst());
+                    element.error().ifPresent(e -> failed.add(t.getSecond()));
+                    result.setValue(result.getValue().apply3((r,k, v) -> {
+                    	addEmptyIndexBefore(list,k.intValue()+1);
+                    	list.set(k.intValue(),v.getFirst());
+                        return r;
+                    }, key, element));
+    			});
+    			final T errors = ops.createList(failed.build());
+
+                final Pair<List<A>, T> pair = Pair.of(list, errors);
+
+                return result.getValue().map(unit -> pair).setPartial(pair);
+    		});
+    	}
         return ops.getList(input).flatMap(stream -> {
             List<A> list=new ArrayList<>();
             final Stream.Builder<T> failed = Stream.builder();

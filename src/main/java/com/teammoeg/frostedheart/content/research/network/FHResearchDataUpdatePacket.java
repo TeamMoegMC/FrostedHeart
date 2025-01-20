@@ -54,7 +54,7 @@ public record FHResearchDataUpdatePacket(Object rd, int id) implements CMessage 
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            Research rs = FHResearch.researches.getById(id);
+            Research rs = FHResearch.researches.get(id);
             ResearchData old = rs.getData();
             ResearchDataPacket datax = CodecUtil.decodeOrThrow(ResearchData.NETWORK_CODEC.decode(DataOps.COMPRESSED, rd));
             boolean status = old.isCompleted();

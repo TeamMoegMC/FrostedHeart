@@ -1,0 +1,26 @@
+package com.teammoeg.frostedheart.mixin.immersiveengineering;
+
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.events.IERegistryEvent;
+
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IEMultiblocks;
+import net.minecraftforge.common.MinecraftForge;
+
+@Mixin(IEMultiblocks.class)
+public class IERegistrationMixin {
+
+	public IERegistrationMixin() {
+	}
+	@Inject(at=@At("TAIL"),method="init",remap=false,require=1)
+	private static void Ch$modConstruction(CallbackInfo cbi) {
+		Chorda.LOGGER.info("Sending Immersive Engineering registry event...");
+		MinecraftForge.EVENT_BUS.post(new IERegistryEvent());
+		
+		//System.out.println("IEInit called");
+	}
+}

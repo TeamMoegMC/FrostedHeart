@@ -328,8 +328,8 @@ public class JEICompat implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.Logic.GENERATOR_T1.blockItem().get()), GeneratorFuelCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.Logic.GENERATOR_T2.blockItem().get()), GeneratorFuelCategory.UID,
+        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.Registration.GENERATOR_T1.blockItem().get()), GeneratorFuelCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.Registration.GENERATOR_T2.blockItem().get()), GeneratorFuelCategory.UID,
                 GeneratorSteamCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHBlocks.CHARGER.get()), ChargerCategory.UID, ChargerCookingCategory.UID,
                 ChargerDefrostCategory.UID);

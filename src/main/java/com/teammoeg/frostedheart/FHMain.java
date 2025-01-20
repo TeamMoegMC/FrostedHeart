@@ -163,7 +163,6 @@ public class FHMain {
         FHBlocks.init();
         FHBlockEntityTypes.init();
         FHBiomes.init();
-        FHMultiblocks.Multiblock.init();
         FHPredicates.init();
 
         // Compat init

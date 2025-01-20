@@ -146,8 +146,8 @@ public class FHClientEventsMod {
 	@SubscribeEvent
 	public static void registerBERenders(RegisterRenderers event){
 		FHMain.LOGGER.info("===========Dynamic Block Renderers========");
-        event.registerBlockEntityRenderer(FHMultiblocks.Logic.GENERATOR_T1.masterBE().get(), T1GeneratorRenderer::new);
-        event.registerBlockEntityRenderer(FHMultiblocks.Logic.GENERATOR_T2.masterBE().get(), T2GeneratorRenderer::new);
+        event.registerBlockEntityRenderer(FHMultiblocks.Registration.GENERATOR_T1.masterBE().get(), T1GeneratorRenderer::new);
+        event.registerBlockEntityRenderer(FHMultiblocks.Registration.GENERATOR_T2.masterBE().get(), T2GeneratorRenderer::new);
         event.registerBlockEntityRenderer(FHBlockEntityTypes.MECH_CALC.get(), MechCalcRenderer::new);
 	}
 

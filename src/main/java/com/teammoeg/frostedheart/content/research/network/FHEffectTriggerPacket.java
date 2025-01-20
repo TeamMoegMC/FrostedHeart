@@ -51,7 +51,7 @@ public class FHEffectTriggerPacket implements CMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
 
         context.get().enqueueWork(() -> {
-            Research r = FHResearch.researches.getById(researchID);
+            Research r = FHResearch.researches.get(researchID);
 
             ServerPlayer spe = context.get().getSender();
             TeamDataHolder data = CTeamDataManager.get(spe);

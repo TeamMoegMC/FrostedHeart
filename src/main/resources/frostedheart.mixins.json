@@ -29,6 +29,7 @@
     "immersiveengineering.AssemblerLogicMixin",
     "immersiveengineering.CrafterPatternInventoryMixin",
     "immersiveengineering.TemplateMultiblockMixin",
+    "immersiveengineering.IERegistrationMixin",
     "minecraft.accessors.NewChatGuiAccessor",
     "minecraft.campfire.CampfireBlockMixin_TimeLimit",
     "minecraft.campfire.CampfireTileEntityMixin_TimeLimit",

@@ -20,7 +20,9 @@
 package com.teammoeg.frostedheart.content.research.blocks;
 
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import com.teammoeg.chorda.block.CTickableBlockEntity;
 import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
@@ -44,7 +46,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.List;
 
-public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggleInformation {
+public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggleInformation,CTickableBlockEntity {
     public int process = 0;
     int processMax = 6400;
     int currentPoints = 0;
@@ -62,6 +64,12 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
     }
 
     @Override
+	public List<BlockPos> addPropagationLocations(IRotate block, BlockState state, List<BlockPos> neighbours) {
+		// TODO Auto-generated method stub
+		return super.addPropagationLocations(block, state, neighbours);
+	}
+
+	@Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         super.addToGoggleTooltip(tooltip, isPlayerSneaking);
         boolean flag = true;
@@ -138,9 +146,10 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
     @Override
     public void tick() {
         super.tick();
+        
         if (!level.isClientSide) {
             float spd = Mth.abs(super.getSpeed());
-
+            //System.out.println(spd);
             if (spd > 0 && spd <= 64 && currentPoints <= maxPoints - 20) {
                 process += (int) spd;
                 int curact = process / 1067;

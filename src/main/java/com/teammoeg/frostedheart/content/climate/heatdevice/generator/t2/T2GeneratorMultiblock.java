@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.multiblock.CMultiblock;
-import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks.Logic;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks.Registration;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.chorda.util.ie.CMultiblockHelper;
 import net.minecraft.core.Direction;
@@ -34,7 +34,7 @@ public class T2GeneratorMultiblock extends CMultiblock {
     public T2GeneratorMultiblock() {
 
         super(new ResourceLocation(FHMain.MODID, "multiblocks/generator_t2"),
-                new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 7, 3), Logic.GENERATOR_T2);
+                new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 7, 3), Registration.GENERATOR_T2);
     }
 
 

@@ -55,7 +55,7 @@ public class FHResearchControlPacket implements CMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
 
         context.get().enqueueWork(() -> {
-            Research r = FHResearch.researches.getById(researchID);
+            Research r = FHResearch.researches.get(researchID);
             if (r == null) return;
             ServerPlayer spe = context.get().getSender();
             TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(spe);

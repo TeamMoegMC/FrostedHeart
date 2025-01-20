@@ -59,6 +59,7 @@ public class FHResearchDataSyncPacket implements CMessage {
                 // Sync Server Data to Client
                 CClientTeamDataManager.INSTANCE.getInstance().setData(FHSpecialDataTypes.RESEARCH_DATA, FHSpecialDataTypes.RESEARCH_DATA.loadData(DataOps.COMPRESSED, dat));
                 // Grant Effects on Client
+                
                 // TODO: Why not just sync the UnlockLists through TeamResearchData.Codec, so that the above line is all we need?
                  TeamDataClosure<TeamResearchData> closure = CClientTeamDataManager.INSTANCE.getInstance().getDataHolder(FHSpecialDataTypes.RESEARCH_DATA);
                  closure.get().initResearch(closure.team());

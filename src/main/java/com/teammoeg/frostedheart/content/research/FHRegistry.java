@@ -19,12 +19,14 @@
 
 package com.teammoeg.frostedheart.content.research;
 
+import com.teammoeg.chorda.util.io.RegistryListedMap;
 import com.teammoeg.chorda.util.utility.OptionalLazy;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -172,6 +174,31 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T> {
             items.add(null);
     }
 
+    public <E> List<E> toList(Map<String,E> data){
+    	return new RegistryListedMap<String,E>(data,rnamesl.size()){
+
+			@Override
+			public String getKey(int id) {
+				return FHRegistry.this.getStrId(id);
+			}
+    		
+    	};
+    }
+    public <E> void fromList(List<E> data,BiConsumer<String,E> map){
+    	int id=0;
+    	for(E elm:data) {
+    		final int curid=id;
+    		if(elm!=null)
+    			map.accept(getStrId(curid),elm);
+    		id++;
+    	}
+    }
+    /**
+     * Get by numeric id.
+     *
+     * @param id the id<br>
+     * @return item<br>
+     */
     public T get(int id) {
         if (id < 0)
             return null;
@@ -194,7 +221,11 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T> {
     public int getIntId(String obj) {
         return rnames.getOrDefault(obj, -1);
     }
-
+    public String getStrId(int id) {
+    	if(id<0||id>=rnamesl.size())
+    		return null;
+        return rnamesl.get(id);
+    }
     public void replace(T research) {
         cache.remove(research.getId());
         register(research);
@@ -210,10 +241,10 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T> {
      * @param id the id<br>
      * @return by id<br>
      */
-    public T getById(int id) {
+    /*public T getById(int id) {
         if (id < 0 || id >= items.size()) return null;
         return items.get(id);
-    }
+    }*/
 
     /**
      * Get by name.

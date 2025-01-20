@@ -149,9 +149,9 @@ public class FHRegistrateTags {
                 .addTag(FHTags.Blocks.PERMAFROST.tag);
 
         prov.tag(BlockTags.MINEABLE_WITH_PICKAXE)
-                .add(FHMultiblocks.Multiblock.GENERATOR_T1.getBlock())
-                .add(FHMultiblocks.Multiblock.GENERATOR_T2.getBlock())
-                .add(FHMultiblocks.Multiblock.RADIATOR.getBlock());
+                .add(FHMultiblocks.GENERATOR_T1.getBlock())
+                .add(FHMultiblocks.GENERATOR_T2.getBlock())
+                .add(FHMultiblocks.RADIATOR.getBlock());
 
         for (FHTags.Blocks tag : FHTags.Blocks.values()) {
             if (tag.alwaysDatagen) {

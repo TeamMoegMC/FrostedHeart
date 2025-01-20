@@ -280,7 +280,7 @@ public class FHResearch {
             FHMain.LOGGER.error("Cannot load research " + f.getName() + ": " + e.getMessage());
         }
         clearCache();
-        return researches.getById(iid);
+        return researches.get(iid);
     }
 
     /**

@@ -38,7 +38,7 @@ public class T1GeneratorMultiblock extends CMultiblock {
 
     public T1GeneratorMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/generator"),
-                new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 4, 3), FHMultiblocks.Logic.GENERATOR_T1
+                new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 4, 3), FHMultiblocks.Registration.GENERATOR_T1
         );
     }
 
