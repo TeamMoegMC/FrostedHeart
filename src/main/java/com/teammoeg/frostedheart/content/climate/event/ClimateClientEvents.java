@@ -32,7 +32,7 @@ public class ClimateClientEvents {
                 && event.player instanceof LocalPlayer) {
             LocalPlayer player = (LocalPlayer) event.player;
             if(ClientUtils.mc().screen instanceof GeneratorScreen gsc &&player.tickCount%20==0) {
-            	gsc.fullInit();
+            	gsc.calculateUpgradeCost();
             }
             if (!player.isSpectator() && !player.isCreative() && player.level() != null) {
                 if (player.tickCount % 60 <= 3) {

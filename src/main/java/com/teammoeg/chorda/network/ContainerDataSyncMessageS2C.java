@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import com.teammoeg.chorda.menu.CBaseMenu;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
+import com.teammoeg.chorda.menu.CCustomMenuSlot.NetworkEncoder;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.OtherDataSlotEncoder;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.io.SerializeUtil;
@@ -16,15 +17,15 @@ import net.minecraftforge.network.NetworkEvent.Context;
 
 public record ContainerDataSyncMessageS2C(List<ContainerDataPair> data) implements CMessage {
 
-	private static record ContainerDataPair(int slotIndex,OtherDataSlotEncoder<?> conv,Object data){
-		public ContainerDataPair(FriendlyByteBuf buf,int slotIndex,OtherDataSlotEncoder<?> conv) {
+	private static record ContainerDataPair(int slotIndex,NetworkEncoder<?> conv,Object data){
+		public ContainerDataPair(FriendlyByteBuf buf,int slotIndex,NetworkEncoder<?> conv) {
 			this(slotIndex,conv,conv.read(buf));
 		}
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public void write(FriendlyByteBuf buffer) {
 			buffer.writeVarInt(slotIndex);
-			CCustomMenuSlot.encoders.write(buffer, conv);
-			((OtherDataSlotEncoder)conv).write(buffer, data);
+			CCustomMenuSlot.Encoders.encoders.write(buffer, conv);
+			((NetworkEncoder)conv).write(buffer, data);
 		}
 	}
 	
@@ -32,7 +33,7 @@ public record ContainerDataSyncMessageS2C(List<ContainerDataPair> data) implemen
 		this(new ArrayList<>());
 	}
 	public void add(int slotIndex,OtherDataSlotEncoder<?> conv,Object data) {
-		this.data.add(new ContainerDataPair(slotIndex,conv,data));
+		this.data.add(new ContainerDataPair(slotIndex,conv.getEncoder(),data));
 	}
 	
 	public void forEach(BiConsumer<Integer,Object> t) {
@@ -43,7 +44,7 @@ public record ContainerDataSyncMessageS2C(List<ContainerDataPair> data) implemen
 	}
 
 	public ContainerDataSyncMessageS2C(FriendlyByteBuf buf) {
-		this(SerializeUtil.readList(buf, t->new ContainerDataPair(buf,buf.readVarInt(), CCustomMenuSlot.encoders.read(buf))));
+		this(SerializeUtil.readList(buf, t->new ContainerDataPair(buf,buf.readVarInt(), CCustomMenuSlot.Encoders.encoders.read(buf))));
 	}
 
 	@Override

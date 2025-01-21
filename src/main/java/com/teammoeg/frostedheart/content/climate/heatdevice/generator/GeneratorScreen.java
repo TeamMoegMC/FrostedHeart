@@ -59,9 +59,9 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
     private static final AtlasUV generatorSymbol = new AtlasUV(TEXTURE, 176, 0, 24, 48, 3, 12, TEXW, TEXH);
     private static final Point generatorPos = new Point(76, 44);
     MasterGeneratorGuiButtonUpgrade upgrade;
-    int level;
     boolean validStructure;
     boolean hasResearch;
+    int level;
     List<Component> costStr = new ArrayList<>();;
 
     public GeneratorScreen(GeneratorContainer<R, T> inventorySlotsIn, Inventory inv, Component title) {
@@ -146,7 +146,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
     @Override
     public void init() {
         super.init();
-        Optional<IMultiblockBEHelper<?>> ohelper = CMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue());
+       
         
        
         this.addRenderableWidget(new MasterGeneratorGuiButtonBoolean(leftPos + 5, topPos + 24, 11, 22, menu.isWorking.asSupplier(), 472, 148,
@@ -157,68 +157,71 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
                 btn -> {
                     menu.sendMessage(2, btn.getNextState());
                 }));
-        level = 1;
-        Player player = ClientUtils.mc().player;
-        costStr.clear();
-        ohelper.ifPresent(t->{
-        	GeneratorLogic<T,R> tile = (GeneratorLogic<T, R>) t.getMultiblock().logic();
-        	IMultiblockBEHelper<R> helper=(IMultiblockBEHelper<R>) t;
-	        if (menu.isBroken.getValue()) {
-	            costStr.add(Lang.translateGui("generator.repair_material"));
-	            BitSet cost = IngredientUtils.checkItemList(ClientUtils.mc().player, tile.getRepairCost());
-	            int i = 0;
-	            for (IngredientWithSize iws : tile.getRepairCost()) {
-	                ItemStack[] iss = iws.getMatchingStacks();
-	                MutableComponent iftc = Components.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
-	                if (cost.get(i))
-	                    iftc = iftc.withStyle(ChatFormatting.GREEN);
-	                else
-	                    iftc = iftc.withStyle(ChatFormatting.RED);
-	                i++;
-	                costStr.add(iftc);
-	            }
-	            if (cost.cardinality() == cost.length())
-	                level = 2;
-	            else
-	                level = 3;
-	        } else if (tile.getNextLevelMultiblock() != null) {
-	            validStructure = tile.nextLevelHasValidStructure(Minecraft.getInstance().level, helper.getContext());
-	            List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper.getContext());
-	            BitSet cost = IngredientUtils.checkItemList(ClientUtils.mc().player, upgcost);
-	            hasResearch = ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock());
-	            Vec3i v3i = tile.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
-	            if (!validStructure) {
-	                costStr.add(Lang.translateGui("generator.no_enough_space", v3i.getX(), v3i.getY(), v3i.getZ()));
-	            } else if (!hasResearch) {
-	                costStr.add(Lang.translateGui("generator.incomplete_research"));
-	            } else {
-	                costStr.add(Lang.translateGui("generator.upgrade_material"));
-	                int i = 0;
-	                for (IngredientWithSize iws : upgcost) {
-	                    ItemStack[] iss = iws.getMatchingStacks();
-	                    MutableComponent iftc = Components.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
-	                    if (cost.get(i))
-	                        iftc = iftc.withStyle(ChatFormatting.GREEN);
-	                    else
-	                        iftc = iftc.withStyle(ChatFormatting.RED);
-	                    i++;
-	                    costStr.add(iftc);
-	                }
-	                if (cost.cardinality() == cost.length()) {
-	                    level = 0;
-	                }
-	            }
-	        	
-	
-	        }
-        });
+       
         this.addRenderableWidget(upgrade = new MasterGeneratorGuiButtonUpgrade(leftPos + 75, topPos + 116, 26, 18, () -> level, 424, 148,
                 btn -> {
                     FHNetwork.sendToServer(new GeneratorModifyPacket());
                 }));
 
     }
-
+    public void calculateUpgradeCost() {
+    	 level = 1;
+         Player player = ClientUtils.mc().player;
+         costStr.clear();
+         Optional<IMultiblockBEHelper<?>> ohelper = CMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue());
+         ohelper.ifPresent(t->{
+         	GeneratorLogic<T,R> tile = (GeneratorLogic<T, R>) t.getMultiblock().logic();
+         	IMultiblockBEHelper<R> helper=(IMultiblockBEHelper<R>) t;
+ 	        if (menu.isBroken.getValue()) {
+ 	            costStr.add(Lang.translateGui("generator.repair_material"));
+ 	            BitSet cost = IngredientUtils.checkItemList(ClientUtils.mc().player, tile.getRepairCost());
+ 	            int i = 0;
+ 	            for (IngredientWithSize iws : tile.getRepairCost()) {
+ 	                ItemStack[] iss = iws.getMatchingStacks();
+ 	                MutableComponent iftc = Components.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
+ 	                if (cost.get(i))
+ 	                    iftc = iftc.withStyle(ChatFormatting.GREEN);
+ 	                else
+ 	                    iftc = iftc.withStyle(ChatFormatting.RED);
+ 	                i++;
+ 	                costStr.add(iftc);
+ 	            }
+ 	            if (cost.cardinality() == cost.length())
+ 	                level = 2;
+ 	            else
+ 	                level = 3;
+ 	        } else if (tile.getNextLevelMultiblock() != null) {
+ 	            validStructure = tile.nextLevelHasValidStructure(Minecraft.getInstance().level, helper.getContext());
+ 	            List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper.getContext());
+ 	            BitSet cost = IngredientUtils.checkItemList(ClientUtils.mc().player, upgcost);
+ 	            hasResearch = ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock());
+ 	            Vec3i v3i = tile.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
+ 	            if (!validStructure) {
+ 	                costStr.add(Lang.translateGui("generator.no_enough_space", v3i.getX(), v3i.getY(), v3i.getZ()));
+ 	            } else if (!hasResearch) {
+ 	                costStr.add(Lang.translateGui("generator.incomplete_research"));
+ 	            } else {
+ 	                costStr.add(Lang.translateGui("generator.upgrade_material"));
+ 	                int i = 0;
+ 	                for (IngredientWithSize iws : upgcost) {
+ 	                    ItemStack[] iss = iws.getMatchingStacks();
+ 	                    MutableComponent iftc = Components.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
+ 	                    if (cost.get(i))
+ 	                        iftc = iftc.withStyle(ChatFormatting.GREEN);
+ 	                    else
+ 	                        iftc = iftc.withStyle(ChatFormatting.RED);
+ 	                    i++;
+ 	                    costStr.add(iftc);
+ 	                }
+ 	                if (cost.cardinality() == cost.length()) {
+ 	                    level = 0;
+ 	                }
+ 	            }
+ 	        	
+ 	
+ 	        }
+         });
+    }
     @Override
     protected void gatherAdditionalTooltips(int mouseX, int mouseY, Consumer<Component> addLine, Consumer<Component> addGray) {
         super.gatherAdditionalTooltips(mouseX, mouseY, addLine, addGray);

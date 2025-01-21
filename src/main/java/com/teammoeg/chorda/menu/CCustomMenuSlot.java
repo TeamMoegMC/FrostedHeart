@@ -1,17 +1,15 @@
 package com.teammoeg.chorda.menu;
 
-import java.util.Comparator;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
-
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.JsonOps;
 import com.teammoeg.chorda.util.io.CodecUtil;
-import com.teammoeg.chorda.util.io.SerializeUtil;
 import com.teammoeg.chorda.util.io.registry.IdRegistry;
 
 import net.minecraft.core.BlockPos;
@@ -27,7 +25,54 @@ import net.minecraftforge.fluids.FluidStack;
  * 
  * */
 public class CCustomMenuSlot {
-	public static final IdRegistry<OtherDataSlotEncoder<?>> encoders=new IdRegistry<>();
+	public static class Encoders{
+		public static final IdRegistry<NetworkEncoder<?>> encoders=new IdRegistry<>();
+		static final NetworkEncoder<FluidStack> fluidEncoder=encoders.register(new NetworkEncoder<>() {
+
+			@Override
+			public FluidStack read(FriendlyByteBuf network) {
+				return FluidStack.readFromPacket(network);
+			}
+
+			@Override
+			public void write(FriendlyByteBuf network, FluidStack data) {
+				data.writeToPacket(network);
+			}
+			
+		});
+		
+		static final NetworkEncoder<List<Component>> textEncoder=encoders.register(codec(Codec.list(CodecUtil.convertSchema(JsonOps.INSTANCE).xmap(Component.Serializer::fromJson, Component.Serializer::toJsonTree))));
+		static final NetworkEncoder<BitSet> bitSetEncoder=encoders.register(new NetworkEncoder<>() {
+
+			@Override
+			public BitSet read(FriendlyByteBuf network) {
+		
+				return BitSet.valueOf(network.readByteArray());
+			}
+
+			@Override
+			public void write(FriendlyByteBuf network, BitSet data) {
+				byte[] ba=data.toByteArray();
+				network.writeByteArray(ba);
+			}
+			
+		});
+		public static <T> NetworkEncoder<T> codec(Codec<T> type){
+			return new NetworkEncoder<>(){
+
+				@Override
+				public T read(FriendlyByteBuf network) {
+					return CodecUtil.readCodec(network, type);
+				}
+
+				@Override
+				public void write(FriendlyByteBuf network, T data) {
+					CodecUtil.writeCodec(network, type, data);
+				}
+			};
+		}
+	}
+	
 	public static interface DataSlotConverter<A> extends IntFunction<A>{
 		int apply(A a);
 		A getDefault();
@@ -35,9 +80,12 @@ public class CCustomMenuSlot {
 			return CCustomMenuSlot.create(container,this);
 		}
 	}
+	public static interface NetworkEncoder<T>{
+		public T read(FriendlyByteBuf network);
+		public void write(FriendlyByteBuf network, T data);
+	};
 	public static interface OtherDataSlotEncoder<A>{
-		A read(FriendlyByteBuf network);
-		void write(FriendlyByteBuf network,A data);
+		NetworkEncoder<A> getEncoder();
 		A copy(A data);
 		A getDefault();
 		default boolean isSame(A data,A data2) {
@@ -307,6 +355,40 @@ public class CCustomMenuSlot {
 			return 0f;
 		}
 	};
+	public static final DataSlotConverter<BitSet> SLOT_BITSET32=new DataSlotConverter<>(){
+		@Override
+		public BitSet apply(int value) {
+	        BitSet bits = new BitSet();
+	        int index = 0;
+	        while (value != 0) {
+	            if (value % 2 != 0) {
+	                bits.set(index);
+	            }
+	            ++index;
+	            value = value >>> 1;
+	        }
+
+	        return bits;
+		}
+
+		@Override
+		public int apply(BitSet a) {
+			int val = 0;
+	        int bitval = 1;
+	        for (int i = 0; i < a.length(); i++) {
+	            if (a.get(i))
+	                val += bitval;
+	            bitval += bitval;
+	        }
+
+	        return val;
+		}
+
+		@Override
+		public BitSet getDefault() {
+			return new BitSet();
+		}
+	};
 	public static final MultipleDataSlotConverter<Long> SLOT_LONG=new MultipleDataSlotConverter<>(){
 		@Override
 		public void encode(Long a, int[] values) {
@@ -369,17 +451,8 @@ public class CCustomMenuSlot {
 			return Vec3i.ZERO;
 		}
 	};
+
 	public static final OtherDataSlotEncoder<FluidStack> SLOT_TANK=new OtherDataSlotEncoder<>(){
-
-		@Override
-		public FluidStack read(FriendlyByteBuf network) {
-			return FluidStack.readFromPacket(network);
-		}
-
-		@Override
-		public void write(FriendlyByteBuf network, FluidStack data) {
-			data.writeToPacket(network);
-		}
 
 		@Override
 		public FluidStack copy(FluidStack data) {
@@ -400,39 +473,64 @@ public class CCustomMenuSlot {
 			return data.isFluidStackIdentical(data2);
 		}
 
+		@Override
+		public NetworkEncoder<FluidStack> getEncoder() {
+			return Encoders.fluidEncoder;
+		}
+
 	};
-	static {
-		encoders.register(SLOT_TANK);
-	}
-	public static <T> OtherDataSlotEncoder<T> codec(Codec<T> type,Supplier<T> def,UnaryOperator<T> copy,Comparator<T> comparator){
-		return new OtherDataSlotEncoder<>(){
+	public static final OtherDataSlotEncoder<List<Component>> SLOT_TEXT=new OtherDataSlotEncoder<>(){
 
-			@Override
-			public T read(FriendlyByteBuf network) {
-				return CodecUtil.readCodec(network, type);
-			}
+		@Override
+		public List<Component> copy(List<Component> data) {
+			return List.copyOf(data);
+		}
 
-			@Override
-			public void write(FriendlyByteBuf network, T data) {
-				CodecUtil.writeCodec(network, type, data);
+		@Override
+		public List<Component> getDefault() {
+			return List.of();
+		}
+		@Override
+		public boolean isSame(List<Component> data, List<Component> data2) {
+			if(data.size()!=data2.size())
+				return false;
+			for(int i=0;i<data.size();i++) {
+				if(!Objects.equals(data.get(i), data2.get(i)))
+					return false;
 			}
+			return true;
+		}
 
-			@Override
-			public T copy(T data) {
-				return copy.apply(data);
-			}
+		@Override
+		public NetworkEncoder<List<Component>> getEncoder() {
+			return Encoders.textEncoder;
+		}
 
-			@Override
-			public T getDefault() {
-				return def.get();
-			}
-			@Override
-			public boolean isSame(T data, T data2) {
-				return comparator.compare(data, data2)==0;
-			}
+	};
+	public static final OtherDataSlotEncoder<BitSet> SLOT_VAR_BITSET=new OtherDataSlotEncoder<>(){
 
-		};
-	}
+		@Override
+		public BitSet copy(BitSet data) {
+			return BitSet.valueOf(data.toLongArray());
+		}
+
+		@Override
+		public BitSet getDefault() {
+			return new BitSet();
+		}
+		@Override
+		public boolean isSame(BitSet data,BitSet data2) {
+			return data.equals(data2);
+		}
+
+		@Override
+		public NetworkEncoder<BitSet> getEncoder() {
+			return Encoders.bitSetEncoder;
+		}
+
+	};
+
+
 	public static <T> CDataSlot<T> create(CBaseMenu container, DataSlotConverter<T> type) {
 		SingleDataSlot<T> slot=new SingleDataSlot<>(type);
 		container.addDataSlot(slot);

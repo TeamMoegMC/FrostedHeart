@@ -61,7 +61,7 @@ public class MechCalcRenderer implements BlockEntityRenderer<MechCalcTileEntity>
         matrixStack.pushPose();
         
         matrixStack.rotateAround(ClientUtils.DIR_TO_FACING.apply(te.getDirection().getOpposite()), 0.5f, 0.5f, 0.5f);
-        double forward = ((double) te.process / 1280) / 16d;
+        double forward = ( te.process / 1067) / 16d;
         matrixStack.translate(forward, 0, 0);
         List<BakedQuad> quads = MODEL.apply(ModelData.builder().with(DynamicSubmodelCallbacks.getProperty(), register).build());
         RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
