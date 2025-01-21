@@ -24,6 +24,8 @@ import blusunrize.immersiveengineering.client.models.obj.callback.DynamicSubmode
 import blusunrize.immersiveengineering.client.utils.RenderUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.model.DynamicBlockModelReference;
+import com.teammoeg.chorda.util.client.ClientUtils;
+
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -57,9 +59,10 @@ public class MechCalcRenderer implements BlockEntityRenderer<MechCalcTileEntity>
         Direction rd = te.getDirection().getClockWise();
 
         matrixStack.pushPose();
-        matrixStack.rotateAround(new Quaternionf().rotateY(te.getDirection().toYRot() / 180F * Mth.PI), 0.5f, 0.5f, 0.5f);
-        double forward = ((double) te.process / 1067) / 16d;
-        matrixStack.translate(rd.getStepX() * forward, 0, rd.getStepZ() * forward);
+        
+        matrixStack.rotateAround(ClientUtils.DIR_TO_FACING.apply(te.getDirection().getOpposite()), 0.5f, 0.5f, 0.5f);
+        double forward = ((double) te.process / 1280) / 16d;
+        matrixStack.translate(forward, 0, 0);
         List<BakedQuad> quads = MODEL.apply(ModelData.builder().with(DynamicSubmodelCallbacks.getProperty(), register).build());
         RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
         matrixStack.popPose();

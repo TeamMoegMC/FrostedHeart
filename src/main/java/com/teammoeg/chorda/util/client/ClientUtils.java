@@ -19,12 +19,18 @@
 
 package com.teammoeg.chorda.util.client;
 
+import java.util.function.Function;
+
+import org.joml.Quaternionf;
+
 import com.mojang.blaze3d.platform.InputConstants;
 
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
@@ -39,6 +45,8 @@ public class ClientUtils {
     public static float OverwriteGammaValue;
     public static boolean DoApplyGammaValue;
     private static long previousTick = 0;
+	public static final Function<Direction, Quaternionf> DIR_TO_FACING = Util
+	.memoize(dir -> new Quaternionf().rotateAxis(-(float) (dir.toYRot() / 180 * Math.PI), 0, 1, 0));
 
     public static LocalPlayer getPlayer() {
         return mc().player;

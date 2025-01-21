@@ -21,7 +21,6 @@ package com.teammoeg.chorda.util;
 
 import java.util.List;
 import java.util.OptionalDouble;
-import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -32,7 +31,6 @@ import com.teammoeg.chorda.util.client.ColorHelper;
 import com.teammoeg.chorda.util.client.Point;
 import net.minecraft.client.gui.Font;
 import org.joml.Matrix4f;
-import org.joml.Quaternionf;
 
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -43,7 +41,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
@@ -51,7 +48,6 @@ import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
@@ -65,9 +61,6 @@ import net.minecraftforge.client.ForgeRenderTypes;
  * Convenience functions for gui rendering
  */
 public class CGuiHelper {
-	public static final Function<Direction, Quaternionf> DIR_TO_FACING = Util
-			.memoize(dir -> new Quaternionf().rotateAxis(-(float) (dir.toYRot() / 180 * Math.PI), 0, 1, 0));
-
 	// hack to access render state protected members
 	public static class RenderStateAccess extends RenderStateShard {
 		public static RenderType.CompositeState getLineState(double width) {
