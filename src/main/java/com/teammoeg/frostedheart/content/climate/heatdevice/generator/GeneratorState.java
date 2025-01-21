@@ -1,13 +1,16 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
+import java.util.List;
 import java.util.Optional;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 public class GeneratorState extends HeatingState {
@@ -16,6 +19,9 @@ public class GeneratorState extends HeatingState {
      */
     int explodeTicks;
     boolean hasFuel;
+    //store upgrade and repair cost
+    List<IngredientWithSize> upgrade;
+    List<ItemStack> price;
     public boolean hasFuel() {
 		return hasFuel;
 	}

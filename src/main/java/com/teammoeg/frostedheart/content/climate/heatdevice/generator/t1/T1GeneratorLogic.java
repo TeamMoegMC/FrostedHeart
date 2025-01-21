@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.chorda.util.ie.CMultiblockHelper;
 import com.teammoeg.chorda.util.client.ClientUtils;
 
+import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelper;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
@@ -34,6 +35,7 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.util.ShapeType;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.AlloySmelterLogic;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.BlastFurnaceLogic;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.NonMirrorableWithActiveBlock;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -83,11 +85,13 @@ public final class T1GeneratorLogic extends GeneratorLogic<T1GeneratorLogic, T1G
         return false;
     }
 
-    @Override
+	@Override
     public IETemplateMultiblock getNextLevelMultiblock() {
         return FHMultiblocks.GENERATOR_T2;
     }
-
+    public TemplateMultiblock getMultiblock() {
+        return FHMultiblocks.GENERATOR_T1;
+    }
     @Override
     public T1GeneratorState createInitialState(IInitialMultiblockContext<T1GeneratorState> ctx) {
         return new T1GeneratorState();

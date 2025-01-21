@@ -33,12 +33,13 @@ import com.teammoeg.chorda.util.ie.MultiBlockAccess;
 
 import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.MultiblockRegistration;
-import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelper;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.CapabilityPosition;
 import blusunrize.immersiveengineering.api.utils.DirectionUtils;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.NonMirrorableWithActiveBlock;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -70,8 +71,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
     private final List<IngredientWithSize> repair = Arrays.asList(new IngredientWithSize(Ingredient.of(ItemTags.create(new ResourceLocation("forge", "ingots/copper"))), 32), new IngredientWithSize(Ingredient.of(ItemTags.create(new ResourceLocation("forge", "stone"))), 8));
-    //local inventory, prevent lost
-    List<IngredientWithSize> upgrade;
+
     private boolean hasFuel;//for rendering
 
     public GeneratorLogic() {
@@ -107,7 +107,8 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
         Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, ctx.getLevel().getOrientation().front());
         ((MultiBlockAccess) getNextLevelMultiblock()).setPlayer(entityplayer);
         ((MultiBlockAccess) getNextLevelMultiblock()).callForm(ctx.getLevel().getRawLevel(), ctx.getLevel().toAbsolute(negMasterOffset), rot, Mirror.NONE, ctx.getLevel().getOrientation().front().getOpposite());
-
+        for(ItemStack is:this.getPrice(ctx.getLevel().getRawLevel(), ctx))
+        	CUtils.giveItem(entityplayer, is.copy());
     }
 
     public void repairStructure(IMultiblockContext<R> ctx, ServerPlayer entityplayer) {
@@ -179,7 +180,8 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
     public List<IngredientWithSize> getUpgradeCost(Level level, IMultiblockContext<R> ctx) {
         IETemplateMultiblock ietm = getNextLevelMultiblock();
         if (ietm != null) {
-            if (upgrade == null) {
+        	R state=ctx.getState();
+            if (state.upgrade == null) {
                 List<StructureBlockInfo> structure = ietm.getStructure(level);
                 NonNullList<ItemStack> materials = NonNullList.create();
                 for (StructureBlockInfo info : structure) {
@@ -198,13 +200,41 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
                         materials.add(picked.copy());
                 }
                 if (materials.isEmpty()) return null;
-                upgrade = materials.stream().filter(Ingredient.of(FHBlocks.GENERATOR_CORE_T1.get()).negate()).map(IngredientWithSize::of).collect(Collectors.toList());
+                state.upgrade = materials.stream().filter(Ingredient.of(FHBlocks.GENERATOR_CORE_T1.get()).negate()).map(IngredientWithSize::of).collect(Collectors.toList());
             }
-            return upgrade;
+            return state.upgrade;
         }
         return null;
     }
-
+    public List<ItemStack> getPrice(Level level, IMultiblockContext<R> ctx) {
+        IETemplateMultiblock ietm = getNextLevelMultiblock();
+        if (ietm != null) {
+        	R state=ctx.getState();
+            if (state.price == null) {
+                List<StructureBlockInfo> structure = ietm.getStructure(level);
+                NonNullList<ItemStack> materials = NonNullList.create();
+                for (StructureBlockInfo info : structure) {
+                    // Skip dummy blocks in total
+                    if (info.state().hasProperty(IEProperties.MULTIBLOCKSLAVE) && info.state().getValue(IEProperties.MULTIBLOCKSLAVE))
+                        continue;
+                    ItemStack picked = Utils.getPickBlock(info.state());
+                    boolean added = false;
+                    for (ItemStack existing : materials)
+                        if (ItemStack.isSameItem(existing, picked)) {
+                            existing.grow(1);
+                            added = true;
+                            break;
+                        }
+                    if (!added)
+                        materials.add(picked.copy());
+                }
+                if (materials.isEmpty()) return null;
+                state.price = materials.stream().filter(Ingredient.of(FHBlocks.GENERATOR_CORE_T1.get()).negate()).collect(Collectors.toList());
+            }
+            return state.price;
+        }
+        return null;
+    }
     public abstract IETemplateMultiblock getNextLevelMultiblock();
 
     public boolean nextLevelHasValidStructure(Level level, IMultiblockContext<R> ctx) {
@@ -327,4 +357,10 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
     public void tickHeat(IMultiblockContext<R> ctx, boolean isActive) {
 
     }
+    @Override
+	public void onActiveStateChange(IMultiblockContext<R> ctx, boolean active) {
+		NonMirrorableWithActiveBlock.setActive(ctx.getLevel(), getMultiblock(), active);
+	}
+
+    public abstract TemplateMultiblock getMultiblock() ;
 }

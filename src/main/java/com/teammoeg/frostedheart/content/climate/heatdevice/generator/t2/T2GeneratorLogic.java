@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
+import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.CapabilityPosition;
@@ -31,6 +32,7 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorD
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import net.minecraft.core.BlockPos;
@@ -210,7 +212,9 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     public IETemplateMultiblock getNextLevelMultiblock() {
         return null;
     }
-
+    public TemplateMultiblock getMultiblock() {
+        return FHMultiblocks.GENERATOR_T2;
+    }
 
     @Override
     public T2GeneratorState createInitialState(IInitialMultiblockContext<T2GeneratorState> ctx) {

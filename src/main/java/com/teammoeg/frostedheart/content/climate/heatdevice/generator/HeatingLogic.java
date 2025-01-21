@@ -26,6 +26,7 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IClientT
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IServerTickableComponent;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockLogic;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.NonMirrorableWithActiveBlock;
 import net.minecraft.core.BlockPos;
 
 /**
@@ -57,8 +58,10 @@ public abstract class HeatingLogic<T extends HeatingLogic<T, ?>, R extends Heati
         tickHeat(ctx, isActive);
 
         // Set the activity status
-        if (activeBeforeTick != isActive)
+        if (activeBeforeTick != isActive) {
             state.setActive(isActive);
+            NonMirrorableWithActiveBlock.setActive(ctx.getLevel(), CMultiblockHelper.getMultiblock(ctx).m, isActive);
+        }
 
         // Update the heat area
         if (state.shouldUpdateAdjust()) {
@@ -81,7 +84,8 @@ public abstract class HeatingLogic<T extends HeatingLogic<T, ?>, R extends Heati
         tickShutdown(ctx);
 
     }
-
+    public void onActiveStateChange(IMultiblockContext<R> ctx,boolean active) {
+    }
     /**
      * Core client tick method
      * @param ctx

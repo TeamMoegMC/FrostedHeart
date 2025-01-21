@@ -85,9 +85,9 @@ public class FHMultiblocks {
 		}
 
 	}
-	public static IETemplateMultiblock GENERATOR_T1 = new T1GeneratorMultiblock();
-	public static IETemplateMultiblock GENERATOR_T2 = new T2GeneratorMultiblock();
-	public static IETemplateMultiblock RADIATOR = new RadiatorMultiblock();
+	public static final IETemplateMultiblock GENERATOR_T1 = new T1GeneratorMultiblock();
+	public static final IETemplateMultiblock GENERATOR_T2 = new T2GeneratorMultiblock();
+	public static final IETemplateMultiblock RADIATOR = new RadiatorMultiblock();
 	public static void registerMultiblocks() {
 		MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR_T1);
 		MultiblockHandler.registerMultiblock(FHMultiblocks.RADIATOR);
