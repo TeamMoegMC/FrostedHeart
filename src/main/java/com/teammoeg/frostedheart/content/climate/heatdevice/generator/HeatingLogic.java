@@ -60,7 +60,7 @@ public abstract class HeatingLogic<T extends HeatingLogic<T, ?>, R extends Heati
         // Set the activity status
         if (activeBeforeTick != isActive) {
             state.setActive(isActive);
-            NonMirrorableWithActiveBlock.setActive(ctx.getLevel(), CMultiblockHelper.getMultiblock(ctx).m, isActive);
+            this.onActiveStateChange(ctx, isActive);
         }
 
         // Update the heat area
