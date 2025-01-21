@@ -6,10 +6,10 @@ import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.common.util.NonNullSupplier;
 
-public class CTransientCapabilityProvider<C> implements ICapabilityProvider{
+public class TransientCapabilityProvider<C> implements ICapabilityProvider{
 	LazyOptional<C> lazyCap;
-	CTransientCapability<C> capability;
-	public CTransientCapabilityProvider(CTransientCapability<C> capability, NonNullSupplier<C> factory) {
+	TransientCapability<C> capability;
+	public TransientCapabilityProvider(TransientCapability<C> capability, NonNullSupplier<C> factory) {
 		super();
 		this.capability = capability;
 		this.lazyCap=LazyOptional.of(factory);

@@ -7,10 +7,10 @@ import java.util.List;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.capability.CCapabilityType;
-import com.teammoeg.chorda.capability.codec.CCodecCapabilityType;
-import com.teammoeg.chorda.capability.nbt.CNBTCapabilityType;
-import com.teammoeg.chorda.capability.nonpresistent.CTransientCapability;
+import com.teammoeg.chorda.capability.CapabilityType;
+import com.teammoeg.chorda.capability.codec.CodecCapabilityType;
+import com.teammoeg.chorda.capability.nbt.NBTCapabilityType;
+import com.teammoeg.chorda.capability.nonpresistent.TransientCapability;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -33,22 +33,22 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class FHCapabilities {
-	private static List<CCapabilityType> capabilities=new ArrayList<>();
-	public static final CNBTCapabilityType<WorldClimate> CLIMATE_DATA=register(WorldClimate.class);
-	public static final CNBTCapabilityType<DeathInventoryData> DEATH_INV=register(DeathInventoryData.class);
-	public static final CNBTCapabilityType<PlayerTemperatureData> PLAYER_TEMP=register(PlayerTemperatureData.class);
-	public static final CNBTCapabilityType<EnergyCore> ENERGY=register(EnergyCore.class);
-	public static final CNBTCapabilityType<ScenarioConductor> SCENARIO=register(ScenarioConductor.class);
-	public static final CCodecCapabilityType<ChunkHeatData> CHUNK_HEAT=register(ChunkHeatData.class,ChunkHeatData.CODEC);
-	public static final CNBTCapabilityType<HeatEndpoint> HEAT_EP=register(HeatEndpoint.class);
-	public static final CTransientCapability<HeatStorageCapability> ITEM_HEAT=registerTransient(HeatStorageCapability.class);
+	private static List<CapabilityType> capabilities=new ArrayList<>();
+	public static final NBTCapabilityType<WorldClimate> CLIMATE_DATA=register(WorldClimate.class);
+	public static final NBTCapabilityType<DeathInventoryData> DEATH_INV=register(DeathInventoryData.class);
+	public static final NBTCapabilityType<PlayerTemperatureData> PLAYER_TEMP=register(PlayerTemperatureData.class);
+	public static final NBTCapabilityType<EnergyCore> ENERGY=register(EnergyCore.class);
+	public static final NBTCapabilityType<ScenarioConductor> SCENARIO=register(ScenarioConductor.class);
+	public static final CodecCapabilityType<ChunkHeatData> CHUNK_HEAT=register(ChunkHeatData.class,ChunkHeatData.CODEC);
+	public static final NBTCapabilityType<HeatEndpoint> HEAT_EP=register(HeatEndpoint.class);
+	public static final TransientCapability<HeatStorageCapability> ITEM_HEAT=registerTransient(HeatStorageCapability.class);
 
-	public static final CNBTCapabilityType<WantedFoodCapability> WANTED_FOOD=register(WantedFoodCapability.class);
-	public static final CNBTCapabilityType<ChunkTownResourceCapability> CHUNK_TOWN_RESOURCE=register(ChunkTownResourceCapability.class);
-	public static final CTransientCapability<RobotChunk> ROBOTIC_LOGISTIC_CHUNK=registerTransient(RobotChunk.class);
-	public static final CNBTCapabilityType<WaypointCapability> WAYPOINT=register(WaypointCapability.class);
-	public static final CNBTCapabilityType<WaterLevelCapability> PLAYER_WATER_LEVEL = register(WaterLevelCapability.class);
-	public static final CNBTCapabilityType<NutritionCapability> PLAYER_NUTRITION = register(NutritionCapability.class);
+	public static final NBTCapabilityType<WantedFoodCapability> WANTED_FOOD=register(WantedFoodCapability.class);
+	public static final NBTCapabilityType<ChunkTownResourceCapability> CHUNK_TOWN_RESOURCE=register(ChunkTownResourceCapability.class);
+	public static final TransientCapability<RobotChunk> ROBOTIC_LOGISTIC_CHUNK=registerTransient(RobotChunk.class);
+	public static final NBTCapabilityType<WaypointCapability> WAYPOINT=register(WaypointCapability.class);
+	public static final NBTCapabilityType<WaterLevelCapability> PLAYER_WATER_LEVEL = register(WaterLevelCapability.class);
+	public static final NBTCapabilityType<NutritionCapability> PLAYER_NUTRITION = register(NutritionCapability.class);
 	public static void setup() {
 	
 	}
@@ -56,7 +56,7 @@ public class FHCapabilities {
 	 * register capability with class, using no-arg constructor as default factory
 	 * <p>
 	 * */
-	public static <T extends NBTSerializable> CNBTCapabilityType<T> register(Class<T> capClass){
+	public static <T extends NBTSerializable> NBTCapabilityType<T> register(Class<T> capClass){
 		Constructor<T> ctor;
 		try {
 			try {	
@@ -85,7 +85,7 @@ public class FHCapabilities {
 	 * register capability with class, using no-arg constructor as default factory
 	 * <p>
 	 * */
-	public static <T> CCodecCapabilityType<T> register(Class<T> capClass, Codec<T> codec){
+	public static <T> CodecCapabilityType<T> register(Class<T> capClass, Codec<T> codec){
 		Constructor<T> ctor;
 		try {
 			try {	
@@ -113,31 +113,31 @@ public class FHCapabilities {
 	/**
 	 * register capability with class, with provided factory in initialization
 	 * */
-	public static <T extends NBTSerializable> CNBTCapabilityType<T> register(Class<T> capClass, NonNullSupplier<T> factory){
-		CNBTCapabilityType<T> cap=new CNBTCapabilityType<>(capClass,factory);
+	public static <T extends NBTSerializable> NBTCapabilityType<T> register(Class<T> capClass, NonNullSupplier<T> factory){
+		NBTCapabilityType<T> cap=new NBTCapabilityType<>(capClass,factory);
 		capabilities.add(cap);
 		return cap;
 	}
 	/**
 	 * register Non persistent capability with class
 	 * */
-	public static <T> CTransientCapability<T> registerTransient(Class<T> capClass){
-		CTransientCapability<T> cap=new CTransientCapability<>(capClass);
+	public static <T> TransientCapability<T> registerTransient(Class<T> capClass){
+		TransientCapability<T> cap=new TransientCapability<>(capClass);
 		capabilities.add(cap);
 		return cap;
 	}
 	/**
 	 * register capability with class, with provided factory in initialization, and provided codec in serialization
 	 * */
-	public static <T> CCodecCapabilityType<T> register(Class<T> capClass, NonNullSupplier<T> factory, Codec<T> codec){
-		CCodecCapabilityType<T> cap=new CCodecCapabilityType<>(capClass,factory,codec);
+	public static <T> CodecCapabilityType<T> register(Class<T> capClass, NonNullSupplier<T> factory, Codec<T> codec){
+		CodecCapabilityType<T> cap=new CodecCapabilityType<>(capClass,factory,codec);
 		capabilities.add(cap);
 		return cap;
 	}
 	@SubscribeEvent
 	public static void onRegister(RegisterCapabilitiesEvent ev) {
 		
-		for(CCapabilityType cap:capabilities) {
+		for(CapabilityType cap:capabilities) {
 			ev.register(cap.getCapClass());
 			cap.register();
 		}

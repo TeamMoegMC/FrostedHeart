@@ -1,36 +1,36 @@
-package com.teammoeg.chorda.capability.codec;
+package com.teammoeg.chorda.capability.nbt;
 
 import org.objectweb.asm.Type;
 
-import com.mojang.serialization.Codec;
-import com.teammoeg.chorda.capability.CCapabilityType;
+import com.teammoeg.chorda.capability.CapabilityType;
 import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
+import com.teammoeg.chorda.util.io.NBTSerializable;
+
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.common.util.NonNullSupplier;
 /**
- * Basic codec serialized capability type
+ * Basic nbt capability type
+ * 
  * */
-public class CCodecCapabilityType<C> implements CCapabilityType {
+public class NBTCapabilityType<C extends NBTSerializable> implements CapabilityType {
 	private Class<C> capClass;
 	private Capability<C> capability;
 	private NonNullSupplier<C> factory;
-	private Codec<C> codec;
-
-	public CCodecCapabilityType(Class<C> capClass, NonNullSupplier<C> factory, Codec<C> codec) {
+	public NBTCapabilityType(Class<C> capClass, NonNullSupplier<C> factory) {
 		super();
 		this.capClass = capClass;
 		this.factory = factory;
-		this.codec = codec;
 	}
 	@SuppressWarnings("unchecked")
 	public void register() {
         capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(Type.getInternalName(capClass).intern());
 	}
 	public ICapabilityProvider provider() {
-		return new CCodecCapabilityProvider<>(this);
+		return new NBTCapabilityProvider<>(this);
 	}
 	LazyOptional<C> createCapability(){
 		return LazyOptional.of(factory);
@@ -40,12 +40,17 @@ public class CCodecCapabilityType<C> implements CCapabilityType {
 			return ((ICapabilityProvider)cap).getCapability(capability);
 		return LazyOptional.empty();
 	}
+	public LazyOptional<C> getCapability(Object cap,Direction dir) {
+		if(cap instanceof ICapabilityProvider)
+			return ((ICapabilityProvider)cap).getCapability(capability,dir);
+		return LazyOptional.empty();
+	}
     public Capability<C> capability() {
 		return capability;
 	}
-    public Codec<C> codec(){
-    	return codec;
-    }
+    public boolean isCapability(Capability<?> cap) {
+		return capability==cap;
+	}
 	public Class<C> getCapClass() {
 		return capClass;
 	}

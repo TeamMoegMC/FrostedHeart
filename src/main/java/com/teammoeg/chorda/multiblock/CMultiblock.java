@@ -81,7 +81,7 @@ public abstract class CMultiblock extends IETemplateMultiblock {
         CMultiblockHelper.getBEHelper(world, origin.offset(master)).ifPresent(te -> {
             if (te.getState() instanceof DisassembleListener lis) {
             	lis.onDisassemble(this, te);
-            }else
+            }else if(te.getState()==null)
                 Chorda.LOGGER.error("State is null when disassembling Multiblock.");
         });
         super.disassemble(world, origin, mirrored, clickDirectionAtCreation);

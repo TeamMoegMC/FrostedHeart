@@ -44,7 +44,7 @@ public class MultiblockMenuType<S extends IMultiblockState, C extends AbstractCo
 	}
 
 	public IMultiblockComponent<S> createComponent(){
-		return new CMenuComponent<>(this);
+		return new CMultiblockMenuComponent<>(this);
 	}
 
 

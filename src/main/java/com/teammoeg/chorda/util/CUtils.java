@@ -21,7 +21,7 @@ package com.teammoeg.chorda.util;
 
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.capability.nbt.CNBTCapabilityType;
+import com.teammoeg.chorda.capability.nbt.NBTCapabilityType;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.FHMain;
@@ -213,10 +213,10 @@ public class CUtils {
    public static <T extends NBTSerializable> void clonePlayerCapability(Capability<T> capability,Player old,Player now){
 	   cloneCapability(old.getCapability(capability),now.getCapability(capability));
    }
-   public static <T extends NBTSerializable> void copyPlayerCapability(CNBTCapabilityType<T> capability, Player old, Player now){
+   public static <T extends NBTSerializable> void copyPlayerCapability(NBTCapabilityType<T> capability, Player old, Player now){
 	   copyCapability(capability.getCapability(old),capability.getCapability(now));
    }
-   public static <T extends NBTSerializable> void clonePlayerCapability(CNBTCapabilityType<T> capability, Player old, Player now){
+   public static <T extends NBTSerializable> void clonePlayerCapability(NBTCapabilityType<T> capability, Player old, Player now){
 	   cloneCapability(capability.getCapability(old),capability.getCapability(now));
    }
    public static <T> void copyAllFields(T to, T from) {

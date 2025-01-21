@@ -30,6 +30,7 @@ import com.teammoeg.chorda.network.ContainerDataSyncMessageS2C;
 import com.teammoeg.chorda.network.ContainerOperationMessageC2S;
 import com.teammoeg.chorda.util.utility.CCustomMenuSlot.SyncableDataSlot;
 
+import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MoveItemsFunc;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
@@ -47,73 +48,87 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 	public static class Validator implements Predicate<Player> {
 		Vec3 initial;
 		int distsqr;
+
 		public Validator(BlockPos initial, int distance) {
 			super();
 			this.initial = Vec3.atCenterOf(initial);
-			this.distsqr = distance*distance;
+			this.distsqr = distance * distance;
 		}
+
 		@Override
 		public boolean test(Player t) {
-			return t.position().distanceToSqr(initial)<=distsqr;
+			return t.position().distanceToSqr(initial) <= distsqr;
 		}
-		public Predicate<Player> and(BooleanSupplier supp){
-			return this.and(t->supp.getAsBoolean());
+
+		public Predicate<Player> and(BooleanSupplier supp) {
+			return this.and(t -> supp.getAsBoolean());
 		}
 	}
-	public static class QuickMoveStackBuilder{
-			private static record Range(int start,int end,boolean reverse){
-				private Range(int slot) {
-					this(slot,slot+1,false);
-				}
-				
+
+	public static class QuickMoveStackBuilder {
+		private static record Range(int start, int end, boolean reverse) {
+			private Range(int slot) {
+				this(slot, slot + 1, false);
 			}
-			List<Range> ranges=new ArrayList<>();
-			private QuickMoveStackBuilder() {}
-			
-			public static QuickMoveStackBuilder begin() {
-				return new QuickMoveStackBuilder();
-			}
-			public static QuickMoveStackBuilder first(int slot) {
-				return begin().then(slot);
-			}
-			public static QuickMoveStackBuilder first(int beginInclusive,int endExclusive) {
-				return begin().then(beginInclusive,endExclusive);
-			}
-			public QuickMoveStackBuilder then(int slot) {
-				ranges.add(new Range(slot));
-				return this;
-			}
-			public QuickMoveStackBuilder then(int beginInclusive,int endExclusive) {
-				ranges.add(new Range(beginInclusive,endExclusive,false));
-				return this;
-			}
-			public QuickMoveStackBuilder then(int beginInclusive,int endExclusive,boolean reversed) {
-				ranges.add(new Range(beginInclusive,endExclusive,reversed));
-				return this;
-			}
-			public Function<ItemStack,Boolean> build(CBaseMenu t){
-				return i->{
-					for(Range r:ranges) {
-						if(t.moveItemStackTo(i, r.start(), r.end(), r.reverse()))
-							return true;
-					}
-					return false;
-				};
-				
-			}
+
 		}
+
+		List<Range> ranges = new ArrayList<>();
+
+		private QuickMoveStackBuilder() {
+		}
+
+		public static QuickMoveStackBuilder begin() {
+			return new QuickMoveStackBuilder();
+		}
+
+		public static QuickMoveStackBuilder first(int slot) {
+			return begin().then(slot);
+		}
+
+		public static QuickMoveStackBuilder first(int beginInclusive, int endExclusive) {
+			return begin().then(beginInclusive, endExclusive);
+		}
+
+		public QuickMoveStackBuilder then(int slot) {
+			ranges.add(new Range(slot));
+			return this;
+		}
+
+		public QuickMoveStackBuilder then(int beginInclusive, int endExclusive) {
+			ranges.add(new Range(beginInclusive, endExclusive, false));
+			return this;
+		}
+
+		public QuickMoveStackBuilder then(int beginInclusive, int endExclusive, boolean reversed) {
+			ranges.add(new Range(beginInclusive, endExclusive, reversed));
+			return this;
+		}
+
+		public Function<ItemStack, Boolean> build(CBaseMenu t) {
+			return i -> {
+				for (Range r : ranges) {
+					if (t.moveItemStackTo(i, r.start(), r.end(), r.reverse()))
+						return true;
+				}
+				return false;
+			};
+
+		}
+	}
 
 	protected final int INV_START;
 	protected static final int INV_SIZE = 36;
 	protected static final int INV_QUICK = 27;
 	protected Predicate<Player> validator;
-	protected Lazy<Function<ItemStack,Boolean>> moveFunction = Lazy.of(()->defineQuickMoveStack().build(this));
-	protected List<SyncableDataSlot<?>> specialDataSlots=new ArrayList<>();
+	protected Lazy<Function<ItemStack, Boolean>> moveFunction = Lazy.of(() -> defineQuickMoveStack().build(this));
+	protected List<SyncableDataSlot<?>> specialDataSlots = new ArrayList<>();
 	private Player player;
+
 	public CBaseMenu(MenuType<?> pMenuType, int pContainerId, Player player, int inv_start) {
 		super(pMenuType, pContainerId);
 		this.INV_START = inv_start;
-		this.player=player;
+		this.player = player;
 	}
 
 	protected void addPlayerInventory(Inventory inv, int dx, int dy, int quickBarY) {
@@ -125,7 +140,7 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 	}
 
 	public QuickMoveStackBuilder defineQuickMoveStack() {
-		return QuickMoveStackBuilder.first(0,INV_START);
+		return QuickMoveStackBuilder.first(0, INV_START);
 	}
 
 	public boolean quickMoveIn(ItemStack slotStack) {
@@ -136,7 +151,7 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 	public ItemStack quickMoveStack(Player playerIn, int index) {
 		ItemStack itemStack = ItemStack.EMPTY;
 		Slot slot = slots.get(index);
-	
+
 		if (slot != null && slot.hasItem()) {
 			ItemStack slotStack = slot.getItem();
 			itemStack = slotStack.copy();
@@ -171,19 +186,105 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 
 	@Override
 	public boolean moveItemStackTo(ItemStack pStack, int pStartIndex, int pEndIndex, boolean pReverseDirection) {
-		return super.moveItemStackTo(pStack, pStartIndex, pEndIndex, pReverseDirection);
+		boolean flag = false;
+		int i = pStartIndex;
+		if (pReverseDirection) {
+			i = pEndIndex - 1;
+		}
+
+		if (pStack.isStackable()) {
+			while (!pStack.isEmpty()) {
+				if (pReverseDirection) {
+					if (i < pStartIndex) {
+						break;
+					}
+				} else if (i >= pEndIndex) {
+					break;
+				}
+
+				Slot slot = this.slots.get(i);
+				ItemStack itemstack = slot.getItem();
+				if(slot.mayPlace(pStack))
+					if (!itemstack.isEmpty() && ItemStack.isSameItemSameTags(pStack, itemstack)) {
+						int j = itemstack.getCount() + pStack.getCount();
+						int maxSize = Math.min(slot.getMaxStackSize(), pStack.getMaxStackSize());
+						if (j <= maxSize) {
+							pStack.setCount(0);
+							itemstack.setCount(j);
+							slot.setChanged();
+							flag = true;
+						} else if (itemstack.getCount() < maxSize) {
+							pStack.shrink(maxSize - itemstack.getCount());
+							itemstack.setCount(maxSize);
+							slot.setChanged();
+							flag = true;
+						}
+					}
+
+				if (pReverseDirection) {
+					--i;
+				} else {
+					++i;
+				}
+			}
+		}
+
+		if (!pStack.isEmpty()) {
+			if (pReverseDirection) {
+				i = pEndIndex - 1;
+			} else {
+				i = pStartIndex;
+			}
+
+			while (true) {
+				if (pReverseDirection) {
+					if (i < pStartIndex) {
+						break;
+					}
+				} else if (i >= pEndIndex) {
+					break;
+				}
+
+				Slot slot1 = this.slots.get(i);
+				ItemStack itemstack1 = slot1.getItem();
+				if (itemstack1.isEmpty() && slot1.mayPlace(pStack)) {
+					if (pStack.getCount() > slot1.getMaxStackSize()) {
+						slot1.setByPlayer(pStack.split(slot1.getMaxStackSize()));
+					} else {
+						slot1.setByPlayer(pStack.split(pStack.getCount()));
+					}
+
+					slot1.setChanged();
+					flag = true;
+					break;
+				}
+
+				if (pReverseDirection) {
+					--i;
+				} else {
+					++i;
+				}
+			}
+		}
+
+		return flag;
+
 	}
-	public void receiveMessage(short btnId,int state) {
-		
+
+	public void receiveMessage(short btnId, int state) {
+
 	}
-	public void sendMessage(int btnId,int state) {
-		ChordaNetwork.sendToServer(new ContainerOperationMessageC2S(this.containerId,(short) btnId,state));
+
+	public void sendMessage(int btnId, int state) {
+		ChordaNetwork.sendToServer(new ContainerOperationMessageC2S(this.containerId, (short) btnId, state));
 	}
-	public void sendMessage(int btnId,boolean state) {
-		ChordaNetwork.sendToServer(new ContainerOperationMessageC2S(this.containerId,(short) btnId,state?1:0));
+
+	public void sendMessage(int btnId, boolean state) {
+		ChordaNetwork.sendToServer(new ContainerOperationMessageC2S(this.containerId, (short) btnId, state ? 1 : 0));
 	}
-	public void sendMessage(int btnId,float state) {
-		ChordaNetwork.sendToServer(new ContainerOperationMessageC2S(this.containerId,(short) btnId,Float.floatToRawIntBits(state)));
+
+	public void sendMessage(int btnId, float state) {
+		ChordaNetwork.sendToServer(new ContainerOperationMessageC2S(this.containerId, (short) btnId, Float.floatToRawIntBits(state)));
 	}
 
 	@Override
@@ -195,35 +296,37 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 	public void addDataSlots(ContainerData pArray) {
 		super.addDataSlots(pArray);
 	}
+
 	public void addDataSlot(SyncableDataSlot<?> slot) {
 		specialDataSlots.add(slot);
 	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void processPacket(ContainerDataSyncMessageS2C packet) {
-		packet.forEach((i,o)->{
-			((SyncableDataSlot)specialDataSlots.get(i)).setValue(o);
+		packet.forEach((i, o) -> {
+			((SyncableDataSlot) specialDataSlots.get(i)).setValue(o);
 		});
 	}
+
 	@Override
 	public void broadcastChanges() {
 		super.broadcastChanges();
-		ContainerDataSyncMessageS2C packet=new ContainerDataSyncMessageS2C();
-		for(int i=0;i<specialDataSlots.size();i++) {
-			SyncableDataSlot<?> slot= specialDataSlots.get(i);
-			if(slot.checkForUpdate()) {
+		ContainerDataSyncMessageS2C packet = new ContainerDataSyncMessageS2C();
+		for (int i = 0; i < specialDataSlots.size(); i++) {
+			SyncableDataSlot<?> slot = specialDataSlots.get(i);
+			if (slot.checkForUpdate()) {
 				packet.add(i, slot.getConverter(), slot.getValue());
 			}
 		}
-		if(packet.hasData()&&player!=null)
-			ChordaNetwork.sendPlayer((ServerPlayer)player, packet);
+		if (packet.hasData() && player != null)
+			ChordaNetwork.sendPlayer((ServerPlayer) player, packet);
 	}
 
 	@Override
 	public boolean stillValid(Player pPlayer) {
-		if(validator==null)
+		if (validator == null)
 			return true;
 		return validator.test(pPlayer);
 	}
 
-	
 }

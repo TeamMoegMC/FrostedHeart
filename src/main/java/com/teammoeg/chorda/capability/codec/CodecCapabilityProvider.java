@@ -9,10 +9,10 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class CCodecCapabilityProvider<T> implements ICapabilitySerializable<Tag> {
+public class CodecCapabilityProvider<T> implements ICapabilitySerializable<Tag> {
 	LazyOptional<T> lazyCap;
-	CCodecCapabilityType<T> capability;
-	public CCodecCapabilityProvider(CCodecCapabilityType<T> capability) {
+	CodecCapabilityType<T> capability;
+	public CodecCapabilityProvider(CodecCapabilityType<T> capability) {
 		this.capability=capability;
 		this.lazyCap=capability.createCapability();
 	}
