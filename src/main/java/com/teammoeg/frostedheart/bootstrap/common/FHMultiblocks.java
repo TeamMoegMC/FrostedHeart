@@ -20,8 +20,6 @@
 package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.teammoeg.chorda.block.CActiveMultiblockBlock;
-import com.teammoeg.chorda.events.IERegistryEvent;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
@@ -43,9 +41,6 @@ import blusunrize.immersiveengineering.common.register.IEBlocks;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class FHMultiblocks {
 	public static class Registration{
 		public static final MultiblockRegistration<T1GeneratorState> GENERATOR_T1 = stone(new T1GeneratorLogic(), "generator_t1",false)
@@ -93,11 +88,11 @@ public class FHMultiblocks {
 	public static IETemplateMultiblock GENERATOR_T1 = new T1GeneratorMultiblock();
 	public static IETemplateMultiblock GENERATOR_T2 = new T2GeneratorMultiblock();
 	public static IETemplateMultiblock RADIATOR = new RadiatorMultiblock();
-	@SubscribeEvent
-	public void registerMultiblocks(IERegistryEvent event) {
+	public static void registerMultiblocks() {
 		MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR_T1);
 		MultiblockHandler.registerMultiblock(FHMultiblocks.RADIATOR);
 		MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR_T2);
+		System.out.println("eventBus loaded");
 	}
 
 

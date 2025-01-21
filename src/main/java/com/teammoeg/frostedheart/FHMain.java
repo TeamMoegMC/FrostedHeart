@@ -24,6 +24,7 @@ import com.simibubi.create.foundation.item.KineticStats;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.chorda.ChordaMetaEvents;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.client.FHTooltips;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
@@ -164,7 +165,7 @@ public class FHMain {
         FHBlockEntityTypes.init();
         FHBiomes.init();
         FHPredicates.init();
-
+        ChordaMetaEvents.ieRegistry.addListener(()->FHMultiblocks::registerMultiblocks);
         // Compat init
         LOGGER.info(COMMON_INIT, "Initializing Mod Compatibilities");
         FHSpecialDataTypes.init();
