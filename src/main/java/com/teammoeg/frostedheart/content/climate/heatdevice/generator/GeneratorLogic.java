@@ -249,24 +249,29 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
      */
     @Override
     protected boolean tickFuel(IMultiblockContext<R> ctx) {
+    	R state=ctx.getState();
         Optional<GeneratorData> data = getData(ctx);
         boolean lastIsBroken = data.map(t -> t.isBroken).orElse(false);
-
+        boolean curHasFuel=data.map(t->t.hasFuel()).orElse(false);
+        if(state.hasFuel!=curHasFuel) {
+        	state.hasFuel=curHasFuel;
+        	ctx.requestMasterBESync();
+        }
         // Tick the GeneratorData
-        ctx.getState().tickData(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx));
+        state.tickData(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx));
         boolean isActive = data.map(t -> t.isActive).orElse(false);
 
         // If newly broken, start exploding for 100 ticks
         boolean isBroken = data.map(t -> t.isBroken).orElse(false);
         if (lastIsBroken != isBroken && isBroken) {
-            ctx.getState().explodeTicks = 100;
+            state.explodeTicks = 100;
         }
 
         Level level = ctx.getLevel().getRawLevel();
-        if (ctx.getState().explodeTicks > 0) {
+        if (state.explodeTicks > 0) {
             Vec3i size = CMultiblockHelper.getSize(ctx);
             // Every 5 ticks, send explosion packet to nearby players
-            if (ctx.getState().explodeTicks % 5 == 0) {
+            if (state.explodeTicks % 5 == 0) {
                 BlockPos pos = ctx.getLevel().toAbsolute(new BlockPos(level.random.nextInt(size.getX()),
                         level.random.nextInt(size.getY()),
                         level.random.nextInt(size.getZ())));
@@ -277,7 +282,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
                 }
             }
             // Reduce the explode ticks
-            ctx.getState().explodeTicks--;
+            state.explodeTicks--;
         }
 
         // Tick the drives

@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorContainer;
-import com.teammoeg.chorda.util.utility.CCustomMenuSlot;
-import com.teammoeg.chorda.util.utility.CCustomMenuSlot.CDataSlot;
+import com.teammoeg.chorda.menu.CCustomMenuSlot;
+import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.chorda.util.client.Point;
 
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;

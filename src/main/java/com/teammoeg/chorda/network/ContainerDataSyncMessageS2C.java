@@ -6,8 +6,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.menu.CBaseMenu;
-import com.teammoeg.chorda.util.utility.CCustomMenuSlot;
-import com.teammoeg.chorda.util.utility.CCustomMenuSlot.OtherDataSlotEncoder;
+import com.teammoeg.chorda.menu.CCustomMenuSlot;
+import com.teammoeg.chorda.menu.CCustomMenuSlot.OtherDataSlotEncoder;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.io.SerializeUtil;
 

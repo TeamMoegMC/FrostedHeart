@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 import java.util.Optional;
 
 import com.teammoeg.chorda.menu.CBaseMenu;
-import com.teammoeg.chorda.util.utility.CCustomMenuSlot;
-import com.teammoeg.chorda.util.utility.CCustomMenuSlot.CDataSlot;
+import com.teammoeg.chorda.menu.CCustomMenuSlot;
+import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.chorda.util.ie.CMultiblockHelper;
 import com.teammoeg.chorda.util.client.Point;
 

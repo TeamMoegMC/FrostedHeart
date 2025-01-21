@@ -52,9 +52,8 @@ public class T2GeneratorRenderer implements BlockEntityRenderer<MultiblockBlockE
         final IMultiblockBEHelperMaster<T2GeneratorState> helper = blockEntity.getHelper();
         final T2GeneratorState state = helper.getState();
         final MultiblockOrientation orientation = helper.getContext().getLevel().getOrientation();
-        BlockPos blockPos = blockEntity.getBlockPos();
 
-        if (state.getData(blockPos).map(t -> !t.inventory.getStackInSlot(GeneratorData.INPUT_SLOT).isEmpty()).orElse(false)) {
+        if (state.hasFuel()) {
             matrixStack.pushPose();
             bufferIn = BERenderUtils.mirror(orientation, matrixStack, bufferIn);
             Direction facing = orientation.front();

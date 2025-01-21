@@ -1,17 +1,23 @@
-package com.teammoeg.chorda.util.utility;
+package com.teammoeg.chorda.menu;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
-import com.teammoeg.chorda.menu.CBaseMenu;
+import com.mojang.serialization.Codec;
+import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.util.io.SerializeUtil;
 import com.teammoeg.chorda.util.io.registry.IdRegistry;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraftforge.fluids.FluidStack;
@@ -397,6 +403,35 @@ public class CCustomMenuSlot {
 	};
 	static {
 		encoders.register(SLOT_TANK);
+	}
+	public static <T> OtherDataSlotEncoder<T> codec(Codec<T> type,Supplier<T> def,UnaryOperator<T> copy,Comparator<T> comparator){
+		return new OtherDataSlotEncoder<>(){
+
+			@Override
+			public T read(FriendlyByteBuf network) {
+				return CodecUtil.readCodec(network, type);
+			}
+
+			@Override
+			public void write(FriendlyByteBuf network, T data) {
+				CodecUtil.writeCodec(network, type, data);
+			}
+
+			@Override
+			public T copy(T data) {
+				return copy.apply(data);
+			}
+
+			@Override
+			public T getDefault() {
+				return def.get();
+			}
+			@Override
+			public boolean isSame(T data, T data2) {
+				return comparator.compare(data, data2)==0;
+			}
+
+		};
 	}
 	public static <T> CDataSlot<T> create(CBaseMenu container, DataSlotConverter<T> type) {
 		SingleDataSlot<T> slot=new SingleDataSlot<>(type);

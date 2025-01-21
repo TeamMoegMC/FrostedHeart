@@ -15,7 +15,16 @@ public class GeneratorState extends HeatingState {
      * Remaining ticks to explode
      */
     int explodeTicks;
-    public HeatEndpoint ep = new HeatEndpoint(200, 0);
+    boolean hasFuel;
+    public boolean hasFuel() {
+		return hasFuel;
+	}
+
+	public void setHasFuel(boolean hasFuel) {
+		this.hasFuel = hasFuel;
+	}
+
+	public HeatEndpoint ep = new HeatEndpoint(200, 0);
     public GeneratorState() {
         super();
     }
@@ -117,5 +126,17 @@ public class GeneratorState extends HeatingState {
     public void onDataChange() {
     	
     }
+
+	@Override
+	public void writeSyncNBT(CompoundTag nbt) {
+		super.writeSyncNBT(nbt);
+		nbt.putBoolean("hasFuel", hasFuel);
+	}
+
+	@Override
+	public void readSyncNBT(CompoundTag nbt) {
+		super.readSyncNBT(nbt);
+		hasFuel=nbt.getBoolean("hasFuel");
+	}
 
 }

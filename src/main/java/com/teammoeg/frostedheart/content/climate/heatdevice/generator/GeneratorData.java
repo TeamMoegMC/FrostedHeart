@@ -230,7 +230,9 @@ public class GeneratorData implements SpecialData {
         RLevel = ranged / 100F;
 
     }
-
+    public boolean hasFuel() {
+    	return process>0||!inventory.getStackInSlot(INPUT_SLOT).isEmpty();
+    }
     public boolean tickFuelProcess(Level w,SpecialDataHolder<?> teamData) {
         if (!isWorking || isBroken)
             return false;

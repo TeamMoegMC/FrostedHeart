@@ -26,9 +26,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import com.teammoeg.chorda.ChordaNetwork;
+import com.teammoeg.chorda.menu.CCustomMenuSlot.SyncableDataSlot;
 import com.teammoeg.chorda.network.ContainerDataSyncMessageS2C;
 import com.teammoeg.chorda.network.ContainerOperationMessageC2S;
-import com.teammoeg.chorda.util.utility.CCustomMenuSlot.SyncableDataSlot;
 
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MoveItemsFunc;
 import net.minecraft.core.BlockPos;
