@@ -135,7 +135,7 @@ public class SerializeUtil {
 	
 	/**
 	 * Read ItemStack from json
-	 *
+	 * @see #toJson
 	 * @param elm the elm
 	 * @return the item stack
 	 */
@@ -175,9 +175,9 @@ public class SerializeUtil {
 
 	/**
 	 * Parses the json element list, this would check if elm is array/null.<p>
-	 * case array, mapper would be applied to each element.<br>
+	 * case array, mapper would be called to serialize each element.<br>
 	 * case null, an empty list would be returned<br>
-	 * case other, mapper would be applied to element itself
+	 * case other, mapper would be called to serialize to element itself
 	 * 
 	 *
 	 * @param <T> the return object
@@ -197,9 +197,9 @@ public class SerializeUtil {
 
 	/**
 	 * Parses the json object list, this would check if elm is array/null.<p>
-	 * case array, mapper would be applied to each element.<br>
+	 * case array, mapper would be called to deserialize each element.<br>
 	 * case null, an empty list would be returned<br>
-	 * case object, mapper would be applied to element itself
+	 * case object, mapper would be called to deserialize element itself
 	 * 
 	 * @throws IllegalStateException when element of array or the element itself is not json object
 	 * 
@@ -278,7 +278,7 @@ public class SerializeUtil {
 
 	/**
 	 * Read list from buffer, may return null if the list written is null
-	 * the function would be applied for each element to read from packet to required object.
+	 * the function would be called to read each element to read from packet to required object.
 	 * @see #readList(FriendlyByteBuf, Function)
 	 * @see #writeListNullable(FriendlyByteBuf, Collection, BiConsumer)
 	 * @see #writeListNullable2(FriendlyByteBuf, Collection, BiConsumer)
@@ -296,7 +296,9 @@ public class SerializeUtil {
 
 	/**
 	 * Read a list from buffer
-	 * the function would be applied for each element to read from packet to required object.
+	 * the function would be called to read each element to read from packet to required object.
+	 * @see #writeList(FriendlyByteBuf, Collection, BiConsumer)
+	 * @see #writeList2(FriendlyByteBuf, Collection, BiConsumer)
 	 * @param <T> the list element type
 	 * @param buffer the buffer
 	 * @param func the read method for the required object
@@ -312,7 +314,7 @@ public class SerializeUtil {
 
 	/**
 	 * Read values and set the provided map to the read key values with separate key and value reader.
-	 * The key reader and value reader would be applied to each entry
+	 * The key reader and value reader would be called to read each entry
 	 * @see #writeMap(FriendlyByteBuf, Map, BiConsumer, BiConsumer)
 	 * @param <K> the key type
 	 * @param <V> the value type
@@ -334,7 +336,8 @@ public class SerializeUtil {
 
 	/**
 	 * Read values and set the provided map to the read key values with single entry reader.
-	 * The entry reader would be applied to each entry
+	 * The entry reader would be called to read each entry
+	 * @see #writeEntry(FriendlyByteBuf, Map, BiConsumer)
 	 * @param <K> the key type
 	 * @param <V> the value type
 	 * @param buffer the buffer
@@ -368,7 +371,7 @@ public class SerializeUtil {
 
 	/**
 	 * Read short array from packet
-	 *
+	 * @see #writeShortArray(FriendlyByteBuf, short[])
 	 * @param buffer the buffer
 	 * @return the short array
 	 */
@@ -384,7 +387,8 @@ public class SerializeUtil {
 
 	/**
 	 * Read string-value map and set the provided map to the read key values with value reader.
-	 * The value reader would be applied to each entry
+	 * The value reader would be called to read each entry value
+	 * @see #readStringMap(FriendlyByteBuf, Map, Function)
 	 * @param <V> the value type
 	 * @param buffer the buffer
 	 * @param map the map to write entrys within
@@ -397,7 +401,7 @@ public class SerializeUtil {
 
 	/**
 	 * Save itemstack to json
-	 *
+	 * @see #fromJson(JsonElement)
 	 * @param stack the stack
 	 * @return the json element
 	 */
@@ -446,11 +450,11 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * To NBT list.
-	 *
-	 * @param <T> the generic type
-	 * @param stacks the stacks
-	 * @param mapper the mapper
+	 * Serialize a collection to a NBT list
+	 * 
+	 * @param <T> the element type
+	 * @param stacks the collection
+	 * @param mapper the element serializer, the second argument is array nbt element builder
 	 * @return the list tag
 	 */
 	public static <T> ListTag toNBTList(Collection<T> stacks, BiConsumer<T, ArrayNBTBuilder<Void>> mapper) {
@@ -460,11 +464,11 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * To NBT map.
+	 * Serialize a collection to a NBT map.
 	 *
-	 * @param <T> the generic type
-	 * @param stacks the stacks
-	 * @param mapper the mapper
+	 * @param <T> the element type
+	 * @param stacks the collection
+	 * @param mapper the element serializer, the second argument is map nbt entry builder
 	 * @return the compound tag
 	 */
 	public static <T> CompoundTag toNBTMap(Collection<T> stacks, BiConsumer<T, CompoundNBTBuilder<Void>> mapper) {
@@ -485,7 +489,7 @@ public class SerializeUtil {
 
 	/**
 	 * Write boolean flags to a byte bit.
-	 *
+	 * @see #readBooleans(byte)
 	 * @param elms the elms
 	 * @return the byte
 	 */
@@ -504,14 +508,15 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write list nullable.
-	 *
-	 * @param <T> the generic type
+	 * Write a nullable colleciton to the packet, each element is written by calling the function.
+	 * @see #readListNullable(FriendlyByteBuf, Function)
+	 * @see #writeListNullable2(FriendlyByteBuf, Collection, BiConsumer)
+	 * @param <T> the element type
 	 * @param buffer the buffer
-	 * @param elms the elms
-	 * @param func the func
+	 * @param elms the colleciton
+	 * @param func the write function
 	 */
-	public static <T> void writeListNullable(FriendlyByteBuf buffer, Collection<T> elms, BiConsumer<T, FriendlyByteBuf> func) {
+	public static <T> void writeListNullable(FriendlyByteBuf buffer,@Nullable Collection<T> elms, BiConsumer<T, FriendlyByteBuf> func) {
 		if (elms == null) {
 			buffer.writeBoolean(false);
 			return;
@@ -521,12 +526,14 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write list nullable 2.
-	 *
-	 * @param <T> the generic type
+	 * Write a nullable colleciton to the packet, each element is written by calling the function.
+	 * This method is different from {@link #writeListNullable(FriendlyByteBuf, Collection, BiConsumer) writeListNullable} with reversed function parameter order, so that :: operator can be used
+	 * @see #readListNullable(FriendlyByteBuf, Function)
+	 * @see #writeListNullable(FriendlyByteBuf, Collection, BiConsumer)
+	 * @param <T> the element type
 	 * @param buffer the buffer
-	 * @param elms the elms
-	 * @param func the func
+	 * @param elms the colleciton
+	 * @param func the write function
 	 */
 	public static <T> void writeListNullable2(FriendlyByteBuf buffer, Collection<T> elms, BiConsumer<FriendlyByteBuf, T> func) {
 		if (elms == null) {
@@ -538,12 +545,13 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write list.
-	 *
-	 * @param <T> the generic type
+	 * Write a nonnull colleciton to the packet, each element is written by calling the function.
+	 * @see #readList(FriendlyByteBuf, Function)
+	 * @see #writeList2(FriendlyByteBuf, Collection, BiConsumer)
+	 * @param <T> the element type
 	 * @param buffer the buffer
-	 * @param elms the elms
-	 * @param func the func
+	 * @param elms the colleciton
+	 * @param func the write function
 	 */
 	public static <T> void writeList(FriendlyByteBuf buffer, Collection<T> elms, BiConsumer<T, FriendlyByteBuf> func) {
 		buffer.writeVarInt(elms.size());
@@ -551,13 +559,13 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write entry.
-	 *
+	 * Write entries of the map to packet with given write function
+	 * @see #readEntry(FriendlyByteBuf, Map, BiConsumer)
 	 * @param <K> the key type
 	 * @param <V> the value type
 	 * @param buffer the buffer
-	 * @param elms the elms
-	 * @param func the func
+	 * @param elms the map
+	 * @param func the write function
 	 */
 	public static <K, V> void writeEntry(FriendlyByteBuf buffer, Map<K, V> elms, BiConsumer<Map.Entry<K, V>, FriendlyByteBuf> func) {
 		buffer.writeVarInt(elms.size());
@@ -565,12 +573,14 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write list 2.
-	 *
-	 * @param <T> the generic type
+	 * Write a nonnull colleciton to the packet, each element is written by calling the function.
+	 * This method is different from {@link #writeList(FriendlyByteBuf, Collection, BiConsumer) writeList} with reversed function parameter order, so that :: operator can be used
+	 * @see #readList(FriendlyByteBuf, Function)
+	 * @see #writeList(FriendlyByteBuf, Collection, BiConsumer)
+	 * @param <T> the element type
 	 * @param buffer the buffer
-	 * @param elms the elms
-	 * @param func the func
+	 * @param elms the colleciton
+	 * @param func the write function
 	 */
 	public static <T> void writeList2(FriendlyByteBuf buffer, Collection<T> elms, BiConsumer<FriendlyByteBuf, T> func) {
 		buffer.writeVarInt(elms.size());
@@ -578,14 +588,14 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write map.
-	 *
+	 * Write map to packet with the given key and value writer for each entry.
+	 * @see #readMap(FriendlyByteBuf, Map, Function, Function)
 	 * @param <K> the key type
 	 * @param <V> the value type
 	 * @param buffer the buffer
-	 * @param elms the elms
-	 * @param keywriter the keywriter
-	 * @param valuewriter the valuewriter
+	 * @param elms the map
+	 * @param keywriter the key writer
+	 * @param valuewriter the value writer
 	 */
 	public static <K, V> void writeMap(FriendlyByteBuf buffer, Map<K, V> elms, BiConsumer<K, FriendlyByteBuf> keywriter, BiConsumer<V, FriendlyByteBuf> valuewriter) {
 		writeListNullable(buffer, elms.entrySet(), (p, b) -> {
@@ -595,12 +605,12 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write optional.
+	 * Write optional value to packet, the write function would be called to write data when optional is not null
 	 *
-	 * @param <T> the generic type
+	 * @param <T> the optional type
 	 * @param buffer the buffer
-	 * @param data the data
-	 * @param func the func
+	 * @param data the optional data
+	 * @param func the write function
 	 */
 	public static <T> void writeOptional(FriendlyByteBuf buffer, Optional<T> data, BiConsumer<T, FriendlyByteBuf> func) {
 		if (data.isPresent()) {
@@ -612,24 +622,25 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write optional.
-	 *
-	 * @param <T> the generic type
+	 * Write nullable data as optional to packet.
+	 * @see #writeOptional(FriendlyByteBuf, Optional, BiConsumer)
+	 * @param <T> the optional type
 	 * @param buffer the buffer
 	 * @param data the data
-	 * @param func the func
+	 * @param func the write function
 	 */
-	public static <T> void writeOptional(FriendlyByteBuf buffer, T data, BiConsumer<T, FriendlyByteBuf> func) {
+	public static <T> void writeOptional(FriendlyByteBuf buffer,@Nullable T data, BiConsumer<T, FriendlyByteBuf> func) {
 		writeOptional(buffer, Optional.ofNullable(data), func);
 	}
 
 	/**
-	 * Write optional 2.
-	 *
-	 * @param <T> the generic type
+	 * Write nullable data as optional to packet.
+	 * This method is different from {@link #writeOptional(FriendlyByteBuf, Object, BiConsumer) writeOptional} with reversed function parameter order, so that :: operator can be used 
+	 * @see #writeOptional(FriendlyByteBuf, Optional, BiConsumer)
+	 * @param <T> the optional type
 	 * @param buffer the buffer
 	 * @param data the data
-	 * @param func the func
+	 * @param func the write function
 	 */
 	public static <T> void writeOptional2(FriendlyByteBuf buffer, T data, BiConsumer<FriendlyByteBuf, T> func) {
 		writeOptional(buffer, data, (a, b) -> func.accept(b, a));
@@ -639,7 +650,7 @@ public class SerializeUtil {
 	 * Write short array.
 	 *
 	 * @param buffer the buffer
-	 * @param arr the arr
+	 * @param arr the array
 	 */
 	public static void writeShortArray(FriendlyByteBuf buffer, short[] arr) {
 		if (arr == null) {
@@ -653,20 +664,17 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write string map.
+	 * Write string-value map to the packet, the value writer is called to write each entry.
 	 *
+	 * @see #readStringMap(FriendlyByteBuf, Map, Function)
 	 * @param <V> the value type
 	 * @param buffer the buffer
-	 * @param elms the elms
-	 * @param valuewriter the valuewriter
+	 * @param elms the map
+	 * @param valuewriter the value writer
 	 */
 	public static <V> void writeStringMap(FriendlyByteBuf buffer, Map<String, V> elms, BiConsumer<V, FriendlyByteBuf> valuewriter) {
 		writeMap(buffer, elms, (p, b) -> b.writeUtf(p), valuewriter);
 	}
-
-	/**
-	 * Instantiates a new serialize util.
-	 */
 	private SerializeUtil() {
 
 	}
