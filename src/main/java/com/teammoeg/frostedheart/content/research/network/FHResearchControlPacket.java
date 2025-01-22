@@ -64,7 +64,7 @@ public class FHResearchControlPacket implements CMessage {
 
                     ResearchData rd = trd.get().getData(r);
                     if (rd.canResearch()) return;
-                    if (trd.get().commitItem(spe, trd.team(), r)) {
+                    if (trd.get().commitItem(spe, trd, r)) {
                         trd.get().setCurrentResearch(trd.team(), r);
                     }
                     return;

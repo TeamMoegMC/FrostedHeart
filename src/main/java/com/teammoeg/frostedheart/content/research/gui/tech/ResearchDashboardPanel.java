@@ -60,7 +60,7 @@ public class ResearchDashboardPanel extends Panel {
         techpoint = new RTextField(this).setMaxWidth(100).setMaxLine(1).setColor(TechIcons.text);
         techpoint.setPos(40, 28);
         availableInsightLevel = new RTextField(this).setMaxWidth(100).setMaxLine(1).setColor(TechIcons.text);
-        availableInsightLevel.setPos(60, 28);
+        availableInsightLevel.setPos(40, 38);
     }
 
     public static synchronized String toReadable(long num) {
@@ -114,6 +114,7 @@ public class ResearchDashboardPanel extends Panel {
         techpoint.setText(toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
         add(techpoint);
         TeamResearchData data = ClientResearchDataAPI.getData().get();
+        Lang.gui(read, null)
         availableInsightLevel.setText(data.getAvailableInsightLevel() + "Insight Points");
         add(availableInsightLevel);
     }

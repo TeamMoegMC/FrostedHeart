@@ -55,7 +55,7 @@ class Benefits {
 
 
     public void giveEnergy() {
-        EnergyCore.addEnergy(player, (int) ((5000 + EnergyCore.getEnergy(player)) * Math.min((float) eatenFoodsAmount / 200, 0.5)));
+        //EnergyCore.addEnergy(player, (int) ((5000 + EnergyCore.getEnergy(player)) * Math.min((float) eatenFoodsAmount / 200, 0.5)));
     }
 
     /**

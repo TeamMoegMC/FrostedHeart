@@ -23,6 +23,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.team.SpecialData;
 import com.teammoeg.chorda.team.SpecialDataHolder;
+import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.chorda.util.ie.IngredientUtils;
 import com.teammoeg.chorda.util.io.CodecUtil;
@@ -263,8 +264,11 @@ public class TeamResearchData implements SpecialData {
 				return false;
 			}
 		}
+		if(!this.hasInsight(research.getInsight()))
+			return false;
 		if (!research.getRequiredItems().isEmpty() && !IngredientUtils.costItems(player, research.getRequiredItems()))
 			return false;
+		this.costInsight(research.getInsight());
 		getData(research).setActive();
 		this.sendResearchProgressPacket(team, research);
 		return true;
@@ -677,7 +681,16 @@ public class TeamResearchData implements SpecialData {
 		int currentLevelInsights = computeInsightFromLevel(insightLevel);
 		return (float) (insight - currentLevelInsights) / (nextLevelInsights - currentLevelInsights);
 	}
-
+	public boolean costInsight(int insightLvl) {
+		if(this.usedInsightLevel+insightLvl>=this.insightLevel) {
+			this.usedInsightLevel+=insightLvl;
+			return true;
+		}
+		return false;
+	}
+	public boolean hasInsight(int insightLvl) {
+		return this.usedInsightLevel+insightLvl>=this.insightLevel;
+	}
 	/**
 	 * Get available insights level.
 	 *

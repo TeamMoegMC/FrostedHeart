@@ -97,9 +97,9 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
         if (lvl < 0) return;
         Optional<ResearchPaperRecipe> pr = CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.get(PAPER_SLOT))).findAny();
         if (!pr.isPresent()) return;
-        if (EnergyCore.getEnergy(player) <= 0) return;
+        //if (EnergyCore.getEnergy(player) <= 0) return;
         if (!damageInk(player, 5, lvl)) return;
-        EnergyCore.costEnergy(player, 1);
+        //EnergyCore.costEnergy(player, 1);
         inventory.get(PAPER_SLOT).shrink(1);
         game.init(GenerateInfo.all[lvl], new Random());
         game.setLvl(lvl);
