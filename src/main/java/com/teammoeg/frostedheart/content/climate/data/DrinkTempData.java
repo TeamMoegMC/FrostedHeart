@@ -19,21 +19,32 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
+import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.registries.RegistryObject;
 
 public record DrinkTempData(Fluid fluid,float heat) {
-	public static final MapCodec<DrinkTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+	public static final Codec<DrinkTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 		CodecUtil.registryCodec(()->BuiltInRegistries.FLUID).fieldOf("fluid").forGetter(o->o.fluid),
 		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("heat").forGetter(o->o.heat)).apply(t, DrinkTempData::new));
-
-
+	public static RegistryObject<CodecRecipeSerializer<DrinkTempData>> TYPE;
+	public static Map<Fluid,DrinkTempData> cacheList=ImmutableMap.of();
     public float getHeat() {
         return heat;
     }
+	public static float getDrinkHeat(FluidStack f) {
+		DrinkTempData dtd = cacheList.get(f.getFluid());
+		if (dtd != null)
+			return dtd.getHeat();
+		return -0.3f;
+	}
 }

@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart.content.climate;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
+import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -250,7 +250,7 @@ public class WorldTemperature {
     public static final float VANILLA_PLANT_GROW_TEMPERATURE_MAX = 50;
     public static final float CLIMATE_BLOCK_AFFECTION=0.5f;
     
-    public static Map<Object, Float> worldCache = new HashMap<>();
+    public static Map<Level, Float> worldCache = new HashMap<>();
     public static Map<Biome, Float> biomeCache = new HashMap<>();
 
     public static void clear() {
@@ -266,7 +266,7 @@ public class WorldTemperature {
     public static float dimension(LevelReader w) {
         float wt = 0;
         if (w instanceof Level level) {
-            wt = worldCache.computeIfAbsent(level, (k) -> FHDataManager.getWorldTemp(level));
+            wt = worldCache.computeIfAbsent(level,l-> WorldTempData.getWorldTemp(l));
         }
         return wt;
     }
@@ -279,7 +279,7 @@ public class WorldTemperature {
      */
     public static float biome(LevelReader w, BlockPos pos) {
         Biome b = w.getBiome(pos).get();
-        return biomeCache.computeIfAbsent(b, FHDataManager::getBiomeTemp);
+        return biomeCache.computeIfAbsent(b,t-> BiomeTempData.getBiomeTemp(t));
     }
 
     /**
@@ -372,7 +372,7 @@ public class WorldTemperature {
 
     @Nonnull
     public static PlantTempData getPlantDataWithDefault(Block block) {
-        PlantTempData data = FHDataManager.getPlantData(block);
+        PlantTempData data = PlantTempData.getPlantData(block);
         // We can't really do any instanceof check here, since so many potential blocks
         // may be invoked with the crop event.
         if (data == null)

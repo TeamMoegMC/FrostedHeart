@@ -34,7 +34,6 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
-import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
@@ -44,8 +43,6 @@ import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
-import com.teammoeg.frostedheart.infrastructure.data.FHDataManager.DataType;
 import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_PlaceExtraSnow;
 import com.teammoeg.chorda.util.CUtils;
 import net.minecraft.core.BlockPos;
@@ -117,7 +114,7 @@ public class ClimateCommonEvents {
 
     @SubscribeEvent
     public static void attachToItem(AttachCapabilitiesEvent<ItemStack> event) {
-        ArmorTempData amd=FHDataManager.getArmor(event.getObject());
+        ArmorTempData amd=ArmorTempData.cacheList.get(event.getObject().getItem());
         if (amd!=null) {
             event.addCapability(new ResourceLocation(FHMain.MODID, "armor_warmth"),new CurioCapabilityProvider(()->new ArmorTempCurios(amd,event.getObject())));
         }
@@ -135,7 +132,7 @@ public class ClimateCommonEvents {
 
     @SubscribeEvent
     public static void insulationDataAttr(ItemAttributeModifierEvent event) {
-        ArmorTempData data=FHDataManager.getArmor(event.getItemStack());
+        ArmorTempData data=ArmorTempData.cacheList.get(event.getItemStack().getItem());
 
         if(data!=null) {
         	EquipmentSlot es=event.getItemStack().getEquipmentSlot();
@@ -154,10 +151,10 @@ public class ClimateCommonEvents {
     }
 
 
-    @SubscribeEvent
+   /* @SubscribeEvent
     public static void addReloadListeners(AddReloadListenerEvent event) {
         event.addListener(FHDataManager.INSTANCE);
-    }
+    }*/
 
     /**
      * Controls the growth of crops based on the temperature.
@@ -319,8 +316,6 @@ public class ClimateCommonEvents {
             ServerLevel serverWorld = ((ServerPlayer) event.getEntity()).serverLevel();
             PacketTarget currentPlayer=PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity());
             FHResearch.sendSyncPacket(currentPlayer);
-            for(DataType type:DataType.types)
-            	FHNetwork.send(currentPlayer,new FHDatapackSyncPacket(type));
             FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayer) event.getEntity()).get()));
             FHCapabilities.CLIMATE_DATA.getCapability(serverWorld).ifPresent((cap) -> FHNetwork.send(currentPlayer,new FHClimatePacket(cap)));
 

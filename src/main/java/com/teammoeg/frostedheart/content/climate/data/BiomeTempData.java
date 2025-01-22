@@ -19,15 +19,34 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
+import java.util.Map;
+
+import javax.annotation.Nonnull;
+
+import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
+import com.teammoeg.chorda.util.CRegistryHelper;
+
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraftforge.registries.RegistryObject;
 
 public record BiomeTempData(ResourceLocation biome,float temperature) {
-	public static final MapCodec<BiomeTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+	public static final Codec<BiomeTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 		ResourceLocation.CODEC.fieldOf("biome").forGetter(o->o.biome),
 		Codec.FLOAT.fieldOf("temperature").forGetter(o->o.temperature)
 		).apply(t,BiomeTempData::new));
- 
+	public static RegistryObject<CodecRecipeSerializer<BiomeTempData>> TYPE;
+	public static Map<ResourceLocation,BiomeTempData> cacheList=ImmutableMap.of();
+
+	@Nonnull
+	public static Float getBiomeTemp(Biome b) {
+		if (b == null) return 0f;
+		BiomeTempData data = cacheList.get(CRegistryHelper.getRegistryName(b));
+		if (data != null)
+			return data.temperature();
+		return 0F;
+	}
 }

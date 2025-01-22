@@ -25,10 +25,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.function.Function;
 
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 
 import net.minecraft.world.level.block.state.BlockState;
@@ -286,16 +286,26 @@ public class SurroundingTemperatureSimulator {
     private boolean getAir(BlockPos bp) {
         return getInfoCached(bp).exposeToAir;
     }
-
+    private class CachedBlockInfoGetter implements Function <BlockState,CachedBlockInfo>{
+    	BlockPos pos;
+		@Override
+		public CachedBlockInfo apply(BlockState t) {
+			return getInfo(pos, t);
+		}
+    	
+    }
+    // only one instance is generated each class to lower lambda overhead cost
+    CachedBlockInfoGetter generator=new CachedBlockInfoGetter();
     /***
      * fetch without position cache, but with blockstate cache, blocks with the same
      * state should have same collider and heat.
      *
      */
     private CachedBlockInfo getInfo(BlockPos pos) {
+    	generator.pos=pos;
         BlockPos ofregion = pos.subtract(origin);
         BlockState bs = getBlock(ofregion.getX(), ofregion.getY(), ofregion.getZ());
-        return info.computeIfAbsent(bs, s -> getInfo(pos, s));
+        return info.computeIfAbsent(bs, generator);
     }
 
     /**
@@ -304,7 +314,7 @@ public class SurroundingTemperatureSimulator {
      */
     private CachedBlockInfo getInfo(BlockPos pos, BlockState bs) {
         boolean isExpose = getTopY(pos.getX(), pos.getZ()) < pos.getY();
-        BlockTempData b = FHDataManager.getBlockData(bs.getBlock());
+        BlockTempData b = BlockTempData.cacheList.get(bs.getBlock());
         if (b == null)
             return new CachedBlockInfo(bs.getBlockSupportShape(world, pos), isExpose, bs);
         float cblocktemp = 0;

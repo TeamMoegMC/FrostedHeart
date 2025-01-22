@@ -24,6 +24,13 @@ import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 import com.teammoeg.chorda.recipe.DataContainerRecipe;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
+import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
+import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
+import com.teammoeg.frostedheart.content.climate.data.CupData;
+import com.teammoeg.frostedheart.content.climate.data.DrinkTempData;
+import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
+import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
+import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
@@ -93,7 +100,17 @@ public class FHRecipes {
         WaterLevelAndEffectRecipe.TYPE = createRecipeType("water_level_and_effect");
         NutritionRecipe.TYPE = createRecipeType("diet_override");
         ItemResourceAmountRecipe.TYPE = createRecipeType("item_resource_amount");
-        createCodecRecipeType("armor",ArmorTempData.CODEC);
+        ArmorTempData.TYPE=createCodecRecipeType("armor_temp",ArmorTempData.CODEC);
+        BiomeTempData.TYPE=createCodecRecipeType("biome_temp",BiomeTempData.CODEC);
+        BlockTempData.TYPE=createCodecRecipeType("block_temp",BlockTempData.CODEC);
+        CupData.TYPE=createCodecRecipeType("cup_temp",CupData.CODEC);
+        DrinkTempData.TYPE=createCodecRecipeType("armor_temp",DrinkTempData.CODEC);
+        FoodTempData.TYPE=createCodecRecipeType("drink_temp",FoodTempData.CODEC);
+        PlantTempData.TYPE=createCodecRecipeType("food_temp",PlantTempData.CODEC);
+        WorldTempData.TYPE=createCodecRecipeType("world_temp",WorldTempData.CODEC);
+        
+        
+        
     }
     public static <T extends Recipe<?>> RegistryObject<RecipeType<T>> createRecipeType(String name){
     	return RECIPE_TYPES.register(name,()->RecipeType.simple(new ResourceLocation(FHMain.MODID,name)));

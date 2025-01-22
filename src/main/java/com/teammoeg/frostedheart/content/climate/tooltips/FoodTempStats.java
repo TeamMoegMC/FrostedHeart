@@ -6,10 +6,10 @@ import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
+import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.chorda.util.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
@@ -59,7 +59,7 @@ public class FoodTempStats implements TooltipModifier {
 
     public static List<Component> getFoodStats(Item item, ItemStack stack, Player player) {
         List<Component> list = new ArrayList<>();
-        ITempAdjustFood data = FHDataManager.getTempAdjustFood(stack);
+        ITempAdjustFood data = FoodTempData.getTempAdjustFood(stack);
         if (data != null) {
             float env = PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getEnvTemp).orElse(0f);
             float heat = (float) (data.getHeat(stack, env) * FHConfig.SERVER.tempSpeed.get());

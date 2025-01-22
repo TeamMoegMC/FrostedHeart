@@ -38,7 +38,6 @@ import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.steamenergy.*;
 import com.teammoeg.frostedheart.content.utility.SoilThermometer;
 import com.teammoeg.frostedheart.content.utility.TemperatureProbe;
-import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.GuiGraphics;
@@ -131,8 +130,8 @@ public class TemperatureGoogleRenderer {
 
         BlockState state = world.getBlockState(pos);
         Block block = world.getBlockState(pos).getBlock();
-        BlockTempData blockData = FHDataManager.getBlockData(block);
-        PlantTempData plantData = FHDataManager.getPlantData(block);
+        BlockTempData blockData = BlockTempData.cacheList.get(block);
+        PlantTempData plantData = PlantTempData.cacheList.get(block);
         boolean hasBlockTempInfo = blockData != null;
         boolean hasPlantTempInfo = plantData != null;
 

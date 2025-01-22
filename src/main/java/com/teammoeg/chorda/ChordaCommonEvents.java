@@ -1,8 +1,12 @@
 package com.teammoeg.chorda;
 
+import com.teammoeg.chorda.recipe.RecipeReloadListener;
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
+
+import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
@@ -21,5 +25,10 @@ public class ChordaCommonEvents {
                 SchedulerQueue.tickAll(serverWorld);
             }
         }
+    }
+    @SubscribeEvent
+    public static void addReloadListenersLowest(AddReloadListenerEvent event) {
+        ReloadableServerResources dataPackRegistries = event.getServerResources();
+        event.addListener(new RecipeReloadListener(dataPackRegistries));
     }
 }

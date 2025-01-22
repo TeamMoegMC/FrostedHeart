@@ -27,8 +27,8 @@ import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.content.water.item.DurableDrinkContainerItem;
-import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.data.DrinkTempData;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.client.Lang;
 
@@ -121,7 +121,7 @@ public class ThermosItem extends DurableDrinkContainerItem implements ITempAdjus
             IFluidHandlerItem f = ih.resolve().get();
             FluidStack fs = f.getFluidInTank(0);
             if (!fs.isEmpty()) {
-                return FHDataManager.getDrinkHeat(fs);
+                return DrinkTempData.getDrinkHeat(fs);
             }
         }
         return 0;

@@ -19,26 +19,55 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
-import com.teammoeg.chorda.util.io.CodecUtil;
+import java.util.Map;
 
-import lombok.Data;
+import javax.annotation.Nullable;
+
+import com.google.common.collect.ImmutableMap;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
+import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
+
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.RegistryObject;
 
 public record FoodTempData(Item item,float heat, float min, float max) implements ITempAdjustFood {
 
 
-	public static final MapCodec<FoodTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+	public static final Codec<FoodTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 		CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).fieldOf("item").forGetter(o->o.item),
 		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("heat").forGetter(o->o.heat),
 		CodecUtil.defaultValue(Codec.FLOAT,-15f).fieldOf("min").forGetter(o->o.min),
 		CodecUtil.defaultValue(Codec.FLOAT,15f).fieldOf("max").forGetter(o->o.max)).apply(t, FoodTempData::new));
+	public static RegistryObject<CodecRecipeSerializer<FoodTempData>> TYPE;
+	public static Map<Item,FoodTempData> cacheList=ImmutableMap.of();
+	/**
+	 * Get the temperature adjuster for the food item.
+	 * If stack is a cup, return the cup's temperature adjuster.
+	 * If stack has food temp data, return the food's temperature adjuster.
+	 * Otherwise, return null.
+	 *
+	 * @param stack the item stack
+	 * @return the temperature adjuster
+	 */
+	public static @Nullable ITempAdjustFood getTempAdjustFood(ItemStack stack) {
+		return getTempAdjustFood(stack.getItem());
+	}
 
+	public static @Nullable ITempAdjustFood getTempAdjustFood(Item item) {
+		if (item instanceof ITempAdjustFood) {
+			return (ITempAdjustFood) item;
+		}
+		CupData data = CupData.cacheList.get(item);
+		if (data != null) {
+			return new CupTempAdjustProxy(data.getEfficiency(), cacheList.get(item));
+		}
+		return cacheList.get(item);
+	}
     @Override
     public float getHeat(ItemStack is, float env) {
         return heat;

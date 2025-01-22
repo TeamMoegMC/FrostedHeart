@@ -19,13 +19,17 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
+import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 import com.teammoeg.chorda.util.io.CodecUtil;
-import lombok.Getter;
+
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
+import net.minecraftforge.registries.RegistryObject;
 
 public record PlantTempData(Block block,float minFertilize, float minGrow, float minSurvive,
 	 float maxFertilize, float maxGrow, float maxSurvive,
@@ -39,7 +43,7 @@ public record PlantTempData(Block block,float minFertilize, float minGrow, float
 	public static final boolean DEFAULT_SNOW_VULNERABLE = true;
 	public static final boolean DEFAULT_BLIZZARD_VULNERABLE = true;
 
-	public static final MapCodec<PlantTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+	public static final Codec<PlantTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 			CodecUtil.registryCodec(()->BuiltInRegistries.BLOCK).fieldOf("block").forGetter(o->o.block),
 			// min
 			CodecUtil.defaultValue(Codec.FLOAT,DEFAULT_BONEMEAL_TEMP).fieldOf("min_fertilize").forGetter(o->o.minFertilize),
@@ -53,8 +57,12 @@ public record PlantTempData(Block block,float minFertilize, float minGrow, float
 			CodecUtil.defaultValue(Codec.BOOL,DEFAULT_SNOW_VULNERABLE).fieldOf("snow_vulnerable").forGetter(o->o.snowVulnerable),
 			CodecUtil.defaultValue(Codec.BOOL,DEFAULT_BLIZZARD_VULNERABLE).fieldOf("blizzard_vulnerable").forGetter(o->o.blizzardVulnerable)
 	).apply(t, PlantTempData::new));
-
+	public static RegistryObject<CodecRecipeSerializer<PlantTempData>> TYPE;
+	public static Map<Block,PlantTempData> cacheList=ImmutableMap.of();
 	// default constructor
+	public static PlantTempData getPlantData(Block block2) {
+		return null;
+	}
 	public PlantTempData(Block blk) {
 		this(blk,DEFAULT_BONEMEAL_TEMP, DEFAULT_GROW_TEMP, DEFAULT_SURVIVE_TEMP,
 				DEFAULT_BONEMEAL_MAX_TEMP, DEFAULT_GROW_MAX_TEMP, DEFAULT_SURVIVE_MAX_TEMP,

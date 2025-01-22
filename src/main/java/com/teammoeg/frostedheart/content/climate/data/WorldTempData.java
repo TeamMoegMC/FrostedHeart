@@ -19,18 +19,33 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
+import java.util.Map;
+
+import javax.annotation.Nonnull;
+
+import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.registries.RegistryObject;
 
 public record WorldTempData(ResourceLocation world,float temperature){
-	public static final MapCodec<WorldTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+	public static final Codec<WorldTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 		ResourceLocation.CODEC.fieldOf("world").forGetter(o->o.world),
 		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("temperature").forGetter(o->o.temperature)).apply(t, WorldTempData::new));
-	
+	public static RegistryObject<CodecRecipeSerializer<WorldTempData>> TYPE;
+	public static Map<ResourceLocation,WorldTempData> cacheList=ImmutableMap.of();
+	@Nonnull
+	public static Float getWorldTemp(Level w) {
+		WorldTempData data = cacheList.get(w.dimension().location());
+		if (data != null)
+			return data.getTemp();
+		return -10F;
+	}
 	public float getTemp() {
         return temperature;
     }

@@ -4,7 +4,6 @@ import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
-import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
@@ -57,7 +56,7 @@ public class BlockTempStats implements TooltipModifier {
 
     public static List<Component> getStats(Block block, @Nullable ItemStack stack, @Nullable Player player) {
         List<Component> list = new ArrayList<>();
-        BlockTempData data = FHDataManager.getBlockData(block);
+        BlockTempData data = BlockTempData.cacheList.get(block);
         if (data != null) {
             float heat = data.getTemp();
             heat = (Math.round(heat * 10)) / 10.0F;// round

@@ -53,7 +53,6 @@ import com.teammoeg.frostedheart.content.climate.tooltips.EquipmentTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
-import com.teammoeg.frostedheart.infrastructure.data.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
 import com.teammoeg.frostedheart.compat.ftbteams.FTBTeamsEvents;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -204,7 +203,7 @@ public class FHMain {
 
         // Forge bus
         LOGGER.info(COMMON_INIT, "Registering Forge Event Listeners");
-        forge.register(new FHRecipeReloadListener(null));
+        //forge.register(new FHRecipeReloadListener(null));
 
         // Mod bus
         LOGGER.info(COMMON_INIT, "Registering Mod Event Listeners");

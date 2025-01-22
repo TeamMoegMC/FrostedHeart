@@ -25,10 +25,10 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.water.item.DrinkContainerItem;
-import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.core.NonNullList;
 import net.minecraft.server.level.ServerPlayer;
@@ -129,7 +129,7 @@ public class FoodTemperatureHandler {
         if (it instanceof ITempAdjustFood) {
             adj = (ITempAdjustFood) it;
         } else {
-            adj = FHDataManager.getTempAdjustFood(stack);
+            adj = FoodTempData.getTempAdjustFood(stack);
         }
 
         // Depending on food temperature status, display message, and set default heat, which could be overridden if

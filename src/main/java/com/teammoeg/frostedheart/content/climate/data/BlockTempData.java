@@ -19,22 +19,26 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
+import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
+import net.minecraftforge.registries.RegistryObject;
 
 public record BlockTempData(Block block,float temperature, boolean level, boolean lit){
-	public static final MapCodec<BlockTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+	public static final Codec<BlockTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 		CodecUtil.registryCodec(()->BuiltInRegistries.BLOCK).fieldOf("block").forGetter(o->o.block),
 		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("temperature").forGetter(o->o.temperature),
 		CodecUtil.defaultValue(Codec.BOOL,false).fieldOf("level_divide").forGetter(o->o.level),
 		CodecUtil.defaultValue(Codec.BOOL,false).fieldOf("must_lit").forGetter(o->o.lit)).apply(t, BlockTempData::new));
-    
-
+	public static RegistryObject<CodecRecipeSerializer<BlockTempData>> TYPE;
+	public static Map<Block,BlockTempData> cacheList=ImmutableMap.of();
 	public float getTemp() {
         return temperature;
     }

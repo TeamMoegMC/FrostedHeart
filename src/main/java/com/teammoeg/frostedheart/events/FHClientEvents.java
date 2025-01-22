@@ -38,6 +38,7 @@ import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.util.FHVersion;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.client.GuiClickedEvent;
@@ -61,6 +62,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RecipesUpdatedEvent;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
@@ -83,7 +85,7 @@ import java.util.List;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class FHClientEvents {
 
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "deprecation"})
     @SubscribeEvent
     public static void drawUpdateReminder(ScreenEvent.Render event) {
         Screen gui = event.getScreen();
@@ -151,7 +153,12 @@ public class FHClientEvents {
             });
         }
     }
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public void onRecipesUpdated(RecipesUpdatedEvent event) {
+        if (!Minecraft.getInstance().hasSingleplayerServer())
+            FHRecipeCachingReloadListener.buildRecipeLists(event.getRecipeManager());
 
+    }
     @SubscribeEvent
     public static void onResearchStatus(ClientResearchStatusEvent event) {
         if (event.isStatusChanged()) {

@@ -35,7 +35,6 @@ import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
-import com.teammoeg.frostedheart.infrastructure.data.FHRecipeReloadListener;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.util.CConstants;
 import com.teammoeg.frostedheart.util.FUtils;
@@ -161,7 +160,7 @@ public class FHCommonEvents {
         ReloadableServerResources dataPackRegistries = event.getServerResources();
         // IReloadableResourceManager resourceManager = (IReloadableResourceManager)
         // dataPackRegistries.getResourceManager();
-        event.addListener(new FHRecipeReloadListener(dataPackRegistries));
+        //event.addListener(new FHRecipeReloadListener(dataPackRegistries));
 //            resourceManager.addReloadListener(ChunkCacheInvalidationReloaderListener.INSTANCE);
     }
 

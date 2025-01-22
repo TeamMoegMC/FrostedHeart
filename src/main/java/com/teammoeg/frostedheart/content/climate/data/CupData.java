@@ -19,18 +19,24 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
+import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
+import net.minecraftforge.registries.RegistryObject;
 
 public record CupData(Item item,float efficiency){
-	public static final MapCodec<CupData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+	public static final Codec<CupData> CODEC=RecordCodecBuilder.create(t->t.group(
 		CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).fieldOf("item").forGetter(o->o.item),
 		Codec.FLOAT.fieldOf("efficiency").forGetter(o->o.efficiency)).apply(t, CupData::new));
+	public static RegistryObject<CodecRecipeSerializer<CupData>> TYPE;
+	public static Map<Item,CupData> cacheList=ImmutableMap.of();
     public Float getEfficiency() {
         return efficiency;
     }
