@@ -6,12 +6,13 @@ import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CustomRecipe;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 
 public abstract class DataRecipe extends CustomRecipe {
 
-	public DataRecipe(ResourceLocation pId, CraftingBookCategory pCategory) {
-		super(pId, pCategory);
+	public DataRecipe(ResourceLocation pId) {
+		super(pId, CraftingBookCategory.MISC);
 	}
 
 	@Override
@@ -28,6 +29,5 @@ public abstract class DataRecipe extends CustomRecipe {
 	public boolean canCraftInDimensions(int pWidth, int pHeight) {
 		return false;
 	}
-
-
+	public abstract RecipeType<?> getType();
 }

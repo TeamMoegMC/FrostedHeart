@@ -26,26 +26,19 @@ import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.chorda.util.io.CodecUtil;
 
 import lombok.Data;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-@Data
-public class FoodTempData implements ITempAdjustFood {
+public record FoodTempData(Item item,float heat, float min, float max) implements ITempAdjustFood {
 
 
 	public static final MapCodec<FoodTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+		CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).fieldOf("item").forGetter(o->o.item),
 		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("heat").forGetter(o->o.heat),
 		CodecUtil.defaultValue(Codec.FLOAT,-15f).fieldOf("min").forGetter(o->o.min),
 		CodecUtil.defaultValue(Codec.FLOAT,15f).fieldOf("max").forGetter(o->o.max)).apply(t, FoodTempData::new));
 
-    private final float heat;
-    private final float min;
-    private final float max;
-	public FoodTempData(float heat, float min, float max) {
-		super();
-		this.heat = heat;
-		this.min = min;
-		this.max = max;
-	}
     @Override
     public float getHeat(ItemStack is, float env) {
         return heat;

@@ -24,14 +24,14 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.util.io.CodecUtil;
 
-public class DrinkTempData {
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.material.Fluid;
+
+public record DrinkTempData(Fluid fluid,float heat) {
 	public static final MapCodec<DrinkTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+		CodecUtil.registryCodec(()->BuiltInRegistries.FLUID).fieldOf("fluid").forGetter(o->o.fluid),
 		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("heat").forGetter(o->o.heat)).apply(t, DrinkTempData::new));
-	float heat;
-	public DrinkTempData(float heat) {
-		super();
-		this.heat = heat;
-	}
+
 
     public float getHeat() {
         return heat;

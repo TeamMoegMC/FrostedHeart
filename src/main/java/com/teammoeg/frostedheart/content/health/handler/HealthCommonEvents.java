@@ -5,7 +5,6 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import com.teammoeg.frostedheart.content.health.dailykitchen.DailyKitchen;
-import com.teammoeg.frostedheart.content.research.insight.InsightHandler;
 import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;

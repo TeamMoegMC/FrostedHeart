@@ -19,7 +19,11 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import com.mojang.serialization.Codec;
+import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
+import com.teammoeg.chorda.recipe.DataContainerRecipe;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
@@ -89,8 +93,14 @@ public class FHRecipes {
         WaterLevelAndEffectRecipe.TYPE = createRecipeType("water_level_and_effect");
         NutritionRecipe.TYPE = createRecipeType("diet_override");
         ItemResourceAmountRecipe.TYPE = createRecipeType("item_resource_amount");
+        createCodecRecipeType("armor",ArmorTempData.CODEC);
     }
     public static <T extends Recipe<?>> RegistryObject<RecipeType<T>> createRecipeType(String name){
     	return RECIPE_TYPES.register(name,()->RecipeType.simple(new ResourceLocation(FHMain.MODID,name)));
+    }
+    public static <T> RegistryObject<CodecRecipeSerializer<T>> createCodecRecipeType(String name,Codec<T> codec){
+    	RegistryObject<RecipeType<DataContainerRecipe<T>>> rct=RECIPE_TYPES.register(name,()->RecipeType.simple(new ResourceLocation(FHMain.MODID,name)));
+    	return RECIPE_SERIALIZERS.register(name,()-> new CodecRecipeSerializer<T>(codec,rct.get()));
+    	
     }
 }

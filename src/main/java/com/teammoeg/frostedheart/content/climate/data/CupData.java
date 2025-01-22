@@ -22,16 +22,15 @@ package com.teammoeg.frostedheart.content.climate.data;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.util.io.CodecUtil;
 
-public class CupData{
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.item.Item;
+
+public record CupData(Item item,float efficiency){
 	public static final MapCodec<CupData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+		CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).fieldOf("item").forGetter(o->o.item),
 		Codec.FLOAT.fieldOf("efficiency").forGetter(o->o.efficiency)).apply(t, CupData::new));
-	float efficiency;
-	public CupData(float efficiency) {
-		super();
-		this.efficiency = efficiency;
-	}
-
     public Float getEfficiency() {
         return efficiency;
     }

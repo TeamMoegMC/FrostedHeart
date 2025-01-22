@@ -24,14 +24,13 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.util.io.CodecUtil;
 
-public class WorldTempData{
+import net.minecraft.resources.ResourceLocation;
+
+public record WorldTempData(ResourceLocation world,float temperature){
 	public static final MapCodec<WorldTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+		ResourceLocation.CODEC.fieldOf("world").forGetter(o->o.world),
 		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("temperature").forGetter(o->o.temperature)).apply(t, WorldTempData::new));
-	float temperature;
-    public WorldTempData(float temperature) {
-		super();
-		this.temperature = temperature;
-	}
+	
 	public float getTemp() {
         return temperature;
     }

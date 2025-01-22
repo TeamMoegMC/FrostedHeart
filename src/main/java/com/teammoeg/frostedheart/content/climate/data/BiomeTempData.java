@@ -22,18 +22,12 @@ package com.teammoeg.frostedheart.content.climate.data;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.util.io.CodecUtil;
+import net.minecraft.resources.ResourceLocation;
 
-public class BiomeTempData {
+public record BiomeTempData(ResourceLocation biome,float temperature) {
 	public static final MapCodec<BiomeTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("temperature").forGetter(o->o.temperature)).apply(t, BiomeTempData::new));
-    float temperature;
-
-    public BiomeTempData(float temperature) {
-		this.temperature = temperature;
-	}
-
-	public Float getTemp() {
-        return temperature;
-    }
+		ResourceLocation.CODEC.fieldOf("biome").forGetter(o->o.biome),
+		Codec.FLOAT.fieldOf("temperature").forGetter(o->o.temperature)
+		).apply(t,BiomeTempData::new));
+ 
 }

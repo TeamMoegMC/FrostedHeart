@@ -376,40 +376,40 @@ public class WorldTemperature {
         // We can't really do any instanceof check here, since so many potential blocks
         // may be invoked with the crop event.
         if (data == null)
-            return new PlantTempData();
+            return new PlantTempData(block);
         return data;
     }
 
     private static float getMinFertilizeTemp(Block block) {
-        return getPlantDataWithDefault(block).getMinFertilize();
+        return getPlantDataWithDefault(block).minFertilize();
     }
 
     private static float getMinGrowTemp(Block block) {
-        return getPlantDataWithDefault(block).getMinGrow();
+        return getPlantDataWithDefault(block).minGrow();
     }
 
     private static float getMinSurviveTemp(Block block) {
-        return getPlantDataWithDefault(block).getMinSurvive();
+        return getPlantDataWithDefault(block).minSurvive();
     }
 
     private static float getMaxFertilizeTemp(Block block) {
-        return getPlantDataWithDefault(block).getMaxFertilize();
+        return getPlantDataWithDefault(block).maxFertilize();
     }
 
     private static float getMaxGrowTemp(Block block) {
-        return getPlantDataWithDefault(block).getMaxGrow();
+        return getPlantDataWithDefault(block).maxGrow();
     }
 
     private static float getMaxSurviveTemp(Block block) {
-        return getPlantDataWithDefault(block).getMaxSurvive();
+        return getPlantDataWithDefault(block).maxSurvive();
     }
 
     private static boolean isSnowVulnerable(Block block) {
-        return getPlantDataWithDefault(block).isSnowVulnerable();
+        return getPlantDataWithDefault(block).snowVulnerable();
     }
 
     public static boolean isBlizzardVulnerable(Block block) {
-        return getPlantDataWithDefault(block).isBlizzardVulnerable();
+        return getPlantDataWithDefault(block).blizzardVulnerable();
     }
 
     private static boolean fertilizable(LevelAccessor level, BlockPos pos, Block block) {

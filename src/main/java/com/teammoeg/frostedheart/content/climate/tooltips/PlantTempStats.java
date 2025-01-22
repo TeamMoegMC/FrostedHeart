@@ -94,17 +94,17 @@ public class PlantTempStats implements TooltipModifier {
         boolean bonemealable = block instanceof BonemealableBlock;
 
         Lang.translate("tooltip", "temp.plant.survive").style(ChatFormatting.GRAY).addTo(list);
-        getTempProgressBar(data.getMinSurvive(), data.getMaxSurvive()).addTo(list);
+        getTempProgressBar(data.minSurvive(), data.maxSurvive()).addTo(list);
 
         Lang.translate("tooltip", "temp.plant.grow").style(ChatFormatting.GRAY).addTo(list);
-        getTempProgressBar(data.getMinGrow(), data.getMaxGrow()).addTo(list);
+        getTempProgressBar(data.minGrow(), data.maxGrow()).addTo(list);
 
         if (bonemealable) {
             Lang.translate("tooltip", "temp.plant.fertilize").style(ChatFormatting.GRAY).addTo(list);
-            getTempProgressBar(data.getMinFertilize(), data.getMaxFertilize()).addTo(list);
+            getTempProgressBar(data.minFertilize(), data.maxFertilize()).addTo(list);
         }
 
-        boolean vulnerableSnow = data.isSnowVulnerable();
+        boolean vulnerableSnow = data.snowVulnerable();
         if (vulnerableSnow) {
             Lang.translate("tooltip", "temp.plant.snow_vulnerable")
                     .style(ChatFormatting.RED)
@@ -115,7 +115,7 @@ public class PlantTempStats implements TooltipModifier {
                     .addTo(list);
         }
 
-        boolean vulnerableBlizzard = data.isBlizzardVulnerable();
+        boolean vulnerableBlizzard = data.blizzardVulnerable();
         if (vulnerableBlizzard) {
             Lang.translate("tooltip", "temp.plant.blizzard_vulnerable")
                     .style(ChatFormatting.RED)

@@ -24,22 +24,16 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.util.io.CodecUtil;
 
-public class BlockTempData{
-	float temperature;
-	boolean level;
-	boolean lit;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.block.Block;
+
+public record BlockTempData(Block block,float temperature, boolean level, boolean lit){
 	public static final MapCodec<BlockTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+		CodecUtil.registryCodec(()->BuiltInRegistries.BLOCK).fieldOf("block").forGetter(o->o.block),
 		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("temperature").forGetter(o->o.temperature),
 		CodecUtil.defaultValue(Codec.BOOL,false).fieldOf("level_divide").forGetter(o->o.level),
 		CodecUtil.defaultValue(Codec.BOOL,false).fieldOf("must_lit").forGetter(o->o.lit)).apply(t, BlockTempData::new));
     
-
-    public BlockTempData(float temperature, boolean level, boolean lit) {
-		super();
-		this.temperature = temperature;
-		this.level = level;
-		this.lit = lit;
-	}
 
 	public float getTemp() {
         return temperature;

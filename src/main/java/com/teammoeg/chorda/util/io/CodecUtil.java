@@ -408,6 +408,9 @@ public class CodecUtil {
 	public static <T, A> T decodeOrThrow(DataResult<Pair<T, A>> result) {
 		return result.getOrThrow(true, s->{}).getFirst();
 	}
+	public static <T, A> T strictDecodeOrThrow(DataResult<Pair<T, A>> result) {
+		return result.getOrThrow(false, s->{}).getFirst();
+	}
 	public static <A> A initEmpty(Codec<A> codec) {
 		if(codec instanceof CodecWithFactory)
 			return ((CodecWithFactory<A>) codec).getInstance();

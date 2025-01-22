@@ -24,20 +24,16 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.util.io.CodecUtil;
 
-public class ArmorTempData {
-	public static final MapCodec<ArmorTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("factor").forGetter(o->o.insulation),
-		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("heat_proof").forGetter(o->o.heat_proof),
-		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("wind_proof").forGetter(o->o.wind_proof)).apply(t, ArmorTempData::new));
-	float insulation;
-	float heat_proof;
-	float wind_proof;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.item.Item;
 
-    public ArmorTempData(float insulation, float heat_proof, float wind_proof) {
-		this.insulation = insulation;
-		this.heat_proof = heat_proof;
-		this.wind_proof = wind_proof;
-	}
+public record ArmorTempData(Item item,float insulation, float heat_proof, float wind_proof){
+	public static final Codec<ArmorTempData> CODEC=RecordCodecBuilder.create(t->t.group(
+		CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).fieldOf("item").forGetter(o->o.item),
+		Codec.FLOAT.optionalFieldOf("factor",0f).forGetter(o->o.insulation),
+		Codec.FLOAT.optionalFieldOf("heat_proof",0f).forGetter(o->o.heat_proof),
+		Codec.FLOAT.optionalFieldOf("wind_proof",0f).forGetter(o->o.wind_proof)).apply(t, ArmorTempData::new));
+
 	public float getInsulation() {
     	return insulation;
     }
@@ -47,37 +43,10 @@ public class ArmorTempData {
     public float getColdProof() {
     	return wind_proof;
     }
-  /*  @Override
-    public float getFactor(ServerPlayerEntity pe, ItemStack stack) {
-        float base = this.getFloatOrDefault("factor", 0F);
-        if (pe == null) return base;
-        if (pe.isBurning())
-            base += this.getFloatOrDefault("fire", 0F);
-        if (pe.isInWater())//does not apply twice
-            base += this.getFloatOrDefault("water", 0F);
-        else if (pe.isPotionActive(FHMobEffects.WET.get())) {
-            base += this.getFloatOrDefault("wet", 0F);
-        }
-        if (CUtils.isRainingAt(pe.getPosition(), pe.world)) {
-//            if (pe.getServerWorld().getBiome(pe.getPosition()).getPrecipitation() == Biome.RainType.SNOW)
-            base += this.getFloatOrDefault("snow", 0F);
-//            else
-//                base += this.getFloatOrDefault("rain", 0F);
-        }
 
-        float min = this.getFloatOrDefault("min", 0F);
-        if (base < min) {
-            base = min;
-        } else {
-            float max = this.getFloatOrDefault("max", 1F);
-            if (base > max)
-                base = max;
-
-        }
-        return base;
-    }*/
 	@Override
 	public String toString() {
 		return "ArmorTempData [insulation=" + insulation + ", heat_proof=" + heat_proof + ", wind_proof=" + wind_proof + "]";
 	}
 }
+
