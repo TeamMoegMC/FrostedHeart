@@ -184,7 +184,7 @@ class MainGamePanel extends Panel {
             return;
         }
 
-
+/*
         if ((reset.isMouseOver() || rg.getLevel() == -1) && EnergyCore.getEnergy(ClientUtils.getPlayer()) <= 0) {
 
             if (lstatus != 1) {
@@ -193,7 +193,7 @@ class MainGamePanel extends Panel {
                 lstatus = 1;
             }
             return;
-        }
+        }*/
         DrawingDeskTileEntity tile = ot.dd.getTile();
         if (!tile.isInkSatisfied(reset.isMouseOver() ? 5 : 1)) {
             if (lstatus != 2) {

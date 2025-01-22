@@ -32,7 +32,7 @@ public class ResearchCommonEvents {
     @SubscribeEvent
     public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
         //Common capabilities
-        event.addCapability(new ResourceLocation(FHMain.MODID, "rsenergy"), FHCapabilities.ENERGY.provider());
+        //event.addCapability(new ResourceLocation(FHMain.MODID, "rsenergy"), FHCapabilities.ENERGY.provider());
     }
 
     @SubscribeEvent
@@ -87,14 +87,14 @@ public class ResearchCommonEvents {
     public static void initData(TeamLoadedEvent ev) {
     	ev.getTeamData().getOptional(FHSpecialDataTypes.RESEARCH_DATA).ifPresent(t->t.initResearch(ev.getTeamData()));
     }
-    @SubscribeEvent
+   /* @SubscribeEvent
     public static void checkSleep(SleepingTimeCheckEvent event) {
         if (event.getEntity().getSleepTimer() >= 100 && !event.getEntity().getCommandSenderWorld().isClientSide) {
             EnergyCore.applySleep((ServerPlayer) event.getEntity());
         }
-    }
+    }*/
 
-    @SubscribeEvent
+    /*@SubscribeEvent
     public static void tickEnergy(TickEvent.PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == TickEvent.Phase.START
                 && event.player instanceof ServerPlayer) {
@@ -102,9 +102,9 @@ public class ResearchCommonEvents {
             if (!player.isSpectator() && !player.isCreative() && player.tickCount % 20 == 0)
                 EnergyCore.dT(player);
         }
-    }
+    }*/
 
-    @SubscribeEvent
+    /*@SubscribeEvent
     public static void respawn(PlayerEvent.PlayerRespawnEvent event) {
         if (event.getEntity() instanceof ServerPlayer && !(event.getEntity() instanceof FakePlayer)) {
             EnergyCore.getCapability(event.getEntity()).ifPresent(t -> {
@@ -112,5 +112,5 @@ public class ResearchCommonEvents {
                 t.sendUpdate((ServerPlayer) event.getEntity());
             });
         }
-    }
+    }*/
 }

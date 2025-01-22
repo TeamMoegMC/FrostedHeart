@@ -71,7 +71,8 @@ public class Research implements FHRegisteredItem {
                     .flag("hidden", o -> o.isHidden)
                     .flag("keepShow", o -> o.alwaysShow)
                     .flag("infinite", o -> o.isInfinite()).build(),
-            Codec.INT.fieldOf("points").forGetter(o -> o.points)
+            Codec.INT.fieldOf("points").forGetter(o -> o.points),
+            Codec.INT.optionalFieldOf("insight",0).forGetter(o->o.getInsight())
     ).apply(t, Research::new));
     /**
      * The icon for this research.<br>
@@ -114,6 +115,7 @@ public class Research implements FHRegisteredItem {
      * The points.<br>
      */
     int points = 1000;// research point
+    int insight = 1;//insight point
     private String id;// id of this research
     private ResearchCategory category = ResearchCategory.RESCUE;
     private HashSet<String> parents = new HashSet<>();// parent researches
@@ -136,7 +138,7 @@ public class Research implements FHRegisteredItem {
     }
 
     public Research(FHIcon icon, ResearchCategory category, List<String> parents, List<Clue> clues, List<IngredientWithSize> requiredItems, Optional<List<Effect>> effects, String name,
-                    List<String> desc, List<String> fdesc, boolean[] flags, int points) {
+                    List<String> desc, List<String> fdesc, boolean[] flags, int points,int insight) {
         super();
         this.icon = icon;
         this.category = category;
@@ -714,5 +716,9 @@ public class Research implements FHRegisteredItem {
     public void setInfinite(boolean infinite) {
         this.infinite = infinite;
     }
+
+	public int getInsight() {
+		return insight;
+	}
 
 }

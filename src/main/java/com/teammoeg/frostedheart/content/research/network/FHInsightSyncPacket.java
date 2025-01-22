@@ -29,29 +29,20 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class FHInsightSyncPacket implements CMessage {
-    int insight;
-    int insightLevel;
-    int usedInsightLevel;
+public record FHInsightSyncPacket(int insight,int insightLevel,int usedInsightLevel) implements CMessage {
+
 
     public FHInsightSyncPacket(FriendlyByteBuf buffer) {
-        insight = buffer.readInt();
-        insightLevel = buffer.readInt();
-        usedInsightLevel = buffer.readInt();
+        this(buffer.readVarInt(),buffer.readVarInt(),buffer.readVarInt());
+
     }
 
-    public FHInsightSyncPacket(TeamDataHolder team) {
-        TeamResearchData data = team.getData(FHSpecialDataTypes.RESEARCH_DATA);
-        this.insight = data.getInsight();
-        this.insightLevel = data.getInsightLevel();
-        this.usedInsightLevel = data.getUsedInsightLevel();
-    }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
-        buffer.writeInt(insight);
-        buffer.writeInt(insightLevel);
-        buffer.writeInt(usedInsightLevel);
+        buffer.writeVarInt(insight);
+        buffer.writeVarInt(insightLevel);
+        buffer.writeVarInt(usedInsightLevel);
     }
 
     @Override

@@ -43,7 +43,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
     Research r;
     LabeledTextBox id, name;
     LabeledSelection<ResearchCategory> cat;
-    NumberBox pts;
+    NumberBox pts,ins;
     LabeledSelection<Boolean> hide, alt, hidden, locked, showed, inf;
     boolean removed;
 
@@ -60,6 +60,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         cat = new LabeledSelection<>(this, "category", r.getCategory(), ResearchCategory.values(), ResearchCategory::name);
         name = new LabeledTextBox(this, "name", r.name);
         pts = new NumberBox(this, "points", r.points);
+        ins = new NumberBox(this,"insight",r.getInsight());
         showed = LabeledSelection.createBool(this, "Keep this research show in list", r.alwaysShow);
         hide = LabeledSelection.createBool(this, "Hide effects before complete", r.hideEffects);
         alt = LabeledSelection.createBool(this, "Show alt description before complete", r.showfdesc);
@@ -81,6 +82,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
             }
         });
         add(name);
+        add(ins);
         add(pts);
         add(new OpenEditorButton<>(this, "Edit minigame", ClueEditor.RESEARCH_GAME, r, s -> {
         }));
@@ -152,7 +154,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
             r.isHidden = hidden.getSelection();
             r.setInfinite(inf.getSelection());
             r.setInCompletable(locked.getSelection());
-
+            r.insight=(int) ins.getNum();
             if (!id.getText().isEmpty()) {
                 r.setId(id.getText());
                 //FHResearch.register(r);

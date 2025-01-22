@@ -200,22 +200,42 @@ public class CUtils {
         	return ImmutableList.of();
 		return recipeManager.getAllRecipesFor(recipeType.get());
     }
-
+	   /**
+	    * Copying capability uses its serialize and deserialize method to put data to a new one, as if its saved to world and loaded from world.
+	    * */
     public static <T extends NBTSerializable> void copyCapability(LazyOptional<T> oldCapability, LazyOptional<T> newCapability){
        newCapability.ifPresent((newCap) -> oldCapability.ifPresent((oldCap) -> newCap.deserializeNBT(oldCap.serializeNBT())));
    }
+    /**
+     * Cloning capability uses reflection to copy all fields within capability, suitable for capabilities with several transient data
+     * The fields are shallow copy, you should not free resources
+     * */
    public static <T extends NBTSerializable> void cloneCapability(LazyOptional<T> oldCapability, LazyOptional<T> newCapability){
        newCapability.ifPresent((newCap) -> oldCapability.ifPresent((oldCap) -> copyAllFields(newCap,oldCap)));
    }
+   /**
+    * Copying capability uses its serialize and deserialize method to put data to a new one, as if its saved to world and loaded from world.
+    * */
    public static <T extends NBTSerializable> void copyPlayerCapability(Capability<T> capability,Player old,Player now){
 	   copyCapability(old.getCapability(capability),now.getCapability(capability));
    }
+   /**
+    * Cloning capability uses reflection to copy all fields within capability, suitable for capabilities with several transient data
+    * The fields are shallow copy, you should not free resources
+    * */
    public static <T extends NBTSerializable> void clonePlayerCapability(Capability<T> capability,Player old,Player now){
 	   cloneCapability(old.getCapability(capability),now.getCapability(capability));
    }
+   /**
+    * Copying capability uses its serialize and deserialize method to put data to a new one, as if its saved to world and loaded from world.
+    * */
    public static <T extends NBTSerializable> void copyPlayerCapability(NBTCapabilityType<T> capability, Player old, Player now){
 	   copyCapability(capability.getCapability(old),capability.getCapability(now));
    }
+   /**
+    * Cloning capability uses reflection to copy all fields within capability, suitable for capabilities with several transient data
+    * The fields are shallow copy, you should not free resources
+    * */
    public static <T extends NBTSerializable> void clonePlayerCapability(NBTCapabilityType<T> capability, Player old, Player now){
 	   cloneCapability(capability.getCapability(old),capability.getCapability(now));
    }

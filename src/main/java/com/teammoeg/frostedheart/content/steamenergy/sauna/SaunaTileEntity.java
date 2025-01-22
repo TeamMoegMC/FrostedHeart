@@ -177,7 +177,7 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements CTickableBlock
         // add sauna effect
         if (level.getGameTime() % 1000L == 0L && !p.hasEffect(FHMobEffects.SAUNA.get())) {
             // initial reward
-            EnergyCore.addEnergy(p, 1000);
+            //EnergyCore.addEnergy(p, 1000);
             // whole day reward
             p.addEffect(new MobEffectInstance(FHMobEffects.SAUNA.get(), 23000, 0, true, false));
         }

@@ -50,7 +50,8 @@ public class SaunaEffect extends MobEffect {
     public void applyEffectTick(LivingEntity entity, int amplifier) {
         if (entity instanceof ServerPlayer) {
             ServerPlayer player = (ServerPlayer) entity;
-            EnergyCore.addEnergy(player, 9);
+            
+            //EnergyCore.addEnergy(player, 9);
         }
     }
 }
