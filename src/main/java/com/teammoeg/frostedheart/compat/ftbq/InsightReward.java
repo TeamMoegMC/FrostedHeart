@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.compat.ftbq;
 
+import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
@@ -68,8 +69,8 @@ public class InsightReward extends Reward {
 
     @Override
     public void claim(ServerPlayer player, boolean notify) {
-        TeamResearchData trd = ResearchDataAPI.getData(player).get();
-        trd.addInsight(insight);
+        TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(player);
+        trd.get().addInsight(trd.team(),insight);
         if (notify) {
             MutableComponent message = Lang.questReward("insight").text(": +" + insight).style(ChatFormatting.GREEN).component();
             new DisplayRewardToastMessage(id, message, Color4I.empty()).sendTo(player);

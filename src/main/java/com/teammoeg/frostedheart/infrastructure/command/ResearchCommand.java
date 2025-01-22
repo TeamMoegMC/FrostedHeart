@@ -56,8 +56,8 @@ public class ResearchCommand {
                 .then(Commands.literal("insight")
                         // add insight
                         .then(Commands.literal("add").then(Commands.argument("amount", IntegerArgumentType.integer(0)).executes(ct -> {
-                            TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).get();
-                            trd.addInsight(ct.getArgument("amount", Integer.class));
+                            TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                            trd.get().addInsight(trd.team(),ct.getArgument("amount", Integer.class));
                             ct.getSource().sendSuccess(() -> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                             return Command.SINGLE_SUCCESS;
                         })))
@@ -81,22 +81,22 @@ public class ResearchCommand {
                         }))
                         // set insight
                         .then(Commands.literal("set").then(Commands.argument("amount", IntegerArgumentType.integer(0)).executes(ct -> {
-                            TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).get();
-                            trd.setInsight(ct.getArgument("amount", Integer.class));
+                        	TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                            trd.get().setInsight(trd.team(),ct.getArgument("amount", Integer.class));
                             ct.getSource().sendSuccess(() -> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                             return Command.SINGLE_SUCCESS;
                         })))
                         // set insight level
                         .then(Commands.literal("setLevel").then(Commands.argument("level", IntegerArgumentType.integer(0)).executes(ct -> {
-                            TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).get();
-                            trd.setInsightLevel(ct.getArgument("level", Integer.class));
+                        	TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                            trd.get().setInsightLevel(trd.team(),ct.getArgument("level", Integer.class));
                             ct.getSource().sendSuccess(() -> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                             return Command.SINGLE_SUCCESS;
                         })))
                         // set used insight level
                         .then(Commands.literal("setUsedLevel").then(Commands.argument("level", IntegerArgumentType.integer(0)).executes(ct -> {
-                            TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).get();
-                            trd.setUsedInsightLevel(ct.getArgument("level", Integer.class));
+                        	TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                            trd.get().setUsedInsightLevel(trd.team(),ct.getArgument("level", Integer.class));
                             ct.getSource().sendSuccess(() -> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                             return Command.SINGLE_SUCCESS;
                         })))

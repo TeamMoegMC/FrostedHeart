@@ -29,11 +29,13 @@ import com.teammoeg.chorda.util.ie.IngredientUtils;
 import com.teammoeg.chorda.util.io.CodecUtil;
 import com.teammoeg.chorda.util.utility.OptionalLazy;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.content.research.ResearchListeners.CategoryUnlockList;
 import com.teammoeg.frostedheart.content.research.ResearchListeners.MultiblockUnlockList;
 import com.teammoeg.frostedheart.content.research.ResearchListeners.RecipeUnlockList;
+import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.events.ResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.network.*;
 import com.teammoeg.frostedheart.content.research.research.Research;
@@ -264,11 +266,11 @@ public class TeamResearchData implements SpecialData {
 				return false;
 			}
 		}
-		if(!this.hasInsight(research.getInsight()))
+		if (!this.hasInsight(research.getInsight()))
 			return false;
 		if (!research.getRequiredItems().isEmpty() && !IngredientUtils.costItems(player, research.getRequiredItems()))
 			return false;
-		this.costInsight(research.getInsight());
+		this.costInsight(team,research.getInsight());
 		getData(research).setActive();
 		this.sendResearchProgressPacket(team, research);
 		return true;
@@ -399,12 +401,8 @@ public class TeamResearchData implements SpecialData {
 		team.sendToOnline(new FHResearchDataUpdatePacket(par, getData(par)));
 	}
 
-	/**
-	 * Ensure clue data length.
-	 *
-	 * @param len the len<br>
-	 */
-	private void ensureClue(int len) {
+	private void sendInsightChangePacket(TeamDataHolder team) {
+		team.sendToOnline(new FHInsightSyncPacket(insight, insightLevel, usedInsightLevel));
 	}
 
 	/**
@@ -601,49 +599,49 @@ public class TeamResearchData implements SpecialData {
 		}
 	}
 
-	public boolean setInsight(int insight) {
+	public boolean setInsight(TeamDataHolder team, int insight) {
 		this.insight = insight;
 		int newLevel = computeLevelFromInsight(this.insight);
-		if (newLevel != insightLevel) {
-			insightLevel = newLevel;
-			return true;
-		}
-		return false;
-	}
-
-	public void setInsightOnly(int insight) {
-		this.insight = insight;
+		boolean updateedLevel = newLevel != insightLevel;
+		insightLevel = newLevel;
+		if(team!=null)
+			sendInsightChangePacket(team);
+		return updateedLevel;
 	}
 
 	public int getInsight() {
 		return insight;
 	}
 
-	public boolean setInsightLevel(int insightLevel) {
+	public boolean setInsightLevel(TeamDataHolder team,int insightLevel) {
 		this.insightLevel = insightLevel;
 		int newInsight = computeInsightFromLevel(insightLevel);
-		if (newInsight != insight) {
-			insight = newInsight;
-			return true;
-		}
-		return false;
+		boolean updateed = newInsight != insight;
+		insight = newInsight;
+		if(team!=null)
+			sendInsightChangePacket(team);
+		return updateed;
 	}
 
-	public void setInsightLevelOnly(int insightLevel) {
+	public void updateInsight(int insight,int insightLevel,int usedInsight) {
+		this.insight=insight;
 		this.insightLevel = insightLevel;
+		this.usedInsightLevel=usedInsight;
 	}
 
 	public int getInsightLevel() {
 		return insightLevel;
 	}
 
-	public boolean setUsedInsightLevel(int usedInsightLevel) {
+	public boolean setUsedInsightLevel(TeamDataHolder team,int usedInsightLevel) {
 		if (usedInsightLevel > insightLevel) {
 			FHMain.LOGGER.warn("Used insights level cannot exceed insights level. Set to insights level instead.");
 			this.usedInsightLevel = insightLevel;
+			sendInsightChangePacket(team);
 			return false;
 		}
 		this.usedInsightLevel = usedInsightLevel;
+		sendInsightChangePacket(team);
 		return true;
 	}
 
@@ -657,14 +655,14 @@ public class TeamResearchData implements SpecialData {
 	 * @param newInsights insights point to add
 	 * @return whether the level is changed.
 	 */
-	public boolean addInsight(int newInsights) {
+	public boolean addInsight(TeamDataHolder team,int newInsights) {
 		this.insight += newInsights;
 		int newLevel = computeLevelFromInsight(this.insight);
-		if (newLevel != insightLevel) {
-			insightLevel = newLevel;
-			return true;
-		}
-		return false;
+		boolean updateedLevel = newLevel != insightLevel;
+		insightLevel = newLevel;
+		if(team!=null)
+			sendInsightChangePacket(team);
+		return updateedLevel;
 	}
 
 	/**
@@ -681,16 +679,20 @@ public class TeamResearchData implements SpecialData {
 		int currentLevelInsights = computeInsightFromLevel(insightLevel);
 		return (float) (insight - currentLevelInsights) / (nextLevelInsights - currentLevelInsights);
 	}
-	public boolean costInsight(int insightLvl) {
-		if(this.usedInsightLevel+insightLvl>=this.insightLevel) {
-			this.usedInsightLevel+=insightLvl;
+
+	public boolean costInsight(TeamDataHolder team,int insightLvl) {
+		if (this.usedInsightLevel + insightLvl >= this.insightLevel) {
+			this.usedInsightLevel += insightLvl;
+			sendInsightChangePacket(team);
 			return true;
 		}
 		return false;
 	}
+
 	public boolean hasInsight(int insightLvl) {
-		return this.usedInsightLevel+insightLvl>=this.insightLevel;
+		return this.usedInsightLevel + insightLvl >= this.insightLevel;
 	}
+
 	/**
 	 * Get available insights level.
 	 *

@@ -264,7 +264,7 @@ public class ResearchListeners {
             for (InspireRecipe ir : CUtils.filterRecipes(s.level().getRecipeManager(), InspireRecipe.TYPE)) {
                 if (ir.item.test(i)) {
                     i.shrink(1);
-                    trd.get().addInsight(ir.inspire);
+                    trd.get().addInsight(trd.team(),ir.inspire);
 
                     return i;
                 }

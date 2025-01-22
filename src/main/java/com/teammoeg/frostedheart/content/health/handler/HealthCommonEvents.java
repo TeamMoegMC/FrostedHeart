@@ -49,7 +49,7 @@ public class HealthCommonEvents {
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        InsightHandler.onPlayerTick(event);
+        //InsightHandler.onPlayerTick(event);
 
         tick++;
         tick%=8000;

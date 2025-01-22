@@ -114,7 +114,6 @@ public class ResearchDashboardPanel extends Panel {
         techpoint.setText(toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
         add(techpoint);
         TeamResearchData data = ClientResearchDataAPI.getData().get();
-        Lang.gui(read, null)
         availableInsightLevel.setText(data.getAvailableInsightLevel() + "Insight Points");
         add(availableInsightLevel);
     }

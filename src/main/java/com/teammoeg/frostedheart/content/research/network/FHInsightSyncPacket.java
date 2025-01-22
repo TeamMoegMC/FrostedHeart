@@ -47,10 +47,10 @@ public record FHInsightSyncPacket(int insight,int insightLevel,int usedInsightLe
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        TeamResearchData clientData = ClientResearchDataAPI.getData().get();
-        clientData.setInsightOnly(this.insight);
-        clientData.setInsightLevelOnly(this.insightLevel);
-        clientData.setUsedInsightLevel(this.usedInsightLevel);
+    	context.get().enqueueWork(()->{
+    		TeamResearchData clientData = ClientResearchDataAPI.getData().get();
+        	clientData.updateInsight(this.insight,this.insightLevel,this.usedInsightLevel);
+    	});
         context.get().setPacketHandled(true);
     }
 }
