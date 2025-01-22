@@ -59,7 +59,7 @@ public class FHTabs {
             ()->CreativeModeTab
                     .builder()
                     .withTabsBefore(CreativeModeTabs.SPAWN_EGGS)
-                    .icon(()->new ItemStack(FHBlocks.DURALUMIN_BLOCK.get()))
+                    .icon(()->new ItemStack(FHBlocks.RUINED_MACHINE_SWITCH.get()))
                     .title(Lang.translateKey("itemGroup.frostedheart.building_blocks"))
                     .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.BUILDING_BLOCKS))
                     .build());
@@ -68,7 +68,7 @@ public class FHTabs {
             ()->CreativeModeTab
                     .builder()
                     .withTabsBefore(BUILDING_BLOCKS.getKey())
-                    .icon(()->new ItemStack(FHBlocks.IRON_SLUDGE_BLOCK.get()))
+                    .icon(()->new ItemStack(FHBlocks.SILVER_SLUDGE_BLOCK.get()))
                     .title(Lang.translateKey("itemGroup.frostedheart.natural_blocks"))
                     .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.NATURAL_BLOCKS))
                     .build());
@@ -86,7 +86,7 @@ public class FHTabs {
             ()->CreativeModeTab
                     .builder()
                     .withTabsBefore(FUNCTIONAL_BLOCKS.getKey())
-                    .icon(()->new ItemStack(FHItems.DURALUMIN_DUST.get()))
+                    .icon(()->new ItemStack(FHItems.ICE_CHIP.get()))
                     .title(Lang.translateKey("itemGroup.frostedheart.ingredients"))
                     .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.INGREDIENTS))
                     .build());

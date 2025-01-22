@@ -32,9 +32,11 @@ import java.util.function.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.AssetLookup;
+import com.simibubi.create.foundation.data.BlockStateGen;
 import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.block.WardrobeBlock;
+import com.teammoeg.frostedheart.content.decoration.*;
 import com.teammoeg.frostedheart.item.FHBlockItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
@@ -42,15 +44,6 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
 import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
-import com.teammoeg.frostedheart.content.decoration.BoneBlock;
-import com.teammoeg.frostedheart.content.decoration.OddMark;
-import com.teammoeg.frostedheart.content.decoration.PackageBlock;
-import com.teammoeg.frostedheart.content.decoration.PebbleBlock;
-import com.teammoeg.frostedheart.content.decoration.RelicChestBlock;
-import com.teammoeg.frostedheart.content.decoration.SmallGarage;
-import com.teammoeg.frostedheart.content.decoration.SmokeBlockT1;
-import com.teammoeg.frostedheart.content.decoration.WoodenBox;
-import com.teammoeg.frostedheart.content.decoration.bloodBlock;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskBlock;
@@ -82,15 +75,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.DropExperienceBlock;
-import net.minecraft.world.level.block.HugeMushroomBlock;
-import net.minecraft.world.level.block.RotatedPillarBlock;
-import net.minecraft.world.level.block.SlabBlock;
-import net.minecraft.world.level.block.SnowLayerBlock;
-import net.minecraft.world.level.block.SnowyDirtBlock;
-import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
@@ -1619,13 +1604,6 @@ public class FHBlocks {
             .simpleItem()
             .lang("Borderless Ruined Scale Tile")
             .register();
-    // ruined scale tile borderless 2
-    public static BlockEntry<Block> RUINED_SCALE_TILE_BORDERLESS_2 = REGISTRATE.block("ruined_scale_tile_borderless_2", Block::new)
-            .transform(ruinedMachines())
-            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_scale_tile_borderless_2"))
-            .simpleItem()
-            .lang("Dense Borderless Ruined Scale Tile")
-            .register();
     // ruined striped bordered
     public static BlockEntry<Block> RUINED_STRIPED_BORDERED = REGISTRATE.block("ruined_striped_bordered", Block::new)
             .transform(ruinedMachines())
@@ -1643,34 +1621,58 @@ public class FHBlocks {
     // ruined general machine
     // this is a block with six different side textures
     // TODO: need new block types
-    /*
-    public static BlockEntry<Block> RUINED_GENERAL_MACHINE = REGISTRATE.block("ruined_general_machine", Block::new)
+
+    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_GENERAL = REGISTRATE.block("ruined_machine_general", RuinedMachineBlock::new)
             .transform(ruinedMachines())
-            .blockstate((c, p) -> {
-                p.directionalBlock();
-            })
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
             .simpleItem()
             .register();
-    // These are obj blocks
-    // ruined machine a
-    public static BlockEntry<Block> RUINED_MACHINE_A = REGISTRATE.block("ruined_machine_a", Block::new)
+    // ruined_machine_general_chassis
+    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_GENERAL_CHASSIS = REGISTRATE.block("ruined_machine_general_chassis", RuinedMachineBlock::new)
             .transform(ruinedMachines())
-            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_machine_a"))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
             .simpleItem()
             .register();
-    // ruined machine b
-    public static BlockEntry<Block> RUINED_MACHINE_B = REGISTRATE.block("ruined_machine_b", Block::new)
+    // ruined_machine_general_screen
+    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_GENERAL_SCREEN = REGISTRATE.block("ruined_machine_general_screen", RuinedMachineBlock::new)
             .transform(ruinedMachines())
-            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_machine_b"))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
             .simpleItem()
             .register();
-    // ruined machine c
-    public static BlockEntry<Block> RUINED_MACHINE_C = REGISTRATE.block("ruined_machine_c", Block::new)
+    // ruined_machine_general_screen_cracked
+    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_GENERAL_SCREEN_CRACKED = REGISTRATE.block("ruined_machine_general_screen_cracked", RuinedMachineBlock::new)
             .transform(ruinedMachines())
-            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_machine_c"))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
             .simpleItem()
             .register();
-    */
+    // ruined_machine_general_storage
+    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_GENERAL_STORAGE = REGISTRATE.block("ruined_machine_general_storage", RuinedMachineBlock::new)
+            .transform(ruinedMachines())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .simpleItem()
+            .register();
+    // OBJs
+    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_BUTTONS = REGISTRATE.block("ruined_machine_buttons", RuinedMachineBlock::new)
+            .transform(ruinedMachines())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .simpleItem()
+            .register();
+    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_SCREEN = REGISTRATE.block("ruined_machine_screen", RuinedMachineBlock::new)
+            .transform(ruinedMachines())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .simpleItem()
+            .register();
+    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_SCREEN_CRACKED = REGISTRATE.block("ruined_machine_screen_cracked", RuinedMachineBlock::new)
+            .transform(ruinedMachines())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .simpleItem()
+            .register();
+    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_SWITCH = REGISTRATE.block("ruined_machine_switch", RuinedMachineBlock::new)
+            .transform(ruinedMachines())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .simpleItem()
+            .register();
+
 
 
     static {

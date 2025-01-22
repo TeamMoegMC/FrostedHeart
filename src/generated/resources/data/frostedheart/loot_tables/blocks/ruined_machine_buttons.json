@@ -11,11 +11,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "frostedheart:ruined_scale_tile_borderless_2"
+          "name": "frostedheart:ruined_machine_buttons"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "frostedheart:blocks/ruined_scale_tile_borderless_2"
+  "random_sequence": "frostedheart:blocks/ruined_machine_buttons"
 }
