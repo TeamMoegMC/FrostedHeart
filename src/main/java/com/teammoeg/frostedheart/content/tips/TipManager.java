@@ -156,8 +156,10 @@ public class TipManager {
             }
 
             // 添加下一个tip
-            if (!tip.getNextTip().isEmpty()) {
+            if (tip.hasNext()) {
                 general(tip.getNextTip());
+            } else if (!tip.getNextTip().isBlank()) {
+                LOGGER.warn("Tip '{}' declared next tip '{}', but it doesn't exist", tip.getId(), tip.getNextTip());
             }
         }
 

@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.tips.client.gui;
 
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FrostedHud;
-import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.Popup;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.chorda.widget.IconButton;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
@@ -14,6 +14,7 @@ import com.teammoeg.chorda.util.client.ColorHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -43,6 +44,7 @@ public class DebugScreen extends Screen {
     public void init() {
         super.init();
         buttons.clear();
+        var input = addRenderableWidget(new EditBox(ClientUtils.font(), 10, 50, 80, 12, Component.literal("input")));
 
         addButton(IconButton.Icon.CROSS, ColorHelper.CYAN, "Clear Tip Render Queue", (b) ->
             TipManager.INSTANCE.display().clearRenderQueue()
@@ -84,6 +86,9 @@ public class DebugScreen extends Screen {
         addButton(IconButton.Icon.TRADE, ColorHelper.CYAN, "Toggle Debug Overlay", (b) ->
             FrostedHud.renderDebugOverlay = !FrostedHud.renderDebugOverlay
         );
+        addButton(IconButton.Icon.LIST, ColorHelper.CYAN, "Create Pop-up message", (b) ->
+            Popup.put(input.getValue())
+        );
         addButton(IconButton.Icon.LEAVE, ColorHelper.CYAN, "Do Something", (b) -> {
             String message = debug();
             ClientUtils.getPlayer().sendSystemMessage(Components.str(message));
@@ -92,10 +97,8 @@ public class DebugScreen extends Screen {
 
     // 方便热重载debug
     private String debug() {
-        buttons.get(0).setScale(2);
-        Tip tip = Tip.builder("test").line(Components.str("test")).line(Components.str("aaaaaaaaaaaaa")).nextTip("default").build();
-        TipManager.INSTANCE.display().general(tip);
-        return tip.getNextTip();
+        Popup.clear();
+        return "clear";
     }
 
     public void addButton(IconButton.Icon icon, int color, String message, Button.OnPress onPress) {

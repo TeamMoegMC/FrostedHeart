@@ -391,6 +391,29 @@ public class CGuiHelper {
 		}
 	}
 
+	public static void drawCenteredStrings(GuiGraphics graphics, Font font, List<?> texts, int x, int y,
+										   int color, int lineSpace, boolean shadow, boolean background)
+	{
+		for (int i = 0; i < texts.size(); i++) {
+			Object obj = texts.get(i);
+			if (obj instanceof FormattedCharSequence formatted) {
+				int textWidth = font.width(formatted) / 2;
+				if (background) graphics.fill(x-2 - textWidth, y-1 + i * lineSpace, x+2 + textWidth, y-1 + (i+1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
+				graphics.drawString(font, formatted, x-textWidth, y + i * lineSpace, color, shadow);
+
+			} else if (obj instanceof Component component) {
+				int textWidth = font.width(component) / 2;
+				if (background) graphics.fill(x-2 - textWidth, y-1 + i * lineSpace, x+2 + textWidth, y-1 + (i+1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
+				graphics.drawString(font, component, x-textWidth, y + i * lineSpace, color, shadow);
+
+			} else {
+				int textWidth = font.width(obj.toString()) / 2;
+				if (background) graphics.fill(x-2 - textWidth, y-1 + i * lineSpace, x+2 + textWidth, y-1 + (i+1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
+				graphics.drawString(font, obj.toString(), x-textWidth, y + i * lineSpace, color, shadow);
+			}
+		}
+	}
+
 	/**
 	 * 渲染一个图标
 	 * @param icon {@link IconButton.Icon}

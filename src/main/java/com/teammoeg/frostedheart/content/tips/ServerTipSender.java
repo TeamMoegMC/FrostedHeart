@@ -2,9 +2,10 @@ package com.teammoeg.frostedheart.content.tips;
 
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipPacket;
+import com.teammoeg.frostedheart.content.tips.network.DisplayPopupPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.PacketDistributor;
 
 public class ServerTipSender {
 
@@ -14,7 +15,7 @@ public class ServerTipSender {
      * @param player 目标玩家
      */
     public static void sendGeneral(String id, ServerPlayer player) {
-        FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new DisplayTipPacket(id));
+        FHNetwork.sendPlayer(player, new DisplayTipPacket(id));
     }
 
     /**
@@ -24,7 +25,7 @@ public class ServerTipSender {
      * @param tip tip
      */
     public static void sendCustomToAll(Tip tip) {
-        FHNetwork.sendToServer(new DisplayCustomTipPacket(tip));
+        FHNetwork.sendToAll(new DisplayCustomTipPacket(tip));
     }
 
     /**
@@ -36,5 +37,39 @@ public class ServerTipSender {
      */
     public static void sendCustom(Tip tip, ServerPlayer player) {
         FHNetwork.sendPlayer(player, new DisplayCustomTipPacket(tip));
+    }
+
+    /**
+     * 向玩家发送 popup
+     * @param message 消息
+     * @param player 目标玩家
+     */
+    public static void sendPopup(String message, ServerPlayer player) {
+        FHNetwork.sendPlayer(player, new DisplayPopupPacket(message));
+    }
+
+    /**
+     * 向所有玩家发送 popup
+     * @param message 消息
+     */
+    public static void sendPopupToAll(String message) {
+        FHNetwork.sendToAll(new DisplayPopupPacket(message));
+    }
+
+    /**
+     * 向玩家发送 popup
+     * @param message 消息
+     * @param player 目标玩家
+     */
+    public static void sendPopup(Component message, ServerPlayer player) {
+        FHNetwork.sendPlayer(player, new DisplayPopupPacket(message));
+    }
+
+    /**
+     * 向所有玩家发送 popup
+     * @param message 消息
+     */
+    public static void sendPopupToAll(Component message) {
+        FHNetwork.sendToAll(new DisplayPopupPacket(message));
     }
 }
