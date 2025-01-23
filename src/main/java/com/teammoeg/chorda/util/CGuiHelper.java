@@ -21,11 +21,15 @@ package com.teammoeg.chorda.util;
 
 import java.util.List;
 import java.util.OptionalDouble;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.chorda.widget.IconButton;
+
+import dev.ftb.mods.ftblibrary.icon.Color4I;
+
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.client.ColorHelper;
 import com.teammoeg.chorda.util.client.Point;
@@ -39,6 +43,7 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import net.minecraft.client.Minecraft;
@@ -46,6 +51,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.network.chat.Component;
@@ -65,16 +71,16 @@ public class CGuiHelper {
 	public static class RenderStateAccess extends RenderStateShard {
 		public static RenderType.CompositeState getLineState(double width) {
 			return RenderType.CompositeState.builder()
-					.setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(width)))// width
-					.setLayeringState(VIEW_OFFSET_Z_LAYERING).setOutputState(MAIN_TARGET)
-					.setWriteMaskState(COLOR_DEPTH_WRITE).createCompositeState(true);
+				.setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(width)))// width
+				.setLayeringState(VIEW_OFFSET_Z_LAYERING).setOutputState(MAIN_TARGET)
+				.setWriteMaskState(COLOR_DEPTH_WRITE).createCompositeState(true);
 		}
 
 		public static RenderType.CompositeState getRectState() {
 			return RenderType.CompositeState.builder()
-					// width
-					.setLayeringState(VIEW_OFFSET_Z_LAYERING).setOutputState(MAIN_TARGET)
-					.setWriteMaskState(COLOR_DEPTH_WRITE).createCompositeState(true);
+				// width
+				.setLayeringState(VIEW_OFFSET_Z_LAYERING).setOutputState(MAIN_TARGET)
+				.setWriteMaskState(COLOR_DEPTH_WRITE).createCompositeState(true);
 		}
 
 		public RenderStateAccess(String p_i225973_1_, Runnable p_i225973_2_, Runnable p_i225973_3_) {
@@ -83,30 +89,30 @@ public class CGuiHelper {
 
 		public static RenderType createTempType(ResourceLocation texture) {
 			RenderType.CompositeState rendertype$state = RenderType.CompositeState.builder()
-					.setShaderState(RenderType.RENDERTYPE_TEXT_SHADER)
-					.setTextureState(
-							new TextureStateShard(texture, ForgeRenderTypes.enableTextTextureLinearFiltering, false))
-					.setTransparencyState(TRANSLUCENT_TRANSPARENCY).createCompositeState(false);
+				.setShaderState(RenderType.RENDERTYPE_TEXT_SHADER)
+				.setTextureState(
+					new TextureStateShard(texture, ForgeRenderTypes.enableTextTextureLinearFiltering, false))
+				.setTransparencyState(TRANSLUCENT_TRANSPARENCY).createCompositeState(false);
 			return RenderType.create("frostedheart_prerendered", DefaultVertexFormat.POSITION_COLOR_TEX,
-					VertexFormat.Mode.QUADS, 256, false, true, rendertype$state);
+				VertexFormat.Mode.QUADS, 256, false, true, rendertype$state);
 		}
 
-		public static final RenderType BOLD_LINE_TYPE = RenderType.create("fh_line_bold",
-				DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.DEBUG_LINES, 256, false, false,
-				RenderType.CompositeState.builder().setShaderState(RenderStateShard.RENDERTYPE_LINES_SHADER)
-						.setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(4)))
-						// .setLayeringState(VIEW_OFFSET_Z_LAYERING)
-						// .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
-						.setOutputState(MAIN_TARGET)
-						// .setWriteMaskState(COLOR_DEPTH_WRITE)
-						// .setCullState(NO_CULL)
-						.createCompositeState(false));
+		public static final RenderType BOLD_LINE_TYPE = RenderType.create("line_bold",
+			DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.LINES, 256, false, false,
+			RenderType.CompositeState.builder().setShaderState(RenderStateShard.RENDERTYPE_LINES_SHADER)
+				.setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(4)))
+				// .setLayeringState(VIEW_OFFSET_Z_LAYERING)
+				// .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+				.setOutputState(MAIN_TARGET)
+				// .setWriteMaskState(COLOR_DEPTH_WRITE)
+				// .setCullState(NO_CULL)
+				.createCompositeState(false));
 	}
 
 	public static void drawItem(GuiGraphics guiGraphics, ItemStack stack, int x, int y, int zindex, float scaleX,
-			float scaleY, boolean drawDecorations, @Nullable String countReplacement) {
+		float scaleY, boolean drawDecorations, @Nullable String countReplacement) {
 		guiGraphics.pose().pushPose();
-		guiGraphics.pose().translate(x, y, zindex+150);
+		guiGraphics.pose().translate(x, y, zindex + 150);
 		guiGraphics.pose().scale(scaleX, scaleY, scaleX);
 		/*
 		 * guiGraphics.renderItem(stack, 0, 0, 0,300);
@@ -124,30 +130,30 @@ public class CGuiHelper {
 		Matrix4f matrix4f = null;
 		if (!stack.isEmpty()) {
 			BakedModel bakedmodel = ClientUtils.mc().getItemRenderer().getModel(stack, ClientUtils.mc().level,
-					ClientUtils.mc().player, 0);
+				ClientUtils.mc().player, 0);
 			boolean flag = !bakedmodel.usesBlockLight();
-			if(!flag) {
-				matrix4f=new Matrix4f(guiGraphics.pose().last().pose()).rotationYXZ(1.0821041F, 3.2375858F, 0.0F).rotateYXZ((-(float)Math.PI / 8F), 2.3561945F, 0.0F);
+			if (!flag) {
+				matrix4f = new Matrix4f(guiGraphics.pose().last().pose()).rotationYXZ(1.0821041F, 3.2375858F, 0.0F).rotateYXZ((-(float) Math.PI / 8F), 2.3561945F, 0.0F);
 			}
 			guiGraphics.pose().pushPose();
-			guiGraphics.pose().translate(8f, 8f,0f);
+			guiGraphics.pose().translate(8f, 8f, 0f);
 
 			guiGraphics.pose().mulPoseMatrix((new Matrix4f()).scaling(1.0F, -1.0F, 1.0F));
 			guiGraphics.pose().scale(16.0F, 16.0F, 16.0F);
-			
+
 			if (flag) {
 				Lighting.setupForFlatItems();
-			}else {
-			       Lighting.setupLevel(matrix4f);
+			} else {
+				Lighting.setupLevel(matrix4f);
 			}
 
 			ClientUtils.mc().getItemRenderer().render(stack, ItemDisplayContext.GUI, false, guiGraphics.pose(),
-					guiGraphics.bufferSource(), 15728880, OverlayTexture.NO_OVERLAY, bakedmodel);
+				guiGraphics.bufferSource(), 15728880, OverlayTexture.NO_OVERLAY, bakedmodel);
 			guiGraphics.flush();
 			Lighting.setupFor3DItems();
 			guiGraphics.pose().popPose();
 		}
-		if(drawDecorations)
+		if (drawDecorations)
 			guiGraphics.renderItemDecorations(ClientUtils.mc().font, stack, 0, 0, countReplacement);
 		guiGraphics.pose().popPose();
 	}
@@ -160,78 +166,95 @@ public class CGuiHelper {
 		guiGraphics.drawString(Minecraft.getInstance().font, text, point.getX(), point.getY(), color);
 	}
 	// TODO fix line drawing
-	/*
-	 * private static void drawVertexLine(Matrix4f mat, VertexConsumer renderBuffer,
-	 * Color4I color, int startX, int startY,
-	 * int endX, int endY,float z) {
-	 * //RenderSystem.disableTexture();
-	 * //RenderSystem.enableColorLogicOp();
-	 * //RenderSystem.colorMask(false, false, false, false);
-	 * renderBuffer.vertex(mat, startX, startY, z).color(color.redi(),
-	 * color.greeni(), color.bluei(), color.alphai())
-	 * .endVertex();
-	 * renderBuffer.vertex(mat, endX, endY,z).color(color.redi(), color.greeni(),
-	 * color.bluei(), color.alphai())
-	 * .endVertex();
-	 * //RenderSystem.enableTexture();
-	 * }
-	 * private static void drawVertexLine2(Matrix4f mat, VertexConsumer
-	 * renderBuffer, Color4I color, int startX, int startY,
-	 * int endX, int endY,float z) {
-	 * //RenderSystem.disableTexture();
-	 * //RenderSystem.enableColorMaterial();
-	 * //RenderSystem.colorMask(false, false, false, false);
-	 * 
-	 * renderBuffer.vertex(mat, startX, 0, z).color(color.redi(), color.greeni(),
-	 * color.bluei(), color.alphai()).endVertex();
-	 * renderBuffer.vertex(mat, endX, 0, z).color(color.redi(), color.greeni(),
-	 * color.bluei(), color.alphai()).endVertex();
-	 * renderBuffer.vertex(mat, 0, startY, z).color(color.redi(), color.greeni(),
-	 * color.bluei(), color.alphai()).endVertex();
-	 * renderBuffer.vertex(mat, 0, endY , z).color(color.redi(), color.greeni(),
-	 * color.bluei(), color.alphai()).endVertex();
-	 * //RenderSystem.enableTexture();
-	 * }
-	 * // draw a line from start to end by color, ABSOLUTE POSITION
-	 * public static void drawLine(PoseStack matrixStack, Color4I color, int startX,
-	 * int startY, int endX, int endY,float z) {
-	 * Tesselator t=Tesselator.getInstance();
-	 * 
-	 * BufferBuilder vertexBuilderLines = t.getBuilder();
-	 * vertexBuilderLines.begin(VertexFormat.Mode.LINES,
-	 * DefaultVertexFormat.POSITION_COLOR);
-	 * drawVertexLine(matrixStack.last().pose(), vertexBuilderLines, color, startX,
-	 * startY, endX, endY,z);
-	 * t.end();
-	 * }
-	 */
+
+	private static void drawVertexLine(Matrix4f mat, VertexConsumer renderBuffer, Color4I color, int startX, int startY,
+		int endX, int endY, float z) {
+		// RenderSystem.disableTexture();
+		// RenderSystem.enableColorLogicOp();
+		// RenderSystem.colorMask(false, false, false, false);
+		renderBuffer.vertex(mat, startX, startY, z).color(color.redi(),
+			color.greeni(), color.bluei(), color.alphai())
+			.endVertex();
+		/*
+		 * renderBuffer.vertex(mat, startX, startY, z).color(color.redi(),
+		 * color.greeni(), color.bluei(), color.alphai()) .endVertex();
+		 */
+		renderBuffer.vertex(mat, endX, endY, z).color(color.redi(), color.greeni(),
+			color.bluei(), color.alphai())
+			.endVertex();
+		/*
+		 * renderBuffer.vertex(mat, endX, endY, z).color(color.redi(), color.greeni(),
+		 * color.bluei(), color.alphai()) .endVertex();
+		 */
+		// RenderSystem.enableTexture();
+	}
+
+	private static void drawVertexLine2(Matrix4f mat, VertexConsumer renderBuffer, Color4I color, int startX, int startY,
+		int endX, int endY, float z) {
+		// RenderSystem.disableTexture();
+		// RenderSystem.enableColorMaterial();
+		// RenderSystem.colorMask(false, false, false, false);
+
+		renderBuffer.vertex(mat, startX, 0, z).color(color.redi(), color.greeni(),
+			color.bluei(), color.alphai()).endVertex();
+		renderBuffer.vertex(mat, endX, 0, z).color(color.redi(), color.greeni(),
+			color.bluei(), color.alphai()).endVertex();
+		renderBuffer.vertex(mat, 0, startY, z).color(color.redi(), color.greeni(),
+			color.bluei(), color.alphai()).endVertex();
+		renderBuffer.vertex(mat, 0, endY, z).color(color.redi(), color.greeni(),
+			color.bluei(), color.alphai()).endVertex();
+		// RenderSystem.enableTexture();
+	}
 
 	// draw a line from start to end by color, ABSOLUTE POSITION
-	/*
-	 * public static void drawLine(GuiGraphics graphics, Color4I color, int startX,
-	 * int startY, int endX, int endY) {
-	 * 
-	 * VertexConsumer vertexBuilderLines = graphics.bufferSource()
-	 * .getBuffer(RenderStateAccess.BOLD_LINE_TYPE);
-	 * drawVertexLine(graphics.pose().last().pose(), vertexBuilderLines, color,
-	 * startX, startY, endX, endY,0f);
-	 * 
-	 * }
-	 */
+	public static void drawLine(PoseStack matrixStack, Color4I color, int startX,
+		int startY, int endX, int endY, float z) {
+		Tesselator t = Tesselator.getInstance();
 
-	private static void drawRect(Matrix4f mat, BufferBuilder renderBuffer, int x, int y, int w, int h,int color) {
-		renderBuffer.vertex(mat, x,     y,     0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color), FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color))
-				.endVertex();
-		renderBuffer.vertex(mat, x + w, y,     0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color), FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color))
-				.endVertex();
+		BufferBuilder vertexBuilderLines = t.getBuilder();
+		vertexBuilderLines.begin(VertexFormat.Mode.LINES,
+			DefaultVertexFormat.POSITION_COLOR);
+		drawVertexLine(matrixStack.last().pose(), vertexBuilderLines, color, startX,
+			startY, endX, endY, z);
+		t.end();
+	}
+	private static class ShaderSetter implements Supplier<ShaderInstance>{
+		ShaderInstance inst;
+		@Override
+		public ShaderInstance get() {
+			return inst;
+		}
+		
+	}
+	public static ThreadLocal<ShaderSetter> shaderSetterCache=ThreadLocal.withInitial(()->new ShaderSetter());
+	// draw a line from start to end by color, ABSOLUTE POSITION
+
+	public static void drawLine(GuiGraphics graphics, Color4I color, int startX,
+		int startY, int endX, int endY) {
+		ShaderSetter ss=shaderSetterCache.get();
+		ss.inst=RenderSystem.getShader();
+		
+		VertexConsumer vertexBuilderLines = graphics.bufferSource()
+			.getBuffer(RenderStateAccess.BOLD_LINE_TYPE);
+		drawVertexLine(graphics.pose().last().pose(), vertexBuilderLines, color,
+			startX, startY, endX, endY, 0f);
+		RenderSystem.setShader(ss);
+		
+	}
+
+	private static void drawRect(Matrix4f mat, BufferBuilder renderBuffer, int x, int y, int w, int h, int color) {
+		renderBuffer.vertex(mat, x, y, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color), FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color))
+			.endVertex();
+		renderBuffer.vertex(mat, x + w, y, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color), FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color))
+			.endVertex();
 		renderBuffer.vertex(mat, x + w, y + h, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color), FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color))
-				.endVertex();
-		renderBuffer.vertex(mat, x    , y + h, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color), FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color))
-				.endVertex();
+			.endVertex();
+		renderBuffer.vertex(mat, x, y + h, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color), FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color))
+			.endVertex();
 	}
 
 	private static void fillGradient(Matrix4f matrix, BufferBuilder builder, int x1, int y1, int x2, int y2, int colorB,
-			int colorA) {
+		int colorA) {
 		float f = (colorA >> 24 & 255) / 255.0F;
 		float f1 = (colorA >> 16 & 255) / 255.0F;
 		float f2 = (colorA >> 8 & 255) / 255.0F;
@@ -259,6 +282,7 @@ public class CGuiHelper {
 		tessellator.end();
 		RenderSystem.disableBlend();
 	}
+
 	// draw a rectangle
 	public static void fillRect(PoseStack matrixStack, int x1, int y1, int w, int h, int color) {
 		RenderSystem.enableDepthTest();
@@ -274,20 +298,20 @@ public class CGuiHelper {
 	}
 
 	public static void blit(PoseStack matrixStack, int x, int y, int width, int height, float uOffset, float vOffset,
-			int uWidth, int vHeight, int textureWidth, int textureHeight, float opacity) {
+		int uWidth, int vHeight, int textureWidth, int textureHeight, float opacity) {
 		innerBlit(matrixStack, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth,
-				textureHeight, opacity);
+			textureHeight, opacity);
 	}
 
 	public static void innerBlit(PoseStack matrixStack, int x1, int x2, int y1, int y2, int blitOffset, int uWidth,
-			int vHeight, float uOffset, float vOffset, int textureWidth, int textureHeight, float opacity) {
+		int vHeight, float uOffset, float vOffset, int textureWidth, int textureHeight, float opacity) {
 		innerBlit(matrixStack.last().pose(), x1, x2, y1, y2, blitOffset, (uOffset + 0.0F) / textureWidth,
-				(uOffset + uWidth) / textureWidth, (vOffset + 0.0F) / textureHeight,
-				(vOffset + vHeight) / textureHeight, opacity);
+			(uOffset + uWidth) / textureWidth, (vOffset + 0.0F) / textureHeight,
+			(vOffset + vHeight) / textureHeight, opacity);
 	}
 
 	public static void innerBlit(Matrix4f matrix, int x1, int x2, int y1, int y2, int blitOffset, float minU,
-			float maxU, float minV, float maxV, float opacity) {
+		float maxU, float minV, float maxV, float opacity) {
 		// RenderSystem.enableAlphaTest();
 
 		RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
@@ -305,31 +329,31 @@ public class CGuiHelper {
 	}
 
 	public static void blitColored(PoseStack matrixStack, int x, int y, int width, int height, float uOffset,
-			float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight, int color) {
+		float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight, int color) {
 
 		innerBlitColored(matrixStack, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth,
-				textureHeight, FastColor.ARGB32.red(color) / 255f, FastColor.ARGB32.green(color) / 255f,
-				FastColor.ARGB32.blue(color) / 255f, FastColor.ARGB32.alpha(color) / 255f);
+			textureHeight, FastColor.ARGB32.red(color) / 255f, FastColor.ARGB32.green(color) / 255f,
+			FastColor.ARGB32.blue(color) / 255f, FastColor.ARGB32.alpha(color) / 255f);
 	}
 
 	public static void blitColored(PoseStack matrixStack, int x, int y, int width, int height, float uOffset,
-			float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight, int color, float opacity) {
+		float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight, int color, float opacity) {
 
 		innerBlitColored(matrixStack, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth,
-				textureHeight, FastColor.ARGB32.red(color) / 255f, FastColor.ARGB32.green(color) / 255f,
-				FastColor.ARGB32.blue(color) / 255f, opacity);
+			textureHeight, FastColor.ARGB32.red(color) / 255f, FastColor.ARGB32.green(color) / 255f,
+			FastColor.ARGB32.blue(color) / 255f, opacity);
 	}
 
 	public static void innerBlitColored(PoseStack matrixStack, int x1, int x2, int y1, int y2, int blitOffset,
-			int uWidth, int vHeight, float uOffset, float vOffset, int textureWidth, int textureHeight, float r,
-			float g, float b, float opacity) {
+		int uWidth, int vHeight, float uOffset, float vOffset, int textureWidth, int textureHeight, float r,
+		float g, float b, float opacity) {
 		innerBlitColored(matrixStack.last().pose(), x1, x2, y1, y2, blitOffset, (uOffset + 0.0F) / textureWidth,
-				(uOffset + uWidth) / textureWidth, (vOffset + 0.0F) / textureHeight,
-				(vOffset + vHeight) / textureHeight, r, g, b, opacity);
+			(uOffset + uWidth) / textureWidth, (vOffset + 0.0F) / textureHeight,
+			(vOffset + vHeight) / textureHeight, r, g, b, opacity);
 	}
 
 	public static void innerBlitColored(Matrix4f matrix, int x1, int x2, int y1, int y2, int blitOffset, float minU,
-			float maxU, float minV, float maxV, float r, float g, float b, float opacity) {
+		float maxU, float minV, float maxV, float r, float g, float b, float opacity) {
 		// RenderSystem.enableAlphaTest();
 
 		RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
@@ -353,14 +377,14 @@ public class CGuiHelper {
 
 	/**
 	 * 换行文本并渲染
-	 * @param maxWidth 单行最大宽度
+	 * 
+	 * @param maxWidth  单行最大宽度
 	 * @param lineSpace 行间距
-	 * @param shadow 文本阴影
+	 * @param shadow    文本阴影
 	 * @return 换行后的行数
 	 */
 	public static int drawWordWarp(GuiGraphics graphics, Font font, FormattedText text, int x, int y, int color,
-								   int maxWidth, int lineSpace, boolean shadow, boolean background)
-	{
+		int maxWidth, int lineSpace, boolean shadow, boolean background) {
 		List<FormattedCharSequence> texts = font.split(text, maxWidth);
 		drawStrings(graphics, font, texts, x, y, color, lineSpace, shadow, background);
 		return texts.size();
@@ -368,55 +392,55 @@ public class CGuiHelper {
 
 	/**
 	 * 渲染列表中的所有文本
+	 * 
 	 * @param lineSpace 行间距
-	 * @param shadow 文本阴影
+	 * @param shadow    文本阴影
 	 */
 	public static void drawStrings(GuiGraphics graphics, Font font, List<?> texts, int x, int y,
-                                   int color, int lineSpace, boolean shadow, boolean background)
-	{
+		int color, int lineSpace, boolean shadow, boolean background) {
 		for (int i = 0; i < texts.size(); i++) {
 			Object obj = texts.get(i);
 			if (obj instanceof FormattedCharSequence formatted) {
-				if (background) graphics.fill(x, y-1 + i * lineSpace, x + font.width(formatted), y-1 + (i+1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
+				if (background) graphics.fill(x, y - 1 + i * lineSpace, x + font.width(formatted), y - 1 + (i + 1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
 				graphics.drawString(font, formatted, x, y + i * lineSpace, color, shadow);
 
 			} else if (obj instanceof Component component) {
-				if (background) graphics.fill(x, y-1 + i * lineSpace, x + font.width(component), y-1 + (i+1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
+				if (background) graphics.fill(x, y - 1 + i * lineSpace, x + font.width(component), y - 1 + (i + 1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
 				graphics.drawString(font, component, x, y + i * lineSpace, color, shadow);
 
 			} else {
-				if (background) graphics.fill(x, y-1 + i * lineSpace, x + font.width(obj.toString()), y-1 + (i+1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
+				if (background) graphics.fill(x, y - 1 + i * lineSpace, x + font.width(obj.toString()), y - 1 + (i + 1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
 				graphics.drawString(font, Components.str(obj.toString()), x, y + i * lineSpace, color, shadow);
 			}
 		}
 	}
 
 	public static void drawCenteredStrings(GuiGraphics graphics, Font font, List<?> texts, int x, int y,
-										   int color, int lineSpace, boolean shadow, boolean background)
-	{
+		int color, int lineSpace, boolean shadow, boolean background) {
 		for (int i = 0; i < texts.size(); i++) {
 			Object obj = texts.get(i);
 			if (obj instanceof FormattedCharSequence formatted) {
 				int textWidth = font.width(formatted) / 2;
-				if (background) graphics.fill(x-2 - textWidth, y-1 + i * lineSpace, x+2 + textWidth, y-1 + (i+1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
-				graphics.drawString(font, formatted, x-textWidth, y + i * lineSpace, color, shadow);
+				if (background) graphics.fill(x - 2 - textWidth, y - 1 + i * lineSpace, x + 2 + textWidth, y - 1 + (i + 1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
+				graphics.drawString(font, formatted, x - textWidth, y + i * lineSpace, color, shadow);
 
 			} else if (obj instanceof Component component) {
 				int textWidth = font.width(component) / 2;
-				if (background) graphics.fill(x-2 - textWidth, y-1 + i * lineSpace, x+2 + textWidth, y-1 + (i+1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
-				graphics.drawString(font, component, x-textWidth, y + i * lineSpace, color, shadow);
+				if (background) graphics.fill(x - 2 - textWidth, y - 1 + i * lineSpace, x + 2 + textWidth, y - 1 + (i + 1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
+				graphics.drawString(font, component, x - textWidth, y + i * lineSpace, color, shadow);
 
 			} else {
 				int textWidth = font.width(obj.toString()) / 2;
-				if (background) graphics.fill(x-2 - textWidth, y-1 + i * lineSpace, x+2 + textWidth, y-1 + (i+1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
-				graphics.drawString(font, obj.toString(), x-textWidth, y + i * lineSpace, color, shadow);
+				if (background) graphics.fill(x - 2 - textWidth, y - 1 + i * lineSpace, x + 2 + textWidth, y - 1 + (i + 1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
+				graphics.drawString(font, obj.toString(), x - textWidth, y + i * lineSpace, color, shadow);
 			}
 		}
 	}
 
 	/**
 	 * 渲染一个图标
-	 * @param icon {@link IconButton.Icon}
+	 * 
+	 * @param icon  {@link IconButton.Icon}
 	 * @param color 图标的颜色
 	 */
 	public static void renderIcon(PoseStack pose, IconButton.Icon icon, int x, int y, int color) {

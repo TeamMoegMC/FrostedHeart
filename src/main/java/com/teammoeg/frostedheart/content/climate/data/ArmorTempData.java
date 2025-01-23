@@ -48,10 +48,6 @@ public record ArmorTempData(Item item,float insulation, float heat_proof, float 
     public float getColdProof() {
     	return wind_proof;
     }
-
-	@Override
-	public String toString() {
-		return "ArmorTempData [insulation=" + insulation + ", heat_proof=" + heat_proof + ", wind_proof=" + wind_proof + "]";
-	}
+    
 }
 

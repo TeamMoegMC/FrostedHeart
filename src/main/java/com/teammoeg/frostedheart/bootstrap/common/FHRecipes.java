@@ -104,9 +104,9 @@ public class FHRecipes {
         BiomeTempData.TYPE=createCodecRecipeType("biome_temp",BiomeTempData.CODEC);
         BlockTempData.TYPE=createCodecRecipeType("block_temp",BlockTempData.CODEC);
         CupData.TYPE=createCodecRecipeType("cup_temp",CupData.CODEC);
-        DrinkTempData.TYPE=createCodecRecipeType("armor_temp",DrinkTempData.CODEC);
-        FoodTempData.TYPE=createCodecRecipeType("drink_temp",FoodTempData.CODEC);
-        PlantTempData.TYPE=createCodecRecipeType("food_temp",PlantTempData.CODEC);
+        DrinkTempData.TYPE=createCodecRecipeType("drink_temp",DrinkTempData.CODEC);
+        FoodTempData.TYPE=createCodecRecipeType("food_temp",FoodTempData.CODEC);
+        PlantTempData.TYPE=createCodecRecipeType("plant_temp",PlantTempData.CODEC);
         WorldTempData.TYPE=createCodecRecipeType("world_temp",WorldTempData.CODEC);
         
         

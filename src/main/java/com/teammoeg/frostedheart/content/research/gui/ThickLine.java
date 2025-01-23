@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
+import com.teammoeg.chorda.util.CGuiHelper;
+
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -30,11 +32,12 @@ public class ThickLine {
     }
 
     public void draw(GuiGraphics matrixStack, int x, int y) {
-        if (this.x == this.x2)
+        /*if (this.x == this.x2)
             matrixStack.fill(x + this.x - 2, y + this.y - 2, x + this.x + 2, y + this.y2 + 2, color.rgba());
         else
-            matrixStack.fill(x + this.x - 2, y + this.y - 2, x + this.x2 + 2, y + this.y + 2, color.rgba());
-        //CGuis.drawLine(matrixStack, color, x + this.x, y + this.y, x + this.x2, y + this.y2);
+            matrixStack.fill(x + this.x - 2, y + this.y - 2, x + this.x2 + 2, y + this.y + 2, color.rgba());*/
+    	
+        CGuiHelper.drawLine(matrixStack, color, x + this.x, y + this.y, x + this.x2, y + this.y2);
 
         // super.draw(matrixStack, theme, x, y, w, h);
     }
