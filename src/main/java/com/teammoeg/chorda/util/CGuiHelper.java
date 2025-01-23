@@ -98,7 +98,7 @@ public class CGuiHelper {
 		}
 
 		public static final RenderType BOLD_LINE_TYPE = RenderType.create("line_bold",
-			DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.LINES, 256, false, false,
+			DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.DEBUG_LINES, 256, false, false,
 			RenderType.CompositeState.builder().setShaderState(RenderStateShard.RENDERTYPE_LINES_SHADER)
 				.setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(4)))
 				// .setLayeringState(VIEW_OFFSET_Z_LAYERING)

@@ -3,6 +3,7 @@
   "automatic_culling": false,
   "flip_v": true,
   "loader": "forge:obj",
+  "render_type":"cutout_mipped",
   "model": "frostedheart:models/block/mechanical_calculator_base.obj",
   "textures": {
     "particle": "frostedheart:block/obj/mechanical_calculator"

@@ -37,6 +37,7 @@ import com.teammoeg.chorda.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.client.FHScreens;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
@@ -48,6 +49,8 @@ import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.resources.ResourceLocation;
@@ -95,6 +98,20 @@ public class FHClientEventsMod {
             FHGuiProviders.setRewardGuiProviders();
         }
         LOGGER.info(CLIENT_SETUP, "FML Client setup event finished");
+        /*
+         ItemBlockRenderTypes.setRenderLayer(FHBlocks.RYE_BLOCK.get(), RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FHBlocks.WHITE_TURNIP_BLOCK.get(), RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FHBlocks.WOLFBERRY_BUSH_BLOCK.get(), RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.GENERATOR_T1.getBlock(), RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.GENERATOR_T2.getBlock(), RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FHBlocks.DRAWING_DESK.get(), RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FHBlocks.CHARGER.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.MECHANICAL_CALCULATOR.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.STEAM_CORE.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.RADIATOR.getBlock(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.DEBUG_HEATER.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.RELIC_CHEST.get(), RenderType.cutout()); 
+         */
     }
 
     @SubscribeEvent
@@ -102,6 +119,7 @@ public class FHClientEventsMod {
         event.registerReloadListener(KGlyphProvider.INSTANCE);
     }
 
+	@SuppressWarnings("deprecation")
 	@SubscribeEvent
 	public static void onCreativeTabContents(BuildCreativeModeTabContentsEvent event) {
 		CreativeTabItemHelper helper = new CreativeTabItemHelper(event.getTabKey(), event.getTab());
