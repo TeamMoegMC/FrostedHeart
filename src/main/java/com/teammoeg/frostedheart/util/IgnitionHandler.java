@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.utility.ignition;
+package com.teammoeg.frostedheart.util;
 
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;

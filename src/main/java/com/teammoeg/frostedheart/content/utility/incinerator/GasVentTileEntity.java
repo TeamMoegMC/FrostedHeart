@@ -24,6 +24,7 @@ import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 
+import blusunrize.immersiveengineering.common.fluids.ArrayFluidHandler;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.BlockPos;
@@ -60,45 +61,7 @@ public class GasVentTileEntity extends CBlockEntity implements IActiveState, CTi
 
     private void refreshCapability() {
         LazyOptional<IFluidHandler> oldCap = this.holder;
-        this.holder = LazyOptional.of(() -> new IFluidHandler() {
-                    @Override
-                    public FluidStack drain(FluidStack resource, FluidAction action) {
-                        return FluidStack.EMPTY;
-                    }
-
-                    @Override
-                    public FluidStack drain(int maxDrain, FluidAction action) {
-                        return FluidStack.EMPTY;
-                    }
-
-                    @Override
-                    public int fill(FluidStack resource, FluidAction action) {
-                        return input.fill(resource, action);
-                    }
-
-                    @Override
-                    public FluidStack getFluidInTank(int tank) {
-                        return input.getFluidInTank(tank);
-                    }
-
-                    @Override
-                    public int getTankCapacity(int tank) {
-                        return input.getCapacity();
-                    }
-
-                    @Override
-                    public int getTanks() {
-                        return input.getTanks();
-                    }
-
-                    @Override
-                    public boolean isFluidValid(int tank, FluidStack stack) {
-                        return input.isFluidValid(tank, stack);
-                    }
-
-                }
-
-        );
+        this.holder = LazyOptional.of(()->ArrayFluidHandler.fillOnly(input, ()->this.setChanged()));
         oldCap.invalidate();
     }
 
