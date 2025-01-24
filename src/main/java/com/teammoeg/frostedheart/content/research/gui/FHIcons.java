@@ -52,14 +52,6 @@ import java.util.function.Consumer;
 
 public class FHIcons {
     private static final TypedCodecRegistry<FHIcon> serializers = new TypedCodecRegistry<>();
-    public static final Codec<FHIcon> CODEC = new AlternativeCodecBuilder<FHIcon>(FHIcon.class)
-            .addSaveOnly(FHNopIcon.class, FHNopIcon.CODEC.codec())
-            .add(FHItemIcon.class, FHItemIcon.ICON_CODEC)
-            .add(FHItemIcon.class, FHItemIcon.CODEC.codec())
-            .add(FHAnimatedIcon.class, FHAnimatedIcon.ICON_CODEC)
-            .add(serializers.codec())
-            .addSaveOnly(FHIcon.class, FHNopIcon.CODEC.codec())
-            .build();
     public static final Codec<FHIcon> DEFAULT_CODEC = new AlternativeCodecBuilder<FHIcon>(FHIcon.class)
             .fallback(() -> FHNopIcon.INSTANCE)
             .addSaveOnly(FHNopIcon.class, FHNopIcon.CODEC.codec())
@@ -69,6 +61,15 @@ public class FHIcons {
             .add(serializers.codec())
             .add(FHNopIcon.CODEC.codec())
             .build();
+    public static final Codec<FHIcon> CODEC = new AlternativeCodecBuilder<FHIcon>(FHIcon.class)
+            .addSaveOnly(FHNopIcon.class, FHNopIcon.CODEC.codec())
+            .add(FHItemIcon.class, FHItemIcon.ICON_CODEC)
+            .add(FHItemIcon.class, FHItemIcon.CODEC.codec())
+            .add(FHAnimatedIcon.class, FHAnimatedIcon.ICON_CODEC)
+            .add(serializers.codec())
+            .addSaveOnly(FHIcon.class, FHNopIcon.CODEC.codec())
+            .build();
+
 
     static {
         serializers.register(FHNopIcon.class, "nop", FHNopIcon.CODEC);

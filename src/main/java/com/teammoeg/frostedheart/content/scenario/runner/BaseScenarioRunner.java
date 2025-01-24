@@ -53,6 +53,15 @@ public class BaseScenarioRunner implements ScenarioThread{
 	
 	protected Scene scene;
 	
+	@Override
+	public String toString() {
+		return "BaseScenarioRunner [sp=" + sp + ", nodeNum=" + nodeNum + ", scene=" + scene + ", toExecute=" + toExecute
+				+ ", triggers=" + triggers + ", status=" + status + ", waiting=" + waiting + ", callStack=" + callStack
+				+ ", isConducting=" + isConducting + ", currentLabel=" + currentLabel + "]";
+	}
+
+
+
 	/** Actions appended by trigger and awaiting execution. */
 	protected LinkedList<ScenarioTarget> toExecute=new LinkedList<>();
 
@@ -289,7 +298,8 @@ public class BaseScenarioRunner implements ScenarioThread{
      * Stop.
      */
     public void stop() {
-    	nodeNum=getScenario().pieces().size();
+    	this.sp=null;
+    	nodeNum=0;
     	setStatus(RunStatus.STOPPED);
     }
     protected void runCodeExecutionLoop(ScenarioContext ctx) {

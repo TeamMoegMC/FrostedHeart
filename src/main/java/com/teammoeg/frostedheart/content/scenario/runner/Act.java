@@ -144,4 +144,10 @@ public class Act extends BaseScenarioRunner{
 		this.callStack.clear();;
 		this.callStack.addAll(linkedList);
 	}
+	@Override
+	public void stop() {
+		super.stop();
+		currentLabel=null;
+	}
+	
 }

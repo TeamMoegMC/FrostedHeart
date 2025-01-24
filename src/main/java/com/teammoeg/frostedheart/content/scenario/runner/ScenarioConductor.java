@@ -67,6 +67,7 @@ public class ScenarioConductor implements NBTSerializable{
        			currentAct=acts.get(lastCurrent);
     		}
     		acts.values().forEach(t->{
+    			if(!t.name.isAct())return;
     			if(t.getStatus()==RunStatus.WAITTRIGGER) {
     				t.scene().setSlient(true);
     				//t.getScene().setSlient(true);
@@ -129,25 +130,36 @@ public class ScenarioConductor implements NBTSerializable{
     	//detect triggers
 		//System.out.println("start tick==============");
 		
-    	for(Act act:acts.values()) {
-    		//System.out.println(act.name+": "+act);
-    		act.tickTrigger(getContext());
-    	}
-    	//System.out.println("current act: "+getCurrentAct());
-    	if(currentAct!=null) {
-	    	currentAct.tickMain(context);
-	    	if(currentAct.getStatus().shouldPause) {
-	    		currentAct=null;
-	    	}
-    	}
-    	if(currentAct==null)
+		
+		
+		
+		//start act scheduling after system started
+		if(isActsEnabled) {
 	    	for(Act act:acts.values()) {
-	    		
-	    		act.runScheduled(context);
-	    		if(!act.getStatus().shouldPause) {
-	    			currentAct=act;
-	    		}
+	    		//System.out.println(act.name+": "+act);
+	    		act.tickTrigger(context);
 	    	}
+	    	//System.out.println("current act: "+getCurrentAct());
+	    	if(currentAct!=null) {
+		    	currentAct.tickMain(context);
+		    	if(currentAct.getStatus().shouldPause) {
+		    		currentAct=null;
+		    	}
+	    	}
+	    	if(currentAct==null)
+		    	for(Act act:acts.values()) {
+		    		
+		    		act.runScheduled(context);
+		    		if(!act.getStatus().shouldPause) {
+		    			currentAct=act;
+		    		}
+		    	}
+		}else {//during bootstrap steps
+			Act initact=acts.get(init);
+			initact.tickTrigger(context);
+			initact.tickMain(context);
+			initact.runScheduled(context);
+		}
     	
     }
 
