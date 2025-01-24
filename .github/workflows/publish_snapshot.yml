@@ -5,14 +5,12 @@
 # This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
 
-name: Java CI with Gradle 1.20
+name: Publish Snapshots
 
 on:
   push:
     branches: [ "1.20" ]
   workflow_dispatch: 
-
-
 jobs:
   build:
 
@@ -44,16 +42,6 @@ jobs:
       run: ./gradlew runData -Pmod_version="${{steps.read_property.outputs.mod_version}}-snapshot${{github.run_number}}"
     - name: Run build jar
       run: ./gradlew jar -Pmod_version="${{steps.read_property.outputs.mod_version}}-snapshot${{github.run_number}}"
-    - name: Download cosmaven from github
-      run: wget https://github.com/TeamMoegMC/CosMavenProxy/releases/latest/download/cosmavenproxy.jar
-    - name: Start cos maven local
-      shell: bash
-      env:
-        COS_KEY: ${{ secrets.COS_SECRETKEY }}
-        COS_ID: ${{ secrets.COS_SECRETID }}
-      run: |
-        java -DCOS_SECRETID="$COS_ID" -DCOS_SECRETKEY="$COS_KEY" -Dport=9999 -jar cosmavenproxy.jar &
-        ./gradlew publishMavenJavaPublicationToCOSRepository -Pmod_version="${{steps.read_property.outputs.mod_version}}-snapshot${{github.run_number}}"
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -61,18 +49,16 @@ jobs:
         path: build/libs/*.jar
         if-no-files-found: error
         overwrite: true
-
-    # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
-    # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
-    #
-    # - name: Setup Gradle
-    #   uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
-    #   with:
-    #     gradle-version: '8.9'
-    #
-    # - name: Build with Gradle 8.9
-    #   run: gradle build
-
+    - name: Download cosmaven from github
+      run: wget https://github.com/TeamMoegMC/CosMavenProxy/releases/latest/download/cosmavenproxy.jar
+    - name: Publish to cos maven
+      shell: bash
+      env:
+        COS_KEY: ${{ secrets.COS_SECRETKEY }}
+        COS_ID: ${{ secrets.COS_SECRETID }}
+      run: |
+        java -DCOS_SECRETID="$COS_ID" -DCOS_SECRETKEY="$COS_KEY" -Dport=9999 -jar cosmavenproxy.jar &
+        ./gradlew publishMavenJavaPublicationToCOSRepository -Pmod_version="${{steps.read_property.outputs.mod_version}}-snapshot${{github.run_number}}"
   dependency-submission:
 
     runs-on: ubuntu-latest
