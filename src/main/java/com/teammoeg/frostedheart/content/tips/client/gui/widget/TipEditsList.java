@@ -198,7 +198,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
                 } else {
                     key += ".desc" + contents.size();
                 }
-                translationContents.add("\"" + key + "\": \"" + value + "\"");
+                translationContents.add(key);
 
                 input.setValue("");
                 updatePreview(Component.translatable("gui.frostedheart.tip_editor.info.enter"));
@@ -215,8 +215,9 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
             this.translationButton = new ActionStateIconButton(0, 0, IconButton.Icon.LIST, ColorHelper.CYAN, Component.translatable("gui.frostedheart.tip_editor.convert_and_copy"), Component.translatable("gui.frostedheart.copied"), b -> {
                 if (!contents.isEmpty()) {
                     StringBuilder copy = new StringBuilder();
-                    for (String content : translationContents) {
-                        copy.append(content).append("\",\n");
+                    for (int i = 0; i < translationContents.size(); i++) {
+                        String content = translationContents.get(i);
+                        copy.append("\"").append(content).append("\": \"").append(contents.get(i)).append("\",\n");
                     }
                     ClientUtils.mc().keyboardHandler.setClipboard(copy.substring(0, copy.length()-2)); // 删除最后一行的逗号和换行
 
@@ -228,7 +229,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
 
         public List<String> getContents() {
             var c = translation ? translationContents : contents;
-            return c.isEmpty() ? List.of(" ") : c;
+            return c.isEmpty() ? List.of("tips.frostedheart.error.load.empty") : c;
         }
 
         @Override

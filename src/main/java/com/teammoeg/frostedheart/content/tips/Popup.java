@@ -31,7 +31,10 @@ public class Popup {
         } else {
             var graphic = event.getGuiGraphics();
             var message = POPUPS.peek();
-            assert message != null;
+            if (message == null) {
+                POPUPS.remove();
+                return;
+            }
 
             switch (state) {
                 case IDLE -> state = State.FADING_IN;
