@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import com.teammoeg.chorda.util.CGuiHelper;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.gui.GuiGraphics;

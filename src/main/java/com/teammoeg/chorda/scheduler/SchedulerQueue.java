@@ -24,8 +24,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.teammoeg.chorda.ChordaConfig;
-
 import com.teammoeg.chorda.util.CUtils;
+
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.core.BlockPos;

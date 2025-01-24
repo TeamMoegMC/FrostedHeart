@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy.debug;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
-import com.teammoeg.chorda.block.CTickableBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.*;

@@ -21,13 +21,13 @@ package com.teammoeg.frostedheart.content.research.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.team.SpecialData;
 import com.teammoeg.chorda.team.SpecialDataHolder;
 import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.chorda.team.TeamDataHolder;
-import com.teammoeg.chorda.util.ie.IngredientUtils;
-import com.teammoeg.chorda.util.io.CodecUtil;
-import com.teammoeg.chorda.util.utility.OptionalLazy;
+import com.teammoeg.chorda.util.IERecipeUtils;
+import com.teammoeg.chorda.util.struct.OptionalLazy;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.FHResearch;
@@ -268,7 +268,7 @@ public class TeamResearchData implements SpecialData {
 		}
 		if (!this.hasInsight(research.getInsight()))
 			return false;
-		if (!research.getRequiredItems().isEmpty() && !IngredientUtils.costItems(player, research.getRequiredItems()))
+		if (!research.getRequiredItems().isEmpty() && !IERecipeUtils.costItems(player, research.getRequiredItems()))
 			return false;
 		this.costInsight(team,research.getInsight());
 		getData(research).setActive();

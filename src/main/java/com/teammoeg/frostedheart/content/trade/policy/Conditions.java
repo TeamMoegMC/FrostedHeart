@@ -22,13 +22,13 @@ package com.teammoeg.frostedheart.content.trade.policy;
 import java.util.function.Function;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.chorda.io.registry.JsonSerializerRegistry;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.FlagValueCondition;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.GreaterFlagCondition;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.LevelCondition;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.NotCondition;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.TotalTradeCondition;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.WithFlagCondition;
-import com.teammoeg.chorda.util.io.registry.JsonSerializerRegistry;
 
 import net.minecraft.network.FriendlyByteBuf;
 

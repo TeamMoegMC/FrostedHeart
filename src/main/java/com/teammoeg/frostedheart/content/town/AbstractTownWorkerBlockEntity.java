@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.town;
 
 import com.teammoeg.chorda.block.CBlockInterfaces;
-import com.teammoeg.chorda.blockentity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.scheduler.ScheduledTaskTileEntity;
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
 

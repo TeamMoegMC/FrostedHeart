@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.content.health.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.chorda.lang.ComponentOptimizer;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
-import com.teammoeg.chorda.util.lang.ComponentOptimizer;
 import com.teammoeg.frostedheart.util.client.FGuis;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
 import net.minecraft.client.Minecraft;

@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.trade.policy.actions.AddFlagValueAction;
@@ -39,7 +40,6 @@ import com.teammoeg.frostedheart.content.trade.policy.conditions.LevelCondition;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.NotCondition;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.TotalTradeCondition;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.WithFlagCondition;
-import com.teammoeg.chorda.util.io.SerializeUtil;
 
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.world.entity.npc.VillagerProfession;

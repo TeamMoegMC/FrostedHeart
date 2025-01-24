@@ -9,8 +9,8 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
-import com.teammoeg.chorda.util.io.CodecUtil;
-import com.teammoeg.chorda.util.io.registry.IdRegistry;
+import com.teammoeg.chorda.io.CodecUtil;
+import com.teammoeg.chorda.io.registry.IdRegistry;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
@@ -21,7 +21,7 @@ import net.minecraft.world.inventory.DataSlot;
 import net.minecraftforge.fluids.FluidStack;
 /**
  * CContainerData
- * a utility class for menu data sync and type convertion
+ * a utility class for menu data sync and type conversion
  * 
  * */
 public class CCustomMenuSlot {

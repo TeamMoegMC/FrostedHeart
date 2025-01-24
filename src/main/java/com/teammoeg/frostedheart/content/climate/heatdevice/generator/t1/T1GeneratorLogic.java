@@ -23,8 +23,8 @@ import java.util.function.Function;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorLogic;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
-import com.teammoeg.chorda.util.ie.CMultiblockHelper;
-import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;

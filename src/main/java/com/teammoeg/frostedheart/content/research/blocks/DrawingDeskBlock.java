@@ -24,10 +24,11 @@ import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.team.CTeamDataManager;
-import com.teammoeg.chorda.util.mixin.IOwnerTile;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;

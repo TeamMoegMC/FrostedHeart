@@ -19,7 +19,7 @@ public class IERegistrationMixin {
 	private static void Ch$modConstruction(CallbackInfo cbi) {
 		Chorda.LOGGER.info("Sending Immersive Engineering registry event...");
 		//MinecraftForge.EVENT_BUS.post(new IERegistryEvent());
-		ChordaMetaEvents.ieRegistry.setFinished();;
+		ChordaMetaEvents.IE_REGISTRY.setFinished();;
 		//System.out.println("IEInit called");
 	}
 }

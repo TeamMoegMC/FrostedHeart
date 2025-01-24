@@ -8,10 +8,11 @@ import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
 import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.lang.LangBuilder;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
-import com.teammoeg.chorda.util.lang.Components;
-import com.teammoeg.chorda.util.lang.LangBuilder;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;

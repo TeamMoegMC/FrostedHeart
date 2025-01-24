@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.steamenergy.steamcore;
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
 import com.teammoeg.chorda.block.CBlockInterfaces;
-import com.teammoeg.chorda.block.CTickableBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;

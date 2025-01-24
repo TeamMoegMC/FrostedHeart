@@ -24,12 +24,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.teammoeg.chorda.util.ie.IngredientUtils;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.chorda.util.ie.CMultiblockHelper;
+import com.teammoeg.chorda.multiblock.CMultiblockHelper;
+import com.teammoeg.chorda.multiblock.MultiBlockAccess;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.chorda.util.ie.MultiBlockAccess;
+import com.teammoeg.chorda.util.IERecipeUtils;
 
 import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -101,7 +101,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
             return;
         if (!ResearchListeners.hasMultiblock(ctx.getState().getOwner(), getNextLevelMultiblock()))
             return;
-        if (!IngredientUtils.costItems(entityplayer, getUpgradeCost(ctx.getLevel().getRawLevel(), ctx)))
+        if (!IERecipeUtils.costItems(entityplayer, getUpgradeCost(ctx.getLevel().getRawLevel(), ctx)))
             return;
         BlockPos negMasterOffset = CMultiblockHelper.getMasterPos(ctx).subtract(getNextLevelMultiblock().getMasterFromOriginOffset());
         Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, ctx.getLevel().getOrientation().front());
@@ -114,7 +114,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
     public void repairStructure(IMultiblockContext<R> ctx, ServerPlayer entityplayer) {
         if (!getData(ctx).map(t -> t.isBroken).orElse(false))
             return;
-        if (!IngredientUtils.costItems(entityplayer, getRepairCost()))
+        if (!IERecipeUtils.costItems(entityplayer, getRepairCost()))
             return;
         getData(ctx).ifPresent(t -> {
             t.isBroken = false;

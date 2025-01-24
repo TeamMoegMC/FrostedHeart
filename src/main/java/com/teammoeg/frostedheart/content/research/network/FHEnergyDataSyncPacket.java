@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.chorda.network.NBTMessage;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;

@@ -21,11 +21,11 @@ package com.teammoeg.frostedheart.content.climate.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.io.SerializeUtil;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.network.FriendlyByteBuf;

@@ -2,8 +2,9 @@ package com.teammoeg.frostedheart.content.waypoint.waypoints;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.util.client.ClientUtils;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;

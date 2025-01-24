@@ -23,6 +23,8 @@ package com.teammoeg.chorda.block;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.EntityBlock;

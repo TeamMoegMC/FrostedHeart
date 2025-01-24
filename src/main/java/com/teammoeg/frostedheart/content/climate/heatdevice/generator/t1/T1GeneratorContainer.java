@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1;
 
+import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorContainer;
-import com.teammoeg.chorda.util.client.Point;
 
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import net.minecraft.world.entity.player.Inventory;

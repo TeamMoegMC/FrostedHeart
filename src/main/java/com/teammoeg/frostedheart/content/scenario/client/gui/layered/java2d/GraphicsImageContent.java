@@ -8,10 +8,10 @@ import java.util.Optional;
 
 import javax.imageio.ImageIO;
 
+import com.teammoeg.chorda.client.ui.Rect;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
-import com.teammoeg.chorda.util.client.Rect;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;

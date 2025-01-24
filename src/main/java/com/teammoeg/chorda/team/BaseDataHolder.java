@@ -24,8 +24,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.util.io.NBTSerializable;
-import com.teammoeg.chorda.util.io.SerializeUtil;
+import com.teammoeg.chorda.io.NBTSerializable;
+import com.teammoeg.chorda.io.SerializeUtil;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;

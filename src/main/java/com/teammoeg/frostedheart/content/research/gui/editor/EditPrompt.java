@@ -21,7 +21,8 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.lang.Components;
+
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;

@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.research.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.util.evaluator.IEnvironment;
-import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.io.CodecUtil;
+import com.teammoeg.chorda.math.evaluator.IEnvironment;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;

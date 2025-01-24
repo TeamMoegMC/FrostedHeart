@@ -1,9 +1,9 @@
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.teammoeg.chorda.util.CGuiHelper;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;

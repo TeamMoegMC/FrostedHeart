@@ -1,15 +1,16 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
-import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.chorda.widget.ActionStateIconButton;
 import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.chorda.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipEditsList;
 import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipRequestPacket;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.client.ColorHelper;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.widget.ActionStateIconButton;
+import com.teammoeg.chorda.client.widget.IconButton;
+import com.teammoeg.chorda.lang.Components;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;

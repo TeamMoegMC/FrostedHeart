@@ -25,8 +25,8 @@ import org.jetbrains.annotations.NotNull;
 
 import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.chorda.util.client.ClientUtils;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;

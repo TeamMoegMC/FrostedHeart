@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.research.research;
 
 import com.mojang.serialization.Codec;
-import com.teammoeg.chorda.util.io.codec.CompressDifferCodec;
+import com.teammoeg.chorda.io.codec.CompressDifferCodec;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.network.chat.Component;

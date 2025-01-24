@@ -1,7 +1,8 @@
 package com.teammoeg.frostedheart.util.client;
 
-import com.teammoeg.chorda.CUtils;
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.util.CUtils;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
@@ -93,9 +94,9 @@ public class KeyControlledDesc {
     }
 
     public List<Component> getCurrentLines() {
-        if (CUtils.isDown(key1)) {
+        if (com.teammoeg.chorda.util.CUtils.isDown(key1)) {
             return linesOnS;
-        } else if (CUtils.isDown(key2)) {
+        } else if (com.teammoeg.chorda.util.CUtils.isDown(key2)) {
             return linesOnCtrl;
         } else {
             return lines;

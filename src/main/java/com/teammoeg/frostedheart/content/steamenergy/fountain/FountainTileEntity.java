@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import com.teammoeg.chorda.block.CBlockInterfaces;
-import com.teammoeg.chorda.block.CTickableBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;

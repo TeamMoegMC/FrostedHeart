@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.robotics.logistics;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.teammoeg.frostedheart.content.robotics.logistics.workers.INetworkCore;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.INetworkCore;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;

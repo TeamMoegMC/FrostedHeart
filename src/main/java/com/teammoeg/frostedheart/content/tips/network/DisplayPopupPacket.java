@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.tips.network;
 
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.tips.Popup;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;

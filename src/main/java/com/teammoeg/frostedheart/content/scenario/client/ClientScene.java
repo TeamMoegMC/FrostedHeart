@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart.content.scenario.client;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.MutableInt;
+
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.IScenarioDialog;
@@ -15,9 +17,7 @@ import com.teammoeg.frostedheart.content.scenario.network.FHClientSettingsPacket
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.mixin.minecraft.accessors.NewChatGuiAccessor;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.utility.ReferenceValue;
-
+import com.teammoeg.chorda.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.GuiMessage;
@@ -187,15 +187,15 @@ public class ClientScene implements IClientScene {
 	}
 
 	private int countCh(FormattedCharSequence p) {
-		ReferenceValue<Integer> count = new ReferenceValue<>(0);
+		MutableInt count = new MutableInt(0);
 		// if(p instanceof SizedReorderingProcessor)
 		// p=((SizedReorderingProcessor) p).origin;
 		p.accept((i, s, c) -> {
 			if (c != 65533)
-				count.setVal(count.getVal() + 1);
+				count.increment();
 			return true;
 		});
-		return count.getVal();
+		return count.getValue();
 	}
 
 	// fh$scenario$link:

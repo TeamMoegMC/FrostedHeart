@@ -30,10 +30,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import com.teammoeg.chorda.multiblock.CMultiblockHelper;
+import com.teammoeg.chorda.multiblock.MultiBlockAccess;
 import com.teammoeg.chorda.multiblock.components.IOwnerState;
-import com.teammoeg.chorda.util.ie.CMultiblockHelper;
-import com.teammoeg.chorda.util.mixin.IOwnerTile;
-import com.teammoeg.chorda.util.ie.MultiBlockAccess;
+import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.research;
 
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.IconEditor;
 import com.teammoeg.frostedheart.content.research.gui.editor.*;

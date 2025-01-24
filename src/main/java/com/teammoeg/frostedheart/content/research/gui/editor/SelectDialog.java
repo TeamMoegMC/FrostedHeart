@@ -21,9 +21,10 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
+
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;

@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.tips;
 
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import net.minecraft.resources.ResourceLocation;

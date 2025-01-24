@@ -25,9 +25,7 @@ import java.util.function.Consumer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.model.DynamicBlockModelReference;
-import com.teammoeg.chorda.util.ie.DisassembleListener;
-import com.teammoeg.chorda.util.ie.CMultiblockHelper;
+import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
 
 import blusunrize.immersiveengineering.api.multiblocks.ClientMultiblocks.MultiblockManualData;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.MultiblockRegistration;

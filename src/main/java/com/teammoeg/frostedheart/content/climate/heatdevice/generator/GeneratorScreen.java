@@ -11,17 +11,17 @@ import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.chorda.util.ie.IngredientUtils;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
-import com.teammoeg.chorda.util.ie.CMultiblockHelper;
+import com.teammoeg.chorda.client.ui.AtlasUV;
+import com.teammoeg.chorda.client.ui.Point;
+import com.teammoeg.chorda.client.ui.RotatableUV;
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.multiblock.CMultiblockHelper;
+import com.teammoeg.chorda.util.IERecipeUtils;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
-import com.teammoeg.chorda.util.client.AtlasUV;
-import com.teammoeg.chorda.util.client.Point;
-import com.teammoeg.chorda.util.client.RotatableUV;
 
 import blusunrize.immersiveengineering.api.Lib;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -174,7 +174,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
          	IMultiblockBEHelper<R> helper=(IMultiblockBEHelper<R>) t;
  	        if (menu.isBroken.getValue()) {
  	            costStr.add(Lang.translateGui("generator.repair_material"));
- 	            BitSet cost = IngredientUtils.checkItemList(ClientUtils.mc().player, tile.getRepairCost());
+ 	            BitSet cost = IERecipeUtils.checkItemList(ClientUtils.mc().player, tile.getRepairCost());
  	            int i = 0;
  	            for (IngredientWithSize iws : tile.getRepairCost()) {
  	                ItemStack[] iss = iws.getMatchingStacks();
@@ -193,7 +193,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
  	        } else if (tile.getNextLevelMultiblock() != null) {
  	            validStructure = tile.nextLevelHasValidStructure(Minecraft.getInstance().level, helper.getContext());
  	            List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper.getContext());
- 	            BitSet cost = IngredientUtils.checkItemList(ClientUtils.mc().player, upgcost);
+ 	            BitSet cost = IERecipeUtils.checkItemList(ClientUtils.mc().player, upgcost);
  	            hasResearch = ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock());
  	            Vec3i v3i = tile.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
  	            if (!validStructure) {

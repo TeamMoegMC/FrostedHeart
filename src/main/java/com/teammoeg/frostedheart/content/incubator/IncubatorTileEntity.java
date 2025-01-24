@@ -24,13 +24,13 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.block.CBlockInterfaces;
-import com.teammoeg.chorda.block.CTickableBlockEntity;
-import com.teammoeg.chorda.blockentity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
-import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.chorda.util.CUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IProcessBE;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;

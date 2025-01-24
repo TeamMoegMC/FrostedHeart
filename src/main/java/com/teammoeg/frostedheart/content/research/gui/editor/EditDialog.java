@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskScreen;
 import dev.ftb.mods.ftblibrary.ui.Panel;

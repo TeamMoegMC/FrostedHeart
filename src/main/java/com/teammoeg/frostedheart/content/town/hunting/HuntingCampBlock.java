@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.town.hunting;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.block.CEntityBlock;
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 

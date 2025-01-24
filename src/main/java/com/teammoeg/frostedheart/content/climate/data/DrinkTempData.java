@@ -24,8 +24,8 @@ import java.util.Map;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
-import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.material.Fluid;

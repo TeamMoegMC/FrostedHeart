@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.*;
+import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.compat.ftbq.FHGuiProviders;
@@ -33,7 +34,6 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyph
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestExtension;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestModel;
-import com.teammoeg.chorda.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.client.FHScreens;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;

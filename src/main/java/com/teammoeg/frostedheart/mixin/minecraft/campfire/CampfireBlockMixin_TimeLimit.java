@@ -21,7 +21,8 @@ package com.teammoeg.frostedheart.mixin.minecraft.campfire;
 
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.util.mixin.ICampfireExtra;
+import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.stats.Stats;

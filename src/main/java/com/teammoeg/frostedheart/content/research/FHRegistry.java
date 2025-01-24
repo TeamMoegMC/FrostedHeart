@@ -19,8 +19,9 @@
 
 package com.teammoeg.frostedheart.content.research;
 
-import com.teammoeg.chorda.util.io.RegistryListedMap;
-import com.teammoeg.chorda.util.utility.OptionalLazy;
+import com.teammoeg.chorda.io.RegistryListedMap;
+import com.teammoeg.chorda.util.struct.OptionalLazy;
+
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;

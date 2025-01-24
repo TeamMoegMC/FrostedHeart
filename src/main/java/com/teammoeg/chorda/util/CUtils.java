@@ -20,11 +20,14 @@
 package com.teammoeg.chorda.util;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.capability.nbt.NBTCapabilityType;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.io.NBTSerializable;
+import com.teammoeg.chorda.capability.types.nbt.NBTCapabilityType;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.frostedheart.FHMain;
+
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -156,9 +159,6 @@ public class CUtils {
         return ei;
     }
 
-    public static <T> T notNull() {
-        return null;
-    }
 
     public static <O, T> Optional<T> ofMap(Map<O, T> map, O key) {
         return Optional.ofNullable(map.get(key));
@@ -287,4 +287,8 @@ public class CUtils {
     	else
     		l.setBlock(pos, curstate.createLegacyBlock(), 2);
     }
+
+	public static boolean isDown(int key) {
+	    return InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), key);
+	}
 }

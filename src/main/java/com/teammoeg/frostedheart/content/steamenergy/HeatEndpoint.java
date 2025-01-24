@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.chorda.util.io.NBTSerializable;
+import com.teammoeg.chorda.io.NBTSerializable;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

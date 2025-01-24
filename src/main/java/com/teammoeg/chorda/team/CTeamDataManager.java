@@ -37,13 +37,13 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.events.TeamLoadedEvent;
+import com.teammoeg.chorda.util.struct.OptionalLazy;
 
 import org.apache.commons.io.FileUtils;
 
 import com.mojang.authlib.GameProfile;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.utility.OptionalLazy;
 
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;

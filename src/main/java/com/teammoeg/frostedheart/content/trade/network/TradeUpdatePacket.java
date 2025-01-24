@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.content.trade.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.trade.RelationList;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
-import com.teammoeg.chorda.util.client.ClientUtils;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;

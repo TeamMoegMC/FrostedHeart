@@ -27,7 +27,8 @@ import java.util.function.Function;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DynamicOps;
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.io.CodecUtil;
+
 import lombok.Getter;
 import lombok.ToString;
 

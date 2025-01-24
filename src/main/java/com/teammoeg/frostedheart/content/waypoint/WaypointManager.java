@@ -1,12 +1,13 @@
 package com.teammoeg.frostedheart.content.waypoint;
 
+import com.teammoeg.chorda.io.registry.NBTSerializerRegistry;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.waypoint.capability.WaypointCapability;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.*;
-import com.teammoeg.chorda.util.io.registry.NBTSerializerRegistry;
+
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.network.PacketDistributor;

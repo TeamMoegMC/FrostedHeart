@@ -164,7 +164,7 @@ public class FHMain {
         FHBlockEntityTypes.init();
         FHBiomes.init();
         FHPredicates.init();
-        ChordaMetaEvents.ieRegistry.addListener(()->FHMultiblocks::registerMultiblocks);
+        ChordaMetaEvents.IE_REGISTRY.addListener(()->FHMultiblocks::registerMultiblocks);
         // Compat init
         LOGGER.info(COMMON_INIT, "Initializing Mod Compatibilities");
         FHSpecialDataTypes.init();

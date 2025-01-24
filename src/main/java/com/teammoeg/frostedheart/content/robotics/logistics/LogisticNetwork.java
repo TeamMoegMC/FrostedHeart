@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.teammoeg.chorda.util.struct.ResultCacheIterator;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.ILogisticsStorage;
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.TaskableLogisticStorage;
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.TileEntityLogisticsStorage;
-import com.teammoeg.chorda.util.misc.ResultCacheIterator;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;

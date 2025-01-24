@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 
-import com.teammoeg.chorda.util.CGuiHelper;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;

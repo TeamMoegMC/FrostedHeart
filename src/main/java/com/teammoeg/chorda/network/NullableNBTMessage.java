@@ -2,7 +2,7 @@ package com.teammoeg.chorda.network;
 
 import java.util.Optional;
 
-import com.teammoeg.chorda.util.io.SerializeUtil;
+import com.teammoeg.chorda.io.SerializeUtil;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;

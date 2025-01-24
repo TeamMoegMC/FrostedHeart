@@ -3,7 +3,8 @@ package com.teammoeg.frostedheart.content.town.resource;
 import com.google.common.collect.Interner;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.io.CodecUtil;
+
 import lombok.Getter;
 
 /**

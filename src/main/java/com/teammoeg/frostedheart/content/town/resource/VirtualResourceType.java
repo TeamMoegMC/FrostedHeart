@@ -1,7 +1,8 @@
 package com.teammoeg.frostedheart.content.town.resource;
 
 import com.mojang.serialization.Codec;
-import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.io.CodecUtil;
+
 import lombok.Getter;
 
 /**

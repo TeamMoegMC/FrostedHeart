@@ -28,7 +28,7 @@ import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlockEntity
 import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler;
 import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler.GroupedItems;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
-import com.teammoeg.chorda.util.mixin.IOwnerTile;
+import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;

@@ -1,8 +1,9 @@
 package com.teammoeg.frostedheart.util.client;
 
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
-import com.teammoeg.chorda.util.client.ClientUtils;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;

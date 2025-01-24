@@ -21,12 +21,12 @@ package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
 import java.util.function.Consumer;
 
-import com.teammoeg.chorda.util.CUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.climate.recipe.DismantleInnerRecipe;
 
 import net.minecraft.world.entity.LivingEntity;

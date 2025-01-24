@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.teammoeg.chorda.util.lang.ComponentOptimizer;
-import com.teammoeg.chorda.util.misc.Persentage2FractionHelper;
+import com.teammoeg.chorda.lang.ComponentOptimizer;
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.math.Persentage2FractionHelper;
 
-import com.teammoeg.chorda.util.lang.Components;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;

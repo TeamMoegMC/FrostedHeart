@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.number;
 
-import com.teammoeg.chorda.util.io.Writeable;
+import com.teammoeg.chorda.io.Writeable;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 
 public interface IResearchNumber extends Writeable {

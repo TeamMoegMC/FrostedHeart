@@ -1,11 +1,12 @@
 package com.teammoeg.frostedheart.content.waypoint;
 
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.client.RawMouseHelper;
+
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.phys.Vec2;
@@ -78,7 +79,7 @@ public class ClientWaypointManager {
         boolean flag = false;
         if (!ClientUtils.mc().mouseHandler.isMouseGrabbed()) {
             // 鼠标
-            flag = RawMouseHelper.isMouseIn(RawMouseHelper.getScaledX(), RawMouseHelper.getScaledY(), (int)(screenPos.x-10), (int)(screenPos.y-10), 20, 20);
+            flag = MouseHelper.isMouseIn(MouseHelper.getScaledX(), MouseHelper.getScaledY(), (int)(screenPos.x-10), (int)(screenPos.y-10), 20, 20);
         }
         if (!flag) {
             float x = screenPos.x / ClientUtils.screenWidth();
@@ -100,7 +101,7 @@ public class ClientWaypointManager {
         Vec2 pos;
         if (!ClientUtils.mc().mouseHandler.isMouseGrabbed()) {
             // 鼠标坐标
-            pos = new Vec2(RawMouseHelper.getScaledX(), RawMouseHelper.getScaledY());
+            pos = new Vec2(MouseHelper.getScaledX(), MouseHelper.getScaledY());
         } else {
             // 屏幕中心
             pos = new Vec2(ClientUtils.screenWidth()*0.5F, ClientUtils.screenHeight()*0.5F);

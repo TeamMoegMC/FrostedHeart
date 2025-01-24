@@ -21,8 +21,9 @@ package com.teammoeg.frostedheart.content.research.blocks;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskContainer;
