@@ -6,8 +6,6 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.util.struct.ReferenceValue;
-
 import net.minecraft.util.FormattedCharSink;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.network.chat.Component;

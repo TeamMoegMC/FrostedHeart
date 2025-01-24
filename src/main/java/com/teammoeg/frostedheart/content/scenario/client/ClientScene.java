@@ -18,8 +18,6 @@ import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.mixin.minecraft.accessors.NewChatGuiAccessor;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.util.struct.ReferenceValue;
-
 import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.GuiMessage;
