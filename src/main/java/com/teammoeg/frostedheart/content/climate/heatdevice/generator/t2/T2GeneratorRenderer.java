@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.chorda.model.DynamicBlockModelReference;
-import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelperMaster;

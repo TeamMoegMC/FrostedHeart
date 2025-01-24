@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart.bootstrap.common;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.menu.MultiblockMenuClientFactory;
 import com.teammoeg.chorda.menu.MultiBlockMenuServerFactory;
+import com.teammoeg.chorda.menu.MultiblockMenuClientFactory;
 import com.teammoeg.chorda.menu.MultiblockMenuType;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorContainer;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorContainer;

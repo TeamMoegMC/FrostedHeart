@@ -1,10 +1,11 @@
 package com.teammoeg.frostedheart.content.steamenergy.capabilities;
 
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.NetworkConnector;
-import com.teammoeg.chorda.util.CUtils;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;

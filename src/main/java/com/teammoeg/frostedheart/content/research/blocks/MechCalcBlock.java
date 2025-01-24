@@ -25,7 +25,7 @@ import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.block.CKineticBlock;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import net.minecraft.core.BlockPos;

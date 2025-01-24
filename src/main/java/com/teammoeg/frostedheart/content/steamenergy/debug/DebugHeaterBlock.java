@@ -21,9 +21,10 @@ package com.teammoeg.frostedheart.content.steamenergy.debug;
 
 import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.chorda.block.CEntityBlock;
-import com.teammoeg.chorda.util.lang.Components;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;

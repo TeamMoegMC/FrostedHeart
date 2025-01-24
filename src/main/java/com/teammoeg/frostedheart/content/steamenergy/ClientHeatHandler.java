@@ -1,10 +1,11 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.chorda.util.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 
 import java.util.Collection;
+
+import com.teammoeg.chorda.client.ClientUtils;
 
 public class ClientHeatHandler {
 	public static void loadEndPoint(Collection<HeatEndpoint> data) {

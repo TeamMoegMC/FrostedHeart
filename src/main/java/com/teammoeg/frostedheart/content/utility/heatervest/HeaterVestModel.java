@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.utility.heatervest;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.teammoeg.chorda.client.model.CArmorModel;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.model.CArmorModel;
 
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.model.HumanoidModel;

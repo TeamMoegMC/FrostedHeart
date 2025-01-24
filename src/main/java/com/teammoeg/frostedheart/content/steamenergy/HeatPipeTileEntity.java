@@ -20,9 +20,9 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
-import com.teammoeg.chorda.block.CTickableBlockEntity;
 import com.teammoeg.frostedheart.content.steamenergy.pipe.CPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.pipe.CPipeBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
 import com.teammoeg.frostedheart.util.client.Lang;

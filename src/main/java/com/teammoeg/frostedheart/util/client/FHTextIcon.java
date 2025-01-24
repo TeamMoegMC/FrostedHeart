@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.util.client;
 
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;

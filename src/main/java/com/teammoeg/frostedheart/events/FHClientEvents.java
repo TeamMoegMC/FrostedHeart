@@ -19,9 +19,12 @@
 
 package com.teammoeg.frostedheart.events;
 
-import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FrostedHud;
+import com.teammoeg.chorda.client.CameraHelper;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.ui.GuiClickedEvent;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.team.CClientTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
@@ -40,9 +43,6 @@ import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.util.FHVersion;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.client.GuiClickedEvent;
-import com.teammoeg.chorda.util.client.CameraHelper;
 import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;

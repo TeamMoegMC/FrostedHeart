@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.bootstrap.client;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
+import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.model.DynamicBlockModelReference;
 
 public class FHDynamicModels {
     public static void setup() {

@@ -21,13 +21,13 @@ package com.teammoeg.frostedheart.content.town;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.chorda.io.codec.DataOps;
+import com.teammoeg.chorda.io.codec.ObjectWriter;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.team.CClientTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-import com.teammoeg.chorda.util.io.codec.DataOps;
-import com.teammoeg.chorda.util.io.codec.ObjectWriter;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.network.FriendlyByteBuf;

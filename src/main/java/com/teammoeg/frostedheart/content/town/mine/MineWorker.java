@@ -1,9 +1,10 @@
 package com.teammoeg.frostedheart.content.town.mine;
 
+import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
-import com.teammoeg.chorda.util.CMath;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;

@@ -26,8 +26,8 @@ import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
-import com.teammoeg.chorda.util.io.CodecUtil;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 
 import net.minecraft.core.registries.BuiltInRegistries;

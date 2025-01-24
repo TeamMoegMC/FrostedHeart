@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import com.teammoeg.chorda.util.lang.Components;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.Bits;
@@ -34,6 +33,8 @@ import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.Mth;
 
 import java.util.List;
+
+import com.teammoeg.chorda.lang.Components;
 
 public class RTextField extends Widget {
 

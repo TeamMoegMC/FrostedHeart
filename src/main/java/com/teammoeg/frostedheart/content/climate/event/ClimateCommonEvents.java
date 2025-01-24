@@ -24,6 +24,7 @@ import com.teammoeg.frostedheart.*;
 import com.teammoeg.chorda.capability.CurioCapabilityProvider;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
@@ -44,7 +45,7 @@ import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPack
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_PlaceExtraSnow;
-import com.teammoeg.chorda.util.CUtils;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;

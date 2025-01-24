@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import com.teammoeg.chorda.util.lang.Components;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
@@ -28,6 +27,8 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import com.teammoeg.chorda.lang.Components;
 
 public class EditBtnDialog extends BaseEditDialog {
     public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new EditBtnDialog(p, l, v, "Select Tag", c, SelectDialog.EDITOR_ITEM_TAGS).open();

@@ -22,8 +22,8 @@
  */
 package com.teammoeg.chorda.team;
 
-import com.teammoeg.chorda.util.utility.OptionalLazy;
 import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.chorda.util.struct.OptionalLazy;
 import com.teammoeg.frostedheart.FHNetwork;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.nbt.CompoundTag;

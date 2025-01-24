@@ -6,9 +6,10 @@ import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
 import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.lang.LangBuilder;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
-import com.teammoeg.chorda.util.lang.Components;
-import com.teammoeg.chorda.util.lang.LangBuilder;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;

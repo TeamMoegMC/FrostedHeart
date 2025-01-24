@@ -23,7 +23,7 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import net.minecraft.ChatFormatting;

@@ -34,16 +34,15 @@ import com.google.gson.JsonObject;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
+import com.teammoeg.chorda.io.FileUtil;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
-import com.teammoeg.chorda.util.io.FileUtil;
-
 import com.teammoeg.frostedheart.content.world.FHFeatures;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

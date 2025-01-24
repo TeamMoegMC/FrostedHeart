@@ -24,13 +24,13 @@ import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultib
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.chorda.util.io.CodecUtil;
-import com.teammoeg.chorda.util.utility.OptionalLazy;
+import com.teammoeg.chorda.util.struct.OptionalLazy;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;

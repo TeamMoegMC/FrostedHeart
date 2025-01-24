@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.content.scenario.commands.client;
 
+import com.teammoeg.chorda.client.ui.Point;
+import com.teammoeg.chorda.client.ui.Rect;
 import com.teammoeg.frostedheart.content.scenario.client.IClientScene;
-import com.teammoeg.chorda.util.client.Point;
-import com.teammoeg.chorda.util.client.Rect;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 

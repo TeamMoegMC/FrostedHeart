@@ -24,7 +24,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.client.Lang;
 

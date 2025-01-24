@@ -20,11 +20,12 @@
 package com.teammoeg.frostedheart.content.town.house;
 
 import com.teammoeg.chorda.block.CEntityBlock;
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
-import com.teammoeg.chorda.util.CMath;
+
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntityType;

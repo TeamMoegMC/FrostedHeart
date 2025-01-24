@@ -23,7 +23,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.gui.FakeSlot;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
@@ -37,7 +38,6 @@ import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;

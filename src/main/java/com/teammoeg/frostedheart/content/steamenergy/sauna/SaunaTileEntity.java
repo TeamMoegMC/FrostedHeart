@@ -22,9 +22,11 @@ package com.teammoeg.frostedheart.content.steamenergy.sauna;
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+
 import com.teammoeg.chorda.block.CBlockInterfaces;
-import com.teammoeg.chorda.block.CTickableBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.team.CTeamDataManager;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
@@ -32,9 +34,9 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
-import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.util.mixin.IOwnerTile;
+import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;

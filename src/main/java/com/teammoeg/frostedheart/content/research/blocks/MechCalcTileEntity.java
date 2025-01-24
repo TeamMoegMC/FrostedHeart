@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.research.blocks;
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import com.teammoeg.chorda.block.CTickableBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;

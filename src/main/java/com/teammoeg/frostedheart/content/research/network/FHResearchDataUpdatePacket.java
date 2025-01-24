@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
+import com.teammoeg.chorda.io.CodecUtil;
+import com.teammoeg.chorda.io.codec.DataOps;
+import com.teammoeg.chorda.io.codec.ObjectWriter;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.chorda.util.io.CodecUtil;
-import com.teammoeg.chorda.util.io.codec.DataOps;
-import com.teammoeg.chorda.util.io.codec.ObjectWriter;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchUtils;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;

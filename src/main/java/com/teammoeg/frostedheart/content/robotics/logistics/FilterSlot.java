@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.content.robotics.logistics;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticRequestTask;
-import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;

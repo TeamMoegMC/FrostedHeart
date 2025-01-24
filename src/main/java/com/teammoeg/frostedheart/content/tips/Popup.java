@@ -1,10 +1,11 @@
 package com.teammoeg.frostedheart.content.tips;
 
-import com.teammoeg.chorda.util.CGuiHelper;
-import com.teammoeg.chorda.util.client.AnimationUtil;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.client.ColorHelper;
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.client.AnimationUtil;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
+import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.lang.Components;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;

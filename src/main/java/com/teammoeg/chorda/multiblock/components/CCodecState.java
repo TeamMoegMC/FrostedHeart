@@ -1,7 +1,7 @@
 package com.teammoeg.chorda.multiblock.components;
 
 import com.mojang.serialization.Codec;
-import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.io.CodecUtil;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
 import net.minecraft.nbt.CompoundTag;

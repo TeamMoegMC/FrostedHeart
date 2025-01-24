@@ -22,13 +22,13 @@ package com.teammoeg.frostedheart.content.climate.player;
 import java.util.UUID;
 
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.chorda.util.CUtils;
 
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;

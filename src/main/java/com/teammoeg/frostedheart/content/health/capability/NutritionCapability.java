@@ -1,11 +1,12 @@
 package com.teammoeg.frostedheart.content.health.capability;
 
+import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.health.network.PlayerNutritionSyncPacket;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.chorda.util.io.NBTSerializable;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;

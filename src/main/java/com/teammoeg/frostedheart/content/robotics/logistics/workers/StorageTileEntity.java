@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
-import com.teammoeg.chorda.blockentity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.frostedheart.content.robotics.logistics.FilterSlot;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemChangeListener;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemHandlerListener;

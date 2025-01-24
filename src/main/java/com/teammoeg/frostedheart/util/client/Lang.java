@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.util.client;
 
 import java.util.Locale;
 
-import com.teammoeg.chorda.util.lang.LangBuilder;
-import com.teammoeg.chorda.util.lang.LangNumberFormat;
+import com.teammoeg.chorda.lang.LangBuilder;
+import com.teammoeg.chorda.lang.LangNumberFormat;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;

@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.chorda.network.NBTMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.io.NBTSerializable;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;

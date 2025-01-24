@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.decoration;
 
 import com.teammoeg.chorda.block.CBlock;
-import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.client.ClientUtils;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.BlockPos;

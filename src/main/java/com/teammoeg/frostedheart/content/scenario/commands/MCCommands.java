@@ -13,8 +13,8 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.trigger.MovementTrigger;
 import com.teammoeg.frostedheart.content.scenario.runner.trigger.OrTrigger;
 import com.teammoeg.frostedheart.content.scenario.runner.trigger.VariantTrigger;
-import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.chorda.util.CUtils;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

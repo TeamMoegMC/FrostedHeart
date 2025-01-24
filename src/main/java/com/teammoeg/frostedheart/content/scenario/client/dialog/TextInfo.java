@@ -1,8 +1,12 @@
 package com.teammoeg.frostedheart.content.scenario.client.dialog;
 
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.utility.ReferenceValue;
+
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.commons.lang3.mutable.MutableObject;
+
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.util.struct.ReferenceValue;
 
 import net.minecraft.util.FormattedCharSink;
 import net.minecraft.util.FormattedCharSequence;
@@ -28,34 +32,35 @@ public class TextInfo {
 			return this;
 		}
 		public int nextSpace() {
-			ReferenceValue<Integer> renderTracker = new ReferenceValue<>(0);
-			ReferenceValue<Integer> retTracker = new ReferenceValue<>();
+			MutableInt renderTracker = new MutableInt(0);
+			MutableObject<Integer> retTracker = new MutableObject<>(-1);
 			origin.accept((i, s, c) -> {
 				if (c != 65533) {
-					renderTracker.setVal(renderTracker.getVal() + 1);
+					renderTracker.increment();
 				}
-				if (renderTracker.getVal() < limit) return true;
+				if (renderTracker.getValue() < limit) return true;
 				if(Character.isWhitespace(c)) {
-					retTracker.setVal(renderTracker.getVal());
+					retTracker.setValue(renderTracker.getValue());
 				}
 				return false;
 			});
-			retTracker.setIfAbsent(renderTracker::getVal);
-			return retTracker.getVal();
+			if(retTracker.getValue()==null)
+				return renderTracker.getValue();
+			return retTracker.getValue();
 		}
 		@Override
 		public boolean accept(FormattedCharSink p_accept_1_) {
-			ReferenceValue<Integer> renderTracker = new ReferenceValue<>(0);
+			MutableInt renderTracker = new MutableInt(0);
 			return origin.accept((i, s, c) -> {
 				isFinished = true;
-				if (renderTracker.getVal() < limit) {
+				if (renderTracker.getValue() < limit) {
 					p_accept_1_.accept(i, s, c);
 				} else {
 					isFinished = false;
 					return false;
 				}
 				if (c != 65533) {
-					renderTracker.setVal(renderTracker.getVal() + 1);
+					renderTracker.increment();
 				}
 				return true;
 			});

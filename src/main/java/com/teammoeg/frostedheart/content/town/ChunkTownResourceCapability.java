@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
-import com.teammoeg.chorda.util.io.NBTSerializable;
 
 import net.minecraft.nbt.CompoundTag;
 

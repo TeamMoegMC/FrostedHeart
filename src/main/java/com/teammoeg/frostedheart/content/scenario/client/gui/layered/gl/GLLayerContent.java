@@ -1,9 +1,9 @@
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.OrderedRenderableContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
-import com.teammoeg.chorda.util.client.ClientUtils;
 
 public abstract class GLLayerContent extends OrderedRenderableContent {
 

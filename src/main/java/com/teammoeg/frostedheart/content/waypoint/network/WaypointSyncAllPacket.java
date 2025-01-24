@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.waypoint.network;
 
+import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.chorda.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.WaypointManager;

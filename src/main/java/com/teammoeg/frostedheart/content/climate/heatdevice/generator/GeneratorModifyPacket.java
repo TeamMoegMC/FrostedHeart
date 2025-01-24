@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.chorda.util.ie.CMultiblockHelper;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;

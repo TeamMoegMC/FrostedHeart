@@ -20,7 +20,8 @@
 package com.teammoeg.frostedheart.content.steamenergy.debug;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import com.teammoeg.chorda.util.lang.Components;
+
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.HeatHandler;

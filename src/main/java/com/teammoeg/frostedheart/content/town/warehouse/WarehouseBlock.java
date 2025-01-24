@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.content.town.warehouse;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.team.CTeamDataManager;
-import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;

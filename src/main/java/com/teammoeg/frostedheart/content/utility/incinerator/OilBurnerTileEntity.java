@@ -21,9 +21,9 @@ package com.teammoeg.frostedheart.content.utility.incinerator;
 
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.teammoeg.chorda.block.CBlockInterfaces.IActiveState;
-import com.teammoeg.chorda.blockentity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.chorda.block.CTickableBlockEntity;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundTag;

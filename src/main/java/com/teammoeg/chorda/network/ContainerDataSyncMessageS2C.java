@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.menu.CBaseMenu;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.NetworkEncoder;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.OtherDataSlotEncoder;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.io.SerializeUtil;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent.Context;

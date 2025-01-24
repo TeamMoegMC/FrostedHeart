@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.content.scenario.runner;
 
 import java.util.LinkedList;
 
+import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ScenarioTarget;
-import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.nbt.CompoundTag;
 

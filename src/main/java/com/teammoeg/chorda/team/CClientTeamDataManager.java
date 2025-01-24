@@ -21,7 +21,7 @@ package com.teammoeg.chorda.team;
 
 import java.util.UUID;
 
-import com.teammoeg.chorda.util.utility.OptionalLazy;
+import com.teammoeg.chorda.util.struct.OptionalLazy;
 
 /**
  * Synced client data manager.

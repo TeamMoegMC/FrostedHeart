@@ -7,13 +7,13 @@ import java.util.stream.IntStream;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.block.CTickableBlockEntity;
-import com.teammoeg.chorda.blockentity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
+import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.frostedheart.content.robotics.logistics.FilterSlot;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemChangeListener;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemHandlerListener;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
-import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;

@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import com.teammoeg.chorda.util.lang.Components;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -27,6 +26,8 @@ import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 import java.util.function.Consumer;
+
+import com.teammoeg.chorda.lang.Components;
 
 public class LabeledTextBoxAndBtn extends LabeledTextBox {
     Button btn;

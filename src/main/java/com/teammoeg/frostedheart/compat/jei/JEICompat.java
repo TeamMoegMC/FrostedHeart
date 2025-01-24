@@ -38,7 +38,9 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
+import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
@@ -77,9 +79,7 @@ import com.teammoeg.frostedheart.content.research.research.effects.EffectCraftin
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
-import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.util.client.Point;
 
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;

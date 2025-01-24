@@ -20,9 +20,9 @@
 package com.teammoeg.frostedheart.content.utility.incinerator;
 
 import com.teammoeg.chorda.block.CBlockInterfaces.IActiveState;
-import com.teammoeg.chorda.blockentity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.chorda.block.CTickableBlockEntity;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;

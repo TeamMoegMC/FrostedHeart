@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;

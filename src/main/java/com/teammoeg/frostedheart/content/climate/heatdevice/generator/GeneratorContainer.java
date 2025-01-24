@@ -21,11 +21,11 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import java.util.Optional;
 
+import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.menu.CBaseMenu;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
-import com.teammoeg.chorda.util.ie.CMultiblockHelper;
-import com.teammoeg.chorda.util.client.Point;
+import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import blusunrize.immersiveengineering.common.gui.IESlot.NewOutput;

@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.infrastructure.command;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.ClimateEvent;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;

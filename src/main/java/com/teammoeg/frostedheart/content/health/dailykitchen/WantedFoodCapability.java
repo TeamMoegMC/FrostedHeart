@@ -42,8 +42,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.chorda.util.CRegistryHelper;
-import com.teammoeg.chorda.util.io.NBTSerializable;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.nbt.CompoundTag;

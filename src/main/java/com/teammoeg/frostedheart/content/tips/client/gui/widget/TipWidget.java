@@ -1,12 +1,12 @@
 package com.teammoeg.frostedheart.content.tips.client.gui.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.chorda.util.CGuiHelper;
-import com.teammoeg.chorda.widget.IconButton;
+import com.teammoeg.chorda.client.AnimationUtil;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
+import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.chorda.util.client.AnimationUtil;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.client.ColorHelper;
 import com.teammoeg.frostedheart.util.client.Lang;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;

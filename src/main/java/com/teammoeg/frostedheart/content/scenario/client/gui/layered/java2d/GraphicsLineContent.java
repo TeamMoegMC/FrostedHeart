@@ -5,9 +5,9 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.RenderingHints;
 
+import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
-import com.teammoeg.chorda.util.client.Point;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 

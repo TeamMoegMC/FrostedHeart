@@ -27,7 +27,7 @@ import javax.annotation.Nonnull;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.io.CodecUtil;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.world.item.ItemStack;

@@ -22,7 +22,8 @@ package com.teammoeg.frostedheart.content.research.number;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.teammoeg.chorda.util.io.registry.JsonSerializerRegistry;
+import com.teammoeg.chorda.io.registry.JsonSerializerRegistry;
+
 import net.minecraft.network.FriendlyByteBuf;
 
 import java.util.function.Function;

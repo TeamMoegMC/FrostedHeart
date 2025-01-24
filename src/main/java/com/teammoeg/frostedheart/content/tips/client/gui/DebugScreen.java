@@ -1,16 +1,17 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
-import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.content.tips.Popup;
 import com.teammoeg.frostedheart.content.tips.TipManager;
-import com.teammoeg.chorda.widget.IconButton;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.ColumbiatWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.SunStationWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.Waypoint;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.client.ColorHelper;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.widget.IconButton;
+import com.teammoeg.chorda.lang.Components;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;

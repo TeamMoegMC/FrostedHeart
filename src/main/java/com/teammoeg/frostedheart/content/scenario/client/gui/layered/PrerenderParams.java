@@ -8,8 +8,8 @@ import org.lwjgl.opengl.GL11;
 
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.TypedDynamicTexture;
-import com.teammoeg.chorda.util.client.ClientUtils;
-import com.teammoeg.chorda.util.client.Rect;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.ui.Rect;
 
 import net.minecraft.util.FastColor;
 

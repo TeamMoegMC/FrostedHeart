@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.research.number;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.teammoeg.chorda.util.evaluator.Evaluator;
-import com.teammoeg.chorda.util.evaluator.Node;
+import com.teammoeg.chorda.math.evaluator.Evaluator;
+import com.teammoeg.chorda.math.evaluator.Node;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import net.minecraft.network.FriendlyByteBuf;
 

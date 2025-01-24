@@ -1,8 +1,9 @@
 package com.teammoeg.frostedheart.content.steamenergy.creative;
 
 import com.simibubi.create.foundation.block.IBE;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;

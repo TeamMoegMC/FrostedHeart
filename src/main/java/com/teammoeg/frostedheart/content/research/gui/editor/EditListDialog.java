@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.util.client.Lang;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;

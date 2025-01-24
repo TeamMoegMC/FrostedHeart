@@ -20,8 +20,9 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import com.teammoeg.chorda.util.CGuiHelper;
-import com.teammoeg.chorda.util.client.ClientUtils;
+
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import dev.ftb.mods.ftblibrary.ui.Panel;
