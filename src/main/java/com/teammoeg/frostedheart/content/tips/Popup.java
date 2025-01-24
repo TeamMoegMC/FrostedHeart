@@ -48,8 +48,8 @@ public class Popup {
                     }
                 }
                 case PROGRESSING -> {
-                    int displayTime = DISPLAY_TIME * Math.max(message.getString().length() / 48, 1);
-                    float progress = AnimationUtil.fadeIn(displayTime, DISPLAYING_ANIM_NAME, false);
+                    float displayTime = DISPLAY_TIME * Math.max(ClientUtils.font().width(message) / 200F, 1);
+                    float progress = AnimationUtil.fadeIn((int)displayTime, DISPLAYING_ANIM_NAME, false);
                     render(1, graphic, message);
                     if (progress == 1.0F) {
                         state = State.FADING_OUT;
