@@ -29,6 +29,8 @@ import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechTextButton;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
+
+import blusunrize.immersiveengineering.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
@@ -36,6 +38,7 @@ import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.MutableComponent;
 
 import java.text.DecimalFormat;
 
@@ -51,16 +54,17 @@ public class ResearchDashboardPanel extends Panel {
     ResearchDetailPanel detailPanel;
     RTextField techpoint;
     RTextField availableInsightLevel;
-
+    boolean isClueNotCompleted=false;
     public ResearchDashboardPanel(ResearchDetailPanel panel) {
         super(panel);
         this.setOnlyInteractWithWidgetsInside(true);
         this.setOnlyRenderWidgetsInside(true);
         detailPanel = panel;
         techpoint = new RTextField(this).setMaxWidth(100).setMaxLine(1).setColor(TechIcons.text);
-        techpoint.setPos(40, 28);
+        techpoint.setPos(40, 20+ClientUtils.font().lineHeight);
         availableInsightLevel = new RTextField(this).setMaxWidth(100).setMaxLine(1).setColor(TechIcons.text);
-        availableInsightLevel.setPos(40, 38);
+        availableInsightLevel.setPos(40, 20+ClientUtils.font().lineHeight*2);
+        availableInsightLevel.setMaxLine(1);
     }
 
     public static synchronized String toReadable(long num) {
@@ -100,6 +104,15 @@ public class ResearchDashboardPanel extends Panel {
         add(tf);
         tf.setMaxWidth(140).setMinWidth(140).setMaxLine(2).setColor(TechIcons.text).addFlags(4);
         tf.setText(detailPanel.research.getName());
+        
+        
+        
+        RTextField tp = new RTextField(this).setMaxWidth(140).setMaxLine(1).setColor(TechIcons.text);
+        tp.setPos(40, 20);
+        add(tp);
+        tp.setText(Lang.translateGui("research.points"));
+        tp.setX(140 - tp.width);
+        
         if (FHResearch.editor) {
             Button create = new TechTextButton(this, Components.str("edit"),
                     Icon.empty()) {
@@ -113,35 +126,43 @@ public class ResearchDashboardPanel extends Panel {
         }
         techpoint.setText(toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
         add(techpoint);
-        TeamResearchData data = ClientResearchDataAPI.getData().get();
-        availableInsightLevel.setText(data.getAvailableInsightLevel() + "Insight Points");
+        techpoint.setColor(TechIcons.text);
+        ResearchData rd = detailPanel.research.getData();
+        if (rd.canResearch()) {
+            if (!rd.canComplete(detailPanel.research)) {
+            	tp.setColor(TechIcons.text_red);
+                techpoint.setColor(TechIcons.text_red);
+            }
+            techpoint.setText(toReadable(rd.getTotalCommitted(detailPanel.research)) + "/" + toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
+        }
+        techpoint.setX(140 - techpoint.width);
+        int insightNeeded=detailPanel.research.getInsight();
+        int insightAvailable=ClientResearchDataAPI.getData().get().getAvailableInsightLevel();
+        availableInsightLevel.setText(Lang.translateGui("research.insight_required",insightNeeded,insightAvailable));
+        if (insightNeeded>insightAvailable) {
+            availableInsightLevel.setColor(TechIcons.text_red);
+        }
         add(availableInsightLevel);
+        availableInsightLevel.setX(140 - availableInsightLevel.width);
+        if (rd.canResearch() && !rd.canComplete(detailPanel.research)) {
+            RTextField rq = new RTextField(this).setMaxWidth(140).setMaxLine(1).setColor(TechIcons.text_red);
+            rq.setPos(40, 20+ClientUtils.font().lineHeight*3);
+            add(rq);
+            rq.setText(Lang.translateGui("research.required_clue"));
+            rq.setX(140 - rq.width);
+        }
     }
 
     @Override
     public void alignWidgets() {
 
     }
-
     @Override
     public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        ResearchData rd = detailPanel.research.getData();
+        
 
-        techpoint.setColor(TechIcons.text);
-        if (rd.canResearch()) {
-            if (!rd.canComplete(detailPanel.research))
-                techpoint.setColor(TechIcons.text_red);
-            techpoint.setText(toReadable(rd.getTotalCommitted(detailPanel.research)) + "/" + toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
-        }
-        techpoint.setX(140 - techpoint.width);
+        
 
-        TeamResearchData data = ClientResearchDataAPI.getData().get();
-        if (data.getAvailableInsightLevel() == 0) {
-            availableInsightLevel.setColor(TechIcons.text_red);
-        } else {
-            availableInsightLevel.setColor(TechIcons.text);
-        }
-        availableInsightLevel.setX(160 - availableInsightLevel.width);
         super.draw(matrixStack, theme, x, y, w, h);
 
         // name
@@ -149,11 +170,8 @@ public class ResearchDashboardPanel extends Panel {
         // icon
         TechIcons.SHADOW.draw(matrixStack, x + 1, y + 36, 36, 9);
         detailPanel.icon.draw(matrixStack, x + 3, y + 10, 32, 32);
-        theme.drawString(matrixStack, Lang.translateGui("research.points"), x + 40, y + 19, TechIcons.text, 0);
-        if (rd.canResearch() && !rd.canComplete(detailPanel.research))
-            theme.drawString(matrixStack, Lang.translateGui("research.required_clue"), x + 40, y + 38, TechIcons.text_red, 0);
         GuiHelper.setupDrawing();
-        TechIcons.HLINE_L.draw(matrixStack, x, y + 49, 140, 3);
+        TechIcons.HLINE_L.draw(matrixStack, x, y + 55, 140, 3);
 
         // TODO: research progress
         // ResearchData data = ResearchDataAPI.getData((ServerPlayerEntity) detailPanel.researchScreen.player).getData(detailPanel.research);

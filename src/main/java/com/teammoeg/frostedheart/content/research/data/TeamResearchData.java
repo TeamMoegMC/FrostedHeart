@@ -68,7 +68,7 @@ public class TeamResearchData implements SpecialData {
 	public static final Codec<TeamResearchData> CODEC = RecordCodecBuilder.create(t -> t.group(
 		CompoundTag.CODEC.fieldOf("vars").forGetter(o -> o.variants),
 		Codec.unboundedMap(Codec.STRING, ResearchData.CODEC).fieldOf("researches").forGetter(o -> o.rdata),
-		Codec.INT.optionalFieldOf("active",0).forGetter(o -> o.activeResearchId),
+		Codec.INT.optionalFieldOf("active",-1).forGetter(o -> o.activeResearchId),
 		Codec.INT.optionalFieldOf("insight",0).forGetter(o -> o.insight),
 		Codec.INT.optionalFieldOf("insightLevel",0).forGetter(o -> o.insightLevel),
 		Codec.INT.optionalFieldOf("usedInsightLevel",0).forGetter(o -> o.usedInsightLevel)// ,
@@ -84,7 +84,7 @@ public class TeamResearchData implements SpecialData {
 	public static final Codec<TeamResearchData> NETWORK_CODEC = RecordCodecBuilder.create(t -> t.group(
 		CompoundTag.CODEC.fieldOf("vars").forGetter(o -> o.variants),
 		CodecUtil.discreteList(ResearchData.CODEC).fieldOf("researches").forGetter(o -> FHResearch.researches.toList(o.rdata)),
-		Codec.INT.optionalFieldOf("active",0).forGetter(o -> o.activeResearchId),
+		Codec.INT.optionalFieldOf("active",-1).forGetter(o -> o.activeResearchId),
 		Codec.INT.optionalFieldOf("insight",0).forGetter(o -> o.insight),
 		Codec.INT.optionalFieldOf("insightLevel",0).forGetter(o -> o.insightLevel),
 		Codec.INT.optionalFieldOf("usedInsightLevel",0).forGetter(o -> o.usedInsightLevel)// ,
@@ -716,7 +716,7 @@ public class TeamResearchData implements SpecialData {
 			}
 		}
 
-		if (activeResearchId != 0) {
+		if (activeResearchId != -1) {
 			Research r = FHResearch.researches.get(activeResearchId);
 
 			for (Clue c : r.getClues())

@@ -68,10 +68,10 @@ public class ResearchDetailPanel extends Panel {
         icon = research.getIcon();
 
         add(dashboardPanel);
-        dashboardPanel.setPosAndSize(4, 11, 140, 51);
+        dashboardPanel.setPosAndSize(4, 8, 140, 56);
 
         add(descPanel);
-        descPanel.setPosAndSize(8, 64, 132, 100);
+        descPanel.setPosAndSize(8, 66, 132, 98);
         add(scrolldetail);
         scrolldetail.setPosAndSize(142, 64, 8, 100);
 

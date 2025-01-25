@@ -119,6 +119,7 @@
   "gui.frostedheart.research_hierarchy": "Research Relationship",
   "gui.frostedheart.research_progress": "Research Progress",
   "gui.frostedheart.research_time_left": "Time Remaining: %s Minutes",
+  "gui.frostedheart.research.insight_required":"Insight: %s/%s",
   "gui.frostedheart.save_update_needed": "Your save is outdated, Cannot auto update your save! Please exit world and delete %s to complete update!",
   "gui.frostedheart.save_updated": "Auto updated your save, old configuration backed-up at ",
   "gui.frostedheart.temperature.desc": "Average Temperature",

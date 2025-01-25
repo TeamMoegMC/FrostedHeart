@@ -309,7 +309,7 @@ public class FHIcons {
             itemRenderer.renderItemAndEffectIntoGUI(stack, x, y);
             itemRenderer.renderItemOverlayIntoGUI(font, stack, x, y, null);
             itemRenderer.zLevel = 0.0F;*/
-            CGuiHelper.drawItem(matrixStack, stack, x, y, 199, w / 16f, h / 16f, true, null);
+            CGuiHelper.drawItem(matrixStack, stack, x, y, 50, w / 16f, h / 16f, true, null);
             /*ClientUtils.mc().getItemRenderer().renderItem(stack, TransformType.GUI,LightTexture., y, matrixStack, null);
             if (stack != null && stack.getCount() > 1) {
                 matrixStack.push();

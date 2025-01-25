@@ -245,7 +245,7 @@ public class ResearchData implements IEnvironment {
 
     public boolean canComplete(Research rs) {
         for (Clue cl : rs.getClues()) {
-            if (cl.isRequired() && !clueData.get(cl.getNonce()).completed) {
+            if (cl.isRequired() && !isClueTriggered(cl)) {
                 return false;
             }
         }

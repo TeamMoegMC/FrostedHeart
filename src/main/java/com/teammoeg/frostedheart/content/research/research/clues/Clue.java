@@ -44,7 +44,7 @@ public abstract class Clue {
                     Codec.STRING.optionalFieldOf("desc","").forGetter(o -> o.desc),
                     Codec.STRING.optionalFieldOf("hint","").forGetter(o -> o.hint),
                     Codec.STRING.fieldOf("id").forGetter(o -> o.nonce),
-                    Codec.BOOL.fieldOf("required").forGetter(o -> o.required),
+                    Codec.BOOL.optionalFieldOf("required",false).forGetter(o -> o.required),
                     Codec.FLOAT.fieldOf("value").forGetter(o -> o.contribution)).apply(t, BaseData::new));
     private static TypedCodecRegistry<Clue> registry = new TypedCodecRegistry<>();
     public final static Codec<Clue> CODEC = registry.codec();
