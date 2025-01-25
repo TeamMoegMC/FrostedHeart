@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.research.research.effects;
 import blusunrize.immersiveengineering.api.ManualHelper;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
+import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.register.IEItems;
 import blusunrize.lib.manual.ManualEntry;
@@ -81,7 +82,9 @@ public class EffectBuilding extends Effect {
 
     @Override
     public FHIcon getDefaultIcon() {
-        return FHIcons.getIcon(IEItems.Tools.HAMMER);
+    	if(multiblock instanceof IETemplateMultiblock mb)
+    		return FHIcons.getIcon(mb.getBlock());
+        return FHIcons.getIcon(IEItems.Tools.HAMMER.get());
     }
 
     @Override
@@ -92,11 +95,7 @@ public class EffectBuilding extends Effect {
     @Override
     public List<Component> getDefaultTooltip() {
         ArrayList<Component> ar = new ArrayList<>();
-        String raw = multiblock.getUniqueName().toString();
-        String namespace = raw.substring(0, raw.indexOf(':'));
-        String multiblock = raw.substring(raw.indexOf('/') + 1);
-        String key = "block." + namespace + "." + multiblock;
-        ar.add(Lang.translateKey(key));
+        ar.add(multiblock.getDisplayName());
         return ar;
     }
 

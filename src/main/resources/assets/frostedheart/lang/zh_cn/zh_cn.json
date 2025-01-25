@@ -699,6 +699,7 @@
   "tooltip.frostedheart.pressure.max_output": "最多产生气压值",
   "tooltip.frostedheart.pressure.average_intake": "平均消耗气压值",
   "tooltip.frostedheart.pressure.average_output": "平均产生气压值",
+  "tooltip.frostedheart.suitable_items":"接受物品：",
   "gui.frostedheart.creative_heater.heat": "产生的气压值",
   "tips.frostedheart.empty.title": "哎呀，这里什么都没有",
   "tips.frostedheart.error.desc": "请检查整合包是否正确安装，或向我们报告这个bug",

@@ -144,7 +144,7 @@ public class CodecUtil {
 	};
 	public static final Codec<ItemStack>  ITEMSTACK_CODEC = RecordCodecBuilder.create(t -> t.group(
 			CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).fieldOf("id").forGetter(ItemStack::getItem),
-			Codec.INT.fieldOf("Count").forGetter(ItemStack::getCount),
+			Codec.INT.optionalFieldOf("Count",1).forGetter(ItemStack::getCount),
 			CompoundTag.CODEC.optionalFieldOf("tag").forGetter(i->Optional.ofNullable(i.getTag())))/*,
 			CompoundTag.CODEC.optionalFieldOf("ForgeCaps").forGetter(ItemStack::serializeCaps)*/
 		.apply(t, (id,cnt,tag)->{

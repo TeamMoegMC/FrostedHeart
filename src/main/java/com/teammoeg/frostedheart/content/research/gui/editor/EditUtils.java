@@ -34,7 +34,7 @@ public class EditUtils {
 
     public static void editResearch(Widget p, Research r) {
         if (r != null) {
-            FHResearch.load(r);
+            r=FHResearch.load(r);
         }
         new ResearchEditorDialog(p, r, r.getCategory()).open();
     }

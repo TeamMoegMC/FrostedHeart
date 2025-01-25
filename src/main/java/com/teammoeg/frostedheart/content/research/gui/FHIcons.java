@@ -55,8 +55,8 @@ public class FHIcons {
     private static final TypedCodecRegistry<FHIcon> serializers = new TypedCodecRegistry<>();
     public static final Codec<FHIcon> CODEC = new AlternativeCodecBuilder<FHIcon>(FHIcon.class)
             .addSaveOnly(FHNopIcon.class, FHNopIcon.CODEC.codec())
-            .add(FHItemIcon.class, FHItemIcon.ICON_CODEC)
             .add(serializers.codec())
+            .add(FHItemIcon.class, FHItemIcon.ICON_CODEC)
             .addSaveOnly(FHIcon.class, FHNopIcon.CODEC.codec())
             .build();
 

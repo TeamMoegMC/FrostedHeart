@@ -37,8 +37,11 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.Grap
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsTextContent;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.MultipleItemHoverEvent;
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.ui.Rect;
+import com.teammoeg.chorda.io.nbtbuilder.ArrayNBTBuilder;
+import com.teammoeg.chorda.io.nbtbuilder.CompoundNBTBuilder;
 import com.teammoeg.chorda.lang.Components;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -49,13 +52,16 @@ import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.task.ItemTask;
 import dev.ftb.mods.ftbquests.quest.task.KillTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
+import dev.latvian.mods.itemfilters.api.ItemFiltersAPI;
 import net.minecraft.sounds.Music;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance.Attenuation;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -77,8 +83,28 @@ public class ClientControl implements IClientControlCommand {
 		Task tsk=quest.getTasksAsList().get(t);
 		Component itt;
 		if(tsk instanceof ItemTask itmtask) {
-
-			MutableComponent cmp=tsk.getTitle().copy().withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM,new HoverEvent.ItemStackInfo(itmtask.getItemStack()))));
+			ItemStack stack=itmtask.getItemStack();
+			HoverEvent.ItemStackInfo ev;
+			if(ItemFiltersAPI.isFilter(stack)) {
+				List<ItemStack> toshow=new ArrayList<>();
+				ItemFiltersAPI.getDisplayItemStacks(stack, toshow);
+				
+				CompoundNBTBuilder<Void> disp=CompoundNBTBuilder.create();
+				var b=disp.array("Lore");
+				b.addString(Component.Serializer.toJson(Lang.translateTooltip("suitable_items")));
+				
+				for(ItemStack is:toshow) {
+					b.addString(Component.Serializer.toJson(Lang.builder().text("- ").add(is.getDisplayName()).component()));
+				}
+				for(ItemStack is:toshow) {
+					is.addTagElement("display", disp.build());
+				}
+				ev=new MultipleItemHoverEvent(toshow);
+			}else {
+				ev=new HoverEvent.ItemStackInfo(itmtask.getItemStack());
+			}
+			
+			MutableComponent cmp=tsk.getTitle().copy().withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM,ev)));
 			itt= Lang.translateMessage("item_task",cmp);
 			
 		}else if(tsk instanceof KillTask) {
