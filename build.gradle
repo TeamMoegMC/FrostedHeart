@@ -8,6 +8,7 @@ plugins {
     id 'org.spongepowered.mixin' version "${mixingradle_version}"
     id 'org.parchmentmc.librarian.forgegradle' version "${librarian_version}"
     id 'org.jetbrains.gradle.plugin.idea-ext' version '1.1.6'
+    id 'org.cadixdev.licenser' version '0.6.1'
     id 'maven-publish'
     id 'eclipse'
     id 'idea'
@@ -485,12 +486,11 @@ curseforge {
     }
 }
 
-// Automatically apply a license header when running checkLicense / updateLicense
-//license {
-//    header = project.file('HEADER.txt')
-//    ignoreFailures = true
-//    include '**/*.java'
-//}
+license {
+    header = project.file('HEADER.txt')
+    ignoreFailures = true
+    include '**/*.java'
+}
 
 publishing {
     publications {
