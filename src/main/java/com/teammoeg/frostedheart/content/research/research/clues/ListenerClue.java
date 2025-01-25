@@ -32,9 +32,9 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 public abstract class ListenerClue extends Clue {
     public static final MapCodec<BaseData> BASE_CODEC = RecordCodecBuilder.mapCodec(t ->
             t.group(
-                    CodecUtil.defaultValue(Codec.STRING, "").fieldOf("name").forGetter(o -> o.name),
-                    CodecUtil.defaultValue(Codec.STRING, "").fieldOf("desc").forGetter(o -> o.desc),
-                    CodecUtil.defaultValue(Codec.STRING, "").fieldOf("hint").forGetter(o -> o.hint),
+                    Codec.STRING.optionalFieldOf("name","").forGetter(o -> o.name),
+                    Codec.STRING.optionalFieldOf("desc","").forGetter(o -> o.desc),
+                    Codec.STRING.optionalFieldOf("hint","").forGetter(o -> o.hint),
                     Codec.STRING.fieldOf("id").forGetter(o -> o.nonce),
                     Codec.BOOL.fieldOf("required").forGetter(o -> o.required),
                     Codec.FLOAT.fieldOf("value").forGetter(o -> o.contribution),

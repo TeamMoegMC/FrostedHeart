@@ -41,7 +41,7 @@ import net.minecraft.world.level.ChunkPos;
  * */
 public class WorldMarker {
 	public static class ChunkMarker{
-		public static final Codec<ChunkMarker> CODEC=RecordCodecBuilder.create(t->t.group(Codec.list(CodecUtil.defaultValue(Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of), null)).fieldOf("data").forGetter(o->o.getList())).apply(t, ChunkMarker::new));
+		public static final Codec<ChunkMarker> CODEC=RecordCodecBuilder.create(t->t.group(CodecUtil.discreteList(Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of)).fieldOf("data").forGetter(o->o.getList())).apply(t, ChunkMarker::new));
 		BitSet[] sections=new BitSet[16];
 		
 		public ChunkMarker() {

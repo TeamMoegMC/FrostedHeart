@@ -66,16 +66,16 @@ public class TownResourceHolder {
     public static final double DELTA = 1.0/8192;//一个非常小的值，当资源数量小于这个值时，认为资源为0，抵消误差。
 
     public static final Codec<TownResourceHolder> CODEC = RecordCodecBuilder.create(t -> t.group(
-            CodecUtil.defaultValue(CodecUtil.mapCodec("itemStack", ItemStackWrapper.CODEC, "amount", Codec.DOUBLE), new HashMap<>()) .fieldOf("itemResources").forGetter(o->o.itemResources),
-            CodecUtil.defaultValue(CodecUtil.mapCodec("virtualKey", VirtualResourceKey.CODEC, "amount", Codec.DOUBLE), new HashMap<>()).fieldOf("virtualResources").forGetter(o->o.virtualResources),
-            CodecUtil.defaultValue(Codec.DOUBLE, 0.0).fieldOf("occupiedCapacity").forGetter(o->o.occupiedCapacity)
+            CodecUtil.mapCodec("itemStack", ItemStackWrapper.CODEC, "amount", Codec.DOUBLE) .optionalFieldOf("itemResources",Map.of()).forGetter(o->o.itemResources),
+            CodecUtil.mapCodec("virtualKey", VirtualResourceKey.CODEC, "amount", Codec.DOUBLE).optionalFieldOf("virtualResources",Map.of()).forGetter(o->o.virtualResources),
+            Codec.DOUBLE.optionalFieldOf("occupiedCapacity",0d).forGetter(o->o.occupiedCapacity)
             ).apply(t, TownResourceHolder::new)
     );
 
     public TownResourceHolder() {}
     public TownResourceHolder(Map<ItemStackWrapper, Double> itemResources, Map<VirtualResourceKey, Double> virtualResources, double occupiedCapacity) {
-        this.itemResources = itemResources;
-        this.virtualResources = virtualResources;
+        this.itemResources.putAll(itemResources);
+        this.virtualResources.putAll(virtualResources);
         this.occupiedCapacity = occupiedCapacity;
         removeZeros();
         updateCache();
@@ -398,7 +398,7 @@ public class TownResourceHolder {
         public ItemStack itemStack;
 
         public static final Codec<ItemStackWrapper> CODEC = RecordCodecBuilder.create(t -> t.group(
-                CodecUtil.defaultValue(ItemStack.CODEC, ItemStack.EMPTY).fieldOf("itemStack").forGetter(o->o.itemStack)
+        		CodecUtil.ITEMSTACK_CODEC.fieldOf("itemStack").forGetter(o->o.itemStack)
                 ).apply(t, ItemStackWrapper::new)
         );
 

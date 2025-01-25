@@ -48,7 +48,7 @@ public class MinigameClue extends CustomClue {
     }
 
     @Override
-    public String getBrief(Research parent) {
+    public String getBrief() {
         return "Complete game level " + this.level;
     }
 

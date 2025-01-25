@@ -53,7 +53,7 @@ public class TownWorkerData {
 	t.group(CodecUtil.enumCodec(TownWorkerType.class).fieldOf("type").forGetter(o->o.type),
 		CodecUtil.BLOCKPOS.fieldOf("pos").forGetter(o->o.pos),
 		CompoundTag.CODEC.fieldOf("data").forGetter(o->o.workData),
-		CodecUtil.defaultValue(Codec.INT, 0).fieldOf("priority").forGetter(o->o.priority)
+		Codec.INT.optionalFieldOf("priority",0).forGetter(o->o.priority)
 		).apply(t,TownWorkerData::new));
     public static final String KEY_IS_OVERLAPPED = "isOverlapped";
     private TownWorkerType type;

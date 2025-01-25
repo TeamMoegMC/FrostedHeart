@@ -40,7 +40,7 @@ public class AdvancementClue extends TickListenerClue {
     public static final MapCodec<AdvancementClue> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
             ListenerClue.BASE_CODEC.forGetter(o -> o.getData()),
             ResourceLocation.CODEC.fieldOf("advancement").forGetter(o -> o.advancement),
-            CodecUtil.defaultValue(Codec.STRING, "").fieldOf("criterion").forGetter(o -> o.criterion)
+            Codec.STRING.optionalFieldOf("criterion","").forGetter(o -> o.criterion)
     ).apply(t, AdvancementClue::new));
     ResourceLocation advancement = new ResourceLocation("minecraft:story/root");
     String criterion = "";
@@ -64,8 +64,12 @@ public class AdvancementClue extends TickListenerClue {
     }
 
     @Override
-    public String getBrief(Research parent) {
-        return "Advancement " + getDescriptionString(parent);
+    public String getBrief() {
+    	ClientAdvancements cam = ClientUtils.getPlayer().connection.getAdvancements();
+        Advancement adv = cam.getAdvancements().get(advancement);
+        if (adv != null)
+            return "Advancement " +adv.getChatComponent().getString();
+        return "Advancement none" ;
     }
 
     @Override

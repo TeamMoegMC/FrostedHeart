@@ -40,9 +40,9 @@ import java.util.function.Supplier;
 public abstract class Clue {
     public static final MapCodec<BaseData> BASE_CODEC = RecordCodecBuilder.mapCodec(t ->
             t.group(
-                    CodecUtil.defaultValue(Codec.STRING, "").fieldOf("name").forGetter(o -> o.name),
-                    CodecUtil.defaultValue(Codec.STRING, "").fieldOf("desc").forGetter(o -> o.desc),
-                    CodecUtil.defaultValue(Codec.STRING, "").fieldOf("hint").forGetter(o -> o.hint),
+                    Codec.STRING.optionalFieldOf("name","").forGetter(o -> o.name),
+                    Codec.STRING.optionalFieldOf("desc","").forGetter(o -> o.desc),
+                    Codec.STRING.optionalFieldOf("hint","").forGetter(o -> o.hint),
                     Codec.STRING.fieldOf("id").forGetter(o -> o.nonce),
                     Codec.BOOL.fieldOf("required").forGetter(o -> o.required),
                     Codec.FLOAT.fieldOf("value").forGetter(o -> o.contribution)).apply(t, BaseData::new));
@@ -109,7 +109,7 @@ public abstract class Clue {
      *
      * @return brief<br>
      */
-    public abstract String getBrief(Research parent);
+    public abstract String getBrief();
 
     public String getBriefDesc() {
         return "   " + (this.required ? "required " : "") + "+" + (int) (this.contribution * 100) + "%";

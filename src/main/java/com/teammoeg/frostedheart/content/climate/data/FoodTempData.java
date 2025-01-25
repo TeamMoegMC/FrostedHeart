@@ -40,9 +40,9 @@ public record FoodTempData(Item item,float heat, float min, float max) implement
 
 	public static final Codec<FoodTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 		CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).fieldOf("item").forGetter(o->o.item),
-		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("heat").forGetter(o->o.heat),
-		CodecUtil.defaultValue(Codec.FLOAT,-15f).fieldOf("min").forGetter(o->o.min),
-		CodecUtil.defaultValue(Codec.FLOAT,15f).fieldOf("max").forGetter(o->o.max)).apply(t, FoodTempData::new));
+		Codec.FLOAT.optionalFieldOf("heat",0f).forGetter(o->o.heat),
+		Codec.FLOAT.optionalFieldOf("min",-15f).forGetter(o->o.min),
+		Codec.FLOAT.optionalFieldOf("max",15f).forGetter(o->o.max)).apply(t, FoodTempData::new));
 	public static RegistryObject<CodecRecipeSerializer<FoodTempData>> TYPE;
 	public static Map<Item,FoodTempData> cacheList=ImmutableMap.of();
 	/**

@@ -43,7 +43,7 @@ public class VirtualResourceKey implements ITownResourceKey{
 
     public static final Codec<VirtualResourceKey> CODEC = RecordCodecBuilder.create(t -> t.group(
                     VirtualResourceType.CODEC.fieldOf("type").forGetter(o->o.type),
-                    CodecUtil.defaultValue(Codec.INT, 0).fieldOf("level").forGetter(o->o.level)
+                   Codec.INT.optionalFieldOf("level",0).forGetter(o->o.level)
             ).apply(t, VirtualResourceKey::new)
     );
 

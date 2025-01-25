@@ -75,7 +75,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         else
             CUSTOM.open(p, l, (CustomClue) v, c::accept);
     };
-    public static final Editor<Collection<ClueClosure>> EDITOR_LIST = (p, l, v, c) -> new EditListDialog<ClueClosure>(p, l, v, (p2, l2, v2, c2) -> EDITOR.open(p2, l2, v2.clue(), o -> c2.accept(new ClueClosure(v2.research(), o))), e -> e.clue().getBrief(e.research()) + e.clue().getBriefDesc(), c).open();
+    public static final Editor<Collection<Clue>> EDITOR_LIST = (p, l, v, c) -> new EditListDialog<Clue>(p, l, v, EDITOR, e -> e.getBrief() + e.getBriefDesc(), c).open();
     protected LabeledTextBoxAndBtn nonce;
     protected LabeledTextBox name;
     protected LabeledTextBox desc;

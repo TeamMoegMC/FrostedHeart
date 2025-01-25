@@ -56,8 +56,11 @@ public class KillClue extends ListenerClue {
     }
 
     @Override
-    public String getBrief(Research parent) {
-        return "Kill " + getDescriptionString(parent);
+    public String getBrief() {
+    	String entityDesc="none";
+    	if(type!=null)
+    		entityDesc=type.getDescription().getString();
+        return "Kill " + entityDesc;
     }
 
     @Override

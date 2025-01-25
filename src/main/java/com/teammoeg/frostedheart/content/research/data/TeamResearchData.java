@@ -68,10 +68,10 @@ public class TeamResearchData implements SpecialData {
 	public static final Codec<TeamResearchData> CODEC = RecordCodecBuilder.create(t -> t.group(
 		CompoundTag.CODEC.fieldOf("vars").forGetter(o -> o.variants),
 		Codec.unboundedMap(Codec.STRING, ResearchData.CODEC).fieldOf("researches").forGetter(o -> o.rdata),
-		CodecUtil.defaultValue(Codec.INT, 0).fieldOf("active").forGetter(o -> o.activeResearchId),
-		CodecUtil.defaultValue(Codec.INT, 0).fieldOf("insight").forGetter(o -> o.insight),
-		CodecUtil.defaultValue(Codec.INT, 0).fieldOf("insightLevel").forGetter(o -> o.insightLevel),
-		CodecUtil.defaultValue(Codec.INT, 0).fieldOf("usedInsightLevel").forGetter(o -> o.usedInsightLevel)// ,
+		Codec.INT.optionalFieldOf("active",0).forGetter(o -> o.activeResearchId),
+		Codec.INT.optionalFieldOf("insight",0).forGetter(o -> o.insight),
+		Codec.INT.optionalFieldOf("insightLevel",0).forGetter(o -> o.insightLevel),
+		Codec.INT.optionalFieldOf("usedInsightLevel",0).forGetter(o -> o.usedInsightLevel)// ,
 	// BlockUnlockList.CODEC.optionalFieldOf("blockUnlockList", new
 	// BlockUnlockList()).forGetter(o -> o.block),
 	// RecipeUnlockList.CODEC.optionalFieldOf("recipeUnlockList", new
@@ -84,10 +84,10 @@ public class TeamResearchData implements SpecialData {
 	public static final Codec<TeamResearchData> NETWORK_CODEC = RecordCodecBuilder.create(t -> t.group(
 		CompoundTag.CODEC.fieldOf("vars").forGetter(o -> o.variants),
 		CodecUtil.discreteList(ResearchData.CODEC).fieldOf("researches").forGetter(o -> FHResearch.researches.toList(o.rdata)),
-		CodecUtil.defaultValue(Codec.INT, 0).fieldOf("active").forGetter(o -> o.activeResearchId),
-		CodecUtil.defaultValue(Codec.INT, 0).fieldOf("insight").forGetter(o -> o.insight),
-		CodecUtil.defaultValue(Codec.INT, 0).fieldOf("insightLevel").forGetter(o -> o.insightLevel),
-		CodecUtil.defaultValue(Codec.INT, 0).fieldOf("usedInsightLevel").forGetter(o -> o.usedInsightLevel)// ,
+		Codec.INT.optionalFieldOf("active",0).forGetter(o -> o.activeResearchId),
+		Codec.INT.optionalFieldOf("insight",0).forGetter(o -> o.insight),
+		Codec.INT.optionalFieldOf("insightLevel",0).forGetter(o -> o.insightLevel),
+		Codec.INT.optionalFieldOf("usedInsightLevel",0).forGetter(o -> o.usedInsightLevel)// ,
 	// BlockUnlockList.CODEC.optionalFieldOf("blockUnlockList", new
 	// BlockUnlockList()).forGetter(o -> o.block),
 	// RecipeUnlockList.CODEC.optionalFieldOf("recipeUnlockList", new
@@ -142,7 +142,7 @@ public class TeamResearchData implements SpecialData {
 	/**
 	 * The active research id.<br>
 	 */
-	int activeResearchId = 0;
+	int activeResearchId = -1;
 	/**
 	 * The variants.<br>
 	 */
@@ -215,9 +215,9 @@ public class TeamResearchData implements SpecialData {
 	 * @param sync send update packet
 	 */
 	public void clearCurrentResearch(TeamDataHolder team, boolean sync) {
-		if (activeResearchId == 0) return;
+		if (activeResearchId == -1) return;
 		Research r = FHResearch.researches.get(activeResearchId);
-		activeResearchId = 0;
+		activeResearchId = -1;
 		if (r != null)
 			if (team != null) {
 				for (Clue c : r.getClues())
@@ -235,7 +235,7 @@ public class TeamResearchData implements SpecialData {
 	@OnlyIn(Dist.CLIENT)
 	public void clearCurrentResearch(Research r) {
 		if (activeResearchId == FHResearch.researches.getIntId(r))
-			activeResearchId = 0;
+			activeResearchId = -1;
 	}
 
 	/**
@@ -429,7 +429,7 @@ public class TeamResearchData implements SpecialData {
 	 * @return current research<br>
 	 */
 	public OptionalLazy<Research> getCurrentResearch() {
-		if (activeResearchId == 0)
+		if (activeResearchId == -1)
 			return OptionalLazy.empty();
 		return OptionalLazy.of(() -> FHResearch.getResearch(activeResearchId));
 	}
@@ -586,7 +586,7 @@ public class TeamResearchData implements SpecialData {
 		int index = FHResearch.researches.getIntId(r);
 		if (rd.active && !rd.finished) {
 			if (this.activeResearchId != index) {
-				if (this.activeResearchId != 0)
+				if (this.activeResearchId != -1)
 					clearCurrentResearch(team, false);
 				this.activeResearchId = index;
 				FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket(r);

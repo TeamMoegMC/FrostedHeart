@@ -55,8 +55,8 @@ public class CustomClue extends Clue {
     }
 
     @Override
-    public String getBrief(Research parent) {
-        return "Custom " + getDescriptionString(parent);
+    public String getBrief() {
+        return "Custom";
     }
 
 

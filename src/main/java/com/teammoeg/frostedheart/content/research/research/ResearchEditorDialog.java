@@ -107,10 +107,10 @@ public class ResearchEditorDialog extends BaseEditDialog {
             r.getEffects().addAll(s);
             r.doIndex();
         }));
-        add(new OpenEditorButton<>(this, "Edit Clues", ClueEditor.EDITOR_LIST, r.getClues().stream().map(to -> to.getClueClosure(r)).collect(Collectors.toList()), s -> {
+        add(new OpenEditorButton<>(this, "Edit Clues", ClueEditor.EDITOR_LIST, r.getClues(), s -> {
             // r.getClues().forEach(Clue::deleteSelf);
             r.getClues().clear();
-            s.forEach(t -> r.getClues().add(t.clue()));
+            s.forEach(t -> r.getClues().add(t));
             r.doIndex();
         }));
         add(new SimpleTextButton(this, Components.str("Remove"), Icon.empty()) {

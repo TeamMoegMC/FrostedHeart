@@ -38,7 +38,7 @@ import net.minecraft.network.chat.Component;
 public class ItemClue extends Clue {
     public static final MapCodec<ItemClue> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
             Clue.BASE_CODEC.forGetter(o -> o.getData()),
-            CodecUtil.defaultValue(Codec.BOOL, false).fieldOf("consume").forGetter(o -> o.consume),
+            Codec.BOOL.optionalFieldOf("consume",false).forGetter(o -> o.consume),
             CodecUtil.INGREDIENT_SIZE_CODEC.fieldOf("item").forGetter(o -> o.stack)
     ).apply(t, ItemClue::new));
 
@@ -66,10 +66,15 @@ public class ItemClue extends Clue {
     }
 
     @Override
-    public String getBrief(Research parent) {
+    public String getBrief() {
+    	String stackDesc="none";
+        if (stack!=null&&stack.hasNoMatchingItems())
+        	stackDesc=stack.getMatchingStacks()[0].getHoverName().plainCopy()
+                .append(Components.str(" x" + stack.getCount())).getString();
+    	
         if (consume)
-            return "Submit item " + getDescriptionString(parent);
-        return "Inspect item " + getDescriptionString(parent);
+            return "Submit item " + stackDesc;
+        return "Inspect item " + stackDesc;
     }
 
     @Override

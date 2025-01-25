@@ -146,7 +146,7 @@ public class ResearchData implements IEnvironment {
             CodecUtil.<ResearchData>booleans("flags")
                     .flag("active", o -> o.active)
                     .flag("finished", o -> o.finished).build(),
-            CodecUtil.defaultValue(Codec.INT, 0).fieldOf("level").forGetter(o -> o.level),
+            Codec.INT.optionalFieldOf("level",0).forGetter(o -> o.level),
             CodecUtil.mapCodec("id", Codec.STRING, "data", ClueData.CODEC).fieldOf("clueData").forGetter(o -> o.clueData),
             CodecUtil.mapCodec("id", Codec.STRING, "data", Codec.BOOL).fieldOf("effectData").forGetter(o -> o.effectData)
     ).apply(t, ResearchData::new));
@@ -155,7 +155,7 @@ public class ResearchData implements IEnvironment {
             CodecUtil.<ResearchDataPacket>booleans("flags")
                     .flag("active", o -> o.active())
                     .flag("finished", o -> o.finished()).build(),
-            CodecUtil.defaultValue(Codec.INT, 0).fieldOf("level").forGetter(o -> o.level()),
+            Codec.INT.optionalFieldOf("level",0).forGetter(o -> o.level()),
             CodecUtil.discreteList(ClueData.CODEC).fieldOf("clueData").forGetter(o -> o.clueData()),
             CodecUtil.BYTE_ARRAY_CODEC.fieldOf("effectData").forGetter(o -> o.effectData().toByteArray())
     ).apply(t, ResearchDataPacket::new));

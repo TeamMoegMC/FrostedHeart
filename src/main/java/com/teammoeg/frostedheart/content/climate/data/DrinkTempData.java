@@ -35,7 +35,7 @@ import net.minecraftforge.registries.RegistryObject;
 public record DrinkTempData(Fluid fluid,float heat) {
 	public static final Codec<DrinkTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 		CodecUtil.registryCodec(()->BuiltInRegistries.FLUID).fieldOf("fluid").forGetter(o->o.fluid),
-		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("heat").forGetter(o->o.heat)).apply(t, DrinkTempData::new));
+		Codec.FLOAT.optionalFieldOf("heat",0f).forGetter(o->o.heat)).apply(t, DrinkTempData::new));
 	public static RegistryObject<CodecRecipeSerializer<DrinkTempData>> TYPE;
 	public static Map<Fluid,DrinkTempData> cacheList=ImmutableMap.of();
     public float getHeat() {

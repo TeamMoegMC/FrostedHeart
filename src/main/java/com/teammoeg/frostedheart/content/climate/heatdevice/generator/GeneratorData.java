@@ -64,13 +64,13 @@ public class GeneratorData implements SpecialData {
                     .flag("isBroken", o -> o.isBroken).build(),
             Codec.FLOAT.fieldOf("steamLevel").forGetter(o -> o.steamLevel),
             Codec.FLOAT.fieldOf("powerLevel").forGetter(o -> o.power),
-            CodecUtil.defaultValue(Codec.INT, 0).fieldOf("heated").forGetter(o -> o.heated),
-            CodecUtil.defaultValue(Codec.INT, 0).fieldOf("ranged").forGetter(o -> o.ranged),
+            Codec.INT.optionalFieldOf("heated",0).forGetter(o -> o.heated),
+            Codec.INT.optionalFieldOf("ranged",0).forGetter(o -> o.ranged),
             CodecUtil.registryCodec(() -> BuiltInRegistries.FLUID).optionalFieldOf("steamFluid").forGetter(o -> Optional.ofNullable(o.fluid)),
             Codec.FLOAT.fieldOf("tempLevel").forGetter(o -> o.TLevel),
             Codec.FLOAT.fieldOf("rangeLevel").forGetter(o -> o.RLevel),
             CompoundTag.CODEC.fieldOf("items").forGetter(o -> o.inventory.serializeNBT()),
-            CodecUtil.defaultValue(CodecUtil.ITEMSTACK_CODEC, ItemStack.EMPTY).fieldOf("res").forGetter(o -> o.currentItem),
+            CodecUtil.ITEMSTACK_CODEC.optionalFieldOf("res",ItemStack.EMPTY).forGetter(o -> o.currentItem),
             CodecUtil.BLOCKPOS.optionalFieldOf("actualPos").forGetter(o -> Optional.ofNullable(o.actualPos)),
             ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o -> o.dimension == null ? Optional.empty() : Optional.of(o.dimension.location()))
     ).apply(t, GeneratorData::new));

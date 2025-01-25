@@ -30,8 +30,8 @@ public class LeveledValue {
 	public static Codec<LeveledValue> createCodec(IntFunction<Float> maxValue) {
 		
 		return new CodecWithFactory<>(RecordCodecBuilder.create(t->t.group(
-			CodecUtil.defaultValue(Codec.INT, 0).fieldOf("level").forGetter(o->o.level),
-			CodecUtil.defaultValue(Codec.FLOAT, 0f).fieldOf("value").forGetter(o->o.value)
+			Codec.INT.optionalFieldOf("level",0).forGetter(o->o.level),
+			Codec.FLOAT.optionalFieldOf("value",0f).forGetter(o->o.value)
 			).apply(t,(i,v)->new LeveledValue(maxValue,i,v))),()->new LeveledValue(maxValue));
 		
 	}

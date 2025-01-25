@@ -46,16 +46,16 @@ public record PlantTempData(Block block,float minFertilize, float minGrow, float
 	public static final Codec<PlantTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 			CodecUtil.registryCodec(()->BuiltInRegistries.BLOCK).fieldOf("block").forGetter(o->o.block),
 			// min
-			CodecUtil.defaultValue(Codec.FLOAT,DEFAULT_BONEMEAL_TEMP).fieldOf("min_fertilize").forGetter(o->o.minFertilize),
-			CodecUtil.defaultValue(Codec.FLOAT,DEFAULT_GROW_TEMP).fieldOf("min_grow").forGetter(o->o.minGrow),
-			CodecUtil.defaultValue(Codec.FLOAT,DEFAULT_SURVIVE_TEMP).fieldOf("min_survive").forGetter(o->o.minSurvive),
+			Codec.FLOAT.optionalFieldOf("min_fertilize",DEFAULT_BONEMEAL_TEMP).forGetter(o->o.minFertilize),
+			Codec.FLOAT.optionalFieldOf("min_grow",DEFAULT_GROW_TEMP).forGetter(o->o.minGrow),
+			Codec.FLOAT.optionalFieldOf("min_survive",DEFAULT_SURVIVE_TEMP).forGetter(o->o.minSurvive),
 			// max
-			CodecUtil.defaultValue(Codec.FLOAT,DEFAULT_BONEMEAL_MAX_TEMP).fieldOf("max_fertilize").forGetter(o->o.maxFertilize),
-			CodecUtil.defaultValue(Codec.FLOAT,DEFAULT_GROW_MAX_TEMP).fieldOf("max_grow").forGetter(o->o.maxGrow),
-			CodecUtil.defaultValue(Codec.FLOAT,DEFAULT_SURVIVE_MAX_TEMP).fieldOf("max_survive").forGetter(o->o.maxSurvive),
+			Codec.FLOAT.optionalFieldOf("max_fertilize",DEFAULT_BONEMEAL_MAX_TEMP).forGetter(o->o.maxFertilize),
+			Codec.FLOAT.optionalFieldOf("max_grow",DEFAULT_GROW_MAX_TEMP).forGetter(o->o.maxGrow),
+			Codec.FLOAT.optionalFieldOf("max_survive",DEFAULT_SURVIVE_MAX_TEMP).forGetter(o->o.maxSurvive),
 			// vulnerability
-			CodecUtil.defaultValue(Codec.BOOL,DEFAULT_SNOW_VULNERABLE).fieldOf("snow_vulnerable").forGetter(o->o.snowVulnerable),
-			CodecUtil.defaultValue(Codec.BOOL,DEFAULT_BLIZZARD_VULNERABLE).fieldOf("blizzard_vulnerable").forGetter(o->o.blizzardVulnerable)
+			Codec.BOOL.optionalFieldOf("snow_vulnerable",DEFAULT_SNOW_VULNERABLE).forGetter(o->o.snowVulnerable),
+			Codec.BOOL.optionalFieldOf("blizzard_vulnerable",DEFAULT_BLIZZARD_VULNERABLE).forGetter(o->o.blizzardVulnerable)
 	).apply(t, PlantTempData::new));
 	public static RegistryObject<CodecRecipeSerializer<PlantTempData>> TYPE;
 	public static Map<Block,PlantTempData> cacheList=ImmutableMap.of();

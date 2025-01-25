@@ -262,10 +262,12 @@ dependencies {
     implementation fg.deobf("dev.ftb.mods:ftb-chunks-forge:${ftb_chunks_version}")
     compileOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
     noDatagenRuntimeOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
+    //ItemFilters
+    implementation fg.deobf("curse.maven:item-filters-309674:4838266")
 
     // Tetra
     compileOnly fg.deobf("curse.maven:tetra-289712:5957838")
-//    noDatagenRuntimeOnly fg.deobf("curse.maven:tetra-289712:5957838") // somehow, when datagening, you must set to compileOnly
+//    noDatagenRuntimeOnly fg.deobf("curse.maven:tetra-289712:5957838")
 //
     compileOnly fg.deobf("curse.maven:mutil-351914:4824501")
 

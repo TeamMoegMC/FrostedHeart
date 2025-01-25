@@ -185,7 +185,11 @@ public class CodecUtil {
 	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=PacketOrSchemaCodec.create(JsonOps.INSTANCE,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
 	public static final Codec<MobEffectInstance> MOB_EFFECT_CODEC = COMPOUND_TAG_CODEC.xmap(o->MobEffectInstance.load(o),t->t.save(new CompoundTag()));
 	public static final Codec<boolean[]> BOOLEANS = Codec.BYTE.xmap(SerializeUtil::readBooleans, SerializeUtil::writeBooleans);
-
+	/**
+	 * use {@link Codec#optionalFieldOf(String, Object) optinalFieldOf} in Codec instead for better support
+	 * 
+	 * */
+	@Deprecated
 	public static <A> DefaultValueCodec<A> defaultValue(Codec<A> val, A def) {
 		return defaultSupply(val, () -> def);
 	}

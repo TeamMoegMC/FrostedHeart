@@ -51,8 +51,9 @@ public class SpecialDataType<T extends SpecialData>{
 	/**
 	 * Instantiates and register a new special data type.
 	 *
-	 * @param id the id
-	 * @param factory the factory
+	 * @param id the data id
+	 * @param factory the data object factory, current team would be provided to initiate the data object
+	 * @param codec codec for serialization and networking
 	 */
 	public  SpecialDataType(String id, Function<SpecialDataHolder, T> factory, Codec<T> codec) {
 		super();

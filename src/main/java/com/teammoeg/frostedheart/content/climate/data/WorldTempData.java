@@ -36,7 +36,7 @@ import net.minecraftforge.registries.RegistryObject;
 public record WorldTempData(ResourceLocation world,float temperature){
 	public static final Codec<WorldTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 		ResourceLocation.CODEC.fieldOf("world").forGetter(o->o.world),
-		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("temperature").forGetter(o->o.temperature)).apply(t, WorldTempData::new));
+		Codec.FLOAT.optionalFieldOf("temperature",0f).forGetter(o->o.temperature)).apply(t, WorldTempData::new));
 	public static RegistryObject<CodecRecipeSerializer<WorldTempData>> TYPE;
 	public static Map<ResourceLocation,WorldTempData> cacheList=ImmutableMap.of();
 	@Nonnull
