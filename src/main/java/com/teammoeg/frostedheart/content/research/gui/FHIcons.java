@@ -39,6 +39,7 @@ import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -52,20 +53,9 @@ import java.util.function.Consumer;
 
 public class FHIcons {
     private static final TypedCodecRegistry<FHIcon> serializers = new TypedCodecRegistry<>();
-    public static final Codec<FHIcon> DEFAULT_CODEC = new AlternativeCodecBuilder<FHIcon>(FHIcon.class)
-            .fallback(() -> FHNopIcon.INSTANCE)
-            .addSaveOnly(FHNopIcon.class, FHNopIcon.CODEC.codec())
-            .add(FHItemIcon.class, FHItemIcon.ICON_CODEC)
-            .add(FHItemIcon.class, FHItemIcon.CODEC.codec())
-            .add(FHAnimatedIcon.class, FHAnimatedIcon.ICON_CODEC)
-            .add(serializers.codec())
-            .add(FHNopIcon.CODEC.codec())
-            .build();
     public static final Codec<FHIcon> CODEC = new AlternativeCodecBuilder<FHIcon>(FHIcon.class)
             .addSaveOnly(FHNopIcon.class, FHNopIcon.CODEC.codec())
             .add(FHItemIcon.class, FHItemIcon.ICON_CODEC)
-            .add(FHItemIcon.class, FHItemIcon.CODEC.codec())
-            .add(FHAnimatedIcon.class, FHAnimatedIcon.ICON_CODEC)
             .add(serializers.codec())
             .addSaveOnly(FHIcon.class, FHNopIcon.CODEC.codec())
             .build();
@@ -159,9 +149,9 @@ public class FHIcons {
 
     private static class FHAnimatedIcon extends FHIcon {
         private static final MapCodec<FHAnimatedIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
-                Codec.list(FHIcons.DEFAULT_CODEC).fieldOf("icons").forGetter(o -> o.icons)
+                Codec.list(FHIcons.CODEC).fieldOf("icons").forGetter(o -> o.icons)
         ).apply(t, FHAnimatedIcon::new));
-        private static final Codec<FHAnimatedIcon> ICON_CODEC = Codec.list(FHIcons.DEFAULT_CODEC).xmap(FHAnimatedIcon::new, o -> o.icons);
+        private static final Codec<FHAnimatedIcon> ICON_CODEC = Codec.list(FHIcons.CODEC).xmap(FHAnimatedIcon::new, o -> o.icons);
         List<FHIcon> icons;
 
         public FHAnimatedIcon() {
@@ -298,7 +288,7 @@ public class FHIcons {
                 CodecUtil.ITEMSTACK_CODEC.fieldOf("item").forGetter(o -> o.stack)
         ).apply(t, FHItemIcon::new));
         private static final Codec<FHItemIcon> ICON_CODEC =
-                CodecUtil.ITEMSTACK_CODEC.xmap(FHItemIcon::new, o -> o.stack);
+                CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).xmap(FHItemIcon::new, t->t.stack.getItem());
         ItemStack stack;
 
         public FHItemIcon(ItemLike item2) {

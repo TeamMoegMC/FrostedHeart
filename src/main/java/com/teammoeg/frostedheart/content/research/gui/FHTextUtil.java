@@ -35,8 +35,7 @@ public class FHTextUtil {
     private FHTextUtil() {
     }
 
-    public static List<Component> get(List<String> orig, String type, Supplier<String> pid) {
-        String s = pid.get();
+    public static List<Component> get(List<String> orig, String type, String pid) {
         List<Component> li = new ArrayList<>();
         if (orig.isEmpty()) {
             int i = 0;
@@ -44,7 +43,7 @@ public class FHTextUtil {
                 final int fi = i;
                 i++;
                 Component it = null;
-                it = getOptional(null, type, () -> s + "." + fi);
+                it = getOptional(null, type, pid + "." + fi);
                 if (it != null)
                     li.add(it);
                 else
@@ -54,18 +53,18 @@ public class FHTextUtil {
         }
         for (int i = 0; i < orig.size(); i++) {
             final int fi = i;
-            li.add(get(orig.get(i), type, () -> s + "." + fi));
+            li.add(get(orig.get(i), type,  pid + "." + fi));
         }
         return li;
     }
 
     @Nonnull
-    public static Component get(String orig, String type, Supplier<String> pid) {
+    public static Component get(String orig, String type,String pid) {
         if (orig == null || orig.isEmpty())
-            return ClientTextComponentUtils.parse("{" + type + "." + FHMain.MODID + "." + pid.get() + "}");
+            return ClientTextComponentUtils.parse("{" + type + "." + FHMain.MODID + "." + pid+ "}");
         if (orig.startsWith("@")) {
             if (orig.length() == 1)
-                return ClientTextComponentUtils.parse("{" + type + "." + FHMain.MODID + "." + pid.get() + "}");
+                return ClientTextComponentUtils.parse("{" + type + "." + FHMain.MODID + "." + pid + "}");
             return ClientTextComponentUtils.parse("{" + orig.substring(1) + "}");
         }
 
@@ -73,16 +72,16 @@ public class FHTextUtil {
     }
 
     @Nullable
-    public static Component getOptional(String orig, String type, Supplier<String> pid) {
+    public static Component getOptional(String orig, String type, String pid) {
         if (orig == null || orig.isEmpty()) {
-            String key = type + "." + FHMain.MODID + "." + pid.get();
+            String key = type + "." + FHMain.MODID + "." + pid;
             if (I18n.exists(key))
                 return ClientTextComponentUtils.parse("{" + key + "}");
             return null;
         }
         if (orig.startsWith("@")) {
             if (orig.length() == 1)
-                return ClientTextComponentUtils.parse("{" + type + "." + FHMain.MODID + "." + pid.get() + "}");
+                return ClientTextComponentUtils.parse("{" + type + "." + FHMain.MODID + "." + pid + "}");
             return ClientTextComponentUtils.parse("{" + orig.substring(1) + "}");
         }
 

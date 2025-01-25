@@ -41,8 +41,8 @@ public class EffectWidget extends Widget {
 
     public EffectWidget(Panel panel, Effect e, Research r) {
         super(panel);
-        tooltips = e.getTooltip();
-        title = e.getName();
+        tooltips = e.getTooltip(r);
+        title = e.getName(r);
         icon = e.getIcon();
         this.e = e;
         this.r = r;

@@ -30,6 +30,8 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
+import com.teammoeg.frostedheart.content.research.research.Research;
+
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -50,7 +52,7 @@ import java.util.*;
  * file: Effect.java
  * @date 2022/09/02
  */
-public abstract class Effect extends AutoIDItem {
+public abstract class Effect {
     public static final MapCodec<BaseData> BASE_CODEC = RecordCodecBuilder.mapCodec(t ->
             t.group(
                     Codec.STRING.optionalFieldOf("name", "").forGetter(o -> o.name),
@@ -217,18 +219,17 @@ public abstract class Effect extends AutoIDItem {
      *
      * @return name<br>
      */
-    public final MutableComponent getName() {
+    public final MutableComponent getName(Research rsh) {
         if (name.isEmpty())
             return getDefaultName();
-        return (MutableComponent) FHTextUtil.get(name, "effect", this::getId);
+        return (MutableComponent) FHTextUtil.get(name, "effect", rsh.getId()+".effects."+nonce);
     }
-
+    
     /**
      * Get nonce.
      *
      * @return nonce<br>
      */
-    @Override
     public String getNonce() {
         return nonce;
     }
@@ -242,20 +243,10 @@ public abstract class Effect extends AutoIDItem {
      *
      * @return tooltip<br>
      */
-    public final List<Component> getTooltip() {
+    public final List<Component> getTooltip(Research rsh) {
         if (tooltip.isEmpty())
             return getDefaultTooltip();
-        return FHTextUtil.get(tooltip, "effect", this::getId);
-    }
-
-    /**
-     * Get type of this effect.
-     *
-     * @return type<br>
-     */
-    @Override
-    public final String getType() {
-        return "effects";
+        return FHTextUtil.get(tooltip, "effect",rsh.getId()+".effects."+nonce);
     }
 
     /**

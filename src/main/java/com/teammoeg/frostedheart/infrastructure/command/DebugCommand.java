@@ -222,10 +222,10 @@ public class DebugCommand {
                         JsonArray rwd = new JsonArray();
                         for (Effect r : e.getEffects()) {
                             JsonObject joe = new JsonObject();
-                            joe.addProperty("name", r.getName().getString());
+                            joe.addProperty("name", r.getName(e).getString());
 
                             JsonArray dec = new JsonArray();
-                            for (Component it : r.getTooltip()) {
+                            for (Component it : r.getTooltip(e)) {
                                 dec.add(it.getString());
                             }
                             joe.add("description", dec);

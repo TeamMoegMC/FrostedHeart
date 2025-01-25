@@ -127,7 +127,7 @@ public class ResearchDetailPanel extends Panel {
             return;
         }
         matrixStack.pose().pushPose();
-        matrixStack.pose().translate(0, 0, 500);
+        matrixStack.pose().translate(0, 0, 400);
         super.draw(matrixStack, theme, x, y, w, h);
         matrixStack.pose().popPose();
     }
@@ -147,6 +147,7 @@ public class ResearchDetailPanel extends Panel {
     public void open(Research r) {
         this.research = r;
         this.refreshWidgets();
+        scrollInfo.setValue(0);
         researchScreen.setModal(this);
         //researchScreen.refreshWidgets();
 

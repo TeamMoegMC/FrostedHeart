@@ -299,7 +299,7 @@ public class Research implements FHRegisteredItem {
      * @return alt desc<br>
      */
     public List<Component> getAltDesc() {
-        return FHTextUtil.get(fdesc, "research", () -> id + ".desc_alt");
+        return FHTextUtil.get(fdesc, "research", id + ".desc_alt");
     }
 
     /**
@@ -445,7 +445,7 @@ public class Research implements FHRegisteredItem {
      * @return name<br>
      */
     public Component getName() {
-        return (Component) FHTextUtil.get(name, "research", () -> id + ".name");
+        return FHTextUtil.get(name, "research", id + ".name");
     }
 
     /**
@@ -454,7 +454,7 @@ public class Research implements FHRegisteredItem {
      * @return o desc<br>
      */
     public List<Component> getODesc() {
-        return FHTextUtil.get(desc, "research", () -> id + ".desc");
+        return FHTextUtil.get(desc, "research",  id + ".desc");
     }
 
     /**

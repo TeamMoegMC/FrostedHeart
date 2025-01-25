@@ -58,7 +58,7 @@ public class RequirementSlot extends Widget {
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
-        CGuiHelper.drawItem(matrixStack, cur, x, y, 200, w / 16F, h / 16F, true, cnt != 0 ? String.valueOf(cnt) : null);
+        CGuiHelper.drawItem(matrixStack, cur, x, y, 0, w / 16F, h / 16F, true, cnt != 0 ? String.valueOf(cnt) : null);
     }
 
     @Override

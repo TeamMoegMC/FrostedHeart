@@ -118,7 +118,7 @@ public abstract class Clue {
     public Component getDescription(Research parent) {
         if (parent == null || parent.getId() == null)
             return null;
-        return FHTextUtil.getOptional(desc, "clue", () -> parent.getId() + ".clue." + this.getNonce() + ".desc");
+        return FHTextUtil.getOptional(desc, "clue",  parent.getId() + ".clue." + this.getNonce() + ".desc");
     }
 
     public String getDescriptionString(Research parent) {
@@ -132,13 +132,13 @@ public abstract class Clue {
     public Component getHint(Research parent) {
         if (parent == null || parent.getId() == null)
             return null;
-        return FHTextUtil.getOptional(hint, "clue", () -> parent.getId() + ".clue." + this.getNonce() + ".hint");
+        return FHTextUtil.getOptional(hint, "clue", parent.getId() + ".clue." + this.getNonce() + ".hint");
     }
 
     public Component getName(Research parent) {
         if (parent == null || parent.getId() == null)
             return null;
-        return FHTextUtil.get(name, "clue", () -> parent.getId() + ".clue." + this.getNonce() + ".name");
+        return FHTextUtil.get(name, "clue", parent.getId() + ".clue." + this.getNonce() + ".name");
     }
 
     public String getNonce() {

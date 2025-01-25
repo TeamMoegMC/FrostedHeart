@@ -101,7 +101,7 @@ public class EffectCrafting extends Effect {
     @Override
     public String getBrief() {
         if (ingredient != null && !ingredient.isEmpty())
-            return "Craft " + ingredient.getItems()[0].getDisplayName() + (ingredient.getItems().length > 1 ? " ..." : "");
+            return "Craft " + ingredient.getItems()[0].getDisplayName().getString() + (ingredient.getItems().length > 1 ? " ..." : "");
         if (!unlocks.isEmpty())
             return "Craft" + unlocks.get(0).getId() + (unlocks.size() > 1 ? " ..." : "");
         return "Craft nothing";
