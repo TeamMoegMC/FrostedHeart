@@ -24,6 +24,7 @@ public enum RunStatus {
 	WAITCLIENT(false,true),//waiting for client response
 	WAITACTION(false,false),//waiting for player action
 	WAITTIMER,//waiting for timer
+	WAITNETWORK,//waiting for network
 	WAITTRIGGER(true,false,true),//waiting for async trigger
 	PAUSED(true,false,true),//Paused from use action
 	STOPPED(true,false,true);//stopped

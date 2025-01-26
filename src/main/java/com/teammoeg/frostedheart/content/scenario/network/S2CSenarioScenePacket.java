@@ -28,14 +28,16 @@ import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class ServerSenarioScenePacket implements CMessage {
+public class S2CSenarioScenePacket implements CMessage {
+	private final int curTextId;
     private final String text;
     private final boolean isReline;
     private final boolean isNowait;
     private final boolean resetScene;
     private final RunStatus status;
     private final boolean isWaitClick;
-    public ServerSenarioScenePacket(FriendlyByteBuf buffer) {
+    public S2CSenarioScenePacket(FriendlyByteBuf buffer) {
+    	curTextId=buffer.readVarInt();
         text = buffer.readUtf(1024 * 300);
         isReline = buffer.readBoolean();
         isNowait = buffer.readBoolean();
@@ -46,8 +48,9 @@ public class ServerSenarioScenePacket implements CMessage {
 
 
 
-    public ServerSenarioScenePacket(String text, boolean isReline, boolean isNowait, boolean resetScene,RunStatus status,boolean isWC) {
+    public S2CSenarioScenePacket(int curTextId,String text, boolean isReline, boolean isNowait, boolean resetScene,RunStatus status,boolean isWC) {
 		super();
+		this.curTextId=curTextId;
 		this.text = text;
 		this.isReline = isReline;
 		this.isNowait = isNowait;
@@ -59,6 +62,7 @@ public class ServerSenarioScenePacket implements CMessage {
 
 
 	public void encode(FriendlyByteBuf buffer) {
+		buffer.writeVarInt(curTextId);
         buffer.writeUtf(text, 1024 * 300);
         buffer.writeBoolean(isReline);
         buffer.writeBoolean(isNowait);
@@ -71,7 +75,7 @@ public class ServerSenarioScenePacket implements CMessage {
         context.get().enqueueWork(() -> {
         	if(ClientScene.INSTANCE!=null) {
         		//System.out.println("scene sent");
-        		ClientScene.INSTANCE.process(text, isReline, isNowait,resetScene,status);
+        		ClientScene.INSTANCE.process(curTextId,text, isReline, isNowait,resetScene,status);
         		ClientScene.INSTANCE.sendImmediately=!isWaitClick;
         	}
         });

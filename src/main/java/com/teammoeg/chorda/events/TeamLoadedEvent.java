@@ -19,7 +19,7 @@
 
 package com.teammoeg.chorda.events;
 
-import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 
 import lombok.Getter;
 import net.minecraftforge.eventbus.api.Event;

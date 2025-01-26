@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.compat.ftbteams;
 
 import java.util.UUID;
 
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
 

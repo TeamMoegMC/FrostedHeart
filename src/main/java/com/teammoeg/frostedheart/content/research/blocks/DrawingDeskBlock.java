@@ -23,7 +23,7 @@ import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.chorda.block.CEntityBlock;
-import com.teammoeg.chorda.team.CTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.Lang;

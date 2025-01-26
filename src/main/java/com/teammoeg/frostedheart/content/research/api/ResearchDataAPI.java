@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.content.research.api;
 
-import com.teammoeg.chorda.team.CTeamDataManager;
-import com.teammoeg.chorda.team.TeamDataClosure;
-import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;

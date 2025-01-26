@@ -19,13 +19,26 @@
 
 package com.teammoeg.chorda.util;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.ToIntFunction;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.capability.types.nbt.NBTCapabilityType;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.io.NBTSerializable;
-import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -61,14 +74,6 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.registries.RegistryObject;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
-import java.util.*;
-import java.util.function.ToIntFunction;
 
 public class CUtils {
 

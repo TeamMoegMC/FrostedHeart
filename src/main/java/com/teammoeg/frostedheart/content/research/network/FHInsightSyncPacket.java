@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;

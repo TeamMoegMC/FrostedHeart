@@ -20,10 +20,10 @@
 package com.teammoeg.frostedheart.content.research.inspire;
 
 import com.mojang.serialization.Codec;
+import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.chorda.util.struct.LeveledValue;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;

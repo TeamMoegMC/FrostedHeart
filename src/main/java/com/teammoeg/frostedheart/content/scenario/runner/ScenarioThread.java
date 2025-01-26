@@ -101,6 +101,10 @@ public interface ScenarioThread {
 	 */
 	void setStatus(RunStatus status);
 	
+	default void setStatusIf(RunStatus current,RunStatus next) {
+		if(current==getStatus())
+			setStatus(next);
+	};
 	/**
 	 * Gets the call stack.
 	 *
@@ -154,4 +158,11 @@ public interface ScenarioThread {
 	void popCallStack(ScenarioContext ctx);
 
 	void appendLiteral(String text);
+	/**
+	 * Run id for this run, use to identify seperate runs in a multiplex runner
+	 * */
+	int getRunId();
+	default boolean isRunId(int id) {
+		return id==getRunId();
+	};
 }

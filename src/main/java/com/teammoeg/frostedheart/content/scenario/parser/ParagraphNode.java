@@ -54,7 +54,7 @@ public class ParagraphNode implements Node {
     	if(runner.thread().scene().shouldWaitClient()&&!runner.thread().scene().isSlient()) {
     		runner.thread().setStatus(RunStatus.WAITCLIENT);
     		runner.thread().scene().markClearAfterClick();
-    		runner.thread().scene().sendCurrent(runner.context(),RunStatus.WAITCLIENT,false);
-    	}else runner.thread().scene().clear(runner.context(),RunStatus.RUNNING);
+    		runner.thread().scene().sendCurrent(runner.context(),runner.thread(),RunStatus.WAITCLIENT,false);
+    	}else runner.thread().scene().clear(runner.context(),runner.thread(),RunStatus.RUNNING);
     }
 }

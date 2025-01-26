@@ -25,7 +25,7 @@ import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 
 import com.teammoeg.chorda.block.CBlockInterfaces;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
-import com.teammoeg.chorda.team.CTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;

@@ -19,50 +19,37 @@
 
 package com.teammoeg.frostedheart.content.scenario.network;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
-import com.teammoeg.frostedheart.content.scenario.client.FHScenarioClient;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class ServerScenarioCommandPacket implements CMessage {
-    private String commandName;
-    Map<String, String> params;
-
-    public ServerScenarioCommandPacket(FriendlyByteBuf buffer) {
-        commandName = buffer.readUtf();
-        params = SerializeUtil.readStringMap(buffer, new HashMap<>(), FriendlyByteBuf::readUtf);
+public class S2CSenarioActPacket implements CMessage {
+    private final String title;
+    private final String subtitle;
+    public S2CSenarioActPacket(FriendlyByteBuf buffer) {
+    	title =  SerializeUtil.readOptional(buffer, FriendlyByteBuf::readUtf).orElse(null);
+    	subtitle = SerializeUtil.readOptional(buffer, FriendlyByteBuf::readUtf).orElse(null);
     }
-
-    
-    public ServerScenarioCommandPacket(String commandName, Map<String, String> params) {
-        super();
-        this.commandName = commandName;
-        this.params = params;
-    }
-
-    public void encode(FriendlyByteBuf buffer) {
-        buffer.writeUtf(commandName);
-        SerializeUtil.writeStringMap(buffer, params, (v, p) -> p.writeUtf(v));
+	public S2CSenarioActPacket(String title, String subtitle) {
+		super();
+		this.title = title;
+		this.subtitle = subtitle;
+	}
+	public void encode(FriendlyByteBuf buffer) {
+        SerializeUtil.writeOptional2(buffer, title, FriendlyByteBuf::writeUtf);
+        SerializeUtil.writeOptional2(buffer, subtitle, FriendlyByteBuf::writeUtf);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            // Update client-side nbt
-        	//System.out.println(this);
-            FHScenarioClient.callCommand(commandName, ClientScene.INSTANCE, params);
+        	if(ClientScene.INSTANCE!=null)
+        		ClientScene.INSTANCE.setActHud(title,subtitle);
         });
         context.get().setPacketHandled(true);
     }
-
-	@Override
-	public String toString() {
-		return "ServerScenarioCommandPacket [commandName=" + commandName + ", params=" + params + "]";
-	}
 }

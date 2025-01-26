@@ -22,8 +22,8 @@ package com.teammoeg.chorda.multiblock.components;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.teammoeg.chorda.team.CTeamDataManager;
-import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;

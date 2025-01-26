@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.compat.ftbq;
 
-import com.teammoeg.chorda.team.TeamDataClosure;
+import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;

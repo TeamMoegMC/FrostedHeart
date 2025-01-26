@@ -455,10 +455,10 @@ public class BaseScenarioRunner implements ScenarioThread{
 	public void notifyClientResponse(ScenarioContext ctx,boolean isSkip,int status) {
 		
 		if(this.getStatus()==RunStatus.WAITCLIENT) {
-			scene.notifyClientResponse(ctx, status);
+			scene.notifyClientResponse(ctx,this, status);
 			run();
 		}else if(this.getStatus()==RunStatus.WAITTIMER&&isSkip) {
-			scene.notifyClientResponse(ctx, status);
+			scene.notifyClientResponse(ctx,this, status);
 			this.stopWait();
 			run();
 		}
@@ -484,5 +484,10 @@ public class BaseScenarioRunner implements ScenarioThread{
 	public void setCurrentLabel(String target) {
 		if(this.sp!=null)
 			currentLabel=new ExecuteTarget(this.sp.name(),target);
+	}
+
+	@Override
+	public int getRunId() {
+		return 0;
 	}
 }

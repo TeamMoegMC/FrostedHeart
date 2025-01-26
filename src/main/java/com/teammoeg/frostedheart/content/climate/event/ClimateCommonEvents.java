@@ -19,11 +19,11 @@
 
 package com.teammoeg.frostedheart.content.climate.event;
 
-import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.chorda.capability.CurioCapabilityProvider;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;

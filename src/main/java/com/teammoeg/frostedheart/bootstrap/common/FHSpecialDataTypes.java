@@ -19,9 +19,10 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
-import com.teammoeg.chorda.team.SpecialDataType;
+import com.teammoeg.chorda.dataholders.SpecialDataType;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.content.scenario.client.ClientStoredFlags;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
 
 public class FHSpecialDataTypes {
@@ -29,6 +30,7 @@ public class FHSpecialDataTypes {
 	public static final SpecialDataType<TeamResearchData> RESEARCH_DATA=new SpecialDataType<>("research",TeamResearchData::new,TeamResearchData.CODEC);
 	public static final SpecialDataType<GeneratorData> GENERATOR_DATA=new SpecialDataType<>("generator",GeneratorData::new,GeneratorData.CODEC);
 	public static final SpecialDataType<TeamTownData> TOWN_DATA=new SpecialDataType<>("town",TeamTownData::new,TeamTownData.CODEC);
-
+	public static final SpecialDataType<ClientStoredFlags> SCENARIO_COOKIES=new SpecialDataType<>("scenario",ClientStoredFlags::new,ClientStoredFlags.CODEC);
+	
 	public static void init() {}
 }

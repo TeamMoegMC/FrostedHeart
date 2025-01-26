@@ -27,19 +27,25 @@ import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public record FHClientReadyPacket(String lang) implements CMessage {
-    public FHClientReadyPacket(FriendlyByteBuf buffer) {
-        this(buffer.readUtf());
+public record C2SScenarioResponsePacket(int runid,boolean isSkipped,int status) implements CMessage {
+    
+
+    public C2SScenarioResponsePacket(FriendlyByteBuf buffer) {
+        this(buffer.readVarInt(),buffer.readBoolean(),buffer.readVarInt());
     }
 
+
     public void encode(FriendlyByteBuf buffer) {
-        buffer.writeUtf(lang);
+    	buffer.writeVarInt(runid);
+        buffer.writeBoolean(isSkipped);
+        buffer.writeVarInt(status);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-            FHScenario.startFor(context.get().getSender(),lang);
+        	//System.out.println("client responded");
+            FHScenario.get(context.get().getSender()).notifyClientResponse(runid,isSkipped, status);
         });
         context.get().setPacketHandled(true);
     }

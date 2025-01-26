@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.research.api;
 
-import com.teammoeg.chorda.team.CClientTeamDataManager;
-import com.teammoeg.chorda.team.TeamDataClosure;
+import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import net.minecraft.nbt.CompoundTag;

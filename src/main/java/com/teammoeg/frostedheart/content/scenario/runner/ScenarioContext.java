@@ -35,6 +35,8 @@ public abstract class ScenarioContext {
 	protected IScenarioVaribles varData=new DirectScenarioVariables();
 	/** Macros. */
 	Map<String,ExecuteStackElement> macros=new HashMap<>();
+	/** Command Cached Data*/
+	Map<String,Object> commandData=new HashMap<>();
 	public abstract Player player();
 	public abstract void sendMessage(String string);
 	public abstract String getLang();
@@ -65,4 +67,11 @@ public abstract class ScenarioContext {
 	public void restoreSnapshot() {
 		varData.restoreSnapshot();
 	}
+	public Map<String, Object> getCommandData() {
+		return commandData;
+	}
+	public int getRunId() {
+		return 0;
+	}
+	
 }

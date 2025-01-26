@@ -30,9 +30,9 @@ import com.teammoeg.frostedheart.content.scenario.client.dialog.IScenarioDialog;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.TextInfo;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.TextInfo.SizedReorderingProcessor;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.LayerManager;
-import com.teammoeg.frostedheart.content.scenario.network.ClientScenarioResponsePacket;
-import com.teammoeg.frostedheart.content.scenario.network.FHClientReadyPacket;
-import com.teammoeg.frostedheart.content.scenario.network.FHClientSettingsPacket;
+import com.teammoeg.frostedheart.content.scenario.network.C2SScenarioResponsePacket;
+import com.teammoeg.frostedheart.content.scenario.network.C2SClientReadyPacket;
+import com.teammoeg.frostedheart.content.scenario.network.C2SSettingsPacket;
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.mixin.minecraft.accessors.NewChatGuiAccessor;
 import com.teammoeg.frostedheart.util.client.Lang;
@@ -52,6 +52,8 @@ import net.minecraft.network.chat.Style;
 public class ClientScene implements IClientScene {
 	private static GuiMessageTag SCENARIO=new GuiMessageTag(13684944, (GuiMessageTag.Icon)null, Lang.translateKey("chat.tag.frostedheart.scenario"), "Scenario");
 	public static ClientScene INSTANCE;
+	public int curRunId;
+	public int curTextId;
 	public IScenarioDialog dialog;
 	public LinkedList<LayerManager> layers=new LinkedList<>();
 	public ClientScene() {
@@ -136,7 +138,7 @@ public class ClientScene implements IClientScene {
 	@Override
 	public void sendContinuePacket(boolean isSkip) {
 		// if(canSkip)
-		FHNetwork.send(PacketDistributor.SERVER.noArg(), new ClientScenarioResponsePacket(isSkip, 0));
+		FHNetwork.send(PacketDistributor.SERVER.noArg(), new C2SScenarioResponsePacket(curTextId,isSkip, 0));
 		status=RunStatus.RUNNING;
 		canSkip=false;
 	}
@@ -202,7 +204,7 @@ public class ClientScene implements IClientScene {
 	@Override
 	public void setText(String txt) {
 		cls();
-		process(txt, true, false, true,RunStatus.WAITCLIENT);
+		process(curTextId,txt, true, false, true,RunStatus.WAITCLIENT);
 	}
 
 	private int countCh(FormattedCharSequence p) {
@@ -256,6 +258,7 @@ public class ClientScene implements IClientScene {
 		needUpdate = true;
 		shouldWrap = isReline;
 		unFinished=true;
+		curTextId=curRunId;
 	}
 
 	boolean needUpdate = false;
@@ -263,7 +266,7 @@ public class ClientScene implements IClientScene {
 	RunStatus status;
 
 	@Override
-	public void process(String text, boolean isReline, boolean isNowait, boolean resetScene, RunStatus status) {
+	public void process(int curTextId,String text, boolean isReline, boolean isNowait, boolean resetScene, RunStatus status) {
 		if (resetScene) {
 			cls();
 		}
@@ -275,6 +278,7 @@ public class ClientScene implements IClientScene {
 		}
 		shouldWrap = isReline;
 		this.status = status;
+		this.curTextId=curTextId;
 
 	}
 
@@ -340,10 +344,10 @@ public class ClientScene implements IClientScene {
 		}
 	}
 	public void sendClientReady() {
-		FHNetwork.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getSelected()));
+		FHNetwork.sendToServer(new C2SClientReadyPacket(ClientUtils.mc().getLanguageManager().getSelected()));
 	}
 	public void sendClientUpdate() {
-		FHNetwork.sendToServer(new FHClientSettingsPacket());
+		FHNetwork.sendToServer(new C2SSettingsPacket());
 	}
 	@Override
 	public void setActHud(String title, String subtitle) {
@@ -403,5 +407,9 @@ public class ClientScene implements IClientScene {
 			return dialog.getDialogWidth();
 		}
 		return w;
+	}
+	@Override
+	public int getRunId() {
+		return curRunId;
 	}
 }

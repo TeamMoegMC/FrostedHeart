@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.chorda.team;
+package com.teammoeg.chorda.dataholders.team;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,6 +38,8 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.dataholders.SpecialData;
+import com.teammoeg.chorda.dataholders.SpecialDataType;
 import com.teammoeg.chorda.events.TeamLoadedEvent;
 import com.teammoeg.chorda.util.struct.OptionalLazy;
 
@@ -68,8 +70,7 @@ public class CTeamDataManager {
 
     public static CTeamDataManager INSTANCE;
     private final MinecraftServer server;
-    public static final LevelResource dataFolder = new LevelResource("fhdata");
-    static final LevelResource oldDataFolder = new LevelResource("fhresearch");
+    public static final LevelResource dataFolder = new LevelResource("chorda_data");
     private Map<UUID, UUID> dataByFTBId = new HashMap<>();
     private Map<UUID, TeamDataHolder> dataByOwnId = new HashMap<>();
     
@@ -194,20 +195,10 @@ public class CTeamDataManager {
         
         Path local=getServer().getWorldPath(dataFolder);
         local.toFile().mkdirs();
-        Path olocal=getServer().getWorldPath(oldDataFolder);
         Stream<File> strm1=null,strm2=null;
         //Compatible migration from old data folder
         if(local.toFile().exists())
         	strm1=Arrays.stream(local.toFile().listFiles((f) -> f.getName().endsWith(".nbt")));
-        if(olocal.toFile().exists())
-        	strm2=Arrays.stream(olocal.toFile().listFiles((f) -> f.getName().endsWith(".nbt")));
-        if(strm1!=null) {
-        	if(strm2!=null)
-        		strm1=Stream.concat(strm1, strm2);
-        }else {
-        	if(strm2!=null)
-        		strm1=strm2;
-        }
         if(strm1!=null) {
         	dataByFTBId.clear();
         	dataByOwnId.clear();
@@ -262,15 +253,6 @@ public class CTeamDataManager {
         }
         for (String todel : files) {
             local.resolve(todel).toFile().delete();
-        }
-        Path olocal=getServer().getWorldPath(oldDataFolder);
-        if(olocal.toFile().exists()) {
-        	try {
-				FileUtils.deleteDirectory(olocal.toFile());
-			} catch (IOException e) {
-                Chorda.LOGGER.error("Unable to delete old data folder, ignoring...");
-				e.printStackTrace();
-			}
         }
     }
 

@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.mixin.immersiveengineering;
 
 import java.util.UUID;
 
-import com.teammoeg.chorda.team.CTeamDataManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,6 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.chorda.multiblock.MultiBlockAccess;
 import com.teammoeg.chorda.multiblock.components.IOwnerState;

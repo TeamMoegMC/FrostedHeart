@@ -21,13 +21,13 @@ package com.teammoeg.frostedheart.mixin.minecraft.research;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.chorda.team.CTeamDataManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlock;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 

@@ -34,7 +34,9 @@ public class DirectScenarioVariables implements  IScenarioVaribles  {
 	public CompoundTag save() {
     	if(extraData==null)
     		extraData=new CompoundTag();
-    	return extraData;
+    	CompoundTag tosave=extraData.copy();
+    	tosave.remove("client");
+    	return tosave;
     }
     @Override
 	public void load(CompoundTag data) {

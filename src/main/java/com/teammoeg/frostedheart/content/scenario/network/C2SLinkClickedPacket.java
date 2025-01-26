@@ -27,33 +27,19 @@ import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class ClientScenarioResponsePacket implements CMessage {
-    boolean isSkipped;
-    int status;
-
-    public ClientScenarioResponsePacket(FriendlyByteBuf buffer) {
-        isSkipped = buffer.readBoolean();
-        status = buffer.readVarInt();
+public record C2SLinkClickedPacket(String link) implements CMessage {
+    public C2SLinkClickedPacket(FriendlyByteBuf buffer) {
+    	this(buffer.readUtf());
     }
 
 
-    public ClientScenarioResponsePacket(boolean isSkipped, int status) {
-        super();
-        this.isSkipped = isSkipped;
-        this.status = status;
-    }
-
-
-    public void encode(FriendlyByteBuf buffer) {
-        buffer.writeBoolean(isSkipped);
-        buffer.writeVarInt(status);
+	public void encode(FriendlyByteBuf buffer) {
+		buffer.writeUtf(link);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            // Update client-side nbt
-        	//System.out.println("client responded");
-            FHScenario.get(context.get().getSender()).notifyClientResponse(isSkipped, status);
+        	FHScenario.get(context.get().getSender()).onLinkClicked(link);
         });
         context.get().setPacketHandled(true);
     }

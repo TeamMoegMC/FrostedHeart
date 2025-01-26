@@ -58,7 +58,7 @@ public class ScenarioConductor implements NBTSerializable{
     private ActScenarioContext context=new ActScenarioContext(this);
     private ActNamespace lastCurrent;
 	private static final ActNamespace init=new ActNamespace(null,null);
-	
+	int actcounter=0;
     public void copy() {}
     public void enableActs() {
     	if(!isActsEnabled) {
@@ -89,7 +89,7 @@ public class ScenarioConductor implements NBTSerializable{
     }
     public ScenarioConductor() {
 		super();
-		currentAct=new Act(init);
+		currentAct=new Act(0,init);
 		acts.put(init,currentAct);
 		actids.register(init);
 	}
@@ -98,16 +98,21 @@ public class ScenarioConductor implements NBTSerializable{
     	initContext(player,lang);
 	}
 	
-	public void notifyClientResponse(boolean isSkip,int status) {
-		for(Act act:acts.values())
-		act.notifyClientResponse(context, isSkip, status);
+	public void notifyClientResponse(int id,boolean isSkip,int status) {
+		this.getById(id).notifyClientResponse(context, isSkip, status);
 		
     }
 
 	public void onLinkClicked(String link) {
-		ExecuteTarget target=getCurrentAct().scene().getLinks().get(link);
-		if(target!=null)
-			getCurrentAct().jump(getContext(), target);
+		for(Act act:this.acts.values()) {
+			ExecuteTarget target=act.scene().getLinks().get(link);
+			if(target!=null) {
+				act.jump(getContext(), target);
+				return;
+			}
+		}
+		
+		
 	}
 
 
@@ -174,7 +179,7 @@ public class ScenarioConductor implements NBTSerializable{
 			}else {
 				olddata.setStatus(RunStatus.PAUSED);//pause current act
 			}
-			olddata.scene().clear(getContext(),RunStatus.STOPPED);
+			olddata.scene().clear(getContext(),olddata,RunStatus.STOPPED);
 			
 			
 			acts.put(old, olddata);
@@ -186,16 +191,18 @@ public class ScenarioConductor implements NBTSerializable{
 	public void continueAct(ActNamespace quest) {
 		if(quest.equals(getCurrentAct().name))return;
 		Act data=acts.get(quest);
+		Act old=currentAct;
 		if(data!=null) {
 			pauseAct();
 			currentAct=data;
 			data.prepareForRun(getContext());
+			data.sendTitles(getContext(),data,true, true);
 			
-			data.sendTitles(getContext(),true, true);
 			if(data.getStatus().shouldRun) {
-				data.scene().forcedClear(getContext(),RunStatus.RUNNING);
+				data.scene().forcedClear(getContext(),old,RunStatus.RUNNING);
 				data.run();
 			}
+			
 		}
 	}
 	private void globalScope() {
@@ -207,7 +214,7 @@ public class ScenarioConductor implements NBTSerializable{
 		Act data=acts.get(quest);
 		if(data!=null) {
 		}else {
-			data=new Act(quest);
+			data=new Act(++actcounter,quest);
 			acts.put(quest, data);
 			actids.register(quest);
 		}
@@ -233,7 +240,7 @@ public class ScenarioConductor implements NBTSerializable{
 		if(!quest.equals(getCurrentAct().name)) {
 			data=acts.get(quest);
 			if(data==null){
-				data=new Act(quest);
+				data=new Act(++actcounter,quest);
 				acts.put(quest, data);
 				actids.register(quest);
 			}
@@ -294,7 +301,7 @@ public class ScenarioConductor implements NBTSerializable{
     		if(acts.containsKey(ns)) {
     			acts.get(ns).load(t);
     		}else {
-    			Act i=new Act(t);
+    			Act i=new Act(++actcounter,t);
         		acts.put(i.name, i);
         		actids.register(i.name);
     		}
@@ -320,5 +327,10 @@ public class ScenarioConductor implements NBTSerializable{
 	public void queue(ExecuteTarget executeTarget) {
 		getCurrentAct().queue(executeTarget);
 	}
-
+	public Act getById(int id) {
+		for(Act act:acts.values())
+			if(id==act.getRunId())
+				return act;
+		return null;
+	}
 }

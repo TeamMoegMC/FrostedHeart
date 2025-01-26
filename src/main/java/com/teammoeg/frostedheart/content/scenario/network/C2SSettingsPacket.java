@@ -29,23 +29,18 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class FHClientSettingsPacket implements CMessage {
-    double scale;
-    int scaledWidth;
-    int scaledHeight;
+public record C2SSettingsPacket(double scale,int scaledWidth,int scaledHeight) implements CMessage {
+    
 
-    public FHClientSettingsPacket(FriendlyByteBuf buffer) {
-        scale=buffer.readDouble();
-        scaledWidth=buffer.readInt();
-        scaledHeight=buffer.readInt();
+    public C2SSettingsPacket(FriendlyByteBuf buffer) {
+        this(buffer.readDouble(),buffer.readInt(),buffer.readInt());
     }
 
 
-    public FHClientSettingsPacket() {
-        super();
-        this.scale=Minecraft.getInstance().getWindow().getGuiScale();
-        this.scaledWidth=Minecraft.getInstance().getWindow().getGuiScaledWidth();
-        this.scaledHeight=Minecraft.getInstance().getWindow().getGuiScaledHeight();
+    public C2SSettingsPacket() {
+    	this(Minecraft.getInstance().getWindow().getGuiScale(),
+    		Minecraft.getInstance().getWindow().getGuiScaledWidth(),
+    		Minecraft.getInstance().getWindow().getGuiScaledHeight());
     }
 
 

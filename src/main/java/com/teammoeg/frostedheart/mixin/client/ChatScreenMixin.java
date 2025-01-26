@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.Mixin;
 
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.client.FHScenarioClient;
-import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacket;
+import com.teammoeg.frostedheart.content.scenario.network.C2SLinkClickedPacket;
 
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -44,7 +44,7 @@ public class ChatScreenMixin extends Screen {
 		ClickEvent ev=style.getClickEvent();
 		if(ev!=null&&ev.getAction()==Action.RUN_COMMAND) {
 	    	if(ev.getValue().startsWith(FHScenarioClient.LINK_SYMBOL)) {
-	    		ClientLinkClickedPacket packet=new ClientLinkClickedPacket(ev.getValue().substring(FHScenarioClient.LINK_SYMBOL.length()));
+	    		C2SLinkClickedPacket packet=new C2SLinkClickedPacket(ev.getValue().substring(FHScenarioClient.LINK_SYMBOL.length()));
 	    		FHNetwork.sendToServer(packet);
 	    		return true;
 	    	}

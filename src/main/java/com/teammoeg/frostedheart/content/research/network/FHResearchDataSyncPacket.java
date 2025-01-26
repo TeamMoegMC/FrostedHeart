@@ -19,11 +19,11 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
+import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
 import com.teammoeg.chorda.io.codec.DataOps;
 import com.teammoeg.chorda.io.codec.ObjectWriter;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.chorda.team.CClientTeamDataManager;
-import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;

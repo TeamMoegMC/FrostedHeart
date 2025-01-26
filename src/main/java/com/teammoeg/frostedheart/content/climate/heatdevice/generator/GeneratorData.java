@@ -23,9 +23,9 @@ import java.util.Optional;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.dataholders.SpecialData;
+import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
-import com.teammoeg.chorda.team.SpecialData;
-import com.teammoeg.chorda.team.SpecialDataHolder;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;

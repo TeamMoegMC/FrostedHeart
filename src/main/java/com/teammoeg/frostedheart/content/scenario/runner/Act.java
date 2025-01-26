@@ -37,21 +37,23 @@ public class Act extends BaseScenarioRunner{
 	public String toString() {
 		return "Act [name=" + name + ", sp=" + sp + ", nodeNum=" + nodeNum + ", status=" + status + "]";
 	}
-	
+	final int actid;
 	ActNamespace name;
     private String title="";
     private String subtitle="";
 
-    public Act(ActNamespace name) {
+    public Act(int actid,ActNamespace name) {
 		super();
 		this.scene=new ServerScene();
 		this.name=name;
+		this.actid=actid;
 		//nodeNum=-1;
 	}
-    public Act(CompoundTag data) {
+    public Act(int actid,CompoundTag data) {
 		super();
 		this.scene=new ServerScene();
 		load(data);
+		this.actid=actid;
 	}
     public void prepareForRun(ScenarioContext ctx) {
     	//if(nodeNum<0) {
@@ -111,11 +113,11 @@ public class Act extends BaseScenarioRunner{
 	public String getSubtitle() {
 		return subtitle;
 	}
-	public void sendTitles(ScenarioContext ctx,boolean updateT,boolean updateSt) {
-		this.scene.sendTitles(ctx, updateT?title:null, updateSt?subtitle:null);
+	public void sendTitles(ScenarioContext ctx,ScenarioThread thread,boolean updateT,boolean updateSt) {
+		this.scene.sendTitles(ctx,thread, updateT?title:null, updateSt?subtitle:null);
 		//FHNetwork.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioActPacket(updateT?title:null,updateSt?subtitle:null));
 	}
-	public void setTitles(ScenarioContext ctx,String t,String st) {
+	public void setTitles(ScenarioContext ctx,ScenarioThread thread,String t,String st) {
 		//System.out.println(t+","+st);
 		boolean b1 = false,b2 = false;
 		if(t!=null&&!title.equals(t)) {
@@ -126,18 +128,18 @@ public class Act extends BaseScenarioRunner{
 			this.subtitle=st;
 			b2=true;
 		}
-		sendTitles(ctx,b1,b2);
+		sendTitles(ctx,thread,b1,b2);
 	}
-	public void setTitle(ScenarioContext ctx,String title) {
+	public void setTitle(ScenarioContext ctx,ScenarioThread thread,String title) {
 		if(title!=null&&!this.title.equals(title)) {
 			this.title=title;
-			sendTitles(ctx,true,false);
+			sendTitles(ctx,thread,true,false);
 		}
 	}
-	public void setSubtitle(ScenarioContext ctx,String subtitle) {
+	public void setSubtitle(ScenarioContext ctx,ScenarioThread thread,String subtitle) {
 		if(subtitle!=null&&!this.subtitle.equals(subtitle)) {
 			this.subtitle=subtitle;
-			sendTitles(ctx,false,true);
+			sendTitles(ctx,thread,false,true);
 		}
 	}
 	public void setCallStack(LinkedList<ScenarioTarget> linkedList) {
@@ -149,5 +151,8 @@ public class Act extends BaseScenarioRunner{
 		super.stop();
 		currentLabel=null;
 	}
-	
+	@Override
+	public int getRunId() {
+		return actid;
+	}
 }

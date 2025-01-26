@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.chorda.team;
+package com.teammoeg.chorda.dataholders;
 
 import java.util.HashSet;
 import java.util.Objects;

@@ -42,7 +42,7 @@ public interface IClientScene {
 
 	void processClient(Component item, boolean isReline, boolean isNowait);
 
-	void process(String text, boolean isReline, boolean isNowait, boolean resetScene, RunStatus status);
+	void process(int curTextId,String text, boolean isReline, boolean isNowait, boolean resetScene, RunStatus status);
 
 	void setActHud(String title, String subtitle);
 
@@ -63,5 +63,8 @@ public interface IClientScene {
 	int getCharsPerShow();
 
 	void setSpeed(double value);
+	
+	int getRunId();
+
 
 }

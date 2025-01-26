@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.events;
 
-import com.teammoeg.chorda.team.CTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.research.FHResearch;

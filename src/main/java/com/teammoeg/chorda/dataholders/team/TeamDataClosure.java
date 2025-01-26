@@ -17,7 +17,19 @@
  *
  */
 
-package com.teammoeg.chorda.team;
+package com.teammoeg.chorda.dataholders.team;
 
-public interface SpecialData {
+import java.util.UUID;
+import java.util.function.Supplier;
+
+import com.teammoeg.chorda.dataholders.SpecialData;
+import com.teammoeg.chorda.dataholders.SpecialDataType;
+
+public record TeamDataClosure<T extends SpecialData>(TeamDataHolder team,SpecialDataType<T> type) implements Supplier<T>{
+	public T get() {
+		return team.getData(type);
+	}
+	public UUID getId() {
+		return team.getId();
+	}
 }

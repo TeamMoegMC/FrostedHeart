@@ -21,11 +21,11 @@ package com.teammoeg.frostedheart.content.research.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.dataholders.SpecialData;
+import com.teammoeg.chorda.dataholders.SpecialDataHolder;
+import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
-import com.teammoeg.chorda.team.SpecialData;
-import com.teammoeg.chorda.team.SpecialDataHolder;
-import com.teammoeg.chorda.team.TeamDataClosure;
-import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.chorda.util.IERecipeUtils;
 import com.teammoeg.chorda.util.struct.OptionalLazy;
 import com.teammoeg.frostedheart.FHMain;

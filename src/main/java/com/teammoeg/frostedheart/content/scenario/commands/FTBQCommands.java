@@ -50,7 +50,7 @@ public class FTBQCommands {
 		BaseQuestFile qf=FTBQuestsAPI.api().getQuestFile(false);
 		Quest quest=qf.getQuest(BaseQuestFile.parseCodeString(q));
 		Task tsk=quest.getTasksAsList().get(t);
-		FHScenario.callClientCommand("showTask", runner.context(), "q",q,"t",""+t);
+		FHScenario.callClientCommand("showTask", runner, "q",q,"t",""+t);
 		runner.thread().addTrigger(new SingleExecuteTargetTrigger(r->{
 			TeamData td=ServerQuestFile.INSTANCE.getOrCreateTeamData(r.player());
             return td.isCompleted(tsk);

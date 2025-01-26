@@ -35,6 +35,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
+import com.teammoeg.chorda.dataholders.client.CClientDataStorage;
+
 @Mod(Chorda.MODID)
 public class Chorda {
     public static final String MODID = "chorda";
@@ -60,7 +62,7 @@ public class Chorda {
         // Config
         LOGGER.info(COMMON_INIT, "Loading Config");
         ChordaConfig.register();
-
+        CClientDataStorage.load();
         // Init
         LOGGER.info(COMMON_INIT, "Initializing " + MODNAME);
 

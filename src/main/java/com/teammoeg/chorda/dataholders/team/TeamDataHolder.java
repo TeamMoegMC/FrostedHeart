@@ -20,8 +20,11 @@
 /*
  * 
  */
-package com.teammoeg.chorda.team;
+package com.teammoeg.chorda.dataholders.team;
 
+import com.teammoeg.chorda.dataholders.DataHolderMap;
+import com.teammoeg.chorda.dataholders.SpecialData;
+import com.teammoeg.chorda.dataholders.SpecialDataType;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.chorda.util.struct.OptionalLazy;
 import com.teammoeg.frostedheart.FHNetwork;
@@ -35,7 +38,7 @@ import java.util.function.Consumer;
 /**
  * Data holder for team
  */
-public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
+public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
     
     /** The frostedheart team id. */
     private UUID id;
@@ -53,6 +56,7 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 	 * @param team the FTB team
 	 */
 	public TeamDataHolder(UUID id,OptionalLazy<Team> team) {
+		super("TeamData");
 		this.team=team;
 		this.id=id;
 	}

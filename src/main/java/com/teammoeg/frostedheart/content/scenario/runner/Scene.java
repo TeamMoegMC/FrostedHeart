@@ -76,9 +76,9 @@ public abstract class Scene {
 	public void markClearAfterClick() {
 		clearAfterClick=true;
 	}
-	public void notifyClientResponse(ScenarioContext ctx,int clientStatus) {
+	public void notifyClientResponse(ScenarioContext ctx,ScenarioThread thread,int clientStatus) {
 		if(clearAfterClick) {
-			this.clear(ctx,RunStatus.RUNNING);
+			this.clear(ctx,thread,RunStatus.RUNNING);
 		}
 	}
 	public void addLog(String text) {
@@ -94,10 +94,10 @@ public abstract class Scene {
 		log.add(new StringBuilder());
 	}
 
-	public void clear(ScenarioContext parent,RunStatus status) {
+	public void clear(ScenarioContext ctx,ScenarioThread thread,RunStatus status) {
 		//System.out.println("clear:"+requireClear);
 		if (requireClear)
-			forcedClear(parent,status);
+			forcedClear(ctx,thread,status);
 	}
 
 	public void paragraph() {
@@ -111,8 +111,8 @@ public abstract class Scene {
 		log.clear();
 	}
 
-	public void forcedClear(ScenarioContext parent,RunStatus status) {
-		sendClear(parent,status,false);
+	public void forcedClear(ScenarioContext ctx,ScenarioThread thread,RunStatus status) {
+		sendClear(ctx,thread,status,false);
 		requireClear = false;
 		clearLink();
 	}
@@ -150,14 +150,14 @@ public abstract class Scene {
 	 * sync all remaining cached text and send a 'clear current dialog' message to client
 	 * Also sync current state, so call this after all status operation
 	 * */
-	public void sendClear(ScenarioContext ctx,RunStatus status,boolean waitClick) {
+	public void sendClear(ScenarioContext ctx,ScenarioThread thread,RunStatus status,boolean waitClick) {
 		String tosend="";
 		if (currentLiteral != null) {
 			tosend=currentLiteral.toString();
 			addLogLn(tosend);
 		}
 		if (!isSlient())
-			sendScene(ctx,tosend,status, false, true,waitClick);
+			sendScene(ctx,thread,tosend,status, false, true,waitClick);
 		currentLiteral = null;
 	}
 
@@ -165,31 +165,31 @@ public abstract class Scene {
 	 * Send all current message and start a new line after that
 	 * Also sync current state, so call this after all status operation
 	 * */
-	public void sendNewLine(ScenarioContext ctx,RunStatus status,boolean noAutoDelay) {
+	public void sendNewLine(ScenarioContext ctx,ScenarioThread thread,RunStatus status,boolean noAutoDelay) {
 		String tosend="";
 		if (currentLiteral != null) {
 			tosend=currentLiteral.toString();
 			addLogLn(tosend);
 		}
 		if (!isSlient())
-			sendScene(ctx,tosend,status, true, false,noAutoDelay);
+			sendScene(ctx,thread,tosend,status, true, false,noAutoDelay);
 		currentLiteral = null;
 	}
 	/**
 	 * Send all current message
 	 * Also sync current state, so call this after all status operation
 	 * */
-	public void sendCurrent(ScenarioContext ctx,RunStatus status,boolean noAutoDelay) {
+	public void sendCurrent(ScenarioContext ctx,ScenarioThread thread,RunStatus status,boolean noAutoDelay) {
 		if (currentLiteral != null) {
 			addLog(currentLiteral.toString());
 			if (!isSlient())
-				sendScene(ctx,currentLiteral.toString(),status, false, false,noAutoDelay);
+				sendScene(ctx,thread,currentLiteral.toString(),status, false, false,noAutoDelay);
 		}
 	
 		currentLiteral = null;
 	}
-	public void sendCached(ScenarioContext ctx) {
-		sendCurrent(ctx,RunStatus.RUNNING,false);
+	public void sendCached(ScenarioContext ctx,ScenarioThread thread) {
+		sendCurrent(ctx,thread,RunStatus.RUNNING,false);
 	}
 	public boolean isSlient() {
 		return isSlient;
@@ -212,7 +212,7 @@ public abstract class Scene {
 		return links;
 	}
 
-	public abstract void sendTitles(ScenarioContext ctx, String title, String subtitle);
+	public abstract void sendTitles(ScenarioContext ctx,ScenarioThread thread, String title, String subtitle);
 
-	protected abstract void sendScene(ScenarioContext ctx,String text,RunStatus status, boolean wrap, boolean reset,boolean noAutoDelay);
+	protected abstract void sendScene(ScenarioContext ctx,ScenarioThread thread,String text,RunStatus status, boolean wrap, boolean reset,boolean noAutoDelay);
 }

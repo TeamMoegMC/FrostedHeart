@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.town.warehouse;
 
-import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;

@@ -19,7 +19,6 @@
 
 package com.teammoeg.chorda.util;
 
-import com.teammoeg.chorda.team.CTeamDataManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
@@ -39,6 +38,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.Collection;
 import java.util.stream.Stream;
+
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 
 public class CRegistryHelper {
 	public static String getPath(Block v) {

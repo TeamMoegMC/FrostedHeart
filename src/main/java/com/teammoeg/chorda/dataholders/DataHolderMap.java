@@ -17,11 +17,12 @@
  *
  */
 
-package com.teammoeg.chorda.team;
+package com.teammoeg.chorda.dataholders;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.io.NBTSerializable;
@@ -33,11 +34,13 @@ import net.minecraft.nbt.NbtOps;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
-public class BaseDataHolder<T extends BaseDataHolder<T>> implements SpecialDataHolder<T>, NBTSerializable {
+public class DataHolderMap<T extends DataHolderMap<T>> implements SpecialDataHolder<T>, NBTSerializable {
 
-	public static final Marker TEAM_MARKER = MarkerManager.getMarker("Data");
-
-	public BaseDataHolder() {
+	public final Marker marker;
+	Map<SpecialDataType,SpecialData> data=new ConcurrentHashMap<>();
+	
+	public DataHolderMap(String markerName) {
+		marker = MarkerManager.getMarker(markerName);
 	}
 
 	@Override
@@ -46,7 +49,7 @@ public class BaseDataHolder<T extends BaseDataHolder<T>> implements SpecialDataH
 			try {
 				p.put(t.getKey().getId(),(Tag)t.getKey().saveData(NbtOps.INSTANCE, t.getValue()));
 			} catch (Exception e) {
-				Chorda.LOGGER.error(TEAM_MARKER, "Failed to save " + t.getKey(), e);
+				Chorda.LOGGER.error(marker, "Failed to save " + t.getKey(), e);
 			}
 		}));
 	}
@@ -60,13 +63,13 @@ public class BaseDataHolder<T extends BaseDataHolder<T>> implements SpecialDataH
 					SpecialData raw=tc.loadData(NbtOps.INSTANCE, data.get(tc.getId()));
 					this.data.put(tc, raw);
 				} catch (Exception e) {
-					Chorda.LOGGER.error(TEAM_MARKER, "Failed to load " + tc, e);
+					Chorda.LOGGER.error(marker, "Failed to load " + tc, e);
 				}
         	}
         }
 	}
 	
-	Map<SpecialDataType,SpecialData> data=new HashMap<>();
+	
 	@SuppressWarnings("unchecked")
 	public <U extends SpecialData> U getData(SpecialDataType<U> cap){
 		U ret= (U) data.computeIfAbsent(cap,s->cap.create((T) this));

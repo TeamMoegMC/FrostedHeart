@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.chorda.team;
+package com.teammoeg.chorda.dataholders;
 
 import java.util.Optional;
 
@@ -26,7 +26,7 @@ import java.util.Optional;
  *
  * @param <U> the actual type
  */
-public interface SpecialDataHolder<U extends SpecialDataHolder> {
+public interface SpecialDataHolder<U extends SpecialDataHolder<U>> {
 	
 	/**
 	 * Get or create data component

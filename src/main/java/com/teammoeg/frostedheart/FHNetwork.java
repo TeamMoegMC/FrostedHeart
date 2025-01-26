@@ -48,13 +48,16 @@ import com.teammoeg.frostedheart.content.research.network.FHResearchRegistrtySyn
 import com.teammoeg.frostedheart.content.research.network.FHResearchSyncEndPacket;
 import com.teammoeg.frostedheart.content.research.network.FHResearchSyncPacket;
 import com.teammoeg.frostedheart.content.research.network.FHS2CClueProgressSyncPacket;
-import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacket;
-import com.teammoeg.frostedheart.content.scenario.network.ClientScenarioResponsePacket;
-import com.teammoeg.frostedheart.content.scenario.network.FHClientReadyPacket;
-import com.teammoeg.frostedheart.content.scenario.network.FHClientSettingsPacket;
-import com.teammoeg.frostedheart.content.scenario.network.ServerScenarioCommandPacket;
-import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioActPacket;
-import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioScenePacket;
+import com.teammoeg.frostedheart.content.scenario.network.C2SLinkClickedPacket;
+import com.teammoeg.frostedheart.content.scenario.network.C2SScenarioCookies;
+import com.teammoeg.frostedheart.content.scenario.network.C2SScenarioResponsePacket;
+import com.teammoeg.frostedheart.content.scenario.network.C2SClientReadyPacket;
+import com.teammoeg.frostedheart.content.scenario.network.C2SSettingsPacket;
+import com.teammoeg.frostedheart.content.scenario.network.S2CRequestCookieMessage;
+import com.teammoeg.frostedheart.content.scenario.network.S2CScenarioCommandPacket;
+import com.teammoeg.frostedheart.content.scenario.network.S2CSenarioActPacket;
+import com.teammoeg.frostedheart.content.scenario.network.S2CSenarioScenePacket;
+import com.teammoeg.frostedheart.content.scenario.network.S2CSetCookiesMessage;
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkRequestC2SPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkResponseS2CPacket;
@@ -172,13 +175,16 @@ public class FHNetwork {
         registerMessage("trade_update", TradeUpdatePacket.class);
 
         //Scenario System
-        registerMessage("scenario_client_op", ClientScenarioResponsePacket.class);
-        registerMessage("scenario_server_command", ServerScenarioCommandPacket.class);
-        registerMessage("scenario_scene", ServerSenarioScenePacket.class);
-        registerMessage("scenario_ready", FHClientReadyPacket.class);
-        registerMessage("scenario_link", ClientLinkClickedPacket.class);
-        registerMessage("scenario_act", ServerSenarioActPacket.class);
-        registerMessage("scenario_settings", FHClientSettingsPacket.class);
+        registerMessage("scenario_client_op", C2SScenarioResponsePacket.class);
+        registerMessage("scenario_server_command", S2CScenarioCommandPacket.class);
+        registerMessage("scenario_scene", S2CSenarioScenePacket.class);
+        registerMessage("scenario_ready", C2SClientReadyPacket.class);
+        registerMessage("scenario_link", C2SLinkClickedPacket.class);
+        registerMessage("scenario_act", S2CSenarioActPacket.class);
+        registerMessage("scenario_settings", C2SSettingsPacket.class);
+        registerMessage("scenario_set_cookie", S2CSetCookiesMessage.class);
+        registerMessage("scenario_get_cookie", S2CRequestCookieMessage.class);
+        registerMessage("scenario_send_cookie", C2SScenarioCookies.class);
 
         // Heat Messages
         registerMessage("heat_endpoint", EndPointDataPacket.class);

@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.content.scenario.runner;
 
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioActPacket;
-import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioScenePacket;
+import com.teammoeg.frostedheart.content.scenario.network.S2CSenarioActPacket;
+import com.teammoeg.frostedheart.content.scenario.network.S2CSenarioScenePacket;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.PacketDistributor;
@@ -36,12 +36,12 @@ public class ServerScene extends Scene {
 	}
 
 	@Override
-	protected void sendScene(ScenarioContext ctx,String text,RunStatus status,boolean wrap, boolean reset,boolean waitClick) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> ((ServerPlayer)ctx.player())), new ServerSenarioScenePacket(text, wrap, isNowait, reset,status,waitClick));
+	protected void sendScene(ScenarioContext ctx,ScenarioThread thread,String text,RunStatus status,boolean wrap, boolean reset,boolean waitClick) {
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> ((ServerPlayer)ctx.player())), new S2CSenarioScenePacket(thread.getRunId(),text, wrap, isNowait, reset,status,waitClick));
 	}
 	@Override
-	public void sendTitles(ScenarioContext ctx,String title,String subtitle) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(()->((ServerPlayer)ctx.player())), new ServerSenarioActPacket(title,subtitle));
+	public void sendTitles(ScenarioContext ctx,ScenarioThread thread,String title,String subtitle) {
+		FHNetwork.send(PacketDistributor.PLAYER.with(()->((ServerPlayer)ctx.player())), new S2CSenarioActPacket(title,subtitle));
 	}
 
 }

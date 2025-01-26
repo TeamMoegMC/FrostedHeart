@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.town.resource;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.io.CodecUtil;
-import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 

@@ -27,26 +27,19 @@ import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class ClientLinkClickedPacket implements CMessage {
-    final String link;
-    public ClientLinkClickedPacket(FriendlyByteBuf buffer) {
-    	link=buffer.readUtf();
+public record C2SClientReadyPacket(String lang) implements CMessage {
+    public C2SClientReadyPacket(FriendlyByteBuf buffer) {
+        this(buffer.readUtf());
     }
 
-
-
-	public ClientLinkClickedPacket(String link) {
-		super();
-		this.link = link;
-	}
-
-	public void encode(FriendlyByteBuf buffer) {
-		buffer.writeUtf(link);
+    public void encode(FriendlyByteBuf buffer) {
+        buffer.writeUtf(lang);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	FHScenario.get(context.get().getSender()).onLinkClicked(link);
+            // Update client-side nbt
+            FHScenario.startFor(context.get().getSender(),lang);
         });
         context.get().setPacketHandled(true);
     }

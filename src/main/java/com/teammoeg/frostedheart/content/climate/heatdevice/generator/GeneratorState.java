@@ -21,8 +21,9 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import java.util.List;
 import java.util.Optional;
+
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;

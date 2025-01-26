@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.chorda.team;
+package com.teammoeg.chorda.dataholders.team;
 
 import java.util.UUID;
 

@@ -44,7 +44,7 @@ public class ActCommand {
 	}
 	public void actTitle(ScenarioCommandContext vrunner,@Param("t")String t,@Param("st")String st) {
 		if(vrunner.context() instanceof ActScenarioContext context) {
-			context.conductor().getCurrentAct().setTitles(vrunner.context(),t, st);
+			context.conductor().getCurrentAct().setTitles(vrunner.context(),vrunner.thread(),t, st);
 		}
 	}
 	public void startSystem(ScenarioCommandContext vrunner) {

@@ -29,67 +29,67 @@ import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 
 public class TextualCommands {
 	public void nowait(ScenarioCommandContext runner) {
-		runner.thread().scene().sendCached(runner.context());
+		runner.thread().scene().sendCached(runner.context(),runner.thread());
 		runner.thread().scene().isNowait=true;
 	}
 	public void endnowait(ScenarioCommandContext runner) {
-		runner.thread().scene().sendCached(runner.context());
+		runner.thread().scene().sendCached(runner.context(),runner.thread());
 		runner.thread().scene().isNowait=false;
 	}
 	public void r(ScenarioCommandContext runner) {
-		runner.thread().scene().sendNewLine(runner.context(), RunStatus.RUNNING, false);
+		runner.thread().scene().sendNewLine(runner.context(),runner.thread(), RunStatus.RUNNING, false);
 	}
 	
 	
 	
 	public void link(ScenarioCommandContext runner,@Param("lid")String linkId,@Param("s")String scenario,@Param("l")String label) {
-		runner.thread().scene().sendCached(runner.context());
+		runner.thread().scene().sendCached(runner.context(),runner.thread());
 		linkId=runner.thread().scene().createLink(linkId, scenario, label);
 		Map<String,String> pars=new HashMap<>();
 		pars.put("lid", linkId);
-		FHScenario.callClientCommand("link", runner.context(), pars);
+		FHScenario.callClientCommand("link", runner, pars);
 	}
 	public void endlink(ScenarioCommandContext runner) {
-		runner.thread().scene().sendCached(runner.context());
+		runner.thread().scene().sendCached(runner.context(),runner.thread());
 		Map<String,String> pars=new HashMap<>();
-		FHScenario.callClientCommand("endlink", runner.context(), pars);
+		FHScenario.callClientCommand("endlink", runner, pars);
 	}
 	public void nolink(ScenarioCommandContext runner) {
 		runner.thread().scene().clearLink();
 	}
 	public void delay(ScenarioCommandContext runner,@Param("t")int t) {
 		runner.thread().addWait(t);
-		runner.thread().scene().sendCurrent(runner.context(), RunStatus.WAITTIMER,false);
+		runner.thread().scene().sendCurrent(runner.context(),runner.thread(), RunStatus.WAITTIMER,false);
 	}
 	public void er(ScenarioCommandContext runner) {
-		runner.thread().scene().clear(runner.context(),RunStatus.RUNNING);
+		runner.thread().scene().clear(runner.context(),runner.thread(),RunStatus.RUNNING);
 	}
 	public void l(ScenarioCommandContext runner) {
 		runner.thread().waitClient();
-		runner.thread().scene().sendCurrent(runner.context(), RunStatus.WAITCLIENT,false);
+		runner.thread().scene().sendCurrent(runner.context(),runner.thread(), RunStatus.WAITCLIENT,false);
 	}
 	public void p(ScenarioCommandContext runner) {
     	if(runner.thread().scene().shouldWaitClient()&&!runner.thread().scene().isSlient()) {
     		runner.thread().setStatus(RunStatus.WAITCLIENT);
     		runner.thread().scene().markClearAfterClick();
-    		runner.thread().scene().sendCurrent(runner.context(),RunStatus.WAITCLIENT,false);
-    	}else runner.thread().scene().clear(runner.context(),RunStatus.RUNNING);
+    		runner.thread().scene().sendCurrent(runner.context(),runner.thread(),RunStatus.WAITCLIENT,false);
+    	}else runner.thread().scene().clear(runner.context(),runner.thread(),RunStatus.RUNNING);
 	}
 	public void wc(ScenarioCommandContext runner) {
 		runner.thread().waitClient();
-		runner.thread().scene().sendCurrent(runner.context(), RunStatus.WAITCLIENT,true);
+		runner.thread().scene().sendCurrent(runner.context(),runner.thread(), RunStatus.WAITCLIENT,true);
 	}
 	public void wt(ScenarioCommandContext runner) {
 		runner.thread().setStatus((RunStatus.WAITTRIGGER));
-		runner.thread().scene().sendCurrent(runner.context(), RunStatus.WAITTRIGGER,false);
+		runner.thread().scene().sendCurrent(runner.context(),runner.thread(), RunStatus.WAITTRIGGER,false);
 	}
 	public void wa(ScenarioCommandContext runner) {
 		runner.thread().setStatus((RunStatus.WAITACTION));
-		runner.thread().scene().sendCurrent(runner.context(), RunStatus.WAITACTION,false);
+		runner.thread().scene().sendCurrent(runner.context(),runner.thread(), RunStatus.WAITACTION,false);
 	}
 	public void s(ScenarioCommandContext runner) {
 		runner.thread().stop();
-		runner.thread().scene().sendCurrent(runner.context(), RunStatus.STOPPED,false);
+		runner.thread().scene().sendCurrent(runner.context(),runner.thread(), RunStatus.STOPPED,false);
 	}
 
 }

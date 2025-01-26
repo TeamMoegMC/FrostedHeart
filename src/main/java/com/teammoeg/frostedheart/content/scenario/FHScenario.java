@@ -39,12 +39,13 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.content.scenario.commands.ActCommand;
 import com.teammoeg.frostedheart.content.scenario.commands.ControlCommands;
+import com.teammoeg.frostedheart.content.scenario.commands.CookieCommand;
 import com.teammoeg.frostedheart.content.scenario.commands.FTBQCommands;
 import com.teammoeg.frostedheart.content.scenario.commands.MCCommands;
 import com.teammoeg.frostedheart.content.scenario.commands.TextualCommands;
 import com.teammoeg.frostedheart.content.scenario.commands.VariableCommand;
 import com.teammoeg.frostedheart.content.scenario.commands.client.IClientControlCommand;
-import com.teammoeg.frostedheart.content.scenario.network.ServerScenarioCommandPacket;
+import com.teammoeg.frostedheart.content.scenario.network.S2CScenarioCommandPacket;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.content.scenario.parser.ScenarioParser;
 import com.teammoeg.frostedheart.content.scenario.parser.providers.FTBQProvider;
@@ -152,26 +153,26 @@ public class FHScenario {
 		server.register(clazz);
 	}
 
-	public static void callClientCommand(String name, ScenarioContext runner, Map<String, String> params) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) runner.player()),
-				new ServerScenarioCommandPacket(name.toLowerCase(), params));
+	public static void callClientCommand(String name, ScenarioCommandContext runner, Map<String, String> params) {
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) runner.context().player()),
+				new S2CScenarioCommandPacket(runner.thread().getRunId(),name.toLowerCase(), params));
 	}
 
-	public static void callClientCommand(String name, ScenarioContext runner, String... params) {
+	public static void callClientCommand(String name, ScenarioCommandContext runner, String... params) {
 		Map<String, String> data = new HashMap<>();
 		for (int i = 0; i < params.length / 2; i++) {
 			data.put(params[i * 2], params[i * 2 + 1]);
 		}
 
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) runner.player()),
-				new ServerScenarioCommandPacket(name.toLowerCase(), data));
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) runner.context().player()),
+				new S2CScenarioCommandPacket(runner.thread().getRunId(),name.toLowerCase(), data));
 	}
 
 	public static void registerClientDelegate(Class<?> cls) {
 		for (Method met : cls.getMethods()) {
 			if (Modifier.isPublic(met.getModifiers())) {
 				final String name = met.getName();
-				registerCommand(name, (r, p) -> callClientCommand(name, r.context(), p));
+				registerCommand(name, (r, p) -> callClientCommand(name, r, p));
 			}
 		}
 	}
@@ -200,6 +201,7 @@ public class FHScenario {
 		registerClientDelegate(IClientControlCommand.class);
 		registerScenarioProvider(new FTBQProvider());
 		register(MCCommands.class);
+		register(CookieCommand.class);
 	}
 	static Path local;
 	static final LevelResource dataFolder = new LevelResource("fhscenario");
