@@ -6,6 +6,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent.RenderTickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 @Mod.EventBusSubscriber(modid = Chorda.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE,value=Dist.CLIENT)
 public class ChordaClientEvents {
@@ -13,5 +14,5 @@ public class ChordaClientEvents {
 	public static void clientTick(RenderTickEvent tick) {
 		CClientDataStorage.checkAndSave();
 	}
-	
+
 }

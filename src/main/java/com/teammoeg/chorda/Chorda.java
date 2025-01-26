@@ -24,6 +24,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
@@ -62,7 +63,7 @@ public class Chorda {
         // Config
         LOGGER.info(COMMON_INIT, "Loading Config");
         ChordaConfig.register();
-        CClientDataStorage.load();
+        
         // Init
         LOGGER.info(COMMON_INIT, "Initializing " + MODNAME);
 
@@ -83,6 +84,7 @@ public class Chorda {
         mod.addListener(this::processIMC);
         mod.addListener(this::enqueueIMC);
         mod.addListener(this::loadComplete);
+        mod.addListener(this::clientSetup);
 
         // Client setup
         LOGGER.info(COMMON_INIT, "Proceeding to Client Initialization");
@@ -98,7 +100,9 @@ public class Chorda {
     private void setup(final FMLCommonSetupEvent event) {
         ChordaNetwork.register();
     }
-
+	public void clientSetup(final FMLClientSetupEvent ev) {
+		CClientDataStorage.load();
+	}
     /**
      * Enqueue Inter-Mod Communication
      * @param event The event

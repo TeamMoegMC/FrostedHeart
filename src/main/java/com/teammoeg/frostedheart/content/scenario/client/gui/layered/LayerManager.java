@@ -34,27 +34,43 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLLayerC
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.TypedDynamicTexture;
 
 public class LayerManager extends GLLayerContent {
-	Map<String, OrderedRenderableContent> names = new LinkedHashMap<>();
-	PriorityQueue<OrderedRenderableContent> pq;
-	PriorityQueue<OrderedRenderableContent> opq;
-	GLImageContent oglc=new GLImageContent(null,0,0, 1f, 1f, 0, 0, 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale(), 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale());
-	GLImageContent nglc=new GLImageContent(null,0,0, 1f, 1f, 0, 0, 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale(), 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale());
-	private static ExecutorService executor;
-	private Future <PrerenderParams> rendering;
-	public static <T> Future<T> submitRenderTask(Runnable r,T result) {
-		if(executor==null) {
-			AtomicInteger id=new AtomicInteger(0);
-			executor=Executors.newFixedThreadPool(FHConfig.CLIENT.scenarioRenderThread.get(),rn->new Thread(rn,"frostedheart-scenario-prerender-"+id.getAndAdd(1)));
+	private static record RerenderRequest(TransitionFunction trans,int ticks){}
+	private static record LayerContext(PriorityQueue<OrderedRenderableContent> pq,GLImageContent glc) {
+		public void render(RenderParams params) {
+			glc.render(params);
+			if (pq != null)
+				for(OrderedRenderableContent i:pq) {
+					i.render(params);
+				}
 		}
-		return executor.submit(r,result);
-	} 
-	int transTicks;
-	int maxTransTicks;
-	TransitionFunction trans;
 
+		public void close() {
+			glc.texture.release();
+		}
+		
+	}
+	private static class TransitionInfo{
+		int transTicks=0;
+		int maxTransTicks;
+		TransitionFunction trans;
+		public TransitionInfo(int maxTransTicks, TransitionFunction trans) {
+			super();
+			this.maxTransTicks = maxTransTicks;
+			this.trans = trans;
+		}
+	}
+	Map<String, OrderedRenderableContent> names = new LinkedHashMap<>();
+	volatile LayerContext nextlayer;
+	volatile LayerContext current;
+	volatile TransitionInfo trans;
+
+	RerenderRequest rrq;
+	
 	public LayerManager() {
 	}
-
+	public LayerContext createContext() {
+		return new LayerContext(new PriorityQueue<>(Comparator.comparingInt(OrderedRenderableContent::getZ).thenComparing(OrderedRenderableContent::getOrder)),new GLImageContent(null,0,0, 1f, 1f, 0, 0, 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale(), 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale()));
+	}
 	public LayerManager(Map<String, OrderedRenderableContent> names) {
 		super();
 		this.names = names;
@@ -70,13 +86,17 @@ public class LayerManager extends GLLayerContent {
 
 	@Override
 	public void tick() {
-		if(maxTransTicks>0) {
-			transTicks++;
+		if(trans!=null&&trans.maxTransTicks>0) {
+			trans.transTicks++;
 
-			if (transTicks >= maxTransTicks) {
-				maxTransTicks = transTicks = 0;
+			if (trans.transTicks >= trans.maxTransTicks) {
+				LayerContext ol=current;
+				current=nextlayer;
 				trans = null;
-				opq = null;
+				nextlayer=null;
+				if(ol!=null)
+				ol.close();
+				
 			}
 		}
 		for (RenderableContent i : names.values()) {
@@ -102,14 +122,13 @@ public class LayerManager extends GLLayerContent {
 		return new LayerManager();
 	}
 	public void close() {
-		if(oglc.texture!=null){
-			oglc.texture.close();
-			oglc.texture=null;
-			
+		if(nextlayer!=null){
+			nextlayer.close();
+			nextlayer=null;
 		}
-		if(nglc.texture!=null) {
-			nglc.texture.close();
-			nglc.texture=null;
+		if(current!=null) {
+			current.close();
+			current=null;
 		}
 		for(OrderedRenderableContent ctx:names.values())
 			if(ctx instanceof LayerManager) {
@@ -117,98 +136,66 @@ public class LayerManager extends GLLayerContent {
 			}
 	}
 	boolean prerenderRequested;
-	public synchronized void commitChanges(TransitionFunction t, int ticks) {
-
-		if (t != null) {
-			this.trans = t;
-			this.transTicks = 0;
-			this.maxTransTicks = ticks;
-			opq = pq;
-			
-			if(oglc.texture!=null) {
-				oglc.texture.close();
-				oglc.texture=null;
-			}
-			oglc.texture=nglc.texture;
-			nglc.texture=null;
-		}else close();
-		pq=null;
+	public void commitChanges(TransitionFunction t, int ticks) {
+		rrq=new RerenderRequest(t,ticks);			
+	}
+	public void renderPrerendered(TransitionFunction t, int ticks) {
+		LayerContext inext=this.createContext();
 		if (!names.isEmpty()) {
-			pq = new PriorityQueue<>(Comparator.comparingInt(OrderedRenderableContent::getZ).thenComparing(OrderedRenderableContent::getOrder));
 			int i = 0;
 			for (OrderedRenderableContent r : names.values()) {
 				r.setOrder(i);
-				pq.add(r);
+				inext.pq.add(r);
 				i++;
 			}
 			final PrerenderParams prerender=new PrerenderParams();
-			
-			pq.forEach(s->s.prerender(prerender));				
-			
+			inext.pq.forEach(s->s.prerender(prerender));				
+			inext.glc.texture=prerender.loadTexture();
 
-			TypedDynamicTexture tex=prerender.loadTexture();
-
-			//System.out.println("Loading tex");
-			if(nglc.texture!=null) {
-				nglc.texture.close();
-				nglc.texture=null;
-			}
-			nglc.texture=tex;
+		}
+		if (t != null) {
+			this.nextlayer=inext;
+			this.trans = new TransitionInfo(ticks,t);
+		}else {
+			LayerContext otex=current;
+			current=inext;
+			if(otex!=null)
+				otex.close();
 		}
 	}
 
 	@Override
-	public synchronized void renderContents(RenderParams params) {
-		/*if(rendering!=null) {
-			Future<PrerenderParams> rendering=this.rendering;
-			this.rendering=null;
-			PrerenderParams rendered;
-			try {
-				rendered = rendering.get();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				throw new RuntimeException("scenario rendering failed");
-			} catch (ExecutionException e) {
-				e.getCause().printStackTrace();
-				throw new RuntimeException("scenario rendering failed");
+	public void renderContents(RenderParams params) {
+		if(rrq!=null)
+			synchronized(this) {
+				if(rrq!=null) {
+					RerenderRequest trrq=rrq;
+					rrq=null;
+					renderPrerendered(trrq.trans(),trrq.ticks());
+				}
 			}
-			
-			TypedDynamicTexture tex=rendered.loadTexture();
-
-			//System.out.println("Loading tex");
-			if(nglc.texture!=null) {
-				nglc.texture.close();
-				nglc.texture=null;
-			}
-			nglc.texture=tex;
-		}*/
+		
 		if (trans != null) {
 			RenderParams prev = params.copyWithCurrent(this);
 			RenderParams next = params.copyWithCurrent(this);
-			float val = (transTicks + params.partialTicks) / maxTransTicks;
+			float val = (trans.transTicks) / trans.maxTransTicks;
 			// System.out.println(val);
-			trans.compute(prev, next, val);
+			trans.trans.compute(prev, next, val);
 
 			if (prev.forceFirst) {
-				nglc.render(next);
-				if (pq != null)
-					pq.forEach(t -> t.render(next));
-				oglc.render(prev);
-				if (opq != null)
-					opq.forEach(t -> t.render(prev));
+				if(nextlayer!=null)
+					nextlayer.render(next);
+				if(current!=null)
+					current.render(prev);
 			} else {
-				oglc.render(prev);
-				if (opq != null)
-					opq.forEach(t -> t.render(prev));
-				nglc.render(next);
-				if (pq != null)
-					pq.forEach(t -> t.render(next));
+				if(current!=null)
+					current.render(prev);
+				if(nextlayer!=null)
+					nextlayer.render(next);
 			}
 		} else {
-			nglc.render(params);
-			if (pq != null)
-				pq.forEach(t -> t.render(params));
+			if(current!=null)
+				current.render(params);
 		}
 	}
 }

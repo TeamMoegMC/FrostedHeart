@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.mojang.blaze3d.platform.NativeImage;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.client.ClientUtils;
@@ -34,15 +36,29 @@ public class TypedDynamicTexture {
 	DynamicTexture texture;
 	RenderType renderType;
 	ResourceLocation resourceLocation;
+	boolean isClosed = false;
+	AtomicInteger refCount=new AtomicInteger(1);
 	public TypedDynamicTexture(NativeImage texture) {
-        this.texture = new DynamicTexture(texture);
-        resourceLocation = FHMain.rl("fhscenario/generated_"+this.hashCode());
-        ClientUtils.mc().textureManager.register(resourceLocation, this.texture);
-        this.renderType= CGuiHelper.RenderStateAccess.createTempType(resourceLocation);
+		this.texture = new DynamicTexture(texture);
+		resourceLocation = FHMain.rl("fhscenario/generated_" + this.hashCode());
+		ClientUtils.mc().textureManager.register(resourceLocation, this.texture);
+		this.renderType = CGuiHelper.RenderStateAccess.createTempType(resourceLocation);
 	}
-	public void close() {
-		texture.close();
-		ClientUtils.mc().textureManager.release(resourceLocation);
+
+	public synchronized void close() {
+		if(!isClosed) {
+			isClosed = true;
+			texture.close();
+			ClientUtils.mc().textureManager.release(resourceLocation);
+		}
+	}
+	public void addRef() {
+		refCount.incrementAndGet();
+	}
+	public void release() {
+		int ncount=refCount.decrementAndGet();
+		if(ncount<=0)
+			close();
 	}
 	public void draw(GuiGraphics graphics,int x,int y,int w,int h,int uOffset,int vOffset,int uWidth,int vHeight,float alpha) {
         /*Matrix4f matrix4f = graphics.pose().last().pose();
@@ -58,8 +74,12 @@ public class TypedDynamicTexture {
         vertexconsumer.vertex(matrix4f, x+w, y+h, 0F).color(1, 1, 1, alpha).uv(u2, v2).endVertex();
         vertexconsumer.vertex(matrix4f, x+w, y, 0F).color(1, 1, 1, alpha).uv(u2,v1).endVertex();
         vertexconsumer.vertex(matrix4f, x, y, 0F).color(1, 1, 1, alpha).uv(u1, v1).endVertex();*/
-		CGuiHelper.bindTexture(resourceLocation);
-		CGuiHelper.blit(graphics.pose(), x, y, w, h, uOffset, vOffset, uWidth, vHeight, texture.getPixels().getWidth(), texture.getPixels().getHeight(), alpha);
-	}
+        if(!isClosed){
+        	addRef();
+        	CGuiHelper.bindTexture(resourceLocation);
+			CGuiHelper.blit(graphics.pose(), x, y, w, h, uOffset, vOffset, uWidth, vHeight, texture.getPixels().getWidth(), texture.getPixels().getHeight(), alpha);
+			release();
+        }
+     }
 
 }
