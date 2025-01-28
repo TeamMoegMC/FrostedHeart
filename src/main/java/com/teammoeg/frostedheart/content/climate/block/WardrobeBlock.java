@@ -174,20 +174,26 @@ public class WardrobeBlock extends CBlock implements CEntityBlock<WardrobeBlockE
             return DoorHingeSide.RIGHT;
         }
     }
-
-    // Open/Close when right-clicked
-    public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
-        pState = pState.cycle(OPEN);
+    public static void setOpened(Level pLevel,BlockPos pPos,@Nullable BlockState pState,@Nullable Player pPlayer,boolean isOpen) {
+    	if(pState==null)
+    		pState=pLevel.getBlockState(pPos);
+        pState = pState.setValue(OPEN,isOpen);
         pLevel.setBlock(pPos, pState, 10);
         // Get the top/bottom state based on the current state
         BlockPos otherHalfPos = pState.getValue(HALF) == DoubleBlockHalf.LOWER ? pPos.above() : pPos.below();
         BlockState otherHalf = pLevel.getBlockState(otherHalfPos);
         // Cycle the other half
-        otherHalf = otherHalf.cycle(OPEN);
+        otherHalf = otherHalf.setValue(OPEN,isOpen);
         pLevel.setBlock(otherHalfPos, otherHalf, 10);
-        this.playSound(pPlayer, pLevel, pPos, pState.getValue(OPEN));
-        pLevel.gameEvent(pPlayer, this.isOpen(pState) ? GameEvent.BLOCK_OPEN : GameEvent.BLOCK_CLOSE, pPos);
+        if(pPlayer!=null) {
+        	playSound(pPlayer, pLevel, pPos, pState.getValue(OPEN));
+        	pLevel.gameEvent(pPlayer, isOpen ? GameEvent.BLOCK_OPEN : GameEvent.BLOCK_CLOSE, pPos);
+        }
+    }
+    // Open/Close when right-clicked
+    public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
 
+    	setOpened(pLevel,pPos,pState,pPlayer,true);
         if (!pLevel.isClientSide) {
             // Open the Wardrobe GUI
             System.out.println("Opening GUI");
@@ -237,7 +243,7 @@ public class WardrobeBlock extends CBlock implements CEntityBlock<WardrobeBlockE
     }
 
     // Play sound when opening/closing
-    private void playSound(@Nullable Entity pSource, Level pLevel, BlockPos pPos, boolean pIsOpening) {
+    private static void playSound(@Nullable Entity pSource, Level pLevel, BlockPos pPos, boolean pIsOpening) {
         pLevel.playSound(pSource, pPos, pIsOpening ? SoundEvents.WOODEN_DOOR_OPEN : SoundEvents.WOODEN_DOOR_CLOSE, SoundSource.BLOCKS, 1.0F, pLevel.getRandom().nextFloat() * 0.1F + 0.9F);
     }
 

@@ -63,6 +63,7 @@ public class FHDataGenerator {
         gen.addProvider(event.includeServer(), new FHItemTagProvider(gen, FHMain.MODID, exHelper, lookup));
         gen.addProvider(event.includeServer(), new FHLootTableProvider(output));
         gen.addProvider(event.includeServer(), new FHLangProvider(output, FHMain.MODID, "en_us"));
+        gen.addProvider(event.includeClient(), new FHBlockStateProvider(output,FHMain.MODID,exHelper));
         for (final DataProvider provider : makeProviders(output, lookup, exHelper))
             gen.addProvider(event.includeServer(), provider);
 

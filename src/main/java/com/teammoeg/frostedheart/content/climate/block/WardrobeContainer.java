@@ -23,6 +23,8 @@ import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.climate.block.WardrobeBlockEntity;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
@@ -46,4 +48,12 @@ public class WardrobeContainer extends CBlockEntityMenu<WardrobeBlockEntity> {
         }
         super.addPlayerInventory(inventoryPlayer, 8, 84, 142);
     }
+
+	@Override
+	public void removed(Player pPlayer) {
+		super.removed(pPlayer);
+		if (pPlayer instanceof ServerPlayer) {
+			WardrobeBlock.setOpened(blockEntity.getLevel(),blockEntity.getBlockPos(),blockEntity.getBlockState(),pPlayer,false);
+		}
+	}
 }
