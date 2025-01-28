@@ -19,12 +19,16 @@
 
 package com.teammoeg.frostedheart.infrastructure.gen;
 
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.block.WardrobeBlock;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.providers.DataGenContext;
 import com.tterrag.registrate.providers.RegistrateBlockstateProvider;
 import com.tterrag.registrate.providers.RegistrateItemModelProvider;
 import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
+
+import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.BlockItem;
@@ -32,10 +36,16 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelFile;
+import net.minecraftforge.client.model.generators.ModelFile.UncheckedModelFile;
 
 public class FHBlockStateGen {
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> provided() {
+        return (c, p) -> {};
+    }
     public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> simpleCubeAll(
             ResourceLocation texture) {
         return (c, p) -> p.simpleBlock(c.get(), p.models()
@@ -119,5 +129,26 @@ public class FHBlockStateGen {
                 .tag(BlockTags.MINEABLE_WITH_PICKAXE)
                 .tag(BlockTags.NEEDS_IRON_TOOL);
     }
+	public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> wardrobeState(String location) {
+		return (ctx,provider)->{
+			provider.getVariantBuilder(ctx.get()).forAllStates(bs->{
+				Direction facing=bs.getValue(BlockStateProperties.HORIZONTAL_FACING);
+				float yrot=facing.toYRot();
+				StringBuilder sb=new StringBuilder(location);
+				switch(bs.getValue(WardrobeBlock.HALF)) {
+				case UPPER:sb.append("_top");break;
+				case LOWER:sb.append("_bottom");break;
+				}
+				switch(bs.getValue(WardrobeBlock.HINGE)) {
+				case LEFT:sb.append("_left");break;
+				case RIGHT:sb.append("_right");break;
+				}
+				if(bs.getValue(WardrobeBlock.OPEN)) {
+					sb.append("_open");
+				}
+				return ConfiguredModel.builder().modelFile(provider.models().getExistingFile(FHMain.rl(sb.toString()))).rotationY((int) yrot).build();
+			});
+		};
+	}
 
 }

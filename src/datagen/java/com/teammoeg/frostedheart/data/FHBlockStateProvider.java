@@ -39,7 +39,7 @@ public class FHBlockStateProvider extends BlockStateProvider {
 
 	@Override
 	protected void registerStatesAndModels() {
-		wardrobe(FHBlocks.WARDROBE.get(),"wardrobe");
+		//wardrobe(FHBlocks.WARDROBE.get(),"wardrobe");
 	}
 	protected void wardrobe(Block block,String location) {
 		this.getVariantBuilder(block).forAllStates(bs->{
