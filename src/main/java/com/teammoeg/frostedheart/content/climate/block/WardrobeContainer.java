@@ -31,7 +31,7 @@ import net.minecraftforge.event.level.NoteBlockEvent;
 public class WardrobeContainer extends CBlockEntityMenu<WardrobeBlockEntity> {
 
     public WardrobeContainer(int id, Inventory inventoryPlayer, WardrobeBlockEntity tile) {
-        super(FHMenuTypes.WARDROBE.get(), tile, id,inventoryPlayer.player, 15);
+        super(FHMenuTypes.WARDROBE.get(), tile, id,inventoryPlayer.player, 17);
 
         for (int j = 0; j < 1; ++j) {
             for (int k = 0; k < 13; ++k) {
@@ -44,11 +44,6 @@ public class WardrobeContainer extends CBlockEntityMenu<WardrobeBlockEntity> {
         for(int k=0;k<4;++k) {
             this.addSlot(new Slot(ptd.clothesOfParts.get(PlayerTemperatureData.BodyPart.TORSO), k, 44+k*18, 19+18));
         }
-
-        for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 9; j++)
-                addSlot(new Slot(inventoryPlayer, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
-        for (int i = 0; i < 9; i++)
-            addSlot(new Slot(inventoryPlayer, i, 8 + i * 18, 142));
+        super.addPlayerInventory(inventoryPlayer, 8, 84, 142);
     }
 }

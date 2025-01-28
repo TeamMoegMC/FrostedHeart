@@ -59,6 +59,7 @@ public class WardrobeBlockEntity extends RandomizableContainerBlockEntity implem
     @Override
     public void doGraphicalUpdates() {
 
+    	
     }
 
     @Override
