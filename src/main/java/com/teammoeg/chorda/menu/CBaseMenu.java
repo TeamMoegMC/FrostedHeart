@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
+
+import javax.annotation.Nonnull;
 
 import com.teammoeg.chorda.ChordaNetwork;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.SyncableDataSlot;
@@ -33,6 +36,7 @@ import com.teammoeg.chorda.network.ContainerOperationMessageC2S;
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MoveItemsFunc;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -41,30 +45,109 @@ import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.util.Lazy;
 
 public abstract class CBaseMenu extends AbstractContainerMenu {
 	public static class Validator implements Predicate<Player> {
-		Vec3 initial;
-		int distsqr;
-
-		public Validator(BlockPos initial, int distance) {
+		private static record RadiusCheck(Vec3 initial,float distsqr) implements Predicate<Player> {
+			@Override
+			public boolean test(Player t) {
+				return t.position().distanceToSqr(initial) <= distsqr;
+			}
+		};
+		private static record DynamicRadiusCheck(Supplier<Vec3> initial,float distsqr) implements Predicate<Player> {
+			@Override
+			public boolean test(Player t) {
+				return t.position().distanceToSqr(initial.get()) <= distsqr;
+			}
+		};
+		private static record LevelCheck(Supplier<Level> initial) implements Predicate<Player> {
+			@Override
+			public boolean test(Player t) {
+				return initial.get()==t.level();
+			}
+		};
+		private static record BlockEntityCheck(BlockEntity be) implements Predicate<Player> {
+			@Override
+			public boolean test(Player t) {
+				return !be.isRemoved();
+			}
+		};
+		private static record EntityCheck(Entity e) implements Predicate<Player> {
+			@Override
+			public boolean test(Player t) {
+				return !e.isRemoved();
+			}
+		};
+		List<Predicate<Player>> citeria=new ArrayList<>();
+		public Validator() {
 			super();
-			this.initial = Vec3.atCenterOf(initial);
-			this.distsqr = distance * distance;
+		}
+		public Validator range(BlockPos center,float radius) {
+			citeria.add(new RadiusCheck(Vec3.atCenterOf(center),radius*radius));
+			return this;
+		}
+		public Validator range(Supplier<Vec3> center,float radius) {
+			citeria.add(new DynamicRadiusCheck(center,radius*radius));
+			return this;
 		}
 
+		public Validator level(Supplier<Level> level) {
+			citeria.add(new LevelCheck(level));
+			return this;
+		}
+		public Validator level(Level level) {
+			citeria.add(new LevelCheck(()->level));
+			return this;
+		}
+		public Validator blockEntity(BlockEntity block,float radius) {
+			blockEntityWithoutRange(block);
+			level(block::getLevel);
+			return range(block.getBlockPos(),radius);
+		}
+		public Validator blockEntity(BlockEntity block) {
+			return blockEntity(block,8);
+		}
+		public Validator blockEntityWithoutRange(BlockEntity block) {
+			citeria.add(new BlockEntityCheck(block));
+			return this;
+		}
+		public Validator entity(Entity entity,float radius) {
+			entityWithoutRange(entity);
+			level(entity::level);
+			range(entity::position,radius);
+			return this;
+		}
+		public Validator entity(Entity block) {
+			return entity(block,8);
+		}
+		public Validator entityWithoutRange(Entity entity) {
+			citeria.add(new EntityCheck(entity));
+			return this;
+		}
+		public Validator custom(Predicate<Player> predicate) {
+			citeria.add(predicate);
+			return this;
+		}
+		public Validator custom(BooleanSupplier predicate) {
+			citeria.add(p->predicate.getAsBoolean());
+			return this;
+		}
 		@Override
 		public boolean test(Player t) {
-			return t.position().distanceToSqr(initial) <= distsqr;
-		}
-
-		public Predicate<Player> and(BooleanSupplier supp) {
-			return this.and(t -> supp.getAsBoolean());
+			for(Predicate<Player> p:citeria) {
+				if(!p.test(t))return false;
+			}
+			return true;
 		}
 	}
-
+	/**
+	 * A simple builder to define the slot fill order when player shift-click its invertory slot
+	 * It would start to fill from the earlier defined range, then the later
+	 * */
 	public static class QuickMoveStackBuilder {
 		private static record Range(int start, int end, boolean reverse) {
 			private Range(int slot) {
@@ -77,29 +160,45 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 
 		private QuickMoveStackBuilder() {
 		}
-
+		/**
+		 * Define an empty behaviour
+		 * */
 		public static QuickMoveStackBuilder begin() {
 			return new QuickMoveStackBuilder();
 		}
-
+		/**
+		 * Define a single slot to fill
+		 * */
 		public static QuickMoveStackBuilder first(int slot) {
 			return begin().then(slot);
 		}
-
+		/**
+		 * Define a range of slot to fill
+		 * 
+		 * */
 		public static QuickMoveStackBuilder first(int beginInclusive, int endExclusive) {
 			return begin().then(beginInclusive, endExclusive);
 		}
-
+		/**
+		 * Define a single slot to fill
+		 * */
 		public QuickMoveStackBuilder then(int slot) {
 			ranges.add(new Range(slot));
 			return this;
 		}
-
+		/**
+		 * Define a range of slot to fill
+		 * 
+		 * */
 		public QuickMoveStackBuilder then(int beginInclusive, int endExclusive) {
 			ranges.add(new Range(beginInclusive, endExclusive, false));
 			return this;
 		}
-
+		/**
+		 * Define a range of slot to fill
+		 * 
+		 * @param reversed to define whether later slot to be filled first
+		 * */
 		public QuickMoveStackBuilder then(int beginInclusive, int endExclusive, boolean reversed) {
 			ranges.add(new Range(beginInclusive, endExclusive, reversed));
 			return this;
@@ -120,29 +219,41 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 	protected final int INV_START;
 	protected static final int INV_SIZE = 36;
 	protected static final int INV_QUICK = 27;
-	protected Predicate<Player> validator;
+	private final Lazy<Validator> validator=Lazy.of(()->buildValidator(new Validator()));
 	protected Lazy<Function<ItemStack, Boolean>> moveFunction = Lazy.of(() -> defineQuickMoveStack().build(this));
 	protected List<SyncableDataSlot<?>> specialDataSlots = new ArrayList<>();
 	private Player player;
-
+	/**
+	 * Constructor of c base menu
+	 * Implementation notes:
+	 * You can call {@link #addPlayerInventory addPlayerInventory} to add defaulted player inventory slots
+	 * You may override {@link #buildValidator(Validator) buildValidator} to define rules whether this menu should close
+	 * You may override {@link #defineQuickMoveStack() defineQuickMoveStack} to define quickMoveStack(shift-click) behaviour of the menu slots,default ones is to fill from the first slot to the last one.
+	 * You may use {@link CCustomMenuSlot} to broadcast ui changes to the client menu.
+	 * @param inv_start start slot index of player inventory, for example, if the machine has 5 slots, then this should be 5
+	 * 
+	 * */
 	public CBaseMenu(MenuType<?> pMenuType, int pContainerId, Player player, int inv_start) {
 		super(pMenuType, pContainerId);
 		this.INV_START = inv_start;
 		this.player = player;
 	}
 
-	protected void addPlayerInventory(Inventory inv, int dx, int dy, int quickBarY) {
+	protected void addPlayerInventory(Inventory inv, int invX, int invY, int quickBarY) {
 		for (int i = 0; i < 3; i++)
 			for (int j = 0; j < 9; j++)
-				addSlot(new Slot(inv, j + i * 9 + 9, dx + j * 18, dy + i * 18));
+				addSlot(new Slot(inv, j + i * 9 + 9, invX + j * 18, invY + i * 18));
 		for (int i = 0; i < 9; i++)
-			addSlot(new Slot(inv, i, dx + i * 18, quickBarY));
+			addSlot(new Slot(inv, i, invX + i * 18, quickBarY));
 	}
 
 	public QuickMoveStackBuilder defineQuickMoveStack() {
 		return QuickMoveStackBuilder.first(0, INV_START);
 	}
-
+	@Nonnull
+	protected Validator buildValidator(@Nonnull Validator builder) {
+		return builder;
+	}
 	public boolean quickMoveIn(ItemStack slotStack) {
 		return moveFunction.get().apply(slotStack);
 	}
@@ -324,9 +435,7 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 
 	@Override
 	public boolean stillValid(Player pPlayer) {
-		if (validator == null)
-			return true;
-		return validator.test(pPlayer);
+		return validator.get().test(pPlayer);
 	}
 
 }

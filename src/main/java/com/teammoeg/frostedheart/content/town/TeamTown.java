@@ -64,15 +64,6 @@ public class TeamTown implements Town, TownWithResident {
         return new TeamTown(data);
     }
 
-    /**
-     * Get the town for a team.
-     * @param team the team
-     * @return the town
-     */
-    public static TeamTown from(Team team) {
-        TeamTownData data = CTeamDataManager.getDataByTeam(team).getData(FHSpecialDataTypes.TOWN_DATA);
-        return new TeamTown(data);
-    }
 
     /**
      * Default constructor links storage to the town data.

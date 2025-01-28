@@ -43,8 +43,6 @@ import com.teammoeg.chorda.dataholders.SpecialDataType;
 import com.teammoeg.chorda.events.TeamLoadedEvent;
 import com.teammoeg.chorda.util.struct.OptionalLazy;
 
-import org.apache.commons.io.FileUtils;
-
 import com.mojang.authlib.GameProfile;
 
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
@@ -73,6 +71,8 @@ public class CTeamDataManager {
     public static final LevelResource dataFolder = new LevelResource("chorda_data");
     private Map<UUID, UUID> dataByFTBId = new HashMap<>();
     private Map<UUID, TeamDataHolder> dataByOwnId = new HashMap<>();
+    private Map<UUID, UUID> playerOwnedTeam;
+    private Map<String,UUID> playerNameOwnedTeam;
     
     public static RecipeManager getRecipeManager() {
         if (getServer() != null)
@@ -113,14 +113,6 @@ public class CTeamDataManager {
     }
 
 
-    /**
-     * Helper method to get the data from a team.
-     * @param team the team
-     * @return data
-     */
-    public static TeamDataHolder getDataByTeam(Team team) {
-    	return INSTANCE.get(team);
-    }
 
     /**
      * Helper method to get the data from frostedheart team id.

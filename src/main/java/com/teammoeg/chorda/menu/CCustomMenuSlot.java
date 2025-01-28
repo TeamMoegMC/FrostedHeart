@@ -39,7 +39,6 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraftforge.fluids.FluidStack;
 /**
- * CContainerData
  * a utility class for menu data sync and type conversion
  * 
  * */

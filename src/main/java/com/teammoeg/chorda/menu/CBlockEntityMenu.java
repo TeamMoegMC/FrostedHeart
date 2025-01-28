@@ -19,6 +19,8 @@
 
 package com.teammoeg.chorda.menu;
 
+import com.teammoeg.chorda.menu.CBaseMenu.Validator;
+
 import blusunrize.immersiveengineering.common.gui.BlockEntityInventory;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.world.Container;
@@ -42,6 +44,11 @@ public abstract class CBlockEntityMenu<T extends BlockEntity> extends CBaseMenu 
 			inv = cont;
 		this.blockEntity = blockEntity;
 
+	}
+
+	@Override
+	protected Validator buildValidator(Validator builder) {
+		return super.buildValidator(builder).blockEntity(blockEntity);
 	}
 
 	@Override

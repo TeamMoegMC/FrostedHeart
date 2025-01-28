@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.menu.CBaseMenu;
+import com.teammoeg.chorda.menu.CBaseMenu.Validator;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
@@ -51,7 +52,7 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
     public CDataSlot<Boolean> isWorking = CCustomMenuSlot.SLOT_BOOL.create(this);
     public CDataSlot<Boolean> isOverdrive = CCustomMenuSlot.SLOT_BOOL.create(this);
     public CDataSlot<BlockPos> pos = CCustomMenuSlot.SLOT_BLOCKPOS.create(this);
-
+    MultiblockMenuContext<R> ctx;
     public GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<R> ctx) {
         super(type, id, inventoryPlayer.player, 2);
         R state = ctx.mbContext().getState();
@@ -77,13 +78,19 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
             //System.out.println(" binded ");
         });
         //System.out.println(optdata);
+        this.ctx=ctx;
         pos.bind(() -> ctx.clickedPos());
-        this.validator = new Validator(ctx.clickedPos(), 8).and(ctx.mbContext().isValid());
+
         IItemHandler handler = state.getData(CMultiblockHelper.getAbsoluteMaster(ctx.mbContext())).map(t -> t.inventory).orElseGet(() -> null);
         createSlots(handler, inventoryPlayer);
     }
 
-    public GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer) {
+    @Override
+	protected Validator buildValidator(Validator builder) {
+		return super.buildValidator(builder).range(ctx.clickedPos(),8).custom(ctx.mbContext().isValid());
+	}
+
+	public GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer) {
         super(type, id, inventoryPlayer.player, 2);
         createSlots(new ItemStackHandler(2), inventoryPlayer);
     }
