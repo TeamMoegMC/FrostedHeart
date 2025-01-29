@@ -54,6 +54,7 @@ import dev.ftb.mods.ftbquests.quest.task.KillTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
 import dev.latvian.mods.itemfilters.api.ItemFiltersAPI;
 import net.minecraft.sounds.Music;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance.Attenuation;
 import net.minecraft.nbt.ListTag;
@@ -284,10 +285,13 @@ public class ClientControl implements IClientControlCommand {
 	public void bgm(IClientScene runner,@Param("n")@Param("name")String name) {
 		//ISound sound=SimpleSound.music();
 		ClientUtils.mc().getMusicManager().stopPlaying();
-		FHScenarioClient.getPathFrom(ForgeRegistries.SOUND_EVENTS,new ResourceLocation(name),"")
+		//ForgeRegistries.SOUND_EVENTS.getKeys().forEach(System.out::println);
+		/*FHScenarioClient.getPathFrom(ForgeRegistries.SOUND_EVENTS,new ResourceLocation(name),"")
 		.ifPresentOrElse(t->ClientUtils.mc().getMusicManager().startPlaying(new Music(t, 0, 0, true)), ()->{
 			FHMain.LOGGER.error("[FHScenario] Music "+name+" Not found");
-		});
+		});*/
+		ClientUtils.mc().getSoundManager().play(SimpleSoundInstance.forMusic(SoundEvent.createVariableRangeEvent(new ResourceLocation(name))));
+		
 		
 	
 	}
