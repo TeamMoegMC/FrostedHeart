@@ -1660,14 +1660,14 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.rotateOrient("ruined_machine_buttons"))
             .simpleItem()
             .register();
-    public static BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_SCREEN = REGISTRATE.block("ruined_machine_screen", CDirectionalFacingBlock::new)
+    public static BlockEntry<CDirectionalRotatableBlock> RUINED_MACHINE_SCREEN = REGISTRATE.block("ruined_machine_screen", CDirectionalRotatableBlock::new)
             .transform(ruinedMachines())
-            .blockstate(FHBlockStateGen.provided())
+            .blockstate(FHBlockStateGen.rotateOrient("ruined_machine_screen"))
             .simpleItem()
             .register();
-    public static BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_SCREEN_CRACKED = REGISTRATE.block("ruined_machine_screen_cracked", CDirectionalFacingBlock::new)
+    public static BlockEntry<CDirectionalRotatableBlock> RUINED_MACHINE_SCREEN_CRACKED = REGISTRATE.block("ruined_machine_screen_cracked", CDirectionalRotatableBlock::new)
             .transform(ruinedMachines())
-            .blockstate(FHBlockStateGen.provided())
+            .blockstate(FHBlockStateGen.rotateOrient("ruined_machine_screen_cracked"))
             .simpleItem()
             .register();
     public static BlockEntry<CDirectionalRotatableBlock> RUINED_MACHINE_SWITCH = REGISTRATE.block("ruined_machine_switch", CDirectionalRotatableBlock::new)

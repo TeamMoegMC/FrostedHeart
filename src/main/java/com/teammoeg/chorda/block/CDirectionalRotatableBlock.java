@@ -24,7 +24,7 @@ public class CDirectionalRotatableBlock extends Block {
 	@Override
 	public BlockState getStateForPlacement(BlockPlaceContext pContext) {
 		Direction clickedFace=pContext.getClickedFace();
-		return this.defaultBlockState().setValue(ATTACH_FACE, (clickedFace.getAxis()==Axis.Y)?(clickedFace==Direction.DOWN?AttachFace.FLOOR:AttachFace.CEILING):AttachFace.WALL)
+		return this.defaultBlockState().setValue(ATTACH_FACE, (clickedFace.getAxis()==Axis.Y)?(clickedFace==Direction.UP?AttachFace.FLOOR:AttachFace.CEILING):AttachFace.WALL)
 				.setValue(FACING, pContext.getHorizontalDirection().getOpposite());
 	}
 

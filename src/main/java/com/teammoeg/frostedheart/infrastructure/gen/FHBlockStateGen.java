@@ -136,15 +136,15 @@ public class FHBlockStateGen {
             String path) {
         return (c, p) -> p.getVariantBuilder(c.get()).forAllStates(bs->{
         	AttachFace facing=bs.getValue(BlockStateProperties.ATTACH_FACE);
-        	Direction orient=bs.getValue(BlockStateProperties.HORIZONTAL_FACING).getOpposite();
+        	Direction orient=bs.getValue(BlockStateProperties.HORIZONTAL_FACING);
 			
 			float xrot=0;
 			
 		
 			switch(facing) {
-			case CEILING:xrot=0;orient=orient.getOpposite();break;
-			case FLOOR:xrot=180;break;
-			case WALL:xrot=90;break;
+			case CEILING:xrot=180;break;
+			case FLOOR:xrot=0;orient=orient.getOpposite();break;
+			case WALL:xrot=90;orient=orient.getOpposite();break;
 			}
 			float yrot=orient.toYRot();
 			return ConfiguredModel.builder().modelFile(p.models().getExistingFile(FHMain.rl(path))).rotationY((int) yrot).rotationX((int) xrot).build();
