@@ -34,6 +34,8 @@ import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.BlockStateGen;
 import com.simibubi.create.foundation.data.ModelGen;
+import com.teammoeg.chorda.block.CDirectionalFacingBlock;
+import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.block.WardrobeBlock;
 import com.teammoeg.frostedheart.content.decoration.*;
@@ -1623,54 +1625,54 @@ public class FHBlocks {
     // this is a block with six different side textures
     // TODO: need new block types
 
-    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_GENERAL = REGISTRATE.block("ruined_machine_general", RuinedMachineBlock::new)
+    public static BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL = REGISTRATE.block("ruined_machine_general", CDirectionalFacingBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.provided())
             .simpleItem()
             .register();
     // ruined_machine_general_chassis
-    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_GENERAL_CHASSIS = REGISTRATE.block("ruined_machine_general_chassis", RuinedMachineBlock::new)
+    public static BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL_CHASSIS = REGISTRATE.block("ruined_machine_general_chassis", CDirectionalFacingBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.provided())
             .simpleItem()
             .register();
     // ruined_machine_general_screen
-    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_GENERAL_SCREEN = REGISTRATE.block("ruined_machine_general_screen", RuinedMachineBlock::new)
+    public static BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL_SCREEN = REGISTRATE.block("ruined_machine_general_screen", CDirectionalFacingBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.provided())
             .simpleItem()
             .register();
     // ruined_machine_general_screen_cracked
-    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_GENERAL_SCREEN_CRACKED = REGISTRATE.block("ruined_machine_general_screen_cracked", RuinedMachineBlock::new)
+    public static BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL_SCREEN_CRACKED = REGISTRATE.block("ruined_machine_general_screen_cracked", CDirectionalFacingBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.provided())
             .simpleItem()
             .register();
     // ruined_machine_general_storage
-    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_GENERAL_STORAGE = REGISTRATE.block("ruined_machine_general_storage", RuinedMachineBlock::new)
+    public static BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL_STORAGE = REGISTRATE.block("ruined_machine_general_storage", CDirectionalFacingBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.provided())
             .simpleItem()
             .register();
     // OBJs
-    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_BUTTONS = REGISTRATE.block("ruined_machine_buttons", RuinedMachineBlock::new)
+    public static BlockEntry<CDirectionalRotatableBlock> RUINED_MACHINE_BUTTONS = REGISTRATE.block("ruined_machine_buttons", CDirectionalRotatableBlock::new)
+            .transform(ruinedMachines())
+            .blockstate(FHBlockStateGen.rotateOrient("ruined_machine_buttons"))
+            .simpleItem()
+            .register();
+    public static BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_SCREEN = REGISTRATE.block("ruined_machine_screen", CDirectionalFacingBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.provided())
             .simpleItem()
             .register();
-    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_SCREEN = REGISTRATE.block("ruined_machine_screen", RuinedMachineBlock::new)
+    public static BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_SCREEN_CRACKED = REGISTRATE.block("ruined_machine_screen_cracked", CDirectionalFacingBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.provided())
             .simpleItem()
             .register();
-    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_SCREEN_CRACKED = REGISTRATE.block("ruined_machine_screen_cracked", RuinedMachineBlock::new)
+    public static BlockEntry<CDirectionalRotatableBlock> RUINED_MACHINE_SWITCH = REGISTRATE.block("ruined_machine_switch", CDirectionalRotatableBlock::new)
             .transform(ruinedMachines())
-            .blockstate(FHBlockStateGen.provided())
-            .simpleItem()
-            .register();
-    public static BlockEntry<RuinedMachineBlock> RUINED_MACHINE_SWITCH = REGISTRATE.block("ruined_machine_switch", RuinedMachineBlock::new)
-            .transform(ruinedMachines())
-            .blockstate(FHBlockStateGen.provided())
+            .blockstate(FHBlockStateGen.rotateOrient("ruined_machine_switch"))
             .simpleItem()
             .register();
 

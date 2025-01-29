@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.bootstrap.common;
 
 import static com.teammoeg.frostedheart.FHMain.*;
 
-import com.teammoeg.frostedheart.bootstrap.common.predicate.BlackListPredicate;
+import com.teammoeg.frostedheart.bootstrap.common.base.BlackListPredicate;
 
 import net.minecraft.advancements.critereon.ItemPredicate;
 import net.minecraft.resources.ResourceLocation;

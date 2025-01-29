@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.infrastructure.gen;
 
+import com.teammoeg.chorda.block.CBlockProperties;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.block.WardrobeBlock;
 import com.tterrag.registrate.builders.BlockBuilder;
@@ -29,6 +30,7 @@ import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
 
 import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.BlockItem;
@@ -36,6 +38,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.client.model.generators.ConfiguredModel;
@@ -128,6 +131,24 @@ public class FHBlockStateGen {
                         .noOcclusion())
                 .tag(BlockTags.MINEABLE_WITH_PICKAXE)
                 .tag(BlockTags.NEEDS_IRON_TOOL);
+    }
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> rotateOrient(
+            String path) {
+        return (c, p) -> p.getVariantBuilder(c.get()).forAllStates(bs->{
+        	AttachFace facing=bs.getValue(BlockStateProperties.ATTACH_FACE);
+        	Direction orient=bs.getValue(BlockStateProperties.HORIZONTAL_FACING).getOpposite();
+			
+			float xrot=0;
+			
+		
+			switch(facing) {
+			case CEILING:xrot=0;orient=orient.getOpposite();break;
+			case FLOOR:xrot=180;break;
+			case WALL:xrot=90;break;
+			}
+			float yrot=orient.toYRot();
+			return ConfiguredModel.builder().modelFile(p.models().getExistingFile(FHMain.rl(path))).rotationY((int) yrot).rotationX((int) xrot).build();
+        });
     }
 	public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> wardrobeState(String location) {
 		return (ctx,provider)->{

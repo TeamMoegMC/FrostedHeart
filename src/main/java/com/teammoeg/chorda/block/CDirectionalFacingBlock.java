@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.decoration;
+package com.teammoeg.chorda.block;
 
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -29,8 +29,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import org.jetbrains.annotations.NotNull;
 
-public class RuinedMachineBlock extends DirectionalBlock {
-    public RuinedMachineBlock(Properties p_52591_) {
+public class CDirectionalFacingBlock extends DirectionalBlock {
+    public CDirectionalFacingBlock(Properties p_52591_) {
         super(p_52591_);
         super.registerDefaultState(super.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }

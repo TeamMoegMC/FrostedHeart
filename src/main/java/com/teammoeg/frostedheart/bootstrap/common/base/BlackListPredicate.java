@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.bootstrap.common.predicate;
+package com.teammoeg.frostedheart.bootstrap.common.base;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
