@@ -36,7 +36,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 public class IncubatorT1Screen extends IEContainerScreen<IncubatorT1Container> {
-    private static final ResourceLocation TEXTURE = FHClientUtils.makeTextureLocation("incubator");
+    private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("incubator");
     private IncubatorTileEntity tile;
 
     public IncubatorT1Screen(IncubatorT1Container container, Inventory inv, Component title) {

@@ -20,12 +20,15 @@
 package com.teammoeg.frostedheart.infrastructure.data;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import com.teammoeg.chorda.util.struct.EquipmentSlotMap;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
@@ -45,6 +48,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
@@ -91,7 +95,11 @@ public class FHRecipeCachingReloadListener implements ResourceManagerReloadListe
         //System.out.println(TradePolicy.items.size());
         TradePolicy.totalW = TradePolicy.items.stream().mapToInt(w -> w.getWeight().asInt()).sum();
         
-        ArmorTempData.cacheList=ArmorTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().item(), t->t.getData()));
+        ArmorTempData.cacheList=new HashMap<>();
+        Function<Item,EquipmentSlotMap<ArmorTempData>> armorMapGetter=t->new EquipmentSlotMap<>();
+        ArmorTempData.TYPE.get().filterRecipes(recipes).forEach(t->{
+        	ArmorTempData.cacheList.computeIfAbsent(t.getData().item(), armorMapGetter).put(t.getData().slot().orElse(null), t.getData());
+        });;
         BiomeTempData.cacheList=BiomeTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().biome(), t->t.getData()));
         BlockTempData.cacheList=BlockTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().block(), t->t.getData()));
         CupData.cacheList=CupData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().item(), t->t.getData()));

@@ -36,7 +36,7 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 
 public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
-    private static final ResourceLocation TEXTURE = FHClientUtils.makeTextureLocation("incubatorii");
+    private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("incubatorii");
     private HeatIncubatorTileEntity tile;
 
     public IncubatorT2Screen(IncubatorT2Container container, Inventory inv, Component title) {

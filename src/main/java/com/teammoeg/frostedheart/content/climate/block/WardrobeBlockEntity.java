@@ -19,9 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate.block;
 
-import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -34,33 +32,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class WardrobeBlockEntity extends RandomizableContainerBlockEntity implements IIEInventory {
+public class WardrobeBlockEntity extends RandomizableContainerBlockEntity  {
     private NonNullList<ItemStack> wardrobeInventory = NonNullList.withSize(13, ItemStack.EMPTY);
 
     public WardrobeBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.WARDROBE.get(), pos, state);
     }
 
-    @Override
-    public NonNullList<ItemStack> getInventory() {
-        return wardrobeInventory;
-    }
 
-    @Override
-    public boolean isStackValid(int i, ItemStack itemStack) {
-        return false;
-    }
-
-    @Override
-    public int getSlotLimit(int i) {
-        return 1;
-    }
-
-    @Override
-    public void doGraphicalUpdates() {
-
-    	
-    }
 
     @Override
     public NonNullList<ItemStack> getItems() {
@@ -82,7 +61,7 @@ public class WardrobeBlockEntity extends RandomizableContainerBlockEntity implem
     }
 
     public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player player) {
-        return new WardrobeContainer(
+        return new ClothesInventoryMenu(
             id,
             playerInventory,
             this

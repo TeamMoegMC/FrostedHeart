@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.bootstrap.reference;
 
 import com.teammoeg.frostedheart.FHMain;
 
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
@@ -31,9 +30,12 @@ public class FHSoundEvents {
     public FHSoundEvents() {
     }
     public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, FHMain.MODID);
-    public static final RegistryObject<SoundEvent> MC_BELL = SOUNDS.register("mc_bell", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(FHMain.MODID, "mc_bell")));
-    public static final RegistryObject<SoundEvent> MC_ROLL = SOUNDS.register("mc_roll", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(FHMain.MODID, "mc_roll")));
-    public static final RegistryObject<SoundEvent> ICE_CRACKING = SOUNDS.register("ice_cracking", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(FHMain.MODID, "ice_cracking")));
-    public static final RegistryObject<SoundEvent> WIND = SOUNDS.register("wind", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(FHMain.MODID, "wind")));
-
+    public static final RegistryObject<SoundEvent> MC_BELL = makeReference("mc_bell");
+    public static final RegistryObject<SoundEvent> MC_ROLL = makeReference("mc_roll");
+    public static final RegistryObject<SoundEvent> ICE_CRACKING = makeReference("ice_cracking");
+    public static final RegistryObject<SoundEvent> WIND = makeReference("wind");
+    public static final RegistryObject<SoundEvent> TFOA = makeReference("the_fall_of_arcana");
+    public static RegistryObject<SoundEvent> makeReference(String name){
+    	return SOUNDS.register(name, () -> SoundEvent.createVariableRangeEvent(FHMain.rl(name)));
+    }
 }

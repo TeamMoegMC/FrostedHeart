@@ -67,7 +67,7 @@ import net.minecraft.world.item.ItemStack;
 public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<T, R>> extends IEContainerScreen<GeneratorContainer<R, T>> {
     public static final int TEXW = 512;
     public static final int TEXH = 256;
-    private static final ResourceLocation TEXTURE = FHClientUtils.makeTextureLocation("general_generator");
+    private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("general_generator");
     private static final AtlasUV rangeicons = new AtlasUV(TEXTURE, 256, 0, 128, 64, 2, 5, TEXW, TEXH);
     private static final Point rangePoint = new Point(24, 61);
     private static final RotatableUV minorPointer = new RotatableUV(TEXTURE, 276, 192, 20, 20, 10, 10, TEXW, TEXH);

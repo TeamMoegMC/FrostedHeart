@@ -25,6 +25,7 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.struct.EquipmentSlotMap;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
@@ -116,10 +117,10 @@ public class ClimateCommonEvents {
 
     @SubscribeEvent
     public static void attachToItem(AttachCapabilitiesEvent<ItemStack> event) {
-        ArmorTempData amd=ArmorTempData.cacheList.get(event.getObject().getItem());
+       /* ArmorTempData amd=ArmorTempData.cacheList.get(event.getObject().getItem()).get(null);
         if (amd!=null) {
             event.addCapability(new ResourceLocation(FHMain.MODID, "armor_warmth"),new CurioCapabilityProvider(()->new ArmorTempCurios(amd,event.getObject())));
-        }
+        }*/
     }
 
     @SubscribeEvent
@@ -134,21 +135,24 @@ public class ClimateCommonEvents {
 
     @SubscribeEvent
     public static void insulationDataAttr(ItemAttributeModifierEvent event) {
-        ArmorTempData data=ArmorTempData.cacheList.get(event.getItemStack().getItem());
-
-        if(data!=null) {
-        	EquipmentSlot es=data.slot().orElse(event.getItemStack().getEquipmentSlot());
-        	if(es!=null) {
-	        	SlotKey ecs=EquipmentSlotType.fromVanilla(es);
-	        	if(event.getSlotType()==es) {
-		        	if(data.getInsulation()!=0)
-		        		event.addModifier(FHAttributes.INSULATION.get(), ecs.createAttribute(data.getInsulation(), Operation.ADDITION));
-		        	if(data.getColdProof()!=0)
-		        		event.addModifier(FHAttributes.WIND_PROOF.get(), ecs.createAttribute(data.getColdProof(), Operation.ADDITION));
-		        	if(data.getHeatProof()!=0)
-		        		event.addModifier(FHAttributes.HEAT_PROOF.get(), ecs.createAttribute(data.getHeatProof(), Operation.ADDITION));
+        EquipmentSlotMap<ArmorTempData> dataMap=ArmorTempData.cacheList.get(event.getItemStack().getItem());
+        if(dataMap!=null) {
+	        ArmorTempData data=dataMap.get(event.getSlotType());
+	
+	        if(data!=null) {
+	        	EquipmentSlot es=data.slot().orElse(event.getSlotType());
+	        	if(es!=null) {
+		        	SlotKey ecs=EquipmentSlotType.fromVanilla(es);
+		        	if(event.getSlotType()==es) {
+			        	if(data.getInsulation()!=0)
+			        		event.addModifier(FHAttributes.INSULATION.get(), ecs.createAttribute(data.getInsulation(), Operation.ADDITION));
+			        	if(data.getColdProof()!=0)
+			        		event.addModifier(FHAttributes.WIND_PROOF.get(), ecs.createAttribute(data.getColdProof(), Operation.ADDITION));
+			        	if(data.getHeatProof()!=0)
+			        		event.addModifier(FHAttributes.HEAT_PROOF.get(), ecs.createAttribute(data.getHeatProof(), Operation.ADDITION));
+		        	}
 	        	}
-        	}
+	        }
         }
     }
 

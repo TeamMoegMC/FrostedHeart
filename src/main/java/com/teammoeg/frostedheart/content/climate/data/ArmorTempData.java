@@ -28,6 +28,7 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
+import com.teammoeg.chorda.util.struct.EquipmentSlotMap;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -47,9 +48,10 @@ public record ArmorTempData(Item item,Optional<EquipmentSlot> slot,float insulat
 		Codec.FLOAT.optionalFieldOf("factor",0f).forGetter(o->o.insulation),
 		Codec.FLOAT.optionalFieldOf("heat_proof",0f).forGetter(o->o.heat_proof),
 		Codec.FLOAT.optionalFieldOf("wind_proof",0f).forGetter(o->o.wind_proof)).apply(t, ArmorTempData::new));
-	
+
 	public static RegistryObject<CodecRecipeSerializer<ArmorTempData>> TYPE;
-	public static Map<Item,ArmorTempData> cacheList=ImmutableMap.of();
+	public static Map<Item,EquipmentSlotMap<ArmorTempData>> cacheList=ImmutableMap.of();
+	
 	public float getInsulation() {
     	return insulation;
     }

@@ -65,10 +65,8 @@ public class PlayerTemperatureData implements NBTSerializable  {
 			BodyPart.LEGS, 0.4f,
 			BodyPart.FEET, 0.05f
 	);
-
-	@Getter
 	@Setter
-	private FHTemperatureDifficulty difficulty = FHConfig.SERVER.tdiffculty.get();
+	private FHTemperatureDifficulty difficulty = null;//in case null, get it from  FHConfig.SERVER.tdiffculty.get()
 	float previousTemp;
 	float bodyTemp;
 	float envTemp;
@@ -93,15 +91,21 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		temperatureOfParts.put(BodyPart.TORSO, new Pair<>("torso_temperature", 0.0f));
 		temperatureOfParts.put(BodyPart.LEGS, new Pair<>("legs_temperature", 0.0f));
 	}
+	public FHTemperatureDifficulty getDifficulty() {
+		if(difficulty==null)
+			return FHConfig.SERVER.tdiffculty.get();
+		return difficulty;
+	}
 	public void load(CompoundTag nbt,boolean isPacket) {
 		// load the difficulty
 		// this can cause issue if the nbt.getstring returns invalid string
 		// do a catch here, and default to normal
-		try {
-			difficulty = FHTemperatureDifficulty.valueOf(nbt.getString("difficulty").toLowerCase());
-		} catch (IllegalArgumentException e) {
-			difficulty = FHTemperatureDifficulty.normal;
-		}
+		if(nbt.contains("difficulty"))
+			try {
+				difficulty = FHTemperatureDifficulty.valueOf(nbt.getString("difficulty").toLowerCase());
+			} catch (IllegalArgumentException e) {
+				difficulty = FHTemperatureDifficulty.normal;
+			}
 
 		previousTemp=nbt.getFloat("previous_body_temperature");
 		bodyTemp=nbt.getFloat("bodytemperature");
@@ -122,7 +126,8 @@ public class PlayerTemperatureData implements NBTSerializable  {
 	}
 	public void save(CompoundTag nc,boolean isPacket) {
 		// save the difficulty
-		nc.putString("difficulty", difficulty.name().toLowerCase());
+		if(difficulty!=null)
+			nc.putString("difficulty", difficulty.name().toLowerCase());
         nc.putFloat("previous_body_temperature",previousTemp);
         nc.putFloat("bodytemperature",bodyTemp);
         nc.putFloat("envtemperature",envTemp);

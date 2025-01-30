@@ -56,7 +56,7 @@ public class FHClientUtils {
         worldIn.addParticle(FHParticleTypes.STEAM.get(), pos.getX() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.05D, 0.0D);
     }
 
-    public static ResourceLocation makeTextureLocation(String name) {
+    public static ResourceLocation makeGuiTextureLocation(String name) {
         return FHMain.rl("textures/gui/" + name + ".png");
     }
 

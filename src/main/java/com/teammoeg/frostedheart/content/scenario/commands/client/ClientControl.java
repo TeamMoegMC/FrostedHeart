@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.scenario.commands.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.Param;
@@ -57,9 +58,12 @@ import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance.Attenuation;
+import net.minecraft.core.Holder.Reference;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
@@ -290,8 +294,11 @@ public class ClientControl implements IClientControlCommand {
 		.ifPresentOrElse(t->ClientUtils.mc().getMusicManager().startPlaying(new Music(t, 0, 0, true)), ()->{
 			FHMain.LOGGER.error("[FHScenario] Music "+name+" Not found");
 		});*/
-		ClientUtils.mc().getSoundManager().play(SimpleSoundInstance.forMusic(SoundEvent.createVariableRangeEvent(new ResourceLocation(name))));
-		
+		Optional<Reference<SoundEvent>> sound=ClientUtils.getWorld().registryAccess().lookup(Registries.SOUND_EVENT).get().get(ResourceKey.create(Registries.SOUND_EVENT, new ResourceLocation(name)));
+		//ClientUtils.mc().getSoundManager().play(SimpleSoundInstance.forMusic(SoundEvent.createVariableRangeEvent(new ResourceLocation(name))));
+		sound.ifPresentOrElse(t->ClientUtils.mc().getMusicManager().startPlaying(new Music(t, 0, 0, true)), ()->{
+			FHMain.LOGGER.error("[FHScenario] Music "+name+" Not found");
+		});
 		
 	
 	}
@@ -304,6 +311,7 @@ public class ClientControl implements IClientControlCommand {
 	@Override
 	public void sound(IClientScene runner,@Param("n")@Param("name")String name,@Param("repeat")int rep) {
 		//ISound sound=SimpleSound.music();
+		
 		SoundInstance sound=new SimpleSoundInstance(FHScenarioClient.getPathOf(new ResourceLocation(name),""), SoundSource.MASTER,1, 1, ClientUtils.getWorld().getRandom(), rep>0, 0, Attenuation.LINEAR, 0, 0, 0, true);
 		ClientUtils.mc().getSoundManager().play(sound);
 		current.add(sound);

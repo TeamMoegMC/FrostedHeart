@@ -34,7 +34,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Inventory;
 
 public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
-    private static final ResourceLocation TEXTURE = FHClientUtils.makeTextureLocation("sauna_vent");
+    private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("sauna_vent");
 
     private static final TexturedUV clock1 = new TexturedUV(TEXTURE, 176, 0, 38, 38);
     private static final TexturedUV clock2 = new TexturedUV(TEXTURE, 214, 0, 38, 38);

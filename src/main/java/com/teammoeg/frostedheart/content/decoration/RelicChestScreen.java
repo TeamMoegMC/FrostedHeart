@@ -26,7 +26,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 
 public class RelicChestScreen extends IEContainerScreen<RelicChestContainer> {
-    private static final ResourceLocation TEXTURE = FHClientUtils.makeTextureLocation("relic_chest");
+    private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("relic_chest");
 
     public RelicChestScreen(RelicChestContainer inventorySlotsIn, Inventory inv, Component title) {
         super(inventorySlotsIn, inv, title,TEXTURE);
