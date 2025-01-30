@@ -20,23 +20,34 @@
 package com.teammoeg.frostedheart.content.climate.data;
 
 import java.util.Map;
+import java.util.Optional;
 
 import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.registries.RegistryObject;
 
-public record ArmorTempData(Item item,float insulation, float heat_proof, float wind_proof){
+public record ArmorTempData(Item item,Optional<EquipmentSlot> slot,float insulation, float heat_proof, float wind_proof){
 	public static final Codec<ArmorTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 		CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).fieldOf("item").forGetter(o->o.item),
+		Codec.STRING.comapFlatMap(n->{
+			try {
+				return DataResult.success(EquipmentSlot.byName(n));
+			}catch(IllegalArgumentException ex) {
+				return DataResult.error(ex::getMessage);
+			}
+		}, EquipmentSlot::getName).optionalFieldOf("slot").forGetter(o->o.slot),
 		Codec.FLOAT.optionalFieldOf("factor",0f).forGetter(o->o.insulation),
 		Codec.FLOAT.optionalFieldOf("heat_proof",0f).forGetter(o->o.heat_proof),
 		Codec.FLOAT.optionalFieldOf("wind_proof",0f).forGetter(o->o.wind_proof)).apply(t, ArmorTempData::new));
+	
 	public static RegistryObject<CodecRecipeSerializer<ArmorTempData>> TYPE;
 	public static Map<Item,ArmorTempData> cacheList=ImmutableMap.of();
 	public float getInsulation() {

@@ -32,6 +32,7 @@ import lombok.Setter;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -45,12 +46,17 @@ import java.util.Map;
 
 public class PlayerTemperatureData implements NBTSerializable  {
 	public enum BodyPart {
-		TORSO, // 40% area
-		LEGS, // 40% area
-		HANDS, // 5% area
-		FEET, // 5% area
-		HEAD, // 10% area
-		REMOVEALL, // debug only
+		TORSO(EquipmentSlot.CHEST), // 40% area
+		LEGS(EquipmentSlot.LEGS), // 40% area
+		HANDS(EquipmentSlot.MAINHAND), // 5% area
+		FEET(EquipmentSlot.FEET), // 5% area
+		HEAD(EquipmentSlot.CHEST), // 10% area
+		REMOVEALL(null); // debug only
+		public final EquipmentSlot slot;
+
+		private BodyPart(EquipmentSlot slot) {
+			this.slot = slot;
+		}
 	}
 	public static Map<BodyPart, Float> bodyPartAreaMap = Map.of(
 			BodyPart.HEAD, 0.1f,
@@ -220,7 +226,7 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		};
 		// TODO remove out
 //		System.out.printf("Part %s Cond %f\n", bodyPart, clothesOfParts.get(bodyPart).getThermalConductivity(equipment));
-		return clothesOfParts.get(bodyPart).getThermalConductivity(equipment);
+		return clothesOfParts.get(bodyPart).getThermalConductivity(bodyPart.slot,equipment);
 	}
 
 	public float getTemperatureByPart(BodyPart bodyPart) {

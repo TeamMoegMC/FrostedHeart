@@ -22,10 +22,17 @@ package com.teammoeg.frostedheart.content.climate.player;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.AttributeMap;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Arrays;
+import java.util.Collection;
+
+import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 
 class BodyPartClothingData implements Container {
     String name;
@@ -46,36 +53,50 @@ class BodyPartClothingData implements Container {
         Arrays.fill(clothes, ItemStack.EMPTY);
     }
 
-    float getThermalConductivity(ItemStack equipment) {
+    float getThermalConductivity(EquipmentSlot slot,ItemStack equipment) {
         float res=0f;
         float rate=0.4f;
-        if(equipment.getItem() instanceof FHBaseClothesItem) {
-            res += rate * ((FHBaseClothesItem) equipment.getItem()).getWarmthLevel();
+        //if(equipment.getItem() instanceof FHBaseClothesItem) {
+            res += rate * sumAttributes(equipment.getAttributeModifiers(slot).get(FHAttributes.INSULATION.get()));
             rate -= 0.1f;
-        }
+        //}
         for(ItemStack it : this.clothes) {
             if(!it.isEmpty()) {
-                res += rate * ((FHBaseClothesItem) it.getItem()).getWarmthLevel();
+                res += rate * sumAttributes(it.getAttributeModifiers(slot).get(FHAttributes.INSULATION.get()));
                 rate -= 0.1f;
             }
         }
         return 100/(100+res);
     }
 
-    float getWindResistance(ItemStack equipment) {
-        float res=0f;
+    float getWindResistance(EquipmentSlot slot,ItemStack equipment) {
+    	double res=0f;
         float rate=0.3f-this.clothes.length*0.1f;
-        if(equipment.getItem() instanceof FHBaseClothesItem) {
+        //if(equipment.getItem() instanceof FHBaseClothesItem) {
             rate += 0.1f;
-            res += rate * ((FHBaseClothesItem) equipment.getItem()).getWarmthLevel();
-        }
+            res += rate * sumAttributes(equipment.getAttributeModifiers(slot).get(FHAttributes.WIND_PROOF.get()));
+        //}
         for(ItemStack it : this.clothes) {
             if(!it.isEmpty()) {
                 rate += 0.1f;
-                res += rate * ((FHBaseClothesItem) it.getItem()).getWindResistance();
+                res += rate * sumAttributes(it.getAttributeModifiers(slot).get(FHAttributes.WIND_PROOF.get()));
             }
         }
-        return res;
+        return (float) res;
+    }
+    public double sumAttributes(Collection<AttributeModifier> attribute) {
+    	double base=0;
+    	double mbase=1;
+    	double mtotal=1;
+    	for(AttributeModifier attrib:attribute) {
+    		if(attrib.getOperation()==Operation.ADDITION)
+    			base+=attrib.getAmount();
+    		if(attrib.getOperation()==Operation.MULTIPLY_BASE)
+    			mbase*=attrib.getAmount();
+    		if(attrib.getOperation()==Operation.MULTIPLY_TOTAL)
+    			mtotal*=attrib.getAmount();
+    	}
+    	return base*mbase*mtotal;
     }
     @Override
     public int getContainerSize() {

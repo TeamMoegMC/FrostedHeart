@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
+import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
 
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.LivingEntity;
@@ -140,7 +141,7 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
     }
 
 	@Override
-	public float getEffectiveTempAdded(Either<ISlotType,EquipmentSlotType> slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
+	public float getEffectiveTempAdded(Either<ISlotType,SlotKey> slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
 		if(slot==null) {
 			return getFuelAmount(stack) > 0 ? 7 : 0;
 		}else if(slot.map(t->false, t->t.isHand())) {

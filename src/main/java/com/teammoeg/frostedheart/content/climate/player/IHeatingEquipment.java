@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.climate.player;
 import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Either;
+import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
 
 import net.minecraft.world.item.ItemStack;
 import top.theillusivec4.curios.api.type.ISlotType;
@@ -45,5 +46,5 @@ public interface IHeatingEquipment {
      * @param bodyTemp        the body temperature, normalize to 0<br>
      * @return returns body temperature change
      */
-    float getEffectiveTempAdded(@Nullable Either<ISlotType,EquipmentSlotType> slot,ItemStack stack, float effectiveTemp, float bodyTemp);
+    float getEffectiveTempAdded(@Nullable Either<ISlotType,SlotKey> slot,ItemStack stack, float effectiveTemp, float bodyTemp);
 }

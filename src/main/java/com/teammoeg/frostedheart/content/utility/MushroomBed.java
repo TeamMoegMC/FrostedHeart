@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
+import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
 
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.LivingEntity;
@@ -123,7 +124,7 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
     }
 
 	@Override
-	public float getEffectiveTempAdded(Either<ISlotType,EquipmentSlotType> slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
+	public float getEffectiveTempAdded(Either<ISlotType,SlotKey> slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
 		if(slot==null)
 			return 0.5f;
         if (stack.getDamageValue() > 0) {

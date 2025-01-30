@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
+import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
 
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.world.item.TooltipFlag;
@@ -149,7 +150,7 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
     }
 
 	@Override
-	public float getEffectiveTempAdded(Either<ISlotType,EquipmentSlotType> slot, ItemStack stack, float effectiveTemp,
+	public float getEffectiveTempAdded(Either<ISlotType,SlotKey> slot, ItemStack stack, float effectiveTemp,
 			float bodyTemp) {
 		if(slot==null)return 12.5f;
 		

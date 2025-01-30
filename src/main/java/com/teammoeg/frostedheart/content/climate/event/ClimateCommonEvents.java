@@ -36,6 +36,7 @@ import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
+import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
 import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;
@@ -136,16 +137,16 @@ public class ClimateCommonEvents {
         ArmorTempData data=ArmorTempData.cacheList.get(event.getItemStack().getItem());
 
         if(data!=null) {
-        	EquipmentSlot es=event.getItemStack().getEquipmentSlot();
+        	EquipmentSlot es=data.slot().orElse(event.getItemStack().getEquipmentSlot());
         	if(es!=null) {
-	        	EquipmentSlotType ecs=EquipmentSlotType.fromVanilla(es);
+	        	SlotKey ecs=EquipmentSlotType.fromVanilla(es);
 	        	if(event.getSlotType()==es) {
 		        	if(data.getInsulation()!=0)
-		        		event.addModifier(FHAttributes.INSULATION.get(), new AttributeModifier(ecs.getSlotUUID(0), ecs.getKey(0), data.getInsulation(), Operation.ADDITION));
+		        		event.addModifier(FHAttributes.INSULATION.get(), ecs.createAttribute(data.getInsulation(), Operation.ADDITION));
 		        	if(data.getColdProof()!=0)
-		        		event.addModifier(FHAttributes.WIND_PROOF.get(), new AttributeModifier(ecs.getSlotUUID(0), ecs.getKey(0), data.getColdProof(), Operation.ADDITION));
+		        		event.addModifier(FHAttributes.WIND_PROOF.get(), ecs.createAttribute(data.getColdProof(), Operation.ADDITION));
 		        	if(data.getHeatProof()!=0)
-		        		event.addModifier(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(ecs.getSlotUUID(0), ecs.getKey(0), data.getHeatProof(), Operation.ADDITION));
+		        		event.addModifier(FHAttributes.HEAT_PROOF.get(), ecs.createAttribute(data.getHeatProof(), Operation.ADDITION));
 	        	}
         	}
         }
