@@ -279,6 +279,11 @@ public class GeneratorData implements SpecialData {
         process = 0;
         processMax = 0;
         steamProcess = 0;
+        steamLevel = 0;
+        fluid = null;
+        power = 0;
+        lastPower=0;
+        
     }
 
     protected double getHeatEfficiency(SpecialDataHolder<?> teamData) {
