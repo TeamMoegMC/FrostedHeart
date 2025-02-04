@@ -45,54 +45,57 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BlockTempStats implements TooltipModifier {
-    protected final Block block;
-    public BlockTempStats(Block block) {
-        this.block = block;
-    }
+	protected final Block block;
 
-    @Nullable
-    public static BlockTempStats create(Item item) {
-        if (item instanceof BlockItem blockItem) {
-            Block block = blockItem.getBlock();
-            return new BlockTempStats(block);
-        }
-        return null;
-    }
+	public BlockTempStats(Block block) {
+		this.block = block;
+	}
 
-    @Override
-    public void modify(ItemTooltipEvent context) {
-        List<Component> stats = getStats(block, context.getItemStack(), context.getEntity());
-        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>(),
-                GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_LEFT_CONTROL,
-                "S", "Ctrl",
-                "holdForTemperature", "holdForControls"
-        );
-        if (!stats.isEmpty()) {
-            List<Component> tooltip = context.getToolTip();
-            tooltip.add(Components.immutableEmpty());
-            tooltip.addAll(desc.getCurrentLines());
-        }
-    }
+	@Nullable
+	public static BlockTempStats create(Item item) {
+		if (item instanceof BlockItem blockItem) {
+			Block block = blockItem.getBlock();
+			return new BlockTempStats(block);
+		}
+		return null;
+	}
 
-    public static List<Component> getStats(Block block, @Nullable ItemStack stack, @Nullable Player player) {
-        List<Component> list = new ArrayList<>();
-        BlockTempData data = BlockTempData.cacheList.get(block);
-        if (data != null) {
-            float heat = data.getTemp();
-            heat = (Math.round(heat * 10)) / 10.0F;// round
-            String s = TemperatureDisplayHelper.toTemperatureDeltaFloatString(heat);
-            Lang.translate("tooltip", "temp.block")
-                    .style(ChatFormatting.GRAY)
-                    .addTo(list);
+	@Override
+	public void modify(ItemTooltipEvent context) {
+		final BlockTempData data = BlockTempData.cacheList.get(block);
+		final ItemStack stack = context.getItemStack();
+		final Player player = context.getEntity();
 
-            int progress = Mth.ceil(Mth.clamp(Math.abs(heat) * 0.1, 0, 3));
+		if (data != null) {
+			KeyControlledDesc desc = new KeyControlledDesc(() -> getStats(data, stack, player), GLFW.GLFW_KEY_S, "S",
+					"holdForTemperature");
+			List<Component> tooltip = context.getToolTip();
+			tooltip.add(Components.immutableEmpty());
+			tooltip.addAll(desc.getCurrentLines());
+		}
+	}
+	public static List<Component> getStats(Block block, @Nullable ItemStack stack, @Nullable Player player) {
+		final BlockTempData data = BlockTempData.cacheList.get(block);
+		return getStats(data,stack,player);
+	}
 
-            LangBuilder builder = Lang.builder()
-                    .add(FHTextIcon.thermometer.getIcon())
-                    .add(Lang.text(" " + s + " " + TooltipHelper.makeProgressBar(3, progress))
-                            .style(heat < 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD));
-            builder.addTo(list);
-        }
-        return list;
-    }
+	public static List<Component> getStats(BlockTempData data, @Nullable ItemStack stack, @Nullable Player player) {
+
+		if (data != null) {
+			List<Component> list = new ArrayList<>();
+			float heat = data.getTemp();
+			heat = (Math.round(heat * 10)) / 10.0F;// round
+			String s = TemperatureDisplayHelper.toTemperatureDeltaFloatString(heat);
+			Lang.translate("tooltip", "temp.block").style(ChatFormatting.GRAY).addTo(list);
+
+			int progress = Mth.ceil(Mth.clamp(Math.abs(heat) * 0.1, 0, 3));
+
+			LangBuilder builder = Lang.builder().add(FHTextIcon.thermometer.getIcon())
+					.add(Lang.text(" " + s + " " + TooltipHelper.makeProgressBar(3, progress))
+							.style(heat < 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD));
+			builder.addTo(list);
+			return list;
+		}
+		return null;
+	}
 }

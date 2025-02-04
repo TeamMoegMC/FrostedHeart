@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.health.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.lang.ComponentOptimizer;
+import com.teammoeg.frostedheart.content.health.capability.Nutrition;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import com.teammoeg.frostedheart.util.client.FGuis;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
@@ -88,12 +89,12 @@ public class NutritionScreen extends Screen {
         pose.popPose();
     }
 
-    private static void renderNutritionBar(GuiGraphics guiGraphics, int x, int y, NutritionCapability.Nutrition n) {
+    private static void renderNutritionBar(GuiGraphics guiGraphics, int x, int y, Nutrition n) {
 
-        renderBar(guiGraphics,x-40,y-30,fat_icon,Component.literal("fat"),n.fat()/10000,FAT_COLOR);
-        renderBar(guiGraphics,x+40,y-30,protein_icon,Component.literal("protein"),n.protein()/10000,PROTEIN_COLOR);
-        renderBar(guiGraphics,x-40,y+30,carbohydrate_icon,Component.literal("carbohydrate"),n.carbohydrate()/10000,CARBOHYDRATE_COLOR);
-        renderBar(guiGraphics,x+40,y+30,vegetable_icon,Component.literal("vegetable"),n.vegetable()/10000,VEGETABLE_COLOR);
+        renderBar(guiGraphics,x-40,y-30,fat_icon,Component.literal("fat"),n.getFat()/10000,FAT_COLOR);
+        renderBar(guiGraphics,x+40,y-30,protein_icon,Component.literal("protein"),n.getProtein()/10000,PROTEIN_COLOR);
+        renderBar(guiGraphics,x-40,y+30,carbohydrate_icon,Component.literal("carbohydrate"),n.getCarbohydrate()/10000,CARBOHYDRATE_COLOR);
+        renderBar(guiGraphics,x+40,y+30,vegetable_icon,Component.literal("vegetable"),n.getVegetable()/10000,VEGETABLE_COLOR);
 
     }
 

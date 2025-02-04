@@ -64,22 +64,25 @@ public class FoodTempStats implements TooltipModifier {
 
     @Override
     public void modify(ItemTooltipEvent context) {
-        List<Component> stats = getFoodStats(item, context.getItemStack(), context.getEntity());
-        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>(),
-                GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_LEFT_CONTROL,
-                "S", "Ctrl",
-                "holdForTemperature", "holdForControls"
-        );
-        if (!stats.isEmpty()) {
+    	final ITempAdjustFood data = FoodTempData.getTempAdjustFood(context.getItemStack());
+    	final ItemStack stack = context.getItemStack();
+		final Player player = context.getEntity();
+        
+        if (data!=null) {
+            KeyControlledDesc desc = new KeyControlledDesc(()->getFoodStats(data, stack, player),
+                    GLFW.GLFW_KEY_S,
+                    "S", 
+                    "holdForTemperature"
+            );
             List<Component> tooltip = context.getToolTip();
             tooltip.add(Components.immutableEmpty());
             tooltip.addAll(desc.getCurrentLines());
         }
     }
 
-    public static List<Component> getFoodStats(Item item, ItemStack stack, Player player) {
+    public static List<Component> getFoodStats(ITempAdjustFood data, ItemStack stack, Player player) {
         List<Component> list = new ArrayList<>();
-        ITempAdjustFood data = FoodTempData.getTempAdjustFood(stack);
+        
         if (data != null) {
             float env = PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getEnvTemp).orElse(0f);
             float heat = (float) (data.getHeat(stack, env) * FHConfig.SERVER.tempSpeed.get());

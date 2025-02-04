@@ -59,12 +59,13 @@ public class EquipmentTempStats implements TooltipModifier {
     @Override
     public void modify(ItemTooltipEvent context) {
         List<Component> stats = getStats(item, context.getItemStack(), context.getEntity());
-        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>(),
-                GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_LEFT_CONTROL,
-                "S", "Ctrl",
-                "holdForTemperature", "holdForControls"
-        );
+        
         if (!stats.isEmpty()) {
+        	KeyControlledDesc desc = new KeyControlledDesc(()->stats, 
+                    GLFW.GLFW_KEY_S, 
+                    "S", 
+                    "holdForTemperature"
+            );
             List<Component> tooltip = context.getToolTip();
             tooltip.add(Components.immutableEmpty());
             tooltip.addAll(desc.getCurrentLines());

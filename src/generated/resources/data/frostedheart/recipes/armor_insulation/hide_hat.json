@@ -2,7 +2,7 @@
   "type": "frostedheart:armor_temp",
   "factor": 300.0,
   "heat_proof": 0.5,
-  "item": "frostedheart:buff_coat",
-  "slot": "hands",
+  "item": "frostedheart:hide_hat",
+  "slot": "head",
   "wind_proof": 1.0
 }

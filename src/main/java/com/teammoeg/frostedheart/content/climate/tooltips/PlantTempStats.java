@@ -61,6 +61,7 @@ public class PlantTempStats implements TooltipModifier {
             // In general, BonemeableBlock is growable
             // IPlantable is plantable
             // but there are exceptions...
+            // suggest: fully datapack define instead of old check.
             if (block instanceof BonemealableBlock || block instanceof IPlantable) {
                 return new PlantTempStats(block);
             }
@@ -71,12 +72,13 @@ public class PlantTempStats implements TooltipModifier {
     @Override
     public void modify(ItemTooltipEvent context) {
         List<Component> stats = getStats(block, context.getItemStack(), context.getEntity());
-        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>(),
-                GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_LEFT_CONTROL,
-                "S", "Ctrl",
-                "holdForTemperature", "holdForControls"
-        );
+        
         if (!stats.isEmpty()) {
+        	KeyControlledDesc desc = new KeyControlledDesc(()->stats, 
+                    GLFW.GLFW_KEY_S, 
+                    "S", 
+                    "holdForTemperature"
+            );
             List<Component> tooltip = context.getToolTip();
             tooltip.add(Components.immutableEmpty());
             tooltip.addAll(desc.getCurrentLines());

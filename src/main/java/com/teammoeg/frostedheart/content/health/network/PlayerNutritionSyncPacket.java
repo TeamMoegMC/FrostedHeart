@@ -20,7 +20,9 @@
 package com.teammoeg.frostedheart.content.health.network;
 
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
+import com.teammoeg.frostedheart.content.health.capability.ImmutableNutrition;
+import com.teammoeg.frostedheart.content.health.capability.Nutrition;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
@@ -37,8 +39,8 @@ public class PlayerNutritionSyncPacket implements CMessage {
         vegetable = buffer.readFloat();
     }
 
-    public PlayerNutritionSyncPacket(NutritionCapability.Nutrition nutrition) {
-        this(nutrition.fat(),nutrition.carbohydrate(),nutrition.protein(),nutrition.vegetable());
+    public PlayerNutritionSyncPacket(Nutrition nutrition) {
+        this(nutrition.getFat(),nutrition.getCarbohydrate(),nutrition.getProtein(),nutrition.getVegetable());
     }
 
      public PlayerNutritionSyncPacket(float fat ,float carbohydrate ,float portein,float vegetable) {
@@ -63,7 +65,7 @@ public class PlayerNutritionSyncPacket implements CMessage {
         }
     }
 
-    public NutritionCapability.Nutrition getNutrition(){
-        return new NutritionCapability.Nutrition(fat,carbohydrate,protein,vegetable);
+    public ImmutableNutrition getNutrition(){
+        return new ImmutableNutrition(fat,carbohydrate,protein,vegetable);
     }
 }

@@ -412,18 +412,15 @@ public class WorldTemperature {
         return getPlantDataWithDefault(block).blizzardVulnerable();
     }
 
-    private static boolean fertilizable(LevelAccessor level, BlockPos pos, Block block) {
-        float blockTemp = block(level, pos);
+    private static boolean fertilizable(float blockTemp,  Block block) {
         return getMinFertilizeTemp(block) <= blockTemp && getMaxFertilizeTemp(block) >= blockTemp;
     }
 
-    private static boolean growable(LevelAccessor level, BlockPos pos, Block block) {
-        float blockTemp = block(level, pos);
+    private static boolean growable(float blockTemp,  Block block) {
         return getMinGrowTemp(block) <= blockTemp && getMaxGrowTemp(block) >= blockTemp;
     }
 
-    private static boolean survivable(LevelAccessor level, BlockPos pos, Block block) {
-        float blockTemp = block(level, pos);
+    private static boolean survivable(float blockTemp, Block block) {
         return getMinSurviveTemp(block) <= blockTemp && getMaxSurviveTemp(block) >= blockTemp;
     }
 
@@ -470,13 +467,13 @@ public class WorldTemperature {
         if (snowDamageable(level, pos, block)) {
             return PlantStatus.WILL_DIE;
         }
-        if (fertilizable(level, pos, block)) {
+        if (fertilizable(blockTemp, block)) {
             return PlantStatus.CAN_FERTILIZE;
         }
-        if (growable(level, pos, block)) {
+        if (growable(blockTemp, block)) {
             return PlantStatus.CAN_GROW;
         }
-        if (survivable(level, pos, block)) {
+        if (survivable(blockTemp, block)) {
             return PlantStatus.CAN_SURVIVE;
         }
         return PlantStatus.WILL_DIE;

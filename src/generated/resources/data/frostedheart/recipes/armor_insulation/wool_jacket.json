@@ -2,7 +2,7 @@
   "type": "frostedheart:armor_temp",
   "factor": 500.0,
   "heat_proof": 0.3,
-  "item": "frostedheart:gambeson",
+  "item": "frostedheart:wool_jacket",
   "slot": "torso",
   "wind_proof": 0.5
 }

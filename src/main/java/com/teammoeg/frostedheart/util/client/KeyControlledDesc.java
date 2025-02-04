@@ -24,102 +24,51 @@ import com.teammoeg.chorda.util.CUtils;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraftforge.common.util.Lazy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static net.minecraft.ChatFormatting.*;
 import static net.minecraft.ChatFormatting.DARK_GRAY;
 
 public class KeyControlledDesc {
-    List<Component> lines;
-    List<Component> linesOnS;
-    List<Component> linesOnCtrl;
-    int key1;
-    int key2;
-    String key1Desc;
-    String key2Desc;
-    String key1Translation;
-    String key2Translation;
+	List<Component> lines;
+	Supplier<List<Component>> linesOnKey;
+	int key1;
+	MutableComponent keyTooltip;
+	String[] holdDesc;
 
-    // initialize with empty lines
-    public KeyControlledDesc(List<Component> shiftLines, List<Component> ctrlLines, int key1, int key2,
-                             String key1Desc, String key2Desc,
-                             String key1Translation, String key2Translation) {
-        this.lines = new ArrayList<>();
-        this.linesOnS = shiftLines;
-        this.linesOnCtrl = ctrlLines;
-        this.key1 = key1;
-        this.key2 = key2;
-        this.key1Desc = key1Desc;
-        this.key2Desc = key2Desc;
-        this.key1Translation = key1Translation;
-        this.key2Translation = key2Translation;
+	// initialize with empty lines
+	public KeyControlledDesc(Supplier<List<Component>> LinesOnKey, int key1, String key1Desc, String key1Translation) {
+		this.lines = new ArrayList<>();
+		this.key1 = key1;
 
-        boolean hasDescription = !this.linesOnS.isEmpty();
-        boolean hasControls = !this.linesOnCtrl.isEmpty();
+		holdDesc = Lang.translateTooltip(key1Translation, "$").getString().split("\\$");
+		keyTooltip = Lang.text(key1Desc).component();
+		this.linesOnKey=LinesOnKey;
+	}
 
-        if (hasDescription || hasControls) {
-            String[] holdDesc = Lang.translateTooltip(this.key1Translation, "$")
-                    .getString()
-                    .split("\\$");
-            String[] holdCtrl = Lang.translateTooltip(this.key2Translation, "$")
-                    .getString()
-                    .split("\\$");
-            MutableComponent keyShiftTooltip = Lang.text(this.key1Desc).component();
-            MutableComponent keyCtrlTooltip = Lang.text(this.key2Desc).component();
+	public void appendKeyDesc(List<Component> lines, boolean isPressed) {
 
-            for (List<Component> list : Arrays.asList(lines, this.linesOnS, this.linesOnCtrl)) {
-                boolean shift = list == this.linesOnS;
-                boolean ctrl = list == this.linesOnCtrl;
-                if (holdDesc.length != 2 || holdCtrl.length != 2) {
-                    list.add(0, Components.literal("Invalid lang formatting!"));
-                    continue;
-                }
+		MutableComponent tabBuilder = Components.empty();
+		tabBuilder.append(Components.literal(holdDesc[0]).withStyle(DARK_GRAY));
+		tabBuilder.append(keyTooltip.plainCopy().withStyle(isPressed ? WHITE : GRAY));
+		tabBuilder.append(Components.literal(holdDesc[1]).withStyle(DARK_GRAY));
+		lines.add(0, tabBuilder);
+		lines.add(1, Components.immutableEmpty());
+	}
 
-                if (hasControls) {
-                    MutableComponent tabBuilder = Components.empty();
-                    tabBuilder.append(Components.literal(holdCtrl[0]).withStyle(DARK_GRAY));
-                    tabBuilder.append(keyCtrlTooltip.plainCopy()
-                            .withStyle(ctrl ? WHITE : GRAY));
-                    tabBuilder.append(Components.literal(holdCtrl[1]).withStyle(DARK_GRAY));
-                    list.add(0, tabBuilder);
-                }
-
-                if (hasDescription) {
-                    MutableComponent tabBuilder = Components.empty();
-                    tabBuilder.append(Components.literal(holdDesc[0]).withStyle(DARK_GRAY));
-                    tabBuilder.append(keyShiftTooltip.plainCopy()
-                            .withStyle(shift ? WHITE : GRAY));
-                    tabBuilder.append(Components.literal(holdDesc[1]).withStyle(DARK_GRAY));
-                    list.add(0, tabBuilder);
-                }
-
-                if (shift || ctrl)
-                    list.add(hasDescription && hasControls ? 2 : 1, Components.immutableEmpty());
-
-            }
-        }
-
-        if (!hasDescription) {
-            this.linesOnCtrl.clear();
-            this.linesOnS.addAll(lines);
-        }
-        if (!hasControls) {
-            this.linesOnCtrl.clear();
-            this.linesOnCtrl.addAll(lines);
-        }
-    }
-
-    public List<Component> getCurrentLines() {
-        if (com.teammoeg.chorda.util.CUtils.isDown(key1)) {
-            return linesOnS;
-        } else if (com.teammoeg.chorda.util.CUtils.isDown(key2)) {
-            return linesOnCtrl;
-        } else {
-            return lines;
-        }
-    }
+	public List<Component> getCurrentLines() {
+		if (com.teammoeg.chorda.util.CUtils.isDown(key1)) {
+			List<Component> res=linesOnKey.get();
+			appendKeyDesc(res,true);
+			return res;
+		}
+		appendKeyDesc(lines, false);
+		return lines;
+	}
 
 }

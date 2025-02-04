@@ -65,11 +65,11 @@ public class BodyPartData {
 			clothes.setStackInSlot(i, ItemStack.EMPTY);
 	}
 
-	public float getThermalConductivity(BodyPart part,EquipmentSlot slot, ItemStack equipment) {
+	public float getThermalConductivity(BodyPart part, ItemStack equipment) {
 		float res = 0f;
 		float rate = 0.4f;
 		if (!equipment.isEmpty()) {
-			res += rate * sumAttributes(equipment.getAttributeModifiers(slot).get(FHAttributes.INSULATION.get()));
+			res += rate * sumAttributes(equipment.getAttributeModifiers(part.slot).get(FHAttributes.INSULATION.get()));
 			rate -= 0.1f;
 		}
 		for (int i = 0; i < clothes.getSlots(); i++) {
@@ -85,12 +85,12 @@ public class BodyPartData {
 		return 100 / (100 + res);
 	}
 
-	public float getWindResistance(BodyPart part,EquipmentSlot slot, ItemStack equipment) {
+	public float getWindResistance(BodyPart part, ItemStack equipment) {
 		double res = 0f;
 		float rate = 0.3f - this.clothes.getSlots() * 0.1f;
 		if (!equipment.isEmpty()) {
 			rate += 0.1f;
-			res += rate * sumAttributesPercentage(equipment.getAttributeModifiers(slot).get(FHAttributes.WIND_PROOF.get()));
+			res += rate * sumAttributesPercentage(equipment.getAttributeModifiers(part.slot).get(FHAttributes.WIND_PROOF.get()));
 		}
 		for (int i = 0; i < clothes.getSlots(); i++) {
 			ItemStack it = clothes.getStackInSlot(i);
@@ -105,7 +105,7 @@ public class BodyPartData {
 		return (float) res;
 	}
 
-	public double sumAttributes(Collection<AttributeModifier> attribute) {
+	public static double sumAttributes(Collection<AttributeModifier> attribute) {
 		double base = 0;
 		double mbase = 1;
 		double mtotal = 1;
@@ -119,7 +119,7 @@ public class BodyPartData {
 		}
 		return base * mbase * mtotal;
 	}
-	public double sumAttributesPercentage(Collection<AttributeModifier> attribute) {
+	public static double sumAttributesPercentage(Collection<AttributeModifier> attribute) {
 		double base = 0;
 		for (AttributeModifier attrib : attribute) {
 			if (attrib.getOperation() == Operation.MULTIPLY_TOTAL)

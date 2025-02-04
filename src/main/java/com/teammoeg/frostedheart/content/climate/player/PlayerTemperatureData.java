@@ -22,14 +22,17 @@ package com.teammoeg.frostedheart.content.climate.player;
 import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.io.NBTSerializable;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -75,6 +78,9 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		public static BodyPart fromVanilla(EquipmentSlot es) {
 			if(es==null)return null;
 			return VANILLA_MAP.get(es);
+		}
+		public Component getName() {
+			return Lang.translateGui("body_part."+getSerializedName());
 		}
 	}
 	@Setter
@@ -218,7 +224,7 @@ public class PlayerTemperatureData implements NBTSerializable  {
 			equipment=player.getMainHandItem();
 		// TODO remove out
 //		System.out.printf("Part %s Cond %f\n", bodyPart, clothesOfParts.get(bodyPart).getThermalConductivity(equipment));
-		return clothesOfParts.get(bodyPart).getThermalConductivity(bodyPart.slot,equipment);
+		return clothesOfParts.get(bodyPart).getThermalConductivity(bodyPart,equipment);
 	}
 	public float getWindResistanceByPart(Player player, BodyPart bodyPart) {
 		ItemStack equipment;
@@ -228,7 +234,7 @@ public class PlayerTemperatureData implements NBTSerializable  {
 			equipment=player.getMainHandItem();
 		// TODO remove out
 //		System.out.printf("Part %s Cond %f\n", bodyPart, clothesOfParts.get(bodyPart).getThermalConductivity(equipment));
-		return clothesOfParts.get(bodyPart).getWindResistance(bodyPart.slot,equipment);
+		return clothesOfParts.get(bodyPart).getWindResistance(bodyPart,equipment);
 	}
 
 	public float getTemperatureByPart(BodyPart bodyPart) {

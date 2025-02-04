@@ -58,6 +58,7 @@ public record ArmorTempData(Item item,Optional<BodyPart> slot,float insulation, 
 		return map.get(part);
 		
 	}
+	
 	public float getInsulation() {
     	return insulation;
     }

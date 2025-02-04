@@ -44,6 +44,7 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
 import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
 import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.compat.caupona.NutritionEvents;
 import com.teammoeg.frostedheart.compat.create.CreateCompat;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.compat.ftbq.FHRewardTypes;
@@ -176,7 +177,8 @@ public class FHMain {
             FHRewardTypes.init();
         if (ModList.get().isLoaded("ftbteams"))
             FTBTeamsEvents.init();
-
+        if(ModList.get().isLoaded("caupona"))
+        	forge.addListener(NutritionEvents::gatherNutritionFromSoup);
         // Deferred Registration
         // Order doesn't matter here, as that's why we use deferred registers
         // See ForgeRegistries for more info

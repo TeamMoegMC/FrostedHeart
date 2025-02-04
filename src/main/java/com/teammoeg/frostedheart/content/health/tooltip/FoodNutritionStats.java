@@ -23,6 +23,8 @@ import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
+import com.teammoeg.frostedheart.content.health.capability.ImmutableNutrition;
+import com.teammoeg.frostedheart.content.health.capability.Nutrition;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import com.teammoeg.frostedheart.util.client.FineProgressBarBuilder;
 import com.teammoeg.frostedheart.util.client.Lang;
@@ -51,13 +53,15 @@ public class FoodNutritionStats implements TooltipModifier {
 
     @Override
     public void modify(ItemTooltipEvent context) {
-        List<Component> stats = getFoodStats(item, context.getItemStack(), context.getEntity());
-        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>(),
-                GLFW.GLFW_KEY_N, GLFW.GLFW_KEY_LEFT_CONTROL,
-                "N", "Ctrl",
-                "holdForNutrition", "holdForControls"
-                );
-        if (!stats.isEmpty()) {
+    	final ItemStack stack=context.getItemStack();
+    	final Player player=context.getEntity();
+        
+        if (FoodTemperatureHandler.isFoodOrDrink(stack)) {
+        	KeyControlledDesc desc = new KeyControlledDesc(()->getFoodStats(stack, player), 
+                    GLFW.GLFW_KEY_N,
+                    "N", 
+                    "holdForNutrition"
+                    );
             List<Component> tooltip = context.getToolTip();
             tooltip.add(Components.immutableEmpty());
             tooltip.addAll(desc.getCurrentLines());
@@ -68,34 +72,36 @@ public class FoodNutritionStats implements TooltipModifier {
     static final int CARBOHYDRATE_COLOR=0xFFd4781c;
     static final int VEGETABLE_COLOR=0xFF31d41c;
     static final int PROGRESS_LENGTH=100;
-    public static List<Component> getFoodStats(Item item, ItemStack stack, Player player) {
-        List<Component> list = new ArrayList<>();
+    public static List<Component> getFoodStats(ItemStack stack, Player player) {
+        
 
-        if(player == null) return list;
-        NutritionCapability.Nutrition foodNutrition = NutritionCapability.getFoodNutrition(player.level(), stack);
+        if(player == null) return null;
+        
+        Nutrition foodNutrition = NutritionCapability.getFoodNutrition(player, stack);
 
-        if (FoodTemperatureHandler.isFoodOrDrink(stack) && foodNutrition != null) {
+        if(foodNutrition!=null) {
+        	List<Component> list = new ArrayList<>();
             Lang.translate("tooltip", "nutrition")
                     .style(ChatFormatting.GRAY)
                     .addTo(list);
-            NutritionCapability.Nutrition nutrition = foodNutrition.scale(1/foodNutrition.getNutritionValue());
+            Nutrition nutrition = foodNutrition.scale(1/foodNutrition.getNutritionValue());
             FineProgressBarBuilder builder=new FineProgressBarBuilder(PROGRESS_LENGTH);
             //list.add(Lang.str("\uF504").withStyle(FHTextIcon.applyFont(Style.EMPTY)));
-            if(nutrition.fat()>0) {
-            	builder.addElement(FAT_COLOR, "\uF504",nutrition.fat());
+            if(nutrition.getFat()>0) {
+            	builder.addElement(FAT_COLOR, "\uF504",nutrition.getFat());
             }
-            if(nutrition.protein()>0) {
-            	builder.addElement(PROTEIN_COLOR, "\uF505",nutrition.protein());
+            if(nutrition.getProtein()>0) {
+            	builder.addElement(PROTEIN_COLOR, "\uF505",nutrition.getProtein());
             }
-            if(nutrition.carbohydrate()>0) {
-            	builder.addElement(CARBOHYDRATE_COLOR, "\uF502",nutrition.carbohydrate());
+            if(nutrition.getCarbohydrate()>0) {
+            	builder.addElement(CARBOHYDRATE_COLOR, "\uF502",nutrition.getCarbohydrate());
             }
-            if(nutrition.vegetable()>0) {
-            	builder.addElement(VEGETABLE_COLOR, "\uF503",nutrition.vegetable());
+            if(nutrition.getVegetable()>0) {
+            	builder.addElement(VEGETABLE_COLOR, "\uF503",nutrition.getVegetable());
             }
             list.add(builder.build());
         }
-        return list;
+        return null;
     }
 //
 //    private static void addLine(List<Component> list,String suffix,float value,int color) {

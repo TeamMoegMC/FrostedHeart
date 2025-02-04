@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.health.capability;
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.health.event.GatherFoodNutritionEvent;
 import com.teammoeg.frostedheart.content.health.network.PlayerNutritionSyncPacket;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -42,30 +43,7 @@ import javax.annotation.Nullable;
 import java.util.UUID;
 
 public class NutritionCapability implements NBTSerializable {
-
-
-    public record Nutrition(float fat , float carbohydrate, float protein , float vegetable){
-        public Nutrition(){
-            this(0);
-        }
-        public Nutrition(float v){
-            this(v,v,v,v);
-        }
-        public Nutrition scale(float scale){
-            return new Nutrition(fat*scale,carbohydrate*scale,protein*scale,vegetable*scale);
-        }
-        public Nutrition add(Nutrition nutrition){
-            return new Nutrition(fat+nutrition.fat,carbohydrate+nutrition.carbohydrate,protein+nutrition.protein,vegetable+nutrition.vegetable);
-        }
-        public float getNutritionValue(){
-            return fat + carbohydrate + protein + vegetable;
-        }
-        public boolean isZero(){
-            return fat == 0 && carbohydrate == 0 && protein == 0 && vegetable == 0;
-        }
-    }
-
-    @Override
+	@Override
     public void save(CompoundTag compound, boolean isPacket) {
         compound.putFloat("fat", nutrition.fat);
         compound.putFloat("carbohydrate", nutrition.carbohydrate);
@@ -75,50 +53,50 @@ public class NutritionCapability implements NBTSerializable {
 
     @Override
     public void load(CompoundTag nbt, boolean isPacket) {
-        set(new Nutrition(nbt.getFloat("fat"),nbt.getFloat("carbohydrate"),nbt.getFloat("protein"),nbt.getFloat("vegetable")));
+        set(new ImmutableNutrition(nbt.getFloat("fat"),nbt.getFloat("carbohydrate"),nbt.getFloat("protein"),nbt.getFloat("vegetable")));
     }
-
-    private Nutrition nutrition = new Nutrition(5000);
+    public static final ImmutableNutrition DEFAULT_VALUE=new ImmutableNutrition(5000);
+    private MutableNutrition nutrition = DEFAULT_VALUE.mutableCopy();
 
 
     public void addFat(Player player, float add) {
-        this.nutrition = new Nutrition(nutrition.fat+add,nutrition.carbohydrate,nutrition.protein,nutrition.vegetable);
+        this.nutrition.fat+=add;
         syncToClientOnRestore(player);
     }
 
     public void addCarbohydrate(Player player, float add) {
-        this.nutrition = new Nutrition(nutrition.fat,nutrition.carbohydrate+add,nutrition.protein,nutrition.vegetable);
+        this.nutrition.carbohydrate+=add;
         syncToClientOnRestore(player);
     }
 
     public void addProtein(Player player, float add) {
-        this.nutrition = new Nutrition(nutrition.fat,nutrition.carbohydrate,nutrition.protein+add,nutrition.vegetable);
+        this.nutrition.protein+=add;
         syncToClientOnRestore(player);
     }
 
     public void addVegetable(Player player, float add) {
-        this.nutrition = new Nutrition(nutrition.fat,nutrition.carbohydrate,nutrition.protein,nutrition.vegetable+add);
+        this.nutrition.vegetable+=add;
         syncToClientOnRestore(player);
     }
 
     public void set(Nutrition temp) {
-        this.nutrition = temp;
+    	if(temp!=this.nutrition)
+    		this.nutrition.set(temp);
     }
-
     public void setFat(float temp) {
-        this.nutrition = new Nutrition(temp,nutrition.carbohydrate,nutrition.protein,nutrition.vegetable);
+        this.nutrition.fat=temp;
     }
 
     public void setCarbohydrate(float temp) {
-        this.nutrition = new Nutrition(nutrition.fat,temp,nutrition.protein,nutrition.vegetable);
+        this.nutrition.carbohydrate=temp;
     }
 
     public void setProtein(float temp) {
-        this.nutrition = new Nutrition(nutrition.fat,nutrition.carbohydrate,temp,nutrition.vegetable);
+        this.nutrition.protein=temp;
     }
 
     public void setVegetable(float temp) {
-        this.nutrition = new Nutrition(nutrition.fat,nutrition.carbohydrate,nutrition.protein,temp);
+        this.nutrition.vegetable=temp;
     }
 
     public Nutrition get() {
@@ -136,11 +114,6 @@ public class NutritionCapability implements NBTSerializable {
         }
     }
 
-    public void modifyNutrition(Player player, Nutrition nutrition) {
-        set(get().add(nutrition));
-        syncToClientOnRestore(player);
-    }
-
     /**
      * 如一个食物营养值为0.1，0，0，0.2，饱食度是4，那么这个食物给玩家增加的基础营养值就是0.1*4,0,0,0.2*4
      * 再乘以营养增加比例，默认是40
@@ -150,19 +123,19 @@ public class NutritionCapability implements NBTSerializable {
     public void eat(Player player, ItemStack food) {
         if(!food.isEdible()) return;
         Level level = player.level();
-        NutritionRecipe wRecipe = NutritionRecipe.getRecipeFromItem(level, food);
+        Nutrition wRecipe = NutritionRecipe.getRecipeFromItem(player, food);
         if(wRecipe == null) return;
         int nutrition = food.getFoodProperties(player).getNutrition();
-        Nutrition recipeNutrition = wRecipe.getNutrition();
-        Nutrition n = recipeNutrition.scale(nutrition).scale(FHConfig.SERVER.nutritionGainRate.get());
-        modifyNutrition(player, n);
+        Nutrition recipeNutrition = wRecipe;
+        this.nutrition.addScaled(recipeNutrition, nutrition*FHConfig.SERVER.nutritionGainRate.get());
+        syncToClientOnRestore(player);
     }
 
     public void consume(Player player) {
         float radio = - 0.1f * FHConfig.SERVER.nutritionConsumptionRate.get();
 
-        Nutrition nutrition = get();
-        modifyNutrition(player, nutrition.scale(radio / nutrition.getNutritionValue()));
+        this.nutrition.addScaled(this.nutrition, radio / nutrition.getNutritionValue());
+        syncToClientOnRestore(player);
     }
 
 
@@ -230,9 +203,8 @@ public class NutritionCapability implements NBTSerializable {
     }
 
     @Nullable
-    public static Nutrition getFoodNutrition(Level level,ItemStack food) {
-        NutritionRecipe recipe = NutritionRecipe.getRecipeFromItem(level, food);
-        if(recipe == null) return null;
-        return recipe.getNutrition();
+    public static Nutrition getFoodNutrition(Player player,ItemStack food) {
+        return NutritionRecipe.getRecipeFromItem(player, food);
+        
     }
 }
