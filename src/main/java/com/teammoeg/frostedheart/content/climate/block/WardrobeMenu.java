@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.climate.block;
 
+import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.climate.block.ClothesInventoryMenu.LiningSlot;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
@@ -28,7 +29,7 @@ public class WardrobeMenu extends ClothesInventoryMenu {
 		
 	}
 	public WardrobeMenu(int id, Inventory inventoryPlayer, WardrobeBlockEntity tile) {
-		super(id, inventoryPlayer,37);
+		super(FHMenuTypes.WARDROBE.get(),id, inventoryPlayer,37);
 		blockEntity=tile;
 		for(int p=0;p<3;p++) {
 	        for(int k=0;k<1;++k) {

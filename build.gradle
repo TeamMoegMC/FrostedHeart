@@ -278,13 +278,13 @@ dependencies {
     datagenImplementation fg.deobf("curse.maven:caupona-656147:5116975")
 
     // LDLib
-    compileOnly fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
+    implementation fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
 
     // oculus
-    compileOnly fg.deobf("maven.modrinth:oculus:${oculus_version}")
+    implementation fg.deobf("maven.modrinth:oculus:${oculus_version}")
 
     // embeddium
-    compileOnly fg.deobf("org.embeddedt:embeddium-${minecraft_version}:${embeddium_version}")
+    implementation fg.deobf("org.embeddedt:embeddium-${minecraft_version}:${embeddium_version}")
 
     // Comforts
 //    implementation fg.deobf("curse.maven:comforts-276951:5503516")

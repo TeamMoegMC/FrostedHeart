@@ -49,7 +49,6 @@ public class FHNotifyChunkHeatUpdatePacket implements CMessage {
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	FHMain.LOGGER.info("Notifing player for chunk heat update...");
             if (LDLib.isClient()) {
                 InfraredViewRenderer.notifyChunkDataUpdate();
             }

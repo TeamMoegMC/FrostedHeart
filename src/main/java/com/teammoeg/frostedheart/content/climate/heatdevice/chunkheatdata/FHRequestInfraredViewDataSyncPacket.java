@@ -72,7 +72,7 @@ public class FHRequestInfraredViewDataSyncPacket implements CMessage {
                     }
                 }
                 var heatAreaList = new ArrayList<>(heatAreas.values());
-                FHMain.LOGGER.info("Sending "+heatAreaList.size()+" heats to client");
+
                 FHNetwork.sendPlayer(player, new FHResponseInfraredViewDataSyncPacket(chunkPos, heatAreaList));
             }
         });

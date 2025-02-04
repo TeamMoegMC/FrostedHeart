@@ -62,6 +62,6 @@ public class PillarHeatArea extends CubicHeatArea {
 
     @Override
     public float[] getStructData() {
-        return new float[] {getCenterX() + 0.5f, getCenterY() + 0.5f, getCenterZ() + 0.5f, 1, value, getRadius(), upper, lower};
+        return new float[] {getCenterX() + 0.5f, getCenterY() + 0.5f, getCenterZ() + 0.5f, 1, value-20, getRadius(), getCenterY()+upper+0.005f, getCenterY()-lower-0.005f};
     }
 }

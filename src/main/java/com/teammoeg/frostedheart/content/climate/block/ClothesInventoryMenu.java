@@ -38,6 +38,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.ItemStack;
@@ -79,7 +80,7 @@ public class ClothesInventoryMenu extends CBaseMenu {
         this(id,inventoryPlayer);
     }
     public ClothesInventoryMenu(int id, Inventory inventoryPlayer) {
-        super(FHMenuTypes.WARDROBE.get(), id,inventoryPlayer.player, 13);
+        super(FHMenuTypes.CLOTHES_GUI.get(), id,inventoryPlayer.player, 13);
 
         createLiningSlots(inventoryPlayer);
         super.addPlayerInventory(inventoryPlayer, 8, 120, 178);
@@ -88,8 +89,8 @@ public class ClothesInventoryMenu extends CBaseMenu {
     /**
      * For use by wardrobe
      * */
-    ClothesInventoryMenu(int id, Inventory inventoryPlayer,int max_slots) {
-        super(FHMenuTypes.WARDROBE.get(), id,inventoryPlayer.player, max_slots);
+    ClothesInventoryMenu(MenuType<?> type,int id, Inventory inventoryPlayer,int max_slots) {
+        super(type, id,inventoryPlayer.player, max_slots);
         createLiningSlots(inventoryPlayer);
     }
     private void createLiningSlots(Inventory inventoryPlayer) {
@@ -114,5 +115,6 @@ public class ClothesInventoryMenu extends CBaseMenu {
             this.addSlot(new LiningSlot(inventoryPlayer.player,PlayerTemperatureData.BodyPart.FEET,ptd.clothesOfParts.get(PlayerTemperatureData.BodyPart.FEET), k, 100+k*18, 76));
         }
     }
+    
 
 }

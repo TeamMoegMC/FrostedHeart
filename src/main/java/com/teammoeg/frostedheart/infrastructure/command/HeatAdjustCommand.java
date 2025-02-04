@@ -24,6 +24,7 @@ import java.util.Collection;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
@@ -37,6 +38,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.server.command.EnumArgument;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class HeatAdjustCommand {
@@ -62,7 +64,19 @@ public class HeatAdjustCommand {
                                     IntegerArgumentType.getInteger(ct, "range"),
                                     IntegerArgumentType.getInteger(ct, "temperature"));
                             return Command.SINGLE_SUCCESS;
-                        }))));
+                        })
+                        .then(Commands.argument("top", IntegerArgumentType.integer()).suggests((ct,sb)->sb.suggest(2).buildFuture())
+                        		.then(Commands.argument("bottom", IntegerArgumentType.integer()).suggests((ct,sb)->sb.suggest(2).buildFuture())
+                        		.executes(ct->{
+                        		 ChunkHeatData.addPillarTempAdjust(ct.getSource().getLevel(),
+	                                     BlockPosArgument.getBlockPos(ct, "position"),
+	                                     IntegerArgumentType.getInteger(ct, "range"),
+	                                     
+	                                     IntegerArgumentType.getInteger(ct, "top"),
+	                                     IntegerArgumentType.getInteger(ct, "bottom"),
+	                                     IntegerArgumentType.getInteger(ct, "temperature"));
+                             return Command.SINGLE_SUCCESS;
+                        }))))));
 
         // Get
         LiteralArgumentBuilder<CommandSourceStack> get = Commands.literal("get")

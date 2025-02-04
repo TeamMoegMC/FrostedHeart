@@ -71,7 +71,7 @@ public class CubicHeatArea implements IHeatArea {
 
     @Override
     public float[] getStructData() {
-        return new float[] {center.getX() + 0.5f, center.getY() + 0.5f, center.getZ() + 0.5f, 0, value, getRadius(), 0, 0};
+        return new float[] {center.getX() + 0.5f, center.getY() + 0.5f, center.getZ() + 0.5f, 0, value-20, getRadius()+0.005f, 0, 0};
     }
 
     @Override

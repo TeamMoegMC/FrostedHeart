@@ -64,7 +64,6 @@ public class FHResponseInfraredViewDataSyncPacket implements CMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             if (LDLib.isClient()) {
-            	FHMain.LOGGER.info("Client received"+data.length);
                 if (!RenderSystem.isOnRenderThread()) {
                     RenderSystem.recordRenderCall(() -> InfraredViewRenderer.updateData(chunkPos, data));
                 } else {
