@@ -29,6 +29,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 import com.teammoeg.chorda.util.CRegistryHelper;
 
+import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraftforge.registries.RegistryObject;
@@ -49,4 +50,7 @@ public record BiomeTempData(ResourceLocation biome,float temperature) {
 			return data.temperature();
 		return 0F;
 	}
+    public FinishedRecipe toFinished(ResourceLocation name) {
+    	return TYPE.get().toFinished(name, this);
+    }
 }

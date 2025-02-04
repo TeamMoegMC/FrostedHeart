@@ -35,6 +35,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraftforge.fluids.FluidStack;
@@ -59,7 +60,7 @@ public class CCustomMenuSlot {
 			
 		});
 		
-		static final NetworkEncoder<List<Component>> textEncoder=encoders.register(codec(Codec.list(CodecUtil.convertSchema(JsonOps.INSTANCE).xmap(Component.Serializer::fromJson, Component.Serializer::toJsonTree))));
+		static final NetworkEncoder<List<Component>> textEncoder=encoders.register(codec(Codec.list(ExtraCodecs.JSON.xmap(Component.Serializer::fromJson, Component.Serializer::toJsonTree))));
 		static final NetworkEncoder<BitSet> bitSetEncoder=encoders.register(new NetworkEncoder<>() {
 
 			@Override

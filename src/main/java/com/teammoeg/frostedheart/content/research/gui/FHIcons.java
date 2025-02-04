@@ -44,6 +44,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -285,10 +286,10 @@ public class FHIcons {
 
     private static class FHItemIcon extends FHIcon {
         private static final MapCodec<FHItemIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
-                CodecUtil.ITEMSTACK_CODEC.fieldOf("item").forGetter(o -> o.stack)
+                ItemStack.CODEC.fieldOf("item").forGetter(o -> o.stack)
         ).apply(t, FHItemIcon::new));
         private static final Codec<FHItemIcon> ICON_CODEC =
-                CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).xmap(FHItemIcon::new, t->t.stack.getItem());
+                ForgeRegistries.ITEMS.getCodec().xmap(FHItemIcon::new, t->t.stack.getItem());
         ItemStack stack;
 
         public FHItemIcon(ItemLike item2) {

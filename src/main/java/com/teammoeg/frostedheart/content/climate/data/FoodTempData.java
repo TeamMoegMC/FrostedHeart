@@ -33,13 +33,14 @@ import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 public record FoodTempData(Item item,float heat, float min, float max) implements ITempAdjustFood {
 
 
 	public static final Codec<FoodTempData> CODEC=RecordCodecBuilder.create(t->t.group(
-		CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).fieldOf("item").forGetter(o->o.item),
+		ForgeRegistries.ITEMS.getCodec().fieldOf("item").forGetter(o->o.item),
 		Codec.FLOAT.optionalFieldOf("heat",0f).forGetter(o->o.heat),
 		Codec.FLOAT.optionalFieldOf("min",-15f).forGetter(o->o.min),
 		Codec.FLOAT.optionalFieldOf("max",15f).forGetter(o->o.max)).apply(t, FoodTempData::new));

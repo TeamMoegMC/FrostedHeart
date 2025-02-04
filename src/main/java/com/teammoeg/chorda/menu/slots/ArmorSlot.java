@@ -14,8 +14,8 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 public class ArmorSlot extends Slot {
 	public static final ResourceLocation[] TEXTURE_EMPTY_SLOTS = new ResourceLocation[]{InventoryMenu.EMPTY_ARMOR_SLOT_BOOTS, InventoryMenu.EMPTY_ARMOR_SLOT_LEGGINGS, InventoryMenu.EMPTY_ARMOR_SLOT_CHESTPLATE, InventoryMenu.EMPTY_ARMOR_SLOT_HELMET};
-	Player owner;
-	EquipmentSlot equipmentslot;
+	protected Player owner;
+	protected EquipmentSlot equipmentslot;
 
 
 	public ArmorSlot(Player owner, EquipmentSlot equipmentslot,Container pContainer, int pSlot, int pX, int pY) {

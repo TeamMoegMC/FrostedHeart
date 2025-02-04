@@ -28,30 +28,36 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
-import com.teammoeg.chorda.util.struct.EquipmentSlotMap;
+import com.teammoeg.chorda.util.struct.EnumDefaultedMap;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
-public record ArmorTempData(Item item,Optional<EquipmentSlot> slot,float insulation, float heat_proof, float wind_proof){
+public record ArmorTempData(Item item,Optional<BodyPart> slot,float insulation, float heat_proof, float wind_proof){
 	public static final Codec<ArmorTempData> CODEC=RecordCodecBuilder.create(t->t.group(
-		CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).fieldOf("item").forGetter(o->o.item),
-		Codec.STRING.comapFlatMap(n->{
-			try {
-				return DataResult.success(EquipmentSlot.byName(n));
-			}catch(IllegalArgumentException ex) {
-				return DataResult.error(ex::getMessage);
-			}
-		}, EquipmentSlot::getName).optionalFieldOf("slot").forGetter(o->o.slot),
+		ForgeRegistries.ITEMS.getCodec().fieldOf("item").forGetter(o->o.item),
+		CodecUtil.enumCodec(BodyPart.class).optionalFieldOf("slot").forGetter(o->o.slot),
 		Codec.FLOAT.optionalFieldOf("factor",0f).forGetter(o->o.insulation),
 		Codec.FLOAT.optionalFieldOf("heat_proof",0f).forGetter(o->o.heat_proof),
 		Codec.FLOAT.optionalFieldOf("wind_proof",0f).forGetter(o->o.wind_proof)).apply(t, ArmorTempData::new));
 
 	public static RegistryObject<CodecRecipeSerializer<ArmorTempData>> TYPE;
-	public static Map<Item,EquipmentSlotMap<ArmorTempData>> cacheList=ImmutableMap.of();
-	
+	public static Map<Item,EnumDefaultedMap<BodyPart,ArmorTempData>> cacheList=ImmutableMap.of();
+	public static ArmorTempData getData(ItemStack is,BodyPart part) {
+		EnumDefaultedMap<BodyPart, ArmorTempData> map=cacheList.get(is.getItem());
+		if(map==null)return null;
+		
+		return map.get(part);
+		
+	}
 	public float getInsulation() {
     	return insulation;
     }
@@ -60,6 +66,9 @@ public record ArmorTempData(Item item,Optional<EquipmentSlot> slot,float insulat
     }
     public float getColdProof() {
     	return wind_proof;
+    }
+    public FinishedRecipe toFinished(ResourceLocation name) {
+    	return TYPE.get().toFinished(name, this);
     }
     
 }

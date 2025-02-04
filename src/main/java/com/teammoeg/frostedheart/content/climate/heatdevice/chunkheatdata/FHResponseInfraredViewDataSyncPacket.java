@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 import com.lowdragmc.lowdraglib.LDLib;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.ChunkPos;
@@ -63,6 +64,7 @@ public class FHResponseInfraredViewDataSyncPacket implements CMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             if (LDLib.isClient()) {
+            	FHMain.LOGGER.info("Client received"+data.length);
                 if (!RenderSystem.isOnRenderThread()) {
                     RenderSystem.recordRenderCall(() -> InfraredViewRenderer.updateData(chunkPos, data));
                 } else {

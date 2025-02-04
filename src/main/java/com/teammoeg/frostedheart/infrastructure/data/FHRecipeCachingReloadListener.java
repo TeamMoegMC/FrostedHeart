@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
-import com.teammoeg.chorda.util.struct.EquipmentSlotMap;
+import com.teammoeg.chorda.util.struct.EnumDefaultedMap;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
@@ -96,7 +97,7 @@ public class FHRecipeCachingReloadListener implements ResourceManagerReloadListe
         TradePolicy.totalW = TradePolicy.items.stream().mapToInt(w -> w.getWeight().asInt()).sum();
         
         ArmorTempData.cacheList=new HashMap<>();
-        Function<Item,EquipmentSlotMap<ArmorTempData>> armorMapGetter=t->new EquipmentSlotMap<>();
+        Function<Item,EnumDefaultedMap<BodyPart,ArmorTempData>> armorMapGetter=t->new EnumDefaultedMap<>(BodyPart.class);
         ArmorTempData.TYPE.get().filterRecipes(recipes).forEach(t->{
         	ArmorTempData.cacheList.computeIfAbsent(t.getData().item(), armorMapGetter).put(t.getData().slot().orElse(null), t.getData());
         });;

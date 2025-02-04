@@ -33,7 +33,7 @@ import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class WardrobeBlockEntity extends RandomizableContainerBlockEntity  {
-    private NonNullList<ItemStack> wardrobeInventory = NonNullList.withSize(13, ItemStack.EMPTY);
+    private NonNullList<ItemStack> wardrobeInventory = NonNullList.withSize(24, ItemStack.EMPTY);
 
     public WardrobeBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.WARDROBE.get(), pos, state);
@@ -61,7 +61,7 @@ public class WardrobeBlockEntity extends RandomizableContainerBlockEntity  {
     }
 
     public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player player) {
-        return new ClothesInventoryMenu(
+        return new WardrobeMenu(
             id,
             playerInventory,
             this
@@ -85,6 +85,6 @@ public class WardrobeBlockEntity extends RandomizableContainerBlockEntity  {
 
     @Override
     public int getContainerSize() {
-        return 13;
+        return wardrobeInventory.size();
     }
 }

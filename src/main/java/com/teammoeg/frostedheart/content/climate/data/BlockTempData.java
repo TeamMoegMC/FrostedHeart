@@ -28,12 +28,15 @@ import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 public record BlockTempData(Block block,float temperature, boolean level, boolean lit){
 	public static final Codec<BlockTempData> CODEC=RecordCodecBuilder.create(t->t.group(
-		CodecUtil.registryCodec(()->BuiltInRegistries.BLOCK).fieldOf("block").forGetter(o->o.block),
+		ForgeRegistries.BLOCKS.getCodec().fieldOf("block").forGetter(o->o.block),
 		Codec.FLOAT.optionalFieldOf("temperature",0f).forGetter(o->o.temperature),
 		Codec.BOOL.optionalFieldOf("level_divide",false).forGetter(o->o.level),
 		Codec.BOOL.optionalFieldOf("must_lit",false).forGetter(o->o.lit)).apply(t, BlockTempData::new));
@@ -49,5 +52,8 @@ public record BlockTempData(Block block,float temperature, boolean level, boolea
 
     public boolean isLit() {
         return lit;
+    }
+    public FinishedRecipe toFinished(ResourceLocation name) {
+    	return TYPE.get().toFinished(name, this);
     }
 }

@@ -53,6 +53,7 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.SAUNA.get(), SaunaScreen::new);
         MenuScreens.register(FHMenuTypes.INCUBATOR_T1.get(), IncubatorT1Screen::new);
         MenuScreens.register(FHMenuTypes.INCUBATOR_T2.get(), IncubatorT2Screen::new);
+        MenuScreens.register(FHMenuTypes.CLOTHES_GUI.get(), ClothesScreen::new);
         MenuScreens.register(FHMenuTypes.WARDROBE.get(), ClothesScreen::new);
     }
 

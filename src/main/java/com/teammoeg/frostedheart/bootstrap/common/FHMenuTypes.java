@@ -43,6 +43,7 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
 import com.teammoeg.frostedheart.content.climate.block.WardrobeBlockEntity;
+import com.teammoeg.frostedheart.content.climate.block.WardrobeMenu;
 import com.teammoeg.frostedheart.content.climate.block.ClothesInventoryMenu;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
@@ -66,7 +67,8 @@ public class FHMenuTypes {
 		FHMain.MODID);
 	public static final RegistryObject<MenuType<TradeContainer>> TRADE_GUI = CONTAINERS.register("trade", () -> IForgeMenuType.create(TradeContainer::new));
 	public static final RegistryObject<MenuType<HeatStatContainer>> HEAT_STAT = CONTAINERS.register("heat_stat", () -> IForgeMenuType.create(HeatStatContainer::new));
-
+	public static final RegistryObject<MenuType<ClothesInventoryMenu>> CLOTHES_GUI = CONTAINERS.register("clothes", () -> IForgeMenuType.create(ClothesInventoryMenu::new));
+	
 	public static final MultiblockMenuType<T1GeneratorState, T1GeneratorContainer> GENERATOR_T1 = registerMultiblock("generator",T1GeneratorContainer::new,T1GeneratorContainer::new);
 	public static final MultiblockMenuType<T2GeneratorState, T2GeneratorContainer> GENERATOR_T2 = registerMultiblock("generator_t2", T2GeneratorContainer::new, T2GeneratorContainer::new);
 
@@ -75,8 +77,9 @@ public class FHMenuTypes {
 	public static final RegistryObject<MenuType<SaunaContainer>> SAUNA = register(SaunaTileEntity.class, ("sauna_vent"), SaunaContainer::new);
 	public static final RegistryObject<MenuType<IncubatorT1Container>> INCUBATOR_T1 = register(IncubatorTileEntity.class, ("incubator"), IncubatorT1Container::new);
 	public static final RegistryObject<MenuType<IncubatorT2Container>> INCUBATOR_T2 = register(HeatIncubatorTileEntity.class, ("heat_incubator"), IncubatorT2Container::new);
-	public static final RegistryObject<MenuType<ClothesInventoryMenu>> WARDROBE = register(WardrobeBlockEntity.class, ("wardrobe"), ClothesInventoryMenu::new);
+	public static final RegistryObject<MenuType<ClothesInventoryMenu>> WARDROBE = register(WardrobeBlockEntity.class, ("wardrobe"), WardrobeMenu::new);
 
+	
 	@SuppressWarnings("unchecked")
 	public static <T extends AbstractContainerMenu, BE extends BlockEntity> RegistryObject<MenuType<T>> register(Class<BE> BEClass, String name, BEMenuFactory<T, BE> factory) {
 		return CONTAINERS.register(name, () -> IForgeMenuType.create((id, inv, pb) -> {

@@ -87,9 +87,13 @@ public class GeneratorState extends HeatingState {
         if(data.isPresent()) {
         	TeamDataHolder teamData=data.get();
         	GeneratorData dat=teamData.getData(FHSpecialDataTypes.GENERATOR_DATA);
+        	this.setRangeLevel(0);
+        	this.setTempLevel(0);
         	if(origin.equals(dat.actualPos)) {
         		dat.tick(level, teamData);
         		ep.setHeat(dat.lastPower);
+        		this.setRangeLevel(dat.RLevel);
+        		this.setTempLevel(dat.TLevel);
         		dat.lastPower=0;
         	}
         	

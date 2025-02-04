@@ -85,7 +85,7 @@ public class FHLootTableProvider extends LootTableProvider {
                                             .apply(SetItemCountFunction.setCount(UniformGenerator.between(0.0F, 2.0F)))
                                             .apply(LootingEnchantFunction.lootingMultiplier(UniformGenerator.between(0.0F, 1.0F)))))
                     // add FHItems.hide_boots
-                    .withPool(LootPool.lootPool()
+                    /*.withPool(LootPool.lootPool()
                                     .setRolls(ConstantValue.exactly(1.0F))
                                     .add(LootItem.lootTableItem(FHItems.FH_CLOTHES.get("hide_boots").get())
                                             .apply(SetItemCountFunction.setCount(UniformGenerator.between(0.0F, 1.0F)))
@@ -101,7 +101,7 @@ public class FHLootTableProvider extends LootTableProvider {
                     // add FHItems.hide_pants
                                     .add(LootItem.lootTableItem(FHItems.FH_CLOTHES.get("hide_pants").get())
                                             .apply(SetItemCountFunction.setCount(UniformGenerator.between(0.0F, 1.0F)))
-                                            .apply(LootingEnchantFunction.lootingMultiplier(UniformGenerator.between(0.0F, 1.0F)))))
+                                            .apply(LootingEnchantFunction.lootingMultiplier(UniformGenerator.between(0.0F, 1.0F)))))*/
                     // add foods
                     .withPool(LootPool.lootPool()
                                     .setRolls(ConstantValue.exactly(1.0F))

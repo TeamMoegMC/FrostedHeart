@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.chorda.client.CameraHelper;
 import com.teammoeg.chorda.client.ClientUtils;
@@ -29,6 +30,7 @@ import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
+import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import com.teammoeg.frostedheart.content.health.screen.NutritionScreen;
@@ -405,6 +407,9 @@ public class FHClientEvents {
         if (event.getAction() == GLFW.GLFW_PRESS) {
             if (FHKeyMappings.key_health.get().consumeClick()) {
                 Minecraft.getInstance().setScreen(new NutritionScreen());
+            }
+            if(FHKeyMappings.key_clothes.get().consumeClick()) {
+            	FHNetwork.sendToServer(new C2SOpenClothesScreenMessage());
             }
         }
     }

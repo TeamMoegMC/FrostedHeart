@@ -46,6 +46,7 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -63,7 +64,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CodecUtil {
-	static final Function<DynamicOps<?>, Codec<?>> schCodec=SerializeUtil.cached(CodecUtil::scCodec);
 	public static class DispatchNameCodecBuilder<A>{
 		Map<Class<? extends A>,String> classes=new LinkedHashMap<>();
 		Map<String,Codec<? extends A>> codecs=new LinkedHashMap<>();
@@ -142,33 +142,17 @@ public class CodecUtil {
 		}
 		
 	};
-	public static final Codec<ItemStack>  ITEMSTACK_CODEC = RecordCodecBuilder.create(t -> t.group(
-			CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).fieldOf("id").forGetter(ItemStack::getItem),
-			Codec.INT.optionalFieldOf("Count",1).forGetter(ItemStack::getCount),
-			CompoundTag.CODEC.optionalFieldOf("tag").forGetter(i->Optional.ofNullable(i.getTag())))/*,
-			CompoundTag.CODEC.optionalFieldOf("ForgeCaps").forGetter(ItemStack::serializeCaps)*/
-		.apply(t, (id,cnt,tag)->{
-			ItemStack out=new ItemStack(id,cnt);
-			tag.ifPresent(n->out.setTag(n));
-			return out;
-		}));
+
 	public static final Codec<ItemStack>  ITEMSTACK_STRING_CODEC = new AlternativeCodecBuilder<>(ItemStack.class)
-			.add(ITEMSTACK_CODEC)
+			.add(ItemStack.CODEC)
 			.add(ResourceLocation.CODEC.comapFlatMap(t->{
 				Item it= CRegistryHelper.getItem(t);
 				if(it==Items.AIR||it==null)return DataResult.error(()->"Not a item");
 				return DataResult.success(new ItemStack(it,1));
 				
 			}, t-> CRegistryHelper.getRegistryName(t.getItem()))).build();
-	public static final Codec<CompoundTag> COMPOUND_TAG_CODEC=CodecUtil.convertSchema(NbtOps.INSTANCE).comapFlatMap(t->{
-		if(t instanceof CompoundTag)
-			return DataResult.success((CompoundTag)t);
-		return DataResult.error(()->"Cannot cast "+t+" to Compound Tag.");
-	}, UnaryOperator.identity());
 	public static final Codec<Integer> POSITIVE_INT = Codec.intRange(0, Integer.MAX_VALUE);
-	public static final Codec<BlockPos> BLOCKPOS = alternative(BlockPos.class).add(BlockPos.CODEC).add(Codec.LONG.xmap(BlockPos::of, BlockPos::asLong)).build();
-	
-	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(JsonOps.INSTANCE,o2->DataResult.success(o2.toJson()),o->{
+	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(ExtraCodecs.JSON,o2->DataResult.success(o2.toJson()),o->{
 		if(o.isJsonArray()||o.isJsonObject())
 			return DataResult.success(Ingredient.fromJson(o));
 		if(o.isJsonPrimitive()) {
@@ -182,8 +166,8 @@ public class CodecUtil {
 		}
 		return DataResult.error(()->"Not a ingredient");
 	},Ingredient::toNetwork,Ingredient::fromNetwork);
-	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=PacketOrSchemaCodec.create(JsonOps.INSTANCE,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
-	public static final Codec<MobEffectInstance> MOB_EFFECT_CODEC = COMPOUND_TAG_CODEC.xmap(o->MobEffectInstance.load(o),t->t.save(new CompoundTag()));
+	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=PacketOrSchemaCodec.create(ExtraCodecs.JSON,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
+	public static final Codec<MobEffectInstance> MOB_EFFECT_CODEC = CompoundTag.CODEC.xmap(o->MobEffectInstance.load(o),t->t.save(new CompoundTag()));
 	public static final Codec<boolean[]> BOOLEANS = Codec.BYTE.xmap(SerializeUtil::readBooleans, SerializeUtil::writeBooleans);
 	/**
 	 * use {@link Codec#optionalFieldOf(String, Object) optinalFieldOf} in Codec instead for better support
@@ -230,30 +214,10 @@ public class CodecUtil {
 	public static <A> Codec<A> createIntCodec(MappedRegistry<A> registry) {
 		return Codec.INT.xmap(registry::byId, registry::getId);
 	}
-	static <K> Codec<K> scCodec(DynamicOps<K> op){
-		return new Codec<K>(){
-			@Override
-			public <T> DataResult<T> encode(K input, DynamicOps<T> ops, T prefix) {
-				return DataResult.success(op.convertTo(ops, input));
-			}
-	
-			@Override
-			public <T> DataResult<Pair<K, T>> decode(DynamicOps<T> ops, T input) {
-				return DataResult.success(Pair.of(ops.convertTo(op, input), input));
-			}
-			
-		};
-	}
-	public static <I> Codec<I> convertSchema(DynamicOps<I> op){
-		return (Codec<I>) schCodec.apply(op);
-	}
-	
 	public static <S> AlternativeCodecBuilder<S> alternative(Class<S> type){
 		return new AlternativeCodecBuilder<>(type);
 	}
-	public static <K> Codec<K> registryCodec(Supplier<Registry<K>> func) {
-		return new RegistryCodec<>(func);
-	}
+
 	public static <T extends Enum<T>> Codec<T> enumCodec(Class<T> en){
 		Map<String,T> maps=new HashMap<>();
 		T[] values=en.getEnumConstants();

@@ -31,7 +31,7 @@ import net.minecraft.core.BlockPos;
  */
 @Getter
 public class PillarHeatArea extends CubicHeatArea {
-    public static Codec<PillarHeatArea> CODEC = RecordCodecBuilder.create(t -> t.group(CodecUtil.BLOCKPOS.fieldOf("pos").forGetter(o -> o.center),
+    public static Codec<PillarHeatArea> CODEC = RecordCodecBuilder.create(t -> t.group(BlockPos.CODEC.fieldOf("pos").forGetter(o -> o.center),
             Codec.INT.fieldOf("r").forGetter(o -> o.r),
             Codec.INT.fieldOf("u").forGetter(o -> o.upper),
             Codec.INT.fieldOf("d").forGetter(o -> o.lower),

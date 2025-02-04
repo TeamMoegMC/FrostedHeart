@@ -19,19 +19,33 @@
 
 package com.teammoeg.frostedheart.data;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.poifs.filesystem.OfficeXmlFileException;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import blusunrize.immersiveengineering.api.IETags;
 import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.chorda.util.ExcelHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
+import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
+import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
+import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.trade.policy.TradeBuilder;
 
 import net.minecraft.data.DataGenerator;
@@ -40,24 +54,25 @@ import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.ItemLike;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 public class FHRecipeProvider extends RecipeProvider {
 	private final HashMap<String, Integer> PATH_COUNT = new HashMap<>();
-
+	DataGenerator dg;
 	public FHRecipeProvider(DataGenerator generatorIn) {
 		super(generatorIn.getPackOutput());
+		dg=generatorIn;
 	}
 
+	@SuppressWarnings("resource")
 	@Override
 	protected void buildRecipes(@Nonnull Consumer<FinishedRecipe> out) {
-		
-		try (PrintStream ps=new PrintStream(FMLPaths.GAMEDIR.get()
-				.resolve("../src/datagen/resources/data/frostedheart/data/food_healing.csv").toFile());Scanner sc = new Scanner(FMLPaths.GAMEDIR.get()
-				.resolve("../src/datagen/resources/data/frostedheart/data/food_values.csv").toFile(), "UTF-8")) {
+
+		try (PrintStream ps=new PrintStream(openDebugFile("food_healing.csv"));
+				Scanner sc = new Scanner(openDatagenResource("/data/frostedheart/data/food_values.csv"), "UTF-8")) {
 			if(sc.hasNextLine()) {
 				sc.nextLine();
 				while(sc.hasNextLine()) {
@@ -89,11 +104,29 @@ public class FHRecipeProvider extends RecipeProvider {
 				}
 			}
 		}
-		// recipesGenerator(out);
 		catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-
+		//biome
+		ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/biome_temperature.xlsx"), m->{
+			ResourceLocation biome=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("biome")));
+			out.accept(new BiomeTempData(biome,(float)ExcelHelper.getCellValueAsNumber(m.get("temperature"))).toFinished(FHMain.rl("biome_temperature/"+biome.getPath())));
+		});
+		//block
+		ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/block_temperature.xlsx"), m->{
+			ResourceLocation block=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("block")));
+			out.accept(new BlockTempData(CRegistryHelper.getBlock(block),
+					(float)ExcelHelper.getCellValueAsNumber(m.get("temperature")),
+					ExcelHelper.getCellValueAsBoolean(m.get("level_divide")),
+					ExcelHelper.getCellValueAsBoolean(m.get("must_lit"))
+					).toFinished(FHMain.rl("block_temperature/"+block.getPath())));
+		});
+		//world
+		out.accept(new WorldTempData(new ResourceLocation("the_nether"),300).toFinished(FHMain.rl("level_temperature/nether")));
+		out.accept(new WorldTempData(new ResourceLocation("the_end"),-300).toFinished(FHMain.rl("level_temperature/the_end")));
+		
+		
+		
 //		CPFluids.getAll().filter(o->!Arrays.stream(ovride).anyMatch(CRegistries.getRegistryName(o).getPath()::equals)).forEach(f-> {
 //
 //				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+ CRegistries.getRegistryName(f).getPath()+"_thermos"),Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"thermos"))),f,2,2));
@@ -102,9 +135,53 @@ public class FHRecipeProvider extends RecipeProvider {
 //
 //				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+ CRegistries.getRegistryName(f).getPath()+"_thermos"),Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"thermos"))),f,3,2));
 //		});
+        /*Map<String, Float[]> materials = Map.of(
+                "hay", new Float[]{0.2f, 200.0f},
+                "hide", new Float[]{1.0f, 300.0f},
+                "cotton", new Float[]{0.3f, 400.0f},
+                "wool", new Float[]{0.5f, 500.0f},
+                "down", new Float[]{0.7f, 600.0f}
+        );*/
+        //List<ArmorTempData> armorData=new ArrayList<>();
+        for(BodyPart part:BodyPart.values()) {
+        	if(part.slot!=null) {
+        		out.accept(armorData(FHItems.straw_lining,part,200f,.2f,.2f));
+        		out.accept(armorData(FHItems.buff_coat,part,300f,.4f,.3f));
+        		out.accept(armorData(FHItems.gambeson,part,400f,.2f,.4f));
+        		out.accept(armorData(FHItems.kelp_lining,part,200f,.2f,.7f));
+        		//out.accept(armorData(FHItems.cotton,part,500f,.2f,.5f));
+        		//out.accept(armorData(FHItems.straw_lining,part,600f,.2f,.7f));
+        	}
+        }
+        
+		//recipeTrade(out);
+	}
+	private FinishedRecipe armorData(ItemLike item,BodyPart part,float insulation,float heat_proof,float cold_proof) {
+		return new ArmorTempData(item.asItem(), Optional.of(part), insulation, heat_proof,cold_proof).toFinished(FHMain.rl("armor_insulation/lining/"+CRegistryHelper.getPath(item.asItem())+"_"+part.name().toLowerCase()));
 		
+	}
+	private Workbook openWorkBook(String name) {
+		try {
+			HSSFWorkbook book=new HSSFWorkbook(openDatagenResource(name));
+			return book;
+		} catch (OfficeXmlFileException | IOException e) {
+			try {
+				XSSFWorkbook book=new XSSFWorkbook(openDatagenResource(name));
+				return book;
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		}
+		return new HSSFWorkbook();
+	}
 
-		recipeTrade(out);
+	public static InputStream openDatagenResource(String name) {
+		return FHRecipeProvider.class.getResourceAsStream(name);
+	}
+	public static File openDebugFile(String name) {
+		File parfile=FMLPaths.GAMEDIR.get().resolve("debug_output").toFile();
+		parfile.mkdirs();
+		return new File(parfile,name);
 	}
 	private void recipeTrade(@Nonnull Consumer<FinishedRecipe> out) {
 		trade().group().buy(10,10,10,FHItems.rye_bread.get())

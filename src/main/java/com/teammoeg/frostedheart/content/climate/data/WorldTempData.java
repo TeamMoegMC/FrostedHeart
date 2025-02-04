@@ -29,6 +29,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 
+import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.RegistryObject;
@@ -49,5 +50,7 @@ public record WorldTempData(ResourceLocation world,float temperature){
 	public float getTemp() {
         return temperature;
     }
-
+	   public FinishedRecipe toFinished(ResourceLocation name) {
+	    	return TYPE.get().toFinished(name, this);
+	    }
 }

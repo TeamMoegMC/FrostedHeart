@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHNoti
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHRequestInfraredViewDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHResponseInfraredViewDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorModifyPacket;
+import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.content.health.network.PlayerNutritionSyncPacket;
@@ -151,6 +152,7 @@ public class FHNetwork {
 
         registerMessage("climate_data", FHClimatePacket.class);
         registerMessage("temperature_display", FHTemperatureDisplayPacket.class);
+        registerMessage("open_clothes", C2SOpenClothesScreenMessage.class);
 
         //Research Messages
         registerMessage("research_registry", FHResearchRegistrtySyncPacket.class);

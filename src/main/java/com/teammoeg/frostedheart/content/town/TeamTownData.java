@@ -57,7 +57,7 @@ public class TeamTownData implements SpecialData{
 	public static final Codec<TeamTownData> CODEC=RecordCodecBuilder.create(t->t.group(
             Codec.STRING.fieldOf("name").forGetter(o->o.name),
 			TownResourceHolder.CODEC.fieldOf("resources").forGetter(o->o.resources),
-			CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "data", TownWorkerData.CODEC).optionalFieldOf("blocks",Map.of()).forGetter(o->o.blocks),
+			CodecUtil.mapCodec("pos", BlockPos.CODEC, "data", TownWorkerData.CODEC).optionalFieldOf("blocks",Map.of()).forGetter(o->o.blocks),
 			CodecUtil.mapCodec("uuid",UUIDUtil.CODEC,"data",Resident.CODEC).optionalFieldOf("residents",Map.of()).forGetter(o->o.residents)
     ).apply(t, TeamTownData::new));
 //    public static final Codec<TeamTownData> CODEC = CodecUtil.debugCodec(CODEC_TOWN);

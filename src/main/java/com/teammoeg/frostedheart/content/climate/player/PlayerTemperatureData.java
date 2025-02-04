@@ -31,9 +31,11 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
@@ -45,7 +47,7 @@ import java.util.Map;
 // https://ierga.com/hr/wp-content/uploads/sites/2/2017/10/ASHRAE-55-2013.pdf
 
 public class PlayerTemperatureData implements NBTSerializable  {
-	public enum BodyPart {
+	public enum BodyPart implements StringRepresentable{
 		TORSO(EquipmentSlot.CHEST), // 40% area
 		LEGS(EquipmentSlot.LEGS), // 40% area
 		HANDS(EquipmentSlot.MAINHAND), // 5% area
@@ -53,9 +55,22 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		HEAD(EquipmentSlot.CHEST), // 10% area
 		REMOVEALL(null); // debug only
 		public final EquipmentSlot slot;
-
+		private final static Map<EquipmentSlot,BodyPart> VANILLA_MAP=Util.make(new EnumMap<>(EquipmentSlot.class),t->{
+			for(BodyPart part:BodyPart.values())
+				if(part.slot!=null)
+					t.put(part.slot, part);
+		});
 		private BodyPart(EquipmentSlot slot) {
 			this.slot = slot;
+		}
+
+		@Override
+		public String getSerializedName() {
+			return this.name().toLowerCase();
+		}
+		public static BodyPart fromVanilla(EquipmentSlot es) {
+			if(es==null)return null;
+			return VANILLA_MAP.get(es);
 		}
 	}
 	public static Map<BodyPart, Float> bodyPartAreaMap = Map.of(

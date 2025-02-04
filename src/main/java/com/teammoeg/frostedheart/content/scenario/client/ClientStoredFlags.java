@@ -11,7 +11,7 @@ import net.minecraft.nbt.CompoundTag;
 
 public class ClientStoredFlags implements SpecialData{
 	public static final Codec<ClientStoredFlags> CODEC=RecordCodecBuilder.create(t->
-	t.group(CodecUtil.COMPOUND_TAG_CODEC.fieldOf("flags").forGetter(o->o.data))
+	t.group(CompoundTag.CODEC.fieldOf("flags").forGetter(o->o.data))
 			.apply(t, ClientStoredFlags::new));
 	@Getter
 	CompoundTag data;

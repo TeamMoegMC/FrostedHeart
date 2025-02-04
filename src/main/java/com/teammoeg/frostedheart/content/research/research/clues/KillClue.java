@@ -33,11 +33,12 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class KillClue extends ListenerClue {
     public static final MapCodec<KillClue> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
             ListenerClue.BASE_CODEC.forGetter(o -> o.getData()),
-            CodecUtil.registryCodec(() -> BuiltInRegistries.ENTITY_TYPE).fieldOf("entity").forGetter(o -> o.type)
+            ForgeRegistries.ENTITY_TYPES.getCodec().fieldOf("entity").forGetter(o -> o.type)
     ).apply(t, KillClue::new));
     EntityType<?> type;
 

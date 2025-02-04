@@ -1460,7 +1460,7 @@ thinner.png
             .item("debug_remove_all_cloth", n-> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.0f, 0.0f, PlayerTemperatureData.BodyPart.REMOVEALL))
             .register();
 
-    public static final Map<String, ItemEntry<FHBaseClothesItem>> FH_CLOTHES = new HashMap<>();
+    /*public static final Map<String, ItemEntry<FHBaseClothesItem>> FH_CLOTHES = new HashMap<>();
     static {
         // Define item properties for each type of clothing material
         // {windproof, insulation}
@@ -1496,7 +1496,7 @@ thinner.png
                         .register());
             });
         });
-    }
+    }*/
 
     // Tools
     public static final ItemEntry<KnifeItem> MAKESHIFT_KNIFE =

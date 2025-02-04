@@ -36,15 +36,15 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 	Function<S,DataResult<A>> schemaDeserialize;
 	BiConsumer<A,FriendlyByteBuf> bufferSerialize;
 	Function<byte[],A> bufferDeserialize;
-	DynamicOps<S> schemaCodec;
-	public static <A,S> PacketOrSchemaCodec<A,S> create(DynamicOps<S> schema, Function<A, S> schemaSerialize, Function<S, A> schemaDeserialize, BiConsumer<A, FriendlyByteBuf> bufferSerialize, Function<FriendlyByteBuf, A> bufferDeserialize) {
+	Codec<S> schemaCodec;
+	public static <A,S> PacketOrSchemaCodec<A,S> create(Codec<S> schema, Function<A, S> schemaSerialize, Function<S, A> schemaDeserialize, BiConsumer<A, FriendlyByteBuf> bufferSerialize, Function<FriendlyByteBuf, A> bufferDeserialize) {
 		return new PacketOrSchemaCodec<>(schema,
 		schemaSerialize.andThen(DataResult::success),
 		schemaDeserialize.andThen(DataResult::success),
 		bufferSerialize,
 		bs->bufferDeserialize.apply(new FriendlyByteBuf(Unpooled.wrappedBuffer(bs))));
 	}
-	public PacketOrSchemaCodec(DynamicOps<S> schema, Function<A, DataResult<S>> schemaSerialize, Function<S, DataResult<A>> schemaDeserialize, BiConsumer<A, FriendlyByteBuf> bufferSerialize, Function<FriendlyByteBuf, A> bufferDeserialize) {
+	public PacketOrSchemaCodec(Codec<S> schema, Function<A, DataResult<S>> schemaSerialize, Function<S, DataResult<A>> schemaDeserialize, BiConsumer<A, FriendlyByteBuf> bufferSerialize, Function<FriendlyByteBuf, A> bufferDeserialize) {
 		super();
 		this.schemaSerialize = schemaSerialize;
 		this.schemaDeserialize = schemaDeserialize;
@@ -62,7 +62,7 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 			buffer.getBytes(0, ba);
 			return CodecUtil.BYTE_ARRAY_CODEC.encode(ba, ops, prefix);
 		}
-		return schemaSerialize.apply(input).flatMap(t->CodecUtil.convertSchema(schemaCodec).encode(t, ops, prefix) );
+		return schemaSerialize.apply(input).flatMap(t->schemaCodec.encode(t, ops, prefix) );
 	}
 
 	@Override
@@ -70,7 +70,7 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 		if(ops.compressMaps()) {
 			return CodecUtil.BYTE_ARRAY_CODEC.decode(ops, input).map(t->t.mapFirst(bufferDeserialize));
 		}
-		DataResult<Pair<S, T>> obj=CodecUtil.convertSchema(schemaCodec).decode(ops, input);
+		DataResult<Pair<S, T>> obj=schemaCodec.decode(ops, input);
 		return obj.flatMap(t->schemaDeserialize.apply(t.getFirst()).map(o->Pair.of(o, input)));
 	}
 

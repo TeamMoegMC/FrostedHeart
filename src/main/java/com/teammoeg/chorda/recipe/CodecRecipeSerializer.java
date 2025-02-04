@@ -27,10 +27,12 @@ import java.util.stream.Stream;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.teammoeg.chorda.io.CodecUtil;
 
+import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Recipe;
@@ -42,7 +44,11 @@ public record CodecRecipeSerializer<T>(Codec<T> codec,RecipeType<DataContainerRe
 
 	@Override
 	public DataContainerRecipe<T> fromJson(ResourceLocation pRecipeId, JsonObject pSerializedRecipe) {
-		return new DataContainerRecipe<>(pRecipeId,this,CodecUtil.strictDecodeOrThrow(codec.decode(JsonOps.INSTANCE, pSerializedRecipe)));
+		try {
+			return new DataContainerRecipe<>(pRecipeId,this,CodecUtil.strictDecodeOrThrow(codec.decode(JsonOps.INSTANCE, pSerializedRecipe)));
+		}catch(RuntimeException ex) {
+			throw new JsonSyntaxException(ex.getMessage(),ex);
+		}
 	}
 	@Override
 	public @Nullable DataContainerRecipe<T> fromNetwork(ResourceLocation pRecipeId, FriendlyByteBuf pBuffer) {
@@ -66,7 +72,10 @@ public record CodecRecipeSerializer<T>(Codec<T> codec,RecipeType<DataContainerRe
 		}
 		return recipeList;
 	}
-	
+	public FinishedRecipe toFinished(ResourceLocation rl,T data) {
+		return new DataContainerFinishedRecipe<>(rl,this,data);
+		
+	}
 	public Stream<DataContainerRecipe<T>> filterRecipes(Collection<Recipe<?>> recipes){
 		return recipes.stream().filter(r->r instanceof DataContainerRecipe&&r.getType()==type).map(t->(DataContainerRecipe<T>)t);
 	}

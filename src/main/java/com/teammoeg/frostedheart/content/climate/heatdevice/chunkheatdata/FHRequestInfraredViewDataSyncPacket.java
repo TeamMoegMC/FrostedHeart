@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 
 import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -71,6 +72,7 @@ public class FHRequestInfraredViewDataSyncPacket implements CMessage {
                     }
                 }
                 var heatAreaList = new ArrayList<>(heatAreas.values());
+                FHMain.LOGGER.info("Sending "+heatAreaList.size()+" heats to client");
                 FHNetwork.sendPlayer(player, new FHResponseInfraredViewDataSyncPacket(chunkPos, heatAreaList));
             }
         });

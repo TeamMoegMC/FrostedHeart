@@ -30,7 +30,10 @@ public record DataContainerFinishedRecipe<T>(ResourceLocation pId, CodecRecipeSe
 
 	@Override
 	public void serializeRecipeData(JsonObject pJson) {
-		serializer.codec().encode(data, JsonOps.INSTANCE, pJson);
+		JsonObject jo=serializer.codec().encode(data, JsonOps.INSTANCE, pJson).getOrThrow(false, s->{}).getAsJsonObject();
+		pJson.asMap().putAll(jo.asMap());
+		
+		
 	}
 
 	@Override

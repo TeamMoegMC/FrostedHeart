@@ -42,6 +42,7 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * Generator data and utility functions.
@@ -66,12 +67,12 @@ public class GeneratorData implements SpecialData {
             Codec.FLOAT.fieldOf("powerLevel").forGetter(o -> o.power),
             Codec.INT.optionalFieldOf("heated",0).forGetter(o -> o.heated),
             Codec.INT.optionalFieldOf("ranged",0).forGetter(o -> o.ranged),
-            CodecUtil.registryCodec(() -> BuiltInRegistries.FLUID).optionalFieldOf("steamFluid").forGetter(o -> Optional.ofNullable(o.fluid)),
+            ForgeRegistries.FLUIDS.getCodec().optionalFieldOf("steamFluid").forGetter(o -> Optional.ofNullable(o.fluid)),
             Codec.FLOAT.fieldOf("tempLevel").forGetter(o -> o.TLevel),
             Codec.FLOAT.fieldOf("rangeLevel").forGetter(o -> o.RLevel),
             CompoundTag.CODEC.fieldOf("items").forGetter(o -> o.inventory.serializeNBT()),
-            CodecUtil.ITEMSTACK_CODEC.optionalFieldOf("res",ItemStack.EMPTY).forGetter(o -> o.currentItem),
-            CodecUtil.BLOCKPOS.optionalFieldOf("actualPos").forGetter(o -> Optional.ofNullable(o.actualPos)),
+            ItemStack.CODEC.optionalFieldOf("res",ItemStack.EMPTY).forGetter(o -> o.currentItem),
+            BlockPos.CODEC.optionalFieldOf("actualPos").forGetter(o -> Optional.ofNullable(o.actualPos)),
             ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o -> o.dimension == null ? Optional.empty() : Optional.of(o.dimension.location()))
     ).apply(t, GeneratorData::new));
     public final ItemStackHandler inventory = new ItemStackHandler(2);

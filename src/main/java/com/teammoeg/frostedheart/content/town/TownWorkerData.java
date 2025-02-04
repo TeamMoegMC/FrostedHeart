@@ -51,7 +51,7 @@ import java.util.UUID;
 public class TownWorkerData {
 	public static final Codec<TownWorkerData> CODEC=RecordCodecBuilder.create(t->
 	t.group(CodecUtil.enumCodec(TownWorkerType.class).fieldOf("type").forGetter(o->o.type),
-		CodecUtil.BLOCKPOS.fieldOf("pos").forGetter(o->o.pos),
+		BlockPos.CODEC.fieldOf("pos").forGetter(o->o.pos),
 		CompoundTag.CODEC.fieldOf("data").forGetter(o->o.workData),
 		Codec.INT.optionalFieldOf("priority",0).forGetter(o->o.priority)
 		).apply(t,TownWorkerData::new));

@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 
 import com.lowdragmc.lowdraglib.LDLib;
 import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.ChunkPos;
@@ -48,6 +49,7 @@ public class FHNotifyChunkHeatUpdatePacket implements CMessage {
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
+        	FHMain.LOGGER.info("Notifing player for chunk heat update...");
             if (LDLib.isClient()) {
                 InfraredViewRenderer.notifyChunkDataUpdate();
             }

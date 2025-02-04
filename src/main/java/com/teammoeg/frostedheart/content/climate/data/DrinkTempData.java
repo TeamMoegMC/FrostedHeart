@@ -30,11 +30,12 @@ import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 public record DrinkTempData(Fluid fluid,float heat) {
 	public static final Codec<DrinkTempData> CODEC=RecordCodecBuilder.create(t->t.group(
-		CodecUtil.registryCodec(()->BuiltInRegistries.FLUID).fieldOf("fluid").forGetter(o->o.fluid),
+		ForgeRegistries.FLUIDS.getCodec().fieldOf("fluid").forGetter(o->o.fluid),
 		Codec.FLOAT.optionalFieldOf("heat",0f).forGetter(o->o.heat)).apply(t, DrinkTempData::new));
 	public static RegistryObject<CodecRecipeSerializer<DrinkTempData>> TYPE;
 	public static Map<Fluid,DrinkTempData> cacheList=ImmutableMap.of();

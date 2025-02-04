@@ -1,0 +1,5 @@
+{
+  "type": "frostedheart:block_temp",
+  "block": "minecraft:water",
+  "temperature": -0.05
+}

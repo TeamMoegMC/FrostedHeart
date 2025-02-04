@@ -1,0 +1,5 @@
+{
+  "type": "frostedheart:block_temp",
+  "block": "minecraft:snow_block",
+  "temperature": -2.0
+}

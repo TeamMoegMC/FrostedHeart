@@ -29,6 +29,7 @@ import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 public record PlantTempData(Block block,float minFertilize, float minGrow, float minSurvive,
@@ -44,7 +45,7 @@ public record PlantTempData(Block block,float minFertilize, float minGrow, float
 	public static final boolean DEFAULT_BLIZZARD_VULNERABLE = true;
 
 	public static final Codec<PlantTempData> CODEC=RecordCodecBuilder.create(t->t.group(
-			CodecUtil.registryCodec(()->BuiltInRegistries.BLOCK).fieldOf("block").forGetter(o->o.block),
+			ForgeRegistries.BLOCKS.getCodec().fieldOf("block").forGetter(o->o.block),
 			// min
 			Codec.FLOAT.optionalFieldOf("min_fertilize",DEFAULT_BONEMEAL_TEMP).forGetter(o->o.minFertilize),
 			Codec.FLOAT.optionalFieldOf("min_grow",DEFAULT_GROW_TEMP).forGetter(o->o.minGrow),
