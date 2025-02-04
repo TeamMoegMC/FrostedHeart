@@ -19,11 +19,15 @@
 
 package com.teammoeg.frostedheart.content.climate.block;
 
-import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
+import java.util.function.Consumer;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.ui.TexturedUV;
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 
+import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
@@ -32,16 +36,22 @@ import net.minecraft.world.entity.player.Inventory;
 
 public class ClothesScreen extends IEContainerScreen<ClothesInventoryMenu> {
 	private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("changing");
-
+	public static final TexturedUV SLOT_DISABLED=new TexturedUV(FHClientUtils.makeGuiTextureLocation("empty_lining_slot_disabled"),0,0,16,16,16,16);
 	public ClothesScreen(ClothesInventoryMenu inventorySlotsIn, Inventory inv, Component title) {
 		super(inventorySlotsIn, inv, title, TEXTURE);
 		super.imageHeight = 202;
 	}
 
+	@Override
+	protected void drawBackgroundTexture(GuiGraphics graphics) {
+		super.drawBackgroundTexture(graphics);
+		
+	}
+
 	protected void drawContainerBackgroundPre(GuiGraphics pGuiGraphics, float pPartialTick, int pMouseX, int pMouseY) {
 	      int i = this.leftPos;
 	      int j = this.topPos;
-	      InventoryScreen.renderEntityInInventoryFollowsMouse(pGuiGraphics, i + 60, j + 97, 45, (float) (i + 40) - pMouseX,
+	      InventoryScreen.renderEntityInInventoryFollowsMouse(pGuiGraphics, i + 70, j + 97, 45, (float) (i + 40) - pMouseX,
 	                (float) (j + 75 - 50) - pMouseY, ClientUtils.getPlayer());
 	}
 
@@ -49,4 +59,20 @@ public class ClothesScreen extends IEContainerScreen<ClothesInventoryMenu> {
 	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY)
 	{
 	}
+
+	@Override
+	protected void gatherAdditionalTooltips(int mouseX, int mouseY, Consumer<Component> addLine,
+			Consumer<Component> addGray) {
+		for (int j = 0; j < 5; j++) {
+			BodyPart bp=BodyPart.values()[j];
+			if(super.isMouseIn(mouseX, mouseY, 118, 6+18*j, 54, 18)) {
+				addLine.accept(Components.str(String.valueOf(menu.partInsulation.get(bp).getFirst().getValue())));
+				addLine.accept(Components.str(String.valueOf(menu.partInsulation.get(bp).getSecond().getValue())));
+			}
+			
+
+		}
+		super.gatherAdditionalTooltips(mouseX, mouseY, addLine, addGray);
+	}
+	
 }

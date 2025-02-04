@@ -63,6 +63,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.DigDurabilityEnchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -143,10 +144,10 @@ public class ClimateCommonEvents {
 
 	@SubscribeEvent
 	public static void insulationDataAttr(ItemAttributeModifierEvent event) {
-		if(event.getSlotType().getType()!=EquipmentSlot.Type.ARMOR) {
+		if(!event.getSlotType().isArmor()||!Mob.getEquipmentSlotForItem(event.getItemStack()).isArmor()) {
+			
 			return ;
 		}
-		
 		ArmorTempData data = ArmorTempData.getData(event.getItemStack(), BodyPart.fromVanilla(event.getSlotType()));
 		
 		if (data != null) {
@@ -156,10 +157,10 @@ public class ClimateCommonEvents {
 						ecs.createAttribute(data.getInsulation(), Operation.ADDITION));
 			if (data.getColdProof() != 0)
 				event.addModifier(FHAttributes.WIND_PROOF.get(),
-						ecs.createAttribute(data.getColdProof(), Operation.ADDITION));
+						ecs.createAttribute(data.getColdProof(), Operation.MULTIPLY_TOTAL));
 			if (data.getHeatProof() != 0)
 				event.addModifier(FHAttributes.HEAT_PROOF.get(),
-						ecs.createAttribute(data.getHeatProof(), Operation.ADDITION));
+						ecs.createAttribute(data.getHeatProof(), Operation.MULTIPLY_TOTAL));
 		}
 
 	}

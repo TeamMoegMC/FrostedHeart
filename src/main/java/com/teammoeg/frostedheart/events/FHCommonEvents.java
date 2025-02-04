@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
@@ -279,7 +280,8 @@ public class FHCommonEvents {
         //CUtils.clonePlayerCapability(FHCapabilities.ENERGY,ev.getOriginal(),ev.getEntity());
         CUtils.clonePlayerCapability(FHCapabilities.SCENARIO,ev.getOriginal(),ev.getEntity());
         CUtils.clonePlayerCapability(FHCapabilities.WAYPOINT,ev.getOriginal(),ev.getEntity());
-        //CUtils.clonePlayerCapability(PlayerTemperatureData.CAPABILITY,ev.getOriginal(),ev.getEntity());
+        CUtils.clonePlayerCapability(FHCapabilities.PLAYER_TEMP,ev.getOriginal(),ev.getEntity());
+        FHCapabilities.PLAYER_TEMP.getCapability(ev.getEntity()).ifPresent(t->t.deathResetTemperature());
         //FHMain.LOGGER.info("clone");
         if (!ev.getEntity().level().isClientSide) {
             DeathInventoryData orig = DeathInventoryData.get(ev.getOriginal());

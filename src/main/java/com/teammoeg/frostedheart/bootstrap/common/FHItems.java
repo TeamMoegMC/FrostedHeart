@@ -29,7 +29,6 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.item.DyedItemList;
 import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
 import com.teammoeg.frostedheart.item.FHBaseArmorItem;
-import com.teammoeg.frostedheart.content.climate.player.FHBaseClothesItem;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.item.FHToolMaterials;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
@@ -1255,7 +1254,7 @@ thinner.png
             .model(AssetLookup.existingItemModel())
             .register();
 
-    /*
+    
     public static ItemEntry<FHBaseArmorItem> hay_boots = REGISTRATE
             .item("hay_boots", p -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.BOOTS, createProps()))
             .model(AssetLookup.existingItemModel())
@@ -1304,7 +1303,7 @@ thinner.png
             .item("hide_pants", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.LEGGINGS, createProps()))
             .model(AssetLookup.existingItemModel())
             .register();
-     */
+     
     public static ItemEntry<HeaterVestItem> heater_vest = REGISTRATE
             .item("heater_vest", HeaterVestItem::new)
             .properties(p -> p.stacksTo(1).setNoRepair())
@@ -1452,13 +1451,13 @@ thinner.png
                     .register();
 
     // Clothes
-    public static final ItemEntry<FHBaseClothesItem> DEBUG_CLOTH = REGISTRATE
+  /*  public static final ItemEntry<FHBaseClothesItem> DEBUG_CLOTH = REGISTRATE
             .item("debug_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.5f, 100.0f, PlayerTemperatureData.BodyPart.TORSO))
             .register();
 
     public static final ItemEntry<FHBaseClothesItem> REMOVE_ALL = REGISTRATE
             .item("debug_remove_all_cloth", n-> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.0f, 0.0f, PlayerTemperatureData.BodyPart.REMOVEALL))
-            .register();
+            .register();*/
 
     /*public static final Map<String, ItemEntry<FHBaseClothesItem>> FH_CLOTHES = new HashMap<>();
     static {

@@ -28,6 +28,8 @@ import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -61,13 +63,15 @@ public record PlantTempData(Block block,float minFertilize, float minGrow, float
 	public static RegistryObject<CodecRecipeSerializer<PlantTempData>> TYPE;
 	public static Map<Block,PlantTempData> cacheList=ImmutableMap.of();
 	// default constructor
-	public static PlantTempData getPlantData(Block block2) {
-		return null;
+	public static PlantTempData getPlantData(Block block) {
+		return cacheList.get(block);
 	}
 	public PlantTempData(Block blk) {
 		this(blk,DEFAULT_BONEMEAL_TEMP, DEFAULT_GROW_TEMP, DEFAULT_SURVIVE_TEMP,
 				DEFAULT_BONEMEAL_MAX_TEMP, DEFAULT_GROW_MAX_TEMP, DEFAULT_SURVIVE_MAX_TEMP,
 				DEFAULT_SNOW_VULNERABLE, DEFAULT_BLIZZARD_VULNERABLE);
 	}
-
+    public FinishedRecipe toFinished(ResourceLocation name) {
+    	return TYPE.get().toFinished(name, this);
+    }
 }

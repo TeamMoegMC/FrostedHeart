@@ -1,0 +1,12 @@
+{
+  "type": "frostedheart:plant_temp",
+  "blizzard_vulnerable": false,
+  "block": "frostedheart:wolfberry_bush_block",
+  "max_fertilize": 30.0,
+  "max_grow": 30.0,
+  "max_survive": 30.0,
+  "min_fertilize": -10.0,
+  "min_grow": -20.0,
+  "min_survive": -30.0,
+  "snow_vulnerable": false
+}

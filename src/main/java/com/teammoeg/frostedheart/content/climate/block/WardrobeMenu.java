@@ -1,7 +1,8 @@
 package com.teammoeg.frostedheart.content.climate.block;
 
+import com.teammoeg.chorda.menu.CBaseMenu;
+import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
-import com.teammoeg.frostedheart.content.climate.block.ClothesInventoryMenu.LiningSlot;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 
@@ -9,14 +10,14 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.items.IItemHandler;
 
-public class WardrobeMenu extends ClothesInventoryMenu {
-	WardrobeBlockEntity blockEntity;
+public class WardrobeMenu extends CBlockEntityMenu<WardrobeBlockEntity> {
 	int page;
 	protected class PagedLiningSlot extends LiningSlot{
 		final int slotPage;
 
-		public PagedLiningSlot(Player owner, BodyPart part, Container pContainer, int pSlot, int pX, int pY,
+		public PagedLiningSlot(Player owner, BodyPart part, IItemHandler pContainer, int pSlot, int pX, int pY,
 				int slotPage) {
 			super(owner, part, pContainer, pSlot, pX, pY);
 			this.slotPage = slotPage;
@@ -29,9 +30,9 @@ public class WardrobeMenu extends ClothesInventoryMenu {
 		
 	}
 	public WardrobeMenu(int id, Inventory inventoryPlayer, WardrobeBlockEntity tile) {
-		super(FHMenuTypes.WARDROBE.get(),id, inventoryPlayer,37);
+		super(FHMenuTypes.WARDROBE.get(),tile,id, inventoryPlayer.player,37);
 		blockEntity=tile;
-		for(int p=0;p<3;p++) {
+		/*for(int p=0;p<3;p++) {
 	        for(int k=0;k<1;++k) {
 	            this.addSlot(new PagedLiningSlot(inventoryPlayer.player,PlayerTemperatureData.BodyPart.HEAD,blockEntity, 8*p+0+k, 100+k*18, 7,p));
 	        }
@@ -44,7 +45,7 @@ public class WardrobeMenu extends ClothesInventoryMenu {
 	        for(int k=0;k<1;++k) {
 	            this.addSlot(new PagedLiningSlot(inventoryPlayer.player,PlayerTemperatureData.BodyPart.FEET,blockEntity, 8*p+7+k, 100+k*18, 76,p));
 	        }
-		}
+		}*/
 		super.addPlayerInventory(inventoryPlayer, 8, 120, 178);
 	}
 	@Override

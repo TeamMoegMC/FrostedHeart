@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.function.Consumer;
@@ -44,6 +46,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
+import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.trade.policy.TradeBuilder;
@@ -52,6 +55,7 @@ import net.minecraft.data.DataGenerator;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
@@ -124,8 +128,20 @@ public class FHRecipeProvider extends RecipeProvider {
 		//world
 		out.accept(new WorldTempData(new ResourceLocation("the_nether"),300).toFinished(FHMain.rl("level_temperature/nether")));
 		out.accept(new WorldTempData(new ResourceLocation("the_end"),-300).toFinished(FHMain.rl("level_temperature/the_end")));
-		
-		
+		//plant
+		ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/plant_temperature.xlsx"), m->{
+			ResourceLocation block=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("block")));
+			out.accept(new PlantTempData(CRegistryHelper.getBlock(block),
+					(float)ExcelHelper.getCellValueAsNumber(m.get("min_fertilize")),
+					(float)ExcelHelper.getCellValueAsNumber(m.get("min_grow")),
+					(float)ExcelHelper.getCellValueAsNumber(m.get("min_survive")),
+					(float)ExcelHelper.getCellValueAsNumber(m.get("max_fertilize")),
+					(float)ExcelHelper.getCellValueAsNumber(m.get("max_grow")),
+					(float)ExcelHelper.getCellValueAsNumber(m.get("max_survive")),
+					ExcelHelper.getCellValueAsBoolean(m.get("survive_snow")),
+					ExcelHelper.getCellValueAsBoolean(m.get("survive_blizzard"))
+					).toFinished(FHMain.rl("plant_temperature/"+block.getPath())));
+		});
 		
 //		CPFluids.getAll().filter(o->!Arrays.stream(ovride).anyMatch(CRegistries.getRegistryName(o).getPath()::equals)).forEach(f-> {
 //
@@ -135,29 +151,37 @@ public class FHRecipeProvider extends RecipeProvider {
 //
 //				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+ CRegistries.getRegistryName(f).getPath()+"_thermos"),Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"thermos"))),f,3,2));
 //		});
-        /*Map<String, Float[]> materials = Map.of(
-                "hay", new Float[]{0.2f, 200.0f},
-                "hide", new Float[]{1.0f, 300.0f},
-                "cotton", new Float[]{0.3f, 400.0f},
-                "wool", new Float[]{0.5f, 500.0f},
-                "down", new Float[]{0.7f, 600.0f}
-        );*/
+        Map<String, Float[]> materials = Map.of(
+                "hay", new Float[]{.2f,0.2f, 200.0f},
+                "hide", new Float[]{.5f,1.0f, 300.0f},
+                //"cotton", new Float[]{0.3f, 400.0f},
+                "wool", new Float[]{.3f,0.5f, 500.0f}
+                //"down", new Float[]{0.7f, 600.0f}
+        );
         //List<ArmorTempData> armorData=new ArrayList<>();
         for(BodyPart part:BodyPart.values()) {
         	if(part.slot!=null) {
         		out.accept(armorData(FHItems.straw_lining,part,200f,.2f,.2f));
-        		out.accept(armorData(FHItems.buff_coat,part,300f,.4f,.3f));
-        		out.accept(armorData(FHItems.gambeson,part,400f,.2f,.4f));
-        		out.accept(armorData(FHItems.kelp_lining,part,200f,.2f,.7f));
+        		out.accept(armorData(FHItems.buff_coat,part,300f,.5f,1.0f));
+        		out.accept(armorData(FHItems.gambeson,part,500f,.3f,.5f));
+        		out.accept(armorData(FHItems.kelp_lining,part,200f,.5f,1.0f));
         		//out.accept(armorData(FHItems.cotton,part,500f,.2f,.5f));
         		//out.accept(armorData(FHItems.straw_lining,part,600f,.2f,.7f));
         	}
         }
-        
+        for(Entry<String, Float[]> mat:materials.entrySet()) {
+        	for(String type:new String[]{"hat","jacket","pants","boots"}) {
+        		out.accept(armorArmorData(CRegistryHelper.getItem(FHMain.rl(mat.getKey()+"_"+type)),mat.getValue()[2],mat.getValue()[0],mat.getValue()[1]));
+        	} 
+        }
 		//recipeTrade(out);
 	}
 	private FinishedRecipe armorData(ItemLike item,BodyPart part,float insulation,float heat_proof,float cold_proof) {
 		return new ArmorTempData(item.asItem(), Optional.of(part), insulation, heat_proof,cold_proof).toFinished(FHMain.rl("armor_insulation/lining/"+CRegistryHelper.getPath(item.asItem())+"_"+part.name().toLowerCase()));
+		
+	}
+	private FinishedRecipe armorArmorData(ItemLike item,float insulation,float heat_proof,float cold_proof) {
+		return new ArmorTempData(item.asItem(), Optional.of(BodyPart.fromVanilla(((Equipable)item.asItem()).getEquipmentSlot())), insulation, heat_proof,cold_proof).toFinished(FHMain.rl("armor_insulation/"+CRegistryHelper.getPath(item.asItem())));
 		
 	}
 	private Workbook openWorkBook(String name) {

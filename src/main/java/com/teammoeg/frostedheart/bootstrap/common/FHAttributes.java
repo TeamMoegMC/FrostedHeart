@@ -36,8 +36,8 @@ public class FHAttributes {
 	public static final RegistryObject<Attribute> ENV_TEMPERATURE=register("env_temp", s->new RangedAttribute(s, 0, -1000, 10000000));
 	public static final RegistryObject<Attribute> EFFECTIVE_TEMPERATURE=register("eff_temp", s->new RangedAttribute(s, 0, -1000, 10000000));
 	public static final RegistryObject<Attribute> INSULATION=register("insulation", s->new RangedAttribute(s, 0, -1000, 10000000));
-	public static final RegistryObject<Attribute> WIND_PROOF=register("windproof", s->new RangedAttribute(s, 0, -1000, 10000000));
-	public static final RegistryObject<Attribute> HEAT_PROOF=register("heatproof", s->new RangedAttribute(s, 0, -1000, 10000000));
+	public static final RegistryObject<Attribute> WIND_PROOF=register("windproof", s->new RangedAttribute(s, 0, -1000, 10000000));//This attribute must be multiply-total
+	public static final RegistryObject<Attribute> HEAT_PROOF=register("heatproof", s->new RangedAttribute(s, 0, -1000, 10000000));//This attribute must be multiply-total
 
 	public static final AttributeModifier SNOW_DRIFTER = new AttributeModifier(UUID.fromString("3c4a1c57-ed5a-482e-946e-eb0b00fe5fb0"), "frostedheart:snowshoes", 0.05, AttributeModifier.Operation.ADDITION);
 	public static final AttributeModifier SPEED_SKATER = new AttributeModifier(UUID.fromString("3c4a1c57-ed5a-482e-946e-eb0b00fe5fb1"), "frostedheart:speed_skater", 0.1, AttributeModifier.Operation.ADDITION);

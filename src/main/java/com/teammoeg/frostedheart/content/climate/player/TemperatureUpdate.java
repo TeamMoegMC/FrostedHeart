@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import com.mojang.datafixers.util.Pair;
@@ -28,6 +29,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHBodyDataSyncPacket;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -199,20 +201,13 @@ public class TemperatureUpdate {
                     // Insulation
                     envtemp=(float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
                     // float insulation = (float) player.getAttributeValue(FHAttributes.INSULATION.get());
-                    PlayerTemperatureData.BodyPart[] parts = {
-                            PlayerTemperatureData.BodyPart.HEAD,
-                            PlayerTemperatureData.BodyPart.TORSO,
-                            PlayerTemperatureData.BodyPart.HANDS,
-                            PlayerTemperatureData.BodyPart.LEGS,
-                            PlayerTemperatureData.BodyPart.FEET
-                    };
-                    float[] ratios = {0.1f, 0.4f, 0.05f, 0.4f, 0.05f};
                     float totalConductivity = 0.0f;
                     // If the player has the insulation effect, insulation is set to 1, so no heat exchange with the environment
-                    if (!player.hasEffect(FHMobEffects.INSULATION.get())) {
-                        for (int i = 0; i < 5; ++i) {
-                            PlayerTemperatureData.BodyPart part = parts[i];
-                            float ratio = ratios[i];
+                    // Also disable when player is creative
+                    if (!player.hasEffect(FHMobEffects.INSULATION.get())&&!player.getAbilities().invulnerable) {
+                        for (BodyPart part:PlayerTemperatureData.BodyPart.values()) {
+
+                            float ratio = part.area;
                             float thermalConductivity = data.getThermalConductivityByPart(player, part);
                             totalConductivity += ratio*thermalConductivity;
                             float temperature = data.getTemperatureByPart(part);

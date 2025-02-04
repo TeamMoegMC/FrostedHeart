@@ -19,102 +19,61 @@
 
 package com.teammoeg.frostedheart.content.climate.block;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.menu.CBaseMenu;
-import com.teammoeg.chorda.menu.CBlockEntityMenu;
+import com.teammoeg.chorda.menu.CCustomMenuSlot;
+import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.chorda.menu.slots.ArmorSlot;
 import com.teammoeg.chorda.menu.slots.OffHandSlot;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
-import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
+import com.teammoeg.frostedheart.content.climate.player.BodyPartData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.Container;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.InventoryMenu;
-import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.Equipable;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 public class ClothesInventoryMenu extends CBaseMenu {
-	protected static class LiningSlot extends Slot{
-		   public static final ResourceLocation EMPTY_LINING_SLOT_HELMET = FHMain.rl("item/empty_lining_slot_head");
-		   public static final ResourceLocation EMPTY_LINING_SLOT_CHESTPLATE = FHMain.rl("item/empty_lining_slot_body");
-		   public static final ResourceLocation EMPTY_LINING_SLOT_LEGGINGS = FHMain.rl("item/empty_lining_slot_leg");
-		   public static final ResourceLocation EMPTY_LINING_SLOT_BOOTS = FHMain.rl("item/empty_lining_slot_feet");
-		   public static final ResourceLocation EMPTY_LINING_SLOT_HAND = FHMain.rl("item/empty_lining_slot_hands");
-		public static final ResourceLocation[] TEXTURE_EMPTY_SLOTS = new ResourceLocation[]{EMPTY_LINING_SLOT_CHESTPLATE, EMPTY_LINING_SLOT_LEGGINGS, EMPTY_LINING_SLOT_HAND ,EMPTY_LINING_SLOT_BOOTS,  EMPTY_LINING_SLOT_HELMET};
-		Player owner;
-		BodyPart part;
-		public LiningSlot(Player owner, BodyPart part, Container pContainer, int pSlot, int pX,
-				int pY) {
-			super(pContainer, pSlot, pX, pY);
-			this.owner=owner;
-			this.part=part;
-		}
+	Map<BodyPart,Pair<CDataSlot<Float>,CDataSlot<Float>>> partInsulation=new EnumMap<>(BodyPart.class);
+	{
+		for(BodyPart bp:BodyPart.values())
+			partInsulation.put(bp, Pair.of(CCustomMenuSlot.SLOT_FIXED.create(this), CCustomMenuSlot.SLOT_FIXED.create(this)));
+	}
+	public ClothesInventoryMenu(int id, Inventory inventoryPlayer, FriendlyByteBuf extraData) {
+		this(id, inventoryPlayer);
+	}
 
-		public int getMaxStackSize() {
-			return 1;
+	public ClothesInventoryMenu(int id, Inventory inventoryPlayer) {
+		super(FHMenuTypes.CLOTHES_GUI.get(), id, inventoryPlayer.player, 13);
+		PlayerTemperatureData ptd = PlayerTemperatureData.getCapability(inventoryPlayer.player).resolve().get();
+		createLiningSlots(inventoryPlayer,ptd);
+		for(BodyPart bp:BodyPart.values()) {
+			partInsulation.get(bp).getFirst().bind(()->ptd.getThermalConductivityByPart(inventoryPlayer.player,bp));
+			partInsulation.get(bp).getSecond().bind(()->ptd.getWindResistanceByPart(inventoryPlayer.player,bp));
 		}
-		public boolean mayPlace(ItemStack p_39746_) {
-			return (part.slot.getType()==EquipmentSlot.Type.ARMOR&&p_39746_.canEquip(part.slot, owner))||ArmorTempData.getData(p_39746_, part)!=null;
-		}
-		public boolean mayPickup(Player p_39744_) {
-			ItemStack itemstack = this.getItem();
-			return !itemstack.isEmpty() && !p_39744_.isCreative() && EnchantmentHelper.hasBindingCurse(itemstack) ? false
-					: super.mayPickup(p_39744_);
-		}
-		public Pair<ResourceLocation, ResourceLocation> getNoItemIcon() {
-			return Pair.of(InventoryMenu.BLOCK_ATLAS, TEXTURE_EMPTY_SLOTS[part.ordinal()]);
+		super.addPlayerInventory(inventoryPlayer, 8, 120, 178);
+	}
+
+	private void createLiningSlots(Inventory inventoryPlayer,PlayerTemperatureData ptd) {
+		
+		int y0 = 6;
+		this.addSlot(new ArmorSlot(inventoryPlayer.player, EquipmentSlot.HEAD, inventoryPlayer, 39, 6, y0));
+		this.addSlot(new ArmorSlot(inventoryPlayer.player, EquipmentSlot.CHEST, inventoryPlayer, 38, 6, y0 + 18));
+		this.addSlot(new OffHandSlot(inventoryPlayer.player, inventoryPlayer, 40, 6, y0 + 18 * 2));
+		this.addSlot(new ArmorSlot(inventoryPlayer.player, EquipmentSlot.LEGS, inventoryPlayer, 37, 6, y0 + 18 * 3));
+		this.addSlot(new ArmorSlot(inventoryPlayer.player, EquipmentSlot.FEET, inventoryPlayer, 36, 6, y0 + 18 * 4));
+		for (int j = 0; j < 5; j++) {
+			BodyPart bp=BodyPart.values()[j];
+			BodyPartData clothes=ptd.clothesOfParts.get(bp);
+			for (int k = 0; k < clothes.getSize(); ++k) {
+				this.addSlot(new LiningSlot(inventoryPlayer.player,bp,
+						clothes.clothes, k, 118 + k * 18, 6+18*j));
+			}
 		}
 	}
-    public ClothesInventoryMenu(int id, Inventory inventoryPlayer,FriendlyByteBuf extraData) {
-        this(id,inventoryPlayer);
-    }
-    public ClothesInventoryMenu(int id, Inventory inventoryPlayer) {
-        super(FHMenuTypes.CLOTHES_GUI.get(), id,inventoryPlayer.player, 13);
-
-        createLiningSlots(inventoryPlayer);
-        super.addPlayerInventory(inventoryPlayer, 8, 120, 178);
-    }
-    
-    /**
-     * For use by wardrobe
-     * */
-    ClothesInventoryMenu(MenuType<?> type,int id, Inventory inventoryPlayer,int max_slots) {
-        super(type, id,inventoryPlayer.player, max_slots);
-        createLiningSlots(inventoryPlayer);
-    }
-    private void createLiningSlots(Inventory inventoryPlayer) {
-        PlayerTemperatureData ptd = PlayerTemperatureData.getCapability(inventoryPlayer.player).resolve().get();
-        int y0=6;
-        this.addSlot(new ArmorSlot(inventoryPlayer.player,EquipmentSlot.HEAD,inventoryPlayer,39,6,y0));
-        this.addSlot(new ArmorSlot(inventoryPlayer.player,EquipmentSlot.CHEST,inventoryPlayer,38,6,y0+18));
-        this.addSlot(new LiningSlot(inventoryPlayer.player,PlayerTemperatureData.BodyPart.HANDS,ptd.clothesOfParts.get(PlayerTemperatureData.BodyPart.HANDS),40,6,y0+18*2));
-        this.addSlot(new ArmorSlot(inventoryPlayer.player,EquipmentSlot.LEGS,inventoryPlayer,37,6,y0+18*3));
-        this.addSlot(new ArmorSlot(inventoryPlayer.player,EquipmentSlot.FEET,inventoryPlayer,36,6,y0+18*4));
-        
-        for(int k=0;k<1;++k) {
-            this.addSlot(new LiningSlot(inventoryPlayer.player,PlayerTemperatureData.BodyPart.HEAD,ptd.clothesOfParts.get(PlayerTemperatureData.BodyPart.HEAD), k, 100+k*18, 7));
-        }
-        for(int k=0;k<3;++k) {
-            this.addSlot(new LiningSlot(inventoryPlayer.player,PlayerTemperatureData.BodyPart.TORSO,ptd.clothesOfParts.get(PlayerTemperatureData.BodyPart.TORSO), k, 100+k*18, 30));
-        }
-        for(int k=0;k<3;++k) {
-            this.addSlot(new LiningSlot(inventoryPlayer.player,PlayerTemperatureData.BodyPart.LEGS,ptd.clothesOfParts.get(PlayerTemperatureData.BodyPart.LEGS), k, 100+k*18, 53));
-        }
-        for(int k=0;k<1;++k) {
-            this.addSlot(new LiningSlot(inventoryPlayer.player,PlayerTemperatureData.BodyPart.FEET,ptd.clothesOfParts.get(PlayerTemperatureData.BodyPart.FEET), k, 100+k*18, 76));
-        }
-    }
-    
 
 }

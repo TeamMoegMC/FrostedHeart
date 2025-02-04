@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1Gener
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorState;
 import com.teammoeg.frostedheart.content.climate.block.ClothesScreen;
+import com.teammoeg.frostedheart.content.climate.block.WardrobeScreen;
 import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
@@ -54,7 +55,7 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.INCUBATOR_T1.get(), IncubatorT1Screen::new);
         MenuScreens.register(FHMenuTypes.INCUBATOR_T2.get(), IncubatorT2Screen::new);
         MenuScreens.register(FHMenuTypes.CLOTHES_GUI.get(), ClothesScreen::new);
-        MenuScreens.register(FHMenuTypes.WARDROBE.get(), ClothesScreen::new);
+        MenuScreens.register(FHMenuTypes.WARDROBE.get(), WardrobeScreen::new);
     }
 
     public static <C extends AbstractContainerMenu, S extends BaseScreen> void

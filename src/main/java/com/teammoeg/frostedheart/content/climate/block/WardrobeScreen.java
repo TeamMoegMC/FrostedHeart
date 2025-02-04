@@ -30,10 +30,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
-public class WardrobeScreen extends IEContainerScreen<ClothesInventoryMenu> {
+public class WardrobeScreen extends IEContainerScreen<WardrobeMenu> {
 	private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("changing");
 	private static final ResourceLocation TEXTURE_CLOSET = FHClientUtils.makeGuiTextureLocation("closet");
-	public WardrobeScreen(ClothesInventoryMenu inventorySlotsIn, Inventory inv, Component title) {
+	public WardrobeScreen(WardrobeMenu inventorySlotsIn, Inventory inv, Component title) {
 		super(inventorySlotsIn, inv, title, TEXTURE);
 		super.imageHeight = 202;
 		super.imageWidth = 261;

@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.climate.player;
 
 import javax.annotation.Nullable;
 
-import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -37,31 +36,36 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.FloatTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.ItemStackHandler;
 
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 // https://ierga.com/hr/wp-content/uploads/sites/2/2017/10/ASHRAE-55-2013.pdf
 
 public class PlayerTemperatureData implements NBTSerializable  {
 	public enum BodyPart implements StringRepresentable{
-		TORSO(EquipmentSlot.CHEST), // 40% area
-		LEGS(EquipmentSlot.LEGS), // 40% area
-		HANDS(EquipmentSlot.MAINHAND), // 5% area
-		FEET(EquipmentSlot.FEET), // 5% area
-		HEAD(EquipmentSlot.CHEST), // 10% area
-		REMOVEALL(null); // debug only
+		HEAD(EquipmentSlot.HEAD, 0.1f), // 10% area
+		TORSO(EquipmentSlot.CHEST, 0.4f), // 40% area
+		
+		HANDS(EquipmentSlot.MAINHAND, 0.05f), // 5% area
+		LEGS(EquipmentSlot.LEGS, 0.4f), // 40% area
+		FEET(EquipmentSlot.FEET, 0.05f); // 5% area
 		public final EquipmentSlot slot;
+		public final float area;
 		private final static Map<EquipmentSlot,BodyPart> VANILLA_MAP=Util.make(new EnumMap<>(EquipmentSlot.class),t->{
 			for(BodyPart part:BodyPart.values())
 				if(part.slot!=null)
 					t.put(part.slot, part);
 		});
-		private BodyPart(EquipmentSlot slot) {
+		private BodyPart(EquipmentSlot slot,float area) {
 			this.slot = slot;
+			this.area=area;
 		}
 
 		@Override
@@ -73,13 +77,6 @@ public class PlayerTemperatureData implements NBTSerializable  {
 			return VANILLA_MAP.get(es);
 		}
 	}
-	public static Map<BodyPart, Float> bodyPartAreaMap = Map.of(
-			BodyPart.HEAD, 0.1f,
-			BodyPart.TORSO, 0.4f,
-			BodyPart.HANDS, 0.05f,
-			BodyPart.LEGS, 0.4f,
-			BodyPart.FEET, 0.05f
-	);
 	@Setter
 	private FHTemperatureDifficulty difficulty = null;//in case null, get it from  FHConfig.SERVER.tdiffculty.get()
 	float previousTemp;
@@ -89,22 +86,23 @@ public class PlayerTemperatureData implements NBTSerializable  {
 	public float smoothedBody;//Client only, smoothed body temperature
 	public float smoothedBodyPrev;//Client only, smoothed body temperature
 
-	private final Map<BodyPart, Pair<String, Float>> temperatureOfParts = new EnumMap<>(BodyPart.class);
-	private final Map<BodyPart, String> namesOfParts = new EnumMap<>(BodyPart.class);
 
-	public final Map<BodyPart, BodyPartClothingData> clothesOfParts = new EnumMap<>(BodyPart.class);
-
+	public final Map<BodyPart, BodyPartData> clothesOfParts = new EnumMap<>(BodyPart.class);
+	public void deathResetTemperature() {
+		previousTemp=0;
+		bodyTemp=0;
+		envTemp=0;
+		feelTemp=0;
+		for(BodyPartData i:clothesOfParts.values()) {
+			i.temperature=0;
+		}
+	}
 	public PlayerTemperatureData() {
-		clothesOfParts.put(BodyPart.HEAD, new BodyPartClothingData("head_clothing", 1));
-		clothesOfParts.put(BodyPart.HANDS, new BodyPartClothingData("hands_clothing", 1));
-		clothesOfParts.put(BodyPart.FEET, new BodyPartClothingData("feet_clothing", 1));
-		clothesOfParts.put(BodyPart.TORSO, new BodyPartClothingData("torso_clothing", 3));
-		clothesOfParts.put(BodyPart.LEGS, new BodyPartClothingData("legs_clothing", 3));
-		temperatureOfParts.put(BodyPart.HEAD, new Pair<>("head_temperature", 0.0f));
-		temperatureOfParts.put(BodyPart.HANDS, new Pair<>("hands_temperature", 0.0f));
-		temperatureOfParts.put(BodyPart.FEET, new Pair<>("feet_temperature", 0.0f));
-		temperatureOfParts.put(BodyPart.TORSO, new Pair<>("torso_temperature", 0.0f));
-		temperatureOfParts.put(BodyPart.LEGS, new Pair<>("legs_temperature", 0.0f));
+		clothesOfParts.put(BodyPart.HEAD, new BodyPartData(1));
+		clothesOfParts.put(BodyPart.HANDS, new BodyPartData(1));
+		clothesOfParts.put(BodyPart.FEET, new BodyPartData(1));
+		clothesOfParts.put(BodyPart.TORSO, new BodyPartData(3));
+		clothesOfParts.put(BodyPart.LEGS, new BodyPartData(3));
 	}
 	public FHTemperatureDifficulty getDifficulty() {
 		if(difficulty==null)
@@ -126,18 +124,11 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		bodyTemp=nbt.getFloat("bodytemperature");
 		envTemp=nbt.getFloat("envtemperature");
 		feelTemp=nbt.getFloat("feeltemperature");
-
-		for(Map.Entry<BodyPart, BodyPartClothingData> e : clothesOfParts.entrySet()) {
-			BodyPartClothingData subData = e.getValue();
-			ListTag itemsTag = nbt.getList(subData.name, Tag.TAG_COMPOUND);
-			e.getValue().set(itemsTag);
+		CompoundTag partClothes=nbt.getCompound("body_parts");
+		for(Map.Entry<BodyPart, BodyPartData> e : clothesOfParts.entrySet()) {
+			e.getValue().load(partClothes.getCompound(e.getKey().getSerializedName()));;
 		}
 
-		for (Map.Entry<BodyPart, Pair<String, Float>> e : temperatureOfParts.entrySet()) {
-			Pair<String, Float> p = e.getValue();
-			Pair<String, Float> updatedPair = new Pair<>(p.getFirst(), nbt.getFloat(p.getFirst()));
-			e.setValue(updatedPair); // Update the map with the new Pair
-		}
 	}
 	public void save(CompoundTag nc,boolean isPacket) {
 		// save the difficulty
@@ -147,24 +138,11 @@ public class PlayerTemperatureData implements NBTSerializable  {
         nc.putFloat("bodytemperature",bodyTemp);
         nc.putFloat("envtemperature",envTemp);
         nc.putFloat("feeltemperature",feelTemp);
-
-		for(Map.Entry<BodyPart, BodyPartClothingData> e : clothesOfParts.entrySet()) {
-			BodyPartClothingData subData = e.getValue();
-			ListTag itemsTag = new ListTag();
-			for(ItemStack stack : subData.clothes) {
-				CompoundTag itemTag = new CompoundTag();
-				if (stack != null) {
-					stack.save(itemTag);
-				}
-				itemsTag.add(itemTag);
-			}
-			nc.put(subData.name, (Tag) itemsTag);
+        CompoundTag partClothes=new CompoundTag();
+		for(Entry<BodyPart, BodyPartData> bp:clothesOfParts.entrySet()) {
+			partClothes.put(bp.getKey().getSerializedName(),bp.getValue().save());
 		}
-
-		for(Map.Entry<BodyPart, Pair<String, Float>> e : temperatureOfParts.entrySet()) {
-			Pair<String, Float> p = e.getValue();
-			nc.putFloat(p.getFirst(), p.getSecond());
-		}
+		nc.put("body_parts", partClothes);
 	}
 	public void reset() {
 		previousTemp=0;
@@ -178,8 +156,8 @@ public class PlayerTemperatureData implements NBTSerializable  {
         // update delta before body
     	previousTemp=bodyTemp;
     	bodyTemp=0;
-		for(Map.Entry<BodyPart, Pair<String, Float>> e : temperatureOfParts.entrySet()) {
-			bodyTemp += e.getValue().getSecond() * bodyPartAreaMap.get(e.getKey());
+		for(Entry<BodyPart, BodyPartData> e : clothesOfParts.entrySet()) {
+			bodyTemp += e.getValue().temperature * e.getKey().area;
 		}
     	envTemp=(current_env + 37F) * .2f + envTemp * .8f;
 		float current_feel = bodyTemp - conductivity * (bodyTemp - current_env);
@@ -214,15 +192,12 @@ public class PlayerTemperatureData implements NBTSerializable  {
 	}
 
 	// Body clothes methods
-	public ItemStack[] getClothesByPart(BodyPart bodyPart) {
+	public ItemStackHandler getClothesByPart(BodyPart bodyPart) {
 		return clothesOfParts.get(bodyPart).clothes; // Return a copy to prevent direct modification
 	}
 
 	public void setClothes(BodyPart bodyPart, int index, ItemStack stack) {
-		if (index < 0 || index >= clothesOfParts.get(bodyPart).clothes.length) {
-			throw new IndexOutOfBoundsException("Invalid index for bodyClothes: " + index);
-		}
-		clothesOfParts.get(bodyPart).clothes[index] = stack != null ? stack : ItemStack.EMPTY;
+		clothesOfParts.get(bodyPart).clothes.setStackInSlot(index, stack);
 	}
 
 	public void clearClothes(BodyPart bodyPart, int index) {
@@ -230,29 +205,36 @@ public class PlayerTemperatureData implements NBTSerializable  {
 	}
 
 	public void clearAllClothes() {
-		for(Map.Entry<BodyPart, BodyPartClothingData> e : clothesOfParts.entrySet()) {
+		for(Map.Entry<BodyPart, BodyPartData> e : clothesOfParts.entrySet()) {
 			e.getValue().reset();
 		}
 	}
 
 	public float getThermalConductivityByPart(Player player, BodyPart bodyPart) {
-		ItemStack equipment = switch (bodyPart) {
-			case TORSO -> player.getInventory().getArmor(2); // Chestplate slot
-			case LEGS -> player.getInventory().getArmor(1); // Leggings slot
-			case FEET -> player.getInventory().getArmor(0); // Boots slot
-			case HEAD -> player.getInventory().getArmor(3); // Helmet slot
-			case HANDS -> player.getMainHandItem(); // Main hand
-			default -> ItemStack.EMPTY; // Default to empty
-		};
+		ItemStack equipment;
+		if(bodyPart.slot.isArmor())
+			equipment=player.getInventory().getArmor(bodyPart.slot.getIndex());
+		else
+			equipment=player.getMainHandItem();
 		// TODO remove out
 //		System.out.printf("Part %s Cond %f\n", bodyPart, clothesOfParts.get(bodyPart).getThermalConductivity(equipment));
 		return clothesOfParts.get(bodyPart).getThermalConductivity(bodyPart.slot,equipment);
 	}
+	public float getWindResistanceByPart(Player player, BodyPart bodyPart) {
+		ItemStack equipment;
+		if(bodyPart.slot.isArmor())
+			equipment=player.getInventory().getArmor(bodyPart.slot.getIndex());
+		else
+			equipment=player.getMainHandItem();
+		// TODO remove out
+//		System.out.printf("Part %s Cond %f\n", bodyPart, clothesOfParts.get(bodyPart).getThermalConductivity(equipment));
+		return clothesOfParts.get(bodyPart).getWindResistance(bodyPart.slot,equipment);
+	}
 
 	public float getTemperatureByPart(BodyPart bodyPart) {
-		return temperatureOfParts.get(bodyPart).getSecond();
+		return clothesOfParts.get(bodyPart).temperature;
 	}
 	public void setTemperatureByPart(BodyPart bodyPart, float t) {
-		temperatureOfParts.put(bodyPart, new Pair<>(temperatureOfParts.get(bodyPart).getFirst(), t));
+		clothesOfParts.get(bodyPart).temperature=t;
 	}
 }
