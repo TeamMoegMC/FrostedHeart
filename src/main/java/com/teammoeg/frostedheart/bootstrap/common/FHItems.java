@@ -1303,7 +1303,18 @@ thinner.png
             .item("hide_pants", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.LEGGINGS, createProps()))
             .model(AssetLookup.existingItemModel())
             .register();
-     
+    public static ItemEntry<FHBaseArmorItem> space_boots = REGISTRATE
+            .item("spacesuit_boots", p -> new FHBaseArmorItem(FHArmorMaterial.SPACESUIT, Type.BOOTS, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> space_hat = REGISTRATE
+            .item("spacesuit_helmet", p -> new FHBaseArmorItem(FHArmorMaterial.SPACESUIT, Type.HELMET, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> space_jacket = REGISTRATE
+            .item("spacesuit_body", p -> new FHBaseArmorItem(FHArmorMaterial.SPACESUIT, Type.CHESTPLATE, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> space_pants = REGISTRATE
+            .item("spacesuit_leg", p -> new FHBaseArmorItem(FHArmorMaterial.SPACESUIT, Type.LEGGINGS, createProps()))
+            .register();
     public static ItemEntry<HeaterVestItem> heater_vest = REGISTRATE
             .item("heater_vest", HeaterVestItem::new)
             .properties(p -> p.stacksTo(1).setNoRepair())

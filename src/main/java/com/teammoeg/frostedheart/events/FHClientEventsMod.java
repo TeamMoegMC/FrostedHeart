@@ -173,7 +173,8 @@ public class FHClientEventsMod {
 
     @SubscribeEvent
     public static void onModelBake(ModelEvent.ModifyBakingResult event) {
-        for (ResourceLocation location : event.getModels().keySet()) {
+    	//TODO Remove lining 
+        /*for (ResourceLocation location : event.getModels().keySet()) {
             // Now find all armors
             ResourceLocation item = new ResourceLocation(location.getNamespace(), location.getPath());
             if (CRegistryHelper.getItem(item) instanceof ArmorItem) {
@@ -189,7 +190,7 @@ public class FHClientEventsMod {
                     event.getModels().put(itemModelResourceLocation, customModel);
                 }
             }
-        }
+        }*/
     }
 
     @SubscribeEvent

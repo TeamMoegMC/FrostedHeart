@@ -24,6 +24,9 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Random;
 
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+
 public class CMath {
 
     public static final Random RANDOM = new Random();
@@ -41,4 +44,16 @@ public class CMath {
 	public static <T> T selectElementByTime(List<T> list) {
 		return list.get((int) ((System.currentTimeMillis() / 1000) %list.size()));
 	}
+	public static int randomValue(RandomSource rs,double rate) {
+		if (rate > 0) {
+			int total = (int) rate;
+			double npart = Mth.frac(rate);
+			if (npart>0&&rs.nextDouble() < npart) {
+				total++;
+			}
+			return total;
+		}
+		return 0;
+	}
 }
+

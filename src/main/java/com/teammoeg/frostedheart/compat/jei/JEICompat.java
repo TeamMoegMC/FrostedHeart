@@ -373,7 +373,7 @@ public class JEICompat implements IModPlugin {
     @Override
     public void registerVanillaCategoryExtensions(IVanillaCategoryExtensionRegistration registration) {
         registration.getCraftingCategory().addCategoryExtension(FuelingRecipe.class, FuelingExtension::new);
-        registration.getCraftingCategory().addCategoryExtension(InstallInnerRecipe.class, InnerExtension::new);
+        //registration.getCraftingCategory().addCategoryExtension(InstallInnerRecipe.class, InnerExtension::new);
         registration.getCraftingCategory().addCategoryExtension(ModifyDamageRecipe.class, DamageModifierExtension::new);
         //registration.getCraftingCategory().addCategoryExtension(ShapelessCopyDataRecipe.class,ShapelessCopyDataExtension::new);
     }

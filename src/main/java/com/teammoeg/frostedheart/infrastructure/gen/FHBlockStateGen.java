@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.infrastructure.gen;
 
+import java.util.NoSuchElementException;
+
 import com.teammoeg.chorda.block.CBlockProperties;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.block.WardrobeBlock;
@@ -32,6 +34,7 @@ import com.tterrag.registrate.util.nullness.NonNullFunction;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -46,8 +49,11 @@ import net.minecraftforge.client.model.generators.ModelFile;
 import net.minecraftforge.client.model.generators.ModelFile.UncheckedModelFile;
 
 public class FHBlockStateGen {
-    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> provided() {
-        return (c, p) -> {};
+	
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> existed() {
+        return (c, p) -> {if(!p.models().existingFileHelper.exists(c.getId(), PackType.CLIENT_RESOURCES, ".json", "blockstates")) {
+        	throw new NoSuchElementException("Blockstate definition for "+c.getId()+" does not exists!");
+        }};
     }
     public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> simpleCubeAll(
             ResourceLocation texture) {

@@ -67,18 +67,22 @@ public class BodyPartData {
 
 	public float getThermalConductivity(BodyPart part, ItemStack equipment) {
 		float res = 0f;
-		float rate = 0.4f;
+		//TODO determine if alphaGem wrote this incorrectly
+		//float rate = 0.4f;
+		float rate = 0.3f - this.clothes.getSlots() * 0.1f;
 		if (!equipment.isEmpty()) {
+			rate += 0.1f;
 			res += rate * sumAttributes(equipment.getAttributeModifiers(part.slot).get(FHAttributes.INSULATION.get()));
-			rate -= 0.1f;
+			//rate -= 0.1f;
 		}
 		for (int i = 0; i < clothes.getSlots(); i++) {
 			ItemStack it = clothes.getStackInSlot(i);
 			if (!it.isEmpty()) {
 				ArmorTempData data=ArmorTempData.getData(it, part);
 				if(data!=null) {
+					rate += 0.1f;
 					res += rate * data.getInsulation();
-					rate -= 0.1f;
+					//rate -= 0.1f;
 				}
 			}
 		}
@@ -87,18 +91,23 @@ public class BodyPartData {
 
 	public float getWindResistance(BodyPart part, ItemStack equipment) {
 		double res = 0f;
-		float rate = 0.3f - this.clothes.getSlots() * 0.1f;
+		//TODO determine if alphaGem wrote this incorrectly
+		//float rate = 0.3f - this.clothes.getSlots() * 0.1f;
+		float rate = 0.4f;
 		if (!equipment.isEmpty()) {
-			rate += 0.1f;
+			//rate += 0.1f;
+			
 			res += rate * sumAttributesPercentage(equipment.getAttributeModifiers(part.slot).get(FHAttributes.WIND_PROOF.get()));
+			rate-=0.1f;
 		}
 		for (int i = 0; i < clothes.getSlots(); i++) {
 			ItemStack it = clothes.getStackInSlot(i);
 			if (!it.isEmpty()) {
 				ArmorTempData data=ArmorTempData.getData(it, part);
 				if(data!=null) {
-					rate += 0.1f;
+					//rate += 0.1f;
 					res += rate * data.getColdProof();
+					rate-=0.1f;
 				}
 			}
 		}

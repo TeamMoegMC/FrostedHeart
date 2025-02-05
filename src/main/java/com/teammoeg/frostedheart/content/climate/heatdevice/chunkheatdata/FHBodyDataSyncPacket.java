@@ -36,7 +36,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 public class FHBodyDataSyncPacket extends NBTMessage {
     public FHBodyDataSyncPacket(Player pe) {
-        super(PlayerTemperatureData.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundTag::new));
+        super(PlayerTemperatureData.getCapability(pe).map(t->t.serialize(true)).orElseGet(CompoundTag::new));
     }
 
 
@@ -52,7 +52,7 @@ public class FHBodyDataSyncPacket extends NBTMessage {
             Level world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);
             Player player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
             if (world != null) {
-                PlayerTemperatureData.getCapability(player).ifPresent(t -> t.deserializeNBT(super.getTag()));
+                PlayerTemperatureData.getCapability(player).ifPresent(t -> t.deserialize(super.getTag(),true));
             }
         });
         context.get().setPacketHandled(true);

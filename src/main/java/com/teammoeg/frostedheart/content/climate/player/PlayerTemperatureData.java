@@ -83,12 +83,13 @@ public class PlayerTemperatureData implements NBTSerializable  {
 			return Lang.translateGui("body_part."+getSerializedName());
 		}
 	}
+	public static final int INVALID_TEMPERATURE=99999;
 	@Setter
 	private FHTemperatureDifficulty difficulty = null;//in case null, get it from  FHConfig.SERVER.tdiffculty.get()
 	float previousTemp;
 	float bodyTemp;
-	float envTemp;
-	float feelTemp;
+	float envTemp=INVALID_TEMPERATURE;
+	float feelTemp=INVALID_TEMPERATURE;
 	public float smoothedBody;//Client only, smoothed body temperature
 	public float smoothedBodyPrev;//Client only, smoothed body temperature
 
@@ -97,8 +98,8 @@ public class PlayerTemperatureData implements NBTSerializable  {
 	public void deathResetTemperature() {
 		previousTemp=0;
 		bodyTemp=0;
-		envTemp=0;
-		feelTemp=0;
+		envTemp=INVALID_TEMPERATURE;
+		feelTemp=INVALID_TEMPERATURE;
 		for(BodyPartData i:clothesOfParts.values()) {
 			i.temperature=0;
 		}
@@ -116,45 +117,51 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		return difficulty;
 	}
 	public void load(CompoundTag nbt,boolean isPacket) {
-		// load the difficulty
-		// this can cause issue if the nbt.getstring returns invalid string
-		// do a catch here, and default to normal
-		if(nbt.contains("difficulty"))
-			try {
-				difficulty = FHTemperatureDifficulty.valueOf(nbt.getString("difficulty").toLowerCase());
-			} catch (IllegalArgumentException e) {
-				difficulty = FHTemperatureDifficulty.normal;
-			}
 
 		previousTemp=nbt.getFloat("previous_body_temperature");
 		bodyTemp=nbt.getFloat("bodytemperature");
 		envTemp=nbt.getFloat("envtemperature");
 		feelTemp=nbt.getFloat("feeltemperature");
-		CompoundTag partClothes=nbt.getCompound("body_parts");
-		for(Map.Entry<BodyPart, BodyPartData> e : clothesOfParts.entrySet()) {
-			e.getValue().load(partClothes.getCompound(e.getKey().getSerializedName()));;
+		if(!isPacket) {
+			// load the difficulty
+			// this can cause issue if the nbt.getstring returns invalid string
+			// do a catch here, and default to normal
+			if(nbt.contains("difficulty"))
+				try {
+					difficulty = FHTemperatureDifficulty.valueOf(nbt.getString("difficulty").toLowerCase());
+				} catch (IllegalArgumentException e) {
+					difficulty = FHTemperatureDifficulty.normal;
+				}
+	
+			CompoundTag partClothes=nbt.getCompound("body_parts");
+			for(Map.Entry<BodyPart, BodyPartData> e : clothesOfParts.entrySet()) {
+				e.getValue().load(partClothes.getCompound(e.getKey().getSerializedName()));;
+			}
 		}
 
 	}
 	public void save(CompoundTag nc,boolean isPacket) {
 		// save the difficulty
-		if(difficulty!=null)
-			nc.putString("difficulty", difficulty.name().toLowerCase());
+		
         nc.putFloat("previous_body_temperature",previousTemp);
         nc.putFloat("bodytemperature",bodyTemp);
         nc.putFloat("envtemperature",envTemp);
         nc.putFloat("feeltemperature",feelTemp);
-        CompoundTag partClothes=new CompoundTag();
-		for(Entry<BodyPart, BodyPartData> bp:clothesOfParts.entrySet()) {
-			partClothes.put(bp.getKey().getSerializedName(),bp.getValue().save());
-		}
-		nc.put("body_parts", partClothes);
+        if(!isPacket) {
+        	if(difficulty!=null)
+    			nc.putString("difficulty", difficulty.name().toLowerCase());
+	        CompoundTag partClothes=new CompoundTag();
+			for(Entry<BodyPart, BodyPartData> bp:clothesOfParts.entrySet()) {
+				partClothes.put(bp.getKey().getSerializedName(),bp.getValue().save());
+			}
+			nc.put("body_parts", partClothes);
+        }
 	}
 	public void reset() {
 		previousTemp=0;
 		bodyTemp=0;
-		envTemp=0;
-		feelTemp=0;
+		envTemp=INVALID_TEMPERATURE;
+		feelTemp=INVALID_TEMPERATURE;
 		smoothedBody=0;
 		clearAllClothes();
 	}
@@ -165,9 +172,15 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		for(Entry<BodyPart, BodyPartData> e : clothesOfParts.entrySet()) {
 			bodyTemp += e.getValue().temperature * e.getKey().area;
 		}
-    	envTemp=(current_env + 37F) * .2f + envTemp * .8f;
+		if(envTemp==INVALID_TEMPERATURE)
+			envTemp=current_env;
+		else
+			envTemp=(current_env + 37F) * .2f + envTemp * .8f;
 		float current_feel = bodyTemp - conductivity * (bodyTemp - current_env);
-    	feelTemp=(current_feel + 37F) * .2f + feelTemp * .8f;
+		if(feelTemp==INVALID_TEMPERATURE)
+			feelTemp=current_feel;
+		else
+			feelTemp=(current_feel + 37F) * .2f + feelTemp * .8f;
     }
     public static LazyOptional<PlayerTemperatureData> getCapability(@Nullable Player player) {
         return FHCapabilities.PLAYER_TEMP.getCapability(player);
@@ -179,9 +192,13 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		return bodyTemp;
 	}
 	public float getEnvTemp() {
+		if(envTemp==INVALID_TEMPERATURE)
+			return -20;
 		return envTemp;
 	}
 	public float getFeelTemp() {
+		if(feelTemp==INVALID_TEMPERATURE)
+			return -20;
 		return feelTemp;
 	}
 	public void setPreviousTemp(float previousTemp) {

@@ -50,9 +50,6 @@ public class ClimateClientEvents {
         if (event.side == LogicalSide.CLIENT && FHConfig.CLIENT.enableBreathParticle.get() && event.phase == TickEvent.Phase.START
                 && event.player instanceof LocalPlayer) {
             LocalPlayer player = (LocalPlayer) event.player;
-            if(ClientUtils.mc().screen instanceof GeneratorScreen gsc &&player.tickCount%20==0) {
-            	gsc.calculateUpgradeCost();
-            }
             if (!player.isSpectator() && !player.isCreative() && player.level() != null) {
                 if (player.tickCount % 60 <= 3) {
                 	 PlayerTemperatureData ptd=PlayerTemperatureData.getCapability(player).orElse(null);

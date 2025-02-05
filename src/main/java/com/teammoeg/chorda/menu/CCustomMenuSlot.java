@@ -374,40 +374,7 @@ public class CCustomMenuSlot {
 			return 0f;
 		}
 	};
-	public static final DataSlotConverter<BitSet> SLOT_BITSET32=new DataSlotConverter<>(){
-		@Override
-		public BitSet apply(int value) {
-	        BitSet bits = new BitSet();
-	        int index = 0;
-	        while (value != 0) {
-	            if (value % 2 != 0) {
-	                bits.set(index);
-	            }
-	            ++index;
-	            value = value >>> 1;
-	        }
 
-	        return bits;
-		}
-
-		@Override
-		public int apply(BitSet a) {
-			int val = 0;
-	        int bitval = 1;
-	        for (int i = 0; i < a.length(); i++) {
-	            if (a.get(i))
-	                val += bitval;
-	            bitval += bitval;
-	        }
-
-	        return val;
-		}
-
-		@Override
-		public BitSet getDefault() {
-			return new BitSet();
-		}
-	};
 	public static final MultipleDataSlotConverter<Long> SLOT_LONG=new MultipleDataSlotConverter<>(){
 		@Override
 		public void encode(Long a, int[] values) {
@@ -536,10 +503,6 @@ public class CCustomMenuSlot {
 		@Override
 		public BitSet getDefault() {
 			return new BitSet();
-		}
-		@Override
-		public boolean isSame(BitSet data,BitSet data2) {
-			return data.equals(data2);
 		}
 
 		@Override

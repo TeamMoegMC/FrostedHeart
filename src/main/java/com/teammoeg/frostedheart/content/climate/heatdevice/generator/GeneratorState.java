@@ -39,6 +39,7 @@ public class GeneratorState extends HeatingState {
      */
     int explodeTicks;
     boolean hasFuel;
+    //int upgradeProcess;
     //store upgrade and repair cost
     List<IngredientWithSize> upgrade;
     List<ItemStack> price;
@@ -59,11 +60,13 @@ public class GeneratorState extends HeatingState {
     public void writeSaveNBT(CompoundTag nbt) {
         super.writeSaveNBT(nbt);
         nbt.putInt("explodeTicks", explodeTicks);
+        //upgradeProcess=nbt.getInt("upgradeProcess");
     }
 
     @Override
     public void readSaveNBT(CompoundTag nbt) {
         super.readSaveNBT(nbt);
+        //upgradeProcess = nbt.getInt("upgradeProcess");
         //Optional<GeneratorData> data = this.getDataNoCheck();
         explodeTicks = nbt.getInt("explodeTicks");
     }
@@ -161,12 +164,14 @@ public class GeneratorState extends HeatingState {
 	public void writeSyncNBT(CompoundTag nbt) {
 		super.writeSyncNBT(nbt);
 		nbt.putBoolean("hasFuel", hasFuel);
+		nbt.putBoolean("isActive", isActive());
 	}
 
 	@Override
 	public void readSyncNBT(CompoundTag nbt) {
 		super.readSyncNBT(nbt);
 		hasFuel=nbt.getBoolean("hasFuel");
+		super.setActive(nbt.getBoolean("isActive"));
 	}
 
 }

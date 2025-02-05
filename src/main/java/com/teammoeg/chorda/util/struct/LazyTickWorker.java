@@ -30,12 +30,23 @@ public class LazyTickWorker {
     public int tCur = 0;
     private boolean isStaticMax;
     public Supplier<Boolean> work;
-
+    public LazyTickWorker(int tMax, Runnable work) {
+        this(tMax,()->{
+        	work.run();
+        	return true;
+        });
+    }
     public LazyTickWorker(int tMax, Supplier<Boolean> work) {
         super();
         this.tMax = tMax;
         this.work = work;
         isStaticMax = true;
+    }
+    public LazyTickWorker(Runnable work) {
+        this(()->{
+        	work.run();
+        	return true;
+        });
     }
 
     public LazyTickWorker(Supplier<Boolean> work) {

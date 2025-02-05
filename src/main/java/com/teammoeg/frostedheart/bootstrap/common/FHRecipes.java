@@ -71,7 +71,7 @@ public class FHRecipes {
     static {
         GeneratorRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("generator", GeneratorRecipe.Serializer::new);
         GeneratorSteamRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("steam_generator", GeneratorSteamRecipe.Serializer::new);
-        InstallInnerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("recipe_inner", InstallInnerRecipe.Serializer::new);
+        //InstallInnerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("recipe_inner", InstallInnerRecipe.Serializer::new);
         ChargerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("charger", ChargerRecipe.Serializer::new);
         DismantleInnerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("recipe_inner_dismantle", DismantleInnerRecipe.Serializer::new);
         CampfireDefrostRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("defrost_campfire", CampfireDefrostRecipe.Serializer::new);

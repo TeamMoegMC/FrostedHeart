@@ -36,6 +36,7 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.blockimpl.Wrapp
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class CMultiblockHelper {
 	private static final Supplier<RuntimeException> noMultiblockExists=()->new IllegalStateException("Multiblock is not valid");
@@ -77,6 +78,9 @@ public class CMultiblockHelper {
 	}
 	public static BlockPos getAbsoluteMaster(IMultiblockContext<?> ctx) {
 		return ctx.getLevel().toAbsolute(getMasterPos(ctx));
+	}
+	public static BlockEntity getMasterBlock(IMultiblockContext<?> ctx) {
+		return ctx.getLevel().getBlockEntity(getMasterPos(ctx));
 	}
 	private static IMultiblockContext<?> unwrap(IMultiblockContext<?> ctx){
 		while(ctx instanceof WrappingMultiblockContext wctx) {

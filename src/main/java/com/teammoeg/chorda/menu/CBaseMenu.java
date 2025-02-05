@@ -434,6 +434,20 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 	}
 
 	@Override
+	public void broadcastFullState() {
+		super.broadcastFullState();
+		ContainerDataSyncMessageS2C packet = new ContainerDataSyncMessageS2C();
+		for (int i = 0; i < specialDataSlots.size(); i++) {
+			SyncableDataSlot<?> slot = specialDataSlots.get(i);
+			slot.checkForUpdate();
+			packet.add(i, slot.getConverter(), slot.getValue());
+			
+		}
+		if (packet.hasData() && player != null)
+			ChordaNetwork.sendPlayer((ServerPlayer) player, packet);
+	}
+
+	@Override
 	public boolean stillValid(Player pPlayer) {
 		return validator.get().test(pPlayer);
 	}

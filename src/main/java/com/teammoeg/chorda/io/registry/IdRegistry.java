@@ -34,7 +34,9 @@ public class IdRegistry<T> {
 	}
 
 	public T read(FriendlyByteBuf pb) {
-	   return get( pb.readByte());
+		byte id=pb.readByte();
+		//System.out.println("read "+id);
+	   return get( id);
 	}
 	public synchronized <R extends T> R register(R from) {
 		if(types.containsKey(from))return from;
@@ -44,7 +46,7 @@ public class IdRegistry<T> {
 		return from;
 	}
 	public int getId(T obj) {
-		Integer dat=types.get(obj.getClass());
+		Integer dat=types.get(obj);
 		if(dat==null)dat=0;
 		return dat;
 	}
@@ -54,8 +56,9 @@ public class IdRegistry<T> {
 	    return fromPacket.get(id);
 	}
 	public void write(FriendlyByteBuf pb, T obj) {
-
-	    pb.writeByte(getId(obj));
+		int id=getId(obj);
+		//System.out.println("write "+id);
+	    pb.writeByte(id);
 	}
 
 }

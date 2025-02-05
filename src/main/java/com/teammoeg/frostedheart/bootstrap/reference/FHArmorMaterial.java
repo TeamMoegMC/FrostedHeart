@@ -43,7 +43,8 @@ public enum FHArmorMaterial implements ArmorMaterial {
     HIDE("hide", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(FHItems.raw_hide.get())),
     HAY("hay", 4, new int[]{1, 1, 1, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(ModList.get().isLoaded("charcoal_pit") ? CRegistryHelper.getItem(new ResourceLocation("charcoal_pit", "straw")) : Items.WHEAT)),
     WOOL("wool", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(Items.WHITE_WOOL)),
-    WEATHER("weather", 15, new int[]{2, 5, 6, 2}, 9, SoundEvents.ARMOR_EQUIP_IRON, 0.0F, 0.0F, () -> Ingredient.of(Items.IRON_INGOT));
+    WEATHER("weather", 15, new int[]{2, 5, 6, 2}, 9, SoundEvents.ARMOR_EQUIP_IRON, 0.0F, 0.0F, () -> Ingredient.of(Items.IRON_INGOT)),
+    SPACESUIT("spacesuit",15, new int[]{2, 5, 6, 2}, 9, SoundEvents.ARMOR_EQUIP_IRON, 0.0F, 0.0F, () -> Ingredient.of());
 
     private static final int[] MAX_DAMAGE_ARRAY = new int[]{13, 15, 16, 11};
     private final String name;

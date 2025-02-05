@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
+import com.teammoeg.frostedheart.FHMain;
+
 public class IERecipeUtils {
     public static BitSet checkItemList(Player player, List<IngredientWithSize> costList) {
     	BitSet bs=new BitSet(costList.size());
@@ -69,16 +71,21 @@ public class IERecipeUtils {
         List<ItemStack> ret = new ArrayList<>();
         for (IngredientWithSize iws : costList) {
             int count = iws.getCount();
-            for (ItemStack it : player.getInventory().items) {
+           // System.out.println("require "+iws.getBaseIngredient().getItems()[0].getHoverName().getString()+" x "+count);
+            for (int i=0;i<player.getInventory().items.size();i++) {
+            	ItemStack it=player.getInventory().items.get(i);
                 if (iws.testIgnoringSize(it)) {
                     int redcount = Math.min(count, it.getCount());
                     ret.add(it.split(redcount));
+                   // System.out.println(splited);
+                   // System.out.println(it);
                     count -= redcount;
                     if (count <= 0)
                         break;
                 }
             }
             if (count > 0) {// wrong, revert.
+            	FHMain.LOGGER.error("cost item can not be consumed successfully, this is unusual, consider cheat or data issues");
                 for (ItemStack it : ret)
                     CUtils.giveItem(player, it);
                 return false;

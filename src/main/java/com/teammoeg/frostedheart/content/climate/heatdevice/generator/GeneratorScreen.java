@@ -78,17 +78,79 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
     private static final AtlasUV generatorSymbol = new AtlasUV(TEXTURE, 176, 0, 24, 48, 3, 12, TEXW, TEXH);
     private static final Point generatorPos = new Point(76, 44);
     MasterGeneratorGuiButtonUpgrade upgrade;
-    boolean validStructure;
-    boolean hasResearch;
-    int level;
-    List<Component> costStr = new ArrayList<>();;
-
+    List<Component> costStr = new ArrayList<>();
+    boolean hasEnoughMaterial;
+    boolean shouldUpdateTooltip;
     public GeneratorScreen(GeneratorContainer<R, T> inventorySlotsIn, Inventory inv, Component title) {
         super(inventorySlotsIn, inv, title, TEXTURE);
         this.imageHeight = 222;
-
+        menu.material.bind(t->shouldUpdateTooltip=true);
+        menu.validStructure.bind(t->shouldUpdateTooltip=true);
+        menu.hasResearch.bind(t->shouldUpdateTooltip=true);
+        menu.pos.bind(t->shouldUpdateTooltip=true);
+       // updateTooltip();
     }
-
+    public void updateTooltip() {
+    	shouldUpdateTooltip=false;
+        costStr.clear();
+        Optional<IMultiblockBEHelper<?>> ohelper = CMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue());
+        //System.out.println("Updating tooltips");
+        //System.out.println(menu.pos.getValue());
+        ohelper.ifPresent(t->{
+        	BitSet cost=menu.material.getValue();
+        	//System.out.println("Presented");
+        	GeneratorLogic<T,R> tile = (GeneratorLogic<T, R>) t.getMultiblock().logic();
+        	IMultiblockBEHelper<R> helper=(IMultiblockBEHelper<R>) t;
+	        if (menu.isBroken.getValue()) {
+	            costStr.add(Lang.translateGui("generator.repair_material"));
+	            int i = 0;
+	            List<IngredientWithSize> rpcost=tile.getRepairCost();
+	            for (IngredientWithSize iws : rpcost) {
+	                ItemStack[] iss = iws.getMatchingStacks();
+	                MutableComponent iftc = Components.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
+	                if (cost.get(i))
+	                    iftc = iftc.withStyle(ChatFormatting.GREEN);
+	                else
+	                    iftc = iftc.withStyle(ChatFormatting.RED);
+	                i++;
+	                costStr.add(iftc);
+	            }
+	            if (cost.cardinality() == rpcost.size())
+	            	hasEnoughMaterial = true;
+	            else
+	            	hasEnoughMaterial = false;
+	        } else if (tile.getNextLevelMultiblock() != null) {
+	            
+	           
+	            if (!menu.validStructure.getValue()) {
+	            	 Vec3i v3i = tile.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
+	                costStr.add(Lang.translateGui("generator.no_enough_space", v3i.getX(), v3i.getY(), v3i.getZ()));
+	            } else if (!menu.hasResearch.getValue()) {
+	                costStr.add(Lang.translateGui("generator.incomplete_research"));
+	            } else {
+	                costStr.add(Lang.translateGui("generator.upgrade_material"));
+	                List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper.getContext());
+	                int i = 0;
+	                for (IngredientWithSize iws : upgcost) {
+	                    ItemStack[] iss = iws.getMatchingStacks();
+	                    MutableComponent iftc = Components.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
+	                    if (cost.get(i))
+	                        iftc = iftc.withStyle(ChatFormatting.GREEN);
+	                    else
+	                        iftc = iftc.withStyle(ChatFormatting.RED);
+	                    i++;
+	                    costStr.add(iftc);
+	                }
+	                if (cost.cardinality() == upgcost.size()) {
+	                	hasEnoughMaterial = true;
+	                }else
+	                	hasEnoughMaterial=false;
+	            }
+	        	
+	
+	        }
+        });
+    }
     public GeneratorContainer<R, T> getMenu() {
         return menu;
     }
@@ -177,70 +239,22 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
                     menu.sendMessage(2, btn.getNextState());
                 }));
        
-        this.addRenderableWidget(upgrade = new MasterGeneratorGuiButtonUpgrade(leftPos + 75, topPos + 116, 26, 18, () -> level, 424, 148,
+        this.addRenderableWidget(upgrade = new MasterGeneratorGuiButtonUpgrade(leftPos + 75, topPos + 116, 26, 18, () -> {
+        	int base=0;
+        	if(menu.isBroken.getValue()) {
+        		base=2;
+        	}
+        	if(!hasEnoughMaterial) {
+        		base+=1;
+        	}
+        	return base;
+        }, 424, 148,
                 btn -> {
                     FHNetwork.sendToServer(new GeneratorModifyPacket());
                 }));
 
     }
-    public void calculateUpgradeCost() {
-    	 level = 1;
-         Player player = ClientUtils.mc().player;
-         costStr.clear();
-         Optional<IMultiblockBEHelper<?>> ohelper = CMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue());
-         ohelper.ifPresent(t->{
-         	GeneratorLogic<T,R> tile = (GeneratorLogic<T, R>) t.getMultiblock().logic();
-         	IMultiblockBEHelper<R> helper=(IMultiblockBEHelper<R>) t;
- 	        if (menu.isBroken.getValue()) {
- 	            costStr.add(Lang.translateGui("generator.repair_material"));
- 	            BitSet cost = IERecipeUtils.checkItemList(ClientUtils.mc().player, tile.getRepairCost());
- 	            int i = 0;
- 	            for (IngredientWithSize iws : tile.getRepairCost()) {
- 	                ItemStack[] iss = iws.getMatchingStacks();
- 	                MutableComponent iftc = Components.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
- 	                if (cost.get(i))
- 	                    iftc = iftc.withStyle(ChatFormatting.GREEN);
- 	                else
- 	                    iftc = iftc.withStyle(ChatFormatting.RED);
- 	                i++;
- 	                costStr.add(iftc);
- 	            }
- 	            if (cost.cardinality() == cost.length())
- 	                level = 2;
- 	            else
- 	                level = 3;
- 	        } else if (tile.getNextLevelMultiblock() != null) {
- 	            validStructure = tile.nextLevelHasValidStructure(Minecraft.getInstance().level, helper.getContext());
- 	            List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper.getContext());
- 	            BitSet cost = IERecipeUtils.checkItemList(ClientUtils.mc().player, upgcost);
- 	            hasResearch = ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock());
- 	            Vec3i v3i = tile.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
- 	            if (!validStructure) {
- 	                costStr.add(Lang.translateGui("generator.no_enough_space", v3i.getX(), v3i.getY(), v3i.getZ()));
- 	            } else if (!hasResearch) {
- 	                costStr.add(Lang.translateGui("generator.incomplete_research"));
- 	            } else {
- 	                costStr.add(Lang.translateGui("generator.upgrade_material"));
- 	                int i = 0;
- 	                for (IngredientWithSize iws : upgcost) {
- 	                    ItemStack[] iss = iws.getMatchingStacks();
- 	                    MutableComponent iftc = Components.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
- 	                    if (cost.get(i))
- 	                        iftc = iftc.withStyle(ChatFormatting.GREEN);
- 	                    else
- 	                        iftc = iftc.withStyle(ChatFormatting.RED);
- 	                    i++;
- 	                    costStr.add(iftc);
- 	                }
- 	                if (cost.cardinality() == cost.length()) {
- 	                    level = 0;
- 	                }
- 	            }
- 	        	
- 	
- 	        }
-         });
-    }
+
     @Override
     protected void gatherAdditionalTooltips(int mouseX, int mouseY, Consumer<Component> addLine, Consumer<Component> addGray) {
         super.gatherAdditionalTooltips(mouseX, mouseY, addLine, addGray);
@@ -268,7 +282,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
             addLine.accept(Lang.translateGui("generator.range.level").append(Integer.toString(menu.rangeBlock.getValue())));
         }
         if (isMouseIn(mouseX, mouseY, 124, 18, 32, 32)) {
-            addLine.accept(Lang.translateGui("generator.over.level", menu.overdrive.getValue() * 100));
+            addLine.accept(Lang.translateGui("generator.over.level", Integer.toString((int) (menu.overdrive.getValue() * 100))));
         }
         if (isMouseIn(mouseX, mouseY, 75, 116, 26, 18)) {
             costStr.forEach(addLine);
@@ -277,6 +291,8 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
 
     @Override
     public void render(GuiGraphics transform, int mouseX, int mouseY, float partial) {
+    	if(shouldUpdateTooltip)
+    		updateTooltip();
         super.render(transform, mouseX, mouseY, partial);
 
 

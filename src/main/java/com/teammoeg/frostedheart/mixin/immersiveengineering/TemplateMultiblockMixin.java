@@ -33,6 +33,7 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.chorda.multiblock.MultiBlockAccess;
 import com.teammoeg.chorda.multiblock.components.IOwnerState;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.OwnedLogic;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
@@ -48,7 +49,7 @@ import net.minecraft.world.level.Level;
 
 @Mixin(TemplateMultiblock.class)
 public abstract class TemplateMultiblockMixin implements IMultiblock, MultiBlockAccess {
-    private ServerPlayer pe;
+    private UUID user;
 
     public TemplateMultiblockMixin() {
     }
@@ -58,19 +59,21 @@ public abstract class TemplateMultiblockMixin implements IMultiblock, MultiBlock
 
     @Inject(at = @At(value = "INVOKE", target = "Lblusunrize/immersiveengineering/api/multiblocks/TemplateMultiblock;form"), method = "createStructure", remap = false)
     public void fh$on$createStructure(Level world, BlockPos pos, Direction side, Player player, CallbackInfoReturnable<Boolean> cbi) {
-    	pe = null;
+    	user = null;
     	if (!world.isClientSide)
-            pe = (ServerPlayer) player;
+    		setPlayer((ServerPlayer) player);
     }
 
     @Inject(at = @At("RETURN"), remap = false, method = "form", locals = LocalCapture.CAPTURE_FAILHARD)
     public void fh$on$form(Level world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit, CallbackInfo cbi, BlockPos master) {
-        if (pe != null) {
-        	UUID user= CTeamDataManager.get(pe).getId();
+        if (user != null) {
             IOwnerTile.trySetOwner(Utils.getExistingTileEntity(world, master), user);
-            CMultiblockHelper.getBEHelper(world, pos).ifPresent(t->{
+            CMultiblockHelper.getBEHelper(world, master).ifPresent(t->{
             	if(t.getState() instanceof IOwnerState state) {
             		state.setOwner(user);
+            	}
+            	if(t.getMultiblock().logic() instanceof OwnedLogic logic){
+            		logic.onOwnerChange(t.getContext());
             	}
             });
         }
@@ -78,6 +81,10 @@ public abstract class TemplateMultiblockMixin implements IMultiblock, MultiBlock
 
 	@Override
 	public void setPlayer(ServerPlayer spe) {
-		pe=spe;
+		user= CTeamDataManager.get(spe).getId();
+	}
+	@Override
+	public void setUUID(UUID id) {
+		user=id;
 	}
 }

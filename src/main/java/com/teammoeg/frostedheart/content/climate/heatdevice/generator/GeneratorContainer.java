@@ -19,19 +19,36 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
+import java.util.BitSet;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import com.teammoeg.chorda.client.ui.Point;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.menu.CBaseMenu;
 import com.teammoeg.chorda.menu.CBaseMenu.Validator;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
+import com.teammoeg.chorda.util.IERecipeUtils;
+import com.teammoeg.chorda.util.struct.LazyTickWorker;
+import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedheart.util.client.Lang;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelper;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockLogic;
+import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import blusunrize.immersiveengineering.common.gui.IESlot.NewOutput;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
@@ -51,7 +68,12 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
     public CDataSlot<Boolean> isBroken = CCustomMenuSlot.SLOT_BOOL.create(this);
     public CDataSlot<Boolean> isWorking = CCustomMenuSlot.SLOT_BOOL.create(this);
     public CDataSlot<Boolean> isOverdrive = CCustomMenuSlot.SLOT_BOOL.create(this);
+    public CDataSlot<Boolean> validStructure = CCustomMenuSlot.SLOT_BOOL.create(this);
+    public CDataSlot<Boolean> hasResearch = CCustomMenuSlot.SLOT_BOOL.create(this);
     public CDataSlot<BlockPos> pos = CCustomMenuSlot.SLOT_BLOCKPOS.create(this);
+    public CDataSlot<BitSet> material=CCustomMenuSlot.SLOT_VAR_BITSET.create(this);
+    
+    GeneratorLogic<T,R> tile;
     MultiblockMenuContext<R> ctx;
     public GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<R> ctx) {
         super(type, id, inventoryPlayer.player, 2);
@@ -63,6 +85,8 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
         }*/
         state.tryRegist(inventoryPlayer.player.level(),master);
         Optional<GeneratorData> optdata = state.getData(master);
+        Optional<IMultiblockLogic<?>> otile=CMultiblockHelper.getMultiblockLogic(ctx.mbContext());
+        tile=(GeneratorLogic<T, R>) otile.get();
         optdata.ifPresent(data -> {
             process.bind(() -> data.process);
             processMax.bind(() -> data.processMax);
@@ -75,17 +99,51 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
             isBroken.bind(() -> data.isBroken);
             isWorking.bind(() -> data.isWorking, t -> {data.isWorking = t;});
             isOverdrive.bind(() -> data.isOverdrive, t -> data.isOverdrive = t);
+            material.bind(()->{
+
+            	if(data.isBroken)
+            		return IERecipeUtils.checkItemList(inventoryPlayer.player, tile.getRepairCost());
+            	else if(tile.getNextLevelMultiblock()!=null) {
+            		List<IngredientWithSize> upgcost = tile.getUpgradeCost(inventoryPlayer.player.level(), ctx.mbContext());
+    	            return IERecipeUtils.checkItemList(inventoryPlayer.player, upgcost);
+            	}
+            	return new BitSet();
+            });
             //System.out.println(" binded ");
         });
+        state.getTeamData().ifPresent(team->{
+        	hasResearch.bind(()->{
+        		if(tile.getNextLevelMultiblock()!=null)
+        			return ResearchListeners.hasMultiblock(state.getOwner(), tile.getNextLevelMultiblock());
+        		else
+        			return false;
+        	});
+        });
+        
         //System.out.println(optdata);
         this.ctx=ctx;
-        pos.bind(() -> ctx.clickedPos());
+        pos.setValue(master);
 
-        IItemHandler handler = state.getData(CMultiblockHelper.getAbsoluteMaster(ctx.mbContext())).map(t -> t.inventory).orElseGet(() -> null);
+        IItemHandler handler = state.getData(master).map(t -> t.inventory).orElseGet(() -> null);
         createSlots(handler, inventoryPlayer);
+        updateStructureState();
     }
-
+    public void updateStructureState() {
+    	validStructure.setValue(tile.nextLevelHasValidStructure(Minecraft.getInstance().level, ctx.mbContext()));
+    }
+    LazyTickWorker worker=new LazyTickWorker(10, ()->updateStructureState());
     @Override
+	public void broadcastChanges() {
+    	worker.tick();
+		super.broadcastChanges();
+	}
+    
+	@Override
+	public void broadcastFullState() {
+		updateStructureState();
+		super.broadcastFullState();
+	}
+	@Override
 	protected Validator buildValidator(Validator builder) {
 		return super.buildValidator(builder).range(ctx.clickedPos(),8).custom(ctx.mbContext().isValid());
 	}
@@ -110,7 +168,6 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
 	        super.addPlayerInventory(inventoryPlayer, 8, 140, 198);
         }
     }
-
     public abstract Point getSlotIn();
 
     public abstract Point getSlotOut();

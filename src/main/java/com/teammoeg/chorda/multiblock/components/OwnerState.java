@@ -58,7 +58,7 @@ public class OwnerState implements IMultiblockState, IOwnerState<OwnerState> {
 		
 	}
 
-    protected Optional<TeamDataHolder> getTeamData() {
+    public Optional<TeamDataHolder> getTeamData() {
         UUID owner = getOwner();
         if (owner != null)
             return Optional.ofNullable(CTeamDataManager.getDataByResearchID(owner));

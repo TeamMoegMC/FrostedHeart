@@ -25,6 +25,7 @@ import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
@@ -137,14 +138,14 @@ public class FHCommonEvents {
             persistent.putBoolean(CConstants.FIRST_LOGIN_GIVE_MANUAL, false);
             event.getEntity().getInventory().add(
                     new ItemStack(CRegistryHelper.getItem(new ResourceLocation("ftbquests", "book"))));
-            event.getEntity().getInventory().armor.set(3, FUtils.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
-                    .setHoverName(Lang.translateKey("itemname.frostedheart.start_head"))));
-            event.getEntity().getInventory().armor.set(2, FUtils.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)
-                    .setHoverName(Lang.translateKey("itemname.frostedheart.start_chest"))));
-            event.getEntity().getInventory().armor.set(1, FUtils.ArmorLiningNBT(new ItemStack(Items.IRON_LEGGINGS)
-                    .setHoverName(Lang.translateKey("itemname.frostedheart.start_leg"))));
-            event.getEntity().getInventory().armor.set(0, FUtils.ArmorLiningNBT(new ItemStack(Items.IRON_BOOTS)
-                    .setHoverName(Lang.translateKey("itemname.frostedheart.start_foot"))));
+            event.getEntity().getInventory().armor.set(3, CUtils.ArmorNBT(new ItemStack(FHItems.space_hat),107,6)
+                    .setHoverName(Lang.translateKey("itemname.frostedheart.start_head")));
+            event.getEntity().getInventory().armor.set(2, CUtils.ArmorNBT(new ItemStack(FHItems.space_jacket),107,6)
+                    .setHoverName(Lang.translateKey("itemname.frostedheart.start_chest")));
+            event.getEntity().getInventory().armor.set(1, CUtils.ArmorNBT(new ItemStack(FHItems.space_pants),107,6)
+                    .setHoverName(Lang.translateKey("itemname.frostedheart.start_leg")));
+            event.getEntity().getInventory().armor.set(0, CUtils.ArmorNBT(new ItemStack(FHItems.space_boots),107,6)
+                    .setHoverName(Lang.translateKey("itemname.frostedheart.start_foot")));
             if (event.getEntity().getAbilities().instabuild) {
                 event.getEntity().sendSystemMessage(Lang.translateKey("message.frostedheart.creative_help")
                         .setStyle(Style.EMPTY.applyFormat(ChatFormatting.YELLOW)

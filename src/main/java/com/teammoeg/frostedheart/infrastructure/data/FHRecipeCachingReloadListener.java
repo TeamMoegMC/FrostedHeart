@@ -74,11 +74,11 @@ public class FHRecipeCachingReloadListener implements ResourceManagerReloadListe
             return;
         //filterRecipes(recipes, GeneratorRecipe.class, GeneratorRecipe.TYPE);
         GeneratorSteamRecipe.recipeList = filterRecipes(recipes, GeneratorSteamRecipe.class, GeneratorSteamRecipe.TYPE);
-        InstallInnerRecipe.recipeList = recipes.stream()
+       /* InstallInnerRecipe.recipeList = recipes.stream()
                 .filter(iRecipe -> iRecipe.getClass() == InstallInnerRecipe.class)
                 .map(e -> (InstallInnerRecipe) e)
                 .collect(Collectors.<InstallInnerRecipe, ResourceLocation, InstallInnerRecipe>toMap(InstallInnerRecipe::getBuffType, recipe -> recipe));
-        CampfireDefrostRecipe.recipeList = recipes.stream()
+        */CampfireDefrostRecipe.recipeList = recipes.stream()
                 .filter(iRecipe -> iRecipe.getClass() == CampfireDefrostRecipe.class)
                 .map(e -> (CampfireDefrostRecipe) e)
                 .collect(Collectors.toMap(AbstractCookingRecipe::getId, recipe -> recipe));

@@ -23,6 +23,7 @@ import com.teammoeg.frostedheart.*;
 import com.teammoeg.chorda.capability.CurioCapabilityProvider;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
+import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.chorda.util.struct.EnumDefaultedMap;
@@ -36,6 +37,7 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
+import com.teammoeg.frostedheart.content.climate.player.BodyPartData;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -62,7 +64,9 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.DigDurabilityEnchantment;
@@ -79,6 +83,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.ItemAttributeModifierEvent;
@@ -94,9 +99,11 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.PacketDistributor.PacketTarget;
 
+import java.util.Collection;
 import java.util.function.Supplier;
 
 import static com.teammoeg.frostedheart.content.climate.WorldTemperature.SNOW_TEMPERATURE;
@@ -144,12 +151,11 @@ public class ClimateCommonEvents {
 
 	@SubscribeEvent
 	public static void insulationDataAttr(ItemAttributeModifierEvent event) {
-		if(!event.getSlotType().isArmor()||!Mob.getEquipmentSlotForItem(event.getItemStack()).isArmor()) {
-			
-			return ;
+		if (!event.getSlotType().isArmor()/* ||!Mob.getEquipmentSlotForItem(event.getItemStack()).isArmor() */) {
+			return;
 		}
 		ArmorTempData data = ArmorTempData.getData(event.getItemStack(), BodyPart.fromVanilla(event.getSlotType()));
-		
+
 		if (data != null) {
 			SlotKey ecs = EquipmentSlotType.fromVanilla(event.getSlotType());
 			if (data.getInsulation() != 0)
@@ -161,6 +167,15 @@ public class ClimateCommonEvents {
 			if (data.getHeatProof() != 0)
 				event.addModifier(FHAttributes.HEAT_PROOF.get(),
 						ecs.createAttribute(data.getHeatProof(), Operation.MULTIPLY_TOTAL));
+		}else {
+			Collection<AttributeModifier> attr=event.getItemStack().getItem().getAttributeModifiers(event.getSlotType(),event.getItemStack()).get(Attributes.ARMOR);
+			if(!attr.isEmpty()) {
+				SlotKey ecs = EquipmentSlotType.fromVanilla(event.getSlotType());
+				event.addModifier(FHAttributes.WIND_PROOF.get(),
+						ecs.createAttribute(1f, Operation.MULTIPLY_TOTAL));
+				event.addModifier(FHAttributes.HEAT_PROOF.get(),
+						ecs.createAttribute(.7f, Operation.MULTIPLY_TOTAL));
+			}
 		}
 
 	}
@@ -219,58 +234,25 @@ public class ClimateCommonEvents {
 					amount += player.getRandom().nextDouble() < (damage - amount) ? 1 : 0;
 				if (amount <= 0)
 					return;
-				for (ItemStack itemstack : player.getArmorSlots()) {
-					if (itemstack.isEmpty())
-						continue;
-					CompoundTag cn = itemstack.getTag();
-					if (cn == null)
-						continue;
-					String inner = cn.getString("inner_cover");
-					if (inner.isEmpty())
-						continue;
-					if (cn.getBoolean("inner_bounded")) {
-						int dmg = cn.getInt("inner_damage");
-						if (dmg < itemstack.getDamageValue()) {
-							dmg = itemstack.getDamageValue();
-						}
-						dmg += amount;
-						if (dmg >= itemstack.getMaxDamage()) {
-							cn.remove("inner_cover");
-							cn.remove("inner_cover_tag");
-							cn.remove("inner_bounded");
-							cn.remove("inner_damage");
-							player.broadcastBreakEvent(Mob.getEquipmentSlotForItem(itemstack));
-						} else
-							cn.putInt("inner_damage", dmg);
-						continue;
-					}
-					CompoundTag cnbt = cn.getCompound("inner_cover_tag");
-					int i = CUtils.getEnchantmentLevel(Enchantments.UNBREAKING, cnbt);
-					int j = 0;
-					if (i > 0)
-						for (int k = 0; k < amount; ++k) {
-							if (DigDurabilityEnchantment.shouldIgnoreDurabilityDrop(itemstack, i, player.getRandom())) {
-								++j;
+				LazyOptional<PlayerTemperatureData> cap = PlayerTemperatureData.getCapability(player);
+				if (cap.isPresent()) {
+					RandomSource rs = player.level().random;
+					PlayerTemperatureData ptd = cap.resolve().get();
+					for (BodyPart part : BodyPart.values()) {
+						ItemStackHandler partItem = ptd.getClothesByPart(part);
+						float rate = 1;
+						for (int i = 0; i < partItem.getSlots(); i++) {
+							ItemStack itemstack = partItem.getStackInSlot(i);
+							if(!itemstack.isEmpty()) {
+								if(itemstack.isDamageableItem())
+								itemstack.hurtAndBreak(CMath.randomValue(rs, rate * amount), player,
+									t -> t.broadcastBreakEvent(part.slot));
+								rate*=(1-BodyPartData.sumAttributesPercentage(itemstack.getAttributeModifiers(part.slot).get(FHAttributes.HEAT_PROOF.get())));
 							}
 						}
-					amount -= j;
-					if (amount <= 0)
-						continue;
-					int crdmg = cnbt.getInt("Damage");
-					crdmg += amount;
-					InstallInnerRecipe ri = InstallInnerRecipe.recipeList.get(new ResourceLocation(inner));
-
-					if (ri != null && ri.getDurability() <= crdmg) {// damaged
-						cn.remove("inner_cover");
-						cn.remove("inner_cover_tag");
-						cn.remove("inner_bounded");
-						player.broadcastBreakEvent(Mob.getEquipmentSlotForItem(itemstack));
-					} else {
-						cnbt.putInt("Damage", crdmg);
-						cn.put("inner_cover_tag", cnbt);
 					}
-				}
 
+				}
 			}
 		}
 	}

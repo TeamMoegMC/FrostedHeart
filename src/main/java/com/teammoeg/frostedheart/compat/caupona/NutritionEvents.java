@@ -1,13 +1,8 @@
 package com.teammoeg.frostedheart.compat.caupona;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Map.Entry;
-
 import com.teammoeg.caupona.CPConfig;
-import com.teammoeg.caupona.api.CauponaApi;
 import com.teammoeg.caupona.api.CauponaHooks;
 import com.teammoeg.caupona.data.recipes.FluidFoodValueRecipe;
 import com.teammoeg.caupona.data.recipes.FoodValueRecipe;
