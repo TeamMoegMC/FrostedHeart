@@ -44,6 +44,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     public static final Editor<EffectShowCategory> CAT = (p, l, v, c) -> new Category(p, l, v, c).open();
     public static final Editor<EffectCommand> COMMAND = (p, l, v, c) -> new Command(p, l, v, c).open();
     public static final Editor<EffectExperience> EXP = (p, l, v, c) -> new Exp(p, l, v, c).open();
+    public static final Editor<EffectCustom> CUSTOM= (p,l,v,c) -> new Custom(p,l,v,c).open();
     public static final Editor<Effect> EDITOR = (p, l, v, c) -> {
         if (v instanceof EffectBuilding)
             BUILD.open(p, l, (EffectBuilding) v, c::accept);
@@ -61,6 +62,8 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
             COMMAND.open(p, l, (EffectCommand) v, c::accept);
         else if (v instanceof EffectExperience)
             EXP.open(p, l, (EffectExperience) v, c::accept);
+        else if(v instanceof EffectCustom)
+        	CUSTOM.open(p,l,(EffectCustom) v,c::accept);
         else
             new EditorSelector<>(p, l, c)
                     .addEditor("Building", BUILD)
@@ -71,6 +74,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
                     .addEditor("Recipe Category", CAT)
                     .addEditor("Add Command", COMMAND)
                     .addEditor("Add Experience", EXP)
+                    .addEditor("Custom",CUSTOM)
                     .open();
 
     };
@@ -339,6 +343,19 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         @Override
         public EffectUse createEffect() {
             return new EffectUse();
+        }
+
+    }
+    private static class Custom extends EffectEditor<EffectCustom> {
+
+        public Custom(Widget panel, String lbl, EffectCustom e, Consumer<EffectCustom> cb) {
+            super(panel, lbl, e, cb);
+        }
+
+
+        @Override
+        public EffectCustom createEffect() {
+            return new EffectCustom();
         }
 
     }

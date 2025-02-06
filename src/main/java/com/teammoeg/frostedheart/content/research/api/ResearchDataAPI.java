@@ -102,6 +102,9 @@ public class ResearchDataAPI {
 
     }
 
+    /**
+     * A convenience method to check if specific research is completed in both sides, for easier compat
+     * */
     public static boolean isResearchComplete(Player id, String research) {
         if (id instanceof ServerPlayer)
             return CTeamDataManager.INSTANCE.get(FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer) id).get()).getData(FHSpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();

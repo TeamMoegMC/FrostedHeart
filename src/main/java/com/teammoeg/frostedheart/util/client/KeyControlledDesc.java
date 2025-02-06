@@ -20,14 +20,9 @@
 package com.teammoeg.frostedheart.util.client;
 
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.util.CUtils;
-
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraftforge.common.util.Lazy;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 

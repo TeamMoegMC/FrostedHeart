@@ -21,6 +21,9 @@ package com.teammoeg.frostedheart.content.utility;
 
 import com.teammoeg.frostedheart.item.FHBaseItem;
 
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.ToolAction;
+
 public class FHLeveledTool extends FHBaseItem {
     protected int level;
 
@@ -32,6 +35,11 @@ public class FHLeveledTool extends FHBaseItem {
     public int getLevel() {
         return level;
     }
+
+	@Override
+	public boolean canPerformAction(ItemStack stack, ToolAction toolAction) {
+		return super.canPerformAction(stack, toolAction);
+	}
 
 
 }

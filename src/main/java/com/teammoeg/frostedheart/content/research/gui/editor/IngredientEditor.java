@@ -38,6 +38,7 @@ import net.minecraft.world.item.crafting.Ingredient.TagValue;
 import net.minecraft.world.item.crafting.Ingredient.Value;
 import net.minecraftforge.common.crafting.CompoundIngredient;
 import net.minecraftforge.common.crafting.PartialNBTIngredient;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,10 +112,27 @@ public class IngredientEditor extends BaseEditDialog {
     };
     public static final Editor<Ingredient> TAG_EDITOR = (p, l, v, c) -> {
 
-        if (v != null && v.values.length > 0 && v.values[0] instanceof TagValue)
-            EDITOR_TAGLIST.open(p, l, (TagValue) v.values[0], e -> c.accept(Ingredient.fromValues(Stream.of(e))));
-        else
+        if (v != null && v.values.length > 0) {
+        	if(v.values[0] instanceof TagValue) {
+        		EDITOR_TAGLIST.open(p, l, (TagValue) v.values[0], e -> c.accept(Ingredient.fromValues(Stream.of(e))));
+        		return;
+        	}else if(v.values[0] instanceof ItemValue) {
+        		EDITOR_TAGLIST.open(p, l, ((ItemValue)v.values[0]).item.getTags().findFirst().map(TagValue::new).orElse(null), e -> c.accept(Ingredient.fromValues(Stream.of(e))));
+        	}
+        }
             EDITOR_TAGLIST.open(p, l, null, e -> c.accept(Ingredient.fromValues(Stream.of(e))));
+    };
+    public static final Editor<Ingredient> ITEM_EDITOR = (p, l, v, c) -> {
+    	if(v != null && v.values.length > 0) {
+	        if ( v.values[0] instanceof ItemValue) {
+	        	EDITOR_ITEMLIST.open(p, l, (ItemValue) v.values[0], e -> c.accept(Ingredient.fromValues(Stream.of(e))));
+	        	return;
+	        } else if(v.values[0] instanceof TagValue) {
+	        	EDITOR_ITEMLIST.open(p, l, ForgeRegistries.ITEMS.tags().getTag(((TagValue) v.values[0]).tag).stream().findFirst().map(ItemStack::new).map(ItemValue::new).orElse(null), e -> c.accept(Ingredient.fromValues(Stream.of(e))));
+	        	return;
+	        }
+    	}
+        	EDITOR_ITEMLIST.open(p, l, null, e -> c.accept(Ingredient.fromValues(Stream.of(e))));
     };
     public static final Editor<Ingredient> EDITOR_INGREDIENT = (p, l, v, c) -> {
         if (v == null) {
@@ -130,9 +148,13 @@ public class IngredientEditor extends BaseEditDialog {
         EditorSelector<Ingredient> igd = new EditorSelector<>(p, l, (o, t) -> true, v, c);
         igd.addEditor("Edit", EDITOR_INGREDIENT);
         if (v != null) {
-            if (v.values.length == 1)
+            if (v.values.length == 1) {
                 igd.addEditor("Change to Multiple", EDITOR_MULTIPLE);
-            else
+                if(!(v.values[0] instanceof TagValue))
+                	igd.addEditor("Change to Tag", TAG_EDITOR);
+               if(!(v.values[0] instanceof ItemValue))
+                	igd.addEditor("Change to Item", ITEM_EDITOR);
+            }else
                 igd.addEditor("Change to Single", EDITOR_SIMPLE);
             if (!(v instanceof PartialNBTIngredient))
                 igd.addEditor("Add NBT", NBT_EDITOR);

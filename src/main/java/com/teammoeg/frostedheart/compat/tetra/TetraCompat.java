@@ -19,7 +19,10 @@
 
 package com.teammoeg.frostedheart.compat.tetra;
 
+import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraftforge.common.ToolAction;
+import se.mickelus.tetra.module.schematic.requirement.CraftingRequirementDeserializer;
 
 public class TetraCompat {
     public static ToolAction coreSpade = ToolAction.get("core_spade");
@@ -27,5 +30,6 @@ public class TetraCompat {
     public static ToolAction geoHammer = ToolAction.get("geo_hammer");
 
     public static void init() {
+    	CraftingRequirementDeserializer.registerSupplier(FHMain.rl("research").toString(), ResearchRequirement::new);
     }
 }

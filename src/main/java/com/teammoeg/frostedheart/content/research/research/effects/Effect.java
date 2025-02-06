@@ -71,6 +71,7 @@ public abstract class Effect {
         registerEffectType(EffectShowCategory.class, "category", EffectShowCategory.CODEC);
         registerEffectType(EffectCommand.class, "command", EffectCommand.CODEC);
         registerEffectType(EffectExperience.class, "experience", EffectExperience.CODEC);
+        registerEffectType(EffectCustom.class, "custom", EffectCustom.CODEC);
     }
 
     String name = "";
@@ -255,7 +256,7 @@ public abstract class Effect {
      * @param team          the team<br>
      * @param triggerPlayer the player trigger the grant, null if this is not triggered by player, typically press "claim" button.<br>
      * @param isload        true if this is run when loaded from disk<br>
-     * @return true, if
+     * @return true, if the effect is granted successfully
      */
     public abstract boolean grant(TeamDataHolder team, TeamResearchData trd, @Nullable Player triggerPlayer, boolean isload);
 
