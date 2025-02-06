@@ -58,7 +58,8 @@ public class KeyControlledDesc {
 		tabBuilder.append(keyTooltip.plainCopy().withStyle(isPressed ? WHITE : GRAY));
 		tabBuilder.append(Components.literal(holdDesc[1]).withStyle(DARK_GRAY));
 		lines.add(0, tabBuilder);
-		lines.add(1, Components.immutableEmpty());
+		if(isPressed)
+			lines.add(1, Components.immutableEmpty());
 	}
 
 	public List<Component> getCurrentLines() {
