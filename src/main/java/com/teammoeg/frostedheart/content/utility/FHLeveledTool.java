@@ -19,10 +19,12 @@
 
 package com.teammoeg.frostedheart.content.utility;
 
+import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.ToolAction;
+import se.mickelus.tetra.properties.IToolProvider;
 
 public class FHLeveledTool extends FHBaseItem {
     protected int level;
@@ -40,6 +42,11 @@ public class FHLeveledTool extends FHBaseItem {
 	public boolean canPerformAction(ItemStack stack, ToolAction toolAction) {
 		return super.canPerformAction(stack, toolAction);
 	}
+    public static int getLevel(ItemStack item) {
+        if (item.getItem() instanceof FHLeveledTool)
+            return ((FHLeveledTool) item.getItem()).getLevel();
 
+        return ((IToolProvider) item.getItem()).getToolLevel(item, TetraCompat.coreSpade);
+    }
 
 }

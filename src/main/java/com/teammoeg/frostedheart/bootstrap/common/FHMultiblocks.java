@@ -92,7 +92,7 @@ public class FHMultiblocks {
 		MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR_T1);
 		MultiblockHandler.registerMultiblock(FHMultiblocks.RADIATOR);
 		MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR_T2);
-		System.out.println("eventBus loaded");
+		//System.out.println("eventBus loaded");
 	}
 
 

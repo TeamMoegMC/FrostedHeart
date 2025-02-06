@@ -123,13 +123,6 @@ public class ProspectorPick extends FHLeveledTool {
         return getLevel(item) + 8;
     }
 
-    public static int getLevel(ItemStack item) {
-        if (item.getItem() instanceof FHLeveledTool)
-            return ((FHLeveledTool) item.getItem()).getLevel();
-
-        return ((IToolProvider) item.getItem()).getToolLevel(item, TetraCompat.proPick);
-    }
-
     public static int getVerticalRange(ItemStack item) {
         return getLevel(item) + 3;
     }

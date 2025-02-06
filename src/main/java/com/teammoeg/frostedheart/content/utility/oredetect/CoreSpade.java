@@ -130,12 +130,7 @@ public class CoreSpade extends FHLeveledTool {
         return Math.max(3, getLevel(item));
     }
 
-    public static int getLevel(ItemStack item) {
-        if (item.getItem() instanceof FHLeveledTool)
-            return ((FHLeveledTool) item.getItem()).getLevel();
 
-        return ((IToolProvider) item.getItem()).getToolLevel(item, TetraCompat.coreSpade);
-    }
 
     public static int getVerticalRange(ItemStack item) {
         return getLevel(item) == 1 ? 32 : (48 + (getLevel(item) - 1) * 16);

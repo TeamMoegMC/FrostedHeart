@@ -118,13 +118,6 @@ public class GeologistsHammer extends FHLeveledTool {
         return getLevel(item) + 4;
     }
 
-    public static int getLevel(ItemStack item) {
-        if (item.getItem() instanceof FHLeveledTool)
-            return ((FHLeveledTool) item.getItem()).getLevel();
-
-        return ((IToolProvider) item.getItem()).getToolLevel(item, TetraCompat.geoHammer);
-    }
-
     public static int getVerticalRange(ItemStack item) {
         return getLevel(item) + 3;
     }
