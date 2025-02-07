@@ -24,6 +24,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.water.recipe.WaterLevelAndEffectRecipe;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -83,7 +84,7 @@ public class WaterLevelUtil {
     }
 
     public static boolean canPlayerAddWaterExhaustionLevel(Player player) {
-        return !(player instanceof FakePlayer) && !player.getAbilities().invulnerable && WaterLevelCapability.getCapability(player) != null;
+        return !(player instanceof FakePlayer) && !player.getAbilities().invulnerable && WaterLevelCapability.getCapability(player) != null&&player.level().getDifficulty()!=Difficulty.PEACEFUL;
     }
 
     public static float getMoisturizingRate(Player player) {

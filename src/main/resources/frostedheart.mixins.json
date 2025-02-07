@@ -51,7 +51,6 @@
     "minecraft.temperature.ChickenMixin",
     "minecraft.temperature.CowMixin",
     "minecraft.temperature.IceBlockMixin_Melt",
-    "minecraft.temperature.ItemStackMixin_GiveLining",
     "minecraft.temperature.MooshroomMixin",
     "minecraft.temperature.MushroomBlockMixin",
     "minecraft.temperature.PigMixin",

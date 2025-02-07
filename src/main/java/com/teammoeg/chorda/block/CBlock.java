@@ -27,6 +27,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public class CBlock extends Block {
     protected int lightOpacity;
 
+    
     public CBlock(Properties blockProps) {
         super(blockProps.dynamicShape());
         lightOpacity = 15;

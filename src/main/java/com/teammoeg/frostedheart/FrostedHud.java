@@ -32,6 +32,7 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.AtlasUV;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.ui.PointSet;
 import com.teammoeg.chorda.client.ui.TextPosition;
@@ -337,7 +338,7 @@ public class FrostedHud {
         RenderSystem.enableBlend();
         int air = player.getAirSupply();
         int maxAir = 300;
-        if (player.isEyeInFluid(FluidTags.WATER) || air < maxAir) {
+        if (player.isEyeInFluid(FluidTags.WATER) || air < maxAir-2) {
             
             HUDElements.right_half_frame.blitAt(stack, x, y, BasePos.right_half_3);
             if (air <= 30) {
@@ -519,14 +520,14 @@ public class FrostedHud {
                         if (lastLevel != 0) {
                             int end = windowX + i * segmentLength / 2 - 2;
                             int clr = clrs.get(lastLevel);
-                            stack.fillGradient(end, 1, end + 6, 15, clr, clrs.get((int) fr.toState));
+                            CGuiHelper.fillGradient(stack.pose(),end, 1, end + 6, 15, clr, clrs.get((int) fr.toState));
                             int start = windowX + lastStart * segmentLength / 2 + 4;
                             if (lastStart == 0)
                                 start -= 3;
                             stack.fill( start, 1, end, 15, clr);
                         } else if (lastLevel == 0) {
                             int end = windowX + i * segmentLength / 2 - 2;
-                            stack.fillGradient(end, 1, end + 6, 15, 0, clrs.get((int) fr.toState));
+                            CGuiHelper.fillGradient(stack.pose(),end, 1, end + 6, 15, 0, clrs.get((int) fr.toState));
                         }
                     }
                     lastStart = i;

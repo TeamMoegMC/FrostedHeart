@@ -81,6 +81,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.LazyOptional;
@@ -286,7 +287,15 @@ public class ClimateCommonEvents {
 				// Update clock source every second, and check hour data if it needs an update
 				if (serverWorld.getGameTime() % 20 == 0) {
 					WorldClimate data = WorldClimate.get(serverWorld);
+					
 					if (data != null) {
+						if(FHConfig.SERVER.addInitClimate.get())
+							if(!data.isInitialEventAdded()) {
+								data.setInitialEventAdded(true);
+								if(serverWorld.dimensionTypeRegistration().is(BuiltinDimensionTypes.OVERWORLD)) {
+									data.addInitTempEvent(serverWorld);
+								}
+							}
 						data.updateClock(serverWorld);
 						data.updateCache(serverWorld);
 						data.trimTempEventStream();

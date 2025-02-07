@@ -69,7 +69,10 @@ public class BodyPartData {
 		float res = 0f;
 		//TODO determine if alphaGem wrote this incorrectly
 		//float rate = 0.4f;
-		float rate = 0.3f - this.clothes.getSlots() * 0.1f;
+		float rate = 0.3f;
+		for(int i=0;i<this.clothes.getSlots();i++)
+			if(!clothes.getStackInSlot(i).isEmpty())
+				rate-= 0.1f;
 		if (!equipment.isEmpty()) {
 			rate += 0.1f;
 			res += rate * sumAttributes(equipment.getAttributeModifiers(part.slot).get(FHAttributes.INSULATION.get()));

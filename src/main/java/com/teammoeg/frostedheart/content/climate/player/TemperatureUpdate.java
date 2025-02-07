@@ -47,8 +47,10 @@ import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.LogicalSide;
 
 public class TemperatureUpdate {
-    public static final Double HEAT_EXCHANGE_CONSTANT = FHConfig.SERVER.heatExchangeConstant.get();
-    public static final UUID envTempId = UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
+	public static final UUID envTempId = UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
+	//Do not use static final in config because this is reloaded each world
+    /*public static final Double HEAT_EXCHANGE_CONSTANT = FHConfig.SERVER.heatExchangeConstant.get();
+    
     public static final int TEMP_SKY_LIGHT_THRESHOLD = FHConfig.SERVER.tempSkyLightThreshold.get();
     public static final int SNOW_TEMP_MODIFIER = FHConfig.SERVER.snowTempModifier.get();
     public static final int BLIZZARD_TEMP_MODIFIER = FHConfig.SERVER.blizzardTempModifier.get();
@@ -56,8 +58,8 @@ public class TemperatureUpdate {
     public static final int ON_FIRE_TEMP_MODIFIER = FHConfig.SERVER.onFireTempModifier.get();
     public static final double HURTING_HEAT_UPDATE = FHConfig.SERVER.hurtingHeatUpdate.get();
     public static final int MIN_BODY_TEMP_CHANGE = FHConfig.SERVER.minBodyTempChange.get();
-    public static final int MAX_BODY_TEMP_CHANGE = FHConfig.SERVER.maxBodyTempChange.get();
-
+    public static final int MAX_BODY_TEMP_CHANGE = FHConfig.SERVER.maxBodyTempChange.get();*/
+    public static final float FOOD_EXHAUST_COLD=.05F;
 
     /**
      * Perform temperature effect
@@ -170,25 +172,25 @@ public class TemperatureUpdate {
                     int skyLight = world.getChunkSource().getLightEngine().getLayerListener(LightLayer.SKY).getLightValue(pos);
                     float dayTime = world.getDayTime() % 24000L;
                     float relativeTime = Mth.sin((float) Math.toRadians(dayTime / ((float) 200 / 3))); // range from -1 to 1
-                    if (skyLight < TEMP_SKY_LIGHT_THRESHOLD) {
+                    if (skyLight < FHConfig.SERVER.tempSkyLightThreshold.get()) {
                         relativeTime = -1;
                     }
 
                     // Weather temperature modifier
                     float weatherMultiplier = 1.0F;
                     if (world.isRaining() && WorldTemperature.isRainingAt(player.blockPosition(), world)) {
-                        envtemp -= SNOW_TEMP_MODIFIER;
+                        envtemp -= FHConfig.SERVER.snowTempModifier.get();
                         if (world.isThundering()) {
-                            envtemp -= BLIZZARD_TEMP_MODIFIER;
+                            envtemp -= FHConfig.SERVER.blizzardTempModifier.get();
                         }
                         weatherMultiplier = 0.2F;
                     }
 
-                    envtemp += relativeTime * DAY_NIGHT_TEMP_AMPLITUDE * weatherMultiplier;
+                    envtemp += relativeTime * FHConfig.SERVER.dayNightTempAmplitude.get() * weatherMultiplier;
 
                     // Burning temperature
                     if (player.isOnFire())
-                        envtemp += ON_FIRE_TEMP_MODIFIER;
+                        envtemp += FHConfig.SERVER.onFireTempModifier.get();
 
                     // Handle Attributes
                     player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).removeModifier(envTempId);
@@ -223,10 +225,10 @@ public class TemperatureUpdate {
                             float selfHeatRate=data.getDifficulty().heat_unit;
                             unit*=selfHeatRate;
                             // base generation when cold: 1 unit
-                            if (temperature < 0.0) {
+                            if (temperature < 0.0&&player.getFoodData().getFoodLevel()>0) {
                                 temperature += unit;
                                 // TODO: cost hunger for cold, adjust for difficulty
-                                player.causeFoodExhaustion(1);
+                                player.causeFoodExhaustion(FOOD_EXHAUST_COLD);
                             }
 
                             double speedSquared = player.getDeltaMovement().horizontalDistanceSqr(); // Horizontal movement speed squared
@@ -240,6 +242,11 @@ public class TemperatureUpdate {
                             } else {
                                 temperature += unit; // Standing still or being in a vehicle increases temperature by 1 unit
                             }
+                            //gain an extra unit if too cold
+                            /*if(!isSprinting&&temperature < 0.0) {
+                            	 temperature += unit;
+                                 player.causeFoodExhaustion(FOOD_EXHAUST_COLD);
+                            }*/
                             // TODO: degree I/II/III burn if dt=+20/+30/+40
                             // TODO: degree I/II/III freeze if dt=-50/-60/-70
                             data.setTemperatureByPart(part, temperature);
@@ -257,8 +264,9 @@ public class TemperatureUpdate {
 
                     // Equipments
                     // TODO: heat up equipments!
-
+                    if(!player.isCreative()&&!player.isSpectator())
                     data.update(envtemp, totalConductivity);
+                    System.out.println("===================================");
                     for(BodyPart bp:BodyPart.values())
                     System.out.println(bp+":"+data.getTemperatureByPart(bp));
                     //FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));

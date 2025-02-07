@@ -104,6 +104,7 @@ public class WorldClimate implements NBTSerializable {
     protected int hourInDay = 0;
     protected DayTemperatureData daycache;
     protected long lastday = -1;
+    private boolean isInitialEventAdded;
 
     /**
      * Get ClimateData attached to this world
@@ -862,6 +863,7 @@ public class WorldClimate implements NBTSerializable {
         clockSource.serialize(nbt);
         nbt.put("tempEventStream", CodecUtil.toNBTList(tempEventStream, ClimateEvent.CODEC));
         nbt.put("hourlyTempStream", CodecUtil.toNBTList(dailyTempData, DayTemperatureData.CODEC));
+        nbt.putBoolean("isInitialEventAdded", isInitialEventAdded);
 	}
 
 	@Override
@@ -871,6 +873,15 @@ public class WorldClimate implements NBTSerializable {
         tempEventStream.addAll(CodecUtil.fromNBTList(nbt.getList("tempEventStream", Tag.TAG_COMPOUND), ClimateEvent.CODEC));
         dailyTempData.clear();
         dailyTempData.addAll(CodecUtil.fromNBTList(nbt.getList("hourlyTempStream", Tag.TAG_COMPOUND), DayTemperatureData.CODEC));
+        setInitialEventAdded(nbt.getBoolean("isInitialEventAdded"));
         readCache();
+	}
+
+	public boolean isInitialEventAdded() {
+		return isInitialEventAdded;
+	}
+
+	public void setInitialEventAdded(boolean isInitialEventAdded) {
+		this.isInitialEventAdded = isInitialEventAdded;
 	}
 }

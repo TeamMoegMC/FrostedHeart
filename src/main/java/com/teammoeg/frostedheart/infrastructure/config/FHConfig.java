@@ -252,6 +252,7 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Integer> dayNightTempAmplitude;
         public final ForgeConfigSpec.ConfigValue<Integer> onFireTempModifier;
         public final ForgeConfigSpec.ConfigValue<Double> heatExchangeConstant;
+        public final ForgeConfigSpec.BooleanValue addInitClimate;
         /*
         public static final double HURTING_HEAT_UPDATE = 0.1;
     public static final int MIN_BODY_TEMP_CHANGE = -10;
@@ -267,6 +268,7 @@ public class FHConfig {
 
         Server(ForgeConfigSpec.Builder builder) {
             builder.push("Temperature");
+            
             tdiffculty = builder.comment("Temperature System difficulty", "easy=Strong body", "normal=Average", "hard=Reality", "hardcore=Sick body")
                     .defineEnum("temperatureDifficulty", FHTemperatureDifficulty.normal);
             tempSpeed = builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
@@ -303,6 +305,8 @@ public class FHConfig {
                     .defineInRange("minBodyTempChange", -10, -100, 100);
             maxBodyTempChange = builder.comment("The maximum body temperature change relative to 37.")
                     .defineInRange("maxBodyTempChange", 10, -100, 100);
+            addInitClimate =builder.comment("Whether should an initial climate event added to newly created world: a snowstorm after three days")
+            	.define("addInitClimate", true);
             builder.pop();
 
             builder.push("Water & Nutrition");

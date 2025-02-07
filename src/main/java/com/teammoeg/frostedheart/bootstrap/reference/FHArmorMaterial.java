@@ -102,11 +102,11 @@ public enum FHArmorMaterial implements ArmorMaterial {
 
 	@Override
 	public int getDurabilityForType(Type pType) {
-		return 0;
+		 return getDurabilityForSlot(pType.getSlot());
 	}
 
 	@Override
 	public int getDefenseForType(Type pType) {
-		return 0;
+		return getDefenseForSlot(pType.getSlot());
 	}
 }

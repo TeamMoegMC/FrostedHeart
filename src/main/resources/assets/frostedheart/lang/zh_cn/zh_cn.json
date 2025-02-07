@@ -35,7 +35,7 @@
   "block.frostedheart.wolfberry_bush_block": "枸杞",
   "block.frostedheart.wooden_box": "废弃的木制板条箱",
   "container.relic_chest": "遗迹箱",
-  "death.attack.byThirst": "%s变成了%s干。",
+  "death.attack.thirst": "%s变成了%s干。",
   "death.attack.hyperthermia": "%s中暑了。",
   "death.attack.hyperthermia.player": "%s中暑了。",
   "death.attack.hyperthermia_instant": "%s被烤成了香肠。",
