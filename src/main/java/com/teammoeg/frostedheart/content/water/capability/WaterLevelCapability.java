@@ -21,9 +21,11 @@ package com.teammoeg.frostedheart.content.water.capability;
 
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.chorda.io.NBTSerializable;
+import com.teammoeg.chorda.util.CDamageSourceHelper;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 
 import net.minecraft.core.Holder;
@@ -188,7 +190,7 @@ public class WaterLevelCapability implements NBTSerializable {
         if (player.level().getDifficulty() != Difficulty.HARD) i = 1;
         if (getWaterLevel() == 0 && player.getHealth() > i) {
             if (!player.level().isClientSide()) {
-                player.hurt(new DamageSource(Holder.direct(new DamageType("byThirst", 1.0F))), 1.0f);
+                player.hurt(CDamageSourceHelper.source(player.level(), FHDamageTypes.THIRST), 1.0f);
             } else {
                 //player.level().playSound(player, player, SoundEvents.GUARDIAN_ATTACK, SoundSource.PLAYERS, 1.0F, 1.0F);
             }

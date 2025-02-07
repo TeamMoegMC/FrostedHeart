@@ -25,16 +25,16 @@ import net.minecraft.server.level.ServerPlayer;
 import java.util.function.Function;
 
 public enum FHTemperatureDifficulty {
-    easy(s -> 0.05F, Icon.getIcon("frostedheart:item/flask_i/insulated_flask_i_pouch_green")),
-    normal(s -> 0.036F, Icon.getIcon("frostedheart:item/flask_i/insulated_flask_i_pouch_yellow")),
-    hard(s -> s.isSprinting() ? 0.036F : 0.024F, Icon.getIcon("frostedheart:item/flask_i/insulated_flask_i_pouch_orange")),
-    hardcore(s -> 0F, Icon.getIcon("frostedheart:item/flask_i/insulated_flask_i_pouch_red"));
+    easy(2, Icon.getIcon("frostedheart:item/flask_i/insulated_flask_i_pouch_green")),
+    normal(1, Icon.getIcon("frostedheart:item/flask_i/insulated_flask_i_pouch_yellow")),
+    hard(.5F, Icon.getIcon("frostedheart:item/flask_i/insulated_flask_i_pouch_orange")),
+    hardcore(0F, Icon.getIcon("frostedheart:item/flask_i/insulated_flask_i_pouch_red"));
 
-    public final Function<ServerPlayer, Float> self_heat;
+    public final float heat_unit;
     public final Icon icon;
 
-    FHTemperatureDifficulty(Function<ServerPlayer, Float> self_heat, Icon icon) {
-        this.self_heat = self_heat;
+    FHTemperatureDifficulty(float heat_unit, Icon icon) {
+        this.heat_unit = heat_unit;
         this.icon = icon;
     }
 }

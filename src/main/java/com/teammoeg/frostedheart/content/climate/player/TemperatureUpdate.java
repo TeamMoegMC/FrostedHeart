@@ -220,12 +220,13 @@ public class TemperatureUpdate {
                             // sprinting: 25 dt
 
                             // 1 unit = 60W
-
-
+                            float selfHeatRate=data.getDifficulty().heat_unit;
+                            unit*=selfHeatRate;
                             // base generation when cold: 1 unit
                             if (temperature < 0.0) {
                                 temperature += unit;
                                 // TODO: cost hunger for cold, adjust for difficulty
+                                player.causeFoodExhaustion(1);
                             }
 
                             double speedSquared = player.getDeltaMovement().horizontalDistanceSqr(); // Horizontal movement speed squared
@@ -252,12 +253,14 @@ public class TemperatureUpdate {
                             totalConductivity  = amp / 100.0f;
                         }
                     }
-
+                    
 
                     // Equipments
                     // TODO: heat up equipments!
 
                     data.update(envtemp, totalConductivity);
+                    for(BodyPart bp:BodyPart.values())
+                    System.out.println(bp+":"+data.getTemperatureByPart(bp));
                     //FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
                 }
 

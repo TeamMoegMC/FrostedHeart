@@ -33,6 +33,7 @@ public class FHDamageTypes {
     public static final ResourceKey<DamageType> RAD = create("radiation");
     public static final ResourceKey<DamageType> HYPOTHERMIA_INSTANT = create("hypothermia_instant");
     public static final ResourceKey<DamageType> HYPERTHERMIA_INSTANT = create("hyperthermia_instant");
+    public static final ResourceKey<DamageType> THIRST=create("thirst");
     public static ResourceKey<DamageType> create(String name) {
     	return ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation(FHMain.MODID,name));
     }

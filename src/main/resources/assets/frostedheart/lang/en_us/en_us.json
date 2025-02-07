@@ -1,7 +1,7 @@
 {
-  "attribute.frostedheart.heatproof": "Heat Proof",
-  "attribute.frostedheart.insulation": "Insulation",
-  "attribute.frostedheart.windproof": "Water Proof",
+  "attribute.frostedheart.heatproof": "Insulation",
+  "attribute.frostedheart.insulation": "Warmth",
+  "attribute.frostedheart.windproof": "Windproof",
   "biome.frostedheart.volcanic": "Geology Active Area",
   "clue.frostedheart.advancement": "Complete",
   "clue.frostedheart.consume_item": "Submit Item",

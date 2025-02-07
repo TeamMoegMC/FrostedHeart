@@ -83,7 +83,7 @@ public class WaterLevelUtil {
     }
 
     public static boolean canPlayerAddWaterExhaustionLevel(Player player) {
-        return !(player instanceof FakePlayer) && !player.isCreative() && !player.isSpectator() && WaterLevelCapability.getCapability(player) != null && player.level().getDifficulty() != PEACEFUL;
+        return !(player instanceof FakePlayer) && !player.getAbilities().invulnerable && WaterLevelCapability.getCapability(player) != null;
     }
 
     public static float getMoisturizingRate(Player player) {

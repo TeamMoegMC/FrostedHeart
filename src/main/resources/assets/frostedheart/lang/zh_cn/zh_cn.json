@@ -1,7 +1,7 @@
 {
-  "attribute.frostedheart.heatproof": "隔热",
-  "attribute.frostedheart.insulation": "密封",
-  "attribute.frostedheart.windproof": "防风",
+  "attribute.frostedheart.heatproof": "防护层效率",
+  "attribute.frostedheart.insulation": "保暖系数",
+  "attribute.frostedheart.windproof": "风阻率",
   "biome.frostedheart.volcanic": "活跃地质区",
   "block.frostedheart.blood_block": "血",
   "block.frostedheart.bone_block": "骨堆",

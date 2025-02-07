@@ -37,6 +37,7 @@ public class FHDamageTypeProvider {
 		register(pContext, FHDamageTypes.HYPERTHERMIA_INSTANT, t->new DamageType(t, DamageScaling.ALWAYS, 0, DamageEffects.BURNING));
 		register(pContext, FHDamageTypes.HYPOTHERMIA_INSTANT, t->new DamageType(t, DamageScaling.ALWAYS, 0.1F, DamageEffects.FREEZING));
 		register(pContext, FHDamageTypes.RAD, t->new DamageType(t, DamageScaling.ALWAYS, 0.1F, DamageEffects.POKING));
+		register(pContext, FHDamageTypes.THIRST, t->new DamageType(t, DamageScaling.NEVER, 1.0F, DamageEffects.DROWNING));
 	}
 	private static <T> void register(BootstapContext<T> pContext,ResourceKey<T> rk,Function<String,T> supplier) {
 		pContext.register(rk, supplier.apply(rk.location().getPath()));
