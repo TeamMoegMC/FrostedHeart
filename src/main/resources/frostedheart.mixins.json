@@ -28,8 +28,8 @@
     "forge.ServerLifecycleHooksMixin",
     "immersiveengineering.AssemblerLogicMixin",
     "immersiveengineering.CrafterPatternInventoryMixin",
-    "immersiveengineering.TemplateMultiblockMixin",
     "immersiveengineering.IERegistrationMixin",
+    "immersiveengineering.TemplateMultiblockMixin",
     "minecraft.accessors.NewChatGuiAccessor",
     "minecraft.campfire.CampfireBlockMixin_TimeLimit",
     "minecraft.campfire.CampfireTileEntityMixin_TimeLimit",
@@ -76,6 +76,7 @@
     "client.PrimaryLevelDataMixin",
     "client.ToastComponentMixin",
     "create.MixinOpenConfigButtonHandler",
+    "minecraft.water.LocalPlayerMixin",
     "oculus.IrisRenderingPipelineAccess"
   ],
   "injectors": {
