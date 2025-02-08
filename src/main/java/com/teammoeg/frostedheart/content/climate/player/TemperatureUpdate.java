@@ -266,9 +266,9 @@ public class TemperatureUpdate {
                     // TODO: heat up equipments!
                     if(!player.isCreative()&&!player.isSpectator())
                     data.update(envtemp, totalConductivity);
-                    System.out.println("===================================");
-                    for(BodyPart bp:BodyPart.values())
-                    System.out.println(bp+":"+data.getTemperatureByPart(bp));
+                    //System.out.println("===================================");
+                    //for(BodyPart bp:BodyPart.values())
+                    //System.out.println(bp+":"+data.getTemperatureByPart(bp));
                     //FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
                 }
 

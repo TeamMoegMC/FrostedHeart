@@ -53,22 +53,24 @@ import java.util.Map.Entry;
 
 public class PlayerTemperatureData implements NBTSerializable  {
 	public enum BodyPart implements StringRepresentable{
-		HEAD(EquipmentSlot.HEAD, 0.1f), // 10% area
-		TORSO(EquipmentSlot.CHEST, 0.4f), // 40% area
+		HEAD(EquipmentSlot.HEAD, 0.1f, 0.1f), // 10% area
+		TORSO(EquipmentSlot.CHEST, 0.4f, 0.4f), // 40% area
 		
-		HANDS(EquipmentSlot.MAINHAND, 0.05f), // 5% area
-		LEGS(EquipmentSlot.LEGS, 0.4f), // 40% area
-		FEET(EquipmentSlot.FEET, 0.05f); // 5% area
+		HANDS(EquipmentSlot.MAINHAND, 0.05f, 0.05f), // 5% area
+		LEGS(EquipmentSlot.LEGS, 0.4f, 0.4f), // 40% area
+		FEET(EquipmentSlot.FEET, 0.05f, 0.05f); // 5% area
 		public final EquipmentSlot slot;
 		public final float area;
+		public final float affectsCore;
 		private final static Map<EquipmentSlot,BodyPart> VANILLA_MAP=Util.make(new EnumMap<>(EquipmentSlot.class),t->{
 			for(BodyPart part:BodyPart.values())
 				if(part.slot!=null)
 					t.put(part.slot, part);
 		});
-		private BodyPart(EquipmentSlot slot,float area) {
+		private BodyPart(EquipmentSlot slot,float area,float affectsCore) {
 			this.slot = slot;
 			this.area=area;
+			this.affectsCore=affectsCore;
 		}
 
 		@Override
@@ -170,7 +172,7 @@ public class PlayerTemperatureData implements NBTSerializable  {
     	previousTemp=bodyTemp;
     	bodyTemp=0;
 		for(Entry<BodyPart, BodyPartData> e : clothesOfParts.entrySet()) {
-			bodyTemp += e.getValue().temperature * e.getKey().area;
+			bodyTemp += e.getValue().temperature * e.getKey().affectsCore;
 		}
 		if(envTemp==INVALID_TEMPERATURE)
 			envTemp=current_env;
@@ -205,7 +207,12 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		this.previousTemp = previousTemp;
 	}
 	public void setBodyTemp(float bodyTemp) {
-		this.bodyTemp = bodyTemp;
+		addBodyTemp(bodyTemp-this.bodyTemp);
+	}
+	public void addBodyTemp(float bodyTemp) {
+		for(BodyPart bp:BodyPart.values()) {
+			this.clothesOfParts.get(bp).temperature+=bodyTemp*bp.affectsCore;
+		}
 	}
 	public void setEnvTemp(float envTemp) {
 		this.envTemp = envTemp;
@@ -259,5 +266,8 @@ public class PlayerTemperatureData implements NBTSerializable  {
 	}
 	public void setTemperatureByPart(BodyPart bodyPart, float t) {
 		clothesOfParts.get(bodyPart).temperature=t;
+	}
+	public void addTemperatureByPart(BodyPart bodyPart, float t) {
+		clothesOfParts.get(bodyPart).temperature+=t;
 	}
 }

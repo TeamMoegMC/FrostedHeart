@@ -41,7 +41,10 @@ public class CBlock extends Block {
         else
             return state.propagatesSkylightDown(worldIn, pos) ? 0 : 1;
     }
-
+    /**
+     * Set the opacity of this block in light engine, this only work for solid blocks(full shape and occlude)
+     * value range:0(transparent)-15(opaque)
+     * */
     public CBlock setLightOpacity(int opacity) {
         lightOpacity = opacity;
         return this;

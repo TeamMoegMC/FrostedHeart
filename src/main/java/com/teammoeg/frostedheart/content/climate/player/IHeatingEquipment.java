@@ -19,17 +19,15 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
-import javax.annotation.Nullable;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 
-import com.mojang.datafixers.util.Either;
-import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
-
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import top.theillusivec4.curios.api.type.ISlotType;
 
 /**
  * Interface IHeatingEquipment.
- * Interface for Dynamic Heating Equipment Item
+ * Capability Interface for Dynamic Heating Equipment
  *
  * @author khjxiaogu
  * file: IHeatingEquipment.java
@@ -40,11 +38,21 @@ public interface IHeatingEquipment {
     /**
      * Compute added effective temperature.<br>
      *
-     * @param slot            current slot, null for display<br>
+     * @param slot            current slot<br>
      * @param stack           the stack<br>
-     * @param effectiveTemp   the effective temp<br>
-     * @param bodyTemp        the body temperature, normalize to 0<br>
+     * @param data       	  player temperature data<br>
      * @return returns body temperature change
      */
-    float getEffectiveTempAdded(@Nullable Either<ISlotType,SlotKey> slot,ItemStack stack, float effectiveTemp, float bodyTemp);
+    void tickHeating(HeatingDeviceSlot slot,ItemStack stack,ServerPlayer player,PlayerTemperatureData data);
+    
+    /**
+     * Get highest theoretical temperature change rate
+     * For display only
+     * */
+    float getMaxTempAddValue(ItemStack stack);
+    /**
+    * Get lowest theoretical temperature change rate
+     * For display only
+     * */
+    float getMinTempAddValue(ItemStack stack);
 }
