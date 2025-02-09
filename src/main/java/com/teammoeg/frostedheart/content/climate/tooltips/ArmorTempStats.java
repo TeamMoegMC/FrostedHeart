@@ -23,7 +23,7 @@ import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
 import com.teammoeg.frostedheart.content.climate.player.BodyPartData;
-import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
+import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
 import com.teammoeg.frostedheart.util.client.Lang;

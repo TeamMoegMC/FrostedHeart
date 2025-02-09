@@ -29,7 +29,7 @@ import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
+import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
@@ -133,7 +133,7 @@ public class MushroomBed extends FHBaseItem {
 
 	@Override
 	public @org.jetbrains.annotations.Nullable ICapabilityProvider initCapabilities(ItemStack stack, @org.jetbrains.annotations.Nullable CompoundTag nbt) {
-		return FHCapabilities.EQUIPMENT_HEATING.provider(()->new IHeatingEquipment(){
+		return FHCapabilities.EQUIPMENT_HEATING.provider(()->new BodyHeatingCapability(){
 
 			@Override
 			public void tickHeating(HeatingDeviceSlot slot, ItemStack stack,HeatingDeviceContext data) {

@@ -231,18 +231,18 @@ public class TemperatureUpdate {
                         if(CompatModule.isCuriosLoaded())
                         	for(Pair<ISlotType, ItemStack> i:CuriosCompat.getAllCuriosAndSlotsIfVisible(player)) {
                         		HeatingDeviceSlot slot=new HeatingDeviceSlot(i.getFirst());
-                        		LazyOptional<IHeatingEquipment> cap=FHCapabilities.EQUIPMENT_HEATING.getCapability(i.getSecond());
+                        		LazyOptional<BodyHeatingCapability> cap=FHCapabilities.EQUIPMENT_HEATING.getCapability(i.getSecond());
                         		if(cap.isPresent()) {
-                        			IHeatingEquipment eq=cap.resolve().get();
+                        			BodyHeatingCapability eq=cap.resolve().get();
                         			eq.tickHeating(slot, i.getSecond(), ctx);
                         		}
                         	}
                         for(EquipmentSlot eslot:EquipmentSlot.values()) {
                         	HeatingDeviceSlot slot=new HeatingDeviceSlot(eslot);
                         	ItemStack item=player.getItemBySlot(eslot);
-                    		LazyOptional<IHeatingEquipment> cap=FHCapabilities.EQUIPMENT_HEATING.getCapability(item);
+                    		LazyOptional<BodyHeatingCapability> cap=FHCapabilities.EQUIPMENT_HEATING.getCapability(item);
                     		if(cap.isPresent()) {
-                    			IHeatingEquipment eq=cap.resolve().get();
+                    			BodyHeatingCapability eq=cap.resolve().get();
                     			eq.tickHeating(slot, item, ctx);
                     		}
                         }

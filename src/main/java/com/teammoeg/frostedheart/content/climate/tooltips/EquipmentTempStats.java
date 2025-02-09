@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.climate.tooltips;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
-import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
+import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.chorda.lang.Components;
@@ -73,7 +73,7 @@ public class EquipmentTempStats implements TooltipModifier {
 
     public static List<Component> getStats(Item item, ItemStack stack, Player player) {
         List<Component> list = new ArrayList<>();
-        LazyOptional<IHeatingEquipment> lazyheat = FHCapabilities.EQUIPMENT_HEATING.getCapability(stack);
+        LazyOptional<BodyHeatingCapability> lazyheat = FHCapabilities.EQUIPMENT_HEATING.getCapability(stack);
         if(lazyheat.isPresent()) {
         	
 	        float heat = (Math.round(lazyheat.resolve().get().getMaxTempAddValue(stack) * 1000)) / 1000.0F;

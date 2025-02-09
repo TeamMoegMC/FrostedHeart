@@ -31,7 +31,7 @@ import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
+import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.steamenergy.charger.IChargable;
@@ -117,7 +117,7 @@ public class HeaterVestItem extends FHBaseItem {
 	public ICapabilityProvider initCapabilities(ItemStack stack,CompoundTag nbt) {
 		return CapabilityDispatchBuilder.builder()
 				.add(FHCapabilities.ITEM_HEAT, ()->new HeatStorageCapability(stack, 30000))
-				.add(FHCapabilities.EQUIPMENT_HEATING, ()->new IHeatingEquipment() {
+				.add(FHCapabilities.EQUIPMENT_HEATING, ()->new BodyHeatingCapability() {
 
 					@Override
 					public void tickHeating(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext data) {

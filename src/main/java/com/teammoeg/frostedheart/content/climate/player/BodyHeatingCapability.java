@@ -30,7 +30,7 @@ import net.minecraft.world.item.ItemStack;
  * file: IHeatingEquipment.java
  * Date: 2021/9/14
  */
-public interface IHeatingEquipment {
+public interface BodyHeatingCapability {
 
     /**
      * Compute added effective temperature.<br>

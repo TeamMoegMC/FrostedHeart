@@ -33,7 +33,7 @@ import com.teammoeg.chorda.capability.types.nonpresistent.TransientCapability;
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
+import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import com.teammoeg.frostedheart.content.health.dailykitchen.WantedFoodCapability;
@@ -69,7 +69,7 @@ public class FHCapabilities {
 	public static final NBTCapabilityType<WaypointCapability> WAYPOINT=register(WaypointCapability.class);
 	public static final NBTCapabilityType<WaterLevelCapability> PLAYER_WATER_LEVEL = register(WaterLevelCapability.class);
 	public static final NBTCapabilityType<NutritionCapability> PLAYER_NUTRITION = register(NutritionCapability.class);
-	public static final TransientCapability<IHeatingEquipment> EQUIPMENT_HEATING=registerTransient(IHeatingEquipment.class);
+	public static final TransientCapability<BodyHeatingCapability> EQUIPMENT_HEATING=registerTransient(BodyHeatingCapability.class);
 	
 	public static void setup() {
 	

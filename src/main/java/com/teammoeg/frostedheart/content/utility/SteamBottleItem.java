@@ -27,7 +27,7 @@ import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
+import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
@@ -157,7 +157,7 @@ public class SteamBottleItem extends FHBaseItem implements ITempAdjustFood {
 	@Override
 	public ICapabilityProvider initCapabilities(ItemStack stack,CompoundTag nbt) {
 		return CapabilityDispatchBuilder.builder().add(FHCapabilities.ITEM_HEAT.provider(()->new HeatStorageCapability(stack, 240)))
-				.add(FHCapabilities.EQUIPMENT_HEATING,()->new IHeatingEquipment() {
+				.add(FHCapabilities.EQUIPMENT_HEATING,()->new BodyHeatingCapability() {
 
 					@Override
 					public void tickHeating(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext data) {
