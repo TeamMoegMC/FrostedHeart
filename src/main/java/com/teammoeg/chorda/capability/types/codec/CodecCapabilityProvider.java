@@ -23,6 +23,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.NbtOps;
 
+import com.teammoeg.chorda.capability.CapabilityStored;
 import com.teammoeg.chorda.io.CodecUtil;
 
 import net.minecraft.core.Direction;
@@ -30,7 +31,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class CodecCapabilityProvider<T> implements ICapabilitySerializable<Tag> {
+public class CodecCapabilityProvider<T> implements ICapabilitySerializable<Tag>,CapabilityStored<T> {
 	LazyOptional<T> lazyCap;
 	CodecCapabilityType<T> capability;
 	public CodecCapabilityProvider(CodecCapabilityType<T> capability) {
@@ -54,6 +55,10 @@ public class CodecCapabilityProvider<T> implements ICapabilitySerializable<Tag> 
 		lazyCap.invalidate();
 		T obj=CodecUtil.decodeOrThrow(capability.codec().decode(NbtOps.INSTANCE, nbt));
 		lazyCap=LazyOptional.of(()->obj);
+	}
+	@Override
+	public Capability<T> capability() {
+		return capability.capability();
 	}
 
 }

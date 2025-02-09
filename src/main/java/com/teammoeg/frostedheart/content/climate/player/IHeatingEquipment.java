@@ -19,10 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
-import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
-
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -43,7 +40,7 @@ public interface IHeatingEquipment {
      * @param data       	  player temperature data<br>
      * @return returns body temperature change
      */
-    void tickHeating(HeatingDeviceSlot slot,ItemStack stack,ServerPlayer player,PlayerTemperatureData data);
+    void tickHeating(HeatingDeviceSlot slot,ItemStack stack,HeatingDeviceContext data);
     
     /**
      * Get highest theoretical temperature change rate

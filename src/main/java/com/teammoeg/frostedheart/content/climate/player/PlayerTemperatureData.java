@@ -241,21 +241,13 @@ public class PlayerTemperatureData implements NBTSerializable  {
 	}
 
 	public float getThermalConductivityByPart(Player player, BodyPart bodyPart) {
-		ItemStack equipment;
-		if(bodyPart.slot.isArmor())
-			equipment=player.getInventory().getArmor(bodyPart.slot.getIndex());
-		else
-			equipment=player.getMainHandItem();
+		ItemStack equipment=player.getItemBySlot(bodyPart.slot);
 		// TODO remove out
 //		System.out.printf("Part %s Cond %f\n", bodyPart, clothesOfParts.get(bodyPart).getThermalConductivity(equipment));
 		return clothesOfParts.get(bodyPart).getThermalConductivity(bodyPart,equipment);
 	}
 	public float getWindResistanceByPart(Player player, BodyPart bodyPart) {
-		ItemStack equipment;
-		if(bodyPart.slot.isArmor())
-			equipment=player.getInventory().getArmor(bodyPart.slot.getIndex());
-		else
-			equipment=player.getMainHandItem();
+		ItemStack equipment=player.getItemBySlot(bodyPart.slot);
 		// TODO remove out
 //		System.out.printf("Part %s Cond %f\n", bodyPart, clothesOfParts.get(bodyPart).getThermalConductivity(equipment));
 		return clothesOfParts.get(bodyPart).getWindResistance(bodyPart,equipment);

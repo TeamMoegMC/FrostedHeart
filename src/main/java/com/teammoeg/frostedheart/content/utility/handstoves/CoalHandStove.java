@@ -27,12 +27,17 @@ import javax.annotation.Nullable;
 import com.mojang.datafixers.util.Either;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceSlot;
 
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -46,11 +51,13 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.theillusivec4.curios.api.type.ISlotType;
 
-public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
+public class CoalHandStove extends FHBaseItem {
     public final static int max_fuel = 800;
 
     TagKey<Item> ashitem=ItemTags.create(new ResourceLocation("frostedheart", "ash"));
@@ -62,7 +69,8 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
         return is.getOrCreateTag().getInt("fuel");
     }
 
-    public static void setAshAmount(ItemStack is, int v) {
+
+	public static void setAshAmount(ItemStack is, int v) {
         is.getOrCreateTag().putInt("ash", v);
         if (v >= max_fuel)
             is.getTag().putInt("CustomModelData", 2);
@@ -140,24 +148,48 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
         return stack;
     }
 
-	@Override
-	public float getEffectiveTempAdded(Either<ISlotType,SlotKey> slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
-		if(slot==null) {
-			return getFuelAmount(stack) > 0 ? 7 : 0;
-		}else if(slot.map(t->false, t->t.isHand())) {
-	        int fuel = getFuelAmount(stack);
-	        if (fuel >= 2) {
-	            int ash = getAshAmount(stack);
-	            if (ash <= 800) {
-	                fuel--;
-	                ash++;
-	                setFuelAmount(stack, fuel);
-	                setAshAmount(stack, ash);
-	                return 7;
-	            }
-	        }
-	        return 0;
-		}
+	public float tickHeat(ItemStack stack) {
+
+        int fuel = getFuelAmount(stack);
+        if (fuel >= 2) {
+            int ash = getAshAmount(stack);
+            if (ash <= 800) {
+                fuel--;
+                ash++;
+                setFuelAmount(stack, fuel);
+                setAshAmount(stack, ash);
+                return 7;
+            }
+        }
 		return 0;
 	}
+    @Override
+	public ICapabilityProvider initCapabilities(ItemStack stack,CompoundTag nbt) {
+		return FHCapabilities.EQUIPMENT_HEATING.provider(()->new IHeatingEquipment() {
+
+			@Override
+			public void tickHeating(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext data) {
+				if(slot.isHand()) {
+					float added=tickHeat(stack);
+					if(slot.is(EquipmentSlot.MAINHAND)) {//When in mainHand, only heatup mainhand
+						data.addEffectiveTemperature(BodyPart.HANDS, added);
+					}else {//In offhand, heatup body
+						data.addEffectiveTemperature(BodyPart.TORSO, added);
+					}
+				}
+			}
+
+			@Override
+			public float getMaxTempAddValue(ItemStack stack) {
+				return getFuelAmount(stack) > 0 ? 7 : 0;
+			}
+
+			@Override
+			public float getMinTempAddValue(ItemStack stack) {
+				return getFuelAmount(stack) > 0 ? 7 : 0;
+			}
+			
+		});
+	}
+
 }

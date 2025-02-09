@@ -19,7 +19,8 @@
 
 package com.teammoeg.chorda.capability.types;
 
-public interface CapabilityType {
+public interface CapabilityType<T> {
 	public void register();
-	public Class<?> getCapClass();
+	public Class<T> getCapClass();
+
 }

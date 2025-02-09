@@ -4,10 +4,11 @@ import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKe
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 
 import net.minecraft.world.entity.EquipmentSlot;
+import top.theillusivec4.curios.api.type.ISlotType;
 import top.theillusivec4.curios.common.slottype.SlotType;
 
 public class HeatingDeviceSlot {
-	SlotType curios;
+	ISlotType curios;
 	SlotKey vanilla;
 	BodyPart part;
 	/**
@@ -20,10 +21,11 @@ public class HeatingDeviceSlot {
 	/**
 	 * Heating device on curios
 	 * */
-	public HeatingDeviceSlot(SlotType curios) {
+	public HeatingDeviceSlot(ISlotType curios) {
 		super();
 		this.curios = curios;
 	}
+
 	public boolean is(EquipmentSlot slot) {
 		return vanilla!=null&&vanilla.is(slot);
 	}
@@ -32,5 +34,8 @@ public class HeatingDeviceSlot {
 	}
 	public boolean is(String id) {
 		return id.equals(this.curios.getIdentifier());
+	}
+	public boolean isHand() {
+		return vanilla!=null&&vanilla.isHand();
 	}
 }

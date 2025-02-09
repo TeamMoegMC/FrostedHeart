@@ -22,16 +22,20 @@ package com.teammoeg.frostedheart.content.utility;
 import java.util.List;
 
 import com.mojang.datafixers.util.Either;
+import com.teammoeg.chorda.capability.CapabilityDispatchBuilder;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceSlot;
 
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.world.item.TooltipFlag;
@@ -52,7 +56,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import top.theillusivec4.curios.api.type.ISlotType;
 
-public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, ITempAdjustFood {
+public class SteamBottleItem extends FHBaseItem implements ITempAdjustFood {
 
 
     public SteamBottleItem(Properties properties) {
@@ -149,15 +153,30 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
         return stack;
     }
 
-	@Override
-	public float getEffectiveTempAdded(Either<ISlotType,SlotKey> slot, ItemStack stack, float effectiveTemp,
-			float bodyTemp) {
-		if(slot==null)return 12.5f;
-		
-		return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->t.extractEnergy(3, false)).orElse(0f) / 0.24f;
-	}
+
 	@Override
 	public ICapabilityProvider initCapabilities(ItemStack stack,CompoundTag nbt) {
-		return FHCapabilities.ITEM_HEAT.provider(()->new HeatStorageCapability(stack, 240));
+		return CapabilityDispatchBuilder.builder().add(FHCapabilities.ITEM_HEAT.provider(()->new HeatStorageCapability(stack, 240)))
+				.add(FHCapabilities.EQUIPMENT_HEATING,()->new IHeatingEquipment() {
+
+					@Override
+					public void tickHeating(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext data) {
+						data.addEffectiveTemperature(BodyPart.TORSO	, FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->t.extractEnergy(3, false)).orElse(0f) / 0.24f);
+					}
+
+					@Override
+					public float getMaxTempAddValue(ItemStack stack) {
+						return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->Math.min(3,t.getEnergyStored())).orElse(0f)/ 0.24f;
+					}
+
+					@Override
+					public float getMinTempAddValue(ItemStack stack) {
+						return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->Math.min(3,t.getEnergyStored())).orElse(0f)/ 0.24f;
+					}
+					
+				})
+				.build();
 	}
+
+
 }

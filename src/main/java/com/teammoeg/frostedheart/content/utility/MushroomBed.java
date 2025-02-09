@@ -34,6 +34,8 @@ import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
 import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceSlot;
 
 import net.minecraft.world.item.TooltipFlag;
@@ -134,11 +136,11 @@ public class MushroomBed extends FHBaseItem {
 		return FHCapabilities.EQUIPMENT_HEATING.provider(()->new IHeatingEquipment(){
 
 			@Override
-			public void tickHeating(HeatingDeviceSlot slot, ItemStack stack,ServerPlayer player, PlayerTemperatureData data) {
+			public void tickHeating(HeatingDeviceSlot slot, ItemStack stack,HeatingDeviceContext data) {
 				if (stack.getDamageValue() > 0) {
-		            if (data.getBodyTemp() > -1) {
-		            	stack.hurt(1, player.level().random, player);
-		            	data.addBodyTemp(0.5f);
+		            if (data.getBodyTemperature(BodyPart.TORSO) > -1) {
+		            	stack.hurt(1,data.getLevel().random, data.getPlayer());
+		            	data.addEffectiveTemperature(BodyPart.TORSO, 0.5f);
 		            }
 		        }
 			}

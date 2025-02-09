@@ -22,6 +22,7 @@ package com.teammoeg.chorda.capability.types.nbt;
 import org.objectweb.asm.Type;
 
 import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
+import com.teammoeg.chorda.capability.CapabilityStored;
 import com.teammoeg.chorda.capability.types.CapabilityType;
 import com.teammoeg.chorda.io.NBTSerializable;
 
@@ -35,7 +36,7 @@ import net.minecraftforge.common.util.NonNullSupplier;
  * Basic nbt capability type
  * 
  * */
-public class NBTCapabilityType<C extends NBTSerializable> implements CapabilityType {
+public class NBTCapabilityType<C extends NBTSerializable> implements CapabilityType<C>,CapabilityStored<C> {
 	private Class<C> capClass;
 	private Capability<C> capability;
 	private NonNullSupplier<C> factory;
@@ -48,7 +49,7 @@ public class NBTCapabilityType<C extends NBTSerializable> implements CapabilityT
 	public void register() {
         capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(Type.getInternalName(capClass).intern());
 	}
-	public ICapabilityProvider provider() {
+	public NBTCapabilityProvider<C> provider() {
 		return new NBTCapabilityProvider<>(this);
 	}
 	LazyOptional<C> createCapability(){
