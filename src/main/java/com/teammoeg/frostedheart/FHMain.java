@@ -44,6 +44,7 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
 import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
 import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.compat.CompatModule;
 import com.teammoeg.frostedheart.compat.caupona.NutritionEvents;
 import com.teammoeg.frostedheart.compat.create.CreateCompat;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
@@ -139,6 +140,8 @@ public class FHMain {
     public FHMain() {
         IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
         IEventBus forge = MinecraftForge.EVENT_BUS;
+        LOGGER.info(COMMON_INIT, "Reading Modlist");
+        CompatModule.refreshLoadedStatus();
 
         // Config
         LOGGER.info(COMMON_INIT, "Loading Config");
@@ -168,16 +171,17 @@ public class FHMain {
         ChordaMetaEvents.IE_REGISTRY.addListener(()->FHMultiblocks::registerMultiblocks);
         // Compat init
         LOGGER.info(COMMON_INIT, "Initializing Mod Compatibilities");
+        
         FHSpecialDataTypes.init();
-        if (ModList.get().isLoaded("create"))
+        if (CompatModule.isCreateLoaded())
             CreateCompat.init();
-        if (ModList.get().isLoaded("tetra"))
+        if (CompatModule.isTetraLoaded())
             TetraCompat.init();
-        if (ModList.get().isLoaded("ftbquests"))
+        if (CompatModule.isFTBQLoaded())
             FHRewardTypes.init();
-        if (ModList.get().isLoaded("ftbteams"))
+        if (CompatModule.isFTBTLoaded())
             FTBTeamsEvents.init();
-        if(ModList.get().isLoaded("caupona"))
+        if(CompatModule.isCauponaLoaded())
         	forge.addListener(NutritionEvents::gatherNutritionFromSoup);
         // Deferred Registration
         // Order doesn't matter here, as that's why we use deferred registers

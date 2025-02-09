@@ -21,6 +21,7 @@ package com.teammoeg.chorda.capability.types.nonpresistent;
 
 import org.objectweb.asm.Type;
 
+import com.teammoeg.chorda.capability.CapabilityStored;
 import com.teammoeg.chorda.capability.types.CapabilityType;
 import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
 import net.minecraftforge.common.capabilities.Capability;
@@ -33,7 +34,7 @@ import net.minecraftforge.common.util.NonNullSupplier;
  * Used to register capablity that have special data storage like item nbt, block entities...
  * Coresponding capability class should not implement INBTSerializable.
  * */
-public class TransientCapability<C> implements CapabilityType {
+public class TransientCapability<C> implements CapabilityType<C>,CapabilityStored<C> {
 	private Class<C> capClass;
 	private Capability<C> capability;
 
@@ -45,7 +46,7 @@ public class TransientCapability<C> implements CapabilityType {
 	public void register() {
         capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(Type.getInternalName(capClass).intern());
 	}
-	public ICapabilityProvider provider(NonNullSupplier<C> factory) {
+	public TransientCapabilityProvider<C> provider(NonNullSupplier<C> factory) {
 		return new TransientCapabilityProvider<>(this,factory);
 	}
 	public LazyOptional<C> getCapability(Object cap) {
@@ -53,6 +54,7 @@ public class TransientCapability<C> implements CapabilityType {
 			return ((ICapabilityProvider)cap).getCapability(capability);
 		return LazyOptional.empty();
 	}
+	@Override
     public Capability<C> capability() {
 		return capability;
 	}

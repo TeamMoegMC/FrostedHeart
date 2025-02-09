@@ -26,14 +26,20 @@ import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.compat.CompatModule;
+import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHBodyDataSyncPacket;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext.BodyPartContext;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -42,9 +48,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.LogicalSide;
+import top.theillusivec4.curios.api.type.ISlotType;
 
 public class TemperatureUpdate {
 	public static final UUID envTempId = UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
@@ -207,13 +215,43 @@ public class TemperatureUpdate {
                     // If the player has the insulation effect, insulation is set to 1, so no heat exchange with the environment
                     // Also disable when player is creative
                     if (!player.hasEffect(FHMobEffects.INSULATION.get())&&!player.getAbilities().invulnerable) {
+                    	HeatingDeviceContext ctx=new HeatingDeviceContext(player);
+                    	//Collect body effective temperature
                         for (BodyPart part:PlayerTemperatureData.BodyPart.values()) {
 
                             float ratio = part.area;
                             float thermalConductivity = data.getThermalConductivityByPart(player, part);
                             totalConductivity += ratio*thermalConductivity;
                             float temperature = data.getTemperatureByPart(part);
-                            float dt = (temperature - envtemp) * thermalConductivity;
+                            float dt = (temperature - envtemp) * thermalConductivity;//=(eff)
+                            float effective=temperature-dt;
+                            ctx.setPartData(part, temperature, effective);
+                        }
+                        //Compute heating equipments
+                        if(CompatModule.isCuriosLoaded())
+                        	for(Pair<ISlotType, ItemStack> i:CuriosCompat.getAllCuriosAndSlotsIfVisible(player)) {
+                        		HeatingDeviceSlot slot=new HeatingDeviceSlot(i.getFirst());
+                        		LazyOptional<IHeatingEquipment> cap=FHCapabilities.EQUIPMENT_HEATING.getCapability(i.getSecond());
+                        		if(cap.isPresent()) {
+                        			IHeatingEquipment eq=cap.resolve().get();
+                        			eq.tickHeating(slot, i.getSecond(), ctx);
+                        		}
+                        	}
+                        for(EquipmentSlot eslot:EquipmentSlot.values()) {
+                        	HeatingDeviceSlot slot=new HeatingDeviceSlot(eslot);
+                        	ItemStack item=player.getItemBySlot(eslot);
+                    		LazyOptional<IHeatingEquipment> cap=FHCapabilities.EQUIPMENT_HEATING.getCapability(item);
+                    		if(cap.isPresent()) {
+                    			IHeatingEquipment eq=cap.resolve().get();
+                    			eq.tickHeating(slot, item, ctx);
+                    		}
+                        }
+                        //Compute part heating data
+                        //TODO: Calculate heat transfer between each part
+                        for (BodyPart part:PlayerTemperatureData.BodyPart.values()) {
+                        	BodyPartContext pctx=ctx.getPartData(part);
+                        	float temperature=pctx.getBodyTemperature();
+                        	float dt=temperature-pctx.getEffectiveTemperature();
                             float unit = 0.006f; // 1 unit per tick is 0.012 degree per second
                             temperature -= (2*unit) * (dt/10); // charge 2 units for every 10 dt
 
@@ -227,7 +265,7 @@ public class TemperatureUpdate {
                             // base generation when cold: 1 unit
                             if (temperature < 0.0&&player.getFoodData().getFoodLevel()>0) {
                                 temperature += unit;
-                                // TODO: cost hunger for cold, adjust for difficulty
+                                // TODO: cost hunger for cold, adjust for difficult
                                 player.causeFoodExhaustion(FOOD_EXHAUST_COLD);
                             }
 
@@ -251,6 +289,7 @@ public class TemperatureUpdate {
                             // TODO: degree I/II/III freeze if dt=-50/-60/-70
                             data.setTemperatureByPart(part, temperature);
                         }
+
                     } else {
                         MobEffectInstance insulationEffect = player.getEffect(FHMobEffects.INSULATION.get());
                         if (insulationEffect != null) {
@@ -266,9 +305,9 @@ public class TemperatureUpdate {
                     // TODO: heat up equipments!
                     if(!player.isCreative()&&!player.isSpectator())
                     data.update(envtemp, totalConductivity);
-                    System.out.println("===================================");
-                    for(BodyPart bp:BodyPart.values())
-                    System.out.println(bp+":"+data.getTemperatureByPart(bp));
+                    //System.out.println("===================================");
+                    //for(BodyPart bp:BodyPart.values())
+                    //System.out.println(bp+":"+data.getTemperatureByPart(bp));
                     //FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
                 }
 

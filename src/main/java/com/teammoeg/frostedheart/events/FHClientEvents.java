@@ -29,6 +29,7 @@ import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.compat.CompatModule;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -400,7 +401,7 @@ public class FHClientEvents {
                 if (ClientScene.INSTANCE != null)
                     ClientScene.INSTANCE.sendContinuePacket(true);
                 //event.setCanceled(true);
-            } else if (ModList.get().isLoaded("ldlib") && FHKeyMappings.key_InfraredView.get().consumeClick()) {
+            } else if (CompatModule.isLdLibLoaded() && FHKeyMappings.key_InfraredView.get().consumeClick()) {
                 InfraredViewRenderer.toggleInfraredView();
             }
         }

@@ -21,6 +21,7 @@ package com.teammoeg.chorda.capability.types.nbt;
 
 import net.minecraft.nbt.CompoundTag;
 
+import com.teammoeg.chorda.capability.CapabilityStored;
 import com.teammoeg.chorda.io.NBTSerializable;
 
 import net.minecraft.core.Direction;
@@ -28,7 +29,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class NBTCapabilityProvider<C extends NBTSerializable> implements ICapabilitySerializable<CompoundTag>{
+public class NBTCapabilityProvider<C extends NBTSerializable> implements ICapabilitySerializable<CompoundTag>,CapabilityStored<C>{
 	LazyOptional<C> lazyCap;
 	NBTCapabilityType<C> capability;
 	public NBTCapabilityProvider(NBTCapabilityType<C> capability) {
@@ -53,6 +54,11 @@ public class NBTCapabilityProvider<C extends NBTSerializable> implements ICapabi
 	@Override
 	public void deserializeNBT(CompoundTag nbt) {
 		lazyCap.ifPresent(c->c.deserializeNBT(nbt));
+	}
+
+	@Override
+	public Capability<C> capability() {
+		return capability.capability();
 	}
 
 }

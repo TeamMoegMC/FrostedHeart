@@ -23,6 +23,7 @@ import com.teammoeg.frostedheart.*;
 import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.frostedheart.compat.CompatModule;
 import com.teammoeg.frostedheart.compat.ftbq.FHGuiProviders;
 import com.teammoeg.frostedheart.compat.ie.FHManual;
 import com.teammoeg.frostedheart.compat.tetra.TetraClient;
@@ -85,15 +86,15 @@ public class FHClientEventsMod {
         LOGGER.info(CLIENT_SETUP, "Initializing Screens");
         FHScreens.init();
 
-        if (ModList.get().isLoaded("immersiveengineering")) {
+        if (CompatModule.isIELoaded()) {
             LOGGER.info(CLIENT_SETUP, "Initializing IE Manual");
             FHManual.init();
         }
-        if (ModList.get().isLoaded("tetra")) {
+        if (CompatModule.isTetraLoaded()) {
             LOGGER.info(CLIENT_SETUP, "Initializing Tetra Client");
             TetraClient.init();
         }
-        if (ModList.get().isLoaded("ftbquests")) {
+        if (CompatModule.isFTBQLoaded()) {
             LOGGER.info(CLIENT_SETUP, "Initializing FTB Quests");
             FHGuiProviders.setRewardGuiProviders();
         }
@@ -139,7 +140,8 @@ public class FHClientEventsMod {
         FHKeyMappings.key_health.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
         FHKeyMappings.key_clothes.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
 		ev.register(FHKeyMappings.key_skipDialog.get());
-        ev.register(FHKeyMappings.key_InfraredView.get());
+		if(CompatModule.isLdLibLoaded())
+			ev.register(FHKeyMappings.key_InfraredView.get());
         ev.register(FHKeyMappings.key_health.get());
         ev.register(FHKeyMappings.key_clothes.get());
 	}

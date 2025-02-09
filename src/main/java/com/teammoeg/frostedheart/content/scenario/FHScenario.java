@@ -36,6 +36,7 @@ import org.objectweb.asm.Type;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.compat.CompatModule;
 import com.teammoeg.frostedheart.content.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.content.scenario.commands.ActCommand;
 import com.teammoeg.frostedheart.content.scenario.commands.ControlCommands;
@@ -194,7 +195,7 @@ public class FHScenario {
 		}*/
 		register(TextualCommands.class);
 		register(ControlCommands.class);
-		if(ModList.get().isLoaded("ftbquests"))
+		if(CompatModule.isFTBQLoaded())
 			register(FTBQCommands.class);
 		register(ActCommand.class);
 		register(VariableCommand.class);

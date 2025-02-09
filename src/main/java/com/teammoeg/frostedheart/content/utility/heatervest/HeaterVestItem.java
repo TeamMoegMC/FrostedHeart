@@ -26,16 +26,21 @@ import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Either;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.chorda.capability.CapabilityDispatchBuilder;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.steamenergy.charger.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceSlot;
 
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.Entity;
@@ -43,19 +48,21 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.common.util.LazyOptional;
 import top.theillusivec4.curios.api.type.ISlotType;
 
 /**
  * Heater Vest: wear it to warm yourself from the coldness.
  * 加温背心：穿戴抵御寒冷
  */
-public class HeaterVestItem extends FHBaseItem implements IHeatingEquipment, IChargable {
+public class HeaterVestItem extends FHBaseItem {
     public static final String NBT_HEATER_VEST = FHMain.MODID + "heater_vest";
     private static final String ENERGY_KEY="steam";
     public HeaterVestItem(Properties properties) {
@@ -70,14 +77,6 @@ public class HeaterVestItem extends FHBaseItem implements IHeatingEquipment, ICh
         list.add(Lang.translateTooltip("charger.heat_vest").withStyle(ChatFormatting.GRAY));
         list.add(Lang.translateTooltip("steam_stored", stored).withStyle(ChatFormatting.GOLD));
     }
-
-    @Override
-    public float charge(ItemStack stack, float value) {
-		return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->{
-			return t.receiveEnergy(value, false);
-		}).orElse(value);
-    }
-
 
 
     @Override
@@ -113,28 +112,44 @@ public class HeaterVestItem extends FHBaseItem implements IHeatingEquipment, ICh
         return 30000;
     }
 
-	@Override
-	public float getEffectiveTempAdded(Either<ISlotType,SlotKey> slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
-		if(slot==null) {
-			return 50;
-		}
-		int energycost = 1;
-		return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->{
-			if (effectiveTemp < 30.05f) {
-			    float delta = 30.05f - effectiveTemp;
-			    if (delta > 50)
-			        delta = 50F;
-			    float rex = Math.max(t.extractEnergy( energycost + (int) (delta * 0.24f), false) - energycost, 0F);
-			    return rex / 0.24f;
-			} else t.extractEnergy(energycost, false);
-			return 0f;
-		}).orElse(0f);
-		
-	}
 
 	@Override
 	public ICapabilityProvider initCapabilities(ItemStack stack,CompoundTag nbt) {
-		return FHCapabilities.ITEM_HEAT.provider(()->new HeatStorageCapability(stack, 30000));
+		return CapabilityDispatchBuilder.builder()
+				.add(FHCapabilities.ITEM_HEAT, ()->new HeatStorageCapability(stack, 30000))
+				.add(FHCapabilities.EQUIPMENT_HEATING, ()->new IHeatingEquipment() {
+
+					@Override
+					public void tickHeating(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext data) {
+						LazyOptional<HeatStorageCapability> cap=FHCapabilities.ITEM_HEAT.getCapability(stack);
+						if(cap.isPresent()) {
+							HeatStorageCapability t=cap.resolve().get();
+							int energycost=1;
+							float effectiveTemp=data.getEffectiveTemperature(BodyPart.TORSO);
+							if (effectiveTemp < 30.05f) {
+							    float delta = 30.05f - effectiveTemp;
+							    if (delta > 50)
+							        delta = 50F;
+							    float rex = Math.max(t.extractEnergy( energycost + (int) (delta * 0.24f), false) - energycost, 0F);
+							    data.addEffectiveTemperature(BodyPart.TORSO, rex / 0.24f);
+							}
+						}
+						
+					}
+
+					@Override
+					public float getMaxTempAddValue(ItemStack stack) {
+						return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->Math.min(50,t.getEnergyStored())).orElse(0f)/ 0.24f;
+					}
+
+					@Override
+					public float getMinTempAddValue(ItemStack stack) {
+						return 0;
+					}
+					
+				})
+				.build();
+		
 	}
 
 

@@ -19,13 +19,15 @@
 
 package com.teammoeg.chorda.capability.types.nonpresistent;
 
+import com.teammoeg.chorda.capability.CapabilityStored;
+
 import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.common.util.NonNullSupplier;
 
-public class TransientCapabilityProvider<C> implements ICapabilityProvider{
+public class TransientCapabilityProvider<C> implements ICapabilityProvider,CapabilityStored<C>{
 	LazyOptional<C> lazyCap;
 	TransientCapability<C> capability;
 	public TransientCapabilityProvider(TransientCapability<C> capability, NonNullSupplier<C> factory) {
@@ -39,6 +41,10 @@ public class TransientCapabilityProvider<C> implements ICapabilityProvider{
 			return lazyCap.cast();
 		}
 		return LazyOptional.empty();
+	}
+	@Override
+	public Capability<C> capability() {
+		return capability.capability();
 	}
 
 

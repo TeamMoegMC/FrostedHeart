@@ -51,6 +51,9 @@ public enum EquipmentSlotType {
 		public boolean is(EquipmentSlotType slot) {
 			return slot==slotType;
 		}
+		public boolean is(EquipmentSlot slot) {
+			return this.slotType==EquipmentSlotType.fromVanilla(slot).slotType;
+		}
 		public boolean is(EquipmentSlotType slot,int slotNum) {
 			return slot==slotType&&this.slotNum()==slotNum;
 		}

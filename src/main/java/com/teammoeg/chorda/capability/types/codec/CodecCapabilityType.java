@@ -22,6 +22,7 @@ package com.teammoeg.chorda.capability.types.codec;
 import org.objectweb.asm.Type;
 
 import com.mojang.serialization.Codec;
+import com.teammoeg.chorda.capability.CapabilityStored;
 import com.teammoeg.chorda.capability.types.CapabilityType;
 import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
 import net.minecraftforge.common.capabilities.Capability;
@@ -32,7 +33,7 @@ import net.minecraftforge.common.util.NonNullSupplier;
 /**
  * Basic codec serialized capability type
  * */
-public class CodecCapabilityType<C> implements CapabilityType {
+public class CodecCapabilityType<C> implements CapabilityType<C>,CapabilityStored<C> {
 	private Class<C> capClass;
 	private Capability<C> capability;
 	private NonNullSupplier<C> factory;
@@ -48,7 +49,7 @@ public class CodecCapabilityType<C> implements CapabilityType {
 	public void register() {
         capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(Type.getInternalName(capClass).intern());
 	}
-	public ICapabilityProvider provider() {
+	public CodecCapabilityProvider<C> provider() {
 		return new CodecCapabilityProvider<>(this);
 	}
 	LazyOptional<C> createCapability(){

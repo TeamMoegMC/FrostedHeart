@@ -26,60 +26,128 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
 
 /**
- * A Helper for showing temperature in ui and message as well as convert them accordingly to client unit setting
+ * A Helper for showing temperature in ui and message as well as convert them accordingly to client unit setting.
  */
 public class TemperatureDisplayHelper {
 
+    /**
+     * Send temperature as message to players.
+     *
+     * @param pe players to receive
+     * @param format the language key for the message
+     * @param temps temperature in Celsius for fill in language
+     */
     public static void sendTemperature(Collection<ServerPlayer> pe, String format, float... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, temps);
         for (ServerPlayer p : pe)
             FHNetwork.sendPlayer(p, k);
     }
 
+    /**
+     * Send temperature as message to players.
+     *
+     * @param pe players to receive
+     * @param format the language key for the message
+     * @param temps temperature in Celsius for fill in language
+     */
     public static void sendTemperature(Collection<ServerPlayer> pe, String format, int... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, temps);
         for (ServerPlayer p : pe)
             FHNetwork.sendPlayer( p, k);
     }
 
+    /**
+     * Send temperature as message to player.
+     *
+     * @param pe the player to receive
+     * @param format the language key for the message
+     * @param temps the temperature in Celsius for fill in language
+     */
     public static void sendTemperature(ServerPlayer pe, String format, float... temps) {
         FHNetwork.sendPlayer( pe, new FHTemperatureDisplayPacket(format, temps));
     }
 
+    /**
+     * Send temperature as message to player.
+     *
+     * @param pe the player to receive
+     * @param format the language key for the message
+     * @param temps the temperature in Celsius for fill in language
+     */
     public static void sendTemperature(ServerPlayer pe, String format, int... temps) {
         FHNetwork.sendPlayer( pe, new FHTemperatureDisplayPacket(format, temps));
     }
 
-    public static void sendTemperatureStatus(Collection<ServerPlayer> pe, String format, boolean act, float... temps) {
-        FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, act, temps);
+    /**
+     * Send temperature as status message to player.
+     *
+     * @param pe players to receive
+     * @param format the language key for the message
+     * @param isAction isAction for {@link Player#displayClientMessage}
+     * @param temps the temperature in Celsius for fill in language
+     */
+    public static void sendTemperatureStatus(Collection<ServerPlayer> pe, String format, boolean isAction, float... temps) {
+        FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, isAction, temps);
         for (ServerPlayer p : pe)
             FHNetwork.sendPlayer( p, k);
     }
 
+    /**
+     * Send temperature as status message to player.
+     *
+     * @param pe players to receive
+     * @param format the language key for the message
+     * @param isAction isAction for {@link Player#displayClientMessage}
+     * @param temps the temperature in Celsius for fill in language
+     */
     public static void sendTemperatureStatus(Collection<ServerPlayer> pe, String format, boolean act, int... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, act, temps);
         for (ServerPlayer p : pe)
             FHNetwork.sendPlayer(p, k);
     }
 
+    /**
+     * Send temperature as status message to player.
+     *
+     * @param pe the player to receive
+     * @param format the language key for the message
+     * @param isAction isAction for {@link Player#displayClientMessage}
+     * @param temps the temperature in Celsius for fill in language
+     */
     public static void sendTemperatureStatus(ServerPlayer pe, String format, boolean act, float... temps) {
         FHNetwork.sendPlayer(pe, new FHTemperatureDisplayPacket(format, act, temps));
     }
 
+    /**
+     * Send temperature as status message to player.
+     *
+     * @param pe the player to receive
+     * @param format the language key for the message
+     * @param isAction isAction for {@link Player#displayClientMessage}
+     * @param temps the temperature in Celsius for fill in language
+     */
     public static void sendTemperatureStatus(ServerPlayer pe, String format, boolean act, int... temps) {
         FHNetwork.sendPlayer(pe, new FHTemperatureDisplayPacket(format, act, temps));
     }
 
+    /**
+     * For client to convert delta Celsius into temperature delta string, with 1 decimal digit 
+     * like 1.0 °C
+     * @param celsus the celsius temperature
+     * @return the temperature string
+     */
     public static String toTemperatureDeltaFloatString(float celsus) {
         //celsus=Math.max(-273.15f, celsus);
         float result;
         String str = "";
         if (FHConfig.CLIENT.useFahrenheit.get()) {
-            result = ((int) ((celsus * 9 / 5) * 10)) / 10f;
+            result = Math.round(((celsus * 9 / 5) * 10)) / 10f;
         } else {
-            result = ((int) (celsus * 10)) / 10f;
+            result = Math.round((celsus * 10)) / 10f;
         }
         if (result > 0) {
             str += "+" + result;
@@ -92,24 +160,50 @@ public class TemperatureDisplayHelper {
             return str + " °C";
     }
 
+    /**
+     * For client to convert delta Celsius into temperature delta string, rounded to integer 
+     * like 1 °C
+     * @param celsus the celsius temperature
+     * @return the string
+     */
     public static String toTemperatureDeltaIntString(float celsus) {
         //celsus=Math.max(-273.15f, celsus);
         if (FHConfig.CLIENT.useFahrenheit.get())
-            return ((int) (celsus * 9 / 5)) + " °F";
-        return ((int) celsus) + " °C";
+            return Math.round( (celsus * 9 / 5)) + " °F";
+        return Math.round( celsus) + " °C";
     }
+    
+    /**
+     * For client to convert delta Celsius into temperature delta string, rounded to integer, with no space between number and unit
+     * like 1°C
+     * @param celsus the celsius temperature
+     * @return the string
+     */
     public static String toTemperatureDeltaIntStringNoSpace(float celsus) {
         //celsus=Math.max(-273.15f, celsus);
         if (FHConfig.CLIENT.useFahrenheit.get())
             return ((int) (celsus * 9 / 5)) + "F";
         return ((int) celsus) + "C";
     }
+    
+    /**
+     * For client to convert delta Celsius into temperature delta rounded to integer
+     * @param celsus the celsius temperature
+     * @return the temperature
+     */
     public static int toTemperatureDeltaInt(float celsus) {
         //celsus=Math.max(-273.15f, celsus);
         if (FHConfig.CLIENT.useFahrenheit.get())
             return ((int) (celsus * 9 / 5)) ;
         return ((int) celsus) ;
     }
+    
+    /**
+     * For client to convert absolute Celsius into temperature string, with 1 decimal digit 
+     * like 1.0 °C
+     * @param celsus the celsius temperature
+     * @return the temperature
+     */
     public static String toTemperatureFloatString(float celsus) {
         celsus = Math.max(-273.15f, celsus);
         if (FHConfig.CLIENT.useFahrenheit.get())
@@ -117,11 +211,17 @@ public class TemperatureDisplayHelper {
         return ((int) (celsus * 10)) / 10f + " °C";
     }
 
+    /**
+     * For client to convert absolute Celsius into temperature string, rounded to integer
+     * like 1 °C
+     * @param celsus the celsus
+     * @return the string
+     */
     public static String toTemperatureIntString(float celsus) {
         celsus = Math.max(-273.15f, celsus);
         if (FHConfig.CLIENT.useFahrenheit.get())
-            return ((int) (celsus * 9 / 5 + 32)) + " °F";
-        return ((int) celsus) + " °C";
+            return Math.round((celsus * 9 / 5 + 32)) + " °F";
+        return Math.round(celsus) + " °C";
     }
 
 }

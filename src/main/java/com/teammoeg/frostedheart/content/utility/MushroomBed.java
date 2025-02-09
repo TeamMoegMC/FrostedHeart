@@ -28,10 +28,15 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceSlot;
 
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.LivingEntity;
@@ -43,14 +48,17 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import top.theillusivec4.curios.api.type.ISlotType;
 
-public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
+public class MushroomBed extends FHBaseItem {
     public static final TagKey<Item> ktag = ItemTags.create(new ResourceLocation(FHMain.MODID, "knife"));
 
     Item resultType;
@@ -124,16 +132,31 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
     }
 
 	@Override
-	public float getEffectiveTempAdded(Either<ISlotType,SlotKey> slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
-		if(slot==null)
-			return 0.5f;
-        if (stack.getDamageValue() > 0) {
-            if (bodyTemp > -1) {
-                this.setDamage(stack, this.getDamage(stack) - 1);
-                return 0.5f;
-            }
-        }
-		return 0;
+	public @org.jetbrains.annotations.Nullable ICapabilityProvider initCapabilities(ItemStack stack, @org.jetbrains.annotations.Nullable CompoundTag nbt) {
+		return FHCapabilities.EQUIPMENT_HEATING.provider(()->new IHeatingEquipment(){
+
+			@Override
+			public void tickHeating(HeatingDeviceSlot slot, ItemStack stack,HeatingDeviceContext data) {
+				if (stack.getDamageValue() > 0) {
+		            if (data.getBodyTemperature(BodyPart.TORSO) > -1) {
+		            	stack.hurt(1,data.getLevel().random, data.getPlayer());
+		            	data.addEffectiveTemperature(BodyPart.TORSO, 0.5f);
+		            }
+		        }
+			}
+
+			@Override
+			public float getMaxTempAddValue(ItemStack stack) {
+				return 0.5f;
+			}
+
+			@Override
+			public float getMinTempAddValue(ItemStack stack) {
+				return 0f;
+			}
+			
+		});
 	}
+
 
 }
