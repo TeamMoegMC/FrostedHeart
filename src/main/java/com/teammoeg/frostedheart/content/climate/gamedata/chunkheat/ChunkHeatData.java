@@ -270,13 +270,12 @@ public class ChunkHeatData {
         Optional<ChunkHeatData> cap=get(world, new ChunkPos(pos));
         if(cap.isPresent()) {
         	for(IHeatArea i:cap.get().getAdjusters()) {
-        		if(i.isEffective(pos)){
-        			double curValue=pos.distSqr(i.getCenter());
-        			if(curValue<mostValue) {
-        				most=i;
-        				mostValue=curValue;
-        			}
-        		}
+    			double curValue=pos.distSqr(i.getCenter());
+    			if(curValue<mostValue) {
+    				most=i;
+    				mostValue=curValue;
+    			}
+        		
         	}
         }
         return most;

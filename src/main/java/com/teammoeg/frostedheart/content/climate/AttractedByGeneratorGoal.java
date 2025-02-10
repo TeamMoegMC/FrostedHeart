@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.content.climate;
 import java.util.EnumSet;
 
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.IHeatArea;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
@@ -60,8 +61,11 @@ public class AttractedByGeneratorGoal extends Goal {
 	 * Keep ticking a continuous task that has already been started
 	 */
 	public void tick() {
-		BlockPos pos = ChunkHeatData.getNearestAdjust(animal.level(), animal.blockPosition()).getCenter();
-		this.animal.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), this.speedModifier);
+		IHeatArea adjust=ChunkHeatData.getNearestAdjust(animal.level(), animal.blockPosition());
+		if(adjust!=null) {
+			BlockPos pos = adjust.getCenter();
+			this.animal.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), this.speedModifier);
+		}
 	}
 
 }
