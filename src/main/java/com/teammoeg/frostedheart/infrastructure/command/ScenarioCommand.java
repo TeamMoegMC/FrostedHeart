@@ -69,10 +69,14 @@ public class ScenarioCommand {
 					})
 			)).then(Commands.literal("run").then(
 				Commands.argument("script", StringArgumentType.string()).executes(ct->{
+					try {
                     String sb = StringArgumentType.getString(ct, "script") + "\n" + "@return";
 						ScenarioConductor cdt=FHScenario.get(ct.getSource().getPlayerOrException());
 						cdt.getCurrentAct().addCallStack(null);
-						cdt.getCurrentAct().run(FHScenario.parser.parseString("<anoymous_command>", sb+"\r\n@return"));
+						cdt.getCurrentAct().run(FHScenario.parser.parseString("<anoymous_command>", sb));
+					}catch(Exception ex) {
+						ex.printStackTrace();
+					}
 						return Command.SINGLE_SUCCESS;
 					})
 			)).then(Commands.literal("pause").executes(ct->{

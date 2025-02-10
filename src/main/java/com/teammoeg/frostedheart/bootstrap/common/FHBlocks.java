@@ -1078,6 +1078,7 @@ public class FHBlocks {
             .register();
     public static final BlockEntry<RyeBlock> RYE_BLOCK = REGISTRATE.block("rye_block", p -> new RyeBlock(FHProps.cropProps))
             .blockstate(FHBlockStateGen.existed())
+            .loot(FHLootGen.existed())
             .item()
             .model(AssetLookup.existingItemModel())
             .build()
@@ -1098,6 +1099,8 @@ public class FHBlocks {
     public static final BlockEntry<WhiteTurnipBlock> WHITE_TURNIP_BLOCK = REGISTRATE.block("white_turnip_block",
                     p -> new WhiteTurnipBlock(FHProps.cropProps))
             .blockstate(FHBlockStateGen.existed())
+            .loot(FHLootGen.existed())
+           
             .item()
             .model(AssetLookup.existingItemModel())
             .build()
@@ -1797,6 +1800,7 @@ public class FHBlocks {
                     .sound(SoundType.WOOD)
                     .strength(2, 6)
                     .noOcclusion())
+            .loot(FHLootGen.existed())
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
             .item()

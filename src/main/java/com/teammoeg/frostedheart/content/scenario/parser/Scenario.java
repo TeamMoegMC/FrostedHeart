@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 public record Scenario(String name, List<Node> pieces, Map<String, Integer> labels) {
-
+	public static Scenario EMPTY=new Scenario("empty");
     public Scenario(String name) {
         this(name,new ArrayList<>(),new HashMap<>());
     }

@@ -86,8 +86,8 @@ public class ChargerCookingCategory implements IRecipeCategory<SmokingRecipe> {
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, SmokingRecipe recipe, IFocusGroup focuses) {
-    	builder.addSlot(RecipeIngredientRole.INPUT, 43, 4).addIngredients(recipe.getIngredients().get(0));
-    	builder.addSlot(RecipeIngredientRole.OUTPUT, 117, 47).addItemStack(RecipeUtil.getResultItem(recipe));
+    	builder.addSlot(RecipeIngredientRole.INPUT, 44, 5).addIngredients(recipe.getIngredients().get(0));
+    	builder.addSlot(RecipeIngredientRole.OUTPUT, 118, 48).addItemStack(RecipeUtil.getResultItem(recipe));
     }
 
 	@Override

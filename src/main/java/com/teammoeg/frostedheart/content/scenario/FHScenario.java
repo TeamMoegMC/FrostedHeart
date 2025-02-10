@@ -101,6 +101,8 @@ public class FHScenario {
 	}
 
 	public static Scenario loadScenario(ScenarioContext ctx,String name) {
+		if("empty".equals(name))
+			return Scenario.EMPTY;
 		String[] paths=name.split("\\?");
 		String[] args=new String[0];
 		if(paths.length>1&&!paths[1].isEmpty())

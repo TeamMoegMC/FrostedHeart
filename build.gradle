@@ -275,7 +275,7 @@ dependencies {
 //	noDatagenRuntimeOnly fg.deobf("curse.maven:mutil-351914:4824501")
     // Caupona
     compileOnly fg.deobf("curse.maven:caupona-656147:5116975")
-    datagenImplementation fg.deobf("curse.maven:caupona-656147:5116975")
+    
 
     // LDLib
     compileOnly fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
@@ -296,7 +296,10 @@ dependencies {
 //    implementation fg.deobf("curse.maven:primal-winter-393321:4575861")
 
 
+
     // Datagen only
+    datagenImplementation fg.deobf("curse.maven:steampowered-534610:5778650")
+    datagenImplementation fg.deobf("curse.maven:caupona-656147:5116975")
 //    datagenImplementation fg.deobf("curse.maven:supplementaries-412082:5676069")
 //    datagenImplementation fg.deobf("curse.maven:crock-pot-404523:5458905")
 //    datagenImplementation fg.deobf("curse.maven:charcoal-pit-reloaded-534602:5861935")

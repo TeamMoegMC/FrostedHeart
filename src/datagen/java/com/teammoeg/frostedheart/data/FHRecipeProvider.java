@@ -46,6 +46,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
+import com.teammoeg.frostedheart.content.climate.data.DrinkTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
@@ -144,7 +145,13 @@ public class FHRecipeProvider extends RecipeProvider {
 					!ExcelHelper.getCellValueAsBoolean(m.get("survive_blizzard"))
 					).toFinished(FHMain.rl("plant_temperature/"+block.getPath())));
 		});
-		
+		//drink
+		ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/drink_temperature.xlsx"), m->{
+			ResourceLocation block=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("fluid")));
+			out.accept(new DrinkTempData(CRegistryHelper.getFluid(block),
+					(float)ExcelHelper.getCellValueAsNumber(m.get("heat"))
+					).toFinished(FHMain.rl("drink_temperature/"+block.getPath())));
+		});
 //		CPFluids.getAll().filter(o->!Arrays.stream(ovride).anyMatch(CRegistries.getRegistryName(o).getPath()::equals)).forEach(f-> {
 //
 //				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+ CRegistries.getRegistryName(f).getPath()+"_thermos"),Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"thermos"))),f,2,2));

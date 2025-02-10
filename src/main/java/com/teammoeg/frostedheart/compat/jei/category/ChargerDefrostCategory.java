@@ -93,8 +93,8 @@ public class ChargerDefrostCategory implements IRecipeCategory<CampfireDefrostRe
 
 	@Override
 	public void setRecipe(IRecipeLayoutBuilder builder, CampfireDefrostRecipe recipe, IFocusGroup focuses) {
-		builder.addSlot(RecipeIngredientRole.INPUT, 43, 4).addIngredients(recipe.getIngredients().get(0));
-		builder.addSlot(RecipeIngredientRole.OUTPUT, 117, 47).addItemStacks(Arrays.asList(recipe.getIss()));
+		builder.addSlot(RecipeIngredientRole.INPUT, 44, 5).addIngredients(recipe.getIngredients().get(0));
+		builder.addSlot(RecipeIngredientRole.OUTPUT, 118, 48).addItemStacks(Arrays.asList(recipe.getIss()));
 		
 	}
 }

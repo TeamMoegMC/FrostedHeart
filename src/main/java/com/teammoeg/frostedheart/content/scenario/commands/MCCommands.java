@@ -38,6 +38,8 @@ import com.teammoeg.chorda.util.CUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.TagParser;
@@ -53,6 +55,10 @@ public class MCCommands {
 		if (nbt != null)
 			is.setTag(TagParser.parseTag(nbt));
 		CUtils.giveItem(runner.context().player(), is);
+	}
+	public void mobEffect(ScenarioCommandContext runner, @Param("e") String effect, @Param("a") int amplifier, @Param("t") int time,@Param("hide")boolean hide,@Param("hideIcon")boolean hideIcon) throws CommandSyntaxException {
+		MobEffect i = CRegistryHelper.getEffect(new ResourceLocation(effect));
+		runner.context().player().addEffect(new MobEffectInstance(i,time,amplifier,false,!hide,!hideIcon));
 	}
 
 	public void setResearchAttribute(ScenarioCommandContext runner, @Param("k") String key, @Param("v") double value) {

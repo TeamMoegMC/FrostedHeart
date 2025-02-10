@@ -271,8 +271,8 @@ public class FHConfig {
             
             tdiffculty = builder.comment("Temperature System difficulty", "easy=Strong body", "normal=Average", "hard=Reality", "hardcore=Sick body")
                     .defineEnum("temperatureDifficulty", FHTemperatureDifficulty.normal);
-            tempSpeed = builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
-                    .defineInRange("temperatureChangeRate", 0.5, 0, 20);
+            tempSpeed = builder.comment("Modifier of body temperature change speed, Adjust this higher only when you lower the update interval respectively This does not affect hypothermia temperature.")
+                    .defineInRange("temperatureChangeRate", 1f, 0, 20);
             temperatureUpdateIntervalTicks = builder.comment("The interval of temperature update in ticks.")
                     .defineInRange("temperatureUpdateIntervalTicks", 20, 1, Integer.MAX_VALUE);
             wetEffectDuration = builder.comment("The duration of the wet effect applied in water in ticks.")

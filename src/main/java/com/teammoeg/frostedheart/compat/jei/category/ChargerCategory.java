@@ -90,7 +90,7 @@ public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
 
 	@Override
 	public void setRecipe(IRecipeLayoutBuilder builder, ChargerRecipe recipe, IFocusGroup focuses) {
-		builder.addSlot(RecipeIngredientRole.INPUT, 43, 4).addItemStacks(Arrays.asList(recipe.input.getMatchingStacks()));
-		builder.addSlot(RecipeIngredientRole.OUTPUT, 117, 47).addItemStack(recipe.output);
+		builder.addSlot(RecipeIngredientRole.INPUT, 44, 5).addItemStacks(Arrays.asList(recipe.input.getMatchingStacks()));
+		builder.addSlot(RecipeIngredientRole.OUTPUT, 118, 48).addItemStack(recipe.output);
 	}
 }

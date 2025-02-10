@@ -191,8 +191,8 @@ public class FHTags {
 		CHICKEN_FEED,
 		POWDERED_SNOW_WALKABLE,
 		GARBAGE,
-		KNIFE,
-		BAD_FOOD,
+		KNIFE(false),
+		BAD_FOOD(false),
 		ASH,
 		FORBIDDEN_IN_CRATES(NameSpace.IE),
 		COW_FEED,
@@ -245,7 +245,12 @@ public class FHTags {
 		Items(NameSpace namespace, boolean optional, boolean alwaysDatagen) {
 			this(namespace, null, optional, alwaysDatagen);
 		}
-
+		Items(boolean optional, boolean alwaysDatagen) {
+			this(NameSpace.MOD, null, optional, alwaysDatagen);
+		}
+		Items(boolean alwaysDatagen) {
+			this(NameSpace.MOD, null, NameSpace.MOD.optionalDefault, alwaysDatagen);
+		}
 		Items(NameSpace namespace, String path, boolean optional, boolean alwaysDatagen) {
 			ResourceLocation id = new ResourceLocation(namespace.id, path == null ? Lang.asId(name()) : path);
 			if (optional) {
@@ -325,8 +330,8 @@ public class FHTags {
 
 	public enum Fluids {
 		DRINK,
-		HIDDEN_DRINK,
-		FLAMMABLE_FLUID
+		HIDDEN_DRINK(false),
+		FLAMMABLE_FLUID(false)
 		;
 
 		public final TagKey<Fluid> tag;
@@ -347,7 +352,12 @@ public class FHTags {
 		Fluids(NameSpace namespace, String path) {
 			this(namespace, path, namespace.optionalDefault, namespace.alwaysDatagenDefault);
 		}
-
+		Fluids(boolean optional, boolean alwaysDatagen) {
+			this(NameSpace.MOD, null, optional, alwaysDatagen);
+		}
+		Fluids(boolean alwaysDatagen) {
+			this(NameSpace.MOD, null, NameSpace.MOD.optionalDefault, alwaysDatagen);
+		}
 		Fluids(NameSpace namespace, boolean optional, boolean alwaysDatagen) {
 			this(namespace, null, optional, alwaysDatagen);
 		}

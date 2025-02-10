@@ -19,7 +19,13 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.charger;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
+import static net.minecraft.ChatFormatting.GRAY;
+
+import java.util.Collection;
+import java.util.List;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.teammoeg.chorda.block.CBlockInterfaces;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
@@ -30,8 +36,11 @@ import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
+
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -41,7 +50,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmokingRecipe;
@@ -50,12 +58,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Collection;
-import java.util.List;
-
-import static net.minecraft.ChatFormatting.GRAY;
 
 public class ChargerTileEntity extends IEBaseBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState, IHaveGoggleInformation, HeatNetworkProvider {
     public static final int INPUT_SLOT = 0;
@@ -119,9 +121,9 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements CTickableBlo
 
     public InteractionResult onClick(Player pe, ItemStack is) {
         if (is != null) {
-            Item it = is.getItem();
-            if (it instanceof IChargable) {
-                power -= ((IChargable) it).charge(is, power);
+            LazyOptional<HeatStorageCapability> cap=FHCapabilities.ITEM_HEAT.getCapability(is);
+            if (cap.isPresent()) {
+                power -= cap.resolve().get().receiveEnergy(power, false);
                 drawEffect();
                 return InteractionResult.SUCCESS;
             }
@@ -192,7 +194,7 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements CTickableBlo
         if (!level.isClientSide) {
             float actual = network.drainHeat(Math.min(200, (getMaxPower() - power) / 0.8F));
             if (actual > 0) {
-                power += (float) (actual * 8);
+                power += (float) (actual * 10);
                 this.setActive(true);
                 setChanged();
                 this.markContainingBlockForUpdate(null);

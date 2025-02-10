@@ -122,8 +122,8 @@ public class CampfireDefrostCategory implements IRecipeCategory<CampfireDefrostR
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder recipeLayout, CampfireDefrostRecipe recipe, IFocusGroup ingredients) {
-        recipeLayout.addSlot(RecipeIngredientRole.INPUT, 0, 0).addIngredients(recipe.getIngredient());
-        recipeLayout.addSlot(RecipeIngredientRole.OUTPUT, 60, 8).addItemStacks(Arrays.asList(recipe.getIss()));
+        recipeLayout.addSlot(RecipeIngredientRole.INPUT, 1, 1).addIngredients(recipe.getIngredient());
+        recipeLayout.addSlot(RecipeIngredientRole.OUTPUT, 61, 9).addItemStacks(Arrays.asList(recipe.getIss()));
     }
 
 	@Override

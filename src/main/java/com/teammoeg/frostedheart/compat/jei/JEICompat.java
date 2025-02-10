@@ -310,8 +310,8 @@ public class JEICompat implements IModPlugin {
 				int outinvarrx=98;
 				int inarryl=76-ininvarrx;
 				int outarryl=out.getX()-2-outinvarrx;
-				col.add(IGuiClickableArea.createBasic(ininvarrx,ininvarry, inarryl, 4, GeneratorSteamCategory.UID));
-				col.add(IGuiClickableArea.createBasic(outinvarrx,outinvarry, outarryl, 4, GeneratorSteamCategory.UID));
+				col.add(IGuiClickableArea.createBasic(ininvarrx,ininvarry, inarryl, 4, GeneratorFuelCategory.UID));
+				col.add(IGuiClickableArea.createBasic(outinvarrx,outinvarry, outarryl, 4, GeneratorFuelCategory.UID));
 				return col;
 			}
 		});

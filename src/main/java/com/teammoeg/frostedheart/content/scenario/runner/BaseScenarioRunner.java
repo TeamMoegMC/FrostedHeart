@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.content.scenario.parser.Node;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
+import com.teammoeg.frostedheart.content.scenario.runner.target.NullTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.PreparedScenarioTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ScenarioTarget;
 
@@ -220,6 +221,8 @@ public class BaseScenarioRunner implements ScenarioThread{
 	 */
 	@Override
 	public ExecuteStackElement getCurrentPosition(int offset) {
+		if(sp==null)
+			return NullTarget.NULL_STACK;
     	return new ExecuteStackElement(sp.name(),nodeNum+offset);
     }
 	

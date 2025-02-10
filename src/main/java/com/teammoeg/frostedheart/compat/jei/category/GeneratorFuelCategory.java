@@ -93,8 +93,8 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
 
 	@Override
 	public void setRecipe(IRecipeLayoutBuilder builder, GeneratorRecipe recipe, IFocusGroup focuses) {
-		builder.addSlot(RecipeIngredientRole.INPUT, 55, 8).addItemStacks(Arrays.asList(recipe.input.getMatchingStacks()));
-		builder.addSlot(RecipeIngredientRole.OUTPUT, 55, 47).addItemStack(recipe.output);
+		builder.addSlot(RecipeIngredientRole.INPUT, 56, 9).addItemStacks(Arrays.asList(recipe.input.getMatchingStacks()));
+		builder.addSlot(RecipeIngredientRole.OUTPUT, 56, 48).addItemStack(recipe.output);
 		
 	}
 }

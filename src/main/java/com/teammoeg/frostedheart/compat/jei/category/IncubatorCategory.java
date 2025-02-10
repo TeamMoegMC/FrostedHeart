@@ -24,6 +24,7 @@ import java.util.Arrays;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.util.client.Lang;
 
@@ -119,14 +120,17 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 		if (!recipe.output_fluid.isEmpty())
 			fluidout.setFluidRenderer(recipe.output_fluid.getAmount()*5, false, 16,46).addIngredient(ForgeTypes.FLUID_STACK, recipe.output_fluid)
 			.addTooltipCallback((v,t)->{if(recipe.isFood)t.add(Lang.translateGui("per_food_value", recipe.output_fluid.getAmount()));});
-		builder.addSlot(RecipeIngredientRole.INPUT, 29, 47);
-		builder.addSlot(recipe.consume_catalyst?RecipeIngredientRole.INPUT:RecipeIngredientRole.CATALYST, 11, 12)
+		
+		builder.addSlot(RecipeIngredientRole.INPUT, 29, 47).addItemStack(FHItems.QUICKLIME.asStack());
+		
+		builder.addSlot(recipe.consume_catalyst?RecipeIngredientRole.INPUT:RecipeIngredientRole.CATALYST, 12, 13)
 		.addItemStacks(Arrays.asList(recipe.catalyst.getMatchingStacks()))
 		.addTooltipCallback((v,t)->{if(recipe.consume_catalyst)t.add(Lang.translateGui("not_consume"));});
-		builder.addSlot(RecipeIngredientRole.INPUT, 29, 12).addItemStacks(Arrays.asList(recipe.input.getMatchingStacks()))
+		
+		builder.addSlot(RecipeIngredientRole.INPUT, 30, 13).addItemStacks(Arrays.asList(recipe.input.getMatchingStacks()))
 		.addTooltipCallback((v,t)->{if(recipe.isFood)t.add(Lang.translateGui("any_food"));});
 		
-		IRecipeSlotBuilder itemout=builder.addSlot(RecipeIngredientRole.OUTPUT, 138, 31);
+		IRecipeSlotBuilder itemout=builder.addSlot(RecipeIngredientRole.OUTPUT, 139, 32);
         if (!recipe.output.isEmpty())
         	itemout.addItemStack(recipe.output);
 		

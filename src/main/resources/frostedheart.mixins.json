@@ -61,7 +61,8 @@
     "minecraft.temperature.SnowLayerBlockMixin_Melt",
     "minecraft.temperature.VillagerMixin",
     "minecraft.trade.AssignProfessionFromJobSite_DisableVanillaProfession",
-    "minecraft.trade.ResetProfession_DisableVanillaProfession"
+    "minecraft.trade.ResetProfession_DisableVanillaProfession",
+    "registrate.RegistrateBlockLootTablesMixin_RemoveExisted"
   ],
   "client": [
     "client.BossHealthOverlayAccess",

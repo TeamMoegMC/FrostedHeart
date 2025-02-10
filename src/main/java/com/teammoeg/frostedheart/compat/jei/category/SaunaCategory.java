@@ -107,6 +107,6 @@ public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
 
 	@Override
 	public void setRecipe(IRecipeLayoutBuilder builder, SaunaRecipe recipe, IFocusGroup focuses) {
-		builder.addSlot(RecipeIngredientRole.INPUT, 43, 4).addIngredients(recipe.input);
+		builder.addSlot(RecipeIngredientRole.INPUT, 44, 5).addIngredients(recipe.input);
 	}
 }

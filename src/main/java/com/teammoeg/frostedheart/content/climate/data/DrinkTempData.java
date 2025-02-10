@@ -26,6 +26,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -45,5 +47,9 @@ public record DrinkTempData(Fluid fluid,float heat) {
 		if (dtd != null)
 			return dtd.getHeat();
 		return -0.3f;
+	}
+
+	public FinishedRecipe toFinished(ResourceLocation name) {
+		return TYPE.get().toFinished(name, this);
 	}
 }

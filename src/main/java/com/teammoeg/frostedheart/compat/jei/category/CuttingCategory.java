@@ -91,9 +91,9 @@ public class CuttingCategory implements IRecipeCategory<CuttingRecipe> {
 
 	@Override
 	public void setRecipe(IRecipeLayoutBuilder builder, CuttingRecipe recipe, IFocusGroup focuses) {
-		builder.addSlot(RecipeIngredientRole.INPUT, 34, 24).addItemStack(recipe.in);
-		builder.addSlot(RecipeIngredientRole.INPUT, 8, 4).addItemStacks(matching.stream().map(ItemStack::new).collect(Collectors.toList()));
-		builder.addSlot(RecipeIngredientRole.OUTPUT, 96, 24).addItemStack(recipe.out);
+		builder.addSlot(RecipeIngredientRole.INPUT, 35, 25).addItemStack(recipe.in);
+		builder.addSlot(RecipeIngredientRole.INPUT, 9, 5).addItemStacks(matching.stream().map(ItemStack::new).collect(Collectors.toList()));
+		builder.addSlot(RecipeIngredientRole.OUTPUT, 97, 25).addItemStack(recipe.out);
 		
 	}
 }
