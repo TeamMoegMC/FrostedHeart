@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate;
 
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.health.dailykitchen.DailyKitchen;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;

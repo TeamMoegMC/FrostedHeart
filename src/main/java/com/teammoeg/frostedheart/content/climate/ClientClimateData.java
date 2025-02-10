@@ -21,6 +21,9 @@ package com.teammoeg.frostedheart.content.climate;
 
 import java.util.Arrays;
 
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.TemperatureFrame;
+
 public class ClientClimateData {
     public static final TemperatureFrame[] forecastData = new TemperatureFrame[40];
     public static ClimateType climate;

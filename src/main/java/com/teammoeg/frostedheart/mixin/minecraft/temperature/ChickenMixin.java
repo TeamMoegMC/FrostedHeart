@@ -28,6 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
@@ -49,7 +50,6 @@ import net.minecraft.world.level.Level;
 
 @Mixin(Chicken.class)
 public abstract class ChickenMixin extends Animal implements IFeedStore {
-    private final static TagKey<Item> chicken_feed = ItemTags.create(new ResourceLocation(FHMain.MODID, "chicken_feed"));
 
     @Shadow
     public int eggTime;
@@ -114,7 +114,7 @@ public abstract class ChickenMixin extends Animal implements IFeedStore {
     public InteractionResult mobInteract(Player playerIn, InteractionHand hand) {
         ItemStack itemstack = playerIn.getItemInHand(hand);
 
-        if (!this.isBaby() && !itemstack.isEmpty() && itemstack.is(chicken_feed)) {
+        if (!this.isBaby() && !itemstack.isEmpty() && isFood(itemstack)) {
             if (feeded < 4) {
 
                 if (!this.level().isClientSide)

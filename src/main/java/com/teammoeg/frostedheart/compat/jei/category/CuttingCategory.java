@@ -46,11 +46,11 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraftforge.registries.tags.ITag;
 
 public class CuttingCategory implements IRecipeCategory<CuttingRecipe> {
     public static RecipeType<CuttingRecipe> UID =  RecipeType.create(FHMain.MODID, "knife_cutting",CuttingRecipe.class);
-    public static List<Item> matching;
-    public static final TagKey<Item> ktag = ItemTags.create(new ResourceLocation(FHMain.MODID, "knife"));
+    public static ITag<Item> matching;
     private IDrawable BACKGROUND;
     private IDrawable ICON;
 

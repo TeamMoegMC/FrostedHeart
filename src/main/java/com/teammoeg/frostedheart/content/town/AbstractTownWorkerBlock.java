@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.town;
 import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.block.CBlock;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.block.Block;

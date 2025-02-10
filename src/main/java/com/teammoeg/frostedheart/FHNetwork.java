@@ -26,11 +26,11 @@ import java.util.Map;
 import java.util.function.Function;
 
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHBodyDataSyncPacket;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHNotifyChunkHeatUpdatePacket;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHRequestInfraredViewDataSyncPacket;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHResponseInfraredViewDataSyncPacket;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorModifyPacket;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorModifyPacket;
+import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHBodyDataSyncPacket;
+import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHNotifyChunkHeatUpdatePacket;
+import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHRequestInfraredViewDataSyncPacket;
+import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHResponseInfraredViewDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;

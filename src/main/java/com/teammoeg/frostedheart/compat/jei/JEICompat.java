@@ -45,6 +45,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.compat.jei.category.CampfireDefrostCategory;
 import com.teammoeg.frostedheart.compat.jei.category.ChargerCategory;
 import com.teammoeg.frostedheart.compat.jei.category.ChargerCookingCategory;
@@ -58,13 +59,13 @@ import com.teammoeg.frostedheart.compat.jei.category.SmokingDefrostCategory;
 import com.teammoeg.frostedheart.compat.jei.extension.DamageModifierExtension;
 import com.teammoeg.frostedheart.compat.jei.extension.FuelingExtension;
 import com.teammoeg.frostedheart.compat.jei.extension.InnerExtension;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorContainer;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorScreen;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorContainer;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorScreen;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
@@ -346,7 +347,7 @@ public class JEICompat implements IModPlugin {
         checkNotNull(world, "minecraft world");
         RecipeManager recipeManager = world.getRecipeManager();
 
-        CuttingCategory.matching = CRegistryHelper.getItemHolders().filter(t->t.containsTag(CuttingCategory.ktag)).map(t->t.get()).collect(Collectors.toList());
+        CuttingCategory.matching = FHTags.Items.KNIFE.getTagCollection();
 
         registration.addRecipes(GeneratorFuelCategory.UID, CUtils.filterRecipes(recipeManager,GeneratorRecipe.TYPE));
         registration.addRecipes(GeneratorSteamCategory.UID,new ArrayList<>(GeneratorSteamRecipe.recipeList.values()));

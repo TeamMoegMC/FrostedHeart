@@ -25,7 +25,7 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.frostedheart.content.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;

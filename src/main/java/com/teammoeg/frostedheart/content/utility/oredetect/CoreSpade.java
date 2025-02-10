@@ -26,6 +26,7 @@ import java.util.Random;
 import java.util.function.Predicate;
 
 import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.utility.FHLeveledTool;
 import com.teammoeg.frostedheart.util.client.Lang;
@@ -38,8 +39,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.MutableComponent;
@@ -50,11 +49,10 @@ import net.minecraftforge.common.util.FakePlayer;
 import se.mickelus.tetra.properties.IToolProvider;
 
 public class CoreSpade extends FHLeveledTool {
-    public static TagKey<Block> otag = BlockTags.create(new ResourceLocation("forge:ores"));
-    public static TagKey<Block> stag = BlockTags.create(new ResourceLocation("forge:stone"));
+
     public static InteractionResult doProspect(Player player, Level world, BlockPos blockpos, ItemStack is, InteractionHand h) {
         if (player != null && (!(player instanceof FakePlayer))) {// fake players does not deserve XD
-            if (!world.isClientSide && world.getBlockState(blockpos).is(otag)) {// early exit 'cause ore found
+            if (!world.isClientSide && world.getBlockState(blockpos).is(FHTags.Blocks.ORES.tag)) {// early exit 'cause ore found
                 player.displayClientMessage(
                         Lang.translateKey(world.getBlockState(blockpos).getBlock().getDescriptionId())
                                 .withStyle(ChatFormatting.GOLD),
@@ -74,9 +72,9 @@ public class CoreSpade extends FHLeveledTool {
                 Predicate<BlockState> tagdet;
                 float corr = getCorrectness(is);
                 if (rnd.nextInt((int) (20 * corr)) != 0) {
-                    tagdet = ts -> (ts.is(otag)) || ts.is(stag);
+                    tagdet = ts -> (ts.is(FHTags.Blocks.ORES.tag)) || ts.is(FHTags.Blocks.STONE.tag);
                 } else
-                    tagdet = ts -> ts.is(stag);
+                    tagdet = ts -> ts.is(FHTags.Blocks.STONE.tag);
                 BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos(x, y, z);
                 BlockState ore;
                 HashMap<String, Integer> founded = new HashMap<>();

@@ -24,9 +24,9 @@ import java.util.function.Supplier;
 import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.climate.ClientClimateData;
-import com.teammoeg.frostedheart.content.climate.ClimateType;
-import com.teammoeg.frostedheart.content.climate.TemperatureFrame;
-import com.teammoeg.frostedheart.content.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.TemperatureFrame;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;

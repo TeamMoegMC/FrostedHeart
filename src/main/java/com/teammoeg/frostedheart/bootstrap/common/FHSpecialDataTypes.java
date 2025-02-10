@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.teammoeg.chorda.dataholders.SpecialDataType;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.scenario.client.ClientStoredFlags;
 import com.teammoeg.frostedheart.content.town.TeamTownData;

@@ -29,6 +29,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 
 import net.minecraft.world.entity.EntityType;
@@ -60,7 +61,6 @@ import net.minecraft.world.level.Level;
 
 @Mixin(Cow.class)
 public abstract class CowMixin extends Animal implements IMilkable, IFeedStore {
-    private final static TagKey<Item> cow_feed = ItemTags.create(new ResourceLocation(FHMain.MODID, "cow_feed"));
     private EatBlockGoal eatGrassGoal;
 
     byte feeded;
@@ -113,7 +113,7 @@ public abstract class CowMixin extends Animal implements IMilkable, IFeedStore {
     public InteractionResult mobInteract(Player playerIn, InteractionHand hand) {
         ItemStack itemstack = playerIn.getItemInHand(hand);
         //FHMain.LOGGER.info("start feed"+this.isInLove());
-        if (!this.isBaby() && !itemstack.isEmpty() && itemstack.is(cow_feed)) {
+        if (!this.isBaby() && !itemstack.isEmpty() && isFood(itemstack)) {
             if (feeded < 2) {
                 feeded++;
                 //FHMain.LOGGER.info("yield feed"+this.isInLove());

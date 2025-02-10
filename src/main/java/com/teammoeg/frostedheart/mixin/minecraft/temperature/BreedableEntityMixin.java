@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.teammoeg.frostedheart.util.mixin.BreedUtil;
+import com.teammoeg.frostedheart.util.BreedingHelper;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Animal;
@@ -51,7 +51,7 @@ public abstract class BreedableEntityMixin extends Animal {
     @Inject(at = @At("HEAD"), method = "isFood", cancellable = true)
     public void isFood(ItemStack itemStack, CallbackInfoReturnable<Boolean> cbi) {
         EntityType<?> type = getType();
-        boolean f = BreedUtil.isBreedingItem(type, itemStack);
+        boolean f = BreedingHelper.isBreedingItem(type, itemStack);
         if (f)
             cbi.setReturnValue(true);
     }

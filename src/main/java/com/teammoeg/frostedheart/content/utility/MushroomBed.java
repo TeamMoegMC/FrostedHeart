@@ -28,6 +28,7 @@ import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
@@ -53,7 +54,6 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
 public class MushroomBed extends FHBaseItem {
-    public static final TagKey<Item> ktag = ItemTags.create(new ResourceLocation(FHMain.MODID, "knife"));
 
     Item resultType;
 
@@ -106,7 +106,7 @@ public class MushroomBed extends FHBaseItem {
 
 
         InteractionHand otherHand = handIn == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
-        if (playerIn.getItemInHand(otherHand).is(ktag)) {
+        if (playerIn.getItemInHand(otherHand).is(FHTags.Items.KNIFE.tag)) {
             playerIn.startUsingItem(handIn);
             return new InteractionResultHolder<>(InteractionResult.SUCCESS, stack);
         }

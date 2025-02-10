@@ -30,6 +30,7 @@ import javax.annotation.Nonnull;
 
 import com.teammoeg.chorda.util.struct.EnumDefaultedMap;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
@@ -38,7 +39,6 @@ import com.teammoeg.frostedheart.content.climate.data.DrinkTempData;
 import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;

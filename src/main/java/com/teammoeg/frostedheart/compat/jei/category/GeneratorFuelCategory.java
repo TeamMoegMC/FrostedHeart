@@ -24,7 +24,7 @@ import java.util.Arrays;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.util.client.Lang;
 
 import mezz.jei.api.constants.VanillaTypes;

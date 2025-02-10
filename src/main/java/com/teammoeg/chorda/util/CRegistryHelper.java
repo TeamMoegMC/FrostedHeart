@@ -25,6 +25,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.VillagerProfession;
@@ -35,6 +36,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.tags.ITag;
 
 import java.util.Collection;
 import java.util.stream.Stream;
@@ -125,5 +127,14 @@ public class CRegistryHelper {
 	}
 	public static Collection<EntityType<?>> getEntities() {
 		return ForgeRegistries.ENTITY_TYPES.getValues();
+	}
+	public static ITag<Block> getBlockTag(TagKey<Block> tag){
+		return ForgeRegistries.BLOCKS.tags().getTag(tag);
+	}
+	public static ITag<Fluid> getFluidTag(TagKey<Fluid> tag){
+		return ForgeRegistries.FLUIDS.tags().getTag(tag);
+	}
+	public static ITag<Item> getItemTag(TagKey<Item> tag){
+		return ForgeRegistries.ITEMS.tags().getTag(tag);
 	}
 }

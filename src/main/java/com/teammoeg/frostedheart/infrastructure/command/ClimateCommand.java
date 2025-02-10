@@ -24,8 +24,8 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.ClimateEvent;
-import com.teammoeg.frostedheart.content.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateEvent;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

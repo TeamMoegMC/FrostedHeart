@@ -27,8 +27,8 @@ import java.util.stream.Collectors;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.util.client.Lang;
 
 import mezz.jei.api.forge.ForgeTypes;

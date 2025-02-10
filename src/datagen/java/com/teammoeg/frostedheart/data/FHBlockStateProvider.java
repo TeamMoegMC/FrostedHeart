@@ -8,7 +8,7 @@ import java.util.function.UnaryOperator;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedheart.content.climate.block.WardrobeBlock;
+import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;

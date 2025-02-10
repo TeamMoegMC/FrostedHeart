@@ -27,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
 import net.minecraft.world.entity.EntityType;
@@ -46,9 +47,6 @@ import net.minecraft.world.level.Level;
 
 @Mixin(Sheep.class)
 public abstract class SheepMixin extends Animal implements IFeedStore {
-
-
-    private final static TagKey<Item> cow_feed = ItemTags.create(new ResourceLocation(FHMain.MODID, "cow_feed"));
 
     byte feeded = 0;
     protected SheepMixin(EntityType<? extends Animal> type, Level worldIn) {
@@ -74,7 +72,7 @@ public abstract class SheepMixin extends Animal implements IFeedStore {
     public void fh$getEntityInteractionResult(Player playerIn, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cbi) {
         ItemStack itemstack = playerIn.getItemInHand(hand);
 
-        if (!this.isBaby() && !itemstack.isEmpty() && itemstack.is(cow_feed)) {
+        if (!this.isBaby() && !itemstack.isEmpty() && isFood(itemstack)) {
             if (feeded < 2) {
                 feeded++;
                 if (!this.level().isClientSide)

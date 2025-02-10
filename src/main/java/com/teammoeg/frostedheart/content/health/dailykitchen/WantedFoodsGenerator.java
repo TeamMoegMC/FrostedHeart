@@ -26,6 +26,7 @@ import java.util.Set;
 
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.world.item.Item;
@@ -50,10 +51,9 @@ class WantedFoodsGenerator {
         maxGenerateAmount = Math.min(eatenFoodsAmount / 10, 3);
 
     }
-    static TagKey<Item> raw_food=ItemTags.create(FHMain.rl("raw_food"));
-    static TagKey<Item> bad_food=ItemTags.create(FHMain.rl("bad_food"));
+
     private static boolean isNotBadFood(Item food) {
-        return ForgeRegistries.ITEMS.getDelegate(food).map(t->t.is(raw_food)||t.is(bad_food)).orElse(false);
+        return ForgeRegistries.ITEMS.getDelegate(food).map(t->t.is(FHTags.Items.RAW_FOOD.tag)||t.is(FHTags.Items.BAD_FOOD.tag)).orElse(false);
     }
 
     public HashSet<Item> generate() {

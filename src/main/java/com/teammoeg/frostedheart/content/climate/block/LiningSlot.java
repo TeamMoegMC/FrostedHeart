@@ -18,7 +18,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
-class LiningSlot extends SlotItemHandler{
+public class LiningSlot extends SlotItemHandler{
 	   public static final ResourceLocation EMPTY_LINING_SLOT_HELMET = FHMain.rl("item/empty_lining_slot_head");
 	   public static final ResourceLocation EMPTY_LINING_SLOT_CHESTPLATE = FHMain.rl("item/empty_lining_slot_body");
 	   public static final ResourceLocation EMPTY_LINING_SLOT_LEGGINGS = FHMain.rl("item/empty_lining_slot_leg");

@@ -24,18 +24,15 @@ import com.teammoeg.chorda.block.CBlockInterfaces.IActiveState;
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 
 import blusunrize.immersiveengineering.common.fluids.ArrayFluidHandler;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.FluidTags;
-import net.minecraft.tags.TagKey;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
@@ -45,8 +42,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class OilBurnerTileEntity extends CBlockEntity implements IActiveState, CTickableBlockEntity {
-    TagKey<Fluid> burnable = FluidTags.create(new ResourceLocation("frostedheart", "flammable_fluid"));
-    FluidTank input = new FluidTank(10000, s -> s.getFluid().is(burnable));
+    FluidTank input = new FluidTank(10000, s -> s.getFluid().is(FHTags.Fluids.FLAMMABLE_FLUID.tag));
     int vals;
     private LazyOptional<IFluidHandler> holder = LazyOptional.empty();
 

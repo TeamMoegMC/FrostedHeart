@@ -205,7 +205,15 @@ public class FHRegistrateTags {
         // rewrite using prov method
         prov.tag(FHTags.Items.CHICKEN_FEED.tag)
                 .addTag(Tags.Items.SEEDS);
-
+        prov.tag(FHTags.Items.COW_FEED.tag)
+        	.add(Items.WHEAT);
+        prov.tag(FHTags.Items.PIG_FEED.tag)
+        	.add(Items.CARROT, Items.POTATO, Items.BEETROOT);
+        prov.tag(FHTags.Items.CAT_FEED.tag)
+        .add(Items.COD, Items.SALMON);
+        prov.tag(FHTags.Items.RABBIT_FEED.tag)
+        .add(Items.CARROT,Items.GOLDEN_CARROT,Blocks.DANDELION.asItem());
+        
         //used for town test
         prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_KEY_TO_TAG.get(ItemResourceType.STONE.generateKey(0)))
                 .add(Items.COBBLESTONE)

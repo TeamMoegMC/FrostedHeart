@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.Bo
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
 import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
@@ -60,7 +61,6 @@ import top.theillusivec4.curios.api.type.ISlotType;
 public class CoalHandStove extends FHBaseItem {
     public final static int max_fuel = 800;
 
-    TagKey<Item> ashitem=ItemTags.create(new ResourceLocation("frostedheart", "ash"));
     public static int getAshAmount(ItemStack is) {
         return is.getOrCreateTag().getInt("ash");
     }
@@ -134,7 +134,7 @@ public class CoalHandStove extends FHBaseItem {
     public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
         int ash = getAshAmount(stack);
         if (ash >= 800) {
-            Iterator<Item> item=ForgeRegistries.ITEMS.tags().getTag(ashitem).iterator();
+            Iterator<Item> item=ForgeRegistries.ITEMS.tags().getTag(FHTags.Items.ASH.tag).iterator();
             setAshAmount(stack, ash - 800);
             if (getFuelAmount(stack) < 2)
                 stack.getTag().putInt("CustomModelData", 0);

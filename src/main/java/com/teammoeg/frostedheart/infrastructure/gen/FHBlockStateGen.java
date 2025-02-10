@@ -23,7 +23,7 @@ import java.util.NoSuchElementException;
 
 import com.teammoeg.chorda.block.CBlockProperties;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.block.WardrobeBlock;
+import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.providers.DataGenContext;
 import com.tterrag.registrate.providers.RegistrateBlockstateProvider;

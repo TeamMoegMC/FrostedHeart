@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.bootstrap.reference;
 
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
 
 import com.teammoeg.frostedheart.util.client.Lang;
@@ -37,15 +38,17 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.registries.tags.ITag;
 
 import java.util.*;
 
 public class FHTags {
-
+	public static final TagKey<ConfiguredFeature<?,?>> BIG_TREE=TagKey.create(Registries.CONFIGURED_FEATURE, FHMain.rl("big_tree"));
 	public static <T> TagKey<T> optionalTag(IForgeRegistry<T> registry,
 											ResourceLocation id) {
 		return registry.tags()
@@ -110,7 +113,9 @@ public class FHTags {
 		WOODEN_MACHINES("machines/wooden"),
 		SOIL,
 		SNOW_MOVEMENT("movement_modifiers/snow"),
-		ICE_MOVEMENT("movement_modifiers/ice")
+		ICE_MOVEMENT("movement_modifiers/ice"),
+		STONE(NameSpace.FORGE),
+		ORES(NameSpace.FORGE)
 
 
 		;
@@ -164,7 +169,9 @@ public class FHTags {
 		public TagKey<Block> get() {
 			return tag;
 		}
-
+		public ITag<Block> getTagCollection(){
+			return CRegistryHelper.getBlockTag(tag);
+		}
 		private static void init() {}
 	}
 
@@ -183,8 +190,14 @@ public class FHTags {
 		THERMOS,
 		CHICKEN_FEED,
 		POWDERED_SNOW_WALKABLE,
-		GARBAGE
-
+		GARBAGE,
+		KNIFE,
+		BAD_FOOD,
+		ASH,
+		FORBIDDEN_IN_CRATES(NameSpace.IE),
+		COW_FEED,
+		PIG_FEED,
+		CAT_FEED, RABBIT_FEED
 		;
 
 		public final TagKey<Item> tag;
@@ -252,6 +265,12 @@ public class FHTags {
 		public boolean matches(ItemStack stack) {
 			return stack.is(tag);
 		}
+		/**
+		 * Convenience method to get all items in a tag
+		 * */
+		public ITag<Item> getTagCollection(){
+			return CRegistryHelper.getItemTag(tag);
+		}
 
 		private static void init() {}
 	}
@@ -305,7 +324,9 @@ public class FHTags {
 	}
 
 	public enum Fluids {
-		DRINK
+		DRINK,
+		HIDDEN_DRINK,
+		FLAMMABLE_FLUID
 		;
 
 		public final TagKey<Fluid> tag;
@@ -353,7 +374,9 @@ public class FHTags {
 		public TagKey<Fluid> get() {
 			return tag;
 		}
-
+		public ITag<Fluid> getTagCollection(){
+			return CRegistryHelper.getFluidTag(tag);
+		}
 		private static void init() {}
 	}
 

@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.utility.FHLeveledTool;
 import com.teammoeg.frostedheart.util.client.Lang;
@@ -45,11 +46,9 @@ import net.minecraftforge.common.util.FakePlayer;
 import se.mickelus.tetra.properties.IToolProvider;
 
 public class ProspectorPick extends FHLeveledTool {
-    public static TagKey<Block> tag = BlockTags.create(new ResourceLocation("forge:ores"));
-
     public static InteractionResult doProspect(Player player, Level world, BlockPos blockpos, ItemStack is, InteractionHand h) {
         if (player != null && (!(player instanceof FakePlayer))) {//fake players does not deserve XD
-            if (world.getBlockState(blockpos).is(tag)) {//early exit 'cause ore found
+            if (world.getBlockState(blockpos).is(FHTags.Blocks.ORES.tag)) {//early exit 'cause ore found
                 player.displayClientMessage(Lang.translateKey(world.getBlockState(blockpos).getBlock().getDescriptionId()).withStyle(ChatFormatting.GOLD), false);
                 return InteractionResult.SUCCESS;
             }
@@ -75,7 +74,7 @@ public class ProspectorPick extends FHLeveledTool {
                                 int BlockY = y + y2;
                                 int BlockZ = z + z2;
                                 ore = world.getBlockState(mutable.set(BlockX, BlockY, BlockZ));
-                                if (ore.is(tag)) {
+                                if (ore.is(FHTags.Blocks.ORES.tag)) {
                                     founded.merge(ore.getBlock().getDescriptionId(), 1, Integer::sum);
                                     rseed++;
                                 }

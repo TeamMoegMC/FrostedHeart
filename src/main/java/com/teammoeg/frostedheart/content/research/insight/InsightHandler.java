@@ -21,18 +21,18 @@ package com.teammoeg.frostedheart.content.research.insight;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
-
+/**
+ * For checking player satisfies certain insight triggers
+ * */
+@Mod.EventBusSubscriber
 public class InsightHandler {
-    // TODO: This now ticks every packet, change this to send only when needed.
 
-    /**
-     * Sync insight data to the client for display purpose.
-     */
+
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.player instanceof ServerPlayer) {
-            PacketDistributor.PacketTarget currentPlayer = PacketDistributor.PLAYER.with(
-                    () -> (ServerPlayer) event.player);
+ 
            
         }
     }

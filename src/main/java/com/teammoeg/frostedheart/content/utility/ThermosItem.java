@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.water.item.DurableDrinkContainerItem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.data.DrinkTempData;
@@ -57,8 +58,7 @@ import net.minecraftforge.registries.tags.ITag;
 public class ThermosItem extends DurableDrinkContainerItem implements ITempAdjustFood,ICreativeModeTabItem {
     final int unit;
     final boolean doAddItems;
-    static final TagKey<Fluid> availableFluid=FluidTags.create(new ResourceLocation(FHMain.MODID, "drink"));
-    static final TagKey<Fluid> hidden = FluidTags.create(new ResourceLocation(FHMain.MODID, "hidden_drink"));
+
     public ThermosItem(int capacity, int unit, boolean add) {
         super(new Properties().stacksTo(1).setNoRepair().durability(capacity).food(new FoodProperties.Builder().nutrition(1).saturationMod(1).build()), capacity);
         this.unit = unit;
@@ -75,13 +75,13 @@ public class ThermosItem extends DurableDrinkContainerItem implements ITempAdjus
     public void fillItemCategory(CreativeTabItemHelper helper) {
         if (helper.isType(FHTabs.itemGroup)) {
        
-            ITag<Fluid> tag = ForgeRegistries.FLUIDS.tags().getTag(availableFluid);
+            ITag<Fluid> tag = ForgeRegistries.FLUIDS.tags().getTag(FHTags.Fluids.DRINK.tag);
             
             helper.accept(new ItemStack(this));
             if (tag == null) return;
             if(doAddItems)
             for (Fluid fluid : tag) {
-                if (fluid.is(hidden)) continue;
+                if (fluid.is(FHTags.Fluids.HIDDEN_DRINK.tag)) continue;
                 ItemStack itemStack = new ItemStack(this);
                 itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(data -> data.fill(new FluidStack(fluid, data.getTankCapacity(0)), FluidAction.EXECUTE));
                 helper.accept(itemStack);

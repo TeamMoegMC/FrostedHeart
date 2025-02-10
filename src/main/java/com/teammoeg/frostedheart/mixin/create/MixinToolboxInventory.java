@@ -25,6 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.equipment.toolbox.ToolboxInventory;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -35,11 +36,10 @@ import net.minecraftforge.items.ItemStackHandler;
 
 @Mixin(ToolboxInventory.class)
 public class MixinToolboxInventory extends ItemStackHandler {
-    TagKey<Item> forbid = ItemTags.create(new ResourceLocation("immersiveengineering:forbidden_in_crates"));
 
     @Inject(at = @At("HEAD"), method = "isItemValid", cancellable = true, remap = false)
     public void FH$AvoidForbid(int slot, ItemStack stack, CallbackInfoReturnable<Boolean> cbi) {
-        if (stack.is(forbid))
+        if (stack.is(FHTags.Items.FORBIDDEN_IN_CRATES.tag))
             cbi.setReturnValue(false);
     }
 }

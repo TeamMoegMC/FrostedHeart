@@ -20,13 +20,13 @@
 package com.teammoeg.frostedheart.bootstrap.client;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorScreen;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorLogic;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorLogic;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorState;
 import com.teammoeg.frostedheart.content.climate.block.ClothesScreen;
-import com.teammoeg.frostedheart.content.climate.block.WardrobeScreen;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorScreen;
+import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorLogic;
+import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorState;
+import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorLogic;
+import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorState;
+import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeScreen;
 import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;

@@ -24,14 +24,15 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.ForecastHandler;
-import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.player.BodyPartData;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
@@ -402,7 +403,7 @@ public class ClimateCommonEvents {
 	public static void finishUsingItems(LivingEntityUseItemEvent.Finish event) {
 		FoodTemperatureHandler.checkFoodAfterEating(event);
 	}
-	private static final TagKey<ConfiguredFeature<?,?>> BIG_TREE=TagKey.create(Registries.CONFIGURED_FEATURE, FHMain.rl("big_tree"));
+	
 	@SubscribeEvent
 	public static void saplingGrow(SaplingGrowTreeEvent event) {
 		BlockPos pos = event.getPos();
@@ -413,7 +414,7 @@ public class ClimateCommonEvents {
 		if (WorldTemperature.isBlizzardHarming(worldIn, pos)) {
 			worldIn.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
 			event.setResult(Event.Result.DENY);
-		} else if(event.getFeature().is(BIG_TREE)) {
+		} else if(event.getFeature().is(FHTags.BIG_TREE)) {
 			if(!WorldTemperature.canBigTreeGenerate(worldIn, pos, rand)) {
 				event.setResult(Event.Result.DENY);
 			}

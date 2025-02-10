@@ -1,0 +1,77 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.frostedheart.content.climate.block.generator.t2;
+
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorState;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
+
+import blusunrize.immersiveengineering.api.multiblocks.blocks.util.StoredCapability;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.templates.FluidTank;
+
+public class T2GeneratorState extends GeneratorState {
+    public static final int TANK_CAPACITY = 200 * 1000;
+    public FluidTank tank = new FluidTank(TANK_CAPACITY,
+            f -> GeneratorSteamRecipe.findRecipe(f) != null);
+    public LazyOptional<IFluidHandler> tankCap = LazyOptional.of(() -> tank);
+    
+    public StoredCapability<HeatEndpoint> heatCap=new StoredCapability<>(ep);
+    HeatNetwork manager=new HeatNetwork();
+
+    int liquidtick = 0;
+    int noliquidtick = 0;
+    int tickUntilStopBoom = 20;
+    int notFullPowerTick = 0;
+    final int nextBoom = 200; //10s
+
+    public T2GeneratorState() {
+        super();
+    }
+
+    @Override
+    public void writeSaveNBT(CompoundTag nbt) {
+        super.writeSaveNBT(nbt);
+        nbt.putInt("liquidtick", liquidtick);
+        nbt.putInt("noliquidtick", noliquidtick);
+        nbt.putInt("tickUntilStopBoom", tickUntilStopBoom);
+        nbt.putInt("notFullPowerTick", notFullPowerTick);
+        nbt.put("tank", tank.writeToNBT(new CompoundTag()));
+        if(manager!=null)
+            nbt.put("manager", manager.serializeNBT());
+    }
+
+    @Override
+    public void readSaveNBT(CompoundTag nbt) {
+        super.readSaveNBT(nbt);
+        liquidtick = nbt.getInt("liquidtick");
+        noliquidtick = nbt.getInt("noliquidtick");
+        tickUntilStopBoom = nbt.getInt("tickUntilStopBoom");
+        notFullPowerTick = nbt.getInt("notFullPowerTick");
+        tank.readFromNBT(nbt.getCompound("tank"));
+        if(manager!=null)
+            manager.deserializeNBT(nbt.getCompound("manager"));
+    }
+
+
+}

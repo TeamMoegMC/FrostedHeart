@@ -20,15 +20,15 @@
 package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.teammoeg.chorda.block.CActiveMultiblockBlock;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorLogic;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorMultiblock;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorLogic;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorMultiblock;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorState;
-import com.teammoeg.frostedheart.content.climate.heatdevice.radiator.RadiatorLogic;
-import com.teammoeg.frostedheart.content.climate.heatdevice.radiator.RadiatorMultiblock;
-import com.teammoeg.frostedheart.content.climate.heatdevice.radiator.RadiatorState;
+import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorLogic;
+import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorMultiblock;
+import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorState;
+import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorLogic;
+import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorMultiblock;
+import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorState;
+import com.teammoeg.frostedheart.content.climate.block.radiator.RadiatorLogic;
+import com.teammoeg.frostedheart.content.climate.block.radiator.RadiatorMultiblock;
+import com.teammoeg.frostedheart.content.climate.block.radiator.RadiatorState;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.MultiblockRegistration;
