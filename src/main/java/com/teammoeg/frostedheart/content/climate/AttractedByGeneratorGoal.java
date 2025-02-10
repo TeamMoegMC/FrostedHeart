@@ -64,7 +64,11 @@ public class AttractedByGeneratorGoal extends Goal {
 		IHeatArea adjust=ChunkHeatData.getNearestAdjust(animal.level(), animal.blockPosition());
 		if(adjust!=null) {
 			BlockPos pos = adjust.getCenter();
-			this.animal.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), this.speedModifier);
+			if(pos.distSqr(animal.blockPosition())<=4) {
+				inAreaTicks=30;
+				this.animal.getNavigation().stop();
+			}else
+				this.animal.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), adjust.isEffective(animal.blockPosition())?this.speedModifier*0.5:this.speedModifier);
 			
 		}
 	}
