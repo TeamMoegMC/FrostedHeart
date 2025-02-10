@@ -244,7 +244,7 @@ public class GeneratorData implements SpecialData {
         boolean hasFuel = true;
         int lastOverdrive=overdriveLevel;
         overdriveLevel -= 5 * (teamData.getData(FHSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER) + 1);
-
+        boolean isWorking=false;
         	
         if (isOverdrive) {
             while (process <= 1 && hasFuel) {
@@ -258,7 +258,7 @@ public class GeneratorData implements SpecialData {
             }
             if (process > 1) {
                 process -= 2;
-                return true;
+                isWorking=true;
             }
 
 
@@ -270,7 +270,7 @@ public class GeneratorData implements SpecialData {
             }
             if (process > 0) {
                 process--;
-                return true;
+                isWorking=true;
             }
         }
         if(teamData instanceof TeamDataHolder team) {
@@ -282,7 +282,8 @@ public class GeneratorData implements SpecialData {
 	        }
 	        
         }
-        return false;
+
+        return isWorking;
     }
 
     public void onPosChange() {
