@@ -49,7 +49,7 @@ public class AnimalMixin_Feeding extends Mob {
     }
     @Inject(at=@At("TAIL"),method="registerGoals",remap=true,require=1)
     public void fh$addGeneratorGoal(CallbackInfo cbi) {
-    	   super.goalSelector.addGoal(5, new AttractedByGeneratorGoal(this,1.5D));
+    	   super.goalSelector.addGoal(5, new AttractedByGeneratorGoal(this,1.0D));
     }
     @Inject(at = @At("HEAD"), method = "readAdditionalSaveData")
     public void fh$readAdditional(CompoundTag compound, CallbackInfo cbi) {

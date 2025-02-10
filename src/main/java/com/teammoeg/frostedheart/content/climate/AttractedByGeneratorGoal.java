@@ -38,7 +38,7 @@ public class AttractedByGeneratorGoal extends Goal {
 	public boolean canContinueToUse() {
 		if (ChunkHeatData.hasActiveAdjust(animal.level(), animal.blockPosition())) {
 			inAreaTicks++;
-			if(inAreaTicks>60) {
+			if(inAreaTicks>30) {
 				inAreaTicks=0;
 				return false;
 			}
@@ -65,6 +65,7 @@ public class AttractedByGeneratorGoal extends Goal {
 		if(adjust!=null) {
 			BlockPos pos = adjust.getCenter();
 			this.animal.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), this.speedModifier);
+			
 		}
 	}
 

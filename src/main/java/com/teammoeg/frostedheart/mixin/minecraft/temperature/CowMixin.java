@@ -170,7 +170,7 @@ public abstract class CowMixin extends Animal implements IMilkable, IFeedStore {
         this.goalSelector.addGoal(2, new BreedGoal(this, 1.0D));
         this.goalSelector.addGoal(3, new TemptGoal(this, 1.25D, Ingredient.of(FHTags.Items.COW_FEED.tag), false));
         this.goalSelector.addGoal(4, new FollowParentGoal(this, 1.25D));
-        this.goalSelector.addGoal(5, new AttractedByGeneratorGoal(this,1.5D));
+        this.goalSelector.addGoal(5, new AttractedByGeneratorGoal(this,1.0D));
         this.goalSelector.addGoal(6, eatGrassGoal);
         
         this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0D));
