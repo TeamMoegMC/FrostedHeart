@@ -20,6 +20,9 @@
 package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+
+import javax.annotation.Nullable;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -27,9 +30,15 @@ import org.spongepowered.asm.mixin.Shadow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.HalfTransparentBlock;
 import net.minecraft.world.level.block.IceBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
@@ -37,8 +46,11 @@ import net.minecraft.world.level.block.state.BlockState;
  * <p>
  * */
 @Mixin(IceBlock.class)
-public abstract class IceBlockMixin_Melt {
-    /**
+public abstract class IceBlockMixin_Melt extends HalfTransparentBlock{
+    public IceBlockMixin_Melt(Properties pProperties) {
+		super(pProperties);
+	}
+	/**
      * @author khjxiaogu
      * @reason add generator effect on ice
      */
@@ -49,7 +61,28 @@ public abstract class IceBlockMixin_Melt {
         }
 
     }
+	/**
+	 * 
+	 * @reason remove water melt when it's cold
+	 * @author khjxiaogu
+	 */
+	@Overwrite
+	public void playerDestroy(Level pLevel, Player pPlayer, BlockPos pPos, BlockState pState, @Nullable BlockEntity pTe, ItemStack pStack) {
+		super.playerDestroy(pLevel, pPlayer, pPos, pState, pTe, pStack);
+		if (EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH, pStack) == 0) {
+			if (WorldTemperature.block(pLevel, pPos) > -2) {
+				if (pLevel.dimensionType().ultraWarm()) {
+					pLevel.removeBlock(pPos, false);
+					return;
+				}
+				BlockState blockstate = pLevel.getBlockState(pPos.below());
+				if (blockstate.blocksMotion() || blockstate.liquid()) {
+					pLevel.setBlockAndUpdate(pPos, IceBlock.meltsInto());
+				}
+			}
+		}
 
+	}
     @Shadow
     protected abstract void melt(BlockState state, Level world, BlockPos pos);
 }
