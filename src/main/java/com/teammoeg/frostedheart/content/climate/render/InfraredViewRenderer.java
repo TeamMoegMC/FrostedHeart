@@ -19,6 +19,12 @@
 
 package com.teammoeg.frostedheart.content.climate.render;
 
+import javax.annotation.Nullable;
+
+import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL30;
+
 import com.lowdragmc.lowdraglib.LDLib;
 import com.lowdragmc.lowdraglib.client.shader.management.ShaderManager;
 import com.lowdragmc.lowdraglib.client.shader.management.ShaderUBO;
@@ -26,11 +32,12 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.client.FHShaders;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHRequestInfraredViewDataSyncPacket;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.oculus.IrisRenderingPipelineAccess;
+
 import lombok.Getter;
 import lombok.Setter;
 import net.irisshaders.iris.Iris;
@@ -39,11 +46,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL30;
-
-import javax.annotation.Nullable;
 
 
 @OnlyIn(Dist.CLIENT)

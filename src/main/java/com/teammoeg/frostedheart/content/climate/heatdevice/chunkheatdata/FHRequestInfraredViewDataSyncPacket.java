@@ -19,17 +19,20 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelReader;
 import net.minecraftforge.network.NetworkEvent;
-
-import java.util.*;
-import java.util.function.Supplier;
 
 
 public class FHRequestInfraredViewDataSyncPacket implements CMessage {

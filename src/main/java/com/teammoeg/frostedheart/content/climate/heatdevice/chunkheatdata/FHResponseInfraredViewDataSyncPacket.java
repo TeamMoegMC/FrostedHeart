@@ -19,17 +19,17 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 import com.lowdragmc.lowdraglib.LDLib;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.network.NetworkEvent;
-
-import java.util.*;
-import java.util.function.Supplier;
 
 
 public class FHResponseInfraredViewDataSyncPacket implements CMessage {

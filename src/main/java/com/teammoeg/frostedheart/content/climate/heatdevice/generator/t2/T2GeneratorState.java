@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorState;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
 

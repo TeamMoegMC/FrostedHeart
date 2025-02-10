@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.io.CodecUtil;
 
 import lombok.Getter;
 import net.minecraft.core.BlockPos;

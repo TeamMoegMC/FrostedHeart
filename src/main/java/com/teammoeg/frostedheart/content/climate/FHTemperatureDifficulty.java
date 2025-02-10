@@ -20,9 +20,6 @@
 package com.teammoeg.frostedheart.content.climate;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
-import net.minecraft.server.level.ServerPlayer;
-
-import java.util.function.Function;
 
 public enum FHTemperatureDifficulty {
     easy(2, Icon.getIcon("frostedheart:item/flask_i/insulated_flask_i_pouch_green")),

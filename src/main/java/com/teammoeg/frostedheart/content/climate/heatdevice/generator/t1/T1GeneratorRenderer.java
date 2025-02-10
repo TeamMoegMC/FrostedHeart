@@ -24,7 +24,6 @@ import java.util.List;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelperMaster;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.registry.MultiblockBlockEntityMaster;
@@ -37,7 +36,6 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
 
 public class T1GeneratorRenderer implements BlockEntityRenderer<MultiblockBlockEntityMaster<T1GeneratorState>> {
     public static DynamicBlockModelReference FUEL;

@@ -30,22 +30,19 @@ import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.chorda.client.ui.AtlasUV;
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.ui.RotatableUV;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
-import com.teammoeg.chorda.util.IERecipeUtils;
+import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 
 import blusunrize.immersiveengineering.api.Lib;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelper;
-import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonState;
@@ -61,7 +58,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<T, R>> extends IEContainerScreen<GeneratorContainer<R, T>> {

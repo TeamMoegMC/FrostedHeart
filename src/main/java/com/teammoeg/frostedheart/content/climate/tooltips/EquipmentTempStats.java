@@ -19,16 +19,22 @@
 
 package com.teammoeg.frostedheart.content.climate.tooltips;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
+
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
-import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
-import com.teammoeg.frostedheart.util.client.FHTextIcon;
-import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.lang.LangBuilder;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
+import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
+import com.teammoeg.frostedheart.util.client.FHTextIcon;
+import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
+import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -38,11 +44,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class EquipmentTempStats implements TooltipModifier {
     protected final Item item;

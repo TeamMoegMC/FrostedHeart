@@ -20,17 +20,13 @@
 package com.teammoeg.frostedheart.content.climate.event;
 
 import com.teammoeg.frostedheart.*;
-import com.teammoeg.chorda.capability.CurioCapabilityProvider;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.chorda.util.struct.EnumDefaultedMap;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.climate.ArmorTempCurios;
 import com.teammoeg.frostedheart.content.climate.ForecastHandler;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
@@ -43,7 +39,6 @@ import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKe
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
-import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
@@ -52,25 +47,20 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_PlaceExtraSnow;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.DigDurabilityEnchantment;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LightLayer;
@@ -83,9 +73,10 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.ItemAttributeModifierEvent;
 import net.minecraftforge.event.TickEvent;
@@ -411,17 +402,23 @@ public class ClimateCommonEvents {
 	public static void finishUsingItems(LivingEntityUseItemEvent.Finish event) {
 		FoodTemperatureHandler.checkFoodAfterEating(event);
 	}
-
+	private static final TagKey<ConfiguredFeature<?,?>> BIG_TREE=TagKey.create(Registries.CONFIGURED_FEATURE, FHMain.rl("big_tree"));
 	@SubscribeEvent
 	public static void saplingGrow(SaplingGrowTreeEvent event) {
 		BlockPos pos = event.getPos();
 		LevelAccessor worldIn = event.getLevel();
 		RandomSource rand = event.getRandomSource();
 		BlockState sapling = event.getLevel().getBlockState(pos);
+		
 		if (WorldTemperature.isBlizzardHarming(worldIn, pos)) {
 			worldIn.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
 			event.setResult(Event.Result.DENY);
-		} else if (!WorldTemperature.canTreeGrow(worldIn, pos, rand))
+		} else if(event.getFeature().is(BIG_TREE)) {
+			if(!WorldTemperature.canBigTreeGenerate(worldIn, pos, rand)) {
+				System.out.println("bigtree");
+				event.setResult(Event.Result.DENY);
+			}
+		}else if (!WorldTemperature.canTreeGrow(worldIn, pos, rand))
 			event.setResult(Event.Result.DENY);
 	}
 

@@ -21,12 +21,11 @@ package com.teammoeg.frostedheart.content.climate;
 
 import java.util.Collection;
 
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 
 /**

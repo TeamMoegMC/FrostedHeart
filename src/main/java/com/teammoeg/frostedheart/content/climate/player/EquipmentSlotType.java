@@ -26,11 +26,11 @@ import java.util.UUID;
 
 import com.teammoeg.frostedheart.FHMain;
 
+import net.minecraft.Util;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.Util;
-import net.minecraft.util.Mth;
 
 /**
  * A way to markup inventory and equipment slot universally

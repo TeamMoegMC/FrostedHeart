@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.climate.render;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
 import net.minecraft.core.BlockPos;

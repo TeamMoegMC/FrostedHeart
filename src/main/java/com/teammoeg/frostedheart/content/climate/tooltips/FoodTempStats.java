@@ -19,18 +19,23 @@
 
 package com.teammoeg.frostedheart.content.climate.tooltips;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.lwjgl.glfw.GLFW;
+
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
-import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
-import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.util.client.FHTextIcon;
-import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.lang.LangBuilder;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
+import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.util.client.FHTextIcon;
+import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
+import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -39,10 +44,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import org.lwjgl.glfw.GLFW;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class FoodTempStats implements TooltipModifier {
     protected final Item item;

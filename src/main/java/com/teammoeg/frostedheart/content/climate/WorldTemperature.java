@@ -22,22 +22,26 @@ package com.teammoeg.frostedheart.content.climate;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.*;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.common.IPlantable;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import javax.annotation.Nonnull;
 
 /**
  * World Temperature API on the server side.
@@ -75,16 +79,7 @@ import javax.annotation.Nonnull;
  * </p>
  */
 public class WorldTemperature {
-    public static boolean canTreeGrow(LevelAccessor worldIn, BlockPos p, RandomSource rand) {
-        float temp = block(worldIn, p);
-        if (temp <= -6 || WorldClimate.isBlizzard(worldIn))
-            return false;
-        if (temp > VANILLA_PLANT_GROW_TEMPERATURE_MAX)
-            return false;
-        if (temp > 0)
-            return true;
-        return rand.nextInt(Math.max(1, Mth.ceil(-temp / 2))) == 0;
-    }
+
 
     public static boolean isBlizzardHarming(LevelAccessor iWorld, BlockPos p) {
         return WorldClimate.isBlizzard(iWorld) && openToAir(iWorld,p);
@@ -103,15 +98,27 @@ public class WorldTemperature {
         } else return world.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos).getY() <= pos.getY();
     }
 
-    public static boolean canBigTreeGenerate(Level w, BlockPos p, RandomSource r) {
-
-        return canTreeGenerate(w, p, r, 7);
+    public static boolean canBigTreeGenerate(LevelAccessor worldIn, BlockPos p, RandomSource r) {
+    	float temp = block(worldIn, p);
+        if (temp <= -6 || WorldClimate.isBlizzard(worldIn))
+            return false;
+        if (temp > VANILLA_PLANT_GROW_TEMPERATURE_MAX)
+            return false;
+        if (temp > 0)
+            return canTreeGenerate(worldIn, p, r, 7);
+        return canTreeGenerate(worldIn, p, r,7*Mth.ceil(Math.max(1, -temp / 2)));
 
     }
 
-    public static void canBigTreeGenerate(Level w, BlockPos p, RandomSource r, CallbackInfoReturnable<Boolean> cr) {
-        if (!canBigTreeGenerate(w, p, r))
-            cr.setReturnValue(false);
+    public static boolean canTreeGrow(LevelAccessor worldIn, BlockPos p, RandomSource rand) {
+        float temp = block(worldIn, p);
+        if (temp <= -6 || WorldClimate.isBlizzard(worldIn))
+            return false;
+        if (temp > VANILLA_PLANT_GROW_TEMPERATURE_MAX)
+            return false;
+        if (temp > 0)
+            return true;
+        return canTreeGenerate(worldIn, p, rand,Math.max(1, Mth.ceil(-temp / 2)));
     }
 
     public static boolean canGrassSurvive(LevelReader world, BlockPos pos) {
@@ -129,7 +136,7 @@ public class WorldTemperature {
         return !(temp > 300 + VANILLA_PLANT_GROW_TEMPERATURE_MAX);
     }
 
-    public static boolean canTreeGenerate(Level w, BlockPos p, RandomSource r, int chance) {
+    public static boolean canTreeGenerate(LevelAccessor w, BlockPos p, RandomSource r, int chance) {
         return r.nextInt(chance) == 0;
 
     }

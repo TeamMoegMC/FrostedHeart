@@ -21,11 +21,9 @@ package com.teammoeg.frostedheart.content.climate.event;
 
 import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
 import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorScreen;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 
 import net.minecraft.client.player.LocalPlayer;

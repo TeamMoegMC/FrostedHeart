@@ -289,7 +289,7 @@ public class ChunkHeatData {
             ChunkAccess chunk = world.getChunk(chunkPos.x, chunkPos.z);
             ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
             if (data != null)
-                data.adjusters.remove(adj);
+                data.adjusters.remove(adj.getCenter());
         }
     }
 

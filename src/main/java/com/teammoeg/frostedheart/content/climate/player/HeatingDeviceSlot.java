@@ -5,7 +5,6 @@ import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.Bo
 
 import net.minecraft.world.entity.EquipmentSlot;
 import top.theillusivec4.curios.api.type.ISlotType;
-import top.theillusivec4.curios.common.slottype.SlotType;
 
 public class HeatingDeviceSlot {
 	ISlotType curios;

@@ -19,32 +19,6 @@
 
 package com.teammoeg.frostedheart.content.climate.tooltips;
 
-import com.simibubi.create.foundation.item.TooltipHelper;
-import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
-import com.teammoeg.frostedheart.content.climate.player.BodyPartData;
-import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
-import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
-import com.teammoeg.frostedheart.util.client.FHTextIcon;
-import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.lang.LangBuilder;
-import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
-import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
-
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -52,6 +26,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
+
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
+
+import com.simibubi.create.foundation.item.TooltipModifier;
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.lang.LangBuilder;
+import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
+import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
+import com.teammoeg.frostedheart.content.climate.player.BodyPartData;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
+import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
+import com.teammoeg.frostedheart.util.client.Lang;
+
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 
 public class ArmorTempStats implements TooltipModifier {
 	protected final Item item;

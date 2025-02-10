@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
+
 import net.minecraft.core.BlockPos;
 
 /**

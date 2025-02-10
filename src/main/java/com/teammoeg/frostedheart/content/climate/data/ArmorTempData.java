@@ -24,18 +24,14 @@ import java.util.Optional;
 
 import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 import com.teammoeg.chorda.util.struct.EnumDefaultedMap;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ExtraCodecs;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;

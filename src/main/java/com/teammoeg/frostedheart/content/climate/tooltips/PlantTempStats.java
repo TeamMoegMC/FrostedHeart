@@ -19,15 +19,21 @@
 
 package com.teammoeg.frostedheart.content.climate.tooltips;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
+
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
-import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.lang.LangBuilder;
 import com.teammoeg.chorda.util.CTooltips;
+import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
+import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
 import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.ChatFormatting;
@@ -41,11 +47,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class PlantTempStats implements TooltipModifier {
     protected final Block block;

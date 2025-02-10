@@ -24,6 +24,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.eventbus.api.Cancelable;
 
 /**
  * Event that is fired before any apply bonemeal logic is performed.
@@ -35,7 +36,8 @@ import net.minecraftforge.event.level.BlockEvent;
  *
  * However, this event does not have access to player.
  */
-public class PerformBonemealEvent extends BlockEvent {
+@Cancelable
+public class PerformBonemealEvent extends BlockEvent{
     private final RandomSource random;
     public PerformBonemealEvent(LevelAccessor level, BlockPos pos, BlockState state, RandomSource random) {
         super(level, pos, state);

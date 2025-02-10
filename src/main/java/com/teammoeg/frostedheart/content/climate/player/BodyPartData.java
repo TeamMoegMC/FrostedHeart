@@ -19,13 +19,6 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.ItemStackHandler;
-
 import java.util.Collection;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
@@ -33,6 +26,11 @@ import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 
 import lombok.Getter;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.items.ItemStackHandler;
 
 public class BodyPartData {
 	public final ItemStackHandler clothes;

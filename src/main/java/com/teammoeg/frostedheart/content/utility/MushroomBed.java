@@ -23,17 +23,13 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.mojang.datafixers.util.Either;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
-import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
-import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
 import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceSlot;
@@ -48,7 +44,6 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.network.chat.Component;
@@ -56,7 +51,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import top.theillusivec4.curios.api.type.ISlotType;
 
 public class MushroomBed extends FHBaseItem {
     public static final TagKey<Item> ktag = ItemTags.create(new ResourceLocation(FHMain.MODID, "knife"));

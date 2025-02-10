@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1;
 
 import java.util.function.Function;
 
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorLogic;
-import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorLogic;
 
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
@@ -35,14 +35,13 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.util.ShapeType;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.AlloySmelterLogic;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.BlastFurnaceLogic;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.NonMirrorableWithActiveBlock;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
 
 public final class T1GeneratorLogic extends GeneratorLogic<T1GeneratorLogic, T1GeneratorState> {
     public T1GeneratorLogic() {

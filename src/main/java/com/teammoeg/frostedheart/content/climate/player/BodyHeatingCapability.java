@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
 /**

@@ -46,7 +46,6 @@
     "minecraft.temperature.AnimalEntityMixin",
     "minecraft.temperature.AnimalMixin_Feeding",
     "minecraft.temperature.BeeHiveMixin_TempCheck",
-    "minecraft.temperature.BigTreeMixin_TempCheck",
     "minecraft.temperature.BonemealableBlockMixin_CheckTemp",
     "minecraft.temperature.ChickenMixin",
     "minecraft.temperature.CowMixin",

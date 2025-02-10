@@ -20,35 +20,25 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import java.util.BitSet;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import com.teammoeg.chorda.client.ui.Point;
-import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.menu.CBaseMenu;
-import com.teammoeg.chorda.menu.CBaseMenu.Validator;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.chorda.util.IERecipeUtils;
 import com.teammoeg.chorda.util.struct.LazyTickWorker;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
-import com.teammoeg.frostedheart.util.client.Lang;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelper;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockLogic;
-import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import blusunrize.immersiveengineering.common.gui.IESlot.NewOutput;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.capability.templates.FluidTank;

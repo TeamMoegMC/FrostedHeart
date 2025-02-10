@@ -19,6 +19,17 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
+import java.util.Optional;
+import java.util.function.Function;
+
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorLogic;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
@@ -27,15 +38,6 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.util.MultiblockFac
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.RelativeBlockFace;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.ShapeType;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorLogic;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
-import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
-import com.teammoeg.frostedheart.util.client.FHClientUtils;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -49,9 +51,6 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
-
-import java.util.Optional;
-import java.util.function.Function;
 
 public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2GeneratorState> {
     private static final MultiblockFace REDSTONE_OFFSET = new MultiblockFace(1, 1, 0, RelativeBlockFace.FRONT);

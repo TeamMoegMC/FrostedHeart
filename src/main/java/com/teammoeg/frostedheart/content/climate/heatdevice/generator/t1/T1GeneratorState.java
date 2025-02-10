@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1;
 
-import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorState;
 
 import net.minecraft.core.BlockPos;

@@ -22,13 +22,12 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.chorda.network.NBTMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;

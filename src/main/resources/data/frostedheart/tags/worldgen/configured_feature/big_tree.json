@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:dark_oak",
+    "minecraft:mega_jungle_tree",
+    "minecraft:mega_spruce",
+    "minecraft:mega_pine"
+  ]
+}

@@ -24,12 +24,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.teammoeg.frostedheart.content.research.ResearchListeners;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.chorda.multiblock.MultiBlockAccess;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.chorda.util.IERecipeUtils;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.content.research.ResearchListeners;
 
 import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
