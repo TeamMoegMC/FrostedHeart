@@ -59,6 +59,7 @@ import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -111,6 +112,7 @@ public class FHRecipeProvider extends RecipeProvider {
 		catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+
 		//biome
 		ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/biome_temperature.xlsx"), m->{
 			ResourceLocation biome=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("biome")));
@@ -138,8 +140,8 @@ public class FHRecipeProvider extends RecipeProvider {
 					(float)ExcelHelper.getCellValueAsNumber(m.get("max_fertilize")),
 					(float)ExcelHelper.getCellValueAsNumber(m.get("max_grow")),
 					(float)ExcelHelper.getCellValueAsNumber(m.get("max_survive")),
-					ExcelHelper.getCellValueAsBoolean(m.get("survive_snow")),
-					ExcelHelper.getCellValueAsBoolean(m.get("survive_blizzard"))
+					!ExcelHelper.getCellValueAsBoolean(m.get("survive_snow")),
+					!ExcelHelper.getCellValueAsBoolean(m.get("survive_blizzard"))
 					).toFinished(FHMain.rl("plant_temperature/"+block.getPath())));
 		});
 		

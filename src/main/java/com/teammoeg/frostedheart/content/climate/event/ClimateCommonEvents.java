@@ -415,7 +415,6 @@ public class ClimateCommonEvents {
 			event.setResult(Event.Result.DENY);
 		} else if(event.getFeature().is(BIG_TREE)) {
 			if(!WorldTemperature.canBigTreeGenerate(worldIn, pos, rand)) {
-				System.out.println("bigtree");
 				event.setResult(Event.Result.DENY);
 			}
 		}else if (!WorldTemperature.canTreeGrow(worldIn, pos, rand))

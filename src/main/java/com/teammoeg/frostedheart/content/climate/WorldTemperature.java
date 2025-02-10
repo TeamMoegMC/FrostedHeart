@@ -27,6 +27,8 @@ import javax.annotation.Nonnull;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
+import com.teammoeg.frostedheart.content.climate.data.PlantTemperature;
+import com.teammoeg.frostedheart.content.climate.data.PlantTemperature.TemperatureType;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
@@ -41,6 +43,8 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SaplingBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 /**
@@ -100,25 +104,29 @@ public class WorldTemperature {
 
     public static boolean canBigTreeGenerate(LevelAccessor worldIn, BlockPos p, RandomSource r) {
     	float temp = block(worldIn, p);
-        if (temp <= -6 || WorldClimate.isBlizzard(worldIn))
+    	 BlockState bs=worldIn.getBlockState(p);
+    	 float minTemp=getMinGrowTemp(bs.getBlock());
+        if (temp < minTemp || WorldClimate.isBlizzard(worldIn))
             return false;
-        if (temp > VANILLA_PLANT_GROW_TEMPERATURE_MAX)
+        if (temp > getMaxGrowTemp(bs.getBlock()))
             return false;
         if (temp > 0)
             return canTreeGenerate(worldIn, p, r, 7);
-        return canTreeGenerate(worldIn, p, r,7*Mth.ceil(Math.max(1, -temp / 2)));
+        return canTreeGenerate(worldIn, p, r,7*Mth.ceil(Math.max(1, minTemp+6-temp / 2)));
 
     }
 
     public static boolean canTreeGrow(LevelAccessor worldIn, BlockPos p, RandomSource rand) {
         float temp = block(worldIn, p);
-        if (temp <= -6 || WorldClimate.isBlizzard(worldIn))
+        BlockState bs=worldIn.getBlockState(p);
+        float minTemp=getMinGrowTemp(bs.getBlock());
+        if (temp < minTemp || WorldClimate.isBlizzard(worldIn))
             return false;
-        if (temp > VANILLA_PLANT_GROW_TEMPERATURE_MAX)
+        if (temp > getMaxGrowTemp(bs.getBlock()))
             return false;
         if (temp > 0)
             return true;
-        return canTreeGenerate(worldIn, p, rand,Math.max(1, Mth.ceil(-temp / 2)));
+        return canTreeGenerate(worldIn, p, rand,Math.max(1, Mth.ceil(minTemp+6-temp / 2)));
     }
 
     public static boolean canGrassSurvive(LevelReader world, BlockPos pos) {
@@ -378,12 +386,17 @@ public class WorldTemperature {
     }
 
     @Nonnull
-    public static PlantTempData getPlantDataWithDefault(Block block) {
-        PlantTempData data = PlantTempData.getPlantData(block);
+    public static PlantTemperature getPlantDataWithDefault(Block block) {
+        
+    	PlantTempData data = PlantTempData.getPlantData(block);
+        
         // We can't really do any instanceof check here, since so many potential blocks
         // may be invoked with the crop event.
-        if (data == null)
-            return new PlantTempData(block);
+        if (data == null) {
+        	if(block instanceof SaplingBlock)
+        		return PlantTemperature.DEFAULT_SAPLINGS;
+            return PlantTemperature.DEFAULT_PLANTS;
+        }
         return data;
     }
 
@@ -419,25 +432,6 @@ public class WorldTemperature {
         return getPlantDataWithDefault(block).blizzardVulnerable();
     }
 
-    private static boolean fertilizable(float blockTemp,  Block block) {
-        return getMinFertilizeTemp(block) <= blockTemp && getMaxFertilizeTemp(block) >= blockTemp;
-    }
-
-    private static boolean growable(float blockTemp,  Block block) {
-        return getMinGrowTemp(block) <= blockTemp && getMaxGrowTemp(block) >= blockTemp;
-    }
-
-    private static boolean survivable(float blockTemp, Block block) {
-        return getMinSurviveTemp(block) <= blockTemp && getMaxSurviveTemp(block) >= blockTemp;
-    }
-
-    private static boolean snowDamageable(LevelAccessor level, BlockPos pos, Block block) {
-        return isSnowVulnerable(block) && WorldClimate.isSnowing(level) && openToAir(level, pos);
-    }
-
-    private static boolean blizzardDamageable(LevelAccessor level, BlockPos pos, Block block) {
-        return isBlizzardVulnerable(block) && WorldClimate.isBlizzard(level) && openToAir(level, pos);
-    }
 
 
     public enum PlantStatus {
@@ -464,23 +458,26 @@ public class WorldTemperature {
     }
 
     /**
-     * Use this when you need a comprehensive check on plant status.
+     * Use this when you need a comprehensive check on plant status
      */
     public static PlantStatus checkPlantStatus(LevelAccessor level, BlockPos pos, Block block) {
         float blockTemp = block(level, pos);
-        if (blizzardDamageable(level, pos, block)) {
-            return PlantStatus.WILL_DIE;
+        PlantTemperature data=getPlantDataWithDefault(block);
+        if(openToAir(level,pos)) {
+	        if (WorldClimate.isBlizzard(level)&&data.blizzardVulnerable()) {
+	            return PlantStatus.WILL_DIE;
+	        }
+	        if (WorldClimate.isSnowing(level)&&data.snowVulnerable()) {
+	            return PlantStatus.WILL_DIE;
+	        }
         }
-        if (snowDamageable(level, pos, block)) {
-            return PlantStatus.WILL_DIE;
-        }
-        if (fertilizable(blockTemp, block)) {
+        if (data.isValidTemperature(TemperatureType.BONEMEAL, blockTemp)) {
             return PlantStatus.CAN_FERTILIZE;
         }
-        if (growable(blockTemp, block)) {
+        if (data.isValidTemperature(TemperatureType.GROW, blockTemp)) {
             return PlantStatus.CAN_GROW;
         }
-        if (survivable(blockTemp, block)) {
+        if (data.isValidTemperature(TemperatureType.SURVIVE, blockTemp)) {
             return PlantStatus.CAN_SURVIVE;
         }
         return PlantStatus.WILL_DIE;

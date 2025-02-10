@@ -269,22 +269,22 @@ dependencies {
 
     // Tetra
     compileOnly fg.deobf("curse.maven:tetra-289712:5957838")
-    noDatagenRuntimeOnly fg.deobf("curse.maven:tetra-289712:5957838")
+//    noDatagenRuntimeOnly fg.deobf("curse.maven:tetra-289712:5957838")
 //
     compileOnly fg.deobf("curse.maven:mutil-351914:4824501")
-	noDatagenRuntimeOnly fg.deobf("curse.maven:mutil-351914:4824501")
+//	noDatagenRuntimeOnly fg.deobf("curse.maven:mutil-351914:4824501")
     // Caupona
     compileOnly fg.deobf("curse.maven:caupona-656147:5116975")
     datagenImplementation fg.deobf("curse.maven:caupona-656147:5116975")
 
     // LDLib
-    implementation fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
+    compileOnly fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
 
     // oculus
-    implementation fg.deobf("maven.modrinth:oculus:${oculus_version}")
+    compileOnly fg.deobf("maven.modrinth:oculus:${oculus_version}")
 
     // embeddium
-    implementation fg.deobf("org.embeddedt:embeddium-${minecraft_version}:${embeddium_version}")
+    compileOnly fg.deobf("org.embeddedt:embeddium-${minecraft_version}:${embeddium_version}")
 
     // Comforts
 //    implementation fg.deobf("curse.maven:comforts-276951:5503516")

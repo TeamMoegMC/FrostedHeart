@@ -31,6 +31,7 @@ import com.teammoeg.chorda.lang.LangBuilder;
 import com.teammoeg.chorda.util.CTooltips;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.data.PlantTemperature;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
 import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
@@ -113,16 +114,16 @@ public class PlantTempStats implements TooltipModifier {
 
     public static List<Component> getStats(Block block, @Nullable ItemStack stack, @Nullable Player player) {
         List<Component> list = new ArrayList<>();
-        PlantTempData data = WorldTemperature.getPlantDataWithDefault(block);
+        PlantTemperature data = WorldTemperature.getPlantDataWithDefault(block);
         boolean bonemealable = block instanceof BonemealableBlock;
-
-        Lang.translate("tooltip", "temp.plant.survive").style(ChatFormatting.GRAY).addTo(list);
-        getTempProgressBar(data.minSurvive(), data.maxSurvive()).addTo(list);
-
+        if(data.shouldShowSurvive()) {
+        	Lang.translate("tooltip", "temp.plant.survive").style(ChatFormatting.GRAY).addTo(list);
+        	getTempProgressBar(data.minSurvive(), data.maxSurvive()).addTo(list);
+        }
         Lang.translate("tooltip", "temp.plant.grow").style(ChatFormatting.GRAY).addTo(list);
         getTempProgressBar(data.minGrow(), data.maxGrow()).addTo(list);
 
-        if (bonemealable) {
+        if (bonemealable&&data.shouldShowFertilize()) {
             Lang.translate("tooltip", "temp.plant.fertilize").style(ChatFormatting.GRAY).addTo(list);
             getTempProgressBar(data.minFertilize(), data.maxFertilize()).addTo(list);
         }
