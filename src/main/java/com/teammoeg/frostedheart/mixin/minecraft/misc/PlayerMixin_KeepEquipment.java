@@ -31,24 +31,53 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.FakePlayer;
+
 /**
  * Keep equipments for players
- * */
+ */
 @Mixin(Player.class)
 public abstract class PlayerMixin_KeepEquipment extends LivingEntity {
 
-    protected PlayerMixin_KeepEquipment(EntityType<? extends LivingEntity> type, Level worldIn) {
-        super(type, worldIn);
-    }
+	protected PlayerMixin_KeepEquipment(EntityType<? extends LivingEntity> type, Level worldIn) {
+		super(type, worldIn);
+	}
 
-    @Inject(at = @At("HEAD"), method = "dropEquipment")
-    public void fh$dropInventory(CallbackInfo cbi) {
-        super.dropEquipment();
-        if (((Object) this) instanceof FakePlayer)
-            return;
-        DeathInventoryData dit = DeathInventoryData.get((Player) ((Object) this));
-        dit.startClone();
-    }
+	@Inject(at = @At("HEAD"), method = "dropEquipment")
+	public void fh$dropInventory(CallbackInfo cbi) {
+		super.dropEquipment();
+		if (((Object) this) instanceof FakePlayer)
+			return;
+		DeathInventoryData dit = DeathInventoryData.get((Player) ((Object) this));
+		dit.startClone();
+	}
 
+	/**
+	 * Disable powder snow display
+	 */
+	@Override
+	public float getPercentFrozen() {
+		int i = this.getTicksRequiredToFreeze();
+		return (float) Math.min(this.getTicksFrozen(), i) / (float) i;
+	}
+
+	/**
+	 * Disable powder snow effect
+	 */
+	@Override
+	public int getTicksFrozen() {
+		return 0;
+	}
+
+	@Override
+	public boolean isFullyFrozen() {
+		return false;
+	}
+
+	/**
+	 * Disable powder snow effect
+	 */
+	@Override
+	protected void tryAddFrost() {
+	}
 
 }

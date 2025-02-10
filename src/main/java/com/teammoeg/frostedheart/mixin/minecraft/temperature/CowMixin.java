@@ -30,6 +30,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.content.climate.AttractedByGeneratorGoal;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 
 import net.minecraft.world.entity.EntityType;
@@ -167,12 +168,16 @@ public abstract class CowMixin extends Animal implements IMilkable, IFeedStore {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new PanicGoal(this, 2.0D));
         this.goalSelector.addGoal(2, new BreedGoal(this, 1.0D));
-        this.goalSelector.addGoal(3, new TemptGoal(this, 1.25D, Ingredient.of(Items.WHEAT), false));
+        this.goalSelector.addGoal(3, new TemptGoal(this, 1.25D, Ingredient.of(FHTags.Items.COW_FEED.tag), false));
         this.goalSelector.addGoal(4, new FollowParentGoal(this, 1.25D));
-        this.goalSelector.addGoal(5, eatGrassGoal);
-        this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 1.0D));
-        this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));
-        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(5, new AttractedByGeneratorGoal(this,1.5D));
+        this.goalSelector.addGoal(6, eatGrassGoal);
+        
+        this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0D));
+        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 6.0F));
+        this.goalSelector.addGoal(9, new RandomLookAroundGoal(this));
+        
+
     }
 
     @Override

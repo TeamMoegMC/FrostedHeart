@@ -26,11 +26,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
+import com.teammoeg.frostedheart.content.climate.AttractedByGeneratorGoal;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.animal.Rabbit;
@@ -45,7 +47,10 @@ public class AnimalMixin_Feeding extends Mob {
     protected AnimalMixin_Feeding(EntityType<? extends Mob> type, Level worldIn) {
         super(type, worldIn);
     }
-
+    @Inject(at=@At("TAIL"),method="registerGoals",remap=true,require=1)
+    public void fh$addGeneratorGoal(CallbackInfo cbi) {
+    	   super.goalSelector.addGoal(5, new AttractedByGeneratorGoal(this,1.5D));
+    }
     @Inject(at = @At("HEAD"), method = "readAdditionalSaveData")
     public void fh$readAdditional(CompoundTag compound, CallbackInfo cbi) {
         hxteTimer = compound.getShort("hxthermia");

@@ -80,7 +80,7 @@ public class WarehouseBlock extends AbstractTownWorkerBlock implements CEntityBl
         WarehouseBlockEntity warehouseBlockEntity = (WarehouseBlockEntity) Utils.getExistingTileEntity(world, pos);
         if (warehouseBlockEntity != null) {
             if (entity instanceof ServerPlayer) {
-                if (ChunkHeatData.hasAdjust(world, pos)) {
+                if (ChunkHeatData.hasActiveAdjust(world, pos)) {
                     UUID teamFHID = CTeamDataManager.get((ServerPlayer)entity).getId();
                     warehouseBlockEntity.setTeamID(teamFHID);
                 }

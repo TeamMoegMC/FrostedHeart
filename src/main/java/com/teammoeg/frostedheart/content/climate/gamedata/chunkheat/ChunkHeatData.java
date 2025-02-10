@@ -237,18 +237,67 @@ public class ChunkHeatData {
      * This method directly get temperature adjusts at any positions.
      */
     public static Collection<IHeatArea> getAdjust(LevelReader world, BlockPos pos) {
-        ArrayList<IHeatArea> al = new ArrayList<>(get(world, new ChunkPos(pos)).map(ChunkHeatData::getAdjusters).orElseGet(Arrays::asList));
-        al.removeIf(adj -> !adj.isEffective(pos));
+        ArrayList<IHeatArea> al = new ArrayList<>();
+        Optional<ChunkHeatData> cap=get(world, new ChunkPos(pos));
+        if(cap.isPresent()) {
+        	for(IHeatArea i:cap.get().getAdjusters()) {
+        		if(i.isEffective(pos))
+        			al.add(i);
+        	}
+        }
         return al;
     }
-
-    /**
-     * If there is any adjust at the position.
-     */
-    public static boolean hasAdjust(LevelReader world, BlockPos pos) {
-        return !getAdjust(world, pos).isEmpty();
+    public static IHeatArea getHotMostAdjust(LevelReader world, BlockPos pos) {
+    	IHeatArea most=null;
+    	float mostValue=-999;
+        Optional<ChunkHeatData> cap=get(world, new ChunkPos(pos));
+        if(cap.isPresent()) {
+        	for(IHeatArea i:cap.get().getAdjusters()) {
+        		if(i.isEffective(pos)){
+        			float curValue=i.getValueAt(pos);
+        			if(curValue>mostValue) {
+        				most=i;
+        				mostValue=curValue;
+        			}
+        		}
+        	}
+        }
+        return most;
     }
-
+    public static IHeatArea getNearestAdjust(LevelReader world, BlockPos pos) {
+    	IHeatArea most=null;
+    	double mostValue=999;
+        Optional<ChunkHeatData> cap=get(world, new ChunkPos(pos));
+        if(cap.isPresent()) {
+        	for(IHeatArea i:cap.get().getAdjusters()) {
+        		if(i.isEffective(pos)){
+        			double curValue=pos.distSqr(i.getCenter());
+        			if(curValue<mostValue) {
+        				most=i;
+        				mostValue=curValue;
+        			}
+        		}
+        	}
+        }
+        return most;
+    }
+    public static boolean hasActiveAdjust(LevelReader world, BlockPos pos) {
+    	Optional<ChunkHeatData> cap=get(world, new ChunkPos(pos));
+        if(cap.isPresent()) {
+        	for(IHeatArea i:cap.get().getAdjusters()) {
+        		if(i.isEffective(pos))
+        			return true;
+        	}
+        }
+        return false;
+    }
+    public static boolean hasAdjust(LevelReader world, BlockPos pos) {
+    	Optional<ChunkHeatData> cap=get(world, new ChunkPos(pos));
+        if(cap.isPresent()) {
+        	return !cap.get().getAdjusters().isEmpty();
+        }
+        return false;
+    }
     /**
      * Helper method, since lazy optionals and instanceof checks together are ugly
      */
