@@ -145,9 +145,9 @@ public class FHConfig {
                     .defineInRange("autoModeInterval", 40, 0, 500);
             textSpeed = builder.comment("Base text appear speed, actual speed may change by scenario if necessary, speed 1 is 0.5 character per tick.")
                     .defineInRange("textSpeed", 1d, 0.000001, 100000);
-            scenarioRenderQuality = builder.comment("Scenario 2d content rendering quality, internal resolution=2^(config value)*1024, 2d contents are rendered on cpu, higher quality may cause lag")
-                    .defineInRange("scenarioRenderQuality", 1, 0, 16);
-            scenarioRenderThread = builder.comment("Scenario rendering thread")
+            scenarioRenderQuality = builder.comment("Scenario 2d content rendering quality, internal resolution=2^(config value)*1024, 2d contents are rendered on cpu, higher quality may cause slower rendering")
+                    .defineInRange("scenarioRenderQuality", 2, 0, 16);
+            scenarioRenderThread = builder.comment("Scenario rendering thread, Scenario screen are pre-rendered in seperate pool to prevent lag")
                     .defineInRange("scenarioRenderThread", 2, 1, 16);
             infraredViewUBOOffset = builder.comment("The binding offset of the UBO for the infrared view shader.")
                     .comment("Partial shaders and mods may occupy the position as well.")
