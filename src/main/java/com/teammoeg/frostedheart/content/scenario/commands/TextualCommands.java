@@ -91,5 +91,10 @@ public class TextualCommands {
 		runner.thread().stop();
 		runner.thread().scene().sendCurrent(runner.context(),runner.thread(), RunStatus.STOPPED,false);
 	}
-
+	public void wr(ScenarioCommandContext runner) {
+		runner.thread().setStatus((RunStatus.WAITRENDER));
+	}
+	public void wtr(ScenarioCommandContext runner) {
+		runner.thread().setStatus((RunStatus.WAITTRANS));
+	}
 }

@@ -50,6 +50,7 @@ import com.teammoeg.frostedheart.content.research.network.FHResearchSyncEndPacke
 import com.teammoeg.frostedheart.content.research.network.FHResearchSyncPacket;
 import com.teammoeg.frostedheart.content.research.network.FHS2CClueProgressSyncPacket;
 import com.teammoeg.frostedheart.content.scenario.network.C2SLinkClickedPacket;
+import com.teammoeg.frostedheart.content.scenario.network.C2SRenderingStatusMessage;
 import com.teammoeg.frostedheart.content.scenario.network.C2SScenarioCookies;
 import com.teammoeg.frostedheart.content.scenario.network.C2SScenarioResponsePacket;
 import com.teammoeg.frostedheart.content.scenario.network.C2SClientReadyPacket;
@@ -187,6 +188,7 @@ public class FHNetwork {
         registerMessage("scenario_set_cookie", S2CSetCookiesMessage.class);
         registerMessage("scenario_get_cookie", S2CRequestCookieMessage.class);
         registerMessage("scenario_send_cookie", C2SScenarioCookies.class);
+        registerMessage("scenario_render_status",C2SRenderingStatusMessage.class);
 
         // Heat Messages
         registerMessage("heat_endpoint", EndPointDataPacket.class);

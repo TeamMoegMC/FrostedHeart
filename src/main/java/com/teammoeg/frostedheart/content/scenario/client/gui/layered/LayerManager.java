@@ -63,6 +63,9 @@ public class LayerManager extends GLLayerContent {
 	volatile LayerContext nextlayer;
 	volatile LayerContext current;
 	volatile TransitionInfo trans;
+	public boolean renderComplete;
+	public Runnable transCompleteRunnable;
+	public Runnable renderCompleteRunnable;
 	static ExecutorService renderThread=Executors.newFixedThreadPool(FHConfig.CLIENT.scenarioRenderThread.get(),r->{
 		Thread th=new Thread(r);
 		th.setDaemon(true);
@@ -91,6 +94,15 @@ public class LayerManager extends GLLayerContent {
 
 	@Override
 	public void tick() {
+		if(renderComplete&&renderCompleteRunnable!=null) {
+			renderCompleteRunnable.run();
+			renderCompleteRunnable=null;
+			if(trans==null)
+				if(transCompleteRunnable!=null) {
+					transCompleteRunnable.run();
+					transCompleteRunnable=null;
+				}
+		}
 		if(trans!=null&&trans.maxTransTicks>0) {
 			trans.transTicks++;
 
@@ -101,6 +113,10 @@ public class LayerManager extends GLLayerContent {
 				nextlayer=null;
 				if(ol!=null)
 				ol.close();
+				if(transCompleteRunnable!=null) {
+					transCompleteRunnable.run();
+					transCompleteRunnable=null;
+				}
 				
 			}
 		}
@@ -143,6 +159,9 @@ public class LayerManager extends GLLayerContent {
 	boolean prerenderRequested;
 	public void commitChanges(TransitionFunction t, int ticks) {
 		//rrq=new RerenderRequest(t,ticks);
+		renderComplete=false;
+		transCompleteRunnable=null;
+		renderCompleteRunnable=null;
 		renderThread.submit(()->renderPrerendered(t,ticks));
 		
 	}
@@ -169,6 +188,7 @@ public class LayerManager extends GLLayerContent {
 			if(otex!=null)
 				otex.close();
 		}
+		renderComplete=true;
 	}
 
 	@Override
@@ -185,7 +205,7 @@ public class LayerManager extends GLLayerContent {
 		if (trans != null) {
 			RenderParams prev = params.copyWithCurrent(this);
 			RenderParams next = params.copyWithCurrent(this);
-			float val = (trans.transTicks) / trans.maxTransTicks;
+			float val = (trans.transTicks)*1f / trans.maxTransTicks;
 			// System.out.println(val);
 			trans.trans.compute(prev, next, val);
 

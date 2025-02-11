@@ -36,8 +36,8 @@ public class ServerScene extends Scene {
 	}
 
 	@Override
-	protected void sendScene(ScenarioContext ctx,ScenarioThread thread,String text,RunStatus status,boolean wrap, boolean reset,boolean waitClick) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> ((ServerPlayer)ctx.player())), new S2CSenarioScenePacket(thread.getRunId(),text, wrap, isNowait, reset,status,waitClick));
+	protected void sendScene(ScenarioContext ctx,ScenarioThread thread,String text,RunStatus status,boolean wrap, boolean reset,boolean noDelay) {
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> ((ServerPlayer)ctx.player())), new S2CSenarioScenePacket(thread.getRunId(),text, wrap, isNowait, reset,status,noDelay));
 	}
 	@Override
 	public void sendTitles(ScenarioContext ctx,ScenarioThread thread,String title,String subtitle) {

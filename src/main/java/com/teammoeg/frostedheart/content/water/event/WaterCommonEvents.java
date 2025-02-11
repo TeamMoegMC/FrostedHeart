@@ -93,8 +93,8 @@ public class WaterCommonEvents {
             if (WaterLevelUtil.canPlayerAddWaterExhaustionLevel(player)) {
                 WaterLevelCapability.getCapability(player).ifPresent(data -> {
                     if (entity.isSprinting()) {
-                        data.addExhaustion(player, 0.24f);
-                    } else data.addExhaustion(player, 0.14f);
+                        data.addExhaustion(player, 0.12f);
+                    } else data.addExhaustion(player, 0.07f);
                 });
             }
         }
@@ -150,7 +150,7 @@ public class WaterCommonEvents {
             if (tick % 2 == 0) {
                 player.getDeltaMovement();
                 if (player.onGround() || player.isInWater()) {
-                    double x = player.getDeltaMovement().length()*2;
+                    double x = player.getDeltaMovement().length();
                     if (x < 5) {
                         WaterLevelCapability.getCapability(player).ifPresent(dataW -> {
                             if (player.isSprinting()) {
@@ -169,7 +169,7 @@ public class WaterCommonEvents {
                         data.restoreWater(player, 1);
                     });
                 }
-
+/*
                 Biome biome = level.getBiome(BlockPos.containing(player.getPosition(0f).x,player.getPosition(0f).y,player.getPosition(0f).z)).value();
                 if (level.getLightEmission(BlockPos.containing(player.getPosition(0f).x,player.getPosition(0f).y,player.getPosition(0f).z)) == 15 && level.getDayTime() < 11000 && level.getDayTime() > 450 && !level.isRainingAt(BlockPos.containing(player.getPosition(0f).x,player.getPosition(0f).y,player.getPosition(0f).z))) {
                     if (biome.getBaseTemperature() > 0.3) {
@@ -182,7 +182,7 @@ public class WaterCommonEvents {
                             data.addExhaustion(player, 0.0055f);
                         });
                     }
-                }
+                }*/
                 //}
                 //Thirty State
                 MobEffectInstance effectInstance = player.getEffect(FHMobEffects.THIRST.get());

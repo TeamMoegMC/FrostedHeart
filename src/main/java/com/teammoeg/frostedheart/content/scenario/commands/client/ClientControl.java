@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.FHScenarioClient;
@@ -37,6 +38,7 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.Grap
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsLineContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsRectContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsTextContent;
+import com.teammoeg.frostedheart.content.scenario.network.C2SRenderingStatusMessage;
 import com.teammoeg.frostedheart.util.client.Lang;
 
 
@@ -221,7 +223,7 @@ public class ClientControl implements IClientControlCommand {
 		ClientScene.INSTANCE.layers.add(lm);
 	}
 	@Override
-	public void showLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("trans")String transition,@Param("t")int time,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h) {
+	public void showLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("trans")String transition,@Param("t")int time,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("nowait")boolean nowait) {
 		if(ClientScene.INSTANCE.dialog==null)
 			return;
 		LayerManager lm=ClientScene.INSTANCE.layers.pollLast();
@@ -235,7 +237,11 @@ public class ClientControl implements IClientControlCommand {
 		lm.setY((y));
 		lm.setWidth((w));
 		lm.setHeight((h));
+
+		
 		lm.commitChanges(transition!=null?Transition.valueOf(transition.toLowerCase()):null,time);
+		lm.renderCompleteRunnable=()->FHNetwork.sendToServer(new C2SRenderingStatusMessage(ClientScene.INSTANCE.curRunId,false));
+		lm.transCompleteRunnable=()->FHNetwork.sendToServer(new C2SRenderingStatusMessage(ClientScene.INSTANCE.curRunId,true));
 		if(ClientScene.INSTANCE.layers.isEmpty()) {
 			ClientScene.INSTANCE.dialog.setPrimary(lm);
 		}else {

@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "texture0": "frostedheart:block/heat_radiator",
+    "particle": "frostedheart:block/heat_radiator"
+  },
+  "loader": "forge:obj",
+  "model": "frostedheart:models/block/heat_radiator.obj",
+  "automatic_culling": false,
+  "flip_v": true,
+  "render_type": "cutout"
+}

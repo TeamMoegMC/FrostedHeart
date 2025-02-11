@@ -78,6 +78,7 @@ public abstract class Scene {
 	}
 	public void notifyClientResponse(ScenarioContext ctx,ScenarioThread thread,int clientStatus) {
 		if(clearAfterClick) {
+			clearAfterClick=false;
 			this.clear(ctx,thread,RunStatus.RUNNING);
 		}
 	}

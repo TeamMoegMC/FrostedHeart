@@ -46,7 +46,6 @@ public interface IClientControlCommand {
 
 
 
-	void showLayer(IClientScene runner, String name, String transition, int time, float x, float y, Float w, Float h);
 
 	void fullScreenDialog(IClientScene runner, Integer show, Float x, Float y, Float w, Integer m);
 
@@ -70,6 +69,10 @@ public interface IClientControlCommand {
 
 
 	void textElement(IClientScene runner, String name, String text, float x, float y, float w, float h, int z, Float opacity, int shadow, int resize);
+
+	void showLayer(IClientScene runner, String name, String transition, int time, float x, float y, Float w, Float h,
+			boolean cached);
+
 
 
 

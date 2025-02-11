@@ -35,7 +35,7 @@ public class S2CSenarioScenePacket implements CMessage {
     private final boolean isNowait;
     private final boolean resetScene;
     private final RunStatus status;
-    private final boolean isWaitClick;
+    private final boolean noDelay;
     public S2CSenarioScenePacket(FriendlyByteBuf buffer) {
     	curTextId=buffer.readVarInt();
         text = buffer.readUtf(1024 * 300);
@@ -43,12 +43,12 @@ public class S2CSenarioScenePacket implements CMessage {
         isNowait = buffer.readBoolean();
         resetScene=buffer.readBoolean();
         status=RunStatus.values()[buffer.readByte()];
-        isWaitClick=buffer.readBoolean();
+        noDelay=buffer.readBoolean();
     }
 
 
 
-    public S2CSenarioScenePacket(int curTextId,String text, boolean isReline, boolean isNowait, boolean resetScene,RunStatus status,boolean isWC) {
+    public S2CSenarioScenePacket(int curTextId,String text, boolean isReline, boolean isNowait, boolean resetScene,RunStatus status,boolean noDelay) {
 		super();
 		this.curTextId=curTextId;
 		this.text = text;
@@ -56,7 +56,7 @@ public class S2CSenarioScenePacket implements CMessage {
 		this.isNowait = isNowait;
 		this.resetScene = resetScene;
 		this.status=status;
-		isWaitClick=isWC;
+		this.noDelay=noDelay;
 	}
 
 
@@ -68,7 +68,7 @@ public class S2CSenarioScenePacket implements CMessage {
         buffer.writeBoolean(isNowait);
         buffer.writeBoolean(resetScene);
         buffer.writeByte(status.ordinal());
-        buffer.writeBoolean(isWaitClick);
+        buffer.writeBoolean(noDelay);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
@@ -76,7 +76,7 @@ public class S2CSenarioScenePacket implements CMessage {
         	if(ClientScene.INSTANCE!=null) {
         		//System.out.println("scene sent");
         		ClientScene.INSTANCE.process(curTextId,text, isReline, isNowait,resetScene,status);
-        		ClientScene.INSTANCE.sendImmediately=!isWaitClick;
+        		ClientScene.INSTANCE.sendImmediately=noDelay;
         	}
         });
         

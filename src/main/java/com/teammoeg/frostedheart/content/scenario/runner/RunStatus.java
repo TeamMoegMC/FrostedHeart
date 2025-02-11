@@ -27,7 +27,10 @@ public enum RunStatus {
 	WAITNETWORK,//waiting for network
 	WAITTRIGGER(true,false,true),//waiting for async trigger
 	PAUSED(true,false,true),//Paused from use action
-	STOPPED(true,false,true);//stopped
+	STOPPED(true,false,true),//stopped
+	WAITTRANS,//waiting for transition
+	WAITRENDER//waiting for render
+	;
 	public final boolean doPersist;
 	public final boolean shouldRun;
 	public final boolean shouldPause;
