@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.ui.Rect;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.OrderedRenderableContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
@@ -47,7 +48,6 @@ public abstract class GLLayerContent extends OrderedRenderableContent {
 		}
 		this.height = h;
 	}
-
 
 	protected GLLayerContent(float x, float y, float width, float height, int z) {
 		super();

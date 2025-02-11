@@ -69,5 +69,8 @@ public interface IClientControlCommand {
 	void hudDialog(IClientScene runner, Integer show);
 
 
+	void textElement(IClientScene runner, String name, String text, float x, float y, float w, float h, int z, Float opacity, int shadow, int resize);
+
+
 
 }

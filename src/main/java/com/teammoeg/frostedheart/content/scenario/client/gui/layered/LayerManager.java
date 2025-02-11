@@ -63,7 +63,12 @@ public class LayerManager extends GLLayerContent {
 	volatile LayerContext nextlayer;
 	volatile LayerContext current;
 	volatile TransitionInfo trans;
-
+	static ExecutorService renderThread=Executors.newFixedThreadPool(FHConfig.CLIENT.scenarioRenderThread.get(),r->{
+		Thread th=new Thread(r);
+		th.setDaemon(true);
+		th.setName("scenario-render-pool");
+		return th;
+	});
 	RerenderRequest rrq;
 	
 	public LayerManager() {
@@ -137,7 +142,9 @@ public class LayerManager extends GLLayerContent {
 	}
 	boolean prerenderRequested;
 	public void commitChanges(TransitionFunction t, int ticks) {
-		rrq=new RerenderRequest(t,ticks);			
+		//rrq=new RerenderRequest(t,ticks);
+		renderThread.submit(()->renderPrerendered(t,ticks));
+		
 	}
 	public void renderPrerendered(TransitionFunction t, int ticks) {
 		LayerContext inext=this.createContext();
@@ -166,7 +173,7 @@ public class LayerManager extends GLLayerContent {
 
 	@Override
 	public void renderContents(RenderParams params) {
-		if(rrq!=null)
+		/*if(rrq!=null)
 			synchronized(this) {
 				if(rrq!=null) {
 					RerenderRequest trrq=rrq;
@@ -174,7 +181,7 @@ public class LayerManager extends GLLayerContent {
 					renderPrerendered(trrq.trans(),trrq.ticks());
 				}
 			}
-		
+		*/
 		if (trans != null) {
 			RenderParams prev = params.copyWithCurrent(this);
 			RenderParams next = params.copyWithCurrent(this);

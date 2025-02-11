@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.ImageScreenDialog;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.Transition;
+import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLTextContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsImageContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsLineContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsRectContent;
@@ -264,6 +265,19 @@ public class ClientControl implements IClientControlCommand {
 		GraphicsTextContent tc=new GraphicsTextContent(ClientTextComponentUtils.parse(text),rect,resize,shadow>0);
 		tc.setOpacity(opacity);
 		tc.setZ(z);
+		ClientScene.INSTANCE.layers.peekLast().addLayer(name,tc);
+		
+	}
+	@Override
+	public void textElement(IClientScene runner,@Param("n")@Param("name")String name,@Param("text")String text,@Param("x")float x,@Param("y")float y,@Param("w")float w,@Param("h")float h,@Param("z")int z,@Param("opacity")Float opacity,@Param("shadow")int shadow,@Param("resize")int resize) {
+		if(ClientScene.INSTANCE.dialog==null)
+			return;
+		if(opacity==null)
+			opacity=1f;
+		if(resize==0)
+			resize=9;
+		GLTextContent tc=new GLTextContent(ClientTextComponentUtils.parse(text),x,y,w,h,z,shadow>0,resize);
+		tc.setOpacity(opacity);
 		ClientScene.INSTANCE.layers.peekLast().addLayer(name,tc);
 		
 	}
