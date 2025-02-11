@@ -37,6 +37,8 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.Grap
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsRectContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsTextContent;
 import com.teammoeg.frostedheart.util.client.Lang;
+
+
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MultipleItemHoverEvent;
 import com.teammoeg.chorda.client.ui.Point;
@@ -60,6 +62,7 @@ import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance.Attenuation;
 import net.minecraft.core.Holder.Reference;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -67,6 +70,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -93,18 +97,25 @@ public class ClientControl implements IClientControlCommand {
 			if(ItemFiltersAPI.isFilter(stack)) {
 				List<ItemStack> toshow=new ArrayList<>();
 				ItemFiltersAPI.getDisplayItemStacks(stack, toshow);
-				
-				CompoundNBTBuilder<Void> disp=CompoundNBTBuilder.create();
-				var b=disp.array("Lore");
-				b.addString(Component.Serializer.toJson(Lang.translateTooltip("suitable_items")));
-				
+				Lazy<CompoundTag> tagBuilder=Lazy.of(()->{
+					CompoundNBTBuilder<Void> disp=CompoundNBTBuilder.create();
+					var b=disp.array("Lore");
+					b.addString(Component.Serializer.toJson(Lang.translateTooltip("suitable_items")));
+					
+					for(ItemStack is:toshow) {
+						b.addString(Component.Serializer.toJson(Lang.builder().text("- ").add(is.getDisplayName()).component()));
+					}
+					return disp.build();
+				});
+				List<Lazy<ItemStack>> tolazy=new ArrayList<>();
 				for(ItemStack is:toshow) {
-					b.addString(Component.Serializer.toJson(Lang.builder().text("- ").add(is.getDisplayName()).component()));
+					tolazy.add(Lazy.of(()->{
+						
+						is.addTagElement("display", tagBuilder.get());
+						return is;
+					}));
 				}
-				for(ItemStack is:toshow) {
-					is.addTagElement("display", disp.build());
-				}
-				ev=new MultipleItemHoverEvent(toshow);
+				ev=new MultipleItemHoverEvent(tolazy);
 			}else {
 				ev=new HoverEvent.ItemStackInfo(itmtask.getItemStack());
 			}

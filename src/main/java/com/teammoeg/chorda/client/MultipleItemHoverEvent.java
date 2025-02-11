@@ -23,19 +23,20 @@ import java.util.List;
 
 import net.minecraft.network.chat.HoverEvent.ItemStackInfo;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.util.Lazy;
 /*
  * client only event to display multiple items
  * This is a hack and can not be sent by network
  * */
 public class MultipleItemHoverEvent extends ItemStackInfo {
-	List<ItemStack> stacks;
-	public MultipleItemHoverEvent(List<ItemStack> pStack) {
-		super(pStack.get(0));
+	List<Lazy<ItemStack>> stacks;
+	public MultipleItemHoverEvent(List<Lazy<ItemStack>> pStack) {
+		super(ItemStack.EMPTY);
 		stacks=pStack;
 	}
 	@Override
 	public ItemStack getItemStack() {
-		return stacks.get((int) ((System.currentTimeMillis()/1000)%stacks.size()));
+		return stacks.get((int) ((System.currentTimeMillis()/1000)%stacks.size())).get();
 	}
 	
 
