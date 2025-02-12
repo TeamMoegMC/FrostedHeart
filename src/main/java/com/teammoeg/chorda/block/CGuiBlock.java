@@ -95,12 +95,13 @@ public abstract class CGuiBlock<T extends BlockEntity> extends CBlock implements
         if(hand == InteractionHand.MAIN_HAND && !player.isShiftKeyDown()) {
 	        if (tile instanceof IInteractionObjectIE interaction) {
 	            BlockEntity master = interaction.getGuiMaster();
-	            if (master instanceof MenuProvider menu)
+	            if (!world.isClientSide&&master instanceof MenuProvider menu)
 	            	NetworkHooks.openScreen((ServerPlayer)player, menu,master.getBlockPos());
 	            return InteractionResult.SUCCESS;
 	        }
 	        if (tile instanceof MenuProvider menu) {
-	            	NetworkHooks.openScreen((ServerPlayer)player, menu,tile.getBlockPos());
+	        	if (!world.isClientSide)
+	        		NetworkHooks.openScreen((ServerPlayer)player, menu,tile.getBlockPos());
 	            return InteractionResult.SUCCESS;
 	        }
         }

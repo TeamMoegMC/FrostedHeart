@@ -21,13 +21,18 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.items.IItemHandler;
 
 public class WardrobeMenu extends CBlockEntityMenu<WardrobeBlockEntity> {
 	CDataSlot<Integer> page=CCustomMenuSlot.SLOT_INT.create(this);
-	ItemHandlerWrapper wrap;
+	IItemHandler wrap;
 	public WardrobeMenu(int id, Inventory inventoryPlayer, WardrobeBlockEntity tile) {
 		super(FHMenuTypes.WARDROBE.get(),tile,id, inventoryPlayer.player,37);
-		wrap=new ItemHandlerWrapper(()->tile.invs[page.getValue()]);
+		//we don't actually switch inventory in client.
+		if(inventoryPlayer.player.level().isClientSide)
+			wrap=tile.invs[0];
+		else
+			wrap=new ItemHandlerWrapper(()->tile.invs[page.getValue()]);
 		PlayerTemperatureData ptd = PlayerTemperatureData.getCapability(inventoryPlayer.player).resolve().get();
 		int y0=6;
 		this.addSlot(new ArmorSlot(inventoryPlayer.player, EquipmentSlot.HEAD, inventoryPlayer, 39, 6, y0));
@@ -78,7 +83,8 @@ public class WardrobeMenu extends CBlockEntityMenu<WardrobeBlockEntity> {
 		for(int i=0;i<tslots;i++) {
 			Slot slot1=this.getSlot(i);
 			Slot slot2=this.getSlot(tslots+i);
-			if(slot1.mayPickup(super.getPlayer())&&slot2.mayPickup(getPlayer())) {
+			
+			if((slot1.mayPickup(getPlayer())||slot1.getItem().isEmpty())&&(slot2.mayPickup(getPlayer())||slot2.getItem().isEmpty())) {
 				ItemStack stack1=slot1.getItem();
 				ItemStack stack2=slot2.getItem();
 				if((stack1.isEmpty()||slot2.mayPlace(stack1))&&(stack2.isEmpty()||slot1.mayPlace(stack2))) {
@@ -91,7 +97,7 @@ public class WardrobeMenu extends CBlockEntityMenu<WardrobeBlockEntity> {
 	@Override
 	public void receiveMessage(short btnId, int state) {
 		switch(btnId) {
-		case 1:swapSlots();
+		case 1:swapSlots();break;
 		case 2:page.setValue(Mth.clamp(state, 0, blockEntity.invs.length-1));
 		}
 	}

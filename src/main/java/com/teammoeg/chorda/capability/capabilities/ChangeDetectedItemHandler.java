@@ -23,11 +23,14 @@ import org.jetbrains.annotations.NotNull;
 
 import com.teammoeg.chorda.block.entity.SyncableBlockEntity;
 
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.IItemHandlerModifiable;
 
-public class ChangeDetectedItemHandler implements IItemHandler{
+public class ChangeDetectedItemHandler implements IItemHandler,IItemHandlerModifiable,INBTSerializable<CompoundTag>{
 	IItemHandler handler;
 	Runnable onchange;
 	public ChangeDetectedItemHandler(IItemHandler handler,Runnable onchange) {
@@ -35,9 +38,11 @@ public class ChangeDetectedItemHandler implements IItemHandler{
 		this.handler = handler;
 		this.onchange = onchange;
 	}
-	public static <T extends BlockEntity> IItemHandler fromBESetChanged(T blockEntity,IItemHandler nested) {
+	public static <T extends BlockEntity> ChangeDetectedItemHandler fromBESetChanged(T blockEntity,IItemHandler nested) {
 		return new ChangeDetectedItemHandler(nested,()->{blockEntity.setChanged();});
 	}
+	
+	
 	
 	public static <T extends BlockEntity& SyncableBlockEntity> IItemHandler fromBESynced(T blockEntity, IItemHandler nested) {
 		return new ChangeDetectedItemHandler(nested,()->{blockEntity.setChanged();blockEntity.syncData();});
@@ -68,6 +73,28 @@ public class ChangeDetectedItemHandler implements IItemHandler{
 	}
 	protected void onContentsChanged(int slot) {
 		onchange.run();
+	}
+	@Override
+	public void setStackInSlot(int slot, @NotNull ItemStack stack) {
+		if(handler instanceof IItemHandlerModifiable im) {
+			im.setStackInSlot(slot, stack);
+		}else
+			throw new UnsupportedOperationException(handler+" does not implemented IItemHandlerModifiable!");
+			
+	}
+	@Override
+	public CompoundTag serializeNBT() {
+		if(handler instanceof INBTSerializable im) {
+			return (CompoundTag) im.serializeNBT();
+		}else
+			throw new UnsupportedOperationException(handler+" does not implemented INBTSerializable!");
+	}
+	@Override
+	public void deserializeNBT(CompoundTag nbt) {
+		if(handler instanceof INBTSerializable im) {
+			im.deserializeNBT(nbt);
+		}else
+			throw new UnsupportedOperationException(handler+" does not implemented INBTSerializable!");
 	}
 
 }

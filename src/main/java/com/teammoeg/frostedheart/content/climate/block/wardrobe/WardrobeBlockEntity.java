@@ -20,6 +20,8 @@
 package com.teammoeg.frostedheart.content.climate.block.wardrobe;
 
 import com.teammoeg.chorda.block.entity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.ConnectedBlockEntity;
+import com.teammoeg.chorda.capability.capabilities.ChangeDetectedItemHandler;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 
@@ -31,11 +33,12 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraftforge.items.ItemStackHandler;
 
 public class WardrobeBlockEntity extends CBlockEntity implements MenuProvider  {
 	public static final int NUM_INVENTORY=3;
-    ItemStackHandler[] invs=new ItemStackHandler[NUM_INVENTORY];
+	ChangeDetectedItemHandler[] invs=new ChangeDetectedItemHandler[NUM_INVENTORY];
 
     public WardrobeBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.WARDROBE.get(), pos, state);
@@ -44,14 +47,14 @@ public class WardrobeBlockEntity extends CBlockEntity implements MenuProvider  {
         	countSlot+=bp.slotNum;
         }
         for(int i=0;i<invs.length;i++) {
-        	invs[i]=new ItemStackHandler(countSlot) {
+        	invs[i]=ChangeDetectedItemHandler.fromBESetChanged(this, new ItemStackHandler(countSlot) {
 
 				@Override
 				public int getSlotLimit(int slot) {
 					return 1;
 				}
         		
-        	};
+        	});
         }
     }
     public Component getDisplayName() {
@@ -59,6 +62,7 @@ public class WardrobeBlockEntity extends CBlockEntity implements MenuProvider  {
     }
     @Override
     public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player player) {
+    	
         return new WardrobeMenu(
             id,
             playerInventory,
@@ -68,8 +72,9 @@ public class WardrobeBlockEntity extends CBlockEntity implements MenuProvider  {
 	@Override
 	public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
 		if(!descPacket)
-		for(int i=0;i<invs.length;i++)
-			nbt.put("inv"+i, invs[i].serializeNBT());
+			for(int i=0;i<invs.length;i++)
+				invs[i].deserializeNBT(nbt.getCompound("inv"+i));
+				
 		
 	}
 
@@ -80,7 +85,7 @@ public class WardrobeBlockEntity extends CBlockEntity implements MenuProvider  {
 	public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
 		if(!descPacket)
 			for(int i=0;i<invs.length;i++)
-				invs[i].deserializeNBT(nbt.getCompound("inv"+i));
+				nbt.put("inv"+i, invs[i].serializeNBT());
 		
 	}
 

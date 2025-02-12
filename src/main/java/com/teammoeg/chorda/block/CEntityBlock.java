@@ -45,9 +45,13 @@ public interface CEntityBlock<B extends BlockEntity> extends EntityBlock {
 	public default boolean hasTileEntity(BlockPos p,BlockState state) {
 		return true;
 	}
+	public default boolean hasTicker(BlockState state) {
+		return true;
+	}
 	@Override
 	public default <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level pLevel, BlockState pState,
 			BlockEntityType<T> pBlockEntityType) {
+		if(hasTicker(pState))
 		return new BlockEntityTicker<T>() {
 
 			@Override
@@ -58,6 +62,7 @@ public interface CEntityBlock<B extends BlockEntity> extends EntityBlock {
 					entity.tick();
 			}
 		};
+		return null;
 	}
 
 

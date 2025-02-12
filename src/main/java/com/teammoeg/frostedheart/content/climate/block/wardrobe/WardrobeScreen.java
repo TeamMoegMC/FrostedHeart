@@ -41,12 +41,13 @@ public class WardrobeScreen extends IEContainerScreen<WardrobeMenu> {
 	
 	@Override
 	protected void init() {
+		super.init();
 		this.addRenderableWidget(new HoverableImageButton(TEXTURE,leftPos + 88, topPos + 40, 21, 21, 197, 63,btn -> { menu.sendMessage(1, 0);}));
 		for(int i=0;i<WardrobeBlockEntity.NUM_INVENTORY;i++) {
 			final int ctab=i;
-			this.addRenderableWidget(new TabImageButton(TEXTURE,leftPos+193,topPos+i*21,27,21,224,ctab==0?0:21,ctab,btn->{ menu.sendMessage(2, ctab);}).bind(menu.page.asSupplier()));
+			this.addRenderableWidget(new TabImageButton(TEXTURE,leftPos+193,topPos+i*21,27,21,197,ctab==0?0:21,ctab,btn->{ menu.sendMessage(2, ctab);}).bind(menu.page.asSupplier()));
 		}
-		super.init();
+		
 	}
 
 	protected void drawBackgroundTexture(GuiGraphics graphics)

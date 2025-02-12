@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.climate.block.wardrobe;
 
 import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.capability.capabilities.ChangeDetectedItemHandler;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -39,12 +40,14 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.storage.loot.LootParams.Builder;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -53,6 +56,8 @@ import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+
+import java.util.List;
 import java.util.function.Supplier;
 
 public class WardrobeBlock extends CBlock implements CEntityBlock<WardrobeBlockEntity> {
@@ -97,9 +102,29 @@ public class WardrobeBlock extends CBlock implements CEntityBlock<WardrobeBlockE
         super.playerWillDestroy(pLevel, pPos, pState, pPlayer);
     }
 
-    // Drop the bottom part of the door when broken in creative mode
+    @Override
+	public List<ItemStack> getDrops(BlockState pState, Builder pParams) {
+		return super.getDrops(pState, pParams);
+	}
+
+	@Override
+	public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
+		if(pState.getBlock()!=pNewState.getBlock()&&pLevel.getBlockEntity(pPos) instanceof WardrobeBlockEntity be) {
+			for(int i=0;i<be.invs.length;i++) {
+				ChangeDetectedItemHandler inv=be.invs[i];
+				for(int k=0;k<inv.getSlots();k++) {
+					ItemStack is=inv.getStackInSlot(k);
+					super.popResource(pLevel, pPos, is);
+				}
+			}
+		}
+		super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
+	}
+
+	// Drop the bottom part of the door when broken in creative mode
     public static void preventOtherPartDrop(Level pLevel, BlockPos pPos, BlockState pState, Player pPlayer) {
         DoubleBlockHalf doubleblockhalf = pState.getValue(HALF);
+        
         if (doubleblockhalf == DoubleBlockHalf.UPPER) {
             BlockPos blockpos = pPos.below();
             BlockState blockstate = pLevel.getBlockState(blockpos);
@@ -117,8 +142,20 @@ public class WardrobeBlock extends CBlock implements CEntityBlock<WardrobeBlockE
             }
         }
     }
+    public BlockPos getMasterPos(BlockPos p, BlockState state) {
+		return state.getValue(HALF)==DoubleBlockHalf.UPPER?p.below():p;
+	}
+    @Override
+	public boolean hasTileEntity(BlockPos p, BlockState state) {
+		return state.getValue(HALF)!=DoubleBlockHalf.UPPER;
+	}
 
-    // Get the block's state when placed
+	@Override
+	public boolean hasTicker(BlockState state) {
+		return state.getValue(HALF)!=DoubleBlockHalf.UPPER;
+	}
+
+	// Get the block's state when placed
     @Nullable
     public BlockState getStateForPlacement(BlockPlaceContext pContext) {
         BlockPos blockpos = pContext.getClickedPos();
@@ -193,11 +230,10 @@ public class WardrobeBlock extends CBlock implements CEntityBlock<WardrobeBlockE
     	setOpened(pLevel,pPos,pState,pPlayer,true);
         if (!pLevel.isClientSide) {
             // Open the Wardrobe GUI
-            System.out.println("Opening GUI");
-            WardrobeBlockEntity tile = (WardrobeBlockEntity) pLevel.getBlockEntity(pPos);
-            if (tile != null) {
-                System.out.println("Tile is not null");
-                NetworkHooks.openScreen((ServerPlayer) pPlayer, tile, pPos);
+        	BlockPos masterPos=getMasterPos(pPos,pState);
+            BlockEntity tile = pLevel.getBlockEntity(masterPos);
+            if (tile instanceof WardrobeBlockEntity wardrobe) {
+                NetworkHooks.openScreen((ServerPlayer) pPlayer, wardrobe, masterPos);
                 pLevel.playSound(null, pPos, SoundEvents.LAVA_EXTINGUISH, SoundSource.BLOCKS, 0.3F, 1.5F);
             }
         }

@@ -148,6 +148,11 @@ public class DrawingDeskBlock extends CBlock implements IModelOffsetProvider, CE
     }
 
     @Override
+	public boolean hasTicker(BlockState state) {
+		return !state.getValue(IS_NOT_MAIN);
+	}
+
+	@Override
     public BlockState mirror(BlockState state, Mirror mirrorIn) {
         return state.rotate(mirrorIn.getRotation(state.getValue(FACING)));
     }

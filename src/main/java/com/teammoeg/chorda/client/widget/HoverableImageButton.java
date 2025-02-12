@@ -41,9 +41,9 @@ public class HoverableImageButton extends Button {
 	}
 
 	public HoverableImageButton(ResourceLocation texture,int xIn, int yIn, int widthIn, int heightIn, int xTexStartIn, int yTexStartIn,
-		Tooltip tt, Button.OnPress onPressIn) {
+		Tooltip tooltipIn, Button.OnPress onPressIn) {
 	
-		this(texture,xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, 256, 256, onPressIn, tt,
+		this(texture,xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, 256, 256, onPressIn, tooltipIn,
 			Components.empty());
 	}
 
@@ -52,15 +52,15 @@ public class HoverableImageButton extends Button {
 		this(texture,x, y, width, height, xTexStart, yTexStart, textureWidth, textureHeight, onPress, null, title);
 	}
 
-	public HoverableImageButton(ResourceLocation texture,int p_i244513_1_, int p_i244513_2_, int p_i244513_3_, int p_i244513_4_, int p_i244513_5_,
-			int p_i244513_6_, int p_i244513_9_, int p_i244513_10_, Button.OnPress p_i244513_11_,
-			Tooltip p_i244513_12_, Component p_i244513_13_) {
-		super(Button.builder(p_i244513_13_, p_i244513_11_).bounds(p_i244513_2_, p_i244513_3_, p_i244513_4_, p_i244513_5_).tooltip(p_i244513_12_));
+	public HoverableImageButton(ResourceLocation texture,int xIn, int yIn, int widthIn, int heightIn, int xTexStart,
+			int yTexStart, int textureWidth, int textureHeight, Button.OnPress onPressIn,
+			Tooltip tooltipIn, Component title) {
+		super(Button.builder(title, onPressIn).bounds(xIn, yIn, widthIn, heightIn).tooltip(tooltipIn));
 		this.TEXTURE=texture;
-		this.textureWidth = p_i244513_9_;
-		this.textureHeight = p_i244513_10_;
-		this.xTexStart = p_i244513_5_;
-		this.yTexStart = p_i244513_6_;
+		this.textureWidth = textureWidth;
+		this.textureHeight = textureHeight;
+		this.xTexStart = xTexStart;
+		this.yTexStart = yTexStart;
 	}
 
 	public void setPosition(int xIn, int yIn) {

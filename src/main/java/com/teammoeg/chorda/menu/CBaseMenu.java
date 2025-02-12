@@ -422,7 +422,6 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 
 	@Override
 	public void broadcastChanges() {
-		super.broadcastChanges();
 		ContainerDataSyncMessageS2C packet = new ContainerDataSyncMessageS2C();
 		for (int i = 0; i < specialDataSlots.size(); i++) {
 			SyncableDataSlot<?> slot = specialDataSlots.get(i);
@@ -432,11 +431,12 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 		}
 		if (packet.hasData() && player != null)
 			ChordaNetwork.sendPlayer((ServerPlayer) player, packet);
+		super.broadcastChanges();
+
 	}
 
 	@Override
 	public void broadcastFullState() {
-		super.broadcastFullState();
 		ContainerDataSyncMessageS2C packet = new ContainerDataSyncMessageS2C();
 		for (int i = 0; i < specialDataSlots.size(); i++) {
 			SyncableDataSlot<?> slot = specialDataSlots.get(i);
@@ -446,6 +446,8 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 		}
 		if (packet.hasData() && player != null)
 			ChordaNetwork.sendPlayer((ServerPlayer) player, packet);
+		super.broadcastFullState();
+
 	}
 
 	@Override

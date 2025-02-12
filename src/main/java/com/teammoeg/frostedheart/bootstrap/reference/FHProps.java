@@ -62,13 +62,11 @@ public class FHProps {
             .of()
             .sound(SoundType.STONE)
             .mapColor(MapColor.STONE)
-            .noCollission()
             .requiresCorrectToolForDrops()
             .strength(2, 10);
 
     public static final BlockBehaviour.Properties woodenProps = BlockBehaviour.Properties
     		.of()
-            .noCollission()
             .mapColor(MapColor.WOOD)
             .requiresCorrectToolForDrops()
             .sound(SoundType.WOOD)
@@ -77,7 +75,6 @@ public class FHProps {
     public static final BlockBehaviour.Properties grassProps = BlockBehaviour.Properties
             .of()
             .mapColor(MapColor.PLANT)
-            .noCollission()
             .requiresCorrectToolForDrops()
             .sound(SoundType.GRASS)
             .strength(0.3F);

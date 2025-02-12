@@ -40,30 +40,30 @@ public class TabImageButton extends Button {
 	ResourceLocation TEXTURE;
 	public TabImageButton(ResourceLocation texture,int xIn, int yIn, int widthIn, int heightIn, int xTexStartIn, int yTexStartIn,int tab,
 			Button.OnPress onPressIn) {
-		this(texture,xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, tab, null, onPressIn);
+		this(texture,xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn,tab, null, onPressIn);
 	}
 
 	public TabImageButton(ResourceLocation texture,int xIn, int yIn, int widthIn, int heightIn, int xTexStartIn, int yTexStartIn,int tab,
-		Tooltip tt, Button.OnPress onPressIn) {
+		Tooltip tooltipIn, Button.OnPress onPressIn) {
 	
-		this(texture,xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, 256, 256, tab, onPressIn, tt,
+		this(texture,xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, 256, 256,tab, onPressIn, tooltipIn,
 			Components.empty());
 	}
 
-	public TabImageButton(ResourceLocation texture,int x, int y, int width, int height, int xTexStart, int yTexStart, int textureWidth,
-			int textureHeight,int tab, Button.OnPress onPress, Component title) {
-		this(texture,x, y, width, height, xTexStart, yTexStart, textureWidth, textureHeight, tab, onPress, null, title);
+	public TabImageButton(ResourceLocation texture,int x, int y, int width, int height, int xTexStart, int yTexStart, int textureWidth,int textureHeight,int tab,
+			Button.OnPress onPress, Component title) {
+		this(texture,x, y, width, height, xTexStart, yTexStart, textureWidth, textureHeight,tab, onPress, null, title);
 	}
 
-	public TabImageButton(ResourceLocation texture,int p_i244513_1_, int p_i244513_2_, int p_i244513_3_, int p_i244513_4_, int p_i244513_5_,
-			int p_i244513_6_, int p_i244513_9_, int p_i244513_10_,int tab, Button.OnPress p_i244513_11_,
-			Tooltip p_i244513_12_, Component p_i244513_13_) {
-		super(Button.builder(p_i244513_13_, p_i244513_11_).bounds(p_i244513_2_, p_i244513_3_, p_i244513_4_, p_i244513_5_).tooltip(p_i244513_12_));
+	public TabImageButton(ResourceLocation texture,int xIn, int yIn, int widthIn, int heightIn, int xTexStart,
+			int yTexStart, int textureWidth, int textureHeight,int tab,
+			Button.OnPress onPressIn,Tooltip tooltipIn, Component title) {
+		super(Button.builder(title, onPressIn).bounds(xIn, yIn, widthIn, heightIn).tooltip(tooltipIn));
 		this.TEXTURE=texture;
-		this.textureWidth = p_i244513_9_;
-		this.textureHeight = p_i244513_10_;
-		this.xTexStart = p_i244513_5_;
-		this.yTexStart = p_i244513_6_;
+		this.textureWidth = textureWidth;
+		this.textureHeight = textureHeight;
+		this.xTexStart = xTexStart;
+		this.yTexStart = yTexStart;
 		this.tab=tab;
 	}
 	public TabImageButton bind(Supplier<Integer> supp) {
@@ -79,7 +79,7 @@ public class TabImageButton extends Button {
 		int current=0;
 		if(currentTab!=null)
 			current=currentTab.get();
-		int i =  (tab==current)?0: this.width;
+		int i =  (tab==current)?0:this.width;
 
 
 		RenderSystem.enableDepthTest();
