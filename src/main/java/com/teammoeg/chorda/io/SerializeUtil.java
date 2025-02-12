@@ -34,8 +34,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import org.jetbrains.annotations.NotNull;
-
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -48,13 +46,11 @@ import com.teammoeg.chorda.io.nbtbuilder.CompoundNBTBuilder;
 import com.teammoeg.chorda.util.CRegistryHelper;
 
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-// TODO: Auto-generated Javadoc
 
 /**
  * utils wrapped function for serialization and networking.

@@ -33,7 +33,7 @@ import com.teammoeg.chorda.menu.CCustomMenuSlot.SyncableDataSlot;
 import com.teammoeg.chorda.network.ContainerDataSyncMessageS2C;
 import com.teammoeg.chorda.network.ContainerOperationMessageC2S;
 
-import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MoveItemsFunc;
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -222,6 +222,7 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 	private final Lazy<Validator> validator=Lazy.of(()->buildValidator(new Validator()));
 	protected Lazy<Function<ItemStack, Boolean>> moveFunction = Lazy.of(() -> defineQuickMoveStack().build(this));
 	protected List<SyncableDataSlot<?>> specialDataSlots = new ArrayList<>();
+	@Getter
 	private Player player;
 	/**
 	 * Constructor of c base menu

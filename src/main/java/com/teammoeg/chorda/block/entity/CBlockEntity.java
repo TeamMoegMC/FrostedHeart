@@ -19,23 +19,139 @@
 
 package com.teammoeg.chorda.block.entity;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.core.BlockPos;
-
-public abstract class CBlockEntity extends IEBaseBlockEntity implements SyncableBlockEntity {
-
+import net.minecraft.world.level.block.state.BlockState;
+/**
+ * CBlockEntity 
+ * blockentity with our basic code, for convenience, some code are inspired by Immersive Engineering
+ * */
+public abstract class CBlockEntity extends BlockEntity implements SyncableBlockEntity,BlockStateAccess {
+	protected boolean isUnloaded;
     public CBlockEntity(BlockEntityType<? extends BlockEntity> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
+	@Override
+	public void load(CompoundTag nbtIn)
+	{
+		super.load(nbtIn);
+		this.readCustomNBT(nbtIn, false);
+	}
 
+	public abstract void readCustomNBT(CompoundTag nbt, boolean descPacket);
+
+	@Override
+	protected void saveAdditional(CompoundTag nbt)
+	{
+		super.saveAdditional(nbt);
+		this.writeCustomNBT(nbt, false);
+	}
+
+	public abstract void writeCustomNBT(CompoundTag nbt, boolean descPacket);
+
+	@Override
+	public ClientboundBlockEntityDataPacket getUpdatePacket()
+	{
+		return ClientboundBlockEntityDataPacket.create(this, be -> {
+			CompoundTag nbttagcompound = new CompoundTag();
+			this.writeCustomNBT(nbttagcompound, true);
+			return nbttagcompound;
+		});
+	}
+
+	@Override
+	public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt)
+	{
+		CompoundTag nonNullTag = pkt.getTag()!=null?pkt.getTag(): new CompoundTag();
+		this.readCustomNBT(nonNullTag, true);
+	}
+
+	@Override
+	public void handleUpdateTag(CompoundTag tag)
+	{
+		this.readCustomNBT(tag, true);
+	}
+
+	@Override
+	public CompoundTag getUpdateTag()
+	{
+		CompoundTag nbt = super.getUpdateTag();
+		writeCustomNBT(nbt, true);
+		return nbt;
+	}
+	@Override
+	public boolean triggerEvent(int id, int type)
+	{
+		if(id==0||id==255)
+		{
+			syncData();
+			return true;
+		}
+		else if(id==254)
+		{
+			BlockState state = level.getBlockState(worldPosition);
+			level.sendBlockUpdated(worldPosition, state, state, 3);
+			return true;
+		}
+		return super.triggerEvent(id, type);
+	}
     public void syncData() {
         this.setChanged();
-        // level.markAndNotifyBlock(worldPosition, level.getChunkAt(pos), getBlockState(), getBlockState(), 4, 128);
         level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+        level.updateNeighborsAt(this.getBlockPos(), this.getBlockState().getBlock());
         
     }
+	@Override
+	public final void setRemoved()
+	{
+		if(!isUnloaded)
+			onRemoved();
+		super.setRemoved();
+	}
+	public void onRemoved(){
+		
+	}
+	@Override
+	public void onLoad()
+	{
+		super.onLoad();
+		isUnloaded = false;
+	}
+	@Override
+	public void onChunkUnloaded()
+	{
+		super.onChunkUnloaded();
+		isUnloaded = true;
+		onUnloaded();
+	}
+	public void onUnloaded(){
+	}
+	protected void setChunkUnsaved()
+	{
+		if(this.level.hasChunkAt(this.worldPosition))
+			this.level.getChunkAt(this.worldPosition).setUnsaved(true);
+	}
+	@Override
+	public void setChanged()
+	{
+		setChunkUnsaved();
+		BlockState state = getBlockState();
+		if(state.hasAnalogOutputSignal())
+			this.level.updateNeighbourForOutputSignal(this.worldPosition, state.getBlock());
+	}
+	@Override
+	public BlockState getBlock() {
+		return this.getBlockState();
+	}
+	@Override
+	public void setBlock(BlockState state) {
+		this.level.setBlock(this.worldPosition, state, 4);
+		this.setBlockState(state);
+		
+	}
 
 }

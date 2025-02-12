@@ -19,47 +19,45 @@
 
 package com.teammoeg.frostedheart.content.climate.block.wardrobe;
 
+import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
+
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.items.ItemStackHandler;
 
-public class WardrobeBlockEntity extends RandomizableContainerBlockEntity  {
-    private NonNullList<ItemStack> wardrobeInventory = NonNullList.withSize(24, ItemStack.EMPTY);
+public class WardrobeBlockEntity extends CBlockEntity implements MenuProvider  {
+	public static final int NUM_INVENTORY=3;
+    ItemStackHandler[] invs=new ItemStackHandler[NUM_INVENTORY];
 
     public WardrobeBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.WARDROBE.get(), pos, state);
+        int countSlot=5;
+        for(BodyPart bp:BodyPart.values()) {
+        	countSlot+=bp.slotNum;
+        }
+        for(int i=0;i<invs.length;i++) {
+        	invs[i]=new ItemStackHandler(countSlot) {
+
+				@Override
+				public int getSlotLimit(int slot) {
+					return 1;
+				}
+        		
+        	};
+        }
     }
-
-
-
-    @Override
-    public NonNullList<ItemStack> getItems() {
-        return wardrobeInventory;
-    }
-
-    @Override
-    protected void setItems(NonNullList<ItemStack> itemsIn) {
-        this.wardrobeInventory = itemsIn;
-    }
-
     public Component getDisplayName() {
         return Component.translatable("container.wardrobe");
     }
-
     @Override
-    protected Component getDefaultName() {
-        return null;
-    }
-
     public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player player) {
         return new WardrobeMenu(
             id,
@@ -67,24 +65,24 @@ public class WardrobeBlockEntity extends RandomizableContainerBlockEntity  {
             this
         );
     }
+	@Override
+	public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
+		if(!descPacket)
+		for(int i=0;i<invs.length;i++)
+			nbt.put("inv"+i, invs[i].serializeNBT());
+		
+	}
 
-    @Override
-    protected AbstractContainerMenu createMenu(int i, Inventory inventory) {
-        return null;
-    }
 
-    public void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
-        ContainerHelper.saveAllItems(tag, wardrobeInventory);
-    }
 
-    public void load(CompoundTag tag) {
-        super.load(tag);
-        ContainerHelper.loadAllItems(tag, wardrobeInventory);
-    }
 
-    @Override
-    public int getContainerSize() {
-        return wardrobeInventory.size();
-    }
+	@Override
+	public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
+		if(!descPacket)
+			for(int i=0;i<invs.length;i++)
+				invs[i].deserializeNBT(nbt.getCompound("inv"+i));
+		
+	}
+
+
 }

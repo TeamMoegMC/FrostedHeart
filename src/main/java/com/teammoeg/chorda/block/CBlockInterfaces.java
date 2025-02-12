@@ -19,14 +19,16 @@
 
 package com.teammoeg.chorda.block;
 
+import com.teammoeg.chorda.block.entity.BlockStateAccess;
+
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 public class CBlockInterfaces {
-    public interface IActiveState extends IEBlockInterfaces.BlockstateProvider {
+    public interface IActiveState extends BlockStateAccess {
         default boolean getIsActive() {
-            BlockState state = this.getState();
+            BlockState state = this.getBlock();
             return state.hasProperty(BlockStateProperties.LIT) ? state.getValue(BlockStateProperties.LIT) : false;
         }
 
@@ -36,10 +38,10 @@ public class CBlockInterfaces {
          * @return true if the state was changed, false otherwise
          */
         default boolean setActive(boolean active) {
-            BlockState state = this.getState();
+            BlockState state = this.getBlock();
             if (state.getValue(BlockStateProperties.LIT) != active) {
                 BlockState newState = state.setValue(BlockStateProperties.LIT, active);
-                this.setState(newState);
+                this.setBlock(newState);
                 return true;
             }
             return false;

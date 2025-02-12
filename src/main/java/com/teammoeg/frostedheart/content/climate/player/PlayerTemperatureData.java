@@ -46,24 +46,26 @@ import net.minecraftforge.items.ItemStackHandler;
 
 public class PlayerTemperatureData implements NBTSerializable  {
 	public enum BodyPart implements StringRepresentable{
-		HEAD(EquipmentSlot.HEAD, 0.1f, 0.1f), // 10% area
-		TORSO(EquipmentSlot.CHEST, 0.4f, 0.4f), // 40% area
+		HEAD(EquipmentSlot.HEAD, 0.1f, 0.1f,1), // 10% area
+		TORSO(EquipmentSlot.CHEST, 0.4f, 0.4f,3), // 40% area
 		
-		HANDS(EquipmentSlot.MAINHAND, 0.05f, 0.05f), // 5% area
-		LEGS(EquipmentSlot.LEGS, 0.4f, 0.4f), // 40% area
-		FEET(EquipmentSlot.FEET, 0.05f, 0.05f); // 5% area
+		HANDS(EquipmentSlot.MAINHAND, 0.05f, 0.05f,1), // 5% area
+		LEGS(EquipmentSlot.LEGS, 0.4f, 0.4f,3), // 40% area
+		FEET(EquipmentSlot.FEET, 0.05f, 0.05f,1); // 5% area
 		public final EquipmentSlot slot;
 		public final float area;
 		public final float affectsCore;
+		public final int slotNum;
 		private final static Map<EquipmentSlot,BodyPart> VANILLA_MAP=Util.make(new EnumMap<>(EquipmentSlot.class),t->{
 			for(BodyPart part:BodyPart.values())
 				if(part.slot!=null)
 					t.put(part.slot, part);
 		});
-		private BodyPart(EquipmentSlot slot,float area,float affectsCore) {
+		private BodyPart(EquipmentSlot slot,float area,float affectsCore,int slotNum) {
 			this.slot = slot;
 			this.area=area;
 			this.affectsCore=affectsCore;
+			this.slotNum=slotNum;
 		}
 
 		@Override
@@ -100,11 +102,8 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		}
 	}
 	public PlayerTemperatureData() {
-		clothesOfParts.put(BodyPart.HEAD, new BodyPartData(1));
-		clothesOfParts.put(BodyPart.HANDS, new BodyPartData(1));
-		clothesOfParts.put(BodyPart.FEET, new BodyPartData(1));
-		clothesOfParts.put(BodyPart.TORSO, new BodyPartData(3));
-		clothesOfParts.put(BodyPart.LEGS, new BodyPartData(3));
+		for(BodyPart bp:BodyPart.values())
+		clothesOfParts.put(bp, new BodyPartData(bp.slotNum));
 	}
 	public FHTemperatureDifficulty getDifficulty() {
 		if(difficulty==null)

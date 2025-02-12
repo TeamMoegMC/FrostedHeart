@@ -24,6 +24,7 @@ import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 
 import com.teammoeg.chorda.block.CBlockInterfaces;
+import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.util.CUtils;
@@ -71,7 +72,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-public class SaunaTileEntity extends IEBaseBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState, IIEInventory, MenuProvider {
+public class SaunaTileEntity extends CBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState, IIEInventory, MenuProvider {
 
     private static final int RANGE = 5;
     private static final int WALL_HEIGHT = 3;
@@ -240,10 +241,6 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements CTickableBlock
         network.load(nbt, descPacket);
     }
 
-    @Override
-    public void receiveMessageFromServer(CompoundTag message) {
-        super.receiveMessageFromServer(message);
-    }
 
     private boolean structureIsValid() {
         floor.clear();

@@ -26,8 +26,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
+
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.JsonOps;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.registry.IdRegistry;
 

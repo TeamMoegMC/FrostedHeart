@@ -102,14 +102,15 @@ public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
     }
 
     @Override
-    public BlockState getState() {
+    public BlockState getBlock() {
         return this.getBlockState();
     }
 
     @Override
-    public void setState(BlockState blockState) {
-        if (this.getWorldNonnull().getBlockState(this.worldPosition) == this.getState()) {
+    public void setBlock(BlockState blockState) {
+        if (this.getWorldNonnull().getBlockState(this.worldPosition) == this.getBlock()) {
             this.getWorldNonnull().setBlockAndUpdate(this.worldPosition, blockState);
+            super.setBlockState(blockState);
         }
     }
 

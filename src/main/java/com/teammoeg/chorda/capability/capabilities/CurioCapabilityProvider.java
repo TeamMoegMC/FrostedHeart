@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.chorda.capability;
+package com.teammoeg.chorda.capability.capabilities;
 
 import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;

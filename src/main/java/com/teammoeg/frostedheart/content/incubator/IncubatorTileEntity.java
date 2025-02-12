@@ -86,7 +86,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
         public FluidStack drain(FluidStack resource, FluidAction action) {
             FluidStack fs = fluid[1].drain(resource, action);
             if (!fs.isEmpty() && action == FluidAction.EXECUTE) {
-                markContainingBlockForUpdate(null);
+                syncData();
             }
             return fs;
         }
@@ -95,7 +95,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
         public FluidStack drain(int maxDrain, FluidAction action) {
             FluidStack fs = fluid[1].drain(maxDrain, action);
             if (!fs.isEmpty() && action == FluidAction.EXECUTE) {
-                markContainingBlockForUpdate(null);
+            	syncData();
             }
             return fs;
         }
@@ -104,7 +104,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
         public int fill(FluidStack resource, FluidAction action) {
             int f = fluid[0].fill(resource, action);
             if (f > 0 && action == FluidAction.EXECUTE) {
-                markContainingBlockForUpdate(null);
+            	syncData();
 
             }
             return f;
@@ -276,7 +276,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                     lprocess = 0;
                     this.setActive(false);
                     this.setChanged();
-                    this.markContainingBlockForUpdate(null);
+                    this.syncData();
                     return;
                 }
                 if (fuel <= 0) {
@@ -305,7 +305,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                                 efficiency -= 0.005F;
                             this.setActive(false);
                             this.setChanged();
-                            this.markContainingBlockForUpdate(null);
+                            this.syncData();
                             return;
                         }
                     }
@@ -324,7 +324,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                 }
 
                 this.setChanged();
-                this.markContainingBlockForUpdate(null);
+                this.syncData();
             } else if (!out.isEmpty() || !outfluid.isEmpty()) {
                 if (ItemHandlerHelper.canItemStacksStack(out, inventory.get(3))) {
                     ItemStack is = inventory.get(3);
@@ -362,7 +362,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                             isFoodRecipe = false;
                             lprocess = 0;
                             this.setChanged();
-                            this.markContainingBlockForUpdate(null);
+                            this.syncData();
                             return;
                         }
                     }
@@ -377,7 +377,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                             catalyst.shrink(1);
                             efficiency = 0.2f;
                             this.setChanged();
-                            this.markContainingBlockForUpdate(null);
+                            this.syncData();
                             return;
                         }
                         if (efficiency > 0.01) {
@@ -397,7 +397,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                             water = 1;
                             this.setActive(true);
                             this.setChanged();
-                            this.markContainingBlockForUpdate(null);
+                            this.syncData();
                             return;
                         }
                     }
@@ -415,7 +415,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                 this.setActive(false);
                 if (changed) {
                     this.setChanged();
-                    this.markContainingBlockForUpdate(null);
+                    this.syncData();
                 }
 
             }

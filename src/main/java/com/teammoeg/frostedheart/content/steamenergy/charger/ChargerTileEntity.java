@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.teammoeg.chorda.block.CBlockInterfaces;
+import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
@@ -59,7 +60,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class ChargerTileEntity extends IEBaseBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState, IHaveGoggleInformation, HeatNetworkProvider {
+public class ChargerTileEntity extends CBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState, IHaveGoggleInformation, HeatNetworkProvider {
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
@@ -136,7 +137,7 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements CTickableBlo
                         ItemStack gain = cr.output.copy();
                         CUtils.giveItem(pe, gain);
                         setChanged();
-                        this.markContainingBlockForUpdate(null);
+                        this.syncData();
                     }
                     drawEffect();
                     return InteractionResult.SUCCESS;
@@ -154,7 +155,7 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements CTickableBlo
                             ItemStack gain = sr.assemble(null, this.level.registryAccess()).copy();
                             CUtils.giveItem(pe, gain);
                             setChanged();
-                            this.markContainingBlockForUpdate(null);
+                            this.syncData();
                         }
                         drawEffect();
                         return InteractionResult.SUCCESS;
@@ -172,7 +173,7 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements CTickableBlo
                             ItemStack gain = sr.assemble(null, this.level.registryAccess()).copy();
                             CUtils.giveItem(pe, gain);
                             setChanged();
-                            this.markContainingBlockForUpdate(null);
+                            this.syncData();
                         }
                         drawEffect();
                         return InteractionResult.SUCCESS;
@@ -197,7 +198,7 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements CTickableBlo
                 power += (float) (actual * 10);
                 this.setActive(true);
                 setChanged();
-                this.markContainingBlockForUpdate(null);
+                this.syncData();
             } else
                 this.setActive(false);
         } else if (getIsActive()) {

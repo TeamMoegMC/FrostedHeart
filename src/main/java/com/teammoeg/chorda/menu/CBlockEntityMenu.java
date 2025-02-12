@@ -19,8 +19,6 @@
 
 package com.teammoeg.chorda.menu;
 
-import com.teammoeg.chorda.menu.CBaseMenu.Validator;
-
 import blusunrize.immersiveengineering.common.gui.BlockEntityInventory;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.world.Container;
@@ -31,6 +29,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 public abstract class CBlockEntityMenu<T extends BlockEntity> extends CBaseMenu {
 	protected T blockEntity;
 	public Container inv;
+	
 
 	public T getBlock() {
 		return blockEntity;

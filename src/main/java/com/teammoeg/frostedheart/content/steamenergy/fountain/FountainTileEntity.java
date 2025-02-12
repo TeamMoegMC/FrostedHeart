@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import com.teammoeg.chorda.block.CBlockInterfaces;
+import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
@@ -44,7 +45,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
-public class FountainTileEntity extends IEBaseBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState {
+public class FountainTileEntity extends CBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState {
 
     public static final int RANGE_PER_NOZZLE = 1;
     public static final int MAX_HEIGHT = 5;
@@ -85,10 +86,6 @@ public class FountainTileEntity extends IEBaseBlockEntity implements CTickableBl
         lastTemp = nbt.getFloat("lastTemp");
     }
 
-    @Override
-    public void receiveMessageFromServer(CompoundTag message) {
-        super.receiveMessageFromServer(message);
-    }
 
     @Override
     public void tick() {
@@ -132,13 +129,13 @@ public class FountainTileEntity extends IEBaseBlockEntity implements CTickableBl
                     power--;
                 }
                 setChanged();
-                this.markContainingBlockForUpdate(null);
+                this.syncData();
             } else this.setActive(false);
 
             // grant player effect if structure is valid
             if (height > 0 && power > 0) {
                 setChanged();
-                this.markContainingBlockForUpdate(null);
+                this.syncData();
                 adjustHeat(getRange());
 
                 for (Player p : this.getLevel().players()) {
@@ -172,7 +169,7 @@ public class FountainTileEntity extends IEBaseBlockEntity implements CTickableBl
     private BlockPos findWater() {
         if (getRange() == 0) return null;
 
-        BlockState state = getState();
+        BlockState state = getBlock();
         BlockPos pos = null;
         int tries = 0;
 
@@ -242,8 +239,8 @@ public class FountainTileEntity extends IEBaseBlockEntity implements CTickableBl
 
 
     @Override
-    public void setRemovedIE() {
-        super.setRemovedIE();
+    public void onRemoved() {
+        super.onRemoved();
         removeHeat();
 
         for (int i = 0; i < MAX_HEIGHT; i++) {

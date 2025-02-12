@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.chorda.capability;
+package com.teammoeg.chorda.capability.capabilities;
 
 import com.teammoeg.chorda.block.entity.SyncableBlockEntity;
 
