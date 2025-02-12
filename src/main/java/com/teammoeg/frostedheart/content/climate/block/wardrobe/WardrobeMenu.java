@@ -27,7 +27,7 @@ public class WardrobeMenu extends CBlockEntityMenu<WardrobeBlockEntity> {
 	CDataSlot<Integer> page=CCustomMenuSlot.SLOT_INT.create(this);
 	IItemHandler wrap;
 	public WardrobeMenu(int id, Inventory inventoryPlayer, WardrobeBlockEntity tile) {
-		super(FHMenuTypes.WARDROBE.get(),tile,id, inventoryPlayer.player,37);
+		super(FHMenuTypes.WARDROBE.get(),tile,id, inventoryPlayer.player,28);
 		//we don't actually switch inventory in client.
 		if(inventoryPlayer.player.level().isClientSide)
 			wrap=tile.invs[0];
