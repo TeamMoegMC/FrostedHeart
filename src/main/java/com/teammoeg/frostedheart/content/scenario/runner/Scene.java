@@ -6,4 +6,5 @@ public interface Scene {
 
 	void sendScene(ScenarioThread thread, String text, RunStatus status, boolean wrap, boolean reset, boolean isNowait, boolean noDelay);
 
+	void waitRender(ScenarioThread thread,boolean isTransition);
 }

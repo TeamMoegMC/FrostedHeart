@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.scenario.runner;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.network.S2CSenarioActPacket;
 import com.teammoeg.frostedheart.content.scenario.network.S2CSenarioScenePacket;
+import com.teammoeg.frostedheart.content.scenario.network.S2CWaitTransMessage;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -49,6 +50,12 @@ public class ServerScene implements Scene {
 	@Override
 	public void sendTitles(ScenarioThread thread,String title,String subtitle) {
 		FHNetwork.send(PacketDistributor.PLAYER.with(()->player), new S2CSenarioActPacket(title,subtitle));
+	}
+
+
+	@Override
+	public void waitRender(ScenarioThread thread, boolean isTransition) {
+		FHNetwork.sendPlayer(player, new S2CWaitTransMessage(thread.getRunId(), isTransition));
 	}
 
 }

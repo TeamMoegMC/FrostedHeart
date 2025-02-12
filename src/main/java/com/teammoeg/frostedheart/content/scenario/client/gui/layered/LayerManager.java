@@ -138,6 +138,8 @@ public class LayerManager extends GLLayerContent {
 			current.close();
 			current=null;
 		}
+		if(trans!=null)
+			ClientScene.INSTANCE.onTransitionComplete.setFinished();
 		for(OrderedRenderableContent ctx:names.values())
 			if(ctx instanceof LayerManager) {
 				((LayerManager) ctx).close();
@@ -192,7 +194,7 @@ public class LayerManager extends GLLayerContent {
 		if (trans != null) {
 			RenderParams prev = params.copyWithCurrent(this);
 			RenderParams next = params.copyWithCurrent(this);
-			float val = (trans.transTicks)*1f / trans.maxTransTicks;
+			float val = (trans.transTicks+params.partialTicks)*1f / trans.maxTransTicks;
 			// System.out.println(val);
 			trans.trans.compute(prev, next, val);
 

@@ -22,10 +22,14 @@ package com.teammoeg.frostedheart.content.scenario.commands;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import com.teammoeg.frostedheart.content.scenario.Param;
+import com.teammoeg.frostedheart.content.scenario.network.S2CWaitTransMessage;
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
+
+import net.minecraft.server.level.ServerPlayer;
 
 public class TextualCommands {
 	public void nowait(ScenarioCommandContext runner) {
@@ -61,40 +65,5 @@ public class TextualCommands {
 		runner.thread().addWait(t);
 		runner.thread().scene().sendCurrent(runner.context(),runner.thread(), RunStatus.WAITTIMER,false);
 	}
-	public void er(ScenarioCommandContext runner) {
-		runner.thread().scene().clear(runner.context(),runner.thread(),RunStatus.RUNNING);
-	}
-	public void l(ScenarioCommandContext runner) {
-		runner.thread().waitClient();
-		runner.thread().scene().sendCurrent(runner.context(),runner.thread(), RunStatus.WAITCLIENT,false);
-	}
-	public void p(ScenarioCommandContext runner) {
-    	if(runner.thread().scene().shouldWaitClient()&&!runner.thread().scene().isSlient()) {
-    		runner.thread().setStatus(RunStatus.WAITCLIENT);
-    		runner.thread().scene().markClearAfterClick();
-    		runner.thread().scene().sendCurrent(runner.context(),runner.thread(),RunStatus.WAITCLIENT,false);
-    	}else runner.thread().scene().clear(runner.context(),runner.thread(),RunStatus.RUNNING);
-	}
-	public void wc(ScenarioCommandContext runner) {
-		runner.thread().waitClient();
-		runner.thread().scene().sendCurrent(runner.context(),runner.thread(), RunStatus.WAITCLIENT,true);
-	}
-	public void wt(ScenarioCommandContext runner) {
-		runner.thread().setStatus((RunStatus.WAITTRIGGER));
-		runner.thread().scene().sendCurrent(runner.context(),runner.thread(), RunStatus.WAITTRIGGER,false);
-	}
-	public void wa(ScenarioCommandContext runner) {
-		runner.thread().setStatus((RunStatus.WAITACTION));
-		runner.thread().scene().sendCurrent(runner.context(),runner.thread(), RunStatus.WAITACTION,false);
-	}
-	public void s(ScenarioCommandContext runner) {
-		runner.thread().stop();
-		runner.thread().scene().sendCurrent(runner.context(),runner.thread(), RunStatus.STOPPED,false);
-	}
-	public void wr(ScenarioCommandContext runner) {
-		runner.thread().setStatus((RunStatus.WAITRENDER));
-	}
-	public void wtr(ScenarioCommandContext runner) {
-		runner.thread().setStatus((RunStatus.WAITTRANS));
-	}
+
 }

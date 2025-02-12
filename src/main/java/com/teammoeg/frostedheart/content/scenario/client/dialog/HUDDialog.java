@@ -77,6 +77,7 @@ public class HUDDialog implements IScenarioDialog{
 	@Override
 	public void closeDialog() {
 		ClientScene.INSTANCE.dialog=null;
+		ClientScene.INSTANCE.onTransitionComplete.setFinished();
 	}
 
 	@Override
