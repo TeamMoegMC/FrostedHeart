@@ -118,7 +118,7 @@ public interface ScenarioThread {
 
 	void notifyClientResponse(ScenarioContext ctx, boolean isSkip, int status);
 
-	Scene scene();
+	SceneContext scene();
 
 	void addWait(int time);
 

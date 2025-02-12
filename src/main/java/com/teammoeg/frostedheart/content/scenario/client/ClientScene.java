@@ -37,6 +37,8 @@ import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.mixin.minecraft.accessors.NewChatGuiAccessor;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.util.struct.BitObserverList;
+
 import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.GuiMessage;
@@ -79,6 +81,8 @@ public class ClientScene implements IClientScene {
 	boolean hasText = false;
 	boolean canSkip = false;
 	public boolean sendImmediately=false;
+	public BitObserverList onRenderComplete=new BitObserverList();
+	public BitObserverList onTransitionComplete=new BitObserverList();
 	Component currentActTitle;
 
 

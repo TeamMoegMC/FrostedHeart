@@ -40,6 +40,7 @@ public abstract class ScenarioContext {
 	public abstract Player player();
 	public abstract void sendMessage(String string);
 	public abstract String getLang();
+	public abstract Scene getScene();
 	public Scenario loadScenario(String name) {
 		return FHScenario.loadScenario(this, name);
 	}

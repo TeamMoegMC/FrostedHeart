@@ -28,10 +28,11 @@ public class ActScenarioContext extends ScenarioContext {
 	ServerPlayer player;
 	String lang;
 	ScenarioConductor conductor;
-
-	public ActScenarioContext(ScenarioConductor conductor) {
+	Scene scene;
+	public ActScenarioContext(ScenarioConductor conductor,Scene scene) {
 		super();
 		this.conductor = conductor;
+		this.scene=scene;
 	}
 
 	@Override
@@ -56,6 +57,11 @@ public class ActScenarioContext extends ScenarioContext {
 		this.player = player;
 		if(lang!=null)
 		this.lang=lang;
+	}
+
+	@Override
+	public Scene getScene() {
+		return scene;
 	}
 
 }

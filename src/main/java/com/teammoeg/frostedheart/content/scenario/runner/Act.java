@@ -44,14 +44,14 @@ public class Act extends BaseScenarioRunner{
 
     public Act(int actid,ActNamespace name) {
 		super();
-		this.scene=new ServerScene();
+		this.scene=new SceneContext();
 		this.name=name;
 		this.actid=actid;
 		//nodeNum=-1;
 	}
     public Act(int actid,CompoundTag data) {
 		super();
-		this.scene=new ServerScene();
+		this.scene=new SceneContext();
 		load(data);
 		this.actid=actid;
 	}
@@ -114,7 +114,7 @@ public class Act extends BaseScenarioRunner{
 		return subtitle;
 	}
 	public void sendTitles(ScenarioContext ctx,ScenarioThread thread,boolean updateT,boolean updateSt) {
-		this.scene.sendTitles(ctx,thread, updateT?title:null, updateSt?subtitle:null);
+		ctx.getScene().sendTitles(thread, updateT?title:null, updateSt?subtitle:null);
 		//FHNetwork.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioActPacket(updateT?title:null,updateSt?subtitle:null));
 	}
 	public void setTitles(ScenarioContext ctx,ScenarioThread thread,String t,String st) {

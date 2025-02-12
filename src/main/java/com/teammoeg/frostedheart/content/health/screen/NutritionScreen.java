@@ -20,22 +20,23 @@
 package com.teammoeg.frostedheart.content.health.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.chorda.lang.ComponentOptimizer;
-import com.teammoeg.frostedheart.content.health.capability.Nutrition;
-import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.util.client.FGuis;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.gui.screens.inventory.MenuAccess;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.world.entity.player.Inventory;
 
-public class NutritionScreen extends Screen {
-    public NutritionScreen() {
-        super(Component.empty());
+public class NutritionScreen extends Screen implements MenuAccess<NutritionMenu> {
+	NutritionMenu menu;
+    public NutritionScreen(NutritionMenu menu, Inventory inv, Component title) {
+        super(title);
+        this.menu=menu;
     }
 
     static final int FAT_COLOR=0xFFd41c53;
@@ -57,18 +58,10 @@ public class NutritionScreen extends Screen {
     @Override
     public void init() {
         progress=0.0f;
-        ComponentOptimizer fat=new ComponentOptimizer();
-        fat.appendChar("\uF504", def_style);
-        ComponentOptimizer protein=new ComponentOptimizer();
-        protein.appendChar("\uF505", def_style);
-        ComponentOptimizer carbohydrate=new ComponentOptimizer();
-        carbohydrate.appendChar("\uF502", def_style);
-        ComponentOptimizer vegetable=new ComponentOptimizer();
-        vegetable.appendChar("\uF503", def_style);
-        fat_icon=fat.build();
-        protein_icon=protein.build();
-        carbohydrate_icon=carbohydrate.build();
-        vegetable_icon=vegetable.build();
+        fat_icon=Components.str("\uF504").withStyle(def_style);
+        protein_icon=Components.str("\uF505").withStyle(def_style);
+        carbohydrate_icon=Components.str("\uF502").withStyle(def_style);
+        vegetable_icon=Components.str("\uF503").withStyle(def_style);
 
     }
 
@@ -76,25 +69,21 @@ public class NutritionScreen extends Screen {
     public void render(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
         super.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
         progress = Math.min(progress + pPartialTick/10, 1.0f);
-        LocalPlayer localPlayer = null;
-        if (this.minecraft != null) {
-            localPlayer = this.minecraft.player;
-        }
         PoseStack pose = pGuiGraphics.pose();
         pose.pushPose();
         pose.translate((float) this.width /2, (float) this.height /2, 0);
         FGuis.fillRoundRect(pGuiGraphics,-100, -80, 200, 160, 0.05f,0x40FFFFFF);
 
-        NutritionCapability.getCapability(localPlayer).ifPresent(nutrition -> renderNutritionBar(pGuiGraphics, 0, 0, nutrition.get()));
+        renderNutritionBar(pGuiGraphics, 0, 0);
         pose.popPose();
     }
 
-    private static void renderNutritionBar(GuiGraphics guiGraphics, int x, int y, Nutrition n) {
+    private void renderNutritionBar(GuiGraphics guiGraphics, int x, int y) {
 
-        renderBar(guiGraphics,x-40,y-30,fat_icon,Component.literal("fat"),n.getFat()/10000,FAT_COLOR);
-        renderBar(guiGraphics,x+40,y-30,protein_icon,Component.literal("protein"),n.getProtein()/10000,PROTEIN_COLOR);
-        renderBar(guiGraphics,x-40,y+30,carbohydrate_icon,Component.literal("carbohydrate"),n.getCarbohydrate()/10000,CARBOHYDRATE_COLOR);
-        renderBar(guiGraphics,x+40,y+30,vegetable_icon,Component.literal("vegetable"),n.getVegetable()/10000,VEGETABLE_COLOR);
+        renderBar(guiGraphics,x-40,y-30,fat_icon,Component.literal("fat"),menu.fat.getValue(),FAT_COLOR);
+        renderBar(guiGraphics,x+40,y-30,protein_icon,Component.literal("protein"),menu.protein.getValue(),PROTEIN_COLOR);
+        renderBar(guiGraphics,x-40,y+30,carbohydrate_icon,Component.literal("carbohydrate"),menu.carbohydrate.getValue(),CARBOHYDRATE_COLOR);
+        renderBar(guiGraphics,x+40,y+30,vegetable_icon,Component.literal("vegetable"),menu.vegetable.getValue(),VEGETABLE_COLOR);
 
     }
 
@@ -108,4 +97,9 @@ public class NutritionScreen extends Screen {
         FGuis.drawRing(guiGraphics, x,  y, 10, 15, 0,value *360 * progress, color);
         guiGraphics.drawCenteredString(font, desc, x, y+16+font.lineHeight/2, 0xFFFFFF);
     }
+
+	@Override
+	public NutritionMenu getMenu() {
+		return menu;
+	}
 }

@@ -23,15 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 /**
- * Registry for "meta" events.
- * meta event is a flag that changes after specific initialization code is executed.
+ * observer listeners for a flag
  * Listeners would be called after the flag changes, or immediate when flag is already changed.
  * 
  * */
-public class MetaEventObservers {
+public class BitObserverList {
 	List<Supplier<Runnable>> listener=new ArrayList<>();
 	boolean isFired=false;
-	public MetaEventObservers() {
+	public BitObserverList() {
 	}
 	public synchronized void addListener(Supplier<Runnable> runnable) {
 		if(isFired) {
@@ -43,6 +42,10 @@ public class MetaEventObservers {
 	public synchronized void setFinished() {
 		isFired=true;
 		listener.forEach(t->t.get().run());
+		listener.clear();
 	}
-
+	public synchronized void resetFinished() {
+		isFired=false;
+		
+	}
 }

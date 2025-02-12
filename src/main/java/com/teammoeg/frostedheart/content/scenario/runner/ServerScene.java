@@ -23,25 +23,32 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.network.S2CSenarioActPacket;
 import com.teammoeg.frostedheart.content.scenario.network.S2CSenarioScenePacket;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.PacketDistributor;
 
 /**
  * A scene is a place to present content to client You should NOT store this
- * object, always get it from {@link ScenarioConductor#getScene()}
+ * object, always get it from {@link ScenarioContext#getScene()}
  */
-public class ServerScene extends Scene {
+public class ServerScene implements Scene {
+	@Setter
+	@Getter
+	ServerPlayer player;
 	public ServerScene() {
 		super();
 	}
 
+
 	@Override
-	protected void sendScene(ScenarioContext ctx,ScenarioThread thread,String text,RunStatus status,boolean wrap, boolean reset,boolean noDelay) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> ((ServerPlayer)ctx.player())), new S2CSenarioScenePacket(thread.getRunId(),text, wrap, isNowait, reset,status,noDelay));
+	public void sendScene(ScenarioThread thread,String text,RunStatus status,boolean wrap, boolean reset,boolean isNowait,boolean noDelay) {
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new S2CSenarioScenePacket(thread.getRunId(),text, wrap, isNowait, reset,status,noDelay));
 	}
+
 	@Override
-	public void sendTitles(ScenarioContext ctx,ScenarioThread thread,String title,String subtitle) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(()->((ServerPlayer)ctx.player())), new S2CSenarioActPacket(title,subtitle));
+	public void sendTitles(ScenarioThread thread,String title,String subtitle) {
+		FHNetwork.send(PacketDistributor.PLAYER.with(()->player), new S2CSenarioActPacket(title,subtitle));
 	}
 
 }

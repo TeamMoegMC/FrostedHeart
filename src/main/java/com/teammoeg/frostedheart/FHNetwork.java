@@ -34,7 +34,7 @@ import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHResponseIn
 import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
-import com.teammoeg.frostedheart.content.health.network.PlayerNutritionSyncPacket;
+import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
 import com.teammoeg.frostedheart.content.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.content.research.network.FHDrawingDeskOperationPacket;
 import com.teammoeg.frostedheart.content.research.network.FHEffectProgressSyncPacket;
@@ -60,6 +60,7 @@ import com.teammoeg.frostedheart.content.scenario.network.S2CScenarioCommandPack
 import com.teammoeg.frostedheart.content.scenario.network.S2CSenarioActPacket;
 import com.teammoeg.frostedheart.content.scenario.network.S2CSenarioScenePacket;
 import com.teammoeg.frostedheart.content.scenario.network.S2CSetCookiesMessage;
+import com.teammoeg.frostedheart.content.scenario.network.S2CWaitTransMessage;
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkRequestC2SPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkResponseS2CPacket;
@@ -137,7 +138,6 @@ public class FHNetwork {
         String VERSION = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
         FHMain.LOGGER.info("FH Network Version: " + VERSION);
         CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION, VERSION::equals, VERSION::equals);
-
         // CHANNEL.registerMessage(id++, ChunkWatchPacket.class,
         // ChunkWatchPacket::encode, ChunkWatchPacket::new, ChunkWatchPacket::handle);
         // CHANNEL.registerMessage(id++, ChunkUnwatchPacket.class,
@@ -177,7 +177,7 @@ public class FHNetwork {
         registerMessage("trade_commit", TradeCommitPacket.class);
         registerMessage("trade_update", TradeUpdatePacket.class);
 
-        //Scenario System
+        //Scenario Messages
         registerMessage("scenario_client_op", C2SScenarioResponsePacket.class);
         registerMessage("scenario_server_command", S2CScenarioCommandPacket.class);
         registerMessage("scenario_scene", S2CSenarioScenePacket.class);
@@ -189,6 +189,8 @@ public class FHNetwork {
         registerMessage("scenario_get_cookie", S2CRequestCookieMessage.class);
         registerMessage("scenario_send_cookie", C2SScenarioCookies.class);
         registerMessage("scenario_render_status",C2SRenderingStatusMessage.class);
+        registerMessage("scenario_wait_render",S2CWaitTransMessage.class);
+        
 
         // Heat Messages
         registerMessage("heat_endpoint", EndPointDataPacket.class);
@@ -216,7 +218,8 @@ public class FHNetwork {
         registerMessage("water_level", PlayerWaterLevelSyncPacket.class);
 
         // Nutrition
-        registerMessage("nutrition", PlayerNutritionSyncPacket.class);
+        //registerMessage("nutrition", PlayerNutritionSyncPacket.class);
+        registerMessage("open_nutrition", C2SOpenNutritionScreenMessage.class);
 
         // Infrared View
         registerMessage("infrared_view_c2s", FHRequestInfraredViewDataSyncPacket.class);

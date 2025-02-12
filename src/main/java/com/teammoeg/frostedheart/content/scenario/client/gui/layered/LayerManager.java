@@ -29,6 +29,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLImageContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLLayerContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.TypedDynamicTexture;
@@ -63,13 +64,11 @@ public class LayerManager extends GLLayerContent {
 	volatile LayerContext nextlayer;
 	volatile LayerContext current;
 	volatile TransitionInfo trans;
-	public boolean renderComplete;
-	public Runnable transCompleteRunnable;
-	public Runnable renderCompleteRunnable;
+	private static final AtomicInteger THREAD_NUM=new AtomicInteger(0);
 	static ExecutorService renderThread=Executors.newFixedThreadPool(FHConfig.CLIENT.scenarioRenderThread.get(),r->{
 		Thread th=new Thread(r);
-		th.setDaemon(true);
-		th.setName("scenario-render-pool");
+		th.setDaemon(true);//if the game exits, we have no need to render anymore
+		th.setName("scenario-render-pool-"+THREAD_NUM.incrementAndGet());
 		return th;
 	});
 	RerenderRequest rrq;
@@ -94,15 +93,6 @@ public class LayerManager extends GLLayerContent {
 
 	@Override
 	public void tick() {
-		if(renderComplete&&renderCompleteRunnable!=null) {
-			renderCompleteRunnable.run();
-			renderCompleteRunnable=null;
-			if(trans==null)
-				if(transCompleteRunnable!=null) {
-					transCompleteRunnable.run();
-					transCompleteRunnable=null;
-				}
-		}
 		if(trans!=null&&trans.maxTransTicks>0) {
 			trans.transTicks++;
 
@@ -113,10 +103,7 @@ public class LayerManager extends GLLayerContent {
 				nextlayer=null;
 				if(ol!=null)
 				ol.close();
-				if(transCompleteRunnable!=null) {
-					transCompleteRunnable.run();
-					transCompleteRunnable=null;
-				}
+				ClientScene.INSTANCE.onTransitionComplete.setFinished();
 				
 			}
 		}
@@ -159,9 +146,8 @@ public class LayerManager extends GLLayerContent {
 	boolean prerenderRequested;
 	public void commitChanges(TransitionFunction t, int ticks) {
 		//rrq=new RerenderRequest(t,ticks);
-		renderComplete=false;
-		transCompleteRunnable=null;
-		renderCompleteRunnable=null;
+		ClientScene.INSTANCE.onRenderComplete.resetFinished();
+		ClientScene.INSTANCE.onTransitionComplete.resetFinished();
 		renderThread.submit(()->renderPrerendered(t,ticks));
 		
 	}
@@ -187,8 +173,9 @@ public class LayerManager extends GLLayerContent {
 			current=inext;
 			if(otex!=null)
 				otex.close();
+			ClientScene.INSTANCE.onTransitionComplete.setFinished();
 		}
-		renderComplete=true;
+		ClientScene.INSTANCE.onRenderComplete.setFinished();
 	}
 
 	@Override

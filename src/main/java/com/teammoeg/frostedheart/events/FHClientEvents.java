@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
+import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
 import com.teammoeg.frostedheart.content.health.screen.NutritionScreen;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.gui.ResearchToast;
@@ -407,7 +408,7 @@ public class FHClientEvents {
         }
         if (event.getAction() == GLFW.GLFW_PRESS) {
             if (FHKeyMappings.key_health.get().consumeClick()) {
-                Minecraft.getInstance().setScreen(new NutritionScreen());
+            	FHNetwork.sendToServer(new C2SOpenNutritionScreenMessage());
             }
             if(FHKeyMappings.key_clothes.get().consumeClick()) {
             	FHNetwork.sendToServer(new C2SOpenClothesScreenMessage());

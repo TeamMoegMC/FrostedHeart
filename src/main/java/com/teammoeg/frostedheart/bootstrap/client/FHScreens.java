@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorL
 import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorState;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeScreen;
 import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
+import com.teammoeg.frostedheart.content.health.screen.NutritionScreen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskScreen;
@@ -55,6 +56,7 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.INCUBATOR_T1.get(), IncubatorT1Screen::new);
         MenuScreens.register(FHMenuTypes.INCUBATOR_T2.get(), IncubatorT2Screen::new);
         MenuScreens.register(FHMenuTypes.CLOTHES_GUI.get(), ClothesScreen::new);
+        MenuScreens.register(FHMenuTypes.NUTRITION_GUI.get(), NutritionScreen::new);
         MenuScreens.register(FHMenuTypes.WARDROBE.get(), WardrobeScreen::new);
     }
 

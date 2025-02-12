@@ -20,15 +20,11 @@
 package com.teammoeg.frostedheart.content.health.capability;
 
 import com.teammoeg.chorda.io.NBTSerializable;
-import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.health.event.GatherFoodNutritionEvent;
-import com.teammoeg.frostedheart.content.health.network.PlayerNutritionSyncPacket;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -102,16 +98,16 @@ public class NutritionCapability implements NBTSerializable {
     public Nutrition get() {
         return nutrition;
     }
-
+/*
     public static void syncToClient(ServerPlayer player) {
         getCapability(player).ifPresent(t -> FHNetwork.sendPlayer(player, new PlayerNutritionSyncPacket(t.get())));
-    }
+    }*/
 
     public static void syncToClientOnRestore(Player player) {
-        if (!player.level().isClientSide()) {
+        /*if (!player.level().isClientSide()) {
             ServerPlayer serverPlayer = (ServerPlayer) player;
             syncToClient(serverPlayer);
-        }
+        }*/
     }
 
     /**

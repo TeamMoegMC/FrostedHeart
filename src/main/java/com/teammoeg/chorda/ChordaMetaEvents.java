@@ -19,10 +19,10 @@
 
 package com.teammoeg.chorda;
 
-import com.teammoeg.chorda.util.struct.MetaEventObservers;
+import com.teammoeg.chorda.util.struct.BitObserverList;
 
 public class ChordaMetaEvents {
-	public static final MetaEventObservers IE_REGISTRY=new MetaEventObservers();
+	public static final BitObserverList IE_REGISTRY=new BitObserverList();
 	public ChordaMetaEvents() {
 	}
 

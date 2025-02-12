@@ -52,7 +52,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 	/** Program register. */
 	protected int nodeNum=0;
 	
-	protected Scene scene;
+	protected SceneContext scene;
 	
 	@Override
 	public String toString() {
@@ -339,6 +339,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 		runIfNeeded(ctx);
 		tickWaitIfNeeded();
 	}
+	
 	public void runIfNeeded(ScenarioContext ctx) {
 		if(getStatus()==RunStatus.RUNNING) {
 			runCodeExecutionLoop(ctx);
@@ -474,7 +475,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 
 
 	@Override
-	public Scene scene() {
+	public SceneContext scene() {
 		return scene;
 	}
 
@@ -485,6 +486,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 
 	@Override
 	public void setCurrentLabel(String target) {
+		scene.rollLogs();
 		if(this.sp!=null)
 			currentLabel=new ExecuteTarget(this.sp.name(),target);
 	}

@@ -28,6 +28,7 @@ import com.teammoeg.chorda.menu.MultiblockMenuType;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.decoration.RelicChestContainer;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
+import com.teammoeg.frostedheart.content.health.screen.NutritionMenu;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Container;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Container;
@@ -68,6 +69,7 @@ public class FHMenuTypes {
 	public static final RegistryObject<MenuType<TradeContainer>> TRADE_GUI = CONTAINERS.register("trade", () -> IForgeMenuType.create(TradeContainer::new));
 	public static final RegistryObject<MenuType<HeatStatContainer>> HEAT_STAT = CONTAINERS.register("heat_stat", () -> IForgeMenuType.create(HeatStatContainer::new));
 	public static final RegistryObject<MenuType<ClothesInventoryMenu>> CLOTHES_GUI = CONTAINERS.register("clothes", () -> IForgeMenuType.create(ClothesInventoryMenu::new));
+	public static final RegistryObject<MenuType<NutritionMenu>> NUTRITION_GUI = CONTAINERS.register("nutrition", () -> IForgeMenuType.create(NutritionMenu::new));
 	
 	public static final MultiblockMenuType<T1GeneratorState, T1GeneratorContainer> GENERATOR_T1 = registerMultiblock("generator",T1GeneratorContainer::new,T1GeneratorContainer::new);
 	public static final MultiblockMenuType<T2GeneratorState, T2GeneratorContainer> GENERATOR_T2 = registerMultiblock("generator_t2", T2GeneratorContainer::new, T2GeneratorContainer::new);

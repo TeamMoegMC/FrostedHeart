@@ -238,15 +238,14 @@ public class ClientControl implements IClientControlCommand {
 		lm.setWidth((w));
 		lm.setHeight((h));
 
-		
 		lm.commitChanges(transition!=null?Transition.valueOf(transition.toLowerCase()):null,time);
-		lm.renderCompleteRunnable=()->FHNetwork.sendToServer(new C2SRenderingStatusMessage(ClientScene.INSTANCE.curRunId,false));
-		lm.transCompleteRunnable=()->FHNetwork.sendToServer(new C2SRenderingStatusMessage(ClientScene.INSTANCE.curRunId,true));
+
 		if(ClientScene.INSTANCE.layers.isEmpty()) {
 			ClientScene.INSTANCE.dialog.setPrimary(lm);
 		}else {
 			ClientScene.INSTANCE.layers.peekLast().addLayer(name, lm);
 		}
+		
 	}
 	@Override
 	public void ImageLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")String path,@Param("")Rect drect,@Param("s")Rect srect,@Param("z")int z,@Param("opacity")Float opacity) {

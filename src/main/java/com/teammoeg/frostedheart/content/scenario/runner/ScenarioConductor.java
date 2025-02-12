@@ -54,8 +54,10 @@ public class ScenarioConductor implements NBTSerializable{
     public Map<ActNamespace,Act> acts=new HashMap<>();
     public IdRegistry<ActNamespace> actids=new IdRegistry<>();
     private transient boolean isActsEnabled;
+    private ServerScene scene=new ServerScene();
     //private transient ActNamespace lastQuest;
-    private ActScenarioContext context=new ActScenarioContext(this);
+    private ActScenarioContext context=new ActScenarioContext(this,scene);
+    
     private ActNamespace lastCurrent;
 	private static final ActNamespace init=new ActNamespace(null,null);
 	int actcounter=0;
@@ -85,6 +87,7 @@ public class ScenarioConductor implements NBTSerializable{
     	}
     }
     public void initContext(ServerPlayer player,String lang) {
+    	scene.setPlayer(player);
     	context.setPlayerAndLang(player,lang);
     }
     public ScenarioConductor() {
@@ -131,6 +134,7 @@ public class ScenarioConductor implements NBTSerializable{
 		acts.get(init).jump(getContext(), scenario, null);
 	}
 	public void tick(ServerPlayer player) {
+		
 		init(player,null);
     	//detect triggers
 		//System.out.println("start tick==============");
