@@ -48,6 +48,7 @@ import java.util.function.Predicate;
 
 public class WheelMenuScreen extends Screen {
     private static final String OPEN_ANIM_NAME = WheelMenuScreen.class.getName() + "opening";
+    private static final String CLOSE_ANIM_NAME = WheelMenuScreen.class.getName() + "closing";
     public static final float WHEEL_OUTER_RADIUS = 100;
     public static final float WHEEL_INNER_RADIUS = 70;
     private final List<Selection> selections = new ArrayList<>();
@@ -55,11 +56,14 @@ public class WheelMenuScreen extends Screen {
     private final List<Point> positions = new ArrayList<>();
     private final List<Float> degrees = new ArrayList<>();
     public boolean showing = false;
+    private boolean close = false;
     private Selection hovered;
     private Selection lastHovered;
 
     public WheelMenuScreen() {
         super(Component.empty());
+        AnimationUtil.remove(OPEN_ANIM_NAME);
+        AnimationUtil.remove(CLOSE_ANIM_NAME);
 //        if (Popup.isEmpty()) {
 //            Popup.put("Release Tab to select");
 //        }
@@ -69,6 +73,13 @@ public class WheelMenuScreen extends Screen {
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         showing = true;
         float p = AnimationUtil.fadeIn(300, OPEN_ANIM_NAME, false);
+        if (close) {
+            p = 1 - AnimationUtil.fadeIn(150, CLOSE_ANIM_NAME, false);
+            if (p == 0) {
+                onClose();
+                return;
+            }
+        }
         int size = visibleSelections.size();
         int cw = ClientUtils.screenCenterX();
         int ch = ClientUtils.screenCenterY();
@@ -166,7 +177,7 @@ public class WheelMenuScreen extends Screen {
     protected void init() {
         // 在此处添加轮盘选项
         addSelection(new Selection(Component.literal("Test0"), FHItems.debug_item.get().getDefaultInstance(), s -> Popup.put("Test")));
-        addSelection(new Selection(Component.literal("Test1"), IconButton.Icon.LEAVE, ColorHelper.CYAN, Selection.ALWAYS_VISIBLE, Selection.NO_ACTION, s -> Popup.put("Test1 Hovered")));
+        addSelection(new Selection(Component.literal("Test1"), IconButton.Icon.LEAVE, ColorHelper.CYAN, Selection.ALWAYS_VISIBLE, Selection.NO_ACTION, s -> Popup.put("Test1")));
         addSelection(new Selection(Component.literal("Test2"), FHItems.debug_item.get().getDefaultInstance(), Selection.NO_ACTION) {
             @Override
             void renderWhenHovered(@NotNull GuiGraphics graphics, int pMouseX, int pMouseY, float pPartialTick) {
@@ -214,13 +225,6 @@ public class WheelMenuScreen extends Screen {
 
     @Override
     public void onClose() {
-        if (hovered != null) {
-            hovered.onPress();
-        }
-        hovered = null;
-        lastHovered = null;
-        showing = false;
-        AnimationUtil.remove(OPEN_ANIM_NAME);
         super.onClose();
     }
 
@@ -238,14 +242,14 @@ public class WheelMenuScreen extends Screen {
 
     @Override
     public boolean keyReleased(int pKeyCode, int pScanCode, int pModifiers) {
-        boolean flag = super.keyReleased(pKeyCode, pScanCode, pModifiers);
-        if (flag) return true;
-
-        if (pKeyCode == FHKeyMappings.key_openWheelMenu.get().getKey().getValue()) {
-            onClose();
+        if (!close && pKeyCode == FHKeyMappings.key_openWheelMenu.get().getKey().getValue()) {
+            if (hovered != null) {
+                hovered.onPress();
+            }
+            close = true;
             return true;
         }
-        return false;
+        return super.keyReleased(pKeyCode, pScanCode, pModifiers);
     }
 
     @Override
