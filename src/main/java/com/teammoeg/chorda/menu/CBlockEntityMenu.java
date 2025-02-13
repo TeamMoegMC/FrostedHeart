@@ -25,11 +25,13 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
+/**
+ * use of blockentity in screens, use {@link CCustomMenuSlot} to serve as data synchronization instead
+ * */
 public abstract class CBlockEntityMenu<T extends BlockEntity> extends CBaseMenu {
 	protected T blockEntity;
 	public Container inv;
-	
+
 
 	public T getBlock() {
 		return blockEntity;
@@ -53,5 +55,9 @@ public abstract class CBlockEntityMenu<T extends BlockEntity> extends CBaseMenu 
 	@Override
 	public boolean stillValid(Player pPlayer) {
 		return !blockEntity.isRemoved();
+	}
+	public CBlockEntityMenu<T> bindServer(){
+		
+		return this;
 	}
 }

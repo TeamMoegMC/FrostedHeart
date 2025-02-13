@@ -86,7 +86,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
         public FluidStack drain(FluidStack resource, FluidAction action) {
             FluidStack fs = fluid[1].drain(resource, action);
             if (!fs.isEmpty() && action == FluidAction.EXECUTE) {
-                syncData();
+                setChanged();
             }
             return fs;
         }
@@ -95,7 +95,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
         public FluidStack drain(int maxDrain, FluidAction action) {
             FluidStack fs = fluid[1].drain(maxDrain, action);
             if (!fs.isEmpty() && action == FluidAction.EXECUTE) {
-            	syncData();
+            	setChanged();
             }
             return fs;
         }
@@ -104,7 +104,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
         public int fill(FluidStack resource, FluidAction action) {
             int f = fluid[0].fill(resource, action);
             if (f > 0 && action == FluidAction.EXECUTE) {
-            	syncData();
+            	setChanged();
 
             }
             return f;
@@ -276,7 +276,6 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                     lprocess = 0;
                     this.setActive(false);
                     this.setChanged();
-                    this.syncData();
                     return;
                 }
                 if (fuel <= 0) {
@@ -305,7 +304,6 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                                 efficiency -= 0.005F;
                             this.setActive(false);
                             this.setChanged();
-                            this.syncData();
                             return;
                         }
                     }
@@ -324,7 +322,6 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                 }
 
                 this.setChanged();
-                this.syncData();
             } else if (!out.isEmpty() || !outfluid.isEmpty()) {
                 if (ItemHandlerHelper.canItemStacksStack(out, inventory.get(3))) {
                     ItemStack is = inventory.get(3);
@@ -362,7 +359,6 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                             isFoodRecipe = false;
                             lprocess = 0;
                             this.setChanged();
-                            this.syncData();
                             return;
                         }
                     }
@@ -377,11 +373,10 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                             catalyst.shrink(1);
                             efficiency = 0.2f;
                             this.setChanged();
-                            this.syncData();
                             return;
                         }
                         if (efficiency > 0.01) {
-                            int value = in.getItem().getFoodProperties().getNutrition();
+                            int value = in.getFoodProperties(null).getNutrition();
                             //add caupona
                             /*if (in.getItem() instanceof StewItem) {
                                 value = ThermopoliumApi.getInfo(in).healing;
@@ -397,7 +392,6 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                             water = 1;
                             this.setActive(true);
                             this.setChanged();
-                            this.syncData();
                             return;
                         }
                     }
@@ -415,7 +409,6 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                 this.setActive(false);
                 if (changed) {
                     this.setChanged();
-                    this.syncData();
                 }
 
             }
@@ -445,7 +438,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
 
 	@Override
 	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-		return new IncubatorT1Container(pContainerId,pPlayerInventory,this);
+		return new IncubatorT1Container(pContainerId,pPlayerInventory,this,true);
 	}
 
 	@Override

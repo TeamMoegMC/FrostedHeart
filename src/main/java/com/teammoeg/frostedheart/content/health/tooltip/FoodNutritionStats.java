@@ -19,26 +19,31 @@
 
 package com.teammoeg.frostedheart.content.health.tooltip;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nullable;
+
+import org.lwjgl.glfw.GLFW;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
-import com.teammoeg.frostedheart.content.health.capability.ImmutableNutrition;
 import com.teammoeg.frostedheart.content.health.capability.Nutrition;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import com.teammoeg.frostedheart.util.client.FineProgressBarBuilder;
+import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
 import com.teammoeg.frostedheart.util.client.Lang;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import org.lwjgl.glfw.GLFW;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
 
 public class FoodNutritionStats implements TooltipModifier {
     protected final Item item;
@@ -100,6 +105,7 @@ public class FoodNutritionStats implements TooltipModifier {
             	builder.addElement(VEGETABLE_COLOR, "\uF503",nutrition.getVegetable());
             }
             list.add(builder.build());
+            return list;
         }
         return null;
     }

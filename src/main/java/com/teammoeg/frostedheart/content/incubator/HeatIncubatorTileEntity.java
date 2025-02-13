@@ -25,6 +25,10 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
+
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.nbt.CompoundTag;
@@ -96,6 +100,10 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity{
 	public void invalidateCaps() {
 		heatcap.invalidate();
 		super.invalidateCaps();
+	}
+	@Override
+	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
+		return new IncubatorT2Container(pContainerId,pPlayerInventory,this,true);
 	}
 
 }

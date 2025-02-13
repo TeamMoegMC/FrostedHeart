@@ -20,6 +20,9 @@
 package com.teammoeg.frostedheart.content.incubator;
 
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
+import com.teammoeg.chorda.menu.CCustomMenuSlot;
+import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
+import com.teammoeg.chorda.menu.slots.UIFluidTank;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 
 import blusunrize.immersiveengineering.common.gui.IESlot;
@@ -27,10 +30,30 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
 public class IncubatorT1Container extends CBlockEntityMenu<IncubatorTileEntity> {
-
+	UIFluidTank tankin=new UIFluidTank(this,6000);
+	UIFluidTank tankout=new UIFluidTank(this,6000);
+	CDataSlot<Float> process=CCustomMenuSlot.SLOT_FIXED.create(this);
+	CDataSlot<Float> fuel=CCustomMenuSlot.SLOT_FIXED.create(this);
+	CDataSlot<Float> efficiency=CCustomMenuSlot.SLOT_FIXED.create(this);
+	CDataSlot<Boolean> isFoodRecipe=CCustomMenuSlot.SLOT_BOOL.create(this);
     public IncubatorT1Container(int id, Inventory inventoryPlayer, IncubatorTileEntity tile) {
+    	this(id,inventoryPlayer,tile,false);
+    	
+    }
+    public IncubatorT1Container(int id, Inventory inventoryPlayer, IncubatorTileEntity tile,boolean isServer) {
         super(FHMenuTypes.INCUBATOR_T1.get(), tile, id,inventoryPlayer.player, 4);
+        if(isServer) {
+        	//System.out.println("binded in side "+inventoryPlayer.player.level().isClientSide);
+        	tankin.bind(tile.fluid[0]);
+        	tankout.bind(tile.fluid[1]);
+        	process.bind(()->tile.process*1f/tile.processMax);
+        	fuel.bind(()->tile.fuel*1f/tile.fuelMax);
+        	efficiency.bind(()->tile.efficiency);
+        }
+        addSlot(inventoryPlayer,tile);
 
+    }
+    public void addSlot(Inventory inventoryPlayer,IncubatorTileEntity tile) {
         this.addSlot(new IESlot(this, this.inv, 0, 34, 52) {
             @Override
             public boolean mayPlace(ItemStack itemStack) {
@@ -53,5 +76,6 @@ public class IncubatorT1Container extends CBlockEntityMenu<IncubatorTileEntity> 
 
         this.addPlayerInventory(inventoryPlayer,8,84,142);
     }
+    
 }
 

@@ -441,32 +441,36 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 
 	@Override
 	public void broadcastChanges() {
-		ContainerDataSyncMessageS2C packet = new ContainerDataSyncMessageS2C();
-		for (int i = 0; i < specialDataSlots.size(); i++) {
-			SyncableDataSlot<?> slot = specialDataSlots.get(i);
-			if (slot.checkForUpdate()) {
-				packet.add(i, slot.getConverter(), slot.getValue());
-			}
-		}
-		if (packet.hasData() && player != null)
-			ChordaNetwork.sendPlayer((ServerPlayer) player, packet);
-		super.broadcastChanges();
 
+		super.broadcastChanges();
+		if(!player.level().isClientSide) {
+			ContainerDataSyncMessageS2C packet = new ContainerDataSyncMessageS2C();
+			for (int i = 0; i < specialDataSlots.size(); i++) {
+				SyncableDataSlot<?> slot = specialDataSlots.get(i);
+				if (slot.checkForUpdate()) {
+					packet.add(i, slot.getConverter(), slot.getValue());
+				}
+			}
+			if (packet.hasData() && player != null)
+				ChordaNetwork.sendPlayer((ServerPlayer) player, packet);
+
+		}
 	}
 
 	@Override
 	public void broadcastFullState() {
-		ContainerDataSyncMessageS2C packet = new ContainerDataSyncMessageS2C();
-		for (int i = 0; i < specialDataSlots.size(); i++) {
-			SyncableDataSlot<?> slot = specialDataSlots.get(i);
-			slot.checkForUpdate();
-			packet.add(i, slot.getConverter(), slot.getValue());
-			
-		}
-		if (packet.hasData() && player != null)
-			ChordaNetwork.sendPlayer((ServerPlayer) player, packet);
 		super.broadcastFullState();
-
+		if(!player.level().isClientSide) {
+			ContainerDataSyncMessageS2C packet = new ContainerDataSyncMessageS2C();
+			for (int i = 0; i < specialDataSlots.size(); i++) {
+				SyncableDataSlot<?> slot = specialDataSlots.get(i);
+				slot.checkForUpdate();
+				packet.add(i, slot.getConverter(), slot.getValue());
+				
+			}
+			if (packet.hasData() && player != null)
+				ChordaNetwork.sendPlayer((ServerPlayer) player, packet);
+		}
 	}
 
 	@Override

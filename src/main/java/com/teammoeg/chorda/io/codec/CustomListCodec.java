@@ -19,15 +19,15 @@
 
 package com.teammoeg.chorda.io.codec;
 
+import java.util.Collection;
+import java.util.Objects;
+import java.util.function.Supplier;
+
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.ListBuilder;
-
-import java.util.Collection;
-import java.util.Objects;
-import java.util.function.Supplier;
 
 public class CustomListCodec<A,L extends Collection<A>> implements Codec<L> {
     private final Codec<A> elementCodec;

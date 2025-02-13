@@ -511,8 +511,6 @@ public class CCustomMenuSlot {
 		}
 
 	};
-
-
 	public static <T> CDataSlot<T> create(CBaseMenu container, DataSlotConverter<T> type) {
 		SingleDataSlot<T> slot=new SingleDataSlot<>(type);
 		container.addDataSlot(slot);
@@ -529,5 +527,6 @@ public class CCustomMenuSlot {
 		container.addDataSlot(slot);
 		return slot;
 	}
+	
 	
 }

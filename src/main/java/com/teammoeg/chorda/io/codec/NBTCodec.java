@@ -28,8 +28,8 @@ import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.chorda.io.marshaller.ClassInfo;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 
 public class NBTCodec<A extends NBTSerializable> implements Codec<A> {
 	Class<A> clazz;

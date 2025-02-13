@@ -37,18 +37,16 @@ import net.minecraft.world.entity.player.Inventory;
 
 public class IncubatorT1Screen extends IEContainerScreen<IncubatorT1Container> {
     private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("incubator");
-    private IncubatorTileEntity tile;
 
     public IncubatorT1Screen(IncubatorT1Container container, Inventory inv, Component title) {
         super(container, inv, title, TEXTURE);
-        this.tile = container.getBlock();
     }
 
 
     @Override
 	protected List<InfoArea> makeInfoAreas() {
-		return ImmutableList.of(new FluidInfoArea(tile.fluid[0], new Rect2i(61,20,16,46), 177, 177, 20, 51, background),
-			new FluidInfoArea(tile.fluid[1], new Rect2i(117,20,16,46), 177, 177, 20, 51, background));
+		return ImmutableList.of(new FluidInfoArea(menu.tankin, new Rect2i(leftPos+61,topPos+20,16,46), 177, 177, 20, 51, background),
+			new FluidInfoArea(menu.tankout, new Rect2i(leftPos+117,topPos+20,16,46), 177, 177, 20, 51, background));
 	}
 
 
@@ -58,17 +56,17 @@ public class IncubatorT1Screen extends IEContainerScreen<IncubatorT1Container> {
 		
        // transform.blit(TEXTURE, leftPos, topPos, 0, 0, imageWidth, imageHeight);
         // recipe progress icon
-        if (tile.processMax > 0 && tile.process > 0) {
-            int w = (int) (32 * (tile.process / (float) tile.processMax));
+        if (menu.process.getValue()>0) {
+            int w = (int) (32 * menu.process.getValue());
             transform.blit(TEXTURE, leftPos + 80, topPos + 28, 176, 0, 32 - w, 29);
         }
-        if (tile.fuel > 0 && tile.fuelMax > 0) {
-            int h = (int) (14 * (tile.fuel / (float) tile.fuelMax));
+        if (menu.fuel.getValue() > 0) {
+            int h = (int) (14 * menu.fuel.getValue());
             transform.blit(TEXTURE, leftPos + 35, topPos + 35 + (14 - h), 198, 64 + (14 - h), 14, h);
         }
-        if (tile.efficiency > 0) {
-            int h = (int) (35 * (tile.efficiency));
-            if (tile.isFoodRecipe)
+        if (menu.efficiency.getValue() > 0) {
+            int h = (int) (35 * menu.efficiency.getValue());
+            if (menu.isFoodRecipe.getValue())
             	transform.blit(TEXTURE, leftPos + 19, topPos + 35 + (35 - h), 198, 29 + (35 - h), 9, h);
             else
             	transform.blit(TEXTURE, leftPos + 19, topPos + 35 + (35 - h), 207, 29 + (35 - h), 9, h);

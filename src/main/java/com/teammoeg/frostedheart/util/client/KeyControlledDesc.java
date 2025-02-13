@@ -60,8 +60,12 @@ public class KeyControlledDesc {
 	public List<Component> getCurrentLines() {
 		if (com.teammoeg.chorda.util.CUtils.isDown(key1)) {
 			List<Component> res=linesOnKey.get();
-			appendKeyDesc(res,true);
-			return res;
+			if(res!=null) {
+				appendKeyDesc(res,true);
+				return res;
+			}else {
+				return List.of();
+			}
 		}
 		appendKeyDesc(lines, false);
 		return lines;

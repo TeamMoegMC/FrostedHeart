@@ -37,17 +37,15 @@ import net.minecraft.network.chat.Component;
 
 public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
     private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("incubatorii");
-    private HeatIncubatorTileEntity tile;
 
     public IncubatorT2Screen(IncubatorT2Container container, Inventory inv, Component title) {
         super(container, inv, title, TEXTURE);
-        this.tile = container.getBlock();
     }
 
     @Override
 	protected List<InfoArea> makeInfoAreas() {
-		return ImmutableList.of(new FluidInfoArea(tile.fluid[0], new Rect2i(88,20,16,46), 177, 177, 20, 51, background),
-			new FluidInfoArea(tile.fluid[1], new Rect2i(124,20,16,46), 177, 177, 20, 51, background));
+		return ImmutableList.of(new FluidInfoArea(menu.tankin, new Rect2i(leftPos+88,topPos+20,16,46), 177, 177, 20, 51, background),
+			new FluidInfoArea(menu.tankout, new Rect2i(leftPos+124,topPos+20,16,46), 177, 177, 20, 51, background));
 	}
 
 	@Override
@@ -56,12 +54,12 @@ public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
 		//transform.blit(TEXTURE, leftPos, topPos, 0, 0, imageWidth, imageHeight);
 
         // recipe progress icon
-        if (tile.processMax > 0 && tile.process > 0) {
-            int w = (int) (14 * (tile.process / (float) tile.processMax));
+        if (menu.process.getValue() > 0) {
+            int w = (int) (14 * (menu.process.getValue()));
             transform.blit(TEXTURE, leftPos + 107, topPos + 28, 176, 0, 14 - w, 29);
         }
-        if (tile.network.getHeat() > 0) {
-            float v = tile.network.getHeat() / tile.network.getCapacity();
+        if (menu.heat.getValue() > 0) {
+            float v = menu.heat.getValue();
             boolean a = false, b = false;
             if (v > 0.75) {
                 a = b = true;
@@ -71,9 +69,9 @@ public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
                 a = true;
             transform.blit(TEXTURE, leftPos + 10, topPos + 24, 176 + (a ? 38 : 0), 81 + (b ? 38 : 0), 38, 38);
         } else transform.blit(TEXTURE, leftPos + 10, topPos + 24, 176, 81, 38, 38);
-        if (tile.efficiency > 0) {
-            int h = (int) (51 * (tile.efficiency / 2f));
-            if (tile.isFoodRecipe)
+        if (menu.efficiency.getValue() > 0) {
+            int h = (int) (51 * (menu.efficiency.getValue() / 2f));
+            if (menu.isFoodRecipe.getValue())
             	transform.blit(TEXTURE, leftPos + 52, topPos + 16 + (51 - h), 198, 29 + (51 - h), 9, h);
             else
             	transform.blit(TEXTURE, leftPos + 52, topPos + 16 + (51 - h), 207, 29 + (51 - h), 9, h);

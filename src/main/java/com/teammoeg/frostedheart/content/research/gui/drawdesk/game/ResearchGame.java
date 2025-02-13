@@ -24,6 +24,8 @@ import net.minecraft.nbt.CompoundTag;
 import java.util.*;
 import java.util.function.Consumer;
 
+import com.mojang.datafixers.util.Pair;
+
 public class ResearchGame {
     Card[][] cards = new Card[9][9];
     int addcur;
@@ -38,7 +40,10 @@ public class ResearchGame {
                 cards[i][j] = new Card();
             }
     }
-
+    public ResearchGame(ResearchGame from) {
+        load(from.serialize());
+        
+    }
     private void AddSector(Set<CardPos> set, int x1, int x2, int y1, int y2) {
         int dx = x1 > x2 ? -1 : 1;
         int dy = y1 > y2 ? -1 : 1;
@@ -243,7 +248,8 @@ public class ResearchGame {
     private boolean placeSolution(List<CardCombo> sol, GenerateInfo gen, Random rnd) {
         clear();
         gen.setUnplacable(cards, rnd);
-        Set<CardPos> place = new HashSet<>();
+        Set<CardPos> place = new LinkedHashSet<>();
+        List<Pair<CardPos,CardPos>> trueSolution=new ArrayList<>();
         cards[4][4].setType(CardType.ADDING, 8);
         cards[4][4].show = true;
         for (CardCombo cc : sol) {
@@ -265,13 +271,17 @@ public class ResearchGame {
             }
             Card c1 = null;
             Card c2 = null;
+            CardPos cp1=null;
+            CardPos cp2=null;
             int i = 0;
             for (CardPos cp : place) {
                 if (i == r1) {
                     c1 = get(cp);
+                    cp1=cp;
                 }
                 if (i == r2) {
                     c2 = get(cp);
+                    cp2=cp;
                     break;
                 } // cause r2 is always greater than r1
                 i++;
@@ -283,6 +293,12 @@ public class ResearchGame {
                 cc.place(c1, c2);
             else
                 cc.place(c2, c1);
+            trueSolution.add(0,Pair.of(cp1, cp2));
+        }
+        ResearchGame test=new ResearchGame(this);
+        for(Pair<CardPos, CardPos> p:trueSolution) {
+        	if(!test.tryCombine(p.getFirst(), p.getSecond()))
+        		return false;
         }
         return true;
     }
