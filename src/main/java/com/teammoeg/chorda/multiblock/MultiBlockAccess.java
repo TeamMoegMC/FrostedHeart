@@ -19,15 +19,14 @@
 
 package com.teammoeg.chorda.multiblock;
 
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
-
 import java.util.UUID;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
 
 public interface MultiBlockAccess {
     void callForm(Level world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit);

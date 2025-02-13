@@ -89,7 +89,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
     public void updateTooltip() {
     	shouldUpdateTooltip=false;
         costStr.clear();
-        Optional<IMultiblockBEHelper<?>> ohelper = CMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue());
+        Optional<IMultiblockBEHelper<?>> ohelper = CMultiblockHelper.getBEHelperOptional(Minecraft.getInstance().level, menu.pos.getValue());
         //System.out.println("Updating tooltips");
         //System.out.println(menu.pos.getValue());
         ohelper.ifPresent(t->{

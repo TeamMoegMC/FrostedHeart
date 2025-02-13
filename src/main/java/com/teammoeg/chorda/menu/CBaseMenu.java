@@ -47,18 +47,20 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.util.Lazy;
 
 public abstract class CBaseMenu extends AbstractContainerMenu {
 	public static class Validator implements Predicate<Player> {
-		private static record RadiusCheck(Vec3 initial,float distsqr) implements Predicate<Player> {
+		private static record BoundCheck(Supplier<Vec3> initial,AABB bounds) implements Predicate<Player> {
 			@Override
 			public boolean test(Player t) {
-				return t.position().distanceToSqr(initial) <= distsqr;
+				Vec3 pos=t.position().subtract(initial.get());
+				return bounds.contains(pos.x, pos.y, pos.z);
 			}
 		};
-		private static record DynamicRadiusCheck(Supplier<Vec3> initial,float distsqr) implements Predicate<Player> {
+		private static record RadiusCheck(Supplier<Vec3> initial,float distsqr) implements Predicate<Player> {
 			@Override
 			public boolean test(Player t) {
 				return t.position().distanceToSqr(initial.get()) <= distsqr;
@@ -87,11 +89,17 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 			super();
 		}
 		public Validator range(BlockPos center,float radius) {
-			citeria.add(new RadiusCheck(Vec3.atCenterOf(center),radius*radius));
+			return range(()->Vec3.atCenterOf(center),radius*radius);
+		}
+		public Validator bound(Supplier<Vec3> center,AABB bounds) {
+			citeria.add(new BoundCheck(center,bounds));
 			return this;
 		}
+		public Validator bound(BlockPos center,AABB bounds) {
+			return bound(()->Vec3.atCenterOf(center),bounds);
+		}
 		public Validator range(Supplier<Vec3> center,float radius) {
-			citeria.add(new DynamicRadiusCheck(center,radius*radius));
+			citeria.add(new RadiusCheck(center,radius*radius));
 			return this;
 		}
 
@@ -107,6 +115,11 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 			blockEntityWithoutRange(block);
 			level(block::getLevel);
 			return range(block.getBlockPos(),radius);
+		}
+		public Validator blockEntity(BlockEntity block,AABB bounds) {
+			blockEntityWithoutRange(block);
+			level(block::getLevel);
+			return bound(block.getBlockPos(),bounds);
 		}
 		public Validator blockEntity(BlockEntity block) {
 			return blockEntity(block,8);
@@ -247,10 +260,15 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 		for (int i = 0; i < 9; i++)
 			addSlot(new Slot(inv, i, invX + i * 18, quickBarY));
 	}
-
+	/**
+	 * Define quickmovestack logic, when a player shift-clicked a slot item in their inventory, then it would traverse this builder definition and fill slots in defined order 
+	 * */
 	public QuickMoveStackBuilder defineQuickMoveStack() {
 		return QuickMoveStackBuilder.first(0, INV_START);
 	}
+	/**
+	 * Build gui validator logic, when some condition in validator does not meet, then the ui would be closed.
+	 * */
 	@Nonnull
 	protected Validator buildValidator(@Nonnull Validator builder) {
 		return builder;
@@ -267,17 +285,18 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 		if (slot != null && slot.hasItem()) {
 			ItemStack slotStack = slot.getItem();
 			itemStack = slotStack.copy();
-			if (index < INV_START) {
-				if (!this.moveItemStackTo(slotStack, INV_START, INV_SIZE + INV_START, true)) {
-					return ItemStack.EMPTY;
-				}
+			if (index < INV_START) {//move item from block to inventory
+				if (!this.moveItemStackTo(slotStack, INV_QUICK +INV_START, INV_SIZE + INV_START, false))//first move item to quickbar
+					if (!this.moveItemStackTo(slotStack, INV_START, INV_QUICK + INV_START, false)) {//then move item to inventory
+						return ItemStack.EMPTY;
+					}
 				slot.onQuickCraft(slotStack, itemStack);
-			} else if (index >= INV_START) {
-				if (!quickMoveIn(slotStack)) {
-					if (index < INV_QUICK + INV_START) {
+			} else if (index >= INV_START) {//move item from inventory
+				if (!quickMoveIn(slotStack)) {//first try to move into block
+					if (index < INV_QUICK + INV_START) {//if moving from quickbar, move to inventory
 						if (!this.moveItemStackTo(slotStack, INV_QUICK + INV_START, INV_SIZE + INV_START, false))
 							return ItemStack.EMPTY;
-					} else if (index < INV_SIZE + INV_START && !this.moveItemStackTo(slotStack, INV_START, INV_QUICK + INV_START, false))
+					} else if (index < INV_SIZE + INV_START && !this.moveItemStackTo(slotStack, INV_START, INV_QUICK + INV_START, false))//if moving from inventory, move to quickbar
 						return ItemStack.EMPTY;
 				}
 			} else if (!this.moveItemStackTo(slotStack, INV_START, INV_SIZE + INV_START, false)) {

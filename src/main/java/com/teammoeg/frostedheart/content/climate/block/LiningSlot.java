@@ -1,18 +1,13 @@
 package com.teammoeg.frostedheart.content.climate.block;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.chorda.client.ui.TexturedUV;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
-import com.teammoeg.frostedheart.util.client.FHClientUtils;
-
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Container;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.InventoryMenu;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraftforge.items.IItemHandler;

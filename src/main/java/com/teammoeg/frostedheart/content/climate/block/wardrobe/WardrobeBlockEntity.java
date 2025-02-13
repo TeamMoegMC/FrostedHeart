@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.climate.block.wardrobe;
 
 import com.teammoeg.chorda.block.entity.CBlockEntity;
-import com.teammoeg.chorda.block.entity.ConnectedBlockEntity;
 import com.teammoeg.chorda.capability.capabilities.ChangeDetectedItemHandler;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
@@ -33,7 +32,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraftforge.items.ItemStackHandler;
 
 public class WardrobeBlockEntity extends CBlockEntity implements MenuProvider  {

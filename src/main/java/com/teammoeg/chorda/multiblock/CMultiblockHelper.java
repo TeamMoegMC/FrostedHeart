@@ -24,7 +24,6 @@ import java.util.function.Supplier;
 
 import com.teammoeg.chorda.util.CUtils;
 
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.MultiblockRegistration;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelper;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
@@ -42,14 +41,17 @@ public class CMultiblockHelper {
 	private static final Supplier<RuntimeException> noMultiblockExists=()->new IllegalStateException("Multiblock is not valid");
 	private CMultiblockHelper() {
 	}
-	public static Optional<IMultiblockBEHelper<?>> getBEHelper(Level level,BlockPos pos){
+	public static Optional<IMultiblockBEHelper<?>> getBEHelperOptional(Level level,BlockPos pos){
 		if(CUtils.getExistingTileEntity(level, pos) instanceof IMultiblockBE te) {
 			return Optional.of(te.getHelper());
 		}
 		return Optional.empty();
 	}
+	public static IMultiblockBEHelper<?> getBEHelper(Level level,BlockPos pos){
+		return getBEHelperOptional(level,pos).orElseThrow(noMultiblockExists);
+	}
 	public static Optional<IMultiblockLogic<?>> getMultiblockLogic(Level level,BlockPos pos){
-		return getBEHelper(level,pos).map(t->t.getMultiblock().logic());
+		return getBEHelperOptional(level,pos).map(t->t.getMultiblock().logic());
 	}
 	public static Optional<IMultiblockBEHelper<?>> getBEHelper(IMultiblockLevel level) {
 		if(level.getBlockEntity(BlockPos.ZERO) instanceof IMultiblockBE te) 

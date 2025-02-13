@@ -65,7 +65,7 @@ public final class T1GeneratorLogic extends GeneratorLogic<T1GeneratorLogic, T1G
                     // Enum a seamless NoUpandDown hollow cube
                     if (((z > zLow && z < zHigh) && ((x == xLow) || (x == xHigh))) || ((z == zLow || z == zHigh) && (x > xLow && x < xHigh))) {
                         blockpos.set(x, y, z);
-                        IMultiblockBEHelper<?> te = CMultiblockHelper.getBEHelper(ctx.getLevel().getRawLevel(), ctx.getLevel().toAbsolute(blockpos)).orElse(null);
+                        IMultiblockBEHelper<?> te = CMultiblockHelper.getBEHelper(ctx.getLevel().getRawLevel(), ctx.getLevel().toAbsolute(blockpos));
                         IMultiblockState state = te.getContext().getState();
                         if (state instanceof BlastFurnaceLogic.State) {
                             if (++blastBlockCount == 9) {

@@ -22,13 +22,9 @@ package com.teammoeg.frostedheart.content.climate.block.generator.t1;
 import com.teammoeg.chorda.multiblock.CMultiblock;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
-
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -47,12 +43,6 @@ public class T1GeneratorMultiblock extends CMultiblock {
         return 16;
     }
 
-    @Override
-    public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
-        BlockPos master = this.getMasterFromOriginOffset();
-        ChunkHeatData.removeTempAdjust(world, origin.offset(master));
-        super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
-    }
 
 
 }

@@ -20,16 +20,12 @@
 package com.teammoeg.frostedheart.content.climate.block.radiator;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.multiblock.CMultiblock;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
-
-import net.minecraft.core.Direction;
+import com.teammoeg.frostedheart.content.climate.block.generator.HeatingMultiblock;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
 
-public class RadiatorMultiblock extends CMultiblock {
+public class RadiatorMultiblock extends HeatingMultiblock {
     public RadiatorMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/heat_radiator"),
                 new BlockPos(0, 0, 0), new BlockPos(0, 0, 0), new BlockPos(1, 3, 1),
@@ -41,11 +37,6 @@ public class RadiatorMultiblock extends CMultiblock {
         return 16;
     }
 
-    @Override
-    public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
-        BlockPos master = this.getMasterFromOriginOffset();
-        ChunkHeatData.removeTempAdjust(world, origin.offset(master));
-        super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
-    }
+
 
 }

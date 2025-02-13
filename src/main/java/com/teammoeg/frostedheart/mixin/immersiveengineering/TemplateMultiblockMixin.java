@@ -68,7 +68,7 @@ public abstract class TemplateMultiblockMixin implements IMultiblock, MultiBlock
     public void fh$on$form(Level world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit, CallbackInfo cbi, BlockPos master) {
         if (user != null) {
             IOwnerTile.trySetOwner(Utils.getExistingTileEntity(world, master), user);
-            CMultiblockHelper.getBEHelper(world, master).ifPresent(t->{
+            CMultiblockHelper.getBEHelperOptional(world, master).ifPresent(t->{
             	if(t.getState() instanceof IOwnerState state) {
             		state.setOwner(user);
             	}

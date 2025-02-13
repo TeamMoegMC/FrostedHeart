@@ -50,7 +50,7 @@ public class GeneratorModifyPacket implements CMessage {
             ServerPlayer spe = context.get().getSender();
             AbstractContainerMenu container = spe.containerMenu;
             if (container instanceof GeneratorContainer<?, ?> crncontainer) {
-                CMultiblockHelper.getBEHelper(spe.level(), crncontainer.pos.getValue()).ifPresent(helper -> {
+                CMultiblockHelper.getBEHelperOptional(spe.level(), crncontainer.pos.getValue()).ifPresent(helper -> {
                     if (helper.getMultiblock().logic() instanceof GeneratorLogic mas) {
                         mas.onUpgradeMaintainClicked(helper.getContext(), spe);
                     }

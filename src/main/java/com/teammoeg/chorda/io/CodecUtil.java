@@ -199,10 +199,27 @@ public class CodecUtil {
 		return RecordCodecBuilder.create(t -> t.group(key.fieldOf(nkey).forGetter(Pair::getFirst), val.fieldOf(nval).forGetter(Pair::getSecond))
 			.apply(t, Pair::of));
 	}
+	/**
+	 * store map in format like:
+	 * {
+	 *   "key":{value}
+	 * }
+	 * Note that keyCodec must output string type, otherwise an exception would be thrown
+	 * */
 	public static <K, V> Codec<Map<K, V>> mapCodec(Codec<K> keyCodec, Codec<V> valueCodec) {
 		return Codec.compoundList(keyCodec, valueCodec).xmap(pl -> pl.stream().collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)),
 			pl -> pl.entrySet().stream().map(ent -> Pair.of(ent.getKey(), ent.getValue())).collect(Collectors.toList()));
 	}
+	/**
+	 * store map in format like:
+	 * [
+	 *   {
+	 *     "nkey":{key},
+	 *     "nvalue":{value}
+	 *   } 
+	 * ]
+	 * key and value could be anything
+	 * */
 	public static <K, V> Codec<Map<K, V>> mapCodec(String nkey, Codec<K> keyCodec, String nval, Codec<V> valueCodec) {
 		return Codec.list(CodecUtil.pairCodec(nkey, keyCodec, nval, valueCodec)).xmap(pl -> pl.stream().collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)),
 			pl -> pl.entrySet().stream().map(ent -> Pair.of(ent.getKey(), ent.getValue())).collect(Collectors.toList()));
@@ -219,8 +236,11 @@ public class CodecUtil {
 	}
 
 	public static <T extends Enum<T>> Codec<T> enumCodec(Class<T> en){
+		
+		return enumCodec(en.getEnumConstants());
+	}
+	public static <T extends Enum<T>> Codec<T> enumCodec(T[] values){
 		Map<String,T> maps=new HashMap<>();
-		T[] values=en.getEnumConstants();
 		for(T val:values)
 			maps.put(val.name().toLowerCase(), val);
 		return new CompressDifferCodec<>(Codec.STRING.xmap(maps::get, v->v.name().toLowerCase()),Codec.BYTE.xmap(o->values[o], v->(byte)v.ordinal()));

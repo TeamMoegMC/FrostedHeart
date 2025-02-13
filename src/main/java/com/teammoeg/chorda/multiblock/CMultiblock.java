@@ -24,22 +24,22 @@ import java.util.function.Consumer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
 
 import blusunrize.immersiveengineering.api.multiblocks.ClientMultiblocks.MultiblockManualData;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.MultiblockRegistration;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockLogic;
 import blusunrize.immersiveengineering.client.utils.BasicClientProperties;
 import blusunrize.immersiveengineering.client.utils.IERenderTypes;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 public abstract class CMultiblock extends IETemplateMultiblock {
 	DynamicBlockModelReference dm;
@@ -76,11 +76,11 @@ public abstract class CMultiblock extends IETemplateMultiblock {
 	@Override
 	public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
         BlockPos master = this.getMasterFromOriginOffset();
-        CMultiblockHelper.getBEHelper(world, origin.offset(master)).ifPresent(te -> {
-            if (te.getState() instanceof DisassembleListener lis) {
+        CMultiblockHelper.getBEHelperOptional(world, origin.offset(master)).ifPresent(te -> {
+        	IMultiblockLogic<?> logic=te.getMultiblock().logic();
+            if (logic instanceof DisassembleListener lis) {
             	lis.onDisassemble(this, te);
-            }else if(te.getState()==null)
-                Chorda.LOGGER.error("State is null when disassembling Multiblock.");
+            }
         });
         super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
 	}

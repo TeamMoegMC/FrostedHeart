@@ -51,7 +51,7 @@ public class WardrobeMenu extends CBlockEntityMenu<WardrobeBlockEntity> {
 		y0=6;
 		this.addSlot(new ArmorSlotItemHandler(inventoryPlayer.player, EquipmentSlot.HEAD, wrap, 3, 121, y0));
 		this.addSlot(new ArmorSlotItemHandler(inventoryPlayer.player, EquipmentSlot.CHEST, wrap, 2, 121, y0 + 18));
-		this.addSlot(new OffHandSlotItemHandler(inventoryPlayer.player, wrap, 4, 6, y0 + 18 * 2));
+		this.addSlot(new OffHandSlotItemHandler(inventoryPlayer.player, wrap, 4, 121, y0 + 18 * 2));
 		this.addSlot(new ArmorSlotItemHandler(inventoryPlayer.player, EquipmentSlot.LEGS, wrap, 1, 121, y0 + 18 * 3));
 		this.addSlot(new ArmorSlotItemHandler(inventoryPlayer.player, EquipmentSlot.FEET, wrap, 0, 121, y0 + 18 * 4));
 		int slotOrder=4;
