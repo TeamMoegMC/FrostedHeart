@@ -26,6 +26,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 public class FGuis {
     /**
@@ -71,16 +72,26 @@ public class FGuis {
      * @param color 颜色
      */
     public static void drawRing(GuiGraphics guiGraphics, int x, int y, float innerRadius, float outerRadius,float startAngle,float endAngle, int color) {
+        drawRing(guiGraphics, x, y, innerRadius, outerRadius, startAngle, endAngle, color, color);
+    }
+    /**
+     * @param innerColor 内圆环颜色
+     * @param outerColor 外圆环颜色
+     */
+    public static void drawRing(GuiGraphics guiGraphics, int x, int y, float innerRadius, float outerRadius,float startAngle,float endAngle, int innerColor,int outerColor) {
         float x2 = (int) (x + outerRadius);
         float y2 = (int) (y + outerRadius);
         float x1 = (int) (x - outerRadius);
         float y1 = (int) (y - outerRadius);
+
 
         RenderSystem.setShader(FHShaders::getRingShader);
         ShaderInstance shader = FHShaders.getRingShader();
         shader.safeGetUniform("innerRadius").set(innerRadius/outerRadius/2);
         shader.safeGetUniform("outerRadius").set(0.5f);
 
+        shader.safeGetUniform("innerColor").set(int2vec4(innerColor));
+        shader.safeGetUniform("outerColor").set(int2vec4(outerColor));
 
         shader.safeGetUniform("startAngle").set(startAngle);
         shader.safeGetUniform("endAngle").set(endAngle);
@@ -88,11 +99,11 @@ public class FGuis {
         RenderSystem.enableBlend();
         Matrix4f matrix4f = guiGraphics.pose().last().pose();
         BufferBuilder builder = Tesselator.getInstance().getBuilder();
-        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        builder.vertex(matrix4f, x1, y1, 0).uv(0, 0).color(color).endVertex();
-        builder.vertex(matrix4f, x1, y2, 0).uv(0, 1).color(color).endVertex();
-        builder.vertex(matrix4f, x2, y2, 0).uv(1, 1).color(color).endVertex();
-        builder.vertex(matrix4f, x2, y1, 0).uv(1, 0).color(color).endVertex();
+        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        builder.vertex(matrix4f, x1, y1, 0).uv(0, 0).endVertex();
+        builder.vertex(matrix4f, x1, y2, 0).uv(0, 1).endVertex();
+        builder.vertex(matrix4f, x2, y2, 0).uv(1, 1).endVertex();
+        builder.vertex(matrix4f, x2, y1, 0).uv(1, 0).endVertex();
         BufferUploader.drawWithShader(builder.end());
     }
 
@@ -110,5 +121,9 @@ public class FGuis {
         builder.vertex(matrix4f, (float)x2, (float)y2, 0).uv(1, 1);
         builder.vertex(matrix4f, (float)x2, (float)y, 0).uv(1, 0);
         BufferUploader.drawWithShader(builder.end());
+    }
+
+    private static Vector4f int2vec4(int color) {
+        return new Vector4f((color >> 16 & 255) / 255.0F, (color >> 8 & 255) / 255.0F, (color & 255) / 255.0F, (color >> 24 & 255) / 255.0F);
     }
 }
