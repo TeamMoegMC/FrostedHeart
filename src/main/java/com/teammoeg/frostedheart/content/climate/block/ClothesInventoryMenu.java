@@ -48,7 +48,7 @@ public class ClothesInventoryMenu extends CBaseMenu {
 	}
 
 	public ClothesInventoryMenu(int id, Inventory inventoryPlayer) {
-		super(FHMenuTypes.CLOTHES_GUI.get(), id, inventoryPlayer.player, 13);
+		super(FHMenuTypes.CLOTHES_GUI.get(), id, inventoryPlayer.player, 14);
 		PlayerTemperatureData ptd = PlayerTemperatureData.getCapability(inventoryPlayer.player).resolve().get();
 		createLiningSlots(inventoryPlayer,ptd);
 		for(BodyPart bp:BodyPart.values()) {
