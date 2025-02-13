@@ -391,8 +391,9 @@ public class CGuiHelper {
 	/**
 	 * 渲染列表中的所有文本
 	 * 
-	 * @param lineSpace 行间距
-	 * @param shadow    文本阴影
+	 * @param lineSpace  行间距
+	 * @param shadow     是否添加文本阴影
+	 * @param background 是否渲染背景(参考F3显示的文本)
 	 */
 	public static void drawStrings(GuiGraphics graphics, Font font, List<?> texts, int x, int y,
 		int color, int lineSpace, boolean shadow, boolean background) {
@@ -413,6 +414,13 @@ public class CGuiHelper {
 		}
 	}
 
+	/**
+	 * 居中渲染列表中的所有文本
+	 *
+	 * @param lineSpace  行间距
+	 * @param shadow     是否添加文本阴影
+	 * @param background 是否渲染背景(参考F3显示的文本)
+	 */
 	public static void drawCenteredStrings(GuiGraphics graphics, Font font, List<?> texts, int x, int y,
 		int color, int lineSpace, boolean shadow, boolean background) {
 		for (int i = 0; i < texts.size(); i++) {

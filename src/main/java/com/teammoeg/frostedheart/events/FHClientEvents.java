@@ -20,22 +20,16 @@
 package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.chorda.client.CameraHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.GuiClickedEvent;
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
-import com.teammoeg.frostedheart.compat.CompatModule;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
-import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
-import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
-import com.teammoeg.frostedheart.content.health.screen.NutritionScreen;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.gui.ResearchToast;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
@@ -65,7 +59,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RecipesUpdatedEvent;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
@@ -79,10 +72,8 @@ import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.server.ServerLifecycleHooks;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
@@ -393,27 +384,6 @@ public class FHClientEvents {
     @SubscribeEvent
     public void onWorldUnLoad(LevelEvent.Unload event) {
 
-    }
-
-    @SubscribeEvent
-    public static void onClientKey(InputEvent.Key event) {
-        if (event.getAction() == GLFW.GLFW_PRESS) {
-            if (FHKeyMappings.key_skipDialog.get().consumeClick()) {
-                if (ClientScene.INSTANCE != null)
-                    ClientScene.INSTANCE.sendContinuePacket(true);
-                //event.setCanceled(true);
-            } else if (CompatModule.isLdLibLoaded() && FHKeyMappings.key_InfraredView.get().consumeClick()) {
-                InfraredViewRenderer.toggleInfraredView();
-            }
-        }
-        if (event.getAction() == GLFW.GLFW_PRESS) {
-            if (FHKeyMappings.key_health.get().consumeClick()) {
-            	FHNetwork.sendToServer(new C2SOpenNutritionScreenMessage());
-            }
-            if(FHKeyMappings.key_clothes.get().consumeClick()) {
-            	FHNetwork.sendToServer(new C2SOpenClothesScreenMessage());
-            }
-        }
     }
 
     /**

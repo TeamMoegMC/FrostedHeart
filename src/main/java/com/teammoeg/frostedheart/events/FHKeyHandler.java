@@ -1,0 +1,53 @@
+package com.teammoeg.frostedheart.events;
+
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
+import com.teammoeg.frostedheart.compat.CompatModule;
+import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
+import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
+import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
+import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
+import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuScreen;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import org.lwjgl.glfw.GLFW;
+
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+public class FHKeyHandler {
+
+    @SubscribeEvent
+    public static void onClientKey(InputEvent.Key event) {
+        if (event.getAction() == GLFW.GLFW_PRESS) {
+            // skip scenario dialog
+            if (FHKeyMappings.key_skipDialog.get().consumeClick()) {
+                if (ClientScene.INSTANCE != null)
+                    ClientScene.INSTANCE.sendContinuePacket(true);
+                //event.setCanceled(true);
+            }
+
+            // toggle infrared view
+            if (CompatModule.isLdLibLoaded() && FHKeyMappings.key_InfraredView.get().consumeClick()) {
+                InfraredViewRenderer.toggleInfraredView();
+            }
+
+            // open nutrition screen
+            if (FHKeyMappings.key_health.get().consumeClick()) {
+                FHNetwork.sendToServer(new C2SOpenNutritionScreenMessage());
+            }
+
+            // open clothes screen
+            if(FHKeyMappings.key_clothes.get().consumeClick()) {
+                FHNetwork.sendToServer(new C2SOpenClothesScreenMessage());
+            }
+
+            // open wheel menu
+            if (FHKeyMappings.key_openWheelMenu.get().consumeClick()) {
+                ClientUtils.mc().setScreen(new WheelMenuScreen());
+            }
+        }
+    }
+}

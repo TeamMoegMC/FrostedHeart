@@ -48,10 +48,10 @@ public class NutritionScreen extends Screen implements MenuAccess<NutritionMenu>
 
     static Style def_style= FHTextIcon.applyFont(Style.EMPTY);
 
-    private static Component fat_icon;
-    private static Component protein_icon;
-    private static Component carbohydrate_icon;
-    private static Component vegetable_icon;
+    public static Component fat_icon;
+    public static Component protein_icon;
+    public static Component carbohydrate_icon;
+    public static Component vegetable_icon;
 
     private static Font font = Minecraft.getInstance().font;
 

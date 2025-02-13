@@ -139,11 +139,14 @@ public class FHClientEventsMod {
         FHKeyMappings.key_InfraredView.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
         FHKeyMappings.key_health.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
         FHKeyMappings.key_clothes.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
+        FHKeyMappings.key_openWheelMenu.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
+
 		ev.register(FHKeyMappings.key_skipDialog.get());
 		if(CompatModule.isLdLibLoaded())
 			ev.register(FHKeyMappings.key_InfraredView.get());
         ev.register(FHKeyMappings.key_health.get());
         ev.register(FHKeyMappings.key_clothes.get());
+        ev.register(FHKeyMappings.key_openWheelMenu.get());
 	}
 
 	@SubscribeEvent

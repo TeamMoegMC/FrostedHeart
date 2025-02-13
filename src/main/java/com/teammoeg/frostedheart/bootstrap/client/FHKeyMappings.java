@@ -30,6 +30,8 @@ public class FHKeyMappings {
         GLFW.GLFW_KEY_Z, "key.categories.frostedheart"));
     public static Lazy<KeyMapping> key_InfraredView = Lazy.of(() -> new KeyMapping("key.frostedheart.infrared_view",
             GLFW.GLFW_KEY_I, "key.categories.frostedheart"));
+    public static Lazy<KeyMapping> key_openWheelMenu = Lazy.of(() -> new KeyMapping("key.frostedheart.open_wheel_menu",
+            GLFW.GLFW_KEY_TAB, "key.categories.frostedheart"));
     public static Lazy<KeyMapping> key_health = Lazy.of(() -> new KeyMapping("key.frostedheart.health",
             GLFW.GLFW_KEY_H, "key.categories.frostedheart"));
     public static Lazy<KeyMapping> key_clothes = Lazy.of(() -> new KeyMapping("key.frostedheart.clothes",
