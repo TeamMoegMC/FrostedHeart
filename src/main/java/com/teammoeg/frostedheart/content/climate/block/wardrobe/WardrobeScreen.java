@@ -35,8 +35,8 @@ public class WardrobeScreen extends IEContainerScreen<WardrobeMenu> {
 	private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("closet");
 	public WardrobeScreen(WardrobeMenu inventorySlotsIn, Inventory inv, Component title) {
 		super(inventorySlotsIn, inv, title, TEXTURE);
-		super.imageHeight = 202;
-		super.imageWidth = 261;
+		super.imageHeight = 197;
+		super.imageWidth = 202;
 	}
 	
 	@Override
