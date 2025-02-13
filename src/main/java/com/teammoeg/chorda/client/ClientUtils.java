@@ -21,6 +21,7 @@ package com.teammoeg.chorda.client;
 
 import java.util.function.Function;
 
+import net.minecraft.network.chat.Component;
 import org.joml.Quaternionf;
 
 import com.mojang.blaze3d.platform.InputConstants;
@@ -36,7 +37,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.Size2i;
 
 /**
  * Rendering not related client functions, used for get/set client data, spawning particles
@@ -55,15 +55,19 @@ public class ClientUtils {
     public static Level getWorld() {
         return mc().level;
     }
+
     public static float partialTicks() {
     	return mc().getFrameTime();
     }
+
     public static long gameTick() {
         return getWorld().getLevelData().getGameTime();
     }
+
     public static Minecraft mc() {
         return Minecraft.getInstance();
     }
+
     public static void spawnFireParticles(Level worldIn, BlockPos pos) {
         RandomSource random = worldIn.getRandom();
         // Upward flame
@@ -113,6 +117,14 @@ public class ClientUtils {
         return mc().getWindow().getGuiScaledHeight();
     }
 
+    public static int screenCenterX() {
+        return screenWidth() / 2;
+    }
+
+    public static int screenCenterY() {
+        return screenHeight() / 2;
+    }
+
     public static boolean isKeyDown(int key) {
         return InputConstants.isKeyDown(mc().getWindow().getWindow(), key);
     }
@@ -120,7 +132,6 @@ public class ClientUtils {
     public static ResourceLocation getDimLocation() {
         return getWorld().dimension().location();
     }
-
 
     public static boolean isGameTimeUpdated() {
         boolean flag = previousTick != gameTick();
@@ -131,7 +142,4 @@ public class ClientUtils {
 	public static Font font() {
 	    return mc().font;
 	}
-
-	public static Size2i screenSize() {return new Size2i(mc().getWindow().getGuiScaledWidth(), mc().getWindow().getGuiScaledHeight());}
-
 }

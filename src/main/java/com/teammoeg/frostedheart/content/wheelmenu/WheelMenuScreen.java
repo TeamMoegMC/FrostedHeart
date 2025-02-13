@@ -229,6 +229,14 @@ public class WheelMenuScreen extends Screen {
     }
 
     @Override
+    public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
+        if (pKeyCode == FHKeyMappings.key_openWheelMenu.get().getKey().getValue()) {
+            return true;
+        }
+        return super.keyPressed(pKeyCode, pScanCode, pModifiers);
+    }
+
+    @Override
     public boolean keyReleased(int pKeyCode, int pScanCode, int pModifiers) {
         boolean flag = super.keyReleased(pKeyCode, pScanCode, pModifiers);
         if (flag) return true;
