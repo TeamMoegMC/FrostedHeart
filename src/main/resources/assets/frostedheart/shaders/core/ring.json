@@ -4,10 +4,9 @@
         "srcrgb": "srcalpha",
         "dstrgb": "1-srcalpha"
     },
-    "vertex": "frostedheart:uv_color",
+    "vertex": "frostedheart:uv",
     "fragment": "frostedheart:ring",
     "attributes": [
-        "Color",
         "UV0"
     ],
     "samplers": [
@@ -27,6 +26,18 @@
         },
         {
             "name": "ColorModulator",
+            "type": "float",
+            "count": 4,
+            "values": [ 1.0, 1.0, 1.0, 1.0 ]
+        },
+        {
+            "name": "innerColor",
+            "type": "float",
+            "count": 4,
+            "values": [ 1.0, 1.0, 1.0, 1.0 ]
+        },
+        {
+            "name": "outerColor",
             "type": "float",
             "count": 4,
             "values": [ 1.0, 1.0, 1.0, 1.0 ]

@@ -304,5 +304,9 @@
   "gui.frostedheart.tip_editor.send": "Send this tip to all players",
   "gui.frostedheart.tip_editor.no_permission": "You don\u0027t have permission to use this button",
   "gui.frostedheart.tip_editor.info.enter": "Press Enter to complete this line",
-  "gui.frostedheart.tip_editor.info.resource_location": "Fill in the full texture Resource Location \nExample: \u0027minecraft:textures/item/apple.png\u0027"
+  "gui.frostedheart.tip_editor.info.resource_location": "Fill in the full texture Resource Location \nExample: \u0027minecraft:textures/item/apple.png\u0027",
+  "gui.frostedheart.nutrition.fat": "Fat",
+  "gui.frostedheart.nutrition.protein": "Protein",
+  "gui.frostedheart.nutrition.carbohydrate": "Carbohydrate",
+  "gui.frostedheart.nutrition.vegetable": "Vegetable"
 }

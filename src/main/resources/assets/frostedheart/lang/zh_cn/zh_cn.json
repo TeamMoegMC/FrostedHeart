@@ -774,5 +774,9 @@
   "block.frostedheart.ruined_machine_general_storage": "Ruined Machine General Storage",
   "block.frostedheart.ruined_machine_screen": "Ruined Machine Screen",
   "block.frostedheart.ruined_machine_screen_cracked": "Ruined Machine Screen Cracked",
-  "block.frostedheart.ruined_machine_switch": "Ruined Machine Switch"
+  "block.frostedheart.ruined_machine_switch": "Ruined Machine Switch",
+  "gui.frostedheart.nutrition.fat": "脂肪",
+  "gui.frostedheart.nutrition.protein": "蛋白质",
+  "gui.frostedheart.nutrition.carbohydrate": "碳水化合物",
+  "gui.frostedheart.nutrition.vegetable": "蔬菜"
 }

@@ -18,10 +18,11 @@
  */
 #version 150
 
-in vec4 vertexColor;
 in vec2 texCoord0;
 
 uniform vec4 ColorModulator;
+uniform vec4 innerColor;
+uniform vec4 outerColor;
 
 uniform float innerRadius; // 内半径
 uniform float outerRadius; // 外半径
@@ -39,13 +40,15 @@ void main() {
     vec2 center = vec2(0.5f,0.5f);
     float distance = distance(center, texCoord0);
     vec2 translatedUV = texCoord0 - center;
-    vec2 rotatedUV = mat2(0.0, -1.0, 1.0, 0.0) * translatedUV;
+    float radian = radians(startAngle+90.0F);
+    mat2 rotationMatrix = mat2(cos(radian), -sin(radian), sin(radian), cos(radian));
+    vec2 rotatedUV = rotationMatrix * translatedUV;
     vec2 finalUV = rotatedUV + center;
     float angle = atan2(finalUV.y - center.y,finalUV.x - center.x);
     angle = degrees(angle);
 
-    if (distance >= innerRadius && distance <= outerRadius && angle >= startAngle && angle <= endAngle) {
-        fragColor = vertexColor;
+    if (distance >= innerRadius && distance <= outerRadius && angle >= startAngle && angle <= endAngle-startAngle) {
+        fragColor = mix(innerColor, outerColor, (distance - innerRadius) / (outerRadius - innerRadius));
     } else {
         discard;
     }
