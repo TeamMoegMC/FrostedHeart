@@ -41,7 +41,6 @@ import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.capability.types.nbt.NBTCapabilityType;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.io.NBTSerializable;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
