@@ -24,11 +24,10 @@ import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.math.CMath;
-import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
@@ -88,12 +87,12 @@ public class EffectCrafting extends Effect {
         unlocks.ifLeft(t -> {
             this.ingredient = t;
         });
-        unlocks.ifRight(o -> o.stream().map(CTeamDataManager.getRecipeManager()::byKey).filter(Optional::isPresent).map(Optional::get).forEach(this.unlocks::add));
+        unlocks.ifRight(o -> o.stream().map(CDistHelper.getRecipeManager()::byKey).filter(Optional::isPresent).map(Optional::get).forEach(this.unlocks::add));
     }
 
     public EffectCrafting(ResourceLocation recipe) {
         super("@gui." + FHMain.MODID + ".effect.crafting", new ArrayList<>());
-        Optional<? extends Recipe<?>> r = CTeamDataManager.getRecipeManager().byKey(recipe);
+        Optional<? extends Recipe<?>> r = CDistHelper.getRecipeManager().byKey(recipe);
 
         r.ifPresent(iRecipe -> unlocks.add(iRecipe));
     }
@@ -166,8 +165,8 @@ public class EffectCrafting extends Effect {
 
     private void initItem() {
         unlocks.clear();
-        for (Recipe<?> r : CTeamDataManager.getRecipeManager().getRecipes()) {
-            ItemStack result = r.getResultItem(CRegistryHelper.getAccess());
+        for (Recipe<?> r : CDistHelper.getRecipeManager().getRecipes()) {
+            ItemStack result = r.getResultItem(CDistHelper.getAccess());
             if (result == null) {
                 LogUtils.getLogger().debug("Error null recipe " + r);
             }
@@ -191,7 +190,7 @@ public class EffectCrafting extends Effect {
         if (ingredient != null) {
             initItem();
         } else {
-            unlocks.replaceAll(o -> CTeamDataManager.getRecipeManager().byKey(o.getId()).orElse(null));
+            unlocks.replaceAll(o -> CDistHelper.getRecipeManager().byKey(o.getId()).orElse(null));
             unlocks.removeIf(Objects::isNull);
         }
     }
@@ -204,7 +203,7 @@ public class EffectCrafting extends Effect {
     public void setList(Collection<String> ls) {
         unlocks.clear();
         for (String s : ls) {
-            Optional<? extends Recipe<?>> r = CTeamDataManager.getRecipeManager().byKey(new ResourceLocation(s));
+            Optional<? extends Recipe<?>> r = CDistHelper.getRecipeManager().byKey(new ResourceLocation(s));
 
             r.ifPresent(iRecipe -> unlocks.add(iRecipe));
         }

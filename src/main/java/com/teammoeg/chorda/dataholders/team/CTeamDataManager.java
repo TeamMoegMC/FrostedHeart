@@ -37,10 +37,10 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataType;
 import com.teammoeg.chorda.events.TeamLoadedEvent;
+import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.struct.OptionalLazy;
 
 import com.mojang.authlib.GameProfile;
@@ -49,7 +49,6 @@ import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.MinecraftServer;
@@ -67,21 +66,14 @@ import net.minecraftforge.common.MinecraftForge;
 public class CTeamDataManager {
 
     public static CTeamDataManager INSTANCE;
-    private final MinecraftServer server;
-    public static final LevelResource dataFolder = new LevelResource("chorda_data");
+
+    private static final LevelResource dataFolder = new LevelResource("chorda_data");
     private Map<UUID, UUID> dataByFTBId = new HashMap<>();
     private Map<UUID, TeamDataHolder> dataByOwnId = new HashMap<>();
     private Map<UUID, UUID> playerOwnedTeam;
     private Map<String,UUID> playerNameOwnedTeam;
     
-    public static RecipeManager getRecipeManager() {
-        if (getServer() != null)
-            return getServer().getRecipeManager();
-        return ClientUtils.mc().level.getRecipeManager();
-    }
-
-    public CTeamDataManager(MinecraftServer s) {
-        server = s;
+    public CTeamDataManager() {
         INSTANCE = this;
     }
 
@@ -144,9 +136,9 @@ public class CTeamDataManager {
         if (cn == null) {
             cn=UUID.randomUUID();
             dataByFTBId.put(team.getId(), cn);
-            GameProfile owner = getServer().getProfileCache().get(team.getOwner()).orElse(null);
+            GameProfile owner = CDistHelper.getServer().getProfileCache().get(team.getOwner()).orElse(null);
             
-            if (owner != null&&(!getServer().usesAuthentication()||getServer().isSingleplayer()))
+            if (owner != null&&(!CDistHelper.getServer().usesAuthentication()||CDistHelper.getServer().isSingleplayer()))
                 for (Entry<UUID, TeamDataHolder> dat : dataByOwnId.entrySet()) {
                     if (owner.getName().equals(dat.getValue().getOwnerName())) {
                         this.transferByRid(dat.getKey(), team);
@@ -157,7 +149,7 @@ public class CTeamDataManager {
         }
         TeamDataHolder data= dataByOwnId.computeIfAbsent(cn, c -> new TeamDataHolder(c, OptionalLazy.of(()->team)));
         if (data.getOwnerName() == null) {
-            GameProfileCache cache = getServer().getProfileCache();
+            GameProfileCache cache = CDistHelper.getServer().getProfileCache();
             if (cache != null) {
                 GameProfile gp = cache.get(team.getOwner()).orElse(null);
                 if (gp != null) {
@@ -185,7 +177,7 @@ public class CTeamDataManager {
      */
     public void load() {
         
-        Path local=getServer().getWorldPath(dataFolder);
+        Path local=CDistHelper.getServer().getWorldPath(dataFolder);
         local.toFile().mkdirs();
         Stream<File> strm1=null,strm2=null;
         //Compatible migration from old data folder
@@ -229,7 +221,7 @@ public class CTeamDataManager {
      * Save all data to disk.
      */
     public void save() {
-    	Path local=getServer().getWorldPath(dataFolder);
+    	Path local=CDistHelper.getServer().getWorldPath(dataFolder);
         Set<String> files = new HashSet<>(Arrays.asList(local.toFile().list((d, s) -> s.endsWith(".nbt"))));
         for (Entry<UUID, TeamDataHolder> entry : dataByOwnId.entrySet()) {
             String fn = entry.getKey().toString() + ".nbt";
@@ -259,7 +251,7 @@ public class CTeamDataManager {
         TeamDataHolder odata = dataByOwnId.get(rid);
         if (odata != null) {
             odata.setTeam(OptionalLazy.of(()->team));
-            odata.setOwnerName(getServer().getProfileCache().get(team.getOwner()).map(GameProfile::getName).orElse(null));
+            odata.setOwnerName(CDistHelper.getServer().getProfileCache().get(team.getOwner()).map(GameProfile::getName).orElse(null));
             dataByFTBId.put(team.getId(), rid);
         }else {
         	this.get(team);
@@ -271,18 +263,10 @@ public class CTeamDataManager {
         TeamDataHolder odata = dataByOwnId.get(rid);
         if (odata != null) {
             odata.setTeam(OptionalLazy.of(()->team));
-            odata.setOwnerName(getServer().getProfileCache().get(team.getOwner()).map(GameProfile::getName).orElse(null));
+            odata.setOwnerName(CDistHelper.getServer().getProfileCache().get(team.getOwner()).map(GameProfile::getName).orElse(null));
             dataByFTBId.put(team.getId(), rid);
         }
     }
-    /**
-     * Get the server instance.
-     * @return the server instance
-     */
-	public static MinecraftServer getServer() {
-		if(INSTANCE==null)
-			return null;
-		return INSTANCE.server;
-	}
+
 
 }

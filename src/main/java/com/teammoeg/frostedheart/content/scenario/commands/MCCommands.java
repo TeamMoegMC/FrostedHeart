@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.content.scenario.runner.trigger.VariantTrigger;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.CDistHelper;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -79,14 +80,14 @@ public class MCCommands {
 		overrides.put("x", pos.getX());
 		overrides.put("y", pos.getY());
 		overrides.put("z", pos.getZ());
-		ServerOpListEntry opent= CTeamDataManager.getServer().getPlayerList().getOps().get(triggerPlayer.getGameProfile());
+		ServerOpListEntry opent= CDistHelper.getServer().getPlayerList().getOps().get(triggerPlayer.getGameProfile());
 		if(op)
 			if(opent==null){
-				CTeamDataManager.getServer().getPlayerList().op(triggerPlayer.getGameProfile());
+				CDistHelper.getServer().getPlayerList().op(triggerPlayer.getGameProfile());
 			}
 		try {
-			Commands cmds = CTeamDataManager.getServer().getCommands();
-			CommandSourceStack source = asp?triggerPlayer.createCommandSourceStack(): CTeamDataManager.getServer().createCommandSourceStack();
+			Commands cmds = CDistHelper.getServer().getCommands();
+			CommandSourceStack source = asp?triggerPlayer.createCommandSourceStack(): CDistHelper.getServer().createCommandSourceStack();
 			for (Map.Entry<String, Object> entry : overrides.entrySet()) {
 				if (entry.getValue() != null) {
 					s = s.replace("@" + entry.getKey(), entry.getValue().toString());
@@ -96,7 +97,7 @@ public class MCCommands {
 		}finally {
 			if(op)
 				if(opent==null){
-					CTeamDataManager.getServer().getPlayerList().deop(triggerPlayer.getGameProfile());
+					CDistHelper.getServer().getPlayerList().deop(triggerPlayer.getGameProfile());
 				}
 		}
 	}

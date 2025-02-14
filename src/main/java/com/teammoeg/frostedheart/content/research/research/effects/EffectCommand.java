@@ -24,6 +24,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
+import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
@@ -96,8 +97,8 @@ public class EffectCommand extends Effect {
         overrides.put("y", pos.getY());
         overrides.put("z", pos.getZ());
         team.getTeam().map(t -> t.getId()).ifPresent(t -> overrides.put("t", t));
-        Commands cmds = CTeamDataManager.getServer().getCommands();
-        CommandSourceStack source = CTeamDataManager.getServer().createCommandSourceStack();
+        Commands cmds = CDistHelper.getServer().getCommands();
+        CommandSourceStack source = CDistHelper.getServer().createCommandSourceStack();
         for (String s : rewards) {
 
             for (Map.Entry<String, Object> entry : overrides.entrySet()) {

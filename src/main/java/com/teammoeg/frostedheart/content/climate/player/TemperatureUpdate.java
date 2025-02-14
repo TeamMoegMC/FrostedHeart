@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.climate.player;
 import java.util.UUID;
 
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.caupona.CPConfig;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
@@ -33,6 +34,7 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext.BodyPartContext;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
+import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator.SimulationResult;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import net.minecraft.core.BlockPos;
@@ -66,7 +68,7 @@ public class TemperatureUpdate {
     public static final int MIN_BODY_TEMP_CHANGE = FHConfig.SERVER.minBodyTempChange.get();
     public static final int MAX_BODY_TEMP_CHANGE = FHConfig.SERVER.maxBodyTempChange.get();*/
     public static final float FOOD_EXHAUST_COLD=.05F;
-
+    public static TemperatureThreadingPool threadingPool;
     /**
      * Perform temperature effect
      *
@@ -139,6 +141,11 @@ public class TemperatureUpdate {
             // if (player.isCreative() || player.isSpectator())
             // return;
             PlayerTemperatureData.getCapability(event.player).ifPresent((data) -> {
+            	data.tick();
+            	if(data.updateInterval<=0) {
+            		if(threadingPool.tryCommitWork(player))
+            			data.updateInterval=FHConfig.SERVER.envTempUpdateIntervalTicks.get();
+            	}
                 if (player.tickCount % FHConfig.SERVER.temperatureUpdateIntervalTicks.get() == 0) {
                     // Soak in water modifier
                     if (player.isInWater()) {
@@ -169,8 +176,9 @@ public class TemperatureUpdate {
                     float envtemp = WorldTemperature.air(world, pos) - 37F; // 37-based
 
                     // Surrounding block temperature
-                    Pair<Float, Float> btp = new SurroundingTemperatureSimulator(player).getBlockTemperatureAndWind(player.getX(), player.getEyeY() - 0.7f, player.getZ());
-                    float bt = btp.getFirst();
+                    //SimulationResult btp = new SurroundingTemperatureSimulator(player).getBlockTemperatureAndWind(player.getX(), player.getEyeY() - 0.7f, player.getZ());
+                    // We don't calculate here, but in a seperate pool
+                    float bt = data.blockTemp;
                     envtemp += bt;
                     //int wind=btp.getSecond()+WorldTemperature.getClimateWind(world);
 
@@ -313,4 +321,13 @@ public class TemperatureUpdate {
             });
         }
     }
+
+	public static void init() {
+		threadingPool=new TemperatureThreadingPool(FHConfig.SERVER.envTempThreadCount.get());
+		
+	}
+	public static void shutdown() {
+		threadingPool.close();
+		threadingPool=null;
+	}
 }

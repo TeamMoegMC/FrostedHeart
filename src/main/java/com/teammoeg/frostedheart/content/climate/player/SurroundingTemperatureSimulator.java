@@ -41,6 +41,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.PalettedContainer;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.Heightmap.Types;
 import net.minecraft.world.phys.AABB;
@@ -53,11 +54,16 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * A simulator built on Alphagem618's heat conducting model
  * This simulates heat conduction in a small area around player
  * And would take the area out of minecraft logic to optimize calculations.
+ * 
+ * Note that the constructor must be called in game thread, while other method could run multithreaded
  *
  * @author khjxiaogu
  * @author Alphagem618
  */
 public class SurroundingTemperatureSimulator {
+	public static record SimulationResult(float blockTemp,float windStrengh){
+		
+	}
     /**
      * Extract block data into shape and temperature, other data are disposed.
      */
@@ -65,23 +71,21 @@ public class SurroundingTemperatureSimulator {
         VoxelShape shape;
         List<AABB> aabbList;
         float temperature;
-        boolean exposeToAir;
         BlockState bs;
 
-        public CachedBlockInfo(VoxelShape shape, float temperature, boolean exposeToAir, BlockState bs) {
+        public CachedBlockInfo(VoxelShape shape, float temperature, BlockState bs) {
             super();
             this.shape = shape;
             this.aabbList=shape.toAabbs();
             this.temperature = temperature;
-            this.exposeToAir = exposeToAir;
+
             this.bs = bs;
         }
 
-        public CachedBlockInfo(VoxelShape shape, boolean exposeToAir, BlockState bs) {
+        public CachedBlockInfo(VoxelShape shape, BlockState bs) {
             super();
             this.shape = shape;
             this.aabbList=shape.toAabbs();
-            this.exposeToAir = exposeToAir;
             this.bs = bs;
         }
     }
@@ -135,10 +139,10 @@ public class SurroundingTemperatureSimulator {
         }
     }
 
-    public LevelChunkSection[] sections = new LevelChunkSection[8];// index: bitset of xzy(1 stands for +)
+    @SuppressWarnings("unchecked")
+	public PalettedContainer<BlockState>[] sections = new PalettedContainer[8];// index: bitset of xzy(1 stands for +)
     public Heightmap[] maps = new Heightmap[4]; // index: bitset of xz(1 stands for +)
     BlockPos origin;
-    ServerLevel world;
     Random rnd;
     //RandomSequence rrnd;
     private Vec3[] Qpos = new Vec3[n];// Qpos, position of particle.
@@ -164,21 +168,27 @@ public class SurroundingTemperatureSimulator {
         int chunkOffsetW = offsetW >> 4;
         int chunkOffsetN = offsetN >> 4;
         int chunkOffsetD = offsetD >> 4;
+        
         // get origin point(center of 8 sections)
         origin = new BlockPos((chunkOffsetW + 1) << 4, (chunkOffsetD + 1) << 4, (chunkOffsetN + 1) << 4);
         // fetch all sections to lower calculation cost
         int i = 0;
-        world = player.serverLevel();
+        ServerLevel world = player.serverLevel();
+        
         for (int x = chunkOffsetW; x <= chunkOffsetW + 1; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetN + 1; z++) {
                 LevelChunk cnk = world.getChunk(x, z);
-                LevelChunkSection[] css = cnk.getSections();
+                int maxIndex=cnk.getSectionsCount();
+                int index0=cnk.getSectionIndexFromSectionY(chunkOffsetD);
+                int index1=index0+1;
                 maps[i / 2] = cnk.getOrCreateHeightmapUnprimed(Types.MOTION_BLOCKING_NO_LEAVES);
-                // all chunkOffsetD should +4 for adjusting 1.20 coords
-                if (css.length > chunkOffsetD+4 && chunkOffsetD+4 >= 0)
-                    sections[i] = css[chunkOffsetD+4];
-                if (css.length > chunkOffsetD+4+1 && chunkOffsetD+4+1 >= 0)
-                    sections[i + 1] = css[chunkOffsetD+4+1];
+                //copy to avoid threading issue
+                if(index0>=0&&index0<maxIndex)
+                	sections[i] = cnk.getSection(index0).getStates().copy();
+                //System.out.println(sections[i].get(0, 0, 0));
+                if(index1>=0&&index1<maxIndex)
+                	sections[i + 1] = cnk.getSection(index1).getStates().copy();
+                //System.out.println(sections[i+1].get(0, 0, 0));
                 i += 2;
             }
         rnd = new Random(player.blockPosition().asLong() ^ (world.getGameTime() >> 6));
@@ -198,11 +208,11 @@ public class SurroundingTemperatureSimulator {
             i += 2;
         if (y >= 0)
             i += 1;
-        LevelChunkSection current = sections[i];
+        PalettedContainer<BlockState> current = sections[i];
         if (current == null)
             return Blocks.AIR.defaultBlockState();
         try {
-            return current.getBlockState(x & 15, y & 15, z & 15);
+            return current.get(x & 15, y & 15, z & 15);
         } catch (Exception ex) {
             throw new RuntimeException("Failed to get block at" + x + "," + y + "," + z);
         }
@@ -226,7 +236,7 @@ public class SurroundingTemperatureSimulator {
         return iis[rnd.nextInt(iis.length)];
     }
 
-    public Pair<Float, Float> getBlockTemperatureAndWind(double qx0, double qy0, double qz0) {
+    public SimulationResult getBlockTemperatureAndWind(double qx0, double qy0, double qz0) {
         float wind = 0;
         Vec3 q0 = new Vec3(qx0, qy0, qz0);
         for (int i = 0; i < n; ++i) // initialize position as the player's position and the speed (index)
@@ -273,7 +283,7 @@ public class SurroundingTemperatureSimulator {
                 wind += getAir(bpos) ? (float) Mth.lerp((Mth.clamp(Math.abs(curspeed.y()), 0.2, 0.8) - 0.2) / 0.6, 2, 0.5) : 0;
             }
         }
-        return Pair.of(heat / n, wind / n);
+        return new SimulationResult(heat / n, wind / n);
     }
 
     /**
@@ -283,14 +293,16 @@ public class SurroundingTemperatureSimulator {
         return getInfoCached(bp).temperature;
     }
 
-    private boolean getAir(BlockPos bp) {
-        return getInfoCached(bp).exposeToAir;
+    private boolean getAir(BlockPos pos) {
+        return getTopY(pos.getX(), pos.getZ()) <= pos.getY();
     }
     private class CachedBlockInfoGetter implements Function <BlockState,CachedBlockInfo>{
     	BlockPos pos;
 		@Override
 		public CachedBlockInfo apply(BlockState t) {
-			return getInfo(pos, t);
+			CachedBlockInfo info= getInfo(pos, t);
+			//System.out.println(t+""+info.temperature);
+			return info;
 		}
     	
     }
@@ -313,10 +325,22 @@ public class SurroundingTemperatureSimulator {
      * Position is only for getCollisionShape method, to avoid some TE based shape.
      */
     private CachedBlockInfo getInfo(BlockPos pos, BlockState bs) {
-        boolean isExpose = getTopY(pos.getX(), pos.getZ()) < pos.getY();
+        //boolean isExpose = getTopY(pos.getX(), pos.getZ()) < pos.getY();
         BlockTempData b = BlockTempData.cacheList.get(bs.getBlock());
+        VoxelShape shape;
+        
+        if(bs.getBlock().hasDynamicShape()) {
+        	shape=Shapes.block();
+        }else {
+        	try {//level is intended null as vanilla code would only query cache, cause a quickfail if some mod make wrong mixin
+        		shape=bs.getCollisionShape(null, pos);
+        	}catch(Exception ex) {
+        		ex.printStackTrace();
+        		shape=Shapes.block();
+        	}
+        }
         if (b == null)
-            return new CachedBlockInfo(bs.getBlockSupportShape(world, pos), isExpose, bs);
+            return new CachedBlockInfo(shape, bs);
         float cblocktemp = 0;
         if (b.isLit()) {
             boolean litOrActive = bs.hasProperty(BlockStateProperties.LIT) && bs.getValue(BlockStateProperties.LIT);
@@ -335,7 +359,7 @@ public class SurroundingTemperatureSimulator {
                 cblocktemp *= (float) (bs.getValue(BlockStateProperties.LEVEL_CAULDRON) + 1) / 4;
             }
         }
-        return new CachedBlockInfo(bs.getBlockSupportShape(world, pos), cblocktemp, isExpose, bs);
+        return new CachedBlockInfo(shape, cblocktemp, bs);
     }
 
     /***

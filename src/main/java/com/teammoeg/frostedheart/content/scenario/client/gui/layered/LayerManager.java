@@ -29,6 +29,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLImageContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLLayerContent;
@@ -64,13 +65,8 @@ public class LayerManager extends GLLayerContent {
 	volatile LayerContext nextlayer;
 	volatile LayerContext current;
 	volatile TransitionInfo trans;
-	private static final AtomicInteger THREAD_NUM=new AtomicInteger(0);
-	static ExecutorService renderThread=Executors.newFixedThreadPool(FHConfig.CLIENT.scenarioRenderThread.get(),r->{
-		Thread th=new Thread(r);
-		th.setDaemon(true);//if the game exits, we have no need to render anymore
-		th.setName("scenario-render-pool-"+THREAD_NUM.incrementAndGet());
-		return th;
-	});
+
+	static ExecutorService renderThread=Executors.newFixedThreadPool(FHConfig.CLIENT.scenarioRenderThread.get(),CUtils.makeThreadFactory("scenario-render-pool", true));
 	RerenderRequest rrq;
 	
 	public LayerManager() {

@@ -22,7 +22,11 @@ package com.teammoeg.frostedheart.events;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
+import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
 import com.teammoeg.frostedheart.content.research.FHResearch;
+
+import net.minecraftforge.event.TickEvent.Phase;
+import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.server.*;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -35,42 +39,63 @@ import net.minecraftforge.fml.common.Mod;
  */
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class FHServerEvents {
-    @SubscribeEvent
-    public static void serverLevelSave(final LevelEvent.Save event) {
-        if (CTeamDataManager.INSTANCE != null) {
-            FHResearch.save();
-            CTeamDataManager.INSTANCE.save();
-            //FHScenario.save(); // TODO: Scenrario save
-        }
-    }
+	@SubscribeEvent
+	public static void serverLevelSave(final LevelEvent.Save event) {
+		FHResearch.save();
+	}
 
-    // Server Lifecycle Events
+	@SubscribeEvent
+	public static void serverTick(final ServerTickEvent event) {
+		if (event.phase == Phase.START) {
+			if(TemperatureUpdate.threadingPool!=null)
+				TemperatureUpdate.threadingPool.tick();
+		}
+	}
 
-    @SubscribeEvent
-    public static void serverAboutToStart(final ServerAboutToStartEvent event) {
-        new CTeamDataManager(event.getServer());
-        FHResearch.load();
-        CTeamDataManager.INSTANCE.load();
-        SurroundingTemperatureSimulator.init();
-    }
+	// Server Lifecycle Events
+	/**
+	 * Server about to start, config and datapack is loaded during this phase, fires
+	 * before level loaded
+	 */
+	@SubscribeEvent
+	public static void serverAboutToStart(final ServerAboutToStartEvent event) {
+		FHResearch.load();
+		SurroundingTemperatureSimulator.init();
+		TemperatureUpdate.init();
+	}
 
-    @SubscribeEvent
-    public static void serverStarting(final ServerStartingEvent event) {
+	/**
+	 * Server starting, all things are loaded properly, canceling this event
+	 * prevents server from start
+	 */
+	@SubscribeEvent
+	public static void serverStarting(final ServerStartingEvent event) {
 
-    }
+	}
 
-    @SubscribeEvent
-    public static void serverStarted(final ServerStartedEvent event) {
+	/**
+	 * Server started. fires immediately after server starting.
+	 */
+	@SubscribeEvent
+	public static void serverStarted(final ServerStartedEvent event) {
 
-    }
+	}
 
-    @SubscribeEvent
-    public static void serverStopping(final ServerStoppingEvent event) {
+	/**
+	 * Server stopping, server thread is stopped and server tick is stopped, but
+	 * nothing is done to stop the server Suitable for data saving
+	 */
+	@SubscribeEvent
+	public static void serverStopping(final ServerStoppingEvent event) {
 
-    }
+	}
 
-    @SubscribeEvent
-    public static void serverStopped(final ServerStoppedEvent event) {
-        CTeamDataManager.INSTANCE = null;
-    }
+	/**
+	 * Server stopped, all data saved, suitable for resource cleanup.
+	 */
+	@SubscribeEvent
+	public static void serverStopped(final ServerStoppedEvent event) {
+		CTeamDataManager.INSTANCE = null;
+		TemperatureUpdate.shutdown();
+	}
 }

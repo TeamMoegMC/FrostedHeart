@@ -87,16 +87,24 @@ public class PlayerTemperatureData implements NBTSerializable  {
 	float bodyTemp;
 	float envTemp=INVALID_TEMPERATURE;
 	float feelTemp=INVALID_TEMPERATURE;
+	float blockTemp=0;
+	
+	float updateInterval=0;
 	public float smoothedBody;//Client only, smoothed body temperature
 	public float smoothedBodyPrev;//Client only, smoothed body temperature
 
 
 	public final Map<BodyPart, BodyPartData> clothesOfParts = new EnumMap<>(BodyPart.class);
+	public float windStrengh;
 	public void deathResetTemperature() {
 		previousTemp=0;
 		bodyTemp=0;
 		envTemp=INVALID_TEMPERATURE;
 		feelTemp=INVALID_TEMPERATURE;
+		blockTemp=0;
+		windStrengh=0;
+		updateInterval=0;
+		
 		for(BodyPartData i:clothesOfParts.values()) {
 			i.temperature=0;
 		}
@@ -116,7 +124,10 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		bodyTemp=nbt.getFloat("bodytemperature");
 		envTemp=nbt.getFloat("envtemperature");
 		feelTemp=nbt.getFloat("feeltemperature");
+		
 		if(!isPacket) {
+			blockTemp=nbt.getFloat("blockTemperature");
+			windStrengh=nbt.getFloat("wind_strengh");
 			// load the difficulty
 			// this can cause issue if the nbt.getstring returns invalid string
 			// do a catch here, and default to normal
@@ -142,6 +153,8 @@ public class PlayerTemperatureData implements NBTSerializable  {
         nc.putFloat("envtemperature",envTemp);
         nc.putFloat("feeltemperature",feelTemp);
         if(!isPacket) {
+        	nc.putFloat("blockTemperature", blockTemp);
+        	nc.putFloat("wind_strengh", windStrengh);
         	if(difficulty!=null)
     			nc.putString("difficulty", difficulty.name().toLowerCase());
 	        CompoundTag partClothes=new CompoundTag();
@@ -157,7 +170,13 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		envTemp=INVALID_TEMPERATURE;
 		feelTemp=INVALID_TEMPERATURE;
 		smoothedBody=0;
+		windStrengh=0;
+		blockTemp=0;
 		clearAllClothes();
+	}
+	public void tick() {
+		if(updateInterval>0)
+			updateInterval--;
 	}
     public void update(float current_env, float conductivity) {
         // update delta before body

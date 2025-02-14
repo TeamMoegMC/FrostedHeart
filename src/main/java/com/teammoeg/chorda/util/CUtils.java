@@ -28,6 +28,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.ToIntFunction;
 
 import javax.annotation.Nonnull;
@@ -295,5 +297,14 @@ public class CUtils {
 
 	public static boolean isDown(int key) {
 	    return InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), key);
+	}
+	public static ThreadFactory makeThreadFactory(String name,boolean isDaemon) {
+		AtomicInteger THREAD_NUM=new AtomicInteger(0);
+		return r->{
+			Thread th=new Thread(r);
+			th.setDaemon(isDaemon);
+			th.setName(name+"-"+THREAD_NUM.incrementAndGet());
+			return th;
+		};
 	}
 }

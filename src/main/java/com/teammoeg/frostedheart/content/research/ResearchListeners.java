@@ -30,6 +30,7 @@ import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.struct.OptionalLazy;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
@@ -480,7 +481,7 @@ public class ResearchListeners {
 
         @Override
         public Recipe<?> getObject(String s) {
-            return CTeamDataManager.getRecipeManager().byKey(new ResourceLocation(s)).orElse(null);
+            return CDistHelper.getRecipeManager().byKey(new ResourceLocation(s)).orElse(null);
         }
 
         @Override

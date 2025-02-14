@@ -116,7 +116,7 @@ public class FHConfig {
                     .defineInRange("snowDensity", 10, 1, 15);
             blizzardDensity = builder
                     .comment("How visually dense the snow weather effect is. Normally, vanilla sets this to 5 with fast graphics, and 10 with fancy graphics.")
-                    .defineInRange("snowDensity", 15, 1, 15);
+                    .defineInRange("blizzardDensity", 15, 1, 15);
             snowSounds = builder
                     .comment("Enable snow weather sounds.")
                     .define("snowSounds", true);
@@ -253,6 +253,8 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Integer> onFireTempModifier;
         public final ForgeConfigSpec.ConfigValue<Double> heatExchangeConstant;
         public final ForgeConfigSpec.BooleanValue addInitClimate;
+        public final ForgeConfigSpec.IntValue envTempUpdateIntervalTicks;
+        public final ForgeConfigSpec.IntValue envTempThreadCount;
         /*
         public static final double HURTING_HEAT_UPDATE = 0.1;
     public static final int MIN_BODY_TEMP_CHANGE = -10;
@@ -275,6 +277,11 @@ public class FHConfig {
                     .defineInRange("temperatureChangeRate", 1f, 0, 20);
             temperatureUpdateIntervalTicks = builder.comment("The interval of temperature update in ticks.")
                     .defineInRange("temperatureUpdateIntervalTicks", 20, 1, Integer.MAX_VALUE);
+            envTempUpdateIntervalTicks = builder.comment("The shortest interval of enviroment(block) temperature update in ticks.")
+                .defineInRange("environmentTempMinTicks", 20, 1, Integer.MAX_VALUE);
+            int numProcessor=Runtime.getRuntime().availableProcessors();
+            envTempThreadCount = builder.comment("The number of threads used for enviroment(block) temperature update, set to 0 disables multithreading, default to min(processors/2,2)")
+                .defineInRange("environmentTempMinTicks", Math.min(2, numProcessor/2), 0, 16);
             wetEffectDuration = builder.comment("The duration of the wet effect applied in water in ticks.")
                     .defineInRange("wetEffectDuration", 100, 1, Integer.MAX_VALUE);
             wetClothesDurationMultiplier = builder.comment("The multiplier of the wet effect duration when player is wearing clothes.")

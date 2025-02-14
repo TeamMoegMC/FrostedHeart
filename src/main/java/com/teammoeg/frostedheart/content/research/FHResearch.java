@@ -29,6 +29,7 @@ import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.io.codec.DataOps;
 import com.teammoeg.chorda.io.codec.ObjectWriter;
+import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.struct.OptionalLazy;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
@@ -46,6 +47,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.DistExecutor;
@@ -67,6 +69,7 @@ public class FHResearch {
      * Registry holder for all defined Research in config.
      */
     public static FHRegistry<Research> researches = new FHRegistry<>();
+    public static final LevelResource dataFolder = new LevelResource("fhresearch_data");
     /**
      * Editing mode.
      */
@@ -442,7 +445,7 @@ public class FHResearch {
      */
     public static void load() {
         FHResearch.editor = false;
-        Path local = CTeamDataManager.getServer().getWorldPath(CTeamDataManager.dataFolder);
+        Path local = CDistHelper.getServer().getWorldPath(dataFolder);
         File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
         FHResearch.clearAll();
         if (regfile.exists()) {
@@ -474,7 +477,7 @@ public class FHResearch {
      * Save Research data to disk.
      */
     public static void save() {
-        Path local = CTeamDataManager.getServer().getWorldPath(CTeamDataManager.dataFolder);
+        Path local = CDistHelper.getServer().getWorldPath(dataFolder);
         File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
         File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
         try {

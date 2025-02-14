@@ -29,7 +29,7 @@ public class CBlock extends Block {
 
     
     public CBlock(Properties blockProps) {
-        super(blockProps.dynamicShape());
+        super(blockProps);
         lightOpacity = 15;
     }
 

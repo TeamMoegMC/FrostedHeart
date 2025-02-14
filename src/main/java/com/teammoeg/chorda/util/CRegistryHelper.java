@@ -19,12 +19,9 @@
 
 package com.teammoeg.chorda.util;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
@@ -68,12 +65,6 @@ public class CRegistryHelper {
 	}
 	public static ResourceLocation getRegistryName(Fluid v) {
 		return ForgeRegistries.FLUIDS.getKey(v);
-	}
-	public static RegistryAccess getAccess() {
-		MinecraftServer server= CTeamDataManager.getServer();
-		if(server!=null)
-			return server.registryAccess();
-		return Minecraft.getInstance().level.registryAccess();
 	}
 	public static ResourceLocation getRegistryName(Biome b) {
 		return ForgeRegistries.BIOMES.getKey(b);
