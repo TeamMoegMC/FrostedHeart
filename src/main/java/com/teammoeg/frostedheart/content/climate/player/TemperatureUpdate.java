@@ -308,8 +308,9 @@ public class TemperatureUpdate {
                     
 
                     // Equipments
-                    // TODO: heat up equipments!
-                    if(!player.isCreative()&&!player.isSpectator())
+          
+                    //if(!player.isCreative()&&!player.isSpectator())
+                    //update for display
                     data.update(envtemp, totalConductivity);
                     //System.out.println("===================================");
                     //for(BodyPart bp:BodyPart.values())
