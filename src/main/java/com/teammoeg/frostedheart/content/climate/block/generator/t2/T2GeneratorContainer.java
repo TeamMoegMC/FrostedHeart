@@ -22,29 +22,27 @@ package com.teammoeg.frostedheart.content.climate.block.generator.t2;
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
+import com.teammoeg.chorda.menu.slots.UIFluidTank;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorContainer;
 
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class T2GeneratorContainer extends GeneratorContainer<T2GeneratorState, T2GeneratorLogic> {
     static final Point pin = new Point(29, 63);
     static final Point pout = new Point(112, 55);
-    FluidTank tank;
-    CDataSlot<FluidStack> slot_tank= CCustomMenuSlot.SLOT_TANK.create(this);
+    UIFluidTank slot_tank=new UIFluidTank(this,T2GeneratorState.TANK_CAPACITY);
     public T2GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<T2GeneratorState> ctx) {
         super(type, id, inventoryPlayer, ctx);
-        tank = ctx.mbContext().getState().tank;
-        slot_tank.bind(tank::getFluid);
+        slot_tank.bind(ctx.mbContext().getState().tank);
 
     }
     public T2GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer) {
         super(type, id, inventoryPlayer);
-        tank = new FluidTank(T2GeneratorState.TANK_CAPACITY);
-        slot_tank.bind(tank::setFluid);
 
     }
 
@@ -64,8 +62,8 @@ public class T2GeneratorContainer extends GeneratorContainer<T2GeneratorState, T
     }
 
     @Override
-    public FluidTank getTank() {
-        return tank;
+    public IFluidTank getTank() {
+        return slot_tank;
     }
 
 

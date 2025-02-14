@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorContai
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraftforge.fluids.capability.templates.FluidTank;
+import net.minecraftforge.fluids.IFluidTank;
 
 public class T1GeneratorContainer extends GeneratorContainer<T1GeneratorState, T1GeneratorLogic> {
 
@@ -55,7 +55,7 @@ public class T1GeneratorContainer extends GeneratorContainer<T1GeneratorState, T
     }
 
     @Override
-    public FluidTank getTank() {
+    public IFluidTank getTank() {
         return null;
     }
 
