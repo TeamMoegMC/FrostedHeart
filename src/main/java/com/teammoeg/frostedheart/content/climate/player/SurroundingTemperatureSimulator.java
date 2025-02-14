@@ -158,8 +158,8 @@ public class SurroundingTemperatureSimulator {
 
     }
 
-    public SurroundingTemperatureSimulator(ServerPlayer player) {
-        int sourceX = Mth.floor(player.getX()), sourceY = Mth.floor(player.getEyeY()), sourceZ = Mth.floor(player.getZ());
+    public SurroundingTemperatureSimulator(ServerLevel world,double sx,double sy,double sz,boolean threadSafe) {
+        int sourceX = Mth.floor(sx), sourceY = Mth.floor(sy), sourceZ = Mth.floor(sz);
         // these are block position offset
         int offsetN = sourceZ - range;
         int offsetW = sourceX - range;
@@ -168,12 +168,10 @@ public class SurroundingTemperatureSimulator {
         int chunkOffsetW = offsetW >> 4;
         int chunkOffsetN = offsetN >> 4;
         int chunkOffsetD = offsetD >> 4;
-        
         // get origin point(center of 8 sections)
         origin = new BlockPos((chunkOffsetW + 1) << 4, (chunkOffsetD + 1) << 4, (chunkOffsetN + 1) << 4);
         // fetch all sections to lower calculation cost
         int i = 0;
-        ServerLevel world = player.serverLevel();
         
         for (int x = chunkOffsetW; x <= chunkOffsetW + 1; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetN + 1; z++) {
@@ -182,16 +180,23 @@ public class SurroundingTemperatureSimulator {
                 int index0=cnk.getSectionIndexFromSectionY(chunkOffsetD);
                 int index1=index0+1;
                 maps[i / 2] = cnk.getOrCreateHeightmapUnprimed(Types.MOTION_BLOCKING_NO_LEAVES);
-                //copy to avoid threading issue
+               
                 if(index0>=0&&index0<maxIndex)
-                	sections[i] = cnk.getSection(index0).getStates().copy();
+                	sections[i] = cnk.getSection(index0).getStates();
                 //System.out.println(sections[i].get(0, 0, 0));
                 if(index1>=0&&index1<maxIndex)
-                	sections[i + 1] = cnk.getSection(index1).getStates().copy();
+                	sections[i + 1] = cnk.getSection(index1).getStates();
                 //System.out.println(sections[i+1].get(0, 0, 0));
                 i += 2;
             }
-        rnd = new Random(player.blockPosition().asLong() ^ (world.getGameTime() >> 6));
+        //copy to avoid threading issue
+        if(threadSafe) {
+        	for(int j=0;j<sections.length;j++)
+        		if(sections[j]!=null)
+        			sections[j]=sections[j].copy();
+        		
+        }
+        rnd = new Random(new BlockPos(sourceX,sourceY,sourceZ).asLong() ^ (world.getGameTime() >> 6));
     }
 
     /**

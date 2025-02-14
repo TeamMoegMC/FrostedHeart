@@ -14,11 +14,17 @@ import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator.SimulationResult;
 
+import lombok.Getter;
 import net.minecraft.server.level.ServerPlayer;
 
 public class TemperatureThreadingPool {
 	Map<UUID,Future<SimulationResult>> resultMap;
 	ExecutorService scheduler;
+	/**
+	 * Used to benchmark temperature calculation performance
+	 * */
+	@Getter
+	int tasksRemain;
 	public TemperatureThreadingPool(int threadNum) {
 		if(threadNum!=0) {
 			scheduler=Executors.newFixedThreadPool(threadNum, CUtils.makeThreadFactory("block-temperature-calculation", true));
@@ -31,12 +37,12 @@ public class TemperatureThreadingPool {
 		double y=player.getEyeY()-0.7;
 		double z=player.getZ();
 		if(scheduler==null) {
-			SurroundingTemperatureSimulator sts=new SurroundingTemperatureSimulator(player);
+			SurroundingTemperatureSimulator sts=new SurroundingTemperatureSimulator(player.serverLevel(),player.getX(),player.getEyeY(),player.getZ(),false);
 			submitPlayerData(player, sts.getBlockTemperatureAndWind(x, y, z));
 			return true;
 		}else if(!resultMap.containsKey(player.getUUID())){
 			//System.out.println("committing work for "+player.getName().getString());
-			SurroundingTemperatureSimulator sts=new SurroundingTemperatureSimulator(player);
+			SurroundingTemperatureSimulator sts=new SurroundingTemperatureSimulator(player.serverLevel(),player.getX(),player.getEyeY(),player.getZ(),true);
 			resultMap.put(player.getUUID(), scheduler.submit(()->sts.getBlockTemperatureAndWind(x, y, z)));
 			return true;
 		}
@@ -44,7 +50,7 @@ public class TemperatureThreadingPool {
 	}
 	public void tick() {
 		if(resultMap!=null) {
-			
+			int tasksRemain=0;
 			for(Iterator<Entry<UUID, Future<SimulationResult>>> it=resultMap.entrySet().iterator();it.hasNext();) {
 				Entry<UUID, Future<SimulationResult>> entry=it.next();
 				if(entry.getValue().isDone()) {
@@ -61,8 +67,9 @@ public class TemperatureThreadingPool {
 							throw new RuntimeException(e.getCause());
 						}
 					}
-				}
+				}else tasksRemain++;
 			}
+			this.tasksRemain=tasksRemain;
 		}
 	}
 	public void close() {
@@ -71,7 +78,7 @@ public class TemperatureThreadingPool {
 		
 	}
 	private void submitPlayerData(ServerPlayer player,SimulationResult result) {
-		System.out.println(result);
+		//System.out.println(result);
 		PlayerTemperatureData.getCapability(player).ifPresent(t->{
 			t.blockTemp=result.blockTemp();
 			t.windStrengh=result.windStrengh();
