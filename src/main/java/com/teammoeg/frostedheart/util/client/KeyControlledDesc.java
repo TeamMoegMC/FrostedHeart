@@ -50,7 +50,7 @@ public class KeyControlledDesc {
 
 		MutableComponent tabBuilder = Components.empty();
 		tabBuilder.append(Components.literal(holdDesc[0]).withStyle(DARK_GRAY));
-		tabBuilder.append(keyTooltip.plainCopy().withStyle(isPressed ? WHITE : GRAY));
+		tabBuilder.append(keyTooltip.plainCopy().withStyle(isPressed ? GRAY:WHITE));
 		tabBuilder.append(Components.literal(holdDesc[1]).withStyle(DARK_GRAY));
 		lines.add(0, tabBuilder);
 		if(isPressed)
