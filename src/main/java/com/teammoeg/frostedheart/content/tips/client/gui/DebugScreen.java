@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
-import com.simibubi.create.foundation.config.ui.BaseConfigScreen;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.content.tips.Popup;
 import com.teammoeg.frostedheart.content.tips.TipManager;
@@ -33,7 +31,6 @@ import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.lang.Components;
 
-import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -123,7 +120,7 @@ public class DebugScreen extends Screen {
     private String debug() {
 //        if (this.minecraft != null) {
 ////            var config = new BaseConfigScreen(this, FHMain.MODID);
-//            this.minecraft.setScreen(new WheelMenuScreen());
+//            this.minecraft.setScreen(new WheelMenuRenderer());
 //        }
         Popup.clear();
         return "opened";

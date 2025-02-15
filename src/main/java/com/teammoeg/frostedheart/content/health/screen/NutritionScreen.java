@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.health.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.util.client.FGuis;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
@@ -48,10 +49,10 @@ public class NutritionScreen extends Screen implements MenuAccess<NutritionMenu>
 
     static Style def_style= FHTextIcon.applyFont(Style.EMPTY);
 
-    public static Component fat_icon;
-    public static Component protein_icon;
-    public static Component carbohydrate_icon;
-    public static Component vegetable_icon;
+    public static Component fat_icon = Components.str("\uF504").withStyle(def_style);
+    public static Component protein_icon = Components.str("\uF505").withStyle(def_style);
+    public static Component carbohydrate_icon = Components.str("\uF502").withStyle(def_style);
+    public static Component vegetable_icon = Components.str("\uF503").withStyle(def_style);
 
     private static Font font = Minecraft.getInstance().font;
 
@@ -59,18 +60,13 @@ public class NutritionScreen extends Screen implements MenuAccess<NutritionMenu>
 
     @Override
     public void init() {
-        progress=0.0f;
-        fat_icon=Components.str("\uF504").withStyle(def_style);
-        protein_icon=Components.str("\uF505").withStyle(def_style);
-        carbohydrate_icon=Components.str("\uF502").withStyle(def_style);
-        vegetable_icon=Components.str("\uF503").withStyle(def_style);
-
+        AnimationUtil.remove("NutritionScreen");
     }
 
     @Override
     public void render(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
         super.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
-        progress = Math.min(progress + pPartialTick/10, 1.0f);
+        progress = AnimationUtil.fadeIn(500, "NutritionScreen", false);
         PoseStack pose = pGuiGraphics.pose();
         pose.pushPose();
         pose.translate((float) this.width /2, (float) this.height /2, 0);

@@ -9,7 +9,7 @@ import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMes
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
-import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuScreen;
+import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -42,11 +42,6 @@ public class FHKeyHandler {
             // open clothes screen
             if(FHKeyMappings.key_clothes.get().consumeClick()) {
                 FHNetwork.sendToServer(new C2SOpenClothesScreenMessage());
-            }
-
-            // open wheel menu
-            if (FHKeyMappings.key_openWheelMenu.get().consumeClick()) {
-                ClientUtils.mc().setScreen(new WheelMenuScreen());
             }
         }
     }

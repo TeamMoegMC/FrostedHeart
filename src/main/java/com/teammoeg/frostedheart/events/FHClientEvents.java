@@ -38,6 +38,7 @@ import com.teammoeg.frostedheart.content.research.research.effects.EffectShowCat
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
+import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.util.FHVersion;
@@ -337,8 +338,8 @@ public class FHClientEvents {
     public static void tickClient(ClientTickEvent event) {
         if (event.phase == Phase.START) {
             InfraredViewRenderer.clientTick();
-            if (ClientUtils.mc().level != null) {
-                Minecraft mc = ClientUtils.mc();
+            Minecraft mc = ClientUtils.mc();
+            if (mc.level != null) {
                 if (ClientScene.INSTANCE != null)
                     ClientScene.INSTANCE.tick(mc);
 
@@ -351,12 +352,15 @@ public class FHClientEvents {
 
             if (pe != null && pe.getEffect(FHMobEffects.NYCTALOPIA.get()) != null) {
                 ClientUtils.DoApplyGammaValue = true;
-                ClientUtils.OverwriteGammaValue = Mth.clamp((float) (double) (ClientUtils.mc().options.gamma().get()), 0f, 1f) * 0.1f
+                ClientUtils.OverwriteGammaValue = Mth.clamp((float) (double) (mc.options.gamma().get()), 0f, 1f) * 0.1f
                         - 1f;
             } else {
                 ClientUtils.DoApplyGammaValue = false;
-                ClientUtils.OverwriteGammaValue = Mth.clamp((float) (double) ClientUtils.mc().options.gamma().get(), 0f, 1f);
+                ClientUtils.OverwriteGammaValue = Mth.clamp((float) (double) mc.options.gamma().get(), 0f, 1f);
             }
+
+            if (mc.screen instanceof WheelMenuRenderer menu)
+                menu.tick();
         }
     }
 
