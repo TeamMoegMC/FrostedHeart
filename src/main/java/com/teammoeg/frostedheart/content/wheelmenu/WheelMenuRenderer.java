@@ -229,16 +229,15 @@ public class WheelMenuRenderer {
 				if (openingStatus < 6)
 					openingStatus++;
 			} else {
-	
-				if (openingStatus > 0) {
-					isClosing = true;
-					openingStatus -= 2;
-					if (openingStatus <= 0) {
-						openingStatus = 0;
-						isClosing = false;
-						onClose();
-					}
+				isClosing = true;
+				openingStatus -= 2;
+				if (openingStatus <= 0) {
+					openingStatus = 0;
+					isClosing = false;
+					onClose();
+					return;
 				}
+				
 			}
 			boolean shouldUpdate = false;
 			for (Selection selection : selections) {

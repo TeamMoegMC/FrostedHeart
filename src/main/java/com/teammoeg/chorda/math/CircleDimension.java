@@ -51,12 +51,12 @@ public class CircleDimension implements Dimension2D {
 	    	this.y = targetY;
 	    } else {
 	    	//if previous point is inside the circle
-	        if ( radiusSquared-EDGE_THRESOLD > this.x * this.x + this.y * this.y) {
+	        //if ( radiusSquared-EDGE_THRESOLD > this.x * this.x + this.y * this.y) {
 	        	
 	            double theta = Math.atan2(targetY, targetX);
 	            this.x =  (float) (radius * Math.cos(theta));
 	            this.y =  (float) (radius * Math.sin(theta));
-	        } else { // previous point at edge
+	       /* } else { // previous point at edge
 	           
 	        	double thetaPrev = Math.atan2(this.x, this.y);
 	            // Calculate movement in tangent direction
@@ -64,12 +64,14 @@ public class CircleDimension implements Dimension2D {
 	        	double thetaCurrent = thetaPrev + tangentDisp / radius;
 	        	this.x = (float) (radius * Math.cos(thetaCurrent));
 	        	this.y = (float) (radius * Math.sin(thetaCurrent));
-	        }
+	        }*/
 	    }
 	}
 	
 	public static void main(String[] args) {
 		CircleDimension cdm=new CircleDimension(125);
+		cdm.addPos(-250, 250);
+		cdm.addPos(0, 250);
 		System.out.println(cdm);
 	}
 
