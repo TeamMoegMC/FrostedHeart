@@ -3,7 +3,7 @@ package com.teammoeg.chorda.math;
 import lombok.Getter;
 import lombok.Setter;
 
-public class PlaneWorld {
+public class SquareDimension implements Dimension2D {
 	@Getter
 	@Setter
 	int boundsX1;
@@ -21,6 +21,7 @@ public class PlaneWorld {
 	@Getter
 	float y;
 
+	@Override
 	public void setPos(float x,float y) {
 		if(x<boundsX1)
 			x=boundsX1;
@@ -33,17 +34,17 @@ public class PlaneWorld {
 		this.x=x;
 		this.y=y;
 	}
+	@Override
 	public void reset() {
 		this.x=0;
 		this.y=0;
 	}
+	@Override
 	public void addPos(float x,float y) {
 		this.setPos(this.x+x, this.y+y);
 	}
-	public void addPos(double x, double y) {
-		this.setPos((float)(this.x+x), (float)(this.y+y));
-	}
-	public PlaneWorld(int boundsX1, int boundsY1, int boundsX2, int boundsY2) {
+
+	public SquareDimension(int boundsX1, int boundsY1, int boundsX2, int boundsY2) {
 		super();
 		this.boundsX1 = boundsX1;
 		this.boundsX2 = boundsX2;

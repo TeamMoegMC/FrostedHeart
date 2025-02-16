@@ -43,6 +43,9 @@ public class FHKeyHandler {
             if(FHKeyMappings.key_clothes.get().consumeClick()) {
                 FHNetwork.sendToServer(new C2SOpenClothesScreenMessage());
             }
+            if(FHKeyMappings.key_openWheelMenu.get().consumeClick()) {
+            	WheelMenuRenderer.open();
+            }
         }
     }
 }

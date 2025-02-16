@@ -34,6 +34,8 @@ public abstract class MouseHandlerMixin_MouseCapture implements CapturableMouseH
 	@Override
 	public void setCaptureMouse(boolean captureMouse) {
 		this.captureMouse = captureMouse;
+		capturedX=0;
+		capturedY=0;
 	}
 
 	
