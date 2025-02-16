@@ -43,6 +43,7 @@ import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
@@ -114,7 +115,7 @@ public class WheelMenuRenderer {
 				hoveredSelection.hoverAction.execute(lastHovered);
 			}
 		} else {
-			mouseMoved = !MouseHelper.isMouseIn(virtualScreen.getX(), virtualScreen.getY(), -10, -10, 20, 20);
+			mouseMoved = !MouseHelper.isMouseIn(virtualScreen.getX(), virtualScreen.getY(), -50, -50, 100, 100);
 			hoveredSelection = null;
 		}
 		// 跟随鼠标移动的细圆环
@@ -176,7 +177,7 @@ public class WheelMenuRenderer {
 		addSelection(new Selection(Component.translatable("gui.close"), IconButton.Icon.CROSS, 0, Selection.NO_ACTION));
 
 		if (CompatModule.isFTBQLoaded()) {
-			addSelection(new Selection(Component.translatable("key.ftbquests.quests"), FTBQuestsItems.BOOK, 10,
+			addSelection(new Selection(Component.translatable("key.ftbquests.quests"), new ItemStack(FTBQuestsItems.BOOK.get()), 10,
 					s -> FTBQuestsClient.openGui()));
 		}
 
