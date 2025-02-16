@@ -359,8 +359,8 @@ public class FHClientEvents {
                 ClientUtils.OverwriteGammaValue = Mth.clamp((float) (double) mc.options.gamma().get(), 0f, 1f);
             }
 
-            if (mc.screen instanceof WheelMenuRenderer menu)
-                menu.tick();
+            //if(WheelMenuRenderer.isOpened)
+            	WheelMenuRenderer.tick();
         }
     }
 
