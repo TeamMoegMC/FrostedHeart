@@ -69,7 +69,7 @@ public class WheelMenuRenderer {
 	protected static Selection hoveredSelection;
 	protected static boolean mouseMoved = false;
 	// create a virtual screen to track mouse movement
-	protected static Dimension2D virtualScreen = new CircleDimension(125);
+	protected static Dimension2D virtualScreen = new CircleDimension(200);
 	@Getter
 	public static boolean isOpened;
 	public static boolean isClosing;
@@ -139,7 +139,7 @@ public class WheelMenuRenderer {
 			}
 
 		// 渲染“鼠标”
-		FGuis.drawRing(graphics, (int) virtualScreen.getX(), (int) virtualScreen.getY(), 3, 6, 0, 360,
+		FGuis.drawRing(graphics, (int) virtualScreen.getX()/2, (int) virtualScreen.getY()/2, 3, 6, 0, 360,
 				ColorHelper.setAlpha(ColorHelper.CYAN, p));
 
 		// 渲染选项标题
@@ -225,6 +225,7 @@ public class WheelMenuRenderer {
 		}
 		if (isOpened) {
 			if (FHKeyMappings.key_openWheelMenu.get().isDown()) {
+				isClosing = false;
 				if (openingStatus < 6)
 					openingStatus++;
 			} else {
@@ -239,8 +240,6 @@ public class WheelMenuRenderer {
 					}
 				}
 			}
-		}
-		if (isOpened) {
 			boolean shouldUpdate = false;
 			for (Selection selection : selections) {
 				selection.tick();
