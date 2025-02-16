@@ -43,7 +43,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
@@ -72,21 +71,22 @@ public class WheelMenuRenderer {
 	@Getter
 	public static boolean isOpened;
 	public static boolean isClosing;
-	static float openningStatus;
+	static float openingStatus;
+
 	public static void render(ForgeGui gui, GuiGraphics graphics, float partialTicks, int width, int height) {
-		if(!isOpened)return;
-		if (visibleSelections.isEmpty())
-			return;
+		if(!isOpened || visibleSelections.isEmpty()) return;
+
 		float p;
 		if(isClosing)
-			p=Mth.clamp((openningStatus+(1-partialTicks)*2)/6f, 0, 1);
+			p=Mth.clamp((openingStatus +(1-partialTicks)*2)/3f, 0, 1);
 		else
-			p=Mth.clamp((openningStatus+(partialTicks))/6f, 0, 1);
+			p=Mth.clamp((openingStatus + partialTicks)/3f, 0, 1);
 		int size = visibleSelections.size();
 		int cw = ClientUtils.screenCenterX();
 		int ch = ClientUtils.screenCenterY();
 		var font = gui.getFont();
 		var pose = graphics.pose();
+		virtualScreen.addPos(MouseCaptureUtil.getAndResetCapturedX(),MouseCaptureUtil.getAndResetCapturedY());
 
 		pose.pushPose();
 		pose.translate(cw, ch, 0);
@@ -97,8 +97,6 @@ public class WheelMenuRenderer {
 				ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
 		FGuis.drawRing(graphics, 0, 0, WHEEL_INNER_RADIUS - 4, WHEEL_INNER_RADIUS - 2, 0, 360,
 				ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
-
-
 		
 		float halfSliceSize = 360F / (size * 2);
 		double radian = Math.atan2(virtualScreen.getX() , -(virtualScreen.getY()));
@@ -113,7 +111,7 @@ public class WheelMenuRenderer {
 				hoveredSelection.hoverAction.execute(lastHovered);
 			}
 		} else {
-			mouseMoved = !MouseHelper.isMouseIn(virtualScreen.getX(), virtualScreen.getY(), -25, -25, 50,50);
+			mouseMoved = !MouseHelper.isMouseIn(virtualScreen.getX(), virtualScreen.getY(), -10, -10, 20,20);
 			hoveredSelection = null;
 		}
 		// 跟随鼠标移动的细圆环
@@ -123,7 +121,7 @@ public class WheelMenuRenderer {
 				ColorHelper.setAlpha(ColorHelper.CYAN, p));
 		pose.popPose();
 
-		// 选择选项的圆环
+		// 当前选择的选项的圆环
 		pose.pushPose();
 		pose.rotateAround(new Quaternionf().rotateZ((float) Math.toRadians(degrees.get(selectedIndex))), 0, 0, 0);
 		FGuis.drawRing(graphics, 0, 0, WHEEL_INNER_RADIUS, WHEEL_OUTER_RADIUS, -halfSliceSize, halfSliceSize,
@@ -136,6 +134,10 @@ public class WheelMenuRenderer {
 				visibleSelections.get(i).setPosition(positions.get(i).getX(), positions.get(i).getY());
 				visibleSelections.get(i).render(gui, graphics, partialTicks, width, height);
 			}
+
+		// 渲染“鼠标”
+		FGuis.drawRing(graphics, (int) virtualScreen.getX(), (int) virtualScreen.getY(), 3, 6, 0, 360,
+				ColorHelper.setAlpha(ColorHelper.CYAN, p));
 
 		// 渲染选项标题
 		if (hoveredSelection != null) {
@@ -168,19 +170,20 @@ public class WheelMenuRenderer {
 		positions.clear();
 		degrees.clear();
 		// 在此处添加轮盘选项
+		addSelection(new Selection(Component.translatable("gui.close"), IconButton.Icon.CROSS, Selection.NO_ACTION));
+
 		if (CompatModule.isFTBQLoaded()) {
 			addSelection(new Selection(Component.translatable("key.ftbquests.quests"), FTBQuestsItems.BOOK,
 					s -> FTBQuestsClient.openGui()));
-		} else {
-			
-			addSelection(new Selection(Component.literal("Open Quests"), Items.BOOK.getDefaultInstance(),
-					Selection.NO_ACTION));
 		}
+
 		addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.debug"),
 				FHItems.debug_item.get().getDefaultInstance(), ColorHelper.CYAN,
 				s -> ClientUtils.getPlayer().isCreative(), s -> DebugScreen.openDebugScreen(), Selection.NO_ACTION));
+
 		addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.nutrition"),
 				NutritionScreen.fat_icon, s -> FHNetwork.sendToServer(new C2SOpenNutritionScreenMessage())));
+
 		addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.clothing"),
 				FHItems.gambeson.get().getDefaultInstance(),
 				s -> FHNetwork.sendToServer(new C2SOpenClothesScreenMessage())));
@@ -208,26 +211,26 @@ public class WheelMenuRenderer {
 
 	public static void tick() {
 		if(ClientUtils.getPlayer()==null) {//not in world
-			openningStatus=0;
+			openingStatus =0;
 			onClose();
 		}
 		if (FHKeyMappings.key_openWheelMenu.get().isDown()) {
 			if(!isOpened) {
-				MouseCaptureUtil.setCaptureMouse(true);
 				init();
+				if (!selections.isEmpty()) {
+					MouseCaptureUtil.setCaptureMouse(true);
+				}
 				isOpened=true;
 			}else {
-				virtualScreen.addPos(MouseCaptureUtil.getAndResetCapturedX(),MouseCaptureUtil.getAndResetCapturedY());
-				
-				if(openningStatus<6)
-				openningStatus++;
+				if(openingStatus <6)
+					openingStatus++;
 			}
 		} else {
-			if(openningStatus>0) {
+			if(openingStatus >0) {
 				isClosing=true;
-				openningStatus-=2;
-				if (openningStatus <= 0) {
-					openningStatus=0;
+				openingStatus -=2;
+				if (openingStatus <= 0) {
+					openingStatus =0;
 					isClosing=false;
 					onClose();
 				}
@@ -251,10 +254,10 @@ public class WheelMenuRenderer {
 	}
 
 	public static void onClose() {
-		
 		MouseCaptureUtil.setCaptureMouse(false);
 		virtualScreen.reset();
 		isOpened=false;
+		mouseMoved = false;
 		if(ClientUtils.getPlayer()!=null&&hoveredSelection!=null) {
 			hoveredSelection.selectAction.execute(hoveredSelection);
 		}
@@ -266,8 +269,7 @@ public class WheelMenuRenderer {
 
 	public static class Selection {
 		public static final Predicate<Selection> ALWAYS_VISIBLE = s -> true;
-		public static final Action NO_ACTION = s -> {
-		};
+		public static final Action NO_ACTION = s -> {};
 
 		protected final Predicate<Selection> visibility;
 		protected final Action selectAction;
@@ -286,10 +288,10 @@ public class WheelMenuRenderer {
 		/**
 		 * @param icon        {@link ItemStack}, {@link IconButton.Icon},
 		 *                    {@link Component}, {@code null}
-		 * @param pressAction 选择后的行动
+		 * @param selectAction 选择后的行动 (选中 -> 松开Tab)
 		 */
-		public Selection(Component message, Object icon, Action pressAction) {
-			this(message, icon, ColorHelper.CYAN, ALWAYS_VISIBLE, pressAction, NO_ACTION);
+		public Selection(Component message, Object icon, Action selectAction) {
+			this(message, icon, ColorHelper.CYAN, ALWAYS_VISIBLE, selectAction, NO_ACTION);
 		}
 
 		/**
@@ -297,17 +299,17 @@ public class WheelMenuRenderer {
 		 *                    {@link Component}, {@code null}
 		 * @param color       图标为 {@link IconButton.Icon} 时的颜色
 		 * @param visibility  选项在什么情况下可见，每tick更新
-		 * @param pressAction 选择后的行动 (选中 -> 松开Tab)
+		 * @param selectAction 选择后的行动 (选中 -> 松开Tab)
 		 * @param hoverAction 选中选项后的行动
 		 */
-		public Selection(Component message, Object icon, int color, Predicate<Selection> visibility, Action pressAction,
+		public Selection(Component message, Object icon, int color, Predicate<Selection> visibility, Action selectAction,
 				Action hoverAction) {
 			this.message = message;
 			this.iconType = getIconType(icon);
 			this.icon = icon;
 			this.color = color;
 			this.visibility = visibility;
-			this.selectAction = pressAction;
+			this.selectAction = selectAction;
 			this.hoverAction = hoverAction;
 		}
 
@@ -320,6 +322,7 @@ public class WheelMenuRenderer {
 			}
 		}
 
+		@SuppressWarnings("unused")
 		protected void renderSelection(ForgeGui gui, GuiGraphics graphics, float partialTick, int width, int height) {
 			switch (iconType) {
 			case ITEM -> graphics.renderItem((ItemStack) icon, x - 8, y - 8);
