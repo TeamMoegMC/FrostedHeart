@@ -51,7 +51,8 @@ public class CircleDimension implements Dimension2D {
 	    	this.y = targetY;
 	    } else {
 	    	//if previous point is inside the circle
-	        if ( radiusSquared-EDGE_THRESOLD < this.x * this.x + this.y * this.y) {
+	        if ( radiusSquared-EDGE_THRESOLD > this.x * this.x + this.y * this.y) {
+	        	
 	            double theta = Math.atan2(targetY, targetX);
 	            this.x =  (float) (radius * Math.cos(theta));
 	            this.y =  (float) (radius * Math.sin(theta));
@@ -65,6 +66,16 @@ public class CircleDimension implements Dimension2D {
 	        	this.y = (float) (radius * Math.sin(thetaCurrent));
 	        }
 	    }
+	}
+	
+	public static void main(String[] args) {
+		CircleDimension cdm=new CircleDimension(125);
+		System.out.println(cdm);
+	}
+
+	@Override
+	public String toString() {
+		return "CircleDimension [radius=" + radius + ", x=" + x + ", y=" + y + "]";
 	}
 
 }
