@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskScreen;
+
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
@@ -30,12 +30,12 @@ import net.minecraft.ChatFormatting;
 
 public abstract class EditDialog extends Panel {
     EditDialog previous;
-    DrawDeskScreen sc;
+    EditorManager sc;
 
     public EditDialog(Widget panel) {
         super(panel.getGui());
-        if (panel.getGui() instanceof DrawDeskScreen)
-            sc = (DrawDeskScreen) panel.getGui();
+        if (panel.getGui() instanceof EditorManager)
+            sc = (EditorManager)panel.getGui();
     }
 
     public void close() {

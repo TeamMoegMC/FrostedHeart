@@ -22,13 +22,13 @@ package com.teammoeg.frostedheart.content.research.research.effects;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -70,11 +70,11 @@ public class EffectItemReward extends Effect {
     }
 
     @Override
-    public FHIcon getDefaultIcon() {
+    public CIcon getDefaultIcon() {
         if (!rewards.isEmpty()) {
-            return FHIcons.getStackIcons(rewards);
+            return CIcons.getStackIcons(rewards);
         }
-        return FHIcons.nop();
+        return CIcons.nop();
     }
 
     @Override

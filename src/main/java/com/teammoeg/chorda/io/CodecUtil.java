@@ -45,6 +45,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -151,6 +152,7 @@ public class CodecUtil {
 				return DataResult.success(new ItemStack(it,1));
 				
 			}, t-> CRegistryHelper.getRegistryName(t.getItem()))).build();
+	public static final Codec<Component>  COMPONENT_CODEC = ExtraCodecs.JSON.xmap(Component.Serializer::fromJson, Component.Serializer::toJsonTree);
 	public static final Codec<Integer> POSITIVE_INT = Codec.intRange(0, Integer.MAX_VALUE);
 	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(ExtraCodecs.JSON,o2->DataResult.success(o2.toJson()),o->{
 		if(o.isJsonArray()||o.isJsonObject())

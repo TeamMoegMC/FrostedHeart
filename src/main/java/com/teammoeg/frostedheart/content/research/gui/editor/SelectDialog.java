@@ -23,10 +23,11 @@ import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.FHIconWrapper;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.content.research.FHResearch;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -50,7 +51,7 @@ import java.util.stream.Collectors;
 public class SelectDialog<T> extends EditDialog {
     public static final Editor<Research> EDITOR_RESEARCH = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, FHResearch::getAllResearch,
             Research::getName, e -> new String[]{e.getId(), e.getName().getString()},
-            Research::getFTBIcon
+            r->new FHIconWrapper(r.getIcon())
     ).open();
     public static final Editor<IMultiblock> EDITOR_MULTIBLOCK = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, MultiblockHandler::getMultiblocks,
             wrap(IMultiblock::getUniqueName)
@@ -61,7 +62,7 @@ public class SelectDialog<T> extends EditDialog {
 
         new SelectDialog<>(p, l, adv, e -> c.accept(e.getId()), () -> cam.getAdvancements().getAllAdvancements(),
                 Advancement::getChatComponent, advx -> new String[]{advx.getChatComponent().getString(), advx.getId().toString()},
-                advx -> FHIcons.getIcon(advx.getDisplay().getIcon()).asFtbIcon()
+                advx -> new FHIconWrapper(CIcons.getIcon(advx.getDisplay().getIcon()))
         ).open();
 
     };

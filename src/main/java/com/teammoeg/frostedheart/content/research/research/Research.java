@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.content.research.research;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
@@ -31,8 +33,6 @@ import com.teammoeg.frostedheart.content.research.FHRegisteredItem;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.content.research.number.IResearchNumber;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
  */
 public class Research implements FHRegisteredItem {
     public static final Codec<Research> CODEC = RecordCodecBuilder.create(t -> t.group(
-            FHIcons.CODEC.optionalFieldOf("icon", FHIcons.nop()).forGetter(o -> o.icon),
+            CIcons.CODEC.optionalFieldOf("icon", CIcons.nop()).forGetter(o -> o.icon),
             ResearchCategory.CODEC.fieldOf("category").forGetter(o -> o.category),
             Codec.list(Codec.STRING).optionalFieldOf("parents", Arrays.asList()).forGetter(o -> new ArrayList<>(o.parents)),
             Codec.list(Clue.CODEC).optionalFieldOf("clues", Arrays.asList()).forGetter(o -> o.clues),
@@ -77,7 +77,7 @@ public class Research implements FHRegisteredItem {
     /**
      * The icon for this research.<br>
      */
-    FHIcon icon;
+    CIcon icon;
     /**
      * The required items.<br>
      */
@@ -134,10 +134,10 @@ public class Research implements FHRegisteredItem {
      */
     public Research() {
         this.id = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
-        this.icon = FHIcons.nop();
+        this.icon = CIcons.nop();
     }
 
-    public Research(FHIcon icon, ResearchCategory category, List<String> parents, List<Clue> clues, List<IngredientWithSize> requiredItems, Optional<List<Effect>> effects, String name,
+    public Research(CIcon icon, ResearchCategory category, List<String> parents, List<Clue> clues, List<IngredientWithSize> requiredItems, Optional<List<Effect>> effects, String name,
                     List<String> desc, List<String> fdesc, boolean[] flags, int points,int insight) {
         super();
         this.icon = icon;
@@ -188,7 +188,7 @@ public class Research implements FHRegisteredItem {
     public Research(String id, ResearchCategory category, ItemStack icon, String... parents) {
         this.id = id;
         this.parents.addAll(Arrays.asList(parents));
-        this.icon = FHIcons.getIcon(icon);
+        this.icon = CIcons.getIcon(icon);
         this.setCategory(category);
     }
 
@@ -411,14 +411,8 @@ public class Research implements FHRegisteredItem {
      *
      * @return icon<br>
      */
-    public FHIcon getIcon() {
+    public CIcon getIcon() {
         return icon;
-    }
-
-    public Icon getFTBIcon() {
-        if (icon == null)
-            return null;
-        return icon.asFtbIcon();
     }
 
     /**

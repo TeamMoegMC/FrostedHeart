@@ -140,11 +140,6 @@ public class FHClientEventsMod {
 
     @SubscribeEvent
 	public static void registerKeys(RegisterKeyMappingsEvent ev) {
-        FHKeyMappings.key_skipDialog.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
-        FHKeyMappings.key_InfraredView.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
-        FHKeyMappings.key_health.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
-        FHKeyMappings.key_clothes.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
-        FHKeyMappings.key_openWheelMenu.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
 
 		ev.register(FHKeyMappings.key_skipDialog.get());
 		if(CompatModule.isLdLibLoaded())

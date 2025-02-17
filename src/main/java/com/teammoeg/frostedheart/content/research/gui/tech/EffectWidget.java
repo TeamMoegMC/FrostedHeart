@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
@@ -35,7 +35,7 @@ import java.util.List;
 public class EffectWidget extends Widget {
     List<Component> tooltips;
     Component title;
-    FHIcon icon;
+    CIcon icon;
     Effect e;
     Research r;
 

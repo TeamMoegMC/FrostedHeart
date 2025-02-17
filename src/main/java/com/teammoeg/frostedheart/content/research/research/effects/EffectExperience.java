@@ -22,11 +22,11 @@ package com.teammoeg.frostedheart.content.research.research.effects;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -64,8 +64,8 @@ public class EffectExperience extends Effect {
     }
 
     @Override
-    public FHIcon getDefaultIcon() {
-        return FHIcons.getIcon(Items.EXPERIENCE_BOTTLE);
+    public CIcon getDefaultIcon() {
+        return CIcons.getIcon(Items.EXPERIENCE_BOTTLE);
     }
 
     @Override

@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
+import com.teammoeg.chorda.client.FHIconWrapper;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
@@ -314,7 +315,7 @@ public class ResearchHierarchyPanel extends Panel {
         Research research;
 
         public ResearchDetailButton(ResearchHierarchyPanel panel, Research research) {
-            super(panel, research.getName(), research.getIcon().asFtbIcon());
+            super(panel, research.getName(), new FHIconWrapper(research.getIcon()));
             this.research = research;
             this.researchScreen = panel.researchPanel;
             setSize(36, 36);
@@ -387,7 +388,7 @@ public class ResearchHierarchyPanel extends Panel {
         Research parent;
 
         public ResearchSimpleButton(ResearchHierarchyPanel panel, Research research) {
-            super(panel, research.getName(), research.getFTBIcon());
+            super(panel, research.getName(), new FHIconWrapper(research.getIcon()));
             this.research = research;
             this.researchScreen = panel.researchPanel;
             setSize(24, 24);

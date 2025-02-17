@@ -19,10 +19,11 @@
 
 package com.teammoeg.frostedheart.content.research.research;
 
+import com.teammoeg.chorda.client.FHIconWrapper;
+import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchUtils;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.IconEditor;
 import com.teammoeg.frostedheart.content.research.gui.editor.*;
 import com.teammoeg.frostedheart.content.research.research.clues.ClueEditor;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectEditor;
@@ -40,7 +41,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ResearchEditorDialog extends BaseEditDialog {
-    public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(), Research::getFTBIcon, c).open();
+    public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(),r->new FHIconWrapper(r.getIcon()), c).open();
     Research r;
     LabeledTextBox id, name;
     LabeledSelection<ResearchCategory> cat;
@@ -87,7 +88,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         add(pts);
         add(new OpenEditorButton<>(this, "Edit minigame", ClueEditor.RESEARCH_GAME, r, s -> {
         }));
-        add(new OpenEditorButton<>(this, "Set Icon", IconEditor.EDITOR, r.icon, r.icon.asFtbIcon(), s -> r.icon = s));
+        add(new OpenEditorButton<>(this, "Set Icon", IconEditor.EDITOR, r.icon, new FHIconWrapper(r.icon), s -> r.icon = s));
         add(cat);
 
         add(new OpenEditorButton<>(this, "Edit Description", EditListDialog.STRING_LIST, r.desc, s -> r.desc = new ArrayList<>(s)));

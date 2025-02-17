@@ -19,7 +19,8 @@
 
 package com.teammoeg.frostedheart.content.research.research.effects;
 
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.IconEditor;
+import com.teammoeg.chorda.client.FHIconWrapper;
+import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.frostedheart.content.research.gui.editor.*;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
@@ -78,7 +79,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
                     .open();
 
     };
-    public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, Effect::getBrief, Effect::getFtbIcon, c).open();
+    public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, Effect::getBrief, e->new FHIconWrapper(e.getIcon()), c).open();
     protected LabeledTextBoxAndBtn nonce;
     protected LabeledTextBox name;
     protected LabeledSelection<Boolean> sd;

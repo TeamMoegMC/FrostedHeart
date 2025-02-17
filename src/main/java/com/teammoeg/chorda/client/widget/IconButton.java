@@ -22,6 +22,8 @@ package com.teammoeg.chorda.client.widget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.ColorHelper;
 
@@ -149,6 +151,9 @@ public class IconButton extends Button {
         public void render(PoseStack pose, int x, int y, int color) {
             CGuiHelper.bindTexture(ICON_LOCATION);
             CGuiHelper.blitColored(pose, x, y, size.width, size.height, this.x, this.y, size.width, size.height, TEXTURE_WIDTH, TEXTURE_HEIGHT, color);
+        }
+        public CIcon toCIcon() {
+        	return CIcons.getIcon(ICON_LOCATION, x, y, size.width, size.height,TEXTURE_WIDTH, TEXTURE_HEIGHT);
         }
     }
 }

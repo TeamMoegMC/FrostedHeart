@@ -21,13 +21,13 @@ package com.teammoeg.frostedheart.content.research.research.effects;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -74,8 +74,8 @@ public class EffectShowCategory extends Effect {
     }
 
     @Override
-    public FHIcon getDefaultIcon() {
-        return FHIcons.getIcon(Blocks.CRAFTING_TABLE);
+    public CIcon getDefaultIcon() {
+        return CIcons.getIcon(Blocks.CRAFTING_TABLE);
     }
 
     @Override

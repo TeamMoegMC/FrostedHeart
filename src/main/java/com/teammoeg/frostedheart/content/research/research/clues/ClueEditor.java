@@ -19,11 +19,15 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
-import com.teammoeg.frostedheart.content.research.gui.FHIcons;
+import com.teammoeg.chorda.client.FHIconWrapper;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedheart.content.research.gui.editor.*;
 import com.teammoeg.frostedheart.content.research.research.Research;
+
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Widget;
+import net.minecraft.world.item.crafting.Ingredient;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -176,7 +180,10 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         @Override
         public void addWidgets() {
             super.addWidgets();
-            add(new OpenEditorButton<>(this, "Select Ingredient", IngredientEditor.EDITOR, e.stack, e.stack == null ? Icon.empty() : FHIcons.getIcon(e.stack).asFtbIcon(), c -> e.stack = c));
+            
+            add(new OpenEditorButton<IngredientWithSize>(this, "Select Ingredient", IngredientEditor.EDITOR, 
+            	e.stack,(e.stack == null ? Icon.empty() : new FHIconWrapper(CIcons.getIcon(e.stack.getBaseIngredient(),e.stack.getCount()))),
+            	c -> e.stack = c));
             add(cons);
         }
 

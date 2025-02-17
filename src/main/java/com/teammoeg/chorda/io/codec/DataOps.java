@@ -22,6 +22,7 @@ package com.teammoeg.chorda.io.codec;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -95,7 +96,7 @@ public class DataOps implements DynamicOps<Object> {
 		public MBuilder(DataOps ops) {
 			super();
 			this.ops = ops;
-			map = DataResult.success(new HashMap<>());
+			map = DataResult.success(new LinkedHashMap<>());
 		}
 
 		@Override
@@ -269,12 +270,14 @@ public class DataOps implements DynamicOps<Object> {
 
 	@Override
 	public Object createMap(Map<Object, Object> map) {
-		return new HashMap<>(map);
+		return new LinkedHashMap<>(map);
 	}
 
 	@Override
 	public Object createMap(Stream<Pair<Object, Object>> map) {
-		return map.collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
+		LinkedHashMap lhm= new LinkedHashMap<>();
+		map.forEach(p->lhm.put(p.getFirst(), p.getSecond()));
+		return lhm;
 	}
 
 	@Override

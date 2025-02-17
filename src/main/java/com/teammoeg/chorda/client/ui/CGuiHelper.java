@@ -204,7 +204,7 @@ public class CGuiHelper {
 	}
 
 	// draw a line from start to end by color, ABSOLUTE POSITION
-	
+
 	public static void drawLine(PoseStack matrixStack, Color4I color, int startX,
 		int startY, int endX, int endY, float z) {
 		Tesselator t = Tesselator.getInstance();
@@ -216,28 +216,32 @@ public class CGuiHelper {
 			startY, endX, endY, z);
 		t.end();
 	}
-	private static class ShaderSetter implements Supplier<ShaderInstance>{
+
+	private static class ShaderSetter implements Supplier<ShaderInstance> {
 		ShaderInstance inst;
+
 		@Override
 		public ShaderInstance get() {
 			return inst;
 		}
-		
+
 	}
-	public static ThreadLocal<ShaderSetter> shaderSetterCache=ThreadLocal.withInitial(()->new ShaderSetter());
+
+	public static ThreadLocal<ShaderSetter> shaderSetterCache = ThreadLocal.withInitial(() -> new ShaderSetter());
+
 	// draw a line from start to end by color, ABSOLUTE POSITION
-	//TODO: THE LINES IS NOT SHOWING
+	// TODO: THE LINES IS NOT SHOWING
 	public static void drawLine(GuiGraphics graphics, Color4I color, int startX,
 		int startY, int endX, int endY) {
-		ShaderSetter ss=shaderSetterCache.get();
-		ss.inst=RenderSystem.getShader();
-		
+		ShaderSetter ss = shaderSetterCache.get();
+		ss.inst = RenderSystem.getShader();
+
 		VertexConsumer vertexBuilderLines = graphics.bufferSource()
 			.getBuffer(RenderStateAccess.BOLD_LINE_TYPE);
 		drawVertexLine(graphics.pose().last().pose(), vertexBuilderLines, color,
 			startX, startY, endX, endY, 0f);
 		RenderSystem.setShader(ss);
-		
+
 	}
 
 	private static void drawRect(Matrix4f mat, BufferBuilder renderBuffer, int x, int y, int w, int h, int color) {
@@ -370,6 +374,7 @@ public class CGuiHelper {
 
 	public static void bindTexture(ResourceLocation showingImage) {
 		RenderSystem.setShaderTexture(0, showingImage);
+		
 
 	}
 
@@ -454,4 +459,12 @@ public class CGuiHelper {
 		CGuiHelper.blitColored(pose, x, y, icon.size.width, icon.size.height, icon.x, icon.y, icon.size.width, icon.size.height, IconButton.TEXTURE_WIDTH, IconButton.TEXTURE_HEIGHT, color);
 	}
 
+	public static void resetGuiDrawing() {
+		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
+		RenderSystem.blendFunc(770, 771);
+		RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+		RenderSystem.enableDepthTest();
+
+	}
 }

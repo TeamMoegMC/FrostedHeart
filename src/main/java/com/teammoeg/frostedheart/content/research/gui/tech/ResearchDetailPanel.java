@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.content.research.research.Research;
@@ -35,7 +35,7 @@ public class ResearchDetailPanel extends Panel {
     public PanelScrollBar scrollInfo;
     public TechScrollBar scrolldetail;
     Research research;
-    FHIcon icon;
+    CIcon icon;
     ResearchDashboardPanel dashboardPanel;
     ResearchInfoPanel infoPanel;
     DescPanel descPanel;

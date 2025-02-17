@@ -22,11 +22,11 @@ package com.teammoeg.frostedheart.content.research.research.effects;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -45,7 +45,7 @@ public class EffectStats extends Effect {
             Codec.DOUBLE.fieldOf("val").forGetter(o -> o.val),
             Codec.BOOL.fieldOf("percent").forGetter(o -> o.isPercentage)
     ).apply(t, EffectStats::new));
-    private static FHIcon addIcon = FHIcons.getDelegateIcon("plus");
+    private static CIcon addIcon = CIcons.getDelegateIcon("plus");
     String vars;
     double val;
     boolean isPercentage = false;
@@ -76,7 +76,7 @@ public class EffectStats extends Effect {
     }
 
     @Override
-    public FHIcon getDefaultIcon() {
+    public CIcon getDefaultIcon() {
         return addIcon;
     }
 

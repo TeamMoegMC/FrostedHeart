@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.wheelmenu;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseCaptureUtil;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.ui.Point;
@@ -103,40 +104,39 @@ public class WheelMenuRenderer {
 				ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
 
 		float halfSliceSize = 360F / (size * 2);
-		double radian = Math.atan2(virtualScreen.getX(), -(virtualScreen.getY()));
-		double degree = Math.toDegrees(radian);
-		if (degree < 0)
-			degree += 360;
-		int selectedIndex = findIndex(degree + halfSliceSize, size);
+
 		if (mouseMoved) {
+			double radian = Math.atan2(virtualScreen.getX(), -(virtualScreen.getY()));
+			double degree = Math.toDegrees(radian);
+			if (degree < 0)
+				degree += 360;
+			int selectedIndex = findIndex(degree + halfSliceSize, size);
 			Selection lastHovered = hoveredSelection;
 			hoveredSelection = visibleSelections.get(selectedIndex);
 			if (hoveredSelection != lastHovered) {
 				hoveredSelection.hoverAction.execute(lastHovered);
 			}
+			// 跟随鼠标移动的细圆环
+			pose.pushPose();
+			pose.rotateAround(new Quaternionf().rotateZ((float) radian), 0, 0, 0);
+			FGuis.drawRing(graphics, 0, 0, WHEEL_INNER_RADIUS - 4, WHEEL_INNER_RADIUS - 2, -halfSliceSize, halfSliceSize,
+					ColorHelper.setAlpha(ColorHelper.CYAN, p));
+			pose.popPose();
+
+			// 当前选择的选项的圆环
+			pose.pushPose();
+			pose.rotateAround(new Quaternionf().rotateZ((float) Math.toRadians(degrees.get(selectedIndex))), 0, 0, 0);
+			FGuis.drawRing(graphics, 0, 0, WHEEL_INNER_RADIUS, WHEEL_OUTER_RADIUS, -halfSliceSize, halfSliceSize,
+					ColorHelper.setAlpha(ColorHelper.CYAN, 0.25F * p));
+			pose.popPose();
 		} else {
 			mouseMoved = !MouseHelper.isMouseIn(virtualScreen.getX(), virtualScreen.getY(), -50, -50, 100, 100);
 			hoveredSelection = null;
 		}
-		// 跟随鼠标移动的细圆环
-		pose.pushPose();
-		pose.rotateAround(new Quaternionf().rotateZ((float) radian), 0, 0, 0);
-		FGuis.drawRing(graphics, 0, 0, WHEEL_INNER_RADIUS - 4, WHEEL_INNER_RADIUS - 2, -halfSliceSize, halfSliceSize,
-				ColorHelper.setAlpha(ColorHelper.CYAN, p));
-		pose.popPose();
-
-		// 当前选择的选项的圆环
-		pose.pushPose();
-		pose.rotateAround(new Quaternionf().rotateZ((float) Math.toRadians(degrees.get(selectedIndex))), 0, 0, 0);
-		FGuis.drawRing(graphics, 0, 0, WHEEL_INNER_RADIUS, WHEEL_OUTER_RADIUS, -halfSliceSize, halfSliceSize,
-				ColorHelper.setAlpha(ColorHelper.CYAN, 0.25F * p));
-		pose.popPose();
-
 		// 渲染选项
 		if (size == positions.size())
 			for (int i = 0; i < size; i++) {
-				visibleSelections.get(i).setPosition(positions.get(i).getX(), positions.get(i).getY());
-				visibleSelections.get(i).render(gui, graphics, partialTicks, width, height);
+				visibleSelections.get(i).render(gui, graphics, partialTicks,positions.get(i).getX(), positions.get(i).getY(), 16, 16);
 			}
 
 		// 渲染“鼠标”
@@ -174,22 +174,22 @@ public class WheelMenuRenderer {
 		positions.clear();
 		degrees.clear();
 		// 在此处添加轮盘选项
-		addSelection(new Selection(Component.translatable("gui.close"), IconButton.Icon.CROSS, 0, Selection.NO_ACTION));
+		addSelection(new Selection(Component.translatable("gui.close"), IconButton.Icon.CROSS.toCIcon(), 0, Selection.NO_ACTION));
 
 		if (CompatModule.isFTBQLoaded()) {
-			addSelection(new Selection(Component.translatable("key.ftbquests.quests"), new ItemStack(FTBQuestsItems.BOOK.get()), 10,
+			addSelection(new Selection(Component.translatable("key.ftbquests.quests"), CIcons.getIcon(FTBQuestsItems.BOOK.get()), 10,
 					s -> FTBQuestsClient.openGui()));
 		}
 
 		addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.debug"),
-				FHItems.debug_item.get().getDefaultInstance(), ColorHelper.CYAN, 20,
+				CIcons.getIcon(FHItems.debug_item), ColorHelper.CYAN, 20,
 				s -> ClientUtils.getPlayer().isCreative(), s -> DebugScreen.openDebugScreen(), Selection.NO_ACTION));
 
 		addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.nutrition"),
-				NutritionScreen.fat_icon, 30, s -> FHNetwork.sendToServer(new C2SOpenNutritionScreenMessage())));
+			CIcons.getIcon(NutritionScreen.fat_icon), 30, s -> FHNetwork.sendToServer(new C2SOpenNutritionScreenMessage())));
 
 		addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.clothing"),
-				FHItems.gambeson.get().getDefaultInstance(), 40,
+			CIcons.getIcon(FHItems.gambeson), 40,
 				s -> FHNetwork.sendToServer(new C2SOpenClothesScreenMessage())));
 		return !MinecraftForge.EVENT_BUS.post(new WheelMenuInitEvent(WheelMenuRenderer::addSelection));
 	}

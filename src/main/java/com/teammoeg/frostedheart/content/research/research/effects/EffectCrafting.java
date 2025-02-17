@@ -24,6 +24,8 @@ import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.math.CMath;
@@ -33,8 +35,6 @@ import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.client.Lang;
 import mezz.jei.library.util.RecipeUtil;
 import net.minecraft.network.chat.Component;
@@ -107,9 +107,9 @@ public class EffectCrafting extends Effect {
     }
 
     @Override
-    public FHIcon getDefaultIcon() {
+    public CIcon getDefaultIcon() {
         if (ingredient != null)
-            return FHIcons.getIcon(FHIcons.getIcon(ingredient), FHIcons.getIcon(Items.CRAFTING_TABLE));
+            return CIcons.getIcon(CIcons.getIcon(ingredient), CIcons.getIcon(Items.CRAFTING_TABLE));
         Set<ItemStack> stacks = new HashSet<>();
         for (Recipe<?> r : unlocks) {
             if (!RecipeUtil.getResultItem(r).isEmpty()) {
@@ -117,8 +117,8 @@ public class EffectCrafting extends Effect {
             }
         }
         if (!stacks.isEmpty())
-            return FHIcons.getIcon(FHIcons.getStackIcons(stacks), FHIcons.getIcon(Items.CRAFTING_TABLE));
-        return FHIcons.getIcon(FHIcons.getDelegateIcon("question"), FHIcons.getIcon(Items.CRAFTING_TABLE));
+            return CIcons.getIcon(CIcons.getStackIcons(stacks), CIcons.getIcon(Items.CRAFTING_TABLE));
+        return CIcons.getIcon(CIcons.getDelegateIcon("question"), CIcons.getIcon(Items.CRAFTING_TABLE));
     }
 
     @Override

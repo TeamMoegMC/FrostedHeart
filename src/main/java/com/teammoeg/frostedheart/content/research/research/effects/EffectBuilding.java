@@ -31,12 +31,12 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -64,7 +64,7 @@ public class EffectBuilding extends Effect {
 
     public EffectBuilding(IETemplateMultiblock s, Block b) {
         super();
-        super.icon = FHIcons.getIcon(b);
+        super.icon = CIcons.getIcon(b);
         tooltip.add("@" + b.getDescriptionId());
         multiblock = s;
 
@@ -81,10 +81,10 @@ public class EffectBuilding extends Effect {
     }
 
     @Override
-    public FHIcon getDefaultIcon() {
+    public CIcon getDefaultIcon() {
     	if(multiblock instanceof IETemplateMultiblock mb)
-    		return FHIcons.getIcon(mb.getBlock());
-        return FHIcons.getIcon(IEItems.Tools.HAMMER.get());
+    		return CIcons.getIcon(mb.getBlock());
+        return CIcons.getIcon(IEItems.Tools.HAMMER.get());
     }
 
     @Override

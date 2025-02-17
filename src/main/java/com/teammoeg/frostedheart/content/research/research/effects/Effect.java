@@ -22,12 +22,12 @@ package com.teammoeg.frostedheart.content.research.research.effects;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.registry.TypedCodecRegistry;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.content.research.research.Research;
 
@@ -56,7 +56,7 @@ public abstract class Effect {
             t.group(
                     Codec.STRING.optionalFieldOf("name", "").forGetter(o -> o.name),
                     Codec.list(Codec.STRING).optionalFieldOf("tooltip", Arrays.asList()).forGetter(o -> o.tooltip),
-                    FHIcons.CODEC.optionalFieldOf("icon").forGetter(o -> Optional.ofNullable(o.icon)),
+                    CIcons.CODEC.optionalFieldOf("icon").forGetter(o -> Optional.ofNullable(o.icon)),
                     Codec.STRING.fieldOf("id").forGetter(o -> o.nonce),
                     Codec.BOOL.optionalFieldOf("hidden", false).forGetter(o -> o.hidden)).apply(t, BaseData::new));
     private static TypedCodecRegistry<Effect> registry = new TypedCodecRegistry<>();
@@ -76,7 +76,7 @@ public abstract class Effect {
 
     String name = "";
     List<String> tooltip;
-    FHIcon icon;
+    CIcon icon;
     String nonce;
     boolean hidden;
 
@@ -120,7 +120,7 @@ public abstract class Effect {
      * @param tooltip the tooltip<br>
      * @param icon    the icon<br>
      */
-    public Effect(String name, List<String> tooltip, FHIcon icon) {
+    public Effect(String name, List<String> tooltip, CIcon icon) {
         super();
         this.name = name;
         this.tooltip = tooltip;
@@ -136,7 +136,7 @@ public abstract class Effect {
      * @param icon    the icon<br>
      */
     public Effect(String name, List<String> tooltip, ItemLike icon) {
-        this(name, tooltip, FHIcons.getIcon(icon));
+        this(name, tooltip, CIcons.getIcon(icon));
     }
 
     /**
@@ -147,7 +147,7 @@ public abstract class Effect {
      * @param icon    the icon<br>
      */
     public Effect(String name, List<String> tooltip, ItemStack icon) {
-        this(name, tooltip, FHIcons.getIcon(icon));
+        this(name, tooltip, CIcons.getIcon(icon));
     }
 
     public static <T extends Effect> void registerEffectType(Class<T> cls, String type, MapCodec<T> json) {
@@ -179,7 +179,7 @@ public abstract class Effect {
      *
      * @return default icon<br>
      */
-    public abstract FHIcon getDefaultIcon();
+    public abstract CIcon getDefaultIcon();
 
     /**
      * Get default name.
@@ -202,17 +202,12 @@ public abstract class Effect {
      *
      * @return icon<br>
      */
-    public final FHIcon getIcon() {
+    public final CIcon getIcon() {
         if (icon == null)
             return getDefaultIcon();
         return icon;
     }
 
-    public final Icon getFtbIcon() {
-        if (icon == null)
-            return getDefaultIcon().asFtbIcon();
-        return icon.asFtbIcon();
-    }
 
     /**
      * Get name.
@@ -292,9 +287,9 @@ public abstract class Effect {
      */
     public abstract void revoke(TeamResearchData team);
 
-    public static record BaseData(String name, List<String> tooltip, FHIcon icon, String nonce, boolean hidden) {
+    public static record BaseData(String name, List<String> tooltip, CIcon icon, String nonce, boolean hidden) {
 
-        public BaseData(String name, List<String> tooltip, Optional<FHIcon> icon, String nonce, boolean hidden) {
+        public BaseData(String name, List<String> tooltip, Optional<CIcon> icon, String nonce, boolean hidden) {
             this(name, tooltip, icon.orElse(null), nonce, hidden);
         }
 

@@ -60,7 +60,7 @@ public class CCustomMenuSlot {
 			
 		});
 		
-		static final NetworkEncoder<List<Component>> textEncoder=encoders.register(codec(Codec.list(ExtraCodecs.JSON.xmap(Component.Serializer::fromJson, Component.Serializer::toJsonTree))));
+		static final NetworkEncoder<List<Component>> textEncoder=encoders.register(codec(Codec.list(CodecUtil.COMPONENT_CODEC)));
 		static final NetworkEncoder<BitSet> bitSetEncoder=encoders.register(new NetworkEncoder<>() {
 
 			@Override

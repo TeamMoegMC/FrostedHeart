@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
+import com.teammoeg.chorda.client.FHIconWrapper;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
@@ -86,7 +87,7 @@ public class ResearchListPanel extends Panel {
         long lastupdate;
 
         public ResearchButton(ResearchList panel, Research research) {
-            super(panel, research.getName(), research.getIcon().asFtbIcon());
+            super(panel, research.getName(), new FHIconWrapper(research.getIcon()));
             this.research = research;
             this.listPanel = panel;
             setSize(101, RESEARCH_HEIGHT);

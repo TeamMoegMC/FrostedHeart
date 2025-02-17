@@ -21,9 +21,11 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 
+import com.teammoeg.chorda.client.FHIconWrapper;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.research.gui.FHIcons;
+
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import net.minecraft.resources.ResourceLocation;
@@ -50,7 +52,7 @@ import java.util.stream.Stream;
 public class IngredientEditor extends BaseEditDialog {
     public static final Editor<Ingredient> EDITOR_JSON = (p, l, v, c) -> EditPrompt.JSON_EDITOR.open(p, l, v == null ? null : v.toJson(), e -> c.accept(Ingredient.fromJson(e)));
     public static final Editor<IngredientWithSize> EDITOR = (p, l, v, c) -> new IngredientEditor(p, l, v, c).open();
-    public static final Editor<List<IngredientWithSize>> LIST_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EDITOR, IngredientEditor::getDesc, e -> FHIcons.getIcon(e).asFtbIcon(), e -> c.accept(new ArrayList<>(e))).open();
+    public static final Editor<List<IngredientWithSize>> LIST_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EDITOR, IngredientEditor::getDesc, e -> new FHIconWrapper(CIcons.getIcon(e.getBaseIngredient(),e.getCount())), e -> c.accept(new ArrayList<>(e))).open();
 
     public static final Editor<ItemValue> EDITOR_ITEMLIST = (p, l, v, c) -> SelectItemStackDialog.EDITOR.open(p, l, (v == null || v.item == null) ? new ItemStack(Items.AIR) : v.item, s -> {
         s = s.copy();
@@ -58,7 +60,6 @@ public class IngredientEditor extends BaseEditDialog {
         c.accept(new ItemValue(s));
     });
     public static final Editor<TagValue> EDITOR_TAGLIST = (p, l, v, c) -> {
-
 
         String vx = "";
         if (v != null) {
@@ -221,7 +222,7 @@ public class IngredientEditor extends BaseEditDialog {
 
     @Override
     public void addWidgets() {
-        add(new OpenEditorButton<>(this, "Edit Ingredient", EDITOR_INGREDIENT, orig, orig == null ? Icon.empty() : FHIcons.getIcon(orig).asFtbIcon(), e -> orig = e));
+        add(new OpenEditorButton<>(this, "Edit Ingredient", EDITOR_INGREDIENT, orig, orig == null ? Icon.empty() : new FHIconWrapper(CIcons.getIcon(orig)), e -> orig = e));
         if (orig != null) {
             if (orig.values.length == 1)
                 add(new OpenEditorButton<>(this, "Change to Multiple", EDITOR_MULTIPLE, orig, e -> orig = e));
