@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import java.util.function.Consumer;
 
+import com.teammoeg.chorda.client.cui.UIElementBase;
+
 import dev.ftb.mods.ftblibrary.ui.Widget;
 
 @FunctionalInterface
@@ -33,6 +35,6 @@ public interface Editor<T> {
         };
     }
 
-    void open(Widget parent, String label, T previousValue, Consumer<T> onCommit);
+    void open(UIElementBase parent, String label, T previousValue, Consumer<T> onCommit);
 
 }

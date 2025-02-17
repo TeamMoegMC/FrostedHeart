@@ -19,15 +19,12 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.TextField;
+import com.teammoeg.chorda.client.cui.UIElementBase;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
-import dev.ftb.mods.ftblibrary.ui.TextField;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 import java.util.function.Consumer;
 
@@ -39,12 +36,12 @@ public class ConfirmDialog extends BaseEditDialog {
     Consumer<Boolean> fin;
     boolean selected = false;
 
-    public ConfirmDialog(Widget panel, String label, boolean exp, Consumer<Boolean> onFinished) {
+    public ConfirmDialog(UIElementBase panel, String label, boolean exp, Consumer<Boolean> onFinished) {
         super(panel);
-        tf = new TextField(this).setColor(Color4I.RED).setMaxWidth(200).setText(label);
+        tf = new TextField(this).setColor(0xFFFF0000).setMaxWidth(200).setText(label);
         fin = onFinished;
         selected = !exp;
-        cancel = new SimpleTextButton(this, Components.str("Cancel"), Icon.empty()) {
+        cancel = new SimpleTextButton(this, Components.str("Cancel"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -53,7 +50,7 @@ public class ConfirmDialog extends BaseEditDialog {
             }
 
         };
-        ok = new SimpleTextButton(this, Components.str("OK"), Icon.empty()) {
+        ok = new SimpleTextButton(this, Components.str("OK"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {

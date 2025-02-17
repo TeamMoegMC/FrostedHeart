@@ -2,75 +2,114 @@ package com.teammoeg.chorda.client;
 
 import org.lwjgl.glfw.GLFW;
 
-import com.mojang.blaze3d.platform.InputConstants;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.steampowered.client.ClientUtils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
 
 public class CInputHelper {
 
 	public CInputHelper() {
 	}
-	public boolean shift(int modifiers) {
+	public static boolean isShift(int modifiers) {
 		return (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
 	}
 
-	public boolean control(int modifiers) {
+	public static boolean isControl(int modifiers) {
 		return (modifiers & GLFW.GLFW_MOD_CONTROL) != 0;
 	}
 
-	public boolean alt(int modifiers) {
+	public static boolean isAlt(int modifiers) {
 		return (modifiers & GLFW.GLFW_MOD_ALT) != 0;
 	}
-
-	public boolean start(int modifiers) {
-		return (modifiers & GLFW.GLFW_MOD_SUPER) != 0;
-	}
-
-	public boolean numLock(int modifiers) {
-		return (modifiers & GLFW.GLFW_MOD_NUM_LOCK) != 0;
-	}
-
-	public boolean capsLock(int modifiers) {
-		return (modifiers & GLFW.GLFW_MOD_CAPS_LOCK) != 0;
-	}
-	public boolean onlyControl(int modifiers) {
-		return control(modifiers) && !shift(modifiers) && !alt(modifiers);
-	}
-	public boolean esc(int keyCode) {
+	public static boolean isEsc(int keyCode) {
 		return keyCode==GLFW.GLFW_KEY_ESCAPE;
 	}
 
-	public boolean escOrInventory(int keyCode,int scanCode) {
+	public static boolean shouldCloseMenu(int keyCode,int scanCode) {
 		
-		return esc(keyCode) || Minecraft.getInstance().options.keyInventory.matches(keyCode, scanCode);
+		return isEsc(keyCode) || ClientUtils.mc().options.keyInventory.matches(keyCode, scanCode);
 	}
 
-	public boolean enter(int keyCode) {
+	public static boolean isEnter(int keyCode) {
 		return keyCode==GLFW.GLFW_KEY_ENTER;
 	}
 
-	public boolean backspace(int keyCode) {
+	public static boolean isBackspace(int keyCode) {
 		return keyCode==GLFW.GLFW_KEY_BACKSPACE;
 	}
 
-	public boolean cut(int keyCode) {
+	public static boolean isCut(int keyCode) {
 		return Screen.isCut(keyCode);
 	}
 
-	public boolean paste(int keyCode) {
+	public static boolean isPaste(int keyCode) {
 		return Screen.isPaste(keyCode);
 	}
 
-	public boolean copy(int keyCode) {
+	public static boolean isCopy(int keyCode) {
 		return Screen.isCopy(keyCode);
 	}
 
-	public boolean selectAll(int keyCode) {
+	public static boolean isSelectAll(int keyCode) {
 		return Screen.isSelectAll(keyCode);
 	}
 
-	public boolean deselectAll(int keyCode) {
-		return keyCode == GLFW.GLFW_KEY_D && Screen.hasControlDown() && !Screen.hasShiftDown() && !Screen.hasAltDown();
+	public static boolean isDeselectAll(int keyCode) {
+		return keyCode == GLFW.GLFW_KEY_D && Screen.hasControlDown();
 	}
+	public static String getClipboardText() {
+		return ClientUtils.mc().keyboardHandler.getClipboard();
+	}
+
+	public static void setClipboardText(String string) {
+		ClientUtils.mc().keyboardHandler.setClipboard(string);
+	}
+	public static boolean isShiftKeyDown() {
+		return Screen.hasShiftDown();
+	}
+
+	public static boolean isCtrlKeyDown() {
+		return Screen.hasControlDown();
+	}
+	public static boolean isKeyPressed(int keyCode) {
+		return GLFW.glfwGetKey(Minecraft.getInstance().getWindow().getWindow(), keyCode) == GLFW.GLFW_PRESS;
+	}
+	public static void playClickSound() {
+		ClientUtils.mc().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1));
+	}
+	public static boolean isMouseLeftDown() {
+		return GLFW.glfwGetMouseButton(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
+	}
+	public static boolean isMouseRightDown() {
+		return GLFW.glfwGetMouseButton(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_MOUSE_BUTTON_RIGHT) == GLFW.GLFW_PRESS;
+	}
+	public enum Cursor{
+		NORMAL(GLFW.GLFW_ARROW_CURSOR),
+		IBEAM(GLFW.GLFW_IBEAM_CURSOR),
+		CROSSHAIR(GLFW.GLFW_CROSSHAIR_CURSOR),
+		HAND(GLFW.GLFW_HAND_CURSOR),
+		HRESIZE(GLFW.GLFW_HRESIZE_CURSOR),
+		VRESIZE(GLFW.GLFW_VRESIZE_CURSOR);
+
+		private final int type;
+		private long handle = 0L;
+
+		Cursor(int type) {
+			this.type = type;
+		}
+		public void use() {
+			long window = Minecraft.getInstance().getWindow().getWindow();
+			
+			if (handle == 0) {
+				handle = GLFW.glfwCreateStandardCursor(type);
+			}
+
+			GLFW.glfwSetCursor(window, handle);
+		}
+	}
+
 }
