@@ -44,11 +44,9 @@ import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
-
 import org.joml.Quaternionf;
 
 import java.util.ArrayList;
@@ -180,6 +178,9 @@ public class WheelMenuRenderer {
 			addSelection(new Selection(Component.translatable("key.ftbquests.quests"), CIcons.getIcon(FTBQuestsItems.BOOK.get()), 10,
 					s -> FTBQuestsClient.openGui()));
 		}
+		addSelection(new Selection("key.curios.open.desc",CIcons.getIcon(FHItems.heater_vest), 50));
+		
+		
 
 		addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.debug"),
 				CIcons.getIcon(FHItems.debug_item), ColorHelper.CYAN, 20,

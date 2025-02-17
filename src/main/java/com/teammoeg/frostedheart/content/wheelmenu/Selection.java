@@ -2,9 +2,11 @@ package com.teammoeg.frostedheart.content.wheelmenu;
 
 import java.util.function.Predicate;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
+import com.teammoeg.chorda.lang.Components;
 
 import lombok.Getter;
 import net.minecraft.client.KeyMapping;
@@ -13,7 +15,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
+import net.minecraftforge.common.MinecraftForge;
 
 public class Selection {
 	public static final Predicate<Selection> ALWAYS_VISIBLE = s -> true;
@@ -60,6 +64,10 @@ public class Selection {
 		this.hoverAction = hoverAction;
 		this.priority=priority;
 	}
+	public Selection(String keyDesc, CIcon icon,int priority) {
+		this(Components.translatable(keyDesc), icon, ColorHelper.CYAN,priority, ALWAYS_VISIBLE, new KeyMappingTriggerAction(keyDesc), NO_ACTION);
+	}
+	
 
 	protected void render(ForgeGui gui, GuiGraphics graphics, float partialTick,int x,int y, int width, int height) {
 		if (!visible)
@@ -94,13 +102,19 @@ public class Selection {
 	}
 	public static class KeyMappingTriggerAction implements Action{
 		private KeyMapping km;
+		/**
+		 * Create a keymapping action. name is key description id.
+		 * */
 		public KeyMappingTriggerAction(String name) {
 			super();
+			km=KeyMapping.ALL.get(name);
 		}
 		@Override
 		public void execute(Selection selection) {
-			
-			
+			km.setDown(true);
+			km.clickCount++;
+			MinecraftForge.EVENT_BUS.post(new InputEvent.Key(0, 0, InputConstants.PRESS, 0));//mock key press
+			MinecraftForge.EVENT_BUS.post(new InputEvent.Key(0, 0, InputConstants.RELEASE, 0));
 		}
 		
 	}
