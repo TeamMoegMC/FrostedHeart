@@ -60,9 +60,10 @@ public class FoodNutritionStats implements TooltipModifier {
     public void modify(ItemTooltipEvent context) {
     	final ItemStack stack=context.getItemStack();
     	final Player player=context.getEntity();
+        List<Component> stats = getFoodStats(stack, player);
         
-        if (FoodTemperatureHandler.isFoodOrDrink(stack)) {
-        	KeyControlledDesc desc = new KeyControlledDesc(()->getFoodStats(stack, player), 
+        if (FoodTemperatureHandler.isFoodOrDrink(stack) && stats != null && !stats.isEmpty()) {
+        	KeyControlledDesc desc = new KeyControlledDesc(()->stats,
                     GLFW.GLFW_KEY_N,
                     "N", 
                     "holdForNutrition"
