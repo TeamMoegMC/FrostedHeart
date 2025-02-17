@@ -421,24 +421,6 @@ public class FHBlocks {
             .register();
 
     // Stone ores
-    public static final BlockEntry<DropExperienceBlock> SILVER_ORE = REGISTRATE.block("silver_ore", DropExperienceBlock::new)
-            .initialProperties(() -> Blocks.GOLD_ORE)
-            .tag(BlockTags.NEEDS_IRON_TOOL)
-            .tag(Tags.Blocks.ORES)
-            .tag(BlockTags.MINEABLE_WITH_PICKAXE)
-            .properties(p -> p.mapColor(MapColor.METAL)
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE))
-            .blockstate(FHBlockStateGen.simpleCubeAll("ore/silver_ore"))
-            .loot((lt, b) -> lt.add(b,
-                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
-                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_SILVER.get())
-                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
-            .transform(tagBlockAndItem("ores/silver", "ores_in_ground/stone"))
-            .tag(Tags.Items.ORES)
-            .build()
-            .register();
-
     public static final BlockEntry<DropExperienceBlock> TIN_ORE = REGISTRATE.block("tin_ore", DropExperienceBlock::new)
             .initialProperties(() -> Blocks.COPPER_ORE)
             .properties(p -> p.mapColor(MapColor.METAL)
@@ -473,43 +455,7 @@ public class FHBlocks {
             .transform(tagBlockAndItem("ores/pyrite", "ores/iron", "ores_in_ground/stone"))
             .tag(Tags.Items.ORES)
             .build()
-            .register();
-
-    public static final BlockEntry<DropExperienceBlock> NICKEL_ORE = REGISTRATE.block("nickel_ore", DropExperienceBlock::new)
-            .initialProperties(() -> Blocks.IRON_ORE)
-            .properties(p -> p.mapColor(MapColor.METAL)
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE))
-            .transform(pickaxeOnly())
-            .blockstate(FHBlockStateGen.simpleCubeAll("ore/nickel_ore"))
-            .loot((lt, b) -> lt.add(b,
-                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
-                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_NICKEL.get())
-                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
-            .tag(BlockTags.NEEDS_IRON_TOOL)
-            .tag(Tags.Blocks.ORES)
-            .transform(tagBlockAndItem("ores/nickel", "ores_in_ground/stone"))
-            .tag(Tags.Items.ORES)
-            .build()
-            .register();
-
-    public static final BlockEntry<DropExperienceBlock> LEAD_ORE = REGISTRATE.block("lead_ore", DropExperienceBlock::new)
-            .initialProperties(() -> Blocks.COPPER_ORE)
-            .properties(p -> p.mapColor(MapColor.METAL)
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE))
-            .transform(pickaxeOnly())
-            .blockstate(FHBlockStateGen.simpleCubeAll("ore/lead_ore"))
-            .loot((lt, b) -> lt.add(b,
-                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
-                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_LEAD.get())
-                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
-            .tag(BlockTags.NEEDS_STONE_TOOL)
-            .tag(Tags.Blocks.ORES)
-            .transform(tagBlockAndItem("ores/lead", "ores_in_ground/stone"))
-            .tag(Tags.Items.ORES)
-            .build()
-            .register();
+            .register();;
 
     public static final BlockEntry<DropExperienceBlock> HALITE_ORE = REGISTRATE.block("halite_ore", DropExperienceBlock::new)
             .initialProperties(() -> Blocks.COPPER_ORE)
@@ -566,23 +512,6 @@ public class FHBlocks {
             .register();
 
     // Deepslate ores
-    public static final BlockEntry<DropExperienceBlock> DEEPSLATE_SILVER_ORE = REGISTRATE.block("deepslate_silver_ore", DropExperienceBlock::new)
-            .initialProperties(() -> Blocks.DEEPSLATE_GOLD_ORE)
-            .properties(p -> p.mapColor(MapColor.METAL)
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.DEEPSLATE))
-            .transform(pickaxeOnly())
-            .blockstate(FHBlockStateGen.simpleCubeAll("ore/deepslate_silver_ore"))
-            .loot((lt, b) -> lt.add(b,
-                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
-                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_SILVER.get())
-                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
-            .tag(BlockTags.NEEDS_IRON_TOOL)
-            .tag(Tags.Blocks.ORES)
-            .transform(tagBlockAndItem("ores/silver", "ores_in_ground/deepslate"))
-            .tag(Tags.Items.ORES)
-            .build()
-            .register();
 
     public static final BlockEntry<DropExperienceBlock> DEEPSLATE_TIN_ORE = REGISTRATE.block("deepslate_tin_ore", DropExperienceBlock::new)
             .initialProperties(() -> Blocks.DEEPSLATE_COPPER_ORE)
@@ -616,42 +545,6 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_STONE_TOOL)
             .tag(Tags.Blocks.ORES)
             .transform(tagBlockAndItem("ores/pyrite", "ores/iron", "ores_in_ground/deepslate"))
-            .tag(Tags.Items.ORES)
-            .build()
-            .register();
-
-    public static final BlockEntry<DropExperienceBlock> DEEPSLATE_NICKEL_ORE = REGISTRATE.block("deepslate_nickel_ore", DropExperienceBlock::new)
-            .initialProperties(() -> Blocks.DEEPSLATE_IRON_ORE)
-            .properties(p -> p.mapColor(MapColor.METAL)
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.DEEPSLATE))
-            .transform(pickaxeOnly())
-            .blockstate(FHBlockStateGen.simpleCubeAll("ore/deepslate_nickel_ore"))
-            .loot((lt, b) -> lt.add(b,
-                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
-                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_NICKEL.get())
-                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
-            .tag(BlockTags.NEEDS_IRON_TOOL)
-            .tag(Tags.Blocks.ORES)
-            .transform(tagBlockAndItem("ores/nickel", "ores_in_ground/deepslate"))
-            .tag(Tags.Items.ORES)
-            .build()
-            .register();
-
-    public static final BlockEntry<DropExperienceBlock> DEEPSLATE_LEAD_ORE = REGISTRATE.block("deepslate_lead_ore", DropExperienceBlock::new)
-            .initialProperties(() -> Blocks.DEEPSLATE_COPPER_ORE)
-            .properties(p -> p.mapColor(MapColor.METAL)
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.DEEPSLATE))
-            .transform(pickaxeOnly())
-            .blockstate(FHBlockStateGen.simpleCubeAll("ore/deepslate_lead_ore"))
-            .loot((lt, b) -> lt.add(b,
-                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
-                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_LEAD.get())
-                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
-            .tag(BlockTags.NEEDS_STONE_TOOL)
-            .tag(Tags.Blocks.ORES)
-            .transform(tagBlockAndItem("ores/lead", "ores_in_ground/deepslate"))
             .tag(Tags.Items.ORES)
             .build()
             .register();

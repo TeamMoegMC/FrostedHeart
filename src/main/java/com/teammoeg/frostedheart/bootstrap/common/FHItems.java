@@ -323,11 +323,6 @@ thinner.png
             taggedIngredient("lead_slurry", FHTags.Items.SLURRY.tag);
 
     // Crushed ores
-    public static ItemEntry<Item> CRUSHED_RAW_SILVER =
-            taggedIngredient("crushed_raw_silver",
-                    forgeItemTag("crushed_raw_materials"),
-                    forgeItemTag("crushed_raw_materials/silver"),
-                    AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
     public static ItemEntry<Item> CRUSHED_RAW_TIN =
             taggedIngredient("crushed_raw_tin",
                     forgeItemTag("crushed_raw_materials"),
@@ -337,16 +332,6 @@ thinner.png
             taggedIngredient("crushed_raw_pyrite",
                     forgeItemTag("crushed_raw_materials"),
                     forgeItemTag("crushed_raw_materials/pyrite"),
-                    AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
-    public static ItemEntry<Item> CRUSHED_RAW_NICKEL =
-            taggedIngredient("crushed_raw_nickel",
-                    forgeItemTag("crushed_raw_materials"),
-                    forgeItemTag("crushed_raw_materials/nickel"),
-                    AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
-    public static ItemEntry<Item> CRUSHED_RAW_LEAD =
-            taggedIngredient("crushed_raw_lead",
-                    forgeItemTag("crushed_raw_materials"),
-                    forgeItemTag("crushed_raw_materials/lead"),
                     AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
     public static ItemEntry<Item> CRUSHED_RAW_HALITE =
             taggedIngredient("crushed_raw_halite",
@@ -365,10 +350,6 @@ thinner.png
                     AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
 
     // Raw ores
-    public static ItemEntry<Item> RAW_SILVER =
-                taggedIngredient("raw_silver",
-                        forgeItemTag("raw_materials/silver"),
-                        forgeItemTag("raw_materials"));
     public static ItemEntry<Item> RAW_TIN =
             taggedIngredient("raw_tin",
                     forgeItemTag("raw_materials/tin"),
@@ -378,14 +359,6 @@ thinner.png
                     forgeItemTag("raw_materials/pyrite"),
                     forgeItemTag("raw_materials"),
                     FHTags.Items.IGNITION_METAL.tag);
-    public static ItemEntry<Item> RAW_NICKEL =
-            taggedIngredient("raw_nickel",
-                    forgeItemTag("raw_materials/nickel"),
-                    forgeItemTag("raw_materials"));
-    public static ItemEntry<Item> RAW_LEAD =
-            taggedIngredient("raw_lead",
-                    forgeItemTag("raw_materials/lead"),
-                    forgeItemTag("raw_materials"));
     public static ItemEntry<Item> RAW_HALITE =
             taggedIngredient("raw_halite",
                     forgeItemTag("raw_materials/halite"),

@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.world;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.world.features.FHFossilFeature;
 import com.teammoeg.frostedheart.content.world.features.ImprovedFreezeTopLayerFeature;
 import com.teammoeg.frostedheart.content.world.features.ImprovedIceSpikeFeature;
 import com.teammoeg.frostedheart.content.world.features.SpacecraftFeature;
@@ -28,6 +29,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.levelgen.feature.DiskFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
+import net.minecraft.world.level.levelgen.feature.FossilFeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.DiskConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
@@ -45,6 +47,7 @@ public class FHFeatures {
     public static final RegistryObject<ImprovedIceSpikeFeature> ICE_SPIKES = register("ice_spikes", ImprovedIceSpikeFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<DiskFeature> DISK = register("disk", DiskFeature::new, DiskConfiguration.CODEC);
     public static final RegistryObject<SpacecraftFeature> SPACECRAFT = register("spacecraft", SpacecraftFeature::new, NoneFeatureConfiguration.CODEC);
+    public static final RegistryObject<FHFossilFeature> FH_FOSSIL = register("fossil", FHFossilFeature::new, FossilFeatureConfiguration.CODEC);
 
     private static <C extends FeatureConfiguration, F extends Feature<C>> RegistryObject<F> register(String name, Function<Codec<C>, F> feature, Codec<C> codec)
     {
@@ -61,6 +64,8 @@ public class FHFeatures {
         public static final ResourceKey<PlacedFeature> CLAY_PERMAFROST_PATCH = key("clay_permafrost_patch");
         public static final ResourceKey<PlacedFeature> GRAVEL_PERMAFROST_PATCH = key("gravel_permafrost_patch");
         public static final ResourceKey<PlacedFeature> SPACECRAFT = key("spacecraft");
+
+        public static final ResourceKey<PlacedFeature> FH_FOSSIL = key("fossil");
         // public static final ResourceKey<PlacedFeature> THIN_ICE_PATCH = key("thin_ice_patch");
 
         private static ResourceKey<PlacedFeature> key(String name)
