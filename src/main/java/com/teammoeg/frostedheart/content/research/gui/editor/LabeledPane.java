@@ -19,25 +19,25 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.TextField;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
+import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.TextField;
+import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 
-public class LabeledPane<T extends Widget> extends Panel {
+
+public class LabeledPane<T extends UIWidget> extends Layer {
 
     protected TextField label;
     protected T obj;
 
-    public LabeledPane(Panel panel, String lab) {
+    public LabeledPane(UIElement panel, String lab) {
         super(panel);
-        label = new TextField(this).setMaxWidth(200).setTrim().setText(lab).setColor(Color4I.WHITE);
+        label = new TextField(this).setMaxWidth(200).setTrim().setText(lab).setColor(0xFFFFFFFF);
 
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         add(label);
         if (obj != null) ;
         add(obj);
@@ -45,7 +45,7 @@ public class LabeledPane<T extends Widget> extends Panel {
 
     @Override
     public void alignWidgets() {
-        setSize(super.align(WidgetLayout.HORIZONTAL), 20);
+        setSize(super.align(true), 20);
 
         label.setY((20 - 8) / 2);
     }

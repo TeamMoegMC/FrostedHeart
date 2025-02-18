@@ -47,8 +47,8 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui {
             add(p);
         if (r != null && r.isEnabled())
             add(r);
-        if (getDialog() != null)
-            add(getDialog());
+        //if (getDialog() != null)
+        //    add(getDialog());
     }
 
     public void closeDialog(boolean refresh) {

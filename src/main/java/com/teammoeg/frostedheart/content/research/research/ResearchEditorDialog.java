@@ -20,6 +20,10 @@
 package com.teammoeg.frostedheart.content.research.research;
 
 import com.teammoeg.chorda.client.FHIconWrapper;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextButton;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.research.FHResearch;
@@ -27,12 +31,7 @@ import com.teammoeg.frostedheart.content.research.ResearchUtils;
 import com.teammoeg.frostedheart.content.research.gui.editor.*;
 import com.teammoeg.frostedheart.content.research.research.clues.ClueEditor;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectEditor;
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+
 import net.minecraft.client.gui.GuiGraphics;
 
 import java.util.ArrayList;
@@ -41,7 +40,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ResearchEditorDialog extends BaseEditDialog {
-    public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(),r->new FHIconWrapper(r.getIcon()), c).open();
+    public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(),r->r.getIcon(), c).open();
     Research r;
     LabeledTextBox id, name;
     LabeledSelection<ResearchCategory> cat;
@@ -49,14 +48,14 @@ public class ResearchEditorDialog extends BaseEditDialog {
     LabeledSelection<Boolean> hide, alt, hidden, locked, showed, inf;
     boolean removed;
 
-    public ResearchEditorDialog(Widget panel, Research r, ResearchCategory def) {
+    public ResearchEditorDialog(UIElement panel, Research r, ResearchCategory def) {
         super(panel);
         if (r == null) {
             r = new Research();
             r.setCategory(def == null ? ResearchCategory.RESCUE : def);
         }
         this.r = r;
-        this.setY(-panel.getGui().getY() + 10);
+        this.setY(-panel.getY() + 10);
         id = new LabeledTextBoxAndBtn(this, "id", r.getId(), "Random", t -> t.accept(Long.toHexString(UUID.randomUUID().getMostSignificantBits())));
 
         cat = new LabeledSelection<>(this, "category", r.getCategory(), ResearchCategory.values(), ResearchCategory::name);
@@ -74,10 +73,10 @@ public class ResearchEditorDialog extends BaseEditDialog {
 
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         add(EditUtils.getTitle(this, "Edit/New Research"));
         add(id);
-        add(new SimpleTextButton(this, Components.str("Reset id"), Icon.empty()) {
+        add(new TextButton(this, Components.str("Reset id"), CIcons.nop()) {
             @Override
             public void onClicked(MouseButton arg0) {
                 id.setText(r.getId());
@@ -88,7 +87,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         add(pts);
         add(new OpenEditorButton<>(this, "Edit minigame", ClueEditor.RESEARCH_GAME, r, s -> {
         }));
-        add(new OpenEditorButton<>(this, "Set Icon", IconEditor.EDITOR, r.icon, new FHIconWrapper(r.icon), s -> r.icon = s));
+        add(new OpenEditorButton<>(this, "Set Icon", IconEditor.EDITOR, r.icon, r.icon, s -> r.icon = s));
         add(cat);
 
         add(new OpenEditorButton<>(this, "Edit Description", EditListDialog.STRING_LIST, r.desc, s -> r.desc = new ArrayList<>(s)));
@@ -115,7 +114,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
             s.forEach(t -> r.getClues().add(t));
             r.doIndex();
         }));
-        add(new SimpleTextButton(this, Components.str("Remove"), Icon.empty()) {
+        add(new TextButton(this, Components.str("Remove"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -133,11 +132,11 @@ public class ResearchEditorDialog extends BaseEditDialog {
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        super.draw(matrixStack, theme, x, y, w, h);
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        super.render(matrixStack, x, y, w, h);
         Research r = FHResearch.researches.getByName(id.getText());
         if (r != null && r != this.r)
-            theme.drawString(matrixStack, "ID Existed!", x + id.width + 10, y + 10, Color4I.RED, 0);
+        	matrixStack.drawString(getFont(), "ID Existed!", x + id.getWidth() + 10, y + 10,0xFFFF0000);
     }
 
 

@@ -22,7 +22,7 @@ import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-public class TextBox extends UIElement implements Focusable {
+public class TextBox extends UIWidget implements Focusable {
 	private boolean isFocused = false;
 	public int charLimit = 2000;
 	public int textColor;
@@ -275,7 +275,7 @@ public class TextBox extends UIElement implements Focusable {
 			setFocused(true);
 			if (button==MouseButton.LEFT) {
 				if (isFocused) {
-					int i = getMouseX() - getX();
+					int i = (int)getMouseX();
 					String s = getFont().plainSubstrByWidth(text.substring(displayPos), getWidth());
 					if (CInputHelper.isShiftKeyDown()) {
 						setSelectionPos(getFont().plainSubstrByWidth(s,i).length() + displayPos);

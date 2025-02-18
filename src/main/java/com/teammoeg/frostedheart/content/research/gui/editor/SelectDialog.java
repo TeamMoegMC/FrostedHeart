@@ -24,18 +24,23 @@ import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultib
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.FHIconWrapper;
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.LayerScrollBar;
+import com.teammoeg.chorda.client.cui.TextBox;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.*;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -51,7 +56,7 @@ import java.util.stream.Collectors;
 public class SelectDialog<T> extends EditDialog {
     public static final Editor<Research> EDITOR_RESEARCH = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, FHResearch::getAllResearch,
             Research::getName, e -> new String[]{e.getId(), e.getName().getString()},
-            r->new FHIconWrapper(r.getIcon())
+            Research::getIcon
     ).open();
     public static final Editor<IMultiblock> EDITOR_MULTIBLOCK = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, MultiblockHandler::getMultiblocks,
             wrap(IMultiblock::getUniqueName)
@@ -62,14 +67,14 @@ public class SelectDialog<T> extends EditDialog {
 
         new SelectDialog<>(p, l, adv, e -> c.accept(e.getId()), () -> cam.getAdvancements().getAllAdvancements(),
                 Advancement::getChatComponent, advx -> new String[]{advx.getChatComponent().getString(), advx.getId().toString()},
-                advx -> new FHIconWrapper(CIcons.getIcon(advx.getDisplay().getIcon()))
+                advx -> CIcons.getIcon(advx.getDisplay().getIcon())
         ).open();
 
     };
     public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, CRegistryHelper::getEntities, EntityType::getDescription, e -> new String[]{e.getDescription().getString(), CRegistryHelper.getRegistryName(e).toString()}
     ).open();
     public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, () -> ForgeRegistries.ITEMS.tags().getTagNames().map(t -> t.location()).map(ResourceLocation::toString).collect(Collectors.toSet())).open();
-    public PanelScrollBar scroll;
+    public LayerScrollBar scroll;
     public SelectorList rl;
     public TextBox searchBox;
     String lbl;
@@ -78,24 +83,24 @@ public class SelectDialog<T> extends EditDialog {
     Supplier<Collection<T>> fetcher;
     Function<T, Component> tostr;
     Function<T, String[]> tosearch;
-    Function<T, Icon> toicon;
+    Function<T, CIcon> toicon;
 
-    public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
-        this(panel, lbl, val, cb, fetcher, e -> Components.str(e.toString()), e -> new String[]{e.toString()}, e -> Icon.empty());
+    public SelectDialog(UIElement panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
+        this(panel, lbl, val, cb, fetcher, e -> Components.str(e.toString()), e -> new String[]{e.toString()}, e -> CIcons.nop());
     }
 
-    public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+    public SelectDialog(UIElement panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
                         Function<T, Component> tostr) {
-        this(panel, lbl, val, cb, fetcher, tostr, e -> new String[]{tostr.apply(val).getString()}, e -> Icon.empty());
+        this(panel, lbl, val, cb, fetcher, tostr, e -> new String[]{tostr.apply(val).getString()}, e -> CIcons.nop());
     }
 
-    public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+    public SelectDialog(UIElement panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
                         Function<T, Component> tostr, Function<T, String[]> tosearch) {
-        this(panel, lbl, val, cb, fetcher, tostr, tosearch, e -> Icon.empty());
+        this(panel, lbl, val, cb, fetcher, tostr, tosearch, e -> CIcons.nop());
     }
 
-    public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
-                        Function<T, Component> tostr, Function<T, String[]> tosearch, Function<T, Icon> toicon) {
+    public SelectDialog(UIElement panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+                        Function<T, Component> tostr, Function<T, String[]> tosearch, Function<T, CIcon> toicon) {
         super(panel);
         this.lbl = lbl;
         this.val = val;
@@ -107,24 +112,25 @@ public class SelectDialog<T> extends EditDialog {
         setSize(400, 300);
     }
 
-    public static <R> Function<R, Component> wrap(Function<R, Object> str) {
+
+	public static <R> Function<R, Component> wrap(Function<R, Object> str) {
         return e -> Components.str(String.valueOf(str.apply(e)));
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
 
         rl = new SelectorList(this);
         searchBox = new TextBox(this) {
             @Override
             public void onTextChanged() {
-                rl.refreshWidgets();
+                rl.refresh();
             }
         };
         searchBox.ghostText = "Search...";
         searchBox.setFocused(true);
         rl.setPosAndSize(5, 25, 360, 270);
-        scroll = new TechScrollBar(this, rl);
+        scroll = new LayerScrollBar(this, rl);
         add(rl);
         add(scroll);
         add(searchBox);
@@ -140,14 +146,14 @@ public class SelectDialog<T> extends EditDialog {
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        super.draw(matrixStack, theme, x, y, w, h);
-        theme.drawString(matrixStack, lbl, x, y - 10);
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        super.render(matrixStack, x, y, w, h);
+        matrixStack.drawString(getFont(), lbl, x, y-10, getLayerHolder().getFontColor());
     }
 
     @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        theme.drawGui(matrixStack, x, y, w, h, WidgetType.NORMAL);
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+       CGuiHelper.drawUIBackground(matrixStack, x, y, w, h);
     }
 
     @Override
@@ -168,23 +174,30 @@ public class SelectDialog<T> extends EditDialog {
         }
 
         @Override
-        public void addMouseOverText(TooltipList list) {
-            list.add(tostr.apply(obj));
+        public void getTooltip(Consumer<Component> list) {
+            list.accept(tostr.apply(obj));
         }
 
         @Override
-        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
             //CGuis.setupDrawing();
-            if (val == this.obj)
-                theme.drawButton(matrixStack, x, y, w, h, WidgetType.DISABLED);
-            else
-                theme.drawButton(matrixStack, x, y, w, h, WidgetType.mouseOver(isMouseOver()));
-            this.drawIcon(matrixStack, theme, x + 1, y + 1, 16, 16);
-            theme.drawString(matrixStack, t, x + 18, y + 6);
+            
+            matrixStack.blitNineSliced(AbstractWidget.WIDGETS_LOCATION, x, y, w, h, 20, 4, 200, 20, 0, this.getTextureY());
+            this.drawIcon(matrixStack, x + 1, y + 1, 16, 16);
+            matrixStack.drawString(getFont(), t, x + 18, y + 6,getLayerHolder().getFontColor());
 
 
         }
+    	private int getTextureY() {
+    		int i = 1;
+    		if (val == this.obj) {
+    			i = 0;
+    		} else if (this.isMouseOver()) {
+    			i = 2;
+    		}
 
+    		return 46 + i * 20;
+    	}
         @Override
         public void onClicked(MouseButton mouseButton) {
             cb.accept(obj);
@@ -192,15 +205,15 @@ public class SelectDialog<T> extends EditDialog {
         }
     }
 
-    public class SelectorList extends Panel {
-        public SelectorList(Panel panel) {
+    public class SelectorList extends Layer {
+        public SelectorList(UIElement panel) {
             super(panel);
             this.setWidth(200);
 
         }
 
         @Override
-        public void addWidgets() {
+        public void addUIElements() {
             int offset = 0;
             String stext = searchBox.getText();
             for (T r : fetcher.get()) {

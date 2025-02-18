@@ -21,13 +21,13 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextButton;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 import java.util.function.Consumer;
 
@@ -41,10 +41,10 @@ public class EditPrompt extends BaseEditDialog {
     Button ok;
     Button cancel;
 
-    public EditPrompt(Widget panel, String label, String val, Consumer<String> onFinished) {
+    public EditPrompt(UIElement panel, String label, String val, Consumer<String> onFinished) {
         super(panel);
         box = new LabeledTextBox(this, label, val);
-        ok = new SimpleTextButton(this, Components.str("OK"), Icon.empty()) {
+        ok = new TextButton(this, Components.str("OK"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -57,7 +57,7 @@ public class EditPrompt extends BaseEditDialog {
             }
 
         };
-        cancel = new SimpleTextButton(this, Components.str("Cancel"), Icon.empty()) {
+        cancel = new TextButton(this, Components.str("Cancel"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -69,12 +69,12 @@ public class EditPrompt extends BaseEditDialog {
         ok.setSize(300, 20);
     }
 
-    public static void open(Widget p, String l, String v, Consumer<String> f) {
+    public static void open(UIElement p, String l, String v, Consumer<String> f) {
         new EditPrompt(p, l, v, f).open();
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
 
         add(box);
         add(ok);

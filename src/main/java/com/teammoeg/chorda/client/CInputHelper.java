@@ -1,9 +1,8 @@
 package com.teammoeg.chorda.client;
 
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.system.MemoryUtil;
 
-import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.steampowered.client.ClientUtils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -109,6 +108,10 @@ public class CInputHelper {
 			}
 
 			GLFW.glfwSetCursor(window, handle);
+		}
+		public static void reset() {
+			long window = Minecraft.getInstance().getWindow().getWindow();
+			GLFW.glfwSetCursor(window, MemoryUtil.NULL);
 		}
 	}
 

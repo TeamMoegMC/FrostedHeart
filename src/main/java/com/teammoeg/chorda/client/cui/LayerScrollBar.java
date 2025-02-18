@@ -1,20 +1,20 @@
 package com.teammoeg.chorda.client.cui;
 
 
-public class PanelScrollBar extends ScrollBar {
-	private final Layer panel;
+public class LayerScrollBar extends ScrollBar {
+	private final Layer layer;
 
-	public PanelScrollBar(Layer parent, boolean isVertical, Layer affected) {
+	public LayerScrollBar(Layer parent, boolean isVertical, Layer affected) {
 		super(parent, isVertical, 0);
-		panel = affected;
+		layer = affected;
 	}
 
-	public PanelScrollBar(Layer parent, Layer affected) {
+	public LayerScrollBar(Layer parent, Layer affected) {
 		this(parent, true, affected);
 	}
 
 	public Layer getAffectedLayer() {
-		return panel;
+		return layer;
 	}
 
 	@Override
@@ -33,17 +33,17 @@ public class PanelScrollBar extends ScrollBar {
 	}
 	@Override
 	public double getMax() {
-		return isVertical ? panel.getContentHeight() - panel.getHeight() : panel.getContentWidth() - panel.getWidth();
+		return isVertical ? layer.getContentHeight() - layer.getHeight() : layer.getContentWidth() - layer.getWidth();
 	}
 
 	@Override
 	public void setScrollStep(double s) {
-		panel.setScrollStep(s);
+		layer.setScrollStep(s);
 	}
 
 	@Override
 	public double getScrollStep() {
-		return panel.getScrollStep();
+		return layer.getScrollStep();
 	}
 
 	@Override
@@ -54,8 +54,8 @@ public class PanelScrollBar extends ScrollBar {
 		}
 
 		int size = isVertical ?
-				(int) (panel.getHeight() / (max + panel.getHeight()) * getHeight()) :
-				(int) (panel.getWidth() / (max + panel.getWidth()) * getWidth());
+				(int) (layer.getHeight() / (max + layer.getHeight()) * getHeight()) :
+				(int) (layer.getWidth() / (max + layer.getWidth()) * getWidth());
 
         return Math.max(size, 10);
 	}
@@ -73,7 +73,7 @@ public class PanelScrollBar extends ScrollBar {
 
 	@Override
 	public boolean isScrollFocused() {
-		return super.isScrollFocused() || panel.isMouseOver();
+		return super.isScrollFocused() || layer.isMouseOver();
 	}
 
 	@Override

@@ -13,57 +13,55 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
-public abstract class Layer extends UIElement {
+public abstract class Layer extends UIWidget {
 	@Getter
-	protected final List<UIElement> elements;
+	protected final List<UIWidget> elements;
 	@Getter
 	@Setter
 	private int offsetX = 0, offsetY = 0;
 	private double scrollStep = 20;
 	private int contentWidth = -1, contentHeight = -1;
-	private LayerScrollbar attachedScrollbar = null;
+	private RatedScrollbar attachedScrollbar = null;
 
-	public Layer(UIElementBase panel) {
+	public Layer(UIElement panel) {
 		super(panel);
 		elements = new ArrayList<>();
 	}
 
-	public abstract void addElements();
+	public abstract void addUIElements();
 
-	public abstract void positionElements();
+	public abstract void alignWidgets();
 
 	public void clearElement() {
 		elements.clear();
 	}
 
-	public void initElement() {
+	public void refresh() {
 		contentWidth = contentHeight = -1;
 
 		clearElement();
 		try {
-			addElements();
+			addUIElements();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
 		elements.sort(null);
 
-		for (UIElement element : elements) {
+		for (UIWidget element : elements) {
 			if (element instanceof Layer p) {
-				p.initElement();
+				p.refresh();
 			}
 		}
 
-		positionElements();
+		alignWidgets();
 	}
 
-	public void add(UIElement element) {
-		if (element.getParent() == this) {
+	public void add(UIWidget element) {
+		if (element.getParent() != this) {
 			return;
-		}else {
-			element.setParent(this);
 		}
-		if (element instanceof LayerScrollbar psb) {
+		if (element instanceof RatedScrollbar psb) {
 			attachedScrollbar = psb;
 		}
 
@@ -75,14 +73,14 @@ public abstract class Layer extends UIElement {
 	public final int align(boolean isHorizontal) {
 		contentWidth = contentHeight = 0;
 		if(isHorizontal) {
-			for(UIElement elm:elements) {
+			for(UIWidget elm:elements) {
 				elm.setPos(contentWidth,0);
 				contentWidth+=elm.getWidth();
 				contentHeight=Math.max(elm.getHeight(), contentHeight);
 			}
 			return contentWidth;
 		}
-		for(UIElement elm:elements) {
+		for(UIWidget elm:elements) {
 			elm.setPos(0,contentHeight);
 			contentHeight+=elm.getHeight();
 			contentWidth=Math.max(elm.getWidth(), contentWidth);
@@ -106,7 +104,7 @@ public abstract class Layer extends UIElement {
 				int x1 = Integer.MAX_VALUE;
 				int x2 = Integer.MIN_VALUE;
 	
-				for (UIElement element : elements) {
+				for (UIWidget element : elements) {
 					if (element.getX() < x1) {
 						x1 = element.getX();
 					}
@@ -131,7 +129,7 @@ public abstract class Layer extends UIElement {
 				int y1 = Integer.MAX_VALUE;
 				int y2 = Integer.MIN_VALUE;
 	
-				for (UIElement element : elements) {
+				for (UIWidget element : elements) {
 					if (element.getY() < y1) {
 						y1 = element.getY();
 					}
@@ -158,18 +156,24 @@ public abstract class Layer extends UIElement {
 		drawBackground(graphics, x, y, w, h);
 		graphics.enableScissor(x, y, w, h);
 
-		for(UIElement elm:elements) {
+		for(UIWidget elm:elements) {
 			drawElement(graphics, elm, x + offsetX, y + offsetY, w, h);
 		}
 
 
 		graphics.disableScissor();
 	}
-
+	@Override
+	public void updateRenderInfo(double mx, double my, float pt) {
+		super.updateRenderInfo(mx, my, pt);
+		for(UIWidget elm:elements) {
+			elm.updateRenderInfo(getMouseX(), getMouseY(), pt);
+		}
+	}
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
 	}
 
-	public void drawElement(GuiGraphics graphics, UIElement element, int x, int y, int w, int h) {
+	public void drawElement(GuiGraphics graphics, UIWidget element, int x, int y, int w, int h) {
 
 		element.render(graphics, element.getX()+x, element.getY()+y, element.getWidth(), element.getHeight());
 	}
@@ -181,7 +185,7 @@ public abstract class Layer extends UIElement {
 		}
 
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIElement element = elements.get(i);
+			UIWidget element = elements.get(i);
 
 			if (element.hasTooltip()) {
 				element.getTooltip(list);
@@ -192,7 +196,7 @@ public abstract class Layer extends UIElement {
 	@Override
 	public void updateMouseOver() {
 		super.updateMouseOver();
-		for (UIElement element : elements) {
+		for (UIWidget element : elements) {
 			element.updateMouseOver();
 		}
 	}
@@ -204,7 +208,7 @@ public abstract class Layer extends UIElement {
 		}
 
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIElement element = elements.get(i);
+			UIWidget element = elements.get(i);
 
             if (element.isEnabled() && element.isVisible() && element.onMousePressed(button)) {
                 return true;
@@ -220,7 +224,7 @@ public abstract class Layer extends UIElement {
 		}
 
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIElement element = elements.get(i);
+			UIWidget element = elements.get(i);
 
 			if (element.isEnabled() && element.onMouseDoubleClicked(button)) {
 				return true;
@@ -233,7 +237,7 @@ public abstract class Layer extends UIElement {
 	@Override
 	public void onMouseReleased(MouseButton button) {
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIElement element = elements.get(i);
+			UIWidget element = elements.get(i);
 
 			if (element.isEnabled()) {
 				element.onMouseReleased(button);
@@ -245,7 +249,7 @@ public abstract class Layer extends UIElement {
 	@Override
 	public boolean onMouseScrolled(double scroll) {
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIElement element = elements.get(i);
+			UIWidget element = elements.get(i);
 
 			if (element.isEnabled() && element.onMouseScrolled(scroll)) {
 				return true;
@@ -258,7 +262,7 @@ public abstract class Layer extends UIElement {
 	@Override
 	public boolean onMouseDragged(MouseButton button, double dragX, double dragY) {
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIElement element = elements.get(i);
+			UIWidget element = elements.get(i);
 
 			if (element.isEnabled() && element.onMouseDragged(button, dragX, dragY)) {
 				return true;
@@ -326,7 +330,7 @@ public abstract class Layer extends UIElement {
 
 
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIElement element = elements.get(i);
+			UIWidget element = elements.get(i);
 
 			if (element.isEnabled() && element.onKeyPressed(keyCode,scanCode,modifier)) {
 				return true;
@@ -339,7 +343,7 @@ public abstract class Layer extends UIElement {
 	public boolean onKeyRelease(int keyCode,int scanCode,int modifier) {
 
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIElement element = elements.get(i);
+			UIWidget element = elements.get(i);
 
 			if (element.isEnabled()&&element.onKeyRelease(keyCode,scanCode,modifier)) {
 				return true;
@@ -356,7 +360,7 @@ public abstract class Layer extends UIElement {
 
 
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIElement element = elements.get(i);
+			UIWidget element = elements.get(i);
 
 			if (element.isEnabled() && element.onIMEInput(c, modifiers)) {
 				return true;
@@ -368,7 +372,7 @@ public abstract class Layer extends UIElement {
 
 	@Override
 	public void onClosed() {
-		for (UIElement element : elements) {
+		for (UIWidget element : elements) {
 			element.onClosed();
 		}
 	}
@@ -376,7 +380,7 @@ public abstract class Layer extends UIElement {
 	@Override
 	public void tick() {
 
-		for (UIElement element : elements) {
+		for (UIWidget element : elements) {
 			if (element.isEnabled()) {
 				element.tick();
 			}
@@ -384,7 +388,7 @@ public abstract class Layer extends UIElement {
 	}
 
 	public boolean isMouseOverAnyWidget() {
-		for (UIElement element : elements) {
+		for (UIWidget element : elements) {
 			if (element.isMouseOver()) {
 				return true;
 			}
@@ -396,7 +400,7 @@ public abstract class Layer extends UIElement {
 	public Cursor getCursor() {
 
 		for (var i = elements.size() - 1; i >= 0; i--) {
-			UIElement widget = elements.get(i);
+			UIWidget widget = elements.get(i);
 			if (widget.isEnabled() && widget.isMouseOver()) {
 				var cursor = widget.getCursor();
 				if (cursor != null) {
@@ -406,4 +410,6 @@ public abstract class Layer extends UIElement {
 		}
 		return null;
 	}
+
+
 }

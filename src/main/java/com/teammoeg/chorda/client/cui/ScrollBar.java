@@ -11,7 +11,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
-public class ScrollBar extends UIElement {
+public class ScrollBar extends UIWidget {
 	@Getter
 	final boolean isVertical;
 	private final int scrollBarSize;
@@ -27,7 +27,7 @@ public class ScrollBar extends UIElement {
 	@Setter
 	private boolean ignoreDirection = true;
 
-	public ScrollBar(UIElement parent, boolean isVertical, int size) {
+	public ScrollBar(UIWidget parent, boolean isVertical, int size) {
 		super(parent);
 		this.isVertical = isVertical;
 		scrollBarSize = Math.max(size, 0);
@@ -54,7 +54,7 @@ public class ScrollBar extends UIElement {
 	@Override
 	public boolean onMousePressed(MouseButton button) {
 		if (isMouseOver()) {
-			delta = (isVertical ? (getMouseY() - (getY() + lerpValue(getHeight() - getScrollBarSize()))) : (getMouseX() - (getX() + lerpValue(getWidth() - getScrollBarSize()))));
+			delta = (isVertical ? (getMouseY() - (lerpValue(getHeight() - getScrollBarSize()))) : (getMouseX() - ( lerpValue(getWidth() - getScrollBarSize()))));
 			return true;
 		}
 
@@ -85,10 +85,10 @@ public class ScrollBar extends UIElement {
 
 	@Override
 	public void render(GuiGraphics graphics, int x, int y, int width, int height) {
-		var scrollBarSize = getScrollBarSize();
+		int scrollBarSize = getScrollBarSize();
 
 		if (scrollBarSize > 0) {
-			var v = getValue();
+			double v = getValue();
 
 			if (delta != Integer.MIN_VALUE) {
 				if (CInputHelper.isMouseLeftDown()) {

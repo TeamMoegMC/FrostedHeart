@@ -19,22 +19,22 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 import java.util.function.Consumer;
 
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextButton;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 
 public class LabeledTextBoxAndBtn extends LabeledTextBox {
     Button btn;
 
-    public LabeledTextBoxAndBtn(Panel panel, String lab, String txt, String btn, Consumer<Consumer<String>> onbtn) {
+    public LabeledTextBoxAndBtn(UIElement panel, String lab, String txt, String btn, Consumer<Consumer<String>> onbtn) {
         super(panel, lab, txt);
-        this.btn = new SimpleTextButton(this, Components.str(btn), Icon.empty()) {
+        this.btn = new TextButton(this, Components.str(btn), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -44,8 +44,8 @@ public class LabeledTextBoxAndBtn extends LabeledTextBox {
     }
 
     @Override
-    public void addWidgets() {
-        super.addWidgets();
+    public void addUIElements() {
+        super.addUIElements();
         add(btn);
     }
 }

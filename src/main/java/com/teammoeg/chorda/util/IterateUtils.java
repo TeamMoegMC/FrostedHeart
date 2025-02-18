@@ -20,6 +20,7 @@
 package com.teammoeg.chorda.util;
 
 import java.util.Iterator;
+import java.util.List;
 
 import com.teammoeg.chorda.util.struct.MutablePair;
 
@@ -82,4 +83,6 @@ public class IterateUtils {
 			}
 		};
 	}
+	public static final Iterable<Boolean> boolIterable=List.of(true,false);
+		
 }

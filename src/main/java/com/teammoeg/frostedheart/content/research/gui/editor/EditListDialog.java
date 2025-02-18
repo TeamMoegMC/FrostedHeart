@@ -20,14 +20,19 @@
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.chorda.client.CInputHelper;
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.LayerScrollBar;
+import com.teammoeg.chorda.client.cui.TextButton;
+import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
+import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.util.client.Lang;
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.ui.*;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -39,29 +44,29 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * @author LatvianModder, khjxiaogu
+ * @author  khjxiaogu
  */
 public class EditListDialog<T> extends EditDialog {
     public static final Editor<Collection<String>> STRING_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, "", EditPrompt.TEXT_EDITOR, e -> e, c).open();
     private final Consumer<Collection<T>> callback;
     private final Component title;
-    private final Panel configPanel;
+    private final Layer configPanel;
     private final Button buttonAccept, buttonCancel;
     private final List<T> list;
     private final Editor<T> editor;
-    private final PanelScrollBar scroll;
+    private final LayerScrollBar scroll;
     private final T def;
     private final Function<T, String> read;
-    private final Function<T, Icon> toicon;
+    private final Function<T, CIcon> toicon;
     boolean modified;
-    public EditListDialog(Widget p, String label, Collection<T> vx, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
+    public EditListDialog(UIElement p, String label, Collection<T> vx, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
         this(p, label, vx, null, editor, toread, null, li);
     }
-    public EditListDialog(Widget p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
+    public EditListDialog(UIElement p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
         this(p, label, vx, def, editor, toread, null, li);
     }
 
-    public EditListDialog(Widget p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Function<T, Icon> icon, Consumer<Collection<T>> li) {
+    public EditListDialog(UIElement p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Function<T, CIcon> icon, Consumer<Collection<T>> li) {
         super(p);
         callback = li;
         if (vx != null)
@@ -76,9 +81,9 @@ public class EditListDialog<T> extends EditDialog {
         int sw = 387;
         int sh = 203;
         this.setSize(sw, sh);
-        configPanel = new Panel(this) {
+        configPanel = new Layer(this) {
             @Override
-            public void addWidgets() {
+            public void addUIElements() {
                 for (int i = 0; i < list.size(); i++) {
                     add(new ButtonConfigValue(this, i));
                 }
@@ -87,25 +92,25 @@ public class EditListDialog<T> extends EditDialog {
 
             @Override
             public void alignWidgets() {
-                for (Widget w : widgets) {
-                    w.setWidth(width - 16);
+                for (UIWidget w : super.elements) {
+                    w.setWidth(super.getWidth() - 16);
                 }
-                align(WidgetLayout.VERTICAL);
+                align(false);
                 //scroll.setMaxValue();
             }
         };
 
-        scroll = new PanelScrollBar(this, configPanel);
-        buttonAccept = new SimpleButton(this, Lang.translateKey("gui.accept"), Icons.ACCEPT, (widget, button) -> {
+        scroll = new LayerScrollBar(this, configPanel);
+        buttonAccept =TextButton.create(this, Lang.translateKey("gui.accept"), IconButton.Icon.CHECK.toCIcon(), (button) -> {
             callback.accept(list);
             modified = false;
             close();
         });
-        buttonCancel = new SimpleButton(this, Lang.translateKey("gui.cancel"), Icons.CANCEL, (widget, button) -> close());
+        buttonCancel = TextButton.create(this, Lang.translateKey("gui.cancel"), IconButton.Icon.CROSS.toCIcon(), (button) -> close());
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         add(buttonAccept);
         add(buttonCancel);
         add(configPanel);
@@ -123,10 +128,9 @@ public class EditListDialog<T> extends EditDialog {
     }
 
     @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        theme.drawGui(matrixStack, x, y, w, h, WidgetType.NORMAL);
-
-        theme.drawString(matrixStack, getTitle(), x, y - 10);
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        CGuiHelper.drawUIBackground(matrixStack, x, y, w, h);
+        matrixStack.drawString(getFont(), getTitle(), x, y-10, getLayerHolder().getFontColor());
     }
 
     @Override
@@ -148,36 +152,32 @@ public class EditListDialog<T> extends EditDialog {
     }
 
     public class ButtonAddValue extends Button {
-        public ButtonAddValue(Panel panel) {
+        public ButtonAddValue(Layer panel) {
             super(panel);
             setHeight(12);
             setTitle(Components.str("+ ").append(Lang.translateKey("gui.add")));
         }
 
-        @Override
-        public void addMouseOverText(TooltipList list) {
-        }
+
 
         @Override
-        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
             boolean mouseOver = getMouseY() >= 20 && isMouseOver();
 
             if (mouseOver) {
-                Color4I.WHITE.withAlpha(33).draw(matrixStack, x, y, w, h);
+               matrixStack.fill(x, y, x+w, y+h, 0x20FFFFFF);
             }
-
-            theme.drawString(matrixStack, getTitle(), x + 4, y + 2, Color4I.WHITE, 0);
-            RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+            matrixStack.drawString(getFont(), getTitle(), x+4, y+2, 0xFFFFFFFF);
         }
 
         @Override
         public void onClicked(MouseButton button) {
-            playClickSound();
+            CInputHelper.playClickSound();
             editor.open(this, "New", def, s -> {
                 if (s != null) {
                     modified = true;
                     list.add(s);
-                    parent.refreshWidgets();
+                    ((Layer)parent).refresh();
                 }
             });
 
@@ -187,23 +187,23 @@ public class EditListDialog<T> extends EditDialog {
     public class ButtonConfigValue extends Button {
         public final int index;
 
-        public ButtonConfigValue(Panel panel, int i) {
+        public ButtonConfigValue(Layer panel, int i) {
             super(panel);
             index = i;
             setHeight(12);
         }
 
         @Override
-        public void addMouseOverText(TooltipList l) {
+        public void getTooltip(Consumer<Component> l) {
             if (getMouseX() >= getX() + width - 19) {
-                l.translate("selectServer.delete");
+                l.accept(Components.translatable("selectServer.delete"));
             } else {
-                l.add(Components.str(read.apply(list.get(index))));
+                l.accept(Components.str(read.apply(list.get(index))));
             }
         }
 
         @Override
-        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
             boolean mouseOver = getMouseY() >= 20 && isMouseOver();
             int ioffset = 0;
             if (toicon != null) {
@@ -212,36 +212,33 @@ public class EditListDialog<T> extends EditDialog {
             }
             if (mouseOver) {
 
-                Color4I.WHITE.withAlpha(33).draw(matrixStack, x, y, w, h);
+            	matrixStack.fill(x, y, x+w, y+h, 0x20FFFFFF);
 
                 if (getMouseX() >= x + w - 19) {
-                    Color4I.WHITE.withAlpha(33).draw(matrixStack, x + w - 19, y, 19, h);
+                	matrixStack.fill(x + w - 19, y, x+w, y+h, 0x20FFFFFF);
                 }
             }
-
-            theme.drawString(matrixStack, read.apply(list.get(index)), x + 4 + ioffset, y + 2, Color4I.WHITE, 0);
+            matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+2, 0xFFFFFFFF);
 
             if (mouseOver) {
-                theme.drawString(matrixStack, "[-]", x + w - 16, y + 2, Color4I.WHITE, 0);
+            	matrixStack.drawString(getFont(), "[-]", x+w-16, y+2, 0xFFFFFFFF);
             }
-
-            RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
         }
 
         @Override
         public void onClicked(MouseButton button) {
-            playClickSound();
+            CInputHelper.playClickSound();
 
             if (getMouseX() >= getX() + width - 19) {
                 list.remove(index);
                 modified = true;
-                parent.refreshWidgets();
+                ((Layer)parent).refresh();
 
             } else {
                 editor.open(this, "Edit", list.get(index), s -> {
                     modified = true;
                     list.set(index, s);
-                    parent.refreshWidgets();
+                    ((Layer)parent).refresh();
                 });
             }
         }

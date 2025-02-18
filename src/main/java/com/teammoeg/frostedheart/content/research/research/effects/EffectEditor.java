@@ -20,18 +20,19 @@
 package com.teammoeg.frostedheart.content.research.research.effects;
 
 import com.teammoeg.chorda.client.FHIconWrapper;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.frostedheart.content.research.gui.editor.*;
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.icon.ItemIcon;
-import dev.ftb.mods.ftblibrary.ui.Widget;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.level.block.Block;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -79,7 +80,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
                     .open();
 
     };
-    public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, Effect::getBrief, e->new FHIconWrapper(e.getIcon()), c).open();
+    public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, Effect::getBrief, Effect::getIcon, c).open();
     protected LabeledTextBoxAndBtn nonce;
     protected LabeledTextBox name;
     protected LabeledSelection<Boolean> sd;
@@ -87,7 +88,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     T e;
     Consumer<T> cb;
 
-    public EffectEditor(Widget panel, String lbl, T e, Consumer<T> cb) {
+    public EffectEditor(UIElement panel, String lbl, T e, Consumer<T> cb) {
         super(panel);
 
         this.lbl = lbl;
@@ -104,7 +105,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         add(EditUtils.getTitle(this, lbl));
         add(nonce);
         add(name);
@@ -127,14 +128,14 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
 
     private static class Building extends EffectEditor<EffectBuilding> {
 
-        public Building(Widget panel, String lbl, EffectBuilding e, Consumer<EffectBuilding> cb) {
+        public Building(UIElement panel, String lbl, EffectBuilding e, Consumer<EffectBuilding> cb) {
             super(panel, lbl, e, cb);
 
         }
 
         @Override
-        public void addWidgets() {
-            super.addWidgets();
+        public void addUIElements() {
+            super.addUIElements();
             add(new LabeledOpenEditorButton<>(this, e.multiblock == null ? "" : e.multiblock.getUniqueName().toString(), "Select Multiblock", SelectDialog.EDITOR_MULTIBLOCK, e.multiblock, s -> e.multiblock = s));
 
         }
@@ -155,14 +156,14 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     private static class Category extends EffectEditor<EffectShowCategory> {
         LabeledTextBox category;
 
-        public Category(Widget panel, String lbl, EffectShowCategory e, Consumer<EffectShowCategory> cb) {
+        public Category(UIElement panel, String lbl, EffectShowCategory e, Consumer<EffectShowCategory> cb) {
             super(panel, lbl, e, cb);
             category = new LabeledTextBox(this, "category id", this.e.cate == null ? "" : this.e.cate.toString());
         }
 
         @Override
-        public void addWidgets() {
-            super.addWidgets();
+        public void addUIElements() {
+            super.addUIElements();
             add(category);
         }
 
@@ -181,14 +182,14 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     }
 
     private static class Command extends EffectEditor<EffectCommand> {
-        public Command(Widget panel, String lbl, EffectCommand e, Consumer<EffectCommand> cb) {
+        public Command(UIElement panel, String lbl, EffectCommand e, Consumer<EffectCommand> cb) {
             super(panel, lbl, e, cb);
 
         }
 
         @Override
-        public void addWidgets() {
-            super.addWidgets();
+        public void addUIElements() {
+            super.addUIElements();
             add(new OpenEditorButton<>(this, "Edit Commands", EditListDialog.STRING_LIST, e.rewards, s -> e.rewards = new ArrayList<>(s)));
         }
 
@@ -206,13 +207,13 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
 
     private static class Crafting extends EffectEditor<EffectCrafting> {
 
-        public Crafting(Widget panel, String lbl, EffectCrafting e, Consumer<EffectCrafting> cb) {
+        public Crafting(UIElement panel, String lbl, EffectCrafting e, Consumer<EffectCrafting> cb) {
             super(panel, lbl, e, cb);
         }
 
         @Override
-        public void addWidgets() {
-            super.addWidgets();
+        public void addUIElements() {
+            super.addUIElements();
             add(EditUtils.getTitle(this, "Only the first in the following takes effects"));
             add(new OpenEditorButton<Ingredient>(this, "Edit Item",
                     IngredientEditor.EDITOR_INGREDIENT,
@@ -237,15 +238,15 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     private static class Exp extends EffectEditor<EffectExperience> {
         NumberBox val;
 
-        public Exp(Widget panel, String lbl, EffectExperience e, Consumer<EffectExperience> cb) {
+        public Exp(UIElement panel, String lbl, EffectExperience e, Consumer<EffectExperience> cb) {
             super(panel, lbl, e, cb);
             val = new NumberBox(this, "Exp", this.e.exp);
 
         }
 
         @Override
-        public void addWidgets() {
-            super.addWidgets();
+        public void addUIElements() {
+            super.addUIElements();
             add(val);
 
         }
@@ -264,7 +265,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     }
 
     private static class ItemReward extends EffectEditor<EffectItemReward> {
-        public ItemReward(Widget panel, String lbl, EffectItemReward e, Consumer<EffectItemReward> cb) {
+        public ItemReward(UIElement panel, String lbl, EffectItemReward e, Consumer<EffectItemReward> cb) {
             super(panel, lbl, e, cb);
         }
 
@@ -273,9 +274,9 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
         @Override
-        public void addWidgets() {
-            super.addWidgets();
-            add(new LabeledOpenEditorButton<>(this, !e.rewards.isEmpty() ? fromItemStack(e.rewards.get(0)) : "", "Edit Rewards", SelectItemStackDialog.STACK_LIST, e.rewards, s -> e.rewards = new ArrayList<>(s)));
+        public void addUIElements() {
+            super.addUIElements();
+            add(new LabeledOpenEditorButton<>(this, !e.rewards.isEmpty() ? fromItemStack(e.rewards.get(0)) : "", "Edit Rewards", SelectStackDialog.STACK_LIST, e.rewards, s -> e.rewards = new ArrayList<>(s)));
 
         }
 
@@ -296,7 +297,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         LabeledTextBox name;
         RealBox val;
 
-        public Stats(Widget panel, String lbl, EffectStats e, Consumer<EffectStats> cb) {
+        public Stats(UIElement panel, String lbl, EffectStats e, Consumer<EffectStats> cb) {
             super(panel, lbl, e, cb);
             perc = LabeledSelection.createBool(this, "percent", this.e.isPercentage);
             name = new LabeledTextBox(this, "Variant name", this.e.vars);
@@ -305,8 +306,8 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
         @Override
-        public void addWidgets() {
-            super.addWidgets();
+        public void addUIElements() {
+            super.addUIElements();
             add(perc);
             add(name);
             add(val);
@@ -330,14 +331,16 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
 
     private static class Use extends EffectEditor<EffectUse> {
 
-        public Use(Widget panel, String lbl, EffectUse e, Consumer<EffectUse> cb) {
+        public Use(UIElement panel, String lbl, EffectUse e, Consumer<EffectUse> cb) {
             super(panel, lbl, e, cb);
         }
 
         @Override
-        public void addWidgets() {
-            super.addWidgets();
-            add(new LabeledOpenEditorButton<>(this, e.blocks.isEmpty() ? "" : e.blocks.get(0).getName().getString(), "Edit blocks", SelectItemStackDialog.BLOCK_LIST, e.blocks, e.blocks.isEmpty() ? Icon.empty() : ItemIcon.getItemIcon(e.blocks.get(0).asItem()), s -> e.blocks = new ArrayList<>(s)));
+        public void addUIElements() {
+            super.addUIElements();
+            add(new LabeledOpenEditorButton<>(this, e.blocks.isEmpty() ? "" : e.blocks.get(0).getName().getString(),
+            	"Edit blocks", SelectStackDialog.BLOCK_LIST, e.blocks,e.blocks.isEmpty() ? CIcons.nop() : CIcons.getIcon(e.blocks),
+            		s -> e.blocks = new ArrayList<>(s)));
 
         }
 
@@ -349,7 +352,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     }
     private static class Custom extends EffectEditor<EffectCustom> {
 
-        public Custom(Widget panel, String lbl, EffectCustom e, Consumer<EffectCustom> cb) {
+        public Custom(UIElement panel, String lbl, EffectCustom e, Consumer<EffectCustom> cb) {
             super(panel, lbl, e, cb);
         }
 

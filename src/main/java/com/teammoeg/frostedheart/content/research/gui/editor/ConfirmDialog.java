@@ -20,8 +20,10 @@
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.TextField;
-import com.teammoeg.chorda.client.cui.UIElementBase;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
@@ -36,12 +38,12 @@ public class ConfirmDialog extends BaseEditDialog {
     Consumer<Boolean> fin;
     boolean selected = false;
 
-    public ConfirmDialog(UIElementBase panel, String label, boolean exp, Consumer<Boolean> onFinished) {
+    public ConfirmDialog(UIElement panel, String label, boolean exp, Consumer<Boolean> onFinished) {
         super(panel);
         tf = new TextField(this).setColor(0xFFFF0000).setMaxWidth(200).setText(label);
         fin = onFinished;
         selected = !exp;
-        cancel = new SimpleTextButton(this, Components.str("Cancel"), CIcons.nop()) {
+        cancel = new TextButton(this, Components.str("Cancel"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -50,7 +52,7 @@ public class ConfirmDialog extends BaseEditDialog {
             }
 
         };
-        ok = new SimpleTextButton(this, Components.str("OK"), CIcons.nop()) {
+        ok = new TextButton(this, Components.str("OK"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -66,13 +68,6 @@ public class ConfirmDialog extends BaseEditDialog {
     }
 
     @Override
-    public void addWidgets() {
-        add(tf);
-        add(ok);
-        add(cancel);
-    }
-
-    @Override
     public void onClose() {
     }
 
@@ -85,5 +80,12 @@ public class ConfirmDialog extends BaseEditDialog {
                 FHMain.LOGGER.error("Error in ConfirmDialog", ex);
             }
     }
+
+	@Override
+	public void addUIElements() {
+		add(tf);
+        add(ok);
+        add(cancel);
+	}
 
 }

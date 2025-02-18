@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.Layer;
-import com.teammoeg.chorda.client.cui.UIElementBase;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 
@@ -32,7 +32,7 @@ public abstract class EditDialog extends Layer {
     EditDialog previous;
     EditorManager sc;
 
-    public EditDialog(UIElementBase panel) {
+    public EditDialog(UIElement panel) {
         super(panel);
         if (panel.getLayerHolder() instanceof EditorManager)
             sc = (EditorManager)panel.getLayerHolder();

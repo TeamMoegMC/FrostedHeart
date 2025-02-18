@@ -19,15 +19,14 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextButton;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 
 public class EditBtnDialog extends BaseEditDialog {
@@ -36,10 +35,10 @@ public class EditBtnDialog extends BaseEditDialog {
     Button ok;
     Button cancel;
 
-    public EditBtnDialog(Widget panel, String label, String val, String sel, Consumer<String> onFinished, Editor<String> onbtn) {
+    public EditBtnDialog(UIElement panel, String label, String val, String sel, Consumer<String> onFinished, Editor<String> onbtn) {
         super(panel);
         box = new LabeledTextBoxAndBtn(this, label, val, sel, e -> onbtn.open(panel, sel, box.getText(), e));
-        ok = new SimpleTextButton(this, Components.str("OK"), Icon.empty()) {
+        ok = new TextButton(this, Components.str("OK"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -52,7 +51,7 @@ public class EditBtnDialog extends BaseEditDialog {
             }
 
         };
-        cancel = new SimpleTextButton(this, Components.str("Cancel"), Icon.empty()) {
+        cancel = new TextButton(this, Components.str("Cancel"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -64,14 +63,14 @@ public class EditBtnDialog extends BaseEditDialog {
         ok.setSize(300, 20);
     }
 
-    public EditBtnDialog(Widget panel, String label, String val, String sel, Consumer<String> onFinished, Function<String, String> onbtn) {
+    public EditBtnDialog(UIElement panel, String label, String val, String sel, Consumer<String> onFinished, Function<String, String> onbtn) {
         this(panel, label, val, sel, onFinished, (p, l, v, c) -> c.accept(onbtn.apply(v)));
 
     }
 
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
 
         add(box);
         add(ok);

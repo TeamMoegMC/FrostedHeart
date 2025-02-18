@@ -9,18 +9,18 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 
-public abstract class Button extends UIElement {
+public abstract class Button extends UIWidget {
 	protected Component title;
 	protected CIcon icon;
 
-	public Button(UIElementBase panel, Component t, CIcon i) {
+	public Button(UIElement panel, Component t, CIcon i) {
 		super(panel);
 		setSize(16, 16);
 		icon = i;
 		title = t;
 	}
 
-	public Button(UIElementBase panel) {
+	public Button(UIElement panel) {
 		this(panel, Component.empty(), CIcons.nop());
 	}
 
@@ -51,7 +51,7 @@ public abstract class Button extends UIElement {
 	}
 
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-		graphics.blitNineSliced(AbstractWidget.WIDGETS_LOCATION, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
+		graphics.blitNineSliced(AbstractWidget.WIDGETS_LOCATION, x, y, w, h, 20, 4, 200, 20, 0, this.getTextureY());
 
 	}
 

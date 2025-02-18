@@ -20,16 +20,16 @@
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextButton;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.client.multiplayer.ClientAdvancements;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
@@ -39,48 +39,49 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class LabeledSelection<R> extends LabeledPane<Button> {
+public class LabeledSelection<R> extends LabeledPane<TextButton> {
     List<R> objs;
 
     Function<R, String> tostr;
 
     int sel;
 
-    public LabeledSelection(Panel panel, String lab, R val, Collection<R> aobjs, Function<R, String> atostr) {
+    public LabeledSelection(UIElement panel, String lab, R val, Collection<R> aobjs, Function<R, String> atostr) {
         this(panel, lab, val, new ArrayList<>(aobjs), atostr);
     }
 
-    public LabeledSelection(Panel panel, String lab, R val, List<R> aobjs, Function<R, String> atostr) {
+    public LabeledSelection(UIElement panel, String lab, R val, List<R> aobjs, Function<R, String> atostr) {
         super(panel, lab);
         this.objs = aobjs;
         this.tostr = atostr;
         sel = objs.indexOf(val);
-        obj = new SimpleTextButton(this, Components.str(tostr.apply(val)), Icon.empty()) {
+        obj = new TextButton(this, Components.str(tostr.apply(val)), CIcons.nop()) {
 
             @Override
-            public void addMouseOverText(TooltipList list) {
+            public void getTooltip(Consumer<Component> list) {
                 int i = 0;
                 for (R elm : objs) {
                     if (i == sel)
-                        list.add(Components.str("->" + tostr.apply(elm)));
+                        list.accept(Components.str("->" + tostr.apply(elm)));
                     else
-                        list.add(Components.str(tostr.apply(elm)));
+                        list.accept(Components.str(tostr.apply(elm)));
                     i++;
                 }
             }
 
-            @Override
+
+			@Override
             public void onClicked(MouseButton arg0) {
-                if (arg0.isLeft())
+                if (arg0==MouseButton.LEFT)
                     sel++;
-                else if (arg0.isRight())
+                else if (arg0==MouseButton.RIGHT)
                     sel--;
                 if (sel >= objs.size())
                     sel = 0;
                 if (sel < 0)
                     sel = objs.size() - 1;
                 this.setTitle(Components.str(tostr.apply(objs.get(sel))));
-                refreshWidgets();
+                refresh();
                 onChange(objs.get(sel));
             }
 
@@ -89,19 +90,19 @@ public class LabeledSelection<R> extends LabeledPane<Button> {
         obj.setHeight(20);
     }
 
-    public LabeledSelection(Panel panel, String lab, R val, R[] aobjs, Function<R, String> atostr) {
+    public LabeledSelection(UIElement panel, String lab, R val, R[] aobjs, Function<R, String> atostr) {
         this(panel, lab, val, Arrays.asList(aobjs), atostr);
     }
 
-    public static LabeledSelection<Boolean> createBool(Panel p, String lab, boolean val) {
+    public static LabeledSelection<Boolean> createBool(UIElement p, String lab, boolean val) {
         return new LabeledSelection<>(p, lab, val, Arrays.asList(true, false), String::valueOf);
     }
 
-    public static <T extends Enum<T>> LabeledSelection<T> createEnum(Panel p, String lab, Class<T> en, T val) {
+    public static <T extends Enum<T>> LabeledSelection<T> createEnum(UIElement p, String lab, Class<T> en, T val) {
         return new LabeledSelection<>(p, lab, val, Arrays.asList(en.getEnumConstants()), Enum::name);
     }
 
-    public static LabeledSelection<String> createCriterion(Panel p, String lab, ResourceLocation adv, String val, Consumer<String> cb) {
+    public static LabeledSelection<String> createCriterion(UIElement p, String lab, ResourceLocation adv, String val, Consumer<String> cb) {
         ClientAdvancements cam = ClientUtils.mc().player.connection.getAdvancements();
         Advancement advx = cam.getAdvancements().get(adv);
         List<String> cit = new ArrayList<>();

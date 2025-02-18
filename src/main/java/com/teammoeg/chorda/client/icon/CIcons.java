@@ -44,6 +44,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.registries.ForgeRegistries;
 /**
  * A uniform icon drawing/serializing network
@@ -84,9 +85,10 @@ public class CIcons {
     /**
      * get icon switching between items
      * */
-    public static CIcon getIcon(Collection<ItemLike> items) {
+    public static CIcon getIcon(Collection<? extends ItemLike> items) {
         return new IngredientIcon(Ingredient.of(items.toArray(new ItemLike[0])));
     }
+
     /**
      * get icon with a small icon on the bottom-right
      * */
@@ -135,13 +137,13 @@ public class CIcons {
     /**
      * get icon showing a texture
      * */
-    public static CIcon getIcon(ResourceLocation texture) {
+    public static CTextureIcon getIcon(ResourceLocation texture) {
         return new TextureIcon(texture);
     }
     /**
      * get icon showing a part of the texture
      * */
-    public static CIcon getIcon(ResourceLocation texture, int x, int y, int w, int h, int tw, int th) {
+    public static CTextureIcon getIcon(ResourceLocation texture, int x, int y, int w, int h, int tw, int th) {
         return new TextureUVIcon(texture, x, y, w, h, tw, th);
     }
     /**
@@ -263,7 +265,11 @@ public class CIcons {
 
         public abstract void draw(GuiGraphics ms, int x, int y, int w, int h);
     }
-
+    public static abstract class CTextureIcon extends CIcon {
+    	public abstract CTextureIcon withUV(int x,int y,int w,int h,int tw,int th);
+    	public abstract CTextureIcon toNineSlice(int c);
+    	public abstract CTextureIcon asPart(int x,int y,int w,int h);
+    }
     static class IngredientIcon extends AnimatedIcon {
         private static final MapCodec<IngredientIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
                 CodecUtil.INGREDIENT_CODEC.fieldOf("ingredient").forGetter(o -> o.igd),
@@ -378,7 +384,7 @@ public class CIcons {
 
     }
 
-    static class TextureIcon extends CIcon {
+    static class TextureIcon extends CTextureIcon {
         private static final MapCodec<TextureIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
                 ResourceLocation.CODEC.fieldOf("location").forGetter(o -> o.rl)
         ).apply(t, TextureIcon::new));
@@ -393,6 +399,19 @@ public class CIcons {
         	 CGuiHelper.resetGuiDrawing();
         	 ms.blit(rl, x, y, 0, 0, w, h, w, h);
         }
+        public CTextureIcon withUV(int x,int y,int w,int h,int tw,int th) {
+        	return new TextureUVIcon(rl,x,y,w,h,tw,th);
+        }
+
+		@Override
+		public CTextureIcon toNineSlice(int c) {
+			return new NineSliceIcon(rl,0,0,256,256,c,256,256);
+		}
+
+		@Override
+		public CTextureIcon asPart(int x, int y, int w, int h) {
+			return new TextureUVIcon(rl,x,y,w,h,256,256);
+		}
 
     }
 
@@ -407,7 +426,7 @@ public class CIcons {
                 Codec.INT.fieldOf("th").forGetter(o -> o.th)
         ).apply(t, TextureUVIcon::new));
         ResourceLocation rl;
-        int x, y, w, h, tw=256, th=256;
+        protected int x, y, w, h, tw=256, th=256;
         public TextureUVIcon() {
         	super(FHMain.rl("texture/gui"));
         }
@@ -427,8 +446,48 @@ public class CIcons {
         	CGuiHelper.resetGuiDrawing();
        	 	ms.blit(rl, x, y, this.x, this.y, this.w, this.h, this.tw, this.th);
         }
-
+		@Override
+		public CTextureIcon toNineSlice(int c) {
+			return new NineSliceIcon(rl,x,y,w,h,c,tw,th);
+		}
+		@Override
+		public CTextureIcon asPart(int x, int y, int w, int h) {
+			return new TextureUVIcon(rl,this.x+x,this.y+y,Math.min(w, this.w),Math.min(h, this.h),tw,th);
+		}
     }
+    static class NineSliceIcon extends TextureUVIcon {
+        private static final MapCodec<NineSliceIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
+            ResourceLocation.CODEC.fieldOf("location").forGetter(o -> o.rl),
+            Codec.INT.fieldOf("x").forGetter(o -> o.x),
+            Codec.INT.fieldOf("y").forGetter(o -> o.y),
+            Codec.INT.fieldOf("w").forGetter(o -> o.w),
+            Codec.INT.fieldOf("h").forGetter(o -> o.h),
+            Codec.INT.fieldOf("c").forGetter(o -> o.corner),
+            Codec.INT.fieldOf("tw").forGetter(o -> o.tw),
+            Codec.INT.fieldOf("th").forGetter(o -> o.th)
+        ).apply(t, NineSliceIcon::new));
+        ResourceLocation rl;
+        int corner;
+        public NineSliceIcon(ResourceLocation rl, int x, int y, int w, int h,int corner, int tw, int th) {
+            super(rl,x,y,w,h,tw,th);
+            this.rl = rl;
+            this.corner=corner;
+  
+        }
+
+        @Override
+        public void draw(GuiGraphics ms, int x, int y, int w, int h) {
+        	 CGuiHelper.resetGuiDrawing();
+        	 CGuiHelper.blitNineSliced(ms, rl, x, y, w, h, corner, this.w, this.h, this.x, this.y, this.tw, this.th);
+        }
+        public CTextureIcon withUV(int x,int y,int w,int h,int tw,int th) {
+        	return new NineSliceIcon(rl,x,y,w,h,corner,tw,th);
+        }
+        public CTextureIcon asPart(int x,int y,int w,int h) {
+        	return new NineSliceIcon(rl,this.x+x,this.y+y,Math.min(w, this.w),Math.min(h, this.h),corner,tw,th);
+        }
+    }
+
 
 
 }

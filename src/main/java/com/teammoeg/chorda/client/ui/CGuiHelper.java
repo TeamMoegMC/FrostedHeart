@@ -45,6 +45,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.recipebook.OverlayRecipeComponent;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
@@ -467,4 +468,38 @@ public class CGuiHelper {
 		RenderSystem.enableDepthTest();
 
 	}
+	private static final ResourceLocation RECIPE_BOOK_LOCATION = new ResourceLocation("textures/gui/recipe_book.png");
+	public static void drawUIBackground(GuiGraphics graphics,int x,int y,int w,int h) {
+		graphics.blitNineSliced(RECIPE_BOOK_LOCATION, x, y, w, h, 4, 32, 32, 82, 208);
+	}
+	public static void blitNineSliced(GuiGraphics graphics,ResourceLocation pAtlasLocation, int pTargetX, int pTargetY, int pTargetWidth, int pTargetHeight, int pCorner, int pSourceWidth, int pSourceHeight, int pSourceX, int pSourceY,int textureWidth,int textureHeight) {
+		blitNineSliced(graphics,pAtlasLocation,pTargetX,pTargetY,pTargetWidth,pTargetHeight,pCorner,pCorner,pCorner,pCorner,pSourceWidth,pSourceHeight,pSourceX,pSourceY,textureWidth,textureHeight);
+	}
+    public static void blitNineSliced(GuiGraphics graphics,ResourceLocation pAtlasLocation, int pTargetX, int pTargetY, int pTargetWidth, int pTargetHeight, int pCornerWidth, int pCornerHeight, int pEdgeWidth, int pEdgeHeight, int pSourceWidth, int pSourceHeight, int pSourceX, int pSourceY,int textureWidth,int textureHeight) {
+        pCornerWidth = Math.min(pCornerWidth, pTargetWidth / 2);
+        pEdgeWidth = Math.min(pEdgeWidth, pTargetWidth / 2);
+        pCornerHeight = Math.min(pCornerHeight, pTargetHeight / 2);
+        pEdgeHeight = Math.min(pEdgeHeight, pTargetHeight / 2);
+        if (pTargetWidth == pSourceWidth && pTargetHeight == pSourceHeight) {
+        	graphics.blit(pAtlasLocation, pTargetX, pTargetY, pSourceX, pSourceY, pTargetWidth, pTargetHeight,textureWidth,textureHeight);
+        } else if (pTargetHeight == pSourceHeight) {
+           graphics.blit(pAtlasLocation, pTargetX, pTargetY, pSourceX, pSourceY, pCornerWidth, pTargetHeight,textureWidth,textureHeight);
+           graphics.blitRepeating(pAtlasLocation, pTargetX + pCornerWidth, pTargetY, pTargetWidth - pEdgeWidth - pCornerWidth, pTargetHeight, pSourceX + pCornerWidth, pSourceY, pSourceWidth - pEdgeWidth - pCornerWidth, pSourceHeight,textureWidth,textureHeight);
+           graphics.blit(pAtlasLocation, pTargetX + pTargetWidth - pEdgeWidth, pTargetY, pSourceX + pSourceWidth - pEdgeWidth, pSourceY, pEdgeWidth, pTargetHeight,textureWidth,textureHeight);
+        } else if (pTargetWidth == pSourceWidth) {
+           graphics.blit(pAtlasLocation, pTargetX, pTargetY, pSourceX, pSourceY, pTargetWidth, pCornerHeight,textureWidth,textureHeight);
+           graphics.blitRepeating(pAtlasLocation, pTargetX, pTargetY + pCornerHeight, pTargetWidth, pTargetHeight - pEdgeHeight - pCornerHeight, pSourceX, pSourceY + pCornerHeight, pSourceWidth, pSourceHeight - pEdgeHeight - pCornerHeight,textureWidth,textureHeight);
+           graphics.blit(pAtlasLocation, pTargetX, pTargetY + pTargetHeight - pEdgeHeight, pSourceX, pSourceY + pSourceHeight - pEdgeHeight, pTargetWidth, pEdgeHeight,textureWidth,textureHeight);
+        } else {
+           graphics.blit(pAtlasLocation, pTargetX, pTargetY, pSourceX, pSourceY, pCornerWidth, pCornerHeight,textureWidth,textureHeight);
+           graphics.blitRepeating(pAtlasLocation, pTargetX + pCornerWidth, pTargetY, pTargetWidth - pEdgeWidth - pCornerWidth, pCornerHeight, pSourceX + pCornerWidth, pSourceY, pSourceWidth - pEdgeWidth - pCornerWidth, pCornerHeight,textureWidth,textureHeight);
+           graphics.blit(pAtlasLocation, pTargetX + pTargetWidth - pEdgeWidth, pTargetY, pSourceX + pSourceWidth - pEdgeWidth, pSourceY, pEdgeWidth, pCornerHeight,textureWidth,textureHeight);
+           graphics.blit(pAtlasLocation, pTargetX, pTargetY + pTargetHeight - pEdgeHeight, pSourceX, pSourceY + pSourceHeight - pEdgeHeight, pCornerWidth, pEdgeHeight,textureWidth,textureHeight);
+           graphics.blitRepeating(pAtlasLocation, pTargetX + pCornerWidth, pTargetY + pTargetHeight - pEdgeHeight, pTargetWidth - pEdgeWidth - pCornerWidth, pEdgeHeight, pSourceX + pCornerWidth, pSourceY + pSourceHeight - pEdgeHeight, pSourceWidth - pEdgeWidth - pCornerWidth, pEdgeHeight,textureWidth,textureHeight);
+           graphics.blit(pAtlasLocation, pTargetX + pTargetWidth - pEdgeWidth, pTargetY + pTargetHeight - pEdgeHeight, pSourceX + pSourceWidth - pEdgeWidth, pSourceY + pSourceHeight - pEdgeHeight, pEdgeWidth, pEdgeHeight,textureWidth,textureHeight);
+           graphics.blitRepeating(pAtlasLocation, pTargetX, pTargetY + pCornerHeight, pCornerWidth, pTargetHeight - pEdgeHeight - pCornerHeight, pSourceX, pSourceY + pCornerHeight, pCornerWidth, pSourceHeight - pEdgeHeight - pCornerHeight,textureWidth,textureHeight);
+           graphics.blitRepeating(pAtlasLocation, pTargetX + pCornerWidth, pTargetY + pCornerHeight, pTargetWidth - pEdgeWidth - pCornerWidth, pTargetHeight - pEdgeHeight - pCornerHeight, pSourceX + pCornerWidth, pSourceY + pCornerHeight, pSourceWidth - pEdgeWidth - pCornerWidth, pSourceHeight - pEdgeHeight - pCornerHeight,textureWidth,textureHeight);
+           graphics.blitRepeating(pAtlasLocation, pTargetX + pTargetWidth - pEdgeWidth, pTargetY + pCornerHeight, pCornerWidth, pTargetHeight - pEdgeHeight - pCornerHeight, pSourceX + pSourceWidth - pEdgeWidth, pSourceY + pCornerHeight, pEdgeWidth, pSourceHeight - pEdgeHeight - pCornerHeight,textureWidth,textureHeight);
+        }
+     }
 }

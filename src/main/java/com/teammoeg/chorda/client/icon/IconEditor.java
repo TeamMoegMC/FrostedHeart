@@ -3,6 +3,10 @@ package com.teammoeg.chorda.client.icon;
 import java.util.function.Consumer;
 
 import com.teammoeg.chorda.client.FHIconWrapper;
+import com.teammoeg.chorda.client.StringTextComponentParser;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextButton;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons.AnimatedIcon;
 import com.teammoeg.chorda.client.icon.CIcons.CombinedIcon;
 import com.teammoeg.chorda.client.icon.CIcons.FHDelegateIcon;
@@ -26,20 +30,14 @@ import com.teammoeg.frostedheart.content.research.gui.editor.LabeledTextBox;
 import com.teammoeg.frostedheart.content.research.gui.editor.NumberBox;
 import com.teammoeg.frostedheart.content.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
-import com.teammoeg.frostedheart.content.research.gui.editor.SelectItemStackDialog;
+import com.teammoeg.frostedheart.content.research.gui.editor.SelectStackDialog;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
 public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
 
-    public static final Editor<ItemIcon> ITEM_EDITOR = (p, l, v, c) -> SelectItemStackDialog.EDITOR.open(p, l, v == null ? null : v.stack, e -> c.accept(new ItemIcon(e)));
+    public static final Editor<ItemIcon> ITEM_EDITOR = (p, l, v, c) -> SelectStackDialog.EDITOR.open(p, l, v == null ? null : v.stack, e -> c.accept(new ItemIcon(e)));
     public static final Editor<TextureIcon> TEXTURE_EDITOR = (p, l, v, c) -> EditPrompt.TEXT_EDITOR.open(p, l, v == null ? "" : (v.rl == null ? "" : v.rl.toString()),
             e -> c.accept(new TextureIcon(new ResourceLocation(e))));
     public static final Editor<IngredientIcon> INGREDIENT_EDITOR = (p, l, v, c) -> IngredientEditor.EDITOR_INGREDIENT_EXTERN.open(p, l, v == null ? null : v.igd,
@@ -78,38 +76,39 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
         } else
             IconEditor.NOP_CHANGE_EDITOR.open(p, l, v, c);
     };
-    public static final Editor<TextIcon> TEXT_EDITOR = (p, l, v, c) -> EditPrompt.TEXT_EDITOR.open(p, l, v == null ? null : v.text.getString(), e -> c.accept(new TextIcon(ClientTextComponentUtils.parse(e))));
+    public static final Editor<TextIcon> TEXT_EDITOR = (p, l, v, c) -> EditPrompt.TEXT_EDITOR.open(p, l, v == null ? null : v.text.getString(), e -> c.accept(new TextIcon(StringTextComponentParser.parse(e))));
     public static final Editor<CIcon> NOP_EDITOR = (p, l, v, c) -> {
         c.accept(NopIcon.INSTANCE);
-        p.getGui().refreshWidgets();
+        p.refresh();
+ 
     };
     public static final Editor<CombinedIcon> COMBINED_EDITOR = (p, l, v, c) -> new Combined(p, l, v, c).open();
-    public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), TechIcons.internals::keySet, Components::str, e -> new String[]{e}, TechIcons.internals::get).open();
+    public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<String>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), TechIcons.internals::keySet, Components::str, e -> new String[]{e}, TechIcons.internals::get).open();
     public static final Editor<TextureUVIcon> UV_EDITOR = (p, l, v, c) -> new UV(p, l, v, c).open();
     T v;
-    public IconEditor(Widget panel, T v) {
+    public IconEditor(UIElement panel, T v) {
         super(panel);
         this.v = v;
     }        public static final Editor<CIcon> NOP_CHANGE_EDITOR = (p, l, v, c) -> EDITOR.open(p, l, null, c);
 
     @Override
-    public void draw(GuiGraphics arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
-        super.draw(arg0, arg1, arg2, arg3, arg4, arg5);
-        v.draw(arg0, arg2 + 300, arg3 + 20, 32, 32);
-    }        public static final Editor<AnimatedIcon> ANIMATED_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v == null ? null : v.icons, null, EDITOR, e -> e.getClass().getSimpleName(),
-            e -> new FHIconWrapper(e), e -> c.accept(new AnimatedIcon(e.toArray(new CIcon[0])))).open();
+    public void render(GuiGraphics arg0, int arg2, int arg3, int arg4, int arg5) {
+        super.render(arg0,arg2 + 300, arg3 + 20, 32, 32);
+    }
+    public static final Editor<AnimatedIcon> ANIMATED_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v == null ? null : v.icons, null, EDITOR, e -> e.getClass().getSimpleName(),
+            e -> e, e -> c.accept(new AnimatedIcon(e.toArray(new CIcon[0])))).open();
 
     private static class Combined extends IconEditor<CombinedIcon> {
         String label;
         Consumer<CombinedIcon> i;
-        public Combined(Widget panel, String label, CombinedIcon v, Consumer<CombinedIcon> i) {
+        public Combined(UIElement panel, String label, CombinedIcon v, Consumer<CombinedIcon> i) {
             super(panel, v == null ? new CombinedIcon(null, null) : v);
             this.label = label;
             this.i = i;
         }
 
         @Override
-        public void addWidgets() {
+        public void addUIElements() {
             add(EditUtils.getTitle(this, label));
             add(new OpenEditorButton<>(this, "Edit base icon", EDITOR, v.large, e -> v.large = e));
             add(new OpenEditorButton<>(this, "Edit corner icon", EDITOR, v.small, e -> v.small = e));
@@ -134,7 +133,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
         NumberBox tw;
         NumberBox th;
 
-        public UV(Widget panel, String label, TextureUVIcon v, Consumer<TextureUVIcon> i) {
+        public UV(UIElement panel, String label, TextureUVIcon v, Consumer<TextureUVIcon> i) {
             super(panel, v == null ? new TextureUVIcon() : v);
             this.label = label;
             this.i = i;
@@ -149,7 +148,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
         }
 
         @Override
-        public void addWidgets() {
+        public void addUIElements() {
             add(EditUtils.getTitle(this, label));
             add(rl);
             add(x);
@@ -158,7 +157,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
             add(h);
             add(tw);
             add(th);
-            add(new SimpleTextButton(this, Components.str("Commit"), Icon.empty()) {
+            add(new TextButton(this, Components.str("Commit"), CIcons.nop()) {
                 @Override
                 public void onClicked(MouseButton arg0) {
                     v.rl = new ResourceLocation(rl.getText());
