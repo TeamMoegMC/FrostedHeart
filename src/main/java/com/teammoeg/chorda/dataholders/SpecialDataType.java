@@ -40,7 +40,7 @@ import lombok.ToString;
  */
 @ToString
 public class SpecialDataType<T extends SpecialData>{
-	public static final Set<SpecialDataType<?>> TYPE_REGISTRY=new HashSet<>();
+	static final Set<SpecialDataType<?>> TYPE_REGISTRY=new HashSet<>();
 	@Getter
 	private String id;
 	@ToString.Exclude
@@ -48,6 +48,8 @@ public class SpecialDataType<T extends SpecialData>{
 	@Getter
 	private Codec<T> codec;
 	
+	final int numId;
+	private static int nid=0;
 	/**
 	 * Instantiates and register a new special data type.
 	 *
@@ -60,7 +62,10 @@ public class SpecialDataType<T extends SpecialData>{
 		this.id = id;
 		this.factory = factory;
 		this.codec=codec;
-		TYPE_REGISTRY.add(this);
+		synchronized(TYPE_REGISTRY) {
+			TYPE_REGISTRY.add(this);
+			numId=nid++;
+		}
 	}
 	
 	/**
@@ -120,7 +125,7 @@ public class SpecialDataType<T extends SpecialData>{
 	public int hashCode() {
 		return Objects.hash(id);
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
