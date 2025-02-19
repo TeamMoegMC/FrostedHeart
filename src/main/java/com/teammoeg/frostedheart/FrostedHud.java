@@ -52,7 +52,7 @@ import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.client.BossHealthOverlayAccess;
 
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
+
 import net.minecraft.client.AttackIndicatorStatus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -378,20 +378,20 @@ public class FrostedHud {
 	            	int len=mc.font.width(t.getString());
 	            	deflen=Math.max(deflen, len-30);
 	            	if(ClientScene.INSTANCE.ticksActUpdate>0)
-		        		GuiHelper.pushScissor(mc.getWindow(), BasePos.act_title.getX(), BasePos.act_title.getY(), (int) (len*(1-ClientScene.INSTANCE.ticksActUpdate/20f)),40);
+	            		stack.enableScissor( BasePos.act_title.getX(), BasePos.act_title.getY(), BasePos.act_title.getX()+(int) (len*(1-ClientScene.INSTANCE.ticksActUpdate/20f)),BasePos.act_title.getY()+40);
 	            	BasePos.act_title.drawText(stack, t, 0xfeff06);
 	            	if(ClientScene.INSTANCE.ticksActUpdate>0)
-	            		GuiHelper.popScissor(mc.getWindow());
+	            		stack.disableScissor();
 	            }
 	            stack.hLine(BasePos.act_split.getX(), BasePos.act_split.getX()+deflen, BasePos.act_split.getY(), 0xFFFFFF06);
 	            
 	            if(st!=null) {
 	            	int len=mc.font.width(st.getString());
 	            	if(ClientScene.INSTANCE.ticksActStUpdate>0)
-		        		GuiHelper.pushScissor(mc.getWindow(), BasePos.act_title.getX(), BasePos.act_title.getY(), (int) (len*(1-ClientScene.INSTANCE.ticksActStUpdate/20f)),40);
+	            		stack.enableScissor(BasePos.act_title.getX(), BasePos.act_title.getY(), BasePos.act_title.getX()+(int) (len*(1-ClientScene.INSTANCE.ticksActStUpdate/20f)),BasePos.act_title.getY()+40);
 	            	BasePos.act_subtitle.drawText(stack, st, 0xffffff);
 	            	if(ClientScene.INSTANCE.ticksActStUpdate>0)
-		            	GuiHelper.popScissor(mc.getWindow());
+	            		stack.disableScissor();
 	            }
 	            
         	}

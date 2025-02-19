@@ -23,6 +23,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.MultipleItemHoverEvent;
+import com.teammoeg.chorda.client.StringTextComponentParser;
+import com.teammoeg.chorda.client.ui.Point;
+import com.teammoeg.chorda.client.ui.Rect;
+import com.teammoeg.chorda.io.nbtbuilder.CompoundNBTBuilder;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
@@ -39,16 +46,6 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.Grap
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsTextContent;
 import com.teammoeg.frostedheart.util.client.Lang;
 
-
-import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.MultipleItemHoverEvent;
-import com.teammoeg.chorda.client.StringTextComponentParser;
-import com.teammoeg.chorda.client.ui.Point;
-import com.teammoeg.chorda.client.ui.Rect;
-import com.teammoeg.chorda.io.nbtbuilder.CompoundNBTBuilder;
-import com.teammoeg.chorda.lang.Components;
-
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftbquests.api.FTBQuestsAPI;
 import dev.ftb.mods.ftbquests.quest.BaseQuestFile;
 import dev.ftb.mods.ftbquests.quest.Quest;
@@ -56,25 +53,25 @@ import dev.ftb.mods.ftbquests.quest.task.ItemTask;
 import dev.ftb.mods.ftbquests.quest.task.KillTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
 import dev.latvian.mods.itemfilters.api.ItemFiltersAPI;
-import net.minecraft.sounds.Music;
-import net.minecraft.sounds.SoundEvent;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance.Attenuation;
 import net.minecraft.core.Holder.Reference;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.util.Lazy;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.Music;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.util.Lazy;
 
 public class ClientControl implements IClientControlCommand {
 	public void link(IClientScene runner,@Param("lid")String linkId) {
@@ -282,7 +279,7 @@ public class ClientControl implements IClientControlCommand {
 		
 	}
 	@Override
-	public void FillRect(IClientScene runner,@Param("n")@Param("name")String name,@Param("")Rect rect,@Param("z")int z,@Param("clr")Color4I color) {
+	public void FillRect(IClientScene runner,@Param("n")@Param("name")String name,@Param("")Rect rect,@Param("z")int z,@Param("clr")int color) {
 		if(ClientScene.INSTANCE.dialog==null)
 			return;
 		GraphicsRectContent tc=new GraphicsRectContent(color,rect);
@@ -291,7 +288,7 @@ public class ClientControl implements IClientControlCommand {
 		
 	}
 	@Override
-	public void DrawLine(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")Point start,@Param("d")Point end,@Param("w")int w,@Param("z")int z,@Param("clr")Color4I color) {
+	public void DrawLine(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")Point start,@Param("d")Point end,@Param("w")int w,@Param("z")int z,@Param("clr")int color) {
 		if(ClientScene.INSTANCE.dialog==null)
 			return;
 		if(w<=0)

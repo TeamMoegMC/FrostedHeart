@@ -207,7 +207,6 @@ public class CIcons {
 		@Override
 		public void draw(GuiGraphics ms, int x, int y, int w, int h) {
 			if (!icons.isEmpty()) {
-				dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
 				CMath.selectElementByTime(icons).draw(ms, x, y, w, h);
 			}
 		}
@@ -228,12 +227,10 @@ public class CIcons {
 
 		@Override
 		public void draw(GuiGraphics ms, int x, int y, int w, int h) {
-			dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
 			if (large != null)
 				large.draw(ms, x, y, w, h);
 			ms.pose().pushPose();
 			ms.pose().translate(0, 0, 110);// let's get top most
-			dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
 			if (small != null)
 				small.draw(ms, x + w / 2, y + h / 2, w / 2, h / 2);
 			ms.pose().popPose();
@@ -252,7 +249,7 @@ public class CIcons {
 
 		@Override
 		public void draw(GuiGraphics ms, int x, int y, int w, int h) {
-			dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
+			CGuiHelper.resetGuiDrawing();
 			TechIcons.internals.get(name).draw(ms, x, y, w, h);
 		}
 

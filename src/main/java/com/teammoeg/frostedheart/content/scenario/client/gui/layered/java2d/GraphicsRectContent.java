@@ -26,7 +26,6 @@ import com.teammoeg.chorda.client.ui.Rect;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 
 public class GraphicsRectContent extends GraphicLayerContent {
 	public int color;
@@ -44,8 +43,8 @@ public class GraphicsRectContent extends GraphicLayerContent {
 	}
 
 
-	public GraphicsRectContent(Color4I color, Rect rect) {
-		this(color.rgba(),rect.getX(),rect.getY(),rect.getW(),rect.getH());
+	public GraphicsRectContent(int color, Rect rect) {
+		this(color,rect.getX(),rect.getY(),rect.getW(),rect.getH());
 	}
 
 	@Override

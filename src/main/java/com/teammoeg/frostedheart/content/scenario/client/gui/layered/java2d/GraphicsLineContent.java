@@ -28,7 +28,6 @@ import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 
 public class GraphicsLineContent extends GraphicLayerContent {
 	public int color;
@@ -46,9 +45,9 @@ public class GraphicsLineContent extends GraphicLayerContent {
 		this.opacity=opacity;
 	}
 
-	public GraphicsLineContent(Color4I color,Point start,Point end) {
+	public GraphicsLineContent(int color,Point start,Point end) {
 		super(start.getX(), start.getY(), end.getX(), end.getY());
-		this.color=color.rgba();
+		this.color=color;
 	}
 	@Override
 	public void tick() {

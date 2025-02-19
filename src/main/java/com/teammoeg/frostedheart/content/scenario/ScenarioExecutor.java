@@ -30,8 +30,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.joml.Vector3f;
@@ -41,7 +39,6 @@ import com.teammoeg.chorda.client.ui.Rect;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.core.Vec3i;
@@ -228,9 +225,6 @@ public class ScenarioExecutor<T> {
     	addTypeAdapter(Point.class,(r,n,p)->new Point(
     		castParamType(r,p,int.class,s->s+"x",0,n),
     		castParamType(r,p,int.class,s->s+"y",0,n)
-    		));
-    	addTypeAdapter(Color4I.class,(r,n,p)->Color4I.rgba(
-    		castParamType(r,p,int.class,0xFF000000,n)
     		));
     }
 

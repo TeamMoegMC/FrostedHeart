@@ -23,8 +23,6 @@ import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.ui.Rect;
 import com.teammoeg.frostedheart.content.scenario.client.IClientScene;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-
 public interface IClientControlCommand {
 
 	void showTask(IClientScene runner, String q, int t);
@@ -61,9 +59,9 @@ public interface IClientControlCommand {
 
 	void ImageLayer(IClientScene runner, String name, String path, Rect drect, Rect srect, int z, Float opacity);
 
-	void FillRect(IClientScene runner, String name, Rect rect, int z, Color4I color);
+	void FillRect(IClientScene runner, String name, Rect rect, int z, int color);
 
-	void DrawLine(IClientScene runner, String name, Point start, Point end, int w, int z, Color4I color);
+	void DrawLine(IClientScene runner, String name, Point start, Point end, int w, int z, int color);
 
 	void hudDialog(IClientScene runner, Integer show);
 
