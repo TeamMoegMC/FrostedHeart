@@ -6,20 +6,25 @@ import java.util.Optional;
 
 import org.lwjgl.glfw.GLFW;
 
+import com.mojang.blaze3d.platform.Window;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
+import com.teammoeg.chorda.lang.Components;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 public class CUIScreen extends Screen implements CUIScreenManager {
-    private final PrimaryLayer primaryLayer;
+	@Setter
+	@Getter
+    private PrimaryLayer primaryLayer;
 
-    public CUIScreen(PrimaryLayer g) {
-        super(g.getTitle());
-        primaryLayer = g;
+    public CUIScreen() {
+        super(Components.str(""));
     }
 
     @Override
@@ -102,16 +107,21 @@ public class CUIScreen extends Screen implements CUIScreenManager {
     List<Component> display=new ArrayList<>();
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        primaryLayer.updateGui(mouseX, mouseY, partialTicks);
+       
         renderBackground(graphics);
         CGuiHelper.resetGuiDrawing();
-        var x = primaryLayer.getX();
-        var y = primaryLayer.getY();
+        Window win=super.minecraft.getWindow();
+        int x=(win.getGuiScaledWidth() - primaryLayer.width) / 2;
+        int y=(win.getGuiScaledHeight() - primaryLayer.height) / 2;
+        primaryLayer.updateGui(mouseX-x, mouseY-y, partialTicks);
+        primaryLayer.updateMouseOver();
         var w = primaryLayer.width;
         var h = primaryLayer.height;
         primaryLayer.render(graphics, x, y, w, h);
         primaryLayer.drawForeground(graphics, x, y, w, h);
-
+        this.width=w;
+        this.height=h;
+        
         
         primaryLayer.getTooltip(display::add);
         graphics.pose().pushPose();
@@ -149,8 +159,4 @@ public class CUIScreen extends Screen implements CUIScreenManager {
         return primaryLayer.onCloseQuery();
     }
 
-	@Override
-	public PrimaryLayer getPrimaryLayer() {
-		return primaryLayer;
-	}
 }

@@ -93,9 +93,9 @@ public class ScrollBar extends UIWidget {
 			if (delta != Integer.MIN_VALUE) {
 				if (CInputHelper.isMouseLeftDown()) {
 					if (isVertical) {
-						v = (getMouseY() - (y + delta)) * getMax() / (double) (height - scrollBarSize);
+						v = (getMouseY() - (delta)) * getMax() / (double) (height - scrollBarSize);
 					} else {
-						v = (getMouseX() - (x + delta)) * getMax() / (double) (width - scrollBarSize);
+						v = (getMouseX() - (delta)) * getMax() / (double) (width - scrollBarSize);
 					}
 				} else {
 					delta = Integer.MIN_VALUE;
@@ -105,7 +105,7 @@ public class ScrollBar extends UIWidget {
 			setValue(v);
 		}
 
-		drawBackground(graphics, x, y, width, height);
+		drawBackground(graphics, x-1, y-1, width+2, height+2);
 
 		if (scrollBarSize > 0) {
 			if (isVertical) {

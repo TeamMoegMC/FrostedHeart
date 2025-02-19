@@ -33,7 +33,6 @@ import net.minecraft.world.item.ItemStack;
 public class DrawDeskContainer extends CBlockEntityMenu<DrawingDeskTileEntity> {
     public DrawDeskContainer(int id, Inventory inventoryPlayer, DrawingDeskTileEntity tile) {
         super(FHMenuTypes.DRAW_DESK.get(), tile, id, inventoryPlayer.player, 3);
-
         this.addSlot(new EnableIESlot(this, inv, DrawingDeskTileEntity.PAPER_SLOT, 114, 161) {// paper
             @Override
             public boolean mayPlace(ItemStack itemStack) {

@@ -89,7 +89,7 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 			super();
 		}
 		public Validator range(BlockPos center,float radius) {
-			return range(()->Vec3.atCenterOf(center),radius*radius);
+			return range(()->Vec3.atCenterOf(center),radius);
 		}
 		public Validator bound(Supplier<Vec3> center,AABB bounds) {
 			citeria.add(new BoundCheck(center,bounds));

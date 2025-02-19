@@ -149,6 +149,13 @@ public class FHClientEvents {
             });
         }
     }
+    
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public void onScreenEvent(ScreenEvent event) {
+        System.out.println(event+":"+event.getScreen());
+
+    }
+    
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onRecipesUpdated(RecipesUpdatedEvent event) {
         if (!Minecraft.getInstance().hasSingleplayerServer())

@@ -7,6 +7,8 @@ import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
+import com.teammoeg.frostedheart.content.research.gui.editor.EditDialog;
+import com.teammoeg.frostedheart.content.research.gui.editor.EditorManager;
 
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
@@ -16,16 +18,17 @@ import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-public class PrimaryLayer extends Layer implements LayerHolder {
+public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
 	Focusable lastFocused;
 	Screen prevScreen;
-
-	public PrimaryLayer() {
+	CUIScreenManager screen;
+	public PrimaryLayer(CUIScreenManager screen) {
 		super(null);
 		width = 176;
 		height = 166;
+		this.screen=screen;
 		prevScreen = Minecraft.getInstance().screen;
-
+		this.setScissorEnabled(false);
 	}
 
 	int mouseX;
@@ -33,11 +36,15 @@ public class PrimaryLayer extends Layer implements LayerHolder {
 	boolean hasBackGradient;
 	boolean refreshRequested;
 
+	@Override
+	public CUIScreenManager getManager() {
+		return screen;
+	}
+
 	public final void initGui() {
 
 		if (onInit()) {
 			this.refresh();
-			alignWidgets();
 			finishInit();
 		}
 	}
@@ -167,8 +174,10 @@ public class PrimaryLayer extends Layer implements LayerHolder {
 	@Override
 	public final void updateGui(double mx, double my, float pt) {
 
-		super.updateRenderInfo(mouseX, mouseY, pt);
+		super.updateRenderInfo(mx, my, pt);
 		if (refreshRequested) {
+			
+			System.out.println("refresh requested");
 			refresh();
 			refreshRequested = false;
 		}
@@ -188,7 +197,7 @@ public class PrimaryLayer extends Layer implements LayerHolder {
 
 	@Override
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-		CGuiHelper.drawUIBackground(graphics, x, y, w, h);
+		//CGuiHelper.drawUIBackground(graphics, x, y, w, h);
 	}
 
 	public void drawForeground(GuiGraphics graphics, int x, int y, int w, int h) {
@@ -197,6 +206,16 @@ public class PrimaryLayer extends Layer implements LayerHolder {
 	@Override
 	public boolean onMousePressed(MouseButton button) {
 		return super.onMousePressed(button);
+	}
+
+	@Override
+	public int getX() {
+		return 0;
+	}
+
+	@Override
+	public int getY() {
+		return 0;
 	}
 
 	@Override
@@ -232,7 +251,8 @@ public class PrimaryLayer extends Layer implements LayerHolder {
 
 	@Override
 	public void addUIElements() {
-
+		if(dialog!=null)
+			add(dialog);
 	}
 
 	@Override
@@ -254,8 +274,11 @@ public class PrimaryLayer extends Layer implements LayerHolder {
 	public void refresh() {
 
 		Window win = ClientUtils.mc().getWindow();
-		this.setPos((win.getGuiScaledWidth() - width) / 2, (win.getGuiScaledWidth() - width) / 2);
+		
 		super.refresh();
+		this.width=this.getContentWidth();
+		this.height=this.getContentHeight();
+		
 	}
 
 	public boolean onInit() {
@@ -263,6 +286,29 @@ public class PrimaryLayer extends Layer implements LayerHolder {
 	}
 
 	void finishInit() {
+	}
+	EditDialog dialog;
+    public void closeDialog(boolean quit) {
+        this.dialog = null;
+        if (quit) {
+            closeGui();
+        }
+        
+    }
+
+    public EditDialog getDialog() {
+        return dialog;
+    }
+    public void openDialog(EditDialog dialog, boolean refresh) {
+        this.dialog = dialog;
+        if (refresh)
+            this.refreshWidgets();
+    }
+
+	@Override
+	public void closeGui() {
+		closeGui(true);
+		
 	}
 
 }

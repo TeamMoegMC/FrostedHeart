@@ -101,12 +101,12 @@ public class EditListDialog<T> extends EditDialog {
         };
 
         scroll = new LayerScrollBar(this, configPanel);
-        buttonAccept =TextButton.create(this, Lang.translateKey("gui.accept"), IconButton.Icon.CHECK.toCIcon(), (button) -> {
+        buttonAccept =TextButton.create(this, Components.empty(), IconButton.Icon.CHECK.toCIcon(), (button) -> {
             callback.accept(list);
             modified = false;
             close();
         });
-        buttonCancel = TextButton.create(this, Lang.translateKey("gui.cancel"), IconButton.Icon.CROSS.toCIcon(), (button) -> close());
+        buttonCancel = TextButton.create(this, Components.empty(), IconButton.Icon.CROSS.toCIcon(), (button) -> close());
     }
 
     @Override
@@ -195,7 +195,7 @@ public class EditListDialog<T> extends EditDialog {
 
         @Override
         public void getTooltip(Consumer<Component> l) {
-            if (getMouseX() >= getX() + width - 19) {
+            if (getMouseX() >=  width - 19) {
                 l.accept(Components.translatable("selectServer.delete"));
             } else {
                 l.accept(Components.str(read.apply(list.get(index))));
@@ -204,7 +204,7 @@ public class EditListDialog<T> extends EditDialog {
 
         @Override
         public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-            boolean mouseOver = getMouseY() >= 20 && isMouseOver();
+            boolean mouseOver = isMouseOver();
             int ioffset = 0;
             if (toicon != null) {
                 toicon.apply(list.get(index)).draw(matrixStack, x + ioffset, y, 12, 12);
@@ -212,10 +212,10 @@ public class EditListDialog<T> extends EditDialog {
             }
             if (mouseOver) {
 
-            	matrixStack.fill(x, y, x+w, y+h, 0x20FFFFFF);
+            	matrixStack.fill(x, y, x+w, y+h, 0x21FFFFFF);
 
-                if (getMouseX() >= x + w - 19) {
-                	matrixStack.fill(x + w - 19, y, x+w, y+h, 0x20FFFFFF);
+                if (getMouseX() >= w - 19) {
+                	matrixStack.fill(x + w - 19, y, x+w, y+h, 0x21FFFFFF);
                 }
             }
             matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+2, 0xFFFFFFFF);

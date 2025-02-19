@@ -172,6 +172,10 @@ public class UIWidget implements UIElement{
 	public void refresh() {
 		
 	}
+	@Override
+	public CUIScreenManager getManager() {
+		return parent.getManager();
+	}
 
 
 }

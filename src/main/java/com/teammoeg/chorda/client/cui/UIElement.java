@@ -5,7 +5,7 @@ import net.minecraft.client.gui.Font;
 public interface UIElement {
 
 	LayerHolder getLayerHolder();
-
+	CUIScreenManager getManager();
 	int getX();
 
 	int getY();

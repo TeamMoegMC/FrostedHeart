@@ -22,6 +22,9 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 import com.teammoeg.chorda.client.cui.Layer;
 import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.UIWidget;
+
+import net.minecraft.client.gui.GuiGraphics;
+
 import com.teammoeg.chorda.client.cui.UIElement;
 
 
@@ -32,21 +35,28 @@ public class LabeledPane<T extends UIWidget> extends Layer {
 
     public LabeledPane(UIElement panel, String lab) {
         super(panel);
-        label = new TextField(this).setMaxWidth(200).setTrim().setText(lab).setColor(0xFFFFFFFF);
+        label = new TextField(this).setMaxWidth(200).setTrim().setText(lab).setColor(0xFF000000);
 
     }
 
     @Override
     public void addUIElements() {
         add(label);
-        if (obj != null) ;
+        if (obj != null)
         add(obj);
     }
 
     @Override
-    public void alignWidgets() {
-        setSize(super.align(true), 20);
+	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+    	//System.out.println("render");
+		super.render(graphics, x, y, w, h);
+	}
 
+	@Override
+    public void alignWidgets() {
+        setSize(super.align(true), this.getContentHeight());
+        
         label.setY((20 - 8) / 2);
+        //System.out.println(this.getX()+","+this.getY()+":"+this.getWidth()+","+this.getHeight());
     }
 }

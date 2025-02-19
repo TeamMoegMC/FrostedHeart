@@ -82,7 +82,7 @@ public class TechIcons {
     static{
     	for(boolean on:IterateUtils.boolIterable) {
     		for(int i=0;i<4;i++) {
-    			for(int j=0;j<4;i++) {
+    			for(int j=0;j<4;j++) {
     		        
     		        int uvy = on ? 233 : 228;
     		        BTN_VH[(on?16:0)+i*4+j]=ALL.withUV(293, uvy, i+1, j+1, 512, 512);

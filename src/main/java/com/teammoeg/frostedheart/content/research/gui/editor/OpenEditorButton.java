@@ -49,7 +49,7 @@ public class OpenEditorButton<T> extends TextButton {
 
     @Override
     public void onClicked(MouseButton arg0) {
-        edi.open(this, lbl, val, cb);
+        edi.open(this.getParent(), lbl, val, cb);
     }
 
 

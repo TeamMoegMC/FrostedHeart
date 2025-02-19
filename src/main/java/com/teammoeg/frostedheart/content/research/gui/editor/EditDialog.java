@@ -33,7 +33,7 @@ public abstract class EditDialog extends Layer {
     EditorManager sc;
 
     public EditDialog(UIElement panel) {
-        super(panel);
+        super(panel.getManager().getPrimaryLayer());
         if (panel.getLayerHolder() instanceof EditorManager)
             sc = (EditorManager)panel.getLayerHolder();
     }

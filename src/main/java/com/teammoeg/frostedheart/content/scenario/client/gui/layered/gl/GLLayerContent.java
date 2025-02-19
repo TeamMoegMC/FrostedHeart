@@ -60,7 +60,7 @@ public abstract class GLLayerContent extends OrderedRenderableContent {
 	@Override
 	public void render(RenderParams params) {
 		params=params.copyWithCurrent(this);
-		params.getGuiGraphics().enableScissor( params.getX(), params.getY(), params.getWidth(), params.getHeight());
+		params.getGuiGraphics().enableScissor( params.getX(), params.getY(), params.getX()+params.getWidth(), params.getY()+params.getHeight());
 		this.renderContents(params);
 		params.getGuiGraphics().disableScissor();
 	}

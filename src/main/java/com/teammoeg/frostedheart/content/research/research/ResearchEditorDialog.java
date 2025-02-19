@@ -19,7 +19,11 @@
 
 package com.teammoeg.frostedheart.content.research.research;
 
-import com.teammoeg.chorda.client.FHIconWrapper;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIElement;
@@ -28,16 +32,21 @@ import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchUtils;
-import com.teammoeg.frostedheart.content.research.gui.editor.*;
+import com.teammoeg.frostedheart.content.research.gui.editor.BaseEditDialog;
+import com.teammoeg.frostedheart.content.research.gui.editor.EditListDialog;
+import com.teammoeg.frostedheart.content.research.gui.editor.EditUtils;
+import com.teammoeg.frostedheart.content.research.gui.editor.Editor;
+import com.teammoeg.frostedheart.content.research.gui.editor.IngredientEditor;
+import com.teammoeg.frostedheart.content.research.gui.editor.LabeledSelection;
+import com.teammoeg.frostedheart.content.research.gui.editor.LabeledTextBox;
+import com.teammoeg.frostedheart.content.research.gui.editor.LabeledTextBoxAndBtn;
+import com.teammoeg.frostedheart.content.research.gui.editor.NumberBox;
+import com.teammoeg.frostedheart.content.research.gui.editor.OpenEditorButton;
+import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.content.research.research.clues.ClueEditor;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectEditor;
 
 import net.minecraft.client.gui.GuiGraphics;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class ResearchEditorDialog extends BaseEditDialog {
     public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(),r->r.getIcon(), c).open();

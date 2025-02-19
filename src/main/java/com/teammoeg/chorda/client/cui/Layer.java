@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -22,7 +23,9 @@ public abstract class Layer extends UIWidget {
 	private double scrollStep = 20;
 	private int contentWidth = -1, contentHeight = -1;
 	private RatedScrollbar attachedScrollbar = null;
-
+	@Getter
+	@Setter
+	private boolean scissorEnabled=true;
 	public Layer(UIElement panel) {
 		super(panel);
 		elements = new ArrayList<>();
@@ -46,12 +49,10 @@ public abstract class Layer extends UIWidget {
 			ex.printStackTrace();
 		}
 
-		elements.sort(null);
+		//elements.sort(null);
 
 		for (UIWidget element : elements) {
-			if (element instanceof Layer p) {
-				p.refresh();
-			}
+			element.refresh();
 		}
 
 		alignWidgets();
@@ -74,14 +75,14 @@ public abstract class Layer extends UIWidget {
 		contentWidth = contentHeight = 0;
 		if(isHorizontal) {
 			for(UIWidget elm:elements) {
-				elm.setPos(contentWidth,0);
+				elm.setX(contentWidth);
 				contentWidth+=elm.getWidth();
 				contentHeight=Math.max(elm.getHeight(), contentHeight);
 			}
 			return contentWidth;
 		}
 		for(UIWidget elm:elements) {
-			elm.setPos(0,contentHeight);
+			elm.setY(contentHeight);
 			contentHeight+=elm.getHeight();
 			contentWidth=Math.max(elm.getWidth(), contentWidth);
 		}
@@ -154,14 +155,21 @@ public abstract class Layer extends UIWidget {
 	public void render(GuiGraphics graphics,  int x, int y, int w, int h) {
 
 		drawBackground(graphics, x, y, w, h);
-		graphics.enableScissor(x, y, w, h);
-
+		if(scissorEnabled)
+			graphics.enableScissor(x, y, x+w, y+h);
+		int contentX=x+ offsetX;
+		int contentY=y+ offsetY;
+		//graphics.pose().pushPose();
+		//graphics.pose().translate(0, 0, 1);
 		for(UIWidget elm:elements) {
-			drawElement(graphics, elm, x + offsetX, y + offsetY, w, h);
+			drawElement(graphics, elm, contentX, contentY, w, h);
 		}
-
-
-		graphics.disableScissor();
+		
+		if(scissorEnabled)
+			graphics.disableScissor();
+		if(isMouseOver)
+			TechIcons.ADD.draw(graphics, (int)getMouseX()+x-4, (int)getMouseY()+y-4, 8, 8);
+		//graphics.pose().popPose();
 	}
 	@Override
 	public void updateRenderInfo(double mx, double my, float pt) {
@@ -174,7 +182,7 @@ public abstract class Layer extends UIWidget {
 	}
 
 	public void drawElement(GuiGraphics graphics, UIWidget element, int x, int y, int w, int h) {
-
+		
 		element.render(graphics, element.getX()+x, element.getY()+y, element.getWidth(), element.getHeight());
 	}
 

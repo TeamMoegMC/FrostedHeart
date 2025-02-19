@@ -65,9 +65,9 @@ public class LayerScrollBar extends ScrollBar {
 		var value = getMax() <= 0 ? 0 : getValue();
 
 		if (isVertical) {
-			getAffectedLayer().setOffsetY((int) value);
+			getAffectedLayer().setOffsetY(-(int) value);
 		} else {
-			getAffectedLayer().setOffsetX((int) value);
+			getAffectedLayer().setOffsetX(-(int) value);
 		}
 	}
 

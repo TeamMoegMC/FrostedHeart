@@ -400,12 +400,12 @@ public class TextBox extends UIWidget implements Focusable {
 
 	@Override
 	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-		drawTextBox(graphics, x, y, w, h);
+		drawTextBox(graphics, x+1, y+1, w-2, h-2);
 		var drawGhostText = !isFocused() && text.isEmpty() && !ghostText.isEmpty();
 		var textToDraw = getFormattedText();
-		graphics.enableScissor( x, y, w, h);
+		graphics.enableScissor( x, y, x+w, y+h);
 	
-		int cursorColor = (validText ? this.getLayerHolder().getFontColor():this.getLayerHolder().getErrorColor())&0xffffff|((drawGhostText ? 120 : 255)<<24);
+		int cursorColor =( (validText ? this.getLayerHolder().getFontColor():this.getLayerHolder().getErrorColor())&0xffffff)|((drawGhostText ? 0x78000000 : 0xFF000000));
 		var j = cursorPos - displayPos;
 		var s = getFont().plainSubstrByWidth(textToDraw.substring(displayPos), w);
 		var textX = x + 4;

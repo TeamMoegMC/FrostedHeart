@@ -42,10 +42,11 @@ public class EditUtils {
         new ResearchEditorDialog(EditUtils.openEditorScreen(), r, r.getCategory()).open();
     }
     public static UIElement openEditorScreen() {
-    	PrimaryLayer primary=new PrimaryLayer();
-    	CUIScreen wrapper=new CUIScreen(primary);
+    	CUIScreen wrapper=new CUIScreen();
+    	wrapper.setPrimaryLayer(new PrimaryLayer(wrapper));
+    	
     	ClientUtils.mc().setScreen(wrapper);
-    	return primary;
+    	return wrapper.getPrimaryLayer();
     }
     public static TextField getTitle(UIElement p, String title) {
 

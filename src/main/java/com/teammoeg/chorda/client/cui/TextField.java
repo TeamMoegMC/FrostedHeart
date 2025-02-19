@@ -2,6 +2,7 @@ package com.teammoeg.chorda.client.cui;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ComponentRenderUtils;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
@@ -20,7 +21,7 @@ public class TextField extends UIWidget {
 	public static final int H_CENTER = 4;
 	public static final int V_CENTER = 32;
 	public static final int SHADOW = 2;
-	private List<FormattedCharSequence> formattedText = List.of();
+	private List<FormattedText> formattedText = List.of();
 	private Component component = Component.empty();
 	public int textFlags = 0;
 	public int minWidth = 0;
@@ -95,7 +96,8 @@ public class TextField extends UIWidget {
 	public TextField setText(Component text) {
 		
 		component = text;
-		formattedText =ComponentRenderUtils.wrapComponents(Component.literal("").append(text), maxWidth, getFont());
+		formattedText =getFont().getSplitter().splitLines(Component.literal("").append(text), maxWidth, Style.EMPTY);
+			//ComponentRenderUtils.wrapComponents(Component.literal("").append(text), maxWidth, getFont());
 
 		return resize();
 	}
@@ -107,12 +109,13 @@ public class TextField extends UIWidget {
 	public TextField resize() {
 		setWidth(0);
 
-		for (FormattedCharSequence s : formattedText) {
+		for (FormattedText s : formattedText) {
 			setWidth(Math.max(getWidth(), (int) ((float) getFont().width(s) * scale)));
 		}
 
 		setWidth(Mth.clamp(getWidth(), minWidth, maxWidth));
 		setHeight((int) ((float) (Math.max(1, formattedText.size()) * textSpacing - (textSpacing - getFont().lineHeight + 1)) * scale));
+		//System.out.println("dims="+this.getX()+","+this.getY()+":"+this.getWidth()+","+this.getHeight());
 		return this;
 	}
 
@@ -123,12 +126,13 @@ public class TextField extends UIWidget {
 		}
 	}
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+		//graphics.fill(x, y, x+w, y+h, 0xFFFF0000);
 	}
 
 	@Override
 	public void render(GuiGraphics graphics,  int x, int y, int w, int h) {
 		drawBackground(graphics, x, y, w, h);
-
+		
 		if (formattedText.size() != 0) {
 			boolean centered = this.isCentered();
 			boolean centeredV = this.isCenteredV();
@@ -138,16 +142,16 @@ public class TextField extends UIWidget {
 			int ty = y + (centeredV ? (h - getFont().lineHeight) / 2 : 0);
 			int i=-1;
 			if (scale == 1.0F) {
-				for (FormattedCharSequence text:formattedText) {
-					graphics.drawString(getFont(), text, tx, ty + (++i) * textSpacing, col, isShadow());
+				for (FormattedText text:formattedText) {
+					graphics.drawString(getFont(),Language.getInstance().getVisualOrder(text), tx, ty + (++i) * textSpacing, col, isShadow());
 				}
 			} else {
 				graphics.pose().pushPose();
 				graphics.pose().translate(tx, ty, 0.0D);
 				graphics.pose().scale(scale, scale, 1.0F);
 
-				for (FormattedCharSequence text:formattedText) {
-					graphics.drawString(getFont(), text, 0, (++i) * textSpacing, col, isShadow());
+				for (FormattedText text:formattedText) {
+					graphics.drawString(getFont(), Language.getInstance().getVisualOrder(text), 0, (++i) * textSpacing, col, isShadow());
 				}
 
 				graphics.pose().popPose();
