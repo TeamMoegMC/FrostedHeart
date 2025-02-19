@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.scenario.parser.reader;
+package com.teammoeg.chorda.util.parsereader.source;
 
 public class StringLineSource extends StreamLineSource {
 	String code;

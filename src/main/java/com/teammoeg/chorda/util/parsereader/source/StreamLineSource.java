@@ -17,7 +17,9 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.scenario.parser.reader;
+package com.teammoeg.chorda.util.parsereader.source;
+
+import com.teammoeg.chorda.util.parsereader.CodeLineSource;
 
 public abstract class StreamLineSource implements CodeLineSource {
 	String name;
@@ -31,7 +33,7 @@ public abstract class StreamLineSource implements CodeLineSource {
 	public abstract int readCh();
 
 	@Override
-	public String read() {
+	public String readLine() {
 		StringBuilder sb=new StringBuilder();
 		int ch;
 		while((ch=readCh())>0) {

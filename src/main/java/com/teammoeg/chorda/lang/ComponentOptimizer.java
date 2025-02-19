@@ -58,4 +58,15 @@ public class ComponentOptimizer {
 		}
 		return mstr;
 	}
+	public void appendChar(char ch, Style style) {
+		if(style!=sty) {
+			createComponent();
+			sty=style;
+		}
+		sb.append(ch);
+	}
+	public void appendComponent(Component c) {
+		createComponent();
+		calculated.add(c);
+	}
 }

@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
+import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.frostedheart.FHMain;
-import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 
@@ -28,7 +28,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 public class FHTextUtil {
 
@@ -61,14 +60,14 @@ public class FHTextUtil {
     @Nonnull
     public static Component get(String orig, String type,String pid) {
         if (orig == null || orig.isEmpty())
-            return ClientTextComponentUtils.parse("{" + type + "." + FHMain.MODID + "." + pid+ "}");
+            return StringTextComponentParser.parse("{" + type + "." + FHMain.MODID + "." + pid+ "}");
         if (orig.startsWith("@")) {
             if (orig.length() == 1)
-                return ClientTextComponentUtils.parse("{" + type + "." + FHMain.MODID + "." + pid + "}");
-            return ClientTextComponentUtils.parse("{" + orig.substring(1) + "}");
+                return StringTextComponentParser.parse("{" + type + "." + FHMain.MODID + "." + pid + "}");
+            return StringTextComponentParser.parse("{" + orig.substring(1) + "}");
         }
 
-        return ClientTextComponentUtils.parse(orig);
+        return StringTextComponentParser.parse(orig);
     }
 
     @Nullable
@@ -76,15 +75,15 @@ public class FHTextUtil {
         if (orig == null || orig.isEmpty()) {
             String key = type + "." + FHMain.MODID + "." + pid;
             if (I18n.exists(key))
-                return ClientTextComponentUtils.parse("{" + key + "}");
+                return StringTextComponentParser.parse("{" + key + "}");
             return null;
         }
         if (orig.startsWith("@")) {
             if (orig.length() == 1)
-                return ClientTextComponentUtils.parse("{" + type + "." + FHMain.MODID + "." + pid + "}");
-            return ClientTextComponentUtils.parse("{" + orig.substring(1) + "}");
+                return StringTextComponentParser.parse("{" + type + "." + FHMain.MODID + "." + pid + "}");
+            return StringTextComponentParser.parse("{" + orig.substring(1) + "}");
         }
 
-        return ClientTextComponentUtils.parse(orig);
+        return StringTextComponentParser.parse(orig);
     }
 }

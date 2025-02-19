@@ -17,28 +17,35 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.scenario.parser.reader;
+package com.teammoeg.chorda.util.parsereader.source;
 
-import java.io.IOException;
-import java.io.Reader;
+import java.util.List;
 
-public class ReaderLineSource extends StreamLineSource {
-	Reader reader;
+import com.teammoeg.chorda.util.parsereader.CodeLineSource;
 
-	public ReaderLineSource(String name, Reader reader) {
-		super(name);
-		this.reader = reader;
+public class StringListStringSource implements CodeLineSource {
+	int idx=0;
+	String name;
+	List<String> strs;
+	public StringListStringSource(String name, List<String> strs) {
+		super();
+		this.name = name;
+		this.strs = strs;
+	}
+	
+	@Override
+	public boolean hasNext() {
+		return idx<strs.size();
 	}
 
 	@Override
-	public int readCh() {
-		try {
-			return reader.read();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return -1;
+	public String readLine() {
+		return strs.get(idx++);
+	}
+
+	@Override
+	public String getName() {
+		return name;
 	}
 
 }

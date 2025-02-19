@@ -31,13 +31,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
+import com.teammoeg.chorda.util.parsereader.CodeLineSource;
+import com.teammoeg.chorda.util.parsereader.ParseReader;
+import com.teammoeg.chorda.util.parsereader.ParseReader.ParserState;
+import com.teammoeg.chorda.util.parsereader.source.ReaderLineSource;
+import com.teammoeg.chorda.util.parsereader.source.StringLineSource;
+import com.teammoeg.chorda.util.parsereader.source.StringListStringSource;
 import com.teammoeg.frostedheart.content.scenario.ScenarioExecutionException;
-import com.teammoeg.frostedheart.content.scenario.parser.reader.CodeLineSource;
-import com.teammoeg.frostedheart.content.scenario.parser.reader.ReaderLineSource;
-import com.teammoeg.frostedheart.content.scenario.parser.reader.StringLineSource;
-import com.teammoeg.frostedheart.content.scenario.parser.reader.StringListStringSource;
-import com.teammoeg.frostedheart.content.scenario.parser.reader.StringParseReader;
-import com.teammoeg.frostedheart.content.scenario.parser.reader.StringParseReader.ParserState;
 
 public class ScenarioParser {
     private static class CommandStack {
@@ -163,7 +163,7 @@ public class ScenarioParser {
     
 
 
-    private NodeInfo parseAtCommand(StringParseReader reader) {
+    private NodeInfo parseAtCommand(ParseReader reader) {
         Map<String, String> params = new HashMap<>();
         ParserState state=reader.getCurrentState();
         String command = parseLiteralOrString(reader, -1);
@@ -188,7 +188,7 @@ public class ScenarioParser {
 
     }
 
-    private NodeInfo parseBarackCommand(StringParseReader reader) {
+    private NodeInfo parseBarackCommand(ParseReader reader) {
         Map<String, String> params = new HashMap<>();
         ParserState state=reader.getCurrentState();
         String command = parseLiteralOrString(reader, ']');
@@ -211,7 +211,7 @@ public class ScenarioParser {
     }
 
     private ParseResult parseLine(CodeLineSource source) {
-        StringParseReader reader = new StringParseReader(source);
+        ParseReader reader = new ParseReader(source);
         List<NodeInfo> nodes = new ArrayList<>();
         while(reader.nextLine()) {
         	try {
@@ -241,7 +241,7 @@ public class ScenarioParser {
         return new ParseResult(nodes,reader.getCurrentState());
     }
 
-    private String parseLiteral(StringParseReader reader) {
+    private String parseLiteral(ParseReader reader) {
         StringBuilder all = new StringBuilder();
         boolean isEscaping = false;
         while (reader.has()) {
@@ -266,7 +266,7 @@ public class ScenarioParser {
         return all.toString();
     }
 
-    private String parseLiteralOrString(StringParseReader reader, int ch) {
+    private String parseLiteralOrString(ParseReader reader, int ch) {
         StringBuilder all = new StringBuilder();
         boolean isEscaping = false;
         boolean hasQuote = false;

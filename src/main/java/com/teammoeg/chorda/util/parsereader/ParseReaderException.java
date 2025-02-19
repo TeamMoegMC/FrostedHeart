@@ -17,36 +17,36 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.scenario.parser;
+package com.teammoeg.chorda.util.parsereader;
 
-public class ScenarioParseException extends RuntimeException {
+public class ParseReaderException extends RuntimeException {
 
     /**
 	 * 
 	 */
 	private static final long serialVersionUID = -2921829910823307588L;
 
-	public ScenarioParseException() {
+	public ParseReaderException() {
         // TODO Auto-generated constructor stub
     }
 
-    public ScenarioParseException(String message) {
+    public ParseReaderException(String message) {
         super(message);
         // TODO Auto-generated constructor stub
     }
 
-    public ScenarioParseException(String message, Throwable cause) {
+    public ParseReaderException(String message, Throwable cause) {
         super(message, cause);
         // TODO Auto-generated constructor stub
     }
 
-    public ScenarioParseException(String message, Throwable cause, boolean enableSuppression,
+    public ParseReaderException(String message, Throwable cause, boolean enableSuppression,
                                       boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
         // TODO Auto-generated constructor stub
     }
 
-    public ScenarioParseException(Throwable cause) {
+    public ParseReaderException(Throwable cause) {
         super(cause);
         // TODO Auto-generated constructor stub
     }

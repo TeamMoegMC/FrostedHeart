@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Optional;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.FHScenarioClient;
@@ -38,20 +37,18 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.Grap
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsLineContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsRectContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsTextContent;
-import com.teammoeg.frostedheart.content.scenario.network.C2SRenderingStatusMessage;
 import com.teammoeg.frostedheart.util.client.Lang;
 
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MultipleItemHoverEvent;
+import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.ui.Rect;
-import com.teammoeg.chorda.io.nbtbuilder.ArrayNBTBuilder;
 import com.teammoeg.chorda.io.nbtbuilder.CompoundNBTBuilder;
 import com.teammoeg.chorda.lang.Components;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import dev.ftb.mods.ftbquests.api.FTBQuestsAPI;
 import dev.ftb.mods.ftbquests.quest.BaseQuestFile;
 import dev.ftb.mods.ftbquests.quest.Quest;
@@ -66,7 +63,6 @@ import net.minecraft.client.resources.sounds.SoundInstance.Attenuation;
 import net.minecraft.core.Holder.Reference;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.resources.ResourceKey;
@@ -74,7 +70,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.Lazy;
-import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
@@ -144,11 +139,11 @@ public class ClientControl implements IClientControlCommand {
 	public void showTitle(IClientScene runner,@Param("t")String t,@Param("st")String st,@Param("in")Integer i1,@Param("show")Integer i2,@Param("out")Integer i3) {
 		Component t1=null,t2=null;
 		if(t!=null) {
-			t1=ClientTextComponentUtils.parse(t);
+			t1=StringTextComponentParser.parse(t);
 			ClientUtils.mc().gui.setTitle(t1);
 		}
 		if(st!=null) {
-			t2=ClientTextComponentUtils.parse(st);
+			t2=StringTextComponentParser.parse(st);
 			ClientUtils.mc().gui.setSubtitle(t2);
 		}
 		
@@ -267,7 +262,7 @@ public class ClientControl implements IClientControlCommand {
 			opacity=1f;
 		if(resize==0)
 			resize=9;
-		GraphicsTextContent tc=new GraphicsTextContent(ClientTextComponentUtils.parse(text),rect,resize,shadow>0);
+		GraphicsTextContent tc=new GraphicsTextContent(StringTextComponentParser.parse(text),rect,resize,shadow>0);
 		tc.setOpacity(opacity);
 		tc.setZ(z);
 		ClientScene.INSTANCE.layers.peekLast().addLayer(name,tc);
@@ -281,7 +276,7 @@ public class ClientControl implements IClientControlCommand {
 			opacity=1f;
 		if(resize==0)
 			resize=9;
-		GLTextContent tc=new GLTextContent(ClientTextComponentUtils.parse(text),x,y,w,h,z,shadow>0,resize);
+		GLTextContent tc=new GLTextContent(StringTextComponentParser.parse(text),x,y,w,h,z,shadow>0,resize);
 		tc.setOpacity(opacity);
 		ClientScene.INSTANCE.layers.peekLast().addLayer(name,tc);
 		

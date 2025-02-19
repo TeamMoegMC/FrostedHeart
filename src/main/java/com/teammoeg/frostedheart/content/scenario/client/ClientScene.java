@@ -24,32 +24,32 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.MutableInt;
 
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.StringTextComponentParser;
+import com.teammoeg.chorda.util.struct.BitObserverList;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.IScenarioDialog;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.TextInfo;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.TextInfo.SizedReorderingProcessor;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.LayerManager;
-import com.teammoeg.frostedheart.content.scenario.network.C2SScenarioResponsePacket;
 import com.teammoeg.frostedheart.content.scenario.network.C2SClientReadyPacket;
+import com.teammoeg.frostedheart.content.scenario.network.C2SScenarioResponsePacket;
 import com.teammoeg.frostedheart.content.scenario.network.C2SSettingsPacket;
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.minecraft.accessors.NewChatGuiAccessor;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.util.struct.BitObserverList;
 
-import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.GuiMessage;
 import net.minecraft.client.GuiMessageTag;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ComponentRenderUtils;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraftforge.network.PacketDistributor;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 
 public class ClientScene implements IClientScene {
 	private static GuiMessageTag SCENARIO=new GuiMessageTag(13684944, (GuiMessageTag.Icon)null, Lang.translateKey("chat.tag.frostedheart.scenario"), "Scenario");
@@ -277,7 +277,7 @@ public class ClientScene implements IClientScene {
 		//System.out.println("Received " + isReline + " " + text + " " + resetScene);
 		if (!text.isEmpty()) {
 			hasText = true;
-			Component item = ClientTextComponentUtils.parse(text);
+			Component item = StringTextComponentParser.parse(text);
 			processClient(item, isReline, isNowait);
 		}
 		shouldWrap = isReline;
@@ -357,14 +357,14 @@ public class ClientScene implements IClientScene {
 	public void setActHud(String title, String subtitle) {
 		if(title!=null) {
 			if(!title.isEmpty()) 
-				this.currentActTitle=ClientTextComponentUtils.parse(title);//.deepCopy().mergeStyle(Style.EMPTY.applyFormatting(TextFormatting.YELLOW).applyFormatting(TextFormatting.BOLD));
+				this.currentActTitle=StringTextComponentParser.parse(title);//.deepCopy().mergeStyle(Style.EMPTY.applyFormatting(TextFormatting.YELLOW).applyFormatting(TextFormatting.BOLD));
 			else
 				this.currentActTitle=null;
 			ticksActUpdate=20;
 		}
 		if(subtitle!=null) {
 			if(!subtitle.isEmpty()) {
-				this.currentActSubtitle=ClientTextComponentUtils.parse(subtitle);
+				this.currentActSubtitle=StringTextComponentParser.parse(subtitle);
 			}else 
 				this.currentActSubtitle=null;
 			ticksActStUpdate=20;

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.scenario.parser;
 
-import com.teammoeg.frostedheart.content.scenario.parser.reader.StringParseReader.ParserState;
+import com.teammoeg.chorda.util.parsereader.ParseReader.ParserState;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 
 public record NodeInfo(Node node,ParserState state) implements Node{

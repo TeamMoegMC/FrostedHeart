@@ -17,17 +17,18 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.scenario.parser.reader;
-
-import com.teammoeg.frostedheart.content.scenario.parser.ScenarioParseException;
-
-public class StringParseReader {
+package com.teammoeg.chorda.util.parsereader;
+/**
+ * A unified reader framework for dsl parsing, contains most used reader functions
+ * 
+ * */
+public class ParseReader {
 	public static record ParserState(String name,int lineNum,int position){
-	    public ScenarioParseException generateException(Throwable nested) {
-	    	return new ScenarioParseException("At File: "+name+" Line:"+lineNum+":"+position+" "+nested.getMessage(),nested);
+	    public ParseReaderException generateException(Throwable nested) {
+	    	return new ParseReaderException("At File: "+name+" Line:"+lineNum+":"+position+" "+nested.getMessage(),nested);
 	    }
-	    public ScenarioParseException generateException(String message) {
-	    	return new ScenarioParseException("At File: "+name+" Line:"+lineNum+":"+position+" "+message);
+	    public ParseReaderException generateException(String message) {
+	    	return new ParseReaderException("At File: "+name+" Line:"+lineNum+":"+position+" "+message);
 	    }
 	}
     public final CodeLineSource strs;
@@ -36,10 +37,13 @@ public class StringParseReader {
     private int srecord = 0;
     private int lineNo=0;
     private ParserState cache;
-    public StringParseReader(CodeLineSource str) {
+    public ParseReader(CodeLineSource str) {
         super();
         this.strs = str;
     }
+    /**
+     * read and go to next line, dispose current line, return true if a new line is populated to the cache.
+     * */
     public boolean nextLine(){
     	cache=null;
     	str=null;
@@ -47,27 +51,48 @@ public class StringParseReader {
 		srecord=0;
     	if(strs.hasNext()) {
     		lineNo++;
-    		str=strs.read();
+    		str=strs.readLine();
     		return true;
     	}
     	return false;
     }
+    /**
+     * Return a string with characters from saved index(included) to current position(excluded)
+     * */
     public String fromStart() {
         return str.substring(srecord, idx);
     }
+    /**
+     * Return true if there's any character in the current line
+     * */
     public boolean has() {
         return str!=null&&idx < str.length();
     }
-
+    /**
+     * Return current character
+     * */
     public char read() {
         return str.charAt(idx);
     }
-
+    /**
+     * Return current character
+     * */
+    public String read(int num) {
+        String text=str.substring(idx,idx+num);
+        idx+=num;
+        return text;
+    }
+    /**
+     * return and skip current character
+     * */
     public char eat() {
     	cache=null;
         return str.charAt(idx++);
     }
-
+    /**
+     * skip current character if the character matches given and return true if skipped
+     * 
+     * */
     public boolean eat(char ch) {
         if (read() == ch) {
             eat();
@@ -76,17 +101,31 @@ public class StringParseReader {
         return false;
     }
 
-
+    /**
+     * record current index for later use.
+     * */
     public void saveIndex() {
         srecord = idx;
     }
-
+    /**
+     * go back to saved index
+     * */
+    public void restoreIndex() {
+        idx=srecord;
+    }
+    /**
+     * Skip character until current character is not space.
+     * 
+     * */
     public void skipWhitespace() {
     	cache=null;
         while (has()&&Character.isWhitespace(read())) {
             idx++;
         }
     }
+    /**
+     * get current position for debug, including file name, line number, position.
+     * */
     public ParserState getCurrentState() {
     	if(cache==null)
     		cache=new ParserState(strs.getName(),lineNo,idx);
