@@ -19,26 +19,25 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
-import dev.ftb.mods.ftblibrary.ui.WidgetType;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
+
 import net.minecraft.client.gui.GuiGraphics;
 
 public abstract class BaseEditDialog extends EditDialog {
 
-    public BaseEditDialog(Widget panel) {
+    public BaseEditDialog(UIElement panel) {
         super(panel);
         setWidth(400);
     }
 
     @Override
     public void alignWidgets() {
-        this.setHeight(super.align(WidgetLayout.VERTICAL));
+        this.setHeight(super.align(false));
     }
 
     @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        theme.drawGui(matrixStack, x - 5, y - 5, w + 10, h + 10, WidgetType.NORMAL);
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+    	CGuiHelper.drawUIBackground(matrixStack, x-5, y-5, w+10, h+10);
     }
 }

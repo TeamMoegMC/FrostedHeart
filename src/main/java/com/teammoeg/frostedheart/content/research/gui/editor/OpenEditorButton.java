@@ -19,26 +19,27 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 import java.util.function.Consumer;
 
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextButton;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.lang.Components;
 
-public class OpenEditorButton<T> extends SimpleTextButton {
+public class OpenEditorButton<T> extends TextButton {
     private final String lbl;
     private final Editor<T> edi;
     private final T val;
     private final Consumer<T> cb;
 
-    public OpenEditorButton(Panel panel, String label, Editor<T> e, T val, Consumer<T> cb) {
-        this(panel, label, e, val, Icon.empty(), cb);
+    public OpenEditorButton(UIElement panel, String label, Editor<T> e, T val, Consumer<T> cb) {
+        this(panel, label, e, val, CIcons.nop(), cb);
     }
 
-    public OpenEditorButton(Panel panel, String label, Editor<T> e, T val, Icon ic, Consumer<T> cb) {
+    public OpenEditorButton(UIElement panel, String label, Editor<T> e, T val, CIcon ic, Consumer<T> cb) {
         super(panel, Components.str(label), ic);
         lbl = label;
         edi = e;
@@ -48,7 +49,7 @@ public class OpenEditorButton<T> extends SimpleTextButton {
 
     @Override
     public void onClicked(MouseButton arg0) {
-        edi.open(this, lbl, val, cb);
+        edi.open(this.getParent(), lbl, val, cb);
     }
 
 

@@ -19,12 +19,12 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.frostedheart.FHMain;
-import dev.ftb.mods.ftblibrary.ui.Panel;
 
 public class RealBox extends LabeledTextBox {
 
-    public RealBox(Panel panel, String lab, double val) {
+    public RealBox(UIElement panel, String lab, double val) {
         super(panel, lab, String.valueOf(val));
     }
 

@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
+import com.teammoeg.chorda.client.FHIconWrapper;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
@@ -33,6 +36,14 @@ public abstract class TechButton extends Button {
         super(panel);
     }
 
+    public TechButton(Panel panel, CIcon i) {
+        super(panel);
+        super.setIcon(new FHIconWrapper(i));
+    }
+
+    public TechButton(Panel panel, Component t, CIcon i) {
+        super(panel, t, new FHIconWrapper(i));
+    }
     public TechButton(Panel panel, Icon i) {
         super(panel);
         super.setIcon(i);
@@ -41,7 +52,6 @@ public abstract class TechButton extends Button {
     public TechButton(Panel panel, Component t, Icon i) {
         super(panel, t, i);
     }
-
     @Override
     public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         GuiHelper.setupDrawing();

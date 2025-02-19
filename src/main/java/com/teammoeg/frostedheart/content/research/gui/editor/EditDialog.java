@@ -19,23 +19,23 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
+import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.input.Key;
 import net.minecraft.ChatFormatting;
 
-public abstract class EditDialog extends Panel {
+public abstract class EditDialog extends Layer {
     EditDialog previous;
     EditorManager sc;
 
-    public EditDialog(Widget panel) {
-        super(panel.getGui());
-        if (panel.getGui() instanceof EditorManager)
-            sc = (EditorManager)panel.getGui();
+    public EditDialog(UIElement panel) {
+        super(panel.getManager().getPrimaryLayer());
+        if (panel.getLayerHolder() instanceof EditorManager)
+            sc = (EditorManager)panel.getLayerHolder();
     }
 
     public void close() {
@@ -69,14 +69,14 @@ public abstract class EditDialog extends Panel {
     }
 
     @Override
-    public boolean keyPressed(Key key) {
+    public boolean onKeyPressed(int key,int scan,int mod) {
         try {
-            if (key.esc()) {
+            if (CInputHelper.isEsc(key)) {
                 close();
                 //this.closeGui(true);
                 return true;
             }
-            return super.keyPressed(key);
+            return super.onKeyPressed(key,scan,mod);
         } catch (Throwable ex) {
             ex.printStackTrace();
             throw new RuntimeException("Error on dialog close", ex);

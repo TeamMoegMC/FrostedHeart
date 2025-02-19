@@ -19,13 +19,15 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.TextBox;
+import com.teammoeg.chorda.client.cui.TextBox;
+import com.teammoeg.chorda.client.cui.UIElement;
+
+
 
 public class LabeledTextBox extends LabeledPane<TextBox> {
     String orig;
 
-    public LabeledTextBox(Panel panel, String lab, String txt) {
+    public LabeledTextBox(UIElement panel, String lab, String txt) {
         super(panel, lab);
         obj = new TextBox(this);
         obj.allowInput();

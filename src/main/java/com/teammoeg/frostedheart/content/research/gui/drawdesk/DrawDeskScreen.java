@@ -38,7 +38,6 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui {
         this.cx = cx;
         p = new DrawDeskPanel(this);
         p.setEnabled(true);
-
     }
 
     @Override
@@ -47,24 +46,15 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui {
             add(p);
         if (r != null && r.isEnabled())
             add(r);
-        if (getDialog() != null)
-            add(getDialog());
+        //if (getDialog() != null)
+        //    add(getDialog());
     }
 
-    public void closeDialog(boolean refresh) {
-        this.dialog = null;
-        r.setEnabled(true);
-        if (refresh)
-            this.refreshWidgets();
-    }
 
     @Override
     public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
     }
 
-    public EditDialog getDialog() {
-        return dialog;
-    }
 
     public DrawingDeskTileEntity getTile() {
         return cx.getBlock();
@@ -84,7 +74,16 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui {
         this.setSize(sw, sh);
         return super.onInit();
     }
+    public void closeDialog(boolean refresh) {
+        this.dialog = null;
+        r.setEnabled(true);
+        if (refresh)
+            this.refreshWidgets();
+    }
 
+    public EditDialog getDialog() {
+        return dialog;
+    }
     public void openDialog(EditDialog dialog, boolean refresh) {
         this.dialog = dialog;
         r.setEnabled(false);
@@ -108,5 +107,7 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui {
         this.refreshWidgets();
 
     }
+
+
 
 }

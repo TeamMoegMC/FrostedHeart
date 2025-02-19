@@ -19,12 +19,15 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
+import com.teammoeg.chorda.client.cui.PrimaryLayer;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.CUIScreen;
+import com.teammoeg.chorda.client.cui.TextField;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchEditorDialog;
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.TextField;
+
 import dev.ftb.mods.ftblibrary.ui.Widget;
 
 public class EditUtils {
@@ -32,16 +35,22 @@ public class EditUtils {
     private EditUtils() {
     }
 
-    public static void editResearch(Widget p, Research r) {
+    public static void editResearch(Widget techTextButton, Research r) {
         if (r != null) {
             r=FHResearch.load(r);
         }
-        new ResearchEditorDialog(p, r, r.getCategory()).open();
+        new ResearchEditorDialog(EditUtils.openEditorScreen(), r, r.getCategory()).open();
     }
+    public static UIElement openEditorScreen() {
+    	CUIScreen wrapper=new CUIScreen();
+    	wrapper.setPrimaryLayer(new PrimaryLayer(wrapper));
+    	
+    	ClientUtils.mc().setScreen(wrapper);
+    	return wrapper.getPrimaryLayer();
+    }
+    public static TextField getTitle(UIElement p, String title) {
 
-    public static TextField getTitle(Panel p, String title) {
-
-        return new TextField(p).setMaxWidth(200).setText(title).setColor(Color4I.WHITE);
+        return new TextField(p).setMaxWidth(200).setText(title).setColor(0xFFFFFFFF);
     }
 
     public static void saveResearch(Research r) {
