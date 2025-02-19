@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.widget.IconButton;
+import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -15,7 +16,7 @@ import net.minecraft.util.FormattedCharSequence;
 public abstract class TextButton extends Button {
 	public TextButton(UIElement panel, Component txt, CIcon icon) {
 		super(panel, txt, icon);
-		setWidth(panel.getFont().width(txt) + (hasIcon() ? 28 : 8));
+		setWidth(panel.getFont().width(txt)+(txt==Components.empty()?0:8) + (hasIcon() ? 20 : 0));
 		setHeight(20);
 	}
 

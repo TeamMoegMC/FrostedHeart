@@ -32,6 +32,16 @@ public class LayerScrollBar extends ScrollBar {
 		throw new UnsupportedOperationException();
 	}
 	@Override
+	public double getPage() {
+		return isVertical ? layer.getHeight() :  layer.getWidth();
+	}
+
+	@Override
+	public void setPageStep(double s) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public double getMax() {
 		return isVertical ? layer.getContentHeight() - layer.getHeight() : layer.getContentWidth() - layer.getWidth();
 	}

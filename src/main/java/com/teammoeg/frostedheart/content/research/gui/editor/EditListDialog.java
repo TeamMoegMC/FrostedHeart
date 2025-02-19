@@ -123,8 +123,8 @@ public class EditListDialog<T> extends EditDialog {
         configPanel.alignWidgets();
         scroll.setPosAndSize(width - 16, 20, 16, height - 20);
 
-        buttonAccept.setPos(width - 18, 2);
-        buttonCancel.setPos(width - 38, 2);
+        buttonAccept.setPos(width - 21, 2);
+        buttonCancel.setPos(width - 42, 2);
     }
 
     @Override
@@ -162,7 +162,7 @@ public class EditListDialog<T> extends EditDialog {
 
         @Override
         public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-            boolean mouseOver = getMouseY() >= 20 && isMouseOver();
+            boolean mouseOver = isMouseOver();
 
             if (mouseOver) {
                matrixStack.fill(x, y, x+w, y+h, 0x20FFFFFF);
@@ -229,7 +229,7 @@ public class EditListDialog<T> extends EditDialog {
         public void onClicked(MouseButton button) {
             CInputHelper.playClickSound();
 
-            if (getMouseX() >= getX() + width - 19) {
+            if (getMouseX() >=width - 19) {
                 list.remove(index);
                 modified = true;
                 ((Layer)parent).refresh();

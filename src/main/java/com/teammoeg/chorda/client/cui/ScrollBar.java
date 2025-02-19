@@ -14,9 +14,12 @@ import net.minecraft.util.Mth;
 public class ScrollBar extends UIWidget {
 	@Getter
 	final boolean isVertical;
+	@Getter
 	private final int scrollBarSize;
 	private double value = 0;
 	private double step = 20;
+	@Getter
+	private double page=200;
 	private double delta = Integer.MAX_VALUE;
 	@Getter
 	private double min = 0;
@@ -46,15 +49,30 @@ public class ScrollBar extends UIWidget {
 	public void setScrollStep(double s) {
 		step = Math.max(0D, s);
 	}
-
-	public int getScrollBarSize() {
-		return scrollBarSize;
+	public void setPageStep(double s) {
+		page = Math.max(0D, s);
 	}
-
 	@Override
 	public boolean onMousePressed(MouseButton button) {
 		if (isMouseOver()) {
-			delta = (isVertical ? (getMouseY() - (lerpValue(getHeight() - getScrollBarSize()))) : (getMouseX() - ( lerpValue(getWidth() - getScrollBarSize()))));
+			int scrollBarSize=getScrollBarSize();
+			if(isVertical) {
+				int barPos=(int) (lerpValue(height - scrollBarSize-2)+1);
+				if(getMouseY()<barPos) {
+					this.setValue(this.getValue()-getPage());
+				}else if(getMouseY()>barPos+scrollBarSize) {
+					this.setValue(this.getValue()+getPage());
+				}else
+					delta =getMouseY();
+			}else {
+				int barPos=(int) (lerpValue(width - scrollBarSize-2)+1);
+				if(getMouseX()<barPos) {
+					this.setValue(this.getValue()-getPage());
+				}else if(getMouseX()>barPos+scrollBarSize) {
+					this.setValue(this.getValue()+getPage());
+				}else
+					delta=getMouseX();
+			}
 			return true;
 		}
 
@@ -93,9 +111,9 @@ public class ScrollBar extends UIWidget {
 			if (delta != Integer.MIN_VALUE) {
 				if (CInputHelper.isMouseLeftDown()) {
 					if (isVertical) {
-						v = (getMouseY() - (delta)) * getMax() / (double) (height - scrollBarSize);
+						v = (getMouseY() - (delta)) * (getMax()-getMin()) / (double) (height - scrollBarSize);
 					} else {
-						v = (getMouseX() - (delta)) * getMax() / (double) (width - scrollBarSize);
+						v = (getMouseX() - (delta)) * (getMax()-getMin()) / (double) (width - scrollBarSize);
 					}
 				} else {
 					delta = Integer.MIN_VALUE;
@@ -109,9 +127,9 @@ public class ScrollBar extends UIWidget {
 
 		if (scrollBarSize > 0) {
 			if (isVertical) {
-				drawScrollBar(graphics, x, (int) (y + lerpValue(height - scrollBarSize)), width, scrollBarSize);
+				drawScrollBar(graphics, x+1, (int) (y + lerpValue(height - scrollBarSize-2)+1), width-2, scrollBarSize);
 			} else {
-				drawScrollBar(graphics, (int) (x + lerpValue(width - scrollBarSize)), y, scrollBarSize, height);
+				drawScrollBar(graphics, (int) (x + lerpValue(width - scrollBarSize-2)+1), y+1, scrollBarSize, height-2);
 			}
 		}
 	}

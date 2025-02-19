@@ -76,14 +76,14 @@ public abstract class Layer extends UIWidget {
 		if(isHorizontal) {
 			for(UIWidget elm:elements) {
 				elm.setX(contentWidth);
-				contentWidth+=elm.getWidth();
+				contentWidth+=elm.getWidth()+2;
 				contentHeight=Math.max(elm.getHeight(), contentHeight);
 			}
 			return contentWidth;
 		}
 		for(UIWidget elm:elements) {
 			elm.setY(contentHeight);
-			contentHeight+=elm.getHeight();
+			contentHeight+=elm.getHeight()+2;
 			contentWidth=Math.max(elm.getWidth(), contentWidth);
 		}
 		return contentHeight;
