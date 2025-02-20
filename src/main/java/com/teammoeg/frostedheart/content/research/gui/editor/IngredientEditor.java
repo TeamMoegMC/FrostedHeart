@@ -19,16 +19,18 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 
+import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.CIconFTBWrapper;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Widget;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
@@ -52,8 +54,8 @@ import java.util.stream.Stream;
 
 public class IngredientEditor extends BaseEditDialog {
     public static final Editor<Ingredient> EDITOR_JSON = (p, l, v, c) -> EditPrompt.JSON_EDITOR.open(p, l, v == null ? null : v.toJson(), e -> c.accept(Ingredient.fromJson(e)));
-    public static final Editor<IngredientWithSize> EDITOR = (p, l, v, c) -> new IngredientEditor(p, l, v, c).open();
-    public static final Editor<List<IngredientWithSize>> LIST_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EDITOR, IngredientEditor::getDesc, e -> CIcons.getIcon(e.getBaseIngredient(),e.getCount()), e -> c.accept(new ArrayList<>(e))).open();
+    public static final Editor<Pair<Ingredient,Integer>> EDITOR = (p, l, v, c) -> new IngredientEditor(p, l, v, c).open();
+    public static final Editor<List<Pair<Ingredient,Integer>>> LIST_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EDITOR, IngredientEditor::getDesc, e -> CIcons.getIcon(e.getFirst(),e.getSecond()), e -> c.accept(new ArrayList<>(e))).open();
 
     public static final Editor<ItemValue> EDITOR_ITEMLIST = (p, l, v, c) -> SelectStackDialog.EDITOR.open(p, l, (v == null || v.item == null) ? new ItemStack(Items.AIR) : v.item, s -> {
         s = s.copy();
@@ -165,28 +167,28 @@ public class IngredientEditor extends BaseEditDialog {
         igd.open();
     };
 
-    String label;
+    Component label;
 
-    Consumer<IngredientWithSize> callback;
+    Consumer<Pair<Ingredient,Integer>> callback;
     int cnt;
     Ingredient orig;
     NumberBox count;
 
-    public IngredientEditor(UIWidget panel, String label, IngredientWithSize i, Consumer<IngredientWithSize> callback) {
+    public IngredientEditor(UIWidget panel, Component label, Pair<Ingredient,Integer> i, Consumer<Pair<Ingredient,Integer>> callback) {
         super(panel);
         this.label = label;
         if (i != null) {
-            this.cnt = i.getCount();
-            this.orig = i.getBaseIngredient();
+            this.cnt = i.getSecond();
+            this.orig = i.getFirst();
         } else {
             this.cnt = 1;
         }
         this.callback = callback;
-        count = new NumberBox(this, "Count", cnt);
+        count = new NumberBox(this, Components.str("Count"), cnt);
     }
 
-    public static String getDesc(IngredientWithSize w) {
-        return getODesc(w.getBaseIngredient()) + " x " + w.getCount();
+    public static String getDesc(Pair<Ingredient,Integer> w) {
+        return getODesc(w.getFirst()) + " x " + w.getSecond();
     }
 
     public static String getODesc(Ingredient i) {
@@ -223,17 +225,21 @@ public class IngredientEditor extends BaseEditDialog {
 
     @Override
     public void addUIElements() {
-        add(new OpenEditorButton<>(this, "Edit Ingredient", EDITOR_INGREDIENT, orig, orig == null ? CIcons.nop() : CIcons.getIcon(orig), e -> orig = e));
+        add(new OpenEditorButton<>(this, Components.str("Edit Ingredient"), EDITOR_INGREDIENT, orig, orig == null ? CIcons.nop() : CIcons.getIcon(orig), e -> orig = e));
         if (orig != null) {
-            if (orig.values.length == 1)
-                add(new OpenEditorButton<>(this, "Change to Multiple", EDITOR_MULTIPLE, orig, e -> orig = e));
-            else
-                add(new OpenEditorButton<>(this, "Change to Single", EDITOR_SIMPLE, orig, e -> orig = e));
+            if (orig.values.length == 1) {
+            	if(!(orig.values[0] instanceof TagValue))
+            		add(new OpenEditorButton<>(this, Components.str("Change to Tag"), TAG_EDITOR, orig, e -> orig = e));
+               if(!(orig.values[0] instanceof ItemValue))
+            	   add(new OpenEditorButton<>(this, Components.str("Change to Item"), ITEM_EDITOR, orig, e -> orig = e));
+                add(new OpenEditorButton<>(this, Components.str("Change to Multiple"), EDITOR_MULTIPLE, orig, e -> orig = e));
+            }else
+                add(new OpenEditorButton<>(this, Components.str("Change to Single"), EDITOR_SIMPLE, orig, e -> orig = e));
             if (!(orig instanceof PartialNBTIngredient))
-                add(new OpenEditorButton<>(this, "Add NBT", NBT_EDITOR, orig, e -> orig = e));
+                add(new OpenEditorButton<>(this, Components.str("Add NBT"), NBT_EDITOR, orig, e -> orig = e));
         }
 
-        add(new OpenEditorButton<>(this, "Edit as JSON", EDITOR_JSON, orig, e -> orig = e));
+        add(new OpenEditorButton<>(this, Components.str("Edit as JSON"), EDITOR_JSON, orig, e -> orig = e));
         add(count);
     }
 
@@ -241,7 +247,7 @@ public class IngredientEditor extends BaseEditDialog {
     public void onClose() {
         cnt = (int) count.getNum();
         if (orig != null)
-            callback.accept(new IngredientWithSize(orig, cnt));
+            callback.accept(Pair.of(orig, cnt));
     }
 
 

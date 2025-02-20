@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
+import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -33,6 +34,7 @@ import com.teammoeg.frostedheart.util.client.Lang;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.network.chat.Component;
 
 public class ItemClue extends Clue {
@@ -43,20 +45,20 @@ public class ItemClue extends Clue {
     ).apply(t, ItemClue::new));
 
     boolean consume;
-    IngredientWithSize stack;
+    Pair<Ingredient,Integer> stack;
 
     ItemClue() {
         super();
     }
 
-    public ItemClue(BaseData data, boolean consume, IngredientWithSize stack) {
+    public ItemClue(BaseData data, boolean consume, Pair<Ingredient,Integer> stack) {
         super(data);
         this.consume = consume;
         this.stack = stack;
     }
 
 
-    public ItemClue(String name, String desc, String hint, float contribution, IngredientWithSize stack) {
+    public ItemClue(String name, String desc, String hint, float contribution, Pair<Ingredient,Integer> stack) {
         super(name, desc, hint, contribution);
         this.stack = stack;
     }
@@ -68,9 +70,9 @@ public class ItemClue extends Clue {
     @Override
     public String getBrief() {
     	String stackDesc="none";
-        if (stack!=null&&stack.hasNoMatchingItems())
-        	stackDesc=stack.getMatchingStacks()[0].getHoverName().plainCopy()
-                .append(Components.str(" x" + stack.getCount())).getString();
+        if (stack!=null&&!stack.getFirst().isEmpty())
+        	stackDesc=stack.getFirst().getItems()[0].getHoverName().plainCopy()
+                .append(Components.str(" x" + stack.getSecond())).getString();
     	
         if (consume)
             return "Submit item " + stackDesc;
@@ -82,10 +84,10 @@ public class ItemClue extends Clue {
         Component itc = super.getDescription(parent);
         if (itc != null || stack == null)
             return itc;
-        if (stack.hasNoMatchingItems())
+        if (stack.getFirst().isEmpty())
             return null;
-        return stack.getMatchingStacks()[0].getHoverName().plainCopy()
-                .append(Components.str(" x" + stack.getCount()));
+        return stack.getFirst().getItems()[0].getHoverName().plainCopy()
+                .append(Components.str(" x" + stack.getSecond()));
     }
 
     @Override
@@ -109,10 +111,10 @@ public class ItemClue extends Clue {
     public int test(TeamDataHolder t, Research r, ItemStack stack) {
         TeamResearchData trd = t.getData(FHSpecialDataTypes.RESEARCH_DATA);
         if (!trd.isClueCompleted(r, this))
-            if (this.stack.test(stack)) {
+            if (this.stack!=null&&this.stack.getFirst().test(stack)) {
                 trd.setClueCompleted(t, r, 0, consume);
                 if (consume)
-                    return this.stack.getCount();
+                    return this.stack.getSecond();
             }
         return 0;
     }

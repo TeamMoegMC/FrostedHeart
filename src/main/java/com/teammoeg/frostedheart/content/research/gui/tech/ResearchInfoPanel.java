@@ -20,6 +20,8 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+
+import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
@@ -41,6 +43,7 @@ import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.item.crafting.Ingredient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,8 +71,8 @@ public class ResearchInfoPanel extends Panel {
         FramedPanel prl = new FramedPanel(this, fp -> {
             int ioffset = 4;
             int xoffset = 4;
-            for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
-                if (ingredient.getMatchingStacks().length != 0) {
+            for (Pair<Ingredient, Integer> ingredient : detailPanel.research.getRequiredItems()) {
+                if (!ingredient.getFirst().isEmpty()) {
                     RequirementSlot button = new RequirementSlot(fp, ingredient);
 
                     button.setPosAndSize(xoffset, ioffset, 16, 16);

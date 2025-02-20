@@ -22,9 +22,11 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.frostedheart.FHMain;
 
+import net.minecraft.network.chat.Component;
+
 public class RealBox extends LabeledTextBox {
 
-    public RealBox(UIWidget panel, String lab, double val) {
+    public RealBox(UIWidget panel, Component lab, double val) {
         super(panel, lab, String.valueOf(val));
     }
 

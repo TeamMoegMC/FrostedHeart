@@ -4,7 +4,7 @@ package com.teammoeg.chorda.client.cui;
 public class LayerScrollBar extends ScrollBar {
 	private final Layer layer;
 
-	public LayerScrollBar(Layer parent, boolean isVertical, Layer affected) {
+	public LayerScrollBar(UIWidget parent, boolean isVertical, Layer affected) {
 		super(parent, isVertical, 0);
 		layer = affected;
 	}

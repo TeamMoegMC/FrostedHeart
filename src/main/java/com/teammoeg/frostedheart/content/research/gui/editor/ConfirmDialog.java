@@ -28,6 +28,8 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 
+import net.minecraft.network.chat.Component;
+
 import java.util.function.Consumer;
 
 public class ConfirmDialog extends BaseEditDialog {
@@ -38,7 +40,7 @@ public class ConfirmDialog extends BaseEditDialog {
     Consumer<Boolean> fin;
     boolean selected = false;
 
-    public ConfirmDialog(UIWidget panel, String label, boolean exp, Consumer<Boolean> onFinished) {
+    public ConfirmDialog(UIWidget panel, Component label, boolean exp, Consumer<Boolean> onFinished) {
         super(panel);
         tf = new TextField(this).setColor(0xFFFF0000).setMaxWidth(200).setText(label);
         fin = onFinished;

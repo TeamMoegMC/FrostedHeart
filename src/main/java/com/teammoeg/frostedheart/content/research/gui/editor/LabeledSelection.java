@@ -46,11 +46,11 @@ public class LabeledSelection<R> extends LabeledPane<TextButton> {
 
     int sel;
 
-    public LabeledSelection(UIWidget panel, String lab, R val, Collection<R> aobjs, Function<R, String> atostr) {
+    public LabeledSelection(UIWidget panel, Component lab, R val, Collection<R> aobjs, Function<R, String> atostr) {
         this(panel, lab, val, new ArrayList<>(aobjs), atostr);
     }
 
-    public LabeledSelection(UIWidget panel, String lab, R val, List<R> aobjs, Function<R, String> atostr) {
+    public LabeledSelection(UIWidget panel, Component lab, R val, List<R> aobjs, Function<R, String> atostr) {
         super(panel, lab);
         this.objs = aobjs;
         this.tostr = atostr;
@@ -90,19 +90,19 @@ public class LabeledSelection<R> extends LabeledPane<TextButton> {
         obj.setHeight(20);
     }
 
-    public LabeledSelection(UIWidget panel, String lab, R val, R[] aobjs, Function<R, String> atostr) {
+    public LabeledSelection(UIWidget panel, Component lab, R val, R[] aobjs, Function<R, String> atostr) {
         this(panel, lab, val, Arrays.asList(aobjs), atostr);
     }
 
-    public static LabeledSelection<Boolean> createBool(UIWidget p, String lab, boolean val) {
+    public static LabeledSelection<Boolean> createBool(UIWidget p, Component lab, boolean val) {
         return new LabeledSelection<>(p, lab, val, Arrays.asList(true, false), String::valueOf);
     }
 
-    public static <T extends Enum<T>> LabeledSelection<T> createEnum(UIWidget p, String lab, Class<T> en, T val) {
+    public static <T extends Enum<T>> LabeledSelection<T> createEnum(UIWidget p, Component lab, Class<T> en, T val) {
         return new LabeledSelection<>(p, lab, val, Arrays.asList(en.getEnumConstants()), Enum::name);
     }
 
-    public static LabeledSelection<String> createCriterion(UIWidget p, String lab, ResourceLocation adv, String val, Consumer<String> cb) {
+    public static LabeledSelection<String> createCriterion(UIWidget p, Component lab, ResourceLocation adv, String val, Consumer<String> cb) {
         ClientAdvancements cam = ClientUtils.mc().player.connection.getAdvancements();
         Advancement advx = cam.getAdvancements().get(adv);
         List<String> cit = new ArrayList<>();

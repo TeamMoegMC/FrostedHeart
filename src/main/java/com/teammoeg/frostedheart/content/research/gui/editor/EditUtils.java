@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchEditorDialog;
 
 import dev.ftb.mods.ftblibrary.ui.Widget;
+import net.minecraft.network.chat.Component;
 
 public class EditUtils {
 
@@ -51,7 +52,10 @@ public class EditUtils {
 
         return new TextField(p).setMaxWidth(200).setText(title).setColor(0xFFFFFFFF);
     }
+    public static TextField getTitle(UIWidget p, Component title) {
 
+        return new TextField(p).setMaxWidth(200).setText(title).setColor(0xFFFFFFFF);
+    }
     public static void saveResearch(Research r) {
         r.doIndex();
         FHResearch.save(r);

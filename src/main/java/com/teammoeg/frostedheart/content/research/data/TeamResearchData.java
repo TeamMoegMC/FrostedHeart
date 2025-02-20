@@ -27,6 +27,7 @@ import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.util.IERecipeUtils;
+import com.teammoeg.chorda.util.RecipeUtils;
 import com.teammoeg.chorda.util.struct.OptionalLazy;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
@@ -268,7 +269,7 @@ public class TeamResearchData implements SpecialData {
 		}
 		if (!this.hasInsight(research.getInsight()))
 			return false;
-		if (!research.getRequiredItems().isEmpty() && !IERecipeUtils.costItems(player, research.getRequiredItems()))
+		if (!research.getRequiredItems().isEmpty() && !RecipeUtils.costItems(player, research.getRequiredItems()))
 			return false;
 		this.costInsight(team,research.getInsight());
 		getData(research).setActive();

@@ -22,9 +22,11 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.frostedheart.FHMain;
 
+import net.minecraft.network.chat.Component;
+
 public class NumberBox extends LabeledTextBox {
 
-    public NumberBox(UIWidget panel, String lab, long val) {
+    public NumberBox(UIWidget panel, Component lab, long val) {
         super(panel, lab, String.valueOf(val));
     }
 

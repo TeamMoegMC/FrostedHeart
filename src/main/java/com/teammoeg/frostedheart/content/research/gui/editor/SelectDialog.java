@@ -77,7 +77,7 @@ public class SelectDialog<T> extends EditDialog {
     public LayerScrollBar scroll;
     public SelectorList rl;
     public TextBox searchBox;
-    String lbl;
+    Component lbl;
     T val;
     Consumer<T> cb;
     Supplier<Collection<T>> fetcher;
@@ -85,21 +85,21 @@ public class SelectDialog<T> extends EditDialog {
     Function<T, String[]> tosearch;
     Function<T, CIcon> toicon;
 
-    public SelectDialog(UIWidget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
+    public SelectDialog(UIWidget panel, Component lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
         this(panel, lbl, val, cb, fetcher, e -> Components.str(e.toString()), e -> new String[]{e.toString()}, e -> CIcons.nop());
     }
 
-    public SelectDialog(UIWidget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+    public SelectDialog(UIWidget panel, Component lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
                         Function<T, Component> tostr) {
         this(panel, lbl, val, cb, fetcher, tostr, e -> new String[]{tostr.apply(val).getString()}, e -> CIcons.nop());
     }
 
-    public SelectDialog(UIWidget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+    public SelectDialog(UIWidget panel, Component lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
                         Function<T, Component> tostr, Function<T, String[]> tosearch) {
         this(panel, lbl, val, cb, fetcher, tostr, tosearch, e -> CIcons.nop());
     }
 
-    public SelectDialog(UIWidget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+    public SelectDialog(UIWidget panel, Component lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
                         Function<T, Component> tostr, Function<T, String[]> tosearch, Function<T, CIcon> toicon) {
         super(panel);
         this.lbl = lbl;
@@ -129,14 +129,13 @@ public class SelectDialog<T> extends EditDialog {
         };
         searchBox.ghostText = "Search...";
         searchBox.setFocused(true);
-        rl.setPosAndSize(5, 25, 360, 270);
+        rl.setPosAndSize(5, 25, width-18, height-30);
         scroll = new LayerScrollBar(this, rl);
         add(rl);
         add(scroll);
         add(searchBox);
-        searchBox.setPosAndSize(0, 0, width, 20);
-        scroll.setPos(370, 20);
-        scroll.setSize(8, height);
+        searchBox.setPosAndSize(5, 5, width-12, 18);
+        scroll.setPosAndSize(width-12, 25,8, height-25);
 
     }
 
@@ -229,7 +228,7 @@ public class SelectDialog<T> extends EditDialog {
                 }
                 SelectorButton button = new SelectorButton(this, r);
                 add(button);
-                button.setPosAndSize(4, offset, width, 16);
+                button.setPosAndSize(2, offset, width-4, 16);
                 offset += 18;
             }
             //scroll.setMaxValue(offset);

@@ -20,6 +20,8 @@
 package com.teammoeg.frostedheart.content.research.research;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+
+import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.client.icon.CIcons;
@@ -41,6 +43,7 @@ import dev.ftb.mods.ftblibrary.icon.Icon;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -81,7 +84,7 @@ public class Research implements FHRegisteredItem {
     /**
      * The required items.<br>
      */
-    List<IngredientWithSize> requiredItems = new ArrayList<>();
+    List<Pair<Ingredient,Integer>> requiredItems = new ArrayList<>();
     List<IResearchNumber> requiredItemsCountOverride = new ArrayList<>();
     /**
      * The name.<br>
@@ -137,7 +140,7 @@ public class Research implements FHRegisteredItem {
         this.icon = CIcons.nop();
     }
 
-    public Research(CIcon icon, ResearchCategory category, List<String> parents, List<Clue> clues, List<IngredientWithSize> requiredItems, Optional<List<Effect>> effects, String name,
+    public Research(CIcon icon, ResearchCategory category, List<String> parents, List<Clue> clues, List<Pair<Ingredient,Integer>> requiredItems, Optional<List<Effect>> effects, String name,
                     List<String> desc, List<String> fdesc, boolean[] flags, int points,int insight) {
         super();
         this.icon = icon;
@@ -237,7 +240,7 @@ public class Research implements FHRegisteredItem {
      *
      * @param ingredients the ingredients<br>
      */
-    public void attachRequiredItem(IngredientWithSize... ingredients) {
+    public void attachRequiredItem(@SuppressWarnings("unchecked") Pair<Ingredient,Integer>... ingredients) {
         requiredItems.addAll(Arrays.asList(ingredients));
     }
 
@@ -500,7 +503,7 @@ public class Research implements FHRegisteredItem {
      *
      * @return required items<br>
      */
-    public List<IngredientWithSize> getRequiredItems() {
+    public List<Pair<Ingredient,Integer>> getRequiredItems() {
         return Collections.unmodifiableList(requiredItems);
     }
 

@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import com.teammoeg.chorda.client.cui.UIWidget;
-import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -32,7 +31,7 @@ public abstract class BaseEditDialog extends EditDialog {
         setWidth(400);
     }
 
-    @Override
+	@Override
     public void alignWidgets() {
         this.setHeight(super.align(false));
     }

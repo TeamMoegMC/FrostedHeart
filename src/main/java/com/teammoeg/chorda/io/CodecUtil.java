@@ -168,7 +168,7 @@ public class CodecUtil {
 		}
 		return DataResult.error(()->"Not a ingredient");
 	},Ingredient::toNetwork,Ingredient::fromNetwork);
-	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=PacketOrSchemaCodec.create(ExtraCodecs.JSON,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
+	public static final Codec<Pair<Ingredient,Integer>> INGREDIENT_SIZE_CODEC=pairCodec("base_ingredient",INGREDIENT_CODEC,"count", Codec.INT);
 	public static final Codec<MobEffectInstance> MOB_EFFECT_CODEC = CompoundTag.CODEC.xmap(o->MobEffectInstance.load(o),t->t.save(new CompoundTag()));
 	public static final Codec<boolean[]> BOOLEANS = Codec.BYTE.xmap(SerializeUtil::readBooleans, SerializeUtil::writeBooleans);
 	/**

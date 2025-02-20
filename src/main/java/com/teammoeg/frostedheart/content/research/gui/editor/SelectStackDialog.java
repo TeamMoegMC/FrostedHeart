@@ -222,7 +222,7 @@ public class SelectStackDialog<T> extends EditDialog {
     });
     public static Editor<ItemStack> EDITOR = (p, l, v, c) -> new SelectStackDialog<ItemStack>(p, l, v, c,itemMode,ALL_ITEM,INVENTORY,BLOCKS).open();
     public static final Editor<Collection<ItemStack>> STACK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, new ItemStack(Items.AIR), EDITOR, SelectStackDialog::fromItemStack, CIcons::getIcon, c).open();
-    public static Editor<Block> EDITOR_BLOCK = (p, l, v, c) -> new SelectStackDialog<ItemStack>(p, l + " (Blocks only)", new ItemStack(v), e -> {
+    public static Editor<Block> EDITOR_BLOCK = (p, l, v, c) -> new SelectStackDialog<ItemStack>(p, Components.empty().append(l).append(" (Blocks only)"), new ItemStack(v), e -> {
         Block b = Block.byItem(e.getItem());
         if (b != Blocks.AIR)
             c.accept(b);
@@ -241,12 +241,13 @@ public class SelectStackDialog<T> extends EditDialog {
     private T current;
 
     @SafeVarargs
-	public SelectStackDialog(UIWidget p, String label, T orig, Consumer<T> cb,ResourceMode<T> mode,ResourceLister<T>...listers) {
+	public SelectStackDialog(UIWidget p, Component label, T orig, Consumer<T> cb,ResourceMode<T> mode,ResourceLister<T>...listers) {
         super(p);
-        setSize(211, 150);
+        setSize(240, 150);
         callback = cb;
-        current = orig == null ? type.getDefaultValue() : type.copy(orig);
         this.type=mode;
+        current = orig == null ? type.getDefaultValue() : type.copy(orig);
+        
         this.modes.addAll(Arrays.asList(listers));
         int bsize = width / 2 - 10;
 
@@ -289,7 +290,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
             @Override
             public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-                CGuiHelper.drawUIBackground(matrixStack, x, y, w, h);
+            	CGuiHelper.drawLayerBackground(matrixStack, x, y, w, h);
             }
 
 			@Override
@@ -318,14 +319,14 @@ public class SelectStackDialog<T> extends EditDialog {
         tabs = new Layer(this) {
             @Override
             public void addUIElements() {
-                add(new ButtonSwitchMode(this));
-                add(new ButtonEditData(this));
+                add(new ButtonSwitchMode(tabs));
+                add(new ButtonEditData(tabs));
 
-                add(new ButtonCount(this));
+                add(new ButtonCount(tabs));
 
 
-                add(new ButtonNBT(this));
-                add(new ButtonCaps(this));
+                add(new ButtonNBT(tabs));
+                add(new ButtonCaps(tabs));
             }
 
             @Override
@@ -333,13 +334,13 @@ public class SelectStackDialog<T> extends EditDialog {
                 for (UIWidget widget : super.elements) {
                     widget.setSize(20, 20);
                 }
-
-                setHeight(align(true));
+                setWidth(20);
+                setHeight(align(false));
             }
 
         };
 
-        tabs.setPosAndSize(0, 8, 20, 0);
+        tabs.setPosAndSize(5, 8, 20, 100);
 
         updateItemWidgets(Collections.emptyList());
     }
@@ -424,8 +425,9 @@ public class SelectStackDialog<T> extends EditDialog {
         panelStacks.getElements().clear();
         for(UIWidget elm:items)
         	panelStacks.add((UIWidget)elm);
-        scrollBar.setPosAndSize(panelStacks.getX() + panelStacks.getWidth() + 25, panelStacks.getY() - 1, 16, panelStacks.getHeight() + 2);
+        scrollBar.setPosAndSize(panelStacks.getX() + panelStacks.getWidth() +3, panelStacks.getY() - 1, 16, panelStacks.getHeight() + 2);
         scrollBar.setValue(0);
+        
         //scrollBar.setMaxValue(1 + Mth.ceil(panelStacks.getWidgets().size() / 9F) * 19);
     }
 
@@ -441,7 +443,8 @@ public class SelectStackDialog<T> extends EditDialog {
             final CompoundTag nbt = type.save(current);
 
 
-            EditPrompt.open(this, "caps", fromNBT(nbt.get("ForgeCaps")), s -> {
+            EditPrompt.open(this, Components.str("capability"), fromNBT(nbt.get("ForgeCaps")), s -> {
+            	
                 if (s == null || s.isEmpty() || s.equals("null")) {
                     nbt.remove("ForgeCaps");
                 } else {
@@ -465,7 +468,7 @@ public class SelectStackDialog<T> extends EditDialog {
         @Override
         public void onClicked(MouseButton button) {
         	CInputHelper.playClickSound();
-            EditPrompt.open(this, "count", String.valueOf(type.getCount(current)), val -> type.setCount(current,Integer.parseInt(val)));
+            EditPrompt.open(this, Components.str("Count"), String.valueOf(type.getCount(current)), val -> type.setCount(current,Integer.parseInt(val)));
         }
     }
 
@@ -488,7 +491,7 @@ public class SelectStackDialog<T> extends EditDialog {
         @Override
         public void onClicked(MouseButton button) {
         	CInputHelper.playClickSound();
-            EditPrompt.open(this, "Data", type.save(current).toString(), s -> {
+            EditPrompt.open(this, Components.str("Data"), type.save(current).toString(), s -> {
                 try {
                     current = type.load(TagParser.parseTag(s));
                 } catch (CommandSyntaxException e) {
@@ -507,7 +510,7 @@ public class SelectStackDialog<T> extends EditDialog {
         @Override
         public void onClicked(MouseButton button) {
         	CInputHelper.playClickSound();
-            EditPrompt.open(this, "nbt", fromNBT(type.getTag(current)), s -> {
+            EditPrompt.open(this, Components.str("NBTag"), fromNBT(type.getTag(current)), s -> {
                 try {
                     type.setTag(current,TagParser.parseTag(s));
                 } catch (CommandSyntaxException e) {

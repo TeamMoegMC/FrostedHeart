@@ -68,7 +68,7 @@ public class ResearchHierarchyPanel extends Panel {
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add parent
                         Research r = researchPanel.selectedResearch;
-                        ResearchEditorDialog.RESEARCH_LIST.open(EditUtils.openEditorScreen(), "Edit parents", r.getParents(), s -> {
+                        ResearchEditorDialog.RESEARCH_LIST.open(EditUtils.openEditorScreen(), Components.str("Edit parents"), r.getParents(), s -> {
                             try {
                                 //System.out.println(s);
                                 r.setParents(s.stream().map(Research::getId).collect(Collectors.toList()));
@@ -88,7 +88,7 @@ public class ResearchHierarchyPanel extends Panel {
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add children
                         Research r = researchPanel.selectedResearch;
-                        ResearchEditorDialog.RESEARCH_LIST.open(EditUtils.openEditorScreen(), "Edit children", r.getChildren(), s -> {
+                        ResearchEditorDialog.RESEARCH_LIST.open(EditUtils.openEditorScreen(), Components.str("Edit children"), r.getChildren(), s -> {
                             r.getChildren().forEach(e -> {
                                 e.removeParent(r);
                                 EditUtils.saveResearch(e);

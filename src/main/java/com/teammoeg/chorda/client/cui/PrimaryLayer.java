@@ -107,18 +107,10 @@ public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
 	public LayerHolder getLayerHolder() {
 		return this;
 	}
-
-	/**
-	 * @return if the GUI should render a blur effect behind it
-	 */
 	@Override
 	public boolean shouldRenderGradient() {
 		return hasBackGradient;
 	}
-
-	/**
-	 * @param renderBlur sets if the GUI should render a blur effect behind it
-	 */
 	public void setRenderGradient(boolean renderGradient) {
 		this.hasBackGradient = renderGradient;
 	}
@@ -178,17 +170,18 @@ public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
 	public final void updateGui(double mx, double my, float pt) {
 
 		super.updateRenderInfo(mx, my, pt);
+
+
+	}
+	public void onBeforeRender() {
 		if (refreshRequested) {
-			
-			System.out.println("refresh requested");
 			refresh();
 			refreshRequested = false;
 		}
-
 	}
-
 	@Override
 	public final void render(GuiGraphics graphics, int x, int y, int w, int h) {
+		
 		super.render(graphics, x, y, w, h);
 	}
 
@@ -278,8 +271,6 @@ public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
 
 	@Override
 	public void refresh() {
-
-		Window win = ClientUtils.mc().getWindow();
 		
 		super.refresh();
 		this.width=this.getContentWidth();
@@ -316,5 +307,6 @@ public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
 		closeGui(true);
 		
 	}
+
 
 }

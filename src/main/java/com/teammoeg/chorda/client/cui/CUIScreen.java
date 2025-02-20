@@ -40,7 +40,7 @@ public class CUIScreen extends Screen implements CUIScreenManager {
 
 	@Override
 	public boolean mouseClicked(double x, double y, int button) {
-		primaryLayer.updateGui(x, y, -1);
+		primaryLayer.updateGui(x-this.x, y-this.y, -1);
 
 		if (button == GLFW.GLFW_MOUSE_BUTTON_4) {
 			primaryLayer.back();
@@ -53,7 +53,7 @@ public class CUIScreen extends Screen implements CUIScreenManager {
 
 	@Override
 	public boolean mouseReleased(double x, double y, int button) {
-		primaryLayer.updateGui(x, y, -1);
+		primaryLayer.updateGui(x-this.x, y-this.y, -1);
 		primaryLayer.onMouseReleased(MouseButton.of(button));
 		return super.mouseReleased(x, y, button);
 	}
@@ -104,19 +104,20 @@ public class CUIScreen extends Screen implements CUIScreenManager {
 	}
 
 	List<Component> display = new ArrayList<>();
-
+	int x,y;
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 
 		renderBackground(graphics);
 		CGuiHelper.resetGuiDrawing();
 		Window win = super.minecraft.getWindow();
-		int x = (win.getGuiScaledWidth() - primaryLayer.width) / 2;
-		int y = (win.getGuiScaledHeight() - primaryLayer.height) / 2;
+		primaryLayer.onBeforeRender();
+		x = (win.getGuiScaledWidth() - primaryLayer.width) / 2;
+		y = (win.getGuiScaledHeight() - primaryLayer.height) / 2;
 		primaryLayer.updateGui(mouseX - x, mouseY - y, partialTicks);
 		primaryLayer.updateMouseOver();
-		var w = primaryLayer.width;
-		var h = primaryLayer.height;
+		int w = primaryLayer.width;
+		int h = primaryLayer.height;
 		primaryLayer.render(graphics, x, y, w, h);
 		primaryLayer.drawForeground(graphics, x, y, w, h);
 		this.width = w;

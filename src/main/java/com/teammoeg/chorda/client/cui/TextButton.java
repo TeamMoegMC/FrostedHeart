@@ -10,13 +10,14 @@ import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.FormattedCharSequence;
 
 public abstract class TextButton extends Button {
 	public TextButton(UIWidget panel, Component txt, CIcon icon) {
 		super(panel, txt, icon);
-		setWidth(panel.getFont().width(txt)+(txt==Components.empty()?0:8) + (hasIcon() ? 20 : 0));
+		setWidth(panel.getFont().width(txt)+((txt.getContents()==ComponentContents.EMPTY&&hasIcon())?0:8) + (hasIcon() ? 20 : 0));
 		setHeight(20);
 	}
 

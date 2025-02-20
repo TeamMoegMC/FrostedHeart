@@ -20,19 +20,29 @@
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 
+import net.minecraft.network.chat.Component;
+
 public class LabeledOpenEditorButton<T> extends LabeledPane<OpenEditorButton<T>> {
 
-    public LabeledOpenEditorButton(UIWidget panel, String master, String label, Editor<T> e, T val, Consumer<T> cb) {
+    public LabeledOpenEditorButton(UIWidget panel, Component master, Component label, Editor<T> e, T val, Consumer<T> cb) {
         super(panel, master);
         obj = new OpenEditorButton<>(this, label, e, val, cb);
     }
 
-    public LabeledOpenEditorButton(UIWidget panel, String master, String label, Editor<T> e, T val, CIcon ic, Consumer<T> cb) {
+    public LabeledOpenEditorButton(UIWidget panel, Component master, Component label, Editor<T> e, T val, CIcon ic, Consumer<T> cb) {
         super(panel, master);
         obj = new OpenEditorButton<>(this, label, e, val, ic, cb);
+    }
+    public LabeledOpenEditorButton(UIWidget panel, Component master, Editor<T> edi, T val, Function<T, CIcon> getIcon, Function<T, Component> getText) {
+        super(panel, master);
+        obj = new OpenEditorButton<>(this, master, edi, val, getIcon, getText);
+    }
+    T getValue() {
+    	return obj.getValue();
     }
 }

@@ -27,14 +27,15 @@ import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
-import com.teammoeg.chorda.lang.Components;
+
+import net.minecraft.network.chat.Component;
 
 public class LabeledTextBoxAndBtn extends LabeledTextBox {
     Button btn;
 
-    public LabeledTextBoxAndBtn(UIWidget panel, String lab, String txt, String btn, Consumer<Consumer<String>> onbtn) {
+    public LabeledTextBoxAndBtn(UIWidget panel, Component lab, String txt, Component btn, Consumer<Consumer<String>> onbtn) {
         super(panel, lab, txt);
-        this.btn = new TextButton(this, Components.str(btn), CIcons.nop()) {
+        this.btn = new TextButton(this, btn, CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {

@@ -59,21 +59,21 @@ public class EditListDialog<T> extends EditDialog {
     private final Function<T, String> read;
     private final Function<T, CIcon> toicon;
     boolean modified;
-    public EditListDialog(UIWidget p, String label, Collection<T> vx, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
+    public EditListDialog(UIWidget p, Component label, Collection<T> vx, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
         this(p, label, vx, null, editor, toread, null, li);
     }
-    public EditListDialog(UIWidget p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
+    public EditListDialog(UIWidget p, Component label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
         this(p, label, vx, def, editor, toread, null, li);
     }
 
-    public EditListDialog(UIWidget p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Function<T, CIcon> icon, Consumer<Collection<T>> li) {
+    public EditListDialog(UIWidget p, Component label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Function<T, CIcon> icon, Consumer<Collection<T>> li) {
         super(p);
         callback = li;
         if (vx != null)
             list = new ArrayList<>(vx);
         else
             list = new ArrayList<>();
-        title = Components.str(label).withStyle(ChatFormatting.BOLD);
+        title = (label).copy().withStyle(ChatFormatting.BOLD);
         this.editor = editor;
         this.def = def;
         this.read = toread;
@@ -119,12 +119,12 @@ public class EditListDialog<T> extends EditDialog {
 
     @Override
     public void alignWidgets() {
-        configPanel.setPosAndSize(5, 20, width - 10, height - 20);
+        configPanel.setPosAndSize(5, 25, width - 10, height - 30);
         configPanel.alignWidgets();
-        scroll.setPosAndSize(width - 16, 20, 16, height - 20);
+        scroll.setPosAndSize(width - 16, 25, 8, height - 30);
 
-        buttonAccept.setPos(width - 21, 2);
-        buttonCancel.setPos(width - 42, 2);
+        buttonAccept.setPos(width - 26, 2);
+        buttonCancel.setPos(width - 47, 2);
     }
 
     @Override
@@ -145,7 +145,7 @@ public class EditListDialog<T> extends EditDialog {
     @Override
     public void onClosed() {
         if (modified) {
-            ConfirmDialog.EDITOR.open(this, "Unsaved changes, discard?", true, e -> {
+            ConfirmDialog.EDITOR.open(this, Components.str("Unsaved changes, discard?"), true, e -> {
                 if (!e) open();
             });
         }
@@ -173,7 +173,7 @@ public class EditListDialog<T> extends EditDialog {
         @Override
         public void onClicked(MouseButton button) {
             CInputHelper.playClickSound();
-            editor.open(this, "New", def, s -> {
+            editor.open(this,Components.str( "New"), def, s -> {
                 if (s != null) {
                     modified = true;
                     list.add(s);
@@ -235,7 +235,7 @@ public class EditListDialog<T> extends EditDialog {
                 ((Layer)parent).refresh();
 
             } else {
-                editor.open(this, "Edit", list.get(index), s -> {
+                editor.open(this, Components.str("Edit"), list.get(index), s -> {
                     modified = true;
                     list.set(index, s);
                     ((Layer)parent).refresh();

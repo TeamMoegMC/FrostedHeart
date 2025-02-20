@@ -15,6 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
 public abstract class Layer extends UIWidget {
+	
 	@Getter
 	protected final List<UIWidget> elements;
 	@Getter
@@ -38,9 +39,11 @@ public abstract class Layer extends UIWidget {
 	public void clearElement() {
 		elements.clear();
 	}
-
-	public void refresh() {
+	public final void recalcContentSize() {
 		contentWidth = contentHeight = -1;
+	}
+	public void refresh() {
+		recalcContentSize();
 
 		clearElement();
 		try {
@@ -76,17 +79,50 @@ public abstract class Layer extends UIWidget {
 		if(isHorizontal) {
 			for(UIWidget elm:elements) {
 				elm.setX(contentWidth);
-				contentWidth+=elm.getWidth()+2;
+				contentWidth+=elm.getWidth()+1;
 				contentHeight=Math.max(elm.getHeight(), contentHeight);
 			}
 			return contentWidth;
 		}
 		for(UIWidget elm:elements) {
 			elm.setY(contentHeight);
-			contentHeight+=elm.getHeight()+2;
+			contentHeight+=elm.getHeight()+1;
 			contentWidth=Math.max(elm.getWidth(), contentWidth);
 		}
 		return contentHeight;
+	}
+	public final void flow(boolean isHorizontalFirst) {
+		contentWidth = contentHeight = 0;
+		int currentX=0,currentY=0;
+		int currentH=0,currentW=0;;
+		if(isHorizontalFirst) {
+			for(UIWidget elm:elements) {
+				if(currentX+elm.getWidth()>width) {
+					contentWidth=Math.max(contentWidth, currentX);
+					currentY+=currentH+1;
+					currentX=0;
+					currentH=0;
+				}
+				elm.setPos(currentX,currentY);
+				currentX+=elm.getWidth()+1;
+				currentH=Math.max(elm.getHeight(), currentH);
+			}
+			contentHeight=currentY+currentH;
+			return;
+		}
+		for(UIWidget elm:elements) {
+			if(currentY+elm.getHeight()>height) {
+				contentHeight=Math.max(contentHeight, currentY);
+				currentX+=currentW+1;
+				currentY=0;
+				currentW=0;
+			}
+			elm.setPos(currentX,currentY);
+			currentY+=elm.getHeight()+1;
+			currentW=Math.max(elm.getWidth(), currentW);
+		}
+		contentWidth=currentX+currentW;
+		
 	}
 	@Override
 	public int getContentX() {
@@ -167,15 +203,15 @@ public abstract class Layer extends UIWidget {
 		
 		if(scissorEnabled)
 			graphics.disableScissor();
-		if(isMouseOver)
-			TechIcons.ADD.draw(graphics, (int)getMouseX()+x-4, (int)getMouseY()+y-4, 8, 8);
+		//if(isMouseOver)
+		//	TechIcons.ADD.draw(graphics, (int)getMouseX()+x-4, (int)getMouseY()+y-4, 8, 8);
 		//graphics.pose().popPose();
 	}
 	@Override
 	public void updateRenderInfo(double mx, double my, float pt) {
 		super.updateRenderInfo(mx, my, pt);
 		for(UIWidget elm:elements) {
-			elm.updateRenderInfo(getMouseX(), getMouseY(), pt);
+			elm.updateRenderInfo(getMouseX()-offsetX, getMouseY()-offsetY, pt);
 		}
 	}
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {

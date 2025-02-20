@@ -2,15 +2,14 @@ package com.teammoeg.chorda.client.icon;
 
 import java.util.function.Consumer;
 
-import com.teammoeg.chorda.client.CIconFTBWrapper;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons.AnimatedIcon;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.CIcons.CombinedIcon;
 import com.teammoeg.chorda.client.icon.CIcons.FHDelegateIcon;
-import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.CIcons.IngredientIcon;
 import com.teammoeg.chorda.client.icon.CIcons.ItemIcon;
 import com.teammoeg.chorda.client.icon.CIcons.NopIcon;
@@ -33,6 +32,7 @@ import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectStackDialog;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
@@ -55,7 +55,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
             new EditorSelector<>(p, l, (o, t) -> true, v, c).addEditor("Edit", IconEditor.CHANGE_EDITOR)
                     .addEditor("New", IconEditor.NOP_CHANGE_EDITOR).open();
     };
-    public static final Editor<CIcon> INGREDIENT_SIZE_EDITOR = (p, l, v, c) -> IngredientEditor.EDITOR.open(p, l, null, e -> c.accept(CIcons.getIcon(e.getBaseIngredient(),e.getCount())));
+    public static final Editor<CIcon> INGREDIENT_SIZE_EDITOR = (p, l, v, c) -> IngredientEditor.EDITOR.open(p, l, null, e -> c.accept(CIcons.getIcon(e.getFirst(),e.getSecond())));
     public static final Editor<CIcon> CHANGE_EDITOR = (p, l, v, c) -> {
         if (v instanceof ItemIcon) {
             IconEditor.ITEM_EDITOR.open(p, l, (ItemIcon) v, c::accept);
@@ -99,9 +99,9 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
             e -> e, e -> c.accept(new AnimatedIcon(e.toArray(new CIcon[0])))).open();
 
     private static class Combined extends IconEditor<CombinedIcon> {
-        String label;
+        Component label;
         Consumer<CombinedIcon> i;
-        public Combined(UIWidget panel, String label, CombinedIcon v, Consumer<CombinedIcon> i) {
+        public Combined(UIWidget panel, Component label, CombinedIcon v, Consumer<CombinedIcon> i) {
             super(panel, v == null ? new CombinedIcon(null, null) : v);
             this.label = label;
             this.i = i;
@@ -110,8 +110,8 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
         @Override
         public void addUIElements() {
             add(EditUtils.getTitle(this, label));
-            add(new OpenEditorButton<>(this, "Edit base icon", EDITOR, v.large, e -> v.large = e));
-            add(new OpenEditorButton<>(this, "Edit corner icon", EDITOR, v.small, e -> v.small = e));
+            add(new OpenEditorButton<>(this, Components.str("Edit base icon"), EDITOR, v.large, e -> v.large = e));
+            add(new OpenEditorButton<>(this, Components.str("Edit corner icon"), EDITOR, v.small, e -> v.small = e));
         }
 
         @Override
@@ -123,7 +123,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
     }
 
     private static class UV extends IconEditor<TextureUVIcon> {
-        String label;
+    	Component label;
         Consumer<TextureUVIcon> i;
         LabeledTextBox rl;
         NumberBox x;
@@ -133,18 +133,18 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
         NumberBox tw;
         NumberBox th;
 
-        public UV(UIWidget panel, String label, TextureUVIcon v, Consumer<TextureUVIcon> i) {
+        public UV(UIWidget panel, Component label, TextureUVIcon v, Consumer<TextureUVIcon> i) {
             super(panel, v == null ? new TextureUVIcon() : v);
             this.label = label;
             this.i = i;
             v = this.v;
-            rl = new LabeledTextBox(this, "Texture", this.v.rl == null ? "" : this.v.rl.toString());
-            x = new NumberBox(this, "X", (v.x));
-            y = new NumberBox(this, "Y", (v.y));
-            w = new NumberBox(this, "Width", (v.w));
-            h = new NumberBox(this, "Height", (v.h));
-            tw = new NumberBox(this, "Texture Width", (v.tw));
-            th = new NumberBox(this, "Texture Height", (v.th));
+            rl = new LabeledTextBox(this, Components.str("Texture"), this.v.rl == null ? "" : this.v.rl.toString());
+            x = new NumberBox(this, Components.str("X"), (v.x));
+            y = new NumberBox(this, Components.str("Y"), (v.y));
+            w = new NumberBox(this, Components.str("Width"), (v.w));
+            h = new NumberBox(this, Components.str("Height"), (v.h));
+            tw = new NumberBox(this, Components.str("Texture Width"), (v.tw));
+            th = new NumberBox(this, Components.str("Texture Height"), (v.th));
         }
 
         @Override

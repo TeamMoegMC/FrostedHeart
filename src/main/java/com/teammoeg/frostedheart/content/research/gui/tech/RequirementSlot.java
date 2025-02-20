@@ -21,10 +21,13 @@ package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 
+import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
+
+
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
@@ -34,15 +37,16 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.crafting.Ingredient;
 
 public class RequirementSlot extends Widget {
     ItemStack[] i;
     int cnt;
 
-    public RequirementSlot(Panel panel, IngredientWithSize iws) {
+    public RequirementSlot(Panel panel, Pair<Ingredient,Integer> iws) {
         super(panel);
-        this.i = iws.getMatchingStacks();
-        this.cnt = iws.getCount();
+        this.i = iws.getFirst().getItems();
+        this.cnt = iws.getSecond();
         this.setSize(16, 16);
     }
 

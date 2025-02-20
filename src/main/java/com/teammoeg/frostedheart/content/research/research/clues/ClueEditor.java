@@ -19,13 +19,16 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
+import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.CIconFTBWrapper;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.research.gui.editor.*;
 import com.teammoeg.frostedheart.content.research.research.Research;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.crafting.Ingredient;
 
 import java.util.Arrays;
@@ -85,10 +88,10 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
     protected LabeledTextBox hint;
     protected RealBox cont;
     protected LabeledSelection<Boolean> req;
-    String lbl;
+    Component lbl;
     T e;
     Consumer<T> cb;
-    public ClueEditor(UIWidget panel, String lbl, T e, Consumer<T> cb) {
+    public ClueEditor(UIWidget panel, Component lbl, T e, Consumer<T> cb) {
         super(panel);
 
         this.lbl = lbl;
@@ -98,12 +101,12 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
             e = createClue();
         }
         this.e = e;
-        nonce = new LabeledTextBoxAndBtn(this, "nonce", e != null ? e.getNonce() : "", "Random", t -> t.accept(Long.toHexString(UUID.randomUUID().getMostSignificantBits())));
-        name = new LabeledTextBox(this, "Name", e.name);
-        desc = new LabeledTextBox(this, "Description", e.desc);
-        hint = new LabeledTextBox(this, "Hint", e.hint);
-        cont = new RealBox(this, "Contribution(%)", e.contribution * 100);
-        req = LabeledSelection.createBool(this, "Required", e.required);
+        nonce = new LabeledTextBoxAndBtn(this, Components.str("nonce"), e != null ? e.getNonce() : "", Components.str("Random"), t -> t.accept(Long.toHexString(UUID.randomUUID().getMostSignificantBits())));
+        name = new LabeledTextBox(this, Components.str("Name"), e.name);
+        desc = new LabeledTextBox(this, Components.str("Description"), e.desc);
+        hint = new LabeledTextBox(this, Components.str("Hint"), e.hint);
+        cont = new RealBox(this, Components.str("Contribution(%)"), e.contribution * 100);
+        req = LabeledSelection.createBool(this, Components.str("Required"), e.required);
         this.cb = cb;
     }
 
@@ -138,15 +141,15 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
 
     private static class Advancement extends Listener<AdvancementClue> {
 
-        public Advancement(UIWidget panel, String lbl, AdvancementClue e, Consumer<AdvancementClue> cb) {
+        public Advancement(UIWidget panel, Component lbl, AdvancementClue e, Consumer<AdvancementClue> cb) {
             super(panel, lbl, e, cb);
         }
 
         @Override
         public void addUIElements() {
             super.addUIElements();
-            add(new LabeledOpenEditorButton<>(this, e.advancement.toString(), "Select Advancement", SelectDialog.EDITOR_ADVANCEMENT, e.advancement, c -> e.advancement = c));
-            add(LabeledSelection.createCriterion(this, "Select Criterion", e.advancement, e.criterion, c -> e.criterion = c));
+            add(new LabeledOpenEditorButton<>(this,Components.str( e.advancement.toString()), Components.str("Select Advancement"), SelectDialog.EDITOR_ADVANCEMENT, e.advancement, c -> e.advancement = c));
+            add(LabeledSelection.createCriterion(this, Components.str("Select Criterion"), e.advancement, e.criterion, c -> e.criterion = c));
 
         }
 
@@ -158,7 +161,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
 
     private static class Custom extends ClueEditor<CustomClue> {
 
-        public Custom(UIWidget panel, String lbl, CustomClue e, Consumer<CustomClue> cb) {
+        public Custom(UIWidget panel, Component lbl, CustomClue e, Consumer<CustomClue> cb) {
             super(panel, lbl, e, cb);
         }
 
@@ -171,17 +174,17 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
     private static class Item extends ClueEditor<ItemClue> {
         LabeledSelection<Boolean> cons;
 
-        public Item(UIWidget panel, String lbl, ItemClue e, Consumer<ItemClue> cb) {
+        public Item(UIWidget panel, Component lbl, ItemClue e, Consumer<ItemClue> cb) {
             super(panel, lbl, e, cb);
-            cons = LabeledSelection.createBool(this, "Consumes item", this.e.consume);
+            cons = LabeledSelection.createBool(this, Components.str("Consumes item"), this.e.consume);
         }
 
         @Override
         public void addUIElements() {
             super.addUIElements();
             
-            add(new OpenEditorButton<IngredientWithSize>(this, "Select Ingredient", IngredientEditor.EDITOR, 
-            	e.stack,(e.stack == null ? CIcons.nop() : CIcons.getIcon(e.stack.getBaseIngredient(),e.stack.getCount())),
+            add(new OpenEditorButton<Pair<Ingredient,Integer>>(this, Components.str("Select Ingredient"), IngredientEditor.EDITOR, 
+            	e.stack,(e.stack == null ? CIcons.nop() : CIcons.getIcon(e.stack.getFirst(),e.stack.getSecond())),
             	c -> e.stack = c));
             add(cons);
         }
@@ -200,14 +203,14 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
 
     private static class Kill extends Listener<KillClue> {
 
-        public Kill(UIWidget panel, String lbl, KillClue e, Consumer<KillClue> cb) {
+        public Kill(UIWidget panel, Component lbl, KillClue e, Consumer<KillClue> cb) {
             super(panel, lbl, e, cb);
         }
 
         @Override
         public void addUIElements() {
             super.addUIElements();
-            add(new LabeledOpenEditorButton<>(this, e.type == null ? "" : e.type.getDescription().getString(), "Select Entity", SelectDialog.EDITOR_ENTITY, e.type, c -> {
+            add(new LabeledOpenEditorButton<>(this, e.type == null ? Components.empty() : e.type.getDescription(), Components.str("Select Entity"), SelectDialog.EDITOR_ENTITY, e.type, c -> {
                 e.type = c;
                 desc.setText("@" + c.getDescriptionId());
             }));
@@ -223,9 +226,9 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
     private static abstract class Listener<U extends ListenerClue> extends ClueEditor<U> {
         LabeledSelection<Boolean> aa;
 
-        public Listener(UIWidget panel, String lbl, U e, Consumer<U> cb) {
+        public Listener(UIWidget panel, Component lbl, U e, Consumer<U> cb) {
             super(panel, lbl, e, cb);
-            aa = LabeledSelection.createBool(this, "Listen even not active", this.e.alwaysOn);
+            aa = LabeledSelection.createBool(this, Components.str("Listen even not active"), this.e.alwaysOn);
         }
 
         @Override
@@ -246,9 +249,9 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
     private static class Minigame extends ClueEditor<MinigameClue> {
         LabeledSelection<Integer> lvl;
 
-        public Minigame(UIWidget panel, String lbl, MinigameClue e, Consumer<MinigameClue> cb) {
+        public Minigame(UIWidget panel, Component lbl, MinigameClue e, Consumer<MinigameClue> cb) {
             super(panel, lbl, e, cb);
-            lvl = new LabeledSelection<>(this, "Level", this.e.getLevel(), Arrays.asList(0, 1, 2, 3), String::valueOf);
+            lvl = new LabeledSelection<>(this, Components.str("Level"), this.e.getLevel(), Arrays.asList(0, 1, 2, 3), String::valueOf);
         }
 
         @Override

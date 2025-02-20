@@ -25,6 +25,7 @@ import java.util.function.Function;
 import com.teammoeg.chorda.client.cui.UIWidget;
 
 import dev.ftb.mods.ftblibrary.ui.Widget;
+import net.minecraft.network.chat.Component;
 
 @FunctionalInterface
 public interface Editor<T> {
@@ -36,11 +37,11 @@ public interface Editor<T> {
         };
     }
 
-    void open(UIWidget parent, String label, T previousValue, Consumer<T> onCommit);
+    void open(UIWidget parent, Component label, T previousValue, Consumer<T> onCommit);
     default <A> Editor<A> xmap(Function<T,A> to,Function<A,T> from){
     	return (p,l,v,c)->{
     		this.open(p, l, from.apply(v), e->c.accept(to.apply(e)));
     	};
     	
-    };
+    }
 }
