@@ -14,7 +14,7 @@ import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.FormattedCharSequence;
 
 public abstract class TextButton extends Button {
-	public TextButton(UIElement panel, Component txt, CIcon icon) {
+	public TextButton(UIWidget panel, Component txt, CIcon icon) {
 		super(panel, txt, icon);
 		setWidth(panel.getFont().width(txt)+(txt==Components.empty()?0:8) + (hasIcon() ? 20 : 0));
 		setHeight(20);
@@ -78,7 +78,7 @@ public abstract class TextButton extends Button {
 		}
 	}
 
-	public static TextButton create(UIElement panel, Component txt, CIcon icon, Consumer<MouseButton> callback, Component... tooltip) {
+	public static TextButton create(UIWidget panel, Component txt, CIcon icon, Consumer<MouseButton> callback, Component... tooltip) {
 		return new TextButton(panel, txt, icon) {
 			@Override
 			public void onClicked(MouseButton button) {
@@ -94,11 +94,11 @@ public abstract class TextButton extends Button {
 		};
 	}
 
-	public static TextButton accept(UIElement panel, Consumer<MouseButton> callback, Component... tooltip) {
+	public static TextButton accept(UIWidget panel, Consumer<MouseButton> callback, Component... tooltip) {
 		return create(panel, Component.translatable("gui.accept"), IconButton.Icon.CHECK.toCIcon(), callback, tooltip);
 	}
 
-	public static TextButton cancel(UIElement panel, Consumer<MouseButton> callback, Component... tooltip) {
+	public static TextButton cancel(UIWidget panel, Consumer<MouseButton> callback, Component... tooltip) {
 		return create(panel, Component.translatable("gui.cancel"), IconButton.Icon.CROSS.toCIcon(), callback, tooltip);
 	}
 }

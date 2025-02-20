@@ -25,14 +25,14 @@ import java.util.function.Consumer;
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 
 public class LabeledTextBoxAndBtn extends LabeledTextBox {
     Button btn;
 
-    public LabeledTextBoxAndBtn(UIElement panel, String lab, String txt, String btn, Consumer<Consumer<String>> onbtn) {
+    public LabeledTextBoxAndBtn(UIWidget panel, String lab, String txt, String btn, Consumer<Consumer<String>> onbtn) {
         super(panel, lab, txt);
         this.btn = new TextButton(this, Components.str(btn), CIcons.nop()) {
 

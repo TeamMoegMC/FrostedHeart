@@ -19,12 +19,12 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.frostedheart.FHMain;
 
 public class NumberBox extends LabeledTextBox {
 
-    public NumberBox(UIElement panel, String lab, long val) {
+    public NumberBox(UIWidget panel, String lab, long val) {
         super(panel, lab, String.valueOf(val));
     }
 

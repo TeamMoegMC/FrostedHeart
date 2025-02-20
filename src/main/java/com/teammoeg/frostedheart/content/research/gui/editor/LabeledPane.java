@@ -25,7 +25,7 @@ import com.teammoeg.chorda.client.cui.UIWidget;
 
 import net.minecraft.client.gui.GuiGraphics;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 
 
 public class LabeledPane<T extends UIWidget> extends Layer {
@@ -33,7 +33,7 @@ public class LabeledPane<T extends UIWidget> extends Layer {
     protected TextField label;
     protected T obj;
 
-    public LabeledPane(UIElement panel, String lab) {
+    public LabeledPane(UIWidget panel, String lab) {
         super(panel);
         label = new TextField(this).setMaxWidth(200).setTrim().setText(lab).setColor(0xFF000000);
 

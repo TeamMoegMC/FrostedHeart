@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 
 import dev.ftb.mods.ftblibrary.ui.Panel;
 

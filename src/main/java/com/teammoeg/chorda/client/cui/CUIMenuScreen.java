@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.lwjgl.glfw.GLFW;
 
+import com.mojang.blaze3d.platform.Window;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
@@ -22,16 +23,14 @@ public class CUIMenuScreen<T extends AbstractContainerMenu> extends AbstractCont
 	public CUIMenuScreen(PrimaryLayer g, T menu, Inventory playerInventory, Component title) {
 		super(menu, playerInventory, title);
 		primaryLayer = g;
+		primaryLayer.setScreen(this);
 	}
 
 	@Override
 	public void init() {
 		super.init();
 		primaryLayer.refresh();
-		leftPos = primaryLayer.getX();
-		topPos = primaryLayer.getY();
-		imageWidth = primaryLayer.width;
-		imageHeight = primaryLayer.height;
+
 	}
 
 	@Override
@@ -106,8 +105,6 @@ public class CUIMenuScreen<T extends AbstractContainerMenu> extends AbstractCont
 	@Override
 	protected void renderBg(GuiGraphics graphics, float f, int mx, int my) {;
 		CGuiHelper.resetGuiDrawing();
-		renderBackground(graphics);
-		CGuiHelper.resetGuiDrawing();
 		primaryLayer.render(graphics, leftPos, topPos, imageWidth, imageHeight);
 	}
 	 List<Component> display=new ArrayList<>();
@@ -142,7 +139,13 @@ public class CUIMenuScreen<T extends AbstractContainerMenu> extends AbstractCont
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		renderBackground(graphics);
-		primaryLayer.updateGui(mouseX, mouseY, partialTicks);
+		Window win=super.minecraft.getWindow();
+        leftPos=(win.getGuiScaledWidth() - primaryLayer.width) / 2;
+        topPos=(win.getGuiScaledHeight() - primaryLayer.height) / 2;
+		imageWidth = primaryLayer.width;
+		imageHeight = primaryLayer.height;
+		primaryLayer.updateGui(mouseX-leftPos, mouseY-topPos, partialTicks);
+		primaryLayer.updateMouseOver();
 		super.render(graphics, mouseX, mouseY, partialTicks);
 	}
 

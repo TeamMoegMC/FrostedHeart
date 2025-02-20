@@ -24,7 +24,7 @@ import com.google.gson.JsonParser;
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 
@@ -41,7 +41,7 @@ public class EditPrompt extends BaseEditDialog {
     Button ok;
     Button cancel;
 
-    public EditPrompt(UIElement panel, String label, String val, Consumer<String> onFinished) {
+    public EditPrompt(UIWidget panel, String label, String val, Consumer<String> onFinished) {
         super(panel);
         box = new LabeledTextBox(this, label, val);
         ok = new TextButton(this, Components.str("OK"), CIcons.nop()) {
@@ -69,7 +69,7 @@ public class EditPrompt extends BaseEditDialog {
         ok.setSize(300, 20);
     }
 
-    public static void open(UIElement p, String l, String v, Consumer<String> f) {
+    public static void open(UIWidget p, String l, String v, Consumer<String> f) {
         new EditPrompt(p, l, v, f).open();
     }
 

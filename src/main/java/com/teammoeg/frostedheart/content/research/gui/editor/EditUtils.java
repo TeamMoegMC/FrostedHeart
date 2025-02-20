@@ -23,7 +23,7 @@ import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.CUIScreen;
 import com.teammoeg.chorda.client.cui.TextField;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchEditorDialog;
@@ -41,14 +41,13 @@ public class EditUtils {
         }
         new ResearchEditorDialog(EditUtils.openEditorScreen(), r, r.getCategory()).open();
     }
-    public static UIElement openEditorScreen() {
-    	CUIScreen wrapper=new CUIScreen();
-    	wrapper.setPrimaryLayer(new PrimaryLayer(wrapper));
+    public static UIWidget openEditorScreen() {
+    	CUIScreen wrapper=new CUIScreen(new PrimaryLayer());
     	
     	ClientUtils.mc().setScreen(wrapper);
     	return wrapper.getPrimaryLayer();
     }
-    public static TextField getTitle(UIElement p, String title) {
+    public static TextField getTitle(UIWidget p, String title) {
 
         return new TextField(p).setMaxWidth(200).setText(title).setColor(0xFFFFFFFF);
     }

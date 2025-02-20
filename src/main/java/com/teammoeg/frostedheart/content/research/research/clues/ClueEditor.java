@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
-import com.teammoeg.chorda.client.FHIconWrapper;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.CIconFTBWrapper;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedheart.content.research.gui.editor.*;
 import com.teammoeg.frostedheart.content.research.research.Research;
@@ -88,7 +88,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
     String lbl;
     T e;
     Consumer<T> cb;
-    public ClueEditor(UIElement panel, String lbl, T e, Consumer<T> cb) {
+    public ClueEditor(UIWidget panel, String lbl, T e, Consumer<T> cb) {
         super(panel);
 
         this.lbl = lbl;
@@ -138,7 +138,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
 
     private static class Advancement extends Listener<AdvancementClue> {
 
-        public Advancement(UIElement panel, String lbl, AdvancementClue e, Consumer<AdvancementClue> cb) {
+        public Advancement(UIWidget panel, String lbl, AdvancementClue e, Consumer<AdvancementClue> cb) {
             super(panel, lbl, e, cb);
         }
 
@@ -158,7 +158,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
 
     private static class Custom extends ClueEditor<CustomClue> {
 
-        public Custom(UIElement panel, String lbl, CustomClue e, Consumer<CustomClue> cb) {
+        public Custom(UIWidget panel, String lbl, CustomClue e, Consumer<CustomClue> cb) {
             super(panel, lbl, e, cb);
         }
 
@@ -171,7 +171,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
     private static class Item extends ClueEditor<ItemClue> {
         LabeledSelection<Boolean> cons;
 
-        public Item(UIElement panel, String lbl, ItemClue e, Consumer<ItemClue> cb) {
+        public Item(UIWidget panel, String lbl, ItemClue e, Consumer<ItemClue> cb) {
             super(panel, lbl, e, cb);
             cons = LabeledSelection.createBool(this, "Consumes item", this.e.consume);
         }
@@ -200,7 +200,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
 
     private static class Kill extends Listener<KillClue> {
 
-        public Kill(UIElement panel, String lbl, KillClue e, Consumer<KillClue> cb) {
+        public Kill(UIWidget panel, String lbl, KillClue e, Consumer<KillClue> cb) {
             super(panel, lbl, e, cb);
         }
 
@@ -223,7 +223,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
     private static abstract class Listener<U extends ListenerClue> extends ClueEditor<U> {
         LabeledSelection<Boolean> aa;
 
-        public Listener(UIElement panel, String lbl, U e, Consumer<U> cb) {
+        public Listener(UIWidget panel, String lbl, U e, Consumer<U> cb) {
             super(panel, lbl, e, cb);
             aa = LabeledSelection.createBool(this, "Listen even not active", this.e.alwaysOn);
         }
@@ -246,7 +246,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
     private static class Minigame extends ClueEditor<MinigameClue> {
         LabeledSelection<Integer> lvl;
 
-        public Minigame(UIElement panel, String lbl, MinigameClue e, Consumer<MinigameClue> cb) {
+        public Minigame(UIWidget panel, String lbl, MinigameClue e, Consumer<MinigameClue> cb) {
             super(panel, lbl, e, cb);
             lvl = new LabeledSelection<>(this, "Level", this.e.getLevel(), Arrays.asList(0, 1, 2, 3), String::valueOf);
         }

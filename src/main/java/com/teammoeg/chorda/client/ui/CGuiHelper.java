@@ -29,7 +29,6 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.lang.Components;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.gui.Font;
 import org.joml.Matrix4f;
 
@@ -165,21 +164,17 @@ public class CGuiHelper {
 	}
 	// TODO fix line drawing
 
-	private static void drawVertexLine(Matrix4f mat, VertexConsumer renderBuffer, Color4I color, int startX, int startY,
+	private static void drawVertexLine(Matrix4f mat, VertexConsumer renderBuffer, int color, int startX, int startY,
 		int endX, int endY, float z) {
 		// RenderSystem.disableTexture();
 		// RenderSystem.enableColorLogicOp();
 		// RenderSystem.colorMask(false, false, false, false);
-		renderBuffer.vertex(mat, startX, startY, z).color(color.redi(),
-			color.greeni(), color.bluei(), color.alphai())
-			.endVertex();
+		renderBuffer.vertex(mat, startX, startY, z).color(color).endVertex();
 		/*
 		 * renderBuffer.vertex(mat, startX, startY, z).color(color.redi(),
 		 * color.greeni(), color.bluei(), color.alphai()) .endVertex();
 		 */
-		renderBuffer.vertex(mat, endX, endY, z).color(color.redi(), color.greeni(),
-			color.bluei(), color.alphai())
-			.endVertex();
+		renderBuffer.vertex(mat, endX, endY, z).color(color).endVertex();
 		/*
 		 * renderBuffer.vertex(mat, endX, endY, z).color(color.redi(), color.greeni(),
 		 * color.bluei(), color.alphai()) .endVertex();
@@ -187,26 +182,22 @@ public class CGuiHelper {
 		// RenderSystem.enableTexture();
 	}
 
-	private static void drawVertexLine2(Matrix4f mat, VertexConsumer renderBuffer, Color4I color, int startX, int startY,
+	private static void drawVertexLine2(Matrix4f mat, VertexConsumer renderBuffer, int color, int startX, int startY,
 		int endX, int endY, float z) {
 		// RenderSystem.disableTexture();
 		// RenderSystem.enableColorMaterial();
 		// RenderSystem.colorMask(false, false, false, false);
 
-		renderBuffer.vertex(mat, startX, 0, z).color(color.redi(), color.greeni(),
-			color.bluei(), color.alphai()).endVertex();
-		renderBuffer.vertex(mat, endX, 0, z).color(color.redi(), color.greeni(),
-			color.bluei(), color.alphai()).endVertex();
-		renderBuffer.vertex(mat, 0, startY, z).color(color.redi(), color.greeni(),
-			color.bluei(), color.alphai()).endVertex();
-		renderBuffer.vertex(mat, 0, endY, z).color(color.redi(), color.greeni(),
-			color.bluei(), color.alphai()).endVertex();
+		renderBuffer.vertex(mat, startX, 0, z).color(color).endVertex();
+		renderBuffer.vertex(mat, endX, 0, z).color(color).endVertex();
+		renderBuffer.vertex(mat, 0, startY, z).color(color).endVertex();
+		renderBuffer.vertex(mat, 0, endY, z).color(color).endVertex();
 		// RenderSystem.enableTexture();
 	}
 
 	// draw a line from start to end by color, ABSOLUTE POSITION
 
-	public static void drawLine(PoseStack matrixStack, Color4I color, int startX,
+	public static void drawLine(PoseStack matrixStack, int color, int startX,
 		int startY, int endX, int endY, float z) {
 		Tesselator t = Tesselator.getInstance();
 
@@ -232,7 +223,7 @@ public class CGuiHelper {
 
 	// draw a line from start to end by color, ABSOLUTE POSITION
 	// TODO: THE LINES IS NOT SHOWING
-	public static void drawLine(GuiGraphics graphics, Color4I color, int startX,
+	public static void drawLine(GuiGraphics graphics, int color, int startX,
 		int startY, int endX, int endY) {
 		ShaderSetter ss = shaderSetterCache.get();
 		ss.inst = RenderSystem.getShader();
@@ -469,8 +460,18 @@ public class CGuiHelper {
 
 	}
 	private static final ResourceLocation RECIPE_BOOK_LOCATION = new ResourceLocation("textures/gui/recipe_book.png");
+
+	public static void drawLayerBackground(GuiGraphics graphics,int x,int y,int w,int h) {
+		graphics.fill(x, y, x+w, y+h, 0xFF8B8B8B);
+	}
 	public static void drawUIBackground(GuiGraphics graphics,int x,int y,int w,int h) {
 		graphics.blitNineSliced(RECIPE_BOOK_LOCATION, x, y, w, h, 4, 32, 32, 82, 208);
+	}
+	public static void drawUIBackgroundWithSearch(GuiGraphics graphics,int x,int y,int w,int h) {
+		graphics.blitNineSliced(RECIPE_BOOK_LOCATION, x, y, w, h, 24,28, 0, 0, 148, 167);
+	}
+	public static void drawUISlot(GuiGraphics graphics,int x,int y,int w,int h) {
+		graphics.blitNineSliced(RECIPE_BOOK_LOCATION, x, y, w, h, 2, 24, 24, 29, 206);
 	}
 	public static void blitNineSliced(GuiGraphics graphics,ResourceLocation pAtlasLocation, int pTargetX, int pTargetY, int pTargetWidth, int pTargetHeight, int pCorner, int pSourceWidth, int pSourceHeight, int pSourceX, int pSourceY,int textureWidth,int textureHeight) {
 		blitNineSliced(graphics,pAtlasLocation,pTargetX,pTargetY,pTargetWidth,pTargetHeight,pCorner,pCorner,pCorner,pCorner,pSourceWidth,pSourceHeight,pSourceX,pSourceY,textureWidth,textureHeight);

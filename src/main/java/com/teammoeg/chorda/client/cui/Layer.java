@@ -26,7 +26,7 @@ public abstract class Layer extends UIWidget {
 	@Getter
 	@Setter
 	private boolean scissorEnabled=true;
-	public Layer(UIElement panel) {
+	public Layer(UIWidget panel) {
 		super(panel);
 		elements = new ArrayList<>();
 	}

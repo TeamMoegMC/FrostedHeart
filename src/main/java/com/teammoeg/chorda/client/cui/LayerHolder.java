@@ -4,7 +4,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 
 public interface LayerHolder {
-	void focusOn(Focusable elm);
+	void focusOn(UIWidget elm);
 	Font getFont();
 	int getErrorColor();
 	int getHighlightColor();

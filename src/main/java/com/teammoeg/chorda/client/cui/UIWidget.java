@@ -4,13 +4,14 @@ import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.MouseHelper;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import java.util.function.Consumer;
 
-public class UIWidget implements UIElement{
+public class UIWidget{
 	@Getter
-	protected UIElement parent;
+	protected UIWidget parent;
 	@Getter
 	@Setter
 	private int x, y;
@@ -24,7 +25,7 @@ public class UIWidget implements UIElement{
 	private double mouseX,mouseY;
 	@Getter
 	private float partialTick;
-	public UIWidget(UIElement parent) {
+	public UIWidget(UIWidget parent) {
 			this.parent = parent;
 	}
 	protected void setParent(UIWidget parent) {
@@ -107,7 +108,9 @@ public class UIWidget implements UIElement{
 		isMouseOver=MouseHelper.isMouseIn(this.getMouseX(), this.getMouseY(), 0,0,this.getWidth(), this.getHeight());
 	}
 
-
+	public Font getFont() {
+		return getLayerHolder().getFont();
+	}
 	public boolean hasTooltip() {
 		return isEnabled() && isMouseOver();
 	}
@@ -168,11 +171,9 @@ public class UIWidget implements UIElement{
 	public Cursor getCursor() {
 		return null;
 	}
-	@Override
 	public void refresh() {
 		
 	}
-	@Override
 	public CUIScreenManager getManager() {
 		return parent.getManager();
 	}

@@ -23,7 +23,7 @@ import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.TextField;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
@@ -38,7 +38,7 @@ public class ConfirmDialog extends BaseEditDialog {
     Consumer<Boolean> fin;
     boolean selected = false;
 
-    public ConfirmDialog(UIElement panel, String label, boolean exp, Consumer<Boolean> onFinished) {
+    public ConfirmDialog(UIWidget panel, String label, boolean exp, Consumer<Boolean> onFinished) {
         super(panel);
         tf = new TextField(this).setColor(0xFFFF0000).setMaxWidth(200).setText(label);
         fin = onFinished;

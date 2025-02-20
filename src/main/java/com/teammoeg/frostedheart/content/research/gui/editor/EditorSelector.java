@@ -27,7 +27,7 @@ import java.util.Map.Entry;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 
 public class EditorSelector<T> extends BaseEditDialog {
     private final Map<String, Editor<? extends T>> editors = new LinkedHashMap<>();
@@ -37,7 +37,7 @@ public class EditorSelector<T> extends BaseEditDialog {
     private final Consumer<T> callback;
 
 
-    public EditorSelector(UIElement panel, String label, BiPredicate<T, String> pred, T val, Consumer<T> callback) {
+    public EditorSelector(UIWidget panel, String label, BiPredicate<T, String> pred, T val, Consumer<T> callback) {
         super(panel);
         this.label = label;
         this.val = val;
@@ -45,7 +45,7 @@ public class EditorSelector<T> extends BaseEditDialog {
         this.callback = callback;
     }
 
-    public EditorSelector(UIElement panel, String label, Consumer<T> callback) {
+    public EditorSelector(UIWidget panel, String label, Consumer<T> callback) {
         this(panel, label, (o, s) -> false, null, callback);
     }
 

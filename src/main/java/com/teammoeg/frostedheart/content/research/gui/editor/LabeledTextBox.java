@@ -20,14 +20,14 @@
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import com.teammoeg.chorda.client.cui.TextBox;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 
 
 
 public class LabeledTextBox extends LabeledPane<TextBox> {
     String orig;
 
-    public LabeledTextBox(UIElement panel, String lab, String txt) {
+    public LabeledTextBox(UIWidget panel, String lab, String txt) {
         super(panel, lab);
         obj = new TextBox(this);
         obj.allowInput();

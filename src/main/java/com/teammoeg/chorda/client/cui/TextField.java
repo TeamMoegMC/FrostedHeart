@@ -1,19 +1,14 @@
 package com.teammoeg.chorda.client.cui;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.ComponentRenderUtils;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-
-import com.teammoeg.chorda.client.ClientUtils;
 
 
 
@@ -32,7 +27,7 @@ public class TextField extends UIWidget {
 	public boolean trim = false;
 	private boolean tooltip = false;
 
-	public TextField(UIElement parent) {
+	public TextField(UIWidget parent) {
 		super(parent);
 	}
 

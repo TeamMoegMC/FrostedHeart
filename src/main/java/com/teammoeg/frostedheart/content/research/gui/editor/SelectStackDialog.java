@@ -30,7 +30,7 @@ import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.TextBox;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
@@ -241,7 +241,7 @@ public class SelectStackDialog<T> extends EditDialog {
     private T current;
 
     @SafeVarargs
-	public SelectStackDialog(UIElement p, String label, T orig, Consumer<T> cb,ResourceMode<T> mode,ResourceLister<T>...listers) {
+	public SelectStackDialog(UIWidget p, String label, T orig, Consumer<T> cb,ResourceMode<T> mode,ResourceLister<T>...listers) {
         super(p);
         setSize(211, 150);
         callback = cb;
@@ -381,14 +381,14 @@ public class SelectStackDialog<T> extends EditDialog {
         }
     }
 
-    public List<UIElement> getItems(String search, Layer panel) {
+    public List<UIWidget> getItems(String search, Layer panel) {
 
         if (activeMode == null) {
             return Collections.emptyList();
         }
 
         Collection<T> items = activeMode.getResources();
-        List<UIElement> widgets = new ArrayList<>(search.isEmpty() ? items.size() + 1 : 64);
+        List<UIWidget> widgets = new ArrayList<>(search.isEmpty() ? items.size() + 1 : 64);
 
         String mod = "";
         if (search.startsWith("@")) {
@@ -420,9 +420,9 @@ public class SelectStackDialog<T> extends EditDialog {
     public void onClose() {
     }
 
-    private void updateItemWidgets(List<UIElement> items) {
+    private void updateItemWidgets(List<UIWidget> items) {
         panelStacks.getElements().clear();
-        for(UIElement elm:items)
+        for(UIWidget elm:items)
         	panelStacks.add((UIWidget)elm);
         scrollBar.setPosAndSize(panelStacks.getX() + panelStacks.getWidth() + 25, panelStacks.getY() - 1, 16, panelStacks.getHeight() + 2);
         scrollBar.setValue(0);
@@ -430,7 +430,7 @@ public class SelectStackDialog<T> extends EditDialog {
     }
 
     private class ButtonCaps extends ButtonStackConfig {
-        public ButtonCaps(UIElement panel) {
+        public ButtonCaps(UIWidget panel) {
             super(panel, Components.str("Caps"), CIcons.getIcon(Items.ANVIL));
         }
 
@@ -458,7 +458,7 @@ public class SelectStackDialog<T> extends EditDialog {
     }
 
     private class ButtonCount extends ButtonStackConfig {
-        public ButtonCount(UIElement panel) {
+        public ButtonCount(UIWidget panel) {
             super(panel, Components.str("Count"), CIcons.getIcon(Items.PAPER));
         }
 
@@ -470,7 +470,7 @@ public class SelectStackDialog<T> extends EditDialog {
     }
 
     private class ButtonEditData extends Button {
-        public ButtonEditData(UIElement panel) {
+        public ButtonEditData(UIWidget panel) {
             super(panel, Component.empty(), CIcons.getIcon(Items.BARRIER));
         }
 
@@ -500,7 +500,7 @@ public class SelectStackDialog<T> extends EditDialog {
     }
 
     private class ButtonNBT extends ButtonStackConfig {
-        public ButtonNBT(UIElement panel) {
+        public ButtonNBT(UIWidget panel) {
             super(panel, Components.str("nbt"), CIcons.getIcon(Items.NAME_TAG));
         }
 
@@ -519,7 +519,7 @@ public class SelectStackDialog<T> extends EditDialog {
     }
 
     private abstract class ButtonStackConfig extends Button {
-        public ButtonStackConfig(UIElement panel, Component title, CIcon icon) {
+        public ButtonStackConfig(UIWidget panel, Component title, CIcon icon) {
             super(panel, title, icon);
         }
 
@@ -532,7 +532,7 @@ public class SelectStackDialog<T> extends EditDialog {
     private class ButtonSwitchMode extends Button {
         private final Iterator<ResourceLister<T>> modeIterator = Iterators.cycle(modes);
 
-        public ButtonSwitchMode(UIElement panel) {
+        public ButtonSwitchMode(UIWidget panel) {
             super(panel);
             activeMode = modeIterator.next();
         }
@@ -563,7 +563,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
     private class ItemStackButton extends Button {
         private final T stack;
-        private ItemStackButton(UIElement panel, T is) {
+        private ItemStackButton(UIWidget panel, T is) {
             super(panel, Component.empty(), CIcons.getIcon(Items.BARRIER));
             setSize(18, 18);
             stack = is;

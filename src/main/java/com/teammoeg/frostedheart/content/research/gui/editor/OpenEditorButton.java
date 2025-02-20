@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.lang.Components;
@@ -35,11 +35,11 @@ public class OpenEditorButton<T> extends TextButton {
     private final T val;
     private final Consumer<T> cb;
 
-    public OpenEditorButton(UIElement panel, String label, Editor<T> e, T val, Consumer<T> cb) {
+    public OpenEditorButton(UIWidget panel, String label, Editor<T> e, T val, Consumer<T> cb) {
         this(panel, label, e, val, CIcons.nop(), cb);
     }
 
-    public OpenEditorButton(UIElement panel, String label, Editor<T> e, T val, CIcon ic, Consumer<T> cb) {
+    public OpenEditorButton(UIWidget panel, String label, Editor<T> e, T val, CIcon ic, Consumer<T> cb) {
         super(panel, Components.str(label), ic);
         lbl = label;
         edi = e;

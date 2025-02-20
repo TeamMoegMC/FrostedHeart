@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.research.research.effects;
 
-import com.teammoeg.chorda.client.FHIconWrapper;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.CIconFTBWrapper;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.frostedheart.content.research.gui.editor.*;
@@ -88,7 +88,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     T e;
     Consumer<T> cb;
 
-    public EffectEditor(UIElement panel, String lbl, T e, Consumer<T> cb) {
+    public EffectEditor(UIWidget panel, String lbl, T e, Consumer<T> cb) {
         super(panel);
 
         this.lbl = lbl;
@@ -128,7 +128,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
 
     private static class Building extends EffectEditor<EffectBuilding> {
 
-        public Building(UIElement panel, String lbl, EffectBuilding e, Consumer<EffectBuilding> cb) {
+        public Building(UIWidget panel, String lbl, EffectBuilding e, Consumer<EffectBuilding> cb) {
             super(panel, lbl, e, cb);
 
         }
@@ -156,7 +156,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     private static class Category extends EffectEditor<EffectShowCategory> {
         LabeledTextBox category;
 
-        public Category(UIElement panel, String lbl, EffectShowCategory e, Consumer<EffectShowCategory> cb) {
+        public Category(UIWidget panel, String lbl, EffectShowCategory e, Consumer<EffectShowCategory> cb) {
             super(panel, lbl, e, cb);
             category = new LabeledTextBox(this, "category id", this.e.cate == null ? "" : this.e.cate.toString());
         }
@@ -182,7 +182,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     }
 
     private static class Command extends EffectEditor<EffectCommand> {
-        public Command(UIElement panel, String lbl, EffectCommand e, Consumer<EffectCommand> cb) {
+        public Command(UIWidget panel, String lbl, EffectCommand e, Consumer<EffectCommand> cb) {
             super(panel, lbl, e, cb);
 
         }
@@ -207,7 +207,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
 
     private static class Crafting extends EffectEditor<EffectCrafting> {
 
-        public Crafting(UIElement panel, String lbl, EffectCrafting e, Consumer<EffectCrafting> cb) {
+        public Crafting(UIWidget panel, String lbl, EffectCrafting e, Consumer<EffectCrafting> cb) {
             super(panel, lbl, e, cb);
         }
 
@@ -238,7 +238,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     private static class Exp extends EffectEditor<EffectExperience> {
         NumberBox val;
 
-        public Exp(UIElement panel, String lbl, EffectExperience e, Consumer<EffectExperience> cb) {
+        public Exp(UIWidget panel, String lbl, EffectExperience e, Consumer<EffectExperience> cb) {
             super(panel, lbl, e, cb);
             val = new NumberBox(this, "Exp", this.e.exp);
 
@@ -265,7 +265,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     }
 
     private static class ItemReward extends EffectEditor<EffectItemReward> {
-        public ItemReward(UIElement panel, String lbl, EffectItemReward e, Consumer<EffectItemReward> cb) {
+        public ItemReward(UIWidget panel, String lbl, EffectItemReward e, Consumer<EffectItemReward> cb) {
             super(panel, lbl, e, cb);
         }
 
@@ -297,7 +297,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         LabeledTextBox name;
         RealBox val;
 
-        public Stats(UIElement panel, String lbl, EffectStats e, Consumer<EffectStats> cb) {
+        public Stats(UIWidget panel, String lbl, EffectStats e, Consumer<EffectStats> cb) {
             super(panel, lbl, e, cb);
             perc = LabeledSelection.createBool(this, "percent", this.e.isPercentage);
             name = new LabeledTextBox(this, "Variant name", this.e.vars);
@@ -331,7 +331,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
 
     private static class Use extends EffectEditor<EffectUse> {
 
-        public Use(UIElement panel, String lbl, EffectUse e, Consumer<EffectUse> cb) {
+        public Use(UIWidget panel, String lbl, EffectUse e, Consumer<EffectUse> cb) {
             super(panel, lbl, e, cb);
         }
 
@@ -352,7 +352,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     }
     private static class Custom extends EffectEditor<EffectCustom> {
 
-        public Custom(UIElement panel, String lbl, EffectCustom e, Consumer<EffectCustom> cb) {
+        public Custom(UIWidget panel, String lbl, EffectCustom e, Consumer<EffectCustom> cb) {
             super(panel, lbl, e, cb);
         }
 

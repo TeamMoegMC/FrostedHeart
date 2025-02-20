@@ -14,23 +14,25 @@ import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
-	Focusable lastFocused;
+	UIWidget lastFocused;
 	Screen prevScreen;
 	CUIScreenManager screen;
-	public PrimaryLayer(CUIScreenManager screen) {
+	public PrimaryLayer() {
 		super(null);
 		width = 176;
 		height = 166;
-		this.screen=screen;
 		prevScreen = Minecraft.getInstance().screen;
 		this.setScissorEnabled(false);
 	}
-
+	public void setScreen(CUIScreenManager screen) {
+		this.screen=screen;
+	}
 	int mouseX;
 	int mouseY;
 	boolean hasBackGradient;
@@ -50,12 +52,13 @@ public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
 	}
 
 	@Override
-	public void focusOn(Focusable elm) {
+	public void focusOn(UIWidget elm) {
+		if(lastFocused==elm)return;
 		if (lastFocused != null) {
-			lastFocused.setFocused(false);
+			((Focusable) lastFocused).setFocused(false);
 		}
-		if (elm != null) {
-			elm.setFocused(true);
+		if (elm instanceof Focusable f) {
+			f.setFocused(true);
 			lastFocused = elm;
 		}
 	}
@@ -205,7 +208,10 @@ public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
 
 	@Override
 	public boolean onMousePressed(MouseButton button) {
-		return super.onMousePressed(button);
+		if(super.onMousePressed(button)) {
+			return true;
+		}else this.focusOn(null);
+		return false;
 	}
 
 	@Override
@@ -244,7 +250,7 @@ public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
 		return super.onIMEInput(c, modifiers);
 	}
 
-	public boolean isMouseOver(UIElement widget) {
+	public boolean isMouseOver(UIWidget widget) {
 		return MouseHelper.isMouseIn(mouseX, mouseY, widget.getScreenX(), widget.getScreenY(), width, height);
 
 	}

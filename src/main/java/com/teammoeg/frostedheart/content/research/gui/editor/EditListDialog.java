@@ -27,7 +27,7 @@ import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
@@ -59,14 +59,14 @@ public class EditListDialog<T> extends EditDialog {
     private final Function<T, String> read;
     private final Function<T, CIcon> toicon;
     boolean modified;
-    public EditListDialog(UIElement p, String label, Collection<T> vx, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
+    public EditListDialog(UIWidget p, String label, Collection<T> vx, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
         this(p, label, vx, null, editor, toread, null, li);
     }
-    public EditListDialog(UIElement p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
+    public EditListDialog(UIWidget p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
         this(p, label, vx, def, editor, toread, null, li);
     }
 
-    public EditListDialog(UIElement p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Function<T, CIcon> icon, Consumer<Collection<T>> li) {
+    public EditListDialog(UIWidget p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Function<T, CIcon> icon, Consumer<Collection<T>> li) {
         super(p);
         callback = li;
         if (vx != null)

@@ -13,14 +13,14 @@ public abstract class Button extends UIWidget {
 	protected Component title;
 	protected CIcon icon;
 
-	public Button(UIElement panel, Component t, CIcon i) {
+	public Button(UIWidget panel, Component t, CIcon i) {
 		super(panel);
 		setSize(16, 16);
 		icon = i;
 		title = t;
 	}
 
-	public Button(UIElement panel) {
+	public Button(UIWidget panel) {
 		this(panel, Component.empty(), CIcons.nop());
 	}
 

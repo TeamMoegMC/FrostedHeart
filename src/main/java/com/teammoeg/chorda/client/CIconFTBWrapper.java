@@ -5,10 +5,10 @@ import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import net.minecraft.client.gui.GuiGraphics;
 
-public class FHIconWrapper extends Icon {
+public class CIconFTBWrapper extends Icon {
 	private final CIcon icon;
 
-	public FHIconWrapper(CIcon icon) {
+	public CIconFTBWrapper(CIcon icon) {
 		this.icon = icon;
 	}
 

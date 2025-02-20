@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.compat.ftbq;
 
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.client.CIconFTBWrapper;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftblibrary.config.NameMap;
@@ -97,7 +98,7 @@ public class TemperatureDifficultyReward extends Reward {
                 v -> temperatureDifficulty = v,
                 NameMap.of(FHTemperatureDifficulty.normal, difficulties)
                         .nameKey(v -> "temperature_difficulty.frostedheart." + v.name())
-                        .icon(v -> v.icon)
+                        .icon(v -> new CIconFTBWrapper(v.icon))
                         .create(),
                 FHTemperatureDifficulty.normal
         );
@@ -123,7 +124,7 @@ public class TemperatureDifficultyReward extends Reward {
     @Override
     @OnlyIn(Dist.CLIENT)
     public Icon getAltIcon() {
-        return temperatureDifficulty.icon;
+        return new CIconFTBWrapper(temperatureDifficulty.icon);
     }
 
     @Override

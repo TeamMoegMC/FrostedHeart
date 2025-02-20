@@ -2,11 +2,11 @@ package com.teammoeg.chorda.client.icon;
 
 import java.util.function.Consumer;
 
-import com.teammoeg.chorda.client.FHIconWrapper;
+import com.teammoeg.chorda.client.CIconFTBWrapper;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons.AnimatedIcon;
 import com.teammoeg.chorda.client.icon.CIcons.CombinedIcon;
 import com.teammoeg.chorda.client.icon.CIcons.FHDelegateIcon;
@@ -86,7 +86,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
     public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<String>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), TechIcons.internals::keySet, Components::str, e -> new String[]{e}, TechIcons.internals::get).open();
     public static final Editor<TextureUVIcon> UV_EDITOR = (p, l, v, c) -> new UV(p, l, v, c).open();
     T v;
-    public IconEditor(UIElement panel, T v) {
+    public IconEditor(UIWidget panel, T v) {
         super(panel);
         this.v = v;
     }        public static final Editor<CIcon> NOP_CHANGE_EDITOR = (p, l, v, c) -> EDITOR.open(p, l, null, c);
@@ -101,7 +101,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
     private static class Combined extends IconEditor<CombinedIcon> {
         String label;
         Consumer<CombinedIcon> i;
-        public Combined(UIElement panel, String label, CombinedIcon v, Consumer<CombinedIcon> i) {
+        public Combined(UIWidget panel, String label, CombinedIcon v, Consumer<CombinedIcon> i) {
             super(panel, v == null ? new CombinedIcon(null, null) : v);
             this.label = label;
             this.i = i;
@@ -133,7 +133,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
         NumberBox tw;
         NumberBox th;
 
-        public UV(UIElement panel, String label, TextureUVIcon v, Consumer<TextureUVIcon> i) {
+        public UV(UIWidget panel, String label, TextureUVIcon v, Consumer<TextureUVIcon> i) {
             super(panel, v == null ? new TextureUVIcon() : v);
             this.label = label;
             this.i = i;

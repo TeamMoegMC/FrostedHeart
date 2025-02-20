@@ -19,14 +19,15 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 
 import net.minecraft.client.gui.GuiGraphics;
 
 public abstract class BaseEditDialog extends EditDialog {
 
-    public BaseEditDialog(UIElement panel) {
+    public BaseEditDialog(UIWidget panel) {
         super(panel);
         setWidth(400);
     }

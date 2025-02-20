@@ -19,12 +19,12 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.frostedheart.FHMain;
 
 public class RealBox extends LabeledTextBox {
 
-    public RealBox(UIElement panel, String lab, double val) {
+    public RealBox(UIWidget panel, String lab, double val) {
         super(panel, lab, String.valueOf(val));
     }
 

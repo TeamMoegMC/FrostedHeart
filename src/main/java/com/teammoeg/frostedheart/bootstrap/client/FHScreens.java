@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.bootstrap.client;
 
+import com.teammoeg.chorda.client.cui.CUIMenuScreen;
+import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.climate.block.ClothesScreen;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorScreen;
@@ -51,7 +53,7 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.RELIC_CHEST.get(), RelicChestScreen::new);
         registerFTBScreen(FHMenuTypes.DRAW_DESK.get(), DrawDeskScreen::new);
         registerFTBScreen(FHMenuTypes.TRADE_GUI.get(), TradeScreen::new);
-        registerFTBScreen(FHMenuTypes.HEAT_STAT.get(), HeatStatScreen::new);
+        registerCUIScreen(FHMenuTypes.HEAT_STAT.get(), HeatStatScreen::new);
         MenuScreens.register(FHMenuTypes.SAUNA.get(), SaunaScreen::new);
         MenuScreens.register(FHMenuTypes.INCUBATOR_T1.get(), IncubatorT1Screen::new);
         MenuScreens.register(FHMenuTypes.INCUBATOR_T2.get(), IncubatorT2Screen::new);
@@ -64,9 +66,16 @@ public class FHScreens {
     registerFTBScreen(MenuType<C> type, Function<C, S> factory) {
         MenuScreens.register(type, FTBScreenFactory(factory));
     }
-
+    public static <C extends AbstractContainerMenu, S extends PrimaryLayer> void
+    registerCUIScreen(MenuType<C> type, Function<C, S> factory) {
+        MenuScreens.register(type, CUIScreenFactory(factory));
+    }
     public static <C extends AbstractContainerMenu, S extends BaseScreen> MenuScreens.ScreenConstructor<C, MenuScreenWrapper<C>>
     FTBScreenFactory(Function<C, S> factory) {
         return (c, i, t) -> new MenuScreenWrapper<>(factory.apply(c), c, i, t).disableSlotDrawing();
+    }
+    public static <C extends AbstractContainerMenu, S extends PrimaryLayer> MenuScreens.ScreenConstructor<C, CUIMenuScreen<C>>
+    CUIScreenFactory(Function<C, S> factory) {
+        return (c, i, t) -> new CUIMenuScreen<>(factory.apply(c), c, i, t);
     }
 }

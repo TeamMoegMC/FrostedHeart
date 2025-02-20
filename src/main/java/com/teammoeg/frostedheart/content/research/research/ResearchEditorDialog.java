@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.lang.Components;
@@ -57,7 +57,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
     LabeledSelection<Boolean> hide, alt, hidden, locked, showed, inf;
     boolean removed;
 
-    public ResearchEditorDialog(UIElement panel, Research r, ResearchCategory def) {
+    public ResearchEditorDialog(UIWidget panel, Research r, ResearchCategory def) {
         super(panel);
         if (r == null) {
             r = new Research();

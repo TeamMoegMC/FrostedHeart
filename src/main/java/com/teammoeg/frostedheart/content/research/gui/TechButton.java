@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import com.teammoeg.chorda.client.FHIconWrapper;
+import com.teammoeg.chorda.client.CIconFTBWrapper;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -38,11 +38,11 @@ public abstract class TechButton extends Button {
 
     public TechButton(Panel panel, CIcon i) {
         super(panel);
-        super.setIcon(new FHIconWrapper(i));
+        super.setIcon(new CIconFTBWrapper(i));
     }
 
     public TechButton(Panel panel, Component t, CIcon i) {
-        super(panel, t, new FHIconWrapper(i));
+        super(panel, t, new CIconFTBWrapper(i));
     }
     public TechButton(Panel panel, Icon i) {
         super(panel);

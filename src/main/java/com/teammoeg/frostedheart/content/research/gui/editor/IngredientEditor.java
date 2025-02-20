@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 
-import com.teammoeg.chorda.client.FHIconWrapper;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.CIconFTBWrapper;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
@@ -172,7 +172,7 @@ public class IngredientEditor extends BaseEditDialog {
     Ingredient orig;
     NumberBox count;
 
-    public IngredientEditor(UIElement panel, String label, IngredientWithSize i, Consumer<IngredientWithSize> callback) {
+    public IngredientEditor(UIWidget panel, String label, IngredientWithSize i, Consumer<IngredientWithSize> callback) {
         super(panel);
         this.label = label;
         if (i != null) {
