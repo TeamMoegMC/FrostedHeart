@@ -27,6 +27,7 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.research.gui.editor.EditorSelector.EditorSelectorBuilder;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Widget;
@@ -75,14 +76,11 @@ public class IngredientEditor extends BaseEditDialog {
         }
         EditBtnDialog.EDITOR_ITEM_TAGS.open(p, l, vx, s -> c.accept(new TagValue(ItemTags.create(new ResourceLocation(s)))));
     };
-    public static final Editor<Value> EDITOR_LIST = (p, l, v, c) -> {
-        if (v == null)
-            new EditorSelector<>(p, l, c).addEditor("Tag", EDITOR_TAGLIST).addEditor("Stack", EDITOR_ITEMLIST).open();
-        else if (v instanceof TagValue)
-            EDITOR_TAGLIST.open(p, l, (TagValue) v, c::accept);
-        else if (v instanceof ItemValue)
-            EDITOR_ITEMLIST.open(p, l, (ItemValue) v, c::accept);
-    };
+    public static final Editor<Value> EDITOR_LIST = 
+    	new EditorSelectorBuilder<Value>()
+    	.addEditor("Tag", EDITOR_TAGLIST,v->v instanceof TagValue)
+    	.addEditor("Stack", EDITOR_ITEMLIST,v->v instanceof ItemValue)
+    	.build();
 
 
     public static final Editor<Collection<Value>> EDITOR_LIST_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, EDITOR_LIST, IngredientEditor::getText, c).open();
@@ -97,16 +95,11 @@ public class IngredientEditor extends BaseEditDialog {
             vx = v.values[0];
         EDITOR_LIST.open(p, l, vx, e -> c.accept(Ingredient.fromValues(Stream.of(e))));
     };
-    public static final Editor<Ingredient> VANILLA_EDITOR_CHOICE = (p, l, v, c) -> new EditorSelector<>(p, l, (t, s) -> true, v, c).addEditor("Single", EDITOR_SIMPLE).addEditor("Multiple", EDITOR_MULTIPLE).open();
-    public static final Editor<Ingredient> VANILLA_EDITOR = (p, l, v, c) -> {
-        if (v == null || v.values.length == 0) {
-            VANILLA_EDITOR_CHOICE.open(p, l, null, c);
-        } else if (v.values.length == 1) {
-            EDITOR_SIMPLE.open(p, l, v, c);
-        } else {
-            EDITOR_MULTIPLE.open(p, l, v, c);
-        }
-    };
+    public static final Editor<Ingredient> VANILLA_EDITOR = 
+    	new EditorSelectorBuilder<Ingredient>()
+    	.addEditor("Single", EDITOR_SIMPLE,v->v.values.length==1)
+    	.addEditor("Multiple", EDITOR_MULTIPLE)
+    	.build();
     public static final Editor<Ingredient> NBT_EDITOR = (p, l, v, c) -> {
         if (v == null || v.isEmpty()) {
             SelectStackDialog.EDITOR.open(p, l, new ItemStack(Items.AIR), e -> c.accept(CUtils.createIngredient(e)));
@@ -138,34 +131,26 @@ public class IngredientEditor extends BaseEditDialog {
     	}
         	EDITOR_ITEMLIST.open(p, l, null, e -> c.accept(Ingredient.fromValues(Stream.of(e))));
     };
-    public static final Editor<Ingredient> EDITOR_INGREDIENT = (p, l, v, c) -> {
-        if (v == null) {
-            new EditorSelector<>(p, l, c).addEditor("ItemStack", NBT_EDITOR).addEditor("TAG", TAG_EDITOR).addEditor("Advanced", VANILLA_EDITOR).open();
-        } else if (v instanceof PartialNBTIngredient) {
-            NBT_EDITOR.open(p, l, v, c);
-        } else if (v.isVanilla()) {
-            VANILLA_EDITOR.open(p, l, v, c);
-        } else
-            EDITOR_JSON.open(p, l, v, c);
-    };
-    public static final Editor<Ingredient> EDITOR_INGREDIENT_EXTERN = (p, l, v, c) -> {
-        EditorSelector<Ingredient> igd = new EditorSelector<>(p, l, (o, t) -> true, v, c);
-        igd.addEditor("Edit", EDITOR_INGREDIENT);
-        if (v != null) {
-            if (v.values.length == 1) {
-                igd.addEditor("Change to Multiple", EDITOR_MULTIPLE);
-                if(!(v.values[0] instanceof TagValue))
-                	igd.addEditor("Change to Tag", TAG_EDITOR);
-               if(!(v.values[0] instanceof ItemValue))
-                	igd.addEditor("Change to Item", ITEM_EDITOR);
-            }else
-                igd.addEditor("Change to Single", EDITOR_SIMPLE);
-            if (!(v instanceof PartialNBTIngredient))
-                igd.addEditor("Add NBT", NBT_EDITOR);
-        }
-        igd.addEditor("Edit as JSON", EDITOR_JSON);
-        igd.open();
-    };
+    public static final Editor<Ingredient> EDITOR_INGREDIENT = 
+    	new EditorSelectorBuilder<Ingredient>()
+    	.addEditor("ItemStack", NBT_EDITOR,v->v instanceof PartialNBTIngredient)
+    	.addEditorWhenEmpty("Tag", TAG_EDITOR)
+    	.addEditor("Advanced", VANILLA_EDITOR,v->v.isVanilla())
+    	.addEditorWhenEmpty("Json", EDITOR_JSON)
+    	.buildEdit();
+    public static final Editor<Ingredient> EDITOR_INGREDIENT_EXTERN = new EditorSelectorBuilder<Ingredient>()
+    	.addEditor("Edit", EDITOR_INGREDIENT)
+    	.addEditor("Change to Multiple",  EDITOR_MULTIPLE,v->v!=null||v.values.length == 1)
+    	.addEditor("Change to Tag",  TAG_EDITOR,v->v!=null&&v.values.length == 1&&v.values[0] instanceof TagValue)
+    	.addEditor("Change to Item", ITEM_EDITOR,v->v!=null&&v.values.length == 1&&v.values[0] instanceof ItemValue)
+    	.addEditor("Change to Single",  EDITOR_SIMPLE,v->v!=null&&v.values.length != 1)
+    	.addEditor("Add NBT", NBT_EDITOR,v->v instanceof PartialNBTIngredient)
+    	.addEditor("Edit as JSON", EDITOR_JSON)
+    	.build();
+    
+    
+    
+ 
 
     Component label;
 

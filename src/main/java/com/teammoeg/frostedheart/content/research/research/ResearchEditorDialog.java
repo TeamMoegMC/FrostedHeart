@@ -34,7 +34,7 @@ import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchUtils;
 import com.teammoeg.frostedheart.content.research.gui.editor.BaseEditDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditListDialog;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditUtils;
+import com.teammoeg.frostedheart.content.research.gui.editor.ResearchEditUtils;
 import com.teammoeg.frostedheart.content.research.gui.editor.Editor;
 import com.teammoeg.frostedheart.content.research.gui.editor.IngredientEditor;
 import com.teammoeg.frostedheart.content.research.gui.editor.LabeledSelection;
@@ -74,16 +74,17 @@ public class ResearchEditorDialog extends BaseEditDialog {
         showed = LabeledSelection.createBool(this, Components.str("Keep this research show in list"), r.alwaysShow);
         hide = LabeledSelection.createBool(this, Components.str("Hide effects before complete"), r.hideEffects);
         alt = LabeledSelection.createBool(this, Components.str("Show alt description before complete"), r.showfdesc);
+        inf = LabeledSelection.createBool(this, Components.str("Infinite"), r.isInfinite());
         hidden = LabeledSelection.createBool(this, Components.str("Hide this research in list"), r.isHidden);
         locked = LabeledSelection.createBool(this, Components.str("Lock this research"), r.isInCompletable());
-        inf = LabeledSelection.createBool(this, Components.str("Infinite"), r.isInfinite());
+        
 
     }
 
 
     @Override
     public void addUIElements() {
-        add(EditUtils.getTitle(this, "Edit/New Research"));
+        add(ResearchEditUtils.getTitle(this, "Edit/New Research"));
         add(id);
         add(new TextButton(this, Components.str("Reset id"), CIcons.nop()) {
             @Override
@@ -170,7 +171,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
                 //FHResearch.register(r);
             }
 
-            EditUtils.saveResearch(r);
+            ResearchEditUtils.saveResearch(r);
             
             FHResearch.load(r);
         }

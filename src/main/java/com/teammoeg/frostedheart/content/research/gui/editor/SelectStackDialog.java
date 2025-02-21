@@ -36,11 +36,13 @@ import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.client.Lang;
 
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
@@ -215,11 +217,7 @@ public class SelectStackDialog<T> extends EditDialog {
             }
         };
     
-    public static final ExecutorService ITEM_SEARCH = Executors.newSingleThreadExecutor(task -> {
-        Thread thread = new Thread(task, "FH-ItemSearch");
-        thread.setDaemon(true);
-        return thread;
-    });
+    public static final ExecutorService ITEM_SEARCH = Executors.newSingleThreadExecutor(CUtils.makeThreadFactory("Chorda-ItemSearch", true));
     public static Editor<ItemStack> EDITOR = (p, l, v, c) -> new SelectStackDialog<ItemStack>(p, l, v, c,itemMode,ALL_ITEM,INVENTORY,BLOCKS).open();
     public static final Editor<Collection<ItemStack>> STACK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, new ItemStack(Items.AIR), EDITOR, SelectStackDialog::fromItemStack, CIcons::getIcon, c).open();
     public static Editor<Block> EDITOR_BLOCK = (p, l, v, c) -> new SelectStackDialog<ItemStack>(p, Components.empty().append(l).append(" (Blocks only)"), new ItemStack(v), e -> {
@@ -243,13 +241,13 @@ public class SelectStackDialog<T> extends EditDialog {
     @SafeVarargs
 	public SelectStackDialog(UIWidget p, Component label, T orig, Consumer<T> cb,ResourceMode<T> mode,ResourceLister<T>...listers) {
         super(p);
-        setSize(240, 150);
+        setSize(222, 150);
         callback = cb;
         this.type=mode;
         current = orig == null ? type.getDefaultValue() : type.copy(orig);
         
         this.modes.addAll(Arrays.asList(listers));
-        int bsize = width / 2 - 10;
+        int bsize = width / 2 - 30;
 
         buttonCancel = new TextButton(this, Lang.translateKey("gui.cancel"), CIcons.nop()) {
             @Override
@@ -280,7 +278,7 @@ public class SelectStackDialog<T> extends EditDialog {
             }
         };
 
-        buttonAccept.setPosAndSize(width - bsize + 11, height - 24, bsize, 16);
+        buttonAccept.setPosAndSize(width - bsize -29, height - 24, bsize, 16);
 
         panelStacks = new Layer(this) {
             @Override
@@ -312,7 +310,7 @@ public class SelectStackDialog<T> extends EditDialog {
             }
         };
 
-        searchBox.setPosAndSize(27, 7, width - 16, 12);
+        searchBox.setPosAndSize(27, 4, width - 32, 16);
         searchBox.ghostText = I18n.get("gui.search_box");
         searchBox.setFocused(true);
 
@@ -425,7 +423,7 @@ public class SelectStackDialog<T> extends EditDialog {
         panelStacks.getElements().clear();
         for(UIWidget elm:items)
         	panelStacks.add((UIWidget)elm);
-        scrollBar.setPosAndSize(panelStacks.getX() + panelStacks.getWidth() +3, panelStacks.getY() - 1, 16, panelStacks.getHeight() + 2);
+        scrollBar.setPosAndSize(panelStacks.getX() + panelStacks.getWidth() +3, panelStacks.getY() - 1, 10, panelStacks.getHeight() + 2);
         scrollBar.setValue(0);
         
         //scrollBar.setMaxValue(1 + Mth.ceil(panelStacks.getWidgets().size() / 9F) * 19);
@@ -484,6 +482,11 @@ public class SelectStackDialog<T> extends EditDialog {
         }
 
         @Override
+		public void getTooltip(Consumer<Component> tooltip) {
+			type.appendTooltip(current, tooltip);
+		}
+
+		@Override
         public Component getTitle() {
             return type.getTitle(current);
         }
@@ -576,7 +579,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
         @Override
         public void getTooltip(Consumer<Component> list) {
-        	
+        	type.appendTooltip(stack, list);
         }
 
         @Override

@@ -8,6 +8,7 @@ import com.teammoeg.chorda.client.ui.CGuiHelper;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentContents;
 
 public abstract class Button extends UIWidget {
 	protected Component title;
@@ -31,14 +32,22 @@ public abstract class Button extends UIWidget {
 
 	public Button setTitle(Component s) {
 		title = s;
+		fitSize();
 		return this;
 	}
 
+	public boolean hasIcon() {
+		return icon!=CIcons.nop();
+	}
 	public Button setIcon(CIcon i) {
 		icon = i;
+		fitSize();
 		return this;
 	}
-
+	protected void fitSize() {
+		setWidth(parent.getFont().width(title)+((title.getContents()==ComponentContents.EMPTY&&hasIcon())?0:8) + (hasIcon() ? 20 : 0));
+		setHeight(hasIcon() ?20:16);
+	}
 	private int getTextureY() {
 		int i = 1;
 		if (!this.isEnabled()) {

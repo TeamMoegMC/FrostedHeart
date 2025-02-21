@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechTextButton;
 import com.teammoeg.frostedheart.content.research.gui.ThickLine;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditUtils;
+import com.teammoeg.frostedheart.content.research.gui.editor.ResearchEditUtils;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchEditorDialog;
 import com.teammoeg.frostedheart.util.client.Lang;
@@ -68,12 +68,12 @@ public class ResearchHierarchyPanel extends Panel {
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add parent
                         Research r = researchPanel.selectedResearch;
-                        ResearchEditorDialog.RESEARCH_LIST.open(EditUtils.openEditorScreen(), Components.str("Edit parents"), r.getParents(), s -> {
+                        ResearchEditorDialog.RESEARCH_LIST.open(ResearchEditUtils.openEditorScreen(), Components.str("Edit parents"), r.getParents(), s -> {
                             try {
                                 //System.out.println(s);
                                 r.setParents(s.stream().map(Research::getId).collect(Collectors.toList()));
                                 FHResearch.reindex();
-                                EditUtils.saveResearch(r);
+                                ResearchEditUtils.saveResearch(r);
                             } catch (Throwable t) {
                                 t.printStackTrace();
                             }
@@ -88,14 +88,14 @@ public class ResearchHierarchyPanel extends Panel {
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add children
                         Research r = researchPanel.selectedResearch;
-                        ResearchEditorDialog.RESEARCH_LIST.open(EditUtils.openEditorScreen(), Components.str("Edit children"), r.getChildren(), s -> {
+                        ResearchEditorDialog.RESEARCH_LIST.open(ResearchEditUtils.openEditorScreen(), Components.str("Edit children"), r.getChildren(), s -> {
                             r.getChildren().forEach(e -> {
                                 e.removeParent(r);
-                                EditUtils.saveResearch(e);
+                                ResearchEditUtils.saveResearch(e);
                             });
                             s.forEach(e -> e.addParent(r));
                             FHResearch.reindex();
-                            EditUtils.saveResearch(r);
+                            ResearchEditUtils.saveResearch(r);
                         });
                     }
                 };
@@ -108,7 +108,7 @@ public class ResearchHierarchyPanel extends Panel {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         
-                        new ResearchEditorDialog(EditUtils.openEditorScreen(), null, researchPanel.selectedCategory).open();
+                        new ResearchEditorDialog(ResearchEditUtils.openEditorScreen(), null, researchPanel.selectedCategory).open();
                     }
                 };
                 create.setPos(offset, 130);
@@ -119,7 +119,7 @@ public class ResearchHierarchyPanel extends Panel {
                 Button create = new TechTextButton(this, Components.str("edit"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
-                        EditUtils.editResearch(this, researchPanel.selectedResearch);
+                        ResearchEditUtils.editResearch(this, researchPanel.selectedResearch);
                     }
                 };
                 create.setPos(offset, 130);

@@ -57,7 +57,7 @@ public class LabeledPane<T extends UIWidget> extends Layer {
     public void alignWidgets() {
         setSize(super.align(true), this.getContentHeight());
         
-        label.setY((20 - 8) / 2);
+        label.setY((this.getContentHeight() - 8) / 2);
         //System.out.println(this.getX()+","+this.getY()+":"+this.getWidth()+","+this.getHeight());
     }
 }

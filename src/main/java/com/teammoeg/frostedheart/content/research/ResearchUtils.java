@@ -34,6 +34,5 @@ public class ResearchUtils {
                 bs.refreshWidgets();
             }
         }
-        ClientUtils.mc().getLanguageManager();
     }
 }

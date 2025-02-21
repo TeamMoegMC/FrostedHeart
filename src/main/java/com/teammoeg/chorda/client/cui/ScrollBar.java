@@ -58,7 +58,7 @@ public class ScrollBar extends UIWidget {
 			int scrollBarSize=getScrollBarSize();
 			if(isVertical) {
 				int barPos=(int) (lerpValue(height - scrollBarSize-2)+1);
-				System.out.println(getMouseY()+"/"+barPos+"("+height);
+				//System.out.println(getMouseY()+"/"+barPos+"("+height);
 				if(getMouseY()<barPos) {
 					this.setValue(this.getValue()-getPage());
 				}else if(getMouseY()>barPos+scrollBarSize) {

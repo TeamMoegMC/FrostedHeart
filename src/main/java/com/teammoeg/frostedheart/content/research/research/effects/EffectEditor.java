@@ -51,39 +51,18 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     public static final Editor<EffectCommand> COMMAND = (p, l, v, c) -> new Command(p, l, v, c).open();
     public static final Editor<EffectExperience> EXP = (p, l, v, c) -> new Exp(p, l, v, c).open();
     public static final Editor<EffectCustom> CUSTOM= (p,l,v,c) -> new Custom(p,l,v,c).open();
-    public static final Editor<Effect> EDITOR = (p, l, v, c) -> {
-        if (v instanceof EffectBuilding)
-            BUILD.open(p, l, (EffectBuilding) v, c::accept);
-        else if (v instanceof EffectCrafting)
-            CRAFT.open(p, l, (EffectCrafting) v, c::accept);
-        else if (v instanceof EffectItemReward)
-            ITEM.open(p, l, (EffectItemReward) v, c::accept);
-        else if (v instanceof EffectStats)
-            STATS.open(p, l, (EffectStats) v, c::accept);
-        else if (v instanceof EffectUse)
-            USE.open(p, l, (EffectUse) v, c::accept);
-        else if (v instanceof EffectShowCategory)
-            CAT.open(p, l, (EffectShowCategory) v, c::accept);
-        else if (v instanceof EffectCommand)
-            COMMAND.open(p, l, (EffectCommand) v, c::accept);
-        else if (v instanceof EffectExperience)
-            EXP.open(p, l, (EffectExperience) v, c::accept);
-        else if(v instanceof EffectCustom)
-        	CUSTOM.open(p,l,(EffectCustom) v,c::accept);
-        else
-            new EditorSelector<>(p, l, c)
-                    .addEditor("Building", BUILD)
-                    .addEditor("Craft", CRAFT)
-                    .addEditor("Item Reward", ITEM)
-                    .addEditor("Add Stats", STATS)
-                    .addEditor("Add Usage", USE)
-                    .addEditor("Recipe Category", CAT)
-                    .addEditor("Add Command", COMMAND)
-                    .addEditor("Add Experience", EXP)
-                    .addEditor("Custom",CUSTOM)
-                    .open();
-
-    };
+    public static final Editor<Effect> EDITOR = 
+    	new EditorSelector.EditorSelectorBuilder<Effect>() 
+        .addEditor("Building", BUILD,v->v instanceof EffectBuilding)
+        .addEditor("Craft", CRAFT,v->v instanceof EffectCrafting)
+        .addEditor("Item Reward", ITEM,v->v instanceof EffectItemReward)
+        .addEditor("Add Stats", STATS,v->v instanceof EffectStats)
+        .addEditor("Add Usage", USE,v->v instanceof EffectUse)
+        .addEditor("Recipe Category", CAT,v->v instanceof EffectShowCategory)
+        .addEditor("Add Command", COMMAND,v->v instanceof EffectCommand)
+        .addEditor("Add Experience", EXP,v->v instanceof EffectExperience)
+        .addEditor("Custom",CUSTOM,v->v instanceof EffectCustom)
+        .build();
     public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, Effect::getBrief, Effect::getIcon, c).open();
     protected LabeledTextBoxAndBtn nonce;
     protected LabeledTextBox name;
@@ -110,7 +89,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
 
     @Override
     public void addUIElements() {
-        add(EditUtils.getTitle(this, lbl));
+        add(ResearchEditUtils.getTitle(this, lbl));
         add(nonce);
         add(name);
         add(new OpenEditorButton<>(this, Components.str("Edit Description"), EditListDialog.STRING_LIST, e.tooltip, s -> e.tooltip = new ArrayList<>(s)));
@@ -218,7 +197,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         @Override
         public void addUIElements() {
             super.addUIElements();
-            add(EditUtils.getTitle(this, "Only the first in the following takes effects"));
+            add(ResearchEditUtils.getTitle(this, "Only the first in the following takes effects"));
             add(new OpenEditorButton<Ingredient>(this, Components.str("Edit Item"),
                     IngredientEditor.EDITOR_INGREDIENT,
                     e.ingredient, s -> {

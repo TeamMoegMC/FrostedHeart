@@ -60,27 +60,13 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
                 clues.add(e);
         }).open();
     };
-    public static final Editor<Clue> EDITOR = (p, l, v, c) -> {
-        if (v == null) {
-            new EditorSelector<>(p, l, c)
-                    .addEditor("Submit Item", ITEM)
-                    .addEditor("Triger in program", CUSTOM)
-                    .addEditor("Advancement", ADVA)
-                    .addEditor("Kill Entity", KILL)
-                    .addEditor("Complete minigame", GAME)
-                    .open();
-
-        } else if (v instanceof ItemClue)
-            ITEM.open(p, l, (ItemClue) v, c::accept);
-        else if (v instanceof MinigameClue)
-            GAME.open(p, l, (MinigameClue) v, c::accept);
-        else if (v instanceof AdvancementClue)
-            ADVA.open(p, l, (AdvancementClue) v, c::accept);
-        else if (v instanceof KillClue)
-            KILL.open(p, l, (KillClue) v, c::accept);
-        else
-            CUSTOM.open(p, l, (CustomClue) v, c::accept);
-    };
+    public static final Editor<Clue> EDITOR = new EditorSelector.EditorSelectorBuilder<Clue>()
+        .addEditor("Submit Item", ITEM,v->v instanceof ItemClue)
+        .addEditor("Triger in program", CUSTOM,v->v instanceof CustomClue)
+        .addEditor("Advancement", ADVA,v->v instanceof AdvancementClue)
+        .addEditor("Kill Entity", KILL,v->v instanceof KillClue)
+        .addEditor("Complete minigame", GAME,v->v instanceof MinigameClue)
+        .build();
     public static final Editor<Collection<Clue>> EDITOR_LIST = (p, l, v, c) -> new EditListDialog<Clue>(p, l, v, EDITOR, e -> e.getBrief() + e.getBriefDesc(), c).open();
     protected LabeledTextBoxAndBtn nonce;
     protected LabeledTextBox name;
@@ -116,7 +102,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
 
     @Override
     public void addUIElements() {
-        add(EditUtils.getTitle(this, lbl));
+        add(ResearchEditUtils.getTitle(this, lbl));
         add(nonce);
         add(name);
         add(desc);

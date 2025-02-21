@@ -77,14 +77,8 @@ public abstract class ResearchPanel extends Panel {
         };
         hierarchyBar = new TechScrollBar(this, Plane.HORIZONTAL, researchHierarchyPanel);
         detailframe = new ResearchDetailPanel(this);
-        //TODO default select on progress research
-        Research cr = null;
-        if (ClientResearchData.last != null && FHResearch.researches.getIntId(ClientResearchData.last) > 0)
-            cr = ClientResearchData.last;
-        else
-            cr = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
-        selectedCategory = cr == null ? ResearchCategory.RESCUE : cr.getCategory();
-        selectedResearch = cr == null ? FHResearch.getFirstResearchInCategory(selectedCategory) : cr;
+        selectedCategory=ResearchCategory.RESCUE;
+        selectedResearch=null;
     }
 
 
@@ -100,7 +94,16 @@ public abstract class ResearchPanel extends Panel {
         int sw = 387;
         int sh = 203;
         this.setSize(sw, sh);
-
+        Research cr = null;
+        if (ClientResearchData.last != null) {
+            cr = FHResearch.researches.get(ClientResearchData.last);
+        }
+        if(cr==null)
+            cr = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
+        if(cr==null)
+        	cr= FHResearch.getFirstResearchInCategory(selectedCategory);
+        selectedCategory = cr == null ? ResearchCategory.RESCUE : cr.getCategory();
+        selectedResearch = cr;
         researchCategoryPanel.setPosAndSize(165, 0, 190, 21);
         researchListPanel.setPosAndSize(12, 74, 114, 118);
         researchHierarchyPanel.setPosAndSize(160, 23, 210, 160);
@@ -183,7 +186,7 @@ public abstract class ResearchPanel extends Panel {
 
     public void selectResearch(Research research) {
         if (selectedResearch != research) {
-            ClientResearchData.last = research;
+            ClientResearchData.last = research.getId();
             selectedResearch = research;
             if (selectedResearch != null)
                 selectCategory(selectedResearch.getCategory());

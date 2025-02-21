@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechTextButton;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditUtils;
+import com.teammoeg.frostedheart.content.research.gui.editor.ResearchEditUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
 
 import blusunrize.immersiveengineering.client.ClientUtils;
@@ -118,7 +118,8 @@ public class ResearchDashboardPanel extends Panel {
                     Icon.empty()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
-                    EditUtils.editResearch(this, detailPanel.research);
+                	if(detailPanel.research!=null)
+                		ResearchEditUtils.editResearch(this, detailPanel.research);
                 }
             };
             create.setPos(40, 30);

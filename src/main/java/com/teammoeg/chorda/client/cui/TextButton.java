@@ -17,15 +17,7 @@ import net.minecraft.util.FormattedCharSequence;
 public abstract class TextButton extends Button {
 	public TextButton(UIWidget panel, Component txt, CIcon icon) {
 		super(panel, txt, icon);
-		setWidth(panel.getFont().width(txt)+((txt.getContents()==ComponentContents.EMPTY&&hasIcon())?0:8) + (hasIcon() ? 20 : 0));
-		setHeight(20);
-	}
-
-	@Override
-	public TextButton setTitle(Component txt) {
-		super.setTitle(txt);
-		setWidth(getFont().width(getTitle()) + (hasIcon() ? 28 : 8));
-		return this;
+		fitSize();
 	}
 
 	public boolean renderTitleInCenter() {
@@ -33,9 +25,6 @@ public abstract class TextButton extends Button {
 	}
 
 
-	public boolean hasIcon() {
-		return icon!=CIcons.nop();
-	}
 
 	@Override
 	public void getTooltip(Consumer<Component> list) {

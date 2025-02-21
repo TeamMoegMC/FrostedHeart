@@ -198,7 +198,8 @@ public abstract class Layer extends UIWidget {
 		//graphics.pose().pushPose();
 		//graphics.pose().translate(0, 0, 1);
 		for(UIWidget elm:elements) {
-			drawElement(graphics, elm, contentX, contentY, w, h);
+			if(elm.isVisible())
+				drawElement(graphics, elm, contentX, contentY, w, h);
 		}
 		
 		if(scissorEnabled)
@@ -218,8 +219,21 @@ public abstract class Layer extends UIWidget {
 	}
 
 	public void drawElement(GuiGraphics graphics, UIWidget element, int x, int y, int w, int h) {
+		int childX=element.getX()+x;
+		int childY=element.getY()+y;
+		int childW=element.getWidth();
+		int childH=element.getHeight();
 		
-		element.render(graphics, element.getX()+x, element.getY()+y, element.getWidth(), element.getHeight());
+		if(scissorEnabled) {
+			if(childX+childW<x&&childY+childH<y) {
+				return;
+			}else if(childX>x+w&&childY>y+h) {
+				return;
+			}
+			
+			
+		}
+		element.render(graphics, childX, childY, childW, childH);
 	}
 
 	@Override

@@ -56,6 +56,7 @@ import java.util.stream.Collectors;
  *
  * @author khjxiaogu
  */
+
 public class Research implements FHRegisteredItem {
     public static final Codec<Research> CODEC = RecordCodecBuilder.create(t -> t.group(
             CIcons.CODEC.optionalFieldOf("icon", CIcons.nop()).forGetter(o -> o.icon),
@@ -121,8 +122,8 @@ public class Research implements FHRegisteredItem {
     int insight = 1;//insight point
     private String id;// id of this research
     private ResearchCategory category = ResearchCategory.RESCUE;
-    private HashSet<String> parents = new HashSet<>();// parent researches
-    private HashSet<String> children = new HashSet<>();// child researches, this is set automatically,
+    HashSet<String> parents = new HashSet<>();// parent researches
+    HashSet<String> children = new HashSet<>();// child researches, this is set automatically,
     // should not set manually.
     private List<Clue> clues = new ArrayList<>();// research clues
     private List<Effect> effects = new ArrayList<>();// effects of this research
@@ -140,7 +141,32 @@ public class Research implements FHRegisteredItem {
         this.icon = CIcons.nop();
     }
 
-    public Research(CIcon icon, ResearchCategory category, List<String> parents, List<Clue> clues, List<Pair<Ingredient,Integer>> requiredItems, Optional<List<Effect>> effects, String name,
+    public Research(String id,String name,int insight, int points, CIcon icon,ResearchCategory category,Collection<String> desc, Collection<String> fdesc,Collection<Research> parents,Collection<Research> children, List<Pair<Ingredient, Integer>> requiredItems, Collection<Effect> effects, Collection<Clue> clues,  
+    	boolean alwaysShow, boolean hideEffects, boolean showfdesc,  
+		boolean infinite, boolean isHidden,boolean inCompletable) {
+		super();
+		this.icon = icon;
+		this.requiredItems = requiredItems;
+		this.name = name;
+		this.desc.addAll(desc);
+		this.fdesc.addAll(fdesc);
+		this.showfdesc = showfdesc;
+		this.hideEffects = hideEffects;
+		this.isHidden = isHidden;
+		this.alwaysShow = alwaysShow;
+		this.points = points;
+		this.insight = insight;
+		parents.forEach(r->this.parents.add(r.getId()));
+		children.forEach(r->this.children.add(r.getId()));
+		this.id = id;
+		this.category = category;
+		this.clues.addAll(clues);
+		this.effects.addAll(effects);
+		this.inCompletable = inCompletable;
+		this.infinite = infinite;
+	}
+
+	public Research(CIcon icon, ResearchCategory category, List<String> parents, List<Clue> clues, List<Pair<Ingredient,Integer>> requiredItems, Optional<List<Effect>> effects, String name,
                     List<String> desc, List<String> fdesc, boolean[] flags, int points,int insight) {
         super();
         this.icon = icon;
@@ -716,6 +742,25 @@ public class Research implements FHRegisteredItem {
 
 	public int getInsight() {
 		return insight;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(alwaysShow, category, children, clues, desc, effects, fdesc, hideEffects, icon, id, inCompletable, infinite, insight, isHidden, name, parents, points, requiredItems,
+			requiredItemsCountOverride, showfdesc);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		Research other = (Research) obj;
+		return alwaysShow == other.alwaysShow && category == other.category && Objects.equals(children, other.children) && Objects.equals(clues, other.clues) && Objects.equals(desc, other.desc)
+			&& Objects.equals(effects, other.effects) && Objects.equals(fdesc, other.fdesc) && hideEffects == other.hideEffects && Objects.equals(icon, other.icon) && Objects.equals(id, other.id)
+			&& inCompletable == other.inCompletable && infinite == other.infinite && insight == other.insight && isHidden == other.isHidden && Objects.equals(name, other.name)
+			&& Objects.equals(parents, other.parents) && points == other.points && Objects.equals(requiredItems, other.requiredItems)
+			&& Objects.equals(requiredItemsCountOverride, other.requiredItemsCountOverride) && showfdesc == other.showfdesc;
 	}
 
 }

@@ -21,7 +21,7 @@ import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.editor.BaseEditDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditListDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditPrompt;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditUtils;
+import com.teammoeg.frostedheart.content.research.gui.editor.ResearchEditUtils;
 import com.teammoeg.frostedheart.content.research.gui.editor.Editor;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditorSelector;
 import com.teammoeg.frostedheart.content.research.gui.editor.IngredientEditor;
@@ -41,41 +41,23 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
     public static final Editor<TextureIcon> TEXTURE_EDITOR = (p, l, v, c) -> EditPrompt.TEXT_EDITOR.open(p, l, v == null ? "" : (v.rl == null ? "" : v.rl.toString()),
             e -> c.accept(new TextureIcon(new ResourceLocation(e))));
     public static final Editor<IngredientIcon> INGREDIENT_EDITOR = (p, l, v, c) -> IngredientEditor.EDITOR_INGREDIENT_EXTERN.open(p, l, v == null ? null : v.igd,
-            e -> c.accept(new IngredientIcon(e)));        public static final Editor<CIcon> EDITOR = (p, l, v, c) -> {
-        if (v == null || v instanceof NopIcon) {
-            new EditorSelector<>(p, l, c).addEditor("Empty", IconEditor.NOP_EDITOR)
-                    .addEditor("ItemStack", IconEditor.ITEM_EDITOR).addEditor("Texture", IconEditor.TEXTURE_EDITOR)
-                    .addEditor("Texture with UV", IconEditor.UV_EDITOR).addEditor("Text", IconEditor.TEXT_EDITOR)
-                    .addEditor("Ingredient", IconEditor.INGREDIENT_EDITOR)
-                    .addEditor("IngredientWithSize", IconEditor.INGREDIENT_SIZE_EDITOR)
-                    .addEditor("Internal", IconEditor.INTERNAL_EDITOR)
-                    .addEditor("Combined", IconEditor.COMBINED_EDITOR)
-                    .addEditor("Animated", IconEditor.ANIMATED_EDITOR).open();
-        } else
-            new EditorSelector<>(p, l, (o, t) -> true, v, c).addEditor("Edit", IconEditor.CHANGE_EDITOR)
-                    .addEditor("New", IconEditor.NOP_CHANGE_EDITOR).open();
-    };
+            e -> c.accept(new IngredientIcon(e)));       
+    public static final Editor<CIcon> EDITOR =
+            new EditorSelector.EditorSelectorBuilder<CIcon>(v->v==null||v==CIcons.nop())
+            .addEditorWhenEmpty("Empty", IconEditor.NOP_EDITOR)
+            .addEditor("ItemStack", IconEditor.ITEM_EDITOR,v->v.getClass()==ItemIcon.class)
+            .addEditor("Texture", IconEditor.TEXTURE_EDITOR,v->v.getClass()==TextureIcon.class)
+            .addEditor("Texture with UV", IconEditor.UV_EDITOR,v->v.getClass()==TextureIcon.class)
+            .addEditor("Text", IconEditor.TEXT_EDITOR,v->v.getClass()==TextIcon.class)
+            .addEditor("Ingredient", IconEditor.INGREDIENT_EDITOR,v->v.getClass()==IngredientIcon.class)
+            .addEditorWhenEmpty("IngredientWithSize", IconEditor.INGREDIENT_SIZE_EDITOR)
+            .addEditor("Internal", IconEditor.INTERNAL_EDITOR,v->v instanceof FHDelegateIcon)
+            .addEditor("Combined", IconEditor.COMBINED_EDITOR,v->v.getClass()== CombinedIcon.class)
+            .addEditor("Animated", IconEditor.ANIMATED_EDITOR,v->v.getClass()== AnimatedIcon.class)
+            .build();
+
+    ;
     public static final Editor<CIcon> INGREDIENT_SIZE_EDITOR = (p, l, v, c) -> IngredientEditor.EDITOR.open(p, l, null, e -> c.accept(CIcons.getIcon(e.getFirst(),e.getSecond())));
-    public static final Editor<CIcon> CHANGE_EDITOR = (p, l, v, c) -> {
-        if (v instanceof ItemIcon) {
-            IconEditor.ITEM_EDITOR.open(p, l, (ItemIcon) v, c::accept);
-        } else if (v instanceof CombinedIcon) {
-            IconEditor.COMBINED_EDITOR.open(p, l, (CombinedIcon) v, c::accept);
-        } else if (v instanceof IngredientIcon) {
-            IconEditor.INGREDIENT_EDITOR.open(p, l, (IngredientIcon) v, c::accept);
-        } else if (v instanceof AnimatedIcon) {
-            IconEditor.ANIMATED_EDITOR.open(p, l, (AnimatedIcon) v, c::accept);
-        } else if (v instanceof TextureIcon) {
-            IconEditor.TEXTURE_EDITOR.open(p, l, (TextureIcon) v, c::accept);
-        } else if (v instanceof TextureUVIcon) {
-            IconEditor.UV_EDITOR.open(p, l, (TextureUVIcon) v, e -> c.accept(v));
-        } else if (v instanceof TextIcon) {
-            IconEditor.TEXT_EDITOR.open(p, l, (TextIcon) v, c::accept);
-        } else if (v instanceof FHDelegateIcon) {
-            IconEditor.INTERNAL_EDITOR.open(p, l, (FHDelegateIcon) v, c::accept);
-        } else
-            IconEditor.NOP_CHANGE_EDITOR.open(p, l, v, c);
-    };
     public static final Editor<TextIcon> TEXT_EDITOR = (p, l, v, c) -> EditPrompt.TEXT_EDITOR.open(p, l, v == null ? null : v.text.getString(), e -> c.accept(new TextIcon(StringTextComponentParser.parse(e))));
     public static final Editor<CIcon> NOP_EDITOR = (p, l, v, c) -> {
         c.accept(NopIcon.INSTANCE);
@@ -109,7 +91,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
 
         @Override
         public void addUIElements() {
-            add(EditUtils.getTitle(this, label));
+            add(ResearchEditUtils.getTitle(this, label));
             add(new OpenEditorButton<>(this, Components.str("Edit base icon"), EDITOR, v.large, e -> v.large = e));
             add(new OpenEditorButton<>(this, Components.str("Edit corner icon"), EDITOR, v.small, e -> v.small = e));
         }
@@ -149,7 +131,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
 
         @Override
         public void addUIElements() {
-            add(EditUtils.getTitle(this, label));
+            add(ResearchEditUtils.getTitle(this, label));
             add(rl);
             add(x);
             add(y);

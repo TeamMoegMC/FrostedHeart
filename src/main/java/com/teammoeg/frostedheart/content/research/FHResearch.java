@@ -50,6 +50,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.network.PacketDistributor.PacketTarget;
@@ -77,7 +78,7 @@ public class FHResearch {
     /**
      * Cache for all Researches.
      */
-    private static OptionalLazy<List<Research>> allResearches = OptionalLazy.of(() -> researches.all());
+    private static Lazy<List<Research>> allResearches = Lazy.of(() -> researches.all());
 
     public static void clearAll() {
         //clues.clear();
@@ -87,8 +88,7 @@ public class FHResearch {
 
     // clear cache when modification applied
     public static void clearCache() {
-        if (allResearches.isResolved())
-            allResearches = OptionalLazy.of(() -> researches.all());
+            allResearches = Lazy.of(() -> researches.all());
     }
 
     /**
@@ -114,7 +114,7 @@ public class FHResearch {
     }
 
     public static List<Research> getAllResearch() {
-        return allResearches.resolve().get();
+        return allResearches.get();
     }
 
 	/*public static Clue getClue(int id) {
@@ -388,8 +388,8 @@ public class FHResearch {
     // called after reload
     public static void reindex() {
         try {
-            allResearches.orElse(Collections.emptyList()).forEach(Research::doReindex);
-            allResearches.orElse(Collections.emptyList()).forEach(Research::doIndex);
+            allResearches.get().forEach(Research::doReindex);
+            allResearches.get().forEach(Research::doIndex);
         } catch (Throwable t) {
             t.printStackTrace();
         }

@@ -19,8 +19,10 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import com.teammoeg.chorda.client.cui.UIWidget;
 
@@ -37,11 +39,23 @@ public interface Editor<T> {
         };
     }
 
-    void open(UIWidget parent, Component label, T previousValue, Consumer<T> onCommit);
+    void open(UIWidget parent, Component label,final T previousValue, Consumer<T> onCommit);
     default <A> Editor<A> xmap(Function<T,A> to,Function<A,T> from){
     	return (p,l,v,c)->{
     		this.open(p, l, from.apply(v), e->c.accept(to.apply(e)));
     	};
     	
+    }
+    default Editor<T> addOnChangeAction(BiConsumer<T,T> onChange){
+    	return (p,l,v,c)->this.open(p, l, v, cobj->{
+    		onChange.accept(v, cobj);
+    		c.accept(cobj);
+    	});
+    }
+    default Editor<T> withDefault(Supplier<T> def){
+    	return (p,l,v,c)->this.open(p, l, v==null?def.get():v,c);
+    }
+    default Editor<T> withValue(Supplier<T> def){
+    	return (p,l,v,c)->this.open(p, l,def.get(),c);
     }
 }
