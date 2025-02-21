@@ -30,7 +30,7 @@ import net.minecraftforge.common.MinecraftForge;
 public class Selection {
 	public static record UserSelection(String message, CIcon icon, Selection.Action selectAction) {
 		public Selection createSelection(int order) {
-			return new Selection(getParsedMessage(),icon,order,selectAction);
+			return new Selection(getParsedMessage(),icon,order,selectAction==null?Selection.NO_ACTION:selectAction);
 		}
 		public Component getParsedMessage() {
 			return StringTextComponentParser.parse(message);

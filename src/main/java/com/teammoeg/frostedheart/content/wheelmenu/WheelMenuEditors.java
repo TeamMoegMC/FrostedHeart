@@ -26,8 +26,8 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 
 public class WheelMenuEditors {
-	public static final Editor<KeyMapping> KEY_EDITOR= (p, l, v, c) -> new SelectDialog<KeyMapping>(p, l, v, c,()->Arrays.asList(ClientUtils.mc().options.keyMappings),
-			o->Components.translatable(o.getName())
+	public static final Editor<KeyMapping> KEY_EDITOR= (p, l, v, c) -> new SelectDialog<KeyMapping>(p, l, v, c,
+			()->Arrays.asList(ClientUtils.mc().options.keyMappings),o->Components.translatable(o.getName())
     ).open();
 	public static final Editor<KeyMappingTriggerAction> KEY_ACTION_EDITOR=KEY_EDITOR.xmap(CFunctionHelper.mapNullable(KeyMappingTriggerAction::new, null), KeyMappingTriggerAction::getKey);
 	

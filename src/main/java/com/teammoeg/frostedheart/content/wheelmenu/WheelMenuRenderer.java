@@ -175,37 +175,42 @@ public class WheelMenuRenderer {
 		visibleSelections.clear();
 		positions.clear();
 		degrees.clear();
-		// 在此处添加轮盘选项
-		addSelection(new Selection(Component.translatable("gui.close"), IconButton.Icon.CROSS.toCIcon(), 0, Selection.NO_ACTION));
-		addSelection(new Selection(Component.translatable("gui.wheel_menu.editor.edit"), IconButton.Icon.LIST.toCIcon(), -1, s->{
-			EditUtils.edit(WheelMenuEditors.SELECTION_LIST_EDITOR, Component.translatable("gui.wheel_menu.editor.edit"), userConfiguredSelections, t->{
-				userConfiguredSelections.clear();
-				userConfiguredSelections.addAll(t);
-			});
-		}));
-		if (CompatModule.isFTBQLoaded()) {
-			addSelection(new Selection(Component.translatable("key.ftbquests.quests"), CIcons.getIcon(FTBQuestsItems.BOOK.get()), 10,
-					s -> FTBQuestsClient.openGui()));
+
+		boolean rslt=!MinecraftForge.EVENT_BUS.post(new WheelMenuInitEvent(WheelMenuRenderer::addSelection));
+		if(rslt) {
+			// 在此处添加轮盘选项
+			addSelection(new Selection(Component.translatable("gui.close"), IconButton.Icon.CROSS.toCIcon(), 0, Selection.NO_ACTION));
+			addSelection(new Selection(Component.translatable("gui.wheel_menu.editor.edit"), IconButton.Icon.LIST.toCIcon(), -1, s->{
+				EditUtils.edit(WheelMenuEditors.SELECTION_LIST_EDITOR, Component.translatable("gui.wheel_menu.editor.edit"), userConfiguredSelections, t->{
+					userConfiguredSelections.clear();
+					userConfiguredSelections.addAll(t);
+				});
+			}));
+			if (CompatModule.isFTBQLoaded()) {
+				addSelection(new Selection(Component.translatable("key.ftbquests.quests"), CIcons.getIcon(FTBQuestsItems.BOOK.get()), 10,
+						s -> FTBQuestsClient.openGui()));
+			}
+			addSelection(new Selection("key.curios.open.desc",CIcons.getIcon(FHItems.heater_vest), 50));
+			
+			
+
+			addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.debug"),
+					CIcons.getIcon(FHItems.debug_item), ColorHelper.CYAN, 20,
+					s -> ClientUtils.getPlayer().isCreative(), s -> DebugScreen.openDebugScreen(), Selection.NO_ACTION));
+
+			addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.nutrition"),
+				CIcons.getIcon(NutritionScreen.fat_icon), 30, s -> FHNetwork.sendToServer(new C2SOpenNutritionScreenMessage())));
+
+			addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.clothing"),
+				CIcons.getIcon(FHItems.gambeson), 40,
+					s -> FHNetwork.sendToServer(new C2SOpenClothesScreenMessage())));
+
+			int order=0;
+			for(UserSelection i:userConfiguredSelections) {
+				addSelection(i.createSelection(10000+(order++)));
+			}
 		}
-		addSelection(new Selection("key.curios.open.desc",CIcons.getIcon(FHItems.heater_vest), 50));
-		
-		
-
-		addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.debug"),
-				CIcons.getIcon(FHItems.debug_item), ColorHelper.CYAN, 20,
-				s -> ClientUtils.getPlayer().isCreative(), s -> DebugScreen.openDebugScreen(), Selection.NO_ACTION));
-
-		addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.nutrition"),
-			CIcons.getIcon(NutritionScreen.fat_icon), 30, s -> FHNetwork.sendToServer(new C2SOpenNutritionScreenMessage())));
-
-		addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.clothing"),
-			CIcons.getIcon(FHItems.gambeson), 40,
-				s -> FHNetwork.sendToServer(new C2SOpenClothesScreenMessage())));
-		int order=0;
-		for(UserSelection i:userConfiguredSelections) {
-			addSelection(i.createSelection(10000+(order++)));
-		}
-		return !MinecraftForge.EVENT_BUS.post(new WheelMenuInitEvent(WheelMenuRenderer::addSelection));
+		return rslt;
 	}
 
 	private static void update() {
@@ -254,18 +259,15 @@ public class WheelMenuRenderer {
 				}
 				
 			}
-			boolean shouldUpdate = false;
+			int prevsize=visibleSelections.size();
+			visibleSelections.clear();
 			for (Selection selection : selections) {
 				selection.tick();
-				if (!selection.visible) {
-					visibleSelections.remove(selection);
-					shouldUpdate = true;
-				} else if (!visibleSelections.contains(selection)) {
+				if (selection.visible) {
 					visibleSelections.add(selection);
-					shouldUpdate = true;
 				}
 			}
-			if (shouldUpdate)
+			if (prevsize!=visibleSelections.size())
 				update();
 		}
 	}
