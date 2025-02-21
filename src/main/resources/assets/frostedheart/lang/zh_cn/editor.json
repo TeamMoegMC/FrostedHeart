@@ -1,0 +1,9 @@
+{
+  "gui.chorda.editor.unsaved_changes":"修改未保存，恢复到修改前？",
+  "gui.chorda.editor.stacks.all":"所有物品",
+  "gui.chorda.editor.stacks.inventory":"物品栏",
+  "gui.chorda.editor.stacks.blocks":"方块",
+  "gui.chorda.editor.select":"选择",
+  "gui.chorda.editor.new":"新建",
+  "gui.chorda.editor.edit":"修改"
+}

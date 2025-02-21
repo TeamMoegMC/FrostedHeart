@@ -1,13 +1,16 @@
 package com.teammoeg.frostedheart.content.research.research;
 
+import java.util.Collection;
+
+import com.teammoeg.chorda.client.cui.editor.EditListDialog;
+import com.teammoeg.chorda.client.cui.editor.Editor;
+import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder;
+import com.teammoeg.chorda.client.cui.editor.Editors;
+import com.teammoeg.chorda.client.cui.editor.IngredientEditor;
+import com.teammoeg.chorda.client.cui.editor.SelectDialog;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditListDialog;
-import com.teammoeg.frostedheart.content.research.gui.editor.Editor;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditorDialogBuilder;
-import com.teammoeg.frostedheart.content.research.gui.editor.Editors;
-import com.teammoeg.frostedheart.content.research.gui.editor.IngredientEditor;
 import com.teammoeg.frostedheart.content.research.research.clues.ClueEditor;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectEditor;
 
@@ -15,6 +18,7 @@ public class ResearchEditors {
 
 	public ResearchEditors() {
 	}
+	public static final Editor<Collection<Research>> RESEARCH_LIST=(p,l,v,c)->new EditListDialog<>(p, l, v,null,SelectDialog.EDITOR_RESEARCH, Research::getName, Research::getIcon, c);
 	public static final Editor<Research> RESEARCH_EDITOR=EditorDialogBuilder.builder()
 		.add(Editors.STRING_ID.withName("id"), Research::getId)
 		.add(Editors.STRING.withName("name"), t->t.name)
@@ -24,8 +28,8 @@ public class ResearchEditors {
 		.add(Editors.enumBox(ResearchCategory.class).withName("category"), r->r.getCategory())
 		.add(Editors.openDialog(EditListDialog.STRING_LIST).withName("Edit Description"), r->r.desc)
 		.add(Editors.openDialog(EditListDialog.STRING_LIST).withName("Edit Alternative Description"), r->r.fdesc)
-		.add(Editors.openDialog(ResearchEditorDialog.RESEARCH_LIST).withName("Edit Parents"), r->r.getParents())
-		.add(Editors.openDialog(ResearchEditorDialog.RESEARCH_LIST).withName("Edit Children"), r->r.getChildren())
+		.add(Editors.openDialog(RESEARCH_LIST).withName("Edit Parents"), r->r.getParents())
+		.add(Editors.openDialog(RESEARCH_LIST).withName("Edit Children"), r->r.getChildren())
 		.add(Editors.openDialog(IngredientEditor.LIST_EDITOR).withName("Edit Ingredients"),r->r.getRequiredItems())
 		.add(Editors.openDialog(EffectEditor.EFFECT_LIST).withName("Edit Effects"),r->r.getEffects())
 		.add(Editors.openDialog(ClueEditor.EDITOR_LIST).withName("Edit Clues"), r->r.getClues())

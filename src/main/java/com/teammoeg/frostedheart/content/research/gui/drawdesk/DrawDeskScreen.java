@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
+import com.teammoeg.chorda.client.cui.editor.EditDialog;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.content.research.gui.ResearchGui;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditDialog;
 import com.teammoeg.frostedheart.content.research.gui.tech.ResearchPanel;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;

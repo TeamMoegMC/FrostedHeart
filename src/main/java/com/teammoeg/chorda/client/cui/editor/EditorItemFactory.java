@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
 import com.teammoeg.chorda.client.cui.Layer;
 

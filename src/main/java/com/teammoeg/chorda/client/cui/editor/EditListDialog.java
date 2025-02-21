@@ -17,25 +17,26 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.CInputHelper;
+import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.Layer;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.util.client.Lang;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,7 +48,7 @@ import java.util.function.Function;
  * @author  khjxiaogu
  */
 public class EditListDialog<T> extends EditDialog {
-    public static final Editor<Collection<String>> STRING_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, "", EditPrompt.TEXT_EDITOR, e -> e, c).open();
+    public static final Editor<Collection<String>> STRING_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, "", EditPrompt.TEXT_EDITOR,Components::str, c).open();
     private final Consumer<Collection<T>> callback;
     private final Component title;
     private final Layer configPanel;
@@ -56,24 +57,24 @@ public class EditListDialog<T> extends EditDialog {
     private final Editor<T> editor;
     private final LayerScrollBar scroll;
     private final T def;
-    private final Function<T, String> read;
+    private final Function<T, Component> read;
     private final Function<T, CIcon> toicon;
     boolean modified;
-    public EditListDialog(UIWidget p, Component label, Collection<T> vx, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
+    public EditListDialog(UIWidget p, Component label, Collection<T> vx, Editor<T> editor, Function<T, Component> toread, Consumer<Collection<T>> li) {
         this(p, label, vx, null, editor, toread, null, li);
     }
-    public EditListDialog(UIWidget p, Component label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
-        this(p, label, vx, def, editor, toread, null, li);
+    public EditListDialog(UIWidget p, Component label, Collection<T> vx, T def, Editor<T> editor, Function<T, Component> toread, Consumer<Collection<T>> li) {
+        this(p, label, vx, def, editor, toread, o->CIcons.nop(), li);
     }
 
-    public EditListDialog(UIWidget p, Component label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Function<T, CIcon> icon, Consumer<Collection<T>> li) {
+    public EditListDialog(UIWidget p, Component label, Collection<T> vx, T def, Editor<T> editor, Function<T, Component> toread, Function<T, CIcon> icon, Consumer<Collection<T>> li) {
         super(p);
         callback = li;
         if (vx != null)
             list = new ArrayList<>(vx);
         else
             list = new ArrayList<>();
-        title = (label).copy().withStyle(ChatFormatting.BOLD);
+        title = (label).copy();
         this.editor = editor;
         this.def = def;
         this.read = toread;
@@ -108,8 +109,28 @@ public class EditListDialog<T> extends EditDialog {
         });
         buttonCancel = TextButton.create(this, Components.empty(), IconButton.Icon.CROSS.toCIcon(), (button) -> close());
     }
-
+    int movingIndex;
     @Override
+	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+    	if(moving!=null) {
+    		movingIndex=(int) Mth.clamp((this.getMouseY()-configPanel.getY())/(moving.getHeight()+1),0,list.size()-1);
+    		if(MouseHelper.isLeftPressed()) {
+    			moving.setY((int) movingIndex*(moving.getHeight()+1));
+    		}else {
+    			int originIndex=moving.index;
+    			moving=null;
+    			if(originIndex!=movingIndex) {
+	    			int newPos=(int) (movingIndex);
+	    			T obj=list.remove(originIndex);
+	    			list.add(Math.min(list.size(), newPos),obj);
+	    			configPanel.refresh();
+	    			this.modified=true;
+    			}
+    		}
+    	}
+		super.render(graphics, x, y, w, h);
+	}
+	@Override
     public void addUIElements() {
         add(buttonAccept);
         add(buttonCancel);
@@ -123,14 +144,18 @@ public class EditListDialog<T> extends EditDialog {
         configPanel.alignWidgets();
         scroll.setPosAndSize(width - 16, 25, 8, height - 30);
 
-        buttonAccept.setPos(width - 26, 2);
-        buttonCancel.setPos(width - 47, 2);
+        buttonAccept.setPos(width - 26, 4);
+        buttonCancel.setPos(width - 47, 4);
     }
-
+    ButtonConfigValue moving;
+    public void setMoving(ButtonConfigValue moving) {
+    	this.moving=moving;
+    	movingIndex=moving.index;
+    }
     @Override
     public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         CGuiHelper.drawUIBackground(matrixStack, x, y, w, h);
-        matrixStack.drawString(getFont(), getTitle(), x, y-10, getLayerHolder().getFontColor());
+        matrixStack.drawString(getFont(), getTitle(), x+5, y+5, 0xFFFFFFFF);
     }
 
     @Override
@@ -145,7 +170,7 @@ public class EditListDialog<T> extends EditDialog {
     @Override
     public void onClosed() {
         if (modified) {
-            ConfirmDialog.EDITOR.open(this, Components.str("Unsaved changes, discard?"), true, e -> {
+            ConfirmDialog.EDITOR.open(this, Lang.translateKey("gui.chorda.editor.unsaved_changes"), true, e -> {
                 if (!e) open();
             });
         }
@@ -173,7 +198,7 @@ public class EditListDialog<T> extends EditDialog {
         @Override
         public void onClicked(MouseButton button) {
             CInputHelper.playClickSound();
-            editor.open(this,Components.str( "New"), def, s -> {
+            editor.open(this,Lang.translateKey("gui.add"), def, s -> {
                 if (s != null) {
                     modified = true;
                     list.add(s);
@@ -186,28 +211,50 @@ public class EditListDialog<T> extends EditDialog {
 
     public class ButtonConfigValue extends Button {
         public final int index;
-
+        public CIcon icon;
         public ButtonConfigValue(Layer panel, int i) {
             super(panel);
             index = i;
             setHeight(12);
+            icon=toicon.apply(list.get(index));
         }
 
         @Override
+		public int getY() {
+        	int offset=0;
+        	int ioffset=0;
+        	if(moving!=this&&moving!=null) {
+        		
+				if(index>moving.index) {//originally behind item, simulating them being moved one step forward
+					offset-=this.height+1;
+					ioffset--;
+				}
+				if(index+ioffset>=movingIndex) {//currently behind insertion, simulating them being moved backword
+					offset+=this.height+1;
+				}
+        	}
+        	return super.getY()+offset;
+		}
+
+		@Override
         public void getTooltip(Consumer<Component> l) {
             if (getMouseX() >=  width - 19) {
                 l.accept(Components.translatable("selectServer.delete"));
             } else {
-                l.accept(Components.str(read.apply(list.get(index))));
+                l.accept(read.apply(list.get(index)));
             }
         }
 
         @Override
         public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        	if(this==moving) {
+        		matrixStack.pose().pushPose();
+        		matrixStack.pose().translate(0, 0, 10);
+        	}
             boolean mouseOver = isMouseOver();
             int ioffset = 0;
             if (toicon != null) {
-                toicon.apply(list.get(index)).draw(matrixStack, x + ioffset, y, 12, 12);
+            	icon.draw(matrixStack, x + ioffset, y, 12, 12);
                 ioffset += 13;
             }
             if (mouseOver) {
@@ -222,17 +269,31 @@ public class EditListDialog<T> extends EditDialog {
 
             if (mouseOver) {
             	matrixStack.drawString(getFont(), "[-]", x+w-16, y+2, 0xFFFFFFFF);
+            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+2, 0xFFFFFFFF);
             }
+          	if(this==moving) {
+        		matrixStack.pose().popPose();
+        	}
         }
 
         @Override
+		public Cursor getCursor() {
+        	if(MouseHelper.isMouseIn(getMouseX(), getMouseY(), this.getWidth()-36, 0, 20, height))
+        		return Cursor.MOVE;
+        	return null;
+		}
+
+		@Override
         public void onClicked(MouseButton button) {
             CInputHelper.playClickSound();
 
-            if (getMouseX() >=width - 19) {
+            if (getMouseX() >=width - 16) {
                 list.remove(index);
                 modified = true;
                 ((Layer)parent).refresh();
+
+            }else if (getMouseX() >=width - 36) {
+               setMoving(this);
 
             } else {
                 editor.open(this, Components.str("Edit"), list.get(index), s -> {

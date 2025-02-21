@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
@@ -27,6 +27,7 @@ import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.network.chat.Component;
 
@@ -45,7 +46,7 @@ public class ConfirmDialog extends BaseEditDialog {
         tf = new TextField(this).setColor(0xFFFF0000).setMaxWidth(200).setText(label);
         fin = onFinished;
         selected = !exp;
-        cancel = new TextButton(this, Components.str("Cancel"), CIcons.nop()) {
+        cancel = new TextButton(this, Lang.translateKey("gui.cancel"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -54,7 +55,7 @@ public class ConfirmDialog extends BaseEditDialog {
             }
 
         };
-        ok = new TextButton(this, Components.str("OK"), CIcons.nop()) {
+        ok = new TextButton(this, Lang.translateKey("gui.accept"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {

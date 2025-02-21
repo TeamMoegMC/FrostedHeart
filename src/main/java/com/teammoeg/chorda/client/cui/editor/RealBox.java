@@ -17,30 +17,29 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.network.chat.Component;
 
-public class NumberBox extends LabeledTextBox {
+public class RealBox extends LabeledTextBox {
 
-    public NumberBox(UIWidget panel, Component lab, long val) {
+    public RealBox(UIWidget panel, Component lab, double val) {
         super(panel, lab, String.valueOf(val));
     }
 
-    public long getNum() {
+    public double getNum() {
         try {
-            return Long.parseLong(getText());
+            return Double.parseDouble(getText());
         } catch (NumberFormatException ex) {
             FHMain.LOGGER.error("Error parsing number", ex);
-            return Long.parseLong(orig);
+            return Double.parseDouble(orig);
         }
-
     }
 
-    public void setNum(long number) {
+    public void setNum(double number) {
         super.setText(String.valueOf(number));
     }
 

@@ -17,30 +17,35 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
+import com.teammoeg.chorda.client.cui.TextBox;
 import com.teammoeg.chorda.client.cui.UIWidget;
-import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.network.chat.Component;
 
-public class RealBox extends LabeledTextBox {
 
-    public RealBox(UIWidget panel, Component lab, double val) {
-        super(panel, lab, String.valueOf(val));
+
+public class LabeledTextBox extends LabeledPane<TextBox> {
+    String orig;
+
+    public LabeledTextBox(UIWidget panel, Component lab, String txt) {
+        super(panel, lab);
+        obj = new TextBox(this);
+        obj.allowInput();
+        if (txt == null) txt = "";
+        obj.setText(txt);
+        obj.setSize(200, 16);
+        orig = txt;
+
+
     }
 
-    public double getNum() {
-        try {
-            return Double.parseDouble(getText());
-        } catch (NumberFormatException ex) {
-            FHMain.LOGGER.error("Error parsing number", ex);
-            return Double.parseDouble(orig);
-        }
+    public String getText() {
+        return obj.getText();
     }
 
-    public void setNum(double number) {
-        super.setText(String.valueOf(number));
+    public void setText(String s) {
+        obj.setText(s);
     }
-
 }

@@ -1,9 +1,9 @@
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Unit;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditorDialog.EditorDialogPrototype;
+import com.teammoeg.chorda.client.cui.editor.EditorDialog.EditorDialogPrototype;
 
 public class EditorDialogBuilder {
 	private EditorDialogBuilder() {

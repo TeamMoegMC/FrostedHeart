@@ -25,9 +25,9 @@ import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
+import com.teammoeg.frostedheart.content.research.gui.ResearchEditUtils;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechTextButton;
-import com.teammoeg.frostedheart.content.research.gui.editor.ResearchEditUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
 
 import blusunrize.immersiveengineering.client.ClientUtils;

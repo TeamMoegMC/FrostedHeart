@@ -4,11 +4,11 @@ import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.platform.Window;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.cui.editor.EditDialog;
+import com.teammoeg.chorda.client.cui.editor.EditorManager;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditDialog;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditorManager;
 
 import lombok.Getter;
 import net.minecraft.client.Minecraft;

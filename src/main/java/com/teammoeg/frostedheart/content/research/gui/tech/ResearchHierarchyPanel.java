@@ -20,14 +20,15 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import com.teammoeg.chorda.client.CIconFTBWrapper;
+import com.teammoeg.chorda.client.cui.editor.EditUtils;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.research.FHResearch;
+import com.teammoeg.frostedheart.content.research.gui.ResearchEditUtils;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechTextButton;
 import com.teammoeg.frostedheart.content.research.gui.ThickLine;
-import com.teammoeg.frostedheart.content.research.gui.editor.ResearchEditUtils;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.content.research.research.ResearchEditorDialog;
+import com.teammoeg.frostedheart.content.research.research.ResearchEditors;
 import com.teammoeg.frostedheart.util.client.Lang;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -68,7 +69,7 @@ public class ResearchHierarchyPanel extends Panel {
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add parent
                         Research r = researchPanel.selectedResearch;
-                        ResearchEditorDialog.RESEARCH_LIST.open(ResearchEditUtils.openEditorScreen(), Components.str("Edit parents"), r.getParents(), s -> {
+                        ResearchEditors.RESEARCH_LIST.open(EditUtils.openEditorScreen(), Components.str("Edit parents"), r.getParents(), s -> {
                             try {
                                 //System.out.println(s);
                                 r.setParents(s.stream().map(Research::getId).collect(Collectors.toList()));
@@ -88,7 +89,7 @@ public class ResearchHierarchyPanel extends Panel {
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add children
                         Research r = researchPanel.selectedResearch;
-                        ResearchEditorDialog.RESEARCH_LIST.open(ResearchEditUtils.openEditorScreen(), Components.str("Edit children"), r.getChildren(), s -> {
+                        ResearchEditors.RESEARCH_LIST.open(EditUtils.openEditorScreen(), Components.str("Edit children"), r.getChildren(), s -> {
                             r.getChildren().forEach(e -> {
                                 e.removeParent(r);
                                 ResearchEditUtils.saveResearch(e);
@@ -107,8 +108,7 @@ public class ResearchHierarchyPanel extends Panel {
                 Button create = new TechTextButton(this, Components.str("new"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
-                        
-                        new ResearchEditorDialog(ResearchEditUtils.openEditorScreen(), null, researchPanel.selectedCategory).open();
+                    	ResearchEditUtils.editResearch(this,null,researchPanel.selectedCategory);
                     }
                 };
                 create.setPos(offset, 130);

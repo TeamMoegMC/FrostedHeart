@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
 public interface EditorManager {
 	public void openDialog(EditDialog previous,boolean refresh);

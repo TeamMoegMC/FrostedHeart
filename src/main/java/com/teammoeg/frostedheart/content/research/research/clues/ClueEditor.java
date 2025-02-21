@@ -22,9 +22,9 @@ package com.teammoeg.frostedheart.content.research.research.clues;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.CIconFTBWrapper;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.editor.*;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.content.research.gui.editor.*;
 import com.teammoeg.frostedheart.content.research.research.Research;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -67,7 +67,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         .addEditor("Kill Entity", KILL,v->v instanceof KillClue)
         .addEditor("Complete minigame", GAME,v->v instanceof MinigameClue)
         .build();
-    public static final Editor<Collection<Clue>> EDITOR_LIST = (p, l, v, c) -> new EditListDialog<Clue>(p, l, v, EDITOR, e -> e.getBrief() + e.getBriefDesc(), c).open();
+    public static final Editor<Collection<Clue>> EDITOR_LIST = (p, l, v, c) -> new EditListDialog<Clue>(p, l, v, EDITOR, e -> Components.str(e.getBrief() + e.getBriefDesc()), c).open();
     protected LabeledTextBoxAndBtn nonce;
     protected LabeledTextBox name;
     protected LabeledTextBox desc;
@@ -102,7 +102,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
 
     @Override
     public void addUIElements() {
-        add(ResearchEditUtils.getTitle(this, lbl));
+        add(EditUtils.getTitle(this, lbl));
         add(nonce);
         add(name);
         add(desc);

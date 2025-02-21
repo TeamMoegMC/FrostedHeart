@@ -6,6 +6,18 @@ import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.editor.BaseEditDialog;
+import com.teammoeg.chorda.client.cui.editor.EditListDialog;
+import com.teammoeg.chorda.client.cui.editor.EditPrompt;
+import com.teammoeg.chorda.client.cui.editor.EditUtils;
+import com.teammoeg.chorda.client.cui.editor.Editor;
+import com.teammoeg.chorda.client.cui.editor.EditorSelector;
+import com.teammoeg.chorda.client.cui.editor.IngredientEditor;
+import com.teammoeg.chorda.client.cui.editor.LabeledTextBox;
+import com.teammoeg.chorda.client.cui.editor.NumberBox;
+import com.teammoeg.chorda.client.cui.editor.OpenEditorButton;
+import com.teammoeg.chorda.client.cui.editor.SelectDialog;
+import com.teammoeg.chorda.client.cui.editor.SelectStackDialog;
 import com.teammoeg.chorda.client.icon.CIcons.AnimatedIcon;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.CIcons.CombinedIcon;
@@ -18,18 +30,6 @@ import com.teammoeg.chorda.client.icon.CIcons.TextureIcon;
 import com.teammoeg.chorda.client.icon.CIcons.TextureUVIcon;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
-import com.teammoeg.frostedheart.content.research.gui.editor.BaseEditDialog;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditListDialog;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditPrompt;
-import com.teammoeg.frostedheart.content.research.gui.editor.ResearchEditUtils;
-import com.teammoeg.frostedheart.content.research.gui.editor.Editor;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditorSelector;
-import com.teammoeg.frostedheart.content.research.gui.editor.IngredientEditor;
-import com.teammoeg.frostedheart.content.research.gui.editor.LabeledTextBox;
-import com.teammoeg.frostedheart.content.research.gui.editor.NumberBox;
-import com.teammoeg.frostedheart.content.research.gui.editor.OpenEditorButton;
-import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
-import com.teammoeg.frostedheart.content.research.gui.editor.SelectStackDialog;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -77,7 +77,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
     public void render(GuiGraphics arg0, int arg2, int arg3, int arg4, int arg5) {
         super.render(arg0,arg2 + 300, arg3 + 20, 32, 32);
     }
-    public static final Editor<AnimatedIcon> ANIMATED_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v == null ? null : v.icons, null, EDITOR, e -> e.getClass().getSimpleName(),
+    public static final Editor<AnimatedIcon> ANIMATED_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v == null ? null : v.icons, null, EDITOR, e -> Components.str(e.getClass().getSimpleName()),
             e -> e, e -> c.accept(new AnimatedIcon(e.toArray(new CIcon[0])))).open();
 
     private static class Combined extends IconEditor<CombinedIcon> {
@@ -91,7 +91,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
 
         @Override
         public void addUIElements() {
-            add(ResearchEditUtils.getTitle(this, label));
+            add(EditUtils.getTitle(this, label));
             add(new OpenEditorButton<>(this, Components.str("Edit base icon"), EDITOR, v.large, e -> v.large = e));
             add(new OpenEditorButton<>(this, Components.str("Edit corner icon"), EDITOR, v.small, e -> v.small = e));
         }
@@ -131,7 +131,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
 
         @Override
         public void addUIElements() {
-            add(ResearchEditUtils.getTitle(this, label));
+            add(EditUtils.getTitle(this, label));
             add(rl);
             add(x);
             add(y);

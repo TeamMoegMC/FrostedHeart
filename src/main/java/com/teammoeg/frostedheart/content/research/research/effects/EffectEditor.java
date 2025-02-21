@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.content.research.research.effects;
 
 import com.teammoeg.chorda.client.CIconFTBWrapper;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.editor.*;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.content.research.gui.editor.*;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -63,7 +63,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         .addEditor("Add Experience", EXP,v->v instanceof EffectExperience)
         .addEditor("Custom",CUSTOM,v->v instanceof EffectCustom)
         .build();
-    public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, Effect::getBrief, Effect::getIcon, c).open();
+    public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, e->Components.str(e.getBrief()), Effect::getIcon, c).open();
     protected LabeledTextBoxAndBtn nonce;
     protected LabeledTextBox name;
     protected LabeledSelection<Boolean> sd;
@@ -89,7 +89,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
 
     @Override
     public void addUIElements() {
-        add(ResearchEditUtils.getTitle(this, lbl));
+        add(EditUtils.getTitle(this, lbl));
         add(nonce);
         add(name);
         add(new OpenEditorButton<>(this, Components.str("Edit Description"), EditListDialog.STRING_LIST, e.tooltip, s -> e.tooltip = new ArrayList<>(s)));
@@ -197,7 +197,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         @Override
         public void addUIElements() {
             super.addUIElements();
-            add(ResearchEditUtils.getTitle(this, "Only the first in the following takes effects"));
+            add(EditUtils.getTitle(this, "Only the first in the following takes effects"));
             add(new OpenEditorButton<Ingredient>(this, Components.str("Edit Item"),
                     IngredientEditor.EDITOR_INGREDIENT,
                     e.ingredient, s -> {

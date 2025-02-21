@@ -6,9 +6,9 @@ import java.util.function.Consumer;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.editor.LabeledTextBoxAndBtn;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.content.research.gui.editor.LabeledTextBoxAndBtn;
 
 import net.minecraft.network.chat.Component;
 

@@ -81,7 +81,12 @@
   "gui.frostedheart.generator.temperature.level": "温度增幅: ",
   "gui.frostedheart.generator.upgrade_material": "升级素材",
   "gui.frostedheart.mb_per_sec": "%s mb 每秒",
-
+  "gui.wheel_menu.editor.key":"按键行动",
+  "gui.wheel_menu.editor.command":"指令行动",
+  "gui.wheel_menu.editor.name":"名称",
+  "gui.wheel_menu.editor.icon":"图标",
+  "gui.wheel_menu.editor.action":"设置操作",
+  "gui.wheel_menu.editor.edit":"编辑轮盘菜单",
   "gui.frostedheart.not_consume": "不消耗",
   "gui.frostedheart.per_food_value": "%s mb 每饱食度",
   "gui.frostedheart.save_update_needed": "自动更新未完成！请退出这个世界然后手动删除%s以完成更新！",

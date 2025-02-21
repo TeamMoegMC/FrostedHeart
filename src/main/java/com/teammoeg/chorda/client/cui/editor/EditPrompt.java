@@ -17,30 +17,36 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
-import java.util.function.Consumer;
-import java.util.function.Function;
-
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.network.chat.Component;
 
-public class EditBtnDialog extends BaseEditDialog {
-    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new EditBtnDialog(p, l, v, Components.str("Select Tag"), c, SelectDialog.EDITOR_ITEM_TAGS).open();
-    LabeledTextBoxAndBtn box;
+import java.util.function.Consumer;
+
+public class EditPrompt extends BaseEditDialog {
+    public static Editor<String> TEXT_EDITOR = EditPrompt::open;
+    public static Editor<JsonElement> JSON_EDITOR = (p, l, v, c) -> open(p, l, v == null ? "" : v.toString(), e -> c.accept(new JsonParser().parse(e)));
+    public static Editor<Long> LONG_EDITOR = (p, l, v, c) -> open(p, l, String.valueOf(v), o -> c.accept(Long.parseLong(o)));
+    public static Editor<Integer> INT_EDITOR = (p, l, v, c) -> open(p, l, String.valueOf(v), o -> c.accept(Integer.parseInt(o)));
+    public static Editor<Double> REAL_EDITOR = (p, l, v, c) -> open(p, l, String.valueOf(v), o -> c.accept(Double.parseDouble(o)));
+    LabeledTextBox box;
     Button ok;
     Button cancel;
 
-    public EditBtnDialog(UIWidget panel, Component label, String val, Component sel, Consumer<String> onFinished, Editor<String> onbtn) {
+    public EditPrompt(UIWidget panel, Component label, String val, Consumer<String> onFinished) {
         super(panel);
-        box = new LabeledTextBoxAndBtn(this, label, val, sel, e -> onbtn.open(panel, sel, box.getText(), e));
-        ok = new TextButton(this, Components.str("OK"), CIcons.nop()) {
+        box = new LabeledTextBox(this, label, val);
+        ok = new TextButton(this, Lang.translateKey("gui.accept"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -53,7 +59,7 @@ public class EditBtnDialog extends BaseEditDialog {
             }
 
         };
-        cancel = new TextButton(this, Components.str("Cancel"), CIcons.nop()) {
+        cancel = new TextButton(this, Lang.translateKey("gui.cancel"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -65,11 +71,9 @@ public class EditBtnDialog extends BaseEditDialog {
         ok.setSize(300, 20);
     }
 
-    public EditBtnDialog(UIWidget panel, Component label, String val, Component sel, Consumer<String> onFinished, Function<String, String> onbtn) {
-        this(panel, label, val, sel, onFinished, (p, l, v, c) -> c.accept(onbtn.apply(v)));
-
+    public static void open(UIWidget p, Component l, String v, Consumer<String> f) {
+        new EditPrompt(p, l, v, f).open();
     }
-
 
     @Override
     public void addUIElements() {
@@ -82,4 +86,6 @@ public class EditBtnDialog extends BaseEditDialog {
     @Override
     public void onClose() {
     }
+
+
 }

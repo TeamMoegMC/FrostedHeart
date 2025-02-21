@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,7 +66,7 @@ public class EditorDialog<O> extends BaseEditDialog {
 	TextField title;
 	private EditorDialog(UIWidget panel,Component title,EditorDialogPrototype<O> prototype,O origin,Consumer<EditorResult> consumer) {
 		super(panel);
-		this.title=ResearchEditUtils.getTitle(this, title);
+		this.title=EditUtils.getTitle(this, title);
 		this.params=new Object[prototype.widgets.size()];
 		this.consumer=consumer;
         mainPane=new Layer(this) {

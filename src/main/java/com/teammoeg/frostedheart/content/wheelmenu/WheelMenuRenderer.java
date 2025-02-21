@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.wheelmenu;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseCaptureUtil;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.cui.editor.EditUtils;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.ColorHelper;
@@ -37,6 +38,7 @@ import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMes
 import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
 import com.teammoeg.frostedheart.content.health.screen.NutritionScreen;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
+import com.teammoeg.frostedheart.content.wheelmenu.Selection.UserSelection;
 import com.teammoeg.frostedheart.util.client.FGuis;
 import dev.ftb.mods.ftbquests.client.FTBQuestsClient;
 import dev.ftb.mods.ftbquests.item.FTBQuestsItems;
@@ -61,8 +63,10 @@ public class WheelMenuRenderer {
 	public static final float WHEEL_INNER_RADIUS = 70;
 
 	protected static final PriorityQueue<Selection> selections = new PriorityQueue<>(
-			Comparator.comparingInt(Selection::getPriority));
+			Comparator.comparingInt(Selection::getPriority).reversed());
 	protected static final List<Selection> visibleSelections = new ArrayList<>();
+	public static final List<UserSelection> userConfiguredSelections=new ArrayList<>();
+	
 	private static final List<Point> positions = new ArrayList<>();
 	private static final List<Float> degrees = new ArrayList<>();
 	@Getter
@@ -173,7 +177,12 @@ public class WheelMenuRenderer {
 		degrees.clear();
 		// 在此处添加轮盘选项
 		addSelection(new Selection(Component.translatable("gui.close"), IconButton.Icon.CROSS.toCIcon(), 0, Selection.NO_ACTION));
-
+		addSelection(new Selection(Component.translatable("gui.wheel_menu.editor.edit"), IconButton.Icon.LIST.toCIcon(), -1, s->{
+			EditUtils.edit(WheelMenuEditors.SELECTION_LIST_EDITOR, Component.translatable("gui.wheel_menu.editor.edit"), userConfiguredSelections, t->{
+				userConfiguredSelections.clear();
+				userConfiguredSelections.addAll(t);
+			});
+		}));
 		if (CompatModule.isFTBQLoaded()) {
 			addSelection(new Selection(Component.translatable("key.ftbquests.quests"), CIcons.getIcon(FTBQuestsItems.BOOK.get()), 10,
 					s -> FTBQuestsClient.openGui()));
@@ -192,6 +201,10 @@ public class WheelMenuRenderer {
 		addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.clothing"),
 			CIcons.getIcon(FHItems.gambeson), 40,
 				s -> FHNetwork.sendToServer(new C2SOpenClothesScreenMessage())));
+		int order=0;
+		for(UserSelection i:userConfiguredSelections) {
+			addSelection(i.createSelection(10000+(order++)));
+		}
 		return !MinecraftForge.EVENT_BUS.post(new WheelMenuInitEvent(WheelMenuRenderer::addSelection));
 	}
 

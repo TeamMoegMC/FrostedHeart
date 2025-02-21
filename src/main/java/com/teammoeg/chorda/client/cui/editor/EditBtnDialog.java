@@ -17,10 +17,11 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
@@ -30,21 +31,15 @@ import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.network.chat.Component;
 
-import java.util.function.Consumer;
-
-public class EditPrompt extends BaseEditDialog {
-    public static Editor<String> TEXT_EDITOR = EditPrompt::open;
-    public static Editor<JsonElement> JSON_EDITOR = (p, l, v, c) -> open(p, l, v == null ? "" : v.toString(), e -> c.accept(new JsonParser().parse(e)));
-    public static Editor<Long> LONG_EDITOR = (p, l, v, c) -> open(p, l, String.valueOf(v), o -> c.accept(Long.parseLong(o)));
-    public static Editor<Integer> INT_EDITOR = (p, l, v, c) -> open(p, l, String.valueOf(v), o -> c.accept(Integer.parseInt(o)));
-    public static Editor<Double> REAL_EDITOR = (p, l, v, c) -> open(p, l, String.valueOf(v), o -> c.accept(Double.parseDouble(o)));
-    LabeledTextBox box;
+public class EditBtnDialog extends BaseEditDialog {
+    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new EditBtnDialog(p, l, v, Components.str("Select Tag"), c, SelectDialog.EDITOR_ITEM_TAGS).open();
+    LabeledTextBoxAndBtn box;
     Button ok;
     Button cancel;
 
-    public EditPrompt(UIWidget panel, Component label, String val, Consumer<String> onFinished) {
+    public EditBtnDialog(UIWidget panel, Component label, String val, Component sel, Consumer<String> onFinished, Editor<String> onbtn) {
         super(panel);
-        box = new LabeledTextBox(this, label, val);
+        box = new LabeledTextBoxAndBtn(this, label, val, sel, e -> onbtn.open(panel, sel, box.getText(), e));
         ok = new TextButton(this, Components.str("OK"), CIcons.nop()) {
 
             @Override
@@ -70,9 +65,11 @@ public class EditPrompt extends BaseEditDialog {
         ok.setSize(300, 20);
     }
 
-    public static void open(UIWidget p, Component l, String v, Consumer<String> f) {
-        new EditPrompt(p, l, v, f).open();
+    public EditBtnDialog(UIWidget panel, Component label, String val, Component sel, Consumer<String> onFinished, Function<String, String> onbtn) {
+        this(panel, label, val, sel, onFinished, (p, l, v, c) -> c.accept(onbtn.apply(v)));
+
     }
+
 
     @Override
     public void addUIElements() {
@@ -85,6 +82,4 @@ public class EditPrompt extends BaseEditDialog {
     @Override
     public void onClose() {
     }
-
-
 }

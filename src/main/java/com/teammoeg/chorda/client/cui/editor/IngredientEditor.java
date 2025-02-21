@@ -17,21 +17,22 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
 
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.CIconFTBWrapper;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.editor.EditorSelector.EditorSelectorBuilder;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.research.gui.editor.EditorSelector.EditorSelectorBuilder;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
@@ -172,40 +173,40 @@ public class IngredientEditor extends BaseEditDialog {
         count = new NumberBox(this, Components.str("Count"), cnt);
     }
 
-    public static String getDesc(Pair<Ingredient,Integer> w) {
-        return getODesc(w.getFirst()) + " x " + w.getSecond();
+    public static Component getDesc(Pair<Ingredient,Integer> w) {
+        return getODesc(w.getFirst()).append(" x " + w.getSecond());
     }
 
-    public static String getODesc(Ingredient i) {
+    public static MutableComponent getODesc(Ingredient i) {
         if (i instanceof PartialNBTIngredient) {
             if (!i.isEmpty())
-                return "Stack " + i.getItems()[0].getHoverName().getString();
-            return "NBT empty";
+                return Components.str("Stack").append(i.getItems()[0].getHoverName());
+            return Components.str("NBT empty");
         } else if (i instanceof CompoundIngredient) {
             if (!i.isEmpty())
-                return "Compound " + i.getItems()[0].getHoverName().getString();
-            return "Compound empty";
+                return Components.str("Compound ").append(i.getItems()[0].getHoverName());
+            return Components.str("Compound empty");
         } else if (i.isVanilla()) {
             if (i.values.length > 0 && !i.isEmpty()) {
-                return "Item " + i.getItems()[0].getHoverName().getString();
+                return Components.str( "Item ").append(i.getItems()[0].getHoverName());
             }
-            return "Vanilla empty";
+            return Components.str("Vanilla empty");
         } else
-            return "Custom Ingredient";
+            return Components.str("Custom Ingredient");
 
     }
 
-    private static String getText(Value li) {
+    private static MutableComponent getText(Value li) {
         if (li instanceof TagValue) {
             try {
-                return "Tag:" + ((TagValue) li).tag.location();
+                return Components.str("Tag:").append(((TagValue) li).tag.location().toString());
             } catch (Exception ex) {
-                return "Unknown tag list";
+                return Components.str("Unknown tag list");
             }
         } else if (li instanceof ItemValue)
-            return "Item: " + ((ItemValue) li).item.getHoverName().getString();
+            return Components.str("Item: " ).append(((ItemValue) li).item.getHoverName().getString());
         else
-            return "Unknown item list";
+            return Components.str("Unknown item list");
     }
 
     @Override

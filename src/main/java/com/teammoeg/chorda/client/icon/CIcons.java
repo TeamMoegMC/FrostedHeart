@@ -311,11 +311,11 @@ public class CIcons {
 		}
 	}
 
-	static class ItemIcon extends CIcon {
+	public static class ItemIcon extends CIcon {
 		private static final MapCodec<ItemIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
 			ItemStack.CODEC.fieldOf("item").forGetter(o -> o.stack)).apply(t, ItemIcon::new));
 		private static final Codec<ItemIcon> ICON_CODEC = ForgeRegistries.ITEMS.getCodec().xmap(ItemIcon::new, t -> t.stack.getItem());
-		ItemStack stack;
+		public final ItemStack stack;
 
 		public ItemIcon(ItemLike item2) {
 			this(new ItemStack(item2));

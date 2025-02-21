@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.ui.CGuiHelper;

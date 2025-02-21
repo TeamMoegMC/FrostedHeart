@@ -8,6 +8,7 @@ import org.lwjgl.glfw.GLFW;
 import com.mojang.blaze3d.platform.Window;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.lang.Components;
 
@@ -132,6 +133,11 @@ public class CUIScreen extends Screen implements CUIScreenManager {
 			graphics.setColor(1f, 1f, 1f, 1f);
 		}
 		graphics.pose().popPose();
+		Cursor cs=primaryLayer.getCursor();
+		if(cs==null)
+			Cursor.reset();
+		else
+			cs.use();
 		display.clear();
 	}
 
@@ -151,6 +157,7 @@ public class CUIScreen extends Screen implements CUIScreenManager {
 	@Override
 	public void removed() {
 		primaryLayer.onClosed();
+		Cursor.reset();
 		super.removed();
 	}
 

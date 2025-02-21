@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -42,7 +42,7 @@ public interface Editor<T> {
     void open(UIWidget parent, Component label,final T previousValue, Consumer<T> onCommit);
     default <A> Editor<A> xmap(Function<T,A> to,Function<A,T> from){
     	return (p,l,v,c)->{
-    		this.open(p, l, from.apply(v), e->c.accept(to.apply(e)));
+    		this.open(p, l, v==null?null:from.apply(v), e->c.accept(to.apply(e)));
     	};
     	
     }

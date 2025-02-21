@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
 import net.minecraft.network.chat.Component;
 
@@ -106,8 +106,8 @@ public class EditorSelector<T> extends BaseEditDialog {
 		public Editor<T> build(){
 			Editor<T> orig=buildEdit();
 			return new EditorSelectorBuilder<T>()
-			.addEditorWhenNotEmpty("Edit",orig)
-            .addEditor("New", orig.withValue(()->null)).buildEdit();
+			.addEditorWhenNotEmpty(Components.translatable("gui.chorda.editor.edit"),orig)
+            .addEditor(Components.translatable("gui.chorda.editor.new"), orig.withValue(()->null)).buildEdit();
 
 	    }
 	}
@@ -128,7 +128,7 @@ public class EditorSelector<T> extends BaseEditDialog {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void addUIElements() {
-		add(ResearchEditUtils.getTitle(this, label));
+		add(EditUtils.getTitle(this, label));
 		for (EditorDefinition<T> ent : type) {
 			add(new OpenEditorButton<T>(this, ent.label(), (Editor<T>) ent.editor.and((p, l, v, c) -> close(false)), val, callback));
 		}

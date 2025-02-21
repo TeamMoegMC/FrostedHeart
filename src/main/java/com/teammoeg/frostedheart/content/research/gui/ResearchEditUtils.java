@@ -17,16 +17,18 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.frostedheart.content.research.gui;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.CUIScreen;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.editor.EditUtils;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.Research;
+import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.content.research.research.ResearchEditors;
 
 import dev.ftb.mods.ftblibrary.ui.Widget;
@@ -36,15 +38,19 @@ public class ResearchEditUtils {
 
     private ResearchEditUtils() {
     }
-
     public static void editResearch(Widget techTextButton, Research r) {
+    	editResearch(techTextButton,r,null);
+    }
+    public static void editResearch(Widget techTextButton, Research r,ResearchCategory categoryPeferred) {
         if (r != null) {
             r=FHResearch.load(r);
         }else {
         	r=new Research();
+        	if(categoryPeferred!=null)
+        		r.setCategory(categoryPeferred);
         }
         final Research old=r;
-        ResearchEditors.RESEARCH_EDITOR.open(ResearchEditUtils.openEditorScreen(), Components.str("Edit Research"), r, b->{
+        ResearchEditors.RESEARCH_EDITOR.open(EditUtils.openEditorScreen(), Components.str("Edit Research"), r, b->{
         	if(!b.equals(old)) {
         		System.out.println("modified");
         		if(old!=null)
@@ -58,20 +64,6 @@ public class ResearchEditUtils {
         	}
         });
         //new ResearchEditorDialog(EditUtils.openEditorScreen(), r, r.getCategory()).open();
-    }
-    public static UIWidget openEditorScreen() {
-    	CUIScreen wrapper=new CUIScreen(new PrimaryLayer());
-    	
-    	ClientUtils.mc().setScreen(wrapper);
-    	return wrapper.getPrimaryLayer();
-    }
-    public static TextField getTitle(UIWidget p, String title) {
-
-        return new TextField(p).setMaxWidth(200).setText(title).setColor(0xFFFFFFFF);
-    }
-    public static TextField getTitle(UIWidget p, Component title) {
-
-        return new TextField(p).setMaxWidth(200).setText(title).setColor(0xFFFFFFFF);
     }
     public static void saveResearch(Research r) {
         r.doIndex();

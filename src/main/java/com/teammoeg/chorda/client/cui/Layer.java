@@ -199,7 +199,7 @@ public abstract class Layer extends UIWidget {
 		//graphics.pose().translate(0, 0, 1);
 		for(UIWidget elm:elements) {
 			if(elm.isVisible())
-				drawElement(graphics, elm, contentX, contentY, w, h);
+				drawElement(graphics, elm,x,y, contentX, contentY, w, h);
 		}
 		
 		if(scissorEnabled)
@@ -218,20 +218,16 @@ public abstract class Layer extends UIWidget {
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
 	}
 
-	public void drawElement(GuiGraphics graphics, UIWidget element, int x, int y, int w, int h) {
+	public void drawElement(GuiGraphics graphics, UIWidget element,int parX,int parY, int x, int y, int w, int h) {
 		int childX=element.getX()+x;
 		int childY=element.getY()+y;
 		int childW=element.getWidth();
 		int childH=element.getHeight();
-		
+		//Skip rendering out-of-bounds content if scissor is enabled, improve performance
 		if(scissorEnabled) {
-			if(childX+childW<x&&childY+childH<y) {
-				return;
-			}else if(childX>x+w&&childY>y+h) {
+			if(childX>w+parX||childY>h+parY||childX+childW<parX||childY+childH<parY) {
 				return;
 			}
-			
-			
 		}
 		element.render(graphics, childX, childY, childW, childH);
 	}

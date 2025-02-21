@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.research.gui.editor;
+package com.teammoeg.chorda.client.cui.editor;
 
 import com.google.common.collect.Iterators;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -171,7 +171,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
         @Override
         public MutableComponent getDisplayName() {
-            return Components.str("All Items");
+            return Components.translatable("gui.chorda.editor.stacks.all");
         }
 
         @Override
@@ -190,7 +190,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
         @Override
         public MutableComponent getDisplayName() {
-            return Components.str("Inventory");
+            return Components.translatable("gui.chorda.editor.stacks.inventory");
         }
 
         @Override
@@ -208,7 +208,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
             @Override
             public MutableComponent getDisplayName() {
-                return Components.str("Blocks");
+                return Components.translatable("gui.chorda.editor.stacks.blocks");
             }
 
             @Override
@@ -218,14 +218,15 @@ public class SelectStackDialog<T> extends EditDialog {
         };
     
     public static final ExecutorService ITEM_SEARCH = Executors.newSingleThreadExecutor(CUtils.makeThreadFactory("Chorda-ItemSearch", true));
-    public static Editor<ItemStack> EDITOR = (p, l, v, c) -> new SelectStackDialog<ItemStack>(p, l, v, c,itemMode,ALL_ITEM,INVENTORY,BLOCKS).open();
+    public static Editor<ItemStack> EDITOR = (p, l, v, c) -> new SelectStackDialog<ItemStack>(p, l, v, c,itemMode,true,ALL_ITEM,INVENTORY,BLOCKS).open();
+    public static Editor<ItemStack> EDITOR_SIMPLE_ITEM = (p, l, v, c) -> new SelectStackDialog<ItemStack>(p, l, v, c,itemMode,false,ALL_ITEM,INVENTORY,BLOCKS).open();
     public static final Editor<Collection<ItemStack>> STACK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, new ItemStack(Items.AIR), EDITOR, SelectStackDialog::fromItemStack, CIcons::getIcon, c).open();
     public static Editor<Block> EDITOR_BLOCK = (p, l, v, c) -> new SelectStackDialog<ItemStack>(p, Components.empty().append(l).append(" (Blocks only)"), new ItemStack(v), e -> {
         Block b = Block.byItem(e.getItem());
         if (b != Blocks.AIR)
             c.accept(b);
-    },itemMode,INVENTORY,BLOCKS).open();
-    public static final Editor<Collection<Block>> BLOCK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, Blocks.AIR, EDITOR_BLOCK, e -> e.getName().getString(), e -> CIcons.getIcon(e.asItem()), c).open();
+    },itemMode,false,INVENTORY,BLOCKS).open();
+    public static final Editor<Collection<Block>> BLOCK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, Blocks.AIR, EDITOR_BLOCK, e -> e.getName(), e -> CIcons.getIcon(e.asItem()), c).open();
     private ResourceLister<T> activeMode = null;
     public final List<ResourceLister<T>> modes = new ArrayList<>();
     public ResourceMode<T> type;
@@ -237,13 +238,14 @@ public class SelectStackDialog<T> extends EditDialog {
     private final Layer tabs;
     public long update = Long.MAX_VALUE;
     private T current;
-
+    private boolean isAdvanced;
     @SafeVarargs
-	public SelectStackDialog(UIWidget p, Component label, T orig, Consumer<T> cb,ResourceMode<T> mode,ResourceLister<T>...listers) {
+	public SelectStackDialog(UIWidget p, Component label, T orig, Consumer<T> cb,ResourceMode<T> mode,boolean isAdvanced,ResourceLister<T>...listers) {
         super(p);
         setSize(222, 150);
         callback = cb;
         this.type=mode;
+        this.isAdvanced=isAdvanced;
         current = orig == null ? type.getDefaultValue() : type.copy(orig);
         
         this.modes.addAll(Arrays.asList(listers));
@@ -296,7 +298,6 @@ public class SelectStackDialog<T> extends EditDialog {
 				
 			}
         };
-
         panelStacks.setPosAndSize(28, 24, 9 * 19 + 1, 5 * 19 + 1);
 
         scrollBar = new LayerScrollBar(this, panelStacks);
@@ -318,13 +319,15 @@ public class SelectStackDialog<T> extends EditDialog {
             @Override
             public void addUIElements() {
                 add(new ButtonSwitchMode(tabs));
-                add(new ButtonEditData(tabs));
-
-                add(new ButtonCount(tabs));
-
-
-                add(new ButtonNBT(tabs));
-                add(new ButtonCaps(tabs));
+                
+	                add(new ButtonEditData(tabs));
+	            if(isAdvanced) {
+	                add(new ButtonCount(tabs));
+	
+	
+	                add(new ButtonNBT(tabs));
+	                add(new ButtonCaps(tabs));
+                }
             }
 
             @Override
@@ -338,13 +341,13 @@ public class SelectStackDialog<T> extends EditDialog {
 
         };
 
-        tabs.setPosAndSize(5, 8, 20, 100);
+        tabs.setPosAndSize(5, 4, 20, 100);
 
         updateItemWidgets(Collections.emptyList());
     }
 
-    private static String fromItemStack(ItemStack s) {
-        return s.getHoverName().getString() + " x " + s.getCount();
+    private static Component fromItemStack(ItemStack s) {
+        return s.getHoverName().copy().append(" x " + s.getCount());
     }
 
     private static String fromNBT(Tag nbt) {
@@ -490,9 +493,12 @@ public class SelectStackDialog<T> extends EditDialog {
         public Component getTitle() {
             return type.getTitle(current);
         }
-
+		public boolean isEnabled() {
+			return isAdvanced;
+		}
         @Override
         public void onClicked(MouseButton button) {
+        	
         	CInputHelper.playClickSound();
             EditPrompt.open(this, Components.str("Data"), type.save(current).toString(), s -> {
                 try {
