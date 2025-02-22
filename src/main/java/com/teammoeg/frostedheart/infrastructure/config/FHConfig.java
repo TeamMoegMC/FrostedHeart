@@ -49,7 +49,7 @@ public class FHConfig {
         public final ForgeConfigSpec.IntValue autoModeInterval;
         public final ForgeConfigSpec.DoubleValue textSpeed;
         public final ForgeConfigSpec.BooleanValue renderScenario;
-        public final ForgeConfigSpec.BooleanValue renderTips;
+        public final ForgeConfigSpec.BooleanValue enableTip;
         public final ForgeConfigSpec.DoubleValue fogDensity;
         public final ForgeConfigSpec.IntValue fogColorDay;
         public final ForgeConfigSpec.IntValue fogColorNight;
@@ -62,6 +62,7 @@ public class FHConfig {
         public final ForgeConfigSpec.IntValue scenarioRenderQuality;
         public final ForgeConfigSpec.IntValue scenarioRenderThread;
         public final ForgeConfigSpec.IntValue infraredViewUBOOffset;
+        public final ForgeConfigSpec.IntValue wheelMenuRadius;
 
         Client(ForgeConfigSpec.Builder builder) {
             builder.push("Frosted HUD");
@@ -82,6 +83,14 @@ public class FHConfig {
             tempOrbOffsetY = builder
                     .comment("Y Offset of the temperature orb. The anchor point is defined by the tempOrbPosition value. Only when you set tempOrbPosition to value other than MIDDLE will this value be used.  ")
                     .defineInRange("tempOrbOffsetY", 0, -4096, 4096);
+            enableWaypoint = builder
+                    .comment("Enables the waypoints rendering. ")
+                    .define("enableWaypoint", true);
+            enableTip = builder.comment("Enables the tips rendering. ")
+                    .define("enableTip", true);
+            wheelMenuRadius = builder
+                    .comment("Radius of the Wheel Menu. ")
+                    .defineInRange("wheelMenuRadius", 100, 60, Integer.MAX_VALUE);
             builder.pop();
 
             builder.push("Frozen Effects");
@@ -126,14 +135,6 @@ public class FHConfig {
             skyRenderChanges = builder
                     .comment("Changes the sky renderer to one which does not render sunrise or sunset effects during a snowstorm.")
                     .define("skyRenderChanges", true);
-            builder.pop();
-
-            builder.push("Tips and Waypoints");
-            enableWaypoint = builder
-                    .comment("Enables the waypoints rendering. ")
-                    .define("enableWaypoint", true);
-            renderTips = builder.comment("Enables the tips rendering. ")
-                    .define("renderTips", true);
             builder.pop();
 
             builder.push("Scenario");

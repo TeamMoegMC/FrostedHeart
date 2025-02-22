@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMe
 import com.teammoeg.frostedheart.content.health.screen.NutritionScreen;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.wheelmenu.Selection.UserSelection;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FGuis;
 import dev.ftb.mods.ftbquests.client.FTBQuestsClient;
 import dev.ftb.mods.ftbquests.item.FTBQuestsItems;
@@ -54,26 +55,32 @@ import org.joml.Quaternionf;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.PriorityQueue;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class WheelMenuRenderer {
 	public static final IGuiOverlay OVERLAY = WheelMenuRenderer::render;
 
-	public static final float WHEEL_OUTER_RADIUS = 100;
-	public static final float WHEEL_INNER_RADIUS = 70;
+	protected static float wheelRadius = 60;
+	protected static float ringWidth = 30;
 
-	protected static final PriorityQueue<Selection> selections = new PriorityQueue<>(
-			Comparator.comparingInt(Selection::getPriority).reversed());
+	protected static final Set<Selection> selections = new TreeSet<>(
+			Comparator.comparingInt(Selection::getPriority));
 	protected static final List<Selection> visibleSelections = new ArrayList<>();
 	public static final List<UserSelection> userConfiguredSelections=new ArrayList<>();
-	
+
+	@Override
+	public String toString() {
+		return "WheelMenuRenderer{}";
+	}
+
 	private static final List<Point> positions = new ArrayList<>();
 	private static final List<Float> degrees = new ArrayList<>();
 	@Getter
 	protected static Selection hoveredSelection;
 	protected static boolean mouseMoved = false;
 	// create a virtual screen to track mouse movement
-	protected static Dimension2D virtualScreen = new CircleDimension(200);
+	protected static Dimension2D virtualScreen = new CircleDimension(wheelRadius * 2);
 	@Getter
 	public static boolean isOpened;
 	public static boolean isClosing;
@@ -92,6 +99,7 @@ public class WheelMenuRenderer {
 		int ch = ClientUtils.screenCenterY();
 		var font = gui.getFont();
 		var pose = graphics.pose();
+		float innerRadius = wheelRadius - ringWidth;
 		virtualScreen.addPos(MouseCaptureUtil.getAndResetCapturedDeltaX(),
 				MouseCaptureUtil.getAndResetCapturedDeltaY());
 
@@ -100,9 +108,9 @@ public class WheelMenuRenderer {
 		pose.scale(p, p, p);
 
 		// 背景圆环
-		FGuis.drawRing(graphics, 0, 0, WHEEL_INNER_RADIUS, WHEEL_OUTER_RADIUS, 0, 360,
+		FGuis.drawRing(graphics, 0, 0, innerRadius, wheelRadius, 0, 360,
 				ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
-		FGuis.drawRing(graphics, 0, 0, WHEEL_INNER_RADIUS - 4, WHEEL_INNER_RADIUS - 2, 0, 360,
+		FGuis.drawRing(graphics, 0, 0, innerRadius - 4, innerRadius - 2, 0, 360,
 				ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
 
 		float halfSliceSize = 360F / (size * 2);
@@ -121,14 +129,14 @@ public class WheelMenuRenderer {
 			// 跟随鼠标移动的细圆环
 			pose.pushPose();
 			pose.rotateAround(new Quaternionf().rotateZ((float) radian), 0, 0, 0);
-			FGuis.drawRing(graphics, 0, 0, WHEEL_INNER_RADIUS - 4, WHEEL_INNER_RADIUS - 2, -halfSliceSize, halfSliceSize,
+			FGuis.drawRing(graphics, 0, 0, innerRadius - 4, innerRadius - 2, -halfSliceSize, halfSliceSize,
 					ColorHelper.setAlpha(ColorHelper.CYAN, p));
 			pose.popPose();
 
 			// 当前选择的选项的圆环
 			pose.pushPose();
 			pose.rotateAround(new Quaternionf().rotateZ((float) Math.toRadians(degrees.get(selectedIndex))), 0, 0, 0);
-			FGuis.drawRing(graphics, 0, 0, WHEEL_INNER_RADIUS, WHEEL_OUTER_RADIUS, -halfSliceSize, halfSliceSize,
+			FGuis.drawRing(graphics, 0, 0, innerRadius, wheelRadius, -halfSliceSize, halfSliceSize,
 					ColorHelper.setAlpha(ColorHelper.CYAN, 0.25F * p));
 			pose.popPose();
 		} else {
@@ -146,17 +154,10 @@ public class WheelMenuRenderer {
 				ColorHelper.setAlpha(ColorHelper.CYAN, p));
 
 		// 渲染选项标题
-		if (hoveredSelection != null) {
-			CGuiHelper.drawCenteredStrings(graphics, font,
-					font.split(hoveredSelection.getMessage(), (int) (WHEEL_INNER_RADIUS * 2 - 16)), 0, -4,
-					hoveredSelection.color, 10, true, true);
-		} else {
-			Component c = Component.translatable("gui.frostedheart.wheel_menu.message",
-					FHKeyMappings.key_openWheelMenu.get().getKey().getDisplayName().getString());
-			var texts = font.split(c, (int) (WHEEL_INNER_RADIUS * 2 - 16));
-			CGuiHelper.drawCenteredStrings(graphics, font, texts, 0, -texts.size() * 5, ColorHelper.CYAN, 10, true,
-					true);
-		}
+		var message = hoveredSelection != null ? hoveredSelection.getMessage() : Component.translatable("gui.frostedheart.wheel_menu.message",
+				FHKeyMappings.key_openWheelMenu.get().getKey().getDisplayName());
+		var lines = font.split(message, (int) (innerRadius * 2 - 16));
+		CGuiHelper.drawCenteredStrings(graphics, font, lines, 0, -lines.size() * 5, ColorHelper.CYAN, 10, true, true);
 		pose.popPose();
 	}
 
@@ -175,6 +176,9 @@ public class WheelMenuRenderer {
 		visibleSelections.clear();
 		positions.clear();
 		degrees.clear();
+		wheelRadius = FHConfig.CLIENT.wheelMenuRadius.get();
+		ringWidth = 30 * Math.max(1, wheelRadius / FHConfig.CLIENT.wheelMenuRadius.getDefault());
+		((CircleDimension)virtualScreen).setRadius(wheelRadius * 2);
 
 		boolean rslt=!MinecraftForge.EVENT_BUS.post(new WheelMenuInitEvent(WheelMenuRenderer::addSelection));
 		if(rslt) {
@@ -216,7 +220,7 @@ public class WheelMenuRenderer {
 	private static void update() {
 		positions.clear();
 		int size = visibleSelections.size();
-		double averageRadius = (WHEEL_INNER_RADIUS + WHEEL_OUTER_RADIUS) / 2.0;
+		double averageRadius = (wheelRadius + wheelRadius - ringWidth) / 2.0;
 		double angleStep = 2 * Math.PI / size;
 		for (int i = 0; i < size; i++) {
 			double theta = Math.PI / 2 - i * angleStep;
@@ -232,12 +236,14 @@ public class WheelMenuRenderer {
 			degrees.add(angle);
 		}
 	}
+
 	public static void open() {
 		if (init() && !selections.isEmpty()) {
 			MouseCaptureUtil.startMouseCapture();
 			isOpened = true;
 		} 
 	}
+
 	public static void tick() {
 		if (ClientUtils.getPlayer() == null) {// not in world
 			openingStatus = 0;

@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.tips;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
@@ -74,7 +75,7 @@ public class TipRenderer {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onGuiInit(ScreenEvent.Init.Post event) {
-        if (!FHConfig.CLIENT.renderTips.get())
+        if (!FHConfig.CLIENT.enableTip.get())
             return;
         if (SCREEN_BLACKLIST.contains(event.getScreen().getClass()))
             return;
@@ -94,7 +95,7 @@ public class TipRenderer {
 
     @SubscribeEvent
     public static void onHudRender(RenderGuiEvent.Post event) {
-        if (!FHConfig.CLIENT.renderTips.get() || (TIP_QUEUE.isEmpty() && !isTipRendering()))
+        if (!FHConfig.CLIENT.enableTip.get() || (TIP_QUEUE.isEmpty() && !isTipRendering()))
             return;
         Minecraft MC = ClientUtils.mc();
         if (MC.screen != null && !SCREEN_BLACKLIST.contains(MC.screen.getClass()))
@@ -119,7 +120,10 @@ public class TipRenderer {
 
     @SubscribeEvent
     public static void onGuiRender(ScreenEvent.Render.Post event) {
-        if (!FHConfig.CLIENT.renderTips.get() || (TIP_QUEUE.isEmpty() && !isTipRendering()))
+        if (FrostedHud.renderDebugOverlay) {
+            FrostedHud.renderDebugOverlay(event.getGuiGraphics(), ClientUtils.mc());
+        }
+        if (!FHConfig.CLIENT.enableTip.get() || (TIP_QUEUE.isEmpty() && !isTipRendering()))
             return;
         if (!event.getScreen().children().contains(TipWidget.INSTANCE))
             return;

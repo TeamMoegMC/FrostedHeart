@@ -21,8 +21,14 @@ package com.teammoeg.frostedheart;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.ui.*;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.AbstractWidget;
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -31,13 +37,6 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.ui.AtlasUV;
-import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.client.ui.Point;
-import com.teammoeg.chorda.client.ui.PointSet;
-import com.teammoeg.chorda.client.ui.TextPosition;
-import com.teammoeg.chorda.client.ui.TexturedUV;
-import com.teammoeg.chorda.client.ui.UV;
 import com.teammoeg.chorda.client.ui.UV.Transition;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.ClientClimateData;
@@ -972,14 +971,38 @@ public class FrostedHud {
         mc.getProfiler().pop();
     }
 
-    private static Screen previousScreen;
     public static void renderDebugOverlay(GuiGraphics stack, Minecraft mc) {
         Screen screen = mc.screen;
-        Component text = Component.literal("Current Screen: " + (screen == null ? "Null" : screen.getClass().getSimpleName()));
-        if (previousScreen != screen && mc.player != null) {
-            mc.player.sendSystemMessage(text);
+        LocalPlayer player = mc.player;
+        Font font = mc.font;
+        List<Object> lines = new ArrayList<>();
+        if (player == null) return;
+
+        lines.add("Under water: " + player.isUnderWater());
+        lines.add("");
+
+        lines.add(Component.literal("Current Screen: " + (screen == null ? "Null" : screen.getClass().getSimpleName())));
+        if (screen != null) {
+            screen.children().forEach(a -> {
+                var c = Component.empty();
+                if (a instanceof AbstractWidget w) {
+                    String name = w.getMessage().getString();
+                    if (name.isBlank()) {
+                        name = a.getClass().getSimpleName() + ".class";
+                    }
+                    c.append(name);
+                }
+                if (a.isFocused() || a.isMouseOver(MouseHelper.getScaledX(), MouseHelper.getScaledY())) {
+                    String clazz = a.getClass().getSimpleName();
+                    if (clazz.isBlank()) {
+                        clazz = a.getClass().getName();
+                    }
+                    c.append(" - [" + clazz + ".class]").withStyle(ChatFormatting.GOLD);
+                }
+                lines.add(c);
+            });
         }
-        stack.drawString(ClientUtils.font(), text, 1, 1, 0xFFFFFFFF);
-        previousScreen = screen;
+
+        CGuiHelper.drawStrings(stack, font, lines, 1, 12, ColorHelper.CYAN, 10, true, true);
     }
 }

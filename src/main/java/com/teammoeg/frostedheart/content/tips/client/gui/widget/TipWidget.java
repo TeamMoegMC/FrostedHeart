@@ -91,6 +91,8 @@ public class TipWidget extends AbstractWidget {
                 float f = AnimationUtil.fadeIn(RenderContext.FADE_ANIM_LENGTH, RenderContext.FADE_ANIM_NAME, false);
                 render(graphics, mouseX, mouseY, partialTick, f);
                 if (f == 1F) {
+                    pinButton.setAlpha(1F);
+                    closeButton.setAlpha(1F);
                     state = isAlwaysVisible() ? State.DONE : State.PROGRESSING;
                     AnimationUtil.remove(RenderContext.FADE_ANIM_NAME);
                 }
