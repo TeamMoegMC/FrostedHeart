@@ -381,8 +381,8 @@ public class CIcons {
 
 			ms.pose().pushPose();
 
-			ms.pose().scale(2.286f, 2.286f, 0);// scale font height 7 to height 16
-			ms.drawString(ClientUtils.mc().font, text, 0, 0, 0xFFFFFFFF);
+			ms.pose().scale(2f, 2f, 0);// scale font height 8 to height 16
+			ms.drawString(ClientUtils.mc().font, text, 0, 0, 0xFFFFFFFF,false);
 			ms.pose().popPose();
 			ms.pose().popPose();
 			CGuiHelper.resetGuiDrawing();

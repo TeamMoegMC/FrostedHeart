@@ -282,7 +282,7 @@ public class EditListDialog<T> extends EditDialog {
         	}
             boolean mouseOver = isMouseOver();
             int ioffset = 1;
-            if (icon!=CIcons.nop()) {
+            if (icon!=null&&icon!=CIcons.nop()) {
             	icon.draw(matrixStack, x + ioffset, y+1, 16, 16);
                 ioffset += 13;
             }

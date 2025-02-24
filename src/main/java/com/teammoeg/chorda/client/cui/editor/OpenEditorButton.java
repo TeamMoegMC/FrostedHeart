@@ -34,10 +34,10 @@ import com.teammoeg.chorda.util.CFunctionHelper;
 
 import net.minecraft.network.chat.Component;
 
+
 public class OpenEditorButton<T> extends TextButton {
     private final Editor<T> edi;
-    private Supplier<T> val;
-    private  T value;
+    private T val;
     private final Function<T,CIcon> getIcon;
     private final Function<T,Component> getText;
     private final Component txt;
@@ -47,27 +47,16 @@ public class OpenEditorButton<T> extends TextButton {
 	}
 
     public OpenEditorButton(UIWidget panel, Component txt, Editor<T> edi, T val,CIcon icon,Consumer<T> onset) {
-    	this(panel,txt,edi,()->val,icon,onset);
-	}
-
-    public OpenEditorButton(UIWidget panel, Component txt, Editor<T> edi, T val, Function<T, CIcon> getIcon, Function<T, Component> getText) {
-		this(panel,txt,edi,()->val,getIcon,getText);
-	}
-    public OpenEditorButton(UIWidget panel, Component txt, Editor<T> edi, Supplier<T> val,Consumer<T> onset) {
-		this(panel,txt,edi,val,CIcons.nop(),onset);
-	}
-
-    public OpenEditorButton(UIWidget panel, Component txt, Editor<T> edi, Supplier<T> val,CIcon icon,Consumer<T> onset) {
 		super(panel,txt,icon);
 		this.edi = edi;
 		this.val = val;
-		this.getIcon = null;
-		this.getText = null;
+		this.getIcon = t-> CIcons.nop();
+		this.getText = t->txt;
 		this.txt=txt;
 		this.onset=onset;
 	}
 
-    public OpenEditorButton(UIWidget panel, Component txt, Editor<T> edi, Supplier<T> val, Function<T, CIcon> getIcon, Function<T, Component> getText) {
+    public OpenEditorButton(UIWidget panel, Component txt, Editor<T> edi, T val, Function<T, CIcon> getIcon, Function<T, Component> getText) {
 		super(panel,Components.empty(),CIcons.nop());
 		this.edi = edi;
 		this.val = val;
@@ -78,22 +67,17 @@ public class OpenEditorButton<T> extends TextButton {
 		refreshValue();
 	}
     private void refreshValue() {
-    	if(getText!=null||getIcon!=null)
-    		value=val.get();
-    	if(getText!=null)
-    		super.setTitle(getText.apply(value));
-    	if(getIcon!=null)
-    		super.setIcon(getIcon.apply(value));
+    	super.setTitle(getText.apply(val));
+    	super.setIcon(getIcon.apply(val));
     }
 
     public T getValue() {
-    	return value;
+    	return val;
     }
 	@Override
     public void onClicked(MouseButton arg0) {
-		value=val.get();
-        edi.open(this.getParent(), txt, value, v->{
-        	this.value=v;
+        edi.open(this.getParent(), txt, val, v->{
+        	this.val=v;
         	onset.accept(v);
         	refreshValue();
         	
@@ -102,3 +86,4 @@ public class OpenEditorButton<T> extends TextButton {
 
 
 }
+
