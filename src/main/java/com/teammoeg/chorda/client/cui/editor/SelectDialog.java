@@ -133,7 +133,7 @@ public class SelectDialog<T> extends EditDialog {
 		add(scroll);
 		add(searchBox);
 		searchBox.setPosAndSize(5, 5, width - 12, 18);
-		scroll.setPosAndSize(width - 12, 25, 8, height - 25);
+		scroll.setPosAndSize(width - 12, 25, 8, height - 30);
 
 	}
 

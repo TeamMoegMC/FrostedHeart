@@ -61,7 +61,7 @@ public class OpenEditorButton<T> extends TextButton {
 		this.edi = edi;
 		this.val = val;
 		this.getIcon = CFunctionHelper.mapNullable(getIcon, CIcons.nop());
-		this.getText = CFunctionHelper.mapNullable(getText, Components.empty());
+		this.getText = CFunctionHelper.mapNullable(getText, txt);
 		this.txt=txt;
 		this.onset=t->{};
 		refreshValue();

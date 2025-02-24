@@ -33,9 +33,6 @@ import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.util.CFunctionHelper;
-import com.teammoeg.frostedheart.content.wheelmenu.Selection;
-import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedheart.util.client.Lang;
 
 import lombok.Getter;
@@ -175,7 +172,7 @@ public class EditListDialog<T> extends EditDialog {
     @Override
     public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         CGuiHelper.drawUIBackground(matrixStack, x, y, w, h);
-        matrixStack.drawString(getFont(), getTitle(), x+5, y+5, 0xFFFFFFFF);
+        matrixStack.drawString(getFont(), getTitle(), x+5, y+5, 0xFF000000,false);
     }
 
     @Override
@@ -200,20 +197,17 @@ public class EditListDialog<T> extends EditDialog {
     public class ButtonAddValue extends Button {
         public ButtonAddValue(Layer panel) {
             super(panel);
-            setHeight(12);
+            setHeight(18);
             setTitle(Components.str("+ ").append(Lang.translateKey("gui.add")));
         }
 
 
 
-        @Override
+		@Override
         public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-            boolean mouseOver = isMouseOver();
-
-            if (mouseOver) {
-               matrixStack.fill(x, y, x+w, y+h, 0x20FFFFFF);
-            }
-            matrixStack.drawString(getFont(), getTitle(), x+4, y+2, 0xFFFFFFFF);
+            super.drawBackground(matrixStack, x, y, w, h);
+            
+            matrixStack.drawString(getFont(), getTitle(), x+4, y+5, 0xFFFFFFFF);
         }
 
         @Override
@@ -239,10 +233,7 @@ public class EditListDialog<T> extends EditDialog {
             index = i;
             
             icon=toicon.apply(list.get(index));
-            if(icon!=CIcons.nop())
-            	setHeight(18);
-            else
-            	setHeight(14);
+            setHeight(18);
         }
 
         @Override
@@ -298,10 +289,10 @@ public class EditListDialog<T> extends EditDialog {
             matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+th, 0xFFFFFFFF);
 
             //if (mouseOver) {
-            	IconButton.Icon.CROSS.toCIcon().draw(matrixStack, x+w-18, y,height-2,height-2);
+            	IconButton.Icon.CROSS.toCIcon().draw(matrixStack, x+w-18, y+1,height-2,height-2);
             	//matrixStack.drawString(getFont(), "[-]", x+w-16, y+2, 0xFFFFFFFF);
-            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+1, 0xFFFFFFFF);
-            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+h-getFont().lineHeight-1, 0xFFFFFFFF);
+            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+2, 0xFFFFFFFF);
+            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+h-getFont().lineHeight, 0xFFFFFFFF);
             //}
           	if(this==moving) {
         		matrixStack.pose().popPose();
@@ -328,7 +319,7 @@ public class EditListDialog<T> extends EditDialog {
                setMoving(this);
 
             } else {
-                editor.open(this, Components.str("Edit"), list.get(index), s -> {
+                editor.open(this, Components.translatable("gui.chorda.editor.edit"),list.get(index), s -> {
                     modified = true;
                     list.set(index, s);
                     ((Layer)parent).refresh();
