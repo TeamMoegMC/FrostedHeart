@@ -74,11 +74,20 @@ public class FGuis {
     public static void drawRing(GuiGraphics guiGraphics, int x, int y, float innerRadius, float outerRadius,float startAngle,float endAngle, int color) {
         drawRing(guiGraphics, x, y, innerRadius, outerRadius, startAngle, endAngle, color, color);
     }
+    public static void drawRing(GuiGraphics guiGraphics, int x, int y, float innerRadius, float outerRadius,float startAngle,float endAngle, int color,float smooth) {
+        drawRing(guiGraphics, x, y, innerRadius, outerRadius, startAngle, endAngle, color, color,smooth);
+    }
     /**
      * @param innerColor 内圆环颜色
      * @param outerColor 外圆环颜色
      */
     public static void drawRing(GuiGraphics guiGraphics, int x, int y, float innerRadius, float outerRadius,float startAngle,float endAngle, int innerColor,int outerColor) {
+        drawRing(guiGraphics, x, y, innerRadius, outerRadius, startAngle, endAngle, innerColor, outerColor, 0.5f/outerRadius);
+    }
+    /**
+     * @param smooth 平滑度(抗锯齿)(范围0-1f)(不要给太大的数值)
+     */
+    public static void drawRing(GuiGraphics guiGraphics, int x, int y, float innerRadius, float outerRadius,float startAngle,float endAngle, int innerColor,int outerColor,float smooth) {
         float x2 = (int) (x + outerRadius);
         float y2 = (int) (y + outerRadius);
         float x1 = (int) (x - outerRadius);
@@ -95,6 +104,8 @@ public class FGuis {
 
         shader.safeGetUniform("startAngle").set(startAngle);
         shader.safeGetUniform("endAngle").set(endAngle);
+
+        shader.safeGetUniform("Smooth").set(smooth);
 
         RenderSystem.enableBlend();
         Matrix4f matrix4f = guiGraphics.pose().last().pose();

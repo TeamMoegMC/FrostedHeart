@@ -29,6 +29,8 @@ uniform float outerRadius; // 外半径
 uniform float startAngle;  // 扇形起始角度（度）
 uniform float endAngle;    // 扇形结束角度（度）
 
+uniform float Smooth;    // 平滑度（抗锯齿）
+
 out vec4 fragColor;
 
 float atan2(float y, float x) {
@@ -38,7 +40,7 @@ float atan2(float y, float x) {
 
 void main() {
     vec2 center = vec2(0.5f,0.5f);
-    float distance = distance(center, texCoord0);
+    float distan = distance(center, texCoord0);
     vec2 translatedUV = texCoord0 - center;
     float radian = radians(startAngle+90.0F);
     mat2 rotationMatrix = mat2(cos(radian), -sin(radian), sin(radian), cos(radian));
@@ -47,9 +49,16 @@ void main() {
     float angle = atan2(finalUV.y - center.y,finalUV.x - center.x);
     angle = degrees(angle);
 
-    if (distance >= innerRadius && distance <= outerRadius && angle >= startAngle && angle <= endAngle-startAngle) {
-        fragColor = mix(innerColor, outerColor, (distance - innerRadius) / (outerRadius - innerRadius));
-    } else {
+    float inAngleRange = smoothstep(startAngle, startAngle + Smooth, angle) * (1.0 - smoothstep(endAngle-startAngle - Smooth, endAngle-startAngle, angle));
+    float inRadiusRange = smoothstep(innerRadius, innerRadius + Smooth, distan) * (1.0 - smoothstep(outerRadius - Smooth, outerRadius, distan));
+    float inSector = inAngleRange * inRadiusRange;
+    if (inSector == 0.0) {
         discard;
     }
+
+    vec4 fColor = mix(innerColor, outerColor, (distan - innerRadius) / (outerRadius - innerRadius)) * ColorModulator;
+
+    fragColor = fColor * ColorModulator;
+    fragColor.a *= inSector;
+
 }
