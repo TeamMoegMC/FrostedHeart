@@ -131,8 +131,9 @@ public class WheelMenuRenderer {
 		// 背景圆环
 		FGuis.drawRing(graphics, 0, 0, innerRadius, wheelRadius, 0, 360,
 				ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
-		FGuis.drawRing(graphics, 0, 0, innerRadius - 4, innerRadius - 2, 0, 360,
-				ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
+		if (!mouseMoved)
+			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, 0, 360,
+					ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
 
 		float halfSliceSize = 360F / (size * 2);
 
@@ -150,7 +151,9 @@ public class WheelMenuRenderer {
 			// 跟随鼠标移动的细圆环
 			pose.pushPose();
 			pose.rotateAround(new Quaternionf().rotateZ((float) radian), 0, 0, 0);
-			FGuis.drawRing(graphics, 0, 0, innerRadius - 4, innerRadius - 2, -halfSliceSize, halfSliceSize,
+			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, halfSliceSize/2,
+					360-halfSliceSize, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
+			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, -halfSliceSize, halfSliceSize,
 					ColorHelper.setAlpha(ColorHelper.CYAN, p));
 			pose.popPose();
 
