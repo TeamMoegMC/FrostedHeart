@@ -1,16 +1,17 @@
 package com.teammoeg.chorda.client.cui.editor;
 
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
+import com.simibubi.create.foundation.utility.Components;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.simibubi.create.foundation.utility.Components;
 import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.util.CFunctionHelper;
 import com.teammoeg.frostedheart.content.research.gui.IdBox;
-import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -29,6 +30,7 @@ public class Editors {
 	public static final EditorWidgetFactory<Double, RealBox> DOUBLE=EditorWidgetFactory.create(RealBox::new, RealBox::getNum);
 	public static final EditorWidgetFactory<String, LabeledTextBox> STRING=EditorWidgetFactory.create(LabeledTextBox::new, LabeledTextBox::getText);
 	public static final EditorWidgetFactory<String, IdBox> STRING_ID=EditorWidgetFactory.create(IdBox::new, IdBox::getText);
+	public static final EditorWidgetFactory<String, HiddenBox<String>> STRING_ID_HIDDEN=hiddenSupplier(()->Long.toHexString(UUID.randomUUID().getMostSignificantBits()));
 	public static final EditorWidgetFactory<ResourceLocation, LabeledTextBox> RESOURCELOCATION=EditorWidgetFactory.create(LabeledTextBox::new, LabeledTextBox::getText).flatXmap(ResourceLocation::read,ResourceLocation::toString);
 	
 	
@@ -43,6 +45,9 @@ public class Editors {
 	}
 	public static <T extends Enum<T>> EditorWidgetFactory<T,LabeledSelection<T>> enumBox(Class<T> clazz){
 		return EditorWidgetFactory.create((p,l,v)->LabeledSelection.createEnum(p, l, clazz, v), LabeledSelection::getSelection);
+	}
+	public static <T> EditorWidgetFactory<T,HiddenBox<T>> hiddenSupplier(Supplier<T> def){
+		return EditorWidgetFactory.create((p,l,v)->new HiddenBox<>(p,v,def), HiddenBox::getValue);
 	}
 	public static <T> EditorWidgetFactory<T,TextButton> createAction(CIcon icon,BiConsumer<EditorDialog<T>,T> onClick){
 		return EditorWidgetFactory.create((d,p,l,v)->new TextButton(p,l,icon) {

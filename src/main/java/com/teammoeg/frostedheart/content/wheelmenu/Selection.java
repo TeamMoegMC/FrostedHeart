@@ -1,14 +1,20 @@
 package com.teammoeg.frostedheart.content.wheelmenu;
 
+import java.util.List;
 import java.util.function.Predicate;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
+import com.teammoeg.chorda.io.registry.TypedCodecRegistry;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 
@@ -19,6 +25,8 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
@@ -28,9 +36,22 @@ import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.common.MinecraftForge;
 
 public class Selection {
-	public static record UserSelection(String message, CIcon icon, Selection.Action selectAction) {
-		public Selection createSelection(int order) {
-			return new Selection(getParsedMessage(),icon,order,selectAction==null?Selection.NO_ACTION:selectAction);
+	public static TypedCodecRegistry<Selection.Action> registry=new TypedCodecRegistry<>();
+	static{
+		registry.register(KeyMappingTriggerAction.class, "key", KeyMappingTriggerAction.CODEC);
+		registry.register(CommandInputAction.class, "command", CommandInputAction.CODEC);
+	}
+	public static final Codec<Selection.Action> USER_ACTION_CODEC=registry.codec();
+	public static final Codec<List<UserSelection>> USER_SELECTION_LIST=Codec.list(UserSelection.CODEC);
+	public static record UserSelection(String id,String message, CIcon icon, Selection.Action selectAction) {
+		public static final Codec<UserSelection> CODEC=RecordCodecBuilder.create(t->t.group(
+				Codec.STRING.fieldOf("id").forGetter(UserSelection::id),
+				Codec.STRING.fieldOf("name").forGetter(UserSelection::message),
+				CIcons.CODEC.fieldOf("icon").forGetter(UserSelection::icon),
+				USER_ACTION_CODEC.fieldOf("action").forGetter(UserSelection::selectAction)
+			).apply(t, UserSelection::new));
+		public Selection createSelection() {
+			return new Selection(getParsedMessage(),icon,selectAction==null?Selection.NO_ACTION:selectAction);
 		}
 		public Component getParsedMessage() {
 			return StringTextComponentParser.parse(message);
@@ -42,6 +63,7 @@ public class Selection {
 	protected final Predicate<Selection> visibility;
 	protected final Selection.Action selectAction;
 	protected final Selection.Action hoverAction;
+	@Getter
 	public final CIcon icon;
 	@Getter
 	protected Component message;
@@ -50,16 +72,14 @@ public class Selection {
 	@Getter
 	protected boolean hovered;
 	public int color;
-	@Getter
-	private final int priority;
 
 	/**
 	 * @param icon        {@link ItemStack}, {@link IconButton.Icon},
 	 *                    {@link Component}, {@code null}
 	 * @param selectAction 选择后的行动 (选中 -> 松开Tab)
 	 */
-	public Selection(Component message, CIcon icon,int priority, Selection.Action selectAction) {
-		this(message, icon, ColorHelper.CYAN,priority, ALWAYS_VISIBLE, selectAction, NO_ACTION);
+	public Selection(Component message, CIcon icon, Selection.Action selectAction) {
+		this(message, icon, ColorHelper.CYAN, ALWAYS_VISIBLE, selectAction, NO_ACTION);
 	}
 
 	/**
@@ -70,7 +90,7 @@ public class Selection {
 	 * @param selectAction 选择后的行动 (选中 -> 松开Tab)
 	 * @param hoverAction 选中选项后的行动
 	 */
-	public Selection(Component message, CIcon icon, int color,int priority, Predicate<Selection> visibility, Selection.Action selectAction,
+	public Selection(Component message, CIcon icon, int color, Predicate<Selection> visibility, Selection.Action selectAction,
 			Selection.Action hoverAction) {
 		this.message = message;
 		this.icon = icon;
@@ -78,10 +98,9 @@ public class Selection {
 		this.visibility = visibility;
 		this.selectAction = selectAction;
 		this.hoverAction = hoverAction;
-		this.priority=priority;
 	}
-	public Selection(String keyDesc, CIcon icon,int priority) {
-		this(Components.translatable(keyDesc), icon, ColorHelper.CYAN,priority, ALWAYS_VISIBLE, new KeyMappingTriggerAction(keyDesc), NO_ACTION);
+	public Selection(String keyDesc, CIcon icon) {
+		this(Components.translatable(keyDesc), icon, ColorHelper.CYAN, ALWAYS_VISIBLE, new KeyMappingTriggerAction(keyDesc), NO_ACTION);
 	}
 	
 
@@ -108,26 +127,30 @@ public class Selection {
 
 	protected void tick() {
 		hovered = WheelMenuRenderer.hoveredSelection == this;
+		validateVisibility();
+	}
+	public void validateVisibility() {
 		visible = visibility.test(this);
 	}
-
 
 	@OnlyIn(Dist.CLIENT)
 	public interface Action {
 		void execute(Selection selection);
 	}
-	public static class KeyMappingTriggerAction implements Action{
-		private KeyMapping km;
+	public static record KeyMappingTriggerAction(KeyMapping km) implements Action{
+		public static final MapCodec<KeyMappingTriggerAction> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+			Codec.STRING.comapFlatMap(o->{
+				KeyMapping nkm=KeyMapping.ALL.get(o);
+				if(nkm==null)
+					return DataResult.error(()->"Invalid key!");
+				return DataResult.success(nkm);
+			}, KeyMapping::getName).fieldOf("key").forGetter(KeyMappingTriggerAction::km)
+			).apply(t,KeyMappingTriggerAction::new));
 		/**
 		 * Create a keymapping action. name is key description id.
 		 * */
 		public KeyMappingTriggerAction(String name) {
-			super();
-			km=KeyMapping.ALL.get(name);
-		}
-		public KeyMappingTriggerAction(KeyMapping km) {
-			super();
-			this.km=km;
+			this(KeyMapping.ALL.get(name));
 		}
 		public KeyMapping getKey() {
 			return km;
@@ -138,18 +161,15 @@ public class Selection {
 			km.clickCount++;
 			MinecraftForge.EVENT_BUS.post(new InputEvent.Key(0, 0, InputConstants.PRESS, 0));//mock key press
 			MinecraftForge.EVENT_BUS.post(new InputEvent.Key(0, 0, InputConstants.RELEASE, 0));
+			km.setDown(false);
+			km.consumeClick();
 		}
 
 	}
-	public static class CommandInputAction implements Action{
-		private String command;
-		/**
-		 * Create a keymapping action. name is key description id.
-		 * */
-		public CommandInputAction(String command) {
-			super();
-			this.command=command;
-		}
+	public static record CommandInputAction(String command) implements Action{
+		public static final MapCodec<CommandInputAction> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+			ExtraCodecs.validate(Codec.STRING, n->n.startsWith("/")?DataResult.success(n):DataResult.error(()->"Commands must starts with '/'")).fieldOf("command").forGetter(CommandInputAction::command)
+			).apply(t,CommandInputAction::new));
 		public String getCommand() {
 			return command;
 		}

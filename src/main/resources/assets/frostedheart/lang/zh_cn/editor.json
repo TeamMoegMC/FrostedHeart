@@ -5,5 +5,6 @@
   "gui.chorda.editor.stacks.blocks":"方块",
   "gui.chorda.editor.select":"选择",
   "gui.chorda.editor.new":"新建",
-  "gui.chorda.editor.edit":"修改"
+  "gui.chorda.editor.edit":"修改",
+  "gui.chorda.editor.reorder":"调整顺序"
 }

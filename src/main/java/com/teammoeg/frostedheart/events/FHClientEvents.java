@@ -25,6 +25,7 @@ import com.teammoeg.chorda.client.CameraHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.GuiClickedEvent;
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
+import com.teammoeg.chorda.io.ConfigFileUtil;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
@@ -160,6 +161,7 @@ public class FHClientEvents {
     public void onRecipesUpdated(RecipesUpdatedEvent event) {
         if (!Minecraft.getInstance().hasSingleplayerServer())
             FHRecipeCachingReloadListener.buildRecipeLists(event.getRecipeManager());
+        
 
     }
     @SubscribeEvent

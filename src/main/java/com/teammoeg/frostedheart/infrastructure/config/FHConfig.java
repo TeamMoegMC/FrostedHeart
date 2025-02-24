@@ -63,6 +63,8 @@ public class FHConfig {
         public final ForgeConfigSpec.IntValue scenarioRenderThread;
         public final ForgeConfigSpec.IntValue infraredViewUBOOffset;
         public final ForgeConfigSpec.IntValue wheelMenuRadius;
+        public final ForgeConfigSpec.ConfigValue<List<? extends String>> enabledSelections;
+        public final ForgeConfigSpec.ConfigValue<List<? extends String>> disabledSelections;
 
         Client(ForgeConfigSpec.Builder builder) {
             builder.push("Frosted HUD");
@@ -109,6 +111,12 @@ public class FHConfig {
             enableFrozenSound = builder
                     .comment("Enables the frozen sound when player is freezing. ")
                     .define("enableFrozenSound", true);
+            infraredViewUBOOffset = builder.comment("The binding offset of the UBO for the infrared view shader.")
+                .comment("Partial shaders and mods may occupy the position as well.")
+                .comment("We will use default offset (7) for some known mods here. However, it is not guaranteed to be always compatible with all mods / shaders.")
+                .comment("In this case, player have to modify the config to specify the offset.")
+                .comment("No worries, from my experience, offset 7 is compatible with 99% mods / shaders.")
+                .defineInRange("infraredViewUBOOffset", 7, 0, Integer.MAX_VALUE);
             builder.pop();
 
             builder.push("Weather");
@@ -150,13 +158,13 @@ public class FHConfig {
                     .defineInRange("scenarioRenderQuality", 2, 0, 16);
             scenarioRenderThread = builder.comment("Scenario rendering thread, Scenario screen are pre-rendered in seperate pool to prevent lag")
                     .defineInRange("scenarioRenderThread", 2, 1, 16);
-            infraredViewUBOOffset = builder.comment("The binding offset of the UBO for the infrared view shader.")
-                    .comment("Partial shaders and mods may occupy the position as well.")
-                    .comment("We will use default offset (7) for some known mods here. However, it is not guaranteed to be always compatible with all mods / shaders.")
-                    .comment("In this case, player have to modify the config to specify the offset.")
-                    .comment("No worries, from my experience, offset 7 is compatible with 99% mods / shaders.")
-                    .defineInRange("infraredViewUBOOffset", 7, 0, Integer.MAX_VALUE);
+
             builder.pop();
+            builder.push("wheelmenu");
+            enabledSelections=builder.comment("Enabled selections")
+            	.defineList("enabledSelections", new ArrayList<String>(), s->ResourceLocation.isValidResourceLocation(String.valueOf(s)));
+            disabledSelections=builder.comment("Disabled selections")
+            	.defineList("disabledSelections",  new ArrayList<String>(),s->ResourceLocation.isValidResourceLocation(String.valueOf(s)));
 
         }
 

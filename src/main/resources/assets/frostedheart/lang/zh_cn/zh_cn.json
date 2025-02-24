@@ -87,6 +87,8 @@
   "gui.wheel_menu.editor.icon":"图标",
   "gui.wheel_menu.editor.action":"设置操作",
   "gui.wheel_menu.editor.edit":"编辑轮盘菜单",
+  "gui.wheel_menu.editor.enabled": "轮盘按钮配置",
+  "gui.wheel_menu.editor.useraction":"设置自定义操作按钮",
   "gui.frostedheart.not_consume": "不消耗",
   "gui.frostedheart.per_food_value": "%s mb 每饱食度",
   "gui.frostedheart.save_update_needed": "自动更新未完成！请退出这个世界然后手动删除%s以完成更新！",

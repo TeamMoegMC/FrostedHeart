@@ -152,8 +152,11 @@ public class IconButton extends Button {
             CGuiHelper.bindTexture(ICON_LOCATION);
             CGuiHelper.blitColored(pose, x, y, size.width, size.height, this.x, this.y, size.width, size.height, TEXTURE_WIDTH, TEXTURE_HEIGHT, color);
         }
+        private CIcon cache;
         public CIcon toCIcon() {
-        	return CIcons.getIcon(ICON_LOCATION, x, y, size.width, size.height,TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        	if(cache==null)
+        		cache=CIcons.getIcon(ICON_LOCATION, x, y, size.width, size.height,TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        	return cache;
         }
     }
 }

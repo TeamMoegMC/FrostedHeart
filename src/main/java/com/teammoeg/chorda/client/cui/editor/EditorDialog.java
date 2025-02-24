@@ -109,7 +109,7 @@ public class EditorDialog<O> extends BaseEditDialog {
 		if(!noSave) {
 			for(Pair<Integer, EditItem<?>> i:values) {
 				if(i.getFirst()>=0) {
-					i.getSecond().getValue().result().ifPresent(t->params[i.getFirst()]=t);
+					i.getSecond().getValue().result().ifPresent(t->params[i.getFirst()]=t.orElse(null));
 				}
 			}
 			consumer.accept(new EditorResult(params));

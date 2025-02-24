@@ -85,7 +85,7 @@ public class ChordaNetwork {
     public static void register() {
         String VERSION = ModList.get().getModContainerById(Chorda.MODID).get().getModInfo().getVersion().toString();
         Chorda.LOGGER.info("Chorda Network Version: " + VERSION);
-        CHANNEL = NetworkRegistry.newSimpleChannel(Chorda.rl("network"), () -> VERSION, VERSION::equals, VERSION::equals);
+        CHANNEL = NetworkRegistry.newSimpleChannel(Chorda.rl("network"), () -> VERSION,NetworkRegistry.acceptMissingOr(VERSION), VERSION::equals);
 
         //Fundamental Message
         registerMessage("container_operation", ContainerOperationMessageC2S.class);

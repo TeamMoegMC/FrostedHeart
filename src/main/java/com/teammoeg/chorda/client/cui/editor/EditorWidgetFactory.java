@@ -1,5 +1,6 @@
 package com.teammoeg.chorda.client.cui.editor;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.function.TriFunction;
@@ -19,7 +20,7 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 		W create(EditorDialog dialog,Layer parent,Component prompt,T origin);
 	}
 	W create(Layer parent,Component prompt,T origin,EditorDialog dialog);
-	DataResult<T> getValue(W widget);
+	DataResult<Optional<T>> getValue(W widget);
 	
 	default EditorItemFactory<T> withName(String prompt){
 		return withName(Components.str(prompt));
@@ -31,7 +32,7 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 				return new EditItem<>() {
 					W widget=EditorWidgetFactory.this.create(layer,prompt,originValue,dialog);
 					@Override
-					public DataResult<T> getValue() {
+					public DataResult<Optional<T>> getValue() {
 						return EditorWidgetFactory.this.getValue(widget);
 					}
 					@Override
@@ -52,9 +53,9 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 			}
 
 			@Override
-			public DataResult<X> getValue(W widget) {
+			public DataResult<Optional<X>> getValue(W widget) {
 				
-				return objthis.getValue(widget).map(from);
+				return objthis.getValue(widget).map(n->Optional.ofNullable(from.apply(n.orElse(null))));
 			}
 		};
 	}
@@ -67,9 +68,9 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 			}
 
 			@Override
-			public DataResult<X> getValue(W widget) {
+			public DataResult<Optional<X>> getValue(W widget) {
 				
-				return objthis.getValue(widget).flatMap(from);
+				return objthis.getValue(widget).flatMap(n->from.apply(n.orElse(null))).map(Optional::of);
 			}
 		};
 	}
@@ -81,8 +82,8 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 			}
 
 			@Override
-			public DataResult<T> getValue(W widget) {
-				return DataResult.success(func.apply(widget));
+			public DataResult<Optional<T>> getValue(W widget) {
+				return DataResult.success(Optional.ofNullable(func.apply(widget)));
 			}
 		};
 		
@@ -95,7 +96,7 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 			}
 
 			@Override
-			public DataResult<T> getValue(W widget) {
+			public DataResult<Optional<T>> getValue(W widget) {
 				return DataResult.error(()->"Not an input");
 			}
 		};

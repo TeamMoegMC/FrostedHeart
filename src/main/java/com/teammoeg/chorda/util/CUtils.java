@@ -25,6 +25,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -77,7 +78,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.registries.RegistryObject;
 
 public class CUtils {
-
+	public static final Comparator<ResourceLocation> RESOURCE_LOCATION_COMPARATOR=Comparator.comparing(ResourceLocation::getNamespace).thenComparing(ResourceLocation::getPath);
     public static void applyEffectTo(MobEffectInstance effectinstance, Player playerentity) {
         if (effectinstance.getEffect().isInstantenous()) {
             effectinstance.getEffect().applyInstantenousEffect(playerentity, playerentity, playerentity, effectinstance.getAmplifier(), 1.0D);

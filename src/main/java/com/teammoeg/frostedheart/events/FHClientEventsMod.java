@@ -101,6 +101,7 @@ public class FHClientEventsMod {
             FHGuiProviders.setRewardGuiProviders();
         }
         LOGGER.info(CLIENT_SETUP, "FML Client setup event finished");
+        WheelMenuRenderer.registerSelections();
         /*
          ItemBlockRenderTypes.setRenderLayer(FHBlocks.RYE_BLOCK.get(), RenderType.cutout());
 		ItemBlockRenderTypes.setRenderLayer(FHBlocks.WHITE_TURNIP_BLOCK.get(), RenderType.cutout());
@@ -262,5 +263,6 @@ public class FHClientEventsMod {
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(CuriosityEntityModel.LAYER_LOCATION, CuriosityEntityModel::createBodyLayer);
     }
+    
 
 }

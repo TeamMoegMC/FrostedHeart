@@ -33,7 +33,12 @@ import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.util.CFunctionHelper;
+import com.teammoeg.frostedheart.content.wheelmenu.Selection;
+import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedheart.util.client.Lang;
+
+import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -43,6 +48,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import org.apache.commons.lang3.mutable.MutableObject;
 
 /**
  * @author  khjxiaogu
@@ -53,13 +62,24 @@ public class EditListDialog<T> extends EditDialog {
     private final Component title;
     private final Layer configPanel;
     private final Button buttonAccept, buttonCancel;
-    private final List<T> list;
-    private final Editor<T> editor;
+    @Getter
+    protected final List<T> list;
+    protected final Editor<T> editor;
     private final LayerScrollBar scroll;
     private final T def;
     private final Function<T, Component> read;
     private final Function<T, CIcon> toicon;
     boolean modified;
+    public static <T> Editor<Collection<T>> createSetEditor(T def, Supplier<Stream<T>> availables, Function<T, Component> toread, Function<T, CIcon> icon) {
+    	
+    	
+    	return (p, l, v,c) ->{
+    		MutableObject<EditListDialog<T>> dialog=new MutableObject<>();
+    		dialog.setValue(new EditListDialog<T>(p, l, v, def,(p2, l2, v2, c2) -> new SelectDialog<T>(p2, l2, v2, c2,
+    			() -> availables.get().filter(t->!dialog.getValue().getList().contains(t)).toList(), toread, null, icon).open(), toread,icon, c));
+    		dialog.getValue().open();
+    	};
+    }
     public EditListDialog(UIWidget p, Component label, Collection<T> vx, Editor<T> editor, Function<T, Component> toread, Consumer<Collection<T>> li) {
         this(p, label, vx, null, editor, toread, null, li);
     }
@@ -162,11 +182,12 @@ public class EditListDialog<T> extends EditDialog {
     public Component getTitle() {
         return title;
     }
-
     @Override
     public void onClose() {
     }
-
+    public void onChange() {
+    	
+    }
     @Override
     public void onClosed() {
         if (modified) {
@@ -203,6 +224,7 @@ public class EditListDialog<T> extends EditDialog {
                     modified = true;
                     list.add(s);
                     ((Layer)parent).refresh();
+                    onChange();
                 }
             });
 
@@ -215,8 +237,12 @@ public class EditListDialog<T> extends EditDialog {
         public ButtonConfigValue(Layer panel, int i) {
             super(panel);
             index = i;
-            setHeight(12);
+            
             icon=toicon.apply(list.get(index));
+            if(icon!=CIcons.nop())
+            	setHeight(18);
+            else
+            	setHeight(14);
         }
 
         @Override
@@ -240,26 +266,29 @@ public class EditListDialog<T> extends EditDialog {
         public void getTooltip(Consumer<Component> l) {
             if (getMouseX() >=  width - 19) {
                 l.accept(Components.translatable("selectServer.delete"));
-            } else {
+            }else if (getMouseX() >=width - 36) {
+            	l.accept(Components.translatable("gui.chorda.editor.reorder"));
+             }  else {
                 l.accept(read.apply(list.get(index)));
             }
         }
 
         @Override
         public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        	super.drawBackground(matrixStack, x, y, w, h);
         	if(this==moving) {
         		matrixStack.pose().pushPose();
         		matrixStack.pose().translate(0, 0, 10);
         	}
             boolean mouseOver = isMouseOver();
-            int ioffset = 0;
-            if (toicon != null) {
-            	icon.draw(matrixStack, x + ioffset, y, 12, 12);
+            int ioffset = 1;
+            if (icon!=CIcons.nop()) {
+            	icon.draw(matrixStack, x + ioffset, y+1, 16, 16);
                 ioffset += 13;
             }
             if (mouseOver) {
 
-            	matrixStack.fill(x, y, x+w, y+h, 0x21FFFFFF);
+            	//matrixStack.fill(x, y, x+w, y+h, 0x21FFFFFF);
 
                 if (getMouseX() >= w - 19) {
                 	matrixStack.fill(x + w - 19, y, x+w, y+h, 0x21FFFFFF);
@@ -267,10 +296,11 @@ public class EditListDialog<T> extends EditDialog {
             }
             matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+2, 0xFFFFFFFF);
 
-            if (mouseOver) {
-            	matrixStack.drawString(getFont(), "[-]", x+w-16, y+2, 0xFFFFFFFF);
+            //if (mouseOver) {
+            	IconButton.Icon.CROSS.toCIcon().draw(matrixStack, x+w-16, y,height-2,height-2);
+            	//matrixStack.drawString(getFont(), "[-]", x+w-16, y+2, 0xFFFFFFFF);
             	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+2, 0xFFFFFFFF);
-            }
+            //}
           	if(this==moving) {
         		matrixStack.pose().popPose();
         	}
@@ -300,6 +330,7 @@ public class EditListDialog<T> extends EditDialog {
                     modified = true;
                     list.set(index, s);
                     ((Layer)parent).refresh();
+                    onChange();
                 });
             }
         }

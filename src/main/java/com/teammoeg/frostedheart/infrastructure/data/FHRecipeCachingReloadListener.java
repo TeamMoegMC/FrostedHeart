@@ -44,6 +44,7 @@ import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
+import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.ReloadableServerResources;
@@ -56,6 +57,7 @@ import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.registries.RegistryObject;
 
 public class FHRecipeCachingReloadListener implements ResourceManagerReloadListener {
@@ -130,5 +132,7 @@ public class FHRecipeCachingReloadListener implements ResourceManagerReloadListe
     public void onResourceManagerReload(@Nonnull ResourceManager resourceManager) {
         buildRecipeLists(dataPackRegistries.getRecipeManager());
         ResearchListeners.ServerReload();
+        if(FMLEnvironment.dist==Dist.CLIENT)
+        	WheelMenuRenderer.load();
     }
 }

@@ -1,4 +1,4 @@
-package com.teammoeg.chorda.util;
+package com.teammoeg.chorda.io;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,8 +17,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import com.teammoeg.chorda.config.ConfigFileType;
-import com.teammoeg.chorda.io.CodecUtil;
-import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.frostedheart.FHMain;
 
 public class ConfigFileUtil {
@@ -39,7 +37,13 @@ public class ConfigFileUtil {
 			}
 		return null;
 	}
-
+	@Nullable
+	public static <T> void delete(ConfigFileType<T> c, String name) {
+		File f = new File(c.folder(), name + ".json");
+		if (f.exists())
+			if(!f.delete())
+				f.deleteOnExit();
+	}
 	public static <T> Map<String, T> loadAll(ConfigFileType<T> c) {
 		FHMain.LOGGER.info("loading " + c + " data from files...");
 		Map<String, T> list = new LinkedHashMap<>();
@@ -62,7 +66,7 @@ public class ConfigFileUtil {
 		return list;
 	}
 
-	public static <T> void load(ConfigFileType<T> c, String name, T data) {
+	public static <T> void save(ConfigFileType<T> c, String name, T data) {
 		c.folder().mkdirs();
 
 		File out = new File(c.folder(), name + ".json");

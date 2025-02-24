@@ -28,8 +28,11 @@ import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.widget.IconButton;
+import com.teammoeg.chorda.config.ConfigFileType;
+import com.teammoeg.chorda.io.ConfigFileUtil;
 import com.teammoeg.chorda.math.CircleDimension;
 import com.teammoeg.chorda.math.Dimension2D;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
@@ -46,17 +49,24 @@ import dev.ftb.mods.ftbquests.item.FTBQuestsItems;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.ModLoadingContext;
+
 import org.joml.Quaternionf;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.TreeMap;
 
 public class WheelMenuRenderer {
 	public static final IGuiOverlay OVERLAY = WheelMenuRenderer::render;
@@ -64,14 +74,25 @@ public class WheelMenuRenderer {
 	protected static float wheelRadius = 60;
 	protected static float ringWidth = 30;
 
-	protected static final Set<Selection> selections = new TreeSet<>(
-			Comparator.comparingInt(Selection::getPriority));
+	//registered selections
+	protected static final TreeMap<ResourceLocation,Selection> selections = new TreeMap<>(CUtils.RESOURCE_LOCATION_COMPARATOR);
+	//selections by id user choose to show
+	protected static final Set<ResourceLocation> displayedSelections=new LinkedHashSet<>();
+	protected static final Set<ResourceLocation> hiddenSelections=new HashSet<>();
+	
+	public static final Map<ResourceLocation,Selection> registeredSelections=new LinkedHashMap<>();
+	//selections created by user, rl namespace must be wheel_menu_user
+	public static final List<UserSelection> userSelections=new ArrayList<>();
+	//selections from world settings, rl namespace must be wheel_menu_world
+	public static final List<UserSelection> worldSelections=new ArrayList<>();
+	//selections gathered during current session
+	protected static final List<Selection> availableSelections = new ArrayList<>();
 	protected static final List<Selection> visibleSelections = new ArrayList<>();
-	public static final List<UserSelection> userConfiguredSelections=new ArrayList<>();
-
+	public static final ConfigFileType<UserSelection> configType=new ConfigFileType<>(Selection.UserSelection.CODEC,"wheelmenu");
+	
 	@Override
 	public String toString() {
-		return "WheelMenuRenderer{}";
+		return "WheelMenuRenderer";
 	}
 
 	private static final List<Point> positions = new ArrayList<>();
@@ -80,7 +101,7 @@ public class WheelMenuRenderer {
 	protected static Selection hoveredSelection;
 	protected static boolean mouseMoved = false;
 	// create a virtual screen to track mouse movement
-	protected static Dimension2D virtualScreen = new CircleDimension(wheelRadius * 2);
+	protected static Dimension2D virtualScreen;
 	@Getter
 	public static boolean isOpened;
 	public static boolean isClosing;
@@ -170,49 +191,73 @@ public class WheelMenuRenderer {
 		}
 		return 0;
 	}
+	public static void registerSelections(){
+		MinecraftForge.EVENT_BUS.post(new WheelMenuRegisterEvent(registeredSelections));
+		// 在此处添加轮盘选项
 
-	protected static boolean init() {
+		registeredSelections.put(new ResourceLocation("wheel_menu","edit"),new Selection(Component.translatable("gui.wheel_menu.editor.edit"), IconButton.Icon.LIST.toCIcon(), s->{
+			WheelMenuEditors.openConfigScreen();
+		}));
+		if (CompatModule.isFTBQLoaded()) {
+			registeredSelections.put(new ResourceLocation("ftb_quests","open_book"),new Selection(Component.translatable("key.ftbquests.quests"), CIcons.getIcon(FTBQuestsItems.BOOK.get()),
+					s -> FTBQuestsClient.openGui()));
+		}
+		registeredSelections.put(new ResourceLocation("curios","open_gui"),new Selection("key.curios.open.desc",CIcons.getIcon(FHItems.heater_vest)));
+		
+		
+
+		registeredSelections.put(new ResourceLocation("frostedheart","debug"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.debug"),
+				CIcons.getIcon(FHItems.debug_item), ColorHelper.CYAN, 
+				s -> ClientUtils.getPlayer().isCreative(), s -> DebugScreen.openDebugScreen(), Selection.NO_ACTION));
+
+		registeredSelections.put(new ResourceLocation("frostedheart","health"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.nutrition"),
+			CIcons.getIcon(NutritionScreen.fat_icon), s -> FHNetwork.sendToServer(new C2SOpenNutritionScreenMessage())));
+
+		registeredSelections.put(new ResourceLocation("frostedheart","clothing"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.clothing"),
+			CIcons.getIcon(FHItems.gambeson), 
+				s -> FHNetwork.sendToServer(new C2SOpenClothesScreenMessage())));
+	}
+	public static void collectSelections(){
 		selections.clear();
+		selections.putAll(registeredSelections);
+		worldSelections.forEach(u->selections.put(new ResourceLocation("wheel_menu_world",u.id()), u.createSelection()));
+		userSelections.forEach(u->selections.put(new ResourceLocation("wheel_menu_user",u.id()), u.createSelection()));
+	}
+	public static void openIfNewSelection() {
+		boolean modified=false;
+		for(Entry<ResourceLocation, Selection> rl:selections.entrySet()) {
+			rl.getValue().validateVisibility();
+			if(rl.getValue().isVisible()&&!hiddenSelections.contains(rl.getKey())&&!displayedSelections.contains(rl.getKey())) {
+				displayedSelections.add(rl.getKey());
+				modified=true;
+			}
+		}
+		if(modified) {
+			saveUserSelectedOptions();
+		}
+	}
+	protected static boolean init() {
 		visibleSelections.clear();
+		availableSelections.clear();
 		positions.clear();
 		degrees.clear();
 		wheelRadius = FHConfig.CLIENT.wheelMenuRadius.get();
 		ringWidth = 30 * Math.max(1, wheelRadius / FHConfig.CLIENT.wheelMenuRadius.getDefault());
-		((CircleDimension)virtualScreen).setRadius(wheelRadius * 2);
-
-		boolean rslt=!MinecraftForge.EVENT_BUS.post(new WheelMenuInitEvent(WheelMenuRenderer::addSelection));
+		virtualScreen = new CircleDimension(wheelRadius * 2);
+		openIfNewSelection();
+		ArrayList<ResourceLocation> loc=new ArrayList<>(displayedSelections);
+		
+		boolean rslt=!MinecraftForge.EVENT_BUS.post(new WheelMenuInitEvent(loc));
 		if(rslt) {
-			// 在此处添加轮盘选项
-			addSelection(new Selection(Component.translatable("gui.close"), IconButton.Icon.CROSS.toCIcon(), 0, Selection.NO_ACTION));
-			addSelection(new Selection(Component.translatable("gui.wheel_menu.editor.edit"), IconButton.Icon.LIST.toCIcon(), -1, s->{
-				EditUtils.edit(WheelMenuEditors.SELECTION_LIST_EDITOR, Component.translatable("gui.wheel_menu.editor.edit"), userConfiguredSelections, t->{
-					userConfiguredSelections.clear();
-					userConfiguredSelections.addAll(t);
-				});
-			}));
-			if (CompatModule.isFTBQLoaded()) {
-				addSelection(new Selection(Component.translatable("key.ftbquests.quests"), CIcons.getIcon(FTBQuestsItems.BOOK.get()), 10,
-						s -> FTBQuestsClient.openGui()));
-			}
-			addSelection(new Selection("key.curios.open.desc",CIcons.getIcon(FHItems.heater_vest), 50));
 			
-			
-
-			addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.debug"),
-					CIcons.getIcon(FHItems.debug_item), ColorHelper.CYAN, 20,
-					s -> ClientUtils.getPlayer().isCreative(), s -> DebugScreen.openDebugScreen(), Selection.NO_ACTION));
-
-			addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.nutrition"),
-				CIcons.getIcon(NutritionScreen.fat_icon), 30, s -> FHNetwork.sendToServer(new C2SOpenNutritionScreenMessage())));
-
-			addSelection(new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.clothing"),
-				CIcons.getIcon(FHItems.gambeson), 40,
-					s -> FHNetwork.sendToServer(new C2SOpenClothesScreenMessage())));
-
-			int order=0;
-			for(UserSelection i:userConfiguredSelections) {
-				addSelection(i.createSelection(10000+(order++)));
+			for(ResourceLocation s:loc) {
+				Selection sel=selections.get(s);
+				if(sel!=null) {
+					availableSelections.add(sel);
+				}
 			}
+			
+			availableSelections.add(0,new Selection(Component.translatable("gui.close"), IconButton.Icon.CROSS.toCIcon(), Selection.NO_ACTION));
 		}
 		return rslt;
 	}
@@ -245,6 +290,7 @@ public class WheelMenuRenderer {
 	}
 
 	public static void tick() {
+		
 		if (ClientUtils.getPlayer() == null) {// not in world
 			openingStatus = 0;
 			onClose();
@@ -267,7 +313,7 @@ public class WheelMenuRenderer {
 			}
 			int prevsize=visibleSelections.size();
 			visibleSelections.clear();
-			for (Selection selection : selections) {
+			for (Selection selection : availableSelections) {
 				selection.tick();
 				if (selection.visible) {
 					visibleSelections.add(selection);
@@ -280,7 +326,6 @@ public class WheelMenuRenderer {
 
 	public static void onClose() {
 		MouseCaptureUtil.stopMouseCapture();
-		virtualScreen.reset();
 		isOpened = false;
 		mouseMoved = false;
 		if (ClientUtils.getPlayer() != null && hoveredSelection != null) {
@@ -288,7 +333,13 @@ public class WheelMenuRenderer {
 		}
 	}
 
-	private static void addSelection(Selection selection) {
-		selections.add(selection);
+	public static void saveUserSelectedOptions() {
+		FHConfig.CLIENT.enabledSelections.set(displayedSelections.stream().map(ResourceLocation::toString).toList());
+		FHConfig.CLIENT.disabledSelections.set(hiddenSelections.stream().map(ResourceLocation::toString).toList());
+	}
+	public static void load() {
+		WheelMenuRenderer.userSelections.clear();
+        WheelMenuRenderer.userSelections.addAll(ConfigFileUtil.loadAll(WheelMenuRenderer.configType).values());
+        WheelMenuRenderer.collectSelections();
 	}
 }
