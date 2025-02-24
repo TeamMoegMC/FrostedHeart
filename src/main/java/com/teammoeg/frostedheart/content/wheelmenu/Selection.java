@@ -162,7 +162,7 @@ public class Selection {
 			MinecraftForge.EVENT_BUS.post(new InputEvent.Key(0, 0, InputConstants.PRESS, 0));//mock key press
 			MinecraftForge.EVENT_BUS.post(new InputEvent.Key(0, 0, InputConstants.RELEASE, 0));
 			km.setDown(false);
-			km.consumeClick();
+			//km.consumeClick();
 		}
 
 	}
