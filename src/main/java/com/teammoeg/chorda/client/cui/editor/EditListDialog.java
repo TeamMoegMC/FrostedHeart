@@ -286,6 +286,7 @@ public class EditListDialog<T> extends EditDialog {
             	icon.draw(matrixStack, x + ioffset, y+1, 16, 16);
                 ioffset += 13;
             }
+            int th=(height-getFont().lineHeight)/2;
             if (mouseOver) {
 
             	//matrixStack.fill(x, y, x+w, y+h, 0x21FFFFFF);
@@ -294,12 +295,13 @@ public class EditListDialog<T> extends EditDialog {
                 	matrixStack.fill(x + w - 19, y, x+w, y+h, 0x21FFFFFF);
                 }
             }
-            matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+2, 0xFFFFFFFF);
+            matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+th, 0xFFFFFFFF);
 
             //if (mouseOver) {
-            	IconButton.Icon.CROSS.toCIcon().draw(matrixStack, x+w-16, y,height-2,height-2);
+            	IconButton.Icon.CROSS.toCIcon().draw(matrixStack, x+w-18, y,height-2,height-2);
             	//matrixStack.drawString(getFont(), "[-]", x+w-16, y+2, 0xFFFFFFFF);
-            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+2, 0xFFFFFFFF);
+            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+1, 0xFFFFFFFF);
+            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+h-getFont().lineHeight-1, 0xFFFFFFFF);
             //}
           	if(this==moving) {
         		matrixStack.pose().popPose();
