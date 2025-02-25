@@ -77,7 +77,7 @@ public class WheelMenuRenderer {
 	//registered selections
 	protected static final TreeMap<ResourceLocation,Selection> selections = new TreeMap<>(CUtils.RESOURCE_LOCATION_COMPARATOR);
 	//selections by id user choose to show
-	protected static final Set<ResourceLocation> displayedSelections=new LinkedHashSet<>();
+	protected static final List<ResourceLocation> displayedSelections=new ArrayList<>();
 	protected static final Set<ResourceLocation> hiddenSelections=new HashSet<>();
 	
 	public static final Map<ResourceLocation,Selection> registeredSelections=new LinkedHashMap<>();
@@ -228,10 +228,11 @@ public class WheelMenuRenderer {
 	}
 	public static void openIfNewSelection() {
 		boolean modified=false;
+		HashSet<ResourceLocation> set=new HashSet<>(displayedSelections);
 		for(Entry<ResourceLocation, Selection> rl:selections.entrySet()) {
 			rl.getValue().validateVisibility();
-			if(rl.getValue().isVisible()&&!hiddenSelections.contains(rl.getKey())&&!displayedSelections.contains(rl.getKey())) {
-				displayedSelections.add(rl.getKey());
+			if(rl.getValue().isVisible()&&!hiddenSelections.contains(rl.getKey())&&!set.contains(rl.getKey())) {
+				displayedSelections.add(0,rl.getKey());
 				modified=true;
 			}
 		}
@@ -295,8 +296,10 @@ public class WheelMenuRenderer {
 	public static void tick() {
 		
 		if (ClientUtils.getPlayer() == null) {// not in world
-			openingStatus = 0;
-			onClose();
+			if(isOpened) {
+				openingStatus = 0;
+				onClose();
+			}
 		}
 		if (isOpened) {
 			if (FHKeyMappings.key_openWheelMenu.get().isDown()) {
@@ -328,6 +331,8 @@ public class WheelMenuRenderer {
 	}
 
 	public static void onClose() {
+		System.out.println("call onclose");
+		FHKeyMappings.key_openWheelMenu.get().clickCount=0;
 		MouseCaptureUtil.stopMouseCapture();
 		isOpened = false;
 		mouseMoved = false;
@@ -343,6 +348,10 @@ public class WheelMenuRenderer {
 	public static void load() {
 		WheelMenuRenderer.userSelections.clear();
         WheelMenuRenderer.userSelections.addAll(ConfigFileUtil.loadAll(WheelMenuRenderer.configType).values());
+        displayedSelections.clear();
+        displayedSelections.addAll(FHConfig.CLIENT.enabledSelections.get().stream().map(ResourceLocation::new).toList());
+        hiddenSelections.clear();
+        hiddenSelections.addAll(FHConfig.CLIENT.disabledSelections.get().stream().map(ResourceLocation::new).toList());
         WheelMenuRenderer.collectSelections();
 	}
 }

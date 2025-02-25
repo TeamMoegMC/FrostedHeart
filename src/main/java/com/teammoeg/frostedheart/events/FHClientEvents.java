@@ -75,6 +75,7 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
 import java.util.List;
@@ -161,7 +162,8 @@ public class FHClientEvents {
     public void onRecipesUpdated(RecipesUpdatedEvent event) {
         if (!Minecraft.getInstance().hasSingleplayerServer())
             FHRecipeCachingReloadListener.buildRecipeLists(event.getRecipeManager());
-        
+        if(FMLEnvironment.dist==Dist.CLIENT)
+        	WheelMenuRenderer.load();
 
     }
     @SubscribeEvent
