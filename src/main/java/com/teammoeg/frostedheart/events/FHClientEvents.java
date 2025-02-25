@@ -23,6 +23,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.chorda.client.CameraHelper;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.PartialTickTracker;
 import com.teammoeg.chorda.client.ui.GuiClickedEvent;
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.io.ConfigFileUtil;
@@ -241,7 +242,7 @@ public class FHClientEvents {
                 }
 
                 if (ClientScene.INSTANCE != null && ClientScene.INSTANCE.dialog instanceof HUDDialog dialog) {
-                    dialog.render(stack, 0, 0, partialTicks);
+                    dialog.render(stack, 0, 0, PartialTickTracker.getTickAlignedPartialTicks());
                 }
                 event.setCanceled(true);
             }

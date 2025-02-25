@@ -24,6 +24,7 @@ import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.chorda.client.PartialTickTracker;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
@@ -74,22 +75,9 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		
 		
 	}
-	public float handlePt(float partialTicks) {
-		float delta=partialTicks-lpartialTicks;
-		if(delta<0){
-			delta=1-lpartialTicks+partialTicks;
-		}
-		cpartialTicks+=delta;
-		if(cpartialTicks>1)
-			cpartialTicks=1;
-		lpartialTicks=partialTicks;
-		return cpartialTicks;
-	}
-	float lpartialTicks;
-	float cpartialTicks;
 	public void render(GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks) {
 		//AbstractGui.fill(matrixStack, 0, 0, width, height, 0xffffffff);
-		partialTicks=handlePt(partialTicks);
+		partialTicks=PartialTickTracker.getTickAlignedPartialTicks();
 		this.width=ClientScene.fromRelativeXW(1);
 		this.height=ClientScene.fromRelativeYH(1);
 		matrixStack.pose().pushPose();
@@ -141,7 +129,6 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	}
 	@Override
 	public void tickDialog() {
-		cpartialTicks=0;
 		getPrimary().tick();
 		if(escapes!=MAX_ESCAPE) {
 			ticksSinceLastSpace--;
@@ -163,7 +150,6 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		return primary;
 	}
 	public void setPrimary(LayerManager primary) {
-		cpartialTicks=0;
 		this.primary = primary;
 	}
 	@Override

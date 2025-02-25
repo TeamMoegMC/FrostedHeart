@@ -17,8 +17,9 @@
  *
  */
 
-package com.teammoeg.chorda;
+package com.teammoeg.chorda.listeners;
 
+import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.recipe.RecipeReloadListener;
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
 
