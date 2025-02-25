@@ -54,6 +54,7 @@ import net.minecraft.util.Mth;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.ModLoader;
 import net.minecraftforge.fml.ModLoadingContext;
 
 import org.joml.Quaternionf;
@@ -154,7 +155,8 @@ public class WheelMenuRenderer {
 			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, halfSliceSize/2,
 					360-halfSliceSize, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
 			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, -halfSliceSize, halfSliceSize,
-					ColorHelper.setAlpha(ColorHelper.CYAN, p));
+					ColorHelper.setAlpha(ColorHelper.CYAN, p),
+					ColorHelper.setAlpha(ColorHelper.CYAN, p*0.75f));
 			pose.popPose();
 
 			// 当前选择的选项的圆环
@@ -195,32 +197,21 @@ public class WheelMenuRenderer {
 		return 0;
 	}
 	public static void registerSelections(){
-		MinecraftForge.EVENT_BUS.post(new WheelMenuRegisterEvent(registeredSelections));
+		//System.out.println("fire registries");
+		if(!isInitialized) {
+		MinecraftForge.EVENT_BUS.post(new WheelMenuSelectionRegisterEvent(registeredSelections));
 		// 在此处添加轮盘选项
 
 		registeredSelections.put(new ResourceLocation("wheel_menu","edit"),new Selection(Component.translatable("gui.wheel_menu.editor.edit"), IconButton.Icon.LIST.toCIcon(), s->{
 			WheelMenuEditors.openConfigScreen();
 		}));
-		if (CompatModule.isFTBQLoaded()) {
-			registeredSelections.put(new ResourceLocation("ftb_quests","open_book"),new Selection(Component.translatable("key.ftbquests.quests"), CIcons.getIcon(FTBQuestsItems.BOOK.get()),
-					s -> FTBQuestsClient.openGui()));
+		isInitialized=true;
 		}
-		registeredSelections.put(new ResourceLocation("curios","open_gui"),new Selection("key.curios.open.desc",CIcons.getIcon(FHItems.heater_vest)));
-		
-		
 
-		registeredSelections.put(new ResourceLocation("frostedheart","debug"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.debug"),
-				CIcons.getIcon(FHItems.debug_item), ColorHelper.CYAN, 
-				s -> ClientUtils.getPlayer().isCreative(), s -> DebugScreen.openDebugScreen(), Selection.NO_ACTION));
-
-		registeredSelections.put(new ResourceLocation("frostedheart","health"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.nutrition"),
-			CIcons.getIcon(NutritionScreen.fat_icon), s -> FHNetwork.sendToServer(new C2SOpenNutritionScreenMessage())));
-
-		registeredSelections.put(new ResourceLocation("frostedheart","clothing"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.clothing"),
-			CIcons.getIcon(FHItems.gambeson), 
-				s -> FHNetwork.sendToServer(new C2SOpenClothesScreenMessage())));
 	}
+	private static boolean isInitialized=false;
 	public static void collectSelections(){
+		registerSelections();
 		selections.clear();
 		selections.putAll(registeredSelections);
 		worldSelections.forEach(u->selections.put(new ResourceLocation("wheel_menu_world",u.id()), u.createSelection()));
@@ -230,6 +221,7 @@ public class WheelMenuRenderer {
 		boolean modified=false;
 		HashSet<ResourceLocation> set=new HashSet<>(displayedSelections);
 		for(Entry<ResourceLocation, Selection> rl:selections.entrySet()) {
+			if(!rl.getValue().isAutoAddable())continue;
 			rl.getValue().validateVisibility();
 			if(rl.getValue().isVisible()&&!hiddenSelections.contains(rl.getKey())&&!set.contains(rl.getKey())) {
 				displayedSelections.add(0,rl.getKey());
@@ -251,7 +243,7 @@ public class WheelMenuRenderer {
 		openIfNewSelection();
 		ArrayList<ResourceLocation> loc=new ArrayList<>(displayedSelections);
 		
-		boolean rslt=!MinecraftForge.EVENT_BUS.post(new WheelMenuInitEvent(loc));
+		boolean rslt=!MinecraftForge.EVENT_BUS.post(new WheelMenuOpenEvent(loc));
 		if(rslt) {
 			
 			for(ResourceLocation s:loc) {

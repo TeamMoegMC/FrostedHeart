@@ -20,7 +20,10 @@
 package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.*;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
+import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.compat.CompatModule;
@@ -30,32 +33,44 @@ import com.teammoeg.frostedheart.compat.tetra.TetraClient;
 import com.teammoeg.frostedheart.content.climate.particle.SnowParticle;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
+import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestExtension;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestModel;
+import com.teammoeg.frostedheart.content.wheelmenu.Selection;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
+import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuSelectionRegisterEvent;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.client.FHScreens;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
 import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.content.climate.model.LiningModel;
+import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.particle.BreathParticle;
 import com.teammoeg.frostedheart.content.climate.particle.SteamParticle;
 import com.teammoeg.frostedheart.content.climate.particle.WetSteamParticle;
 import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
+import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
+import com.teammoeg.frostedheart.content.health.screen.NutritionScreen;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
+
+import dev.ftb.mods.ftbquests.client.FTBQuestsClient;
+import dev.ftb.mods.ftbquests.item.FTBQuestsItems;
+
 import com.teammoeg.chorda.util.CRegistryHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraftforge.api.distmarker.Dist;
@@ -65,10 +80,12 @@ import net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinit
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import static com.teammoeg.frostedheart.FHMain.CLIENT_SETUP;
@@ -95,13 +112,14 @@ public class FHClientEventsMod {
         if (CompatModule.isTetraLoaded()) {
             LOGGER.info(CLIENT_SETUP, "Initializing Tetra Client");
             TetraClient.init();
+            
         }
         if (CompatModule.isFTBQLoaded()) {
             LOGGER.info(CLIENT_SETUP, "Initializing FTB Quests");
             FHGuiProviders.setRewardGuiProviders();
         }
         LOGGER.info(CLIENT_SETUP, "FML Client setup event finished");
-        WheelMenuRenderer.registerSelections();
+       
         /*
          ItemBlockRenderTypes.setRenderLayer(FHBlocks.RYE_BLOCK.get(), RenderType.cutout());
 		ItemBlockRenderTypes.setRenderLayer(FHBlocks.WHITE_TURNIP_BLOCK.get(), RenderType.cutout());
@@ -125,6 +143,7 @@ public class FHClientEventsMod {
     public static void registerReloadListeners(RegisterClientReloadListenersEvent event) {
         event.registerReloadListener(KGlyphProvider.INSTANCE);
     }
+    
 
 	@SuppressWarnings("deprecation")
 	@SubscribeEvent

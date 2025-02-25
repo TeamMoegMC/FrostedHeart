@@ -11,33 +11,16 @@ import com.teammoeg.chorda.client.cui.Layer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder.SetterAndGetter;
+import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuildResult;
+import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Item;
+import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuiltParams;
 
 import net.minecraft.network.chat.Component;
 
 public class EditorDialog<O> extends BaseEditDialog {
 	Layer mainPane;
 	LayerScrollBar scroll;
-	public static class EditorDialogPrototype<O>{
-		List<EditorPair<O,? extends Object>> widgets;
-		int paramSize=0;
-		public EditorDialogPrototype() {
-			widgets=new ArrayList<>();
-		}
-		public EditorDialogPrototype(EditorDialogPrototype<O> dialog) {
-			this.widgets=new ArrayList<>(dialog.widgets);
-			this.paramSize=dialog.paramSize;
-		}
-		public <A> void add(EditorItemFactory<A> factory,Function<O,A> getter) {
-			widgets.add(new EditorPair<O,A>(factory,getter,paramSize++));
-		}
-		public void addAction(EditorItemFactory<O> factory) {
-			widgets.add(new EditorPair<O,O>(factory,e->e,-1));
-		}
-		public EditorDialog<O> create(UIWidget panel,Component title,O origin,Consumer<EditorResult> consumer){
-			return new EditorDialog<>(panel,title,this,origin,consumer);
-		}
-		
-	}
 	public static record EditorPair<O,A>(EditorItemFactory<A> factory,Function<O,A> getter,int index) {
 		public Pair<Integer, EditItem<?>> create(EditorDialog<O> dialog,Layer parent,O o,Object[] params){
 			A val=null;
@@ -48,17 +31,34 @@ public class EditorDialog<O> extends BaseEditDialog {
 			return Pair.of(index, factory.create(parent,dialog,val));
 		}
 	}
-	public static class EditorResult{
+	public static class EditorDialogPrototype<O>{
+		List<EditorPair<O,?>> widgets;
+		Function<BuiltParams, O> consumer;
+		int paramSize=0;
+		public EditorDialogPrototype(BuildResult<SetterAndGetter<O, ?>,O> dialog) {
+			this.widgets=new ArrayList<>();
+			Arrays.stream(dialog.obj()).map(t->new EditorPair((EditorItemFactory<?>)t.obj().factory(),(Function)t.obj().func(),t.index())).forEach(widgets::add);
+			this.paramSize=dialog.parcount();
+			this.consumer=dialog.consumer();
+		}
+		public EditorDialog<O> create(UIWidget panel,Component title,O origin,Consumer<O> consumer){
+			return new EditorDialog<>(panel,title,this,origin,li->consumer.accept(this.consumer.apply(li)));
+		}
+		
+	}
+
+	public static class EditorResult implements BuiltParams{
 		Object[] par;
 		
 		public EditorResult(Object[] par) {
 			super();
 			this.par = par;
 		}
-
-		public Object get(int params) {
+		@Override
+		public Object getRaw(int params) {
 			return par[params];
-		};
+		}
+
 	}
 	List<Pair<Integer,EditItem<?>>> values=new ArrayList<>();
 	Consumer<EditorResult> consumer;

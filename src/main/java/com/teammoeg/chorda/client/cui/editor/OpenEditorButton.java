@@ -51,9 +51,10 @@ public class OpenEditorButton<T> extends TextButton {
 		this.edi = edi;
 		this.val = val;
 		this.getIcon = t-> CIcons.nop();
-		this.getText = t->txt;
+		this.getText = t-> txt;
 		this.txt=txt;
 		this.onset=onset;
+		refreshValue();
 	}
 
     public OpenEditorButton(UIWidget panel, Component txt, Editor<T> edi, T val, Function<T, CIcon> getIcon, Function<T, Component> getText) {

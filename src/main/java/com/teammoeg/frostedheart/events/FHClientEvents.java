@@ -20,18 +20,26 @@
 package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.chorda.client.CameraHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.PartialTickTracker;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.ui.GuiClickedEvent;
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.io.ConfigFileUtil;
 import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.compat.CompatModule;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
+import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
+import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
+import com.teammoeg.frostedheart.content.health.screen.NutritionScreen;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.gui.ResearchToast;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
@@ -39,12 +47,18 @@ import com.teammoeg.frostedheart.content.research.research.effects.EffectCraftin
 import com.teammoeg.frostedheart.content.research.research.effects.EffectShowCategory;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
+import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
+import com.teammoeg.frostedheart.content.wheelmenu.Selection;
+import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuSelectionRegisterEvent;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.util.FHVersion;
 import com.teammoeg.frostedheart.util.client.Lang;
+
+import dev.ftb.mods.ftbquests.client.FTBQuestsClient;
+import dev.ftb.mods.ftbquests.item.FTBQuestsItems;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -54,8 +68,10 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -78,6 +94,7 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.server.ServerLifecycleHooks;
+import se.mickelus.tetra.items.modular.impl.holo.gui.HoloGui;
 
 import java.util.List;
 
@@ -152,11 +169,25 @@ public class FHClientEvents {
             });
         }
     }
-    
-    @SubscribeEvent(priority = EventPriority.HIGH)
-    public void onScreenEvent(ScreenEvent event) {
-        System.out.println(event+":"+event.getScreen());
+    @SubscribeEvent
+    public static void registerSelections(WheelMenuSelectionRegisterEvent event) {
+		if (CompatModule.isFTBQLoaded()) {
+			
+			event.register(new ResourceLocation("ftb_quests","open_book"),new Selection(Component.translatable("key.ftbquests.quests"), CIcons.getIcon(FTBQuestsItems.BOOK.get()),
+					s -> FTBQuestsClient.openGui()));
+		}
+		event.register(new ResourceLocation("curios","open_gui"),new Selection("key.curios.open.desc",CIcons.getIcon(FHItems.heater_vest)));
+		
+		event.register(FHMain.rl("debug"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.debug"),
+				CIcons.getIcon(FHItems.debug_item), ColorHelper.CYAN, 
+				s -> ClientUtils.getPlayer().isCreative(), s -> DebugScreen.openDebugScreen(), Selection.NO_ACTION));
 
+		event.register(FHMain.rl("health"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.nutrition"),
+			CIcons.getIcon(NutritionScreen.fat_icon), s -> FHNetwork.sendToServer(new C2SOpenNutritionScreenMessage())));
+
+		event.register(FHMain.rl("clothing"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.clothing"),
+			CIcons.getIcon(FHItems.gambeson), 
+				s -> FHNetwork.sendToServer(new C2SOpenClothesScreenMessage())));
     }
     
     @SubscribeEvent(priority = EventPriority.HIGH)

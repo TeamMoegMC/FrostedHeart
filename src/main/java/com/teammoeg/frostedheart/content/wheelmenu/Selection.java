@@ -137,6 +137,13 @@ public class Selection {
 	public interface Action {
 		void execute(Selection selection);
 	}
+	/**
+	 * Return true if this option should be added to selection list when became visible
+	 * Disable this makes this selection could only activate by program
+	 * */
+	public boolean isAutoAddable() {
+		return true;
+	}
 	public static record KeyMappingTriggerAction(KeyMapping km) implements Action{
 		public static final MapCodec<KeyMappingTriggerAction> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
 			Codec.STRING.comapFlatMap(o->{

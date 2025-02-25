@@ -19,9 +19,21 @@
 
 package com.teammoeg.frostedheart.compat.tetra;
 
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.frostedheart.content.wheelmenu.Selection;
+import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuSelectionRegisterEvent;
+
+import dev.ftb.mods.ftbquests.item.FTBQuestsItems;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.common.MinecraftForge;
 import se.mickelus.tetra.blocks.workbench.gui.WorkbenchStatsGui;
 import se.mickelus.tetra.gui.stats.StatsHelper;
 import se.mickelus.tetra.gui.stats.bar.GuiStatBarTool;
+import se.mickelus.tetra.items.modular.impl.holo.ModularHolosphereItem;
+import se.mickelus.tetra.items.modular.impl.holo.gui.HoloGui;
 import se.mickelus.tetra.items.modular.impl.holo.gui.craft.HoloStatsGui;
 
 public class TetraClient {
@@ -32,5 +44,15 @@ public class TetraClient {
         HoloStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, TetraCompat.coreSpade));
         HoloStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, TetraCompat.geoHammer));
         HoloStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, TetraCompat.proPick));
+        MinecraftForge.EVENT_BUS.addListener(TetraClient::registerWheelSelections);
+    }
+    public static void registerWheelSelections(WheelMenuSelectionRegisterEvent event) {
+    	event.register(new ResourceLocation("tetra","holo"),new Selection(Component.translatable("block.tetra.holosphere"), CIcons.getIcon(CRegistryHelper.getItem(new ResourceLocation("tetra",ModularHolosphereItem.identifier))),
+			s ->{
+				HoloGui gui = HoloGui.getInstance();
+
+		        Minecraft.getInstance().setScreen(gui);
+		        gui.onShow();
+			}));
     }
 }

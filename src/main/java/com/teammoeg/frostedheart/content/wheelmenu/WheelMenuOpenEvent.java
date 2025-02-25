@@ -8,11 +8,14 @@ import java.util.function.Consumer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.Cancelable;
 import net.minecraftforge.eventbus.api.Event;
-
+/**
+ * Fired when player attempts to open wheel menu, canceling this to keep player from using wheel menu
+ * You may reorder or
+ * */
 @Cancelable
-public class WheelMenuInitEvent extends Event {
+public class WheelMenuOpenEvent extends Event {
 	List<ResourceLocation> toShow;
-	public WheelMenuInitEvent(List<ResourceLocation> toShow) {
+	public WheelMenuOpenEvent(List<ResourceLocation> toShow) {
 		super();
 		this.toShow = toShow;
 	}

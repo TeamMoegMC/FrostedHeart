@@ -130,7 +130,7 @@ public class EditorSelector<T> extends BaseEditDialog {
 	public void addUIElements() {
 		add(EditUtils.getTitle(this, label));
 		for (EditorDefinition<T> ent : type) {
-			add(new OpenEditorButton<T>(this, ent.label(), (Editor<T>) ent.editor.and((p, l, v, c) -> close(false)), val, callback));
+			add(new OpenEditorButton<T>(this, ent.label(), (Editor<T>) ent.editor.beforeOpen(v-> close(false)), val, callback));
 		}
 	}
 

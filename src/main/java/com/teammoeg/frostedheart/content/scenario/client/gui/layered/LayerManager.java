@@ -21,8 +21,11 @@ package com.teammoeg.frostedheart.content.scenario.client.gui.layered;
 
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -146,18 +149,27 @@ public class LayerManager extends GLLayerContent {
 		//rrq=new RerenderRequest(t,ticks);
 		ClientScene.INSTANCE.onRenderComplete.resetFinished();
 		ClientScene.INSTANCE.onTransitionComplete.resetFinished();
-		renderThread.submit(()->renderPrerendered(t,ticks));
-		
-	}
-	public void renderPrerendered(TransitionFunction t, int ticks) {
 		LayerContext inext=this.createContext();
+		List<CompletableFuture> futures=new LinkedList<>();
 		if (!names.isEmpty()) {
 			int i = 0;
+			
 			for (OrderedRenderableContent r : names.values()) {
 				r.setOrder(i);
 				inext.pq.add(r);
+				CompletableFuture<Void> future=r.prepare(renderThread);
+				if(future!=null)
+					futures.add(future);
 				i++;
 			}
+		}
+		CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
+		.thenRunAsync(()->{renderPrerendered(inext,t,ticks);},renderThread);
+		
+		
+	}
+	public void renderPrerendered(LayerContext inext,TransitionFunction t, int ticks) {
+		if (!names.isEmpty()) {
 			final PrerenderParams prerender=new PrerenderParams();
 			inext.pq.forEach(s->s.prerender(prerender));				
 			inext.glc.texture=prerender.loadTexture();

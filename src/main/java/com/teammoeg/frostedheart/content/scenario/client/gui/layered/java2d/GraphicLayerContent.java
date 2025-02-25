@@ -19,8 +19,13 @@
 
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.OrderedRenderableContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
+
+import net.minecraft.util.Unit;
 
 public abstract class GraphicLayerContent extends OrderedRenderableContent {
 

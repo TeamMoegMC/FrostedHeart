@@ -32,6 +32,7 @@ import com.teammoeg.chorda.client.icon.CIcons.ItemIcon;
 import com.teammoeg.chorda.io.ConfigFileUtil;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CFunctionHelper;
+import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate;
 import com.teammoeg.frostedheart.content.wheelmenu.Selection.CommandInputAction;
 import com.teammoeg.frostedheart.content.wheelmenu.Selection.KeyMappingTriggerAction;
 import com.teammoeg.frostedheart.content.wheelmenu.Selection.UserSelection;
@@ -53,13 +54,13 @@ public class WheelMenuEditors {
 		.build();
 	//public static final Editor<ResourceLocation> SELECTION_CHOOSER = (p, l, v, c) -> new SelectDialog<>(p, l, v, c,
 	//	() -> WheelMenuRenderer.hiddenSelections, o -> WheelMenuRenderer.selections.get(o).getMessage(), null, o -> WheelMenuRenderer.selections.get(o).getIcon()).open();
-	public static final Editor<UserSelection> SELECTION_EDITOR = EditorDialogBuilder.builder()
-		.add(Editors.STRING_ID_HIDDEN.withName("id"), UserSelection::id)
-		.add(Editors.STRING.withName(Components.translatable("gui.wheel_menu.editor.name")), UserSelection::message)
+	public static final Editor<UserSelection> SELECTION_EDITOR = EditorDialogBuilder.create(b->b
+		.add(Editors.STRING_ID_HIDDEN.withName("id").forGetter(UserSelection::id))
+		.add(Editors.STRING.withName(Components.translatable("gui.wheel_menu.editor.name")).forGetter(UserSelection::message))
 		.add(Editors.openDialogLabeled(SelectStackDialog.EDITOR_SIMPLE_ITEM.<CIcon>xmap(CIcons::getIcon, t -> (t instanceof ItemIcon itc) ? itc.stack : null).withDefault(CIcons::nop), t -> t,
-			t -> Components.translatable("gui.chorda.editor.select")).withName(Components.translatable("gui.wheel_menu.editor.icon")), UserSelection::icon)
-		.add(Editors.openDialog(ACTION_EDITOR).withName(Component.translatable("gui.wheel_menu.editor.action")), UserSelection::selectAction)
-		.apply(UserSelection::new);
+			t -> Components.empty()).withName(Components.translatable("gui.wheel_menu.editor.icon")).forGetter(UserSelection::icon))
+		.add(Editors.openDialog(ACTION_EDITOR).withName(Component.translatable("gui.wheel_menu.editor.action")).forGetter(UserSelection::selectAction))
+		.apply(UserSelection::new));
 	public static final Editor<Collection<UserSelection>> USER_SELECTION_LIST = (p, l, v,
 		c) -> new EditListDialog<>(p, l, v, null, SELECTION_EDITOR, UserSelection::getParsedMessage, UserSelection::icon, c).open();
 	public static final Editor<Collection<ResourceLocation>> SELECTION_ENABLED = 

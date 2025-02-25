@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+
 public abstract class OrderedRenderableContent implements RenderableContent {
 	protected int z;
 	protected int order;
@@ -42,6 +45,8 @@ public abstract class OrderedRenderableContent implements RenderableContent {
 	public final void setZ(int z) {
 		this.z = z;
 	}
-
+	public CompletableFuture<Void> prepare(ExecutorService threadPool){
+		return null;
+	}
 
 }

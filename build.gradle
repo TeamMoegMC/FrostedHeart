@@ -269,10 +269,10 @@ dependencies {
 
     // Tetra
     compileOnly fg.deobf("curse.maven:tetra-289712:5957838")
-//    noDatagenRuntimeOnly fg.deobf("curse.maven:tetra-289712:5957838")
+    noDatagenRuntimeOnly fg.deobf("curse.maven:tetra-289712:5957838")
 //
     compileOnly fg.deobf("curse.maven:mutil-351914:4824501")
-//	noDatagenRuntimeOnly fg.deobf("curse.maven:mutil-351914:4824501")
+	noDatagenRuntimeOnly fg.deobf("curse.maven:mutil-351914:4824501")
     // Caupona
     compileOnly fg.deobf("curse.maven:caupona-656147:5116975")
     
