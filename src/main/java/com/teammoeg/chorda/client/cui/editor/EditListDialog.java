@@ -130,7 +130,7 @@ public class EditListDialog<T> extends EditDialog {
     @Override
 	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
     	if(moving!=null) {
-    		movingIndex=(int) Mth.clamp((this.getMouseY()-configPanel.getY())/(moving.getHeight()+1),0,list.size()-1);
+    		movingIndex=(int) Mth.clamp((this.getMouseY()-configPanel.getY()-configPanel.getOffsetY())/(moving.getHeight()+1),0,list.size()-1);
     		if(MouseHelper.isLeftPressed()) {
     			moving.setY((int) movingIndex*(moving.getHeight()+1));
     		}else {

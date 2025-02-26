@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import com.mojang.serialization.DataResult;
 import com.teammoeg.chorda.client.cui.Layer;
@@ -25,6 +26,7 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 	default EditorItemFactory<T> withName(String prompt){
 		return withName(Components.str(prompt));
 	}
+	
 	default EditorItemFactory<T> withName(Component prompt){
 		return new EditorItemFactory<T>() {
 			@Override
@@ -88,6 +90,26 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 				return objthis.setValue(widget, to.apply(value));
 			}
 		};
+	}
+	default EditorWidgetFactory<T,W> withDefault(Supplier<T> def){
+		EditorWidgetFactory<T,W> objthis=this;
+		return new EditorWidgetFactory<>() {
+			@Override
+			public W create(Layer parent, Component prompt, T origin,EditorDialog dialog) {
+				return objthis.create(parent, prompt, origin==null?def.get():origin,dialog);
+			}
+
+			@Override
+			public DataResult<Optional<T>> getValue(W widget) {
+				return objthis.getValue(widget);
+			}
+
+			@Override
+			public W setValue(W widget, T value) {
+				return objthis.setValue(widget, value);
+			}
+		};
+		
 	}
 	public static <T,W extends UIWidget> EditorWidgetFactory<T,W> create(WidgetConstructor<T,W> constr,Function<W,T> func,BiFunction<W,T,W> setValue){
 		return new EditorWidgetFactory<>() {

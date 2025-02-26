@@ -22,8 +22,6 @@ package com.teammoeg.frostedheart.content.wheelmenu;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseCaptureUtil;
 import com.teammoeg.chorda.client.MouseHelper;
-import com.teammoeg.chorda.client.cui.editor.EditUtils;
-import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.ui.Point;
@@ -33,19 +31,9 @@ import com.teammoeg.chorda.io.ConfigFileUtil;
 import com.teammoeg.chorda.math.CircleDimension;
 import com.teammoeg.chorda.math.Dimension2D;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
-import com.teammoeg.frostedheart.bootstrap.common.FHItems;
-import com.teammoeg.frostedheart.compat.CompatModule;
-import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
-import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
-import com.teammoeg.frostedheart.content.health.screen.NutritionScreen;
-import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
-import com.teammoeg.frostedheart.content.wheelmenu.Selection.UserSelection;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FGuis;
-import dev.ftb.mods.ftbquests.client.FTBQuestsClient;
-import dev.ftb.mods.ftbquests.item.FTBQuestsItems;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -54,15 +42,11 @@ import net.minecraft.util.Mth;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.ModLoader;
-import net.minecraftforge.fml.ModLoadingContext;
-
 import org.joml.Quaternionf;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -89,7 +73,7 @@ public class WheelMenuRenderer {
 	//selections gathered during current session
 	protected static final List<Selection> availableSelections = new ArrayList<>();
 	protected static final List<Selection> visibleSelections = new ArrayList<>();
-	public static final ConfigFileType<UserSelection> configType=new ConfigFileType<>(Selection.UserSelection.CODEC,"wheelmenu");
+	public static final ConfigFileType<UserSelection> configType=new ConfigFileType<>(UserSelection.CODEC,"wheelmenu");
 	
 	@Override
 	public String toString() {
@@ -209,13 +193,14 @@ public class WheelMenuRenderer {
 		}
 
 	}
+
 	private static boolean isInitialized=false;
 	public static void collectSelections(){
 		registerSelections();
 		selections.clear();
 		selections.putAll(registeredSelections);
-		worldSelections.forEach(u->selections.put(new ResourceLocation("wheel_menu_world",u.id()), u.createSelection()));
-		userSelections.forEach(u->selections.put(new ResourceLocation("wheel_menu_user",u.id()), u.createSelection()));
+		worldSelections.forEach(u->selections.put(u.worldLocation(),new Selection(u)));
+		userSelections.forEach(u->selections.put(u.userLocation(), new Selection(u)));
 	}
 	public static void openIfNewSelection() {
 		
@@ -326,7 +311,6 @@ public class WheelMenuRenderer {
 	}
 
 	public static void onClose() {
-		System.out.println("call onclose");
 		FHKeyMappings.key_openWheelMenu.get().clickCount=0;
 		MouseCaptureUtil.stopMouseCapture();
 		isOpened = false;
