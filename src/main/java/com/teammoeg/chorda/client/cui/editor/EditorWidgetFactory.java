@@ -1,9 +1,9 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
-
-import org.apache.commons.lang3.function.TriFunction;
 
 import com.mojang.serialization.DataResult;
 import com.teammoeg.chorda.client.cui.Layer;
@@ -21,16 +21,16 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 	}
 	W create(Layer parent,Component prompt,T origin,EditorDialog dialog);
 	DataResult<Optional<T>> getValue(W widget);
-	
+	W setValue(W widget,T value);
 	default EditorItemFactory<T> withName(String prompt){
 		return withName(Components.str(prompt));
 	}
 	default EditorItemFactory<T> withName(Component prompt){
 		return new EditorItemFactory<T>() {
 			@Override
-			public EditItem<T> create(Layer layer,EditorDialog dialog,T originValue) {
+			public EditItem<T> create(Layer layer,EditorDialog dialog,T val) {
 				return new EditItem<>() {
-					W widget=EditorWidgetFactory.this.create(layer,prompt,originValue,dialog);
+					W widget=EditorWidgetFactory.this.create(layer,prompt,val,dialog);
 					@Override
 					public DataResult<Optional<T>> getValue() {
 						return EditorWidgetFactory.this.getValue(widget);
@@ -39,9 +39,14 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 					public UIWidget getWidget() {
 						return widget;
 					}
+					@Override
+					public void setValue(T val) {
+						widget=EditorWidgetFactory.this.setValue(widget, val);
+					}
 					
 				};
 			}
+
 		};
 	}
 	default <X> EditorWidgetFactory<X,W> xmap(Function<T,X> from,Function<X,T> to){
@@ -56,6 +61,11 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 			public DataResult<Optional<X>> getValue(W widget) {
 				
 				return objthis.getValue(widget).map(n->n.map(from));
+			}
+
+			@Override
+			public W setValue(W widget, X value) {
+				return objthis.setValue(widget, to.apply(value));
 			}
 		};
 	}
@@ -72,9 +82,14 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 				
 				return objthis.getValue(widget).flatMap(n->from.apply(n.orElse(null))).map(Optional::of);
 			}
+
+			@Override
+			public W setValue(W widget, X value) {
+				return objthis.setValue(widget, to.apply(value));
+			}
 		};
 	}
-	public static <T,W extends UIWidget> EditorWidgetFactory<T,W> create(WidgetConstructor<T,W> constr,Function<W,T> func){
+	public static <T,W extends UIWidget> EditorWidgetFactory<T,W> create(WidgetConstructor<T,W> constr,Function<W,T> func,BiFunction<W,T,W> setValue){
 		return new EditorWidgetFactory<>() {
 			@Override
 			public W create(Layer parent, Component prompt, T origin,EditorDialog dialog) {
@@ -84,6 +99,31 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 			@Override
 			public DataResult<Optional<T>> getValue(W widget) {
 				return DataResult.success(Optional.ofNullable(func.apply(widget)));
+			}
+
+			@Override
+			public W setValue(W widget, T value) {
+				return setValue.apply(widget, value);
+			}
+		};
+		
+	}
+	public static <T,W extends UIWidget> EditorWidgetFactory<T,W> create(WidgetConstructor<T,W> constr,Function<W,T> func,BiConsumer<W,T> setValue){
+		return new EditorWidgetFactory<>() {
+			@Override
+			public W create(Layer parent, Component prompt, T origin,EditorDialog dialog) {
+				return constr.create(parent, prompt, origin);
+			}
+
+			@Override
+			public DataResult<Optional<T>> getValue(W widget) {
+				return DataResult.success(Optional.ofNullable(func.apply(widget)));
+			}
+
+			@Override
+			public W setValue(W widget, T value) {
+				setValue.accept(widget, value);
+				return widget;
 			}
 		};
 		
@@ -98,6 +138,11 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 			@Override
 			public DataResult<Optional<T>> getValue(W widget) {
 				return DataResult.error(()->"Not an input");
+			}
+
+			@Override
+			public W setValue(W widget, T value) {
+				return widget;
 			}
 		};
 		

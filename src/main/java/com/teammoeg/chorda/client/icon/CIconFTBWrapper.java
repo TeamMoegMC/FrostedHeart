@@ -1,4 +1,4 @@
-package com.teammoeg.chorda.client;
+package com.teammoeg.chorda.client.icon;
 
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 

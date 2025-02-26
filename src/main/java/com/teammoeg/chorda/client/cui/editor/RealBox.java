@@ -26,8 +26,8 @@ import net.minecraft.network.chat.Component;
 
 public class RealBox extends LabeledTextBox {
 
-    public RealBox(UIWidget panel, Component lab, double val) {
-        super(panel, lab, String.valueOf(val));
+    public RealBox(UIWidget panel, Component lab, Double val) {
+        super(panel, lab, val==null?"0":String.valueOf(val));
     }
 
     public double getNum() {

@@ -1,6 +1,8 @@
 package com.teammoeg.chorda.client.cui.editor;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -42,11 +44,10 @@ public class Editors {
 	public static final Editor<Long> LONG_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, String.valueOf(v), o -> c.accept(Long.parseLong(o)));
 	public static final Editor<Integer> INT_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, String.valueOf(v), o -> c.accept(Integer.parseInt(o)));
 	public static final Editor<Double> REAL_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, String.valueOf(v), o -> c.accept(Double.parseDouble(o)));
-	public static final Editor<ResourceLocation> EDITOR_ADVANCEMENT = (p, l, v, c) -> {
+	public static final Editor<Advancement> EDITOR_ADVANCEMENT = (p, l, v, c) -> {
 		ClientAdvancements cam = ClientUtils.mc().player.connection.getAdvancements();
-		Advancement adv = cam.getAdvancements().get(v);
 	
-		new SelectDialog<>(p, l, adv, e -> c.accept(e.getId()), () -> cam.getAdvancements().getAllAdvancements(),
+		new SelectDialog<>(p, l, v, c, () -> cam.getAdvancements().getAllAdvancements(),
 			Advancement::getChatComponent, advx -> new String[] { advx.getChatComponent().getString(), advx.getId().toString() },
 			advx -> CIcons.getIcon(advx.getDisplay().getIcon())).open();
 	
@@ -70,39 +71,46 @@ public class Editors {
 		
 	}
 	public static final EditorWidgetFactory<CIcon, LabeledOpenEditorButton<CIcon>> ICON=openDialogLabeled(IconEditor.EDITOR,t->t,t->Components.empty());
-	public static final EditorWidgetFactory<Boolean, LabeledSelection<Boolean>> BOOLEAN=EditorWidgetFactory.create(LabeledSelection::createBool, LabeledSelection::getSelection);
-	public static final EditorWidgetFactory<Long, NumberBox> LONG=EditorWidgetFactory.create(NumberBox::new, NumberBox::getNum);
+	public static final EditorWidgetFactory<Boolean, LabeledSelection<Boolean>> BOOLEAN=EditorWidgetFactory.create(LabeledSelection::createBool, LabeledSelection::getSelection,(w,v)->{w.setSelection(v);});
+	public static final EditorWidgetFactory<Long, NumberBox> LONG=EditorWidgetFactory.create(NumberBox::new, NumberBox::getNum,NumberBox::setNum);
 	public static final EditorWidgetFactory<Integer, NumberBox> INT=LONG.xmap(CFunctionHelper.mapNullable(Long::intValue, 0), Integer::longValue);
 	public static final EditorWidgetFactory<Short, NumberBox> SHORT=LONG.xmap(CFunctionHelper.mapNullable(Long::shortValue, Short.valueOf((short) 0)), Short::longValue);
 	public static final EditorWidgetFactory<Byte, NumberBox> BYTE=LONG.xmap(CFunctionHelper.mapNullable(Long::byteValue, Byte.valueOf((byte) 0)), Byte::longValue);
-	public static final EditorWidgetFactory<Double, RealBox> DOUBLE=EditorWidgetFactory.create(RealBox::new, RealBox::getNum);
-	public static final EditorWidgetFactory<String, LabeledTextBox> STRING=EditorWidgetFactory.create(LabeledTextBox::new, LabeledTextBox::getText);
-	public static final EditorWidgetFactory<String, IdBox> STRING_ID=EditorWidgetFactory.create(IdBox::new, IdBox::getText);
+	public static final EditorWidgetFactory<Double, RealBox> DOUBLE=EditorWidgetFactory.create(RealBox::new, RealBox::getNum,RealBox::setNum);
+	public static final EditorWidgetFactory<String, LabeledTextBox> STRING=EditorWidgetFactory.create(LabeledTextBox::new, LabeledTextBox::getText,LabeledTextBox::setText);
+	public static final EditorWidgetFactory<String, IdBox> STRING_ID=EditorWidgetFactory.create(IdBox::new, IdBox::getText,IdBox::setText);
 	public static final EditorWidgetFactory<String, HiddenBox<String>> STRING_ID_HIDDEN=hiddenSupplier(()->Long.toHexString(UUID.randomUUID().getMostSignificantBits()));
-	public static final EditorWidgetFactory<ResourceLocation, LabeledTextBox> RESOURCELOCATION=EditorWidgetFactory.create(LabeledTextBox::new, LabeledTextBox::getText).flatXmap(ResourceLocation::read,ResourceLocation::toString);
+	public static final EditorWidgetFactory<ResourceLocation, LabeledTextBox> RESOURCELOCATION=EditorWidgetFactory.create(LabeledTextBox::new, LabeledTextBox::getText,LabeledTextBox::setText).flatXmap(ResourceLocation::read,ResourceLocation::toString);
 	public static final EditorWidgetFactory<Float, RealBox> FLOAT = DOUBLE.xmap(Double::floatValue, Float::doubleValue);
 	public static final EditorWidgetFactory<Pair<Ingredient,Integer>,OpenEditorButton<Pair<Ingredient,Integer>>> SIZED_INGREDIENT=openDialog(IngredientEditor.EDITOR,e->CIcons.getIcon(e.getFirst(), e.getSecond()));
+	public static final EditorWidgetFactory<ResourceLocation, LabeledOpenEditorButton<Advancement>> ADVANCEMENT=
+		openDialogLabeled(EDITOR_ADVANCEMENT,CFunctionHelper.mapIfMapNullable(e->e.getDisplay(), e->CIcons.getIcon(e.getIcon()), e->CIcons.nop()),CFunctionHelper.mapIfMapNullable(e->e.getDisplay(), r->r.getTitle(), e->Components.str(e.getId().toString()))).xmap(e->e.getId(), ClientUtils.mc().player.connection.getAdvancements().getAdvancements()::get);
+	public static final EditorWidgetFactory<Pair<Advancement,String>, AdvancementEditor> ADVANCEMENT_CITERION=EditorWidgetFactory.create(AdvancementEditor::new, AdvancementEditor::getValue,AdvancementEditor::setValue);
+	
 	
 	public static <T> EditorWidgetFactory<T,OpenEditorButton<T>> openDialog(Editor<T> e,Function<T,CIcon> iconGetter,Function<T,Component> textGetter){
-		return EditorWidgetFactory.create((p,l,v)->new OpenEditorButton<>(p,l,e,v,iconGetter,textGetter), OpenEditorButton::getValue);
+		return EditorWidgetFactory.create((p,l,v)->new OpenEditorButton<>(p,l,e,v,iconGetter,textGetter), OpenEditorButton::getValue,(w,v)->{w.setValue(v);});
 	}
 	public static <T> EditorWidgetFactory<T,OpenEditorButton<T>> openDialog(Editor<T> e,Function<T,CIcon> iconGetter){
-		return EditorWidgetFactory.create((p,l,v)->new OpenEditorButton<>(p,l,e,v,iconGetter,a->l), OpenEditorButton::getValue);
+		return EditorWidgetFactory.create((p,l,v)->new OpenEditorButton<>(p,l,e,v,iconGetter,a->l), OpenEditorButton::getValue,(w,v)->{w.setValue(v);});
 	}
 	public static <T> EditorWidgetFactory<T,OpenEditorButton<T>> openDialog(Editor<T> e){
-		return EditorWidgetFactory.create((p,l,v)->new OpenEditorButton<>(p,l,e,v,c->{}), OpenEditorButton::getValue);
+		return EditorWidgetFactory.create((p,l,v)->new OpenEditorButton<>(p,l,e,v,c->{}), OpenEditorButton::getValue,(w,v)->{w.setValue(v);});
 	}
 	public static <T> EditorWidgetFactory<T,LabeledOpenEditorButton<T>> openDialogLabeled(Editor<T> e,Function<T,CIcon> iconGetter,Function<T,Component> textGetter){
-		return EditorWidgetFactory.create((p,l,v)->new LabeledOpenEditorButton<T>(p,l,e,v,iconGetter,textGetter), LabeledOpenEditorButton::getValue);
+		return EditorWidgetFactory.create((p,l,v)->new LabeledOpenEditorButton<T>(p,l,e,v,iconGetter,textGetter), LabeledOpenEditorButton::getValue,(w,v)->{w.setValue(v);});
 	}
 	public static <T extends Enum<T>> EditorWidgetFactory<T,LabeledSelection<T>> enumBox(Class<T> clazz){
-		return EditorWidgetFactory.create((p,l,v)->LabeledSelection.createEnum(p, l, clazz, v), LabeledSelection::getSelection);
+		return EditorWidgetFactory.create((p,l,v)->LabeledSelection.createEnum(p, l, clazz, v), LabeledSelection::getSelection,(w,v)->{w.setSelection(v);});
+	}
+	public static <T> EditorWidgetFactory<T,LabeledSelection<T>> selectBox(List<T> selections){
+		return EditorWidgetFactory.create((p,l,v)->new LabeledSelection<>(p, l, v, selections,a->Components.str(String.valueOf(a)),a->CIcons.nop()), LabeledSelection::getSelection,(w,v)->{w.setSelection(v);});
 	}
 	public static <T extends Enum<T>> EditorWidgetFactory<T,LabeledSelection<T>> enumBox(Class<T> clazz,Function<T,Component> textGetter,Function<T,CIcon> iconGetter){
-		return EditorWidgetFactory.create((p,l,v)->LabeledSelection.createEnum(p, l, clazz, v,textGetter,iconGetter), LabeledSelection::getSelection);
+		return EditorWidgetFactory.create((p,l,v)->LabeledSelection.createEnum(p, l, clazz, v,textGetter,iconGetter), LabeledSelection::getSelection,(w,v)->{w.setSelection(v);});
 	}
 	public static <T> EditorWidgetFactory<T,HiddenBox<T>> hiddenSupplier(Supplier<T> def){
-		return EditorWidgetFactory.create((p,l,v)->new HiddenBox<>(p,v,def), HiddenBox::getValue);
+		return EditorWidgetFactory.create((p,l,v)->new HiddenBox<>(p,v,def), HiddenBox::getValue,(w,v)->{w.setValue(v);});
 	}
 	public static <T> EditorWidgetFactory<T,TextButton> createAction(CIcon icon,BiConsumer<EditorDialog<T>,T> onClick){
 		return EditorWidgetFactory.create((d,p,l,v)->new TextButton(p,l,icon) {

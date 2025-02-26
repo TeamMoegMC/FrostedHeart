@@ -41,21 +41,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
             e -> c.accept(new TextureIcon(new ResourceLocation(e))));
     public static final Editor<IngredientIcon> INGREDIENT_EDITOR = (p, l, v, c) -> IngredientEditor.EDITOR_INGREDIENT_EXTERN.open(p, l, v == null ? null : v.igd,
             e -> c.accept(new IngredientIcon(e)));       
-    public static final Editor<CIcon> EDITOR =
-            new EditorSelector.EditorSelectorBuilder<CIcon>(v->v==null||v==CIcons.nop())
-            .addEditorWhenEmpty("Empty", IconEditor.NOP_EDITOR)
-            .addEditor("ItemStack", IconEditor.ITEM_EDITOR,v->v.getClass()==ItemIcon.class)
-            .addEditor("Texture", IconEditor.TEXTURE_EDITOR,v->v.getClass()==TextureIcon.class)
-            .addEditor("Texture with UV", IconEditor.UV_EDITOR,v->v.getClass()==TextureIcon.class)
-            .addEditor("Text", IconEditor.TEXT_EDITOR,v->v.getClass()==TextIcon.class)
-            .addEditor("Ingredient", IconEditor.INGREDIENT_EDITOR,v->v.getClass()==IngredientIcon.class)
-            .addEditorWhenEmpty("IngredientWithSize", IconEditor.INGREDIENT_SIZE_EDITOR)
-            .addEditor("Internal", IconEditor.INTERNAL_EDITOR,v->v instanceof FHDelegateIcon)
-            .addEditor("Combined", IconEditor.COMBINED_EDITOR,v->v.getClass()== CombinedIcon.class)
-            .addEditor("Animated", IconEditor.ANIMATED_EDITOR,v->v.getClass()== AnimatedIcon.class)
-            .build();
 
-    ;
     public static final Editor<CIcon> INGREDIENT_SIZE_EDITOR = (p, l, v, c) -> IngredientEditor.EDITOR.open(p, l, null, e -> c.accept(CIcons.getIcon(e.getFirst(),e.getSecond())));
     public static final Editor<TextIcon> TEXT_EDITOR = (p, l, v, c) -> Editors.TEXT_PROMPT.open(p, l, v == null ? null : v.text.getString(), e -> c.accept(new TextIcon(StringTextComponentParser.parse(e))));
     public static final Editor<CIcon> NOP_EDITOR = (p, l, v, c) -> {
@@ -70,15 +56,30 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
     public IconEditor(UIWidget panel, T v) {
         super(panel);
         this.v = v;
-    }        public static final Editor<CIcon> NOP_CHANGE_EDITOR = (p, l, v, c) -> EDITOR.open(p, l, null, c);
+    }        public static final Editor<CIcon> NOP_CHANGE_EDITOR = (p, l, v, c) -> getEditor().open(p, l, null, c);
 
     @Override
     public void render(GuiGraphics arg0, int arg2, int arg3, int arg4, int arg5) {
         super.render(arg0,arg2 + 300, arg3 + 20, 32, 32);
     }
-    public static final Editor<AnimatedIcon> ANIMATED_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v == null ? null : v.icons, null, EDITOR, e -> Components.str(e.getClass().getSimpleName()),
+    public static final Editor<AnimatedIcon> ANIMATED_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v == null ? null : v.icons, null, getEditor(), e -> Components.str(e.getClass().getSimpleName()),
             e -> e, e -> c.accept(new AnimatedIcon(e.toArray(new CIcon[0])))).open();
-
+    public static final Editor<CIcon> EDITOR =
+        new EditorSelector.EditorSelectorBuilder<CIcon>(v->v==null||v==CIcons.nop())
+        .addEditorWhenEmpty("Empty", IconEditor.NOP_EDITOR)
+        .addEditor("ItemStack", IconEditor.ITEM_EDITOR,v->v.getClass()==ItemIcon.class)
+        .addEditor("Texture", IconEditor.TEXTURE_EDITOR,v->v.getClass()==TextureIcon.class)
+        .addEditor("Texture with UV", IconEditor.UV_EDITOR,v->v.getClass()==TextureIcon.class)
+        .addEditor("Text", IconEditor.TEXT_EDITOR,v->v.getClass()==TextIcon.class)
+        .addEditor("Ingredient", IconEditor.INGREDIENT_EDITOR,v->v.getClass()==IngredientIcon.class)
+        .addEditorWhenEmpty("IngredientWithSize", IconEditor.INGREDIENT_SIZE_EDITOR)
+        .addEditor("Internal", IconEditor.INTERNAL_EDITOR,v->v instanceof FHDelegateIcon)
+        .addEditor("Combined", IconEditor.COMBINED_EDITOR,v->v.getClass()== CombinedIcon.class)
+        .addEditor("Animated", IconEditor.ANIMATED_EDITOR,v->v.getClass()== AnimatedIcon.class)
+        .build();
+    private static Editor<CIcon> getEditor(){
+    	return EDITOR;
+    }
     private static class Combined extends IconEditor<CombinedIcon> {
         Component label;
         Consumer<CombinedIcon> i;

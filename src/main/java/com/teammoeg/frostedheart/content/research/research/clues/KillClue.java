@@ -47,11 +47,15 @@ public class KillClue extends ListenerClue {
     }
 
 
-    public KillClue(EntityType<?> t, float contribution) {
-        super("", "", "", contribution);
-    }
 
-    public KillClue(BaseData data, EntityType<?> type) {
+    public KillClue(String nonce, String name, String desc, String hint, float contribution, boolean required, boolean alwaysOn, EntityType<?> type) {
+		super(nonce, name, desc, hint, contribution, required, alwaysOn);
+		this.type = type;
+	}
+
+
+
+	public KillClue(BaseData data, EntityType<?> type) {
         super(data);
         this.type = type;
     }

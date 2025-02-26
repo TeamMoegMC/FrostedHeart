@@ -75,6 +75,10 @@ public class OpenEditorButton<T> extends TextButton {
     public T getValue() {
     	return val;
     }
+    public void setValue(T nval) {
+    	this.val=nval;
+    	refreshValue();
+    }
 	@Override
     public void onClicked(MouseButton arg0) {
         edi.open(this.getParent(), txt, val, v->{

@@ -16,5 +16,8 @@ public class HiddenBox<T> extends UIWidget {
 	public T getValue() {
 		return value;
 	}
+	public void setValue(T nval) {
+		this.value=nval;
+	}
 
 }

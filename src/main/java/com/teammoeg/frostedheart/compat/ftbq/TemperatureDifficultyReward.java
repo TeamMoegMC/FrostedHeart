@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.compat.ftbq;
 
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.client.CIconFTBWrapper;
+import com.teammoeg.chorda.client.icon.CIconFTBWrapper;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftblibrary.config.NameMap;

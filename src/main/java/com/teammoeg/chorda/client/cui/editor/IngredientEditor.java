@@ -21,9 +21,9 @@ package com.teammoeg.chorda.client.cui.editor;
 
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.chorda.client.CIconFTBWrapper;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.cui.editor.EditorSelector.EditorSelectorBuilder;
+import com.teammoeg.chorda.client.icon.CIconFTBWrapper;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CUtils;

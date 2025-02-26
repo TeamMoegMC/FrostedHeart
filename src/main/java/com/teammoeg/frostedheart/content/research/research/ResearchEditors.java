@@ -8,11 +8,15 @@ import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder;
 import com.teammoeg.chorda.client.cui.editor.Editors;
 import com.teammoeg.chorda.client.cui.editor.IngredientEditor;
 import com.teammoeg.chorda.client.cui.editor.SelectDialog;
+import com.teammoeg.chorda.client.icon.CIconFTBWrapper;
 import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.FTBIconCWrapper;
 import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.research.FHResearch;
-import com.teammoeg.frostedheart.content.research.research.clues.ClueEditor;
+import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskIcons;
+import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardType;
+import com.teammoeg.frostedheart.content.research.research.clues.ClueEditors;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectEditor;
 
 public class ResearchEditors {
@@ -30,13 +34,16 @@ public class ResearchEditors {
 		.add(Editors.INT.withName("points").forGetter( r->r.points))
 		.add(Editors.openDialog(IconEditor.EDITOR,t->t,t->Components.str("icon")).withName("icon").forGetter( r->r.icon))
 		.add(Editors.enumBox(ResearchCategory.class,ResearchCategory::getName,a->CIcons.getIcon(a.getIcon())).withName("category").forGetter( r->r.getCategory()))
+		.decorator(Editors.createAction(CIcons.nop(), (d,v)->{
+			ClueEditors.RESEARCH_GAME.open(d, Components.str("Edit Minigame"), d.getValue(12), o->{d.setValue(12,o);d.refresh();});
+		}).withName("Edit minigame").decorator())
 		.add(Editors.openDialog(EditListDialog.STRING_LIST).withName("Edit Description").forGetter( r->r.desc))
 		.add(Editors.openDialog(EditListDialog.STRING_LIST).withName("Edit Alternative Description").forGetter( r->r.fdesc))
 		.add(Editors.openDialog(RESEARCH_LIST).withName("Edit Parents").forGetter( r->r.getParents()))
 		.add(Editors.openDialog(RESEARCH_LIST).withName("Edit Children").forGetter( r->r.getChildren()))
 		.add(Editors.openDialog(IngredientEditor.LIST_EDITOR).withName("Edit Ingredients").forGetter(r->r.getRequiredItems()))
 		.add(Editors.openDialog(EffectEditor.EFFECT_LIST).withName("Edit Effects").forGetter(r->r.getEffects()))
-		.add(Editors.openDialog(ClueEditor.EDITOR_LIST).withName("Edit Clues").forGetter(r->r.getClues()))
+		.add(Editors.openDialog(ClueEditors.EDITOR_LIST).withName("Edit Clues").forGetter(r->r.getClues()))
 		.decorator(Editors.<Research>createAction(CIcons.nop(), (r,t)->{r.setNoSave();t.delete();r.close();}).withName("Remove").decorator())
 		.add(Editors.BOOLEAN.withName("Always show").forGetter( r->r.alwaysShow))
 		.add(Editors.BOOLEAN.withName("Hide effects").forGetter( r->r.hideEffects))

@@ -98,7 +98,7 @@ public abstract class Clue {
         this(name, "", "", contribution);
     }
 
-    public Clue(String name, String desc, String hint, float contribution) {
+    private Clue(String name, String desc, String hint, float contribution) {
         super();
         this.contribution = contribution;
         this.name = name;

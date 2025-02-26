@@ -2,7 +2,10 @@ package com.teammoeg.chorda.client.cui.editor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -14,6 +17,9 @@ import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder.SetterAndGetter;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuildResult;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Item;
+
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuiltParams;
 
 import net.minecraft.network.chat.Component;
@@ -22,13 +28,13 @@ public class EditorDialog<O> extends BaseEditDialog {
 	Layer mainPane;
 	LayerScrollBar scroll;
 	public static record EditorPair<O,A>(EditorItemFactory<A> factory,Function<O,A> getter,int index) {
-		public Pair<Integer, EditItem<?>> create(EditorDialog<O> dialog,Layer parent,O o,Object[] params){
+		public Pair<Integer, EditItem<Object>> create(EditorDialog<O> dialog,Layer parent,O o,Object[] params){
 			A val=null;
 			if(o!=null)
 				val=getter.apply(o);
 			if(index>=0)
 				params[index]=val;
-			return Pair.of(index, factory.create(parent,dialog,val));
+			return Pair.of(index, (EditItem)factory.create(parent,dialog,val));
 		}
 	}
 	public static class EditorDialogPrototype<O>{
@@ -60,7 +66,9 @@ public class EditorDialog<O> extends BaseEditDialog {
 		}
 
 	}
-	List<Pair<Integer,EditItem<?>>> values=new ArrayList<>();
+	List<Pair<Integer,EditItem<Object>>> values=new ArrayList<>();
+	Int2ObjectOpenHashMap<EditItem<Object>> map=new Int2ObjectOpenHashMap<>();
+	Map<UIWidget,Integer> widgetNum=new IdentityHashMap<>();
 	Consumer<EditorResult> consumer;
 	Object[] params;
 	TextField title;
@@ -68,15 +76,19 @@ public class EditorDialog<O> extends BaseEditDialog {
 		super(panel);
 		this.title=EditUtils.getTitle(this, title);
 		this.params=new Object[prototype.widgets.size()];
+		
 		this.consumer=consumer;
         mainPane=new Layer(this) {
 
 			@Override
 			public void addUIElements() {
-				for(Pair<Integer, EditItem<?>> i:values) {
+				widgetNum.clear();
+				for(Pair<Integer, EditItem<Object>> i:values) {
 					UIWidget widget=i.getSecond().getWidget();
-					if(widget!=null)
+					if(widget!=null) {
 						this.add(widget);
+						widgetNum.put(widget, i.getFirst());
+					}
 				}
 			}
 
@@ -88,7 +100,12 @@ public class EditorDialog<O> extends BaseEditDialog {
         };
         scroll=new LayerScrollBar(this, true, mainPane);
 		for(EditorPair<O, ?> i:prototype.widgets) {
-			values.add(i.create(this,mainPane,origin,params));
+			//System.out.println(i.index);
+			Pair<Integer, EditItem<Object>> wgt=i.create(this,mainPane,origin,params);
+			values.add(wgt);
+			if(wgt.getFirst()>=0) {
+				map.put((int)wgt.getFirst(), wgt.getSecond());
+			}
 		}
 	
      
@@ -103,11 +120,20 @@ public class EditorDialog<O> extends BaseEditDialog {
 	public void setNoSave() {
 		noSave=true;
 	}
-	
+	public int getCurrentIndex(UIWidget wg) {
+		return widgetNum.getOrDefault(wg, -1);
+	}
+	public <T> T getValue(int idx) {
+		return (T) map.get(idx).getValue().result().flatMap(t->t).orElse(null);
+	}
+	public void setValue(int idx,Object value) {
+		map.get(idx).setValue(value);
+		params[idx]=value;
+	}
 	@Override
 	public void onClose() {
 		if(!noSave) {
-			for(Pair<Integer, EditItem<?>> i:values) {
+			for(Pair<Integer, EditItem<Object>> i:values) {
 				if(i.getFirst()>=0) {
 					i.getSecond().getValue().result().ifPresent(t->params[i.getFirst()]=t.orElse(null));
 				}

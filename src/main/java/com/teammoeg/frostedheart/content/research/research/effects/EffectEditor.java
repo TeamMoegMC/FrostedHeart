@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.content.research.research.effects;
 
-import com.teammoeg.chorda.client.CIconFTBWrapper;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.cui.editor.*;
 import com.teammoeg.chorda.client.cui.editor.compat.IEEditors;
+import com.teammoeg.chorda.client.icon.CIconFTBWrapper;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.lang.Components;

@@ -40,8 +40,9 @@ public class NumberBox extends LabeledTextBox {
 
     }
 
-    public void setNum(long number) {
+    public NumberBox setNum(long number) {
         super.setText(String.valueOf(number));
+        return this;
     }
 
 }

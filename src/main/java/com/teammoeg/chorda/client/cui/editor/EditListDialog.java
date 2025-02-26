@@ -78,7 +78,7 @@ public class EditListDialog<T> extends EditDialog {
     	};
     }
     public EditListDialog(UIWidget p, Component label, Collection<T> vx, Editor<T> editor, Function<T, Component> toread, Consumer<Collection<T>> li) {
-        this(p, label, vx, null, editor, toread, null, li);
+        this(p, label, vx, null, editor, toread, o->CIcons.nop(), li);
     }
     public EditListDialog(UIWidget p, Component label, Collection<T> vx, T def, Editor<T> editor, Function<T, Component> toread, Consumer<Collection<T>> li) {
         this(p, label, vx, def, editor, toread, o->CIcons.nop(), li);

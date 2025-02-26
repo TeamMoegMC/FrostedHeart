@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
+import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -59,11 +60,10 @@ public class AdvancementClue extends TickListenerClue {
         super(name, contribution);
     }
 
-    public AdvancementClue(String name, String desc, String hint, float contribution) {
-        super(name, desc, hint, contribution);
-    }
 
-    @Override
+
+
+	@Override
     public String getBrief() {
     	ClientAdvancements cam = ClientUtils.getPlayer().connection.getAdvancements();
         Advancement adv = cam.getAdvancements().get(advancement);
@@ -72,7 +72,16 @@ public class AdvancementClue extends TickListenerClue {
         return "Advancement none" ;
     }
 
-    @Override
+    public AdvancementClue(String nonce, String name, String desc, String hint, float contribution, boolean required, boolean alwaysOn, Pair<Advancement,String> advancement) {
+		super(nonce, name, desc, hint, contribution, required, alwaysOn);
+		if(advancement!=null) {
+			if(advancement.getFirst()!=null)
+			this.advancement = advancement.getFirst().getId();
+			this.criterion = advancement.getSecond();
+		}
+		
+	}
+	@Override
     public Component getDescription(Research parent) {
         Component itc = super.getDescription(parent);
         if (itc != null) return itc;

@@ -101,7 +101,7 @@ public class LabeledSelection<R> extends LabeledPane<TextButton> {
         this(panel, lab, val, Arrays.asList(aobjs), atostr,atoicon);
     }
 
-    public static LabeledSelection<Boolean> createBool(UIWidget p, Component lab, boolean val) {
+    public static LabeledSelection<Boolean> createBool(UIWidget p, Component lab, Boolean val) {
         return new LabeledSelection<>(p, lab, val, Arrays.asList(true, false), null,t->t?IconButton.Icon.BOX_ON.toCIcon():IconButton.Icon.BOX.toCIcon()) {
             @Override
             public void addUIElements() {
@@ -119,9 +119,7 @@ public class LabeledSelection<R> extends LabeledPane<TextButton> {
         return new LabeledSelection<>(p, lab, val, Arrays.asList(en.getEnumConstants()), atostr, atoicon);
     }
 
-    public static LabeledSelection<String> createCriterion(UIWidget p, Component lab, ResourceLocation adv, String val, Consumer<String> cb) {
-        ClientAdvancements cam = ClientUtils.mc().player.connection.getAdvancements();
-        Advancement advx = cam.getAdvancements().get(adv);
+    public static LabeledSelection<String> createCriterion(UIWidget p, Component lab, Advancement advx, String val, Consumer<String> cb) {
         List<String> cit = new ArrayList<>();
         cit.add("");
         if (advx != null) {
@@ -149,4 +147,7 @@ public class LabeledSelection<R> extends LabeledPane<TextButton> {
 
     public void onChange(R current) {
     }
+
+
+
 }

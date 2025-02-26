@@ -105,7 +105,7 @@ public class EditorSelector<T> extends BaseEditDialog {
 		}
 		public Editor<T> build(){
 			Editor<T> orig=buildEdit();
-			return new EditorSelectorBuilder<T>()
+			return new EditorSelectorBuilder<T>(isNull)
 			.addEditorWhenNotEmpty(Components.translatable("gui.chorda.editor.edit"),orig)
             .addEditor(Components.translatable("gui.chorda.editor.new"), orig.withValue(()->null)).buildEdit();
 

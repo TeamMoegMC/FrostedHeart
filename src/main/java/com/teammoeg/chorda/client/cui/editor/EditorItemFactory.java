@@ -6,7 +6,7 @@ import com.teammoeg.chorda.client.cui.Layer;
 import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder.SetterAndGetter;
 
 public interface EditorItemFactory<T> {
-	EditItem<T> create(Layer l,EditorDialog dialog,T originValue);
+	EditItem<T> create(Layer l,EditorDialog dialog,T val);
 
 	default <O> SetterAndGetter<O,T> forGetter(Function<O,T> getter){
 		return new SetterAndGetter<>(this,getter);

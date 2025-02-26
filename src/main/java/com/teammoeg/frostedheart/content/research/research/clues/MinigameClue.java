@@ -32,7 +32,7 @@ public class MinigameClue extends CustomClue {
             Clue.BASE_CODEC.forGetter(o -> o.getData()),
             Codec.INT.fieldOf("level").forGetter(o -> o.level)
     ).apply(t, MinigameClue::new));
-    private int level = 0;
+    int level = 0;
 
     MinigameClue() {
         super();
@@ -43,11 +43,14 @@ public class MinigameClue extends CustomClue {
         this.level = level;
     }
 
-    public MinigameClue(float contribution) {
-        super("", contribution);
-    }
 
-    @Override
+
+    public MinigameClue(String nonce, String name, String desc, String hint, float contribution, boolean required, int level) {
+		super(nonce, name, desc, hint, contribution, required);
+		this.level = level;
+	}
+
+	@Override
     public String getBrief() {
         return "Complete game level " + this.level;
     }

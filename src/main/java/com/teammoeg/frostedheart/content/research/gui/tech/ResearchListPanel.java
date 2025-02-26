@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import com.teammoeg.chorda.client.CIconFTBWrapper;
+import com.teammoeg.chorda.client.icon.CIconFTBWrapper;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;

@@ -53,13 +53,16 @@ public abstract class ListenerClue extends Clue {
 
     public ListenerClue(String name, float contribution) {
         super(name, contribution);
+        alwaysOn=false;
     }
 
-    public ListenerClue(String name, String desc, String hint, float contribution) {
-        super(name, desc, hint, contribution);
-    }
 
-    public BaseData getData() {
+	public ListenerClue(String nonce, String name, String desc, String hint, float contribution, boolean required, boolean alwaysOn) {
+		super(nonce, name, desc, hint, contribution, required);
+		this.alwaysOn = alwaysOn;
+	}
+
+	public BaseData getData() {
         return new BaseData(name, desc, hint, nonce, required, contribution, alwaysOn);
     }
 

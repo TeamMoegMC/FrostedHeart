@@ -55,8 +55,7 @@ public class WheelMenuEditors {
 	public static final Editor<UserSelection> SELECTION_EDITOR = EditorDialogBuilder.create(b->b
 		.add(Editors.STRING_ID_HIDDEN.withName("id").forGetter(UserSelection::id))
 		.add(Editors.STRING.withName(Components.translatable("gui.wheel_menu.editor.name")).forGetter(UserSelection::message))
-		.add(Editors.openDialogLabeled(Editors.EDITOR_SIMPLE_ITEM.<CIcon>xmap(CIcons::getIcon, t -> (t instanceof ItemIcon itc) ? itc.stack : null).withDefault(CIcons::nop), t -> t,
-			t -> Components.empty()).withName(Components.translatable("gui.wheel_menu.editor.icon")).forGetter(UserSelection::icon))
+		.add(Editors.openDialogLabeled(Editors.EDITOR_SIMPLE_ITEM.<CIcon>xmap(CIcons::getIcon, t -> (t instanceof ItemIcon itc) ? itc.stack : null).withDefault(CIcons::nop), t -> t,t -> Components.empty()).withName(Components.translatable("gui.wheel_menu.editor.icon")).forGetter(UserSelection::icon))
 		.add(Editors.openDialog(ACTION_EDITOR).withName(Component.translatable("gui.wheel_menu.editor.action")).forGetter(UserSelection::selectAction))
 		.apply(UserSelection::new));
 	public static final Editor<Collection<UserSelection>> USER_SELECTION_LIST = (p, l, v,

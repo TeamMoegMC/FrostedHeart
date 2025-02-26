@@ -45,4 +45,9 @@ public class LabeledOpenEditorButton<T> extends LabeledPane<OpenEditorButton<T>>
     T getValue() {
     	return obj.getValue();
     }
+
+	public void setValue(T v) {
+		obj.setValue(v);
+		
+	}
 }

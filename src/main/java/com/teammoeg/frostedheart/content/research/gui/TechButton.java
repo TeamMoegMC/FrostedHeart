@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import com.teammoeg.chorda.client.CIconFTBWrapper;
+import com.teammoeg.chorda.client.icon.CIconFTBWrapper;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;

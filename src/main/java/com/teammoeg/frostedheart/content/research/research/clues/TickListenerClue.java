@@ -41,11 +41,15 @@ public abstract class TickListenerClue extends ListenerClue {
         super(name, contribution);
     }
 
-    public TickListenerClue(String name, String desc, String hint, float contribution) {
-        super(name, desc, hint, contribution);
-    }
 
-    @Override
+   
+
+	public TickListenerClue(String nonce, String name, String desc, String hint, float contribution, boolean required, boolean alwaysOn) {
+		super(nonce, name, desc, hint, contribution, required, alwaysOn);
+	}
+
+
+	@Override
     public void initListener(TeamDataHolder t, Research parent) {
         ResearchListeners.getTickClues().add(super.getClueClosure(parent), t.getId());
     }
