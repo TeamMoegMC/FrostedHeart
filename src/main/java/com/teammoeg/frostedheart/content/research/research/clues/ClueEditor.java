@@ -20,11 +20,16 @@
 package com.teammoeg.frostedheart.content.research.research.clues;
 
 import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.client.CIconFTBWrapper;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.cui.editor.*;
+import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder.SetterAndGetter;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Applicative0;
+import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Applicative5;
+import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Applicative6;
 import com.teammoeg.frostedheart.content.research.research.Research;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -40,8 +45,12 @@ import java.util.stream.Collectors;
 
 public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
 
-    public static final Editor<ItemClue> ITEM = (p, l, v, c) -> new Item(p, l, v, c).open();
-    public static final Editor<CustomClue> CUSTOM = (p, l, v, c) -> new Custom(p, l, v, c).open();
+    public static final Editor<ItemClue> ITEM =EditorDialogBuilder.create(b->applyBase(b)
+    	.add(Editors.SIZED_INGREDIENT.withName("Select Ingredient").forGetter(e->e.stack))
+    	.add(Editors.BOOLEAN.withName("Consumes item").forGetter(e->e.consume))
+    	.apply(ItemClue::new)
+    	);
+    public static final Editor<CustomClue> CUSTOM = EditorDialogBuilder.create(b->applyBase(b).apply(CustomClue::new));
     public static final Editor<AdvancementClue> ADVA = (p, l, v, c) -> new Advancement(p, l, v, c).open();
     public static final Editor<KillClue> KILL = (p, l, v, c) -> new Kill(p, l, v, c).open();
     public static final Editor<MinigameClue> GAME = (p, l, v, c) -> new Minigame(p, l, v, c).open();
@@ -67,6 +76,15 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         .addEditor("Kill Entity", KILL,v->v instanceof KillClue)
         .addEditor("Complete minigame", GAME,v->v instanceof MinigameClue)
         .build();
+    public static <T extends Clue> Applicative6<SetterAndGetter<T, ?>, String, String, String, String, Float, Boolean> applyBase(Applicative0<SetterAndGetter<T, ?>> app) {
+    	return app.add(Editors.STRING_ID.withName("nonce").forGetter(Clue::getNonce))
+        	.add(Editors.STRING.withName("Name").forGetter(e->e.name))
+        	.add(Editors.STRING.withName("Description").forGetter(e->e.desc))
+        	.add(Editors.STRING.withName("Hint").forGetter(e->e.hint))
+        	.add(Editors.FLOAT.withName("Contribution(%)").forGetter(e->e.contribution * 100))
+        	.add(Editors.BOOLEAN.withName("Required").forGetter(e->e.required));
+    }
+
     public static final Editor<Collection<Clue>> EDITOR_LIST = (p, l, v, c) -> new EditListDialog<Clue>(p, l, v, EDITOR, e -> Components.str(e.getBrief() + e.getBriefDesc()), c).open();
     protected LabeledTextBoxAndBtn nonce;
     protected LabeledTextBox name;
@@ -97,7 +115,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
     }
 
     public static Collection<ClueClosure> generate(Research r) {
-        return r.getClues().stream().map(t -> new ClueClosure(r, t)).collect(Collectors.toList());
+        return r.getClues().stream().map(t -> new ClueClosure<Clue>(r, t)).collect(Collectors.toList());
     }
 
     @Override
@@ -134,7 +152,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         @Override
         public void addUIElements() {
             super.addUIElements();
-            add(new LabeledOpenEditorButton<>(this,Components.str( e.advancement.toString()), Components.str("Select Advancement"), SelectDialog.EDITOR_ADVANCEMENT, e.advancement, c -> e.advancement = c));
+            add(new LabeledOpenEditorButton<>(this,Components.str( e.advancement.toString()), Components.str("Select Advancement"), Editors.EDITOR_ADVANCEMENT, e.advancement, c -> e.advancement = c));
             add(LabeledSelection.createCriterion(this, Components.str("Select Criterion"), e.advancement, e.criterion, c -> e.criterion = c));
 
         }
@@ -196,7 +214,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         @Override
         public void addUIElements() {
             super.addUIElements();
-            add(new LabeledOpenEditorButton<>(this, e.type == null ? Components.empty() : e.type.getDescription(), Components.str("Select Entity"), SelectDialog.EDITOR_ENTITY, e.type, c -> {
+            add(new LabeledOpenEditorButton<>(this, e.type == null ? Components.empty() : e.type.getDescription(), Components.str("Select Entity"), Editors.EDITOR_ENTITY, e.type, c -> {
                 e.type = c;
                 desc.setText("@" + c.getDescriptionId());
             }));
@@ -237,7 +255,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
 
         public Minigame(UIWidget panel, Component lbl, MinigameClue e, Consumer<MinigameClue> cb) {
             super(panel, lbl, e, cb);
-            lvl = new LabeledSelection<>(this, Components.str("Level"), this.e.getLevel(), Arrays.asList(0, 1, 2, 3), String::valueOf);
+            lvl = new LabeledSelection<>(this, Components.str("Level"), this.e.getLevel(), Arrays.asList(0, 1, 2, 3),a->Components.str(String.valueOf(a)),a->CIcons.nop());
         }
 
         @Override

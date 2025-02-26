@@ -19,10 +19,6 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
-
-import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.CIconFTBWrapper;
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.Layer;
@@ -34,45 +30,19 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.util.CRegistryHelper;
-import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
-import com.teammoeg.frostedheart.content.research.research.Research;
-import net.minecraft.advancements.Advancement;
+
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EntityType;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class SelectDialog<T> extends EditDialog {
-	public static final Editor<Research> EDITOR_RESEARCH = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, FHResearch::getAllResearch,
-		Research::getName, e -> new String[] { e.getId(), e.getName().getString() },
-		Research::getIcon).open();
-	public static final Editor<IMultiblock> EDITOR_MULTIBLOCK = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, MultiblockHandler::getMultiblocks,
-		wrap(IMultiblock::getUniqueName)).open();
-	public static final Editor<ResourceLocation> EDITOR_ADVANCEMENT = (p, l, v, c) -> {
-		ClientAdvancements cam = ClientUtils.mc().player.connection.getAdvancements();
-		Advancement adv = cam.getAdvancements().get(v);
-
-		new SelectDialog<>(p, l, adv, e -> c.accept(e.getId()), () -> cam.getAdvancements().getAllAdvancements(),
-			Advancement::getChatComponent, advx -> new String[] { advx.getChatComponent().getString(), advx.getId().toString() },
-			advx -> CIcons.getIcon(advx.getDisplay().getIcon())).open();
-
-	};
-	public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, CRegistryHelper::getEntities, EntityType::getDescription,
-		e -> new String[] { e.getDescription().getString(), CRegistryHelper.getRegistryName(e).toString() }).open();
-	public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v,
-		c) -> new SelectDialog<>(p, l, v, c, () -> ForgeRegistries.ITEMS.tags().getTagNames().map(t -> t.location()).map(ResourceLocation::toString).collect(Collectors.toSet())).open();
 	public LayerScrollBar scroll;
 	public SelectorList rl;
 	public TextBox searchBox;

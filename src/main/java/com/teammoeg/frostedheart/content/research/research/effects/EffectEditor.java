@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.research.research.effects;
 import com.teammoeg.chorda.client.CIconFTBWrapper;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.cui.editor.*;
+import com.teammoeg.chorda.client.cui.editor.compat.IEEditors;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.lang.Components;
@@ -119,7 +120,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         @Override
         public void addUIElements() {
             super.addUIElements();
-            add(new LabeledOpenEditorButton<>(this, e.multiblock == null ? Components.empty() : e.multiblock.getDisplayName(), Components.str("Select Multiblock"), SelectDialog.EDITOR_MULTIBLOCK, e.multiblock, s -> e.multiblock = s));
+            add(new LabeledOpenEditorButton<>(this, e.multiblock == null ? Components.empty() : e.multiblock.getDisplayName(), Components.str("Select Multiblock"), IEEditors.EDITOR_MULTIBLOCK, e.multiblock, s -> e.multiblock = s));
 
         }
 
@@ -259,7 +260,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         @Override
         public void addUIElements() {
             super.addUIElements();
-            add(new LabeledOpenEditorButton<>(this, !e.rewards.isEmpty() ? fromItemStack(e.rewards.get(0)) : Components.empty(), Components.str("Edit Rewards"), SelectStackDialog.STACK_LIST, e.rewards, s -> e.rewards = new ArrayList<>(s)));
+            add(new LabeledOpenEditorButton<>(this, !e.rewards.isEmpty() ? fromItemStack(e.rewards.get(0)) : Components.empty(), Components.str("Edit Rewards"), Editors.STACK_LIST, e.rewards, s -> e.rewards = new ArrayList<>(s)));
 
         }
 
@@ -322,7 +323,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         public void addUIElements() {
             super.addUIElements();
             add(new LabeledOpenEditorButton<>(this, e.blocks.isEmpty() ? Components.empty() : e.blocks.get(0).getName(),
-            	Components.str("Edit blocks"), SelectStackDialog.BLOCK_LIST, e.blocks,e.blocks.isEmpty() ? CIcons.nop() : CIcons.getIcon(e.blocks),
+            	Components.str("Edit blocks"), Editors.BLOCK_LIST, e.blocks,e.blocks.isEmpty() ? CIcons.nop() : CIcons.getIcon(e.blocks),
             		s -> e.blocks = new ArrayList<>(s)));
 
         }

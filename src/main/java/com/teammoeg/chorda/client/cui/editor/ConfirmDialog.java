@@ -34,7 +34,6 @@ import net.minecraft.network.chat.Component;
 import java.util.function.Consumer;
 
 public class ConfirmDialog extends BaseEditDialog {
-    public static Editor<Boolean> EDITOR = (p, l, v, c) -> new ConfirmDialog(p, l, v, c).open();
     TextField tf;
     Button cancel;
     Button ok;

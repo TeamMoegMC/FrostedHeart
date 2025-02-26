@@ -46,11 +46,14 @@ public class CustomClue extends Clue {
         super(name, contribution);
     }
 
-    public CustomClue(String name, String desc, String hint, float contribution) {
-        super(name, desc, hint, contribution);
-    }
 
-    @Override
+
+    public CustomClue(String nonce, String name, String desc, String hint, float contribution, boolean required) {
+		super(nonce, name, desc, hint, contribution, required);
+	}
+
+
+	@Override
     public void end(TeamDataHolder team, Research parent) {
     }
 

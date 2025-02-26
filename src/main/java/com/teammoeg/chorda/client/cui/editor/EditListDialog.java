@@ -54,7 +54,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
  * @author  khjxiaogu
  */
 public class EditListDialog<T> extends EditDialog {
-    public static final Editor<Collection<String>> STRING_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, "", EditPrompt.TEXT_EDITOR,Components::str, c).open();
+    public static final Editor<Collection<String>> STRING_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, "", Editors.TEXT_PROMPT,Components::str, c).open();
     private final Consumer<Collection<T>> callback;
     private final Component title;
     private final Layer configPanel;
@@ -188,7 +188,7 @@ public class EditListDialog<T> extends EditDialog {
     @Override
     public void onClosed() {
         if (modified) {
-            ConfirmDialog.EDITOR.open(this, Lang.translateKey("gui.chorda.editor.unsaved_changes"), true, e -> {
+            Editors.CONFIRM_DIALOG.open(this, Lang.translateKey("gui.chorda.editor.unsaved_changes"), true, e -> {
                 if (!e) open();
             });
         }

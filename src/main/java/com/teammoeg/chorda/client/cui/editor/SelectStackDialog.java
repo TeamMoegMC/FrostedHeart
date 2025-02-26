@@ -90,7 +90,7 @@ public class SelectStackDialog<T> extends EditDialog {
 		int getCount(T t);
 		void setCount(T t,int num);
 	}
-	private static ResourceMode<ItemStack> itemMode=new ResourceMode<>() {
+	static ResourceMode<ItemStack> itemMode=new ResourceMode<>() {
 		@Override
 		public CIcon getResourceIcon(ItemStack t) {
 			return CIcons.getIcon(t);
@@ -162,7 +162,7 @@ public class SelectStackDialog<T> extends EditDialog {
 			t.setCount(num);
 		}
 	};
-    private static ResourceLister<ItemStack> ALL_ITEM=new ResourceLister<>() {
+	public static ResourceLister<ItemStack> ALL_ITEM=new ResourceLister<>() {
 
         @Override
         public Collection<ItemStack> getResources() {
@@ -181,7 +181,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
 
     };
-    private static ResourceLister<ItemStack> INVENTORY=new ResourceLister<>() {
+    public static ResourceLister<ItemStack> INVENTORY=new ResourceLister<>() {
 
         @Override
         public Collection<ItemStack> getResources() {
@@ -199,7 +199,7 @@ public class SelectStackDialog<T> extends EditDialog {
         }
 
     };
-    private static ResourceLister<ItemStack> BLOCKS=new ResourceLister<>() {
+    public static ResourceLister<ItemStack> BLOCKS=new ResourceLister<>() {
 
             @Override
             public Collection<ItemStack> getResources() {
@@ -218,15 +218,6 @@ public class SelectStackDialog<T> extends EditDialog {
         };
     
     public static final ExecutorService ITEM_SEARCH = Executors.newSingleThreadExecutor(CUtils.makeThreadFactory("Chorda-ItemSearch", true));
-    public static Editor<ItemStack> EDITOR = (p, l, v, c) -> new SelectStackDialog<ItemStack>(p, l, v, c,itemMode,true,ALL_ITEM,INVENTORY,BLOCKS).open();
-    public static Editor<ItemStack> EDITOR_SIMPLE_ITEM = (p, l, v, c) -> new SelectStackDialog<ItemStack>(p, l, v, c,itemMode,false,ALL_ITEM,INVENTORY,BLOCKS).open();
-    public static final Editor<Collection<ItemStack>> STACK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, new ItemStack(Items.AIR), EDITOR, SelectStackDialog::fromItemStack, CIcons::getIcon, c).open();
-    public static Editor<Block> EDITOR_BLOCK = (p, l, v, c) -> new SelectStackDialog<ItemStack>(p, Components.empty().append(l).append(" (Blocks only)"), new ItemStack(v), e -> {
-        Block b = Block.byItem(e.getItem());
-        if (b != Blocks.AIR)
-            c.accept(b);
-    },itemMode,false,INVENTORY,BLOCKS).open();
-    public static final Editor<Collection<Block>> BLOCK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, Blocks.AIR, EDITOR_BLOCK, e -> e.getName(), e -> CIcons.getIcon(e.asItem()), c).open();
     private ResourceLister<T> activeMode = null;
     public final List<ResourceLister<T>> modes = new ArrayList<>();
     public ResourceMode<T> type;
@@ -346,7 +337,7 @@ public class SelectStackDialog<T> extends EditDialog {
         updateItemWidgets(Collections.emptyList());
     }
 
-    private static Component fromItemStack(ItemStack s) {
+    public static Component fromItemStack(ItemStack s) {
         return s.getHoverName().copy().append(" x " + s.getCount());
     }
 

@@ -31,13 +31,12 @@ import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.network.chat.Component;
 
-public class EditBtnDialog extends BaseEditDialog {
-    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new EditBtnDialog(p, l, v, Components.str("Select Tag"), c, SelectDialog.EDITOR_ITEM_TAGS).open();
+public class EditPromptWithSelect extends BaseEditDialog {
     LabeledTextBoxAndBtn box;
     Button ok;
     Button cancel;
 
-    public EditBtnDialog(UIWidget panel, Component label, String val, Component sel, Consumer<String> onFinished, Editor<String> onbtn) {
+    public EditPromptWithSelect(UIWidget panel, Component label, String val, Component sel, Consumer<String> onFinished, Editor<String> onbtn) {
         super(panel);
         box = new LabeledTextBoxAndBtn(this, label, val, sel, e -> onbtn.open(panel, sel, box.getText(), e));
         ok = new TextButton(this, Components.str("OK"), CIcons.nop()) {
@@ -65,7 +64,7 @@ public class EditBtnDialog extends BaseEditDialog {
         ok.setSize(300, 20);
     }
 
-    public EditBtnDialog(UIWidget panel, Component label, String val, Component sel, Consumer<String> onFinished, Function<String, String> onbtn) {
+    public EditPromptWithSelect(UIWidget panel, Component label, String val, Component sel, Consumer<String> onFinished, Function<String, String> onbtn) {
         this(panel, label, val, sel, onFinished, (p, l, v, c) -> c.accept(onbtn.apply(v)));
 
     }

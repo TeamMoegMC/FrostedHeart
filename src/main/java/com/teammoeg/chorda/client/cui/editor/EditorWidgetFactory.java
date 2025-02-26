@@ -55,7 +55,7 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 			@Override
 			public DataResult<Optional<X>> getValue(W widget) {
 				
-				return objthis.getValue(widget).map(n->Optional.ofNullable(from.apply(n.orElse(null))));
+				return objthis.getValue(widget).map(n->n.map(from));
 			}
 		};
 	}

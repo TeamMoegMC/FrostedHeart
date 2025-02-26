@@ -8,16 +8,15 @@ import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.cui.editor.BaseEditDialog;
 import com.teammoeg.chorda.client.cui.editor.EditListDialog;
-import com.teammoeg.chorda.client.cui.editor.EditPrompt;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;
 import com.teammoeg.chorda.client.cui.editor.Editor;
 import com.teammoeg.chorda.client.cui.editor.EditorSelector;
+import com.teammoeg.chorda.client.cui.editor.Editors;
 import com.teammoeg.chorda.client.cui.editor.IngredientEditor;
 import com.teammoeg.chorda.client.cui.editor.LabeledTextBox;
 import com.teammoeg.chorda.client.cui.editor.NumberBox;
 import com.teammoeg.chorda.client.cui.editor.OpenEditorButton;
 import com.teammoeg.chorda.client.cui.editor.SelectDialog;
-import com.teammoeg.chorda.client.cui.editor.SelectStackDialog;
 import com.teammoeg.chorda.client.icon.CIcons.AnimatedIcon;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.CIcons.CombinedIcon;
@@ -37,8 +36,8 @@ import net.minecraft.resources.ResourceLocation;
 
 public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
 
-    public static final Editor<ItemIcon> ITEM_EDITOR = (p, l, v, c) -> SelectStackDialog.EDITOR.open(p, l, v == null ? null : v.stack, e -> c.accept(new ItemIcon(e)));
-    public static final Editor<TextureIcon> TEXTURE_EDITOR = (p, l, v, c) -> EditPrompt.TEXT_EDITOR.open(p, l, v == null ? "" : (v.rl == null ? "" : v.rl.toString()),
+    public static final Editor<ItemIcon> ITEM_EDITOR = (p, l, v, c) -> Editors.EDITOR_FULL_ITEM.open(p, l, v == null ? null : v.stack, e -> c.accept(new ItemIcon(e)));
+    public static final Editor<TextureIcon> TEXTURE_EDITOR = (p, l, v, c) -> Editors.TEXT_PROMPT.open(p, l, v == null ? "" : (v.rl == null ? "" : v.rl.toString()),
             e -> c.accept(new TextureIcon(new ResourceLocation(e))));
     public static final Editor<IngredientIcon> INGREDIENT_EDITOR = (p, l, v, c) -> IngredientEditor.EDITOR_INGREDIENT_EXTERN.open(p, l, v == null ? null : v.igd,
             e -> c.accept(new IngredientIcon(e)));       
@@ -58,7 +57,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
 
     ;
     public static final Editor<CIcon> INGREDIENT_SIZE_EDITOR = (p, l, v, c) -> IngredientEditor.EDITOR.open(p, l, null, e -> c.accept(CIcons.getIcon(e.getFirst(),e.getSecond())));
-    public static final Editor<TextIcon> TEXT_EDITOR = (p, l, v, c) -> EditPrompt.TEXT_EDITOR.open(p, l, v == null ? null : v.text.getString(), e -> c.accept(new TextIcon(StringTextComponentParser.parse(e))));
+    public static final Editor<TextIcon> TEXT_EDITOR = (p, l, v, c) -> Editors.TEXT_PROMPT.open(p, l, v == null ? null : v.text.getString(), e -> c.accept(new TextIcon(StringTextComponentParser.parse(e))));
     public static final Editor<CIcon> NOP_EDITOR = (p, l, v, c) -> {
         c.accept(NopIcon.INSTANCE);
         p.refresh();

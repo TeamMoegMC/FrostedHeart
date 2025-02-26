@@ -51,17 +51,21 @@ public class ItemClue extends Clue {
         super();
     }
 
-    public ItemClue(BaseData data, boolean consume, Pair<Ingredient,Integer> stack) {
+
+	public ItemClue(BaseData data, boolean consume, Pair<Ingredient,Integer> stack) {
         super(data);
         this.consume = consume;
         this.stack = stack;
     }
 
 
-    public ItemClue(String name, String desc, String hint, float contribution, Pair<Ingredient,Integer> stack) {
-        super(name, desc, hint, contribution);
-        this.stack = stack;
-    }
+    public ItemClue(String nonce, String name, String desc, String hint, float contribution, boolean required, Pair<Ingredient, Integer> stack, boolean consume) {
+		super(nonce, name, desc, hint, contribution, required);
+		this.consume = consume;
+		this.stack = stack;
+	}
+
+
 
     @Override
     public void end(TeamDataHolder team, Research parent) {

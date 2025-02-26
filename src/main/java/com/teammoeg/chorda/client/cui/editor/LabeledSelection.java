@@ -25,6 +25,8 @@ import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.advancements.Advancement;
@@ -42,31 +44,34 @@ import java.util.function.Function;
 public class LabeledSelection<R> extends LabeledPane<TextButton> {
     List<R> objs;
 
-    Function<R, String> tostr;
 
+    Function<R, CIcon> toicon;
     int sel;
 
-    public LabeledSelection(UIWidget panel, Component lab, R val, Collection<R> aobjs, Function<R, String> atostr) {
-        this(panel, lab, val, new ArrayList<>(aobjs), atostr);
+    public LabeledSelection(UIWidget panel, Component lab, R val, Collection<R> aobjs, Function<R, Component> atostr,Function<R, CIcon> atoicon) {
+        this(panel, lab, val, new ArrayList<>(aobjs), atostr,atoicon);
     }
 
-    public LabeledSelection(UIWidget panel, Component lab, R val, List<R> aobjs, Function<R, String> atostr) {
+    public LabeledSelection(UIWidget panel, Component lab, R val, List<R> aobjs, Function<R, Component> atostr,Function<R, CIcon> atoicon) {
         super(panel, lab);
         this.objs = aobjs;
-        this.tostr = atostr;
+        if(val==null)
+        	val=objs.get(0);
         sel = objs.indexOf(val);
-        obj = new TextButton(this, Components.str(tostr.apply(val)), CIcons.nop()) {
+        obj = new TextButton(this,atostr!=null?atostr.apply(val):Components.empty(), atoicon==null?CIcons.nop():atoicon.apply(val)) {
 
             @Override
             public void getTooltip(Consumer<Component> list) {
-                int i = 0;
-                for (R elm : objs) {
-                    if (i == sel)
-                        list.accept(Components.str("->" + tostr.apply(elm)));
-                    else
-                        list.accept(Components.str(tostr.apply(elm)));
-                    i++;
-                }
+            	if(atostr!=null) {
+	                int i = 0;
+	                for (R elm : objs) {
+	                    if (i == sel)
+	                        list.accept(Components.str("->").append(atostr.apply(elm)));
+	                    else
+	                        list.accept(atostr.apply(elm));
+	                    i++;
+	                }
+            	}
             }
 
 
@@ -80,26 +85,38 @@ public class LabeledSelection<R> extends LabeledPane<TextButton> {
                     sel = 0;
                 if (sel < 0)
                     sel = objs.size() - 1;
-                this.setTitle(Components.str(tostr.apply(objs.get(sel))));
-                refresh();
+                if(atostr!=null)
+                	this.setTitle(atostr.apply(objs.get(sel)));
+                this.setIcon(atoicon.apply(objs.get(sel)));
+                LabeledSelection.this.refresh();
                 onChange(objs.get(sel));
             }
 
         };
 
-        obj.setHeight(20);
+        //obj.setHeight(20);
     }
 
-    public LabeledSelection(UIWidget panel, Component lab, R val, R[] aobjs, Function<R, String> atostr) {
-        this(panel, lab, val, Arrays.asList(aobjs), atostr);
+    public LabeledSelection(UIWidget panel, Component lab, R val, R[] aobjs, Function<R, Component> atostr,Function<R, CIcon> atoicon) {
+        this(panel, lab, val, Arrays.asList(aobjs), atostr,atoicon);
     }
 
     public static LabeledSelection<Boolean> createBool(UIWidget p, Component lab, boolean val) {
-        return new LabeledSelection<>(p, lab, val, Arrays.asList(true, false), String::valueOf);
+        return new LabeledSelection<>(p, lab, val, Arrays.asList(true, false), null,t->t?IconButton.Icon.BOX_ON.toCIcon():IconButton.Icon.BOX.toCIcon()) {
+            @Override
+            public void addUIElements() {
+                if (obj != null)
+                	add(obj);
+                add(label);
+            }
+        };
     }
 
     public static <T extends Enum<T>> LabeledSelection<T> createEnum(UIWidget p, Component lab, Class<T> en, T val) {
-        return new LabeledSelection<>(p, lab, val, Arrays.asList(en.getEnumConstants()), Enum::name);
+        return new LabeledSelection<>(p, lab, val, Arrays.asList(en.getEnumConstants()), a->Components.str(a.name()),a->CIcons.nop());
+    }
+    public static <T extends Enum<T>> LabeledSelection<T> createEnum(UIWidget p, Component lab, Class<T> en, T val, Function<T, Component> atostr,Function<T, CIcon> atoicon) {
+        return new LabeledSelection<>(p, lab, val, Arrays.asList(en.getEnumConstants()), atostr, atoicon);
     }
 
     public static LabeledSelection<String> createCriterion(UIWidget p, Component lab, ResourceLocation adv, String val, Consumer<String> cb) {
@@ -110,7 +127,7 @@ public class LabeledSelection<R> extends LabeledPane<TextButton> {
         if (advx != null) {
             cit.addAll(advx.getCriteria().keySet());
         }
-        return new LabeledSelection<String>(p, lab, val, cit, String::valueOf) {
+        return new LabeledSelection<String>(p, lab, val, cit, a->Components.str(String.valueOf(a)),a->CIcons.nop()) {
 
             @Override
             public void onChange(String current) {

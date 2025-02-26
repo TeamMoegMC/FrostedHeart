@@ -58,11 +58,15 @@ public abstract class Clue {
     }
 
     public Supplier<Research> parent;
-    float contribution;// percentage, range (0,1]
+    String nonce;
     String name = "";
     String desc = "";
     String hint = "";
-    String nonce;
+    float contribution;// percentage, range (0,1]
+   
+    
+   
+  
     boolean required = false;
     ClueClosure cache;
     public Clue() {
@@ -78,7 +82,19 @@ public abstract class Clue {
         this.contribution = data.contribution;
     }
 
-    public Clue(String name, float contribution) {
+
+
+	public Clue(String nonce, String name, String desc, String hint, float contribution, boolean required) {
+		super();
+		this.nonce = nonce;
+		this.name = name;
+		this.desc = desc;
+		this.hint = hint;
+		this.contribution = contribution;
+		this.required = required;
+	}
+
+	public Clue(String name, float contribution) {
         this(name, "", "", contribution);
     }
 

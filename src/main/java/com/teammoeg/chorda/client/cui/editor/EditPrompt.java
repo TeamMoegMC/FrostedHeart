@@ -19,8 +19,6 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
@@ -34,11 +32,6 @@ import net.minecraft.network.chat.Component;
 import java.util.function.Consumer;
 
 public class EditPrompt extends BaseEditDialog {
-    public static Editor<String> TEXT_EDITOR = EditPrompt::open;
-    public static Editor<JsonElement> JSON_EDITOR = (p, l, v, c) -> open(p, l, v == null ? "" : v.toString(), e -> c.accept(new JsonParser().parse(e)));
-    public static Editor<Long> LONG_EDITOR = (p, l, v, c) -> open(p, l, String.valueOf(v), o -> c.accept(Long.parseLong(o)));
-    public static Editor<Integer> INT_EDITOR = (p, l, v, c) -> open(p, l, String.valueOf(v), o -> c.accept(Integer.parseInt(o)));
-    public static Editor<Double> REAL_EDITOR = (p, l, v, c) -> open(p, l, String.valueOf(v), o -> c.accept(Double.parseDouble(o)));
     LabeledTextBox box;
     Button ok;
     Button cancel;

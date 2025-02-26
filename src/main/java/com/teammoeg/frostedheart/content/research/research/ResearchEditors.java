@@ -11,22 +11,25 @@ import com.teammoeg.chorda.client.cui.editor.SelectDialog;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate;
+import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.clues.ClueEditor;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectEditor;
 
 public class ResearchEditors {
 
+	public static final Editor<Research> EDITOR_RESEARCH = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, FHResearch::getAllResearch,
+	Research::getName, e -> new String[] { e.getId(), e.getName().getString() },
+	Research::getIcon).open();
 	public ResearchEditors() {
 	}
-	public static final Editor<Collection<Research>> RESEARCH_LIST=(p,l,v,c)->new EditListDialog<>(p, l, v,null,SelectDialog.EDITOR_RESEARCH, Research::getName, Research::getIcon, c);
+	public static final Editor<Collection<Research>> RESEARCH_LIST=(p,l,v,c)->new EditListDialog<>(p, l, v,null,ResearchEditors.EDITOR_RESEARCH, Research::getName, Research::getIcon, c);
 	public static final Editor<Research> RESEARCH_EDITOR=EditorDialogBuilder.create(b->b
 		.add(Editors.STRING_ID.withName("id").forGetter( Research::getId))
 		.add(Editors.STRING.withName("name").forGetter( t->t.name))
 		.add(Editors.INT.withName("insight").forGetter( r->r.insight))
 		.add(Editors.INT.withName("points").forGetter( r->r.points))
-		.add(Editors.openDialog(IconEditor.EDITOR,t->t,t->Components.empty()).withName("icon").forGetter( r->r.icon))
-		.add(Editors.enumBox(ResearchCategory.class).withName("category").forGetter( r->r.getCategory()))
+		.add(Editors.openDialog(IconEditor.EDITOR,t->t,t->Components.str("icon")).withName("icon").forGetter( r->r.icon))
+		.add(Editors.enumBox(ResearchCategory.class,ResearchCategory::getName,a->CIcons.getIcon(a.getIcon())).withName("category").forGetter( r->r.getCategory()))
 		.add(Editors.openDialog(EditListDialog.STRING_LIST).withName("Edit Description").forGetter( r->r.desc))
 		.add(Editors.openDialog(EditListDialog.STRING_LIST).withName("Edit Alternative Description").forGetter( r->r.fdesc))
 		.add(Editors.openDialog(RESEARCH_LIST).withName("Edit Parents").forGetter( r->r.getParents()))

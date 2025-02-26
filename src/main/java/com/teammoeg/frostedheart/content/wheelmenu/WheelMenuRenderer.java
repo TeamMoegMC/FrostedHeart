@@ -218,18 +218,21 @@ public class WheelMenuRenderer {
 		userSelections.forEach(u->selections.put(new ResourceLocation("wheel_menu_user",u.id()), u.createSelection()));
 	}
 	public static void openIfNewSelection() {
-		boolean modified=false;
-		HashSet<ResourceLocation> set=new HashSet<>(displayedSelections);
-		for(Entry<ResourceLocation, Selection> rl:selections.entrySet()) {
-			if(!rl.getValue().isAutoAddable())continue;
-			rl.getValue().validateVisibility();
-			if(rl.getValue().isVisible()&&!hiddenSelections.contains(rl.getKey())&&!set.contains(rl.getKey())) {
-				displayedSelections.add(0,rl.getKey());
-				modified=true;
+		
+		if(displayedSelections.size()<10) {
+			boolean modified=false;
+			HashSet<ResourceLocation> set=new HashSet<>(displayedSelections);
+			for(Entry<ResourceLocation, Selection> rl:selections.entrySet()) {
+				if(!rl.getValue().isAutoAddable())continue;
+				rl.getValue().validateVisibility();
+				if(rl.getValue().isVisible()&&!hiddenSelections.contains(rl.getKey())&&!set.contains(rl.getKey())) {
+					displayedSelections.add(0,rl.getKey());
+					modified=true;
+				}
 			}
-		}
-		if(modified) {
-			saveUserSelectedOptions();
+			if(modified) {
+				saveUserSelectedOptions();
+			}
 		}
 	}
 	protected static boolean init() {

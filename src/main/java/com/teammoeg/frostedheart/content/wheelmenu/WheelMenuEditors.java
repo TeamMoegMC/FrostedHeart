@@ -17,7 +17,6 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.cui.editor.BaseEditDialog;
 import com.teammoeg.chorda.client.cui.editor.EditListDialog;
-import com.teammoeg.chorda.client.cui.editor.EditPrompt;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;
 import com.teammoeg.chorda.client.cui.editor.Editor;
 import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder;
@@ -25,7 +24,6 @@ import com.teammoeg.chorda.client.cui.editor.EditorSelector;
 import com.teammoeg.chorda.client.cui.editor.Editors;
 import com.teammoeg.chorda.client.cui.editor.OpenEditorButton;
 import com.teammoeg.chorda.client.cui.editor.SelectDialog;
-import com.teammoeg.chorda.client.cui.editor.SelectStackDialog;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.CIcons.ItemIcon;
@@ -47,7 +45,7 @@ public class WheelMenuEditors {
 		o -> Components.translatable(o.getCategory()).append(": ").append(Components.translatable(o.getName())).append("(").append(o.getTranslatedKeyMessage()).append(")")).open();
 	public static final Editor<KeyMappingTriggerAction> KEY_ACTION_EDITOR = KEY_EDITOR.xmap(CFunctionHelper.mapNullable(KeyMappingTriggerAction::new, null), KeyMappingTriggerAction::getKey);
 
-	public static final Editor<CommandInputAction> COMMAND_ACTION_EDITOR = EditPrompt.TEXT_EDITOR.xmap(CommandInputAction::new, CommandInputAction::getCommand);
+	public static final Editor<CommandInputAction> COMMAND_ACTION_EDITOR = Editors.TEXT_PROMPT.xmap(CommandInputAction::new, CommandInputAction::getCommand);
 	public static final Editor<Selection.Action> ACTION_EDITOR = new EditorSelector.EditorSelectorBuilder<Selection.Action>()
 		.addEditor(Components.translatable("gui.wheel_menu.editor.key"), KEY_ACTION_EDITOR, t -> t instanceof KeyMappingTriggerAction)
 		.addEditor(Components.translatable("gui.wheel_menu.editor.command"), COMMAND_ACTION_EDITOR, t -> t instanceof CommandInputAction)
@@ -57,7 +55,7 @@ public class WheelMenuEditors {
 	public static final Editor<UserSelection> SELECTION_EDITOR = EditorDialogBuilder.create(b->b
 		.add(Editors.STRING_ID_HIDDEN.withName("id").forGetter(UserSelection::id))
 		.add(Editors.STRING.withName(Components.translatable("gui.wheel_menu.editor.name")).forGetter(UserSelection::message))
-		.add(Editors.openDialogLabeled(SelectStackDialog.EDITOR_SIMPLE_ITEM.<CIcon>xmap(CIcons::getIcon, t -> (t instanceof ItemIcon itc) ? itc.stack : null).withDefault(CIcons::nop), t -> t,
+		.add(Editors.openDialogLabeled(Editors.EDITOR_SIMPLE_ITEM.<CIcon>xmap(CIcons::getIcon, t -> (t instanceof ItemIcon itc) ? itc.stack : null).withDefault(CIcons::nop), t -> t,
 			t -> Components.empty()).withName(Components.translatable("gui.wheel_menu.editor.icon")).forGetter(UserSelection::icon))
 		.add(Editors.openDialog(ACTION_EDITOR).withName(Component.translatable("gui.wheel_menu.editor.action")).forGetter(UserSelection::selectAction))
 		.apply(UserSelection::new));

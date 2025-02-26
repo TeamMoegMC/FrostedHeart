@@ -21,4 +21,7 @@ public class EditorDialogBuilder {
 		EditorDialogPrototype<O> proto=new EditorDialogPrototype<>(CurryApplicativeTemplate.build(builder));
 		return (p,l,v,c)->proto.create(p, l, v, c).open();
 	}
+	public static <O> Applicative0<SetterAndGetter<O, ?>> startBuilder(){
+		return Applicative0.getInstance();
+	}
 }

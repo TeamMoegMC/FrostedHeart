@@ -55,11 +55,11 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class IngredientEditor extends BaseEditDialog {
-    public static final Editor<Ingredient> EDITOR_JSON = (p, l, v, c) -> EditPrompt.JSON_EDITOR.open(p, l, v == null ? null : v.toJson(), e -> c.accept(Ingredient.fromJson(e)));
+    public static final Editor<Ingredient> EDITOR_JSON = (p, l, v, c) -> Editors.JSON_PROMPT.open(p, l, v == null ? null : v.toJson(), e -> c.accept(Ingredient.fromJson(e)));
     public static final Editor<Pair<Ingredient,Integer>> EDITOR = (p, l, v, c) -> new IngredientEditor(p, l, v, c).open();
     public static final Editor<List<Pair<Ingredient,Integer>>> LIST_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EDITOR, IngredientEditor::getDesc, e -> CIcons.getIcon(e.getFirst(),e.getSecond()), e -> c.accept(new ArrayList<>(e))).open();
 
-    public static final Editor<ItemValue> EDITOR_ITEMLIST = (p, l, v, c) -> SelectStackDialog.EDITOR.open(p, l, (v == null || v.item == null) ? new ItemStack(Items.AIR) : v.item, s -> {
+    public static final Editor<ItemValue> EDITOR_ITEMLIST = (p, l, v, c) -> Editors.EDITOR_FULL_ITEM.open(p, l, (v == null || v.item == null) ? new ItemStack(Items.AIR) : v.item, s -> {
         s = s.copy();
         s.setCount(1);
         c.accept(new ItemValue(s));
@@ -75,7 +75,7 @@ public class IngredientEditor extends BaseEditDialog {
                 FHMain.LOGGER.error("Error creating editor tag list", ex);
             }
         }
-        EditBtnDialog.EDITOR_ITEM_TAGS.open(p, l, vx, s -> c.accept(new TagValue(ItemTags.create(new ResourceLocation(s)))));
+        Editors.EDITOR_ITEM_TAGS.open(p, l, vx, s -> c.accept(new TagValue(ItemTags.create(new ResourceLocation(s)))));
     };
     public static final Editor<Value> EDITOR_LIST = 
     	new EditorSelectorBuilder<Value>()
@@ -103,9 +103,9 @@ public class IngredientEditor extends BaseEditDialog {
     	.build();
     public static final Editor<Ingredient> NBT_EDITOR = (p, l, v, c) -> {
         if (v == null || v.isEmpty()) {
-            SelectStackDialog.EDITOR.open(p, l, new ItemStack(Items.AIR), e -> c.accept(CUtils.createIngredient(e)));
+            Editors.EDITOR_FULL_ITEM.open(p, l, new ItemStack(Items.AIR), e -> c.accept(CUtils.createIngredient(e)));
         } else {
-            SelectStackDialog.EDITOR.open(p, l, v.getItems()[0], e -> c.accept(CUtils.createIngredient(e)));
+            Editors.EDITOR_FULL_ITEM.open(p, l, v.getItems()[0], e -> c.accept(CUtils.createIngredient(e)));
         }
     };
     public static final Editor<Ingredient> TAG_EDITOR = (p, l, v, c) -> {
