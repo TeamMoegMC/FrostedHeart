@@ -759,7 +759,7 @@ public class WorldClimate implements NBTSerializable {
             updateHourCache(hours);
             this.updateNewFrames();
             // Send to client if hour increases
-            FHNetwork.send(PacketDistributor.DIMENSION.with(serverWorld::dimension), new FHClimatePacket(this));
+            FHNetwork.INSTANCE.send(PacketDistributor.DIMENSION.with(serverWorld::dimension), new FHClimatePacket(this));
         }
     }
 

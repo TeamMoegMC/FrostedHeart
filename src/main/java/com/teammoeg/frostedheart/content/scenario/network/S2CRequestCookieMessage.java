@@ -41,7 +41,7 @@ public record S2CRequestCookieMessage(int id,List<String> keys) implements CMess
 				}
 			}
 			//System.out.println(tag);
-			FHNetwork.sendToServer(new C2SScenarioCookies(id,tag));
+			FHNetwork.INSTANCE.sendToServer(new C2SScenarioCookies(id,tag));
 			
 		});
 		context.get().setPacketHandled(true);

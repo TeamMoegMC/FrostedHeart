@@ -60,7 +60,7 @@ public class HeatNetworkRequestC2SPacket implements CMessage {
                     if (network != null) {
 //                        FHMain.LOGGER.debug("Client request received. Sending server HeatNetwork data to client");
                         ClientHeatNetworkData data = new ClientHeatNetworkData(pos, network);
-                        FHNetwork.sendPlayer(player, new HeatNetworkResponseS2CPacket(data));
+                        FHNetwork.INSTANCE.sendPlayer(player, new HeatNetworkResponseS2CPacket(data));
                     } else {
 //                        FHMain.LOGGER.debug("Client request received. No HeatNetwork found at the position. Sending nothing.");
                     }

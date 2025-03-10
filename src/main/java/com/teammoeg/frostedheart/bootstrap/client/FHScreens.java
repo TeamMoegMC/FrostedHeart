@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.bootstrap.client;
 
+import java.util.function.Function;
+
 import com.teammoeg.chorda.client.cui.CUIMenuScreen;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
@@ -33,17 +35,15 @@ import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
 import com.teammoeg.frostedheart.content.health.screen.NutritionScreen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
-import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskScreen;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatScreen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
+
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
-
-import java.util.function.Function;
 
 public class FHScreens {
     public static void init() {
@@ -51,7 +51,7 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.GENERATOR_T1.getType(), GeneratorScreen<T1GeneratorState, T1GeneratorLogic>::new);
         MenuScreens.register(FHMenuTypes.GENERATOR_T2.getType(), GeneratorScreen<T2GeneratorState, T2GeneratorLogic>::new);
         MenuScreens.register(FHMenuTypes.RELIC_CHEST.get(), RelicChestScreen::new);
-        registerFTBScreen(FHMenuTypes.DRAW_DESK.get(), DrawDeskScreen::new);
+        
         registerFTBScreen(FHMenuTypes.TRADE_GUI.get(), TradeScreen::new);
         registerCUIScreen(FHMenuTypes.HEAT_STAT.get(), HeatStatScreen::new);
         MenuScreens.register(FHMenuTypes.SAUNA.get(), SaunaScreen::new);

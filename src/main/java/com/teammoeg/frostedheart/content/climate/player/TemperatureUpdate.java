@@ -318,7 +318,7 @@ public class TemperatureUpdate {
                     //FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
                 }
 
-                FHNetwork.sendPlayer(player, new FHBodyDataSyncPacket(player));
+                FHNetwork.INSTANCE.sendPlayer(player, new FHBodyDataSyncPacket(player));
             });
         }
     }

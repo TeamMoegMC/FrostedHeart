@@ -40,12 +40,12 @@ import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKe
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
-import com.teammoeg.frostedheart.content.research.FHResearch;
-import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_PlaceExtraSnow;
+import com.teammoeg.frostedresearch.FHResearch;
+import com.teammoeg.frostedresearch.api.ResearchDataAPI;
+import com.teammoeg.frostedresearch.network.FHResearchDataSyncPacket;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -316,12 +316,12 @@ public class ClimateCommonEvents {
 			ServerLevel serverWorld = ((ServerPlayer) event.getEntity()).serverLevel();
 			PacketTarget currentPlayer = PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity());
 			FHResearch.sendSyncPacket(currentPlayer);
-			FHNetwork.send(currentPlayer,
+			FHNetwork.INSTANCE.send(currentPlayer,
 					new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayer) event.getEntity()).get()));
 			FHCapabilities.CLIMATE_DATA.getCapability(serverWorld)
-					.ifPresent((cap) -> FHNetwork.send(currentPlayer, new FHClimatePacket(cap)));
+					.ifPresent((cap) -> FHNetwork.INSTANCE.send(currentPlayer, new FHClimatePacket(cap)));
 
-			FHNetwork.send(currentPlayer, new WaypointSyncAllPacket((ServerPlayer) event.getEntity()));
+			FHNetwork.INSTANCE.send(currentPlayer, new WaypointSyncAllPacket((ServerPlayer) event.getEntity()));
 			// System.out.println("=x-x=");
 			// System.out.println(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS.getValue(new
 			// ResourceLocation(FHMain.MODID,"add_loot")));
@@ -333,7 +333,7 @@ public class ClimateCommonEvents {
 		if (event.getEntity() instanceof ServerPlayer) {
 			ServerLevel serverWorld = ((ServerPlayer) event.getEntity()).serverLevel();
 
-			FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity()),
+			FHNetwork.INSTANCE.sendPlayer((ServerPlayer) event.getEntity(),
 					new FHClimatePacket(WorldClimate.get(serverWorld)));
 		}
 	}
@@ -422,7 +422,7 @@ public class ClimateCommonEvents {
 	public static void respawn(PlayerEvent.PlayerRespawnEvent event) {
 		if (event.getEntity() instanceof ServerPlayer && !(event.getEntity() instanceof FakePlayer)) {
 			ServerLevel serverWorld = ((ServerPlayer) event.getEntity()).serverLevel();
-			FHNetwork.sendPlayer((ServerPlayer) event.getEntity(), new FHClimatePacket(WorldClimate.get(serverWorld)));
+			FHNetwork.INSTANCE.sendPlayer((ServerPlayer) event.getEntity(), new FHClimatePacket(WorldClimate.get(serverWorld)));
 			PlayerTemperatureData.getCapability(event.getEntity()).ifPresent(PlayerTemperatureData::reset);
 		}
 	}

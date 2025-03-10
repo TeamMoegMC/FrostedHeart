@@ -28,7 +28,7 @@ public class CookieCommand {
 	public void sendCookie(ScenarioCommandContext runner) {
 		Object obj= runner.context().getCommandData().remove("set_cookie");
 		if(obj instanceof CompoundTag tag) {
-			FHNetwork.sendPlayer((ServerPlayer) runner.context().player(), new S2CSetCookiesMessage(tag));
+			FHNetwork.INSTANCE.sendPlayer((ServerPlayer) runner.context().player(), new S2CSetCookiesMessage(tag));
 			
 		}
 	}
@@ -41,7 +41,7 @@ public class CookieCommand {
 	public void requestCookie(ScenarioCommandContext runner) {
 		Object obj= runner.context().getCommandData().remove("get_cookie");
 		if(obj instanceof ArrayList tag) {
-			FHNetwork.sendPlayer((ServerPlayer) runner.context().player(), new S2CRequestCookieMessage(runner.thread().getRunId(),tag));
+			FHNetwork.INSTANCE.sendPlayer((ServerPlayer) runner.context().player(), new S2CRequestCookieMessage(runner.thread().getRunId(),tag));
 			runner.thread().setStatus(RunStatus.WAITNETWORK);
 		}
 	}

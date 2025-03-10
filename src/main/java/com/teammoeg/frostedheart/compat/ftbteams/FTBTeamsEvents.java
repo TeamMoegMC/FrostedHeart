@@ -23,8 +23,8 @@ import java.util.UUID;
 
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
+import com.teammoeg.frostedresearch.api.ResearchDataAPI;
+import com.teammoeg.frostedresearch.network.FHResearchDataSyncPacket;
 
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
@@ -45,7 +45,7 @@ public class FTBTeamsEvents {
 
     public static void syncDataWhenTeamChange(PlayerChangedTeamEvent event) {
     	if(event.getPlayer()!=null)
-    		FHNetwork.sendPlayer(event.getPlayer(),
+    		FHNetwork.INSTANCE.sendPlayer(event.getPlayer(),
                 new FHResearchDataSyncPacket(ResearchDataAPI.getData(event.getPlayer()).get()));
     }
 
@@ -55,7 +55,7 @@ public class FTBTeamsEvents {
 
             CTeamDataManager.INSTANCE.transfer(orig.getId(), event.getTeam());
             for(ServerPlayer p:event.getTeam().getOnlineMembers()) {
-	            FHNetwork.sendPlayer(p,
+	            FHNetwork.INSTANCE.sendPlayer(p,
 	                    new FHResearchDataSyncPacket(ResearchDataAPI.getData(p).get()));
             }
         }
@@ -69,7 +69,7 @@ public class FTBTeamsEvents {
 
             CTeamDataManager.INSTANCE.transfer(event.getTeam().getId(), orig);
             for(ServerPlayer p:event.getTeam().getOnlineMembers()) {
-	            FHNetwork.sendPlayer(p,
+	            FHNetwork.INSTANCE.sendPlayer(p,
 	                    new FHResearchDataSyncPacket(ResearchDataAPI.getData(p).get()));
             }
             

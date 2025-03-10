@@ -47,17 +47,12 @@ public class CreativeTabItemHelper implements Output{
 			return insnum;
 		}
 	}
-	private CreativeModeTab tab;
 	private ResourceKey<CreativeModeTab> key;
 	private int num=Integer.MIN_VALUE;
 	private List<Entry> items=new ArrayList<>();
-	public CreativeModeTab getTab() {
-		return tab;
-	}
-	public CreativeTabItemHelper(ResourceKey<CreativeModeTab> key,CreativeModeTab tab) {
+	public CreativeTabItemHelper(ResourceKey<CreativeModeTab> key) {
 		super();
 		this.key= key;
-		this.tab = tab;
 	}
 	public boolean isType(TabType tab) {
 		if(tab==null)return false;

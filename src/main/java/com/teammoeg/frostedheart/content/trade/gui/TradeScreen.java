@@ -25,19 +25,19 @@ import java.util.Map.Entry;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.content.research.gui.FakeSlot;
-import com.teammoeg.frostedheart.content.research.gui.RTextField;
-import com.teammoeg.frostedheart.content.research.gui.SwitchButton;
-import com.teammoeg.frostedheart.content.research.gui.ToolTipWidget;
-import com.teammoeg.frostedheart.content.research.gui.TristateButton;
 import com.teammoeg.frostedheart.content.trade.RelationModifier;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer.DetectionSlot;
 import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
-import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.frostedresearch.gui.FakeSlot;
+import com.teammoeg.frostedresearch.gui.RTextField;
+import com.teammoeg.frostedresearch.gui.SwitchButton;
+import com.teammoeg.frostedresearch.gui.ToolTipWidget;
+import com.teammoeg.frostedresearch.gui.TristateButton;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
@@ -122,7 +122,7 @@ public class TradeScreen extends BaseScreen {
             @Override
             public void onClicked(MouseButton arg0) {
                 if (bargain.isEnabled()) {
-                    FHNetwork.sendToServer(new BargainRequestPacket(cx.order));
+                    FHNetwork.INSTANCE.sendToServer(new BargainRequestPacket(cx.order));
                 }
             }
 
@@ -132,7 +132,7 @@ public class TradeScreen extends BaseScreen {
             @Override
             public void onClicked(MouseButton arg0) {
                 if (trade.isEnabled()) {
-                    FHNetwork.sendToServer(new TradeCommitPacket(cx.order));
+                    FHNetwork.INSTANCE.sendToServer(new TradeCommitPacket(cx.order));
                 }
             }
 

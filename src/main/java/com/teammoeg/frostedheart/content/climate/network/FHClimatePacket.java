@@ -42,7 +42,7 @@ public class FHClimatePacket implements CMessage {
         climate = ClimateType.NONE;
     }
 
-    public FHClimatePacket(FriendlyByteBuf buffer) {
+    private FHClimatePacket(FriendlyByteBuf buffer) {
         data = SerializeUtil.readShortArray(buffer);
         sec = buffer.readVarLong();
         climate = ClimateType.values()[buffer.readByte() & 0xff];

@@ -45,7 +45,7 @@ public class ChatScreenMixin extends Screen {
 		if(ev!=null&&ev.getAction()==Action.RUN_COMMAND) {
 	    	if(ev.getValue().startsWith(FHScenarioClient.LINK_SYMBOL)) {
 	    		C2SLinkClickedPacket packet=new C2SLinkClickedPacket(ev.getValue().substring(FHScenarioClient.LINK_SYMBOL.length()));
-	    		FHNetwork.sendToServer(packet);
+	    		FHNetwork.INSTANCE.sendToServer(packet);
 	    		return true;
 	    	}
 		}

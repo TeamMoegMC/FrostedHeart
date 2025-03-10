@@ -31,16 +31,13 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
 import com.teammoeg.frostedheart.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.item.FHToolMaterials;
+
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.health.food.CannedFoodItem;
 import com.teammoeg.frostedheart.content.health.food.FHSoupItem;
 import com.teammoeg.frostedheart.content.ore.FHSnowballItem;
-import com.teammoeg.frostedheart.content.research.blocks.FHBasePen;
-import com.teammoeg.frostedheart.content.research.blocks.FHReusablePen;
-import com.teammoeg.frostedheart.content.research.blocks.RubbingTool;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
 import com.teammoeg.frostedheart.content.utility.CeramicBucket;
 import com.teammoeg.frostedheart.content.utility.DebugItem;
@@ -81,9 +78,6 @@ import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
 import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.forgeItemTag;
@@ -1199,16 +1193,8 @@ thinner.png
             .properties(p -> p.stacksTo(1))
             .model(AssetLookup.existingItemModel())
             .register();
-    public static ItemEntry<RubbingTool> rubbing_tool = REGISTRATE
-            .item("rubbing_tool", RubbingTool::new)
-            .properties(p -> p.durability(5).setNoRepair())
-            .model(AssetLookup.existingItemModel())
-            .register();
-    public static ItemEntry<Item> rubbing_pad = REGISTRATE
-            .item("rubbing_pad", Item::new)
-            .properties(p -> p.stacksTo(1))
-            .model(AssetLookup.existingItemModel())
-            .register();
+
+
     public static ItemEntry<FHBaseItem> buff_coat = REGISTRATE
             .item("buff_coat", p -> new FHBaseItem(createProps().defaultDurability(384)).setRepairItem(raw_hide.get()))
             .model(AssetLookup.existingItemModel())
@@ -1352,15 +1338,7 @@ thinner.png
             .properties(p -> p.stacksTo(1))
             .model(AssetLookup.existingItemModel())
             .register();
-    public static ItemEntry<FHBasePen> charcoal = REGISTRATE
-            .item("charcoal", FHBasePen::new)
-            .properties(p -> p.durability(50).setNoRepair())
-            .model(AssetLookup.existingItemModel())
-            .register();
-    public static ItemEntry<FHReusablePen> quill_and_ink = REGISTRATE
-            .item("quill_and_ink", p -> new FHReusablePen(createProps().durability(101).setNoRepair(), 1))
-            .model(AssetLookup.existingItemModel())
-            .register();
+
     public static ItemEntry<FHBaseArmorItem> weatherHelmet = REGISTRATE
             .item("weather_helmet", p -> new FHBaseArmorItem(FHArmorMaterial.WEATHER, Type.HELMET, createProps()))
             .model(AssetLookup.existingItemModel())

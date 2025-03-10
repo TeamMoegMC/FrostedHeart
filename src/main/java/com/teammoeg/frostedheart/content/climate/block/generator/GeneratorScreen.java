@@ -35,10 +35,10 @@ import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.ui.RotatableUV;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
-import com.teammoeg.frostedheart.util.client.Lang;
 
 import blusunrize.immersiveengineering.api.Lib;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -246,7 +246,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         	return base;
         }, 424, 148,
                 btn -> {
-                    FHNetwork.sendToServer(new GeneratorModifyPacket());
+                    FHNetwork.INSTANCE.sendToServer(new GeneratorModifyPacket());
                 }));
 
     }

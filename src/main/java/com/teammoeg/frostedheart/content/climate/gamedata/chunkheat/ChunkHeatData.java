@@ -88,9 +88,9 @@ public class ChunkHeatData {
             // we should notify players in chunk to refresh infrared view.
             // we won't notify all clients, just players in the chunk is enough.
             if (chunk instanceof LevelChunk levelChunk) {
-                FHNetwork.sendToTrackingChunk(levelChunk, new FHNotifyChunkHeatUpdatePacket(chunkPos));
+                FHNetwork.INSTANCE.sendToTrackingChunk(levelChunk, new FHNotifyChunkHeatUpdatePacket(chunkPos));
             } else {
-                FHNetwork.sendToAll(new FHNotifyChunkHeatUpdatePacket(chunkPos));
+                FHNetwork.INSTANCE.sendToAll(new FHNotifyChunkHeatUpdatePacket(chunkPos));
             }
         }
     }
@@ -319,9 +319,9 @@ public class ChunkHeatData {
             // we should notify players in chunk to refresh infrared view.
             // we won't notify all clients, just players in the chunk is enough.
             if (chunk instanceof LevelChunk levelChunk) {
-                FHNetwork.sendToTrackingChunk(levelChunk, new FHNotifyChunkHeatUpdatePacket(chunkPos));
+                FHNetwork.INSTANCE.sendToTrackingChunk(levelChunk, new FHNotifyChunkHeatUpdatePacket(chunkPos));
             } else {
-                FHNetwork.sendToAll(new FHNotifyChunkHeatUpdatePacket(chunkPos));
+                FHNetwork.INSTANCE.sendToAll(new FHNotifyChunkHeatUpdatePacket(chunkPos));
             }
         }
     }

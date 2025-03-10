@@ -26,10 +26,10 @@ import java.util.Random;
 import java.util.function.Predicate;
 
 import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.utility.FHLeveledTool;
-import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;

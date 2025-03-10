@@ -33,12 +33,12 @@ import org.lwjgl.glfw.GLFW;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.lang.LangBuilder;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.player.BodyPartData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
-import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EquipmentSlot;

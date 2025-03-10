@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.teammoeg.chorda.multiblock.components.IOwnerState;
-import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
+import com.teammoeg.chorda.util.IOwnerTile;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.common.blocks.metal.CrafterPatternInventory;

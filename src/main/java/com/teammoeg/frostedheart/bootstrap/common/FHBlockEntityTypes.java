@@ -33,8 +33,6 @@ import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlockEnt
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
-import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
-import com.teammoeg.frostedheart.content.research.blocks.MechCalcTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.creative.CreativeHeaterBlockEntity;
@@ -86,16 +84,12 @@ public class FHBlockEntityTypes {
             "gas_vent", makeType(GasVentTileEntity::new, FHBlocks.GAS_VENT::get)
     );
 
-    public static final RegistryObject<BlockEntityType<DrawingDeskTileEntity>> DRAWING_DESK = REGISTER.register(
-            "drawing_desk", makeType(DrawingDeskTileEntity::new, FHBlocks.DRAWING_DESK::get)
-    );
+
     public static final RegistryObject<BlockEntityType<RelicChestTileEntity>> RELIC_CHEST = REGISTER.register(
             "relic_chest", makeType(RelicChestTileEntity::new, FHBlocks.RELIC_CHEST::get)
     );
 
-    public static final RegistryObject<BlockEntityType<MechCalcTileEntity>> MECH_CALC = REGISTER.register(
-            "mechanical_calculator", makeType(MechCalcTileEntity::new, FHBlocks.MECHANICAL_CALCULATOR::get)
-    );
+
 
     /*public static final RegistryObject<TileEntityType<SteamCoreTileEntity>> STEAM_CORE = REGISTER.register(
             "steam_core", makeType(SteamCoreTileEntity::new, FHBlocks.steam_core)

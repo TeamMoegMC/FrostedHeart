@@ -33,8 +33,8 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.chorda.multiblock.MultiBlockAccess;
 import com.teammoeg.chorda.multiblock.components.IOwnerState;
+import com.teammoeg.chorda.util.IOwnerTile;
 import com.teammoeg.frostedheart.content.climate.block.generator.OwnedLogic;
-import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;

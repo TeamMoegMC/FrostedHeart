@@ -21,9 +21,6 @@ package com.teammoeg.chorda.listeners;
 
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
-import com.teammoeg.frostedheart.content.research.FHResearch;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.server.*;
 import net.minecraftforge.eventbus.api.SubscribeEvent;

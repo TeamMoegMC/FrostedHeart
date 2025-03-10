@@ -28,7 +28,6 @@ import com.teammoeg.chorda.client.icon.CIcons.TextIcon;
 import com.teammoeg.chorda.client.icon.CIcons.TextureIcon;
 import com.teammoeg.chorda.client.icon.CIcons.TextureUVIcon;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -50,7 +49,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
  
     };
     public static final Editor<CombinedIcon> COMBINED_EDITOR = (p, l, v, c) -> new Combined(p, l, v, c).open();
-    public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<String>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), TechIcons.internals::keySet, Components::str, e -> new String[]{e}, TechIcons.internals::get).open();
+    public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<String>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), CIcons.internals::keySet, Components::str, e -> new String[]{e}, CIcons.internals::get).open();
     public static final Editor<TextureUVIcon> UV_EDITOR = (p, l, v, c) -> new UV(p, l, v, c).open();
     T v;
     public IconEditor(UIWidget panel, T v) {

@@ -65,7 +65,7 @@ public class WaypointManager {
     public void putWaypoint(AbstractWaypoint waypoint) {
         playerCap.ifPresent((cap) -> {
             cap.put(waypoint);
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new WaypointSyncPacket(waypoint));
+            FHNetwork.INSTANCE.sendPlayer(player, new WaypointSyncPacket(waypoint));
         });
     }
 
@@ -81,7 +81,7 @@ public class WaypointManager {
         if (waypoint == null) return;
         playerCap.ifPresent((cap) -> {
             waypoint.invalidate();
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new WaypointRemovePacket(waypoint.getId()));
+            FHNetwork.INSTANCE.sendPlayer(player, new WaypointRemovePacket(waypoint.getId()));
             waypoint.onServerRemove();
             cap.remove(waypoint.getId());
         });

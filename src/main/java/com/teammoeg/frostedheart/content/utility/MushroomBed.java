@@ -25,12 +25,12 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
-import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
 import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceSlot;

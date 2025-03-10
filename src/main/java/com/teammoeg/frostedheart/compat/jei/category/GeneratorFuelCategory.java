@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart.compat.jei.category;
 import java.util.Arrays;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorRecipe;
-import com.teammoeg.frostedheart.util.client.Lang;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;

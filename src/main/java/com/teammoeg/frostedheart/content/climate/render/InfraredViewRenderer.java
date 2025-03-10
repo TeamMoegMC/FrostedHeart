@@ -117,7 +117,7 @@ public class InfraredViewRenderer {
 
         if (!onChunkPos.equals(lastChunkPos)) {
             lastChunkPos = onChunkPos;
-            FHNetwork.sendToServer(new FHRequestInfraredViewDataSyncPacket(onChunkPos, MAXIMUM_CHUNK_RADIUS));
+            FHNetwork.INSTANCE.sendToServer(new FHRequestInfraredViewDataSyncPacket(onChunkPos, MAXIMUM_CHUNK_RADIUS));
         }
 
         RenderSystem.depthMask(false);

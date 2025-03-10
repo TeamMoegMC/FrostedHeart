@@ -19,16 +19,15 @@
 
 package com.teammoeg.frostedheart.bootstrap.client;
 
-import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorRenderer;
-import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorRenderer;
-import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
 import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorRenderer;
+import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorRenderer;
 
 public class FHDynamicModels {
     public static void setup() {
         T1GeneratorRenderer.FUEL = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/multiblocks/generator_fuel").register();
         T2GeneratorRenderer.FUEL = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/multiblocks/generator_t2_fuel").register();
-        MechCalcRenderer.MODEL   = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/mechanical_calculator_movable").register();
+        
     }
 }

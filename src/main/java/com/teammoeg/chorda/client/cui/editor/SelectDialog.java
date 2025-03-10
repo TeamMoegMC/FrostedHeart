@@ -25,14 +25,10 @@ import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.TextBox;
 import com.teammoeg.chorda.client.cui.UIWidget;
-import com.teammoeg.chorda.client.icon.CIconFTBWrapper;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
-
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;

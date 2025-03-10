@@ -51,7 +51,7 @@ public class PlayerDrinkWaterMessage extends NBTMessage {
         Player player = context.get().getSender();
         WaterCommonEvents.drinkWaterBlock(player);
         WaterLevelCapability.getCapability(player).ifPresent(data -> {
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new PlayerWaterLevelSyncPacket(data.getWaterLevel(), data.getWaterSaturationLevel(), data.getWaterExhaustionLevel()));
+            FHNetwork.INSTANCE.sendPlayer( (ServerPlayer) player, new PlayerWaterLevelSyncPacket(data.getWaterLevel(), data.getWaterSaturationLevel(), data.getWaterExhaustionLevel()));
         });
     }
 }

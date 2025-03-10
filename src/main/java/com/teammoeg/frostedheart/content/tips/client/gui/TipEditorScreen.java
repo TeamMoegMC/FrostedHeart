@@ -77,7 +77,7 @@ public class TipEditorScreen extends Screen {
             var json = list.toJson();
             if (json != null) {
                 Tip tip = Tip.builder("").fromJson(json).build();
-                FHNetwork.sendToServer(new DisplayCustomTipRequestPacket(tip));
+                FHNetwork.INSTANCE.sendToServer(new DisplayCustomTipRequestPacket(tip));
             }
         });
         if (!ClientUtils.getPlayer().hasPermissions(2)) {

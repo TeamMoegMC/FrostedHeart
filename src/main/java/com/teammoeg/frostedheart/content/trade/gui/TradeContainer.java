@@ -235,7 +235,7 @@ public class TradeContainer extends AbstractContainerMenu {
                 order.clear();
             }
             this.setData(data, pe);
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> pe), new TradeUpdatePacket(
+            FHNetwork.INSTANCE.sendPlayer(pe, new TradeUpdatePacket(
                     data.serializeForSend(new CompoundTag()), pld.serialize(new CompoundTag()), relations, true));
         }
     }
@@ -261,7 +261,7 @@ public class TradeContainer extends AbstractContainerMenu {
             relations = data.getRelationShip(pe);
             succeed = true;
         }
-        FHNetwork.send(PacketDistributor.PLAYER.with(() -> pe), new BargainResponse(this, succeed));
+        FHNetwork.INSTANCE.sendPlayer(pe, new BargainResponse(this, succeed));
     }
 
     @Override

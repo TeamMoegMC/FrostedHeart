@@ -21,7 +21,6 @@ import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CFunctionHelper;
 import com.teammoeg.chorda.util.CRegistryHelper;
-import com.teammoeg.frostedheart.content.research.gui.IdBox;
 
 import net.minecraft.advancements.Advancement;
 import net.minecraft.client.multiplayer.ClientAdvancements;

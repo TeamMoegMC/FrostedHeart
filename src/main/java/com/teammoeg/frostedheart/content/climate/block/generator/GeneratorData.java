@@ -28,9 +28,10 @@ import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
-import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.frostedresearch.FRSpecialDataTypes;
+import com.teammoeg.frostedresearch.data.ResearchVariant;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -162,7 +163,7 @@ public class GeneratorData implements SpecialData {
     }
 
     protected double getEfficiency(SpecialDataHolder<?> teamData) {
-        return teamData.getData(FHSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
+        return teamData.getData(FRSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
     }
 
     public GeneratorRecipe getRecipe(Level w) {
@@ -243,7 +244,7 @@ public class GeneratorData implements SpecialData {
             return false;
         boolean hasFuel = true;
         int lastOverdrive=overdriveLevel;
-        overdriveLevel -= 5 * (teamData.getData(FHSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER) + 1);
+        overdriveLevel -= 5 * (teamData.getData(FRSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER) + 1);
         boolean isWorking=false;
         	
         if (isOverdrive) {
@@ -303,7 +304,7 @@ public class GeneratorData implements SpecialData {
 
     protected double getHeatEfficiency(SpecialDataHolder<?> teamData) {
 
-        return 1 + teamData.getData(FHSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_HEAT);
+        return 1 + teamData.getData(FRSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_HEAT);
     }
 
     public float getMaxTemperatureLevel() {

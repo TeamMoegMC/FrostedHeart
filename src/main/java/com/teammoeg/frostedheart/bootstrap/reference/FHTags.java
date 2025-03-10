@@ -20,9 +20,8 @@
 package com.teammoeg.frostedheart.bootstrap.reference;
 
 import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.FHMain;
-
-import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import net.minecraft.core.registries.Registries;

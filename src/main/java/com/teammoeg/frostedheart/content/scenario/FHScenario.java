@@ -157,7 +157,7 @@ public class FHScenario {
 	}
 
 	public static void callClientCommand(String name, ScenarioCommandContext runner, Map<String, String> params) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) runner.context().player()),
+		FHNetwork.INSTANCE.sendPlayer((ServerPlayer) runner.context().player(),
 				new S2CScenarioCommandPacket(runner.thread().getRunId(),name.toLowerCase(), params));
 	}
 
@@ -167,7 +167,7 @@ public class FHScenario {
 			data.put(params[i * 2], params[i * 2 + 1]);
 		}
 
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) runner.context().player()),
+		FHNetwork.INSTANCE.sendPlayer((ServerPlayer) runner.context().player(),
 				new S2CScenarioCommandPacket(runner.thread().getRunId(),name.toLowerCase(), data));
 	}
 

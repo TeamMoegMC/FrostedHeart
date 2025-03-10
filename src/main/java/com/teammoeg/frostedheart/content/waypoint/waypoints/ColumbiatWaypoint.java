@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.waypoint.waypoints;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.Lang;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.nbt.CompoundTag;

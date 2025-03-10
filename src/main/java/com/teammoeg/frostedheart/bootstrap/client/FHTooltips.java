@@ -22,17 +22,14 @@ package com.teammoeg.frostedheart.bootstrap.client;
 import static com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.compat.jei.JEICompat;
-import com.teammoeg.frostedheart.content.research.recipe.InspireRecipe;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.Lang;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -137,16 +134,10 @@ public class FHTooltips {
                 }
             }
 
-            Item i = stack.getItem();
+            
 
 
-            // Inspiration item
-            for (InspireRecipe ir : CUtils.filterRecipes(null, InspireRecipe.TYPE)) {
-                if (ir.item.test(stack)) {
-                    event.getToolTip().add(Lang.translateTooltip("inspire_item").withStyle(ChatFormatting.GRAY));
-                    break;
-                }
-            }
+
 //            float tspeed = (float) (double) FHConfig.SERVER.tempSpeed.get();
 //
 //            // Food adjust temperature
@@ -259,10 +250,6 @@ public class FHTooltips {
 //                                .add(Lang.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.AQUA));
 //            }
 
-            // Research tooltip
-            Map<String, Component> rstooltip= JEICompat.research.get(i);
-            if(rstooltip!=null)
-                event.getToolTip().addAll(rstooltip.values());
 
         }
     }

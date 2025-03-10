@@ -50,7 +50,7 @@ public class TownCommonEvents {
         if (event.side == LogicalSide.SERVER && event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer player) {
 
             // Town data sync (currently, every tick for debug)
-            FHNetwork.sendPlayer(player,new TeamTownDataS2CPacket(player));
+            FHNetwork.INSTANCE.sendPlayer(player,new TeamTownDataS2CPacket(player));
         }
     }
 }

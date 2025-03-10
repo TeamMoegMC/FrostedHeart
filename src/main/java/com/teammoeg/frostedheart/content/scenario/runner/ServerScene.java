@@ -44,18 +44,18 @@ public class ServerScene implements Scene {
 
 	@Override
 	public void sendScene(ScenarioThread thread,String text,RunStatus status,boolean wrap, boolean reset,boolean isNowait,boolean noDelay) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new S2CSenarioScenePacket(thread.getRunId(),text, wrap, isNowait, reset,status,noDelay));
+		FHNetwork.INSTANCE.sendPlayer( player, new S2CSenarioScenePacket(thread.getRunId(),text, wrap, isNowait, reset,status,noDelay));
 	}
 
 	@Override
 	public void sendTitles(ScenarioThread thread,String title,String subtitle) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(()->player), new S2CSenarioActPacket(title,subtitle));
+		FHNetwork.INSTANCE.sendPlayer(player, new S2CSenarioActPacket(title,subtitle));
 	}
 
 
 	@Override
 	public void waitRender(ScenarioThread thread, boolean isTransition) {
-		FHNetwork.sendPlayer(player, new S2CWaitTransMessage(thread.getRunId(), isTransition));
+		FHNetwork.INSTANCE.sendPlayer(player, new S2CWaitTransMessage(thread.getRunId(), isTransition));
 	}
 
 }

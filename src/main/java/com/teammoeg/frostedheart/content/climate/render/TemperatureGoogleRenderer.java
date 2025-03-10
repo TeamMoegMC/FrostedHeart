@@ -174,7 +174,7 @@ public class TemperatureGoogleRenderer {
                 lastHeatNetworkData = new ClientHeatNetworkData(pos);
             // Try to request the data
 //            FHMain.LOGGER.debug("Requesting ClientHeatNetworkData from HeatNetworkProvider at " + pos);
-            FHNetwork.sendToServer(new HeatNetworkRequestC2SPacket(pos));
+            FHNetwork.INSTANCE.sendToServer(new HeatNetworkRequestC2SPacket(pos));
         }
 
         // Icon to render

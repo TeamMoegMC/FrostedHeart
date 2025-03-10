@@ -32,13 +32,11 @@ import java.util.function.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.AssetLookup;
-import com.simibubi.create.foundation.data.BlockStateGen;
 import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.decoration.*;
-import com.teammoeg.frostedheart.item.FHBlockItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
@@ -48,8 +46,6 @@ import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
-import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskBlock;
-import com.teammoeg.frostedheart.content.research.blocks.MechCalcBlock;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
 import com.teammoeg.frostedheart.content.steamenergy.creative.CreativeHeaterBlock;
@@ -69,6 +65,7 @@ import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerBlock;
 import com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen;
 import com.teammoeg.frostedheart.infrastructure.gen.FHLootGen;
+import com.teammoeg.frostedheart.item.FHBlockItem;
 import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
 import com.tterrag.registrate.util.entry.BlockEntry;
 
@@ -78,7 +75,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
@@ -1687,20 +1683,7 @@ public class FHBlocks {
             .model(AssetLookup.existingItemModel())
             .build()
             .register();
-    // DRAWING_DESK
-    public static final BlockEntry<DrawingDeskBlock> DRAWING_DESK = REGISTRATE.block("drawing_desk", DrawingDeskBlock::new)
-            .properties(t -> t.mapColor(MapColor.WOOD)
-                    .sound(SoundType.WOOD)
-                    .strength(2, 6)
-                    .noOcclusion())
-            .loot(FHLootGen.existed())
-            .blockstate(FHBlockStateGen.existed())
-            .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
-            .item()
-            .model(AssetLookup.existingItemModel())
-            .build()
-//            .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
-            .register();
+
     // SMOKE_BLOCK_T1
     public static final BlockEntry<SmokeBlockT1> SMOKE_BLOCK_T1 = REGISTRATE.block("smoke_block_t1", SmokeBlockT1::new)
             .properties(t -> t.mapColor(MapColor.STONE)
@@ -1715,19 +1698,7 @@ public class FHBlocks {
             .build()
             .lang("T1 Smoke Generator")
             .register();
-    // MECHANICAL_CALCULATOR
-    public static final BlockEntry<MechCalcBlock> MECHANICAL_CALCULATOR = REGISTRATE.block("mechanical_calculator", MechCalcBlock::new)
-            .properties(t -> t.mapColor(MapColor.METAL)
-                    .sound(SoundType.METAL)
-                    .requiresCorrectToolForDrops()
-                    .strength(2, 10)
-                    .noOcclusion())
-            .blockstate(FHBlockStateGen.existed())
-            .tag(FHTags.Blocks.METAL_MACHINES.tag)
-            .item()
-            .model(AssetLookup.existingItemModel())
-            .build()
-            .register();
+
     // SAUNA_VENT
     public static final BlockEntry<SaunaBlock> SAUNA_VENT = REGISTRATE.block("sauna_vent", SaunaBlock::new)
             .properties(t -> t.mapColor(MapColor.STONE)

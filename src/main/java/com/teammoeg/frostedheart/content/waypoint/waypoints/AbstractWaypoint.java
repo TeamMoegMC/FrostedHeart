@@ -23,11 +23,11 @@ import com.google.gson.JsonElement;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
-import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.chorda.client.CameraHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.io.Writeable;
 import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.util.Lang;
 
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;

@@ -34,7 +34,7 @@ public class ServerTipSender {
      * @param player 目标玩家
      */
     public static void sendGeneral(String id, ServerPlayer player) {
-        FHNetwork.sendPlayer(player, new DisplayTipPacket(id));
+        FHNetwork.INSTANCE.sendPlayer(player, new DisplayTipPacket(id));
     }
 
     /**
@@ -44,7 +44,7 @@ public class ServerTipSender {
      * @param tip tip
      */
     public static void sendCustomToAll(Tip tip) {
-        FHNetwork.sendToAll(new DisplayCustomTipPacket(tip));
+        FHNetwork.INSTANCE.sendToAll(new DisplayCustomTipPacket(tip));
     }
 
     /**
@@ -55,7 +55,7 @@ public class ServerTipSender {
      * @param player 目标玩家
      */
     public static void sendCustom(Tip tip, ServerPlayer player) {
-        FHNetwork.sendPlayer(player, new DisplayCustomTipPacket(tip));
+        FHNetwork.INSTANCE.sendPlayer(player, new DisplayCustomTipPacket(tip));
     }
 
     /**
@@ -64,7 +64,7 @@ public class ServerTipSender {
      * @param player 目标玩家
      */
     public static void sendPopup(String message, ServerPlayer player) {
-        FHNetwork.sendPlayer(player, new DisplayPopupPacket(message));
+        FHNetwork.INSTANCE.sendPlayer(player, new DisplayPopupPacket(message));
     }
 
     /**
@@ -72,7 +72,7 @@ public class ServerTipSender {
      * @param message 消息
      */
     public static void sendPopupToAll(String message) {
-        FHNetwork.sendToAll(new DisplayPopupPacket(message));
+        FHNetwork.INSTANCE.sendToAll(new DisplayPopupPacket(message));
     }
 
     /**
@@ -81,7 +81,7 @@ public class ServerTipSender {
      * @param player 目标玩家
      */
     public static void sendPopup(Component message, ServerPlayer player) {
-        FHNetwork.sendPlayer(player, new DisplayPopupPacket(message));
+        FHNetwork.INSTANCE.sendPlayer(player, new DisplayPopupPacket(message));
     }
 
     /**
@@ -89,6 +89,6 @@ public class ServerTipSender {
      * @param message 消息
      */
     public static void sendPopupToAll(Component message) {
-        FHNetwork.sendToAll(new DisplayPopupPacket(message));
+        FHNetwork.INSTANCE.sendToAll(new DisplayPopupPacket(message));
     }
 }

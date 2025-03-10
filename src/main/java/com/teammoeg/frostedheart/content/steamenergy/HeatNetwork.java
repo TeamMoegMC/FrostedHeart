@@ -25,7 +25,8 @@ import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabiliti
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.Lang;
+
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.core.BlockPos;

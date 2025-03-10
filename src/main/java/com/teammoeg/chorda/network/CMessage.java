@@ -21,6 +21,9 @@ package com.teammoeg.chorda.network;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent.Context;
+import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor.PacketTarget;
+import net.minecraftforge.network.simple.SimpleChannel;
 
 import java.util.function.Supplier;
 /**
@@ -35,4 +38,11 @@ public interface CMessage {
 	void encode(FriendlyByteBuf buffer);
 
 	void handle(Supplier<Context> context);
+	
+	default void send(SimpleChannel channel,PacketTarget target) {
+		channel.send(target, this);
+	}
+	default void sendToServer(SimpleChannel channel) {
+		channel.sendToServer(this);
+	}
 }

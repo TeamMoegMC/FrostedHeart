@@ -35,15 +35,12 @@ import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.DismantleInnerRecipe;
-import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
-import com.teammoeg.frostedheart.content.research.recipe.InspireRecipe;
-import com.teammoeg.frostedheart.content.town.resource.ItemResourceAmountRecipe;
-import com.teammoeg.frostedheart.content.research.recipe.ResearchPaperRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceAmountRecipe;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
 import com.teammoeg.frostedheart.content.utility.recipe.ModifyDamageRecipe;
@@ -65,9 +62,6 @@ public class FHRecipes {
     public static final DeferredRegister<RecipeType<?>> RECIPE_TYPES = DeferredRegister.create(
         ForgeRegistries.RECIPE_TYPES, FHMain.MODID
 );
-    public static final DeferredRegister<RecipeType<?>> TYPE_REGISTER = DeferredRegister.create(ForgeRegistries.RECIPE_TYPES, FHMain.MODID);
-    
-
     static {
         GeneratorRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("generator", GeneratorRecipe.Serializer::new);
         GeneratorSteamRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("steam_generator", GeneratorSteamRecipe.Serializer::new);
@@ -79,10 +73,10 @@ public class FHRecipes {
         FuelingRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("fuel_stove", FuelingRecipe.Serializer::new);
         //DietValueRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("diet_override", DietValueRecipe.Serializer::new);
         IncubateRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("incubate", IncubateRecipe.Serializer::new);
-        ResearchPaperRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("paper", ResearchPaperRecipe.Serializer::new);
+        
         SaunaRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("sauna", SaunaRecipe.Serializer::new);
         ModifyDamageRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("modify_damage", ModifyDamageRecipe.Serializer::new);
-        InspireRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("inspire", InspireRecipe.Serializer::new);
+       
         ShapelessCopyDataRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("shapless_copy_data", ShapelessCopyDataRecipe.Serializer::new);
         TradePolicy.SERIALIZER = RECIPE_SERIALIZERS.register("trade", TradePolicy.Serializer::new);
         WaterLevelAndEffectRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("water_level_and_effect", WaterLevelAndEffectRecipe.Serializer::new);
@@ -93,9 +87,8 @@ public class FHRecipes {
         ChargerRecipe.TYPE = createRecipeType("charger");
        // DietValueRecipe.TYPE = createRecipeType("diet_override");
         IncubateRecipe.TYPE = createRecipeType("incubate");
-        ResearchPaperRecipe.TYPE = createRecipeType("paper");
         SaunaRecipe.TYPE = createRecipeType("sauna");
-        InspireRecipe.TYPE = createRecipeType("inspire");
+
         TradePolicy.TYPE = createRecipeType("trade");
         WaterLevelAndEffectRecipe.TYPE = createRecipeType("water_level_and_effect");
         NutritionRecipe.TYPE = createRecipeType("diet_override");

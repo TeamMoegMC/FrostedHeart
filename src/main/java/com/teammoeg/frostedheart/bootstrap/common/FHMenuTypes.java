@@ -33,8 +33,6 @@ import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Container;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Container;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
-import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
-import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
@@ -75,7 +73,7 @@ public class FHMenuTypes {
 	public static final MultiblockMenuType<T2GeneratorState, T2GeneratorContainer> GENERATOR_T2 = registerMultiblock("generator_t2", T2GeneratorContainer::new, T2GeneratorContainer::new);
 
 	public static final RegistryObject<MenuType<RelicChestContainer>> RELIC_CHEST = register(RelicChestTileEntity.class, ("relic_chest"), RelicChestContainer::new);
-	public static final RegistryObject<MenuType<DrawDeskContainer>> DRAW_DESK = register(DrawingDeskTileEntity.class, ("draw_desk"), DrawDeskContainer::new);
+
 	public static final RegistryObject<MenuType<SaunaContainer>> SAUNA = register(SaunaTileEntity.class, ("sauna_vent"), SaunaContainer::new);
 	public static final RegistryObject<MenuType<IncubatorT1Container>> INCUBATOR_T1 = register(IncubatorTileEntity.class, ("incubator"), IncubatorT1Container::new);
 	public static final RegistryObject<MenuType<IncubatorT2Container>> INCUBATOR_T2 = register(HeatIncubatorTileEntity.class, ("heat_incubator"), IncubatorT2Container::new);

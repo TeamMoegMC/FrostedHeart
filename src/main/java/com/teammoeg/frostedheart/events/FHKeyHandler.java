@@ -37,12 +37,12 @@ public class FHKeyHandler {
 
             // open nutrition screen
             if (FHKeyMappings.key_health.get().consumeClick()) {
-                FHNetwork.sendToServer(new C2SOpenNutritionScreenMessage());
+                FHNetwork.INSTANCE.sendToServer(new C2SOpenNutritionScreenMessage());
             }
 
             // open clothes screen
             if(FHKeyMappings.key_clothes.get().consumeClick()) {
-                FHNetwork.sendToServer(new C2SOpenClothesScreenMessage());
+                FHNetwork.INSTANCE.sendToServer(new C2SOpenClothesScreenMessage());
             }
             if(FHKeyMappings.key_openWheelMenu.get().consumeClick()) {
             	WheelMenuRenderer.open();

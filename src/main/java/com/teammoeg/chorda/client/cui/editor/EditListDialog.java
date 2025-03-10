@@ -33,7 +33,7 @@ import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.Lang;
 
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;

@@ -19,13 +19,7 @@
 
 package com.teammoeg.frostedheart;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-
-import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.chorda.network.CBaseNetwork;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorModifyPacket;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHNotifyChunkHeatUpdatePacket;
@@ -35,20 +29,6 @@ import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMes
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
-import com.teammoeg.frostedheart.content.research.network.FHChangeActiveResearchPacket;
-import com.teammoeg.frostedheart.content.research.network.FHDrawingDeskOperationPacket;
-import com.teammoeg.frostedheart.content.research.network.FHEffectProgressSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHEffectTriggerPacket;
-import com.teammoeg.frostedheart.content.research.network.FHEnergyDataSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHInsightSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchAttributeSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchControlPacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchDataUpdatePacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchRegistrtySyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchSyncEndPacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHS2CClueProgressSyncPacket;
 import com.teammoeg.frostedheart.content.scenario.network.C2SLinkClickedPacket;
 import com.teammoeg.frostedheart.content.scenario.network.C2SRenderingStatusMessage;
 import com.teammoeg.frostedheart.content.scenario.network.C2SScenarioCookies;
@@ -78,63 +58,17 @@ import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
 
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.chunk.LevelChunk;
+
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.network.simple.SimpleChannel;
 
-public class FHNetwork {
-
-    private static SimpleChannel CHANNEL;
-    private static Map<Class<? extends CMessage>, ResourceLocation> classesId = new HashMap<>();
-
-    public static SimpleChannel get() {
-        return CHANNEL;
-    }
-
-    private static int iid = 0;
-
-    /**
-     * Register Message Type, would automatically use method in CMessage as serializer and &lt;init&gt;(PacketBuffer) as deserializer
-     */
-    public static synchronized <T extends CMessage> void registerMessage(String name, Class<T> msg) {
-        classesId.put(msg, FHMain.rl(name));
-        try {
-            Constructor<T> ctor = msg.getDeclaredConstructor(FriendlyByteBuf.class);
-            ctor.setAccessible(true);
-            CHANNEL.registerMessage(++iid, msg, CMessage::encode, pb -> {
-                try {
-                    return ctor.newInstance(pb);
-                } catch (IllegalAccessException | IllegalArgumentException | InstantiationException |
-                         InvocationTargetException e) {
-                	e.printStackTrace();
-                    throw new RuntimeException("Can not create message " + msg.getSimpleName()+e.getMessage(), e);
-                }
-            }, CMessage::handle);
-        } catch (NoSuchMethodException | SecurityException e1) {
-            FHMain.LOGGER.error("Can not register message " + msg.getSimpleName());
-            e1.printStackTrace();
-        }
-    }
-
-    /**
-     * Register Message Type, should provide a deserializer
-     */
-    public static synchronized <T extends CMessage> void registerMessage(String name, Class<T> msg, Function<FriendlyByteBuf, T> func) {
-        classesId.put(msg, FHMain.rl(name));
-        CHANNEL.registerMessage(++iid, msg, CMessage::encode, func, CMessage::handle);
-        //CHANNEL.registerMessage(++iid,msg,CMessage::encode,func,CMessage::handle);
-    }
-
-    public static ResourceLocation getId(Class<? extends CMessage> cls) {
-        return classesId.get(cls);
-    }
-
-    public static void register() {
+public class FHNetwork extends CBaseNetwork {
+	private FHNetwork() {
+		super(FHMain.MODID);
+	}
+	public static final FHNetwork INSTANCE=new FHNetwork();
+    @Override
+	public void register() {
         String VERSION = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
         FHMain.LOGGER.info("FH Network Version: " + VERSION);
         CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION, VERSION::equals, VERSION::equals);
@@ -155,21 +89,6 @@ public class FHNetwork {
         registerMessage("temperature_display", FHTemperatureDisplayPacket.class);
         registerMessage("open_clothes", C2SOpenClothesScreenMessage.class);
 
-        //Research Messages
-        registerMessage("research_registry", FHResearchRegistrtySyncPacket.class);
-        registerMessage("research_sync", FHResearchSyncPacket.class);
-        registerMessage("research_sync_end", FHResearchSyncEndPacket.class);
-        registerMessage("research_data", FHResearchDataSyncPacket.class);
-        registerMessage("research_data_update", FHResearchDataUpdatePacket.class);
-        registerMessage("research_clue", FHS2CClueProgressSyncPacket.class);
-        registerMessage("research_attribute", FHResearchAttributeSyncPacket.class);
-        registerMessage("effect_trigger", FHEffectTriggerPacket.class);
-        registerMessage("research_control", FHResearchControlPacket.class);
-        registerMessage("research_select", FHChangeActiveResearchPacket.class);
-        registerMessage("research_drawdesk", FHDrawingDeskOperationPacket.class);
-        registerMessage("research_effect", FHEffectProgressSyncPacket.class);
-        registerMessage("research_energy_data", FHEnergyDataSyncPacket.class);
-        registerMessage("research_insight", FHInsightSyncPacket.class);
 
         //Trade Messages
         registerMessage("bargain_request", BargainRequestPacket.class);
@@ -225,25 +144,5 @@ public class FHNetwork {
         registerMessage("infrared_view_c2s", FHRequestInfraredViewDataSyncPacket.class);
         registerMessage("infrared_view_s2c", FHResponseInfraredViewDataSyncPacket.class);
         registerMessage("notify_chunk_heat_update", FHNotifyChunkHeatUpdatePacket.class);
-    }
-
-    public static void sendPlayer(ServerPlayer p, CMessage message) {
-        send(PacketDistributor.PLAYER.with(() -> p), message);
-    }
-
-    public static void send(PacketDistributor.PacketTarget target, CMessage message) {
-        CHANNEL.send(target, message);
-    }
-
-    public static void sendToServer(CMessage message) {
-        CHANNEL.sendToServer(message);
-    }
-
-    public static void sendToAll(CMessage message) {
-        send(PacketDistributor.ALL.noArg(), message);
-    }
-
-    public static void sendToTrackingChunk(LevelChunk levelChunk, CMessage packet) {
-        send(PacketDistributor.TRACKING_CHUNK.with(() -> levelChunk), packet);
     }
 }

@@ -22,13 +22,14 @@ package com.teammoeg.frostedheart.content.steamenergy.creative;
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
 import com.teammoeg.frostedheart.content.steamenergy.ClientHeatNetworkData;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
-import com.teammoeg.frostedheart.util.client.Lang;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

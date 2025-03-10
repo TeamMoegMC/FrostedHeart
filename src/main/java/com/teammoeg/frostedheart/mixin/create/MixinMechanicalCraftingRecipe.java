@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.kinetics.crafter.MechanicalCraftingRecipe;
-import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchListeners;
 
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;

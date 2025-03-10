@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
@@ -31,6 +30,7 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.trigger.MovementTrigger;
 import com.teammoeg.frostedheart.content.scenario.runner.trigger.OrTrigger;
 import com.teammoeg.frostedheart.content.scenario.runner.trigger.VariantTrigger;
+import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;

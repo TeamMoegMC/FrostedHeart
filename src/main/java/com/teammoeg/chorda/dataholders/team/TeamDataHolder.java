@@ -25,12 +25,14 @@ package com.teammoeg.chorda.dataholders.team;
 import com.teammoeg.chorda.dataholders.DataHolderMap;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataType;
+import com.teammoeg.chorda.network.CBaseNetwork;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.chorda.util.struct.OptionalLazy;
 import com.teammoeg.frostedheart.FHNetwork;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.PacketDistributor;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -97,11 +99,10 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
 	 *
 	 * @param packet the packet
 	 */
-	public void sendToOnline(CMessage packet) {
+	public void sendToOnline(CBaseNetwork network,CMessage packet) {
 		if(team.isPresent())
 	        for (ServerPlayer spe : team.get().getOnlineMembers())
-				// TODO: make this use Chorda somehow...
-	        	FHNetwork.sendPlayer(spe, packet);
+	        	network.sendPlayer(spe, packet);
 	}
     public UUID getId() {
         return id;

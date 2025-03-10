@@ -23,12 +23,13 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.ServerTipSender;
 import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
-import com.teammoeg.frostedheart.util.client.Lang;
+
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -57,7 +58,7 @@ public class TipCommand {
                         int i = 0;
 
                         for(ServerPlayer sp : EntityArgument.getPlayers(c, "targets")) {
-                            FHNetwork.send(PacketDistributor.PLAYER.with(() -> sp), new DisplayTipPacket(ID));
+                            FHNetwork.INSTANCE.send(PacketDistributor.PLAYER.with(() -> sp), new DisplayTipPacket(ID));
                             i++;
                         }
 

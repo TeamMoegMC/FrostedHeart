@@ -116,7 +116,7 @@ public class WaterCommonEvents {
                     date.setWaterSaturationLevel(t.getWaterSaturationLevel());
                 });
             });
-            WaterLevelCapability.getCapability(player).ifPresent(t -> FHNetwork.sendPlayer((ServerPlayer) player, new PlayerWaterLevelSyncPacket(t.getWaterLevel(), t.getWaterSaturationLevel(), t.getWaterExhaustionLevel())));
+            WaterLevelCapability.getCapability(player).ifPresent(t -> FHNetwork.INSTANCE.sendPlayer((ServerPlayer) player, new PlayerWaterLevelSyncPacket(t.getWaterLevel(), t.getWaterSaturationLevel(), t.getWaterExhaustionLevel())));
         }
     }
 
@@ -124,7 +124,7 @@ public class WaterCommonEvents {
     public static void onPlayerLoggedInEvent(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
         if (player instanceof ServerPlayer serverPlayer && !(player instanceof FakePlayer)) {
-            WaterLevelCapability.getCapability(serverPlayer).ifPresent(t -> FHNetwork.sendPlayer(serverPlayer, new PlayerWaterLevelSyncPacket(t.getWaterLevel(), t.getWaterSaturationLevel(), t.getWaterExhaustionLevel())));
+            WaterLevelCapability.getCapability(serverPlayer).ifPresent(t -> FHNetwork.INSTANCE.sendPlayer(serverPlayer, new PlayerWaterLevelSyncPacket(t.getWaterLevel(), t.getWaterSaturationLevel(), t.getWaterExhaustionLevel())));
             //CriteriaTriggerRegistry.GUIDE_BOOK_TRIGGER.trigger(player);
         }
     }
@@ -133,7 +133,7 @@ public class WaterCommonEvents {
     public static void EntityJoinWorldEvent(EntityJoinLevelEvent event) {
         Entity entity = event.getEntity();
         if (entity instanceof ServerPlayer serverPlayer && !(entity instanceof FakePlayer)) {
-            WaterLevelCapability.getCapability(serverPlayer).ifPresent(t -> FHNetwork.sendPlayer(serverPlayer, new PlayerWaterLevelSyncPacket(t.getWaterLevel(), t.getWaterSaturationLevel(), t.getWaterExhaustionLevel())));
+            WaterLevelCapability.getCapability(serverPlayer).ifPresent(t -> FHNetwork.INSTANCE.sendPlayer(serverPlayer, new PlayerWaterLevelSyncPacket(t.getWaterLevel(), t.getWaterSaturationLevel(), t.getWaterExhaustionLevel())));
         }
     }
 
@@ -213,7 +213,7 @@ public class WaterCommonEvents {
         //Update water between server and client - 30s
         if (tick % 1500 == 0 && !(player instanceof FakePlayer) && !level.isClientSide()) {
             WaterLevelCapability.getCapability(player).ifPresent(data -> {
-                FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new PlayerWaterLevelSyncPacket(data.getWaterLevel(), data.getWaterSaturationLevel(), data.getWaterExhaustionLevel()));
+                FHNetwork.INSTANCE.sendPlayer((ServerPlayer) player, new PlayerWaterLevelSyncPacket(data.getWaterLevel(), data.getWaterSaturationLevel(), data.getWaterExhaustionLevel()));
             });
         }
     }
@@ -245,7 +245,7 @@ public class WaterCommonEvents {
         HitResult hitresult = getPlayerPOVHitResult(level, player, ClipContext.Fluid.SOURCE_ONLY);
         if (player.getPose() == Pose.CROUCHING && hitresult.getType() == HitResult.Type.BLOCK && level.getFluidState(BlockPos.containing(hitresult.getLocation().x,hitresult.getLocation().y,hitresult.getLocation().z)).getType() == Fluids.WATER) {
             level.playSound(player,BlockPos.containing(player.getPosition(0f).x,player.getPosition(0f).y,player.getPosition(0f).z), SoundEvents.GENERIC_DRINK, SoundSource.PLAYERS, 0.4f, 1.0f);
-            FHNetwork.sendToServer(new PlayerDrinkWaterMessage());
+            FHNetwork.INSTANCE.sendToServer(new PlayerDrinkWaterMessage());
         }
     }
 

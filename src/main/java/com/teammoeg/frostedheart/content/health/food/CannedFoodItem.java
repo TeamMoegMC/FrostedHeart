@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.health.food;
 
 import java.util.List;
 
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.item.FHBaseItem;
-import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.item.TooltipFlag;

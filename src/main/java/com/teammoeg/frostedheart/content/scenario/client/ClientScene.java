@@ -26,6 +26,7 @@ import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.StringTextComponentParser;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.chorda.util.struct.BitObserverList;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.IScenarioDialog;
@@ -38,7 +39,6 @@ import com.teammoeg.frostedheart.content.scenario.network.C2SSettingsPacket;
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.minecraft.accessors.NewChatGuiAccessor;
-import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.client.GuiMessage;
 import net.minecraft.client.GuiMessageTag;
@@ -142,7 +142,7 @@ public class ClientScene implements IClientScene {
 	@Override
 	public void sendContinuePacket(boolean isSkip) {
 		// if(canSkip)
-		FHNetwork.send(PacketDistributor.SERVER.noArg(), new C2SScenarioResponsePacket(curTextId,isSkip, 0));
+		FHNetwork.INSTANCE.send(PacketDistributor.SERVER.noArg(), new C2SScenarioResponsePacket(curTextId,isSkip, 0));
 		status=RunStatus.RUNNING;
 		canSkip=false;
 	}
@@ -348,10 +348,10 @@ public class ClientScene implements IClientScene {
 		}
 	}
 	public void sendClientReady() {
-		FHNetwork.sendToServer(new C2SClientReadyPacket(ClientUtils.mc().getLanguageManager().getSelected()));
+		FHNetwork.INSTANCE.sendToServer(new C2SClientReadyPacket(ClientUtils.mc().getLanguageManager().getSelected()));
 	}
 	public void sendClientUpdate() {
-		FHNetwork.sendToServer(new C2SSettingsPacket());
+		FHNetwork.INSTANCE.sendToServer(new C2SSettingsPacket());
 	}
 	@Override
 	public void setActHud(String title, String subtitle) {

@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.climate.food;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.bootstrap.reference.FHDamageSources;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
@@ -30,7 +31,6 @@ import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.water.item.DrinkContainerItem;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.core.NonNullList;
 import net.minecraft.server.level.ServerPlayer;

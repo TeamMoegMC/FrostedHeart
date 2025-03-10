@@ -134,7 +134,7 @@ public class ClientWaypointManager {
 
     public static void putWaypoint(AbstractWaypoint waypoint) {
         putWaypointWithoutSendingPacket(waypoint);
-        FHNetwork.send(PacketDistributor.SERVER.noArg(), new WaypointSyncPacket(waypoint));
+        FHNetwork.INSTANCE.sendToServer( new WaypointSyncPacket(waypoint));
     }
 
     public static void putWaypointWithoutSendingPacket(AbstractWaypoint waypoint) {
@@ -143,13 +143,13 @@ public class ClientWaypointManager {
 
     public static void removeWaypoint(String id) {
         if (waypoints.containsKey(id)) {
-            FHNetwork.send(PacketDistributor.SERVER.noArg(), new WaypointRemovePacket(id));
+            FHNetwork.INSTANCE.sendToServer( new WaypointRemovePacket(id));
             removeWaypointWithoutSendingPacket(id);
         }
     }
 
     public static void removeWaypoint(AbstractWaypoint waypoint) {
-        FHNetwork.send(PacketDistributor.SERVER.noArg(), new WaypointRemovePacket(waypoint.getId()));
+        FHNetwork.INSTANCE.sendToServer( new WaypointRemovePacket(waypoint.getId()));
         waypoint.invalidate();
     }
 

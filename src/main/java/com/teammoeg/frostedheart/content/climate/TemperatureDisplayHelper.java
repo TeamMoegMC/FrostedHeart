@@ -43,7 +43,7 @@ public class TemperatureDisplayHelper {
     public static void sendTemperature(Collection<ServerPlayer> pe, String format, float... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, temps);
         for (ServerPlayer p : pe)
-            FHNetwork.sendPlayer(p, k);
+            FHNetwork.INSTANCE.sendPlayer(p, k);
     }
 
     /**
@@ -56,7 +56,7 @@ public class TemperatureDisplayHelper {
     public static void sendTemperature(Collection<ServerPlayer> pe, String format, int... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, temps);
         for (ServerPlayer p : pe)
-            FHNetwork.sendPlayer( p, k);
+            FHNetwork.INSTANCE.sendPlayer( p, k);
     }
 
     /**
@@ -67,7 +67,7 @@ public class TemperatureDisplayHelper {
      * @param temps the temperature in Celsius for fill in language
      */
     public static void sendTemperature(ServerPlayer pe, String format, float... temps) {
-        FHNetwork.sendPlayer( pe, new FHTemperatureDisplayPacket(format, temps));
+        FHNetwork.INSTANCE.sendPlayer( pe, new FHTemperatureDisplayPacket(format, temps));
     }
 
     /**
@@ -78,7 +78,7 @@ public class TemperatureDisplayHelper {
      * @param temps the temperature in Celsius for fill in language
      */
     public static void sendTemperature(ServerPlayer pe, String format, int... temps) {
-        FHNetwork.sendPlayer( pe, new FHTemperatureDisplayPacket(format, temps));
+        FHNetwork.INSTANCE.sendPlayer( pe, new FHTemperatureDisplayPacket(format, temps));
     }
 
     /**
@@ -92,7 +92,7 @@ public class TemperatureDisplayHelper {
     public static void sendTemperatureStatus(Collection<ServerPlayer> pe, String format, boolean isAction, float... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, isAction, temps);
         for (ServerPlayer p : pe)
-            FHNetwork.sendPlayer( p, k);
+            FHNetwork.INSTANCE.sendPlayer( p, k);
     }
 
     /**
@@ -106,7 +106,7 @@ public class TemperatureDisplayHelper {
     public static void sendTemperatureStatus(Collection<ServerPlayer> pe, String format, boolean act, int... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, act, temps);
         for (ServerPlayer p : pe)
-            FHNetwork.sendPlayer(p, k);
+            FHNetwork.INSTANCE.sendPlayer(p, k);
     }
 
     /**
@@ -118,7 +118,7 @@ public class TemperatureDisplayHelper {
      * @param temps the temperature in Celsius for fill in language
      */
     public static void sendTemperatureStatus(ServerPlayer pe, String format, boolean act, float... temps) {
-        FHNetwork.sendPlayer(pe, new FHTemperatureDisplayPacket(format, act, temps));
+        FHNetwork.INSTANCE.sendPlayer(pe, new FHTemperatureDisplayPacket(format, act, temps));
     }
 
     /**
@@ -130,7 +130,7 @@ public class TemperatureDisplayHelper {
      * @param temps the temperature in Celsius for fill in language
      */
     public static void sendTemperatureStatus(ServerPlayer pe, String format, boolean act, int... temps) {
-        FHNetwork.sendPlayer(pe, new FHTemperatureDisplayPacket(format, act, temps));
+        FHNetwork.INSTANCE.sendPlayer(pe, new FHTemperatureDisplayPacket(format, act, temps));
     }
 
     /**

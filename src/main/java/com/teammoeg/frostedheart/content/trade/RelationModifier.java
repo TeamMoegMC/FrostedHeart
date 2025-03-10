@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.trade;
 
-import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.Lang;
 
 import net.minecraft.network.chat.MutableComponent;
 

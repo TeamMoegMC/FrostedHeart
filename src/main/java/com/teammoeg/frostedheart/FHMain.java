@@ -230,7 +230,8 @@ public class FHMain {
      * @param event The event
      */
     private void setup(final FMLCommonSetupEvent event) {
-        FHNetwork.register();
+    
+        FHNetwork.INSTANCE.register();
         FHCapabilities.setup();
         // modify default value
         GameRules.GAME_RULE_TYPES.put(GameRules.RULE_SPAWN_RADIUS, IntegerValue.create(0));

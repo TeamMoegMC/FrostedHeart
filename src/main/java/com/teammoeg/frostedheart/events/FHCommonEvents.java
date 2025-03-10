@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
@@ -40,7 +41,8 @@ import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListen
 import com.teammoeg.frostedheart.util.CConstants;
 import com.teammoeg.frostedheart.util.FUtils;
 import com.teammoeg.frostedheart.util.IgnitionHandler;
-import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.frostedresearch.events.DrawDeskOpenEvent;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -129,7 +131,13 @@ public class FHCommonEvents {
 		// Common capabilities
 
 	}
-
+	@SubscribeEvent
+	public static void onDrawDeskOpen(DrawDeskOpenEvent event) {
+		if (!event.getOpenPlayer().isCreative() && PlayerTemperatureData.getCapability(event.getOpenPlayer()).map(PlayerTemperatureData::getBodyTemp).orElse(0f) < -0.2) {
+			event.getOpenPlayer().displayClientMessage(Lang.translateMessage("research.too_cold"), true);
+			event.setCanceled(true);
+        } 
+	}
 	@SubscribeEvent
 	public static void loginReminder(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
 		CompoundTag nbt = event.getEntity().getPersistentData();

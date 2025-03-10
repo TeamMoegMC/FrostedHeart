@@ -30,7 +30,7 @@ import com.teammoeg.chorda.menu.CMultiblockMenu;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.chorda.util.IERecipeUtils;
 import com.teammoeg.chorda.util.struct.LazyTickWorker;
-import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchListeners;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockLogic;

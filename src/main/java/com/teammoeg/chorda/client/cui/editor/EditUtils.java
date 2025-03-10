@@ -26,12 +26,6 @@ import com.teammoeg.chorda.client.cui.CUIScreen;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.UIWidget;
-import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.content.research.FHResearch;
-import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.content.research.research.ResearchEditors;
-
-import dev.ftb.mods.ftblibrary.ui.Widget;
 import net.minecraft.network.chat.Component;
 
 public class EditUtils {

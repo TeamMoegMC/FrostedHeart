@@ -138,7 +138,7 @@ public class WaterLevelCapability implements NBTSerializable {
     }
 
     public static void syncToClient(ServerPlayer player) {
-        WaterLevelCapability.getCapability(player).ifPresent(t -> FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new PlayerWaterLevelSyncPacket(t.getWaterLevel(), t.getWaterSaturationLevel(), t.getWaterExhaustionLevel())));
+        WaterLevelCapability.getCapability(player).ifPresent(t -> FHNetwork.INSTANCE.sendPlayer(player, new PlayerWaterLevelSyncPacket(t.getWaterLevel(), t.getWaterSaturationLevel(), t.getWaterExhaustionLevel())));
     }
 
     public static void syncToClientOnRestore(Player player) {

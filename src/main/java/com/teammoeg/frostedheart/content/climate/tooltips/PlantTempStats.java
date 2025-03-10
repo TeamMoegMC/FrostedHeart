@@ -29,13 +29,13 @@ import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.lang.LangBuilder;
 import com.teammoeg.chorda.util.CTooltips;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.PlantTemperature;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
 import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
-import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;

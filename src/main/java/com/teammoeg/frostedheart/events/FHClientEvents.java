@@ -29,22 +29,16 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.ui.GuiClickedEvent;
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
-import com.teammoeg.chorda.io.ConfigFileUtil;
 import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.compat.CompatModule;
-import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
 import com.teammoeg.frostedheart.content.health.screen.NutritionScreen;
-import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
-import com.teammoeg.frostedheart.content.research.gui.ResearchToast;
-import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.content.research.research.effects.EffectCrafting;
-import com.teammoeg.frostedheart.content.research.research.effects.EffectShowCategory;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
@@ -55,8 +49,6 @@ import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.util.FHVersion;
-import com.teammoeg.frostedheart.util.client.Lang;
-
 import dev.ftb.mods.ftbquests.client.FTBQuestsClient;
 import dev.ftb.mods.ftbquests.item.FTBQuestsItems;
 import net.minecraft.ChatFormatting;
@@ -94,8 +86,6 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.server.ServerLifecycleHooks;
-import se.mickelus.tetra.items.modular.impl.holo.gui.HoloGui;
-
 import java.util.List;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -183,11 +173,11 @@ public class FHClientEvents {
 				s -> ClientUtils.getPlayer().isCreative(), s -> DebugScreen.openDebugScreen(), Selection.NO_ACTION));
 
 		event.register(FHMain.rl("health"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.nutrition"),
-			CIcons.getIcon(NutritionScreen.fat_icon), s -> FHNetwork.sendToServer(new C2SOpenNutritionScreenMessage())));
+			CIcons.getIcon(NutritionScreen.fat_icon), s -> FHNetwork.INSTANCE.sendToServer(new C2SOpenNutritionScreenMessage())));
 
 		event.register(FHMain.rl("clothing"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.clothing"),
 			CIcons.getIcon(FHItems.gambeson), 
-				s -> FHNetwork.sendToServer(new C2SOpenClothesScreenMessage())));
+				s -> FHNetwork.INSTANCE.sendToServer(new C2SOpenClothesScreenMessage())));
     }
     
     @SubscribeEvent(priority = EventPriority.HIGH)
@@ -197,19 +187,6 @@ public class FHClientEvents {
         if(FMLEnvironment.dist==Dist.CLIENT)
         	WheelMenuRenderer.load();
 
-    }
-    @SubscribeEvent
-    public static void onResearchStatus(ClientResearchStatusEvent event) {
-        if (event.isStatusChanged()) {
-            if (event.isCompletion())
-                ClientUtils.mc().getToasts().addToast(new ResearchToast(event.getResearch()));
-        } else if (!event.isCompletion())
-            return;
-        for (Effect e : event.getResearch().getEffects())
-            if (e instanceof EffectCrafting || e instanceof EffectShowCategory) {
-                JEICompat.syncJEI();
-                return;
-            }
     }
 
     @SubscribeEvent

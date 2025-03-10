@@ -30,6 +30,7 @@ import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.ui.Rect;
 import com.teammoeg.chorda.io.nbtbuilder.CompoundNBTBuilder;
 import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
@@ -44,7 +45,6 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.Grap
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsLineContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsRectContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsTextContent;
-import com.teammoeg.frostedheart.util.client.Lang;
 
 import dev.ftb.mods.ftbquests.api.FTBQuestsAPI;
 import dev.ftb.mods.ftbquests.quest.BaseQuestFile;

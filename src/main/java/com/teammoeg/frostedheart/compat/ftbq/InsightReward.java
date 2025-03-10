@@ -20,10 +20,11 @@
 package com.teammoeg.frostedheart.compat.ftbq;
 
 import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
-import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
-import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.frostedresearch.api.ResearchDataAPI;
+import com.teammoeg.frostedresearch.data.TeamResearchData;
+
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftbquests.net.DisplayRewardToastMessage;

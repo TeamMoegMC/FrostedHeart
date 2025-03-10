@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.compat.tetra;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
+import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 
 import se.mickelus.tetra.module.schematic.CraftingContext;
 import se.mickelus.tetra.module.schematic.requirement.CraftingRequirement;

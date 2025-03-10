@@ -37,7 +37,6 @@ import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import com.teammoeg.frostedheart.content.health.dailykitchen.WantedFoodCapability;
-import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.robotics.logistics.RobotChunk;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
@@ -46,7 +45,6 @@ import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.waypoint.capability.WaypointCapability;
-
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.common.util.NonNullSupplier;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -57,7 +55,7 @@ public class FHCapabilities {
 	public static final NBTCapabilityType<WorldClimate> CLIMATE_DATA=register(WorldClimate.class);
 	public static final NBTCapabilityType<DeathInventoryData> DEATH_INV=register(DeathInventoryData.class);
 	public static final NBTCapabilityType<PlayerTemperatureData> PLAYER_TEMP=register(PlayerTemperatureData.class);
-	public static final NBTCapabilityType<EnergyCore> ENERGY=register(EnergyCore.class);
+	//public static final NBTCapabilityType<EnergyCore> ENERGY=register(EnergyCore.class);
 	public static final NBTCapabilityType<ScenarioConductor> SCENARIO=register(ScenarioConductor.class);
 	public static final CodecCapabilityType<ChunkHeatData> CHUNK_HEAT=register(ChunkHeatData.class,ChunkHeatData.CODEC);
 	public static final NBTCapabilityType<HeatEndpoint> HEAT_EP=register(HeatEndpoint.class);

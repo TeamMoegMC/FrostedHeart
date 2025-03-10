@@ -23,9 +23,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.util.client.FGuis;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
-import com.teammoeg.frostedheart.util.client.Lang;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

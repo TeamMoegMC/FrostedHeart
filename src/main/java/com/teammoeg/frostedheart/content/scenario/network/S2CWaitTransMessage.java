@@ -24,9 +24,9 @@ public record S2CWaitTransMessage(int thread,boolean isWaitTrans) implements CMe
 	public void handle(Supplier<Context> context) {
 		context.get().enqueueWork(()->{
 			if(isWaitTrans) {
-				ClientScene.INSTANCE.onTransitionComplete.addListener(()->()->FHNetwork.sendToServer(new C2SRenderingStatusMessage(thread,true)));
+				ClientScene.INSTANCE.onTransitionComplete.addListener(()->()->FHNetwork.INSTANCE.sendToServer(new C2SRenderingStatusMessage(thread,true)));
 			}else {
-				ClientScene.INSTANCE.onRenderComplete.addListener(()->()->FHNetwork.sendToServer(new C2SRenderingStatusMessage(thread,false)));
+				ClientScene.INSTANCE.onRenderComplete.addListener(()->()->FHNetwork.INSTANCE.sendToServer(new C2SRenderingStatusMessage(thread,false)));
 			}
 		});
 		context.get().setPacketHandled(true);

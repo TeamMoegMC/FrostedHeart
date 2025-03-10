@@ -24,14 +24,11 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
 import com.teammoeg.chorda.client.ui.ColorHelper;
-import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
-import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.compat.CompatModule;
 import com.teammoeg.frostedheart.compat.ftbq.FHGuiProviders;
 import com.teammoeg.frostedheart.compat.ie.FHManual;
 import com.teammoeg.frostedheart.compat.tetra.TetraClient;
 import com.teammoeg.frostedheart.content.climate.particle.SnowParticle;
-import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
@@ -60,6 +57,7 @@ import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMe
 import com.teammoeg.frostedheart.content.health.screen.NutritionScreen;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
+import com.teammoeg.frostedresearch.blocks.MechCalcRenderer;
 
 import dev.ftb.mods.ftbquests.client.FTBQuestsClient;
 import dev.ftb.mods.ftbquests.item.FTBQuestsItems;
@@ -79,14 +77,12 @@ import net.minecraftforge.client.event.EntityRenderersEvent.AddLayers;
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinitions;
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers;
 import net.minecraftforge.client.settings.KeyConflictContext;
-import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import static com.teammoeg.frostedheart.FHMain.CLIENT_SETUP;
 import static com.teammoeg.frostedheart.FHMain.LOGGER;
@@ -145,20 +141,7 @@ public class FHClientEventsMod {
     }
     
 
-	@SuppressWarnings("deprecation")
 	@SubscribeEvent
-	public static void onCreativeTabContents(BuildCreativeModeTabContentsEvent event) {
-		CreativeTabItemHelper helper = new CreativeTabItemHelper(event.getTabKey(), event.getTab());
-		ForgeRegistries.ITEMS.forEach(e -> {
-			if (e instanceof ICreativeModeTabItem item) {
-				item.fillItemCategory(helper);
-			}
-		});
-		helper.register(event);
-
-	}
-
-    @SubscribeEvent
 	public static void registerKeys(RegisterKeyMappingsEvent ev) {
 
 		ev.register(FHKeyMappings.key_skipDialog.get());
@@ -193,7 +176,6 @@ public class FHClientEventsMod {
 		FHMain.LOGGER.info("===========Dynamic Block Renderers========");
         event.registerBlockEntityRenderer(FHMultiblocks.Registration.GENERATOR_T1.masterBE().get(), T1GeneratorRenderer::new);
         event.registerBlockEntityRenderer(FHMultiblocks.Registration.GENERATOR_T2.masterBE().get(), T2GeneratorRenderer::new);
-        event.registerBlockEntityRenderer(FHBlockEntityTypes.MECH_CALC.get(), MechCalcRenderer::new);
 	}
 
     @SubscribeEvent

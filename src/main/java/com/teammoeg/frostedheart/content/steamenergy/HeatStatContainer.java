@@ -65,7 +65,7 @@ public class HeatStatContainer extends AbstractContainerMenu {
         if (counter >= 20) {
             counter = 0;
             EndPointDataPacket epp = new EndPointDataPacket(network);
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> openedPlayer), epp);
+            FHNetwork.INSTANCE.sendPlayer(openedPlayer, epp);
         }
     }
 

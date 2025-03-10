@@ -22,7 +22,9 @@ package com.teammoeg.chorda.client.icon;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.JsonElement;
 import com.mojang.serialization.Codec;
@@ -36,21 +38,19 @@ import com.teammoeg.chorda.io.registry.TypedCodecRegistry;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.research.gui.TechIcons;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
-import net.minecraft.world.level.block.Block;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * A uniform icon drawing/serializing network
  */
 public class CIcons {
+	public static final Map<String, CIcon> internals = new HashMap<>();
 	private static final TypedCodecRegistry<CIcon> serializers = new TypedCodecRegistry<>();
 	public static final Codec<CIcon> CODEC = new AlternativeCodecBuilder<CIcon>(CIcon.class)
 		.addSaveOnly(NopIcon.class, NopIcon.CODEC.codec())
@@ -250,7 +250,7 @@ public class CIcons {
 		@Override
 		public void draw(GuiGraphics ms, int x, int y, int w, int h) {
 			CGuiHelper.resetGuiDrawing();
-			TechIcons.internals.get(name).draw(ms, x, y, w, h);
+			internals.get(name).draw(ms, x, y, w, h);
 		}
 
 	}

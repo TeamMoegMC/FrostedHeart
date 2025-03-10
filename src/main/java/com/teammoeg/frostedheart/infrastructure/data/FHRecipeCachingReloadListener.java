@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 import com.teammoeg.chorda.util.struct.EnumDefaultedMap;
-import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
@@ -41,10 +40,9 @@ import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;
-import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
+import com.teammoeg.frostedresearch.ResearchListeners;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.ReloadableServerResources;
@@ -56,7 +54,6 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.registries.RegistryObject;
 
@@ -111,7 +108,7 @@ public class FHRecipeCachingReloadListener implements ResourceManagerReloadListe
         PlantTempData.cacheList=PlantTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().block(), t->t.getData()));
         WorldTempData.cacheList=WorldTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().world(), t->t.getData()));
         //System.out.println(TradePolicy.totalW);
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::scheduleSyncJEI);
+
     }
     
 

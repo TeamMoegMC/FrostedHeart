@@ -6,7 +6,6 @@ import java.util.function.Consumer;
 
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
-import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 
 import lombok.Getter;
 import lombok.Setter;

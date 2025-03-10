@@ -25,11 +25,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
-import com.teammoeg.frostedheart.util.client.Lang;
 
 import mezz.jei.api.forge.ForgeTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;

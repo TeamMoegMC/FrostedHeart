@@ -23,7 +23,7 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
-import com.teammoeg.frostedheart.content.research.FHResearch;
+import com.teammoeg.frostedresearch.FHResearch;
 
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;

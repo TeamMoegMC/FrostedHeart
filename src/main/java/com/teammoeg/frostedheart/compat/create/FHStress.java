@@ -39,7 +39,6 @@ public class FHStress implements IStressValueProvider {
 
     @Override
     public double getImpact(Block arg0) {
-        if (arg0 == FHBlocks.MECHANICAL_CALCULATOR.get()) return 64;
         
         return 0;
     }
@@ -51,7 +50,7 @@ public class FHStress implements IStressValueProvider {
 
     @Override
     public boolean hasImpact(Block arg0) {
-        return arg0 == FHBlocks.MECHANICAL_CALCULATOR.get();
+        return false;
     }
 
 	@Override
