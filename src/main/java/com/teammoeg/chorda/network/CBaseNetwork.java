@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.teammoeg.chorda.Chorda;
@@ -11,6 +12,7 @@ import com.teammoeg.chorda.asm.OneArgConstructorFactory;
 import com.teammoeg.chorda.util.struct.MutableSupplier;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -18,6 +20,7 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor.PacketTarget;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public abstract class CBaseNetwork {
@@ -80,12 +83,18 @@ public abstract class CBaseNetwork {
 			}
 		}
 	}
-	private static final ThreadLocal<MutableSupplier<ServerPlayer>> playerSupplier=ThreadLocal.withInitial(MutableSupplier::new);
+	private static class MutablePacketTarget{
+		
+		MutableSupplier<ServerPlayer> ms=new MutableSupplier<>();
+		PacketTarget target=PacketDistributor.PLAYER.with(ms);
+	}
+	private static final ThreadLocal<MutablePacketTarget> playerSupplier=ThreadLocal.withInitial(MutablePacketTarget::new);
 	public void sendPlayer(ServerPlayer p, CMessage message) {
 		checkIsProperMessage(message);
-		MutableSupplier<ServerPlayer> supplier=playerSupplier.get();
-		supplier.set(p);
-	    send(PacketDistributor.PLAYER.with(supplier), message);
+		MutablePacketTarget supplier=playerSupplier.get();
+		supplier.ms.set(p);
+		
+	    send(supplier.target, message);
 	}
 
 	public void send(PacketDistributor.PacketTarget target, CMessage message) {
