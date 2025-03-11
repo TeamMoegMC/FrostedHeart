@@ -206,7 +206,7 @@ public class FHMain {
 		FHAttributes.REGISTER.register(mod);
 		FHLoot.LC_REGISTRY.register(mod);
 		FHLoot.LM_REGISTRY.register(mod);
-
+		FHCapabilities.setup();
 		// Forge bus
 		LOGGER.info(COMMON_INIT, "Registering Forge Event Listeners");
 		// forge.register(new FHRecipeReloadListener(null));
@@ -233,7 +233,7 @@ public class FHMain {
 	private void setup(final FMLCommonSetupEvent event) {
 
 		FHNetwork.INSTANCE.register();
-		FHCapabilities.setup();
+		
 		// modify default value
 		GameRules.GAME_RULE_TYPES.put(GameRules.RULE_SPAWN_RADIUS, IntegerValue.create(0));
 

@@ -32,12 +32,13 @@ public abstract class CBaseNetwork {
         CHANNEL = NetworkRegistry.newSimpleChannel(new ResourceLocation(modid,"network"), () -> VERSION, VERSION::equals, VERSION::equals);
 	}
 	public final void register() {
+		
 		registerChannel();
 		registerMessages();
 	};
 	public abstract void registerMessages();
 	private Map<Class<? extends CMessage>, ResourceLocation> classesId = new IdentityHashMap<>(100);
-	private final static OneArgConstructorFactory<FriendlyByteBuf,CMessage> accessorFactory=new OneArgConstructorFactory<>(FriendlyByteBuf.class, CMessage.class);
+	private final static OneArgConstructorFactory<FriendlyByteBuf,CMessage> accessorFactory=new OneArgConstructorFactory<>(FriendlyByteBuf.class);
 	private int iid = 0;
 	private String modid;
 	public SimpleChannel get() {

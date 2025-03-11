@@ -52,9 +52,11 @@ public class CodecCapabilityProvider<T> implements ICapabilitySerializable<Tag>,
 
 	@Override
 	public void deserializeNBT(Tag nbt) {
-		lazyCap.invalidate();
-		T obj=CodecUtil.decodeOrThrow(capability.codec().decode(NbtOps.INSTANCE, nbt));
-		lazyCap=LazyOptional.of(()->obj);
+		if(nbt.getId()!=Tag.TAG_COMPOUND||!((CompoundTag)nbt).isEmpty()){
+			lazyCap.invalidate();
+			T obj=CodecUtil.decodeOrThrow(capability.codec().decode(NbtOps.INSTANCE, nbt));
+			lazyCap=LazyOptional.of(()->obj);
+		}
 	}
 	@Override
 	public Capability<T> capability() {

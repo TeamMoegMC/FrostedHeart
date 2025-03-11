@@ -13,17 +13,18 @@ public class OneArgConstructorFactory<T, R> extends AbstractConstructorFactory {
 	private final Class<T> clazz;
 	private final Type inType;
 	private static final String READ_ACCESSOR_DESC = Type.getInternalName(Function.class);
-	private final String READ_ACCESSOR_READ_METHOD_DESC;
+	private static final String READ_ACCESSOR_READ_METHOD_DESC = Type.getMethodDescriptor(Type.getType(Object.class), Type.getType(Object.class));
 
 	public <AT extends R> Function<T, AT> create(Class<AT> clazz) throws InvocationTargetException, NoSuchMethodException {
 		try {// check if corresponding constructor exists
-			clazz.getConstructor(clazz);
+			clazz.getConstructor(this.clazz);
 		} catch (SecurityException e) {
 			throw new InvocationTargetException(e);
 		} catch (NoSuchMethodException e) {
 			throw e;
 		}
 		Class<?> cls = createWrapper(clazz);
+		
 		try {
 			return (Function) cls.getDeclaredConstructor().newInstance();
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | NoSuchMethodException | SecurityException e) {
@@ -31,12 +32,10 @@ public class OneArgConstructorFactory<T, R> extends AbstractConstructorFactory {
 		}
 	}
 
-	public OneArgConstructorFactory(Class<T> inType, Class<R> outType) {
+	public OneArgConstructorFactory(Class<T> inType) {
 		super();
 		this.clazz = inType;
 		this.inType = Type.getType(this.clazz);
-
-		READ_ACCESSOR_READ_METHOD_DESC = Type.getMethodDescriptor(Type.getType(outType), this.inType);
 	}
 
 
@@ -59,6 +58,7 @@ public class OneArgConstructorFactory<T, R> extends AbstractConstructorFactory {
 			mv = target.visitMethod(ACC_PUBLIC, "apply", READ_ACCESSOR_READ_METHOD_DESC, null, null);
 			mv.visitCode();
 			mv.visitVarInsn(ALOAD, 1);
+			mv.visitTypeInsn(CHECKCAST, inType.getInternalName());
 			mv.visitInvokeDynamicInsn("invoke", "(" + inType.getDescriptor() + ")" + Type.getDescriptor(retType), createCallSiteHandler());
 			mv.visitInsn(ARETURN);
 			mv.visitMaxs(1, 2);

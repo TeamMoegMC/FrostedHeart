@@ -9,11 +9,13 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
-public class NoArgConstructorFactory<R> extends AbstractConstructorFactory {
-	private static final String READ_ACCESSOR_DESC = Type.getInternalName(Supplier.class);
-	private final String READ_ACCESSOR_READ_METHOD_DESC;
+import com.teammoeg.chorda.Chorda;
 
-	public <AT extends R> Supplier<AT> create(Class<AT> clazz) throws InvocationTargetException, NoSuchMethodException {
+public class NoArgConstructorFactory extends AbstractConstructorFactory {
+	private static final String READ_ACCESSOR_DESC = Type.getInternalName(Supplier.class);
+	private static final String READ_ACCESSOR_READ_METHOD_DESC= Type.getMethodDescriptor(Type.getType(Object.class));
+
+	public <AT> Supplier<AT> create(Class<AT> clazz) throws InvocationTargetException, NoSuchMethodException {
 		try {// check if corresponding constructor exists
 			clazz.getConstructor();
 		} catch (SecurityException e) {
@@ -23,19 +25,20 @@ public class NoArgConstructorFactory<R> extends AbstractConstructorFactory {
 		}
 		Class<?> cls = createWrapper(clazz);
 		try {
-			return (Supplier) cls.getDeclaredConstructor().newInstance();
+			Supplier<AT>supm=(Supplier) cls.getDeclaredConstructor().newInstance();
+			return supm;
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | NoSuchMethodException | SecurityException e) {
 			throw new InvocationTargetException(e);
 		}
 	}
 
-	public NoArgConstructorFactory(Class<R> outType) {
+	public NoArgConstructorFactory() {
 		super();
-		READ_ACCESSOR_READ_METHOD_DESC = Type.getMethodDescriptor(Type.getType(outType));
 	}
 
 	@Override
 	protected void transformNode(String name, Class<?> retType, ClassNode target) {
+		Chorda.LOGGER.debug("Making supplier of class "+name);
 		MethodVisitor mv;
 		target.visit(V16, ACC_PUBLIC | ACC_SUPER, name, null, "java/lang/Object", new String[] { READ_ACCESSOR_DESC });
 

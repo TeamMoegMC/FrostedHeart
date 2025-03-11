@@ -22,7 +22,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = Chorda.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class CapabilityRegistry {
 	private static List<CapabilityType> capabilities=new ArrayList<>();
-	private static final NoArgConstructorFactory<Object> capTypeFactory=new NoArgConstructorFactory<>(Object.class);
+	private static final NoArgConstructorFactory capTypeFactory=new NoArgConstructorFactory();
 	private CapabilityRegistry() {
 	}
 	/**

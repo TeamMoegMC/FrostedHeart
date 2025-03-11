@@ -53,7 +53,8 @@ public class NBTCapabilityProvider<C extends NBTSerializable> implements ICapabi
 
 	@Override
 	public void deserializeNBT(CompoundTag nbt) {
-		lazyCap.ifPresent(c->c.deserializeNBT(nbt));
+		if(!nbt.isEmpty())
+			lazyCap.ifPresent(c->c.deserializeNBT(nbt));
 	}
 
 	@Override
