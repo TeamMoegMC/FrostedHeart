@@ -13,6 +13,7 @@ public class FRDataGenerator {
 	@SubscribeEvent
 	public static void gatherData(GatherDataEvent event) {
 		DataGenerator gen = event.getGenerator();
+		
 		gen.addProvider(event.includeServer(), new FRBlockTagProvider(gen, FHMain.MODID, event.getExistingFileHelper(), event.getLookupProvider()));
 		gen.addProvider(event.includeServer(), new FRLootTableProvider(event.getGenerator().getPackOutput()));
 	}

@@ -19,10 +19,8 @@
 
 package com.teammoeg.frostedresearch.data;
 
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedresearch.FRContents;
+import com.teammoeg.frostedresearch.FRMain;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
@@ -33,7 +31,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -118,7 +115,7 @@ public class FRBlockTagProvider extends TagsProvider<Block> {
     Get resource location for mod namespace given value
      */
     private ResourceLocation mrl(String s) {
-        return new ResourceLocation(FHMain.MODID, s);
+        return new ResourceLocation(FRMain.MODID, s);
     }
 
     /*
@@ -137,7 +134,7 @@ public class FRBlockTagProvider extends TagsProvider<Block> {
 
     @Override
     public String getName() {
-        return FHMain.MODID + " block tags";
+        return FRMain.MODID + " block tags";
     }
 
 

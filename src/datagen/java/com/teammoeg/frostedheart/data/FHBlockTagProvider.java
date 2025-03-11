@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.data;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedresearch.FRContents;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
@@ -46,7 +47,11 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
 
     @Override
     protected void addTags(HolderLookup.Provider pProvider) {
+    	//TODO: generate in frostedresearch
+    	adds(tag(BlockTags.MINEABLE_WITH_AXE),FRContents.Blocks.DRAWING_DESK.getKey());
+    	adds(tag(BlockTags.MINEABLE_WITH_PICKAXE),FRContents.Blocks.MECHANICAL_CALCULATOR.getKey());
 
+    	adds(tag(BlockTags.NEEDS_STONE_TOOL),FRContents.Blocks.MECHANICAL_CALCULATOR.getKey());
 
 
 

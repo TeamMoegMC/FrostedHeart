@@ -55,7 +55,7 @@ public class FHDataGenerator {
         ExistingFileHelper exHelper = event.getExistingFileHelper();
         CompletableFuture<HolderLookup.Provider> lookup = CompletableFuture.supplyAsync(VanillaRegistries::createLookup, Util.backgroundExecutor());
         PackOutput output = gen.getPackOutput();
-//        gen.addProvider(event.includeServer(), new FHBlockTagProvider(gen, FHMain.MODID, exHelper, event.getLookupProvider()));
+        gen.addProvider(event.includeServer(), new FHBlockTagProvider(gen, FHMain.MODID, exHelper, event.getLookupProvider()));
         gen.addProvider(event.includeServer(), new FHRecipeProvider(gen));
         gen.addProvider(event.includeServer(), new FHMultiblockStatesProvider(gen, FHMain.MODID, exHelper));
         gen.addProvider(event.includeClient(), new FHItemModelProvider(gen, FHMain.MODID, exHelper));

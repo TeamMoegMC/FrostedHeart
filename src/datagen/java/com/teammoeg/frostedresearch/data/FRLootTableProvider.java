@@ -20,36 +20,21 @@
 package com.teammoeg.frostedresearch.data;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
-import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedresearch.FRContents;
 
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.loot.LootTableProvider;
-import net.minecraft.data.loot.LootTableSubProvider;
 import net.minecraft.data.loot.packs.VanillaBlockLoot;
-import net.minecraft.data.loot.packs.VanillaEntityLoot;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
-import net.minecraft.world.level.storage.loot.functions.LootingEnchantFunction;
-import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
-import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
-import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.stream.Stream;
 
 public class FRLootTableProvider extends LootTableProvider {
     public FRLootTableProvider(PackOutput pOutput) {
