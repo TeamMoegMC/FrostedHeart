@@ -19,24 +19,25 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import java.util.Collection;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.Layer;
-import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
+import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextBox;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.lang.Components;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
-
-import java.util.Collection;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class SelectDialog<T> extends EditDialog {
 	public LayerScrollBar scroll;

@@ -68,10 +68,7 @@ public class FHNetwork extends CBaseNetwork {
 	}
 	public static final FHNetwork INSTANCE=new FHNetwork();
     @Override
-	public void register() {
-        String VERSION = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
-        FHMain.LOGGER.info("FH Network Version: " + VERSION);
-        CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION, VERSION::equals, VERSION::equals);
+	public void registerMessages() {
         // CHANNEL.registerMessage(id++, ChunkWatchPacket.class,
         // ChunkWatchPacket::encode, ChunkWatchPacket::new, ChunkWatchPacket::handle);
         // CHANNEL.registerMessage(id++, ChunkUnwatchPacket.class,

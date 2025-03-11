@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedresearch.gui;
+package com.teammoeg.chorda.client.cui;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;

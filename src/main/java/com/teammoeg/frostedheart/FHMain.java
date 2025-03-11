@@ -25,6 +25,7 @@ import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.ChordaMetaEvents;
+import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.client.FHTooltips;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
@@ -44,7 +45,6 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
 import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
 import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.compat.CompatModule;
 import com.teammoeg.frostedheart.compat.caupona.NutritionEvents;
 import com.teammoeg.frostedheart.compat.create.CreateCompat;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
@@ -87,179 +87,182 @@ import java.io.File;
 @Mod(FHMain.MODID)
 public class FHMain {
 
-    // CConstants
-    public static final String MODID = "frostedheart";
-    public static final String ALIAS = "fh";
-    public static final String TWRID = "twr";
-    public static final String MODNAME = "Frosted Heart";
-    public static final String MODPACK = "The Winter Rescue";
+	// CConstants
+	public static final String MODID = "frostedheart";
+	public static final String ALIAS = "fh";
+	public static final String TWRID = "twr";
+	public static final String MODNAME = "Frosted Heart";
+	public static final String MODPACK = "The Winter Rescue";
 
-    // Logger
-    public static final Logger LOGGER = LogManager.getLogger(MODNAME + " (" + MODPACK + ")");
-    public static final Marker VERSION_CHECK = MarkerManager.getMarker("Version Check");
-    public static final Marker INIT = MarkerManager.getMarker("Init");
-    public static final Marker SETUP = MarkerManager.getMarker("Setup");
-    public static final Marker COMMON_INIT = MarkerManager.getMarker("Common").addParents(INIT);
-    public static final Marker CLIENT_INIT = MarkerManager.getMarker("Client").addParents(INIT);
-    public static final Marker COMMON_SETUP = MarkerManager.getMarker("Common").addParents(SETUP);
-    public static final Marker CLIENT_SETUP = MarkerManager.getMarker("Client").addParents(SETUP);
+	// Logger
+	public static final Logger LOGGER = LogManager.getLogger(MODNAME + " (" + MODPACK + ")");
+	public static final Marker VERSION_CHECK = MarkerManager.getMarker("Version Check");
+	public static final Marker INIT = MarkerManager.getMarker("Init");
+	public static final Marker SETUP = MarkerManager.getMarker("Setup");
+	public static final Marker COMMON_INIT = MarkerManager.getMarker("Common").addParents(INIT);
+	public static final Marker CLIENT_INIT = MarkerManager.getMarker("Client").addParents(INIT);
+	public static final Marker COMMON_SETUP = MarkerManager.getMarker("Common").addParents(SETUP);
+	public static final Marker CLIENT_SETUP = MarkerManager.getMarker("Client").addParents(SETUP);
 
-    // Remote
-    public static FHRemote remote;
-    public static FHRemote local;
-    public static FHRemote pre;
+	// Remote
+	public static FHRemote remote;
+	public static FHRemote local;
+	public static FHRemote pre;
 
-    // Update
-    public static File lastbkf;
-    public static File lastServerConfig;
-    public static boolean saveNeedUpdate;
+	// Update
+	public static File lastbkf;
+	public static File lastServerConfig;
+	public static boolean saveNeedUpdate;
 
-    // Registrate
-    public static final FHRegistrate REGISTRATE = FHRegistrate.create(MODID);
-    static {
-        REGISTRATE.setTooltipModifierFactory(item -> {
-            return new ItemDescription.Modifier(item, TooltipHelper.Palette.STANDARD_CREATE)
-                    .andThen(new FoodTempStats(item))
-                    .andThen(TooltipModifier.mapNull(FoodNutritionStats.create(item)))
-                    .andThen(TooltipModifier.mapNull(PlantTempStats.create(item)))
-                    .andThen(TooltipModifier.mapNull(BlockTempStats.create(item)))
-                    .andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))
-                    .andThen(TooltipModifier.mapNull(KineticStats.create(item)))
-                    ;
-        });
-        FHTooltips.registerTooltipModifiers();
-    }
+	// Registrate
+	public static final FHRegistrate REGISTRATE = FHRegistrate.create(MODID);
+	static {
+		REGISTRATE.setTooltipModifierFactory(item -> {
+			return new ItemDescription.Modifier(item, TooltipHelper.Palette.STANDARD_CREATE)
+				.andThen(new FoodTempStats(item))
+				.andThen(TooltipModifier.mapNull(FoodNutritionStats.create(item)))
+				.andThen(TooltipModifier.mapNull(PlantTempStats.create(item)))
+				.andThen(TooltipModifier.mapNull(BlockTempStats.create(item)))
+				.andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))
+				.andThen(TooltipModifier.mapNull(KineticStats.create(item)));
+		});
+		FHTooltips.registerTooltipModifiers();
+	}
 
-    public static ResourceLocation rl(String path) {
-        return new ResourceLocation(MODID, path);
-    }
+	public static ResourceLocation rl(String path) {
+		return new ResourceLocation(MODID, path);
+	}
 
-    /**
-     * Do all initialization that does not require deferred registers to be filled.
-     */
-    public FHMain() {
-        IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
-        IEventBus forge = MinecraftForge.EVENT_BUS;
-        LOGGER.info(COMMON_INIT, "Reading Modlist");
-        CompatModule.refreshLoadedStatus();
+	/**
+	 * Do all initialization that does not require deferred registers to be filled.
+	 */
+	public FHMain() {
+		IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
+		IEventBus forge = MinecraftForge.EVENT_BUS;
+		CompatModule.enableCompatModule();
 
-        // Config
-        LOGGER.info(COMMON_INIT, "Loading Config");
-        FHConfig.register();
+		// Config
+		LOGGER.info(COMMON_INIT, "Loading Config");
+		FHConfig.register();
 
-        // FH Remote Version Check
-        LOGGER.info(VERSION_CHECK, "Checking for updates");
-        local = new FHRemote.FHLocal();
-        remote = new FHRemote();
-        if (local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal().contains("pre"))
-            pre = new FHRemote.FHPreRemote();
-        LOGGER.info(VERSION_CHECK, "Check completes. Running on version " + local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
+		// FH Remote Version Check
+		LOGGER.info(VERSION_CHECK, "Checking for updates");
+		local = new FHRemote.FHLocal();
+		remote = new FHRemote();
+		if (local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal().contains("pre"))
+			pre = new FHRemote.FHPreRemote();
+		LOGGER.info(VERSION_CHECK, "Check completes. Running on version " + local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
 
-        // Registrate
-        LOGGER.info(COMMON_INIT, "Registering Registrate");
-        REGISTRATE.registerEventListeners(mod);
+		// Registrate
+		LOGGER.info(COMMON_INIT, "Registering Registrate");
+		REGISTRATE.registerEventListeners(mod);
 
-        // Init
-        LOGGER.info(COMMON_INIT, "Initializing " + MODNAME);
-        FHTags.init();
-        FHItems.init();
-        FHProps.init();
-        FHBlocks.init();
-        FHBlockEntityTypes.init();
-        FHBiomes.init();
-        FHPredicates.init();
-        ChordaMetaEvents.IE_REGISTRY.addListener(()->FHMultiblocks::registerMultiblocks);
-        // Compat init
-        LOGGER.info(COMMON_INIT, "Initializing Mod Compatibilities");
-        
-        FHSpecialDataTypes.init();
-        if (CompatModule.isCreateLoaded())
-            CreateCompat.init();
-        if (CompatModule.isTetraLoaded())
-            TetraCompat.init();
-        if (CompatModule.isFTBQLoaded())
-            FHRewardTypes.init();
-        if (CompatModule.isFTBTLoaded())
-            FTBTeamsEvents.init();
-        if(CompatModule.isCauponaLoaded())
-        	forge.addListener(NutritionEvents::gatherNutritionFromSoup);
-        // Deferred Registration
-        // Order doesn't matter here, as that's why we use deferred registers
-        // See ForgeRegistries for more info
-        LOGGER.info(COMMON_INIT, "Registering Deferred Registers");
-        FHEntityTypes.ENTITY_TYPES.register(mod);
-        FHFluids.FLUIDS.register(mod);
-        FHFluids.FLUID_TYPES.register(mod);
-        FHMobEffects.EFFECTS.register(mod);
-        FHParticleTypes.REGISTER.register(mod);
-        FHBlockEntityTypes.REGISTER.register(mod);
-        FHMenuTypes.CONTAINERS.register(mod);
-        FHTabs.TABS.register(mod);
-        FHItems.ITEMS.register(mod);
-        FHBlocks.BLOCKS.register(mod);
-        FHSoundEvents.SOUNDS.register(mod);
-        FHRecipes.RECIPE_SERIALIZERS.register(mod);
-        FHRecipes.RECIPE_TYPES.register(mod);
-        FHFeatures.FEATURES.register(mod);
-        FHBiomes.BIOME_REGISTER.register(mod);
-        FHBiomeModifiers.BIOME_MODIFIERS.register(mod);
-        FHAttributes.REGISTER.register(mod);
-        FHLoot.LC_REGISTRY.register(mod);
-        FHLoot.LM_REGISTRY.register(mod);
+		// Init
+		LOGGER.info(COMMON_INIT, "Initializing " + MODNAME);
+		FHTags.init();
+		FHItems.init();
+		FHProps.init();
+		FHBlocks.init();
+		FHBlockEntityTypes.init();
+		FHBiomes.init();
+		FHPredicates.init();
+		ChordaMetaEvents.IE_REGISTRY.addListener(() -> FHMultiblocks::registerMultiblocks);
+		// Compat init
+		LOGGER.info(COMMON_INIT, "Initializing Mod Compatibilities");
 
-        // Forge bus
-        LOGGER.info(COMMON_INIT, "Registering Forge Event Listeners");
-        //forge.register(new FHRecipeReloadListener(null));
+		FHSpecialDataTypes.init();
+		if (CompatModule.isCreateLoaded())
+			CreateCompat.init();
+		if (CompatModule.isTetraLoaded())
+			TetraCompat.init();
+		if (CompatModule.isFTBQLoaded())
+			FHRewardTypes.init();
+		if (CompatModule.isFTBTLoaded())
+			FTBTeamsEvents.init();
+		if (CompatModule.isCauponaLoaded())
+			forge.addListener(NutritionEvents::gatherNutritionFromSoup);
+		// Deferred Registration
+		// Order doesn't matter here, as that's why we use deferred registers
+		// See ForgeRegistries for more info
+		LOGGER.info(COMMON_INIT, "Registering Deferred Registers");
+		FHEntityTypes.ENTITY_TYPES.register(mod);
+		FHFluids.FLUIDS.register(mod);
+		FHFluids.FLUID_TYPES.register(mod);
+		FHMobEffects.EFFECTS.register(mod);
+		FHParticleTypes.REGISTER.register(mod);
+		FHBlockEntityTypes.REGISTER.register(mod);
+		FHMenuTypes.CONTAINERS.register(mod);
+		FHTabs.TABS.register(mod);
+		FHItems.ITEMS.register(mod);
+		FHBlocks.BLOCKS.register(mod);
+		FHSoundEvents.SOUNDS.register(mod);
+		FHRecipes.RECIPE_SERIALIZERS.register(mod);
+		FHRecipes.RECIPE_TYPES.register(mod);
+		FHRecipes.CRECIPE_SERIALIZERS.register(mod);
+		FHRecipes.CRECIPE_TYPES.register(mod);
+		FHFeatures.FEATURES.register(mod);
+		FHBiomes.BIOME_REGISTER.register(mod);
+		FHBiomeModifiers.BIOME_MODIFIERS.register(mod);
+		FHAttributes.REGISTER.register(mod);
+		FHLoot.LC_REGISTRY.register(mod);
+		FHLoot.LM_REGISTRY.register(mod);
 
-        // Mod bus
-        LOGGER.info(COMMON_INIT, "Registering Mod Event Listeners");
-        mod.addListener(this::setup);
-        mod.addListener(this::processIMC);
-        mod.addListener(this::enqueueIMC);
-        mod.addListener(this::loadComplete);
+		// Forge bus
+		LOGGER.info(COMMON_INIT, "Registering Forge Event Listeners");
+		// forge.register(new FHRecipeReloadListener(null));
 
-        // Client setup
-        LOGGER.info(COMMON_INIT, "Proceeding to Client Initialization");
-        if (FMLEnvironment.dist == Dist.CLIENT) {
-            FHClient.init();
-        }
-    }
+		// Mod bus
+		LOGGER.info(COMMON_INIT, "Registering Mod Event Listeners");
+		mod.addListener(this::setup);
+		mod.addListener(this::processIMC);
+		mod.addListener(this::enqueueIMC);
+		mod.addListener(this::loadComplete);
 
-    /**
-     * Setup stuff that requires deferred registers to be filled.
-     * @param event The event
-     */
-    private void setup(final FMLCommonSetupEvent event) {
-    
-        FHNetwork.INSTANCE.register();
-        FHCapabilities.setup();
-        // modify default value
-        GameRules.GAME_RULE_TYPES.put(GameRules.RULE_SPAWN_RADIUS, IntegerValue.create(0));
+		// Client setup
+		LOGGER.info(COMMON_INIT, "Proceeding to Client Initialization");
+		if (FMLEnvironment.dist == Dist.CLIENT) {
+			FHClient.init();
+		}
+	}
 
-    }
+	/**
+	 * Setup stuff that requires deferred registers to be filled.
+	 * 
+	 * @param event The event
+	 */
+	private void setup(final FMLCommonSetupEvent event) {
 
-    /**
-     * Enqueue Inter-Mod Communication
-     * @param event The event
-     */
-    private void enqueueIMC(final InterModEnqueueEvent event) {
-        CuriosCompat.sendIMCS();
-    }
+		FHNetwork.INSTANCE.register();
+		FHCapabilities.setup();
+		// modify default value
+		GameRules.GAME_RULE_TYPES.put(GameRules.RULE_SPAWN_RADIUS, IntegerValue.create(0));
 
-    /**
-     * Process Inter-Mod Communication
-     * @param event The event
-     */
-    private void processIMC(final InterModProcessEvent event) {
+	}
 
-    }
+	/**
+	 * Enqueue Inter-Mod Communication
+	 * 
+	 * @param event The event
+	 */
+	private void enqueueIMC(final InterModEnqueueEvent event) {
+		CuriosCompat.sendIMCS();
+	}
 
-    /**
-     * Stuff that needs to be done after everything is loaded.
-     * In general, not used.
-     * @param event The event
-     */
-    private void loadComplete(FMLLoadCompleteEvent event) {
+	/**
+	 * Process Inter-Mod Communication
+	 * 
+	 * @param event The event
+	 */
+	private void processIMC(final InterModProcessEvent event) {
 
-    }
+	}
+
+	/**
+	 * Stuff that needs to be done after everything is loaded. In general, not used.
+	 * 
+	 * @param event The event
+	 */
+	private void loadComplete(FMLLoadCompleteEvent event) {
+
+	}
 }

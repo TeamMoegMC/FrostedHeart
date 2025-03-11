@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -16,12 +15,9 @@ import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder.SetterAndGetter;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuildResult;
-import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Item;
-
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuiltParams;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.network.chat.Component;
 
 public class EditorDialog<O> extends BaseEditDialog {

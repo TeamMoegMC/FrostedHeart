@@ -22,7 +22,7 @@ package com.teammoeg.frostedresearch.gui.tech;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;
 import com.teammoeg.chorda.client.icon.CIconFTBWrapper;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.gui.ResearchEditUtils;
 import com.teammoeg.frostedresearch.gui.TechIcons;

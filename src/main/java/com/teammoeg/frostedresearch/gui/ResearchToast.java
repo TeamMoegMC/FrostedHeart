@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedresearch.gui;
 
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.research.Research;
 
 import net.minecraft.client.gui.GuiGraphics;

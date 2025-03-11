@@ -20,9 +20,9 @@
 package com.teammoeg.frostedresearch.gui.tech;
 
 import com.ibm.icu.text.NumberFormat;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.chorda.client.cui.RTextField;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
-import com.teammoeg.frostedresearch.gui.RTextField;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.Research;
 

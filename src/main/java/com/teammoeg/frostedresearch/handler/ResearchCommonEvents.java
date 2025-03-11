@@ -25,17 +25,21 @@ import java.util.Map;
 
 import com.teammoeg.chorda.events.TeamLoadedEvent;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
+import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRMain;
+import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.ResearchListeners;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 import com.teammoeg.frostedresearch.compat.JEICompat;
+import com.teammoeg.frostedresearch.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedresearch.recipe.InspireRecipe;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -46,11 +50,14 @@ import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor.PacketTarget;
 
 @Mod.EventBusSubscriber(modid = FRMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ResearchCommonEvents {
@@ -67,7 +74,16 @@ public class ResearchCommonEvents {
             ResearchListeners.tick((ServerPlayer) event.player);
         }
     }
-
+	@SubscribeEvent
+	public static void syncDataToClient(PlayerEvent.PlayerLoggedInEvent event) {
+		if (event.getEntity() instanceof ServerPlayer) {
+			ServerLevel serverWorld = ((ServerPlayer) event.getEntity()).serverLevel();
+			PacketTarget currentPlayer = PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity());
+			FHResearch.sendSyncPacket(currentPlayer);
+			FRNetwork.INSTANCE.send(currentPlayer,
+					new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayer) event.getEntity()).get()));
+		}
+	}
     @SubscribeEvent
     public static void onPlayerKill(LivingDeathEvent event) {
         Entity ent = event.getSource().getEntity();

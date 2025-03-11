@@ -2,28 +2,35 @@ package com.teammoeg.chorda.network;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.Function;
 
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public abstract class CBaseNetwork {
 
 	protected SimpleChannel CHANNEL;
-
-	public abstract void register();
-
+	public void registerChannel() {
+		String VERSION = ModList.get().getModContainerById(modid).get().getModInfo().getVersion().toString();
+		Chorda.LOGGER.info(modid+" Network Version: " + VERSION);
+        CHANNEL = NetworkRegistry.newSimpleChannel(new ResourceLocation(modid,"network"), () -> VERSION, VERSION::equals, VERSION::equals);
+	}
+	public final void register() {
+		registerChannel();
+		registerMessages();
+	};
+	public abstract void registerMessages();
 	private Map<Class<? extends CMessage>, ResourceLocation> classesId = new IdentityHashMap<>(100);
 	private final static PacketLoaderFactory accessorFactory=new PacketLoaderFactory();
 	private int iid = 0;
@@ -47,7 +54,7 @@ public abstract class CBaseNetwork {
 	        ctor.setAccessible(true);
 	        CHANNEL.registerMessage(++iid, msg, CMessage::encode, accessorFactory.create(ctor), CMessage::handle);
 	    } catch (NoSuchMethodException | SecurityException | InvocationTargetException e1) {
-	        FHMain.LOGGER.error("Can not register message " + msg.getSimpleName());
+	    	Chorda.LOGGER.error("Can not register message " + msg.getSimpleName());
 	        e1.printStackTrace();
 	    }
 	}

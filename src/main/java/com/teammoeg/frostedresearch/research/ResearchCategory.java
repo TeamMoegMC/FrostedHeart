@@ -21,13 +21,14 @@ package com.teammoeg.frostedresearch.research;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.chorda.io.codec.CompressDifferCodec;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FRMain;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public enum ResearchCategory {
@@ -38,15 +39,17 @@ public enum ResearchCategory {
     ARS("ars"),
     EXPLORATION("exploration");
 
-    public static final Map<ResourceLocation, ResearchCategory> ALL = new HashMap<>();
+    public static final Map<ResourceLocation, ResearchCategory> ALL = new LinkedHashMap<>();
     public static final Codec<ResearchCategory> CODEC = new CompressDifferCodec<>(ResourceLocation.CODEC.xmap(
             o -> ALL.get(o),
             o -> o.getId()),
             Codec.BYTE.xmap(i -> ResearchCategory.values()[i], i -> (byte) i.ordinal()));
 
     static {
-        for (ResearchCategory rc : ResearchCategory.values())
+        for (ResearchCategory rc : ResearchCategory.values()) {
             ResearchCategory.ALL.put(rc.id, rc);
+            ResearchCategory.ALL.put(new ResourceLocation("frostedheart",rc.id.getPath()), rc);
+        }
     }
 
     private final ResourceLocation id;

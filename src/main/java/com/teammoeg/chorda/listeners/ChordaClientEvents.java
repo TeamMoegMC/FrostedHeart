@@ -34,18 +34,7 @@ public class ChordaClientEvents {
 			CClientDataStorage.checkAndSave();
 		}
 	}
-	@SuppressWarnings("deprecation")
-	@SubscribeEvent
-	public static void onCreativeTabContents(BuildCreativeModeTabContentsEvent event) {
-		CreativeTabItemHelper helper = new CreativeTabItemHelper(event.getTabKey());
-		ForgeRegistries.ITEMS.forEach(e -> {
-			if (e instanceof ICreativeModeTabItem item) {
-				item.fillItemCategory(helper);
-			}
-		});
-		helper.register(event);
-	
-	}
+
 	
 	
 

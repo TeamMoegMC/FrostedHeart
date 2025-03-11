@@ -23,12 +23,12 @@ import java.util.UUID;
 
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.caupona.CPConfig;
+import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
-import com.teammoeg.frostedheart.compat.CompatModule;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHBodyDataSyncPacket;

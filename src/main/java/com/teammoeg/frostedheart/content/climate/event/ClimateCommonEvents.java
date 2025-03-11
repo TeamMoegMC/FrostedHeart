@@ -43,10 +43,6 @@ import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_PlaceExtraSnow;
-import com.teammoeg.frostedresearch.FHResearch;
-import com.teammoeg.frostedresearch.api.ResearchDataAPI;
-import com.teammoeg.frostedresearch.network.FHResearchDataSyncPacket;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -315,9 +311,6 @@ public class ClimateCommonEvents {
 		if (event.getEntity() instanceof ServerPlayer) {
 			ServerLevel serverWorld = ((ServerPlayer) event.getEntity()).serverLevel();
 			PacketTarget currentPlayer = PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity());
-			FHResearch.sendSyncPacket(currentPlayer);
-			FHNetwork.INSTANCE.send(currentPlayer,
-					new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayer) event.getEntity()).get()));
 			FHCapabilities.CLIMATE_DATA.getCapability(serverWorld)
 					.ifPresent((cap) -> FHNetwork.INSTANCE.send(currentPlayer, new FHClimatePacket(cap)));
 

@@ -26,7 +26,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.data.TeamResearchData;

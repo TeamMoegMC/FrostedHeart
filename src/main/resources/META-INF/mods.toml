@@ -192,3 +192,54 @@ The Library Mod for TeamMoeg Projects.
     versionRange="[5.9.1+1.20.1,)"
     ordering="BEFORE"
     side="BOTH"
+[[mods]] #mandatory
+modId = "frostedresearch" #mandatory
+version = "0.1.0" #mandatory
+displayName = "Frosted Research" #mandatory
+displayURL="https://www.curseforge.com/minecraft/mc-mods/frostedresearch"
+logoFile="logo.png"
+authors = "Developed by TeamMoeg, with the help of many contributors."
+description = '''
+The research mod originally created for The Winter Rescue.
+'''
+[[dependencies.frostedresearch]]
+    modId = "forge"
+    mandatory = true
+    versionRange = "[37,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.frostedresearch]]
+    modId = "minecraft"
+    mandatory = true
+    versionRange = "[1.20.1,1.20.4)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.frostedresearch]]
+    modId="immersiveengineering"
+    mandatory=false
+    versionRange="[1.20.1-10.1.0,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedresearch]]
+    modId="create"
+    mandatory=false
+    versionRange="[0.5.1.j,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedresearch]]
+    modId="flywheel"
+    mandatory=false
+    versionRange="[0.6.10-7,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedresearch]]
+    modId="chorda"
+    mandatory=true
+    versionRange="[0.1,0.2)"
+    ordering="BEFORE"
+    side="BOTH"

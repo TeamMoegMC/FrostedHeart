@@ -30,6 +30,7 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.io.CodecUtil;
@@ -37,7 +38,6 @@ import com.teammoeg.chorda.io.codec.AlternativeCodecBuilder;
 import com.teammoeg.chorda.io.registry.TypedCodecRegistry;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.math.CMath;
-import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -434,7 +434,7 @@ public class CIcons {
 		protected int x, y, w, h, tw = 256, th = 256;
 
 		public TextureUVIcon() {
-			super(FHMain.rl("texture/gui"));
+			super(Chorda.rl("texture/gui"));
 		}
 
 		public TextureUVIcon(ResourceLocation rl, int x, int y, int w, int h, int tw, int th) {

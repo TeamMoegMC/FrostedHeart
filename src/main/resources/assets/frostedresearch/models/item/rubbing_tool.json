@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "frostedheart:item/rubbing_paper"
+    "layer0": "frostedresearch:item/rubbing_paper"
   }
 }

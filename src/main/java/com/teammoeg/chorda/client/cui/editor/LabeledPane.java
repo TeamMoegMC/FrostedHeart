@@ -26,8 +26,6 @@ import com.teammoeg.chorda.client.cui.UIWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
-import com.teammoeg.chorda.client.cui.UIWidget;
-
 
 public class LabeledPane<T extends UIWidget> extends Layer {
 

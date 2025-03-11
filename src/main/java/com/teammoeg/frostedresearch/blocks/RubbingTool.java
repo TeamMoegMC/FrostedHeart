@@ -21,7 +21,7 @@ package com.teammoeg.frostedresearch.blocks;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.item.FRBaseItem;
 import com.teammoeg.frostedresearch.research.Research;
@@ -126,11 +126,9 @@ public class RubbingTool extends FRBaseItem{
             if (brtr.getType() == Type.MISS) return stack;
 
             BlockEntity te = Utils.getExistingTileEntity(worldIn, brtr.getBlockPos());
-            if (te instanceof MechCalcTileEntity) {
-                MechCalcTileEntity mcte = (MechCalcTileEntity) te;
-                int crp = mcte.currentPoints;
-                mcte.currentPoints = 0;
-                mcte.updatePoints();
+            if (te instanceof ComputeMachine) {
+            	ComputeMachine mcte = (ComputeMachine) te;
+                int crp = mcte.fetchPoint(1000);
                 if (crp > 0) {
                     stack.setDamageValue(stack.getDamageValue() + 1);
                     crp += getPoint(stack);

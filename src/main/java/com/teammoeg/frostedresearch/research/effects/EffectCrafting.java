@@ -30,7 +30,7 @@ import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.chorda.util.CDistHelper;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.ResearchListeners;
 import com.teammoeg.frostedresearch.compat.JEICompat;

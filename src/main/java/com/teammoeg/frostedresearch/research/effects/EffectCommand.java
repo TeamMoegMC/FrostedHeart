@@ -27,7 +27,7 @@ import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.util.CDistHelper;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 
 import net.minecraft.commands.CommandSourceStack;

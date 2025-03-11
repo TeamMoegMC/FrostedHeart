@@ -19,14 +19,14 @@
 
 package com.teammoeg.frostedresearch.blocks;
 
+import java.util.List;
+
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
-import com.teammoeg.chorda.util.Lang;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FRContents;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
@@ -46,9 +46,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.util.List;
-
-public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggleInformation,CTickableBlockEntity {
+public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggleInformation,CTickableBlockEntity,ComputeMachine {
     public int process = 0;
     int processMax = 6400;
     int currentPoints = 0;
@@ -157,7 +155,7 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
                 int curact = process / 1067;
                 if (lastact != curact) {
                     lastact = curact;
-                    level.playSound(null, worldPosition, FHSoundEvents.MC_BELL.get(), SoundSource.BLOCKS, 0.1f, 1f);
+                    level.playSound(null, worldPosition, FRContents.Sounds.MC_BELL.get(), SoundSource.BLOCKS, 0.1f, 1f);
                 }
                 if (process >= processMax) {
                     process = 0;
@@ -170,7 +168,7 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
 
                 if (ticsSlp <= 0) {
                     float pitch = Mth.clamp((spd / 32f) + 0.5f, 0.5f, 2f);
-                    level.playSound(null, worldPosition, FHSoundEvents.MC_ROLL.get(), SoundSource.BLOCKS, 0.3f, pitch);
+                    level.playSound(null, worldPosition, FRContents.Sounds.MC_ROLL.get(), SoundSource.BLOCKS, 0.3f, pitch);
                     ticsSlp = Mth.ceil(20 / pitch);
                 } else ticsSlp--;
                 this.notifyUpdate();
@@ -201,4 +199,12 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
         if (!doProduct)
             tag.putBoolean("prod", doProduct);
     }
+
+	@Override
+	public int fetchPoint(int max) {
+		int ret=currentPoints;
+		currentPoints=0;
+		updatePoints();
+		return ret;
+	}
 }

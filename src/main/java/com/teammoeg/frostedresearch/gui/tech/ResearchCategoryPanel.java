@@ -43,7 +43,7 @@ public class ResearchCategoryPanel extends Panel {
     @Override
     public void addWidgets() {
         int k = 0;
-        for (ResearchCategory r : ResearchCategory.ALL.values()) {
+        for (ResearchCategory r : ResearchCategory.values()) {
             CategoryButton button = new CategoryButton(this, r);
             button.setPosAndSize(k * 40, 0, 30, 21);
             add(button);

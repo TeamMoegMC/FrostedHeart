@@ -19,13 +19,23 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.Layer;
-import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
+import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
@@ -39,16 +49,6 @@ import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
-import org.apache.commons.lang3.mutable.MutableObject;
 
 /**
  * @author  khjxiaogu

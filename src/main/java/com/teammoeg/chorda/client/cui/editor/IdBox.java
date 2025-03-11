@@ -1,7 +1,6 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 import java.util.UUID;
-import java.util.function.Consumer;
 
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;

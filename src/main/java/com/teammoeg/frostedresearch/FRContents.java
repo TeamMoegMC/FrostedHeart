@@ -1,7 +1,5 @@
 package com.teammoeg.frostedresearch;
 
-import static com.teammoeg.frostedheart.FHMain.*;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Function;
@@ -9,14 +7,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
-import com.simibubi.create.foundation.data.AssetLookup;
+import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.creativeTab.TabType;
 import com.teammoeg.chorda.item.CBlockItem;
-import com.teammoeg.chorda.util.Lang;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen;
+import com.teammoeg.chorda.util.CFunctionHelper;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskBlock;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedresearch.blocks.FHBasePen;
@@ -28,11 +23,9 @@ import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedresearch.item.FRBaseItem;
 import com.teammoeg.frostedresearch.recipe.InspireRecipe;
 import com.teammoeg.frostedresearch.recipe.ResearchPaperRecipe;
-import com.tterrag.registrate.util.entry.BlockEntry;
-import com.tterrag.registrate.util.entry.ItemEntry;
-
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
@@ -51,11 +44,13 @@ import net.minecraft.world.level.block.entity.BlockEntityType.BlockEntitySupplie
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.common.extensions.IForgeMenuType;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 public class FRContents {
+
 	public static class Blocks {
 		public static final DeferredRegister<Block> REGISTER = DeferredRegister.create(
 			ForgeRegistries.BLOCKS, FRMain.MODID);
@@ -67,12 +62,13 @@ public class FRContents {
 				.strength(2, 6)
 				.noOcclusion()));
 		// MECHANICAL_CALCULATOR
-		public static final RegistryObject<MechCalcBlock> MECHANICAL_CALCULATOR = register("mechanical_calculator", () -> new MechCalcBlock(
+		public static final RegistryObject<MechCalcBlock> MECHANICAL_CALCULATOR = CFunctionHelper.makeIf(CompatModule.isCreateLoaded(), ()->
+			register("mechanical_calculator", () -> new MechCalcBlock(
 			BlockBehaviour.Properties.of().mapColor(MapColor.METAL)
 				.sound(SoundType.METAL)
 				.requiresCorrectToolForDrops()
 				.strength(2, 10)
-				.noOcclusion()));
+				.noOcclusion())));
 
 		protected static <T extends Block> RegistryObject<T> register(String name, Supplier<T> block, String itemName, Function<T, Item> item) {
 			RegistryObject<T> blk = REGISTER.register(name, block);
@@ -105,8 +101,8 @@ public class FRContents {
 			ForgeRegistries.BLOCK_ENTITY_TYPES, FRMain.MODID);
 		public static final RegistryObject<BlockEntityType<DrawingDeskTileEntity>> DRAWING_DESK = REGISTER.register(
 			"drawing_desk", makeType(DrawingDeskTileEntity::new, Blocks.DRAWING_DESK::get));
-		public static final RegistryObject<BlockEntityType<MechCalcTileEntity>> MECH_CALC = REGISTER.register(
-			"mechanical_calculator", makeType(MechCalcTileEntity::new, Blocks.MECHANICAL_CALCULATOR::get));
+		public static final RegistryObject<BlockEntityType<MechCalcTileEntity>> MECH_CALC = CFunctionHelper.makeIf(CompatModule.isCreateLoaded(),()->REGISTER.register(
+			"mechanical_calculator", makeType(MechCalcTileEntity::new, ()->Blocks.MECHANICAL_CALCULATOR.get())));
 
 		private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntitySupplier<T> create, Supplier<Block> valid) {
 			return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
@@ -162,9 +158,9 @@ public class FRContents {
 
 	public static class Recipes {
 		public static final DeferredRegister<RecipeSerializer<?>> RECIPE_SERIALIZERS = DeferredRegister.create(
-			ForgeRegistries.RECIPE_SERIALIZERS, FHMain.MODID);
+			ForgeRegistries.RECIPE_SERIALIZERS, FRMain.MODID);
 		public static final DeferredRegister<RecipeType<?>> RECIPE_TYPES = DeferredRegister.create(
-			ForgeRegistries.RECIPE_TYPES, FHMain.MODID);
+			ForgeRegistries.RECIPE_TYPES, FRMain.MODID);
 		static {
 			ResearchPaperRecipe.TYPE = createRecipeType("paper");
 			ResearchPaperRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("paper", ResearchPaperRecipe.Serializer::new);
@@ -173,12 +169,29 @@ public class FRContents {
 		}
 
 		public static <T extends Recipe<?>> RegistryObject<RecipeType<T>> createRecipeType(String name) {
-			return RECIPE_TYPES.register(name, () -> RecipeType.simple(new ResourceLocation(FHMain.MODID, name)));
+			return RECIPE_TYPES.register(name, () -> RecipeType.simple(new ResourceLocation(FRMain.MODID, name)));
 		}
 	}
-
+	public static class Sounds{
+	    public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, FRMain.MODID);
+	    public static final RegistryObject<SoundEvent> MC_BELL = makeReference("mc_bell");
+	    public static final RegistryObject<SoundEvent> MC_ROLL = makeReference("mc_roll");
+	    public static RegistryObject<SoundEvent> makeReference(String name){
+	    	return SOUNDS.register(name, () -> SoundEvent.createVariableRangeEvent(FRMain.rl(name)));
+	    }
+	}
 	public FRContents() {
-		// TODO Auto-generated constructor stub
+
+	}
+	public static void init(IEventBus mod) {
+		Blocks.REGISTER.register(mod);
+		Items.REGISTER.register(mod);
+		BlockEntityTypes.REGISTER.register(mod);
+		Tabs.TABS.register(mod);
+		MenuTypes.CONTAINERS.register(mod);
+		Recipes.RECIPE_SERIALIZERS.register(mod);
+		Recipes.RECIPE_TYPES.register(mod);
+		Sounds.SOUNDS.register(mod);
 	}
 
 }

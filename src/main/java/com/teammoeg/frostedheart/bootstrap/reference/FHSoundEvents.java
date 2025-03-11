@@ -30,8 +30,6 @@ public class FHSoundEvents {
     public FHSoundEvents() {
     }
     public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, FHMain.MODID);
-    public static final RegistryObject<SoundEvent> MC_BELL = makeReference("mc_bell");
-    public static final RegistryObject<SoundEvent> MC_ROLL = makeReference("mc_roll");
     public static final RegistryObject<SoundEvent> ICE_CRACKING = makeReference("ice_cracking");
     public static final RegistryObject<SoundEvent> WIND = makeReference("wind");
     public static final RegistryObject<SoundEvent> TFOA = makeReference("the_fall_of_arcana");

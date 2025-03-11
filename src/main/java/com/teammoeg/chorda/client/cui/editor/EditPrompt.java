@@ -19,17 +19,16 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import java.util.function.Consumer;
+
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
-import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.Lang;
 
 import net.minecraft.network.chat.Component;
-
-import java.util.function.Consumer;
 
 public class EditPrompt extends BaseEditDialog {
     LabeledTextBox box;

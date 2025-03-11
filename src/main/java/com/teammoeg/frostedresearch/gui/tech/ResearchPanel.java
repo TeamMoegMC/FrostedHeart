@@ -89,22 +89,25 @@ public abstract class ResearchPanel extends Panel {
         list.zOffsetItemTooltip = 500;
         super.addMouseOverText(list);
     }
-
+    boolean isFirstPassed=true;
     @Override
     public void addWidgets() {
         int sw = 387;
         int sh = 203;
         this.setSize(sw, sh);
-        Research cr = null;
-        if (ClientResearchData.last != null) {
-            cr = FHResearch.researches.get(ClientResearchData.last);
+        if(isFirstPassed) {
+	        Research cr = null;
+	        if (ClientResearchData.last != null) {
+	            cr = FHResearch.researches.get(ClientResearchData.last);
+	        }
+	        if(cr==null)
+	            cr = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
+	        if(cr==null)
+	        	cr= FHResearch.getFirstResearchInCategory(selectedCategory);
+	        selectedCategory = cr == null ? ResearchCategory.RESCUE : cr.getCategory();
+	        selectedResearch = cr;
+	        isFirstPassed=false;
         }
-        if(cr==null)
-            cr = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
-        if(cr==null)
-        	cr= FHResearch.getFirstResearchInCategory(selectedCategory);
-        selectedCategory = cr == null ? ResearchCategory.RESCUE : cr.getCategory();
-        selectedResearch = cr;
         researchCategoryPanel.setPosAndSize(165, 0, 190, 21);
         researchListPanel.setPosAndSize(12, 74, 114, 118);
         researchHierarchyPanel.setPosAndSize(160, 23, 210, 160);

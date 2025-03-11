@@ -1,6 +1,8 @@
 package com.teammoeg.chorda.util;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
+
 
 public class CFunctionHelper {
 
@@ -18,5 +20,10 @@ public class CFunctionHelper {
 			}
 			return ifNull.apply(a);
 		};
+	}
+	public static <T> T makeIf(boolean available,Supplier<T> supp) {
+		if(available)
+			return supp.get();
+		return null;
 	}
 }

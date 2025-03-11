@@ -19,18 +19,15 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import net.minecraft.network.chat.Component;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.cui.UIWidget;
-import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.lang.Components;
+
+import net.minecraft.network.chat.Component;
 
 public class EditorSelector<T> extends BaseEditDialog {
 	private static record EditorDefinition<T>(Component label, Editor<T> editor, Predicate<T> isSuitable) {

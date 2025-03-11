@@ -27,7 +27,7 @@ import net.minecraft.util.Mth;
 
 import java.util.List;
 
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 
 public class InspireToast implements Toast {
     int level;

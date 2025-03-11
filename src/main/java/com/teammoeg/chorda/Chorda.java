@@ -59,7 +59,8 @@ public class Chorda {
     public Chorda() {
         IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
         IEventBus forge = MinecraftForge.EVENT_BUS;
-
+        LOGGER.info(COMMON_INIT, "Reading Modlist");
+        CompatModule.enableCompatModule();
         // Config
         LOGGER.info(COMMON_INIT, "Loading Config");
         ChordaConfig.register();

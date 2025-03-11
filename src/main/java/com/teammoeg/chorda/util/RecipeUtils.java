@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.chorda.Chorda;
 
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -48,7 +47,7 @@ public class RecipeUtils {
                 }
             }
             if (count > 0) {// wrong, revert.
-            	FHMain.LOGGER.error("cost item can not be consumed successfully, this is unusual, consider cheat or data issues");
+            	Chorda.LOGGER.error("cost item can not be consumed successfully, this is unusual, consider cheat or data issues");
                 for (ItemStack it : ret)
                     CUtils.giveItem(player, it);
                 return false;

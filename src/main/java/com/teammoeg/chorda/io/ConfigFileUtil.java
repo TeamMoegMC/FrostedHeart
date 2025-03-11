@@ -16,8 +16,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
+import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.config.ConfigFileType;
-import com.teammoeg.frostedheart.FHMain;
+
 
 public class ConfigFileUtil {
 	private static Gson gs = new GsonBuilder().setPrettyPrinting().create();
@@ -31,9 +32,9 @@ public class ConfigFileUtil {
 		if (f.exists())
 			try {
 				JsonElement je = JsonParser.parseString(FileUtil.readString(f));
-				return c.codec().parse(JsonOps.INSTANCE, je).resultOrPartial(FHMain.LOGGER::error).orElse(null);
+				return c.codec().parse(JsonOps.INSTANCE, je).resultOrPartial(Chorda.LOGGER::error).orElse(null);
 			} catch (IOException e) {
-				FHMain.LOGGER.error("Cannot load data " + c + ":" + f.getName() + ": " + e.getMessage());
+				Chorda.LOGGER.error("Cannot load data " + c + ":" + f.getName() + ": " + e.getMessage());
 			}
 		return null;
 	}
@@ -45,7 +46,7 @@ public class ConfigFileUtil {
 				f.deleteOnExit();
 	}
 	public static <T> Map<String, T> loadAll(ConfigFileType<T> c) {
-		FHMain.LOGGER.info("loading " + c + " data from files...");
+		Chorda.LOGGER.info("loading " + c + " data from files...");
 		Map<String, T> list = new LinkedHashMap<>();
 		MutableObject<String> sk = new MutableObject<>();
 		Consumer<T> addToList = t -> list.put(sk.getValue(), t);
@@ -56,10 +57,10 @@ public class ConfigFileUtil {
 					String id = f.getName();
 					id = id.substring(0, id.length() - 5);
 					sk.setValue(id);
-					c.codec().parse(JsonOps.INSTANCE, je).resultOrPartial(FHMain.LOGGER::error).ifPresent(addToList);
+					c.codec().parse(JsonOps.INSTANCE, je).resultOrPartial(Chorda.LOGGER::error).ifPresent(addToList);
 				} catch (Exception e) {
 					e.printStackTrace();
-					FHMain.LOGGER.warn("Cannot load data " + f.getName() + ": " + e.getMessage());
+					Chorda.LOGGER.warn("Cannot load data " + f.getName() + ": " + e.getMessage());
 				}
 
 			}

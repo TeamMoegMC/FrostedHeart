@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.ResearchListeners;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;

@@ -1,7 +1,7 @@
 {
-  "type": "frostedheart:modify_damage",
+  "type": "chorda:modify_damage",
   "tool": {
-    "item": "frostedheart:quill_and_ink"
+    "item": "frostedresearch:quill_and_ink"
   },
   "item": {
     "item": "frostedheart:generator_ash"

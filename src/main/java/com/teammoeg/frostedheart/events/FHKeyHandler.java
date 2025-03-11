@@ -2,10 +2,10 @@ package com.teammoeg.frostedheart.events;
 
 import org.lwjgl.glfw.GLFW;
 
+import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
-import com.teammoeg.frostedheart.compat.CompatModule;
 import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;

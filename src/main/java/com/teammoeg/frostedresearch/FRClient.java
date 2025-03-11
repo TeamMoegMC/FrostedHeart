@@ -3,8 +3,6 @@ package com.teammoeg.frostedresearch;
 import java.util.function.Function;
 
 import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedresearch.blocks.MechCalcRenderer;
 import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskScreen;
 
@@ -13,17 +11,24 @@ import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
-
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+@Mod.EventBusSubscriber(modid = FRMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class FRClient {
+	
 
 	public FRClient() {
 		// TODO Auto-generated constructor stub
 	}
-	public static void setup() {
-		MechCalcRenderer.MODEL   = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/mechanical_calculator_movable").register();
+	 @SubscribeEvent
+	 public static void setup(FMLClientSetupEvent event) {
+		MechCalcRenderer.MODEL = DynamicBlockModelReference.getModelCached(FRMain.MODID, "block/mechanical_calculator_movable").register();
 		
 	}
-	public static void initScreen() {
+	 @SubscribeEvent
+	public static void initScreen(FMLClientSetupEvent event) {
 		registerFTBScreen(FRContents.MenuTypes.DRAW_DESK.get(), DrawDeskScreen::new);
 	}
     public static <C extends AbstractContainerMenu, S extends BaseScreen> void

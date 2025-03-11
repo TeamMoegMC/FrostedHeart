@@ -24,7 +24,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 import com.teammoeg.frostedresearch.research.Research;

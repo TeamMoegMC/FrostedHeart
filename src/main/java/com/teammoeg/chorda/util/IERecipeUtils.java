@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.chorda.Chorda;
 
 public class IERecipeUtils {
     public static BitSet checkItemList(Player player, List<IngredientWithSize> costList) {
@@ -85,7 +85,7 @@ public class IERecipeUtils {
                 }
             }
             if (count > 0) {// wrong, revert.
-            	FHMain.LOGGER.error("cost item can not be consumed successfully, this is unusual, consider cheat or data issues");
+            	Chorda.LOGGER.error("cost item can not be consumed successfully, this is unusual, consider cheat or data issues");
                 for (ItemStack it : ret)
                     CUtils.giveItem(player, it);
                 return false;

@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import com.teammoeg.chorda.client.cui.RTextField;
 import com.teammoeg.chorda.client.icon.CIconFTBWrapper;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FHResearch;
-import com.teammoeg.frostedresearch.gui.RTextField;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.TechScrollBar;
 import com.teammoeg.frostedresearch.research.Research;

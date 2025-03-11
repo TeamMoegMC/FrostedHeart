@@ -19,8 +19,8 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.cui.UIWidget;
-import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.network.chat.Component;
 
@@ -34,7 +34,7 @@ public class NumberBox extends LabeledTextBox {
         try {
             return Long.parseLong(getText());
         } catch (NumberFormatException ex) {
-            FHMain.LOGGER.error("Error parsing number", ex);
+            Chorda.LOGGER.error("Error parsing number", ex);
             return Long.parseLong(orig);
         }
 

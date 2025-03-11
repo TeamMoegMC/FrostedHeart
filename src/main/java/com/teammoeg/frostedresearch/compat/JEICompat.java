@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.ResearchListeners;
@@ -241,7 +241,7 @@ public class JEICompat implements IModPlugin {
         ClientLevel world = Minecraft.getInstance().level;
         checkNotNull(world, "minecraft world");
         RecipeManager recipeManager = world.getRecipeManager();
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::scheduleSyncJEI);
+        JEICompat.scheduleSyncJEI();
     }
 
 

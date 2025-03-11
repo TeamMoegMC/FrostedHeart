@@ -19,8 +19,13 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.Button;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
@@ -30,16 +35,7 @@ import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.advancements.Advancement;
-import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class LabeledSelection<R> extends LabeledPane<TextButton> {
     List<R> objs;

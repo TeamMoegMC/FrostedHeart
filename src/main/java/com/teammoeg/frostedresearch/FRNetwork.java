@@ -22,7 +22,7 @@ public class FRNetwork extends CBaseNetwork {
 	}
 
 	@Override
-	public void register() {
+	public void registerMessages() {
 
         //Research Messages
         registerMessage("research_registry", FHResearchRegistrtySyncPacket.class);

@@ -19,13 +19,13 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import com.teammoeg.chorda.client.cui.RTextField;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.data.ResearchData;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
-import com.teammoeg.frostedresearch.gui.RTextField;
 import com.teammoeg.frostedresearch.gui.ResearchEditUtils;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.TechTextButton;

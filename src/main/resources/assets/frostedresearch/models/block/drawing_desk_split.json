@@ -1,17 +1,17 @@
 {
 	"parent": "minecraft:block/block",
 	"textures": {
-		"particle": "frostedheart:block/escritoire_main"
+		"particle": "frostedresearch:block/escritoire_main"
 	},
 	"loader": "immersiveengineering:basic_split",
 	"dynamic": false,
 	"inner_model": {
 		"parent": "minecraft:block/block",
 		"textures": {
-			"particle": "frostedheart:block/escritoire_main"
+			"particle": "frostedresearch:block/escritoire_main"
 		},
 		"loader": "forge:obj",
-		"model": "frostedheart:models/block/escritoire.obj",
+		"model": "frostedresearch:models/block/escritoire.obj",
 		"automatic_culling": false,
 		"flip_v": true,
 		"render_type": "cutout"

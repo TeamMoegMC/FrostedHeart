@@ -22,13 +22,13 @@
           "conditions": [
             {
               "condition": "minecraft:block_state_property",
-              "block": "frostedheart:drawing_desk",
+              "block": "frostedresearch:drawing_desk",
               "properties": {
                 "not_multi_main": "true"
               }
             }
           ],
-          "name": "frostedheart:drawing_desk"
+          "name": "frostedresearch:drawing_desk"
         }
       ],
       "conditions": [

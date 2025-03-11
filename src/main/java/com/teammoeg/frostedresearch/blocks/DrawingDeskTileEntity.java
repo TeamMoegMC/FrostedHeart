@@ -24,7 +24,7 @@ import java.util.Random;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FRContents;
 import com.teammoeg.frostedresearch.ResearchListeners;
 import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskContainer;
@@ -188,7 +188,7 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
 
     @Override
     public Component getDisplayName() {
-        return Lang.translateKey("gui.frostedheart.draw_desk");
+        return Lang.translate("gui","draw_desk");
     }
 
 }

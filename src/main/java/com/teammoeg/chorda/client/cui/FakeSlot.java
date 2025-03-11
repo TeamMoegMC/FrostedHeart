@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedresearch.gui;
+package com.teammoeg.chorda.client.cui;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.CGuiHelper;

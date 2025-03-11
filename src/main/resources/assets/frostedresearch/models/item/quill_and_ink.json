@@ -1,9 +1,9 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "frostedheart:item/quill_and_ink"
+    "layer0": "frostedresearch:item/quill_and_ink"
   },
   "overrides":[
-  	{"predicate":{"damaged":1,"damage":0.99},"model":"frostedheart:item/empty_quill_and_ink"}
+  	{"predicate":{"damaged":1,"damage":0.99},"model":"frostedresearch:item/empty_quill_and_ink"}
   ]
 }

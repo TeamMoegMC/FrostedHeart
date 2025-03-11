@@ -19,17 +19,30 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import com.google.common.collect.Iterators;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.Layer;
-import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
+import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextBox;
 import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
@@ -38,11 +51,8 @@ import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.chorda.util.Lang;
-import com.teammoeg.frostedheart.FHMain;
 
-import dev.ftb.mods.ftblibrary.ui.Panel;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
@@ -56,13 +66,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * @author khjxiaogu
@@ -443,7 +446,7 @@ public class SelectStackDialog<T> extends EditDialog {
                     try {
                         nbt.put("ForgeCaps", TagParser.parseTag(s));
                     } catch (CommandSyntaxException e) {
-                        FHMain.LOGGER.error("Error parsing NBT when setting ForgeCaps in SelectItemStackDialog");
+                    	Chorda.LOGGER.error("Error parsing NBT when setting ForgeCaps in SelectItemStackDialog");
                         e.printStackTrace();
                     }
                 }
@@ -495,7 +498,7 @@ public class SelectStackDialog<T> extends EditDialog {
                 try {
                     current = type.load(TagParser.parseTag(s));
                 } catch (CommandSyntaxException e) {
-                    FHMain.LOGGER.error("Error parsing NBT when setting ItemStack in SelectItemStackDialog");
+                	Chorda.LOGGER.error("Error parsing NBT when setting ItemStack in SelectItemStackDialog");
                     e.printStackTrace();
                 }
             });
@@ -514,7 +517,7 @@ public class SelectStackDialog<T> extends EditDialog {
                 try {
                     type.setTag(current,TagParser.parseTag(s));
                 } catch (CommandSyntaxException e) {
-                    FHMain.LOGGER.error("Error parsing NBT when setting NBT in SelectItemStackDialog");
+                	Chorda.LOGGER.error("Error parsing NBT when setting NBT in SelectItemStackDialog");
                     e.printStackTrace();
                 }
             });

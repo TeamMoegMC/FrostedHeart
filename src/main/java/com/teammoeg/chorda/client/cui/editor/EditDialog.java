@@ -19,12 +19,12 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.Layer;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.ChatFormatting;
 
@@ -47,7 +47,7 @@ public abstract class EditDialog extends Layer {
             onClose();
         } catch (Throwable ex) {
             ex.printStackTrace();
-            FHMain.LOGGER.error("Error closing dialog", ex);
+            Chorda.LOGGER.error("Error closing dialog", ex);
         }
         try {
             if (previous != null) {

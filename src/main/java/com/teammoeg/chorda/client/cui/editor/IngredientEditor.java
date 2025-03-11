@@ -20,17 +20,21 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.cui.editor.EditorSelector.EditorSelectorBuilder;
-import com.teammoeg.chorda.client.icon.CIconFTBWrapper;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.frostedheart.FHMain;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Widget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -46,13 +50,6 @@ import net.minecraft.world.item.crafting.Ingredient.Value;
 import net.minecraftforge.common.crafting.CompoundIngredient;
 import net.minecraftforge.common.crafting.PartialNBTIngredient;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 public class IngredientEditor extends BaseEditDialog {
     public static final Editor<Ingredient> EDITOR_JSON = (p, l, v, c) -> Editors.JSON_PROMPT.open(p, l, v == null ? null : v.toJson(), e -> c.accept(Ingredient.fromJson(e)));
@@ -72,7 +69,7 @@ public class IngredientEditor extends BaseEditDialog {
             try {
                 vx = tag.location().toString();
             } catch (Exception ex) {
-                FHMain.LOGGER.error("Error creating editor tag list", ex);
+            	Chorda.LOGGER.error("Error creating editor tag list", ex);
             }
         }
         Editors.EDITOR_ITEM_TAGS.open(p, l, vx, s -> c.accept(new TagValue(ItemTags.create(new ResourceLocation(s)))));

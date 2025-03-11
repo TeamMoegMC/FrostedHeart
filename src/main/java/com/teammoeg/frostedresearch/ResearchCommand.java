@@ -28,7 +28,6 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 import com.teammoeg.frostedresearch.research.Research;
@@ -46,12 +45,12 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@Mod.EventBusSubscriber(modid = FRMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ResearchCommand {
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("research")
+        LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("research").requires(s -> s.hasPermission(2))
                 // Insight
                 .then(Commands.literal("insight")
                         // add insight
@@ -282,8 +281,9 @@ public class ResearchCommand {
 
 
         // Register
-        for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
-            dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(add));
-        }
+     
+            dispatcher.register(Commands.literal("frostedheart").then(add));
+            dispatcher.register(add);
+        
     }
 }

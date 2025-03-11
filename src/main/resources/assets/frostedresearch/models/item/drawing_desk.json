@@ -1,5 +1,5 @@
 {
-  "parent": "frostedheart:block/drawing_desk",
+  "parent": "frostedresearch:block/drawing_desk",
   "display": {
     "thirdperson_righthand": {
       "rotation": [ -90, 0, 0 ],

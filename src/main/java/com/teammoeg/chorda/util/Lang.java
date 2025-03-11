@@ -55,20 +55,7 @@ public class Lang {
         return message(name, args).component();
     }
 
-    @Deprecated
-    public static MutableComponent translateResearchCategoryDesc(String name, Object... args) {
-        return researchCategoryDesc(name, args).component();
-    }
 
-    @Deprecated
-    public static MutableComponent translateResearchCategoryName(String name, Object... args) {
-        return researchCategoryName(name, args).component();
-    }
-
-    @Deprecated
-    public static MutableComponent translateResearchLevel(String name, Object... args) {
-        return researchLevel(name, args).component();
-    }
 
     @Deprecated
     public static MutableComponent translateTooltip(String name, Object... args) {
@@ -142,17 +129,6 @@ public class Lang {
         return translate("message", suffix, args);
     }
 
-    public static LangBuilder researchCategoryDesc(String suffix, Object... args) {
-        return translate("research.category.desc", suffix, args);
-    }
-
-    public static LangBuilder researchCategoryName(String suffix, Object... args) {
-        return translate("research.category", suffix, args);
-    }
-
-    public static LangBuilder researchLevel(String suffix, Object... args) {
-        return translate("research.level", suffix, args);
-    }
 
     public static LangBuilder tooltip(String suffix, Object... args) {
         return translate("tooltip", suffix, args);

@@ -20,12 +20,12 @@
 package com.teammoeg.frostedresearch.gui.tech;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
+import com.teammoeg.chorda.client.cui.RTextField;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.data.ResearchData;
 import com.teammoeg.frostedresearch.gui.FramedPanel;
-import com.teammoeg.frostedresearch.gui.RTextField;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.TechTextButton;
 import com.teammoeg.frostedresearch.network.FHEffectTriggerPacket;

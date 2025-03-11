@@ -19,17 +19,18 @@
 
 package com.teammoeg.frostedresearch.blocks;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import java.util.List;
+import java.util.function.Supplier;
+
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.block.CKineticBlock;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedresearch.FRContents;
 
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -53,9 +54,6 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.common.util.FakePlayer;
-
-import java.util.List;
-import java.util.function.Supplier;
 
 public class MechCalcBlock extends CKineticBlock implements CEntityBlock<MechCalcTileEntity>, ICreativeModeTabItem {
     static final VoxelShaper shape = VoxelShaper.forDirectional(Shapes.or(Block.box(0, 0, 0, 16, 9, 16), Block.box(0, 9, 0, 16, 16, 13)), Direction.SOUTH);
@@ -122,7 +120,7 @@ public class MechCalcBlock extends CKineticBlock implements CEntityBlock<MechCal
 
     @Override
     public void fillItemCategory(CreativeTabItemHelper helper) {
-        if (helper.isType(FHTabs.itemGroup)) {
+        if (helper.isType(FRContents.Tabs.BLOCK_TAB_TYPE)) {
             helper.accept(this);
             ItemStack is = new ItemStack(this);
             is.getOrCreateTag().putBoolean("prod", true);

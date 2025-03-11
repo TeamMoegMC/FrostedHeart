@@ -13,9 +13,6 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
-import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
-
-import io.netty.buffer.ByteBufAllocator;
 import net.minecraft.network.FriendlyByteBuf;
 
 import static org.objectweb.asm.Opcodes.*;

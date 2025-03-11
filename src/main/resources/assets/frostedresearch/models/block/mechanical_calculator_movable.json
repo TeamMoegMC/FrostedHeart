@@ -4,8 +4,8 @@
   "flip_v": true,
   "loader": "immersiveengineering:ie_obj",
   "callbacks":"immersiveengineering:submodel",
-  "model": "frostedheart:models/block/mechanical_calculator_movable.obj",
+  "model": "frostedresearch:models/block/mechanical_calculator_movable.obj",
   "textures": {
-    "particle": "frostedheart:block/obj/mechanical_calculator"
+    "particle": "frostedresearch:block/obj/mechanical_calculator"
   }
 }

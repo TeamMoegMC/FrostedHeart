@@ -24,6 +24,11 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.FakeSlot;
+import com.teammoeg.chorda.client.cui.RTextField;
+import com.teammoeg.chorda.client.cui.SwitchButton;
+import com.teammoeg.chorda.client.cui.ToolTipWidget;
+import com.teammoeg.chorda.client.cui.TristateButton;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.FHNetwork;
@@ -33,11 +38,6 @@ import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
-import com.teammoeg.frostedresearch.gui.FakeSlot;
-import com.teammoeg.frostedresearch.gui.RTextField;
-import com.teammoeg.frostedresearch.gui.SwitchButton;
-import com.teammoeg.frostedresearch.gui.ToolTipWidget;
-import com.teammoeg.frostedresearch.gui.TristateButton;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;

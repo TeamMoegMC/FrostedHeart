@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
-import com.teammoeg.chorda.util.Lang;
-import com.teammoeg.frostedresearch.gui.RTextField;
+import com.teammoeg.chorda.client.cui.RTextField;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 
 import dev.ftb.mods.ftblibrary.ui.Button;

@@ -28,12 +28,9 @@ import com.teammoeg.chorda.dataholders.SpecialDataType;
 import com.teammoeg.chorda.network.CBaseNetwork;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.chorda.util.struct.OptionalLazy;
-import com.teammoeg.frostedheart.FHNetwork;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.PacketDistributor;
-
 import java.util.*;
 import java.util.function.Consumer;
 

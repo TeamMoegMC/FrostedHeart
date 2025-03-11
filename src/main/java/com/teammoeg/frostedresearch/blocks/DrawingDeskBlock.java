@@ -25,7 +25,7 @@ import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.util.IOwnerTile;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FRContents;
 import com.teammoeg.frostedresearch.events.DrawDeskOpenEvent;
 

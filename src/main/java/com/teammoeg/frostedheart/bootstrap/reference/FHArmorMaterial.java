@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart.bootstrap.reference;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
-import com.teammoeg.frostedheart.compat.CompatModule;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;

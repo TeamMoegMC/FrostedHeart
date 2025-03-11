@@ -4,6 +4,7 @@
     "frostedheart:packed_snow_slab",
     "#frostedheart:condensed_ores",
     "#frostedheart:sludge",
-    "#frostedheart:soil"
+    "#frostedheart:soil",
+    "minecraft:ice"
   ]
 }
