@@ -36,14 +36,27 @@ import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.apache.logging.log4j.Level;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class HealthCommonEvents {
 
-    static int tick = 0;
+    @SubscribeEvent
+    public static void onPlayerRespawn(PlayerEvent.Clone event){
+        Player player = event.getEntity();
+        Player original = event.getOriginal();
+
+        if (!(player instanceof ServerPlayer)) return;
+        NutritionCapability.getCapability(player).ifPresent(nutrition->{
+            NutritionCapability.getCapability(original).ifPresent(n->{
+                nutrition.set(n.get());
+            });
+        });
+    }
 
     @SubscribeEvent
     public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
@@ -71,19 +84,18 @@ public class HealthCommonEvents {
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         //InsightHandler.onPlayerTick(event);
 
-        tick++;
-        tick%=8000;
-
         Player player = event.player;
         if (!(player instanceof ServerPlayer)) return;
         if(player.isCreative() || player.isSpectator()) return;
 
-        if(tick%20==0){
+        long gameTime = event.player.level().getGameTime();
+
+        if(gameTime%20==0){
             NutritionCapability.getCapability(player).ifPresent(nutrition->{
                 nutrition.consume(player);
             });
         }
-        if(tick%200==0){
+        if(gameTime%200==0){
             NutritionCapability.getCapability(player).ifPresent(nutrition->{
                 nutrition.punishment(player);
             });

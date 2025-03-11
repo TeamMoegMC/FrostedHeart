@@ -49,7 +49,7 @@ void main() {
     float angle = atan2(finalUV.y - center.y,finalUV.x - center.x);
     angle = degrees(angle);
 
-    float inAngleRange = smoothstep(startAngle, startAngle + Smooth, angle) * (1.0 - smoothstep(endAngle-startAngle - Smooth, endAngle-startAngle, angle));
+    float inAngleRange = smoothstep(0, 0 + Smooth, angle) * (1.0 - smoothstep(endAngle-startAngle - Smooth, endAngle-startAngle, angle));
     float inRadiusRange = smoothstep(innerRadius, innerRadius + Smooth, distan) * (1.0 - smoothstep(outerRadius - Smooth, outerRadius, distan));
     float inSector = inAngleRange * inRadiusRange;
     if (inSector == 0.0) {
