@@ -50,7 +50,7 @@ public class NoArgConstructorFactory<R> extends AbstractConstructorFactory {
 			mv.visitEnd();
 		}
 		{// define read method
-			mv = target.visitMethod(ACC_PUBLIC, "apply", READ_ACCESSOR_READ_METHOD_DESC, null, null);
+			mv = target.visitMethod(ACC_PUBLIC, "get", READ_ACCESSOR_READ_METHOD_DESC, null, null);
 			mv.visitCode();
 			mv.visitInvokeDynamicInsn("invoke", "()" + Type.getDescriptor(retType), createCallSiteHandler());
 			mv.visitInsn(ARETURN);
