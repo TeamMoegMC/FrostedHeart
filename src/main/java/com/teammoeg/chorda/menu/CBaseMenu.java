@@ -407,15 +407,15 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 	}
 
 	public void sendMessage(int btnId, int state) {
-		ChordaNetwork.sendToServer(new ContainerOperationMessageC2S(this.containerId, (short) btnId, state));
+		ChordaNetwork.INSTANCE.sendToServer(new ContainerOperationMessageC2S(this.containerId, (short) btnId, state));
 	}
 
 	public void sendMessage(int btnId, boolean state) {
-		ChordaNetwork.sendToServer(new ContainerOperationMessageC2S(this.containerId, (short) btnId, state ? 1 : 0));
+		ChordaNetwork.INSTANCE.sendToServer(new ContainerOperationMessageC2S(this.containerId, (short) btnId, state ? 1 : 0));
 	}
 
 	public void sendMessage(int btnId, float state) {
-		ChordaNetwork.sendToServer(new ContainerOperationMessageC2S(this.containerId, (short) btnId, Float.floatToRawIntBits(state)));
+		ChordaNetwork.INSTANCE.sendToServer(new ContainerOperationMessageC2S(this.containerId, (short) btnId, Float.floatToRawIntBits(state)));
 	}
 
 	@Override
@@ -452,7 +452,7 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 				}
 			}
 			if (packet.hasData() && player != null)
-				ChordaNetwork.sendPlayer((ServerPlayer) player, packet);
+				ChordaNetwork.INSTANCE.sendPlayer((ServerPlayer) player, packet);
 
 		}
 	}
@@ -469,7 +469,7 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 				
 			}
 			if (packet.hasData() && player != null)
-				ChordaNetwork.sendPlayer((ServerPlayer) player, packet);
+				ChordaNetwork.INSTANCE.sendPlayer((ServerPlayer) player, packet);
 		}
 	}
 

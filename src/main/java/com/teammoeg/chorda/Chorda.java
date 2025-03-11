@@ -99,7 +99,7 @@ public class Chorda {
      * @param event The event
      */
     private void setup(final FMLCommonSetupEvent event) {
-        ChordaNetwork.register();
+        ChordaNetwork.INSTANCE.register();
     }
 	public void clientSetup(final FMLClientSetupEvent ev) {
 		CClientDataStorage.load();

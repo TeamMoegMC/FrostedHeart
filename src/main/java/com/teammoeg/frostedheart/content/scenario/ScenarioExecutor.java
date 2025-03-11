@@ -288,6 +288,7 @@ public class ScenarioExecutor<T> {
     public void register(Class<?> clazz) {
         try {
             Constructor<?> ctor = clazz.getConstructor();
+            ctor.setAccessible(true);
             registerInst(ctor.newInstance());
         } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException |
                  IllegalArgumentException e) {
