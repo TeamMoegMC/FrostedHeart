@@ -17,7 +17,7 @@ public class OneArgConstructorFactory<T, R> extends AbstractConstructorFactory {
 
 	public <AT extends R> Function<T, AT> create(Class<AT> clazz) throws InvocationTargetException, NoSuchMethodException {
 		try {// check if corresponding constructor exists
-			clazz.getConstructor(this.clazz);
+			clazz.getDeclaredConstructor(this.clazz);
 		} catch (SecurityException e) {
 			throw new InvocationTargetException(e);
 		} catch (NoSuchMethodException e) {

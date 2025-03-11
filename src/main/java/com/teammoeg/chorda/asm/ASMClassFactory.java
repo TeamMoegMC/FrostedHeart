@@ -14,7 +14,7 @@ public class ASMClassFactory {
 	}
 
 	protected String getUniqueName(Class<?> clazz) {
-		return (clazz.getPackageName()+".__ChordaAsm"+clazz.getSimpleName()).replace('.', '/');
+		return (clazz.getPackageName()+".__ChordaAsm"+clazz.getSimpleName()+"Accessor").replace('.', '/');
 	}
 
 	protected static class ASMClassLoader extends ClassLoader {

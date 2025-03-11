@@ -17,7 +17,11 @@ public class NoArgConstructorFactory extends AbstractConstructorFactory {
 
 	public <AT> Supplier<AT> create(Class<AT> clazz) throws InvocationTargetException, NoSuchMethodException {
 		try {// check if corresponding constructor exists
-			clazz.getConstructor();
+			try {
+				clazz.getConstructor();
+			} catch (NoSuchMethodException e) {
+				clazz.getDeclaredConstructor();
+			}
 		} catch (SecurityException e) {
 			throw new InvocationTargetException(e);
 		} catch (NoSuchMethodException e) {
