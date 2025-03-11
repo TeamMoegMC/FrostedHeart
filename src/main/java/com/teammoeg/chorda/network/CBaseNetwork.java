@@ -4,11 +4,15 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.asm.OneArgConstructorFactory;
+import com.teammoeg.chorda.util.struct.MutableSupplier;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -16,6 +20,7 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor.PacketTarget;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public abstract class CBaseNetwork {
@@ -32,7 +37,7 @@ public abstract class CBaseNetwork {
 	};
 	public abstract void registerMessages();
 	private Map<Class<? extends CMessage>, ResourceLocation> classesId = new IdentityHashMap<>(100);
-	private final static PacketLoaderFactory accessorFactory=new PacketLoaderFactory();
+	private final static OneArgConstructorFactory<FriendlyByteBuf,CMessage> accessorFactory=new OneArgConstructorFactory<>(FriendlyByteBuf.class, CMessage.class);
 	private int iid = 0;
 	private String modid;
 	public SimpleChannel get() {
@@ -50,10 +55,8 @@ public abstract class CBaseNetwork {
 	public synchronized <T extends CMessage> void registerMessage(String name, Class<T> msg) {
 	    classesId.put(msg, new ResourceLocation(modid,name));
 	    try {
-	        Constructor<T> ctor = msg.getDeclaredConstructor(FriendlyByteBuf.class);
-	        ctor.setAccessible(true);
-	        CHANNEL.registerMessage(++iid, msg, CMessage::encode, accessorFactory.create(ctor), CMessage::handle);
-	    } catch (NoSuchMethodException | SecurityException | InvocationTargetException e1) {
+	        CHANNEL.registerMessage(++iid, msg, CMessage::encode, accessorFactory.create(msg), CMessage::handle);
+	    } catch (Throwable e1) {
 	    	Chorda.LOGGER.error("Can not register message " + msg.getSimpleName());
 	        e1.printStackTrace();
 	    }
@@ -80,9 +83,18 @@ public abstract class CBaseNetwork {
 			}
 		}
 	}
+	private static class MutablePacketTarget{
+		
+		MutableSupplier<ServerPlayer> ms=new MutableSupplier<>();
+		PacketTarget target=PacketDistributor.PLAYER.with(ms);
+	}
+	private static final ThreadLocal<MutablePacketTarget> playerSupplier=ThreadLocal.withInitial(MutablePacketTarget::new);
 	public void sendPlayer(ServerPlayer p, CMessage message) {
 		checkIsProperMessage(message);
-	    send(PacketDistributor.PLAYER.with(() -> p), message);
+		MutablePacketTarget supplier=playerSupplier.get();
+		supplier.ms.set(p);
+		
+	    send(supplier.target, message);
 	}
 
 	public void send(PacketDistributor.PacketTarget target, CMessage message) {

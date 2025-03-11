@@ -58,10 +58,6 @@ import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
 
-
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.network.NetworkRegistry;
-
 public class FHNetwork extends CBaseNetwork {
 	private FHNetwork() {
 		super(FHMain.MODID);
