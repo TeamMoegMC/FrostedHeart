@@ -49,8 +49,9 @@ public class GatherFoodNutritionEvent extends Event {
 		return modified;
 	}
 	public boolean isModified() {
-		return modified==null;
+		return modified!=null;
 	}
+
 	public Nutrition queryNutrition(ItemStack stack) {
 		if(consumer!=null)
 			return NutritionRecipe.getRecipeFromItem(consumer, stack);
