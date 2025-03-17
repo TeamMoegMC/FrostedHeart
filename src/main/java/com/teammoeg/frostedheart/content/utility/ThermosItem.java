@@ -25,10 +25,10 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
-import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.water.item.DurableDrinkContainerItem;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.data.DrinkTempData;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;

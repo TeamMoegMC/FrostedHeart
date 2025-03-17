@@ -43,7 +43,7 @@ import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedheart.util.Lang;
 
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -188,7 +188,7 @@ public class EditListDialog<T> extends EditDialog {
     @Override
     public void onClosed() {
         if (modified) {
-            Editors.CONFIRM_DIALOG.open(this, Lang.translateKey("gui.chorda.editor.unsaved_changes"), true, e -> {
+            Editors.CONFIRM_DIALOG.open(this, Components.translatable("gui.chorda.editor.unsaved_changes"), true, e -> {
                 if (!e) open();
             });
         }
@@ -198,7 +198,7 @@ public class EditListDialog<T> extends EditDialog {
         public ButtonAddValue(Layer panel) {
             super(panel);
             setHeight(18);
-            setTitle(Components.str("+ ").append(Lang.translateKey("gui.add")));
+            setTitle(Components.str("+ ").append(Components.translatable("gui.add")));
         }
 
 
@@ -213,7 +213,7 @@ public class EditListDialog<T> extends EditDialog {
         @Override
         public void onClicked(MouseButton button) {
             CInputHelper.playClickSound();
-            editor.open(this,Lang.translateKey("gui.add"), def, s -> {
+            editor.open(this,Components.translatable("gui.add"), def, s -> {
                 if (s != null) {
                     modified = true;
                     list.add(s);

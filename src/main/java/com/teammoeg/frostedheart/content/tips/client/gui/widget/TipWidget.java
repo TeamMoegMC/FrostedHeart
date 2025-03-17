@@ -25,8 +25,8 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
-import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.util.Lang;
 
 import lombok.Getter;
 import net.minecraft.client.Minecraft;

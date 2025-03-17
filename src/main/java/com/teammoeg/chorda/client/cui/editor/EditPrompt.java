@@ -26,7 +26,8 @@ import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.network.chat.Component;
 
@@ -38,7 +39,7 @@ public class EditPrompt extends BaseEditDialog {
     public EditPrompt(UIWidget panel, Component label, String val, Consumer<String> onFinished) {
         super(panel);
         box = new LabeledTextBox(this, label, val);
-        ok = new TextButton(this, Lang.translateKey("gui.accept"), CIcons.nop()) {
+        ok = new TextButton(this, Components.translatable("gui.accept"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -51,7 +52,7 @@ public class EditPrompt extends BaseEditDialog {
             }
 
         };
-        cancel = new TextButton(this, Lang.translateKey("gui.cancel"), CIcons.nop()) {
+        cancel = new TextButton(this, Components.translatable("gui.cancel"), CIcons.nop()) {
 
             @Override
             public void onClicked(MouseButton arg0) {

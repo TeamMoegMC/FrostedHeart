@@ -35,9 +35,9 @@ import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.ui.RotatableUV;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
-import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 
 import blusunrize.immersiveengineering.api.Lib;

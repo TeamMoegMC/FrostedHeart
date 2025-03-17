@@ -26,10 +26,10 @@ import java.util.Map.Entry;
 import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.io.NBTSerializable;
-import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.util.Lang;
 
 import lombok.Setter;
 import net.minecraft.Util;

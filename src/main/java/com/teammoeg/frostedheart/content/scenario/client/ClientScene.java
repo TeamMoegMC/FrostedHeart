@@ -26,7 +26,6 @@ import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.StringTextComponentParser;
-import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.chorda.util.struct.BitObserverList;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.IScenarioDialog;
@@ -39,6 +38,7 @@ import com.teammoeg.frostedheart.content.scenario.network.C2SSettingsPacket;
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.minecraft.accessors.NewChatGuiAccessor;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.client.GuiMessage;
 import net.minecraft.client.GuiMessageTag;

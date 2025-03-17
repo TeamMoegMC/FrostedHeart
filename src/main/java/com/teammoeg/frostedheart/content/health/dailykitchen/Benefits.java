@@ -23,8 +23,9 @@ import java.util.Random;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.chorda.util.CRegistryHelper;
-import com.teammoeg.chorda.util.Lang;
+
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.item.Item;

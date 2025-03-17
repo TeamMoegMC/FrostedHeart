@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.kinetics.crank.HandCrankBlock;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;

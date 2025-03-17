@@ -25,9 +25,9 @@ import java.util.Random;
 import java.util.Set;
 
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.tags.ItemTags;

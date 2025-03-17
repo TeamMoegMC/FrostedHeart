@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.utility;
 
 import com.teammoeg.frostedheart.item.FHBaseItem;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 

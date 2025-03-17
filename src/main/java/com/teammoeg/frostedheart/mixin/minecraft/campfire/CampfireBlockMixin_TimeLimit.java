@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft.campfire;
 
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 import com.teammoeg.frostedresearch.ResearchListeners;
 

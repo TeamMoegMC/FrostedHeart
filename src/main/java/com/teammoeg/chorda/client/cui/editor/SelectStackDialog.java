@@ -50,7 +50,7 @@ import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -245,7 +245,7 @@ public class SelectStackDialog<T> extends EditDialog {
         this.modes.addAll(Arrays.asList(listers));
         int bsize = width / 2 - 30;
 
-        buttonCancel = new TextButton(this, Lang.translateKey("gui.cancel"), CIcons.nop()) {
+        buttonCancel = new TextButton(this, Components.translatable("gui.cancel"), CIcons.nop()) {
             @Override
             public void onClicked(MouseButton button) {
                 CInputHelper.playClickSound();
@@ -260,7 +260,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
         buttonCancel.setPosAndSize(27, height - 24, bsize, 16);
 
-        buttonAccept = new TextButton(this, Lang.translateKey("gui.accept"), CIcons.nop()) {
+        buttonAccept = new TextButton(this, Components.translatable("gui.accept"), CIcons.nop()) {
             @Override
             public void onClicked(MouseButton button) {
             	CInputHelper.playClickSound();

@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.content.climate;
 
-import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.health.dailykitchen.DailyKitchen;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 
 import net.minecraft.ChatFormatting;

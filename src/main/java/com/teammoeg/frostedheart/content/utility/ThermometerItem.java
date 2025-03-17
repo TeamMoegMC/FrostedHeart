@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.utility;
 import java.util.List;
 
 import com.teammoeg.frostedheart.item.FHBaseItem;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 
 import net.minecraft.world.item.TooltipFlag;

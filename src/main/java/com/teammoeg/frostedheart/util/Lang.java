@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.chorda.util;
+package com.teammoeg.frostedheart.util;
 
 import java.util.Locale;
 

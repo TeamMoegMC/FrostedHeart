@@ -27,9 +27,9 @@ import java.util.function.Function;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.chorda.util.Lang;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;

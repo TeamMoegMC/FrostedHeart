@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.waypoint.waypoints;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.util.Lang;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.nbt.CompoundTag;

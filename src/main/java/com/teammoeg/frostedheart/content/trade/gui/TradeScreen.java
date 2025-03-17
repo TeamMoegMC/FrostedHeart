@@ -30,7 +30,6 @@ import com.teammoeg.chorda.client.cui.SwitchButton;
 import com.teammoeg.chorda.client.cui.ToolTipWidget;
 import com.teammoeg.chorda.client.cui.TristateButton;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.util.Lang;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.trade.RelationModifier;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer.DetectionSlot;
@@ -38,6 +37,7 @@ import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
+import com.teammoeg.frostedheart.util.Lang;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
