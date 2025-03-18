@@ -19,13 +19,23 @@
 
 package com.teammoeg.frostedheart.events;
 
+import com.simibubi.create.foundation.item.ItemDescription;
+import com.simibubi.create.foundation.item.KineticStats;
+import com.simibubi.create.foundation.item.TooltipHelper;
+import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
+import com.teammoeg.frostedheart.bootstrap.client.FHTooltips;
 import com.teammoeg.frostedheart.compat.ftbq.FHGuiProviders;
 import com.teammoeg.frostedheart.compat.ie.FHManual;
 import com.teammoeg.frostedheart.compat.tetra.TetraClient;
 import com.teammoeg.frostedheart.content.climate.particle.SnowParticle;
+import com.teammoeg.frostedheart.content.climate.tooltips.BlockTempStats;
+import com.teammoeg.frostedheart.content.climate.tooltips.EquipmentTempStats;
+import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
+import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
+import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestExtension;
@@ -52,8 +62,8 @@ import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import static com.teammoeg.frostedheart.FHMain.CLIENT_SETUP;
-import static com.teammoeg.frostedheart.FHMain.LOGGER;
+
+import static com.teammoeg.frostedheart.FHMain.*;
 
 /**
  * Client side events fired on mod bus.
@@ -83,7 +93,17 @@ public class FHClientEventsMod {
             FHGuiProviders.setRewardGuiProviders();
         }
         LOGGER.info(CLIENT_SETUP, "FML Client setup event finished");
-       
+
+        	REGISTRATE.setTooltipModifierFactory(item -> {
+			return new ItemDescription.Modifier(item, TooltipHelper.Palette.STANDARD_CREATE)
+				.andThen(new FoodTempStats(item))
+				.andThen(TooltipModifier.mapNull(FoodNutritionStats.create(item)))
+				.andThen(TooltipModifier.mapNull(PlantTempStats.create(item)))
+				.andThen(TooltipModifier.mapNull(BlockTempStats.create(item)))
+				.andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))
+				.andThen(TooltipModifier.mapNull(KineticStats.create(item)));
+		});
+		FHTooltips.registerTooltipModifiers();
         /*
          ItemBlockRenderTypes.setRenderLayer(FHBlocks.RYE_BLOCK.get(), RenderType.cutout());
 		ItemBlockRenderTypes.setRenderLayer(FHBlocks.WHITE_TURNIP_BLOCK.get(), RenderType.cutout());

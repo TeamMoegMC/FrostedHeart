@@ -117,7 +117,7 @@ public class FHMain {
 	// Registrate
 	public static final FHRegistrate REGISTRATE = FHRegistrate.create(MODID);
 	static {
-		REGISTRATE.setTooltipModifierFactory(item -> {
+	/*	REGISTRATE.setTooltipModifierFactory(item -> {
 			return new ItemDescription.Modifier(item, TooltipHelper.Palette.STANDARD_CREATE)
 				.andThen(new FoodTempStats(item))
 				.andThen(TooltipModifier.mapNull(FoodNutritionStats.create(item)))
@@ -126,7 +126,7 @@ public class FHMain {
 				.andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))
 				.andThen(TooltipModifier.mapNull(KineticStats.create(item)));
 		});
-		FHTooltips.registerTooltipModifiers();
+		FHTooltips.registerTooltipModifiers();*/
 	}
 
 	public static ResourceLocation rl(String path) {
