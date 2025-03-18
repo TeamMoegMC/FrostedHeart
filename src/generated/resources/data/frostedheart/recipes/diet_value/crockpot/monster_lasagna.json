@@ -3,8 +3,8 @@
   "group": {
     "carbohydrate": 0.0,
     "fat": 0.0,
-    "protein": 0.02525656,
+    "protein": 0.63141394,
     "vegetable": 0.0
   },
-  "item": "minecraft:air"
+  "item": "crockpot:monster_lasagna"
 }

@@ -45,13 +45,19 @@ public class  NutritionRecipeBuilder  implements RecipeBuilder {
 	// Pt=蛋白
 	private float fat,carbohydrate,protein,vegetable;
 	protected Item item;
+	protected ResourceLocation itemID;
 	private final Advancement.Builder advancement = Advancement.Builder.recipeAdvancement();
 
 	public  NutritionRecipeBuilder () {
 	}
 
-	public  NutritionRecipeBuilder  item(Item item) {
+	public  NutritionRecipeBuilder item(Item item) {
 		this.item = item;
+		return this;
+	}
+
+	public  NutritionRecipeBuilder ItemID(ResourceLocation resourceLocation) {
+		this.itemID = resourceLocation;
 		return this;
 	}
 
@@ -102,17 +108,18 @@ public class  NutritionRecipeBuilder  implements RecipeBuilder {
 	@Override
 	public void save(Consumer<FinishedRecipe> pFinishedRecipeConsumer, ResourceLocation pRecipeId) {
 		this.advancement.parent(ROOT_RECIPE_ADVANCEMENT).addCriterion("has_the_recipe", RecipeUnlockedTrigger.unlocked(pRecipeId)).rewards(net.minecraft.advancements.AdvancementRewards.Builder.recipe(pRecipeId)).requirements(RequirementsStrategy.OR);
-		pFinishedRecipeConsumer.accept(new Result(pRecipeId,fat,carbohydrate,protein,vegetable,item, this.advancement, pRecipeId.withPrefix("recipes/diet_value/")));
+		pFinishedRecipeConsumer.accept(new Result(pRecipeId,fat,carbohydrate,protein,vegetable,item,itemID, this.advancement, pRecipeId.withPrefix("recipes/diet_value/")));
 	}
 	public static class Result implements FinishedRecipe {
 
 		private final float fat,carbohydrate,protein,vegetable;
 		protected Item item;
+		protected ResourceLocation itemID;
 		private final ResourceLocation id;
 		private final Advancement.Builder advancement;
 		private final ResourceLocation advancementId;
 
-		public Result(ResourceLocation id,float fat,float carbohydrate,float protein,float vegetable, Item item,Advancement.Builder advancement, ResourceLocation advancementId) {
+		public Result(ResourceLocation id,float fat,float carbohydrate,float protein,float vegetable, Item item,ResourceLocation itemID,Advancement.Builder advancement, ResourceLocation advancementId) {
 			this.id = id;
 			this.advancement = advancement;
 			this.advancementId = advancementId;
@@ -121,6 +128,7 @@ public class  NutritionRecipeBuilder  implements RecipeBuilder {
 			this.protein = protein;
 			this.vegetable = vegetable;
 			this.item = item;
+			this.itemID = itemID;
 		}
 
 		@Override
@@ -131,7 +139,9 @@ public class  NutritionRecipeBuilder  implements RecipeBuilder {
 			group.addProperty("protein", this.protein);
 			group.addProperty("vegetable", this.vegetable);
 			json.add("group", group);
-			json.addProperty("item", ForgeRegistries.ITEMS.getKey(this.item).toString());
+			if (this.item!=null)
+				json.addProperty("item", ForgeRegistries.ITEMS.getKey(this.item).toString());
+			else json.addProperty("item", this.itemID.toString());
 		}
 
 		@Override

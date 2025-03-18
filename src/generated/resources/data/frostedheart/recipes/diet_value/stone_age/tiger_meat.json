@@ -3,8 +3,8 @@
   "group": {
     "carbohydrate": 0.0,
     "fat": 0.0,
-    "protein": 0.02200487,
+    "protein": 0.55012184,
     "vegetable": 0.0
   },
-  "item": "minecraft:air"
+  "item": "stone_age:tiger_meat"
 }

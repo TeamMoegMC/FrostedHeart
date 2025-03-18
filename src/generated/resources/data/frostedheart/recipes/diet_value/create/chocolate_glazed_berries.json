@@ -2,9 +2,9 @@
   "type": "frostedheart:diet_override",
   "group": {
     "carbohydrate": 0.0,
-    "fat": 0.027953431,
+    "fat": 0.69883585,
     "protein": 0.0,
-    "vegetable": 0.027953431
+    "vegetable": 0.69883585
   },
   "item": "create:chocolate_glazed_berries"
 }

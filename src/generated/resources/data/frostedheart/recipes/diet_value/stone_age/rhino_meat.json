@@ -3,8 +3,8 @@
   "group": {
     "carbohydrate": 0.0,
     "fat": 0.0,
-    "protein": 0.0176039,
+    "protein": 0.44009748,
     "vegetable": 0.0
   },
-  "item": "minecraft:air"
+  "item": "stone_age:rhino_meat"
 }

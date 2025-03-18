@@ -1,10 +1,10 @@
 {
   "type": "frostedheart:diet_override",
   "group": {
-    "carbohydrate": 0.0066014603,
-    "fat": 0.0066014603,
+    "carbohydrate": 0.16503656,
+    "fat": 0.16503656,
     "protein": 0.0,
     "vegetable": 0.0
   },
-  "item": "minecraft:air"
+  "item": "crockpot:corn"
 }

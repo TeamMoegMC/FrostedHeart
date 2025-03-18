@@ -2,9 +2,9 @@
   "type": "frostedheart:diet_override",
   "group": {
     "carbohydrate": 0.0,
-    "fat": 0.01246109,
+    "fat": 0.31152737,
     "protein": 0.0,
     "vegetable": 0.0
   },
-  "item": "minecraft:air"
+  "item": "crockpot:hot_cocoa"
 }

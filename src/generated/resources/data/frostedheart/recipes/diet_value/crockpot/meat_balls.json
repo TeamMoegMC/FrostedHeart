@@ -3,8 +3,8 @@
   "group": {
     "carbohydrate": 0.0,
     "fat": 0.0,
-    "protein": 0.03247272,
+    "protein": 0.81181794,
     "vegetable": 0.0
   },
-  "item": "minecraft:air"
+  "item": "crockpot:meat_balls"
 }

@@ -20,15 +20,12 @@
 package com.teammoeg.frostedheart.data;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Scanner;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
@@ -55,12 +52,9 @@ import com.teammoeg.frostedheart.content.trade.policy.TradeBuilder;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeProvider;
-import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Equipable;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -77,7 +71,7 @@ public class FHRecipeProvider extends RecipeProvider {
 	@Override
 	protected void buildRecipes(@Nonnull Consumer<FinishedRecipe> out) {
 
-		try (PrintStream ps=new PrintStream(openDebugFile("food_healing.csv"));
+		/*try (PrintStream ps=new PrintStream(openDebugFile("food_healing.csv"));
 				Scanner sc = new Scanner(openDatagenResource("/data/frostedheart/data/food_values.csv"), "UTF-8")) {
 			if(sc.hasNextLine()) {
 				sc.nextLine();
@@ -112,7 +106,7 @@ public class FHRecipeProvider extends RecipeProvider {
 		}
 		catch (FileNotFoundException e) {
 			e.printStackTrace();
-		}
+		}*/
 
 		//biome
 		ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/biome_temperature.xlsx"), m->{
@@ -151,6 +145,15 @@ public class FHRecipeProvider extends RecipeProvider {
 			out.accept(new DrinkTempData(CRegistryHelper.getFluid(block),
 					(float)ExcelHelper.getCellValueAsNumber(m.get("heat"))
 					).toFinished(FHMain.rl("drink_temperature/"+block.getPath())));
+		});
+
+		ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/nutrition.xlsx"), m->{
+			ResourceLocation itemid = new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("ID")));
+			NutritionRecipeBuilder dvb =new NutritionRecipeBuilder().ItemID(itemid);
+			dvb.nutrition((float)ExcelHelper.getCellValueAsNumber(m.get("Gr2")),(float)ExcelHelper.getCellValueAsNumber(m.get("Va2")),
+					(float)ExcelHelper.getCellValueAsNumber(m.get("Oi2")),(float)ExcelHelper.getCellValueAsNumber(m.get("Pt2")));
+			dvb.save(out,new ResourceLocation(FHMain.MODID,"diet_value/"+ itemid.getNamespace()+ "/"+ itemid.getPath()));
+
 		});
 //		CPFluids.getAll().filter(o->!Arrays.stream(ovride).anyMatch(CRegistries.getRegistryName(o).getPath()::equals)).forEach(f-> {
 //
