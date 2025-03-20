@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.mixin.minecraft.research;
+package com.teammoeg.frostedresearch.mixin.minecraft.research;
 
 import org.spongepowered.asm.mixin.Mixin;
 

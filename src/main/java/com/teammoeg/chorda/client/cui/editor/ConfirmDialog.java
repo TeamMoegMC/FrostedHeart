@@ -29,7 +29,6 @@ import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.network.chat.Component;
 

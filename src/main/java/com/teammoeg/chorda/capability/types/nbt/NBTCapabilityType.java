@@ -21,10 +21,10 @@ package com.teammoeg.chorda.capability.types.nbt;
 
 import org.objectweb.asm.Type;
 
-import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
 import com.teammoeg.chorda.capability.CapabilityStored;
 import com.teammoeg.chorda.capability.types.CapabilityType;
 import com.teammoeg.chorda.io.NBTSerializable;
+import com.teammoeg.chorda.mixin.CapabilityManagerAccess;
 
 import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;

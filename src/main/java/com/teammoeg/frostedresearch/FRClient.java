@@ -2,8 +2,10 @@ package com.teammoeg.frostedresearch;
 
 import java.util.function.Function;
 
+import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
 import com.teammoeg.frostedresearch.blocks.MechCalcRenderer;
+import com.teammoeg.frostedresearch.compat.ftb.FTBQCompat;
 import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskScreen;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
@@ -20,12 +22,13 @@ public class FRClient {
 	
 
 	public FRClient() {
-		// TODO Auto-generated constructor stub
+		
 	}
 	 @SubscribeEvent
 	 public static void setup(FMLClientSetupEvent event) {
 		MechCalcRenderer.MODEL = DynamicBlockModelReference.getModelCached(FRMain.MODID, "block/mechanical_calculator_movable").register();
-		
+		if(CompatModule.isFTBQLoaded())
+			FTBQCompat.setRewardGuiProviders();
 	}
 	 @SubscribeEvent
 	public static void initScreen(FMLClientSetupEvent event) {

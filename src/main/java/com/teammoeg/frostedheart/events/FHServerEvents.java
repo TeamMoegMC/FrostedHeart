@@ -23,7 +23,6 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
-import com.teammoeg.frostedresearch.FHResearch;
 
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
@@ -41,7 +40,6 @@ import net.minecraftforge.fml.common.Mod;
 public class FHServerEvents {
 	@SubscribeEvent
 	public static void serverLevelSave(final LevelEvent.Save event) {
-		FHResearch.save();
 	}
 
 	@SubscribeEvent
@@ -59,7 +57,6 @@ public class FHServerEvents {
 	 */
 	@SubscribeEvent
 	public static void serverAboutToStart(final ServerAboutToStartEvent event) {
-		FHResearch.load();
 		SurroundingTemperatureSimulator.init();
 		TemperatureUpdate.init();
 	}

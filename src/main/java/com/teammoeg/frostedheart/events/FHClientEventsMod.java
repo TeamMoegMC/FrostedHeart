@@ -78,10 +78,10 @@ public class FHClientEventsMod {
             TetraClient.init();
             
         }
-        if (CompatModule.isFTBQLoaded()) {
-            LOGGER.info(CLIENT_SETUP, "Initializing FTB Quests");
-            FHGuiProviders.setRewardGuiProviders();
-        }
+        //if (CompatModule.isFTBQLoaded()) {
+        //    LOGGER.info(CLIENT_SETUP, "Initializing FTB Quests");
+        //    FHGuiProviders.setRewardGuiProviders();
+        //}
         LOGGER.info(CLIENT_SETUP, "FML Client setup event finished");
        
         /*
@@ -130,15 +130,7 @@ public class FHClientEventsMod {
 		HeaterVestExtension.MODEL=new HeaterVestModel(Minecraft.getInstance().getEntityModels().bakeLayer(HeaterVestModel.HEATER_VEST_LAYER));
 	}
 
-	@SubscribeEvent
-	public static void registerModels(ModelEvent.RegisterAdditional ev)
-	{
-		FHMain.LOGGER.info("===========Dynamic Model Register========");
-		DynamicBlockModelReference.registeredModels.forEach(rl->{
-			ev.register(rl);
-			FHMain.LOGGER.info(rl);
-		});
-	}
+
 	@SubscribeEvent
 	public static void registerBERenders(RegisterRenderers event){
 		FHMain.LOGGER.info("===========Dynamic Block Renderers========");

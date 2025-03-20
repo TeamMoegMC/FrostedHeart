@@ -17,9 +17,10 @@
  *
  */
 
-package com.teammoeg.frostedheart.compat.ftbq;
+package com.teammoeg.frostedresearch.compat.ftb;
 
 import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
+import com.teammoeg.frostedheart.compat.ftbq.FHRewardTypes;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
@@ -53,7 +54,7 @@ public class InsightReward extends Reward {
 
     @Override
     public RewardType getType() {
-        return FHRewardTypes.INSIGHT;
+        return FRRewardTypes.INSIGHT;
     }
 
     @Override

@@ -17,18 +17,11 @@
  *
  */
 
-package com.teammoeg.frostedheart.mixin.forge;
+package com.teammoeg.frostedresearch.mixinutil;
+/**
+ * A marker interface to claim a blockentity that manages owner data on its own
+ * The program would not automatically call methods to set its owner.
+ * */
+public interface ManagedOwnerBlockEntity {
 
-import java.util.IdentityHashMap;
-
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
-
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-
-@Mixin(CapabilityManager.class)
-public interface CapabilityManagerAccess {
-	@Accessor(value="providers", remap=false)
-	IdentityHashMap<String, Capability<?>> getProviders();
 }

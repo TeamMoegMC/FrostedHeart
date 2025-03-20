@@ -24,7 +24,8 @@ import org.objectweb.asm.Type;
 import com.mojang.serialization.Codec;
 import com.teammoeg.chorda.capability.CapabilityStored;
 import com.teammoeg.chorda.capability.types.CapabilityType;
-import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
+import com.teammoeg.chorda.mixin.CapabilityManagerAccess;
+
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;

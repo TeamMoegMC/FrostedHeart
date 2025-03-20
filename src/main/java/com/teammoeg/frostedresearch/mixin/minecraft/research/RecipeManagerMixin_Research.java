@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.mixin.minecraft.research;
+package com.teammoeg.frostedresearch.mixin.minecraft.research;
 
 import java.util.Map;
 import java.util.Optional;

@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.chorda.util;
+package com.teammoeg.frostedresearch.mixinutil;
 
 import java.util.Optional;
 import java.util.UUID;

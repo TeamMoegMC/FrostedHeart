@@ -5,6 +5,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.teammoeg.chorda.CompatModule;
+import com.teammoeg.frostedresearch.compat.ftb.FRRewardTypes;
+import com.teammoeg.frostedresearch.compat.ftb.FTBTeamsEvents;
+import com.teammoeg.frostedresearch.compat.tetra.TetraCompat;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
@@ -26,6 +29,13 @@ public class FRMain {
         CompatModule.enableCompatModule();
         FRContents.init(mod);
         mod.addListener(this::setup);
+        if(CompatModule.isTetraLoaded())
+        	TetraCompat.init();
+        if(CompatModule.isFTBQLoaded())
+        	FRRewardTypes.init();
+        if(CompatModule.isFTBTLoaded())
+        	FTBTeamsEvents.init();
+        
 	}
 	public static ResourceLocation rl(String path) {
 		return new ResourceLocation(MODID,path);

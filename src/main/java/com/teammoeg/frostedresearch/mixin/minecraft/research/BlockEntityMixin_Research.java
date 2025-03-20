@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.mixin.minecraft.research;
+package com.teammoeg.frostedresearch.mixin.minecraft.research;
 
 import java.util.UUID;
 
@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.teammoeg.chorda.util.IOwnerTile;
+import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;

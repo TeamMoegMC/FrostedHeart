@@ -42,7 +42,6 @@ import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.Bo
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
-import com.teammoeg.frostedresearch.ResearchListeners;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.ReloadableServerResources;
@@ -128,7 +127,7 @@ public class FHRecipeCachingReloadListener implements ResourceManagerReloadListe
     @Override
     public void onResourceManagerReload(@Nonnull ResourceManager resourceManager) {
         buildRecipeLists(dataPackRegistries.getRecipeManager());
-        ResearchListeners.ServerReload();
+        
         if(FMLEnvironment.dist==Dist.CLIENT)
         	WheelMenuRenderer.load();
     }

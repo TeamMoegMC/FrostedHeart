@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.mixin.create;
+package com.teammoeg.frostedresearch.mixin.create;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,8 +27,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlockEntity;
 import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler;
 import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler.GroupedItems;
-import com.teammoeg.chorda.util.IOwnerTile;
 import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;

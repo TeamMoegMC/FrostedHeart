@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.compat.tetra;
+package com.teammoeg.frostedresearch.compat.tetra;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;

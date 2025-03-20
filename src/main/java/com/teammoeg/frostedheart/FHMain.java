@@ -56,13 +56,13 @@ import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
-import com.teammoeg.frostedheart.compat.ftbteams.FTBTeamsEvents;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.world.FHBiomeModifiers;
 import com.teammoeg.frostedheart.content.world.FHBiomes;
 import com.teammoeg.frostedheart.content.world.FHFeatures;
 import com.teammoeg.frostedheart.util.FHRemote;
 import com.teammoeg.frostedheart.util.FHVersion;
+
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameRules.IntegerValue;
@@ -173,12 +173,12 @@ public class FHMain {
 		FHSpecialDataTypes.init();
 		if (CompatModule.isCreateLoaded())
 			CreateCompat.init();
-		if (CompatModule.isTetraLoaded())
-			TetraCompat.init();
+		//if (CompatModule.isTetraLoaded())
+		//	TetraCompat.init();
 		if (CompatModule.isFTBQLoaded())
 			FHRewardTypes.init();
-		if (CompatModule.isFTBTLoaded())
-			FTBTeamsEvents.init();
+		//if (CompatModule.isFTBTLoaded())
+		//	FTBTeamsEvents.init();
 		if (CompatModule.isCauponaLoaded())
 			forge.addListener(NutritionEvents::gatherNutritionFromSoup);
 		// Deferred Registration

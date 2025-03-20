@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.chorda.util;
+package com.teammoeg.frostedresearch.mixinutil;
 
 public interface IOwnerChangeListener {
 	void onOwnerChange();

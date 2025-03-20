@@ -29,7 +29,5 @@ public class TetraCompat {
     public static ToolAction proPick = ToolAction.get("prospector_pick");
     public static ToolAction geoHammer = ToolAction.get("geo_hammer");
 
-    public static void init() {
-    	CraftingRequirementDeserializer.registerSupplier(FHMain.rl("research").toString(), ResearchRequirement::new);
-    }
+
 }

@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.compat.ftbteams;
+package com.teammoeg.frostedresearch.compat.ftb;
 
 import java.util.UUID;
 

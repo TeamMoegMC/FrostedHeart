@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.teammoeg.chorda.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "chorda.refmap.json",
+  "plugin": "",
+  "mixins": [
+    "CapabilityManagerAccess"
+  ],
+  "client": [
+
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

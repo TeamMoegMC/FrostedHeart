@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.mixin.immersiveengineering;
+package com.teammoeg.frostedresearch.mixin.immersiveengineering;
 
 import java.util.UUID;
 
@@ -29,8 +29,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.teammoeg.chorda.util.IOwnerTile;
 import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.metal.CrafterPatternInventory;
 import net.minecraft.world.item.ItemStack;

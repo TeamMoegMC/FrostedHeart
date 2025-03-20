@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.teammoeg.frostedresearch.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "frostedresearch.refmap.json",
+  "plugin": "",
+  "mixins": [
+    "create.MixinMechanicalCraftingRecipe",
+    "create.RecipeGridHandlerMixin",
+    "immersiveengineering.AssemblerLogicMixin",
+    "immersiveengineering.CrafterPatternInventoryMixin",
+    "immersiveengineering.TemplateMultiblockMixin",
+    "minecraft.research.BlockEntityMixin_Research",
+    "minecraft.research.OwnerBlockMixin_Research",
+    "minecraft.research.RecipeManagerMixin_Research",
+    "minecraft.research.ResultContainerMixin_Research"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
