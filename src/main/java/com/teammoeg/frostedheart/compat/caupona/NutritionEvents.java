@@ -45,7 +45,8 @@ public class NutritionEvents {
 					groups.addScaled(event.queryNutrition(ffvr.getRepersent()), ffvr.heal);
 				}
 			}
-			groups.scale(1 / ois.getHealing()*b);
+			if (ois.getHealing()!=0)
+				groups.scale(1 / ois.getHealing()*b);
 		}
 	}
 }

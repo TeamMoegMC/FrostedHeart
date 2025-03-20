@@ -3,8 +3,8 @@
   "group": {
     "carbohydrate": 0.0,
     "fat": 0.0,
-    "protein": 0.028037459,
-    "vegetable": 0.028037459
+    "protein": 0.70093656,
+    "vegetable": 0.70093656
   },
-  "item": "minecraft:air"
+  "item": "crockpot:seafood_gumbo"
 }

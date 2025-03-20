@@ -3,8 +3,8 @@
   "group": {
     "carbohydrate": 0.0,
     "fat": 0.0,
-    "protein": 0.043613832,
-    "vegetable": 0.043613832
+    "protein": 1.0903457,
+    "vegetable": 1.0903457
   },
-  "item": "minecraft:air"
+  "item": "crockpot:moqueca"
 }

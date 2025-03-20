@@ -1,10 +1,10 @@
 {
   "type": "frostedheart:diet_override",
   "group": {
-    "carbohydrate": 0.02075038,
+    "carbohydrate": 0.5187595,
     "fat": 0.0,
-    "protein": 0.02075038,
+    "protein": 0.5187595,
     "vegetable": 0.0
   },
-  "item": "minecraft:air"
+  "item": "crockpot:froggle_bunwich"
 }

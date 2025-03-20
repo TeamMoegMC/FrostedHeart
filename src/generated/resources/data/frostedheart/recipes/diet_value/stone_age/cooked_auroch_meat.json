@@ -3,8 +3,8 @@
   "group": {
     "carbohydrate": 0.0,
     "fat": 0.0,
-    "protein": 0.0296434,
+    "protein": 0.741085,
     "vegetable": 0.0
   },
-  "item": "minecraft:air"
+  "item": "stone_age:cooked_auroch_meat"
 }

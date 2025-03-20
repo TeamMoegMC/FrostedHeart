@@ -4,7 +4,7 @@
     "carbohydrate": 0.0,
     "fat": 0.0,
     "protein": 0.0,
-    "vegetable": 0.0592868
+    "vegetable": 1.48217
   },
-  "item": "minecraft:air"
+  "item": "crockpot:pumpkin_cookie"
 }

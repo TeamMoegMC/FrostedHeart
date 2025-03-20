@@ -3,8 +3,8 @@
   "group": {
     "carbohydrate": 0.0,
     "fat": 0.0,
-    "protein": 0.02180692,
+    "protein": 0.54517287,
     "vegetable": 0.0
   },
-  "item": "minecraft:air"
+  "item": "crockpot:tropical_bouillabaisse"
 }

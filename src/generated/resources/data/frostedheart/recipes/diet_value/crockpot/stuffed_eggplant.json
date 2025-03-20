@@ -4,7 +4,7 @@
     "carbohydrate": 0.0,
     "fat": 0.0,
     "protein": 0.0,
-    "vegetable": 0.04150076
+    "vegetable": 1.037519
   },
-  "item": "minecraft:air"
+  "item": "crockpot:stuffed_eggplant"
 }

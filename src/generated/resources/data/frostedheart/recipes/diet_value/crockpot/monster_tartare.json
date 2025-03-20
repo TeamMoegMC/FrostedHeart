@@ -3,8 +3,8 @@
   "group": {
     "carbohydrate": 0.0,
     "fat": 0.0,
-    "protein": 0.028864639,
+    "protein": 0.7216159,
     "vegetable": 0.0
   },
-  "item": "minecraft:air"
+  "item": "crockpot:monster_tartare"
 }

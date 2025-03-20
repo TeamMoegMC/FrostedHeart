@@ -2,8 +2,8 @@
   "type": "frostedheart:diet_override",
   "group": {
     "carbohydrate": 0.0,
-    "fat": 8.80195E-4,
-    "protein": 0.00352078,
+    "fat": 0.022004874,
+    "protein": 0.0880195,
     "vegetable": 0.0
   },
   "item": "minecraft:tropical_fish"
