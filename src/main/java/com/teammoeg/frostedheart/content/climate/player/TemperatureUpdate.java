@@ -25,6 +25,7 @@ import com.mojang.datafixers.util.Pair;
 import com.teammoeg.caupona.CPConfig;
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.struct.FastEnumMap;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
@@ -57,8 +58,8 @@ import top.theillusivec4.curios.api.type.ISlotType;
 public class TemperatureUpdate {
 	public static final UUID envTempId = UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
 	//Do not use static final in config because this is reloaded each world
-    /*public static final Double HEAT_EXCHANGE_CONSTANT = FHConfig.SERVER.heatExchangeConstant.get();
-    
+
+    /*
     public static final int TEMP_SKY_LIGHT_THRESHOLD = FHConfig.SERVER.tempSkyLightThreshold.get();
     public static final int SNOW_TEMP_MODIFIER = FHConfig.SERVER.snowTempModifier.get();
     public static final int BLIZZARD_TEMP_MODIFIER = FHConfig.SERVER.blizzardTempModifier.get();
@@ -67,7 +68,8 @@ public class TemperatureUpdate {
     public static final double HURTING_HEAT_UPDATE = FHConfig.SERVER.hurtingHeatUpdate.get();
     public static final int MIN_BODY_TEMP_CHANGE = FHConfig.SERVER.minBodyTempChange.get();
     public static final int MAX_BODY_TEMP_CHANGE = FHConfig.SERVER.maxBodyTempChange.get();*/
-    public static final float FOOD_EXHAUST_COLD=.05F;
+    public static final float FOOD_EXHAUST_COLD=.001F;
+    
     public static TemperatureThreadingPool threadingPool;
     /**
      * Perform temperature effect
@@ -140,7 +142,9 @@ public class TemperatureUpdate {
             // TODO: find another way...we should save resources
             // if (player.isCreative() || player.isSpectator())
             // return;
+        	
             PlayerTemperatureData.getCapability(event.player).ifPresent((data) -> {
+            	final float maxunit=(float)(double)FHConfig.SERVER.heatExchangeConstant.get();
             	data.tick();
             	if(data.updateInterval<=0) {
             		if(threadingPool.tryCommitWork(player))
@@ -229,7 +233,7 @@ public class TemperatureUpdate {
                             float thermalConductivity = data.getThermalConductivityByPart(player, part);
                             totalConductivity += ratio*thermalConductivity;
                             float temperature = data.getTemperatureByPart(part);
-                            float dt = (temperature - envtemp) * thermalConductivity;//=(eff)
+                            float dt = (temperature - envtemp-(part.isBodyEnd()?5:0)) * thermalConductivity;//=(eff)
                             float effective=temperature-dt;
                             ctx.setPartData(part, temperature, effective);
                         }
@@ -253,12 +257,12 @@ public class TemperatureUpdate {
                     		}
                         }
                         //Compute part heating data
-                        //TODO: Calculate heat transfer between each part
+                       FastEnumMap<BodyPart,Float> fem=new FastEnumMap<>(BodyPart.values());
                         for (BodyPart part:PlayerTemperatureData.BodyPart.values()) {
                         	BodyPartContext pctx=ctx.getPartData(part);
                         	float temperature=pctx.getBodyTemperature();
                         	float dt=temperature-pctx.getEffectiveTemperature();
-                            float unit = 0.006f; // 1 unit per tick is 0.012 degree per second
+                            float unit = maxunit; // 1 unit per tick is 0.012 degree per second
                             temperature -= (2*unit) * (dt/10); // charge 2 units for every 10 dt
 
                             // still: 10 dt
@@ -272,7 +276,7 @@ public class TemperatureUpdate {
                             if (temperature < 0.0&&player.getFoodData().getFoodLevel()>0) {
                                 temperature += unit;
                                 // TODO: cost hunger for cold, adjust for difficult
-                                player.causeFoodExhaustion(FOOD_EXHAUST_COLD);
+                                player.causeFoodExhaustion(FOOD_EXHAUST_COLD*part.area);
                             }
 
                             double speedSquared = player.getDeltaMovement().horizontalDistanceSqr(); // Horizontal movement speed squared
@@ -293,9 +297,28 @@ public class TemperatureUpdate {
                             }*/
                             // TODO: degree I/II/III burn if dt=+20/+30/+40
                             // TODO: degree I/II/III freeze if dt=-50/-60/-70
-                            data.setTemperatureByPart(part, temperature);
+                            fem.put(part, temperature);
                         }
-
+                        // Calculate heat transfer between each part
+                        //From leg/chest/head share temperature.
+                        float coreTemp=0;
+                        for(BodyPart corePart:BodyPart.CoreParts) {
+                        	coreTemp+=fem.get(corePart)*corePart.affectsCore;
+                        }
+                        for(BodyPart corePart:BodyPart.CoreParts)
+                        	fem.put(corePart, coreTemp);
+                        //From leg to feets
+                        {
+                        	float dlegfeet=fem.get(BodyPart.LEGS)-fem.get(BodyPart.FEET);
+                        	
+                        	
+                        }
+                        //from chest to hands
+                        {
+                        	float dhandchest=fem.get(BodyPart.TORSO)-fem.get(BodyPart.HANDS);
+                        	
+                        	
+                        }
                     } else {
                         MobEffectInstance insulationEffect = player.getEffect(FHMobEffects.INSULATION.get());
                         if (insulationEffect != null) {

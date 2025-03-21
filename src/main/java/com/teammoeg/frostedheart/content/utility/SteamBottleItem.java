@@ -161,17 +161,17 @@ public class SteamBottleItem extends FHBaseItem implements ITempAdjustFood {
 
 					@Override
 					public void tickHeating(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext data) {
-						data.addEffectiveTemperature(BodyPart.TORSO	, FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->t.extractEnergy(3, false)).orElse(0f) / 0.24f);
+						data.addEffectiveTemperature(BodyPart.TORSO	, FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->t.extractEnergy(1.5f, false)).orElse(0f) / 0.12f);
 					}
 
 					@Override
 					public float getMaxTempAddValue(ItemStack stack) {
-						return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->Math.min(3,t.getEnergyStored())).orElse(0f)/ 0.24f;
+						return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->Math.min(3,t.getEnergyStored())).orElse(0f)/ 0.12f;
 					}
 
 					@Override
 					public float getMinTempAddValue(ItemStack stack) {
-						return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->Math.min(3,t.getEnergyStored())).orElse(0f)/ 0.24f;
+						return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->Math.min(3,t.getEnergyStored())).orElse(0f)/ 0.12f;
 					}
 					
 				})

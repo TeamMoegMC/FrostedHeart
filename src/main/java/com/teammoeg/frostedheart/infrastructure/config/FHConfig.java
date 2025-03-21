@@ -314,7 +314,7 @@ public class FHConfig {
             onFireTempModifier = builder.comment("The temperature modifier when player is on fire.")
                     .defineInRange("onFireTempModifier", 150, 0, 1000);
             heatExchangeConstant = builder.comment("The heat exchange constant between player and environment.")
-                    .defineInRange("heatExchangeConstant", 0.0012, 0, 1);
+                    .defineInRange("heatExchangeConstant", 0.006f, 0, 1);
             hurtingHeatUpdate = builder.comment("The heat update when player is hurt.")
                     .defineInRange("hurtingHeatUpdate", 0.1, 0, 1);
             minBodyTempChange = builder.comment("The minimum body temperature change relative to 37.")

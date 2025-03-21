@@ -43,7 +43,7 @@ public class FastEnumMap<K extends Enum<K>,V> implements Iterable<Map.Entry<K, V
      * @param keyType the class object of the key type for this enum map
      * @throws NullPointerException if {@code keyType} is null
      */
-    private FastEnumMap(K[] keyType) {
+    public FastEnumMap(K[] keyType) {
         this.keyType = keyType;
         vals = new Object[keyType.length];
     }
