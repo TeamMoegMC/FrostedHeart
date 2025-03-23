@@ -164,19 +164,19 @@ public class FHRecipeProvider extends RecipeProvider {
 //				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+ CRegistries.getRegistryName(f).getPath()+"_thermos"),Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"thermos"))),f,3,2));
 //		});
         Map<String, Float[]> materials = Map.of(
-                "hay", new Float[]{.2f,0.2f, 200.0f},
-                "hide", new Float[]{.5f,1.0f, 300.0f},
+                "hay", new Float[]{.2f,0.2f, 270.0f},
+                "hide", new Float[]{.5f,1.0f, 370.0f},
                 //"cotton", new Float[]{0.3f, 400.0f},
-                "wool", new Float[]{.3f,0.5f, 500.0f}
+                "wool", new Float[]{.3f,0.5f, 570.0f}
                 //"down", new Float[]{0.7f, 600.0f}
         );
         //List<ArmorTempData> armorData=new ArrayList<>();
         for(BodyPart part:BodyPart.values()) {
         	if(part.slot!=null) {
-        		out.accept(armorData(FHItems.straw_lining,part,200f,.2f,.2f));
-        		out.accept(armorData(FHItems.buff_coat,part,300f,.5f,1.0f));
-        		out.accept(armorData(FHItems.gambeson,part,500f,.3f,.5f));
-        		out.accept(armorData(FHItems.kelp_lining,part,200f,.5f,1.0f));
+        		out.accept(armorData(FHItems.straw_lining,part,270f,.2f,.2f));
+        		out.accept(armorData(FHItems.buff_coat,part,370f,.5f,1.0f));
+        		out.accept(armorData(FHItems.gambeson,part,570f,.3f,.5f));
+        		out.accept(armorData(FHItems.kelp_lining,part,270f,.5f,1.0f));
         		//out.accept(armorData(FHItems.cotton,part,500f,.2f,.5f));
         		//out.accept(armorData(FHItems.straw_lining,part,600f,.2f,.7f));
         	}
@@ -186,10 +186,10 @@ public class FHRecipeProvider extends RecipeProvider {
         		out.accept(armorArmorData(CRegistryHelper.getItem(FHMain.rl(mat.getKey()+"_"+type)),mat.getValue()[2],mat.getValue()[0],mat.getValue()[1]));
         	} 
         }
-        out.accept(armorArmorData(FHItems.space_hat,400f,.2f,1.0f));
-        out.accept(armorArmorData(FHItems.space_jacket,400f,.2f,1.0f));
-        out.accept(armorArmorData(FHItems.space_pants,400f,.2f,1.0f));
-        out.accept(armorArmorData(FHItems.space_boots,400f,.2f,1.0f));
+        out.accept(armorArmorData(FHItems.space_hat,500f,.2f,1.0f));
+        out.accept(armorArmorData(FHItems.space_jacket,500f,.2f,1.0f));
+        out.accept(armorArmorData(FHItems.space_pants,500f,.2f,1.0f));
+        out.accept(armorArmorData(FHItems.space_boots,500f,.2f,1.0f));
         
 		//recipeTrade(out);
 	}
