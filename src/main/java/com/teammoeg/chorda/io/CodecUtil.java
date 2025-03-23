@@ -168,7 +168,10 @@ public class CodecUtil {
 		}
 		return DataResult.error(()->"Not a ingredient");
 	},Ingredient::toNetwork,Ingredient::fromNetwork);
-	public static final Codec<Pair<Ingredient,Integer>> INGREDIENT_SIZE_CODEC=pairCodec("base_ingredient",INGREDIENT_CODEC,"count", Codec.INT);
+	public static final Codec<Pair<Ingredient,Integer>> INGREDIENT_SIZE_CODEC=CodecUtil.<Pair<Ingredient,Integer>>alternative(Pair.class)
+			.add(pairCodec("base_ingredient",INGREDIENT_CODEC,"count", Codec.INT))
+			.add(INGREDIENT_CODEC.xmap(o->Pair.of(o, 1), o->o.getFirst()))
+			.build();
 	public static final Codec<MobEffectInstance> MOB_EFFECT_CODEC = CompoundTag.CODEC.xmap(o->MobEffectInstance.load(o),t->t.save(new CompoundTag()));
 	public static final Codec<boolean[]> BOOLEANS = Codec.BYTE.xmap(SerializeUtil::readBooleans, SerializeUtil::writeBooleans);
 	/**
@@ -233,7 +236,7 @@ public class CodecUtil {
 	public static <A> Codec<A> createIntCodec(MappedRegistry<A> registry) {
 		return Codec.INT.xmap(registry::byId, registry::getId);
 	}
-	public static <S> AlternativeCodecBuilder<S> alternative(Class<S> type){
+	public static <S> AlternativeCodecBuilder<S> alternative(Class<? super S> type){
 		return new AlternativeCodecBuilder<>(type);
 	}
 
@@ -282,6 +285,37 @@ public class CodecUtil {
 				DataResult<Pair<A, T>> res=codec.decode(ops,input);
 				Chorda.LOGGER.debug("Decoded result: " + res);
 				return res;
+			}
+			@Override
+			public String toString() {
+				return codec.toString();
+			}
+		};
+	}
+	public static <A> Codec<A> catchingCodec(Codec<A> codec){
+		return new Codec<>() {
+
+			@Override
+			public <T> DataResult<T> encode(A input, DynamicOps<T> ops, T prefix) {
+				try {
+				return codec.encode(input, ops, prefix);
+				}catch(Exception ex) {
+					ex.printStackTrace();
+					Chorda.LOGGER.warn("Exception has thrown when encoding "+input);
+					return DataResult.error(()->"Exception "+ex.getMessage()+" has thrown when encoding "+input);
+				}
+				
+			}
+
+			@Override
+			public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
+				try {
+					return codec.decode(ops,input);
+				}catch(Exception ex) {
+					ex.printStackTrace();
+					Chorda.LOGGER.warn("Exception has thrown when decoding "+input);
+					return DataResult.error(()->"Exception "+ex.getMessage()+" has thrown when decoding "+input);
+				}
 			}
 			@Override
 			public String toString() {

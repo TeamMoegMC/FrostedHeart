@@ -45,6 +45,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 
@@ -58,7 +59,7 @@ public class CampfireDefrostCategory implements IRecipeCategory<CampfireDefrostR
 
     public CampfireDefrostCategory(IGuiHelper guiHelper) {
         this.ICON = new DoubleItemIcon(() -> new ItemStack(Blocks.CAMPFIRE), () -> new ItemStack(FHItems.frozen_seeds.get()));
-        this.BACKGROUND = guiHelper.drawableBuilder(Constants.RECIPE_GUI_VANILLA, 0, 186, 82, 34)
+        this.BACKGROUND = guiHelper.drawableBuilder(new ResourceLocation("jei","textures/jei/gui/gui_vanilla.png"), 0, 186, 82, 34)
                 .addPadding(0, 10, 0, 0)
                 .build();
         this.cachedArrows = CacheBuilder.newBuilder()
@@ -66,11 +67,11 @@ public class CampfireDefrostCategory implements IRecipeCategory<CampfireDefrostR
                 .build(new CacheLoader<Integer, IDrawableAnimated>() {
                     @Override
                     public IDrawableAnimated load(Integer cookTime) {
-                        return guiHelper.drawableBuilder(Constants.RECIPE_GUI_VANILLA, 82, 128, 24, 17)
+                        return guiHelper.drawableBuilder(new ResourceLocation("jei","textures/jei/gui/gui_vanilla.png"), 82, 128, 24, 17)
                                 .buildAnimated(cookTime, IDrawableAnimated.StartDirection.LEFT, false);
                     }
                 });
-        staticFlame = guiHelper.createDrawable(Constants.RECIPE_GUI_VANILLA, 82, 114, 14, 14);
+        staticFlame = guiHelper.createDrawable(new ResourceLocation("jei","textures/jei/gui/gui_vanilla.png"), 82, 114, 14, 14);
         animatedFlame = guiHelper.createAnimatedDrawable(staticFlame, 300, IDrawableAnimated.StartDirection.TOP, true);
     }
 
