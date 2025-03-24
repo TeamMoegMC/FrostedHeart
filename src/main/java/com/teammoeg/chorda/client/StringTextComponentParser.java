@@ -100,5 +100,7 @@ public class StringTextComponentParser {
 		}
 		return builder.build();
 	}
-
+	/*public static void main(String[] args) {
+		System.out.println(parse("砧木&b&l测试&r得到"));
+	}*/
 }
