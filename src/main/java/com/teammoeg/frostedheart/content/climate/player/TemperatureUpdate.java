@@ -68,8 +68,8 @@ public class TemperatureUpdate {
     public static final double HURTING_HEAT_UPDATE = FHConfig.SERVER.hurtingHeatUpdate.get();
     public static final int MIN_BODY_TEMP_CHANGE = FHConfig.SERVER.minBodyTempChange.get();
     public static final int MAX_BODY_TEMP_CHANGE = FHConfig.SERVER.maxBodyTempChange.get();*/
-    public static final float FOOD_EXHAUST_COLD=.001F;
-    
+    public static final float FOOD_EXHAUST_COLD=.01F;
+
     public static TemperatureThreadingPool threadingPool;
     /**
      * Perform temperature effect
@@ -272,12 +272,6 @@ public class TemperatureUpdate {
                             // 1 unit = 60W
                             float selfHeatRate=data.getDifficulty().heat_unit;
                             unit*=selfHeatRate;
-                            // base generation when cold: 1 unit
-                            if (temperature < 0.0&&player.getFoodData().getFoodLevel()>0) {
-                                temperature += unit;
-                                // TODO: cost hunger for cold, adjust for difficult
-                                player.causeFoodExhaustion(FOOD_EXHAUST_COLD*part.area);
-                            }
 
                             double speedSquared = player.getDeltaMovement().horizontalDistanceSqr(); // Horizontal movement speed squared
                             boolean isSprinting = player.isSprinting();
@@ -289,6 +283,12 @@ public class TemperatureUpdate {
                                 temperature += 2*unit; // Walking increases temperature by 2 units
                             } else {
                                 temperature += unit; // Standing still or being in a vehicle increases temperature by 1 unit
+                            }
+                            // base generation when cold: 1 unit
+                            if (temperature < 0.0&&player.getFoodData().getFoodLevel()>0) {
+                                temperature += unit;
+                                // TODO: cost hunger for cold, adjust for difficult
+                                player.causeFoodExhaustion(FOOD_EXHAUST_COLD*part.area);
                             }
                             //gain an extra unit if too cold
                             /*if(!isSprinting&&temperature < 0.0) {

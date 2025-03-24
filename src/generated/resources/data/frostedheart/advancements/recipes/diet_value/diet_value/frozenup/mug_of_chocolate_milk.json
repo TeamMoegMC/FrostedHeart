@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "frostedheart:diet_value/frostedheart/dried_wolfberries"
+        "recipe": "frostedheart:diet_value/frozenup/mug_of_chocolate_milk"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -15,7 +15,7 @@
   ],
   "rewards": {
     "recipes": [
-      "frostedheart:diet_value/frostedheart/dried_wolfberries"
+      "frostedheart:diet_value/frozenup/mug_of_chocolate_milk"
     ]
   },
   "sends_telemetry_event": false

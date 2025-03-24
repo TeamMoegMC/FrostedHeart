@@ -31,9 +31,9 @@ import com.mojang.serialization.DynamicOps;
 public class AlternativeCodecBuilder<A>{
 	public static record CodecType<A>(Class<? extends A> clazz,Codec<A> codec,boolean saveOnly) {}
 	List<CodecType<A>> codecs=new ArrayList<>();
-	Class<A> def;
+	Class<? super A> def;
 	Supplier<A> fallback;
-	public AlternativeCodecBuilder(Class<A> clazz) {
+	public AlternativeCodecBuilder(Class<? super A> clazz) {
 		super();
 		def=clazz;
 	}

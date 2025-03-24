@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "frostedheart:diet_value/crockpot/cooked_hoglin_nose"
+        "recipe": "frostedheart:diet_value/frozenup/truffle"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -15,7 +15,7 @@
   ],
   "rewards": {
     "recipes": [
-      "frostedheart:diet_value/crockpot/cooked_hoglin_nose"
+      "frostedheart:diet_value/frozenup/truffle"
     ]
   },
   "sends_telemetry_event": false

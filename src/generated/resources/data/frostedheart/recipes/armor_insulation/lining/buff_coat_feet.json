@@ -1,6 +1,6 @@
 {
   "type": "frostedheart:armor_temp",
-  "factor": 300.0,
+  "factor": 370.0,
   "heat_proof": 0.5,
   "item": "frostedheart:buff_coat",
   "slot": "feet",

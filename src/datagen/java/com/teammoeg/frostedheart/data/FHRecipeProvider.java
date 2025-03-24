@@ -186,10 +186,10 @@ public class FHRecipeProvider extends RecipeProvider {
         		out.accept(armorArmorData(CRegistryHelper.getItem(FHMain.rl(mat.getKey()+"_"+type)),mat.getValue()[2],mat.getValue()[0],mat.getValue()[1]));
         	} 
         }
-        out.accept(armorArmorData(FHItems.space_hat,600f,.2f,1.0f));
-        out.accept(armorArmorData(FHItems.space_jacket,600f,.2f,1.0f));
-        out.accept(armorArmorData(FHItems.space_pants,600f,.2f,1.0f));
-        out.accept(armorArmorData(FHItems.space_boots,600f,.2f,1.0f));
+        out.accept(armorArmorData(FHItems.space_hat,500f,.2f,1.0f));
+        out.accept(armorArmorData(FHItems.space_jacket,500f,.2f,1.0f));
+        out.accept(armorArmorData(FHItems.space_pants,500f,.2f,1.0f));
+        out.accept(armorArmorData(FHItems.space_boots,500f,.2f,1.0f));
         
 		//recipeTrade(out);
 	}

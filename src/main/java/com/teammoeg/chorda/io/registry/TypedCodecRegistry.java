@@ -32,6 +32,7 @@ import com.teammoeg.chorda.io.codec.CompressDifferCodec;
 import com.teammoeg.chorda.io.codec.KeyMapCodec;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.ExtraCodecs;
 
 public class TypedCodecRegistry<T> extends TypeRegistry<T> {
 	Map<String,MapCodec<T>> codecs=new HashMap<>();
@@ -50,7 +51,7 @@ public class TypedCodecRegistry<T> extends TypeRegistry<T> {
 		return byName;
 	}
 	public Codec<T> codec(){
-		return new CompressDifferCodec<>(byName,byInt);
+		return CodecUtil.catchingCodec(new CompressDifferCodec<>(byName,byInt));
 	}
 	public Codec<T> byIntCodec(){
 		return byInt;

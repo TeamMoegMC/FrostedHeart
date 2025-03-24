@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "frostedheart:diet_value/crockpot/bunny_stew"
+        "recipe": "frostedheart:diet_value/frozenup/truffle_cake"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -15,7 +15,7 @@
   ],
   "rewards": {
     "recipes": [
-      "frostedheart:diet_value/crockpot/bunny_stew"
+      "frostedheart:diet_value/frozenup/truffle_cake"
     ]
   },
   "sends_telemetry_event": false

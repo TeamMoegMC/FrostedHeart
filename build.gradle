@@ -136,8 +136,6 @@ sourceSets.main.resources {
 }
 
 mixin {
-    add sourceSets.main, "frostedheart.refmap.json"
-    add sourceSets.main, "frostedresearch.refmap.json"
     add sourceSets.main, "chorda.refmap.json"
 }
 
