@@ -19,6 +19,8 @@
 
 package com.teammoeg.chorda.menu;
 
+import java.util.function.Supplier;
+
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IMultiblockComponent;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;

@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import java.util.function.Supplier;
+
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
@@ -70,7 +72,7 @@ public class FHMenuTypes {
 	public static final RegistryObject<MenuType<NutritionMenu>> NUTRITION_GUI = CONTAINERS.register("nutrition", () -> IForgeMenuType.create(NutritionMenu::new));
 	
 	public static final MultiblockMenuType<T1GeneratorState, T1GeneratorContainer> GENERATOR_T1 = registerMultiblock("generator",T1GeneratorContainer::new,T1GeneratorContainer::new);
-	public static final MultiblockMenuType<T2GeneratorState, T2GeneratorContainer> GENERATOR_T2 = registerMultiblock("generator_t2", T2GeneratorContainer::new, T2GeneratorContainer::new);
+	public static final MultiblockMenuType<T2GeneratorState, T2GeneratorContainer> GENERATOR_T2 = registerMultiblock("generator_t2",T2GeneratorContainer::new,T2GeneratorContainer::new);
 
 	public static final RegistryObject<MenuType<RelicChestContainer>> RELIC_CHEST = register(RelicChestTileEntity.class, ("relic_chest"), RelicChestContainer::new);
 
@@ -94,7 +96,7 @@ public class FHMenuTypes {
 		String name,
 		MultiBlockMenuServerFactory<S, C> container,
 		MultiblockMenuClientFactory<C> client) {
-		RegistryObject<MenuType<C>> typeRef = CONTAINERS.register(name,() -> {
+		RegistryObject<MenuType<C>> typeRef =CONTAINERS.register(name,() -> {
 			Mutable<MenuType<C>> typeBox = new MutableObject<>();
 			MenuType<C> type = new MenuType<>((id, inv) -> client.create(typeBox.getValue(), id, inv), FeatureFlagSet.of());
 			typeBox.setValue(type);
