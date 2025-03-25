@@ -955,13 +955,12 @@ public class FHBlocks {
             .register();
 
     // to block entry
-    public static final BlockEntry<Block> COPPER_GRAVEL = REGISTRATE.block("copper_gravel", Block::new)
+    public static final BlockEntry<GravelBlock> COPPER_GRAVEL = REGISTRATE.block("copper_gravel", GravelBlock::new)
             .initialProperties(() -> GRAVEL)
             .blockstate(FHBlockStateGen.existed())
             .item()
             .model(AssetLookup.existingItemModel())
             .build()
-            .tag(BlockTags.CROPS)
             .loot((lt, b) -> lt.add(b,
                     lt.createSingleItemTableWithSilkTouch(b, Items.RAW_COPPER, ConstantValue.exactly(1))))
             .register();
