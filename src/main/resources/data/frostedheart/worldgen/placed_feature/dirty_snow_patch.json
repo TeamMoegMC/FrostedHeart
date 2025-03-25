@@ -1,9 +1,9 @@
 {
-  "feature": "frostedheart:condensed_copper_ore_patch",
+  "feature": "frostedheart:dirty_snow_patch",
   "placement": [
     {
       "type": "minecraft:rarity_filter",
-      "chance": 12
+      "chance": 1
     },
     {
       "type": "minecraft:in_square"

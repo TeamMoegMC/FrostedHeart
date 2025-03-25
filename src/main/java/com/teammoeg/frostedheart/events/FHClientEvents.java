@@ -185,8 +185,7 @@ public class FHClientEvents {
     public void onRecipesUpdated(RecipesUpdatedEvent event) {
         if (!Minecraft.getInstance().hasSingleplayerServer())
             FHRecipeCachingReloadListener.buildRecipeLists(event.getRecipeManager());
-        if(FMLEnvironment.dist==Dist.CLIENT)
-        	WheelMenuRenderer.load();
+        
 
     }
 
@@ -196,6 +195,8 @@ public class FHClientEvents {
         // TODO: temporary fix for client not sending ready packet
         ClientScene.INSTANCE = new ClientScene();
         ClientScene.INSTANCE.sendClientReady();
+        System.out.println("loaded wheel menu");
+        WheelMenuRenderer.load();
 
     }
 

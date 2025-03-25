@@ -126,24 +126,26 @@ public class CeramicBucket extends FHBaseItem {
 							// Get fluid from vanilla bucket
 							Fluid fluid = ((BucketItem) pickedUpVanilla.getItem()).getFluid();
 
-							// Create new ceramic bucket with fluid
-							ItemStack filledCeramic = itemstack.copy();
-							filledCeramic.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(handler -> {
-								handler.fill(new FluidStack(fluid, 1000), IFluidHandler.FluidAction.EXECUTE);
-							});
+							if (fluid.isSame(Fluids.WATER) || fluid.isSame(Fluids.LAVA)) {
+								// Create new ceramic bucket with fluid
+								ItemStack filledCeramic = itemstack.copy();
+								filledCeramic.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(handler -> {
+									handler.fill(new FluidStack(fluid, 1000), IFluidHandler.FluidAction.EXECUTE);
+								});
 
-							// Play effects
-							pPlayer.awardStat(Stats.ITEM_USED.get(this));
-							bucketpickup.getPickupSound(blockstate).ifPresent(sound ->
-									pPlayer.playSound(sound, 1.0F, 1.0F));
-							pLevel.gameEvent(pPlayer, GameEvent.FLUID_PICKUP, blockpos);
+								// Play effects
+								pPlayer.awardStat(Stats.ITEM_USED.get(this));
+								bucketpickup.getPickupSound(blockstate).ifPresent(sound ->
+										pPlayer.playSound(sound, 1.0F, 1.0F));
+								pLevel.gameEvent(pPlayer, GameEvent.FLUID_PICKUP, blockpos);
 
-							// Return modified ceramic bucket
-							ItemStack resultStack = ItemUtils.createFilledResult(itemstack, pPlayer, filledCeramic);
-							if (!pLevel.isClientSide) {
-								CriteriaTriggers.FILLED_BUCKET.trigger((ServerPlayer) pPlayer, filledCeramic);
+								// Return modified ceramic bucket
+								ItemStack resultStack = ItemUtils.createFilledResult(itemstack, pPlayer, filledCeramic);
+								if (!pLevel.isClientSide) {
+									CriteriaTriggers.FILLED_BUCKET.trigger((ServerPlayer) pPlayer, filledCeramic);
+								}
+								return InteractionResultHolder.sidedSuccess(resultStack, pLevel.isClientSide());
 							}
-							return InteractionResultHolder.sidedSuccess(resultStack, pLevel.isClientSide());
 						}
 					}
 					return InteractionResultHolder.fail(itemstack);

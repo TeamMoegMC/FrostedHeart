@@ -1,7 +1,7 @@
 {
   "block.frostedresearch.drawing_desk": "绘图台",
   "block.frostedresearch.mechanical_calculator": "机械计算器",
-  "itemGroup.frostedresearch.building_blocks": "寒冰科技",
+  "itemGroup.frostedresearch.main": "寒冰科技",
   "item.frostedresearch.charcoal": "炭笔",
   "item.frostedresearch.rubbing_pad": "拓印底板",
   "item.frostedresearch.rubbing_tool": "拓印工具",

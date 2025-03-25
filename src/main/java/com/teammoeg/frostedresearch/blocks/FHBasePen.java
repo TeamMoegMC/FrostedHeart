@@ -22,6 +22,9 @@ package com.teammoeg.frostedresearch.blocks;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import com.teammoeg.frostedresearch.FRContents;
+import com.teammoeg.frostedresearch.FRMain;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -50,8 +53,8 @@ public class FHBasePen  extends Item implements ICreativeModeTabItem,IPen{
 
 	@Override
 	public void fillItemCategory(CreativeTabItemHelper helper) {
-		// TODO Auto-generated method stub
-		
+        if(helper.isType(FRContents.Tabs.BLOCK_TAB_TYPE))
+            helper.accept(this);
 	}
 
 }

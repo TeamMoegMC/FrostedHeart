@@ -374,8 +374,8 @@
   "message.frostedheart.cow.nomilk.hungry": "这只牛太饿了，无法产奶。你可能需要喂食。",
   "message.frostedheart.crank.feel_hunger": "已经饿到摇不动了。",
   "message.frostedheart.creative_help": "[点击以解锁全部研究]",
-  "message.frostedheart.crop_no_bonemeal": "这里的土壤解冻程度太低了，使用骨粉至少需要%s。",
-  "message.frostedheart.crop_not_growable": "这里的土壤解冻程度太低了，这株植物生长至少需要 %s",
+  "message.frostedheart.crop_no_bonemeal": "这里的土壤温度太低了，使用骨粉至少需要%s。",
+  "message.frostedheart.crop_not_growable": "这里的土壤温度太低了，这株植物生长至少需要 %s",
   "message.frostedheart.eat_wanted_food": "好吃！你感觉心情不错。",
   "message.frostedheart.eaten_poisonous_food": "你不应该吃生肉！",
   "message.frostedheart.energy.full": "我感觉精神百倍、好奇心十足，准备迎接挑战。",
@@ -404,7 +404,7 @@
   "message.frostedheart.forecast.night": "傍晚天气预报:\n 今晚: %s\n 午夜: %s\n 明早: %s\n 中午: %s\n 傍晚: %s",
   "message.frostedheart.forecast.snow_today": " 今日降雪 :<",
   "message.frostedheart.forecast.snow_tomorrow": " 明日降雪 :<",
-  "message.frostedheart.info.soil_thermometerbody": "测量位置的土壤解冻程度：%s",
+  "message.frostedheart.info.soil_thermometerbody": "测量位置的土壤温度：%s",
   "message.frostedheart.info.thermometerbody": "体温：%s",
   "message.frostedheart.item_task": "获得[%s]以继续",
   "message.frostedheart.kill_task": "击杀[%s]以继续",
@@ -778,5 +778,11 @@
   "gui.frostedheart.wheel_menu.message": "移动鼠标选择，松开[%s]执行",
   "gui.frostedheart.wheel_menu.selection.nutrition": "营养信息",
   "gui.frostedheart.wheel_menu.selection.clothing": "查看衣物",
-  "gui.frostedheart.wheel_menu.selection.debug": "打开调试菜单"
+  "gui.frostedheart.wheel_menu.selection.debug": "打开调试菜单",
+  "block.frostedheart.dirty_snow": "脏雪",
+  "block.frostedheart.dirty_snow_block": "脏雪块",
+  "item.frostedheart.spacesuit_body": "太空服（躯干）",
+  "item.frostedheart.spacesuit_boots": "太空服（靴子）",
+  "item.frostedheart.spacesuit_helmet": "太空服（头盔）",
+  "item.frostedheart.spacesuit_leg": "太空服（腿部）"
 }

@@ -355,6 +355,9 @@ public class FHConfig {
                             Biomes.END_MIDLANDS.location().toString(),
                             Biomes.THE_END.location().toString(),
                             Biomes.THE_VOID.location().toString(),
+                            // oceans freeze already in their own style
+                            Biomes.FROZEN_OCEAN.location().toString(),
+                            Biomes.DEEP_FROZEN_OCEAN.location().toString(),
                             "terralith:yellowstone",
                             "terralith:volcanic_crater",
                             "terralith:volcanic_peaks",
