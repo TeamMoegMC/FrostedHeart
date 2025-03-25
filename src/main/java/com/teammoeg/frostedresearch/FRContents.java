@@ -128,7 +128,7 @@ public class FRContents {
 				.builder()
 				.withTabsBefore(CreativeModeTabs.SPAWN_EGGS)
 				.icon(() -> new ItemStack(Blocks.DRAWING_DESK.get()))
-				.title(Lang.translateKey("itemGroup.frostedresearch.building_blocks"))
+				.title(Lang.translateKey("itemGroup.frostedresearch.main"))
 				.build());
 		public static final TabType BLOCK_TAB_TYPE = new TabType(BUILDING_BLOCKS);
 	}

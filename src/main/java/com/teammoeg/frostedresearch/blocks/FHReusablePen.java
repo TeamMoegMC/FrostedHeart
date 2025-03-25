@@ -22,6 +22,7 @@ package com.teammoeg.frostedresearch.blocks;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 
+import com.teammoeg.frostedresearch.FRContents;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -52,7 +53,8 @@ public class FHReusablePen extends Item implements ICreativeModeTabItem,IPen {
 
 	@Override
 	public void fillItemCategory(CreativeTabItemHelper helper) {
-		// TODO Auto-generated method stub
+        if(helper.isType(FRContents.Tabs.BLOCK_TAB_TYPE))
+            helper.accept(this);
 		
 	}
 
