@@ -28,10 +28,12 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -43,6 +45,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.fluids.FluidStack;
@@ -56,6 +59,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.FLUID_NBT_KEY;
@@ -69,6 +73,22 @@ public class DrinkContainerItem extends ItemFluidContainer {
 
     protected ItemStack getContainerItem(ItemStack itemStack){
         return itemStack;
+    }
+
+    private boolean initialized = false;
+    @Override
+    public void inventoryTick(ItemStack itemStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
+        if (!initialized) {
+            initialized = true;
+            if(!itemStack.hasTag())return;
+            CompoundTag fluid = itemStack.getOrCreateTag().getCompound("Fluid");
+            String fluidName = fluid.getString("FluidName");
+            int amount = fluid.getInt("Amount");
+            Fluid value = ForgeRegistries.FLUIDS.getValue(ResourceLocation.tryParse(fluidName));
+
+            IFluidHandler handler = itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
+            handler.fill(new FluidStack(value,amount), IFluidHandler.FluidAction.EXECUTE);
+        }
     }
 
     @Override
