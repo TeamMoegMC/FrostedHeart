@@ -1,5 +1,11 @@
 {
   "values": [
-    "frostedresearch:drawing_desk"
+    "frostedheart:warehouse",
+    "frostedheart:mine",
+    "frostedheart:mine_base",
+    "frostedheart:hunting_camp",
+    "frostedheart:hunting_base",
+    "#frostedheart:town/blocks",
+    "#frostedheart:machines/wooden"
   ]
 }
