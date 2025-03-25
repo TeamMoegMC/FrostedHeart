@@ -30,6 +30,7 @@ import com.simibubi.create.AllBlocks;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 /**
  * Stop players from being kicked when flying
@@ -58,4 +59,5 @@ public class ServerPlayNetHandlerMixin_FlyingFix {
         	clientVehicleIsFloating = false;
         }
     }
+
 }
