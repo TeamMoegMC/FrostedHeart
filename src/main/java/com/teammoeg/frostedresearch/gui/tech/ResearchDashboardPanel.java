@@ -137,14 +137,16 @@ public class ResearchDashboardPanel extends Panel {
             techpoint.setText(toReadable(rd.getTotalCommitted(detailPanel.research)) + "/" + toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
         }
         techpoint.setX(140 - techpoint.width);
-        int insightNeeded=detailPanel.research.getInsight();
-        int insightAvailable=ClientResearchDataAPI.getData().get().getAvailableInsightLevel();
-        availableInsightLevel.setText(Lang.translateGui("research.insight_required",insightNeeded,insightAvailable));
-        if (insightNeeded>insightAvailable) {
-            availableInsightLevel.setColor(TechIcons.text_red);
-        }
-        add(availableInsightLevel);
-        availableInsightLevel.setX(140 - availableInsightLevel.width);
+        if (!rd.canResearch()) {
+	        int insightNeeded=detailPanel.research.getInsight();
+	        int insightAvailable=ClientResearchDataAPI.getData().get().getAvailableInsightLevel();
+	        availableInsightLevel.setText(Lang.translateGui("research.insight_required",insightNeeded,insightAvailable));
+	        if (insightNeeded>insightAvailable) {
+	            availableInsightLevel.setColor(TechIcons.text_red);
+	        }
+	        add(availableInsightLevel);
+	        availableInsightLevel.setX(140 - availableInsightLevel.width);
+	    }
         if (rd.canResearch() && !rd.canComplete(detailPanel.research)) {
             RTextField rq = new RTextField(this).setMaxWidth(140).setMaxLine(1).setColor(TechIcons.text_red);
             rq.setPos(40, 20+ClientUtils.font().lineHeight*3);
