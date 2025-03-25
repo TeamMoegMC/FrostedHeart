@@ -74,7 +74,7 @@ public class ItemResourceAmountRecipe extends IESerializableRecipe {
 
     @Override
     protected IERecipeSerializer<?> getIESerializer() {
-        return null;
+        return SERIALIZER.get();
     }
 
     @Override
