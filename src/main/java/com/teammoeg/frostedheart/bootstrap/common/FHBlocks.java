@@ -122,7 +122,9 @@ public class FHBlocks {
     // Condensed ore blocks
     public static final BlockEntry<Block> DIRTY_SNOW_BLOCK = REGISTRATE.block("dirty_snow_block", Block::new)
             .initialProperties(() -> SNOW_BLOCK)
-            .tag(FHTags.Blocks.CONDENSED_ORES.tag)
+            .tag(BlockTags.MINEABLE_WITH_SHOVEL)
+            .tag(BlockTags.SNOW)
+            .tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
             .blockstate(FHBlockStateGen.simpleCubeAll("ore/dirty_snow"))
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, Items.SNOWBALL, ConstantValue.exactly(4))))
             .simpleItem()
@@ -260,6 +262,9 @@ public class FHBlocks {
     // Condensed ores
     public static final BlockEntry<SnowLayerBlock> DIRTY_SNOW = REGISTRATE.block("dirty_snow", SnowLayerBlock::new)
             .initialProperties(() -> SNOW)
+            .tag(BlockTags.MINEABLE_WITH_SHOVEL)
+            .tag(BlockTags.SNOW)
+            .tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
             .loot((lt, block) -> lt.add(block, FHLootGen.buildSnowLootTable(block, DIRTY_SNOW_BLOCK.get(), Items.SNOWBALL)))
             .blockstate(FHBlockStateGen.snowLayered("dirty_snow", "dirty_snow_block", "ore/dirty_snow"))
             .item()
