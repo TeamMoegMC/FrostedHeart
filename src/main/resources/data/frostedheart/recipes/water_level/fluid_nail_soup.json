@@ -1,8 +1,5 @@
 {
     "type": "frostedheart:water_level_and_effect",
-    "ingredient": {
-        "item": "frostedheart:leather_water_bag"
-    },
 	"fluid": "caupona:nail_soup",
 	"waterLevel": 4,
 	"waterSaturationLevel": 2
