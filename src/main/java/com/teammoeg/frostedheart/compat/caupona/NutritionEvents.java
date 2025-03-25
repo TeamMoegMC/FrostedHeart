@@ -28,7 +28,7 @@ public class NutritionEvents {
 					fvr = FoodValueRecipe.recipes.get(sx.getItem());
 				ItemStack stack;
 				int heal;
-				if (fvr == null || fvr.getRepersent() == null) {
+				if (fvr == null || fvr.getRepersent() == null && sx.getStack().getFoodProperties(event.getConsumer()) != null) {
 					stack = sx.getStack();
 					heal = stack.getFoodProperties(event.getConsumer()).getNutrition();
 				} else {
