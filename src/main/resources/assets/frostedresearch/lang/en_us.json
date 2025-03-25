@@ -1,7 +1,7 @@
 {
   "block.frostedresearch.drawing_desk": "Drawing Desk",
   "block.frostedresearch.mechanical_calculator": "Mechanical Calculator",
-  "itemGroup.frostedresearch.building_blocks": "Frosted Technologies",
+  "itemGroup.frostedresearch.main": "Frosted Technologies",
   "clue.frostedresearch.advancement": "Complete",
   "clue.frostedresearch.consume_item": "Submit Item",
   "clue.frostedresearch.item": "Examine Item",
