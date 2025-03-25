@@ -24,6 +24,7 @@ import com.google.common.collect.Multimap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -48,6 +49,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class KnifeItem extends SwordItem {
@@ -66,45 +69,6 @@ public class KnifeItem extends SwordItem {
 
     public float getDamage() {
         return this.attackDamage;
-    }
-
-    @Override
-    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        // Define the maximum allowed distance (2 blocks)
-        double maxReach = 2.0;
-        // Calculate the squared distance (to avoid the cost of Math.sqrt)
-        double distanceSq = attacker.distanceToSqr(target);
-
-        // If the target is farther than 2 blocks, don’t register a hit.
-        if (distanceSq > maxReach * maxReach) {
-            return false;
-        }
-
-        // Otherwise, perform the normal damage procedure.
-        stack.hurtAndBreak(1, attacker, (entity) -> {
-            entity.broadcastBreakEvent(EquipmentSlot.MAINHAND);
-        });
-        return true;
-    }
-
-    public boolean mineBlock(ItemStack pStack, Level pLevel, BlockState pState, BlockPos pPos, LivingEntity pEntityLiving) {
-        // Define the maximum allowed distance (2 blocks)
-        double maxReach = 2.0;
-        // Calculate the squared distance (to avoid the cost of Math.sqrt)
-        double distanceSq = pEntityLiving.distanceToSqr(pPos.getCenter());
-
-        // If the target is farther than 2 blocks, don’t register a hit.
-        if (distanceSq > maxReach * maxReach) {
-            return false;
-        }
-
-        if (pState.getDestroySpeed(pLevel, pPos) != 0.0F) {
-            pStack.hurtAndBreak(2, pEntityLiving, (p_43276_) -> {
-                p_43276_.broadcastBreakEvent(EquipmentSlot.MAINHAND);
-            });
-        }
-
-        return true;
     }
 
     public boolean isCorrectToolForDrops(BlockState pBlock) {
