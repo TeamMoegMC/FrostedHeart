@@ -778,5 +778,11 @@
   "gui.frostedheart.wheel_menu.message": "移动鼠标选择，松开[%s]执行",
   "gui.frostedheart.wheel_menu.selection.nutrition": "营养信息",
   "gui.frostedheart.wheel_menu.selection.clothing": "查看衣物",
-  "gui.frostedheart.wheel_menu.selection.debug": "打开调试菜单"
+  "gui.frostedheart.wheel_menu.selection.debug": "打开调试菜单",
+  "block.frostedheart.dirty_snow": "脏雪",
+  "block.frostedheart.dirty_snow_block": "脏雪块",
+  "item.frostedheart.spacesuit_body": "太空服（躯干）",
+  "item.frostedheart.spacesuit_boots": "太空服（靴子）",
+  "item.frostedheart.spacesuit_helmet": "太空服（头盔）",
+  "item.frostedheart.spacesuit_leg": "太空服（腿部）"
 }
