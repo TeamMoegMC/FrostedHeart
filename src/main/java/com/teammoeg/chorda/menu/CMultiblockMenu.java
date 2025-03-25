@@ -26,7 +26,7 @@ public class CMultiblockMenu<R extends IMultiblockState> extends CBaseMenu {
 	//Client constructor with clicked position
 	public CMultiblockMenu(MenuType<?> pMenuType, int pContainerId, Player player, int inv_start,BlockPos pos) {
 		super(pMenuType, pContainerId, player, inv_start);
-		this.menuContext=new MultiblockMenuContext<R>((IMultiblockContext)CMultiblockHelper.getBEHelper(ClientUtils.getWorld(), pos).getContext(),pos);
+		this.menuContext=new MultiblockMenuContext<R>((IMultiblockContext)CMultiblockHelper.getBEHelper(player.level(), pos).getContext(),pos);
 	}
 	@Override
 	protected Validator buildValidator(Validator builder) {

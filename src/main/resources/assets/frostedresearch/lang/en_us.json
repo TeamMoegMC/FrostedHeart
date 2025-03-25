@@ -1,4 +1,7 @@
 {
+  "block.frostedresearch.drawing_desk": "Drawing Desk",
+  "block.frostedresearch.mechanical_calculator": "Mechanical Calculator",
+  "itemGroup.frostedresearch.building_blocks": "Frosted Technologies",
   "clue.frostedresearch.advancement": "Complete",
   "clue.frostedresearch.consume_item": "Submit Item",
   "clue.frostedresearch.item": "Examine Item",
@@ -8,6 +11,10 @@
   "clue.frostedresearch.minigame.t1": "Finish common paper",
   "clue.frostedresearch.minigame.t2": "Finish advanced paper",
   "clue.frostedresearch.minigame.t3": "Finish complex paper",
+  "item.frostedresearch.charcoal": "Charcoal pencil",
+  "item.frostedresearch.rubbing_pad": "Rubbing Pad",
+  "item.frostedresearch.rubbing_tool": "Rubbing Tools",
+  "item.frostedresearch.quill_and_ink": "Quill And Ink",
   "effect.frostedresearch.lethargic": "Lethargic",
   "gui.frostedresearch.draw_desk.examine": "Examine item",
   "gui.frostedresearch.draw_desk.help": "Help",

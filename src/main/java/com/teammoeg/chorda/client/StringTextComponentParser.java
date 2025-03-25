@@ -8,6 +8,7 @@ import com.teammoeg.chorda.util.parsereader.source.StringLineSource;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 
@@ -41,7 +42,7 @@ public class StringTextComponentParser {
 	private StringTextComponentParser() {
 		
 	}
-	public static Component parse(String str) {
+	public static MutableComponent parse(String str) {
 		ParseReader parser=new ParseReader(new StringLineSource(str, str));
 		ComponentOptimizer builder=new ComponentOptimizer();
 		while(parser.nextLine()) {
@@ -86,7 +87,7 @@ public class StringTextComponentParser {
 					while(parser.has()&&parser.read()!='}') {
 						parser.eat();
 					}
-					builder.appendComponent(Components.translatable(parser.fromStart()).withStyle(style));
+					builder.appendComponent(parse(Components.translatable(parser.fromStart()).getString()).withStyle(style));
 					if(parser.has())
 						parser.eat('}');
 					break;
@@ -100,5 +101,7 @@ public class StringTextComponentParser {
 		}
 		return builder.build();
 	}
-
+	/*public static void main(String[] args) {
+		System.out.println(parse("砧木&b&l测试&r得到"));
+	}*/
 }

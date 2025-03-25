@@ -50,7 +50,6 @@ public record ArmorTempData(Item item,Optional<BodyPart> slot,float insulation, 
 	public static ArmorTempData getData(ItemStack is,BodyPart part) {
 		EnumDefaultedMap<BodyPart, ArmorTempData> map=cacheList.get(is.getItem());
 		if(map==null)return null;
-		
 		return map.get(part);
 		
 	}

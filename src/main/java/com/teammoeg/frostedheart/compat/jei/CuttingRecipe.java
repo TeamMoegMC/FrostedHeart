@@ -31,7 +31,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 
-public class CuttingRecipe implements Recipe<Container> {
+public class CuttingRecipe{
     public final ItemStack in;
     public final ItemStack out;
 
@@ -39,40 +39,12 @@ public class CuttingRecipe implements Recipe<Container> {
         this.in = in;
         this.out = out;
     }
-
-    @Override
-    public boolean canCraftInDimensions(int width, int height) {
-        return false;
-    }
-
-    @Override
-    public ItemStack assemble(Container inv, RegistryAccess pRegistryAccess) {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
     public ResourceLocation getId() {
         return new ResourceLocation(FHMain.MODID, "cutting/" + CRegistryHelper.getRegistryName(out.getItem()).getPath());
     }
 
-    @Override
     public ItemStack getResultItem(RegistryAccess pRegistryAccess) {
         return out;
-    }
-
-    @Override
-    public RecipeSerializer<?> getSerializer() {
-        return null;
-    }
-
-    @Override
-    public RecipeType<?> getType() {
-        return RecipeType.CRAFTING;
-    }
-
-    @Override
-    public boolean matches(Container inv, Level worldIn) {
-        return false;
     }
 
 

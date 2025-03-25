@@ -21,14 +21,19 @@ package com.teammoeg.chorda.lang;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import com.mojang.datafixers.util.Unit;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText.ContentConsumer;
+import net.minecraft.network.chat.FormattedText.StyledContentConsumer;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 /**
  * A convenience method to merge style-char pair to style-string pair, merging items with same style, optimize network or storage.
  * */
-public class ComponentOptimizer {
+public class ComponentOptimizer implements ContentConsumer<Unit>,StyledContentConsumer<Unit>{
 	StringBuilder sb=new StringBuilder();
 	Style sty=Style.EMPTY;
 	List<Component> calculated=new ArrayList<>();
@@ -36,7 +41,7 @@ public class ComponentOptimizer {
 		
 	}
 	public void appendChar(String ch,Style style) {
-		if(style!=sty) {
+		if(style!=sty&&!style.equals(sty)) {
 			createComponent();
 			sty=style;
 		}
@@ -50,7 +55,7 @@ public class ComponentOptimizer {
 		sty=Style.EMPTY;
 		
 	}
-	public Component build() {
+	public MutableComponent build() {
 		createComponent();
 		MutableComponent mstr= Components.str("");
 		for(Component c:calculated) {
@@ -59,7 +64,7 @@ public class ComponentOptimizer {
 		return mstr;
 	}
 	public void appendChar(char ch, Style style) {
-		if(style!=sty) {
+		if(style!=sty&&!style.equals(sty)) {
 			createComponent();
 			sty=style;
 		}
@@ -68,5 +73,15 @@ public class ComponentOptimizer {
 	public void appendComponent(Component c) {
 		createComponent();
 		calculated.add(c);
+	}
+	@Override
+	public Optional<Unit> accept(Style pStyle, String pContent) {
+		appendChar(pContent,sty.applyTo(pStyle));
+		return Optional.empty();
+	}
+	@Override
+	public Optional<Unit> accept(String pContent) {
+		appendChar(pContent,sty);
+		return Optional.empty();
 	}
 }

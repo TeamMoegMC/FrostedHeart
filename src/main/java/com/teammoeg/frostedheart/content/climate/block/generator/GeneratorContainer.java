@@ -23,6 +23,7 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.Optional;
 
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
@@ -126,7 +127,7 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
 	}
 
 	public void updateStructureState() {
-		validStructure.setValue(tile.nextLevelHasValidStructure(Minecraft.getInstance().level, getMenuContext().mbContext()));
+		validStructure.setValue(tile.nextLevelHasValidStructure(ClientUtils.getWorld(), getMenuContext().mbContext()));
 	}
 
 	LazyTickWorker worker = new LazyTickWorker(10, () -> updateStructureState());
