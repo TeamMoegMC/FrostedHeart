@@ -25,6 +25,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -36,20 +37,6 @@ import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 public class WoodenCupItem extends DrinkContainerItem {
     public WoodenCupItem(Properties properties, int capacity) {
         super(properties, capacity);
-    }
-
-    @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        InteractionResultHolder<ItemStack> use = super.use(level, player, hand);
-        ItemStack itemStack = use.getObject();
-        IFluidHandler handler = itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
-        if(handler!=null){
-            int amount = handler.getFluidInTank(0).getAmount();
-            if(amount==0){
-                return InteractionResultHolder.success(new ItemStack(FHItems.wooden_cup.get()));
-            }
-        }
-        return use;
     }
 
     @Override

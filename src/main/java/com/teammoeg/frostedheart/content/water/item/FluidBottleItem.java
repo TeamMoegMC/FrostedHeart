@@ -31,17 +31,6 @@ public class FluidBottleItem extends DrinkContainerItem{
     public FluidBottleItem(Properties properties) {
         super(properties, 250);
     }
-//    @Override
-//    public void fillItemCategory(CreativeModeTab tab, NonNullList<ItemStack> items) {
-//        List<Fluid> fluids = new ArrayList<>();
-//        fluids.add(FHFluids.PURIFIED_WATER.get());
-//        if (this.allowdedIn(tab) && this == ItemRegistry.FLUID_BOTTLE.get()) {
-//            for (Fluid fluid : fluids) {
-//                ItemStack itemStack = new ItemStack(ItemRegistry.FLUID_BOTTLE.get());
-//                items.add(FluidHelper.fillContainer(itemStack, fluid));
-//            }
-//        }
-//    }
 
     @Override
     public Component getName(ItemStack stack) {
