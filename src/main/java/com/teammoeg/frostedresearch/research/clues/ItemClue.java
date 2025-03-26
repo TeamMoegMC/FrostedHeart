@@ -115,7 +115,7 @@ public class ItemClue extends Clue {
         TeamResearchData trd = t.getData(FRSpecialDataTypes.RESEARCH_DATA);
         if (!trd.isClueCompleted(r, this))
             if (this.stack!=null&&this.stack.getFirst().test(stack)) {
-                trd.setClueCompleted(t, r, 0, consume);
+                trd.setClueCompleted(t, r, this, true);
                 if (consume)
                     return this.stack.getSecond();
             }
