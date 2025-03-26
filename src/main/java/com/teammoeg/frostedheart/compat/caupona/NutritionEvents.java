@@ -12,6 +12,7 @@ import com.teammoeg.caupona.util.StewInfo;
 import com.teammoeg.frostedheart.content.health.capability.MutableNutrition;
 import com.teammoeg.frostedheart.content.health.event.GatherFoodNutritionEvent;
 
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
 
 public class NutritionEvents {
@@ -26,12 +27,14 @@ public class NutritionEvents {
 				FoodValueRecipe fvr = null;
 				if (FoodValueRecipe.recipes != null)
 					fvr = FoodValueRecipe.recipes.get(sx.getItem());
-				ItemStack stack;
-				int heal;
-				if (fvr == null || fvr.getRepersent() == null && sx.getStack().getFoodProperties(event.getConsumer()) != null) {
+				ItemStack stack = ItemStack.EMPTY;
+				int heal = 0;
+				if ((fvr == null || fvr.getRepersent() == null) && sx.getStack().getFoodProperties(event.getConsumer()) != null) {
 					stack = sx.getStack();
-					heal = stack.getFoodProperties(event.getConsumer()).getNutrition();
-				} else {
+					FoodProperties fp = stack.getFoodProperties(event.getConsumer());
+					if (fp != null)
+						heal = fp.getNutrition();
+				} else if (fvr != null && fvr.getRepersent() != null) {
 					stack = fvr.getRepersent();
 					heal = fvr.heal;
 				}
@@ -46,7 +49,7 @@ public class NutritionEvents {
 				}
 			}
 			if (ois.getHealing()!=0)
-				groups.scale(1 / ois.getHealing()*b);
+				groups.scale((float) 1 / ois.getHealing()*b);
 		}
 	}
 }
