@@ -101,7 +101,7 @@ public class MushroomBed extends FHBaseItem {
     public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
         ItemStack stack = playerIn.getItemInHand(handIn);
         InteractionResultHolder<ItemStack> FAIL = new InteractionResultHolder<>(InteractionResult.FAIL, stack);
-        if (stack.getDamageValue() > 0)
+        if (stack.getDamageValue() < stack.getMaxDamage())
             return FAIL;
 
 
@@ -116,7 +116,7 @@ public class MushroomBed extends FHBaseItem {
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
 
-        if (stack.getDamageValue() == 0) {
+        if (stack.getDamageValue() == stack.getMaxDamage()) {
             InteractionHand otherHand = entityLiving.getUsedItemHand() == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
             entityLiving.getItemInHand(otherHand).hurtAndBreak(1, entityLiving, (player2) -> player2.broadcastBreakEvent(otherHand));
             return new ItemStack(resultType, 10);
@@ -131,7 +131,7 @@ public class MushroomBed extends FHBaseItem {
 
 			@Override
 			public void tickHeating(HeatingDeviceSlot slot, ItemStack stack,HeatingDeviceContext data) {
-				if (stack.getDamageValue() > 0) {
+				if (stack.getDamageValue() < stack.getMaxDamage()) {
 		            if (data.getBodyTemperature(BodyPart.TORSO) > -1) {
 		            	stack.hurt(1,data.getLevel().random, data.getPlayer());
 		            	data.addEffectiveTemperature(BodyPart.TORSO, 0.5f);
