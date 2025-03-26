@@ -55,7 +55,7 @@ public class TssapProtocolHandler {
 							}
 						}
 						try {
-							Thread.sleep(50*60*1000);
+							Thread.sleep(5*60*1000);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 							return;
