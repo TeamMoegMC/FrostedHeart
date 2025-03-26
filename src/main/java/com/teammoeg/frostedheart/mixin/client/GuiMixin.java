@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.mixin.client;
 
+import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.client.gui.GuiGraphics;
 import org.spongepowered.asm.mixin.Mixin;
 
@@ -27,6 +28,8 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
@@ -36,12 +39,37 @@ public class GuiMixin {
     /**
      * @reason shift upward item name
      */
-    @Inject(method = "renderSelectedItemName(Lnet/minecraft/client/gui/GuiGraphics;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;fill(IIIII)V", shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILEXCEPTION)
-    private void modifyRenderSelectedItemName(GuiGraphics pGuiGraphics, int yShift, CallbackInfo ci, MutableComponent m, Component c, int i, int j, int k, int l) {
-        // Modify the variables j and k
-        k -= 24;
-        j -= 1;
 
-        // You can now use the modified j and k values.
+
+    // DO NOT DO THIS! THIS METHOD IS NOT CALLED
+    /*
+    @ModifyArg(
+            method = "renderSelectedItemName(Lnet/minecraft/client/gui/GuiGraphics;)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/Gui;renderSelectedItemName(Lnet/minecraft/client/gui/GuiGraphics;I)V"
+            ),
+            index = 1 // this specifies the second argument (0-based indexing)
+    )
+    private int modifyRenderSelectedItemNameArg(int original) {
+        FHMain.LOGGER.info("Render selected item name offset " + original);
+        // change the argument from 0 to 20
+        return -11;
+    }
+     */
+
+    /**
+     * @reason Shift the text name to accommodate our HUD.
+     */
+    @ModifyVariable(
+            method = "renderSelectedItemName(Lnet/minecraft/client/gui/GuiGraphics;I)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/GuiGraphics;fill(IIIII)V"
+            ),
+            index = 7
+    )
+    private int modifyK(int k) {
+        return k - 23;
     }
 }
