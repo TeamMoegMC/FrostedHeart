@@ -319,6 +319,14 @@ public class TemperatureUpdate {
                         	
                         	
                         }
+
+                        // update persistent player data
+                        data.setBodyTemp(coreTemp);
+
+                        for (BodyPart part : BodyPart.values()) {
+                            data.setTemperatureByPart(part, fem.get(part));
+                        }
+
                     } else {
                         MobEffectInstance insulationEffect = player.getEffect(FHMobEffects.INSULATION.get());
                         if (insulationEffect != null) {
