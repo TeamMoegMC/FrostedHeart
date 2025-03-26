@@ -270,7 +270,9 @@ public class TeamResearchData implements SpecialData {
 			return false;
 		this.costInsight(team,research.getInsight());
 		getData(research).setActive();
+		
 		this.sendResearchProgressPacket(team, research);
+		checkResearchComplete(team, research);
 		return true;
 	}
 
@@ -289,6 +291,7 @@ public class TeamResearchData implements SpecialData {
 			else
 				cl.start(team, par);
 			sendClueProgressPacket(team, par, clue, trig);
+			checkResearchComplete(team, par);
 		}
 	}
 
@@ -300,6 +303,7 @@ public class TeamResearchData implements SpecialData {
 		else
 			clue.start(team, par);
 		sendClueProgressPacket(team, par, par.getClues().indexOf(clue), trig);
+		checkResearchComplete(team, par);
 	}
 
 	public boolean isEffectGranted(Research research, Effect e) {
