@@ -1,5 +1,5 @@
 {
   "type": "frostedheart:block_temp",
   "block": "minecraft:soul_fire",
-  "temperature": 0.5
+  "temperature": -300.0
 }

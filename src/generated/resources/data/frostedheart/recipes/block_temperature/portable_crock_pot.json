@@ -1,0 +1,6 @@
+{
+  "type": "frostedheart:block_temp",
+  "block": "crockpot:portable_crock_pot",
+  "must_lit": true,
+  "temperature": 100.0
+}

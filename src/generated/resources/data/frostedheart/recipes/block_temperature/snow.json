@@ -2,5 +2,5 @@
   "type": "frostedheart:block_temp",
   "block": "minecraft:snow",
   "level_divide": true,
-  "temperature": -2.0
+  "temperature": -5.0
 }
