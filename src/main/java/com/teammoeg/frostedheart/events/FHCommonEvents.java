@@ -124,13 +124,7 @@ public class FHCommonEvents {
 		// Common capabilities
 
 	}
-	@SubscribeEvent
-	public static void onDrawDeskOpen(DrawDeskOpenEvent event) {
-		if (!event.getOpenPlayer().isCreative() && PlayerTemperatureData.getCapability(event.getOpenPlayer()).map(PlayerTemperatureData::getBodyTemp).orElse(0f) < -0.2) {
-			event.getOpenPlayer().displayClientMessage(Lang.translateMessage("research.too_cold"), true);
-			event.setCanceled(true);
-        } 
-	}
+
 	@SubscribeEvent
 	public static void loginReminder(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
 		CompoundTag nbt = event.getEntity().getPersistentData();
