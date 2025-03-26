@@ -1,7 +1,6 @@
 {
 	"parent": "frostedheart:block/template_culled_translucent_cube",
 	"textures": {
-		"0": "frostedheart:block/thin_ice_3",
-		"particle": "frostedheart:block/thin_ice_3"
+		"all": "frostedheart:block/thin_ice_3"
 	}
 }
