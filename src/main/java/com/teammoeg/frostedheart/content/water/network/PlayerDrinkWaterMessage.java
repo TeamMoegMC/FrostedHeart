@@ -44,6 +44,7 @@ public class PlayerDrinkWaterMessage extends NBTMessage {
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
+        buffer.writeNbt(new CompoundTag());
     }
 
     @Override
