@@ -53,6 +53,7 @@ import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
+import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
@@ -128,6 +129,7 @@ public class FHNetwork extends CBaseNetwork {
 
         // Water level
         registerMessage("water_level", PlayerWaterLevelSyncPacket.class);
+        registerMessage("player_drink_water", PlayerDrinkWaterMessage.class);
 
         // Nutrition
         //registerMessage("nutrition", PlayerNutritionSyncPacket.class);
