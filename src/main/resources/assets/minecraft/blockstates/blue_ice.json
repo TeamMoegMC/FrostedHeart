@@ -1,0 +1,11 @@
+{
+	"variants": {
+		"": [
+			{"model": "frostedheart:block/blue_ice_1"},
+			{"model": "frostedheart:block/blue_ice_2"},
+			{"model": "frostedheart:block/blue_ice_3"},
+			{"model": "frostedheart:block/blue_ice_4"},
+			{"model": "frostedheart:block/blue_ice_5"}
+		]
+	}
+}
