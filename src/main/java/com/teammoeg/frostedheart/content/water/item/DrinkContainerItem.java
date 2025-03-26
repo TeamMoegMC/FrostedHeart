@@ -42,12 +42,13 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.common.util.NonNullConsumer;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler;
@@ -59,7 +60,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.FLUID_NBT_KEY;
@@ -107,6 +108,33 @@ public class DrinkContainerItem extends ItemFluidContainer {
                     stack.shrink(1);
                     return InteractionResultHolder.success(stack);
                 }else return InteractionResultHolder.success(getFilledItem(stack, player));
+            }
+            BlockEntity entity = level.getBlockEntity(pos);
+            if(entity !=null){
+                AtomicBoolean success = new AtomicBoolean(false);
+                final ItemStack[] stack1 = new ItemStack[1];
+                entity.getCapability(ForgeCapabilities.FLUID_HANDLER).ifPresent(
+                        (NonNullConsumer<? super IFluidHandler>) fluidHandler -> {
+                            if(!fluidHandlerItem.getFluidInTank(0).isEmpty()) {
+                                FluidUtil.tryEmptyContainerAndStow(stack, fluidHandler, null, capacity, player, !player.isCreative());
+                                upDateDamage(stack);
+                                success.set(true);
+                            }else {
+                                FluidStack fluidInTank = fluidHandler.getFluidInTank(0);
+                                if(fluidInTank.isEmpty())return;
+                                int amount = fluidInTank.getAmount();
+                                if(amount>capacity)amount = capacity;
+
+                                ItemStack itemStack = FluidHelper.fillContainer(getDrinkItem(), fluidInTank.getFluid(),amount);
+                                fluidInTank.shrink(amount);
+                                stack1[0] = itemStack;
+                                upDateDamage(stack1[0]);
+                                success.set(true);
+                            }
+                        }
+
+                );
+                if(success.get())return InteractionResultHolder.success(stack1[0]!=null?stack1[0]:stack);
             }
         }
         if (canDrink(player, stack)) return ItemUtils.startUsingInstantly(level, player, hand);
