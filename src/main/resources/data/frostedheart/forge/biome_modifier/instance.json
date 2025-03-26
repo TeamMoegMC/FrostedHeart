@@ -10,7 +10,9 @@
     "frostedheart:gravel_permafrost_patch",
     "frostedheart:condensed_copper_ore_patch",
     "frostedheart:condensed_tin_ore_patch",
-    "frostedheart:dirty_snow_patch"
+    "frostedheart:dirty_snow_patch",
+    "frostedheart:ice_covered_gravel",
+    "frostedheart:ice_covered_clay"
   ],
   "top_layer_modification": [
     "frostedheart:freeze_top_layer"

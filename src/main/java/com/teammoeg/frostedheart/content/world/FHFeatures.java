@@ -21,10 +21,7 @@ package com.teammoeg.frostedheart.content.world;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.world.features.FHFossilFeature;
-import com.teammoeg.frostedheart.content.world.features.ImprovedFreezeTopLayerFeature;
-import com.teammoeg.frostedheart.content.world.features.ImprovedIceSpikeFeature;
-import com.teammoeg.frostedheart.content.world.features.SpacecraftFeature;
+import com.teammoeg.frostedheart.content.world.features.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.levelgen.feature.DiskFeature;
@@ -46,6 +43,7 @@ public class FHFeatures {
     public static final RegistryObject<ImprovedFreezeTopLayerFeature> FREEZE_TOP_LAYER = register("freeze_top_layer", ImprovedFreezeTopLayerFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<ImprovedIceSpikeFeature> ICE_SPIKES = register("ice_spikes", ImprovedIceSpikeFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<DiskFeature> DISK = register("disk", DiskFeature::new, DiskConfiguration.CODEC);
+    public static final RegistryObject<LayeredDiskFeature> LAYERED_DISK = register("layered_disk", LayeredDiskFeature::new, LayeredDiskConfiguration.CODEC);
     public static final RegistryObject<SpacecraftFeature> SPACECRAFT = register("spacecraft", SpacecraftFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<FHFossilFeature> FH_FOSSIL = register("fossil", FHFossilFeature::new, FossilFeatureConfiguration.CODEC);
 

@@ -1,9 +1,9 @@
 {
-  "feature": "frostedheart:ice_patch",
+  "feature": "frostedheart:ice_covered_gravel",
   "placement": [
     {
       "type": "minecraft:rarity_filter",
-      "chance": 32
+      "chance": 12
     },
     {
       "type": "minecraft:in_square"
