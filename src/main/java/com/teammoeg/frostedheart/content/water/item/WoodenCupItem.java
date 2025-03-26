@@ -22,28 +22,36 @@ package com.teammoeg.frostedheart.content.water.item;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
 public class WoodenCupItem extends DrinkContainerItem {
     public WoodenCupItem(Properties properties, int capacity) {
         super(properties, capacity);
     }
-//    @Override
-//    public void fillItemCategory(CreativeModeTab tab, NonNullList<ItemStack> items) {
-//        List<Fluid> fluids = new ArrayList<>();
-//        fluids.add(FHFluids.PURIFIED_WATER.get());
-//        fluids.add(Fluids.WATER);
-//        if (this.allowdedIn(tab) && this == ItemRegistry.WOODEN_CUP_DRINK.get()) {
-//            for (Fluid fluid : fluids) {
-//                ItemStack itemStack = new ItemStack(ItemRegistry.WOODEN_CUP_DRINK.get());
-//                items.add(FluidHelper.fillContainer(itemStack, fluid));
-//            }
-//            items.add(new ItemStack(ItemRegistry.WOODEN_CUP.get()));
-//        }
-//    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        InteractionResultHolder<ItemStack> use = super.use(level, player, hand);
+        ItemStack itemStack = use.getObject();
+        IFluidHandler handler = itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
+        if(handler!=null){
+            int amount = handler.getFluidInTank(0).getAmount();
+            if(amount==0){
+                return InteractionResultHolder.success(new ItemStack(FHItems.wooden_cup.get()));
+            }
+        }
+        return use;
+    }
+
     @Override
     public Component getName(ItemStack stack) {
         IFluidHandlerItem fluidHandlerItem =  stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);

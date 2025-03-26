@@ -68,7 +68,6 @@ import java.util.Random;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class WaterCommonEvents {
-    static int tick = 0;
 
     @SubscribeEvent
     public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
@@ -140,12 +139,11 @@ public class WaterCommonEvents {
 
     @SubscribeEvent
     public static void onPlayerTickEvent(TickEvent.PlayerTickEvent event) {
-        tick++;
-        tick %= 8000;
         Player player = event.player;
         Level level = player.level();
         if (!(player instanceof ServerPlayer)) return;
         if(player.isCreative() || player.isSpectator()) return;
+        long tick = level.getGameTime();
         if (WaterLevelUtil.canPlayerAddWaterExhaustionLevel(player)) {
             if (tick % 2 == 0) {
                 player.getDeltaMovement();

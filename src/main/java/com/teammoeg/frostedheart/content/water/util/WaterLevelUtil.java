@@ -46,23 +46,21 @@ public class WaterLevelUtil {
         Random rand = new Random();
 
         WaterLevelAndEffectRecipe wRecipe = WaterLevelAndEffectRecipe.getRecipeFromItem(level, stack);
-        //IThirstRecipe tRecipe = ThirstRecipe.getRecipeFromItem(level, stack);
+
         if (wRecipe != null) {
             WaterLevelCapability.getCapability(player).ifPresent(data -> {
                 if (player.getRemainingFireTicks() > 0 && wRecipe.getWaterLevel() >= 4) {//extinguish player
                     if (!level.isClientSide()) {
                         data.addWaterLevel(player, wRecipe.getWaterLevel() - 4);
-//                        if (tRecipe == null) {
-//                            data.addWaterSaturationLevel(player, Math.max(wRecipe.getWaterSaturationLevel() - 4, 0));
-//                        }
+                        data.addWaterSaturationLevel(player, Math.max(wRecipe.getWaterSaturationLevel() - 4, 0));
                     }
                     player.playSound(SoundEvents.FIRE_EXTINGUISH, 1.0F, 1.0F);
                     player.clearFire();
                 } else {//add water level
-                    data.addWaterLevel(player, wRecipe.getWaterLevel());
-//                    if (tRecipe == null) {
-//                        data.addWaterSaturationLevel(player, wRecipe.getWaterSaturationLevel());
-//                    }
+                    if (!level.isClientSide()) {
+                        data.addWaterLevel(player, wRecipe.getWaterLevel());
+                        data.addWaterSaturationLevel(player, wRecipe.getWaterSaturationLevel());
+                    }
                 }
             });
             for (MobEffectInstance mobEffectInstance : wRecipe.getMobEffectInstances()) {
