@@ -262,38 +262,47 @@ thinner.png
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_IRON_ORE =
             REGISTRATE.item("condensed_ball_iron_ore", FHSnowballItem::new)
                     .tag(FHTags.Items.CONDENSED_BALLS.tag)
+                    .lang("Iron Aeroslit Ball")
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_COPPER_ORE =
             REGISTRATE.item("condensed_ball_copper_ore", FHSnowballItem::new)
                     .tag(FHTags.Items.CONDENSED_BALLS.tag)
+                    .lang("Copper Aeroslit Ball")
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_GOLD_ORE =
             REGISTRATE.item("condensed_ball_gold_ore", FHSnowballItem::new)
                     .tag(FHTags.Items.CONDENSED_BALLS.tag)
+                    .lang("Gold Aeroslit Ball")
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_ZINC_ORE =
             REGISTRATE.item("condensed_ball_zinc_ore", FHSnowballItem::new)
                     .tag(FHTags.Items.CONDENSED_BALLS.tag)
+                    .lang("Zinc Aeroslit Ball")
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_SILVER_ORE =
             REGISTRATE.item("condensed_ball_silver_ore", FHSnowballItem::new)
                     .tag(FHTags.Items.CONDENSED_BALLS.tag)
+                    .lang("Silver Aeroslit Ball")
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_TIN_ORE =
             REGISTRATE.item("condensed_ball_tin_ore", FHSnowballItem::new)
                     .tag(FHTags.Items.CONDENSED_BALLS.tag)
+                    .lang("Tin Aeroslit Ball")
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_PYRITE_ORE =
             REGISTRATE.item("condensed_ball_pyrite_ore", FHSnowballItem::new)
                     .tag(FHTags.Items.CONDENSED_BALLS.tag)
+                    .lang("Pyrite Aeroslit Ball")
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_NICKEL_ORE =
             REGISTRATE.item("condensed_ball_nickel_ore", FHSnowballItem::new)
                     .tag(FHTags.Items.CONDENSED_BALLS.tag)
+                    .lang("Nickel Aeroslit Ball")
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_LEAD_ORE =
             REGISTRATE.item("condensed_ball_lead_ore", FHSnowballItem::new)
                     .tag(FHTags.Items.CONDENSED_BALLS.tag)
+                    .lang("Lead Aeroslit Ball")
                     .register();
 
     // Slurry

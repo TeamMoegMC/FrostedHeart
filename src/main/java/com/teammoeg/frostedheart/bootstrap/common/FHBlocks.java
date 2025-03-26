@@ -135,6 +135,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.simpleCubeAll("ore/condensed_iron_ore"))
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.CONDENSED_BALL_IRON_ORE.get(), ConstantValue.exactly(4))))
             .simpleItem()
+            .lang("Iron Aeroslit Block")
             .register();
     public static final BlockEntry<Block> CONDENSED_COPPER_ORE_BLOCK = REGISTRATE.block("condensed_copper_ore_block", Block::new)
             .initialProperties(() -> SNOW_BLOCK)
@@ -142,6 +143,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.simpleCubeAll("ore/condensed_copper_ore"))
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.CONDENSED_BALL_COPPER_ORE.get(), ConstantValue.exactly(4))))
             .simpleItem()
+            .lang("Copper Aeroslit Block")
             .register();
     public static final BlockEntry<Block> CONDENSED_GOLD_ORE_BLOCK = REGISTRATE.block("condensed_gold_ore_block", Block::new)
             .initialProperties(() -> SNOW_BLOCK)
@@ -149,6 +151,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.simpleCubeAll("ore/condensed_gold_ore"))
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.CONDENSED_BALL_GOLD_ORE.get(), ConstantValue.exactly(4))))
             .simpleItem()
+            .lang("Gold Aeroslit Block")
             .register();
     public static final BlockEntry<Block> CONDENSED_ZINC_ORE_BLOCK = REGISTRATE.block("condensed_zinc_ore_block", Block::new)
             .initialProperties(() -> SNOW_BLOCK)
@@ -156,6 +159,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.simpleCubeAll("ore/condensed_zinc_ore"))
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.CONDENSED_BALL_ZINC_ORE.get(), ConstantValue.exactly(4))))
             .simpleItem()
+            .lang("Zinc Aeroslit Block")
             .register();
     public static final BlockEntry<Block> CONDENSED_SILVER_ORE_BLOCK = REGISTRATE.block("condensed_silver_ore_block", Block::new)
             .initialProperties(() -> SNOW_BLOCK)
@@ -163,6 +167,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.simpleCubeAll("ore/condensed_silver_ore"))
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.CONDENSED_BALL_SILVER_ORE.get(), ConstantValue.exactly(4))))
             .simpleItem()
+            .lang("Silver Aeroslit Block")
             .register();
     public static final BlockEntry<Block> CONDENSED_TIN_ORE_BLOCK = REGISTRATE.block("condensed_tin_ore_block", Block::new)
             .initialProperties(() -> SNOW_BLOCK)
@@ -170,6 +175,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.simpleCubeAll("ore/condensed_tin_ore"))
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.CONDENSED_BALL_TIN_ORE.get(), ConstantValue.exactly(4))))
             .simpleItem()
+            .lang("Tin Aeroslit Block")
             .register();
     public static final BlockEntry<Block> CONDENSED_PYRITE_ORE_BLOCK = REGISTRATE.block("condensed_pyrite_ore_block", Block::new)
             .initialProperties(() -> SNOW_BLOCK)
@@ -177,6 +183,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.simpleCubeAll("ore/condensed_pyrite_ore"))
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.CONDENSED_BALL_PYRITE_ORE.get(), ConstantValue.exactly(4))))
             .simpleItem()
+            .lang("Pyrite Aeroslit Block")
             .register();
     public static final BlockEntry<Block> CONDENSED_NICKEL_ORE_BLOCK = REGISTRATE.block("condensed_nickel_ore_block", Block::new)
             .initialProperties(() -> SNOW_BLOCK)
@@ -191,6 +198,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.simpleCubeAll("ore/condensed_lead_ore"))
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.CONDENSED_BALL_LEAD_ORE.get(), ConstantValue.exactly(4))))
             .simpleItem()
+            .lang("Lead Aeroslit Block")
             .register();
 
     // sludge blocks
@@ -279,6 +287,7 @@ public class FHBlocks {
             .item()
             .model(FHBlockStateGen.itemModelLayered("condensed_iron_ore", "ore/condensed_iron_ore"))
             .build()
+            .lang("Iron Aeroslit")
             .register();
     public static final BlockEntry<SnowLayerBlock> CONDENSED_COPPER_ORE = REGISTRATE.block("condensed_copper_ore", SnowLayerBlock::new)
             .initialProperties(() -> SNOW)
@@ -288,6 +297,7 @@ public class FHBlocks {
             .item()
             .model(FHBlockStateGen.itemModelLayered("condensed_copper_ore", "ore/condensed_copper_ore"))
             .build()
+            .lang("Copper Aeroslit")
             .register();
     public static final BlockEntry<SnowLayerBlock> CONDENSED_GOLD_ORE = REGISTRATE.block("condensed_gold_ore", SnowLayerBlock::new)
             .initialProperties(() -> SNOW)
@@ -297,6 +307,7 @@ public class FHBlocks {
             .item()
             .model(FHBlockStateGen.itemModelLayered("condensed_gold_ore", "ore/condensed_gold_ore"))
             .build()
+            .lang("Gold Aeroslit")
             .register();
     public static final BlockEntry<SnowLayerBlock> CONDENSED_ZINC_ORE = REGISTRATE.block("condensed_zinc_ore", SnowLayerBlock::new)
             .initialProperties(() -> SNOW)
@@ -306,6 +317,7 @@ public class FHBlocks {
             .item()
             .model(FHBlockStateGen.itemModelLayered("condensed_zinc_ore", "ore/condensed_zinc_ore"))
             .build()
+            .lang("Zinc Aeroslit")
             .register();
     public static final BlockEntry<SnowLayerBlock> CONDENSED_SILVER_ORE = REGISTRATE.block("condensed_silver_ore", SnowLayerBlock::new)
             .initialProperties(() -> SNOW)
@@ -315,6 +327,7 @@ public class FHBlocks {
             .item()
             .model(FHBlockStateGen.itemModelLayered("condensed_silver_ore", "ore/condensed_silver_ore"))
             .build()
+            .lang("Silver Aeroslit")
             .register();
     public static final BlockEntry<SnowLayerBlock> CONDENSED_TIN_ORE = REGISTRATE.block("condensed_tin_ore", SnowLayerBlock::new)
             .initialProperties(() -> SNOW)
@@ -324,6 +337,7 @@ public class FHBlocks {
             .item()
             .model(FHBlockStateGen.itemModelLayered("condensed_tin_ore", "ore/condensed_tin_ore"))
             .build()
+            .lang("Tin Aeroslit")
             .register();
     public static final BlockEntry<SnowLayerBlock> CONDENSED_PYRITE_ORE = REGISTRATE.block("condensed_pyrite_ore", SnowLayerBlock::new)
             .initialProperties(() -> SNOW)
@@ -333,6 +347,7 @@ public class FHBlocks {
             .item()
             .model(FHBlockStateGen.itemModelLayered("condensed_pyrite_ore", "ore/condensed_pyrite_ore"))
             .build()
+            .lang("Pyrite Aeroslit")
             .register();
     public static final BlockEntry<SnowLayerBlock> CONDENSED_NICKEL_ORE = REGISTRATE.block("condensed_nickel_ore", SnowLayerBlock::new)
             .initialProperties(() -> SNOW)
@@ -342,6 +357,7 @@ public class FHBlocks {
             .item()
             .model(FHBlockStateGen.itemModelLayered("condensed_nickel_ore", "ore/condensed_nickel_ore"))
             .build()
+            .lang("Nickel Aeroslit")
             .register();
     public static final BlockEntry<SnowLayerBlock> CONDENSED_LEAD_ORE = REGISTRATE.block("condensed_lead_ore", SnowLayerBlock::new)
             .initialProperties(() -> SNOW)
@@ -351,6 +367,7 @@ public class FHBlocks {
             .item()
             .model(FHBlockStateGen.itemModelLayered("condensed_lead_ore", "ore/condensed_lead_ore"))
             .build()
+            .lang("Lead Aeroslit")
             .register();
 
     // Sludge
