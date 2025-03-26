@@ -671,6 +671,7 @@
   "tooltip.frostedheart.keyS": "S",
   "item.frostedheart.flux": "助焊剂",
   "message.frostedheart.info.air_temperature": "此处气温: %s",
+  "message.frostedheart.restarting": "§a[自动更新服务]§c服务器将在%s分钟后重启更新版本，请做好准备。",
   "tooltip.frostedheart.holdForNutrition": "按住 [%1$s] 可查看营养信息",
   "tooltip.frostedheart.nutrition": "营养",
   "tooltip.frostedheart.pressure.intake": "当前温度消耗气压值",

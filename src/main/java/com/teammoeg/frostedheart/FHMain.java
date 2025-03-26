@@ -56,6 +56,7 @@ import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
+import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.world.FHBiomeModifiers;
 import com.teammoeg.frostedheart.content.world.FHBiomes;
@@ -107,7 +108,7 @@ public class FHMain {
 	// Remote
 	public static FHRemote remote;
 	public static FHRemote local;
-	public static FHRemote pre;
+
 
 	// Update
 	public static File lastbkf;
@@ -149,8 +150,7 @@ public class FHMain {
 		LOGGER.info(VERSION_CHECK, "Checking for updates");
 		local = new FHRemote.FHLocal();
 		remote = new FHRemote();
-		if (local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal().contains("pre"))
-			pre = new FHRemote.FHPreRemote();
+		TssapProtocolHandler.init();
 		LOGGER.info(VERSION_CHECK, "Check completes. Running on version " + local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
 
 		// Registrate

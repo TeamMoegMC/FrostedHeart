@@ -309,7 +309,7 @@ public class TemperatureUpdate {
                         	fem.put(corePart, coreTemp);
                         //From leg to feets
                         {
-                        	float dlegfeet=fem.get(BodyPart.LEGS)-fem.get(BodyPart.FEET);
+                        	float dlegfeet=fem.get(BodyPart.LEGS)*BodyPart.LEGS.area-fem.get(BodyPart.FEET)*BodyPart.FEET.area;
                         	
                         	
                         }

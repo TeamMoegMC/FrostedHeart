@@ -26,8 +26,8 @@ import java.net.URLConnection;
 import java.util.Scanner;
 
 import com.google.gson.JsonParser;
-import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.util.struct.OptionalLazy;
+import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
 
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -38,7 +38,7 @@ public class FHRemote {
     public static class FHLocal extends FHRemote {
         @Override
         public void doFetch() {
-            fromTLV();
+        	this.stableVersion=TssapProtocolHandler.localVersion;
             if (this.stableVersion != null) {
                 LOGGER.info(VERSION_CHECK, "Fetched FH local version from .twrlastversion: " + this.stableVersion);
                 return;
@@ -83,35 +83,13 @@ public class FHRemote {
             }
         }
 
-        private void fromTLV() {
-            File vers = new File(FMLPaths.CONFIGDIR.get().toFile(), ".twrlastversion");//from twrlastvers
-            if (vers.exists()) {
-                try {
-                    this.stableVersion = FileUtil.readString(vers);
-                } catch (Throwable e) {
-                    LOGGER.error(VERSION_CHECK, "Error fetching FH local version from .twrlastversion", e);
-                    throw new RuntimeException("[TWR Version Check] Error fetching FH local version from .twrlastversion", e);
-                }
-            }
-        }
 
 
-    }
 
-    public static class FHPreRemote extends FHRemote {
-
-        @Override
-        public void doFetch() {
-            try {
-                this.stableVersion = fetchString("http://server.teammoeg.com:15010/data/twrprever");
-            } catch (Throwable e) {
-                this.stableVersion = "";
-            }
-        }
     }
 
     public String stableVersion = null;
-
+    
     /**
      * Fetch a simple string from remote URL
      *
@@ -157,8 +135,11 @@ public class FHRemote {
     protected void fetch() {
         new Thread(this::doFetch).start();
     }
-
+    
+    public OptionalLazy<FHVersion> versionCache;
     public OptionalLazy<FHVersion> fetchVersion() {
-        return OptionalLazy.of(() -> this.stableVersion == null ? null : FHVersion.parse(this.stableVersion));
+    	if(versionCache==null)
+    		versionCache= OptionalLazy.of(() -> this.stableVersion == null ? null : FHVersion.parse(this.stableVersion));
+    	return versionCache;
     }
 }
