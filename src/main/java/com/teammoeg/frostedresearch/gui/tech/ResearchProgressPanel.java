@@ -30,6 +30,7 @@ import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
 
 public class ResearchProgressPanel extends Panel {
 
@@ -71,7 +72,7 @@ public class ResearchProgressPanel extends Panel {
             float prog = inprog.getProgressFraction();
             TechIcons.SLIDER_FRAME.draw(matrixStack, x + 40, y + 32, 70, 8);
             if (prog > 0)
-                TechIcons.drawTexturedRect(matrixStack, x + 41, y + 33, (int) (68f * prog), 6, true);
+                TechIcons.drawTexturedRect(matrixStack, x + 41, y + 33, Mth.ceil(68f * prog), 6, true);
             if (inprog.getData().canComplete(inprog))
                 theme.drawString(matrixStack, NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, TechIcons.text, 0);
             else
