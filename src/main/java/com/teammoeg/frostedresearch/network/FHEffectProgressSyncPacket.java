@@ -26,6 +26,7 @@ import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
+import com.teammoeg.frostedresearch.ResearchUtils;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 import com.teammoeg.frostedresearch.research.Research;
@@ -61,7 +62,9 @@ public record FHEffectProgressSyncPacket(boolean data, int id, int index) implem
                 e.grant(null, trd.get(), null, false);
             else
                 e.revoke(trd.get());
+            
             trd.get().getData(r).setEffectGranted(e, data);
+            ResearchUtils.refreshResearchGui();
         });
         context.get().setPacketHandled(true);
     }

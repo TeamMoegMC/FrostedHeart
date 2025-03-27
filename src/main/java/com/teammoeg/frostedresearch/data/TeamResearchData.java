@@ -328,10 +328,7 @@ public class TeamResearchData implements SpecialData {
 			}
 		}
 		if (rd.getTotalCommitted(r) >= r.getRequiredPoints() && flag) {
-			rd.setFinished(true);
-			this.grantEffects(team, null, r);
-
-			this.annouceResearchComplete(team, r);
+			this.setResearchFinished(team, r, true);
 			this.clearCurrentResearch(team, true);
 			return true;
 		}
