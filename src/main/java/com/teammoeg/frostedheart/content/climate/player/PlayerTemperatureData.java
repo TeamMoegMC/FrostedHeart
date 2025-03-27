@@ -50,7 +50,7 @@ public class PlayerTemperatureData implements NBTSerializable {
         TORSO(EquipmentSlot.CHEST, 0.45f, 0.5f, 3), // 40% area
 
         HANDS(EquipmentSlot.MAINHAND, 0.05f, 0.05f, 1), // 5% area
-        LEGS(EquipmentSlot.LEGS, 0.35f, 0.3f, 3), // 40% area
+        LEGS(EquipmentSlot.LEGS, 0.35f, 0.4f, 3), // 40% area
         FEET(EquipmentSlot.FEET, 0.05f, 0.05f, 1); // 5% area
         public static final BodyPart[] CoreParts = new BodyPart[]{HEAD, TORSO, LEGS};
         public final EquipmentSlot slot;
