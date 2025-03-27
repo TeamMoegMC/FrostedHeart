@@ -234,7 +234,7 @@ public class FHConfig {
             enableAutoRestart=builder.comment("Enable automatic restart if later snapshot was found, DONT TOUCH UNLESS INSTUCTED BY DEV TEAM.")
             		.define("enableAutoRestart", false);
             enableUpdateReminder=builder.comment("Enable update reminder if later snapshot was found, DONT TOUCH UNLESS INSTUCTED BY DEV TEAM.")
-            		.define("enableAutoRestart", true);
+            		.define("enableUpdateReminder", true);
             builder.pop();
         }
     }
