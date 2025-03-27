@@ -63,6 +63,10 @@ public class HeatingDeviceContext {
         getPartData(part).effectiveTemperature = value;
     }
 
+    public void setBodyTemperature(BodyPart part, float value) {
+        getPartData(part).bodyTemperature = value;
+    }
+
     public void addEffectiveTemperature(BodyPart part, float value) {
         getPartData(part).effectiveTemperature += value;
     }

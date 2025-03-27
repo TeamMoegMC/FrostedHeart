@@ -215,13 +215,8 @@ public class PlayerTemperatureData implements NBTSerializable {
             updateInterval--;
     }
 
-    public void updateForDisplay(float current_env, float conductivity) {
-        // update delta before body
-        previousTemp = bodyTemp;
-        bodyTemp = 0;
-        for (Entry<BodyPart, BodyPartData> e : clothesOfParts.entrySet()) {
-            bodyTemp += e.getValue().temperature * e.getKey().affectsCore;
-        }
+    public void updateWhenInsulated(float current_env, float conductivity) {
+        // Do not change body temp, update env and feel only
         if (envTemp == INVALID_TEMPERATURE)
             envTemp = current_env;
         else
@@ -231,6 +226,31 @@ public class PlayerTemperatureData implements NBTSerializable {
             feelTemp = current_feel;
         else
             feelTemp = (current_feel + 37F) * .2f + feelTemp * .8f;
+    }
+
+    public void update(float currentEnv, HeatingDeviceContext ctx) {
+        // Since we already averaged the core parts, just take torse
+        previousTemp = bodyTemp;
+        bodyTemp = ctx.getBodyTemperature(BodyPart.TORSO);
+        for (BodyPart part : BodyPart.values()) {
+            setTemperatureByPart(part, ctx.getBodyTemperature(part));
+        }
+        // Interpolate with previous envTemp
+        if (envTemp == INVALID_TEMPERATURE)
+            envTemp = currentEnv;
+        else
+            envTemp = (currentEnv + 37F) * .2f + envTemp * .8f;
+        // Compute feelTemp as area-weighted average of parts
+        float currentFeel = 0;
+        for (BodyPart part : BodyPart.values()) {
+            currentFeel += ctx.getEffectiveTemperature(part) * part.area;
+        }
+        // Interpolate with previous feelTemp
+        if (feelTemp == INVALID_TEMPERATURE)
+            feelTemp = currentFeel;
+        else
+            feelTemp = (currentFeel + 37F) * .2f + feelTemp * .8f;
+
     }
 
     public static LazyOptional<PlayerTemperatureData> getCapability(@Nullable Player player) {

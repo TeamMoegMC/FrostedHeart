@@ -266,7 +266,8 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Integer> blizzardTempModifier;
         public final ForgeConfigSpec.ConfigValue<Integer> dayNightTempAmplitude;
         public final ForgeConfigSpec.ConfigValue<Integer> onFireTempModifier;
-        public final ForgeConfigSpec.ConfigValue<Double> heatExchangeConstant;
+        public final ForgeConfigSpec.ConfigValue<Integer> heatExchangeTimeConstant;
+        public final ForgeConfigSpec.ConfigValue<Double> heatExchangeTempConstant;
         public final ForgeConfigSpec.BooleanValue addInitClimate;
         public final ForgeConfigSpec.IntValue envTempUpdateIntervalTicks;
         public final ForgeConfigSpec.IntValue envTempThreadCount;
@@ -319,8 +320,15 @@ public class FHConfig {
                     .defineInRange("dayNightTempAmplitude", 10, -100, 100);
             onFireTempModifier = builder.comment("The temperature modifier when player is on fire.")
                     .defineInRange("onFireTempModifier", 150, 0, 1000);
-            heatExchangeConstant = builder.comment("The heat exchange constant between player and environment.")
-                    .defineInRange("heatExchangeConstant", 0.006f, 0, 1);
+            heatExchangeTimeConstant = builder.comment("The heat exchange time constant between player and environment.")
+                    .comment("Definition: The value has unit in seconds.")
+                    .comment("It represents the theoretical time it takes for a naked player without self-heating")
+                    .comment("to reach the mildest hypothermia (36C body temperature)")
+                    .comment("when exposed to an effective environment temperature of heatExchangeTempConstant below 37C.")
+                    .defineInRange("heatExchangeTimeConstant", 170, 0, Integer.MAX_VALUE);
+            heatExchangeTempConstant = builder.comment("The heat exchange temperature constant between player and environment.")
+                    .comment("Check the comment on heatExchangeTimeConstant for what is this.")
+                    .defineInRange("heatExchangeTempConstant", 5D, 0D, Integer.MAX_VALUE);
             hurtingHeatUpdate = builder.comment("The heat update when player is hurt.")
                     .defineInRange("hurtingHeatUpdate", 0.1, 0, 1);
             minBodyTempChange = builder.comment("The minimum body temperature change relative to 37.")

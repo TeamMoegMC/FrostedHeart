@@ -46,11 +46,16 @@ public class TemperatureCommand {
         LiteralArgumentBuilder<CommandSourceStack> get = Commands.literal("get").executes((ct) -> {
                     Player player = ct.getSource().getPlayerOrException();
                     PlayerTemperatureData.getCapability(player).ifPresent(data -> {
-                        ct.getSource().sendSuccess(()-> Components.str("Body Temperature: " + data.getBodyTemp()), true);
-                        ct.getSource().sendSuccess(()-> Components.str("Environment Temperature: " + data.getEnvTemp()), true);
-                        ct.getSource().sendSuccess(()-> Components.str("Feel Temperature: " + data.getFeelTemp()), true);
-                        ct.getSource().sendSuccess(()-> Components.str("Previous Temperature: " + data.getPreviousTemp()), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Body: " + data.getBodyTemp()), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Environment: " + data.getEnvTemp()), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Feel: " + data.getFeelTemp()), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Previous Body: " + data.getPreviousTemp()), true);
                         ct.getSource().sendSuccess(()-> Components.str("Self-Heating Difficulty: " + data.getDifficulty().name()), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Head: " + data.getTemperatureByPart(PlayerTemperatureData.BodyPart.HEAD)), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Torso: " + data.getTemperatureByPart(PlayerTemperatureData.BodyPart.TORSO)), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Hands: " + data.getTemperatureByPart(PlayerTemperatureData.BodyPart.HANDS)), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Legs: " + data.getTemperatureByPart(PlayerTemperatureData.BodyPart.LEGS)), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Feet: " + data.getTemperatureByPart(PlayerTemperatureData.BodyPart.FEET)), true);
                     });
                     return Command.SINGLE_SUCCESS;
                 });
