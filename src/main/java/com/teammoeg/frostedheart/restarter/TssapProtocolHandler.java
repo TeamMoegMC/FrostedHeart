@@ -20,6 +20,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 public class TssapProtocolHandler {
@@ -86,14 +87,14 @@ public class TssapProtocolHandler {
 						if(latestRemote!=null&&!latestRemote.equals(localVersion)) {
 							try {
 							FHMain.LOGGER.info(VERSION_CHECK, "new version "+latestRemote+" found, restarting...");
-							CDistHelper.getServer().getCommands().performPrefixedCommand(CDistHelper.getServer().createCommandSourceStack(), "/tellraw @a "+Component.Serializer.toJson(Components.translatable("message.frostedheart.restarting")));
+							((DedicatedServer)CDistHelper.getServer()).handleConsoleInput("/tellraw @a "+Component.Serializer.toJson(Components.translatable("message.frostedheart.restarting")), CDistHelper.getServer().createCommandSourceStack());
 							try {
 								Thread.sleep(60000);
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
 							FHMain.LOGGER.info(VERSION_CHECK, "sending stop to server...");
-							CDistHelper.getServer().getCommands().performPrefixedCommand(CDistHelper.getServer().createCommandSourceStack(),"/stop");
+							((DedicatedServer)CDistHelper.getServer()).handleConsoleInput("/stop", CDistHelper.getServer().createCommandSourceStack());
 							}catch(Throwable t) {
 								t.printStackTrace();
 							}
