@@ -92,10 +92,11 @@ public abstract class CBaseNetwork {
 	private static final ThreadLocal<MutablePacketTarget> playerSupplier=ThreadLocal.withInitial(MutablePacketTarget::new);
 	public void sendPlayer(ServerPlayer p, CMessage message) {
 		checkIsProperMessage(message);
-		MutablePacketTarget supplier=playerSupplier.get();
-		supplier.ms.set(p);
+		//MutablePacketTarget supplier=playerSupplier.get();
+		send(PacketDistributor.PLAYER.with(()->p),message);
+		//supplier.ms.set(p);
 		
-	    send(supplier.target, message);
+	    //send(supplier.target, message);
 	}
 
 	public void send(PacketDistributor.PacketTarget target, CMessage message) {

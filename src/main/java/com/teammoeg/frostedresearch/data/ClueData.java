@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedresearch.data;
 
+import java.util.Optional;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.io.codec.CompressDifferCodec;
@@ -30,9 +32,9 @@ import net.minecraft.nbt.CompoundTag;
 public class ClueData {
     public static final Codec<ClueData> FULL_CODEC = RecordCodecBuilder.create(t -> t.group(
             Codec.BOOL.fieldOf("completed").forGetter(o -> o.completed),
-            CompoundTag.CODEC.fieldOf("data").forGetter(o -> o.data)).apply(t, ClueData::new));
-    public static final Codec<ClueData> CODEC = new CompressDifferCodec<>(RecordCodecBuilder.create(t -> t.group(
-            Codec.BOOL.fieldOf("completed").forGetter(o -> o.completed)).apply(t, ClueData::new)), FULL_CODEC);
+            CompoundTag.CODEC.optionalFieldOf("data").forGetter(o -> Optional.ofNullable(o.data))).apply(t, ClueData::new));
+    public static final Codec<ClueData> CODEC = new CompressDifferCodec<>(FULL_CODEC,RecordCodecBuilder.create(t -> t.group(
+            Codec.BOOL.fieldOf("completed").forGetter(o -> o.completed)).apply(t, ClueData::new)));
     boolean completed;
     CompoundTag data;
 
@@ -40,11 +42,10 @@ public class ClueData {
         super();
     }
 
-    public ClueData(boolean completed, CompoundTag data) {
+    public ClueData(boolean completed, Optional<CompoundTag> data) {
         super();
-
         this.completed = completed;
-        this.data = data;
+        this.data = data.orElse(null);
     }
 
     public ClueData(boolean completed) {

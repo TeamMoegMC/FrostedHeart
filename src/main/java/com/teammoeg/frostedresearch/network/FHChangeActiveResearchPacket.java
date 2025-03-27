@@ -35,7 +35,7 @@ public class FHChangeActiveResearchPacket implements CMessage {
     private final int id;
 
     public FHChangeActiveResearchPacket() {
-        this.id = 0;
+        this.id = -1;
     }
 
     public FHChangeActiveResearchPacket(int rid) {

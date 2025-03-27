@@ -208,6 +208,7 @@ public class ResearchData implements IEnvironment {
     }
 
     public ResearchDataPacket write(Research r) {
+    	
         List<ClueData> clueData = new ArrayList<>(r.getClues().size());
         BitSet effectData = new BitSet(r.getEffects().size());
         for (Clue c : r.getClues())
@@ -216,7 +217,8 @@ public class ResearchData implements IEnvironment {
         for (Effect e : r.getEffects()) {
             effectData.set(i++, this.effectData.getOrDefault(e.getNonce(), false));
         }
-        return new ResearchDataPacket(active, finished, level, committed, clueData, effectData);
+        ResearchDataPacket packet=new ResearchDataPacket(active, finished, level, committed, clueData, effectData);
+        return packet;
     }
 
     public void read(Research r, ResearchDataPacket packet) {

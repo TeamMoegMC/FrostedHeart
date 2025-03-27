@@ -37,7 +37,7 @@ public class TssapProtocolHandler {
 	}
 	static Thread clientThread;
 	public static void clientPrepareUpdateReminder() {
-		if(localVersion!=null&&selectedChannelAddr!=null&&FHConfig.COMMON.enableUpdateReminder.get()&&clientThread==null)
+		if(localVersion!=null&&selectedChannelAddr!=null&&FHConfig.COMMON.enableUpdateReminder.get()&&clientThread==null) {
 			clientThread=new Thread() {
 				@Override
 				public void run() {
@@ -66,10 +66,11 @@ public class TssapProtocolHandler {
 				}
 			};
 			clientThread.start();
+		}
 	}
 	static Thread serverThread;
 	public static void serverPrepareUpdateReminder() {
-		if(localVersion!=null&&selectedChannelAddr!=null&&FHConfig.COMMON.enableAutoRestart.get()&&serverThread==null)
+		if(localVersion!=null&&selectedChannelAddr!=null&&FHConfig.COMMON.enableAutoRestart.get()&&serverThread==null) {
 			serverThread=new Thread() {
 				@Override
 				public void run() {
@@ -83,13 +84,19 @@ public class TssapProtocolHandler {
 					if(newver!=null&&!newver.equals(latestRemote)) {
 						latestRemote=newver;
 						if(latestRemote!=null&&!latestRemote.equals(localVersion)) {
+							try {
+							FHMain.LOGGER.info(VERSION_CHECK, "new version "+latestRemote+" found, restarting...");
 							CDistHelper.getServer().getCommands().performPrefixedCommand(CDistHelper.getServer().createCommandSourceStack(), "/tellraw @a "+Component.Serializer.toJson(Components.translatable("message.frostedheart.restarting")));
 							try {
 								Thread.sleep(60000);
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
+							FHMain.LOGGER.info(VERSION_CHECK, "sending stop to server...");
 							CDistHelper.getServer().getCommands().performPrefixedCommand(CDistHelper.getServer().createCommandSourceStack(),"/stop");
+							}catch(Throwable t) {
+								t.printStackTrace();
+							}
 						}
 					}
 					
@@ -99,6 +106,7 @@ public class TssapProtocolHandler {
 				}
 			};
 			serverThread.start();
+		}
 	}
 	private static String fetchLatestRemoteVersion() {
 		

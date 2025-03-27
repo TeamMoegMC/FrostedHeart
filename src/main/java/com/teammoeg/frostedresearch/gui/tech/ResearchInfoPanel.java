@@ -184,6 +184,7 @@ public class ResearchInfoPanel extends Panel {
                                 Icon.empty()) {
                             @Override
                             public void onClicked(MouseButton mouseButton) {
+                            	detailPanel.refreshWidgets();
                             	FRNetwork.INSTANCE.sendToServer(new FHEffectTriggerPacket(detailPanel.research));
                             }
                         };
