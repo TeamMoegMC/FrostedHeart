@@ -44,251 +44,267 @@ import net.minecraftforge.items.ItemStackHandler;
 
 // https://ierga.com/hr/wp-content/uploads/sites/2/2017/10/ASHRAE-55-2013.pdf
 
-public class PlayerTemperatureData implements NBTSerializable  {
-	public enum BodyPart implements StringRepresentable{
-		HEAD(EquipmentSlot.HEAD, 0.1f, 0.1f,1), // 10% area
-		TORSO(EquipmentSlot.CHEST, 0.45f, 0.5f,3), // 40% area
-		
-		HANDS(EquipmentSlot.MAINHAND, 0.05f, 0.05f,1), // 5% area
-		LEGS(EquipmentSlot.LEGS, 0.35f, 0.4f,3), // 40% area
-		FEET(EquipmentSlot.FEET, 0.05f, 0.05f,1); // 5% area
-		public static final BodyPart[] CoreParts=new BodyPart[] {HEAD,TORSO,LEGS};
-		public final EquipmentSlot slot;
-		public final float area;
-		public final float affectsCore;
-		public final int slotNum;
-		private final static Map<EquipmentSlot,BodyPart> VANILLA_MAP=Util.make(new EnumMap<>(EquipmentSlot.class),t->{
-			for(BodyPart part:BodyPart.values())
-				if(part.slot!=null)
-					t.put(part.slot, part);
-		});
-		private BodyPart(EquipmentSlot slot,float area,float affectsCore,int slotNum) {
-			this.slot = slot;
-			this.area=area;
-			this.affectsCore=affectsCore;
-			this.slotNum=slotNum;
-		}
+public class PlayerTemperatureData implements NBTSerializable {
+    public enum BodyPart implements StringRepresentable {
+        HEAD(EquipmentSlot.HEAD, 0.1f, 0.1f, 1), // 10% area
+        TORSO(EquipmentSlot.CHEST, 0.45f, 0.5f, 3), // 40% area
 
-		@Override
-		public String getSerializedName() {
-			return this.name().toLowerCase();
-		}
-		public static BodyPart fromVanilla(EquipmentSlot es) {
-			if(es==null)return null;
-			return VANILLA_MAP.get(es);
-		}
-		public Component getName() {
-			return Lang.translateGui("body_part."+getSerializedName());
-		}
-		public boolean canGenerateHeat() {
-			switch(this) {
-			case TORSO:
-			case LEGS:
-			case HEAD:return true;
-			}
-			return false;
-			
-		}
-		public boolean isBodyEnd() {
-			switch(this) {
-			case FEET:
-			case HANDS:return true;
-			}
-			return false;
-			
-		}
-	}
-	public static final int INVALID_TEMPERATURE=99999;
-	@Setter
-	private FHTemperatureDifficulty difficulty = null;//in case null, get it from  FHConfig.SERVER.tdiffculty.get()
-	float previousTemp;
-	float bodyTemp;
-	float envTemp=INVALID_TEMPERATURE;
-	float feelTemp=INVALID_TEMPERATURE;
-	float blockTemp=0;
-	
-	float updateInterval=0;
-	public float smoothedBody;//Client only, smoothed body temperature
-	public float smoothedBodyPrev;//Client only, smoothed body temperature
+        HANDS(EquipmentSlot.MAINHAND, 0.05f, 0.05f, 1), // 5% area
+        LEGS(EquipmentSlot.LEGS, 0.35f, 0.3f, 3), // 40% area
+        FEET(EquipmentSlot.FEET, 0.05f, 0.05f, 1); // 5% area
+        public static final BodyPart[] CoreParts = new BodyPart[]{HEAD, TORSO, LEGS};
+        public final EquipmentSlot slot;
+        public final float area;
+        public final float affectsCore;
+        public final int slotNum;
+        private final static Map<EquipmentSlot, BodyPart> VANILLA_MAP = Util.make(new EnumMap<>(EquipmentSlot.class), t -> {
+            for (BodyPart part : BodyPart.values())
+                if (part.slot != null)
+                    t.put(part.slot, part);
+        });
 
-
-	public final Map<BodyPart, BodyPartData> clothesOfParts = new EnumMap<>(BodyPart.class);
-	public float windStrengh;
-	public void deathResetTemperature() {
-		previousTemp=0;
-		bodyTemp=0;
-		envTemp=INVALID_TEMPERATURE;
-		feelTemp=INVALID_TEMPERATURE;
-		blockTemp=0;
-		windStrengh=0;
-		updateInterval=0;
-		
-		for(BodyPartData i:clothesOfParts.values()) {
-			i.temperature=0;
-		}
-	}
-	public PlayerTemperatureData() {
-		for(BodyPart bp:BodyPart.values())
-		clothesOfParts.put(bp, new BodyPartData(bp.slotNum));
-	}
-	public FHTemperatureDifficulty getDifficulty() {
-		if(difficulty==null)
-			return FHConfig.SERVER.tdiffculty.get();
-		return difficulty;
-	}
-	public void load(CompoundTag nbt,boolean isPacket) {
-
-		previousTemp=nbt.getFloat("previous_body_temperature");
-		bodyTemp=nbt.getFloat("bodytemperature");
-		envTemp=nbt.getFloat("envtemperature");
-		feelTemp=nbt.getFloat("feeltemperature");
-		
-		if(!isPacket) {
-			blockTemp=nbt.getFloat("blockTemperature");
-			windStrengh=nbt.getFloat("wind_strengh");
-			// load the difficulty
-			// this can cause issue if the nbt.getstring returns invalid string
-			// do a catch here, and default to normal
-			if(nbt.contains("difficulty"))
-				try {
-					difficulty = FHTemperatureDifficulty.valueOf(nbt.getString("difficulty").toLowerCase());
-				} catch (IllegalArgumentException e) {
-					difficulty = FHTemperatureDifficulty.normal;
-				}
-	
-			CompoundTag partClothes=nbt.getCompound("body_parts");
-			for(Map.Entry<BodyPart, BodyPartData> e : clothesOfParts.entrySet()) {
-				e.getValue().load(partClothes.getCompound(e.getKey().getSerializedName()));;
-			}
-		}
-
-	}
-	public void save(CompoundTag nc,boolean isPacket) {
-		// save the difficulty
-		
-        nc.putFloat("previous_body_temperature",previousTemp);
-        nc.putFloat("bodytemperature",bodyTemp);
-        nc.putFloat("envtemperature",envTemp);
-        nc.putFloat("feeltemperature",feelTemp);
-        if(!isPacket) {
-        	nc.putFloat("blockTemperature", blockTemp);
-        	nc.putFloat("wind_strengh", windStrengh);
-        	if(difficulty!=null)
-    			nc.putString("difficulty", difficulty.name().toLowerCase());
-	        CompoundTag partClothes=new CompoundTag();
-			for(Entry<BodyPart, BodyPartData> bp:clothesOfParts.entrySet()) {
-				partClothes.put(bp.getKey().getSerializedName(),bp.getValue().save());
-			}
-			nc.put("body_parts", partClothes);
+        private BodyPart(EquipmentSlot slot, float area, float affectsCore, int slotNum) {
+            this.slot = slot;
+            this.area = area;
+            this.affectsCore = affectsCore;
+            this.slotNum = slotNum;
         }
-	}
-	public void reset() {
-		previousTemp=0;
-		bodyTemp=0;
-		envTemp=INVALID_TEMPERATURE;
-		feelTemp=INVALID_TEMPERATURE;
-		smoothedBody=0;
-		windStrengh=0;
-		blockTemp=0;
-		clearAllClothes();
-	}
-	public void tick() {
-		if(updateInterval>0)
-			updateInterval--;
-	}
-    public void update(float current_env, float conductivity) {
-        // update delta before body
-    	previousTemp=bodyTemp;
-    	bodyTemp=0;
-		for(Entry<BodyPart, BodyPartData> e : clothesOfParts.entrySet()) {
-			bodyTemp += e.getValue().temperature * e.getKey().affectsCore;
-		}
-		if(envTemp==INVALID_TEMPERATURE)
-			envTemp=current_env;
-		else
-			envTemp=(current_env + 37F) * .2f + envTemp * .8f;
-		float current_feel = bodyTemp - conductivity * (bodyTemp - current_env);
-		if(feelTemp==INVALID_TEMPERATURE)
-			feelTemp=current_feel;
-		else
-			feelTemp=(current_feel + 37F) * .2f + feelTemp * .8f;
+
+        @Override
+        public String getSerializedName() {
+            return this.name().toLowerCase();
+        }
+
+        public static BodyPart fromVanilla(EquipmentSlot es) {
+            if (es == null) return null;
+            return VANILLA_MAP.get(es);
+        }
+
+        public Component getName() {
+            return Lang.translateGui("body_part." + getSerializedName());
+        }
+
+        public boolean canGenerateHeat() {
+            switch (this) {
+                case TORSO:
+                case LEGS:
+                case HEAD:
+                    return true;
+            }
+            return false;
+
+        }
+
+        public boolean isBodyEnd() {
+            switch (this) {
+                case FEET:
+                case HANDS:
+                    return true;
+            }
+            return false;
+
+        }
     }
+
+    public static final int INVALID_TEMPERATURE = 99999;
+    @Setter
+    private FHTemperatureDifficulty difficulty = null;//in case null, get it from  FHConfig.SERVER.tdiffculty.get()
+    @Setter
+    float previousTemp;
+    float bodyTemp;
+    @Setter
+    float envTemp = INVALID_TEMPERATURE;
+    @Setter
+    float feelTemp = INVALID_TEMPERATURE;
+    float blockTemp = 0;
+
+    float updateInterval = 0;
+    public float smoothedBody;//Client only, smoothed body temperature
+    public float smoothedBodyPrev;//Client only, smoothed body temperature
+
+
+    public final Map<BodyPart, BodyPartData> clothesOfParts = new EnumMap<>(BodyPart.class);
+    public float windStrengh;
+
+    public void deathResetTemperature() {
+        previousTemp = 0;
+        bodyTemp = 0;
+        envTemp = INVALID_TEMPERATURE;
+        feelTemp = INVALID_TEMPERATURE;
+        blockTemp = 0;
+        windStrengh = 0;
+        updateInterval = 0;
+
+        for (BodyPartData i : clothesOfParts.values()) {
+            i.temperature = 0;
+        }
+    }
+
+    public PlayerTemperatureData() {
+        for (BodyPart bp : BodyPart.values())
+            clothesOfParts.put(bp, new BodyPartData(bp.slotNum));
+    }
+
+    public FHTemperatureDifficulty getDifficulty() {
+        if (difficulty == null)
+            return FHConfig.SERVER.tdiffculty.get();
+        return difficulty;
+    }
+
+    public void load(CompoundTag nbt, boolean isPacket) {
+
+        previousTemp = nbt.getFloat("previous_body_temperature");
+        bodyTemp = nbt.getFloat("bodytemperature");
+        envTemp = nbt.getFloat("envtemperature");
+        feelTemp = nbt.getFloat("feeltemperature");
+
+        if (!isPacket) {
+            blockTemp = nbt.getFloat("blockTemperature");
+            windStrengh = nbt.getFloat("wind_strengh");
+            // load the difficulty
+            // this can cause issue if the nbt.getstring returns invalid string
+            // do a catch here, and default to normal
+            if (nbt.contains("difficulty"))
+                try {
+                    difficulty = FHTemperatureDifficulty.valueOf(nbt.getString("difficulty").toLowerCase());
+                } catch (IllegalArgumentException e) {
+                    difficulty = FHTemperatureDifficulty.normal;
+                }
+
+            CompoundTag partClothes = nbt.getCompound("body_parts");
+            for (Map.Entry<BodyPart, BodyPartData> e : clothesOfParts.entrySet()) {
+                e.getValue().load(partClothes.getCompound(e.getKey().getSerializedName()));
+            }
+        }
+
+    }
+
+    public void save(CompoundTag nc, boolean isPacket) {
+        // save the difficulty
+
+        nc.putFloat("previous_body_temperature", previousTemp);
+        nc.putFloat("bodytemperature", bodyTemp);
+        nc.putFloat("envtemperature", envTemp);
+        nc.putFloat("feeltemperature", feelTemp);
+        if (!isPacket) {
+            nc.putFloat("blockTemperature", blockTemp);
+            nc.putFloat("wind_strengh", windStrengh);
+            if (difficulty != null)
+                nc.putString("difficulty", difficulty.name().toLowerCase());
+            CompoundTag partClothes = new CompoundTag();
+            for (Entry<BodyPart, BodyPartData> bp : clothesOfParts.entrySet()) {
+                partClothes.put(bp.getKey().getSerializedName(), bp.getValue().save());
+            }
+            nc.put("body_parts", partClothes);
+        }
+    }
+
+    public void reset() {
+        previousTemp = 0;
+        bodyTemp = 0;
+        envTemp = INVALID_TEMPERATURE;
+        feelTemp = INVALID_TEMPERATURE;
+        smoothedBody = 0;
+        windStrengh = 0;
+        blockTemp = 0;
+        clearAllClothes();
+    }
+
+    public void tick() {
+        if (updateInterval > 0)
+            updateInterval--;
+    }
+
+    public void updateForDisplay(float current_env, float conductivity) {
+        // update delta before body
+        previousTemp = bodyTemp;
+        bodyTemp = 0;
+        for (Entry<BodyPart, BodyPartData> e : clothesOfParts.entrySet()) {
+            bodyTemp += e.getValue().temperature * e.getKey().affectsCore;
+        }
+        if (envTemp == INVALID_TEMPERATURE)
+            envTemp = current_env;
+        else
+            envTemp = (current_env + 37F) * .2f + envTemp * .8f;
+        float current_feel = bodyTemp + conductivity * (current_env - bodyTemp);
+        if (feelTemp == INVALID_TEMPERATURE)
+            feelTemp = current_feel;
+        else
+            feelTemp = (current_feel + 37F) * .2f + feelTemp * .8f;
+    }
+
     public static LazyOptional<PlayerTemperatureData> getCapability(@Nullable Player player) {
         return FHCapabilities.PLAYER_TEMP.getCapability(player);
     }
-	public float getPreviousTemp() {
-		return previousTemp;
-	}
-	public float getBodyTemp() {
-		return bodyTemp;
-	}
-	public float getEnvTemp() {
-		if(envTemp==INVALID_TEMPERATURE)
-			return -20;
-		return envTemp;
-	}
-	public float getFeelTemp() {
-		if(feelTemp==INVALID_TEMPERATURE)
-			return -20;
-		return feelTemp;
-	}
-	public void setPreviousTemp(float previousTemp) {
-		this.previousTemp = previousTemp;
-	}
-	public void setBodyTemp(float bodyTemp) {
-		addBodyTemp(bodyTemp-this.bodyTemp);
-	}
-	public void addBodyTemp(float bodyTemp) {
-		for(BodyPart bp:BodyPart.values()) {
-			this.clothesOfParts.get(bp).temperature+=bodyTemp*bp.affectsCore;
-		}
-	}
-	public void setEnvTemp(float envTemp) {
-		this.envTemp = envTemp;
-	}
-	public void setFeelTemp(float feelTemp) {
-		this.feelTemp = feelTemp;
-	}
 
-	// Body clothes methods
-	public ItemStackHandler getClothesByPart(BodyPart bodyPart) {
-		return clothesOfParts.get(bodyPart).clothes; // Return a copy to prevent direct modification
-	}
+    public float getPreviousTemp() {
+        return previousTemp;
+    }
 
-	public void setClothes(BodyPart bodyPart, int index, ItemStack stack) {
-		clothesOfParts.get(bodyPart).clothes.setStackInSlot(index, stack);
-	}
+    public float getBodyTemp() {
+        return bodyTemp;
+    }
 
-	public void clearClothes(BodyPart bodyPart, int index) {
-		setClothes(bodyPart, index, ItemStack.EMPTY);
-	}
+    public float getEnvTemp() {
+        if (envTemp == INVALID_TEMPERATURE)
+            return -20;
+        return envTemp;
+    }
 
-	public void clearAllClothes() {
-		for(Map.Entry<BodyPart, BodyPartData> e : clothesOfParts.entrySet()) {
-			e.getValue().reset();
-		}
-	}
+    public float getFeelTemp() {
+        if (feelTemp == INVALID_TEMPERATURE)
+            return -20;
+        return feelTemp;
+    }
 
-	public float getThermalConductivityByPart(Player player, BodyPart bodyPart) {
-		ItemStack equipment=player.getItemBySlot(bodyPart.slot);
-		// TODO remove out
-//		System.out.printf("Part %s Cond %f\n", bodyPart, clothesOfParts.get(bodyPart).getThermalConductivity(equipment));
-		return clothesOfParts.get(bodyPart).getThermalConductivity(bodyPart,equipment);
-	}
-	public float getWindResistanceByPart(Player player, BodyPart bodyPart) {
-		ItemStack equipment=player.getItemBySlot(bodyPart.slot);
-		// TODO remove out
-//		System.out.printf("Part %s Cond %f\n", bodyPart, clothesOfParts.get(bodyPart).getThermalConductivity(equipment));
-		return clothesOfParts.get(bodyPart).getWindResistance(bodyPart,equipment);
-	}
+    public void setBodyTemp(float bodyTemp) {
+        addBodyTemp(bodyTemp - this.bodyTemp);
+    }
 
-	public float getTemperatureByPart(BodyPart bodyPart) {
-		return clothesOfParts.get(bodyPart).temperature;
-	}
-	public void setTemperatureByPart(BodyPart bodyPart, float t) {
-		clothesOfParts.get(bodyPart).temperature=t;
-	}
-	public void addTemperatureByPart(BodyPart bodyPart, float t) {
-		clothesOfParts.get(bodyPart).temperature+=t;
-	}
+    public void addBodyTemp(float bodyTemp) {
+        for (BodyPart bp : BodyPart.values()) {
+            this.clothesOfParts.get(bp).temperature += bodyTemp * bp.affectsCore;
+        }
+    }
+
+    // Body clothes methods
+    public ItemStackHandler getClothesByPart(BodyPart bodyPart) {
+        return clothesOfParts.get(bodyPart).clothes; // Return a copy to prevent direct modification
+    }
+
+    public void setClothes(BodyPart bodyPart, int index, ItemStack stack) {
+        clothesOfParts.get(bodyPart).clothes.setStackInSlot(index, stack);
+    }
+
+    public void clearClothes(BodyPart bodyPart, int index) {
+        setClothes(bodyPart, index, ItemStack.EMPTY);
+    }
+
+    public void clearAllClothes() {
+        for (Map.Entry<BodyPart, BodyPartData> e : clothesOfParts.entrySet()) {
+            e.getValue().reset();
+        }
+    }
+
+    public float getThermalConductivityByPart(Player player, BodyPart bodyPart) {
+        ItemStack equipment = player.getItemBySlot(bodyPart.slot);
+        return clothesOfParts.get(bodyPart).getThermalConductivity(bodyPart, equipment);
+    }
+
+    public float getWindResistanceByPart(Player player, BodyPart bodyPart) {
+        ItemStack equipment = player.getItemBySlot(bodyPart.slot);
+        return clothesOfParts.get(bodyPart).getWindResistance(bodyPart, equipment);
+    }
+
+    public float getTemperatureByPart(BodyPart bodyPart) {
+        return clothesOfParts.get(bodyPart).temperature;
+    }
+
+    public void setTemperatureByPart(BodyPart bodyPart, float t) {
+        clothesOfParts.get(bodyPart).temperature = t;
+    }
+
+    public void addTemperatureByPart(BodyPart bodyPart, float t) {
+        clothesOfParts.get(bodyPart).temperature += t;
+    }
 }

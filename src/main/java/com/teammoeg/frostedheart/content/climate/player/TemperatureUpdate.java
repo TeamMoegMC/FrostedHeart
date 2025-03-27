@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.content.climate.player;
 import java.util.UUID;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.caupona.CPConfig;
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.chorda.util.struct.FastEnumMap;
@@ -35,7 +34,6 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext.BodyPartContext;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
-import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator.SimulationResult;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import net.minecraft.core.BlockPos;
@@ -44,6 +42,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.item.ItemStack;
@@ -56,7 +55,7 @@ import net.minecraftforge.fml.LogicalSide;
 import top.theillusivec4.curios.api.type.ISlotType;
 
 public class TemperatureUpdate {
-	public static final UUID envTempId = UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
+	public static final UUID ENV_TEMP_ATTRIBUTE_UUID = UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
 	//Do not use static final in config because this is reloaded each world
 
     /*
@@ -78,46 +77,73 @@ public class TemperatureUpdate {
      */
     public static void regulateTemperature(PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
-                && event.player instanceof ServerPlayer) {
-            ServerPlayer player = (ServerPlayer) event.player;
-            double calculatedTarget = PlayerTemperatureData.getCapability(event.player).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
+                && event.player instanceof ServerPlayer player) {
+            double bodyTemp = PlayerTemperatureData.getCapability(event.player)
+                    .map(PlayerTemperatureData::getBodyTemp).orElse(0f);
             if (!(player.isCreative() || player.isSpectator())) {
-                if (calculatedTarget > 1 || calculatedTarget < -1) {
+                // Soaked in water wetness
+                if (player.tickCount % FHConfig.SERVER.temperatureUpdateIntervalTicks.get() == 0 && player.isInWater()) {
+                    // Check if an armor piece is on
+                    boolean hasArmor = false;
+                    for (ItemStack is : player.getArmorSlots()) {
+                        if (!is.isEmpty()) {
+                            hasArmor = true;
+                            break;
+                        }
+                    }
+                    // Check the current Wet Effect
+                    MobEffectInstance current = player.getEffect(FHMobEffects.WET.get());
+                    // If armor is on, player gets a longer wet effect
+                    if (hasArmor) {
+                        player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(),
+                                FHConfig.SERVER.wetEffectDuration.get() *
+                                        FHConfig.SERVER.wetClothesDurationMultiplier.get(),
+                                0, false, false));// punish for wet clothes
+                    }
+                    // Otherwise, if there is no wet effect now, add normal wet effect
+                    else if (current == null || current.getDuration() < FHConfig.SERVER.wetEffectDuration.get()) {
+                        player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(),
+                                FHConfig.SERVER.wetEffectDuration.get(), 0, false, false));
+                    }
+                }
+
+                // Hypothermia and Hyperthermia
+                if (bodyTemp > 1 || bodyTemp < -1) {
                     if (!player.hasEffect(FHMobEffects.HYPERTHERMIA.get())
                             && !player.hasEffect(FHMobEffects.HYPOTHERMIA.get())) {
-                        if (calculatedTarget > 1) { // too hot
-                            if (calculatedTarget <= 2) {
+                        if (bodyTemp > 1) { // too hot
+                            if (bodyTemp <= 2) {
                                 player.addEffect(new MobEffectInstance(FHMobEffects.HYPERTHERMIA.get(), 100, 0));
                                 player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
-                            } else if (calculatedTarget <= 3) {
+                            } else if (bodyTemp <= 3) {
                                 player.addEffect(new MobEffectInstance(FHMobEffects.HYPERTHERMIA.get(), 100, 1));
                                 player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
                                 player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
-                            } else if (calculatedTarget <= 5) {
+                            } else if (bodyTemp <= 5) {
                                 player.addEffect(new MobEffectInstance(FHMobEffects.HYPERTHERMIA.get(), 100, 2));
                                 player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
                                 player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
                             } else {
                                 player.addEffect(
-                                        new MobEffectInstance(FHMobEffects.HYPERTHERMIA.get(), 100, (int) (calculatedTarget - 2)));
+                                        new MobEffectInstance(FHMobEffects.HYPERTHERMIA.get(), 100, (int) (bodyTemp - 2)));
                                 player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
                                 player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
                             }
                         } else { // too cold
-                            if (calculatedTarget >= -2) {
+                            if (bodyTemp >= -2) {
                                 player.addEffect(new MobEffectInstance(FHMobEffects.HYPOTHERMIA.get(), 100, 0));
                                 player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
-                            } else if (calculatedTarget >= -3) {
+                            } else if (bodyTemp >= -3) {
                                 player.addEffect(new MobEffectInstance(FHMobEffects.HYPOTHERMIA.get(), 100, 1));
                                 player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
                                 player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
-                            } else if (calculatedTarget >= -5) {
+                            } else if (bodyTemp >= -5) {
                                 player.addEffect(new MobEffectInstance(FHMobEffects.HYPOTHERMIA.get(), 100, 2));
                                 player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
                                 player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
                             } else {
                                 player.addEffect(
-                                        new MobEffectInstance(FHMobEffects.HYPOTHERMIA.get(), 100, (int) (-calculatedTarget - 2)));
+                                        new MobEffectInstance(FHMobEffects.HYPOTHERMIA.get(), 100, (int) (-bodyTemp - 2)));
                                 player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
                                 player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
                             }
@@ -137,54 +163,40 @@ public class TemperatureUpdate {
      */
     public static void updateTemperature(PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.START && event.player instanceof ServerPlayer player) {
-            // ignore creative and spectator players
-            // no longer ignore for easier debug
-            // TODO: find another way...we should save resources
-            // if (player.isCreative() || player.isSpectator())
-            // return;
-        	
-            PlayerTemperatureData.getCapability(event.player).ifPresent((data) -> {
-            	final float maxunit=(float)(double)FHConfig.SERVER.heatExchangeConstant.get();
-            	data.tick();
-            	if(data.updateInterval<=0) {
-            		if(threadingPool.tryCommitWork(player))
-            			data.updateInterval=FHConfig.SERVER.envTempUpdateIntervalTicks.get();
-            	}
+
+            // The Heat Exchange Constant: 0.006F by default.
+            final float HEAT_EXCHANGE_CONSTANT = (float)(double)FHConfig.SERVER.heatExchangeConstant.get();
+            // Temp Change rate: 1F by default
+            double TEMP_CHANGE_RATE = FHConfig.SERVER.tempSpeed.get();
+
+        	// Fetch the player temperature data
+            PlayerTemperatureData.getCapability(player).ifPresent((data) -> {
+
+                // Interval-based Environment Temperature Update: 20 ticks by default.
+                data.tick();
+                if (data.updateInterval <= 0) {
+                    // Multithreaded Environment Simulation
+                    if (threadingPool.tryCommitWork(player))
+                        data.updateInterval = FHConfig.SERVER.envTempUpdateIntervalTicks.get();
+                }
+                // Interval Update on Player Temperature
                 if (player.tickCount % FHConfig.SERVER.temperatureUpdateIntervalTicks.get() == 0) {
-                    // Soak in water modifier
-                    if (player.isInWater()) {
-                        boolean hasArmor = false;
-                        for (ItemStack is : player.getArmorSlots()) {
-                            if (!is.isEmpty()) {
-                                hasArmor = true;
-                                break;
-                            }
-                        }
-                        MobEffectInstance current = player.getEffect(FHMobEffects.WET.get());
-                        if (hasArmor)
-                            player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(), FHConfig.SERVER.wetEffectDuration.get() * FHConfig.SERVER.wetClothesDurationMultiplier.get(), 0, false ,false));// punish for wet clothes
-                        else if (current == null || current.getDuration() < FHConfig.SERVER.wetEffectDuration.get())
-                            player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(), FHConfig.SERVER.wetEffectDuration.get(), 0, false ,false));
-                    }
 
-                    /* Initialization */
+                    /* ENVIRONMENT TEMPERATURE COMPUTATION STARTS */
 
-                    // Load config
-                    double tspeed = FHConfig.SERVER.tempSpeed.get();
-
-                    /* Environment temperature */
-
-                    // World and chunk temperature: Climate, time, heat adjusts
+                    // World Temp: Dimension, Biome, Climate, Time, heat adjusts
                     Level world = player.level();
                     BlockPos pos = new BlockPos((int) player.getX(), (int) player.getEyeY(), (int) player.getZ());
+                    // We use 37C based temperature here.
+                    // The base temperature means around -10C, which becomes -47C.
                     float envtemp = WorldTemperature.air(world, pos) - 37F; // 37-based
 
-                    // Surrounding block temperature
-                    //SimulationResult btp = new SurroundingTemperatureSimulator(player).getBlockTemperatureAndWind(player.getX(), player.getEyeY() - 0.7f, player.getZ());
-                    // We don't calculate here, but in a seperate pool
+                    // Surrounding block temperature.
+                    // We calculate the block temperature using a separate pool.
+                    // See blockTemp usage for more details.
+                    // This shift ranges a lot.
                     float bt = data.blockTemp;
                     envtemp += bt;
-                    //int wind=btp.getSecond()+WorldTemperature.getClimateWind(world);
 
                     // Day-night temperature
                     int skyLight = world.getChunkSource().getLightEngine().getLayerListener(LightLayer.SKY).getLightValue(pos);
@@ -195,100 +207,120 @@ public class TemperatureUpdate {
                     }
 
                     // Weather temperature modifier
+                    // This shift ranges [-10, 0]
                     float weatherMultiplier = 1.0F;
                     if (world.isRaining() && WorldTemperature.isRainingAt(player.blockPosition(), world)) {
+                        // Decrement by 5C
                         envtemp -= FHConfig.SERVER.snowTempModifier.get();
                         if (world.isThundering()) {
+                            // Decrement by 10C
                             envtemp -= FHConfig.SERVER.blizzardTempModifier.get();
                         }
+                        // Due to wetness, daily day-night amplitude shrinks
                         weatherMultiplier = 0.2F;
                     }
 
+                    // Apply day-night amplitude modification
+                    // This shift ranges [-10, 10]
                     envtemp += relativeTime * FHConfig.SERVER.dayNightTempAmplitude.get() * weatherMultiplier;
 
                     // Burning temperature
+                    // This shift ranges [150, 150]
                     if (player.isOnFire())
                         envtemp += FHConfig.SERVER.onFireTempModifier.get();
 
-                    // Handle Attributes
-                    player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).removeModifier(envTempId);
-                    player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).addTransientModifier(new AttributeModifier(envTempId, "player environment modifier", envtemp, Operation.ADDITION));
+                    // Apply the calculated environment temperature to player attribute
+                    AttributeInstance envTempAttribute = player.getAttribute(FHAttributes.ENV_TEMPERATURE.get());
+                    if (envTempAttribute != null) {
+                        envTempAttribute.removeModifier(ENV_TEMP_ATTRIBUTE_UUID);
+                        envTempAttribute.addTransientModifier(new AttributeModifier(ENV_TEMP_ATTRIBUTE_UUID, "player environment modifier", envtemp, Operation.ADDITION));
+                    }
 
-                    // Getting environment temperature end
+                    /* ENVIRONMENT TEMPERATURE COMPUTATION ENDS */
 
-                    // Calculating body temperature change start
+                    /* BODY TEMPERATURE CHANGE COMPUTATION STARTS */
 
-                    // Insulation
-                    envtemp=(float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
-                    // float insulation = (float) player.getAttributeValue(FHAttributes.INSULATION.get());
+                    // Fetch the current environment temperature from player attribute
+                    envtemp = (float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
                     float totalConductivity = 0.0f;
-                    // If the player has the insulation effect, insulation is set to 1, so no heat exchange with the environment
-                    // Also disable when player is creative
-                    if (!player.hasEffect(FHMobEffects.INSULATION.get())&&!player.getAbilities().invulnerable) {
-                    	HeatingDeviceContext ctx=new HeatingDeviceContext(player);
-                    	//Collect body effective temperature
-                        for (BodyPart part:PlayerTemperatureData.BodyPart.values()) {
+                    // If the player has the insulation effect, insulation is set to 1,
+                    // so no heat exchange with the environment
+                    // Also disable when player is invulnerable
+                    if (!player.hasEffect(FHMobEffects.INSULATION.get()) && !player.getAbilities().invulnerable) {
+                        // Temporary storage context handled in each update cycle
+                        HeatingDeviceContext ctx = new HeatingDeviceContext(player);
 
-                            float ratio = part.area;
-                            float thermalConductivity = data.getThermalConductivityByPart(player, part);
-                            totalConductivity += ratio*thermalConductivity;
-                            float temperature = data.getTemperatureByPart(part);
-                            float dt = (temperature - envtemp-(part.isBodyEnd()?5:0)) * thermalConductivity;//=(eff)
-                            float effective=temperature-dt;
-                            ctx.setPartData(part, temperature, effective);
+                        // Collect body effective temperature
+                        for (BodyPart part : PlayerTemperatureData.BodyPart.values()) {
+                            // ranges [0, 1]
+                            float partConductivity = data.getThermalConductivityByPart(player, part);
+                            // all part areas add up to 100%
+                            totalConductivity += part.area * partConductivity;
+                            // This is a body part's "Body Temperature" from last time
+                            float partBodyTemp = data.getTemperatureByPart(part);
+                            // Body ends have a 5C additional effect
+                            float partEnvTemp = envtemp - (part.isBodyEnd() ? 5 : 0);
+                            // Env and Body exchanges temperature
+                            float partBodyEnvExchangeTemp = (partEnvTemp - partBodyTemp) * partConductivity;
+                            float partEffectiveTemp = partBodyTemp + partBodyEnvExchangeTemp;
+                            // Store them in context
+                            ctx.setPartData(part, partBodyTemp, partEffectiveTemp);
                         }
-                        //Compute heating equipments
-                        if(CompatModule.isCuriosLoaded())
-                        	for(Pair<ISlotType, ItemStack> i:CuriosCompat.getAllCuriosAndSlotsIfVisible(player)) {
-                        		HeatingDeviceSlot slot=new HeatingDeviceSlot(i.getFirst());
-                        		LazyOptional<BodyHeatingCapability> cap=FHCapabilities.EQUIPMENT_HEATING.getCapability(i.getSecond());
-                        		if(cap.isPresent()) {
-                        			BodyHeatingCapability eq=cap.resolve().get();
-                        			eq.tickHeating(slot, i.getSecond(), ctx);
-                        		}
-                        	}
-                        for(EquipmentSlot eslot:EquipmentSlot.values()) {
-                        	HeatingDeviceSlot slot=new HeatingDeviceSlot(eslot);
-                        	ItemStack item=player.getItemBySlot(eslot);
-                    		LazyOptional<BodyHeatingCapability> cap=FHCapabilities.EQUIPMENT_HEATING.getCapability(item);
-                    		if(cap.isPresent()) {
-                    			BodyHeatingCapability eq=cap.resolve().get();
-                    			eq.tickHeating(slot, item, ctx);
-                    		}
+
+                        // Compute heating equipments
+                        // Curios slots
+                        if (CompatModule.isCuriosLoaded())
+                            for (Pair<ISlotType, ItemStack> i : CuriosCompat.getAllCuriosAndSlotsIfVisible(player)) {
+                                HeatingDeviceSlot slot = new HeatingDeviceSlot(i.getFirst());
+                                LazyOptional<BodyHeatingCapability> cap = FHCapabilities.EQUIPMENT_HEATING.getCapability(i.getSecond());
+                                if (cap.isPresent()) {
+                                    BodyHeatingCapability eq = cap.resolve().get();
+                                    eq.tickHeating(slot, i.getSecond(), ctx);
+                                }
+                            }
+                        // Equipment slots
+                        for (EquipmentSlot eslot : EquipmentSlot.values()) {
+                            HeatingDeviceSlot slot = new HeatingDeviceSlot(eslot);
+                            ItemStack item = player.getItemBySlot(eslot);
+                            LazyOptional<BodyHeatingCapability> cap = FHCapabilities.EQUIPMENT_HEATING.getCapability(item);
+                            if (cap.isPresent()) {
+                                BodyHeatingCapability eq = cap.resolve().get();
+                                eq.tickHeating(slot, item, ctx);
+                            }
                         }
                         //Compute part heating data
-                       FastEnumMap<BodyPart,Float> fem=new FastEnumMap<>(BodyPart.values());
-                        for (BodyPart part:PlayerTemperatureData.BodyPart.values()) {
-                        	BodyPartContext pctx=ctx.getPartData(part);
-                        	float temperature=pctx.getBodyTemperature();
-                        	float dt=temperature-pctx.getEffectiveTemperature();
-                            float unit = maxunit; // 1 unit per tick is 0.012 degree per second
-                            temperature -= (2*unit) * (dt/10); // charge 2 units for every 10 dt
+                        FastEnumMap<BodyPart, Float> fem = new FastEnumMap<>(BodyPart.values());
+                        for (BodyPart part : BodyPart.values()) {
+                            BodyPartContext pctx = ctx.getPartData(part);
+                            float temperature = pctx.getBodyTemperature();
+                            float dt = temperature - pctx.getEffectiveTemperature();
+                            float unit = HEAT_EXCHANGE_CONSTANT; // 1 unit per tick is 0.012 degree per second
+                            temperature -= (2 * unit) * (dt / 10); // charge 2 units for every 10 dt
 
                             // still: 10 dt
                             // walking: 15 dt
                             // sprinting: 25 dt
 
                             // 1 unit = 60W
-                            float selfHeatRate=data.getDifficulty().heat_unit;
-                            unit*=selfHeatRate;
+                            float selfHeatRate = data.getDifficulty().heat_unit;
+                            unit *= selfHeatRate;
 
                             double speedSquared = player.getDeltaMovement().horizontalDistanceSqr(); // Horizontal movement speed squared
                             boolean isSprinting = player.isSprinting();
                             boolean isOnVehicle = player.getVehicle() != null;
                             boolean isWalking = speedSquared > 0.001 && !isSprinting && !isOnVehicle;
                             if (isSprinting) {
-                                temperature += 4*unit; // Running increases temperature by 4 units
+                                temperature += 4 * unit; // Running increases temperature by 4 units
                             } else if (isWalking) { // Assuming there's a method to check walking
-                                temperature += 2*unit; // Walking increases temperature by 2 units
+                                temperature += 2 * unit; // Walking increases temperature by 2 units
                             } else {
                                 temperature += unit; // Standing still or being in a vehicle increases temperature by 1 unit
                             }
                             // base generation when cold: 1 unit
-                            if (temperature < 0.0&&player.getFoodData().getFoodLevel()>0) {
+                            if (temperature < 0.0 && player.getFoodData().getFoodLevel() > 0) {
                                 temperature += unit;
                                 // TODO: cost hunger for cold, adjust for difficult
-                                player.causeFoodExhaustion(FOOD_EXHAUST_COLD*part.area);
+                                player.causeFoodExhaustion(FOOD_EXHAUST_COLD * part.area);
                             }
                             //gain an extra unit if too cold
                             /*if(!isSprinting&&temperature < 0.0) {
@@ -301,23 +333,23 @@ public class TemperatureUpdate {
                         }
                         // Calculate heat transfer between each part
                         //From leg/chest/head share temperature.
-                        float coreTemp=0;
-                        for(BodyPart corePart:BodyPart.CoreParts) {
-                        	coreTemp+=fem.get(corePart)*corePart.affectsCore;
+                        float coreTemp = 0;
+                        for (BodyPart corePart : BodyPart.CoreParts) {
+                            coreTemp += fem.get(corePart) * corePart.affectsCore;
                         }
-                        for(BodyPart corePart:BodyPart.CoreParts)
-                        	fem.put(corePart, coreTemp);
+                        for (BodyPart corePart : BodyPart.CoreParts)
+                            fem.put(corePart, coreTemp);
                         //From leg to feets
                         {
-                        	float dlegfeet=fem.get(BodyPart.LEGS)*BodyPart.LEGS.area-fem.get(BodyPart.FEET)*BodyPart.FEET.area;
-                        	
-                        	
+                            float dlegfeet = fem.get(BodyPart.LEGS) * BodyPart.LEGS.area - fem.get(BodyPart.FEET) * BodyPart.FEET.area;
+
+
                         }
                         //from chest to hands
                         {
-                        	float dhandchest=fem.get(BodyPart.TORSO)-fem.get(BodyPart.HANDS);
-                        	
-                        	
+                            float dhandchest = fem.get(BodyPart.TORSO) - fem.get(BodyPart.HANDS);
+
+
                         }
 
                         // update persistent player data
@@ -327,26 +359,17 @@ public class TemperatureUpdate {
                             data.setTemperatureByPart(part, fem.get(part));
                         }
 
-                    } else {
+                    }
+                    // Apply insulation effect. Above 100 amplifiers are treated as 100.
+                    else {
                         MobEffectInstance insulationEffect = player.getEffect(FHMobEffects.INSULATION.get());
                         if (insulationEffect != null) {
-                            int amp = insulationEffect.getAmplifier();
-                            // clamp to 0 to 100
-                            amp = Mth.clamp(amp, 0, 100);
-                            totalConductivity  = amp / 100.0f;
+                            totalConductivity = Mth.clamp(insulationEffect.getAmplifier(), 0, 100) / 100.0f;
                         }
                     }
-                    
 
-                    // Equipments
-          
-                    //if(!player.isCreative()&&!player.isSpectator())
-                    //update for display
-                    data.update(envtemp, totalConductivity);
-                    //System.out.println("===================================");
-                    //for(BodyPart bp:BodyPart.values())
-                    //System.out.println(bp+":"+data.getTemperatureByPart(bp));
-                    //FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
+                    // Update player temperature data for display purpose
+                    data.updateForDisplay(envtemp, totalConductivity);
                 }
 
                 FHNetwork.INSTANCE.sendPlayer(player, new FHBodyDataSyncPacket(player));
