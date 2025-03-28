@@ -720,10 +720,14 @@ public class TeamResearchData implements SpecialData {
 
 		if (activeResearchId != -1) {
 			Research r = FHResearch.researches.get(activeResearchId);
-			ResearchData rd = getData(r);
-			for (Clue c : r.getClues())
-				if(!rd.isClueTriggered(c))
-					c.start(team, r);
+			if(r!=null) {
+				ResearchData rd = getData(r);
+				for (Clue c : r.getClues())
+					if(!rd.isClueTriggered(c))
+						c.start(team, r);
+			}else {
+				activeResearchId=-1;
+			}
 
 		}
 	}
