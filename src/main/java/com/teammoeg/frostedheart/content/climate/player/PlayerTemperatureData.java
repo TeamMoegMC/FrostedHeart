@@ -327,4 +327,11 @@ public class PlayerTemperatureData implements NBTSerializable {
     public void addTemperatureByPart(BodyPart bodyPart, float t) {
         clothesOfParts.get(bodyPart).temperature += t;
     }
+
+	@Override
+	public String toString() {
+		return "PlayerTemperatureData [difficulty=" + difficulty + ", bodyTemp=" + bodyTemp + ", envTemp=" + envTemp + ", feelTemp=" + feelTemp + ", blockTemp=" + blockTemp + ", clothesOfParts="
+			+ clothesOfParts + ", windStrengh=" + windStrengh + "]";
+	}
+    
 }

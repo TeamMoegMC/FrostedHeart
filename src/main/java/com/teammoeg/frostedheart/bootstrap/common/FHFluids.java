@@ -31,6 +31,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.fluids.ForgeFlowingFluid;
+import net.minecraftforge.fluids.ForgeFlowingFluid.Flowing;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistries.Keys;
@@ -127,10 +128,10 @@ public class FHFluids {
             "tar", 0xFF000000)
             .tag(FHTags.forgeFluidTag("tar"))
             .register();
-    public static final FluidEntry<VirtualFluid> PROTEIN = REGISTRATE.virtualColoredFluid(
+    public static final FluidEntry<Flowing> PROTEIN = REGISTRATE.fluid(
             "protein",
                     new ResourceLocation(FHMain.MODID, "block/protein_fluid"),
-                    new ResourceLocation(FHMain.MODID, "block/protein_fluid"), 0xFFFFFF)
+                    new ResourceLocation(FHMain.MODID, "block/protein_fluid"))
             .tag(FHTags.forgeFluidTag("protein"))
             .register();
     public static final FluidEntry<VirtualFluid> LATEX = REGISTRATE.virtualColoredLiquid(

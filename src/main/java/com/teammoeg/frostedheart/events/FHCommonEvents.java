@@ -76,6 +76,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AnvilUpdateEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
@@ -287,12 +288,20 @@ public class FHCommonEvents {
 
 	@SubscribeEvent
 	public static void death(PlayerEvent.Clone ev) {
+		//call this to make capability temporary available for copy
+		ev.getOriginal().reviveCaps();
 		CUtils.clonePlayerCapability(FHCapabilities.WANTED_FOOD.capability(), ev.getOriginal(), ev.getEntity());
 		// CUtils.clonePlayerCapability(FHCapabilities.ENERGY,ev.getOriginal(),ev.getEntity());
 		CUtils.clonePlayerCapability(FHCapabilities.SCENARIO, ev.getOriginal(), ev.getEntity());
 		CUtils.clonePlayerCapability(FHCapabilities.WAYPOINT, ev.getOriginal(), ev.getEntity());
-		CUtils.clonePlayerCapability(FHCapabilities.PLAYER_TEMP, ev.getOriginal(), ev.getEntity());
-		FHCapabilities.PLAYER_TEMP.getCapability(ev.getEntity()).ifPresent(t -> t.deathResetTemperature());
+		//System.out.println(LazyOptional.empty());
+		//System.out.println(FHCapabilities.PLAYER_TEMP.getCapability(ev.getOriginal()));
+		CUtils.copyPlayerCapability(FHCapabilities.PLAYER_TEMP, ev.getOriginal(), ev.getEntity());
+		//System.out.println("clone called");
+		//System.out.println(FHCapabilities.PLAYER_TEMP.getCapability(ev.getEntity()).orElse(null));
+		
+		if(ev.isWasDeath()) 
+			FHCapabilities.PLAYER_TEMP.getCapability(ev.getEntity()).ifPresent(t -> t.deathResetTemperature());
 		// FHMain.LOGGER.info("clone");
 		if (!ev.getEntity().level().isClientSide) {
 			DeathInventoryData orig = DeathInventoryData.get(ev.getOriginal());
@@ -302,6 +311,8 @@ public class FHCommonEvents {
 				nw.copy(orig);
 			nw.calledClone();
 		}
+		//re-invalidate to make capability discarded
+		ev.getOriginal().invalidateCaps();
 	}
 
 	@SubscribeEvent
@@ -399,7 +410,7 @@ public class FHCommonEvents {
 	public static void respawn(PlayerEvent.PlayerRespawnEvent event) {
 		if (event.getEntity() instanceof ServerPlayer && !(event.getEntity() instanceof FakePlayer)) {
 			DeathInventoryData dit = DeathInventoryData.get(event.getEntity());
-			dit.tryCallClone(event.getEntity());
+			//dit.tryCallClone(event.getEntity());
 			if (FHConfig.SERVER.keepEquipments.get() && !event.getEntity().level().isClientSide) {
 				if (dit != null)
 					dit.alive(event.getEntity().getInventory());

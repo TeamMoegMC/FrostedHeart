@@ -27,6 +27,7 @@ import com.teammoeg.chorda.block.CBlockInterfaces;
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.chorda.util.CRegistryHelper;
@@ -143,8 +144,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
     LazyOptional<IItemHandler> invHandlerDown = LazyOptional.of(() -> new IEInventoryHandler(1, this, 3, false, true));
 
     public static Fluid getProtein() {
-        Fluid f = CRegistryHelper.getFluid(pr);
-        return f == Fluids.EMPTY ? Fluids.WATER : f;
+    	return FHFluids.PROTEIN.get();
     }
 
     public IncubatorTileEntity(BlockPos bp,BlockState bs) {
@@ -443,7 +443,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
 
 	@Override
 	public Component getDisplayName() {
-		return Lang.translateGui("incubator.t1.title");
+		return this.getBlockState().getBlock().getName();
 	}
 
 }

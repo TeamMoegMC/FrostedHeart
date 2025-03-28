@@ -20,6 +20,8 @@ public class NutritionEvents {
 		Optional<IFoodInfo> opt = CauponaHooks.getInfo(event.getStack());
 		if (opt.isPresent()) {
 			IFoodInfo ois = opt.get();
+			int healing=ois.getHealing();
+			if (healing<=0)return;
 			List<FloatemStack> is = ois.getStacks();
 			MutableNutrition groups = event.getForModify();
 			float b = (float) (double) CPConfig.SERVER.benefitialMod.get();
@@ -48,8 +50,7 @@ public class NutritionEvents {
 					groups.addScaled(event.queryNutrition(ffvr.getRepersent()), ffvr.heal);
 				}
 			}
-			if (ois.getHealing()!=0)
-				groups.scale((float) 1 / ois.getHealing()*b);
+			groups.scale((float) 1 / ois.getHealing()*b);
 		}
 	}
 }
