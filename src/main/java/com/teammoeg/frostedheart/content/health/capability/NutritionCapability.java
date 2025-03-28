@@ -31,6 +31,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.LazyOptional;
@@ -118,26 +119,23 @@ public class NutritionCapability implements NBTSerializable {
      */
     public void eat(Player player, ItemStack food) {
         if(!food.isEdible()) return;
-        Level level = player.level();
         Nutrition wRecipe = NutritionRecipe.getRecipeFromItem(player, food);
         if(wRecipe == null) return;
-        int nutrition = food.getFoodProperties(player).getNutrition();
-        Nutrition recipeNutrition = wRecipe;
-        this.nutrition.addScaled(recipeNutrition, nutrition*FHConfig.SERVER.nutritionGainRate.get());
-        syncToClientOnRestore(player);
+        FoodProperties fp = food.getFoodProperties(player);
+        if (fp != null) {
+            int nutrition = fp.getNutrition();
+            this.nutrition.addScaled(wRecipe, (float) (nutrition*FHConfig.SERVER.nutritionGainRate.get()));
+            syncToClientOnRestore(player);
+        }
     }
 
     public void consume(Player player) {
-        float radio = - 0.1f * FHConfig.SERVER.nutritionConsumptionRate.get();
+        double radio = - 0.1 * FHConfig.SERVER.nutritionConsumptionRate.get();
 
-        this.nutrition.addScaled(this.nutrition, radio / nutrition.getNutritionValue());
+        this.nutrition.addScaled(this.nutrition, (float) radio / nutrition.getNutritionValue());
         syncToClientOnRestore(player);
     }
 
-
-//    public void award(Player player) {
-//
-//    }
 
     public void punishment(Player player) {
         //TODO 营养值过高或过低的惩罚

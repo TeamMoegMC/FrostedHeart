@@ -280,8 +280,8 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Integer> minBodyTempChange;
         public final ForgeConfigSpec.ConfigValue<Integer> maxBodyTempChange;
 
-        public final ForgeConfigSpec.ConfigValue<Float> nutritionConsumptionRate;
-        public final ForgeConfigSpec.ConfigValue<Float> nutritionGainRate;
+        public final ForgeConfigSpec.ConfigValue<Double> nutritionConsumptionRate;
+        public final ForgeConfigSpec.ConfigValue<Double> nutritionGainRate;
 
 
         Server(ForgeConfigSpec.Builder builder) {
@@ -347,9 +347,9 @@ public class FHConfig {
             resetWaterLevelInDeath = builder.comment("It decides if players' water level would reset in death.")
                     .define("resetWaterLevelInDeath", true);
             nutritionConsumptionRate = builder.comment("The rate of nutrition consumption.")
-                    .define("nutritionConsumptionRate", 1.0f);
+                    .defineInRange("nutritionConsumptionRate", 1.0, 0, 10);
             nutritionGainRate = builder.comment("The rate of nutrition gain by eating food.")
-                    .define("nutritionGainRate", 40.0f);
+                    .defineInRange("nutritionGainRate", 40.0, 0, 100);
             builder.pop();
 
             builder.push("Worldgen");
