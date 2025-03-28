@@ -77,8 +77,10 @@ public class DrinkContainerItem extends ItemFluidContainer {
     }
 
     private boolean initialized = false;
+
     @Override
     public void inventoryTick(ItemStack itemStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
+        upDateDamage(itemStack);
         if (!initialized) {
             initialized = true;
             if(!itemStack.hasTag())return;
@@ -111,30 +113,25 @@ public class DrinkContainerItem extends ItemFluidContainer {
             }
             BlockEntity entity = level.getBlockEntity(pos);
             if(entity !=null){
-                AtomicBoolean success = new AtomicBoolean(false);
-                final ItemStack[] stack1 = new ItemStack[1];
-                entity.getCapability(ForgeCapabilities.FLUID_HANDLER).ifPresent(
-                        (NonNullConsumer<? super IFluidHandler>) fluidHandler -> {
-                            if(!fluidHandlerItem.getFluidInTank(0).isEmpty()) {
-                                FluidUtil.tryEmptyContainerAndStow(stack, fluidHandler, null, capacity, player, !player.isCreative());
-                                upDateDamage(stack);
-                                success.set(true);
-                            }else {
-                                FluidStack fluidInTank = fluidHandler.getFluidInTank(0);
-                                if(fluidInTank.isEmpty())return;
-                                int amount = fluidInTank.getAmount();
-                                if(amount>capacity)amount = capacity;
+                IFluidHandler iFluidHandler = entity.getCapability(ForgeCapabilities.FLUID_HANDLER).orElse(null);
+                if (iFluidHandler != null) {
+                    if (!fluidHandlerItem.getFluidInTank(0).isEmpty()) {
+                        FluidUtil.tryEmptyContainerAndStow(stack, iFluidHandler, null, capacity, player, !player.isCreative());
+                        upDateDamage(stack);
+                        return InteractionResultHolder.success(stack);
+                    } else {
+                        FluidStack fluidInTank = iFluidHandler.getFluidInTank(0);
+                        if (!fluidInTank.isEmpty()) {
+                            int amount = fluidInTank.getAmount();
+                            if (amount > capacity) amount = capacity;
 
-                                ItemStack itemStack = FluidHelper.fillContainer(getDrinkItem(), fluidInTank.getFluid(),amount);
-                                fluidInTank.shrink(amount);
-                                stack1[0] = itemStack;
-                                upDateDamage(stack1[0]);
-                                success.set(true);
-                            }
+                            ItemStack itemStack = FluidHelper.fillContainer(getDrinkItem(), fluidInTank.getFluid(), amount);
+                            fluidInTank.shrink(amount);
+                            upDateDamage(itemStack);
+                            return InteractionResultHolder.success(itemStack);
                         }
-
-                );
-                if(success.get())return InteractionResultHolder.success(stack1[0]!=null?stack1[0]:stack);
+                    }
+                }
             }
         }
         if (canDrink(player, stack)) return ItemUtils.startUsingInstantly(level, player, hand);
