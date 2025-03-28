@@ -113,6 +113,7 @@ public class FHRegistrateTags {
                 .addTag(FHTags.Blocks.CONDENSED_ORES.tag)
                 .addTag(FHTags.Blocks.SLUDGE.tag)
                 .addTag(FHTags.Blocks.SOIL.tag)
+                .addTag(FHTags.Blocks.PERMAFROST.tag)
                 .add(Blocks.ICE.builtInRegistryHolder().key());
 
         prov.tag(BlockTags.MINEABLE_WITH_PICKAXE)
