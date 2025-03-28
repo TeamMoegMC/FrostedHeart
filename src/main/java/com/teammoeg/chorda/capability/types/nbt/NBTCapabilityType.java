@@ -56,8 +56,10 @@ public class NBTCapabilityType<C extends NBTSerializable> implements CapabilityT
 		return LazyOptional.of(factory);
 	}
 	public LazyOptional<C> getCapability(Object cap) {
+		
 		if(cap instanceof ICapabilityProvider)
 			return ((ICapabilityProvider)cap).getCapability(capability);
+		new Exception().printStackTrace();
 		return LazyOptional.empty();
 	}
 	public LazyOptional<C> getCapability(Object cap,Direction dir) {

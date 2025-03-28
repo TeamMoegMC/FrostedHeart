@@ -98,6 +98,7 @@ public class ClimateCommonEvents {
 	@SubscribeEvent
 	public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
 		// Common capabilities
+		
 		event.addCapability(new ResourceLocation(FHMain.MODID, "temperature"), FHCapabilities.PLAYER_TEMP.provider());
 
 	}
@@ -413,10 +414,10 @@ public class ClimateCommonEvents {
 
 	@SubscribeEvent
 	public static void respawn(PlayerEvent.PlayerRespawnEvent event) {
-		if (event.getEntity() instanceof ServerPlayer && !(event.getEntity() instanceof FakePlayer)) {
+		if (event.getEntity() instanceof ServerPlayer && !(event.getEntity() instanceof FakePlayer)&&!event.isEndConquered()) {
 			ServerLevel serverWorld = ((ServerPlayer) event.getEntity()).serverLevel();
 			FHNetwork.INSTANCE.sendPlayer((ServerPlayer) event.getEntity(), new FHClimatePacket(WorldClimate.get(serverWorld)));
-			PlayerTemperatureData.getCapability(event.getEntity()).ifPresent(PlayerTemperatureData::reset);
+			//PlayerTemperatureData.getCapability(event.getEntity()).ifPresent(PlayerTemperatureData::deathResetTemperature);
 		}
 	}
 }

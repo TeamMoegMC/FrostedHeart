@@ -46,7 +46,7 @@ public class BodyPartData {
 			}
 
 		};
-		reset();
+		//reset();
 	}
 
 	public void load(CompoundTag itemsTag) {
@@ -143,5 +143,10 @@ public class BodyPartData {
 
 	public int getSize() {
 		return clothes.getSlots();
+	}
+
+	@Override
+	public String toString() {
+		return "BodyPartData [clothes=" + clothes.getStackInSlot(0) + ", temperature=" + temperature + "]";
 	}
 }

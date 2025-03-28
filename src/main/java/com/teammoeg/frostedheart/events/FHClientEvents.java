@@ -349,28 +349,27 @@ public class FHClientEvents {
         if (event.phase == Phase.START) {
             InfraredViewRenderer.clientTick();
             Minecraft mc = ClientUtils.mc();
+            Player pe = ClientUtils.getPlayer();
             if (mc.level != null) {
                 if (ClientScene.INSTANCE != null)
                     ClientScene.INSTANCE.tick(mc);
-
-            }
-            Player pe = ClientUtils.getPlayer();
-            PlayerTemperatureData.getCapability(pe).ifPresent(t -> {
-                t.smoothedBodyPrev = t.smoothedBody;
-                t.smoothedBody = t.smoothedBody * .9f + t.getBodyTemp() * .1f;
-            });
-
-            if (pe != null && pe.getEffect(FHMobEffects.NYCTALOPIA.get()) != null) {
-                ClientUtils.DoApplyGammaValue = true;
-                ClientUtils.OverwriteGammaValue = Mth.clamp((float) (double) (mc.options.gamma().get()), 0f, 1f) * 0.1f
-                        - 1f;
-            } else {
-                ClientUtils.DoApplyGammaValue = false;
-                ClientUtils.OverwriteGammaValue = Mth.clamp((float) (double) mc.options.gamma().get(), 0f, 1f);
-            }
+	            PlayerTemperatureData.getCapability(pe).ifPresent(t -> {
+	                t.smoothedBodyPrev = t.smoothedBody;
+	                t.smoothedBody = t.smoothedBody * .9f + t.getBodyTemp() * .1f;
+	            });
+	
+	            if (pe != null && pe.getEffect(FHMobEffects.NYCTALOPIA.get()) != null) {
+	                ClientUtils.DoApplyGammaValue = true;
+	                ClientUtils.OverwriteGammaValue = Mth.clamp((float) (double) (mc.options.gamma().get()), 0f, 1f) * 0.1f
+	                        - 1f;
+	            } else {
+	                ClientUtils.DoApplyGammaValue = false;
+	                ClientUtils.OverwriteGammaValue = Mth.clamp((float) (double) mc.options.gamma().get(), 0f, 1f);
+	            }
 
             //if(WheelMenuRenderer.isOpened)
             	WheelMenuRenderer.tick();
+            }
         }
     }
 
