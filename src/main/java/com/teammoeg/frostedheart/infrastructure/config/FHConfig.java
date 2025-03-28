@@ -186,7 +186,8 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> stickIgnitionChance;
         public final ForgeConfigSpec.ConfigValue<Double> consumeChanceWhenIgnited;
         public final ForgeConfigSpec.ConfigValue<Boolean> enableScenario;
-
+        public final ForgeConfigSpec.ConfigValue<Boolean> enableAutoRestart;
+        public final ForgeConfigSpec.ConfigValue<Boolean> enableUpdateReminder;
 
         Common(ForgeConfigSpec.Builder builder) {
             builder.push("Weather Forecast");
@@ -229,7 +230,12 @@ public class FHConfig {
                     .comment("Enables the scenario system. ")
                     .define("enableScenario", true);
             builder.pop();
-
+            builder.push("AutoUpdate");
+            enableAutoRestart=builder.comment("Enable automatic restart if later snapshot was found, DONT TOUCH UNLESS INSTUCTED BY DEV TEAM.")
+            		.define("enableAutoRestart", false);
+            enableUpdateReminder=builder.comment("Enable update reminder if later snapshot was found, DONT TOUCH UNLESS INSTUCTED BY DEV TEAM.")
+            		.define("enableUpdateReminder", true);
+            builder.pop();
         }
     }
 
@@ -260,7 +266,8 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Integer> blizzardTempModifier;
         public final ForgeConfigSpec.ConfigValue<Integer> dayNightTempAmplitude;
         public final ForgeConfigSpec.ConfigValue<Integer> onFireTempModifier;
-        public final ForgeConfigSpec.ConfigValue<Double> heatExchangeConstant;
+        public final ForgeConfigSpec.ConfigValue<Integer> heatExchangeTimeConstant;
+        public final ForgeConfigSpec.ConfigValue<Double> heatExchangeTempConstant;
         public final ForgeConfigSpec.BooleanValue addInitClimate;
         public final ForgeConfigSpec.IntValue envTempUpdateIntervalTicks;
         public final ForgeConfigSpec.IntValue envTempThreadCount;
@@ -273,8 +280,8 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Integer> minBodyTempChange;
         public final ForgeConfigSpec.ConfigValue<Integer> maxBodyTempChange;
 
-        public final ForgeConfigSpec.ConfigValue<Float> nutritionConsumptionRate;
-        public final ForgeConfigSpec.ConfigValue<Float> nutritionGainRate;
+        public final ForgeConfigSpec.ConfigValue<Double> nutritionConsumptionRate;
+        public final ForgeConfigSpec.ConfigValue<Double> nutritionGainRate;
 
 
         Server(ForgeConfigSpec.Builder builder) {
@@ -313,8 +320,15 @@ public class FHConfig {
                     .defineInRange("dayNightTempAmplitude", 10, -100, 100);
             onFireTempModifier = builder.comment("The temperature modifier when player is on fire.")
                     .defineInRange("onFireTempModifier", 150, 0, 1000);
-            heatExchangeConstant = builder.comment("The heat exchange constant between player and environment.")
-                    .defineInRange("heatExchangeConstant", 0.006f, 0, 1);
+            heatExchangeTimeConstant = builder.comment("The heat exchange time constant between player and environment.")
+                    .comment("Definition: The value has unit in seconds.")
+                    .comment("It represents the theoretical time it takes for a naked player without self-heating")
+                    .comment("to reach the mildest hypothermia (36C body temperature)")
+                    .comment("when exposed to an effective environment temperature of heatExchangeTempConstant below 37C.")
+                    .defineInRange("heatExchangeTimeConstant", 170, 0, Integer.MAX_VALUE);
+            heatExchangeTempConstant = builder.comment("The heat exchange temperature constant between player and environment.")
+                    .comment("Check the comment on heatExchangeTimeConstant for what is this.")
+                    .defineInRange("heatExchangeTempConstant", 5D, 0D, Integer.MAX_VALUE);
             hurtingHeatUpdate = builder.comment("The heat update when player is hurt.")
                     .defineInRange("hurtingHeatUpdate", 0.1, 0, 1);
             minBodyTempChange = builder.comment("The minimum body temperature change relative to 37.")
@@ -333,9 +347,9 @@ public class FHConfig {
             resetWaterLevelInDeath = builder.comment("It decides if players' water level would reset in death.")
                     .define("resetWaterLevelInDeath", true);
             nutritionConsumptionRate = builder.comment("The rate of nutrition consumption.")
-                    .define("nutritionConsumptionRate", 1.0f);
+                    .defineInRange("nutritionConsumptionRate", 1.0, 0, 10);
             nutritionGainRate = builder.comment("The rate of nutrition gain by eating food.")
-                    .define("nutritionGainRate", 40.0f);
+                    .defineInRange("nutritionGainRate", 40.0, 0, 100);
             builder.pop();
 
             builder.push("Worldgen");

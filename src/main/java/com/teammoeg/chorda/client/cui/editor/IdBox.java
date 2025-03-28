@@ -15,6 +15,8 @@ public class IdBox extends LabeledTextBoxAndBtn {
 	public IdBox(UIWidget panel, Component lab, String txt) {
 		super(panel, lab, txt, Components.str("Random"), s->s.accept(Long.toHexString(UUID.randomUUID().getMostSignificantBits())));
 		oldVal=txt;
+		if(txt==null||txt.isEmpty())
+			setText(Long.toHexString(UUID.randomUUID().getMostSignificantBits()));
 	}
 	String getOldValue() {
 		return oldVal;

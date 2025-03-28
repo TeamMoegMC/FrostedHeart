@@ -47,6 +47,7 @@ import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuSelectionRegisterEve
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
+import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
 import com.teammoeg.frostedheart.util.FHVersion;
 import com.teammoeg.frostedheart.util.Lang;
 
@@ -97,15 +98,9 @@ public class FHClientEvents {
     public static void drawUpdateReminder(ScreenEvent.Render event) {
         Screen gui = event.getScreen();
         if (gui instanceof TitleScreen) {
+        	
             FHMain.remote.fetchVersion().ifPresent(stableVersion -> {
                 boolean isStable = true;
-                if (FHMain.pre != null && FHMain.pre.fetchVersion().isPresent()) {
-                    FHVersion preversion = FHMain.pre.fetchVersion().resolve().get();
-                    if (preversion.laterThan(stableVersion)) {
-                        stableVersion = preversion;
-                        isStable = false;
-                    }
-                }
                 if (stableVersion.isEmpty())
                     return;
                 GuiGraphics matrixStack = event.getGuiGraphics();
@@ -305,13 +300,6 @@ public class FHClientEvents {
 
         FHMain.remote.fetchVersion().ifPresent(stableVersion -> {
             boolean isStable = true;
-            if (FHMain.pre != null && FHMain.pre.fetchVersion().isPresent()) {
-                FHVersion preversion = FHMain.pre.fetchVersion().resolve().get();
-                if (preversion.laterThan(stableVersion)) {
-                    stableVersion = preversion;
-                    isStable = false;
-                }
-            }
             if (stableVersion.isEmpty())
                 return;
             FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);

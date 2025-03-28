@@ -385,6 +385,7 @@ public class FHResearch {
         try {
             allResearches.get().forEach(Research::doReindex);
             allResearches.get().forEach(Research::doIndex);
+            JEICompat.syncJEI();
         } catch (Throwable t) {
             t.printStackTrace();
         }

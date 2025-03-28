@@ -93,7 +93,7 @@ public class ClueEditors {
         	.add(Editors.STRING.withName("Name").forGetter(e->e.name))
         	.add(Editors.STRING.withName("Description").forGetter(e->e.desc))
         	.add(Editors.STRING.withName("Hint").forGetter(e->e.hint))
-        	.add(Editors.FLOAT.withName("Contribution(%)").forGetter(e->e.contribution * 100))
+        	.add(Editors.FLOAT.xmap(t->t/100, t->t*100).withName("Contribution(%)").forGetter(e->e.contribution))
         	.add(Editors.BOOLEAN.withName("Required").forGetter(e->e.required));
     }
     public static <T extends ListenerClue> Applicative7<SetterAndGetter<T, ?>, String, String, String, String, Float, Boolean, Boolean> applyListener(Applicative0<SetterAndGetter<T, ?>> app) {

@@ -23,13 +23,16 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
+import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
 
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.server.*;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 
 /**
  * Events fired only on logical server side.
@@ -59,6 +62,8 @@ public class FHServerEvents {
 	public static void serverAboutToStart(final ServerAboutToStartEvent event) {
 		SurroundingTemperatureSimulator.init();
 		TemperatureUpdate.init();
+		if(FMLEnvironment.dist==Dist.DEDICATED_SERVER)
+			TssapProtocolHandler.serverPrepareUpdateReminder();
 	}
 
 	/**

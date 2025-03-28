@@ -38,6 +38,8 @@ import com.teammoeg.chorda.io.codec.AlternativeCodecBuilder;
 import com.teammoeg.chorda.io.registry.TypedCodecRegistry;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.math.CMath;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedresearch.gui.TechIcons;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -250,7 +252,13 @@ public class CIcons {
 		@Override
 		public void draw(GuiGraphics ms, int x, int y, int w, int h) {
 			CGuiHelper.resetGuiDrawing();
-			internals.get(name).draw(ms, x, y, w, h);
+			CIcon icon = internals.get(name);
+			if (icon != null) {
+				icon.draw(ms, x, y, w, h);
+			} else {
+				FHMain.LOGGER.warn("No icon found for name " + name, ", using default.");
+				TechIcons.Question.draw(ms, x, y, w, h);
+			}
 		}
 
 	}

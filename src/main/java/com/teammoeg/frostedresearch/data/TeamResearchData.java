@@ -328,10 +328,8 @@ public class TeamResearchData implements SpecialData {
 			}
 		}
 		if (rd.getTotalCommitted(r) >= r.getRequiredPoints() && flag) {
-			rd.setFinished(true);
-			this.grantEffects(team, null, r);
-
-			this.annouceResearchComplete(team, r);
+			this.setResearchFinished(team, r, true);
+			this.clearCurrentResearch(team, true);
 			return true;
 		}
 		return false;
@@ -521,9 +519,10 @@ public class TeamResearchData implements SpecialData {
 	 */
 	public void grantEffect(TeamDataHolder team, Research r, Effect e, @Nullable ServerPlayer player) {
 		if (!this.isEffectGranted(r, e)) {
-			e.grant(team, this, player, false);
-			this.setEffectGranted(r, e, true);
-			sendEffectProgressPacket(team, r, r.getEffects().indexOf(e), true);
+			if(e.grant(team, this, player, false)) {
+				this.setEffectGranted(r, e, true);
+				sendEffectProgressPacket(team, r, r.getEffects().indexOf(e), true);
+			}
 		}
 	}
 
@@ -714,15 +713,21 @@ public class TeamResearchData implements SpecialData {
 			ResearchData rd = getData(r);
 			if (rd.isCompleted()) {
 				for (Effect e : r.getEffects())
-					e.grant(team, this, null, true);
+					if(rd.isEffectGranted(e))
+						e.grant(team, this, null, true);
 			}
 		}
 
 		if (activeResearchId != -1) {
 			Research r = FHResearch.researches.get(activeResearchId);
-
-			for (Clue c : r.getClues())
-				c.start(team, r);
+			if(r!=null) {
+				ResearchData rd = getData(r);
+				for (Clue c : r.getClues())
+					if(!rd.isClueTriggered(c))
+						c.start(team, r);
+			}else {
+				activeResearchId=-1;
+			}
 
 		}
 	}

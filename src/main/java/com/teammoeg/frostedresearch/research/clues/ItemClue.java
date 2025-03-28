@@ -114,8 +114,8 @@ public class ItemClue extends Clue {
     public int test(TeamDataHolder t, Research r, ItemStack stack) {
         TeamResearchData trd = t.getData(FRSpecialDataTypes.RESEARCH_DATA);
         if (!trd.isClueCompleted(r, this))
-            if (this.stack!=null&&this.stack.getFirst().test(stack)) {
-                trd.setClueCompleted(t, r, 0, consume);
+            if (this.stack!=null&&this.stack.getFirst().test(stack)&&stack.getCount()>=this.stack.getSecond()) {
+                trd.setClueCompleted(t, r, this, true);
                 if (consume)
                     return this.stack.getSecond();
             }

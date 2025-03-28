@@ -23,11 +23,14 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import static com.teammoeg.frostedheart.FHMain.*;
 
 import com.teammoeg.frostedheart.bootstrap.client.FHDynamicModels;
+import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
 
 @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class FHClient {
@@ -43,7 +46,7 @@ public class FHClient {
         FHDynamicModels.setup();
         // Moved to FHClientEventsMod
 //        KGlyphProvider.addListener();
-
+        mod.addListener(FHClient::setup);
         LOGGER.info(CLIENT_INIT, "Registering client forge event listeners");
 
         LOGGER.info(CLIENT_INIT, "Registering client mod event listeners");
@@ -51,6 +54,9 @@ public class FHClient {
         LOGGER.info(CLIENT_INIT, "Finished initializing client");
     }
 
-
+    public  static void setup(FMLClientSetupEvent ev) {
+		if(FMLEnvironment.dist==Dist.CLIENT)
+			TssapProtocolHandler.clientPrepareUpdateReminder();
+    }
 
 }

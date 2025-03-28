@@ -33,6 +33,8 @@ public class CMultiblockMenu<R extends IMultiblockState> extends CBaseMenu {
 		/*MultiblockRegistration<?> mb=CMultiblockHelper.getMultiblock(menuContext.mbContext());
 		Vec3i otile = mb.size(menuContext.mbContext().getLevel().getRawLevel());
 		BlockPos master = menuContext.mbContext().getLevel().toAbsolute(mb.masterPosInMB());*/
+		if(menuContext==null)
+			return super.buildValidator(builder);
 		return super.buildValidator(builder).range(menuContext.clickedPos(), 8).custom(menuContext.mbContext().isValid());
 	}
 }

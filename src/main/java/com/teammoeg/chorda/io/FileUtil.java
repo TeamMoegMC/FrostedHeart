@@ -26,6 +26,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import com.teammoeg.chorda.Chorda;
@@ -103,4 +105,14 @@ public class FileUtil {
             fos.write(i.getBytes(StandardCharsets.UTF_8));
         }
     }
+	public static InputStream fetch(String url) throws IOException {
+		HttpURLConnection huc2 = (HttpURLConnection) new URL(url).openConnection();
+		huc2.setRequestMethod("GET");
+		huc2.setDoOutput(true);
+		huc2.setDoInput(true);
+		huc2.connect();
+		if(huc2.getResponseCode()==200)
+			return huc2.getInputStream();
+		throw new IOException("HTTP"+huc2.getResponseCode()+" "+huc2.getResponseMessage()+" got while fetching "+url);
+	}
 }

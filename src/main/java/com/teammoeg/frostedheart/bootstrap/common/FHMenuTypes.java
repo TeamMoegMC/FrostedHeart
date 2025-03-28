@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
-import java.util.function.Supplier;
-
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
@@ -28,6 +26,13 @@ import com.teammoeg.chorda.menu.MultiBlockMenuServerFactory;
 import com.teammoeg.chorda.menu.MultiblockMenuClientFactory;
 import com.teammoeg.chorda.menu.MultiblockMenuType;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.block.ClothesInventoryMenu;
+import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorContainer;
+import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorState;
+import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorContainer;
+import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorState;
+import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlockEntity;
+import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeMenu;
 import com.teammoeg.frostedheart.content.decoration.RelicChestContainer;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.health.screen.NutritionMenu;
@@ -39,13 +44,6 @@ import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
-import com.teammoeg.frostedheart.content.climate.block.ClothesInventoryMenu;
-import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorContainer;
-import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorState;
-import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorContainer;
-import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorState;
-import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlockEntity;
-import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeMenu;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
 import net.minecraft.world.entity.player.Inventory;

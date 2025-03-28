@@ -60,6 +60,7 @@ import top.theillusivec4.curios.api.type.ISlotType;
 
 public class CoalHandStove extends FHBaseItem {
     public final static int max_fuel = 800;
+    public static final int HEAT_ADJUST = 20;
 
     public static int getAshAmount(ItemStack is) {
         return is.getOrCreateTag().getInt("ash");
@@ -158,7 +159,7 @@ public class CoalHandStove extends FHBaseItem {
                 ash++;
                 setFuelAmount(stack, fuel);
                 setAshAmount(stack, ash);
-                return 7;
+                return HEAT_ADJUST;
             }
         }
 		return 0;
@@ -181,12 +182,12 @@ public class CoalHandStove extends FHBaseItem {
 
 			@Override
 			public float getMaxTempAddValue(ItemStack stack) {
-				return getFuelAmount(stack) > 0 ? 7 : 0;
+				return getFuelAmount(stack) > 0 ? HEAT_ADJUST : 0;
 			}
 
 			@Override
 			public float getMinTempAddValue(ItemStack stack) {
-				return getFuelAmount(stack) > 0 ? 7 : 0;
+				return getFuelAmount(stack) > 0 ? HEAT_ADJUST : 0;
 			}
 			
 		});
