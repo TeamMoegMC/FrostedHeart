@@ -69,7 +69,7 @@ public class ResearchToast implements Toast {
             this.hasPlayedSound = true;
                gui.getMinecraft().getSoundHandler().play(SimpleSound.master(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.0F));
          }*/
-            FHMain.LOGGER.info("Prepare to draw research toast for " + r.getName());
+            // FHMain.LOGGER.info("Prepare to draw research toast for " + r.getName());
             r.getIcon().draw(matrixStack, 8, 8, 16, 16);
             return time >= 5000L ? Toast.Visibility.HIDE : Toast.Visibility.SHOW;
         }
