@@ -30,6 +30,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -119,6 +120,7 @@ public class DrinkContainerItem extends ItemFluidContainer {
                         iFluidHandler.getFluidInTank(0).grow(change);
                         ItemStack itemStack = FluidHelper.fillContainer(getDrinkItem(), fluidHandlerItem.getFluidInTank(0).getFluid(), amount-change);
                         upDateDamage(itemStack);
+                        level.playSound(player,pos,SoundEvents.BUCKET_EMPTY, SoundSource.PLAYERS);
                         return InteractionResultHolder.success(itemStack);
                     }
 
@@ -132,6 +134,7 @@ public class DrinkContainerItem extends ItemFluidContainer {
                         ItemStack itemStack = FluidHelper.fillContainer(getDrinkItem(), fluidInTank.getFluid(), amount);
                         fluidInTank.shrink(amount);
                         upDateDamage(itemStack);
+                        level.playSound(player,pos,SoundEvents.BUCKET_FILL, SoundSource.PLAYERS);
                         return InteractionResultHolder.success(itemStack);
                     }
                 }
