@@ -127,7 +127,7 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
 	}
 
 	public void updateStructureState() {
-		validStructure.setValue(tile.nextLevelHasValidStructure(ClientUtils.getWorld(), getMenuContext().mbContext()));
+		validStructure.setValue(tile.nextLevelHasValidStructure(getPlayer().level(), getMenuContext().mbContext()));
 	}
 
 	LazyTickWorker worker = new LazyTickWorker(10, () -> updateStructureState());
