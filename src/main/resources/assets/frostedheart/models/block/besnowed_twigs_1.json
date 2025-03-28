@@ -1,0 +1,6 @@
+{
+	"parent": "frostedheart:block/template_besnowed_resource",
+	"textures": {
+		"top": "frostedheart:block/besnowed_twigs_1"
+	}
+}
