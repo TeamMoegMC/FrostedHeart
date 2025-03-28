@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.health.capability;
 
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
@@ -141,38 +142,40 @@ public class NutritionCapability implements NBTSerializable {
         //TODO 营养值过高或过低的惩罚
         int count = 0;
 
-        if(nutrition.fat<3000){
-            count++;
+        if(nutrition.fat<2000){
+            count+=2;
 
         }
         if(nutrition.fat>8000){
             count++;
 
         }
-        if(nutrition.carbohydrate<3000){
-            count++;
+        if(nutrition.carbohydrate<2000){
+            count+=2;
 
         }
         if(nutrition.carbohydrate>8000){
             count++;
 
         }
-        if(nutrition.protein<3000){
-            count++;
+        if(nutrition.protein<2000){
+            count+=2;
 
         }
         if(nutrition.protein>8000){
             count++;
 
         }
-        if(nutrition.vegetable<3000){
-            count++;
+        if(nutrition.vegetable<2000){
+            count+=2;
 
+            //player.addEffect(new MobEffectInstance(FHMobEffects.SCURVY.get(), 300, count - 1));
         }
         if(nutrition.vegetable>8000){
             count++;
 
         }
+        count/=2;
         int a = count/2;
         if(count>0) {
             player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 300, count - 1));
