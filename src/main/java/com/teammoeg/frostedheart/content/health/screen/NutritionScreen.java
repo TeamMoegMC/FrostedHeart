@@ -93,9 +93,21 @@ public class NutritionScreen extends Screen implements MenuAccess<NutritionMenu>
         pose.scale(2.0f,2.0f,1.0f);
         guiGraphics.drawCenteredString(font, icon, x/2, y/2-font.lineHeight/2, 0xFFFFFF);
         pose.popPose();
-        FGuis.drawRing(guiGraphics, x,  y, 9, 16, 0,360 * progress, 0x80FFFFFF,0x80DDDDDD);
-        FGuis.drawRing(guiGraphics, x,  y, 10, 15, 0,value *360 * progress, color);
+        //FGuis.drawRing(guiGraphics, x,  y, 9, 16, 0,360 * progress, 0x80FFFFFF,0x80DDDDDD);
+        FGuis.drawRing(guiGraphics, x,  y, 9, 16, 0,0.2f*360 * progress, 0xB022FF22);
+        FGuis.drawRing(guiGraphics, x,  y, 9, 16, 0.2f*360 * progress,0.8f*360 * progress, 0x402222FF);
+        FGuis.drawRing(guiGraphics, x,  y, 9, 16, 0.8f*360 * progress,360 * progress, 0xB0FF2222);
+        //renderScale(guiGraphics,x,y,color);
+        FGuis.drawRing(guiGraphics, x,  y, 10, 15, 0,360 * progress, 0x80FFFFFF);
+        FGuis.drawRing(guiGraphics, x,  y, 10.5f, 14.5f, 0,value *360 * progress, color);
+        //FGuis.drawRing(guiGraphics, x,  y, 10, 15, value *360 * progress,360 * progress, 0x80FFFFFF);
         guiGraphics.drawCenteredString(font, desc, x, y+16+font.lineHeight/2, 0xFFFFFF);
+    }
+
+    private static void renderScale(GuiGraphics guiGraphics,int x,int y,int color){
+        for (int i = 0; i < 360; i+=36) {
+            FGuis.drawRing(guiGraphics, x,  y, 11, 14, i-1, i+1, color,0.01f);
+        }
     }
 
 	@Override
