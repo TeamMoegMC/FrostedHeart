@@ -61,15 +61,15 @@ public class SmallGarage extends CBlock {
     @Override
     public void playerWillDestroy(Level worldIn, BlockPos pos, BlockState state, Player player) {
         super.playerWillDestroy(worldIn, pos, state, player);
-        int count = Math.abs(worldIn.random.nextInt()) % 5 + 1;
-        popResource(worldIn, pos, new ItemStack(Items.POTATO, count));
+//        int count = Math.abs(worldIn.random.nextInt()) % 5 + 1;
+//        popResource(worldIn, pos, new ItemStack(Items.POTATO, count));
     }
 
     @Override
     public void wasExploded(Level worldIn, BlockPos pos, Explosion explosionIn) {
         super.wasExploded(worldIn, pos, explosionIn);
-        int count = Math.abs(worldIn.random.nextInt()) % 2 + 1;
-        popResource(worldIn, pos, new ItemStack(Items.POTATO, count));
+//        int count = Math.abs(worldIn.random.nextInt()) % 2 + 1;
+//        popResource(worldIn, pos, new ItemStack(Items.POTATO, count));
     }
 
     @Override
