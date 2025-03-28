@@ -1,9 +1,8 @@
 {
-	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "frostedheart:block/package_block/package_block_1",
+		"0": "frostedheart:block/package_block/package_block_0",
 		"1": "frostedheart:block/package_block/package_block_in",
-		"particle": "frostedheart:block/package_block/package_block_1"
+		"particle": "frostedheart:block/package_block/package_block_0"
 	},
 	"elements": [
 		{
