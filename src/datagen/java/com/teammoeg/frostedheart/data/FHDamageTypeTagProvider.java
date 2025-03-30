@@ -48,7 +48,9 @@ public class FHDamageTypeTagProvider  extends TagsProvider<DamageType> {
                 FHDamageTypes.HYPERTHERMIA,
                 FHDamageTypes.HYPOTHERMIA,
                 FHDamageTypes.HYPERTHERMIA_INSTANT,
-                FHDamageTypes.HYPOTHERMIA_INSTANT);
+                FHDamageTypes.HYPOTHERMIA_INSTANT,
+                FHDamageTypes.THIRST
+                );
 
         tag(DamageTypeTags.IS_FREEZING).add(
                 FHDamageTypes.BLIZZARD,

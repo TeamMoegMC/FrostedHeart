@@ -1490,27 +1490,27 @@ thinner.png
                     .tag(ItemTags.HOES)
                     .register();
     public static final ItemEntry<KnifeItem> BRONZE_KNIFE =
-            REGISTRATE.item("bronze_knife", p -> new KnifeItem(FHToolMaterials.ALLOY, 1, -1.5F, new Item.Properties()))
+            REGISTRATE.item("bronze_knife", p -> new KnifeItem(FHToolMaterials.BRONZE, 1, -1.5F, new Item.Properties()))
                     .tag(ItemTags.SWORDS, forgeItemTag("knifes"), forgeItemTag("knifes/bronze"))
                     .register();
     public static final ItemEntry<PickaxeItem> BRONZE_PICKAXE =
-            REGISTRATE.item("bronze_pickaxe", p -> new PickaxeItem(FHToolMaterials.ALLOY, 1, -2.8F, new Item.Properties()))
+            REGISTRATE.item("bronze_pickaxe", p -> new PickaxeItem(FHToolMaterials.BRONZE, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES, forgeItemTag("pickaxes"), forgeItemTag("pickaxes/bronze"))
                     .register();
     public static final ItemEntry<AxeItem> BRONZE_AXE =
-            REGISTRATE.item("bronze_axe", p -> new AxeItem(FHToolMaterials.ALLOY, 4.0F, -3.2F, new Item.Properties()))
+            REGISTRATE.item("bronze_axe", p -> new AxeItem(FHToolMaterials.BRONZE, 4.0F, -3.2F, new Item.Properties()))
                     .tag(ItemTags.AXES, forgeItemTag("axes"), forgeItemTag("axes/bronze"))
                     .register();
     public static final ItemEntry<ShovelItem> BRONZE_SHOVEL =
-            REGISTRATE.item("bronze_shovel", p -> new ShovelItem(FHToolMaterials.ALLOY, 1.5F, -3.0F, new Item.Properties()))
+            REGISTRATE.item("bronze_shovel", p -> new ShovelItem(FHToolMaterials.BRONZE, 1.5F, -3.0F, new Item.Properties()))
                     .tag(ItemTags.SHOVELS, forgeItemTag("shovels"), forgeItemTag("shovels/bronze"))
                     .register();
     public static final ItemEntry<HoeItem> BRONZE_HOE =
-            REGISTRATE.item("bronze_hoe", p -> new HoeItem(FHToolMaterials.ALLOY, 0, -3.0F, new Item.Properties()))
+            REGISTRATE.item("bronze_hoe", p -> new HoeItem(FHToolMaterials.BRONZE, 0, -3.0F, new Item.Properties()))
                     .tag(ItemTags.HOES, forgeItemTag("hoes"), forgeItemTag("hoes/bronze"))
                     .register();
     public static final ItemEntry<SwordItem> BRONZE_SWORD =
-            REGISTRATE.item("bronze_sword", p -> new SwordItem(FHToolMaterials.ALLOY, 3, -2.4F, new Item.Properties()))
+            REGISTRATE.item("bronze_sword", p -> new SwordItem(FHToolMaterials.BRONZE, 3, -2.4F, new Item.Properties()))
                     .tag(ItemTags.SWORDS, forgeItemTag("swords"), forgeItemTag("swords/bronze"))
                     .register();
     public static final ItemEntry<PickaxeItem> STONE_HAMMER =
@@ -1518,7 +1518,7 @@ thinner.png
                     .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/stone"))
                     .register();
     public static final ItemEntry<PickaxeItem> BRONZE_HAMMER =
-            REGISTRATE.item("bronze_hammer", p -> new PickaxeItem(FHToolMaterials.ALLOY, 1, -2.8F, new Item.Properties()))
+            REGISTRATE.item("bronze_hammer", p -> new PickaxeItem(FHToolMaterials.BRONZE, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/bronze"))
                     .register();
 

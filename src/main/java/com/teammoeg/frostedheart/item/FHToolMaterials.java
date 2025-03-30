@@ -21,16 +21,15 @@ package com.teammoeg.frostedheart.item;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraftforge.common.util.Lazy;
 
 public enum FHToolMaterials implements Tier {
-    FLINT(1, 81, 3.0F, 1.0F, 8, () -> {
-        return Ingredient.of(Items.FLINT);
-    }),
-    ALLOY(0, 240, 6.0F, 3.0F, 5, () -> Ingredient.EMPTY);
+    FLINT(1, 81, 3.0F, 1.0F, 8, () -> Ingredient.of(Items.FLINT)),
+    BRONZE(2, 250, 5.0F, 1.5F, 10, () -> Ingredient.of(FHItems.BRONZE_INGOT.get()));
 
     private final int harvestLevel;
     private final int maxUses;

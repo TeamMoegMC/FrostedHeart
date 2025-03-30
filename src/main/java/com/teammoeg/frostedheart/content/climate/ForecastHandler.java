@@ -59,10 +59,10 @@ public class ForecastHandler {
                 // Morning forecast wakeup time
                 if (serverPlayer.level().getDayTime() % 24000 == 40) {
                     float morningTemp = Math.round(WorldClimate.getTemp(serverPlayer.level()) * 10) / 10.0F;
-                    float noonTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 0, 6) * 10) / 10.0F;
-                    float nightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 0, 12) * 10) / 10.0F;
-                    float midnightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 0, 18) * 10) / 10.0F;
-                    float tomorrowMorningTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 1, 0) * 10) / 10.0F;
+                    float noonTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 1, 0) * 10) / 10.0F;
+                    float nightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 2, 0) * 10) / 10.0F;
+                    float midnightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 3, 0) * 10) / 10.0F;
+                    float tomorrowMorningTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 4, 0) * 10) / 10.0F;
                     TemperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.morning", false, morningTemp-10, noonTemp-10,
                             nightTemp-10, midnightTemp-10, tomorrowMorningTemp-10);
                     boolean snow = morningTemp < WorldTemperature.SNOW_TEMPERATURE
@@ -70,10 +70,7 @@ public class ForecastHandler {
                             || midnightTemp < WorldTemperature.SNOW_TEMPERATURE
                             || tomorrowMorningTemp < WorldTemperature.SNOW_TEMPERATURE;
                     boolean blizzard = WorldClimate.isBlizzard(serverPlayer.level())
-                            || WorldClimate.isFutureBlizzard(serverPlayer.level(), 0, 6)
-                            || WorldClimate.isFutureBlizzard(serverPlayer.level(), 0, 12)
-                            || WorldClimate.isFutureBlizzard(serverPlayer.level(), 0, 18)
-                            || WorldClimate.isFutureBlizzard(serverPlayer.level(), 1, 0);
+                            || WorldClimate.isFutureBlizzard(serverPlayer.level(), 0, 12);
                     if (blizzard)
                         serverPlayer.displayClientMessage(Lang.translateMessage("forecast.blizzard_today"), false);
                     else if (snow)
@@ -86,12 +83,12 @@ public class ForecastHandler {
                 // Night forecast bedtime
                 if (serverPlayer.level().getDayTime() % 24000 == 12542) {
                     float nightTemp = Math.round(WorldClimate.getTemp(serverPlayer.level()) * 10) / 10.0F;
-                    float midnightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 0, 6) * 10) / 10.0F;
-                    float tomorrowMorningTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 0, 12) * 10)
+                    float midnightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 1, 0) * 10) / 10.0F;
+                    float tomorrowMorningTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 2, 0) * 10)
                             / 10.0F;
-                    float tomorrowNoonTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 0, 18) * 10)
+                    float tomorrowNoonTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 3, 0) * 10)
                             / 10.0F;
-                    float tomorrowNightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 1, 0) * 10)
+                    float tomorrowNightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 4, 0) * 10)
                             / 10.0F;
                     TemperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.night", false, nightTemp-10, midnightTemp-10,
                             tomorrowMorningTemp-10, tomorrowNoonTemp-10, tomorrowNightTemp-10);
@@ -101,10 +98,7 @@ public class ForecastHandler {
                             || tomorrowNoonTemp < WorldTemperature.SNOW_TEMPERATURE
                             || tomorrowNightTemp < WorldTemperature.SNOW_TEMPERATURE;
                     boolean blizzard = WorldClimate.isBlizzard(serverPlayer.level())
-                            || WorldClimate.isFutureBlizzard(serverPlayer.level(), 0, 6)
-                            || WorldClimate.isFutureBlizzard(serverPlayer.level(), 0, 12)
-                            || WorldClimate.isFutureBlizzard(serverPlayer.level(), 0, 18)
-                            || WorldClimate.isFutureBlizzard(serverPlayer.level(), 1, 0);
+                            || WorldClimate.isFutureBlizzard(serverPlayer.level(), 12, 0);
                     if (blizzard)
                         serverPlayer.displayClientMessage(Lang.translateMessage("forecast.blizzard_tomorrow"), false);
                     else if (snow)
