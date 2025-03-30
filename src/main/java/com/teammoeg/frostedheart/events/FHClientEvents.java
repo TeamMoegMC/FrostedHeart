@@ -47,7 +47,6 @@ import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuSelectionRegisterEve
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
-import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
 import com.teammoeg.frostedheart.util.FHVersion;
 import com.teammoeg.frostedheart.util.Lang;
 
@@ -86,7 +85,6 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import java.util.List;
 
@@ -178,11 +176,11 @@ public class FHClientEvents {
 
     // TODO: Somehow this event does not fire...
     @SubscribeEvent(priority = EventPriority.HIGH)
-    public void onRecipesUpdated(RecipesUpdatedEvent event) {
-        if (!Minecraft.getInstance().hasSingleplayerServer()) {
-            FHMain.LOGGER.info("Frostedheart recipes updated from server, rebuilding recipe lists");
+    public static void onRecipesUpdated(RecipesUpdatedEvent event) {
+       // if (!Minecraft.getInstance().hasSingleplayerServer()) {
+            //FHMain.LOGGER.info("Frostedheart recipes updated from server, rebuilding recipe lists");
             FHRecipeCachingReloadListener.buildRecipeLists(event.getRecipeManager());
-        }
+        //}
     }
 
     @SubscribeEvent

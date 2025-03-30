@@ -19,15 +19,10 @@
 
 package com.teammoeg.frostedheart;
 
-import com.simibubi.create.foundation.item.ItemDescription;
-import com.simibubi.create.foundation.item.KineticStats;
-import com.simibubi.create.foundation.item.TooltipHelper;
-import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.ChordaMetaEvents;
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
-import com.teammoeg.frostedheart.bootstrap.client.FHTooltips;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
@@ -49,12 +44,6 @@ import com.teammoeg.frostedheart.compat.caupona.NutritionEvents;
 import com.teammoeg.frostedheart.compat.create.CreateCompat;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.compat.ftbq.FHRewardTypes;
-import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
-import com.teammoeg.frostedheart.content.climate.tooltips.BlockTempStats;
-import com.teammoeg.frostedheart.content.climate.tooltips.EquipmentTempStats;
-import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
-import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
-import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
 import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -70,7 +59,6 @@ import net.minecraft.world.level.GameRules.IntegerValue;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
