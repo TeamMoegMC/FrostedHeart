@@ -84,10 +84,7 @@ public final class T1GeneratorLogic extends GeneratorLogic<T1GeneratorLogic, T1G
         return false;
     }
 
-	@Override
-    public IETemplateMultiblock getNextLevelMultiblock() {
-        return FHMultiblocks.GENERATOR_T2;
-    }
+
     public TemplateMultiblock getMultiblock() {
         return FHMultiblocks.GENERATOR_T1;
     }

@@ -19,11 +19,7 @@
 
 package com.teammoeg.chorda.menu;
 
-import java.util.function.Supplier;
-
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.multiblock.CMultiblockHelper;
-
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IMultiblockComponent;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
@@ -61,7 +57,8 @@ public class MultiblockMenuType<S extends IMultiblockState, C extends AbstractCo
 
 			@Override
 			public Component getDisplayName() {
-				return CMultiblockHelper.getMultiblockOptional(ctx).map(t->t.block().get().getName()).orElse(Components.empty());
+				return Components.empty();
+				//return CMultiblockHelper.getMultiblockOptional(ctx).map(t->t.block().get().getName()).orElse(Components.empty());
 			}
 			
 		};

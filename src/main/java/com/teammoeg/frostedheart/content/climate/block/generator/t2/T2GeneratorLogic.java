@@ -207,11 +207,6 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
             }
         }
     }
-
-    @Override
-    public IETemplateMultiblock getNextLevelMultiblock() {
-        return null;
-    }
     public TemplateMultiblock getMultiblock() {
         return FHMultiblocks.GENERATOR_T2;
     }

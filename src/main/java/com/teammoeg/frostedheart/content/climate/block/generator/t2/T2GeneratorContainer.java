@@ -23,8 +23,11 @@ import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.chorda.menu.slots.UIFluidTank;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorContainer;
 
+import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
@@ -65,7 +68,14 @@ public class T2GeneratorContainer extends GeneratorContainer<T2GeneratorState, T
     public IFluidTank getTank() {
         return slot_tank;
     }
-
+	@Override
+    public IETemplateMultiblock getNextLevelMultiblock() {
+        return null;
+    }
+	@Override
+	protected TemplateMultiblock getMultiblock() {
+		return FHMultiblocks.GENERATOR_T2;
+	}
 
 }
 

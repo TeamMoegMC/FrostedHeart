@@ -40,9 +40,6 @@ public class GeneratorState extends HeatingState {
     int explodeTicks;
     boolean hasFuel;
     //int upgradeProcess;
-    //store upgrade and repair cost
-    List<IngredientWithSize> upgrade;
-    List<ItemStack> price;
     public boolean hasFuel() {
 		return hasFuel;
 	}

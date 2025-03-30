@@ -23,26 +23,25 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.AtlasUV;
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.ui.RotatableUV;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.multiblock.CMultiblockHelper;
-import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.chorda.util.IERecipeUtils;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import com.teammoeg.frostedresearch.ResearchListeners;
 
 import blusunrize.immersiveengineering.api.Lib;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelper;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonState;
@@ -76,31 +75,28 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
     MasterGeneratorGuiButtonUpgrade upgrade;
     List<Component> costStr = new ArrayList<>();
     boolean hasEnoughMaterial;
-    boolean shouldUpdateTooltip;
+
     public GeneratorScreen(GeneratorContainer<R, T> inventorySlotsIn, Inventory inv, Component title) {
         super(inventorySlotsIn, inv, title, TEXTURE);
         this.imageHeight = 222;
-        menu.material.bind(t->shouldUpdateTooltip=true);
-        menu.validStructure.bind(t->shouldUpdateTooltip=true);
-        menu.hasResearch.bind(t->shouldUpdateTooltip=true);
-        menu.pos.bind(t->shouldUpdateTooltip=true);
-       // updateTooltip();
+        //updateTooltip();
     }
     public void updateTooltip() {
-    	shouldUpdateTooltip=false;
+    	//System.out.println("update tooltip");
         costStr.clear();
-        Optional<IMultiblockBEHelper<?>> ohelper = CMultiblockHelper.getBEHelperOptional(Minecraft.getInstance().level, menu.pos.getValue());
+        //Optional<IMultiblockBEHelper<?>> ohelper = CMultiblockHelper.getBEHelperOptional(Minecraft.getInstance().level, menu.pos.getValue());
         //System.out.println("Updating tooltips");
         //System.out.println(menu.pos.getValue());
-        ohelper.ifPresent(t->{
-        	BitSet cost=menu.material.getValue();
+        //ohelper.ifPresent(t->{
+        	
         	//System.out.println("Presented");
-        	GeneratorLogic<T,R> tile = (GeneratorLogic<T, R>) t.getMultiblock().logic();
-        	IMultiblockBEHelper<R> helper=(IMultiblockBEHelper<R>) t;
+        	//GeneratorLogic<T,R> tile = (GeneratorLogic<T, R>) t.getMultiblock().logic();
+        	//IMultiblockBEHelper<R> helper=(IMultiblockBEHelper<R>) t;
 	        if (menu.isBroken.getValue()) {
 	            costStr.add(Lang.translateGui("generator.repair_material"));
 	            int i = 0;
-	            List<IngredientWithSize> rpcost=tile.getRepairCost();
+	            List<IngredientWithSize> rpcost=menu.getRepairCost();
+	            BitSet cost=IERecipeUtils.checkItemList(ClientUtils.getPlayer(), rpcost);
 	            for (IngredientWithSize iws : rpcost) {
 	                ItemStack[] iss = iws.getMatchingStacks();
 	                MutableComponent iftc = Components.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
@@ -115,18 +111,18 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
 	            	hasEnoughMaterial = true;
 	            else
 	            	hasEnoughMaterial = false;
-	        } else if (tile.getNextLevelMultiblock() != null) {
+	        } else if (menu.getNextLevelMultiblock()!=null) {
 	            
-	           
 	            if (!menu.validStructure.getValue()) {
-	            	 Vec3i v3i = tile.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
+	            	 Vec3i v3i = menu.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
 	                costStr.add(Lang.translateGui("generator.no_enough_space", v3i.getX(), v3i.getY(), v3i.getZ()));
-	            } else if (!menu.hasResearch.getValue()) {
+	            } else if (!ResearchListeners.hasMultiblock(null, menu.getNextLevelMultiblock())) {
 	                costStr.add(Lang.translateGui("generator.incomplete_research"));
 	            } else {
 	                costStr.add(Lang.translateGui("generator.upgrade_material"));
-	                List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper.getContext());
+	                List<IngredientWithSize> upgcost = menu.getUpgradeCost(Minecraft.getInstance().level);
 	                int i = 0;
+	                BitSet cost=IERecipeUtils.checkItemList(ClientUtils.getPlayer(), upgcost);
 	                for (IngredientWithSize iws : upgcost) {
 	                    ItemStack[] iss = iws.getMatchingStacks();
 	                    MutableComponent iftc = Components.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
@@ -145,7 +141,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
 	        	
 	
 	        }
-        });
+        //});
     }
     public GeneratorContainer<R, T> getMenu() {
         return menu;
@@ -246,8 +242,9 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         	return base;
         }, 424, 148,
                 btn -> {
-                    FHNetwork.INSTANCE.sendToServer(new GeneratorModifyPacket());
+                    menu.sendMessage(3, 0);
                 }));
+        updateTooltip();
 
     }
 
@@ -287,11 +284,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
 
     @Override
     public void render(GuiGraphics transform, int mouseX, int mouseY, float partial) {
-    	if(shouldUpdateTooltip)
-    		updateTooltip();
         super.render(transform, mouseX, mouseY, partial);
-
-
     }
 
     public static class MasterGeneratorGuiButtonBoolean extends GuiButtonBoolean {

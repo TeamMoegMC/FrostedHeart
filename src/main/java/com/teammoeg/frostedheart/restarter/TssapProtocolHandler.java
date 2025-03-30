@@ -87,7 +87,7 @@ public class TssapProtocolHandler {
 						if(latestRemote!=null&&!latestRemote.equals(localVersion)) {
 							try {
 							FHMain.LOGGER.info(VERSION_CHECK, "new version "+latestRemote+" found, restarting...");
-							((DedicatedServer)CDistHelper.getServer()).handleConsoleInput("/tellraw @a "+Component.Serializer.toJson(Components.translatable("message.frostedheart.restarting")), CDistHelper.getServer().createCommandSourceStack());
+							((DedicatedServer)CDistHelper.getServer()).handleConsoleInput("/tellraw @a "+Component.Serializer.toJson(Components.translatable("message.frostedheart.restarting",1)), CDistHelper.getServer().createCommandSourceStack());
 							try {
 								Thread.sleep(60000);
 							} catch (InterruptedException e) {

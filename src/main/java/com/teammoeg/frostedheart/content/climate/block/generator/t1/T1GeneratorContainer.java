@@ -20,8 +20,11 @@
 package com.teammoeg.frostedheart.content.climate.block.generator.t1;
 
 import com.teammoeg.chorda.client.ui.Point;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorContainer;
 
+import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
@@ -58,7 +61,14 @@ public class T1GeneratorContainer extends GeneratorContainer<T1GeneratorState, T
     public IFluidTank getTank() {
         return null;
     }
-
+	@Override
+    public IETemplateMultiblock getNextLevelMultiblock() {
+        return FHMultiblocks.GENERATOR_T2;
+    }
+	@Override
+	protected TemplateMultiblock getMultiblock() {
+		return FHMultiblocks.GENERATOR_T1;
+	}
 
 }
 

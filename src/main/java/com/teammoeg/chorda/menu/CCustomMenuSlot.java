@@ -35,6 +35,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraftforge.fluids.FluidStack;
@@ -75,17 +76,24 @@ public class CCustomMenuSlot {
 			}
 			
 		});
+		static final NetworkEncoder<ResourceLocation> resourceLocationEncoder=encoders.register(codec(ResourceLocation.CODEC));
 		public static <T> NetworkEncoder<T> codec(Codec<T> type){
 			return new NetworkEncoder<>(){
 
 				@Override
 				public T read(FriendlyByteBuf network) {
+					if(!network.readBoolean())
+						return null;
 					return CodecUtil.readCodec(network, type);
 				}
 
 				@Override
 				public void write(FriendlyByteBuf network, T data) {
-					CodecUtil.writeCodec(network, type, data);
+					if(data!=null) {
+						network.writeBoolean(true);
+						CodecUtil.writeCodec(network, type, data);
+					}else
+						network.writeBoolean(false);
 				}
 			};
 		}
@@ -509,6 +517,24 @@ public class CCustomMenuSlot {
 			return Encoders.bitSetEncoder;
 		}
 
+	};
+	public static final OtherDataSlotEncoder<ResourceLocation> slot_RL=new OtherDataSlotEncoder<>() {
+
+		@Override
+		public NetworkEncoder<ResourceLocation> getEncoder() {
+			return Encoders.resourceLocationEncoder;
+		}
+
+		@Override
+		public ResourceLocation copy(ResourceLocation data) {
+			return data==null?null:data;
+		}
+
+		@Override
+		public ResourceLocation getDefault() {
+			return null;
+		}
+		
 	};
 	public static <T> CDataSlot<T> create(CBaseMenu container, DataSlotConverter<T> type) {
 		SingleDataSlot<T> slot=new SingleDataSlot<>(type);

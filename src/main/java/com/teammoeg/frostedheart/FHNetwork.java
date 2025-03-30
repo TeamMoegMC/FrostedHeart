@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart;
 
 import com.teammoeg.chorda.network.CBaseNetwork;
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorModifyPacket;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHNotifyChunkHeatUpdatePacket;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHRequestInfraredViewDataSyncPacket;
@@ -114,7 +113,7 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("team_town_data_s2c", TeamTownDataS2CPacket.class);
 
         // Generator Messages
-        registerMessage("generator_upgrade", GeneratorModifyPacket.class);
+        //registerMessage("generator_upgrade", GeneratorModifyPacket.class);
 
         // Tip Messages
         registerMessage("single_tip", DisplayTipPacket.class);
