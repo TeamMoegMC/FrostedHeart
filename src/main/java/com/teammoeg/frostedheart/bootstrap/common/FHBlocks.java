@@ -76,6 +76,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
@@ -270,6 +271,15 @@ public class FHBlocks {
     // Condensed ores
     public static final BlockEntry<SnowLayerBlock> DIRTY_SNOW = REGISTRATE.block("dirty_snow", SnowLayerBlock::new)
             .initialProperties(() -> SNOW)
+            .properties(p -> p.mapColor(MapColor.SNOW)
+                    .replaceable()
+                    .forceSolidOff()
+                    .randomTicks()
+                    .strength(0.1F)
+                    // .requiresCorrectToolForDrops() // no need for this
+                    .sound(SoundType.SNOW)
+                    .isViewBlocking((state, getter, pos) -> state.getValue(SnowLayerBlock.LAYERS) >= 8)
+                    .pushReaction(PushReaction.DESTROY))
             .tag(BlockTags.MINEABLE_WITH_SHOVEL)
             .tag(BlockTags.SNOW)
             .tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
