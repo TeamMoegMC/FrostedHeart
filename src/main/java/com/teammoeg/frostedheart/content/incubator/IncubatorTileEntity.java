@@ -144,7 +144,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
     LazyOptional<IItemHandler> invHandlerDown = LazyOptional.of(() -> new IEInventoryHandler(1, this, 3, false, true));
 
     public static Fluid getProtein() {
-    	return FHFluids.PROTEIN.get();
+    	return FHFluids.PROTEIN.get().getSource();
     }
 
     public IncubatorTileEntity(BlockPos bp,BlockState bs) {

@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.bootstrap.common;
 
 import static com.teammoeg.frostedheart.FHMain.*;
 
+import com.simibubi.create.AllTags;
 import com.simibubi.create.content.fluids.VirtualFluid;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
@@ -132,7 +133,18 @@ public class FHFluids {
             "protein",
                     new ResourceLocation(FHMain.MODID, "block/protein_fluid"),
                     new ResourceLocation(FHMain.MODID, "block/protein_fluid"))
+            .lang("Protein")
+            .properties(b -> b.viscosity(2000)
+                    .density(1400))
+            .fluidProperties(p -> p.levelDecreasePerBlock(2)
+                    .tickRate(25)
+                    .slopeFindDistance(3)
+                    .explosionResistance(100f))
             .tag(FHTags.forgeFluidTag("protein"))
+            .source(ForgeFlowingFluid.Source::new) // TODO: remove when Registrate fixes FluidBuilder
+            .bucket()
+            .tag(AllTags.forgeItemTag("buckets/protein"))
+            .build()
             .register();
     public static final FluidEntry<VirtualFluid> LATEX = REGISTRATE.virtualColoredLiquid(
             "latex", 0xFFFFD700)
