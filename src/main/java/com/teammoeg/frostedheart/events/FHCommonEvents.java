@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListen
 import com.teammoeg.frostedheart.util.CConstants;
 import com.teammoeg.frostedheart.util.IgnitionHandler;
 import com.teammoeg.frostedheart.util.Lang;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -48,6 +49,7 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.ReloadableServerResources;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -59,19 +61,23 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.CandleCakeBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraftforge.common.Tags;
+import net.minecraftforge.common.ToolActions;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AnvilUpdateEvent;
@@ -410,6 +416,43 @@ public class FHCommonEvents {
 			if (FHConfig.SERVER.keepEquipments.get() && !event.getEntity().level().isClientSide) {
 				if (dit != null)
 					dit.alive(event.getEntity().getInventory());
+			}
+		}
+	}
+
+	@SubscribeEvent
+	public static void shovelSnow(BlockEvent.BlockToolModificationEvent event) {
+		if (!event.getLevel().isClientSide() && event.getToolAction() == ToolActions.SHOVEL_FLATTEN) {
+			var state = event.getState();
+			if (state.getBlock() instanceof SnowLayerBlock) {
+				var pos = event.getPos();
+				var level = (ServerLevel)event.getLevel();
+				// 获取最顶层的雪片
+				while (level.getBlockState(pos.above()).getBlock() instanceof SnowLayerBlock) {
+					pos = pos.offset(0, 1, 0);
+				}
+				state = level.getBlockState(pos);
+
+				// 减少1层雪
+				int layers = state.getValue(SnowLayerBlock.LAYERS);
+				if (layers > 1) {
+					level.setBlockAndUpdate(pos, state.setValue(SnowLayerBlock.LAYERS, layers - 1));
+				} else {
+					level.destroyBlock(pos, false);
+				}
+				level.sendBlockUpdated(pos, event.getState(), state, 11);
+
+				// 生成掉落物
+				var player = (ServerPlayer)event.getPlayer();
+				if (player != null && !player.isCreative()) {
+					var drops = Block.getDrops(state.getBlock().defaultBlockState().setValue(SnowLayerBlock.LAYERS, 1),
+							level, pos, null, player, event.getHeldItemStack());
+					for (ItemStack drop : drops) {
+						// 在玩家当前选择的面掉落方块
+						Block.popResourceFromFace(level, event.getPos(), event.getContext().getClickedFace(), drop);
+					}
+					event.getHeldItemStack().hurtAndBreak(1, player, entity -> entity.broadcastBreakEvent(event.getContext().getHand()));
+				}
 			}
 		}
 	}
