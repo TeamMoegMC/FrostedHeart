@@ -1,28 +1,28 @@
 {
   "variants": {
     "layers=1": {
-      "model": "frostedheart:block/dirty_snow_height2"
+      "model": "frostedheart:block/besnowed_debris_height2"
     },
     "layers=2": {
-      "model": "frostedheart:block/dirty_snow_height4"
+      "model": "frostedheart:block/besnowed_debris_height4"
     },
     "layers=3": {
-      "model": "frostedheart:block/dirty_snow_height6"
+      "model": "frostedheart:block/besnowed_debris_height6"
     },
     "layers=4": {
-      "model": "frostedheart:block/dirty_snow_height8"
+      "model": "frostedheart:block/besnowed_debris_height8"
     },
     "layers=5": {
-      "model": "frostedheart:block/dirty_snow_height10"
+      "model": "frostedheart:block/besnowed_debris_height10"
     },
     "layers=6": {
-      "model": "frostedheart:block/dirty_snow_height12"
+      "model": "frostedheart:block/besnowed_debris_height12"
     },
     "layers=7": {
-      "model": "frostedheart:block/dirty_snow_height14"
+      "model": "frostedheart:block/besnowed_debris_height14"
     },
     "layers=8": {
-      "model": "frostedheart:block/dirty_snow_block"
+      "model": "frostedheart:block/besnowed_debris_1"
     }
   }
 }
