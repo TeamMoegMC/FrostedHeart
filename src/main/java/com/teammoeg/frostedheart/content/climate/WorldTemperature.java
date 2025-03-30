@@ -24,6 +24,9 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
@@ -265,7 +268,7 @@ public class WorldTemperature {
 
     public static final float VANILLA_PLANT_GROW_TEMPERATURE_MAX = 50;
     public static final float CLIMATE_BLOCK_AFFECTION=0.5f;
-    
+
     public static Map<Level, Float> worldCache = new HashMap<>();
     public static Map<Biome, Float> biomeCache = new HashMap<>();
 
@@ -295,7 +298,7 @@ public class WorldTemperature {
      */
     public static float biome(LevelReader w, BlockPos pos) {
         Biome b = w.getBiome(pos).get();
-        return biomeCache.computeIfAbsent(b,t-> BiomeTempData.getBiomeTemp(t));
+        return biomeCache.computeIfAbsent(b,t-> BiomeTempData.getBiomeTemp(w, t));
     }
 
     /**
@@ -364,10 +367,10 @@ public class WorldTemperature {
     public static float air(LevelReader world, BlockPos pos) {
         return dimension(world) + biome(world, pos) + climate(world) + heat(world,pos);
     }
-    
+
     /**
      * Convenience method for checking is Blizzard in specific world
-     * 
+     *
      * */
     public static boolean isBlizzard(LevelReader w) {
         if (w instanceof Level l) {
@@ -377,7 +380,7 @@ public class WorldTemperature {
     }
     /**
      * Convenience method for checking wind strength in specific world.
-     * 
+     *
      * */
     public static int wind(LevelReader w) {
         if (w instanceof Level l) {
@@ -388,9 +391,9 @@ public class WorldTemperature {
 
     @Nonnull
     public static PlantTemperature getPlantDataWithDefault(Block block) {
-        
+
     	PlantTempData data = PlantTempData.getPlantData(block);
-        
+
         // We can't really do any instanceof check here, since so many potential blocks
         // may be invoked with the crop event.
         if (data == null) {

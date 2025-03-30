@@ -21,6 +21,7 @@ package com.teammoeg.chorda.util;
 
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.effect.MobEffect;
@@ -28,6 +29,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.levelgen.structure.Structure;
@@ -66,8 +68,12 @@ public class CRegistryHelper {
 	public static ResourceLocation getRegistryName(Fluid v) {
 		return ForgeRegistries.FLUIDS.getKey(v);
 	}
+	// Caution: RK is not available using this method on runtime
 	public static ResourceLocation getRegistryName(Biome b) {
 		return ForgeRegistries.BIOMES.getKey(b);
+	}
+	public static ResourceLocation getBiomeKeyRuntime(LevelReader level, Biome biome) {
+		return level.registryAccess().registryOrThrow(Registries.BIOME).getKey(biome);
 	}
 	public static Item getItem(ResourceLocation rl) {
 		return ForgeRegistries.ITEMS.getValue(rl);
