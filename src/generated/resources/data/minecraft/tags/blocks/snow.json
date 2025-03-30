@@ -1,7 +1,9 @@
 {
   "values": [
-    "frostedheart:dirty_snow_block",
-    "frostedheart:dirty_snow",
+    "frostedheart:besnowed_debris_block",
+    "frostedheart:besnowed_twigs_block",
+    "frostedheart:besnowed_debris",
+    "frostedheart:besnowed_twigs",
     "frostedheart:packed_snow",
     "frostedheart:packed_snow_slab",
     "#frostedheart:condensed_ores"

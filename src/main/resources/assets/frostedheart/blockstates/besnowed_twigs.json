@@ -1,9 +1,28 @@
 {
-	"variants": {
-		"": [
-			{"model": "frostedheart:block/besnowed_twigs_1"},
-			{"model": "frostedheart:block/besnowed_twigs_2"},
-			{"model": "frostedheart:block/besnowed_twigs_3"}
-		]
-	}
+  "variants": {
+    "layers=1": {
+      "model": "frostedheart:block/dirty_snow_height2"
+    },
+    "layers=2": {
+      "model": "frostedheart:block/dirty_snow_height4"
+    },
+    "layers=3": {
+      "model": "frostedheart:block/dirty_snow_height6"
+    },
+    "layers=4": {
+      "model": "frostedheart:block/dirty_snow_height8"
+    },
+    "layers=5": {
+      "model": "frostedheart:block/dirty_snow_height10"
+    },
+    "layers=6": {
+      "model": "frostedheart:block/dirty_snow_height12"
+    },
+    "layers=7": {
+      "model": "frostedheart:block/dirty_snow_height14"
+    },
+    "layers=8": {
+      "model": "frostedheart:block/dirty_snow_block"
+    }
+  }
 }

@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/snow_height8",
-  "textures": {
-    "particle": "frostedheart:block/ore/dirty_snow",
-    "texture": "frostedheart:block/ore/dirty_snow"
-  }
-}
