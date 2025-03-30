@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.climate.tooltips;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -63,7 +64,7 @@ public class BlockTempStats implements TooltipModifier {
 
 	@Override
 	public void modify(ItemTooltipEvent context) {
-		final BlockTempData data = BlockTempData.cacheList.get(block);
+		final BlockTempData data = BlockTempData.getData(Minecraft.getInstance().level, block);
 		final ItemStack stack = context.getItemStack();
 		final Player player = context.getEntity();
 
@@ -76,7 +77,7 @@ public class BlockTempStats implements TooltipModifier {
 		}
 	}
 	public static List<Component> getStats(Block block, @Nullable ItemStack stack, @Nullable Player player) {
-		final BlockTempData data = BlockTempData.cacheList.get(block);
+		final BlockTempData data = BlockTempData.getData(Minecraft.getInstance().level, block);
 		return getStats(data,stack,player);
 	}
 

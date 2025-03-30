@@ -175,13 +175,14 @@ public class FHClientEvents {
 			CIcons.getIcon(FHItems.gambeson), 
 				s -> FHNetwork.INSTANCE.sendToServer(new C2SOpenClothesScreenMessage())));
     }
-    
+
+    // TODO: Somehow this event does not fire...
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onRecipesUpdated(RecipesUpdatedEvent event) {
-        if (!Minecraft.getInstance().hasSingleplayerServer())
+        if (!Minecraft.getInstance().hasSingleplayerServer()) {
+            FHMain.LOGGER.info("Frostedheart recipes updated from server, rebuilding recipe lists");
             FHRecipeCachingReloadListener.buildRecipeLists(event.getRecipeManager());
-        
-
+        }
     }
 
     @SubscribeEvent

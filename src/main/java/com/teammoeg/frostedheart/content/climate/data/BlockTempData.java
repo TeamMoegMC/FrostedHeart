@@ -19,7 +19,9 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
+import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
@@ -28,6 +30,9 @@ import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeManager;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -40,6 +45,19 @@ public record BlockTempData(Block block,float temperature, boolean level, boolea
 		Codec.BOOL.optionalFieldOf("must_lit",false).forGetter(o->o.lit)).apply(t, BlockTempData::new));
 	public static RegistryObject<CodecRecipeSerializer<BlockTempData>> TYPE;
 	public static Map<Block,BlockTempData> cacheList=ImmutableMap.of();
+
+    public static void updateCache(Level level) {
+        RecipeManager manager = level.getRecipeManager();
+        Collection<Recipe<?>> recipes = manager.getRecipes();
+        cacheList = BlockTempData.TYPE.get().filterRecipes(recipes)
+                .collect(Collectors.toMap(t->t.getData().block(), t->t.getData()));
+    }
+
+    public static BlockTempData getData(Level level, Block block) {
+        updateCache(level);
+        return cacheList.get(block);
+    }
+
 	public float getTemp() {
         return temperature;
     }

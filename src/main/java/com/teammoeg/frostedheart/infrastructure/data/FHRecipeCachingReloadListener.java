@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 import com.teammoeg.chorda.util.struct.EnumDefaultedMap;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
@@ -67,6 +68,7 @@ public class FHRecipeCachingReloadListener implements ResourceManagerReloadListe
 
 
     public static void buildRecipeLists(RecipeManager recipeManager) {
+        FHMain.LOGGER.info("Building recipe lists");
         Collection<Recipe<?>> recipes = recipeManager.getRecipes();
         if (recipes.isEmpty())
             return;
