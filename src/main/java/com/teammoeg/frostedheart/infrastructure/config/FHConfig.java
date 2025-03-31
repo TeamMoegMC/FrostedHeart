@@ -65,6 +65,7 @@ public class FHConfig {
         public final ForgeConfigSpec.IntValue wheelMenuRadius;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> enabledSelections;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> disabledSelections;
+        public final ForgeConfigSpec.BooleanValue enableTooltips;
 
         Client(ForgeConfigSpec.Builder builder) {
             builder.push("Frosted HUD");
@@ -165,7 +166,11 @@ public class FHConfig {
             	.defineList("enabledSelections", new ArrayList<String>(), s->ResourceLocation.isValidResourceLocation(String.valueOf(s)));
             disabledSelections=builder.comment("Disabled selections")
             	.defineList("disabledSelections",  new ArrayList<String>(),s->ResourceLocation.isValidResourceLocation(String.valueOf(s)));
+            builder.pop();
 
+            builder.push("other");
+            enableTooltips = builder.comment("Enable item tooltips")
+                    .define("enableTooltips", true);
         }
 
         public int getScenarioScale() {
