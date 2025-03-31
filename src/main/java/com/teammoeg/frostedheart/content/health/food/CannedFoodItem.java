@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.health.food;
 
 import java.util.List;
 
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.util.Lang;
 
@@ -53,6 +54,10 @@ public class CannedFoodItem extends FHBaseItem {
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
         ItemStack itemstack = super.finishUsingItem(stack, worldIn, entityLiving);
+        if(this.isEdible()) {
+	        final int nutrition=this.getFoodProperties(stack, entityLiving).getNutrition();
+	        FHCapabilities.PLAYER_WATER_LEVEL.getCapability(entityLiving).ifPresent(t->t.reduceLevel(nutrition));
+        }
         //entityLiving.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(e -> e.reduceLevel(this.getFoodProperties().getNutrition()));
         return itemstack;
     }

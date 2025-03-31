@@ -137,7 +137,7 @@ public class CTeamDataManager {
             cn=UUID.randomUUID();
             dataByFTBId.put(team.getId(), cn);
             GameProfile owner = CDistHelper.getServer().getProfileCache().get(team.getOwner()).orElse(null);
-            
+            System.out.println(owner);
             if (owner != null&&(!CDistHelper.getServer().usesAuthentication()||CDistHelper.getServer().isSingleplayer()))
                 for (Entry<UUID, TeamDataHolder> dat : dataByOwnId.entrySet()) {
                     if (owner.getName().equals(dat.getValue().getOwnerName())) {
@@ -149,10 +149,13 @@ public class CTeamDataManager {
         }
         TeamDataHolder data= dataByOwnId.computeIfAbsent(cn, c -> new TeamDataHolder(c, OptionalLazy.of(()->team)));
         if (data.getOwnerName() == null) {
+        	//System.out.println("filling owner name");
             GameProfileCache cache = CDistHelper.getServer().getProfileCache();
+           
             if (cache != null) {
                 GameProfile gp = cache.get(team.getOwner()).orElse(null);
                 if (gp != null) {
+                	//System.out.println("filled owner name");
                 	data.setOwnerName(gp.getName());
                 }
             }

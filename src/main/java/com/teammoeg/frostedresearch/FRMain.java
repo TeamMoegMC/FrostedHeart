@@ -28,6 +28,7 @@ public class FRMain {
         IEventBus forge = MinecraftForge.EVENT_BUS;
         CompatModule.enableCompatModule();
         FRContents.init(mod);
+        FRSpecialDataTypes.init();
         mod.addListener(this::setup);
         if(CompatModule.isTetraLoaded())
         	TetraCompat.init();
