@@ -375,7 +375,7 @@ public class WorldTemperature {
             climateBlockAffection = 0.0F;
         }
         return dimension(world) + biome(world, pos) + altitude(world, pos) +
-                climate(world) * climateBlockAffection + heat(world,pos) + gaussian(world, 0, 1);
+                climate(world) * climateBlockAffection + heat(world,pos) + gaussian(world, 0, 0.3F);
     }
 
     /**
@@ -406,7 +406,7 @@ public class WorldTemperature {
             climateAirAffection = 0.0F;
         }
         return dimension(world) + biome(world, pos) + altitude(world, pos) +
-                climate(world) * climateAirAffection + heat(world,pos) + gaussian(world, 0, 1);
+                climate(world) * climateAirAffection + heat(world,pos) + gaussian(world, 0, 0.3F);
     }
 
     /**
