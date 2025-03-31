@@ -57,9 +57,10 @@ public abstract class IceBlockMixin_Melt extends HalfTransparentBlock{
     @Overwrite
     public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
         if (worldIn.getBrightness(LightLayer.BLOCK, pos) > 11 - state.getLightBlock(worldIn, pos) || WorldTemperature.block(worldIn, pos) > WorldTemperature.WATER_ICE_MELTS) {
-            this.melt(state, worldIn, pos);
+            if (random.nextInt(10) == 0) {
+				this.melt(state, worldIn, pos);
+			}
         }
-
     }
 	/**
 	 * 
