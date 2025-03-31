@@ -23,7 +23,7 @@ public class LavaFluidMixin {
         // Lava only freezes above -55. Below that, it is constantly heated.
         if (pos.getY() > WorldTemperature.LAVA_INTERFACE_LEVEL) {
             // Lava keeps itself for longer time
-            if (random.nextInt(10) == 0) {
+            if (random.nextInt(100) == 0) {
                 // Check if the fluid state is a source block
                 if (state.isSource()) {
                     // Get the temperature at this position
