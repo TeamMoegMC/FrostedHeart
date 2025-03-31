@@ -277,7 +277,7 @@ public class TextBox extends UIWidget implements Focusable {
 			}
 		}
 	}
-
+	boolean isPressed;
 	@Override
 	public boolean onMousePressed(MouseButton button) {
 		if (isMouseOver()) {
@@ -289,6 +289,7 @@ public class TextBox extends UIWidget implements Focusable {
 					if (CInputHelper.isShiftKeyDown()) {
 						setSelectionPos(getFont().plainSubstrByWidth(s,i).length() + displayPos);
 					} else {
+						isPressed=true;
 						setCursorPos(getFont().plainSubstrByWidth(s,i).length() + displayPos);
 						setSelectionPos(getCursorPos());
 					}
@@ -419,7 +420,15 @@ public class TextBox extends UIWidget implements Focusable {
 		var drawGhostText = !isFocused() && text.isEmpty() && !ghostText.isEmpty();
 		var textToDraw = getFormattedText();
 		graphics.enableScissor( x, y, x+w, y+h);
-	
+		if(this.isPressed) {
+			if(CInputHelper.isMouseLeftDown()) {
+				int i = (int)getMouseX();
+				String s = getFont().plainSubstrByWidth(text.substring(displayPos), getWidth());
+				setSelectionPos(getFont().plainSubstrByWidth(s,i).length() + displayPos);
+			}else
+				isPressed=false;
+			
+		}
 		int cursorColor =( (!validText.isError() ? this.getLayerHolder().getFontColor():this.getLayerHolder().getErrorColor())&0xffffff)|((drawGhostText ? 0x78000000 : 0xFF000000));
 		var j = cursorPos - displayPos;
 		var s = getFont().plainSubstrByWidth(textToDraw.substring(displayPos), w);
