@@ -214,6 +214,7 @@ public class WorldTemperature {
     public static final float NITROGEN_CONDENSATES = -195;
     public static final float WATER_ICE_MELTS = 2F;
     public static final float WATER_FREEZES = -5F;
+    public static final float LAVA_FREEZES = 700F;
 
     // Agriculture
     public static final float FOOD_FROZEN_TEMPERATURE = -5;
@@ -225,9 +226,11 @@ public class WorldTemperature {
     public static final int SEA_LEVEL = 63;
     public static final int BUILD_UPPER_LIMIT = 320;
     public static final int STONE_INTERFACE_LEVEL = 0;
+    public static final int LAVA_INTERFACE_LEVEL = -55;
     public static final int BUILD_LOWER_LIMIT = -64;
     public static final float TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_SEA_LEVEL = -0.1F;
     public static final float TEMPERATURE_CHANGE_PER_BLOCK_BELOW_STONE_INTERFACE = 0.1F;
+    public static final float TEMPERATURE_CHANGE_PER_BLOCK_BELOW_LAVA_INTERFACE = 20F;
 
     // temperature cache
     public static Map<Level, Float> worldCache = new HashMap<>();
@@ -300,9 +303,14 @@ public class WorldTemperature {
             return 0;
         }
         // increase in deepslate
-        else {
-            int yc = Mth.clamp(y, BUILD_LOWER_LIMIT, STONE_INTERFACE_LEVEL);
+        else if (y > LAVA_INTERFACE_LEVEL) {
+            int yc = Mth.clamp(y, LAVA_INTERFACE_LEVEL, STONE_INTERFACE_LEVEL);
             return (STONE_INTERFACE_LEVEL - yc) * TEMPERATURE_CHANGE_PER_BLOCK_BELOW_STONE_INTERFACE;
+        }
+        // significant increase in lava to bedrock
+        else {
+            int yc = Mth.clamp(y, BUILD_LOWER_LIMIT, LAVA_INTERFACE_LEVEL);
+            return (LAVA_INTERFACE_LEVEL - yc) * TEMPERATURE_CHANGE_PER_BLOCK_BELOW_LAVA_INTERFACE;
         }
     }
 
@@ -332,6 +340,13 @@ public class WorldTemperature {
         return ChunkHeatData.get(world, new ChunkPos(pos)).map(t -> t.getAdditionTemperatureAtBlock(world, pos)).orElse(0f);
     }
 
+    public static float gaussian(LevelReader world, float mean, float std) {
+        if (world instanceof Level level) {
+            return (float) (level.getRandom().nextGaussian() * std + mean);
+        } else
+            return 0;
+    }
+
     /**
      * This is the most common method to get temperature for blocks like crops and machines.
      *
@@ -359,7 +374,8 @@ public class WorldTemperature {
         else {
             climateBlockAffection = 0.0F;
         }
-        return dimension(world) + biome(world, pos) + altitude(world, pos) + climate(world) * climateBlockAffection + heat(world,pos);
+        return dimension(world) + biome(world, pos) + altitude(world, pos) +
+                climate(world) * climateBlockAffection + heat(world,pos) + gaussian(world, 0, 1);
     }
 
     /**
@@ -389,7 +405,8 @@ public class WorldTemperature {
         else {
             climateAirAffection = 0.0F;
         }
-        return dimension(world) + biome(world, pos) + altitude(world, pos) + climate(world) * climateAirAffection + heat(world,pos);
+        return dimension(world) + biome(world, pos) + altitude(world, pos) +
+                climate(world) * climateAirAffection + heat(world,pos) + gaussian(world, 0, 1);
     }
 
     /**
