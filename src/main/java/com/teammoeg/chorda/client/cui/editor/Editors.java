@@ -38,10 +38,11 @@ public class Editors {
 	public static final Editor<Boolean> CONFIRM_DIALOG = (p, l, v, c) -> new ConfirmDialog(p, l, v, c).open();
 	public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new EditPromptWithSelect(p, l, v, Components.str("Select Tag"), c, Editors.EDITOR_SELECT_ITEM_TAGS).open();
 	public static final Editor<String> TEXT_PROMPT = EditPrompt::open;
+	public static final Editor<String> COMMAND_PROMPT = (p, l, v, c) ->  new EditPrompt(p,l,v,c,Verifiers.COMMAND).open();
 	public static final Editor<JsonElement> JSON_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, v == null ? "" : v.toString(), e -> c.accept(new JsonParser().parse(e)));
-	public static final Editor<Long> LONG_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, String.valueOf(v), o -> c.accept(Long.parseLong(o)));
-	public static final Editor<Integer> INT_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, String.valueOf(v), o -> c.accept(Integer.parseInt(o)));
-	public static final Editor<Double> REAL_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, String.valueOf(v), o -> c.accept(Double.parseDouble(o)));
+	public static final Editor<Long> LONG_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, String.valueOf(v), o -> c.accept(Long.parseLong(o)),Verifiers.LONG_STR);
+	public static final Editor<Integer> INT_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, String.valueOf(v), o -> c.accept(Integer.parseInt(o)),Verifiers.INT_STR);
+	public static final Editor<Double> REAL_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, String.valueOf(v), o -> c.accept(Double.parseDouble(o)),Verifiers.NUMBER_STR);
 	public static final Editor<Advancement> EDITOR_ADVANCEMENT = (p, l, v, c) -> {
 		ClientAdvancements cam = ClientUtils.mc().player.connection.getAdvancements();
 	
@@ -76,6 +77,9 @@ public class Editors {
 	public static final EditorWidgetFactory<Byte, NumberBox> BYTE=LONG.xmap(CFunctionHelper.mapNullable(Long::byteValue, Byte.valueOf((byte) 0)), Byte::longValue);
 	public static final EditorWidgetFactory<Double, RealBox> DOUBLE=EditorWidgetFactory.create(RealBox::new, RealBox::getNum,RealBox::setNum);
 	public static final EditorWidgetFactory<String, LabeledTextBox> STRING=EditorWidgetFactory.create(LabeledTextBox::new, LabeledTextBox::getText,LabeledTextBox::setText);
+	public static final EditorWidgetFactory<String, LabeledTextBox> COMMAND=EditorWidgetFactory.create((p,l,v)->new LabeledTextBox(p,l,v,Verifiers.COMMAND), LabeledTextBox::getText,LabeledTextBox::setText);
+	
+	
 	public static final EditorWidgetFactory<String, IdBox> STRING_ID=EditorWidgetFactory.create(IdBox::new, IdBox::getText,IdBox::setText);
 	public static final EditorWidgetFactory<String, HiddenBox<String>> STRING_ID_HIDDEN=hiddenSupplier(()->Long.toHexString(UUID.randomUUID().getMostSignificantBits()));
 	public static final EditorWidgetFactory<ResourceLocation, LabeledTextBox> RESOURCELOCATION=EditorWidgetFactory.create(LabeledTextBox::new, LabeledTextBox::getText,LabeledTextBox::setText).flatXmap(ResourceLocation::read,ResourceLocation::toString);

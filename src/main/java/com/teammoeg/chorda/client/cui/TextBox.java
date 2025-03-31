@@ -16,10 +16,13 @@ import org.lwjgl.glfw.GLFW;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.editor.Verifier;
+import com.teammoeg.chorda.client.cui.editor.Verifier.VerifyResult;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class TextBox extends UIWidget implements Focusable {
@@ -32,14 +35,14 @@ public class TextBox extends UIWidget implements Focusable {
 	private int displayPos;
 	private int cursorPos;
 	private int highlightPos;
-	private boolean validText = true;
+	private VerifyResult validText;
 	private int maxLength = 1024;
-	private Predicate<String> filter;
-
+	private Verifier<String> filter;
+	private String lastValidText="";
 	public TextBox(Layer panel) {
 		super(panel);
-
-		this.filter = Objects::nonNull;
+		filter=Verifier.nonNull();
+		validText=filter.test("");
 	}
 	public void setMaxLength(int maxLength) {
 		this.maxLength = maxLength;
@@ -66,7 +69,7 @@ public class TextBox extends UIWidget implements Focusable {
 		}
 	}
 
-	public void setFilter(Predicate<String> filter) {
+	public void setFilter(Verifier<String> filter) {
 		this.filter = filter;
 	}
 
@@ -79,7 +82,7 @@ public class TextBox extends UIWidget implements Focusable {
 	}
 
 	public void setText(String string, boolean triggerChange) {
-		if (filter.test(string)) {
+		//if (!filter.test(string).isError()) {
 			if (string.length() > maxLength) {
 				text = string.substring(0, maxLength);
 			} else {
@@ -87,13 +90,14 @@ public class TextBox extends UIWidget implements Focusable {
 			}
 
 			validText = isValid(text);
-
+			if(!validText.isError())
+				lastValidText=text;
 			moveCursorToEnd(false);
 			setSelectionPos(cursorPos);
 			if (triggerChange) {
 				onTextChanged();
 			}
-		}
+		//}
 	}
 
 	public final void setText(String s) {
@@ -162,12 +166,14 @@ public class TextBox extends UIWidget implements Focusable {
 
 			String newText = (new StringBuilder(text)).replace(selStart, selEnd, filtered).toString();
 			validText = isValid(newText);
-			if (validText) {
+			if(!validText.isError())
+				lastValidText=newText;
+			//if (!validText.isError()) {
 				text = newText;
 				setCursorPosition(selStart + nToInsert);
 				setSelectionPos(cursorPos);
 				onTextChanged();
-			}
+			//}
 		}
 	}
 
@@ -260,10 +266,13 @@ public class TextBox extends UIWidget implements Focusable {
 				int to = Math.max(pos, cursorPos);
 				if (from != to) {
 					String newText = new StringBuilder(text).delete(from, to).toString();
-					if (filter.test(newText)) {
+					validText=isValid(newText);
+					if(!validText.isError())
+						lastValidText=newText;
+					//if (!isValid(newText).isError()) {
 						text = newText;
 						moveCursorTo(from, false);
-					}
+					//}
 				}
 			}
 		}
@@ -353,14 +362,14 @@ public class TextBox extends UIWidget implements Focusable {
 					return true;
 				}
 				case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER -> {
-					if (validText) {
+					if (!validText.isError()) {
 						setFocused(false);
 						onEnterPressed();
 					}
 					return true;
 				}
 				case GLFW.GLFW_KEY_TAB -> {
-					if (validText) {
+					if (!validText.isError()) {
 						setFocused(false);
 						onTabPressed();
 					}
@@ -399,13 +408,19 @@ public class TextBox extends UIWidget implements Focusable {
 	}
 
 	@Override
+	public void getTooltip(Consumer<Component> tooltip) {
+		super.getTooltip(tooltip);
+		if(validText.hint()!=null)
+		tooltip.accept(validText.hint());
+	}
+	@Override
 	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
 		drawTextBox(graphics, x+1, y+1, w-2, h-2);
 		var drawGhostText = !isFocused() && text.isEmpty() && !ghostText.isEmpty();
 		var textToDraw = getFormattedText();
 		graphics.enableScissor( x, y, x+w, y+h);
 	
-		int cursorColor =( (validText ? this.getLayerHolder().getFontColor():this.getLayerHolder().getErrorColor())&0xffffff)|((drawGhostText ? 0x78000000 : 0xFF000000));
+		int cursorColor =( (!validText.isError() ? this.getLayerHolder().getFontColor():this.getLayerHolder().getErrorColor())&0xffffff)|((drawGhostText ? 0x78000000 : 0xFF000000));
 		var j = cursorPos - displayPos;
 		var s = getFont().plainSubstrByWidth(textToDraw.substring(displayPos), w);
 		var textX = x + 4;
@@ -470,12 +485,12 @@ public class TextBox extends UIWidget implements Focusable {
 		graphics.fill(x, y, x + w, y + h, -16777216);
 	}
 
-	public boolean isValid(String txt) {
+	public VerifyResult isValid(String txt) {
 		return filter.test(txt);
 	}
 
 	public final boolean isTextValid() {
-		return validText;
+		return !validText.isError();
 	}
 
 	@Override

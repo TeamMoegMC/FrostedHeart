@@ -6,5 +6,8 @@
   "gui.chorda.editor.select":"选择",
   "gui.chorda.editor.new":"新建",
   "gui.chorda.editor.edit":"修改",
-  "gui.chorda.editor.reorder":"调整顺序"
+  "gui.chorda.editor.reorder":"调整顺序",
+  "gui.chorda.editor.must_be_nonnull":"不得为null",
+  "gui.chorda.editor.command_must_starts_with_slash":"指令必须以/开头",
+  "gui.chorda.editor.wrong_number":"数字格式错误"
 }

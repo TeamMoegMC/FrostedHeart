@@ -20,7 +20,9 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
+import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
@@ -33,10 +35,9 @@ public class EditPrompt extends BaseEditDialog {
     LabeledTextBox box;
     Button ok;
     Button cancel;
-
-    public EditPrompt(UIWidget panel, Component label, String val, Consumer<String> onFinished) {
+    public EditPrompt(UIWidget panel, Component label, String val, Consumer<String> onFinished,Verifier<String> verifier) {
         super(panel);
-        box = new LabeledTextBox(this, label, val);
+        box = new LabeledTextBox(this, label, val,verifier);
         ok = new TextButton(this, Components.translatable("gui.accept"), CIcons.nop()) {
 
             @Override
@@ -63,9 +64,11 @@ public class EditPrompt extends BaseEditDialog {
     }
 
     public static void open(UIWidget p, Component l, String v, Consumer<String> f) {
-        new EditPrompt(p, l, v, f).open();
+        new EditPrompt(p, l, v, f,null).open();
     }
-
+    public static void open(UIWidget p, Component l, String v, Consumer<String> f,Verifier<String> verif) {
+        new EditPrompt(p, l, v, f,verif).open();
+    }
     @Override
     public void addUIElements() {
 

@@ -21,28 +21,41 @@ package com.teammoeg.chorda.client.cui.editor;
 
 import com.teammoeg.chorda.client.cui.TextBox;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.editor.Verifier.VerifyResult;
 
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 
 
 public class LabeledTextBox extends LabeledPane<TextBox> {
     String orig;
-
+    VerifyResult result;
     public LabeledTextBox(UIWidget panel, Component lab, String txt) {
+    	this(panel,lab,txt,null);
+    }
+    public LabeledTextBox(UIWidget panel, Component lab, String txt,Verifier<String> verif) {
         super(panel, lab);
         obj = new TextBox(this);
         obj.allowInput();
+        if(verif!=null)
+        obj.setFilter(verif);
         if (txt == null) txt = "";
         obj.setText(txt);
         obj.setSize(200, 16);
         orig = txt;
-
-
     }
 
-    public String getText() {
-        return obj.getText();
+    @Override
+	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+		// TODO Auto-generated method stub
+		super.render(graphics, x, y, w, h);
+	}
+
+	public String getText() {
+		if(obj.isTextValid())
+			return obj.getText();
+		return orig;
     }
 
     public void setText(String s) {

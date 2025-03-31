@@ -44,7 +44,7 @@ public class WheelMenuEditors {
 		o -> Components.translatable(o.getCategory()).append(": ").append(Components.translatable(o.getName())).append("(").append(o.getTranslatedKeyMessage()).append(")")).open();
 	public static final Editor<KeyMappingTriggerAction> KEY_ACTION_EDITOR = KEY_EDITOR.xmap(t->t.getName(), KeyMapping.ALL::get).xmap(KeyMappingTriggerAction::new, KeyMappingTriggerAction::getKey);
 
-	public static final Editor<CommandInputAction> COMMAND_ACTION_EDITOR = Editors.TEXT_PROMPT.xmap(CommandInputAction::new, CommandInputAction::getCommand);
+	public static final Editor<CommandInputAction> COMMAND_ACTION_EDITOR = Editors.COMMAND_PROMPT.xmap(CommandInputAction::new, CommandInputAction::getCommand);
 	public static final Editor<Action> ACTION_EDITOR = new EditorSelector.EditorSelectorBuilder<Action>(t->t==null||t==Selection.NO_ACTION)
 		.addEditor(Components.translatable("gui.wheel_menu.editor.key"), KEY_ACTION_EDITOR, t -> t instanceof KeyMappingTriggerAction)
 		.addEditor(Components.translatable("gui.wheel_menu.editor.command"), COMMAND_ACTION_EDITOR, t -> t instanceof CommandInputAction)

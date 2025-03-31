@@ -16,7 +16,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 public record CommandInputAction(String command) implements Action{
 	public static final MapCodec<CommandInputAction> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		ExtraCodecs.validate(Codec.STRING, n->n.startsWith("/")?DataResult.success(n):DataResult.error(()->"Commands must starts with '/'")).fieldOf("command").forGetter(CommandInputAction::command)
+		Codec.STRING.fieldOf("command").forGetter(CommandInputAction::command)
 		).apply(t,CommandInputAction::new));
 	public String getCommand() {
 		return command;

@@ -27,7 +27,7 @@ import net.minecraft.network.chat.Component;
 public class NumberBox extends LabeledTextBox {
 
     public NumberBox(UIWidget panel, Component lab, long val) {
-        super(panel, lab, String.valueOf(val));
+        super(panel, lab, String.valueOf(val),Verifiers.NUMBER_STR);
     }
 
     public long getNum() {

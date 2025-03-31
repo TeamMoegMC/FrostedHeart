@@ -1,0 +1,12 @@
+{
+  "gui.chorda.editor.unsaved_changes":"Unsaved changes, discard?",
+  "gui.chorda.editor.stacks.all":"All Items",
+  "gui.chorda.editor.stacks.inventory":"Inventory",
+  "gui.chorda.editor.stacks.blocks":"Blocks",
+  "gui.chorda.editor.select":"Select",
+  "gui.chorda.editor.new":"New",
+  "gui.chorda.editor.edit":"Edit",
+  "gui.chorda.editor.reorder":"Ordering",
+  "gui.chorda.editor.must_be_nonnull":"Must not be null",
+  "gui.chorda.editor.command_must_starts_with_slash":"Command must starts with /"
+}
