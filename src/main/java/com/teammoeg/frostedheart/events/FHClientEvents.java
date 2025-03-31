@@ -174,7 +174,6 @@ public class FHClientEvents {
 				s -> FHNetwork.INSTANCE.sendToServer(new C2SOpenClothesScreenMessage())));
     }
 
-    // TODO: Somehow this event does not fire...
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onRecipesUpdated(RecipesUpdatedEvent event) {
        // if (!Minecraft.getInstance().hasSingleplayerServer()) {

@@ -36,6 +36,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -148,6 +149,7 @@ public class SurroundingTemperatureSimulator {
     private Vec3[] Qpos = new Vec3[n];// Qpos, position of particle.
     private int[] vid = new int[n];// IDv, particle speed index in speed vector list, this lower random cost.
     //private double[] factor=
+    private Level level;
 
 
     public Map<BlockState, CachedBlockInfo> info = new HashMap<>();// state to info cache
@@ -197,6 +199,7 @@ public class SurroundingTemperatureSimulator {
         		
         }
         rnd = new Random(new BlockPos(sourceX,sourceY,sourceZ).asLong() ^ (world.getGameTime() >> 6));
+        level = world.getLevel();
     }
 
     /**
@@ -331,7 +334,7 @@ public class SurroundingTemperatureSimulator {
      */
     private CachedBlockInfo getInfo(BlockPos pos, BlockState bs) {
         //boolean isExpose = getTopY(pos.getX(), pos.getZ()) < pos.getY();
-        BlockTempData b = BlockTempData.cacheList.get(bs.getBlock());
+        BlockTempData b = BlockTempData.getData(level, bs.getBlock());
         VoxelShape shape;
         
         if(bs.getBlock().hasDynamicShape()) {

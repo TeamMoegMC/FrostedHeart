@@ -44,21 +44,18 @@ public record BlockTempData(Block block,float temperature, boolean level, boolea
 		Codec.BOOL.optionalFieldOf("level_divide",false).forGetter(o->o.level),
 		Codec.BOOL.optionalFieldOf("must_lit",false).forGetter(o->o.lit)).apply(t, BlockTempData::new));
 	public static RegistryObject<CodecRecipeSerializer<BlockTempData>> TYPE;
-	public static Map<Block,BlockTempData> cacheList=ImmutableMap.of();
-
-    public static void updateCache(Level level) {
-        RecipeManager manager = level.getRecipeManager();
-        Collection<Recipe<?>> recipes = manager.getRecipes();
-        cacheList = BlockTempData.TYPE.get().filterRecipes(recipes)
-                .collect(Collectors.toMap(t->t.getData().block(), t->t.getData()));
-    }
+	private static Map<Block,BlockTempData> CACHE =ImmutableMap.of();
 
     public static BlockTempData getData(Level level, Block block) {
-        updateCache(level);
-        return cacheList.get(block);
+        return CACHE.get(block);
     }
 
-	public float getTemp() {
+    public static void updateCache(RecipeManager manager) {
+        Collection<Recipe<?>> recipes = manager.getRecipes();
+        BlockTempData.CACHE = BlockTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().block(), t->t.getData()));
+    }
+
+    public float getTemp() {
         return temperature;
     }
 

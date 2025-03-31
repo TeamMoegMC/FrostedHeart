@@ -102,7 +102,7 @@ public class FHRecipeCachingReloadListener implements ResourceManagerReloadListe
         	ArmorTempData.cacheList.computeIfAbsent(t.getData().item(), armorMapGetter).put(t.getData().slot().orElse(null), t.getData());
         });;
         BiomeTempData.cacheList=BiomeTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().biome(), t->t.getData()));
-        BlockTempData.cacheList=BlockTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().block(), t->t.getData()));
+        BlockTempData.updateCache(recipeManager);
         CupData.cacheList=CupData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().item(), t->t.getData()));
         DrinkTempData.cacheList=DrinkTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().fluid(), t->t.getData()));
         FoodTempData.cacheList=FoodTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().item(), t->t.getData()));
