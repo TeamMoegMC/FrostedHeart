@@ -94,7 +94,7 @@ public class TssapProtocolHandler {
 								e.printStackTrace();
 							}
 							FHMain.LOGGER.info(VERSION_CHECK, "sending stop to server...");
-							((DedicatedServer)CDistHelper.getServer()).handleConsoleInput("/stop", CDistHelper.getServer().createCommandSourceStack());
+							((DedicatedServer)CDistHelper.getServer()).halt(false);
 							}catch(Throwable t) {
 								t.printStackTrace();
 							}
