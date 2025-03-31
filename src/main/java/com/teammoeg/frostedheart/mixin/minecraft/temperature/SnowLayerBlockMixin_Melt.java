@@ -41,7 +41,7 @@ public class SnowLayerBlockMixin_Melt {
     @Inject(method = "randomTick", at = @At("HEAD"), cancellable = true)
     private void randomTick(BlockState pState, ServerLevel pLevel, BlockPos pPos, RandomSource pRandom, CallbackInfo info) {
         if (pLevel.getBrightness(LightLayer.BLOCK, pPos) > 11 ||
-                WorldTemperature.block(pLevel, pPos) >= WorldTemperature.SNOW_MELT_TEMPERATURE) {
+                WorldTemperature.block(pLevel, pPos) >= WorldTemperature.WATER_ICE_MELTS) {
             int layers = pState.getValue(SnowLayerBlock.LAYERS);
             if (layers > 1) {
                 BlockState newState = pState.setValue(SnowLayerBlock.LAYERS, layers - 1);
