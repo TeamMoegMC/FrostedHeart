@@ -21,9 +21,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MagmaBlockMixin {
 
     @Unique
-    private static final int COOLING_CHECK_INTERVAL = 20; //24000; // Ticks between cooling checks
+    private static final int COOLING_CHECK_INTERVAL = 24000; // Ticks between cooling checks
     @Unique
-    private static final float COOLING_CHANCE = 1; //1F / 2F; // On average it can stay 2 days
+    private static final float COOLING_CHANCE = 1F / 2F; // On average it can stay 2 days
 
     @Inject(method = "tick", at = @At("TAIL"))
     private void onTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random, CallbackInfo ci) {

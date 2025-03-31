@@ -14,8 +14,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Unique;
 
 public class CooledMagmaBlock extends Block {
-    private static final int HEATING_CHECK_INTERVAL = 20; //24000; // Ticks between heating checks
-    private static final float HEATING_CHANCE = 1; //1F / 2F; // On average it needs to heat 2 days
+    private static final int HEATING_CHECK_INTERVAL = 24000; // Ticks between heating checks
+    private static final float HEATING_CHANCE = 1F / 2F; // On average it needs to heat 2 days
 
     public CooledMagmaBlock(Properties properties) {
         super(properties);
