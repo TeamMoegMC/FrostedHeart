@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import java.util.function.Function;
+
 import com.teammoeg.chorda.block.CActiveMultiblockBlock;
 import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorMultiblock;
@@ -37,29 +39,30 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockS
 import blusunrize.immersiveengineering.api.multiblocks.blocks.registry.MultiblockItem;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.IEMultiblockBuilder;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.NonMirrorableWithActiveBlock;
 import blusunrize.immersiveengineering.common.register.IEBlocks;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
 public class FHMultiblocks {
 	public static class Registration{
-		public static final MultiblockRegistration<T1GeneratorState> GENERATOR_T1 = stone(new T1GeneratorLogic(), "generator_t1",false)
+		public static final MultiblockRegistration<T1GeneratorState> GENERATOR_T1 = stone(new T1GeneratorLogic(), "generator_t1",false,t->t.lightLevel(bs->bs.getValue(NonMirrorableWithActiveBlock.ACTIVE)?15:0))
 			.structure(() -> FHMultiblocks.GENERATOR_T1)
 			.notMirrored()
 			.component(FHMenuTypes.GENERATOR_T1.createComponent())
 			.build();
-		public static final MultiblockRegistration<T2GeneratorState> GENERATOR_T2 = metal(new T2GeneratorLogic(), "generator_t2")
+		public static final MultiblockRegistration<T2GeneratorState> GENERATOR_T2 = metal(new T2GeneratorLogic(), "generator_t2",t->t.lightLevel(bs->bs.getValue(NonMirrorableWithActiveBlock.ACTIVE)?15:0))
 			.structure(() -> FHMultiblocks.GENERATOR_T2)
 			.notMirrored()
 			.component(FHMenuTypes.GENERATOR_T2.createComponent())
 			.build();
-		public static final MultiblockRegistration<RadiatorState> RADIATOR = metal(new RadiatorLogic(), "radiator")
+		public static final MultiblockRegistration<RadiatorState> RADIATOR = metal(new RadiatorLogic(), "radiator",t->t)
 			.structure(() -> FHMultiblocks.RADIATOR)
 			.notMirrored()
 			.build();
 		
 		
-		private static <S extends IMultiblockState> IEMultiblockBuilder<S> stone(IMultiblockLogic<S> logic, String name, boolean solid) {
+		private static <S extends IMultiblockState> IEMultiblockBuilder<S> stone(IMultiblockLogic<S> logic, String name, boolean solid,Function<Properties,Properties> modifier) {
 			Properties properties = Properties.of()
 				.mapColor(MapColor.STONE)
 				.instrument(NoteBlockInstrument.BASEDRUM)
@@ -70,17 +73,17 @@ public class FHMultiblocks {
 				.notMirrored()
 				.customBlock(
 					FHBlocks.BLOCKS, FHItems.ITEMS,
-					r -> new CActiveMultiblockBlock<>(properties, r),
+					r -> new CActiveMultiblockBlock<>(modifier.apply(properties), r),
 					MultiblockItem::new)
 				.defaultBEs(FHBlockEntityTypes.REGISTER);
 		}
 
-		private static <S extends IMultiblockState> IEMultiblockBuilder<S> metal(IMultiblockLogic<S> logic, String name) {
+		private static <S extends IMultiblockState> IEMultiblockBuilder<S> metal(IMultiblockLogic<S> logic, String name,Function<Properties,Properties> modifier) {
 			return new IEMultiblockBuilder<>(logic, name)
 				.defaultBEs(FHBlockEntityTypes.REGISTER)
 				.customBlock(
 					FHBlocks.BLOCKS, FHItems.ITEMS,
-					r -> new CActiveMultiblockBlock<>(IEBlocks.METAL_PROPERTIES_NO_OCCLUSION.get(), r),
+					r -> new CActiveMultiblockBlock<>(modifier.apply(IEBlocks.METAL_PROPERTIES_NO_OCCLUSION.get()), r),
 					MultiblockItem::new);
 		}
 
