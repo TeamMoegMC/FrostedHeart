@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.bootstrap.reference.FHDamageSources;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHBodyDataSyncPacket;
@@ -234,6 +235,9 @@ public class TemperatureUpdate {
                         envTempAttribute.addTransientModifier(new AttributeModifier(ENV_TEMP_ATTRIBUTE_UUID, "player environment modifier", envtemp, Operation.ADDITION));
                     }
 
+                    // Range [0, 100]
+                    int wind = WorldTemperature.wind(world);
+
                     /* ENVIRONMENT TEMPERATURE COMPUTATION ENDS */
 
                     /* BODY TEMPERATURE CHANGE COMPUTATION STARTS */
@@ -252,6 +256,27 @@ public class TemperatureUpdate {
                         for (BodyPart part : PlayerTemperatureData.BodyPart.values()) {
                             // ranges [0, 1]
                             float partConductivity = data.getThermalConductivityByPart(player, part);
+                            // fluid conductivity is different in different medium,
+                            // fluid resistance [0,1] from clothing helps dealing with this
+                            // by linearly diminishing the conductivity multiplier due to various fluid movement
+                            float partFluidResist = data.getFluidResistanceByPart(player, part);
+                            if (player.isInWater())
+                                partConductivity *= 0.9F * (1 - partFluidResist);
+                            else if (player.isInPowderSnow)
+                                partConductivity *= 0.8F * (1 - partFluidResist);
+                            else {
+                                float airConductivity = 0.3F; // base air conductivity stays
+                                // [0,1]
+                                float effectiveWind = Mth.clamp(wind, 0, 100) / 100F;
+                                // gets up to 0.7F
+                                airConductivity += effectiveWind * 0.4F * (1 - partFluidResist);
+                                // gets up to 0.9F
+                                if (player.hasEffect(FHMobEffects.WET.get())) {
+                                    airConductivity += 0.2F * (1 - partFluidResist);
+                                }
+                                partConductivity *= airConductivity;
+                            }
+
                             // all part areas add up to 100%
                             totalConductivity += part.area * partConductivity;
                             // This is a body part's "Body Temperature" from last time
@@ -323,11 +348,11 @@ public class TemperatureUpdate {
                             boolean isOnVehicle = player.getVehicle() != null;
                             boolean isWalking = speedSquared > 0.001 && !isSprinting && !isOnVehicle;
                             if (isSprinting) {
-                                movementHeatedUnits += 4 * selfHeatRate * unit; // Running increases temperature by 4 units
+                                movementHeatedUnits += 2 * selfHeatRate * unit; // Running increases temperature by 4 units
                             } else if (isWalking) { // Assuming there's a method to check walking
-                                movementHeatedUnits += 2 * selfHeatRate * unit; // Walking increases temperature by 2 units
+                                movementHeatedUnits += 1 * selfHeatRate * unit; // Walking increases temperature by 2 units
                             } else {
-                                movementHeatedUnits += 1 * selfHeatRate *unit;
+                                movementHeatedUnits += 0.5F * selfHeatRate *unit;
                             }
 
                             // Additional Homeostasis using Stored (Food) Energy
@@ -338,13 +363,13 @@ public class TemperatureUpdate {
                             // We apply additional units based on a deviation need, exhausting more food
                             if (deviation < 0 && player.getFoodData().getFoodLevel() > 0) {
                                 if (deviation > -0.5) {
-                                    homeostasisUnits += 2F * selfHeatRate * unit;
+                                    homeostasisUnits += 1F * selfHeatRate * unit;
                                     player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 2F * part.area);
                                 } else if (deviation > -1) {
-                                    homeostasisUnits += 3F * selfHeatRate * unit;
+                                    homeostasisUnits += 1.5F * selfHeatRate * unit;
                                     player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 3F * part.area);
                                 } else {
-                                    homeostasisUnits += 4F * selfHeatRate * unit;
+                                    homeostasisUnits += 2F * selfHeatRate * unit;
                                     player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 4F * part.area);
                                 }
                             }
@@ -372,8 +397,24 @@ public class TemperatureUpdate {
                             4 / 0.05 = 80 seconds for one food level drop
                              */
 
-                            // TODO: degree I/II/III burn if dt=+20/+30/+40
-                            // TODO: degree I/II/III freeze if dt=-50/-60/-70
+                            // degree I/II/III burn if dt=+20/+30/+40
+                            if (dt > 40) {
+                                player.hurt(FHDamageSources.hyperthermiaInstant(world), 2.0F);
+                            } else if (dt > 30) {
+                                player.hurt(FHDamageSources.hyperthermiaInstant(world), 1.5F);
+                            } else if (dt > 20) {
+                                player.hurt(FHDamageSources.hyperthermiaInstant(world), 1.0F);
+                            }
+
+                            // degree I/II/III freeze if dt=-50/-60/-70
+                            if (dt < -70) {
+                                player.hurt(FHDamageSources.hyperthermiaInstant(world), 2.0F);
+                            } else if (dt < -60) {
+                                player.hurt(FHDamageSources.hyperthermiaInstant(world), 1.5F);
+                            } else if (dt < -50) {
+                                player.hurt(FHDamageSources.hyperthermiaInstant(world), 1.0F);
+                            }
+
                             fem.put(part, pbTemp);
                         }
 

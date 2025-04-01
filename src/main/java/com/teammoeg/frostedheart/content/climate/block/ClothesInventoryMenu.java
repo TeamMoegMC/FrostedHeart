@@ -53,7 +53,7 @@ public class ClothesInventoryMenu extends CBaseMenu {
 		createLiningSlots(inventoryPlayer,ptd);
 		for(BodyPart bp:BodyPart.values()) {
 			partInsulation.get(bp).getFirst().bind(()->ptd.getThermalConductivityByPart(inventoryPlayer.player,bp));
-			partInsulation.get(bp).getSecond().bind(()->ptd.getWindResistanceByPart(inventoryPlayer.player,bp));
+			partInsulation.get(bp).getSecond().bind(()->ptd.getFluidResistanceByPart(inventoryPlayer.player,bp));
 		}
 		super.addPlayerInventory(inventoryPlayer, 8, 120, 178);
 	}

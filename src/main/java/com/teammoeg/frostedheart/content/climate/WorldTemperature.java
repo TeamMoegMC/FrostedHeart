@@ -421,7 +421,7 @@ public class WorldTemperature {
     }
     /**
      * Convenience method for checking wind strength in specific world.
-     *
+     * @return Range 0-100
      * */
     public static int wind(LevelReader w) {
         if (w instanceof Level l) {

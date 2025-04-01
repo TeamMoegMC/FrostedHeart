@@ -147,9 +147,9 @@ public class ClimateCommonEvents {
 			if (data.getInsulation() != 0)
 				event.addModifier(FHAttributes.INSULATION.get(),
 						ecs.createAttribute(data.getInsulation(), Operation.ADDITION));
-			if (data.getColdProof() != 0)
+			if (data.getFluidResistance() != 0)
 				event.addModifier(FHAttributes.WIND_PROOF.get(),
-						ecs.createAttribute(data.getColdProof(), Operation.MULTIPLY_TOTAL));
+						ecs.createAttribute(data.getFluidResistance(), Operation.MULTIPLY_TOTAL));
 			if (data.getHeatProof() != 0)
 				event.addModifier(FHAttributes.HEAT_PROOF.get(),
 						ecs.createAttribute(data.getHeatProof(), Operation.MULTIPLY_TOTAL));

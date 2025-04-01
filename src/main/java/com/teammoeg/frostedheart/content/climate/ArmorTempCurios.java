@@ -48,8 +48,8 @@ public class ArmorTempCurios implements ICurio {
 
         	if(data.getInsulation()!=0)
         		mm.put(FHAttributes.INSULATION.get(), new AttributeModifier(uuid,slotContext.identifier(), data.getInsulation(), Operation.ADDITION));
-        	if(data.getColdProof()!=0)
-        		mm.put(FHAttributes.WIND_PROOF.get(), new AttributeModifier(uuid,slotContext.identifier(), data.getColdProof() , Operation.ADDITION));
+        	if(data.getFluidResistance()!=0)
+        		mm.put(FHAttributes.WIND_PROOF.get(), new AttributeModifier(uuid,slotContext.identifier(), data.getFluidResistance() , Operation.ADDITION));
         	if(data.getHeatProof()!=0)
         		mm.put(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(uuid,slotContext.identifier(), data.getHeatProof() , Operation.ADDITION));
         }

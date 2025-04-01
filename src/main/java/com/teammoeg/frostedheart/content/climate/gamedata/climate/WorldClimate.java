@@ -326,6 +326,13 @@ public class WorldClimate implements NBTSerializable {
     public static float getTemp(LevelAccessor world) {
         return getCapability(world).map(t->t.getTemp()).orElse(0f);
     }
+
+    /**
+     * Retrieves hourly updated temperature from cache
+     * Useful in client-side tick-frequency temperature rendering
+     *
+     * @return wind level at current hour, range 0-100
+     */
     public static int getWind(LevelAccessor world) {
         return getCapability(world).map(t->t.getWind()).orElse(0);
     }
@@ -468,8 +475,41 @@ public class WorldClimate implements NBTSerializable {
         return dtd;
     }
     private int getWind(int lastWind,ClimateType climate,float temp) {
-    	return 30;
+        int baseWind = 0;
+        switch (climate) {
+            case NONE: {
+                baseWind = 0;
+                break;
+            }
+            case SNOW: {
+                baseWind = 50;
+                break;
+            }
+            case SUN: {
+                baseWind = 30;
+                break;
+            }
+            case CLOUDY: {
+                baseWind = 40;
+                break;
+            }
+            case BLIZZARD: {
+                baseWind = 70;
+                break;
+            }
+            case SNOW_BLIZZARD: {
+                baseWind = 90;
+            }
+        }
+
+        Random rnd = new Random();
+        int noise = (int) (rnd.nextGaussian() * 3);
+        int wind = (int) (baseWind * 0.5 + lastWind * 0.5);
+        wind += noise;
+
+        return Mth.clamp(wind, 0, 100);
     }
+
     public ClimateType getClimate() {
         return this.getHourData().getType();
     }
