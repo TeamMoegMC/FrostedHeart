@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:armor_temp",
-  "factor": 370.0,
+  "factor": 200.0,
   "heat_proof": 0.5,
   "item": "frostedheart:buff_coat",
   "slot": "legs",
-  "wind_proof": 1.0
+  "wind_proof": 0.9
 }

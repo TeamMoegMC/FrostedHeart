@@ -1,6 +1,6 @@
 {
   "type": "frostedheart:armor_temp",
-  "factor": 270.0,
+  "factor": 100.0,
   "heat_proof": 0.2,
   "item": "frostedheart:hay_boots",
   "slot": "feet",
