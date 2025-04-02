@@ -48,7 +48,7 @@ public class TemperatureCommand {
                     PlayerTemperatureData.getCapability(player).ifPresent(data -> {
                         ct.getSource().sendSuccess(()-> Components.str("Body: " + data.getCoreBodyTemp()), true);
                         ct.getSource().sendSuccess(()-> Components.str("Environment: " + data.getEnvTemp()), true);
-                        ct.getSource().sendSuccess(()-> Components.str("Feel: " + data.getFeelTemp()), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Feel: " + data.getTotalFeelTemp()), true);
                         ct.getSource().sendSuccess(()-> Components.str("Previous Body: " + data.getPreviousCoreBodyTemp()), true);
                         ct.getSource().sendSuccess(()-> Components.str("Self-Heating Difficulty: " + data.getDifficulty().name()), true);
                         ct.getSource().sendSuccess(()-> Components.str("Head: " + data.getBodyTempByPart(PlayerTemperatureData.BodyPart.HEAD)), true);
@@ -118,7 +118,7 @@ public class TemperatureCommand {
                         .then(Commands.argument("value", FloatArgumentType.floatArg()).executes((ct) -> {
                             Player player = ct.getSource().getPlayerOrException();
                             PlayerTemperatureData.getCapability(player).ifPresent(data -> {
-                                data.setFeelTemp(ct.getArgument("amount", Float.class));
+                                data.setTotalFeelTemp(ct.getArgument("amount", Float.class));
                             });
                             return Command.SINGLE_SUCCESS;
                         }))

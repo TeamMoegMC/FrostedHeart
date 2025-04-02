@@ -941,7 +941,7 @@ public class FrostedHud {
         HUDElements.temperature_orb_frame.blitAt(stack, x, y + 3, BasePos.temperature_orb_frame);
         boolean f = FHConfig.CLIENT.useFahrenheit.get();
         float temperature = 0;
-        float tlvl = PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getFeelTemp).orElse(0F);
+        float tlvl = PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getTotalFeelTemp).orElse(0F);
         tlvl = Math.max(-273, tlvl);
         if (f)
             temperature = (tlvl * 9 / 5 + 32);
