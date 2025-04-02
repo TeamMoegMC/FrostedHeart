@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.Lang;
 
+import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
@@ -120,6 +121,7 @@ public class PlayerTemperatureData implements NBTSerializable {
     @Setter
     private FHTemperatureDifficulty difficulty = null;//in case null, get it from  FHConfig.SERVER.tdiffculty.get()
     float prevCoreBodyTemp;
+    @Getter
     float coreBodyTemp;
     @Setter
     float envTemp = INVALID_TEMPERATURE;
@@ -277,14 +279,6 @@ public class PlayerTemperatureData implements NBTSerializable {
 
     public float getPreviousCoreBodyTemp() {
         return prevCoreBodyTemp;
-    }
-
-    public float getCoreBodyTemp() {
-        float result = 0;
-        for (BodyPart bp : BodyPart.values()) {
-            result += this.clothesOfParts.get(bp).temperature * bp.affectsCore;
-        }
-        return result;
     }
 
     public float getEnvTemp() {

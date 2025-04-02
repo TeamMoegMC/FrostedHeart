@@ -1,5 +1,5 @@
 {
   "type": "frostedheart:block_temp",
   "block": "minecraft:lava",
-  "temperature": 3000.0
+  "temperature": 700.0
 }
