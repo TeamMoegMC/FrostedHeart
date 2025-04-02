@@ -262,7 +262,7 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Integer> simulationRange;
         public final ForgeConfigSpec.ConfigValue<Integer> simulationDivision;
         public final ForgeConfigSpec.ConfigValue<Double> simulationParticleInitialSpeed;
-        public final ForgeConfigSpec.ConfigValue<Integer> simulationParticleLife;
+       // public final ForgeConfigSpec.ConfigValue<Integer> simulationParticleLife;
         public final ForgeConfigSpec.ConfigValue<Integer> temperatureUpdateIntervalTicks;
         public final ForgeConfigSpec.ConfigValue<Integer> wetEffectDuration;
         public final ForgeConfigSpec.ConfigValue<Integer> wetClothesDurationMultiplier;
@@ -397,8 +397,8 @@ public class FHConfig {
                     .defineInRange("simulationDivision", 10, 1, 100);
             simulationParticleInitialSpeed = builder.comment("The initial speed of the particles in the simulation.")
                     .defineInRange("simulationParticleInitialSpeed", 0.4f, 0.01f, 1f);
-            simulationParticleLife = builder.comment("The life ticks of the particles in the simulation.")
-                    .defineInRange("simulationParticleLife", 20, 1, 100);
+            //simulationParticleLife = builder.comment("The life ticks of the particles in the simulation.")
+            //        .defineInRange("simulationParticleLife", 20, 1, 100);
             builder.pop();
 
             builder.push("Miscellaneous");

@@ -169,7 +169,7 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
 			this.addSlot(new SlotItemHandler(handler, 0, in.getX(), in.getY()) {
 				@Override
 				public boolean mayPlace(ItemStack itemStack) {
-					return GeneratorData.isStackValid(inventoryPlayer.player.level(), 0, itemStack);
+					return GeneratorData.isStackValid( 0, itemStack);
 				}
 			});
 			Point out = getSlotOut();

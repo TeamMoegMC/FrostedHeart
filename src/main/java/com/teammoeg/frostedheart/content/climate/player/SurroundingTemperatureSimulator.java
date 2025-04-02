@@ -98,7 +98,7 @@ public class SurroundingTemperatureSimulator {
     private static final VoxelShape EMPTY = Shapes.empty();
     private static final VoxelShape FULL = Shapes.block();
     private static Vec3[] speedVectors;// Vp, speed vector list, this list is constant and considered a distributed ball mesh.
-    private static final int num_rounds = FHConfig.SERVER.simulationParticleLife.get();//propagate time-to-live for each particles
+    private static final int num_rounds = 20;//THIS VALUE MUST NOT BE CONFIGURABLE AS THIS WOULD AFFECT RESULT//FHConfig.SERVER.simulationParticleLife.get();//propagate time-to-live for each particles
     private static int[][] speedVectorByDirection = new int[6][];// index: ordinal value of outbounding facing
 
     static {// generate speed vector list

@@ -199,10 +199,8 @@ public class CUtils {
 	    return stack;
 	}
 	public static <R extends Recipe<Container>> List<R> filterRecipes(@Nullable RecipeManager recipeManager, RegistryObject<RecipeType<R>> recipeType) {
-        if(recipeManager==null) {
-        	if(ClientUtils.mc().level!=null)
-        		recipeManager=ClientUtils.mc().level.getRecipeManager();
-        }
+		if(recipeManager==null)
+			recipeManager=CDistHelper.getRecipeManager();
         if(recipeManager==null)
         	return ImmutableList.of();
 		return recipeManager.getAllRecipesFor(recipeType.get());
