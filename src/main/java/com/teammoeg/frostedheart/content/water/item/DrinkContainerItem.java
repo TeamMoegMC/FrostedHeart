@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.water.item;
 
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.water.util.FluidHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -28,132 +27,86 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
-import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.ClipContext.Fluid;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.block.BucketPickup;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult.Type;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.common.util.NonNullConsumer;
+import net.minecraftforge.fluids.FluidActionResult;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.FLUID_NBT_KEY;
 
 public class DrinkContainerItem extends ItemFluidContainer {
-    boolean canDrink = false;
 
     public DrinkContainerItem(Properties properties, int capacity) {
         super(properties, capacity);
     }
 
     protected ItemStack getContainerItem(ItemStack itemStack){
-        return itemStack;
+        return itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).map(t->t.getContainer()).orElse(ItemStack.EMPTY);
     }
 
-    private boolean initialized = false;
-
-    @Override
-    public void inventoryTick(ItemStack itemStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
-        upDateDamage(itemStack);
-        if (!initialized) {
-            initialized = true;
-            if(!itemStack.hasTag())return;
-            CompoundTag fluid = itemStack.getOrCreateTag().getCompound("Fluid");
-            String fluidName = fluid.getString("FluidName");
-            int amount = fluid.getInt("Amount");
-            Fluid value = ForgeRegistries.FLUIDS.getValue(ResourceLocation.tryParse(fluidName));
-
-            IFluidHandler handler = itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
-            handler.fill(new FluidStack(value,amount), IFluidHandler.FluidAction.EXECUTE);
-        }
-    }
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        ItemStack stack = player.getItemInHand(hand);
-
-        BlockHitResult blockhitresult = getPlayerPOVHitResult(level, player, ClipContext.Fluid.SOURCE_ONLY);
-        BlockPos pos = blockhitresult.getBlockPos();
-        IFluidHandlerItem fluidHandlerItem = stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
-
-
-        BlockEntity entity = level.getBlockEntity(pos);
-        if(entity !=null){
-            IFluidHandler iFluidHandler = entity.getCapability(ForgeCapabilities.FLUID_HANDLER).orElse(null);
-            if (iFluidHandler != null) {
-                if (!fluidHandlerItem.getFluidInTank(0).isEmpty()) {
-
-                    int amount = fluidHandlerItem.getFluidInTank(0).getAmount();
-                    int tankCapacity = iFluidHandler.getTankCapacity(0);
-                    int tankAmount = iFluidHandler.getFluidInTank(0).getAmount();
-                    int space = tankCapacity - tankAmount;
-
-                    if(space>0){
-                        int change = Math.min(space, amount);
-                        iFluidHandler.getFluidInTank(0).grow(change);
-                        ItemStack itemStack = FluidHelper.fillContainer(getDrinkItem(), fluidHandlerItem.getFluidInTank(0).getFluid(), amount-change);
-                        upDateDamage(itemStack);
-                        level.playSound(player,pos,SoundEvents.BUCKET_EMPTY, SoundSource.PLAYERS);
-                        return InteractionResultHolder.success(itemStack);
-                    }
-
-
-                } else {
-                    FluidStack fluidInTank = iFluidHandler.getFluidInTank(0);
-                    if (!fluidInTank.isEmpty()) {
-                        int amount = fluidInTank.getAmount();
-                        if (amount > capacity) amount = capacity;
-
-                        ItemStack itemStack = FluidHelper.fillContainer(getDrinkItem(), fluidInTank.getFluid(), amount);
-                        fluidInTank.shrink(amount);
-                        upDateDamage(itemStack);
-                        level.playSound(player,pos,SoundEvents.BUCKET_FILL, SoundSource.PLAYERS);
-                        return InteractionResultHolder.success(itemStack);
-                    }
-                }
-            }
-        }
-
-        if (fluidHandlerItem.getFluidInTank(0).isEmpty() || fluidHandlerItem.getFluidInTank(0).getFluid() == Fluids.WATER) {
-            if (level.getFluidState(pos).getType() == Fluids.WATER) {
-                if (stack.getCount() > 1){
-                    if (!player.getInventory().add(getFilledItem(stack, player))) {
-                        player.drop(getFilledItem(stack, player), false);
-                    }
-                    stack.shrink(1);
-                    return InteractionResultHolder.success(stack);
-                }else return InteractionResultHolder.success(getFilledItem(stack, player));
-            }
-        }
-        if (canDrink(player, stack)) return ItemUtils.startUsingInstantly(level, player, hand);
-        return InteractionResultHolder.fail(player.getItemInHand(hand));
+        BlockHitResult ray = Item.getPlayerPOVHitResult(level, player, Fluid.SOURCE_ONLY);
+		ItemStack cur=player.getItemInHand(hand);
+		if (ray.getType() == Type.BLOCK) {
+			BlockPos blockpos = ray.getBlockPos();
+			//FluidState state = level.getFluidState(blockpos);
+			//BlockState blk=level.getBlockState(blockpos);
+			/*if(blk.getBlock() instanceof BucketPickup bucket) {
+				IFluidHandlerItem handler=cur.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
+				if(handler!=null) {
+					FluidStack fluid=handler.getFluidInTank(0);
+					if(!fluid.isEmpty()&&fluid.getAmount()<handler.getTankCapacity(0)&&fluid.getFluid().isSame(state.getType())) {
+						int amt=handler.fill(new FluidStack(state.getType(),FluidType.BUCKET_VOLUME),FluidAction.EXECUTE);
+						if(amt>0) {
+							bucket.pickupBlock(level, blockpos, blk);
+							return InteractionResultHolder.sidedSuccess(cur,level.isClientSide);
+						}
+					}
+				}
+			}*/
+			FluidActionResult res=FluidUtil.tryPickUpFluid(cur, player, level, blockpos,ray.getDirection());
+			if(res.isSuccess()) {
+				ItemStack result=res.getResult();
+				player.setItemInHand(hand, result);
+				return InteractionResultHolder.sidedSuccess(result,level.isClientSide);
+			}
+		}
+		
+        if (canDrink(player, cur)) return ItemUtils.startUsingInstantly(level, player, hand);
+        return InteractionResultHolder.pass(cur);
 
     }
 
@@ -167,21 +120,24 @@ public class DrinkContainerItem extends ItemFluidContainer {
             return FluidHelper.fillContainer(getDrinkItem(), Fluids.WATER);
         } else {
             fluidHandlerItem.fill(new FluidStack(Fluids.WATER, capacity), IFluidHandler.FluidAction.EXECUTE);
-            upDateDamage(copy);
+           
             return copy;
         }
     }
 
     @Override
+	public int getDamage(ItemStack stack) {
+		return capacity-stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).map(t->t.getFluidInTank(0).getAmount()).orElse(0);
+	}
+
+	@Override
     public ItemStack finishUsingItem(ItemStack itemStack, Level level, LivingEntity livingEntity) {
         IFluidHandler handler = itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
         handler.drain(250, IFluidHandler.FluidAction.EXECUTE);
         if (livingEntity instanceof Player player) {
             if (itemStack.getCount() == 1){
                 if (handler.getFluidInTank(0).isEmpty()) {
-                    return getContainerItem(itemStack);
-                }else {
-                    upDateDamage(itemStack);
+                    return itemStack;
                 }
             }else {
                 if (!player.getInventory().add(getContainerItem(itemStack))) {
@@ -195,18 +151,17 @@ public class DrinkContainerItem extends ItemFluidContainer {
     }
 
     public int getUseDuration(ItemStack stack) {
-        return canDrink ? 32 : 0;
+        return 32;
     }
 
     public UseAnim getUseAnimation(ItemStack p_42997_) {
         return UseAnim.DRINK;
     }
 
-    public void upDateDamage(ItemStack stack) {
-        if (stack.isDamageableItem()) {
-            IFluidHandlerItem fluidHandlerItem = stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
-            stack.setDamageValue(Math.min(stack.getMaxDamage(), stack.getMaxDamage() - fluidHandlerItem.getFluidInTank(0).getAmount()));
-        }
+    public void upDateDamage(ItemStack stack,int amount) {
+    	//System.out.println("Max Damage:"+stack.getMaxDamage()+","+amount);
+        //    stack.setDamageValue(Math.max(0, Math.min(capacity, capacity - amount)));
+        
     }
 
     /**
@@ -226,27 +181,29 @@ public class DrinkContainerItem extends ItemFluidContainer {
      * @return
      */
     public boolean canDrink(Player playerIn, ItemStack stack) {
-        if (playerIn.isOnFire()) return true;
-        canDrink = false;
+        
         IFluidHandlerItem fluidHandlerItem = stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
-        canDrink = !fluidHandlerItem.getFluidInTank(0).isEmpty() && fluidHandlerItem.getFluidInTank(0).getAmount() >= 250;
-        WaterLevelCapability.getCapability(playerIn).ifPresent(data -> {
-            canDrink = canDrink && data.getWaterLevel() < 20;
-        });
-        return canDrink;
+        return !fluidHandlerItem.getFluidInTank(0).isEmpty() && fluidHandlerItem.getFluidInTank(0).getAmount() >= 250;
     }
 
     @Override
     public ICapabilityProvider initCapabilities(@Nonnull ItemStack stack, @Nullable CompoundTag nbt) {
         return new FluidHandlerItemStack(stack, this.capacity) {
+        	
             @Override
+			protected void setFluid(FluidStack fluid) {
+            	upDateDamage(this.getContainer(),fluid.getAmount());
+				super.setFluid(fluid);
+			}
+
+			@Override
+			protected void setContainerToEmpty() {
+				upDateDamage(this.getContainer(),0);
+				super.setContainerToEmpty();
+			}
+			@Override
             public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
-                for (Fluid fluid : ForgeRegistries.FLUIDS.tags().getTag(FHTags.Fluids.DRINK.tag).stream().collect(Collectors.toList())) {
-                    if (fluid == stack.getFluid()) {
-                        return true;
-                    }
-                }
-                return false;
+                return stack.getFluid().is(FHTags.Fluids.DRINK.tag);
             }
         };
     }

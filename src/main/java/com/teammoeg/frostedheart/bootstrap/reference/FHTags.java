@@ -329,7 +329,7 @@ public class FHTags {
 	}
 
 	public enum Fluids {
-		DRINK,
+		DRINK(false),
 		HIDDEN_DRINK(false),
 		FLAMMABLE_FLUID(false)
 		;
