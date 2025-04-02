@@ -150,19 +150,19 @@ public class TemperatureComputation {
         float lowestEffectiveTemperature = data.getLowestFeelTemp();
         if (lowestEffectiveTemperature < -200 - 37) {
             if (r.nextFloat() < 1.0)
-                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 4.0F);
+                player.hurt(FHDamageSources.hypothermiaInstant(player.level()), 4.0F);
         }
         else if (lowestEffectiveTemperature < -150 - 37) {
             if (r.nextFloat() < 0.75)
-                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 3.0F);
+                player.hurt(FHDamageSources.hypothermiaInstant(player.level()), 3.0F);
         }
         else if (lowestEffectiveTemperature < -100 - 37) {
             if (r.nextFloat() < 5)
-                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 2.0F);
+                player.hurt(FHDamageSources.hypothermiaInstant(player.level()), 2.0F);
         }
         else if (lowestEffectiveTemperature < -50) {
             if (r.nextFloat() < 0.25)
-                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 1.0F);
+                player.hurt(FHDamageSources.hypothermiaInstant(player.level()), 1.0F);
         }
     }
 
