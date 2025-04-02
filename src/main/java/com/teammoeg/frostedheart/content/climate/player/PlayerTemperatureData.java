@@ -239,6 +239,7 @@ public class PlayerTemperatureData implements NBTSerializable {
         // Since we already averaged the core parts, just take torse
         previousTemp = bodyTemp;
         bodyTemp = ctx.getBodyTemperature(BodyPart.TORSO);
+        // Set the rest of part body temp
         for (BodyPart part : BodyPart.values()) {
             setTemperatureByPart(part, ctx.getBodyTemperature(part));
         }
