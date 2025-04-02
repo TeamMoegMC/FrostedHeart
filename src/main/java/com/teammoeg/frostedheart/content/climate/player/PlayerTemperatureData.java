@@ -119,12 +119,10 @@ public class PlayerTemperatureData implements NBTSerializable {
     public static final int INVALID_TEMPERATURE = 99999;
     @Setter
     private FHTemperatureDifficulty difficulty = null;//in case null, get it from  FHConfig.SERVER.tdiffculty.get()
-    @Setter
     float prevCoreBodyTemp;
     float coreBodyTemp;
     @Setter
     float envTemp = INVALID_TEMPERATURE;
-    @Setter
     float totalFeelTemp = INVALID_TEMPERATURE;
     float blockTemp = 0;
 
@@ -253,7 +251,7 @@ public class PlayerTemperatureData implements NBTSerializable {
 
         // Interpolate with previous envTemp
         if (envTemp == INVALID_TEMPERATURE)
-            envTemp = currentEnv;
+            envTemp = currentEnv + 37F;
         else
             envTemp = (currentEnv + 37F) * .2f + envTemp * .8f;
 
@@ -262,12 +260,12 @@ public class PlayerTemperatureData implements NBTSerializable {
         float newFeelTemp = 0;
         for (BodyPart part : BodyPart.values()) {
             newFeelTemp += ctx.getEffectiveTemperature(part) * part.area;
-            setFeelTempByPart(part, ctx.getEffectiveTemperature(part));
+            setFeelTempByPart(part, ctx.getEffectiveTemperature(part) + 37F);
         }
 
         // Interpolate with previous feelTemp
         if (totalFeelTemp == INVALID_TEMPERATURE)
-            totalFeelTemp = newFeelTemp;
+            totalFeelTemp = newFeelTemp + 37F;
         else
             totalFeelTemp = (newFeelTemp + 37F) * .2f + totalFeelTemp * .8f;
 
