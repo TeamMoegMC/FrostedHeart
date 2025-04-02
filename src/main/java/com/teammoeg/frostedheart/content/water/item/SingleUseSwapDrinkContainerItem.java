@@ -30,7 +30,7 @@ public abstract class SingleUseSwapDrinkContainerItem extends SingleUseDrinkCont
 
 			@Override
 			public int fill(FluidStack resource, FluidAction doFill) {
-				if(resource.getAmount()!=this.capacity)return 0;
+				if(resource.getAmount()<this.capacity)return 0;
 				return super.fill(resource, doFill);
 			}
 
