@@ -24,9 +24,7 @@ import com.teammoeg.chorda.util.struct.FastEnumMap;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
-import com.teammoeg.frostedheart.bootstrap.reference.FHDamageSources;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHBodyDataSyncPacket;
-import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext.BodyPartContext;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
@@ -37,7 +35,6 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.LogicalSide;
@@ -65,13 +62,22 @@ public class TemperatureUpdate {
      * @param event fired every tick on player
      */
     public static void regulateTemperature(PlayerTickEvent event) {
-        if (event.side == LogicalSide.SERVER && event.phase == Phase.END
-                && event.player instanceof ServerPlayer player) {
-            double bodyTemp = PlayerTemperatureData.getCapability(event.player)
-                    .map(PlayerTemperatureData::getBodyTemp).orElse(0f);
-            if (!(player.isCreative() || player.isSpectator())) {
+        if (event.side == LogicalSide.SERVER && event.phase == Phase.END && event.player instanceof ServerPlayer player) {
+
+            // Fetch the player temperature data
+            PlayerTemperatureData.getCapability(player).ifPresent((data) -> {
+                if (player.isCreative() || player.isSpectator() || player.isInvulnerable()) {
+                    return;
+                }
+
+                if (player.tickCount % FHConfig.SERVER.temperatureUpdateIntervalTicks.get() != 0) {
+                    return;
+                }
+
+                // Rest of update logic is handled every second.
+
                 // Soaked in water wetness
-                if (player.tickCount % FHConfig.SERVER.temperatureUpdateIntervalTicks.get() == 0 && player.isInWater()) {
+                if (player.isInWater()) {
                     // Check if an armor piece is on
                     boolean hasArmor = false;
                     for (ItemStack is : player.getArmorSlots()) {
@@ -96,50 +102,135 @@ public class TemperatureUpdate {
                     }
                 }
 
-                // Hypothermia and Hyperthermia
-                if (bodyTemp > 1 || bodyTemp < -1) {
+                // Torso leads to Hypothermia and Hyperthermia
+                double torso = data.getBodyTempByPart(BodyPart.TORSO);
+                if (torso > 1 || torso < -1) {
                     if (!player.hasEffect(FHMobEffects.HYPERTHERMIA.get())
                             && !player.hasEffect(FHMobEffects.HYPOTHERMIA.get())) {
-                        if (bodyTemp > 1) { // too hot
-                            if (bodyTemp <= 2) {
+                        if (torso > 1) { // too hot
+                            if (torso <= 2) {
                                 player.addEffect(new MobEffectInstance(FHMobEffects.HYPERTHERMIA.get(), 100, 0));
-                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
-                            } else if (bodyTemp <= 3) {
+                            } else if (torso <= 3) {
                                 player.addEffect(new MobEffectInstance(FHMobEffects.HYPERTHERMIA.get(), 100, 1));
-                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
-                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
-                            } else if (bodyTemp <= 5) {
+                            } else if (torso <= 5) {
                                 player.addEffect(new MobEffectInstance(FHMobEffects.HYPERTHERMIA.get(), 100, 2));
-                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
-                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
                             } else {
                                 player.addEffect(
-                                        new MobEffectInstance(FHMobEffects.HYPERTHERMIA.get(), 100, (int) (bodyTemp - 2)));
-                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
-                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
+                                        new MobEffectInstance(FHMobEffects.HYPERTHERMIA.get(), 100, (int) (torso - 2)));
+
                             }
                         } else { // too cold
-                            if (bodyTemp >= -2) {
+                            if (torso >= -2) {
                                 player.addEffect(new MobEffectInstance(FHMobEffects.HYPOTHERMIA.get(), 100, 0));
-                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
-                            } else if (bodyTemp >= -3) {
+                            } else if (torso >= -3) {
                                 player.addEffect(new MobEffectInstance(FHMobEffects.HYPOTHERMIA.get(), 100, 1));
-                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
-                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
-                            } else if (bodyTemp >= -5) {
+                            } else if (torso >= -5) {
                                 player.addEffect(new MobEffectInstance(FHMobEffects.HYPOTHERMIA.get(), 100, 2));
-                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
-                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
                             } else {
                                 player.addEffect(
-                                        new MobEffectInstance(FHMobEffects.HYPOTHERMIA.get(), 100, (int) (-bodyTemp - 2)));
-                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
-                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
+                                        new MobEffectInstance(FHMobEffects.HYPOTHERMIA.get(), 100, (int) (-torso - 2)));
                             }
                         }
                     }
                 }
-            }
+
+                // Head leads to confusion
+                double head = data.getBodyTempByPart(BodyPart.HEAD);
+                if (head > 1 || head < -1) {
+                    if (!player.hasEffect(MobEffects.CONFUSION)) {
+                        if (head > 1) { // too hot
+                            if (head <= 2) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 0)));
+                            } else if (head <= 3) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 1)));
+                            } else if (head <= 5) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
+                            } else {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 3)));
+                            }
+                        } else { // too cold
+                            if (head >= -2) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 0)));
+                            } else if (head >= -3) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 1)));
+                            } else if (head >= -5) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
+                            } else {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 3)));
+                            }
+                        }
+                    }
+                }
+
+                // Feet lead to slowness
+                double feet = data.getBodyTempByPart(BodyPart.FEET);
+                double feetAbs = Math.abs(feet);
+                double legs = data.getBodyTempByPart(BodyPart.LEGS);
+                double legsAbs = Math.abs(legs);
+                double lowerLimb;
+                if (feetAbs > legsAbs) {
+                    lowerLimb = feet;
+                } else {
+                    lowerLimb = legs;
+                }
+                if (lowerLimb > 1 || lowerLimb < -1) {
+                    if (!player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN)) {
+                        if (lowerLimb > 1) { // too hot
+                            if (lowerLimb <= 2) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 0)));
+                            } else if (lowerLimb <= 3) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 1)));
+                            } else if (lowerLimb <= 5) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2)));
+                            } else {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 3)));
+                            }
+                        } else { // too cold
+                            if (lowerLimb >= -2) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 0)));
+                            } else if (lowerLimb >= -3) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 1)));
+                            } else if (lowerLimb >= -5) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2)));
+                            } else {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 3)));
+                            }
+                        }
+                    }
+                }
+
+                // Hands lead to slow digging
+                double hands = data.getBodyTempByPart(BodyPart.HANDS);
+                if (hands > 1 || hands < -1) {
+                    if (!player.hasEffect(MobEffects.DIG_SLOWDOWN)) {
+                        if (hands > 1) { // too hot
+                            if (hands <= 2) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
+                            } else if (hands <= 3) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 1)));
+                            } else if (hands <= 5) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 2)));
+                            } else {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 3)));
+                            }
+                        } else { // too cold
+                            if (hands >= -2) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
+                            } else if (hands >= -3) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 1)));
+                            } else if (hands >= -5) {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 2)));
+                            } else {
+                                player.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 3)));
+                            }
+                        }
+                    }
+                }
+
+                // Frostbite and Burning effects due to effective temp
+                TemperatureComputation.burning(player, data);
+
+            });
         }
     }
 

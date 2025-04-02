@@ -26,7 +26,6 @@ import java.util.Map;
 import com.teammoeg.chorda.events.TeamLoadedEvent;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRMain;
@@ -42,7 +41,6 @@ import com.teammoeg.frostedresearch.recipe.InspireRecipe;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -68,7 +66,7 @@ import net.minecraftforge.network.PacketDistributor.PacketTarget;
 public class ResearchCommonEvents {
     @SubscribeEvent
     public static void onDrawDeskOpen(DrawDeskOpenEvent event) {
-        if (!event.getOpenPlayer().isCreative() && PlayerTemperatureData.getCapability(event.getOpenPlayer()).map(PlayerTemperatureData::getBodyTemp).orElse(0f) < -0.2) {
+        if (!event.getOpenPlayer().isCreative() && PlayerTemperatureData.getCapability(event.getOpenPlayer()).map(PlayerTemperatureData::getCoreBodyTemp).orElse(0f) < -0.2) {
             event.getOpenPlayer().displayClientMessage(Lang.translateMessage("research.too_cold"), true);
             event.setCanceled(true);
         }

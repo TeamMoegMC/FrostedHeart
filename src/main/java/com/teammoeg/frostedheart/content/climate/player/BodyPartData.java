@@ -38,6 +38,8 @@ public class BodyPartData {
     public final ItemStackHandler clothes;
     @Getter
     float temperature = 0;
+	@Getter
+	float feelTemp = 0;
 
     BodyPartData(int max_count) {
         this.clothes = new ItemStackHandler(max_count) {
@@ -55,11 +57,13 @@ public class BodyPartData {
     public void load(CompoundTag itemsTag) {
         clothes.deserializeNBT(itemsTag);
         temperature = itemsTag.getFloat("temp");
+		feelTemp = itemsTag.getFloat("feel_temp");
     }
 
     public CompoundTag save() {
         CompoundTag tag = clothes.serializeNBT();
         tag.putFloat("temp", temperature);
+		tag.putFloat("feel_temp", feelTemp);
         return tag;
     }
 
@@ -342,6 +346,6 @@ public class BodyPartData {
 
     @Override
     public String toString() {
-        return "BodyPartData [clothes=" + clothes.getStackInSlot(0) + ", temperature=" + temperature + "]";
+        return "BodyPartData [clothes=" + clothes.getStackInSlot(0) + ", temperature=" + temperature + ", feelTemp=" + feelTemp + "]";
     }
 }

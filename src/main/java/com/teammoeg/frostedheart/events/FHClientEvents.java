@@ -353,7 +353,7 @@ public class FHClientEvents {
                     ClientScene.INSTANCE.tick(mc);
 	            PlayerTemperatureData.getCapability(pe).ifPresent(t -> {
 	                t.smoothedBodyPrev = t.smoothedBody;
-	                t.smoothedBody = t.smoothedBody * .9f + t.getBodyTemp() * .1f;
+	                t.smoothedBody = t.smoothedBody * .9f + t.getCoreBodyTemp() * .1f;
 	            });
 	
 	            if (pe != null && pe.getEffect(FHMobEffects.NYCTALOPIA.get()) != null) {

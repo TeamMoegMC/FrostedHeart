@@ -12,6 +12,7 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -85,7 +86,7 @@ public class TemperatureComputation {
             // ranges [0, 1]
             float partConductivity = data.getThermalConductivityByPart(player, part);
             // This is a body part's "Body Temperature" from last time
-            float partBodyTemp = data.getTemperatureByPart(part);
+            float partBodyTemp = data.getBodyTempByPart(part);
             // Body ends have a 5C additional effect
             float partEnvTemp = envtemp - (part.isBodyEnd() ? 5 : 0);
             // Env and Body exchanges temperature
@@ -116,6 +117,52 @@ public class TemperatureComputation {
                 BodyHeatingCapability eq = cap.resolve().get();
                 eq.tickHeating(slot, item, ctx);
             }
+        }
+    }
+
+    protected static void burning(Player player, PlayerTemperatureData data) {
+        // TODO: apply burn or frostbite on specific parts
+
+        RandomSource r = player.getRandom();
+
+        // note that all temps are 37C based
+        // burning
+        // https://www.sciencedirect.com/topics/medicine-and-dentistry/thermal-injury#:~:text=Mechanism%20of%20Injury,is%20given%20in%20Table%202.&text=Source:%20Data%20modified%20from%20Moritz,Churchill%20Livingstone%20(Chapter%205).
+        float highestEffectiveTemperature = data.getHighestFeelTemp();
+        if (highestEffectiveTemperature > 200 - 37) {
+            if (r.nextFloat() < 1.0)
+                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 4.0F);
+        }
+        else if (highestEffectiveTemperature > 150 - 37) {
+            if (r.nextFloat() < 0.75)
+                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 3.0F);
+        }
+        else if (highestEffectiveTemperature > 100 - 37) {
+            if (r.nextFloat() < 0.5)
+                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 2.0F);
+        }
+        else if (highestEffectiveTemperature > 70 - 37) {
+            if (r.nextFloat() < 0.25)
+                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 1.0F);
+        }
+
+        // frostbite
+        float lowestEffectiveTemperature = data.getLowestFeelTemp();
+        if (lowestEffectiveTemperature < -200 - 37) {
+            if (r.nextFloat() < 1.0)
+                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 4.0F);
+        }
+        else if (lowestEffectiveTemperature < -150 - 37) {
+            if (r.nextFloat() < 0.75)
+                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 3.0F);
+        }
+        else if (lowestEffectiveTemperature < -100 - 37) {
+            if (r.nextFloat() < 5)
+                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 2.0F);
+        }
+        else if (lowestEffectiveTemperature < -50) {
+            if (r.nextFloat() < 0.25)
+                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 1.0F);
         }
     }
 
@@ -228,33 +275,21 @@ public class TemperatureComputation {
                              */
 
             // Apply all to pbTemp
-            pbTemp += heatExchangedUnits + movementHeatedUnits + homeostasisUnits;
+            pbTemp += heatExchangedUnits;
+
+            if (part.canGenerateHeat()) {
+                pbTemp += movementHeatedUnits + homeostasisUnits;
+            } else {
+                pbTemp += movementHeatedUnits;
+            }
 
             // FHMain.LOGGER.debug("pbTemp: " + pbTemp);
-
-            // degree I/II/III burn if dt=+20/+30/+40
-            if (dt > 40) {
-                player.hurt(FHDamageSources.hyperthermiaInstant(world), 2.0F);
-            } else if (dt > 30) {
-                player.hurt(FHDamageSources.hyperthermiaInstant(world), 1.5F);
-            } else if (dt > 20) {
-                player.hurt(FHDamageSources.hyperthermiaInstant(world), 1.0F);
-            }
-
-            // degree I/II/III freeze if dt=-50/-60/-70
-            if (dt < -70) {
-                player.hurt(FHDamageSources.hyperthermiaInstant(world), 2.0F);
-            } else if (dt < -60) {
-                player.hurt(FHDamageSources.hyperthermiaInstant(world), 1.5F);
-            } else if (dt < -50) {
-                player.hurt(FHDamageSources.hyperthermiaInstant(world), 1.0F);
-            }
 
             fem.put(part, pbTemp);
         }
 
         // Calculate heat transfer between each part
-        //From leg/chest/head share temperature.
+        // Core parts share temperature
         float coreTemp = 0;
         for (PlayerTemperatureData.BodyPart corePart : PlayerTemperatureData.BodyPart.CoreParts) {
             coreTemp += fem.get(corePart) * corePart.affectsCore;

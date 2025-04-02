@@ -148,7 +148,7 @@ public class FoodTemperatureHandler {
             }
 
             // Get the current body temperature
-            float current = PlayerTemperatureData.getCapability((ServerPlayer) event.getEntity()).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
+            float current = PlayerTemperatureData.getCapability((ServerPlayer) event.getEntity()).map(PlayerTemperatureData::getCoreBodyTemp).orElse(0f);
 
             // Fetch data from ITempAdjustFood, if available. Otherwise, use default values.
             if (adj != null) {
@@ -178,7 +178,7 @@ public class FoodTemperatureHandler {
 
             // Set body temperature
             final float toset = current;
-            PlayerTemperatureData.getCapability((ServerPlayer) event.getEntity()).ifPresent(t->t.setBodyTemp(toset));
+            PlayerTemperatureData.getCapability((ServerPlayer) event.getEntity()).ifPresent(t->t.setAllPartsBodyTemp(toset));
         }
     }
 

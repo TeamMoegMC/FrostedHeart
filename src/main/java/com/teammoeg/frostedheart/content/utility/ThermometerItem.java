@@ -55,7 +55,7 @@ public class ThermometerItem extends FHBaseItem {
     public int getTemperature(ServerPlayer p) {
     	 PlayerTemperatureData ptd=PlayerTemperatureData.getCapability(p).orElse(null);
     	 if(ptd!=null)
-    		 return (int) (ptd.getBodyTemp()* 10);
+    		 return (int) (ptd.getCoreBodyTemp()* 10);
     	 return 0;
     }
 
