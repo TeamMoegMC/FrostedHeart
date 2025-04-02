@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.content.climate.block.generator;
 
 import java.util.Optional;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.dataholders.SpecialData;
@@ -79,7 +81,15 @@ public class GeneratorData implements SpecialData {
             BlockPos.CODEC.optionalFieldOf("actualPos").forGetter(o -> Optional.ofNullable(o.actualPos)),
             ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o -> o.dimension == null ? Optional.empty() : Optional.of(o.dimension.location()))
     ).apply(t, GeneratorData::new));
-    public final ItemStackHandler inventory = new ItemStackHandler(2);
+    public final ItemStackHandler inventory = new ItemStackHandler(2) {
+
+		@Override
+		public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+			if(slot==1)return false;
+			return isStackValid(slot,stack);
+		}
+    	
+    };
     public final LazyOptional<ItemStackHandler> invCap = LazyOptional.of(() -> inventory);
     final float heatChance = .05f;
     public int process = 0, processMax = 0;
@@ -124,11 +134,11 @@ public class GeneratorData implements SpecialData {
         this.dimension = dimension.map(t -> ResourceKey.create(Registries.DIMENSION, t)).orElse(null);
     }
 
-    public static boolean isStackValid(Level w, int slot, ItemStack stack) {
+    public static boolean isStackValid(int slot, ItemStack stack) {
         if (stack.isEmpty())
             return false;
         if (slot == INPUT_SLOT) {
-            for (GeneratorRecipe recipet : CUtils.filterRecipes(w.getRecipeManager(), GeneratorRecipe.TYPE))
+            for (GeneratorRecipe recipet : CUtils.filterRecipes(null, GeneratorRecipe.TYPE))
                 if (recipet.input.test(stack)) {
                     return true;
                 }
@@ -166,15 +176,18 @@ public class GeneratorData implements SpecialData {
         return teamData.getData(FRSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
     }
 
+	public GeneratorRecipe getRecipe(Level w,ItemStack stack) {
+    	for (GeneratorRecipe recipet : CUtils.filterRecipes(w.getRecipeManager(), GeneratorRecipe.TYPE))
+            if (recipet.input.test(inventory.getStackInSlot(INPUT_SLOT))) {
+                return recipet;
+            }
+    	return null;
+    }
     public GeneratorRecipe getRecipe(Level w) {
         if (inventory.getStackInSlot(INPUT_SLOT).isEmpty())
             return null;
-        GeneratorRecipe recipe = null;
-        for (GeneratorRecipe recipet : CUtils.filterRecipes(w.getRecipeManager(), GeneratorRecipe.TYPE))
-            if (recipet.input.test(inventory.getStackInSlot(INPUT_SLOT))) {
-                recipe = recipet;
-                break;
-            }
+        GeneratorRecipe recipe=getRecipe(w,inventory.getStackInSlot(INPUT_SLOT));
+        
         if (recipe == null)
             return null;
         if (inventory.getStackInSlot(OUTPUT_SLOT).isEmpty() || (ItemStack.isSameItemSameTags(inventory.getStackInSlot(OUTPUT_SLOT), recipe.output)

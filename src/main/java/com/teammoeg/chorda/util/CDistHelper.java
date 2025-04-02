@@ -42,7 +42,7 @@ public class CDistHelper {
 	public static RecipeManager getRecipeManager() {
 	    if (getServer() != null)
 	        return getServer().getRecipeManager();
-	    return ClientUtils.mc().level.getRecipeManager();
+	    return ClientUtils.getWorld().getRecipeManager();
 	}
 	/**
 	 * Get the Registry Access instance, also the registry of registry
@@ -52,7 +52,7 @@ public class CDistHelper {
 		MinecraftServer server= getServer();
 		if(server!=null)
 			return server.registryAccess();
-		return ClientUtils.mc().level.registryAccess();
+		return ClientUtils.getWorld().registryAccess();
 	}
 	
 }
