@@ -1,7 +1,7 @@
 {
-  "attribute.frostedheart.heatproof": "防护层效率",
-  "attribute.frostedheart.insulation": "保暖系数",
-  "attribute.frostedheart.windproof": "风阻率",
+  "attribute.frostedheart.heatproof": "热防护效率",
+  "attribute.frostedheart.insulation": "保温系数",
+  "attribute.frostedheart.windproof": "流体阻隔率",
   "biome.frostedheart.volcanic": "活跃地质区",
   "block.frostedheart.blood_block": "血",
   "block.frostedheart.bone_block": "骨堆",
@@ -453,8 +453,8 @@
   "tooltip.frostedheart.handstove.fuel": "剩余燃烧时间：%s s",
   "tooltip.frostedheart.handstove.trash_ash": "灰烬已满！对地面按住右键以倒出灰烬",
   "tooltip.frostedheart.ignition_material": "可用于生火的材料，但是需要金属协助。",
-  "tooltip.frostedheart.ignition_metal": "可用于生火的金属，但是需要材料协助。",
-  "tooltip.frostedheart.ignition_tutorial": "双手持此物和以下任一物品即可生火:",
+  "tooltip.frostedheart.ignition_metal": "可用于生火的金属，但是需要燧石协助。",
+  "tooltip.frostedheart.ignition_tutorial": "双手持金属和燧石右击尝试生火。",
   "tooltip.frostedheart.inner": "内衬：",
   "tooltip.frostedheart.inner_damage": "内衬损坏：%s %%",
   "tooltip.frostedheart.inner_enchantment": "内衬附魔：",
@@ -787,5 +787,8 @@
   "item.frostedheart.spacesuit_body": "太空服（躯干）",
   "item.frostedheart.spacesuit_boots": "太空服（靴子）",
   "item.frostedheart.spacesuit_helmet": "太空服（头盔）",
-  "item.frostedheart.spacesuit_leg": "太空服（腿部）"
+  "item.frostedheart.spacesuit_leg": "太空服（腿部）",
+  "block.frostedheart.cooled_magma_block": "冷却的岩浆块",
+  "block.frostedheart.protein": "蛋白质",
+  "item.frostedheart.protein_bucket": "蛋白质桶"
 }

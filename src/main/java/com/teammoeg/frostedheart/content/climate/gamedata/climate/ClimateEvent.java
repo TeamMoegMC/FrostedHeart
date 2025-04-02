@@ -208,14 +208,14 @@ public class ClimateEvent {
         ClimateType type = ClimateType.NONE;
         float temp = getHourTemp(t);
         if (isBlizzard) {
-            if (temp <= WorldTemperature.BLIZZARD_TEMPERATURE) {
+            if (temp <= WorldTemperature.BLIZZARD_REACHES_GROUND) {
                 type = ClimateType.BLIZZARD;
-            } else if (temp <= WorldTemperature.SNOW_TEMPERATURE && t < bottomTime) {
+            } else if (temp <= WorldTemperature.SNOW_REACHES_GROUND && t < bottomTime) {
                 type = ClimateType.SNOW_BLIZZARD;
             } else if (t > bottomTime) {
                 type = ClimateType.SUN;
             }
-        } else if (temp <= WorldTemperature.SNOW_TEMPERATURE) {
+        } else if (temp <= WorldTemperature.SNOW_REACHES_GROUND) {
             type = ClimateType.SNOW;
         }
         return Pair.of(temp, type);

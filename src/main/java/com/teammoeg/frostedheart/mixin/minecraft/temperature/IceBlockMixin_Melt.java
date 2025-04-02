@@ -56,10 +56,11 @@ public abstract class IceBlockMixin_Melt extends HalfTransparentBlock{
      */
     @Overwrite
     public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
-        if (worldIn.getBrightness(LightLayer.BLOCK, pos) > 11 - state.getLightBlock(worldIn, pos) || WorldTemperature.block(worldIn, pos) > WorldTemperature.SNOW_MELT_TEMPERATURE) {
-            this.melt(state, worldIn, pos);
+        if (worldIn.getBrightness(LightLayer.BLOCK, pos) > 11 - state.getLightBlock(worldIn, pos) || WorldTemperature.block(worldIn, pos) > WorldTemperature.WATER_ICE_MELTS) {
+            if (random.nextInt(10) == 0) {
+				this.melt(state, worldIn, pos);
+			}
         }
-
     }
 	/**
 	 * 
@@ -70,7 +71,7 @@ public abstract class IceBlockMixin_Melt extends HalfTransparentBlock{
 	public void playerDestroy(Level pLevel, Player pPlayer, BlockPos pPos, BlockState pState, @Nullable BlockEntity pTe, ItemStack pStack) {
 		super.playerDestroy(pLevel, pPlayer, pPos, pState, pTe, pStack);
 		if (EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH, pStack) == 0) {
-			if (WorldTemperature.block(pLevel, pPos) > -2) {
+			if (WorldTemperature.block(pLevel, pPos) > WorldTemperature.WATER_ICE_MELTS) {
 				if (pLevel.dimensionType().ultraWarm()) {
 					pLevel.removeBlock(pPos, false);
 					return;

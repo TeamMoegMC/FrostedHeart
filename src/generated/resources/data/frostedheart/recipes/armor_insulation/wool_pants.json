@@ -1,6 +1,6 @@
 {
   "type": "frostedheart:armor_temp",
-  "factor": 570.0,
+  "factor": 300.0,
   "heat_proof": 0.3,
   "item": "frostedheart:wool_pants",
   "slot": "legs",

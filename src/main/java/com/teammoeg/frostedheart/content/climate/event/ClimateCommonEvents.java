@@ -91,7 +91,7 @@ import net.minecraftforge.network.PacketDistributor.PacketTarget;
 import java.util.Collection;
 import java.util.function.Supplier;
 
-import static com.teammoeg.frostedheart.content.climate.WorldTemperature.SNOW_TEMPERATURE;
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.SNOW_REACHES_GROUND;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ClimateCommonEvents {
@@ -147,9 +147,9 @@ public class ClimateCommonEvents {
 			if (data.getInsulation() != 0)
 				event.addModifier(FHAttributes.INSULATION.get(),
 						ecs.createAttribute(data.getInsulation(), Operation.ADDITION));
-			if (data.getColdProof() != 0)
+			if (data.getFluidResistance() != 0)
 				event.addModifier(FHAttributes.WIND_PROOF.get(),
-						ecs.createAttribute(data.getColdProof(), Operation.MULTIPLY_TOTAL));
+						ecs.createAttribute(data.getFluidResistance(), Operation.MULTIPLY_TOTAL));
 			if (data.getHeatProof() != 0)
 				event.addModifier(FHAttributes.HEAT_PROOF.get(),
 						ecs.createAttribute(data.getHeatProof(), Operation.MULTIPLY_TOTAL));
@@ -349,7 +349,7 @@ public class ClimateCommonEvents {
 			BlockState state = level.getBlockState(pos);
 			Biome biome = level.getBiome(pos).value();
 			if (level.isRaining() && biome.coldEnoughToSnow(pos)
-					&& WorldTemperature.block(level, pos) <= SNOW_TEMPERATURE
+					&& WorldTemperature.block(level, pos) <= SNOW_REACHES_GROUND
 					&& level.getBrightness(LightLayer.BLOCK, pos) < 10 && state.getBlock() == Blocks.SNOW) {
 				int layers = state.getValue(BlockStateProperties.LAYERS);
 				if (layers < 5) {

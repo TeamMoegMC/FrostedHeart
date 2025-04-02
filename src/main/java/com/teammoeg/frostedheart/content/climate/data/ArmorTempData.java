@@ -53,14 +53,25 @@ public record ArmorTempData(Item item,Optional<BodyPart> slot,float insulation, 
 		return map.get(part);
 		
 	}
-	
+
+	/**
+	 * a non-negative value inversely proportional to conductivity--which is (0,1]
+	 */
 	public float getInsulation() {
     	return insulation;
     }
+
+	/**
+	 * A [0,1] value representing heat resistance
+	 */
     public float getHeatProof() {
     	return heat_proof;
     }
-    public float getColdProof() {
+
+	/**
+	 * A [0,1] value representing fluid resistance
+	 */
+    public float getFluidResistance() {
     	return wind_proof;
     }
     public FinishedRecipe toFinished(ResourceLocation name) {

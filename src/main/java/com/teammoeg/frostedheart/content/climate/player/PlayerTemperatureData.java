@@ -87,8 +87,6 @@ public class PlayerTemperatureData implements NBTSerializable {
         public boolean canGenerateHeat() {
             switch (this) {
                 case TORSO:
-                case LEGS:
-                case HEAD:
                     return true;
             }
             return false;
@@ -102,7 +100,16 @@ public class PlayerTemperatureData implements NBTSerializable {
                     return true;
             }
             return false;
+        }
 
+        public boolean canOnlyWearOneLayer() {
+            switch (this) {
+                case HEAD:
+                case FEET:
+                case HANDS:
+                    return true;
+            }
+            return false;
         }
     }
 
@@ -307,13 +314,11 @@ public class PlayerTemperatureData implements NBTSerializable {
     }
 
     public float getThermalConductivityByPart(Player player, BodyPart bodyPart) {
-        ItemStack equipment = player.getItemBySlot(bodyPart.slot);
-        return clothesOfParts.get(bodyPart).getThermalConductivity(bodyPart, equipment);
+        return clothesOfParts.get(bodyPart).getThermalConductivity(player, bodyPart);
     }
 
-    public float getWindResistanceByPart(Player player, BodyPart bodyPart) {
-        ItemStack equipment = player.getItemBySlot(bodyPart.slot);
-        return clothesOfParts.get(bodyPart).getWindResistance(bodyPart, equipment);
+    public float getFluidResistanceByPart(Player player, BodyPart bodyPart) {
+        return clothesOfParts.get(bodyPart).getFluidResistance(player, bodyPart);
     }
 
     public float getTemperatureByPart(BodyPart bodyPart) {

@@ -24,11 +24,6 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.registries.ForgeRegistries;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTemperature;
 import com.teammoeg.frostedheart.content.climate.data.PlantTemperature.TemperatureType;
@@ -40,7 +35,6 @@ import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -133,21 +127,6 @@ public class WorldTemperature {
         return canTreeGenerate(worldIn, p, rand,Math.max(1, Mth.ceil(minTemp+6-temp / 2)));
     }
 
-    public static boolean canGrassSurvive(LevelReader world, BlockPos pos) {
-        float t = block(world, pos);
-        return t >= HEMP_GROW_TEMPERATURE && t <= VANILLA_PLANT_GROW_TEMPERATURE_MAX;
-    }
-
-    public static boolean canNetherTreeGrow(BlockGetter w, BlockPos p) {
-        if (!(w instanceof LevelAccessor)) {
-            return false;
-        }
-        float temp = block((LevelAccessor) w, p);
-        if (temp <= 300)
-            return false;
-        return !(temp > 300 + VANILLA_PLANT_GROW_TEMPERATURE_MAX);
-    }
-
     public static boolean canTreeGenerate(LevelAccessor w, BlockPos p, RandomSource r, int chance) {
         return r.nextInt(chance) == 0;
 
@@ -179,22 +158,21 @@ public class WorldTemperature {
     		return this==TOO_COLD||this==BLIZZARD_HARM;
     	}
     }
-    /**
-     * Baseline temperature for temperate period.
-     */
-    public static final float CALM_PERIOD_BASELINE = -10;
 
+    // Climate
+    public static final float SNOW_REACHES_GROUND = -13F;
+    public static final float BLIZZARD_REACHES_GROUND = -30;
+    public static final float OVERWORLD_BASELINE = -10;
     /**
      * The temporary uprising peak temperature of a cold period.
      */
     public static final float COLD_PERIOD_PEAK = -5;
-
     /**
      * The peak temperature of a warm period.
      */
     public static final float WARM_PERIOD_PEAK = 8;
     /**
-     * The peak temperature of a warm period.
+     * The lower peak temperature of a warm period.
      */
     public static final float WARM_PERIOD_LOWER_PEAK = 6;
     /**
@@ -228,47 +206,33 @@ public class WorldTemperature {
             COLD_PERIOD_BOTTOM_T10
     };
 
-    public static final float WATER_FREEZE_TEMP = 0;
-    public static final float CO2_FREEZE_TEMP = -78;
-    public static final float O2_FREEZE_TEMP = -218;
-    public static final float O2_LIQUID_TEMP = -182;
-    public static final float N2_FREEZE_TEMP = -209;
-    public static final float N2_LIQUID_TEMP = -195;
+    // Matter state transitions
+    public static final float CO2_FREEZES = -78;
+    public static final float OXYGEN_FREEZES = -218;
+    public static final float OXYGEN_CONDENSATES = -182;
+    public static final float NITROGEN_FREEZES = -209;
+    public static final float NITROGEN_CONDENSATES = -195;
+    public static final float WATER_ICE_MELTS = 2F;
+    public static final float WATER_FREEZES = -5F;
+    public static final float LAVA_FREEZES = 700F;
 
-    /**
-     * The temperature when snow can reach the ground.
-     */
-    public static final float SNOW_TEMPERATURE = -13;
-    /**
-     * The temperature when snow layer melts.
-     */
-    public static final float SNOW_MELT_TEMPERATURE = 0.5F;
-    /**
-     * The temperature when snow becomes blizzard.
-     */
-    public static final float BLIZZARD_TEMPERATURE = -30;
-    /**
-     * The temperature when cold plant can grow.
-     */
-    public static final int COLD_RESIST_GROW_TEMPERATURE = -20;
-    /**
-     * The temperature when hemp can grow.
-     */
-    public static final float HEMP_GROW_TEMPERATURE = -15;
-    /**
-     * The temperature when vanilla plants can grow.
-     */
-    public static final float VANILLA_PLANT_GROW_TEMPERATURE = -10;
-    public static final int BONEMEAL_TEMPERATURE = 5;
+    // Agriculture
     public static final float FOOD_FROZEN_TEMPERATURE = -5;
-
     public static final float ANIMAL_ALIVE_TEMPERATURE = -9f;
-
     public static final float FEEDED_ANIMAL_ALIVE_TEMPERATURE = -30f;
-
     public static final float VANILLA_PLANT_GROW_TEMPERATURE_MAX = 50;
-    public static final float CLIMATE_BLOCK_AFFECTION=0.5f;
 
+    // Altitudes
+    public static final int SEA_LEVEL = 63;
+    public static final int BUILD_UPPER_LIMIT = 320;
+    public static final int STONE_INTERFACE_LEVEL = 0;
+    public static final int LAVA_INTERFACE_LEVEL = -55;
+    public static final int BUILD_LOWER_LIMIT = -64;
+    public static final float TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_SEA_LEVEL = -0.1F;
+    public static final float TEMPERATURE_CHANGE_PER_BLOCK_BELOW_STONE_INTERFACE = 0.1F;
+    public static final float TEMPERATURE_CHANGE_PER_BLOCK_BELOW_LAVA_INTERFACE = 20F;
+
+    // temperature cache
     public static Map<Level, Float> worldCache = new HashMap<>();
     public static Map<Biome, Float> biomeCache = new HashMap<>();
 
@@ -279,11 +243,11 @@ public class WorldTemperature {
 
     /**
      * Get World temperature adjustment, this value is consistent.
-     * @param w
-     * @return
+     * Range: [minWorldTemp, maxWorldTemp], See Data.
+     * Now, it is constant: [-10, -10].
      */
     public static float dimension(LevelReader w) {
-        float wt = 0;
+        float wt = OVERWORLD_BASELINE;
         if (w instanceof Level level) {
             wt = worldCache.computeIfAbsent(level,l-> WorldTempData.getWorldTemp(l));
         }
@@ -292,9 +256,15 @@ public class WorldTemperature {
 
     /**
      * Get Biome temperature adjustment, this value is consistent.
-     * @param w
-     * @param pos
-     * @return
+     * Range: [minBiomeTemp, maxBiomeTemp], See Data.
+     * Now, it is [-30, 20].
+     *
+     * This is biology induced temperature!
+     * This should exclude altitude effects.
+     * For example, frozen peaks and gravel desert should have same biome temp.
+     * Because they both have no plant!
+     * But wintry forest would have higher biome temp, because of trees!
+     * Similarly for bushes etc.
      */
     public static float biome(LevelReader w, BlockPos pos) {
         Biome b = w.getBiome(pos).get();
@@ -303,8 +273,8 @@ public class WorldTemperature {
 
     /**
      * Get Climate temperature adjustment, this value is consistent.
-     * @param w
-     * @return
+     * Range: [COLD_PERIOD_BOTTOM_T10, WARM_PERIOD_PEAK]
+     * Now, it is [-90, 8]
      */
     public static float climate(LevelReader w) {
         if (w instanceof Level) {
@@ -313,10 +283,41 @@ public class WorldTemperature {
         return 0;
     }
 
+
+    /**
+     * Altitude-induced temperature change, this value is consistent.
+     * Range: [(BUILD_UPPER_LIMIT - SEA_LEVEL) * TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_SEA_LEVEL,
+     * (STONE_INTERFACE_LEVEL - BUILD_LOWER_LIMIT) * TEMPERATURE_CHANGE_PER_BLOCK_BELOW_STONE_INTERFACE]
+     * Now, it is [-25.7, 6.4]
+     */
+    public static float altitude(LevelReader w, BlockPos pos) {
+        // TODO: This is for only overworld
+        int y = pos.getY();
+        // decrease above sea
+        if (y > SEA_LEVEL) {
+            int yc = Mth.clamp(y, SEA_LEVEL, BUILD_UPPER_LIMIT);
+            return (yc - SEA_LEVEL) * TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_SEA_LEVEL;
+        }
+        // an insulated zone in normal stone area
+        else if (y > STONE_INTERFACE_LEVEL) {
+            return 0;
+        }
+        // increase in deepslate
+        else if (y > LAVA_INTERFACE_LEVEL) {
+            int yc = Mth.clamp(y, LAVA_INTERFACE_LEVEL, STONE_INTERFACE_LEVEL);
+            return (STONE_INTERFACE_LEVEL - yc) * TEMPERATURE_CHANGE_PER_BLOCK_BELOW_STONE_INTERFACE;
+        }
+        // significant increase in lava to bedrock
+        else {
+            int yc = Mth.clamp(y, BUILD_LOWER_LIMIT, LAVA_INTERFACE_LEVEL);
+            return (LAVA_INTERFACE_LEVEL - yc) * TEMPERATURE_CHANGE_PER_BLOCK_BELOW_LAVA_INTERFACE;
+        }
+    }
+
     /**
      * Get World temperature for a specific world, in absolute value.
      *
-     * Result = Dimension + Biome + Climate.
+     * Result = Dimension + Biome + Altitude + Climate.
      *
      * This value is dynamic in game.
      *
@@ -324,7 +325,7 @@ public class WorldTemperature {
      * @return world temperature<br>
      */
     public static float base(LevelReader w, BlockPos pos) {
-        return dimension(w) + biome(w, pos) + climate(w);
+        return dimension(w) + biome(w, pos) + altitude(w, pos) + climate(w);
     }
 
     /**
@@ -339,10 +340,17 @@ public class WorldTemperature {
         return ChunkHeatData.get(world, new ChunkPos(pos)).map(t -> t.getAdditionTemperatureAtBlock(world, pos)).orElse(0f);
     }
 
+    public static float gaussian(LevelReader world, float mean, float std) {
+        if (world instanceof Level level) {
+            return (float) (level.getRandom().nextGaussian() * std + mean);
+        } else
+            return 0;
+    }
+
     /**
      * This is the most common method to get temperature for blocks like crops and machines.
      *
-     * Result = Dimension + Biome + Climate + HeatAdjusts.
+     * Result = Dimension + Biome + Altitude + Climate + HeatAdjusts.
      * A factor would be applied to climate value to lower the climate affect on block, simulates lower heat transfer rate between block and air
      * Called to get temperature when a world context is available.
      * on server, will either query capability falling back to cache, or query
@@ -351,12 +359,29 @@ public class WorldTemperature {
      * This value is dynamic in game.
      */
     public static float block(LevelReader world, BlockPos pos) {
-        return dimension(world) + biome(world, pos) + climate(world) * CLIMATE_BLOCK_AFFECTION + heat(world,pos);
+        int y = pos.getY();
+
+        float climateBlockAffection;
+        // above sea level, climate significantly influences soil
+        if (y > SEA_LEVEL) {
+            climateBlockAffection = 0.5F;
+        }
+        // a thin layer of stone beneath sea level serves as a climate insulation layer
+        else if (y > STONE_INTERFACE_LEVEL) {
+            climateBlockAffection = 0.5F * (y - STONE_INTERFACE_LEVEL) / (SEA_LEVEL - STONE_INTERFACE_LEVEL);
+        }
+        // below that, climate no longer affects block temperature
+        else {
+            climateBlockAffection = 0.0F;
+        }
+        return dimension(world) + biome(world, pos) + altitude(world, pos) +
+                climate(world) * climateBlockAffection + heat(world,pos) + gaussian(world, 0, 0.3F);
     }
+
     /**
      * This is the most common method to get air temperature which may affect player.
      *
-     * Result = Dimension + Biome + Climate + HeatAdjusts.
+     * Result = Dimension + Biome + Altitude + Climate + HeatAdjusts.
      *
      * Called to get temperature when a world context is available.
      * on server, will either query capability falling back to cache, or query
@@ -365,7 +390,23 @@ public class WorldTemperature {
      * This value is dynamic in game.
      */
     public static float air(LevelReader world, BlockPos pos) {
-        return dimension(world) + biome(world, pos) + climate(world) + heat(world,pos);
+        int y = pos.getY();
+
+        float climateAirAffection;
+        // above sea level, climate significantly influences air
+        if (y > SEA_LEVEL) {
+            climateAirAffection = 1.0F;
+        }
+        // a thin layer of stone beneath sea level serves as a climate insulation layer
+        else if (y > STONE_INTERFACE_LEVEL) {
+            climateAirAffection = 1.0F * (y - STONE_INTERFACE_LEVEL) / (SEA_LEVEL - STONE_INTERFACE_LEVEL);
+        }
+        // below that, climate no longer affects block temperature
+        else {
+            climateAirAffection = 0.0F;
+        }
+        return dimension(world) + biome(world, pos) + altitude(world, pos) +
+                climate(world) * climateAirAffection + heat(world,pos) + gaussian(world, 0, 0.3F);
     }
 
     /**
@@ -380,7 +421,7 @@ public class WorldTemperature {
     }
     /**
      * Convenience method for checking wind strength in specific world.
-     *
+     * @return Range 0-100
      * */
     public static int wind(LevelReader w) {
         if (w instanceof Level l) {

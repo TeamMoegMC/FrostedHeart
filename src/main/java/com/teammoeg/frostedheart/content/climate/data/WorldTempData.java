@@ -28,6 +28,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
@@ -44,7 +45,7 @@ public record WorldTempData(ResourceLocation world,float temperature){
 		WorldTempData data = cacheList.get(w.dimension().location());
 		if (data != null)
 			return data.getTemp();
-		return -10F;
+		return WorldTemperature.OVERWORLD_BASELINE;
 	}
 	public float getTemp() {
         return temperature;

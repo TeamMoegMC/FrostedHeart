@@ -25,9 +25,6 @@ import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.chorda.CompatModule;
-import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
-import com.teammoeg.frostedheart.bootstrap.client.FHTooltips;
-import com.teammoeg.frostedheart.compat.ftbq.FHGuiProviders;
 import com.teammoeg.frostedheart.compat.ie.FHManual;
 import com.teammoeg.frostedheart.compat.tetra.TetraClient;
 import com.teammoeg.frostedheart.content.climate.particle.SnowParticle;
@@ -94,7 +91,7 @@ public class FHClientEventsMod {
         //}
         LOGGER.info(CLIENT_SETUP, "FML Client setup event finished");
 
-        	REGISTRATE.setTooltipModifierFactory(item -> {
+        REGISTRATE.setTooltipModifierFactory(item -> {
 			return new ItemDescription.Modifier(item, TooltipHelper.Palette.STANDARD_CREATE)
 				.andThen(new FoodTempStats(item))
 				.andThen(TooltipModifier.mapNull(FoodNutritionStats.create(item)))
@@ -103,7 +100,7 @@ public class FHClientEventsMod {
 				.andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))
 				.andThen(TooltipModifier.mapNull(KineticStats.create(item)));
 		});
-		FHTooltips.registerTooltipModifiers();
+		// FHTooltips.registerTooltipModifiers();
         /*
          ItemBlockRenderTypes.setRenderLayer(FHBlocks.RYE_BLOCK.get(), RenderType.cutout());
 		ItemBlockRenderTypes.setRenderLayer(FHBlocks.WHITE_TURNIP_BLOCK.get(), RenderType.cutout());

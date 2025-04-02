@@ -36,6 +36,7 @@ import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
 import com.teammoeg.frostedheart.content.decoration.*;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
@@ -75,6 +76,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
@@ -1073,6 +1075,13 @@ public class FHBlocks {
             .model(AssetLookup.existingItemModel())
             .build()
             .lang("White Turnip")
+            .register();
+
+    public static final BlockEntry<CooledMagmaBlock> COOLED_MAGMA_BLOCK = REGISTRATE.block("cooled_magma_block", CooledMagmaBlock::new)
+            .properties(p -> p.mapColor(MapColor.STONE).instrument(NoteBlockInstrument.BASEDRUM).requiresCorrectToolForDrops())
+            .transform(pickaxeOnly())
+            .tag(BlockTags.NEEDS_STONE_TOOL)
+            .simpleItem()
             .register();
 
     static {
