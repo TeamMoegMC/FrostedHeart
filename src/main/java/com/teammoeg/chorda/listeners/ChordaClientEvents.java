@@ -21,15 +21,7 @@ public class ChordaClientEvents {
 				PartialTickTracker.getInstance().advanceTimer();
 		}
 	}
-	@SubscribeEvent
-	public static void registerModels(ModelEvent.RegisterAdditional ev)
-	{
-		Chorda.LOGGER.info("===========Dynamic Model Register========");
-		DynamicBlockModelReference.registeredModels.forEach(rl->{
-			ev.register(rl);
-			Chorda.LOGGER.info(rl);
-		});
-	}
+
 	@SubscribeEvent(priority=EventPriority.HIGHEST)
 	public static void onClientTick(TickEvent.ClientTickEvent ev) {
 		if(ev.phase==Phase.START) {

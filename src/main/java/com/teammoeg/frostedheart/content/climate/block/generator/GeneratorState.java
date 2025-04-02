@@ -57,6 +57,8 @@ public class GeneratorState extends HeatingState {
     public void writeSaveNBT(CompoundTag nbt) {
         super.writeSaveNBT(nbt);
         nbt.putInt("explodeTicks", explodeTicks);
+		nbt.putBoolean("hasFuel", hasFuel);
+		nbt.putBoolean("isActive", isActive());
         //upgradeProcess=nbt.getInt("upgradeProcess");
     }
 
@@ -66,6 +68,8 @@ public class GeneratorState extends HeatingState {
         //upgradeProcess = nbt.getInt("upgradeProcess");
         //Optional<GeneratorData> data = this.getDataNoCheck();
         explodeTicks = nbt.getInt("explodeTicks");
+		hasFuel=nbt.getBoolean("hasFuel");
+		super.setActive(nbt.getBoolean("isActive"));
     }
 
     /**
