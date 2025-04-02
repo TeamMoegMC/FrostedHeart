@@ -45,10 +45,6 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class ChunkHeatData {
-	public static enum AdjustType{
-		CUBIC,
-		PILLAR
-	}
     public static final MapCodec<List<IHeatArea>> LIST_CODEC = CodecUtil.optionalFieldOfs(Codec.list(
             CodecUtil.dispatch(IHeatArea.class)
                     .type("cubic", CubicHeatArea.class, CubicHeatArea.CODEC)
