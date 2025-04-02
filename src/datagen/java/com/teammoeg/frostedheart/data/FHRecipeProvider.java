@@ -115,7 +115,9 @@ public class FHRecipeProvider extends RecipeProvider {
 		});
 		//block
 		ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/block_temperature.xlsx"), m->{
+			
 			ResourceLocation block=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("block")));
+			if(!block.getPath().isEmpty())
 			out.accept(new BlockTempData(CRegistryHelper.getBlock(block),
 					(float)ExcelHelper.getCellValueAsNumber(m.get("temperature")),
 					ExcelHelper.getCellValueAsBoolean(m.get("level_divide")),
