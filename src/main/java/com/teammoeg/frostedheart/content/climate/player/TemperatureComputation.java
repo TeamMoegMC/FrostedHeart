@@ -11,10 +11,10 @@ import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
@@ -25,7 +25,7 @@ import java.util.UUID;
 
 public class TemperatureComputation {
     public static final UUID ENV_TEMP_ATTRIBUTE_UUID = UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
-    protected static float environment(Player player, PlayerTemperatureData data) {
+    protected static float environment(ServerPlayer player, PlayerTemperatureData data) {
         // World Temp: Dimension, Biome, Climate, Time, heat adjusts
         Level world = player.level();
         BlockPos pos = new BlockPos((int) player.getX(), (int) player.getEyeY(), (int) player.getZ());
@@ -78,7 +78,7 @@ public class TemperatureComputation {
         return envtemp;
     }
 
-    protected static void effective(Player player, PlayerTemperatureData data, HeatingDeviceContext ctx) {
+    protected static void effective(ServerPlayer player, PlayerTemperatureData data, HeatingDeviceContext ctx) {
         float envtemp = (float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
 
         // Environment-Body Exchange
@@ -97,7 +97,7 @@ public class TemperatureComputation {
         }
     }
 
-    protected static void equipmentHeating(Player player, PlayerTemperatureData data, HeatingDeviceContext ctx) {
+    protected static void equipmentHeating(ServerPlayer player, PlayerTemperatureData data, HeatingDeviceContext ctx) {
         // Curios slots
         if (CompatModule.isCuriosLoaded())
             for (Pair<ISlotType, ItemStack> i : CuriosCompat.getAllCuriosAndSlotsIfVisible(player)) {
@@ -120,7 +120,7 @@ public class TemperatureComputation {
         }
     }
 
-    protected static void burning(Player player, PlayerTemperatureData data) {
+    protected static void burning(ServerPlayer player, PlayerTemperatureData data) {
         // TODO: apply burn or frostbite on specific parts
 
         RandomSource r = player.getRandom();
@@ -129,45 +129,45 @@ public class TemperatureComputation {
         // burning
         // https://www.sciencedirect.com/topics/medicine-and-dentistry/thermal-injury#:~:text=Mechanism%20of%20Injury,is%20given%20in%20Table%202.&text=Source:%20Data%20modified%20from%20Moritz,Churchill%20Livingstone%20(Chapter%205).
         float highestEffectiveTemperature = data.getHighestFeelTemp();
-        if (highestEffectiveTemperature > 200 - 37) {
+        if (highestEffectiveTemperature > 200) {
             if (r.nextFloat() < 1.0)
                 player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 4.0F);
         }
-        else if (highestEffectiveTemperature > 150 - 37) {
+        else if (highestEffectiveTemperature > 150) {
             if (r.nextFloat() < 0.75)
                 player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 3.0F);
         }
-        else if (highestEffectiveTemperature > 100 - 37) {
+        else if (highestEffectiveTemperature > 100) {
             if (r.nextFloat() < 0.5)
                 player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 2.0F);
         }
-        else if (highestEffectiveTemperature > 70 - 37) {
+        else if (highestEffectiveTemperature > 70) {
             if (r.nextFloat() < 0.25)
                 player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 1.0F);
         }
 
         // frostbite
         float lowestEffectiveTemperature = data.getLowestFeelTemp();
-        if (lowestEffectiveTemperature < -200 - 37) {
+        if (lowestEffectiveTemperature < -200) {
             if (r.nextFloat() < 1.0)
-                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 4.0F);
+                player.hurt(FHDamageSources.hypothermiaInstant(player.level()), 4.0F);
         }
-        else if (lowestEffectiveTemperature < -150 - 37) {
+        else if (lowestEffectiveTemperature < -150) {
             if (r.nextFloat() < 0.75)
-                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 3.0F);
+                player.hurt(FHDamageSources.hypothermiaInstant(player.level()), 3.0F);
         }
-        else if (lowestEffectiveTemperature < -100 - 37) {
+        else if (lowestEffectiveTemperature < -100) {
             if (r.nextFloat() < 5)
-                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 2.0F);
+                player.hurt(FHDamageSources.hypothermiaInstant(player.level()), 2.0F);
         }
         else if (lowestEffectiveTemperature < -50) {
             if (r.nextFloat() < 0.25)
-                player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 1.0F);
+                player.hurt(FHDamageSources.hypothermiaInstant(player.level()), 1.0F);
         }
     }
 
     public static final float FOOD_EXHAUST_COLD=.05F;
-    protected static FastEnumMap<PlayerTemperatureData.BodyPart, Float> body(Player player, PlayerTemperatureData data, HeatingDeviceContext ctx) {
+    protected static FastEnumMap<PlayerTemperatureData.BodyPart, Float> body(ServerPlayer player, PlayerTemperatureData data, HeatingDeviceContext ctx) {
         Level world = player.level();
         // Range 0-100
         int wind = WorldTemperature.wind(world);
