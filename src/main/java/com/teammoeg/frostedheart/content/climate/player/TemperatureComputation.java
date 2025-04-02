@@ -171,8 +171,10 @@ public class TemperatureComputation {
         Level world = player.level();
         // Range 0-100
         int wind = WorldTemperature.wind(world);
+        // Range 0-1
+        float openness = data.getAirOpenness();
         // [0,1]
-        float effectiveWind = Mth.clamp(wind, 0, 100) / 100F;
+        float effectiveWind = openness * Mth.clamp(wind, 0, 100) / 100F;
 
         // Apply Exchanged Temperature, and Self-Heating
         // Temporary storage map
