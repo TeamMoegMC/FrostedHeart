@@ -62,7 +62,7 @@ public class TemperatureCommand {
                 // Core information
                 result.append("§e=== Player Temperature Data ===§r\n");
                 result.append(String.format("§6Core:§r %.2f°C (Previous: %.2f°C)\n",
-                        data.getCoreBodyTemp(), data.getPreviousCoreBodyTemp()));
+                        data.getCoreBodyTemp() + 37, data.getPreviousCoreBodyTemp() + 37));
                 result.append(String.format("§6Feeling:§r %.1f°C\n", data.getTotalFeelTemp()));
                 result.append(String.format("§6Environment:§r %.1f°C\n", data.getEnvTemp()));
                 BlockPos pos = new BlockPos((int) player.getX(), (int) player.getEyeY(), (int) player.getZ());
