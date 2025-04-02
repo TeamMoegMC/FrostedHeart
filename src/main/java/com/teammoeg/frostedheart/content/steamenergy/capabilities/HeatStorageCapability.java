@@ -28,6 +28,8 @@ public class HeatStorageCapability {
     ItemStack container;
 
     public HeatStorageCapability(ItemStack stack, int maxstorage) {
+    	this.container=stack;
+    	this.maxstore=maxstorage;
     }
 
     protected float getEnergy() {

@@ -94,7 +94,7 @@ public class CoalHandStove extends FHBaseItem {
 //        list.add(Lang.translateTooltip("handstove.add_fuel").withStyle(ChatFormatting.GRAY));
         if (getAshAmount(stack) >= 800)
             list.add(Lang.translateTooltip("handstove.trash_ash").withStyle(ChatFormatting.RED));
-        list.add(Lang.translateTooltip("handstove.fuel", getFuelAmount(stack) / 2).withStyle(ChatFormatting.GRAY));
+        list.add(Lang.translateTooltip("handstove.fuel", getFuelAmount(stack)).withStyle(ChatFormatting.GRAY));
     }
 
 
