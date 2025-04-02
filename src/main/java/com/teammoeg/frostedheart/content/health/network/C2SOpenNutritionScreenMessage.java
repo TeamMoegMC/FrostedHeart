@@ -4,8 +4,7 @@ import java.util.function.Supplier;
 
 import com.teammoeg.chorda.menu.DummyMenuProvider;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.content.climate.block.ClothesInventoryMenu;
-import com.teammoeg.frostedheart.content.health.screen.NutritionMenu;
+import com.teammoeg.frostedheart.content.health.screen.HealthStatMenu;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent.Context;
@@ -22,7 +21,7 @@ public record C2SOpenNutritionScreenMessage() implements CMessage {
 	@Override
 	public void handle(Supplier<Context> context) {
 		context.get().enqueueWork(()->{
-			NetworkHooks.openScreen(context.get().getSender(), new DummyMenuProvider((id,inv,player)->new NutritionMenu(id,inv)));
+			NetworkHooks.openScreen(context.get().getSender(), new DummyMenuProvider((id,inv,player)->new HealthStatMenu(id,inv)));
 		});
 		context.get().setPacketHandled(true);
 	}

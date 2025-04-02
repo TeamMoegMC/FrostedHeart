@@ -37,7 +37,7 @@ import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMes
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
-import com.teammoeg.frostedheart.content.health.screen.NutritionScreen;
+import com.teammoeg.frostedheart.content.health.screen.HealthStatScreen;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
@@ -167,7 +167,7 @@ public class FHClientEvents {
 				s -> ClientUtils.getPlayer().isCreative(), s -> DebugScreen.openDebugScreen(), Selection.NO_ACTION));
 
 		event.register(FHMain.rl("health"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.nutrition"),
-			CIcons.getIcon(NutritionScreen.fat_icon), s -> FHNetwork.INSTANCE.sendToServer(new C2SOpenNutritionScreenMessage())));
+			CIcons.getIcon(HealthStatScreen.fat_icon), s -> FHNetwork.INSTANCE.sendToServer(new C2SOpenNutritionScreenMessage())));
 
 		event.register(FHMain.rl("clothing"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.clothing"),
 			CIcons.getIcon(FHItems.gambeson), 
