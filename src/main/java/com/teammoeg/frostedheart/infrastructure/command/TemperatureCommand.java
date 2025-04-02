@@ -46,16 +46,16 @@ public class TemperatureCommand {
         LiteralArgumentBuilder<CommandSourceStack> get = Commands.literal("get").executes((ct) -> {
                     Player player = ct.getSource().getPlayerOrException();
                     PlayerTemperatureData.getCapability(player).ifPresent(data -> {
-                        ct.getSource().sendSuccess(()-> Components.str("Body: " + data.getBodyTemp()), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Body: " + data.getCoreBodyTemp()), true);
                         ct.getSource().sendSuccess(()-> Components.str("Environment: " + data.getEnvTemp()), true);
-                        ct.getSource().sendSuccess(()-> Components.str("Feel: " + data.getFeelTemp()), true);
-                        ct.getSource().sendSuccess(()-> Components.str("Previous Body: " + data.getPreviousTemp()), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Feel: " + data.getTotalFeelTemp()), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Previous Body: " + data.getPreviousCoreBodyTemp()), true);
                         ct.getSource().sendSuccess(()-> Components.str("Self-Heating Difficulty: " + data.getDifficulty().name()), true);
-                        ct.getSource().sendSuccess(()-> Components.str("Head: " + data.getTemperatureByPart(PlayerTemperatureData.BodyPart.HEAD)), true);
-                        ct.getSource().sendSuccess(()-> Components.str("Torso: " + data.getTemperatureByPart(PlayerTemperatureData.BodyPart.TORSO)), true);
-                        ct.getSource().sendSuccess(()-> Components.str("Hands: " + data.getTemperatureByPart(PlayerTemperatureData.BodyPart.HANDS)), true);
-                        ct.getSource().sendSuccess(()-> Components.str("Legs: " + data.getTemperatureByPart(PlayerTemperatureData.BodyPart.LEGS)), true);
-                        ct.getSource().sendSuccess(()-> Components.str("Feet: " + data.getTemperatureByPart(PlayerTemperatureData.BodyPart.FEET)), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Head: " + data.getBodyTempByPart(PlayerTemperatureData.BodyPart.HEAD)), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Torso: " + data.getBodyTempByPart(PlayerTemperatureData.BodyPart.TORSO)), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Hands: " + data.getBodyTempByPart(PlayerTemperatureData.BodyPart.HANDS)), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Legs: " + data.getBodyTempByPart(PlayerTemperatureData.BodyPart.LEGS)), true);
+                        ct.getSource().sendSuccess(()-> Components.str("Feet: " + data.getBodyTempByPart(PlayerTemperatureData.BodyPart.FEET)), true);
                     });
                     return Command.SINGLE_SUCCESS;
                 });
@@ -98,7 +98,7 @@ public class TemperatureCommand {
                         .then(Commands.argument("value", FloatArgumentType.floatArg()).executes((ct) -> {
                             Player player = ct.getSource().getPlayerOrException();
                             PlayerTemperatureData.getCapability(player).ifPresent(data -> {
-                                data.setBodyTemp(ct.getArgument("amount", Float.class));
+                                data.setAllPartsBodyTemp(ct.getArgument("amount", Float.class));
                             });
                             return Command.SINGLE_SUCCESS;
                         }))
@@ -118,7 +118,7 @@ public class TemperatureCommand {
                         .then(Commands.argument("value", FloatArgumentType.floatArg()).executes((ct) -> {
                             Player player = ct.getSource().getPlayerOrException();
                             PlayerTemperatureData.getCapability(player).ifPresent(data -> {
-                                data.setFeelTemp(ct.getArgument("amount", Float.class));
+                                data.setTotalFeelTemp(ct.getArgument("amount", Float.class));
                             });
                             return Command.SINGLE_SUCCESS;
                         }))

@@ -35,6 +35,7 @@ import lombok.Setter;
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
@@ -49,9 +50,9 @@ public class PlayerTemperatureData implements NBTSerializable {
         HEAD(EquipmentSlot.HEAD, 0.1f, 0.1f, 1), // 10% area
         TORSO(EquipmentSlot.CHEST, 0.45f, 0.5f, 3), // 40% area
 
-        HANDS(EquipmentSlot.MAINHAND, 0.05f, 0.05f, 1), // 5% area
+        HANDS(EquipmentSlot.MAINHAND, 0.05f, 0.00f, 1), // 5% area
         LEGS(EquipmentSlot.LEGS, 0.35f, 0.4f, 3), // 40% area
-        FEET(EquipmentSlot.FEET, 0.05f, 0.05f, 1); // 5% area
+        FEET(EquipmentSlot.FEET, 0.05f, 0.00f, 1); // 5% area
         public static final BodyPart[] CoreParts = new BodyPart[]{HEAD, TORSO, LEGS};
         public final EquipmentSlot slot;
         public final float area;
@@ -63,7 +64,7 @@ public class PlayerTemperatureData implements NBTSerializable {
                     t.put(part.slot, part);
         });
 
-        private BodyPart(EquipmentSlot slot, float area, float affectsCore, int slotNum) {
+        BodyPart(EquipmentSlot slot, float area, float affectsCore, int slotNum) {
             this.slot = slot;
             this.area = area;
             this.affectsCore = affectsCore;
@@ -87,6 +88,8 @@ public class PlayerTemperatureData implements NBTSerializable {
         public boolean canGenerateHeat() {
             switch (this) {
                 case TORSO:
+                case LEGS:
+                case HEAD:
                     return true;
             }
             return false;
@@ -117,12 +120,12 @@ public class PlayerTemperatureData implements NBTSerializable {
     @Setter
     private FHTemperatureDifficulty difficulty = null;//in case null, get it from  FHConfig.SERVER.tdiffculty.get()
     @Setter
-    float previousTemp;
-    float bodyTemp;
+    float prevCoreBodyTemp;
+    float coreBodyTemp;
     @Setter
     float envTemp = INVALID_TEMPERATURE;
     @Setter
-    float feelTemp = INVALID_TEMPERATURE;
+    float totalFeelTemp = INVALID_TEMPERATURE;
     float blockTemp = 0;
 
     float updateInterval = 0;
@@ -131,19 +134,20 @@ public class PlayerTemperatureData implements NBTSerializable {
 
 
     public final Map<BodyPart, BodyPartData> clothesOfParts = new EnumMap<>(BodyPart.class);
-    public float windStrengh;
+    protected float windStrengh;
 
     public void deathResetTemperature() {
-        previousTemp = 0;
-        bodyTemp = 0;
+        prevCoreBodyTemp = 0;
+        coreBodyTemp = 0;
         envTemp = INVALID_TEMPERATURE;
-        feelTemp = INVALID_TEMPERATURE;
+        totalFeelTemp = INVALID_TEMPERATURE;
         blockTemp = 0;
         windStrengh = 0;
         updateInterval = 0;
 
         for (BodyPartData i : clothesOfParts.values()) {
             i.temperature = 0;
+            i.feelTemp = 0;
         }
     }
 
@@ -160,10 +164,10 @@ public class PlayerTemperatureData implements NBTSerializable {
 
     public void load(CompoundTag nbt, boolean isPacket) {
 
-        previousTemp = nbt.getFloat("previous_body_temperature");
-        bodyTemp = nbt.getFloat("bodytemperature");
+        prevCoreBodyTemp = nbt.getFloat("previous_body_temperature");
+        coreBodyTemp = nbt.getFloat("bodytemperature");
         envTemp = nbt.getFloat("envtemperature");
-        feelTemp = nbt.getFloat("feeltemperature");
+        totalFeelTemp = nbt.getFloat("feeltemperature");
 
         if (!isPacket) {
             blockTemp = nbt.getFloat("blockTemperature");
@@ -189,10 +193,10 @@ public class PlayerTemperatureData implements NBTSerializable {
     public void save(CompoundTag nc, boolean isPacket) {
         // save the difficulty
 
-        nc.putFloat("previous_body_temperature", previousTemp);
-        nc.putFloat("bodytemperature", bodyTemp);
+        nc.putFloat("previous_body_temperature", prevCoreBodyTemp);
+        nc.putFloat("bodytemperature", coreBodyTemp);
         nc.putFloat("envtemperature", envTemp);
-        nc.putFloat("feeltemperature", feelTemp);
+        nc.putFloat("feeltemperature", totalFeelTemp);
         if (!isPacket) {
             nc.putFloat("blockTemperature", blockTemp);
             nc.putFloat("wind_strengh", windStrengh);
@@ -207,10 +211,10 @@ public class PlayerTemperatureData implements NBTSerializable {
     }
 
     public void reset() {
-        previousTemp = 0;
-        bodyTemp = 0;
+        prevCoreBodyTemp = 0;
+        coreBodyTemp = 0;
         envTemp = INVALID_TEMPERATURE;
-        feelTemp = INVALID_TEMPERATURE;
+        totalFeelTemp = INVALID_TEMPERATURE;
         smoothedBody = 0;
         windStrengh = 0;
         blockTemp = 0;
@@ -228,35 +232,44 @@ public class PlayerTemperatureData implements NBTSerializable {
             envTemp = current_env;
         else
             envTemp = (current_env + 37F) * .2f + envTemp * .8f;
-        float current_feel = bodyTemp + conductivity * (current_env - bodyTemp);
-        if (feelTemp == INVALID_TEMPERATURE)
-            feelTemp = current_feel;
-        else
-            feelTemp = (current_feel + 37F) * .2f + feelTemp * .8f;
+        float current_feel = coreBodyTemp + conductivity * (current_env - coreBodyTemp);
+        if (totalFeelTemp == INVALID_TEMPERATURE) {
+            totalFeelTemp = current_feel;
+        }
+        else {
+            totalFeelTemp = (current_feel + 37F) * .2f + totalFeelTemp * .8f;
+        }
+        setAllPartsFeelTemp(totalFeelTemp);
     }
 
     public void update(float currentEnv, HeatingDeviceContext ctx) {
-        // Since we already averaged the core parts, just take torse
-        previousTemp = bodyTemp;
-        bodyTemp = ctx.getBodyTemperature(BodyPart.TORSO);
+        prevCoreBodyTemp = coreBodyTemp;
+        float newCoreBodyTemp = 0;
         for (BodyPart part : BodyPart.values()) {
-            setTemperatureByPart(part, ctx.getBodyTemperature(part));
+            newCoreBodyTemp += ctx.getBodyTemperature(part) * part.affectsCore;
+            setBodyTempByPart(part, ctx.getBodyTemperature(part));
         }
+        coreBodyTemp = newCoreBodyTemp;
+
         // Interpolate with previous envTemp
         if (envTemp == INVALID_TEMPERATURE)
             envTemp = currentEnv;
         else
             envTemp = (currentEnv + 37F) * .2f + envTemp * .8f;
+
         // Compute feelTemp as area-weighted average of parts
-        float currentFeel = 0;
+        // Also, set each part feel temp
+        float newFeelTemp = 0;
         for (BodyPart part : BodyPart.values()) {
-            currentFeel += ctx.getEffectiveTemperature(part) * part.area;
+            newFeelTemp += ctx.getEffectiveTemperature(part) * part.area;
+            setFeelTempByPart(part, ctx.getEffectiveTemperature(part));
         }
+
         // Interpolate with previous feelTemp
-        if (feelTemp == INVALID_TEMPERATURE)
-            feelTemp = currentFeel;
+        if (totalFeelTemp == INVALID_TEMPERATURE)
+            totalFeelTemp = newFeelTemp;
         else
-            feelTemp = (currentFeel + 37F) * .2f + feelTemp * .8f;
+            totalFeelTemp = (newFeelTemp + 37F) * .2f + totalFeelTemp * .8f;
 
     }
 
@@ -264,12 +277,16 @@ public class PlayerTemperatureData implements NBTSerializable {
         return FHCapabilities.PLAYER_TEMP.getCapability(player);
     }
 
-    public float getPreviousTemp() {
-        return previousTemp;
+    public float getPreviousCoreBodyTemp() {
+        return prevCoreBodyTemp;
     }
 
-    public float getBodyTemp() {
-        return bodyTemp;
+    public float getCoreBodyTemp() {
+        float result = 0;
+        for (BodyPart bp : BodyPart.values()) {
+            result += this.clothesOfParts.get(bp).temperature * bp.affectsCore;
+        }
+        return result;
     }
 
     public float getEnvTemp() {
@@ -278,19 +295,33 @@ public class PlayerTemperatureData implements NBTSerializable {
         return envTemp;
     }
 
-    public float getFeelTemp() {
-        if (feelTemp == INVALID_TEMPERATURE)
+    public float getTotalFeelTemp() {
+        if (totalFeelTemp == INVALID_TEMPERATURE)
             return -20;
-        return feelTemp;
+        return totalFeelTemp;
     }
 
-    public void setBodyTemp(float bodyTemp) {
-        addBodyTemp(bodyTemp - this.bodyTemp);
-    }
-
-    public void addBodyTemp(float bodyTemp) {
+    public void setAllPartsBodyTemp(float t) {
         for (BodyPart bp : BodyPart.values()) {
-            this.clothesOfParts.get(bp).temperature += bodyTemp * bp.affectsCore;
+            this.clothesOfParts.get(bp).temperature = t;
+        }
+    }
+
+    public void addAllPartsBodyTemp(float added) {
+        for (BodyPart bp : BodyPart.values()) {
+            this.clothesOfParts.get(bp).temperature += added;
+        }
+    }
+
+    public void setAllPartsFeelTemp(float t) {
+        for (BodyPart bp : BodyPart.values()) {
+            this.clothesOfParts.get(bp).feelTemp = t;
+        }
+    }
+
+    public void addAllPartsFeelTemp(float added) {
+        for (BodyPart bp : BodyPart.values()) {
+            this.clothesOfParts.get(bp).feelTemp += added;
         }
     }
 
@@ -299,12 +330,12 @@ public class PlayerTemperatureData implements NBTSerializable {
         return clothesOfParts.get(bodyPart).clothes; // Return a copy to prevent direct modification
     }
 
-    public void setClothes(BodyPart bodyPart, int index, ItemStack stack) {
+    public void setClothesByPart(BodyPart bodyPart, int index, ItemStack stack) {
         clothesOfParts.get(bodyPart).clothes.setStackInSlot(index, stack);
     }
 
-    public void clearClothes(BodyPart bodyPart, int index) {
-        setClothes(bodyPart, index, ItemStack.EMPTY);
+    public void clearClothesByPart(BodyPart bodyPart, int index) {
+        setClothesByPart(bodyPart, index, ItemStack.EMPTY);
     }
 
     public void clearAllClothes() {
@@ -321,21 +352,68 @@ public class PlayerTemperatureData implements NBTSerializable {
         return clothesOfParts.get(bodyPart).getFluidResistance(player, bodyPart);
     }
 
-    public float getTemperatureByPart(BodyPart bodyPart) {
+    public float getBodyTempByPart(BodyPart bodyPart) {
         return clothesOfParts.get(bodyPart).temperature;
     }
 
-    public void setTemperatureByPart(BodyPart bodyPart, float t) {
+    public float getFeelTempByPart(BodyPart bodyPart) {
+        return clothesOfParts.get(bodyPart).feelTemp;
+    }
+
+    public void setBodyTempByPart(BodyPart bodyPart, float t) {
         clothesOfParts.get(bodyPart).temperature = t;
     }
 
-    public void addTemperatureByPart(BodyPart bodyPart, float t) {
+    public void setFeelTempByPart(BodyPart bodyPart, float t) {
+        clothesOfParts.get(bodyPart).feelTemp = t;
+    }
+
+    public void addBodyTempByPart(BodyPart bodyPart, float t) {
         clothesOfParts.get(bodyPart).temperature += t;
     }
 
+    public void addFeelTempByPart(BodyPart bodyPart, float t) {
+        clothesOfParts.get(bodyPart).feelTemp += t;
+    }
+
+    public float getHighestFeelTemp() {
+        float highestTemp = Float.NEGATIVE_INFINITY;
+
+        for (BodyPart p : BodyPart.values()) {
+            float temp = getFeelTempByPart(p);
+            if (temp > highestTemp) {
+                highestTemp = temp;
+            }
+        }
+
+        return highestTemp;
+    }
+
+    public float getLowestFeelTemp() {
+        float lowestTemp = Float.POSITIVE_INFINITY;
+
+        for (BodyPart p : BodyPart.values()) {
+            float temp = getFeelTempByPart(p);
+            if (temp < lowestTemp) {
+                lowestTemp = temp;
+            }
+        }
+
+        return lowestTemp;
+    }
+
+    /**
+     * Sampled from blocks around, determines how open the space is
+     * @return range 0-1
+     */
+    public float getAirOpenness() {
+        return Mth.clamp(windStrengh, 0, 1);
+    }
+
+
 	@Override
 	public String toString() {
-		return "PlayerTemperatureData [difficulty=" + difficulty + ", bodyTemp=" + bodyTemp + ", envTemp=" + envTemp + ", feelTemp=" + feelTemp + ", blockTemp=" + blockTemp + ", clothesOfParts="
+		return "PlayerTemperatureData [difficulty=" + difficulty + ", bodyTemp=" + coreBodyTemp + ", envTemp=" + envTemp + ", feelTemp=" + totalFeelTemp + ", blockTemp=" + blockTemp + ", clothesOfParts="
 			+ clothesOfParts + ", windStrengh=" + windStrengh + "]";
 	}
     

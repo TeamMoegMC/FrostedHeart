@@ -279,7 +279,7 @@ dependencies {
     compileOnly fg.deobf("curse.maven:mutil-351914:4824501")
 	noDatagenRuntimeOnly fg.deobf("curse.maven:mutil-351914:4824501")
     // Caupona
-    implementation fg.deobf("curse.maven:Caupona-656147:6354879") {transitive = false}
+    implementation fg.deobf("curse.maven:Caupona-656147:6354879") 
     
 
     // LDLib

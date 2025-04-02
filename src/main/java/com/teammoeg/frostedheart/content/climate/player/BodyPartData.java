@@ -38,6 +38,8 @@ public class BodyPartData {
     public final ItemStackHandler clothes;
     @Getter
     float temperature = 0;
+	@Getter
+	float feelTemp = 0;
 
     BodyPartData(int max_count) {
         this.clothes = new ItemStackHandler(max_count) {
@@ -55,11 +57,13 @@ public class BodyPartData {
     public void load(CompoundTag itemsTag) {
         clothes.deserializeNBT(itemsTag);
         temperature = itemsTag.getFloat("temp");
+		feelTemp = itemsTag.getFloat("feel_temp");
     }
 
     public CompoundTag save() {
         CompoundTag tag = clothes.serializeNBT();
         tag.putFloat("temp", temperature);
+		tag.putFloat("feel_temp", feelTemp);
         return tag;
     }
 
@@ -90,69 +94,96 @@ public class BodyPartData {
 		// heat insulation: non-negative
         double insulation = 0f;
 
-		// hands, feet, head: 1 layer
+		// hands, feet, head: 1 layer of clothes and 1 equipment
 		if (part.canOnlyWearOneLayer()) {
-			// equipment on outside, shares contribution with inside
-			if (!equipment.isEmpty()) {
-				// result from sumAttributes is a non-negative number, can be large like 1000m or small like 0
-				insulation += 0.1F * sumAttributes(equipment.getAttributeModifiers(slot).get(FHAttributes.INSULATION.get()));
-			}
-
-			// clothes contribution
 			ItemStack stack = clothes.getStackInSlot(0);
-			if (!stack.isEmpty()) {
+			boolean hasEquipment = !equipment.isEmpty();
+			boolean hasClothes = !stack.isEmpty();
+
+			// case 1
+			if (hasEquipment && hasClothes) {
+				insulation += 0.5F * sumAttributes(equipment.getAttributeModifiers(slot).get(FHAttributes.INSULATION.get()));
 				ArmorTempData data = ArmorTempData.getData(stack, part);
 				if (data != null) {
-					// account for the full ratio when armor is not on
-					if (equipment.isEmpty()) {
-						insulation += data.getInsulation();
-					} else {
-						insulation += 0.9F * data.getInsulation();
-					}
+					insulation += 0.5F * data.getInsulation();
+				}
+			}
 
+			// case 2
+			if (hasEquipment && !hasClothes) {
+				insulation += sumAttributes(equipment.getAttributeModifiers(slot).get(FHAttributes.INSULATION.get()));
+			}
+
+			// case 3
+			if (!hasEquipment && hasClothes) {
+				ArmorTempData data = ArmorTempData.getData(stack, part);
+				if (data != null) {
+					insulation += data.getInsulation();
 				}
 			}
 		}
 
-		// torso, legs: 3 layers
+		// torso, legs: 3 layers of clothes, 1 armor
 		else {
-			// armor on outside
-			if (!equipment.isEmpty()) {
-				// result from sumAttributes is a non-negative number, can be large like 1000m or small like 0
-				insulation += 0.1F * sumAttributes(equipment.getAttributeModifiers(slot).get(FHAttributes.INSULATION.get()));
-			}
-
+			boolean hasEquipment = !equipment.isEmpty();
 			// three layers of clothes
 			ItemStack outer = clothes.getStackInSlot(0);
 			ItemStack middle = clothes.getStackInSlot(1);
 			ItemStack inside = clothes.getStackInSlot(2);
+			boolean hasOuter = !outer.isEmpty();
+			boolean hasMiddle = !middle.isEmpty();
+			boolean hasInner = !inside.isEmpty();
 
-			if (!outer.isEmpty()) {
-				ArmorTempData data = ArmorTempData.getData(outer, part);
-				if (data != null) {
-					insulation += 0.1 * data.getInsulation();
+			// Count how many layers are present
+			int layerCount = (hasEquipment ? 1 : 0) + (hasOuter ? 1 : 0) +
+					(hasMiddle ? 1 : 0) + (hasInner ? 1 : 0);
+
+			// Define base weights - these will be adjusted based on present layers
+			float equipmentWeight = 0.1f;
+			float outerWeight = 0.2f;
+			float middleWeight = 0.3f;
+			float innerWeight = 0.4f;
+
+			// Adjust weights to ensure sum is 1.0
+			if (layerCount > 0) {
+				float totalBaseWeight = 0f;
+				if (hasEquipment) totalBaseWeight += equipmentWeight;
+				if (hasOuter) totalBaseWeight += outerWeight;
+				if (hasMiddle) totalBaseWeight += middleWeight;
+				if (hasInner) totalBaseWeight += innerWeight;
+
+				// Scale all weights proportionally
+				float scaleFactor = 1.0f / totalBaseWeight;
+
+				if (hasEquipment) {
+					float scaledWeight = equipmentWeight * scaleFactor;
+					insulation += scaledWeight * sumAttributes(equipment.getAttributeModifiers(slot).get(FHAttributes.INSULATION.get()));
 				}
-			}
 
-			if (!middle.isEmpty()) {
-				ArmorTempData data = ArmorTempData.getData(middle, part);
-				if (data != null) {
-					insulation += 0.3 * data.getInsulation();
+				if (hasOuter) {
+					ArmorTempData data = ArmorTempData.getData(outer, part);
+					if (data != null) {
+						float scaledWeight = outerWeight * scaleFactor;
+						insulation += scaledWeight * data.getInsulation();
+					}
 				}
-			}
 
-			if (!inside.isEmpty()) {
-				ArmorTempData data = ArmorTempData.getData(inside, part);
-				if (data != null) {
-					// account for the full ratio when armor is not on
-					if (equipment.isEmpty()) {
-						insulation += 0.6 * data.getInsulation();
-					} else {
-						insulation += 0.5 * data.getInsulation();
+				if (hasMiddle) {
+					ArmorTempData data = ArmorTempData.getData(middle, part);
+					if (data != null) {
+						float scaledWeight = middleWeight * scaleFactor;
+						insulation += scaledWeight * data.getInsulation();
+					}
+				}
+
+				if (hasInner) {
+					ArmorTempData data = ArmorTempData.getData(inside, part);
+					if (data != null) {
+						float scaledWeight = innerWeight * scaleFactor;
+						insulation += scaledWeight * data.getInsulation();
 					}
 				}
 			}
-
 		}
 
         return (float) (100 / (100 + insulation));
@@ -187,67 +218,95 @@ public class BodyPartData {
 
 		// hands, feet, head: 1 layer
 		if (part.canOnlyWearOneLayer()) {
-			// equipment on outside, shares contribution with inside
-			if (!equipment.isEmpty()) {
-				// result from sumAttributes is a non-negative number, can be large like 1000m or small like 0
-				fluidResistance += 0.9F * sumAttributes(equipment.getAttributeModifiers(slot).get(FHAttributes.WIND_PROOF.get()));
+			ItemStack stack = clothes.getStackInSlot(0);
+			boolean hasEquipment = !equipment.isEmpty();
+			boolean hasClothes = !stack.isEmpty();
+
+			// case 1
+			if (hasEquipment && hasClothes) {
+				fluidResistance += 0.5F * sumAttributes(equipment.getAttributeModifiers(slot).get(FHAttributes.WIND_PROOF.get()));
+				 ArmorTempData data = ArmorTempData.getData(stack, part);
+				 if (data != null) {
+					fluidResistance += 0.5F * data.getFluidResistance();
+				 }
 			}
 
-			// clothes contribution
-			ItemStack stack = clothes.getStackInSlot(0);
-			if (!stack.isEmpty()) {
+			// case 2
+			if (hasEquipment && !hasClothes) {
+				fluidResistance += sumAttributes(equipment.getAttributeModifiers(slot).get(FHAttributes.WIND_PROOF.get()));
+			}
+
+			// case 3
+			if (!hasEquipment && hasClothes) {
 				ArmorTempData data = ArmorTempData.getData(stack, part);
 				if (data != null) {
-					// account for the full ratio when armor is not on
-					if (equipment.isEmpty()) {
-						fluidResistance += data.getFluidResistance();
-					} else {
-						fluidResistance += 0.1F * data.getFluidResistance();
-					}
-
+					fluidResistance += data.getFluidResistance();
 				}
 			}
 		}
 
 		// torso, legs: 3 layers
 		else {
-			// armor on outside
-			if (!equipment.isEmpty()) {
-				// result from sumAttributes is a non-negative number, can be large like 1000m or small like 0
-				fluidResistance += 0.1F * sumAttributes(equipment.getAttributeModifiers(slot).get(FHAttributes.WIND_PROOF.get()));
-			}
-
+			boolean hasEquipment = !equipment.isEmpty();
 			// three layers of clothes
 			ItemStack outer = clothes.getStackInSlot(0);
 			ItemStack middle = clothes.getStackInSlot(1);
 			ItemStack inside = clothes.getStackInSlot(2);
+			boolean hasOuter = !outer.isEmpty();
+			boolean hasMiddle = !middle.isEmpty();
+			boolean hasInner = !inside.isEmpty();
 
-			if (!outer.isEmpty()) {
-				ArmorTempData data = ArmorTempData.getData(outer, part);
-				if (data != null) {
-					// account for the full ratio when armor is not on
-					if (equipment.isEmpty()) {
-						fluidResistance += 0.6 * data.getFluidResistance();
-					} else {
-						fluidResistance += 0.5 * data.getFluidResistance();
+			// Count how many layers are present
+			int layerCount = (hasEquipment ? 1 : 0) + (hasOuter ? 1 : 0) +
+					(hasMiddle ? 1 : 0) + (hasInner ? 1 : 0);
+
+			// Define base weights - these are reversed compared to insulation
+			// since fluid resistance is more important in outer layers
+			float equipmentWeight = 0.4f;  // Most outer layer has highest weight
+			float outerWeight = 0.3f;
+			float middleWeight = 0.2f;
+			float innerWeight = 0.1f;      // Inner layer has lowest weight
+
+			// Adjust weights to ensure sum is 1.0
+			if (layerCount > 0) {
+				float totalBaseWeight = 0f;
+				if (hasEquipment) totalBaseWeight += equipmentWeight;
+				if (hasOuter) totalBaseWeight += outerWeight;
+				if (hasMiddle) totalBaseWeight += middleWeight;
+				if (hasInner) totalBaseWeight += innerWeight;
+
+				// Scale all weights proportionally
+				float scaleFactor = 1.0f / totalBaseWeight;
+
+				if (hasEquipment) {
+					float scaledWeight = equipmentWeight * scaleFactor;
+					fluidResistance += scaledWeight * sumAttributes(equipment.getAttributeModifiers(slot).get(FHAttributes.WIND_PROOF.get()));
+				}
+
+				if (hasOuter) {
+					ArmorTempData data = ArmorTempData.getData(outer, part);
+					if (data != null) {
+						float scaledWeight = outerWeight * scaleFactor;
+						fluidResistance += scaledWeight * data.getFluidResistance();
+					}
+				}
+
+				if (hasMiddle) {
+					ArmorTempData data = ArmorTempData.getData(middle, part);
+					if (data != null) {
+						float scaledWeight = middleWeight * scaleFactor;
+						fluidResistance += scaledWeight * data.getFluidResistance();
+					}
+				}
+
+				if (hasInner) {
+					ArmorTempData data = ArmorTempData.getData(inside, part);
+					if (data != null) {
+						float scaledWeight = innerWeight * scaleFactor;
+						fluidResistance += scaledWeight * data.getFluidResistance();
 					}
 				}
 			}
-
-			if (!middle.isEmpty()) {
-				ArmorTempData data = ArmorTempData.getData(middle, part);
-				if (data != null) {
-					fluidResistance += 0.3 * data.getFluidResistance();
-				}
-			}
-
-			if (!inside.isEmpty()) {
-				ArmorTempData data = ArmorTempData.getData(inside, part);
-				if (data != null) {
-					fluidResistance += 0.1 * data.getFluidResistance();
-				}
-			}
-
 		}
 
 		return (float) fluidResistance;
@@ -287,6 +346,6 @@ public class BodyPartData {
 
     @Override
     public String toString() {
-        return "BodyPartData [clothes=" + clothes.getStackInSlot(0) + ", temperature=" + temperature + "]";
+        return "BodyPartData [clothes=" + clothes.getStackInSlot(0) + ", temperature=" + temperature + ", feelTemp=" + feelTemp + "]";
     }
 }
