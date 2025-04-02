@@ -65,43 +65,25 @@ public class TemperatureComputation {
         // This shift ranges [-10, 10]
         envtemp += relativeTime * FHConfig.SERVER.dayNightTempAmplitude.get() * weatherMultiplier;
 
-        // Burning temperature
-        // This shift ranges [150, 150]
+        if (player.isInPowderSnow)
+            envtemp = -30 - 37;
+        if (player.isInWater())
+            envtemp = Math.max(envtemp, -37);
         if (player.isOnFire())
-            envtemp += FHConfig.SERVER.onFireTempModifier.get();
+            envtemp = 300 - 37;
+        if (player.isInLava())
+            envtemp = 1000 - 37;
 
         return envtemp;
     }
 
     protected static void effective(Player player, PlayerTemperatureData data, HeatingDeviceContext ctx) {
         float envtemp = (float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
-        // Range [0, 100]
-        int wind = WorldTemperature.wind(player.level());
+
         // Environment-Body Exchange
         for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
             // ranges [0, 1]
             float partConductivity = data.getThermalConductivityByPart(player, part);
-            // fluid conductivity is different in different medium,
-            // fluid resistance [0,1] from clothing helps dealing with this
-            // by linearly diminishing the conductivity multiplier due to various fluid movement
-            float partFluidResist = data.getFluidResistanceByPart(player, part);
-            if (player.isInWater())
-                partConductivity *= 0.9F * (1 - partFluidResist);
-            else if (player.isInPowderSnow)
-                partConductivity *= 0.8F * (1 - partFluidResist);
-            else {
-                float airConductivity = 0.3F; // base air conductivity stays
-                // [0,1]
-                float effectiveWind = Mth.clamp(wind, 0, 100) / 100F;
-                // gets up to 0.7F
-                airConductivity += effectiveWind * 0.4F * (1 - partFluidResist);
-                // gets up to 0.9F
-                if (player.hasEffect(FHMobEffects.WET.get())) {
-                    airConductivity += 0.2F * (1 - partFluidResist);
-                }
-                partConductivity *= airConductivity;
-            }
-
             // This is a body part's "Body Temperature" from last time
             float partBodyTemp = data.getTemperatureByPart(part);
             // Body ends have a 5C additional effect
@@ -140,6 +122,11 @@ public class TemperatureComputation {
     public static final float FOOD_EXHAUST_COLD=.05F;
     protected static FastEnumMap<PlayerTemperatureData.BodyPart, Float> body(Player player, PlayerTemperatureData data, HeatingDeviceContext ctx) {
         Level world = player.level();
+        // Range 0-100
+        int wind = WorldTemperature.wind(world);
+        // [0,1]
+        float effectiveWind = Mth.clamp(wind, 0, 100) / 100F;
+
         // Apply Exchanged Temperature, and Self-Heating
         // Temporary storage map
         FastEnumMap<PlayerTemperatureData.BodyPart, Float> fem = new FastEnumMap<>(PlayerTemperatureData.BodyPart.values());
@@ -163,8 +150,39 @@ public class TemperatureComputation {
             // Deviation 36% * 50Y = 18Y, Rate 3.6 units, 46.4 sec to hypothermia (effectively, leather suit)
             // Deviation 26% * 50Y = 13Y, Rate 2.6 units, 64.2 sec to hypothermia (effectively, wool suit)
 
+            // fluid conductivity is different in different medium,
+            // fluid resistance [0,1] from clothing helps dealing with this
+            // by linearly diminishing the conductivity multiplier due to various fluid movement
+
+            // wikipedia: https://en.wikipedia.org/wiki/Thermal_conductivity_and_resistivity
+            // thermal conductivity:
+            // water: 0.6089
+            // air: 0.026
+            // powdered snow: 0.05
+            // water/air = 23.41
+            // we use ratio = 25
+
+            float fluidModifier = 0F;
+            float partFluidResist = data.getFluidResistanceByPart(player, part);
+            if (player.isInWater())
+                fluidModifier = 25F * (1 - partFluidResist);
+            // interestingly powdered snow does not affect conductivity that much, it just makes envtemp low
+            // however, the human body melts snow, and that generates water, which may go into the body,
+            // if clothing is not fluid resisting enough, and take away heats.
+            // thus a solution here is an average...
+            else if (player.isInPowderSnow)
+                fluidModifier = 15F * (1 - partFluidResist);
+            else {
+                // gets up to 5F
+                fluidModifier += 5F * effectiveWind * (1 - partFluidResist);
+                // evaporation takes away a LOT of heat. it gets up to 10F
+                if (player.hasEffect(FHMobEffects.WET.get())) {
+                    fluidModifier += 10F * (1 - partFluidResist);
+                }
+            }
+
             // May be negative! (when dt < 0)
-            float heatExchangedUnits = (float) (unit * (dt / FHConfig.SERVER.heatExchangeTempConstant.get()));
+            float heatExchangedUnits = (float) ((1 + fluidModifier) * unit * (dt / FHConfig.SERVER.heatExchangeTempConstant.get()));
 
             // Self-Heating
             float selfHeatRate = data.getDifficulty().heat_unit; // normally 1
@@ -176,11 +194,11 @@ public class TemperatureComputation {
             boolean isOnVehicle = player.getVehicle() != null;
             boolean isWalking = speedSquared > 0.001 && !isSprinting && !isOnVehicle;
             if (isSprinting) {
-                movementHeatedUnits += 2 * selfHeatRate * unit; // Running increases temperature by 4 units
+                movementHeatedUnits += 4 * selfHeatRate * unit; // Running increases temperature by 4 units
             } else if (isWalking) { // Assuming there's a method to check walking
-                movementHeatedUnits += 1 * selfHeatRate * unit; // Walking increases temperature by 2 units
+                movementHeatedUnits += 2 * selfHeatRate * unit; // Walking increases temperature by 2 units
             } else {
-                movementHeatedUnits += 0.5F * selfHeatRate *unit;
+                movementHeatedUnits += 1F * selfHeatRate *unit;
             }
 
             // Additional Homeostasis using Stored (Food) Energy
@@ -191,13 +209,13 @@ public class TemperatureComputation {
             // We apply additional units based on a deviation need, exhausting more food
             if (deviation < 0 && player.getFoodData().getFoodLevel() > 0) {
                 if (deviation > -0.5) {
-                    homeostasisUnits += 1F * selfHeatRate * unit;
+                    homeostasisUnits += 2F * selfHeatRate * unit;
                     player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 2F * part.area);
                 } else if (deviation > -1) {
-                    homeostasisUnits += 1.5F * selfHeatRate * unit;
+                    homeostasisUnits += 3F * selfHeatRate * unit;
                     player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 3F * part.area);
                 } else {
-                    homeostasisUnits += 2F * selfHeatRate * unit;
+                    homeostasisUnits += 4F * selfHeatRate * unit;
                     player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 4F * part.area);
                 }
             }

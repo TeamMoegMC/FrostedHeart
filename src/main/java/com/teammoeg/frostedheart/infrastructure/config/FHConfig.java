@@ -330,10 +330,10 @@ public class FHConfig {
                     .comment("It represents the theoretical time it takes for a naked player without self-heating")
                     .comment("to reach the mildest hypothermia (36C body temperature)")
                     .comment("when exposed to an effective environment temperature of heatExchangeTempConstant below 37C.")
-                    .defineInRange("heatExchangeTimeConstant", 170, 0, Integer.MAX_VALUE);
+                    .defineInRange("heatExchangeTimeConstant", 1000, 0, Integer.MAX_VALUE);
             heatExchangeTempConstant = builder.comment("The heat exchange temperature constant between player and environment.")
                     .comment("Check the comment on heatExchangeTimeConstant for what is this.")
-                    .defineInRange("heatExchangeTempConstant", 5D, 0D, Integer.MAX_VALUE);
+                    .defineInRange("heatExchangeTempConstant", 10D, 0D, Integer.MAX_VALUE);
             hurtingHeatUpdate = builder.comment("The heat update when player is hurt.")
                     .defineInRange("hurtingHeatUpdate", 0.1, 0, 1);
             minBodyTempChange = builder.comment("The minimum body temperature change relative to 37.")
