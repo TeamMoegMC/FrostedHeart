@@ -231,7 +231,6 @@ repositories {
         }
     }
 }
-
 dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.36'
     annotationProcessor 'org.projectlombok:lombok:1.18.36'
@@ -280,7 +279,7 @@ dependencies {
     compileOnly fg.deobf("curse.maven:mutil-351914:4824501")
 	noDatagenRuntimeOnly fg.deobf("curse.maven:mutil-351914:4824501")
     // Caupona
-    implementation fg.deobf("curse.maven:caupona-656147:6354879")
+    implementation fg.deobf("curse.maven:Caupona-656147:6354879") {transitive = false}
     
 
     // LDLib
