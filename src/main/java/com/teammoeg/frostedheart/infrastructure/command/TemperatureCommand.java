@@ -61,40 +61,34 @@ public class TemperatureCommand {
 
                 // Core information
                 result.append("§e=== Player Temperature Data ===§r\n");
-                result.append(String.format("§6Core:§r %.1f°C (Previous: %.1f°C)\n",
+                result.append(String.format("§6Core:§r %.2f°C (Previous: %.2f°C)\n",
                         data.getCoreBodyTemp(), data.getPreviousCoreBodyTemp()));
-                result.append(String.format("§6Environment:§r %.1f°C\n", data.getEnvTemp()));
                 result.append(String.format("§6Feeling:§r %.1f°C\n", data.getTotalFeelTemp()));
+                result.append(String.format("§6Environment:§r %.1f°C\n", data.getEnvTemp()));
                 BlockPos pos = new BlockPos((int) player.getX(), (int) player.getEyeY(), (int) player.getZ());
-                result.append(String.format("§6Air:§r %.1f°C\n", WorldTemperature.air(player.level(), pos)));
-                result.append(String.format("§6Wind:§r %s°C\n", WorldTemperature.wind(player.level())));
-                result.append(String.format("§6Openness:§r %.2f\n", data.getAirOpenness()));
+                result.append(String.format("§6Air:§r %.1f°C | §6Soil:§r %.1f°C\n",
+                        WorldTemperature.air(player.level(), pos),
+                        WorldTemperature.block(player.level(), pos)
+                ));
+                result.append(String.format("§6Wind:§r %s | §6Openness:§r %.2f\n",
+                        WorldTemperature.wind(player.level()),
+                        data.getAirOpenness()
+                ));
 
                 // Body parts information
-                result.append("\n§e=== Body Parts Temperature ===§r\n");
+                result.append("\n§e=== Body Parts ===§r\n");
 
                 // Display body part temperatures with proper formatting
                 for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
                     String partName = part.name().charAt(0) + part.name().substring(1).toLowerCase();
-                    float temp = data.getBodyTempByPart(part);
+                    float body = data.getBodyTempByPart(part);
+                    float felt = data.getFeelTempByPart(part);
 
                     // Color code based on temperature range (optional)
-                    String colorCode = getTemperatureColorCode(temp);
+                    String colorCode = getTemperatureColorCode(body);
+                    String colorCodeFelt = getTemperatureColorCode(felt);
 
-                    result.append(String.format("§6%s:§r %s%.1f°C§r\n", partName, colorCode, temp + 37));
-                }
-
-                // Body parts feeling
-                result.append("\n§e=== Body Parts Feeling ===§r\n");
-
-                for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
-                    String partName = part.name().charAt(0) + part.name().substring(1).toLowerCase();
-                    float temp = data.getFeelTempByPart(part);
-
-                    // Color code based on temperature range (optional)
-                    String colorCode = getTemperatureColorCode(temp);
-
-                    result.append(String.format("§6%s:§r %s%.1f°C§r\n", partName, colorCode, temp));
+                    result.append(String.format("§6%s Body:§r %s%.1f°C | §6Feeling: %s%.1f°C§r\n", partName, colorCode, body + 37, colorCodeFelt, felt));
                 }
 
                 // Send the compiled message as one comprehensive output
