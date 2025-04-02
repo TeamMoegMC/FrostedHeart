@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.water.item;
 
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.water.util.FluidHelper;
 import net.minecraft.ChatFormatting;
@@ -71,11 +72,6 @@ public class DrinkContainerItem extends ItemFluidContainer {
         super(properties, capacity);
     }
 
-    protected ItemStack getContainerItem(ItemStack itemStack){
-        return itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).map(t->t.getContainer()).orElse(ItemStack.EMPTY);
-    }
-
-
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         BlockHitResult ray = Item.getPlayerPOVHitResult(level, player, Fluid.SOURCE_ONLY);
@@ -111,39 +107,29 @@ public class DrinkContainerItem extends ItemFluidContainer {
     }
 
     public ItemStack getFilledItem(ItemStack stack, Player player) {
-        ItemStack copy = stack.copy();
-        IFluidHandlerItem fluidHandlerItem = copy.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
+
         player.playSound(SoundEvents.BUCKET_FILL, 1.0f, 1.0f);
         player.awardStat(Stats.ITEM_USED.get(this));
-
-        if (hasDrinkItem()) {
-            return FluidHelper.fillContainer(getDrinkItem(), Fluids.WATER);
-        } else {
-            fluidHandlerItem.fill(new FluidStack(Fluids.WATER, capacity), IFluidHandler.FluidAction.EXECUTE);
-           
-            return copy;
-        }
+        return FluidHelper.fillContainer(stack, Fluids.WATER);
+        
     }
 
-    @Override
-	public int getDamage(ItemStack stack) {
-		return capacity-stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).map(t->t.getFluidInTank(0).getAmount()).orElse(0);
-	}
+
 
 	@Override
     public ItemStack finishUsingItem(ItemStack itemStack, Level level, LivingEntity livingEntity) {
-        IFluidHandler handler = itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
-        handler.drain(250, IFluidHandler.FluidAction.EXECUTE);
+        
         if (livingEntity instanceof Player player) {
             if (itemStack.getCount() == 1){
-                if (handler.getFluidInTank(0).isEmpty()) {
-                    return itemStack;
-                }
+            	IFluidHandlerItem handler = itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
+                handler.drain(250, IFluidHandler.FluidAction.EXECUTE);
+                return handler.getContainer();
             }else {
-                if (!player.getInventory().add(getContainerItem(itemStack))) {
-                    player.drop(getContainerItem(itemStack), false);
-                }
-                itemStack.shrink(1);
+            	ItemStack using=itemStack.split(1);
+            	IFluidHandlerItem handler = using.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
+                handler.drain(250, IFluidHandler.FluidAction.EXECUTE);
+                CUtils.giveItem(player, using);
+                
                 return itemStack;
             }
         }
@@ -158,11 +144,6 @@ public class DrinkContainerItem extends ItemFluidContainer {
         return UseAnim.DRINK;
     }
 
-    public void upDateDamage(ItemStack stack,int amount) {
-    	//System.out.println("Max Damage:"+stack.getMaxDamage()+","+amount);
-        //    stack.setDamageValue(Math.max(0, Math.min(capacity, capacity - amount)));
-        
-    }
 
     /**
      * Check if the item has fluid and fluid amount is greater than 250mB
@@ -189,18 +170,6 @@ public class DrinkContainerItem extends ItemFluidContainer {
     @Override
     public ICapabilityProvider initCapabilities(@Nonnull ItemStack stack, @Nullable CompoundTag nbt) {
         return new FluidHandlerItemStack(stack, this.capacity) {
-        	
-            @Override
-			protected void setFluid(FluidStack fluid) {
-            	upDateDamage(this.getContainer(),fluid.getAmount());
-				super.setFluid(fluid);
-			}
-
-			@Override
-			protected void setContainerToEmpty() {
-				upDateDamage(this.getContainer(),0);
-				super.setContainerToEmpty();
-			}
 			@Override
             public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
                 return stack.getFluid().is(FHTags.Fluids.DRINK.tag);
@@ -222,11 +191,4 @@ public class DrinkContainerItem extends ItemFluidContainer {
         components.add(Component.translatable("tooltip.frostedheart.drink_unit").append(" : 250mB").setStyle(Style.EMPTY.applyFormat(ChatFormatting.GRAY)));
     }
 
-    public ItemStack getDrinkItem() {
-        return ItemStack.EMPTY;
-    }
-
-    public boolean hasDrinkItem() {
-        return !this.getDrinkItem().isEmpty();
-    }
 }

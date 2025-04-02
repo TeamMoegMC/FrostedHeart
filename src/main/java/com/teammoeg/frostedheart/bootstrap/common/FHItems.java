@@ -1365,13 +1365,13 @@ thinner.png
 
     // Thermos
     public static ItemEntry<ThermosItem> thermos = REGISTRATE
-        .item("thermos", p -> new ThermosItem(1500, 250, true))
+        .item("thermos", p -> new ThermosItem(1500, true))
         .model(AssetLookup.existingItemModel())
         .tag(FHTags.Items.INSULATED_FOOD.tag)
         .tag(FHTags.Items.THERMOS.tag)
         .lang("Thermos")
         .register();
-    public static ItemEntry<ThermosItem> advanced_thermos = REGISTRATE.item("advanced_thermos", p -> new ThermosItem(3000, 250, true))
+    public static ItemEntry<ThermosItem> advanced_thermos = REGISTRATE.item("advanced_thermos", p -> new ThermosItem(3000, true))
             .model(AssetLookup.existingItemModel())
             .tag(FHTags.Items.INSULATED_FOOD.tag)
             .tag(FHTags.Items.THERMOS.tag)
@@ -1391,7 +1391,7 @@ thinner.png
     }
 
     public static final DyedItemList<ThermosItem> allthermos = new DyedItemList<>(color -> {
-        return REGISTRATE.item(color + "_thermos", p -> new ThermosItem(1500, 250, false))
+        return REGISTRATE.item(color + "_thermos", p -> new ThermosItem(1500, false))
                 .model((ctx, prov) -> prov.generated(ctx, FHMain.rl("item/" + "flask_i/insulated_flask_i_pouch_" + color)))
                 .tag(FHTags.Items.INSULATED_FOOD.tag)
                 .tag(FHTags.Items.COLORED_THERMOS.tag)
@@ -1402,7 +1402,7 @@ thinner.png
     });
 
     public static final DyedItemList<ThermosItem> alladvthermos = new DyedItemList<>(color -> {
-        return REGISTRATE.item(color + "_advanced_thermos", p -> new ThermosItem(3000, 250, false))
+        return REGISTRATE.item(color + "_advanced_thermos", p -> new ThermosItem(3000, false))
                 .model((ctx, prov) -> prov.generated(ctx, FHMain.rl("item/" + "flask_ii/insulated_flask_ii_pouch_" + color)))
                 .tag(FHTags.Items.INSULATED_FOOD.tag)
                 .tag(FHTags.Items.COLORED_ADVANCED_THERMOS.tag)

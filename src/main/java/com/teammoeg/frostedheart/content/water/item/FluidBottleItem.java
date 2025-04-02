@@ -23,11 +23,12 @@ import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
-public class FluidBottleItem extends DrinkContainerItem{
+public class FluidBottleItem extends SingleUseSwapDrinkContainerItem{
     public FluidBottleItem(Properties properties) {
         super(properties, 250);
     }
@@ -43,8 +44,14 @@ public class FluidBottleItem extends DrinkContainerItem{
     }
 
     @Override
-    public ItemStack getContainerItem(ItemStack itemStack) {
-        return new ItemStack(FHItems.fluid_bottle.get());
+    public ItemStack getContainerItem() {
+        return new ItemStack(Items.GLASS_BOTTLE);
     }
+
+	@Override
+	public ItemStack getDrinkItem() {
+		return new ItemStack(FHItems.fluid_bottle.get());
+	}
+
 
 }

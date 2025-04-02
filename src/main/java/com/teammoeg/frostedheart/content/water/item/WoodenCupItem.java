@@ -20,21 +20,13 @@
 package com.teammoeg.frostedheart.content.water.item;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
-
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
-public class WoodenCupItem extends DrinkContainerItem {
+public class WoodenCupItem extends SingleUseSwapDrinkContainerItem {
     public WoodenCupItem(Properties properties, int capacity) {
         super(properties, capacity);
     }
@@ -49,8 +41,9 @@ public class WoodenCupItem extends DrinkContainerItem {
         return component.copy().append(Component.translatable("item.frostedheart.wooden_cup_drink"));
     }
 
-    @Override
-    public ItemStack getContainerItem(ItemStack itemStack) {
+
+	@Override
+    public ItemStack getContainerItem() {
         return new ItemStack(FHItems.wooden_cup.get());
     }
 

@@ -56,12 +56,10 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.tags.ITag;
 
 public class ThermosItem extends DurableDrinkContainerItem implements ITempAdjustFood,ICreativeModeTabItem {
-    final int unit;
     final boolean doAddItems;
 
-    public ThermosItem(int capacity, int unit, boolean add) {
+    public ThermosItem(int capacity, boolean add) {
         super(new Properties().stacksTo(1).setNoRepair().durability(capacity).food(new FoodProperties.Builder().nutrition(1).saturationMod(1).build()), capacity);
-        this.unit = unit;
         doAddItems = add;
     }
 
@@ -93,22 +91,13 @@ public class ThermosItem extends DurableDrinkContainerItem implements ITempAdjus
     public ItemStack getCraftingRemainingItem(ItemStack itemStack) {
         ItemStack itemStack1 = itemStack.copy();
         itemStack1.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(data -> {
-            FluidStack fs = data.drain(unit, IFluidHandler.FluidAction.EXECUTE);
+            data.drain(250, IFluidHandler.FluidAction.EXECUTE);
         });
 
 
         return itemStack1;
     }
 
-    @Override
-    public ItemStack getContainerItem(ItemStack itemStack) {
-        return this.getDefaultInstance();
-    }
-
-    @Override
-    public ItemStack getDrinkItem() {
-        return this.getDefaultInstance();
-    }
 
     public SoundEvent getDrinkingSound() {
         return SoundEvents.GENERIC_DRINK;
@@ -136,10 +125,6 @@ public class ThermosItem extends DurableDrinkContainerItem implements ITempAdjus
     @Override
     public float getMinTemp(ItemStack is) {
         return -1;
-    }
-
-    public int getUnit() {
-        return unit;
     }
 
     @Override

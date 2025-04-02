@@ -29,13 +29,4 @@ public class IronBottleItem extends DurableDrinkContainerItem{
         super(properties, capacity);
     }
 
-    @Override
-    public ItemStack getContainerItem(ItemStack itemStack) {
-        return new ItemStack(FHItems.IRON_BOTTLE.get());
-    }
-
-    @Override
-    public ItemStack getDrinkItem() {
-        return new ItemStack(FHItems.IRON_BOTTLE.get());
-    }
 }

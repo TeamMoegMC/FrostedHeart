@@ -19,10 +19,15 @@
 
 package com.teammoeg.frostedheart.content.water.item;
 
-
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
 public class DurableDrinkContainerItem extends DrinkContainerItem {
     public DurableDrinkContainerItem( Properties properties, int capacity) {
         super( properties.defaultDurability(capacity), capacity);
     }
+    @Override
+	public int getDamage(ItemStack stack) {
+		return capacity-stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).map(t->t.getFluidInTank(0).getAmount()).orElse(0);
+	}
 }
