@@ -96,7 +96,7 @@ public class DrinkContainerItem extends ItemFluidContainer {
 			FluidActionResult res=FluidUtil.tryPickUpFluid(cur, player, level, blockpos,ray.getDirection());
 			if(res.isSuccess()) {
 				ItemStack result=res.getResult();
-				player.setItemInHand(hand, result);
+				//player.setItemInHand(hand, result);
 				return InteractionResultHolder.sidedSuccess(result,level.isClientSide);
 			}
 		}

@@ -1,8 +1,7 @@
 {
-  "parent": "forge:item/bucket",
-  "loader": "immersiveengineering:potion_bucket",
+  "parent": "minecraft:item/generated",
   "textures": {
-    "base": "frostedheart:item/ceramic_bucket",
-    "fluid": "forge:item/mask/bucket_fluid"
+    "layer0": "frostedheart:item/ceramic_bucket",
+    "layer1": "forge:item/mask/bucket_fluid"
   }
 }
