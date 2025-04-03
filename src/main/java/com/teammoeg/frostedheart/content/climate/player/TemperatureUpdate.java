@@ -24,6 +24,7 @@ import com.teammoeg.chorda.util.struct.FastEnumMap;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -35,6 +36,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.LogicalSide;
@@ -44,7 +46,7 @@ import static com.teammoeg.frostedheart.content.climate.player.TemperatureComput
 public class TemperatureUpdate {
 
 	//Do not use static final in config because this is reloaded each world
-
+    public static final float FOOD_EXHAUST_COLD=.05F;
     /*
     public static final int TEMP_SKY_LIGHT_THRESHOLD = FHConfig.SERVER.tempSkyLightThreshold.get();
     public static final int SNOW_TEMP_MODIFIER = FHConfig.SERVER.snowTempModifier.get();
@@ -265,14 +267,10 @@ public class TemperatureUpdate {
                     /* ENVIRONMENT TEMPERATURE COMPUTATION STARTS */
 
                     // Compute environment
-                    float envtemp = TemperatureComputation.environment(player, data);
+                    float rawenvtemp = TemperatureComputation.environment(player, data);
 
-                    // Store it in attribute
-                    AttributeInstance envTempAttribute = player.getAttribute(FHAttributes.ENV_TEMPERATURE.get());
-                    if (envTempAttribute != null) {
-                        envTempAttribute.removeModifier(ENV_TEMP_ATTRIBUTE_UUID);
-                        envTempAttribute.addTransientModifier(new AttributeModifier(ENV_TEMP_ATTRIBUTE_UUID, "player environment modifier", envtemp, AttributeModifier.Operation.ADDITION));
-                    }
+                    
+
 
                     /* ENVIRONMENT TEMPERATURE COMPUTATION ENDS */
 
@@ -281,16 +279,188 @@ public class TemperatureUpdate {
                     // Temporary storage context handled in each update cycle
                     HeatingDeviceContext ctx = new HeatingDeviceContext(player);
                     if (!player.hasEffect(FHMobEffects.INSULATION.get()) && !player.getAbilities().invulnerable) {
-
+                    	// Store environment temperature in attribute
+                        AttributeInstance envTempAttribute = player.getAttribute(FHAttributes.ENV_TEMPERATURE.get());
+                        if (envTempAttribute != null) {
+                            envTempAttribute.removeModifier(ENV_TEMP_ATTRIBUTE_UUID);
+                            envTempAttribute.addTransientModifier(new AttributeModifier(ENV_TEMP_ATTRIBUTE_UUID, "player environment modifier", rawenvtemp, AttributeModifier.Operation.ADDITION));
+                        }
                         // Environment-Body Exchange based on clothing, computes effective temperature
-                        TemperatureComputation.effective(player, data, ctx);
+                        float envtemp = (float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
+                        FastEnumMap<BodyPart,PartClothData> clothDataMap=new FastEnumMap<>(BodyPart.values());
+                        // Environment-Body Exchange
+                        for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
+                            // ranges [0, 1]
+                        	PartClothData  clothData=data.getClothDataByPart(player, part);
+                            clothDataMap.put(part, clothData);
+                            // This is a body part's "Body Temperature" from last time
+                            float partBodyTemp = data.getBodyTempByPart(part);
+                            // according to wiki, body ends are 5 degrees lower than core parts, so they are 32-based
+                            float partEnvTemp = envtemp - (part.isBodyEnd() ? 5 : 0);
+                            // Env and Body exchanges temperature
+                            float partBodyEnvExchangeTemp = (partEnvTemp - partBodyTemp) * clothData.heatConductivity;
+                            float partEffectiveTemp = partBodyTemp + partBodyEnvExchangeTemp;
+                            // Store them in context
+                            ctx.setPartData(part, partBodyTemp, partEffectiveTemp);
+                        }
 
                         // Equipment Heating modifies effective temp
                         TemperatureComputation.equipmentHeating(player, data, ctx);
 
                         // Body temperature exchange: from effective and from self-heating
-                        FastEnumMap<PlayerTemperatureData.BodyPart, Float> partBodyTemps =
-                                TemperatureComputation.body(player, data, ctx);
+                        Level world = player.level();
+                        // Range 0-100
+                        int wind = WorldTemperature.wind(world);
+                        // Range 0-1
+                        float openness = data.getAirOpenness();
+                        // [0,1]
+                        float effectiveWind = openness * Mth.clamp(wind, 0, 100) / 100F;
+
+                        // Apply Exchanged Temperature, and Self-Heating
+                        // Temporary storage map
+                        FastEnumMap<PlayerTemperatureData.BodyPart, Float> partBodyTemps = new FastEnumMap<>(PlayerTemperatureData.BodyPart.values());
+                        for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
+                            // Apply effective heat exchange to part temperature
+                            HeatingDeviceContext.BodyPartContext pctx = ctx.getPartData(part);
+                            // Part Body Temperature
+                            float pbTemp = pctx.getBodyTemperature();
+                            float dt = pctx.getEffectiveTemperature() - pbTemp;
+                            // By default heatExchangeTimeConstant = 167
+                            // Since this logic is invoked every 20 ticks (1s), this means
+                            // 1 unit = 0.006 degrees per second
+                            float unit = 1F / FHConfig.SERVER.heatExchangeTimeConstant.get();
+                            // Since 1Y degree deviation leads to hypothermia, that means at one unit rate,
+                            // it takes 167 (= 1/0.006) seconds to reach hypothermia
+                            // For every heatExchangeTimeConstant (default = 5) degrees of deviation, we increase the loss rate by 1 unit.
+                            // Time = 167 / (Deviation / 5)
+                            // Scenarios: (no self-heating, environment effective temp -13C)
+                            // Deviation 50Y, Rate 10 units, 16.7 sec to hypothermia
+                            // Deviation 53% * 50Y = 24Y, Rate 5 units, 34.8 sec to hypothermia (effectively, straw suit)
+                            // Deviation 36% * 50Y = 18Y, Rate 3.6 units, 46.4 sec to hypothermia (effectively, leather suit)
+                            // Deviation 26% * 50Y = 13Y, Rate 2.6 units, 64.2 sec to hypothermia (effectively, wool suit)
+
+                            // fluid conductivity is different in different medium,
+                            // fluid resistance [0,1] from clothing helps dealing with this
+                            // by linearly diminishing the conductivity multiplier due to various fluid movement
+
+                            // wikipedia: https://en.wikipedia.org/wiki/Thermal_conductivity_and_resistivity
+                            // thermal conductivity:
+                            // water: 0.6089
+                            // air: 0.026
+                            // powdered snow: 0.05
+                            // water/air = 23.41
+                            // we use ratio = 25
+
+                            float fluidModifier = 0F;
+                            float partFluidResist = clothDataMap.get(part).windResist;
+                            if (player.isInWater())
+                                fluidModifier = 25F * (1 - partFluidResist);
+                            // interestingly powdered snow does not affect conductivity that much, it just makes envtemp low
+                            // however, the human body melts snow, and that generates water, which may go into the body,
+                            // if clothing is not fluid resisting enough, and take away heats.
+                            // thus a solution here is an average...
+                            else if (player.isInPowderSnow)
+                                fluidModifier = 15F * (1 - partFluidResist);
+                            else {
+                                // gets up to 5F
+                                fluidModifier += 5F * effectiveWind * (1 - partFluidResist);
+                                // evaporation takes away a LOT of heat. it gets up to 10F
+                                if (player.hasEffect(FHMobEffects.WET.get())) {
+                                    fluidModifier += 10F * (1 - partFluidResist);
+                                }
+                            }
+
+                            // May be negative! (when dt < 0)
+                            float heatExchangedUnits = (float) ((1 + fluidModifier) * unit * (dt / FHConfig.SERVER.heatExchangeTempConstant.get()));
+
+                            // Self-Heating
+                            float selfHeatRate = data.getDifficulty().heat_unit; // normally 1
+                            float movementHeatedUnits = 0;
+                            // Apply Self-heating based on movement status
+                            // Food exhaustion is handled by Vanilla, so we don't repeat here
+                            double speedSquared = player.getDeltaMovement().horizontalDistanceSqr(); // Horizontal movement speed squared
+                            boolean isSprinting = player.isSprinting();
+                            boolean isOnVehicle = player.getVehicle() != null;
+                            boolean isWalking = speedSquared > 0.001 && !isSprinting && !isOnVehicle;
+                            if (isSprinting) {
+                                movementHeatedUnits += 4 * selfHeatRate * unit; // Running increases temperature by 4 units
+                            } else if (isWalking) { // Assuming there's a method to check walking
+                                movementHeatedUnits += 2 * selfHeatRate * unit; // Walking increases temperature by 2 units
+                            } else {
+                                movementHeatedUnits += 1F * selfHeatRate *unit;
+                            }
+
+                            // Additional Homeostasis using Stored (Food) Energy
+                            float homeostasisUnits = 0;
+                            // homeostasis only happens when deviation is negative even after heat exchange and movement
+                            // Note 0Y here represents the normal body temperature of 37C
+                            final float deviation = 0 + (pbTemp + heatExchangedUnits + movementHeatedUnits);
+                            // We apply additional units based on a deviation need, exhausting more food
+                            if (deviation < 0 && player.getFoodData().getFoodLevel() > 0) {
+                                if (deviation > -0.5) {
+                                    homeostasisUnits += 2F * selfHeatRate * unit;
+                                    player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 2F * part.area);
+                                } else if (deviation > -1) {
+                                    homeostasisUnits += 3F * selfHeatRate * unit;
+                                    player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 3F * part.area);
+                                } else {
+                                    homeostasisUnits += 4F * selfHeatRate * unit;
+                                    player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 4F * part.area);
+                                }
+                            }
+
+                                            /*
+                                            FHMain.LOGGER.debug("Deviation: " + deviation);
+                                            FHMain.LOGGER.debug("Homeostasis: " + homeostasisUnits);
+                                            FHMain.LOGGER.debug("Movement: " + movementHeatedUnits);
+                                            FHMain.LOGGER.debug("Exchange: " + heatExchangedUnits);
+                                             */
+
+                            // Apply all to pbTemp
+                            pbTemp += heatExchangedUnits;
+
+                            if (part.canGenerateHeat()) {
+                                pbTemp += movementHeatedUnits + homeostasisUnits;
+                            } else {
+                                pbTemp += movementHeatedUnits;
+                            }
+
+                            // FHMain.LOGGER.debug("pbTemp: " + pbTemp);
+
+                            partBodyTemps.put(part, pbTemp);
+                        }
+
+                        // Calculate heat transfer between each part
+                        // Core parts share temperature
+                        float coreTemp = 0;
+                        for (PlayerTemperatureData.BodyPart corePart : PlayerTemperatureData.BodyPart.CoreParts) {
+                            coreTemp += partBodyTemps.get(corePart) * corePart.affectsCore;
+                        }
+                        for (PlayerTemperatureData.BodyPart corePart : PlayerTemperatureData.BodyPart.CoreParts)
+                            partBodyTemps.put(corePart, coreTemp);
+
+                        //From leg to feets
+                        final float transferRate = 0.1F;
+                        final float maxDelta = 3F;
+                        final float minDelta = 0.1F;
+
+                        float dlegfeet = Mth.clamp(partBodyTemps.get(PlayerTemperatureData.BodyPart.LEGS) - partBodyTemps.get(PlayerTemperatureData.BodyPart.FEET), -maxDelta, maxDelta);
+                        if (Mth.abs(dlegfeet) > minDelta) {
+                            float newfeet = partBodyTemps.get(PlayerTemperatureData.BodyPart.FEET) + dlegfeet * transferRate;
+                            float newleg = partBodyTemps.get(PlayerTemperatureData.BodyPart.LEGS) - dlegfeet * transferRate;
+                            partBodyTemps.put(PlayerTemperatureData.BodyPart.FEET, newfeet);
+                            partBodyTemps.put(PlayerTemperatureData.BodyPart.LEGS, newleg);
+                        }
+
+                        //from chest to hands
+                        float dhandchest = Mth.clamp(partBodyTemps.get(PlayerTemperatureData.BodyPart.TORSO) - partBodyTemps.get(PlayerTemperatureData.BodyPart.HANDS), -maxDelta, maxDelta);
+                        if (Mth.abs(dhandchest) > minDelta) {
+                            float newhands = partBodyTemps.get(PlayerTemperatureData.BodyPart.HANDS) + dhandchest * transferRate;
+                            float newtorso = partBodyTemps.get(PlayerTemperatureData.BodyPart.TORSO) - dhandchest * transferRate;
+                            partBodyTemps.put(PlayerTemperatureData.BodyPart.HANDS, newhands);
+                            partBodyTemps.put(PlayerTemperatureData.BodyPart.TORSO, newtorso);
+                        }
+
 
                         // Recycle the FEM, set back to context
                         for (BodyPart part : BodyPart.values()) {
@@ -309,7 +479,7 @@ public class TemperatureUpdate {
                             totalConductivity = Mth.clamp(insulationEffect.getAmplifier(), 0, 100) / 100.0f;
                         }
 
-                        data.updateWhenInsulated(envtemp, totalConductivity);
+                        data.updateWhenInsulated(rawenvtemp, totalConductivity);
                     }
 
                     /* EFFECTIVE AND BODY TEMPERATURE COMPUTATION ENDS */

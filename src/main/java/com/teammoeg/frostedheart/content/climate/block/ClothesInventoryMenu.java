@@ -38,10 +38,10 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Inventory;
 
 public class ClothesInventoryMenu extends CBaseMenu {
-	Map<BodyPart,Pair<CDataSlot<Float>,CDataSlot<Float>>> partInsulation=new EnumMap<>(BodyPart.class);
+	//Map<BodyPart,Pair<CDataSlot<Float>,CDataSlot<Float>>> partInsulation=new EnumMap<>(BodyPart.class);
 	{
-		for(BodyPart bp:BodyPart.values())
-			partInsulation.put(bp, Pair.of(CCustomMenuSlot.SLOT_FIXED.create(this), CCustomMenuSlot.SLOT_FIXED.create(this)));
+		//for(BodyPart bp:BodyPart.values())
+		//	partInsulation.put(bp, Pair.of(CCustomMenuSlot.SLOT_FIXED.create(this), CCustomMenuSlot.SLOT_FIXED.create(this)));
 	}
 	public ClothesInventoryMenu(int id, Inventory inventoryPlayer, FriendlyByteBuf extraData) {
 		this(id, inventoryPlayer);
@@ -51,10 +51,10 @@ public class ClothesInventoryMenu extends CBaseMenu {
 		super(FHMenuTypes.CLOTHES_GUI.get(), id, inventoryPlayer.player, 14);
 		PlayerTemperatureData ptd = PlayerTemperatureData.getCapability(inventoryPlayer.player).resolve().get();
 		createLiningSlots(inventoryPlayer,ptd);
-		for(BodyPart bp:BodyPart.values()) {
-			partInsulation.get(bp).getFirst().bind(()->ptd.getThermalConductivityByPart(inventoryPlayer.player,bp));
-			partInsulation.get(bp).getSecond().bind(()->ptd.getFluidResistanceByPart(inventoryPlayer.player,bp));
-		}
+		//for(BodyPart bp:BodyPart.values()) {
+		//	partInsulation.get(bp).getFirst().bind(()->ptd.getThermalConductivityByPart(inventoryPlayer.player,bp));
+		//	partInsulation.get(bp).getSecond().bind(()->ptd.getFluidResistanceByPart(inventoryPlayer.player,bp));
+		//}
 		super.addPlayerInventory(inventoryPlayer, 8, 120, 178);
 	}
 

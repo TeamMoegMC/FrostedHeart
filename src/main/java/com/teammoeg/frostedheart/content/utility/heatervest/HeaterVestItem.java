@@ -120,8 +120,8 @@ public class HeaterVestItem extends FHBaseItem {
 							HeatStorageCapability t=cap.resolve().get();
 							float energycost=0.05f;
 							float effectiveTemp=data.getEffectiveTemperature(BodyPart.TORSO);
-							if (effectiveTemp < 37f) {
-							    float delta = 37f - effectiveTemp;
+							if (effectiveTemp < 31f) {
+							    float delta = 31f - effectiveTemp;
 							    if (delta > 50)
 							        delta = 50F;
 							    float rex = Math.max(t.extractEnergy( energycost + (int) (delta * 0.12f), false) - energycost, 0F);

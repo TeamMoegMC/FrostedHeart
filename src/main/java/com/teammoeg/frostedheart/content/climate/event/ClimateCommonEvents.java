@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.player.BodyPartData;
+import com.teammoeg.frostedheart.content.climate.player.ClothData;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -226,14 +227,14 @@ public class ClimateCommonEvents {
 					PlayerTemperatureData ptd = cap.resolve().get();
 					for (BodyPart part : BodyPart.values()) {
 						ItemStackHandler partItem = ptd.getClothesByPart(part);
-						float rate = 1;
+						float rate = (float) (1-ClothData.sumAttributesPercentage(player.getItemBySlot(part.slot).getAttributeModifiers(part.slot).get(FHAttributes.HEAT_PROOF.get())));
 						for (int i = 0; i < partItem.getSlots(); i++) {
 							ItemStack itemstack = partItem.getStackInSlot(i);
 							if(!itemstack.isEmpty()) {
 								if(itemstack.isDamageableItem())
 								itemstack.hurtAndBreak(CMath.randomValue(rs, rate * amount), player,
 									t -> t.broadcastBreakEvent(part.slot));
-								rate*=(1-BodyPartData.sumAttributesPercentage(itemstack.getAttributeModifiers(part.slot).get(FHAttributes.HEAT_PROOF.get())));
+								rate*=(1-ArmorTempData.getData(itemstack, part).getHeatProof());
 							}
 						}
 					}

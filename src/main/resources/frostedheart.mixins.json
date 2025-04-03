@@ -24,6 +24,7 @@
     "forge.FluidHandlerItemStackSimpleMixin",
     "forge.ServerLifecycleHooksMixin",
     "immersiveengineering.IERegistrationMixin",
+    "immersiveengineering.OwnerableStateMixin",
     "minecraft.accessors.NewChatGuiAccessor",
     "minecraft.campfire.CampfireBlockMixin_TimeLimit",
     "minecraft.campfire.CampfireTileEntityMixin_TimeLimit",

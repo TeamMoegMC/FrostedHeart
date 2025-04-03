@@ -31,7 +31,7 @@ public class FastEnumMap<K extends Enum<K>,V> implements Iterable<Map.Entry<K, V
     /**
      * Array representation of this map.  The ith element is the value
      * to which universe[i] is currently mapped, or null if it isn't
-     * mapped to anything, or NULL if it's mapped to null.
+     * mapped to anything.
      */
     private Object[] vals;
     private K[] keyType;

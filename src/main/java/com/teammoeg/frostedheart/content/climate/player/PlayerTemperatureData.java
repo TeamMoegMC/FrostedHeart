@@ -106,15 +106,6 @@ public class PlayerTemperatureData implements NBTSerializable {
             return false;
         }
 
-        public boolean canOnlyWearOneLayer() {
-            switch (this) {
-                case HEAD:
-                case FEET:
-                case HANDS:
-                    return true;
-            }
-            return false;
-        }
     }
 
     public static final int INVALID_TEMPERATURE = 99999;
@@ -336,13 +327,10 @@ public class PlayerTemperatureData implements NBTSerializable {
         }
     }
 
-    public float getThermalConductivityByPart(Player player, BodyPart bodyPart) {
-        return clothesOfParts.get(bodyPart).getThermalConductivity(player, bodyPart);
+    public PartClothData getClothDataByPart(Player player, BodyPart bodyPart) {
+        return clothesOfParts.get(bodyPart).getClothData(player, bodyPart);
     }
 
-    public float getFluidResistanceByPart(Player player, BodyPart bodyPart) {
-        return clothesOfParts.get(bodyPart).getFluidResistance(player, bodyPart);
-    }
 
     public float getBodyTempByPart(BodyPart bodyPart) {
         return clothesOfParts.get(bodyPart).temperature;
@@ -399,7 +387,7 @@ public class PlayerTemperatureData implements NBTSerializable {
      * @return range 0-1
      */
     public float getAirOpenness() {
-        return Mth.clamp(windStrengh, 0, 1);
+        return Mth.clamp(windStrengh/20, 0, 1);
     }
 
 
