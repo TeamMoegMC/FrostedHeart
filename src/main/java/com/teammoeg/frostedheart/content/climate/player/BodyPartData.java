@@ -113,7 +113,7 @@ public class BodyPartData {
 			}
 		}
 
-        return new PartClothData((100 / (100 + insulation)),fluidResist);
+        return new PartClothData((float)(100 / (100 + insulation)),(float)fluidResist);
     }
     /**
      * Get cloth data without handling the stack

@@ -36,6 +36,7 @@ import com.teammoeg.chorda.lang.LangBuilder;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.player.BodyPartData;
+import com.teammoeg.frostedheart.content.climate.player.ClothData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
@@ -103,12 +104,12 @@ public class ArmorTempStats implements TooltipModifier {
 			if(es.slot.isArmor()) {
 				Collection<AttributeModifier> insattrs=stack.getAttributeModifiers(es.slot).get(FHAttributes.INSULATION.get());
 				if(!insattrs.isEmpty()) {
-					InsulationBySlot.computeIfAbsent(BodyPartData.sumAttributes(insattrs), func).add(es);
+					InsulationBySlot.computeIfAbsent(ClothData.sumAttributes(insattrs), func).add(es);
 					hasInsulation=true;
 				}
 				Collection<AttributeModifier> wpattrs=stack.getAttributeModifiers(es.slot).get(FHAttributes.WIND_PROOF.get());
 				if(!wpattrs.isEmpty()) {
-					WindProofBySlot.computeIfAbsent(BodyPartData.sumAttributesPercentage(insattrs), func).add(es);
+					WindProofBySlot.computeIfAbsent(ClothData.sumAttributesPercentage(insattrs), func).add(es);
 					hasWindProof=true;
 				}
 			}
