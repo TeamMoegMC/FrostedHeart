@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.*;
+import com.mojang.serialization.DataResult.PartialResult;
 import com.mojang.serialization.codecs.EitherMapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.Chorda;
@@ -274,6 +275,7 @@ public class CodecUtil {
 			@Override
 			public <T> DataResult<T> encode(A input, DynamicOps<T> ops, T prefix) {
 				Chorda.LOGGER.debug("Encoding Codec: " + codec);
+				Chorda.LOGGER.debug("Encoding Data: " + input);
 				DataResult<T> res=codec.encode(input, ops, prefix);
 				Chorda.LOGGER.debug("Encoded result: " + res);
 				return res;
@@ -282,6 +284,7 @@ public class CodecUtil {
 			@Override
 			public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
 				Chorda.LOGGER.debug("Decoding Codec: " + codec);
+				Chorda.LOGGER.debug("Decoding Data: " + input);
 				DataResult<Pair<A, T>> res=codec.decode(ops,input);
 				Chorda.LOGGER.debug("Decoded result: " + res);
 				return res;
@@ -298,7 +301,11 @@ public class CodecUtil {
 			@Override
 			public <T> DataResult<T> encode(A input, DynamicOps<T> ops, T prefix) {
 				try {
-				return codec.encode(input, ops, prefix);
+					DataResult<T> dr= codec.encode(input, ops, prefix);
+					Optional<PartialResult<T>> error=dr.error();
+					if(error.isPresent())
+						Chorda.LOGGER.warn("encoding "+input+" got error "+error.get().message());
+					return dr;
 				}catch(Exception ex) {
 					ex.printStackTrace();
 					Chorda.LOGGER.warn("Exception has thrown when encoding "+input);
@@ -310,7 +317,11 @@ public class CodecUtil {
 			@Override
 			public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
 				try {
-					return codec.decode(ops,input);
+					DataResult<Pair<A, T>> dr= codec.decode(ops,input);
+					Optional<PartialResult<Pair<A, T>>> error=dr.error();
+					if(error.isPresent())
+						Chorda.LOGGER.warn("decoding "+input+" got error "+error.get().message());
+					return dr;
 				}catch(Exception ex) {
 					ex.printStackTrace();
 					Chorda.LOGGER.warn("Exception has thrown when decoding "+input);
@@ -328,17 +339,22 @@ public class CodecUtil {
 
 			@Override
 			public <T> DataResult<A> decode(DynamicOps<T> ops, MapLike<T> input) {
+				Chorda.LOGGER.debug("Decoding Codec: " + codec);
+				Chorda.LOGGER.debug("Decoding Data: " + input);
 				DataResult<A> res=codec.decode(ops, input);
-				System.out.println(codec);
-				System.out.println(res);
+				Chorda.LOGGER.debug("Decoded result: " + res);
 				return res;
 			}
 
 			@Override
 			public <T> RecordBuilder<T> encode(A input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
+				Chorda.LOGGER.debug("Encoding Codec: " + codec);
+				Chorda.LOGGER.debug("Encoding Data: " + input);
 				RecordBuilder<T> res=codec.encode(input, ops, prefix);
-				System.out.println(codec);
-				//System.out.println(res.build(ops.empty()));
+				
+				Chorda.LOGGER.debug("Encoded result: " + res.build(ops.empty()));
+				//encode twice since the record builder clears itself after build
+				res=codec.encode(input, ops, prefix);
 				return res;
 			}
 
