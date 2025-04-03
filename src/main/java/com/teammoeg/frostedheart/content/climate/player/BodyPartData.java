@@ -100,15 +100,17 @@ public class BodyPartData {
         List<ClothData> slots=this.getClothDataBySlot(player, part);
 		// hands, feet, head: 1 layer of clothes and 1 equipment
 		if (part.slotNum==1) {
+			int delta=2-slots.size();
 			for(int i=0;i<slots.size();i++) {
-				insulation+=SINGLE_SLOT_FACTORS[i]*slots.get(i).insulation;
+				insulation+=SINGLE_SLOT_FACTORS[i+delta]*slots.get(i).insulation;
 				fluidResist+=SINGLE_SLOT_FACTORS[SINGLE_SLOT_FACTORS.length-i-1]*slots.get(i).fluidResist;
 			}
 		}
 		// torso, legs: 3 layers of clothes, 1 armor
 		else {
+			int delta=4-slots.size();
 			for(int i=0;i<slots.size();i++) {
-				insulation+=TRIPLE_SLOT_FACTORS[i]*slots.get(i).insulation;
+				insulation+=TRIPLE_SLOT_FACTORS[i+delta]*slots.get(i).insulation;
 				fluidResist+=TRIPLE_SLOT_FACTORS[TRIPLE_SLOT_FACTORS.length-i-1]*slots.get(i).fluidResist;
 			}
 		}
@@ -126,7 +128,11 @@ public class BodyPartData {
     		snst.add(new ClothData(equipment.getAttributeModifiers(part.slot)));
     	for(int i=0;i<clothes.getSlots();i++) {
     		ItemStack item=clothes.getStackInSlot(i);
-    		snst.add(new ClothData(ArmorTempData.getData(item, part)));
+    		if(!item.isEmpty()) {
+	    		ArmorTempData atd=ArmorTempData.getData(item, part);
+	    		if(atd!=null)
+	    			snst.add(new ClothData(atd));
+    		}
     	}
     	return snst;
     }

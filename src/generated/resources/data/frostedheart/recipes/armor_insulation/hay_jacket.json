@@ -1,6 +1,6 @@
 {
   "type": "frostedheart:armor_temp",
-  "factor": 200.0,
+  "factor": 250.0,
   "heat_proof": 0.2,
   "item": "frostedheart:hay_jacket",
   "slot": "torso",

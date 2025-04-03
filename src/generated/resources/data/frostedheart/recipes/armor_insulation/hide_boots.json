@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:armor_temp",
   "factor": 300.0,
-  "heat_proof": 0.5,
+  "heat_proof": 0.4,
   "item": "frostedheart:hide_boots",
   "slot": "feet",
-  "wind_proof": 0.9
+  "wind_proof": 0.6
 }

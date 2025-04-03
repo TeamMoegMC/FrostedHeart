@@ -181,6 +181,8 @@ public class SurroundingTemperatureSimulator {
                 int maxIndex=cnk.getSectionsCount();
                 int index0=cnk.getSectionIndexFromSectionY(chunkOffsetD);
                 int index1=index0+1;
+                //cause chunk to prime heightmap
+                cnk.getHeight(Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
                 maps[i / 2] = cnk.getOrCreateHeightmapUnprimed(Types.MOTION_BLOCKING_NO_LEAVES);
                
                 if(index0>=0&&index0<maxIndex)
@@ -228,7 +230,7 @@ public class SurroundingTemperatureSimulator {
 
     public int getTopY(int x, int z) {
         if (x >= 16 || z >= 16 || x < -16 || z < -16) // out of bounds
-            return 0;
+            return -32767;
         int i = 0;
         if (x >= 0)
             i += 2;
@@ -287,8 +289,12 @@ public class SurroundingTemperatureSimulator {
                 }
                 Qpos[i] = dvec;
                 vid[i] = nid;
-                heat += (float) (getHeat(bpos) * Mth.lerp(Mth.clamp(-curspeed.y(), 0, 0.4) * 2.5, 1, 0.5)); // add heat
-                wind += getAir(bpos) ? (float) Mth.lerp((Mth.clamp(Math.abs(curspeed.y()), 0.2, 0.8) - 0.2) / 0.6, 2, 0.5) : 0;
+                heat += (float) (getHeat(bpos) * Mth.lerp(Mth.clamp(-curspeed.y(), 0, 0.4) * 2.5, 1, 0.5)); // add heat\
+                if(getAir(bpos)) {//open to air, great wind
+                	wind +=  2;
+                }else if(bpos.distToCenterSqr(qx0, qy0, qz0)>=16&&getInfoCached(bpos).shape.isEmpty()) {//particle go further than 4 bl far and meets air
+                	wind+=.5;
+                }
             }
         }
         return new SimulationResult(heat / n, wind / n);
@@ -302,7 +308,10 @@ public class SurroundingTemperatureSimulator {
     }
 
     private boolean getAir(BlockPos pos) {
-        return getTopY(pos.getX(), pos.getZ()) <= pos.getY();
+    	int topY=getTopY(pos.getX()-origin.getX(), pos.getZ()-origin.getZ());
+    	//System.out.println("x:"+(pos.getX()-origin.getX())+"z:"+(pos.getZ()-origin.getZ())+"y:"+topY);
+    	
+        return topY <= pos.getY();
     }
     private class CachedBlockInfoGetter implements Function <BlockState,CachedBlockInfo>{
     	BlockPos pos;
