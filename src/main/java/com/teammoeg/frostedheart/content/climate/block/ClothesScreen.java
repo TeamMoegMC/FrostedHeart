@@ -63,7 +63,7 @@ public class ClothesScreen extends IEContainerScreen<ClothesInventoryMenu> {
 	@Override
 	protected void gatherAdditionalTooltips(int mouseX, int mouseY, Consumer<Component> addLine,
 			Consumer<Component> addGray) {
-		for (int j = 0; j < 5; j++) {
+		/*for (int j = 0; j < 5; j++) {
 			BodyPart bp=BodyPart.values()[j];
 			if(super.isMouseIn(mouseX, mouseY, 118, 6+18*j, 54, 18)) {
 				addLine.accept(Components.str(String.valueOf(menu.partInsulation.get(bp).getFirst().getValue())));
@@ -71,7 +71,7 @@ public class ClothesScreen extends IEContainerScreen<ClothesInventoryMenu> {
 			}
 			
 
-		}
+		}*/
 		super.gatherAdditionalTooltips(mouseX, mouseY, addLine, addGray);
 	}
 	
