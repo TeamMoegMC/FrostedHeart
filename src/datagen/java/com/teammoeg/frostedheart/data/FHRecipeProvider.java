@@ -166,19 +166,20 @@ public class FHRecipeProvider extends RecipeProvider {
 //				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+ CRegistries.getRegistryName(f).getPath()+"_thermos"),Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"thermos"))),f,3,2));
 //		});
         Map<String, Float[]> materials = Map.of(
-                "hay", new Float[]{.2f,0.2f, 100.0f},
-                "hide", new Float[]{.5f,0.9f, 200.0f},
+                "hay", new Float[]{.2f,0.2f, 200.0f},
+                "hide", new Float[]{.5f,0.9f, 300.0f},
                 //"cotton", new Float[]{0.3f, 400.0f},
-                "wool", new Float[]{.3f,0.5f, 300.0f}
+                "wool", new Float[]{.3f,0.5f, 400.0f}
                 //"down", new Float[]{0.7f, 600.0f}
         );
         //List<ArmorTempData> armorData=new ArrayList<>();
         for(BodyPart part:BodyPart.values()) {
         	if(part.slot!=null) {
-        		out.accept(armorData(FHItems.straw_lining,part,100f,.2f,.2f));
-        		out.accept(armorData(FHItems.buff_coat,part,200f,.5f,0.9f));
-        		out.accept(armorData(FHItems.gambeson,part,300f,.3f,.5f));
-        		out.accept(armorData(FHItems.kelp_lining,part,100f,.5f,1.0f));
+        		
+        		out.accept(armorData(FHItems.straw_lining,part,200f,.2f,.2f));
+        		out.accept(armorData(FHItems.buff_coat,part,300f,.5f,0.5f));
+        		out.accept(armorData(FHItems.gambeson,part,400f,.3f,.2f));
+        		out.accept(armorData(FHItems.kelp_lining,part,200f,.5f,0.7f));
         		//out.accept(armorData(FHItems.cotton,part,500f,.2f,.5f));
         		//out.accept(armorData(FHItems.straw_lining,part,600f,.2f,.7f));
         	}
@@ -196,6 +197,7 @@ public class FHRecipeProvider extends RecipeProvider {
 		//recipeTrade(out);
 	}
 	private FinishedRecipe armorData(ItemLike item,BodyPart part,float insulation,float heat_proof,float cold_proof) {
+		
 		return new ArmorTempData(item.asItem(), Optional.of(part), insulation, heat_proof,cold_proof).toFinished(FHMain.rl("armor_insulation/lining/"+CRegistryHelper.getPath(item.asItem())+"_"+part.name().toLowerCase()));
 		
 	}

@@ -75,7 +75,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
     MasterGeneratorGuiButtonUpgrade upgrade;
     List<Component> costStr = new ArrayList<>();
     boolean hasEnoughMaterial;
-
+    boolean isUpgradeHovered;
     public GeneratorScreen(GeneratorContainer<R, T> inventorySlotsIn, Inventory inv, Component title) {
         super(inventorySlotsIn, inv, title, TEXTURE);
         this.imageHeight = 222;
@@ -191,9 +191,12 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
 
         // upgrade arrow
         matrixStack.blit(TEXTURE,leftPos+ 85,topPos+  93, 412, 148, 6, 22,TEXW,TEXH);
-
+        int tierOffset=0;
+        if(menu.getTier()<2&&isUpgradeHovered&&(!menu.isBroken.getValue())) {
+        	tierOffset+=1;
+        }
         // generator symbol
-        generatorSymbol.blitAtlas(matrixStack, leftPos, topPos, generatorPos, (menu.isWorking.getValue() && menu.process.getValue() > 0) ? 2 : 1, (menu.getTier() - 1));
+        generatorSymbol.blitAtlas(matrixStack, leftPos, topPos, generatorPos, menu.isBroken.getValue()?0:((menu.isWorking.getValue() && menu.process.getValue() > 0) ? 2 : 1), (menu.getTier() - 1-tierOffset));
 
         // range gauge
         minorPointer.blitRotated(matrixStack, leftPos, topPos, rangeGauge, menu.rangeLevel.getValue() / 4f * 271f);
@@ -279,6 +282,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         }
         if (isMouseIn(mouseX, mouseY, 75, 116, 26, 18)) {
             costStr.forEach(addLine);
+            isUpgradeHovered=true;
         }
     }
 
