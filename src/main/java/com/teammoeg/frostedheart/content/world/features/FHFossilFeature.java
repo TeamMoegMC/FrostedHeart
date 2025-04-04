@@ -70,15 +70,15 @@ public class FHFossilFeature extends Feature<FossilFeatureConfiguration> {
         BlockPos blockPos1 = blockPos.offset(-vec3i.getX() / 2, 0, -vec3i.getZ() / 2);
         int y = blockPos.getY();
 
-        int x;
-        for(x = 0; x < vec3i.getX(); ++x) {
+        int y2;
+      /*  for(x = 0; x < vec3i.getX(); ++x) {
             for(int z = 0; z < vec3i.getZ(); ++z) {
                 y = Math.min(y, worldGenLevel.getHeight(Heightmap.Types.OCEAN_FLOOR_WG, blockPos1.getX() + x, blockPos1.getZ() + z));
             }
-        }
+        }*/
 
-        x = Math.max(y - 15 - random.nextInt(10), worldGenLevel.getMinBuildHeight() + 10);
-        BlockPos pos = fossilStructures.getZeroPositionWithTransform(blockPos1.atY(x), Mirror.NONE, rotation);
+//        y2 = Math.max(y - 15 - random.nextInt(10), worldGenLevel.getMinBuildHeight() + 10);
+        BlockPos pos = fossilStructures.getZeroPositionWithTransform(blockPos1.atY(y), Mirror.NONE, rotation);
             placeSettings.clearProcessors();
             List<StructureProcessor> Processors = fossilFeatureConfiguration.fossilProcessors.value().list();
             Objects.requireNonNull(placeSettings);
