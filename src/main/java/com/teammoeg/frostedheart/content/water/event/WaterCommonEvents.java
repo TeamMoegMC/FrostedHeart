@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.water.event;
 
+import com.teammoeg.chorda.util.CDamageSourceHelper;
+import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
@@ -64,6 +66,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Random;
+
 
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -192,7 +195,7 @@ public class WaterCommonEvents {
             }
         }
         //Punishment/Reward - 5s
-        if (tick % 250 == 0 && !(player instanceof FakePlayer)) {
+        if (tick % 100 == 0 && !(player instanceof FakePlayer)) {
             WaterLevelCapability.getCapability(player).ifPresent(data -> {
                 if (!player.isCreative()) {
                     data.punishment(player);
@@ -201,7 +204,7 @@ public class WaterCommonEvents {
             });
         }
         //Restore water level in Peaceful difficulty mode - 3s
-        if (tick % 150 == 0 && !(player instanceof FakePlayer)) {
+        if (tick % 60 == 0 && !(player instanceof FakePlayer)) {
             if (level.getDifficulty() == Difficulty.PEACEFUL) {
                 WaterLevelCapability.getCapability(player).ifPresent(data -> {
                     data.restoreWater(player, 2);
@@ -209,7 +212,7 @@ public class WaterCommonEvents {
             }
         }
         //Update water between server and client - 30s
-        if (tick % 1500 == 0 && !(player instanceof FakePlayer) && !level.isClientSide()) {
+        if (tick % 600 == 0 && !(player instanceof FakePlayer) && !level.isClientSide()) {
             WaterLevelCapability.getCapability(player).ifPresent(data -> {
                 FHNetwork.INSTANCE.sendPlayer((ServerPlayer) player, new PlayerWaterLevelSyncPacket(data.getWaterLevel(), data.getWaterSaturationLevel(), data.getWaterExhaustionLevel()));
             });

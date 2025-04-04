@@ -175,14 +175,15 @@ public class WaterLevelCapability implements NBTSerializable {
     public void punishment(Player player) {
 
         if (getWaterLevel() <= 6) {
+            int base = 2 / getWaterLevel();
             switch (player.level().getDifficulty()) {
                 case PEACEFUL:
                     break;
                 case EASY:
-                    mobEffectPunishment(player, 0);
+                    mobEffectPunishment(player, base,base);
                     break;
                 default:
-                    mobEffectPunishment(player, 1);
+                    mobEffectPunishment(player, base+1,base);
                     break;
             }
         }
@@ -191,23 +192,19 @@ public class WaterLevelCapability implements NBTSerializable {
         if (getWaterLevel() == 0 && player.getHealth() > i) {
             if (!player.level().isClientSide()) {
                 player.hurt(CDamageSourceHelper.source(player.level(), FHDamageTypes.THIRST), 1.0f);
-            } else {
-                //player.level().playSound(player, player, SoundEvents.GUARDIAN_ATTACK, SoundSource.PLAYERS, 1.0F, 1.0F);
             }
         }
-        //TODO:当水分为0时死亡
     }
 
 
-    protected static void mobEffectPunishment(Player player, int level) {
-        int weAmp = FHConfig.SERVER.weaknessEffectAmplifier.get();
-        int slAmp = FHConfig.SERVER.weaknessEffectAmplifier.get();
+    protected static void mobEffectPunishment(Player player, int wlevel,int slevel) {
+        int Amp = FHConfig.SERVER.weaknessEffectAmplifier.get();
         MobEffectInstance weaknessEffect = player.getEffect(MobEffects.WEAKNESS);
         MobEffectInstance movementSlowDownEffect = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
-        if (weAmp > -1 && (weaknessEffect == null || weaknessEffect.getDuration() <= 100))
-            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 400, weAmp + level, false, false));
-        if (slAmp > -1 && movementSlowDownEffect == null || movementSlowDownEffect.getDuration() <= 100)
-            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 400, slAmp, false, false));
+        if (Amp > -1 && (weaknessEffect == null || weaknessEffect.getDuration() <= 100))
+            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 400, Amp + wlevel, false, false));
+        if (Amp > -1 && movementSlowDownEffect == null || movementSlowDownEffect.getDuration() <= 100)
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 400, Amp + slevel, false, false));
 
     }
 
