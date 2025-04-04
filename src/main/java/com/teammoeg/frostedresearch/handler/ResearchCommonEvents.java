@@ -66,7 +66,7 @@ import net.minecraftforge.network.PacketDistributor.PacketTarget;
 public class ResearchCommonEvents {
     @SubscribeEvent
     public static void onDrawDeskOpen(DrawDeskOpenEvent event) {
-        if (!event.getOpenPlayer().isCreative() && PlayerTemperatureData.getCapability(event.getOpenPlayer()).map(PlayerTemperatureData::getCoreBodyTemp).orElse(0f) < -0.2) {
+        if (!event.getOpenPlayer().isCreative() && PlayerTemperatureData.getCapability(event.getOpenPlayer()).map((t) -> t.getBodyTempByPart(PlayerTemperatureData.BodyPart.HANDS)).orElse(0f) < -0.5F) {
             event.getOpenPlayer().displayClientMessage(Lang.translateMessage("research.too_cold"), true);
             event.setCanceled(true);
         }
