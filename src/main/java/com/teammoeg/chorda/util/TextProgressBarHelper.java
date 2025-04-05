@@ -19,7 +19,7 @@
 
 package com.teammoeg.chorda.util;
 
-public class CTooltips {
+public class TextProgressBarHelper {
     public static String makeProgressBar(int length, int filledLength) {
         String bar = " ";
         int emptySpaces = length - filledLength;

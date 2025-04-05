@@ -28,7 +28,7 @@ import org.lwjgl.glfw.GLFW;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.lang.LangBuilder;
-import com.teammoeg.chorda.util.CTooltips;
+import com.teammoeg.chorda.util.TextProgressBarHelper;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.PlantTemperature;
@@ -94,7 +94,7 @@ public class PlantTempStats implements TooltipModifier {
         int high = Mth.ceil(Mth.clampedMap(max, -30, 30, 0, 6));
 
         // bar
-        String s = CTooltips.makeProgressBarInterval(6, low, high);
+        String s = TextProgressBarHelper.makeProgressBarInterval(6, low, high);
         String s1 = s.substring(0, 3);
         String s2 = s.substring(3);
 
