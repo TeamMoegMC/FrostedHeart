@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.wheelmenu;
 
 import java.util.Map;
 
-import com.teammoeg.chorda.util.CFunctionHelper;
+import com.teammoeg.chorda.util.CFunctionUtils;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.Event;

@@ -18,7 +18,7 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.util.CFunctionHelper;
+import com.teammoeg.chorda.util.CFunctionUtils;
 import com.teammoeg.chorda.util.CRegistryHelper;
 
 import net.minecraft.advancements.Advancement;
@@ -72,9 +72,9 @@ public class Editors {
 	public static final EditorWidgetFactory<CIcon, LabeledOpenEditorButton<CIcon>> ICON=openDialogLabeled(IconEditor.EDITOR,t->t,t->Components.empty());
 	public static final EditorWidgetFactory<Boolean, LabeledSelection<Boolean>> BOOLEAN=EditorWidgetFactory.create(LabeledSelection::createBool, LabeledSelection::getSelection,(w,v)->{w.setSelection(v);});
 	public static final EditorWidgetFactory<Long, NumberBox> LONG=EditorWidgetFactory.create(NumberBox::new, NumberBox::getNum,NumberBox::setNum);
-	public static final EditorWidgetFactory<Integer, NumberBox> INT=LONG.xmap(CFunctionHelper.mapNullable(Long::intValue, 0), Integer::longValue);
-	public static final EditorWidgetFactory<Short, NumberBox> SHORT=LONG.xmap(CFunctionHelper.mapNullable(Long::shortValue, Short.valueOf((short) 0)), Short::longValue);
-	public static final EditorWidgetFactory<Byte, NumberBox> BYTE=LONG.xmap(CFunctionHelper.mapNullable(Long::byteValue, Byte.valueOf((byte) 0)), Byte::longValue);
+	public static final EditorWidgetFactory<Integer, NumberBox> INT=LONG.xmap(CFunctionUtils.mapNullable(Long::intValue, 0), Integer::longValue);
+	public static final EditorWidgetFactory<Short, NumberBox> SHORT=LONG.xmap(CFunctionUtils.mapNullable(Long::shortValue, Short.valueOf((short) 0)), Short::longValue);
+	public static final EditorWidgetFactory<Byte, NumberBox> BYTE=LONG.xmap(CFunctionUtils.mapNullable(Long::byteValue, Byte.valueOf((byte) 0)), Byte::longValue);
 	public static final EditorWidgetFactory<Double, RealBox> DOUBLE=EditorWidgetFactory.create(RealBox::new, RealBox::getNum,RealBox::setNum);
 	public static final EditorWidgetFactory<String, LabeledTextBox> STRING=EditorWidgetFactory.create(LabeledTextBox::new, LabeledTextBox::getText,LabeledTextBox::setText);
 	public static final EditorWidgetFactory<String, LabeledTextBox> COMMAND=EditorWidgetFactory.create((p,l,v)->new LabeledTextBox(p,l,v,Verifiers.COMMAND), LabeledTextBox::getText,LabeledTextBox::setText);
@@ -86,7 +86,7 @@ public class Editors {
 	public static final EditorWidgetFactory<Float, RealBox> FLOAT = DOUBLE.xmap(Double::floatValue, Float::doubleValue);
 	public static final EditorWidgetFactory<Pair<Ingredient,Integer>,OpenEditorButton<Pair<Ingredient,Integer>>> SIZED_INGREDIENT=openDialog(IngredientEditor.EDITOR,e->CIcons.getIcon(e.getFirst(), e.getSecond()));
 	public static final EditorWidgetFactory<ResourceLocation, LabeledOpenEditorButton<Advancement>> ADVANCEMENT=
-		openDialogLabeled(EDITOR_ADVANCEMENT,CFunctionHelper.mapIfMapNullable(e->e.getDisplay(), e->CIcons.getIcon(e.getIcon()), e->CIcons.nop()),CFunctionHelper.mapIfMapNullable(e->e.getDisplay(), r->r.getTitle(), e->Components.str(e.getId().toString()))).xmap(e->e.getId(), ClientUtils.mc().player.connection.getAdvancements().getAdvancements()::get);
+		openDialogLabeled(EDITOR_ADVANCEMENT,CFunctionUtils.mapIfMapNullable(e->e.getDisplay(), e->CIcons.getIcon(e.getIcon()), e->CIcons.nop()),CFunctionUtils.mapIfMapNullable(e->e.getDisplay(), r->r.getTitle(), e->Components.str(e.getId().toString()))).xmap(e->e.getId(), ClientUtils.mc().player.connection.getAdvancements().getAdvancements()::get);
 	public static final EditorWidgetFactory<Pair<Advancement,String>, AdvancementEditor> ADVANCEMENT_CITERION=EditorWidgetFactory.create(AdvancementEditor::new, AdvancementEditor::getValue,AdvancementEditor::setValue);
 	
 	

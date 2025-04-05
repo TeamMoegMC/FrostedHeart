@@ -29,7 +29,7 @@ import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.CIcons.ItemIcon;
 import com.teammoeg.chorda.io.ConfigFileUtil;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.util.CFunctionHelper;
+import com.teammoeg.chorda.util.CFunctionUtils;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate;
 import com.teammoeg.frostedheart.content.wheelmenu.useractions.CommandInputAction;
 import com.teammoeg.frostedheart.content.wheelmenu.useractions.KeyMappingTriggerAction;
@@ -60,7 +60,7 @@ public class WheelMenuEditors {
 	public static final Editor<Collection<UserSelection>> USER_SELECTION_LIST = (p, l, v,
 		c) -> new EditListDialog<>(p, l, v, null, SELECTION_EDITOR, UserSelection::getParsedMessage, UserSelection::icon, c).open();
 	public static final Editor<Collection<ResourceLocation>> SELECTION_ENABLED = 
-		EditListDialog.createSetEditor(null, ()->Stream.concat(WheelMenuRenderer.displayedSelections.stream(), WheelMenuRenderer.hiddenSelections.stream()), CFunctionHelper.mapIfMapNullable(WheelMenuRenderer.selections::get, Selection::getMessage, t -> Components.str(t.toString())), CFunctionHelper.mapIfMapNullable(WheelMenuRenderer.selections::get, Selection::getIcon, n -> CIcons.nop()));
+		EditListDialog.createSetEditor(null, ()->Stream.concat(WheelMenuRenderer.displayedSelections.stream(), WheelMenuRenderer.hiddenSelections.stream()), CFunctionUtils.mapIfMapNullable(WheelMenuRenderer.selections::get, Selection::getMessage, t -> Components.str(t.toString())), CFunctionUtils.mapIfMapNullable(WheelMenuRenderer.selections::get, Selection::getIcon, n -> CIcons.nop()));
 
 		public static class SelectionConfigScreen extends BaseEditDialog{
 

@@ -29,7 +29,7 @@ import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.util.CFunctionHelper;
+import com.teammoeg.chorda.util.CFunctionUtils;
 
 import net.minecraft.network.chat.Component;
 
@@ -60,8 +60,8 @@ public class OpenEditorButton<T> extends TextButton {
 		super(panel,Components.empty(),CIcons.nop());
 		this.edi = edi;
 		this.val = val;
-		this.getIcon = CFunctionHelper.mapNullable(getIcon, CIcons.nop());
-		this.getText = CFunctionHelper.mapNullable(getText, txt);
+		this.getIcon = CFunctionUtils.mapNullable(getIcon, CIcons.nop());
+		this.getText = CFunctionUtils.mapNullable(getText, txt);
 		this.txt=txt;
 		this.onset=t->{};
 		refreshValue();

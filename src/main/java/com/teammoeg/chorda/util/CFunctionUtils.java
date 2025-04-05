@@ -4,9 +4,9 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 
-public class CFunctionHelper {
+public class CFunctionUtils {
 
-	public CFunctionHelper() {
+	public CFunctionUtils() {
 		
 	}
 	public static <A,B> Function<A,B> mapNullable(Function<A,B> func,B def){

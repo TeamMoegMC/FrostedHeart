@@ -10,7 +10,7 @@ import com.google.common.collect.ImmutableSet;
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.creativeTab.TabType;
 import com.teammoeg.chorda.item.CBlockItem;
-import com.teammoeg.chorda.util.CFunctionHelper;
+import com.teammoeg.chorda.util.CFunctionUtils;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskBlock;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
@@ -62,7 +62,7 @@ public class FRContents {
 				.strength(2, 6)
 				.noOcclusion()));
 		// MECHANICAL_CALCULATOR
-		public static final RegistryObject<MechCalcBlock> MECHANICAL_CALCULATOR = CFunctionHelper.makeIf(CompatModule.isCreateLoaded(), ()->
+		public static final RegistryObject<MechCalcBlock> MECHANICAL_CALCULATOR = CFunctionUtils.makeIf(CompatModule.isCreateLoaded(), ()->
 			register("mechanical_calculator", () -> new MechCalcBlock(
 			BlockBehaviour.Properties.of().mapColor(MapColor.METAL)
 				.sound(SoundType.METAL)
@@ -101,7 +101,7 @@ public class FRContents {
 			ForgeRegistries.BLOCK_ENTITY_TYPES, FRMain.MODID);
 		public static final RegistryObject<BlockEntityType<DrawingDeskTileEntity>> DRAWING_DESK = REGISTER.register(
 			"drawing_desk", makeType(DrawingDeskTileEntity::new, Blocks.DRAWING_DESK::get));
-		public static final RegistryObject<BlockEntityType<MechCalcTileEntity>> MECH_CALC = CFunctionHelper.makeIf(CompatModule.isCreateLoaded(),()->REGISTER.register(
+		public static final RegistryObject<BlockEntityType<MechCalcTileEntity>> MECH_CALC = CFunctionUtils.makeIf(CompatModule.isCreateLoaded(),()->REGISTER.register(
 			"mechanical_calculator", makeType(MechCalcTileEntity::new, ()->Blocks.MECHANICAL_CALCULATOR.get())));
 
 		private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntitySupplier<T> create, Supplier<Block> valid) {
