@@ -191,7 +191,7 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> stickIgnitionChance;
         public final ForgeConfigSpec.ConfigValue<Double> consumeChanceWhenIgnited;
         public final ForgeConfigSpec.ConfigValue<Boolean> enableScenario;
-        public final ForgeConfigSpec.ConfigValue<Boolean> enableAutoRestart;
+        //public final ForgeConfigSpec.ConfigValue<Boolean> enableAutoRestart;
         public final ForgeConfigSpec.ConfigValue<Boolean> enableUpdateReminder;
 
         Common(ForgeConfigSpec.Builder builder) {
@@ -236,8 +236,8 @@ public class FHConfig {
                     .define("enableScenario", true);
             builder.pop();
             builder.push("AutoUpdate");
-            enableAutoRestart=builder.comment("Enable automatic restart if later snapshot was found, DONT TOUCH UNLESS INSTUCTED BY DEV TEAM.")
-            		.define("enableAutoRestart", false);
+            /*enableAutoRestart=builder.comment("Enable automatic restart if later snapshot was found, DONT TOUCH UNLESS INSTUCTED BY DEV TEAM.")
+            		.define("enableAutoRestart", false);*/
             enableUpdateReminder=builder.comment("Enable update reminder if later snapshot was found, DONT TOUCH UNLESS INSTUCTED BY DEV TEAM.")
             		.define("enableUpdateReminder", true);
             builder.pop();

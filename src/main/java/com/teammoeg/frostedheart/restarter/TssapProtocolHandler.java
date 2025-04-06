@@ -71,7 +71,7 @@ public class TssapProtocolHandler {
 	}
 	static Thread serverThread;
 	public static void serverPrepareUpdateReminder() {
-		if(localVersion!=null&&selectedChannelAddr!=null&&FHConfig.COMMON.enableAutoRestart.get()&&serverThread==null) {
+		if(localVersion!=null&&selectedChannelAddr!=null&&new File(FMLPaths.CONFIGDIR.get().toFile(),"autorestart.toml").exists()&&serverThread==null) {
 			serverThread=new Thread() {
 				@Override
 				public void run() {
