@@ -175,7 +175,8 @@ public class WaterLevelCapability implements NBTSerializable {
     public void punishment(Player player) {
 
         if (getWaterLevel() <= 6) {
-            int base = 2 / getWaterLevel();
+        	
+            int base = 2 / Math.max(getWaterLevel(), 1);
             switch (player.level().getDifficulty()) {
                 case PEACEFUL:
                     break;
