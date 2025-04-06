@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.content.health.capability.MutableNutrition;
@@ -43,6 +44,8 @@ public class GatherFoodNutritionEvent extends Event {
 		this.consumer = consumer;
 		this.stack = stack;
 	}
+
+	@Nonnull
 	public MutableNutrition getForModify() {
 		if(modified==null)
 			modified=new MutableNutrition(0,0,0,0);
@@ -51,6 +54,8 @@ public class GatherFoodNutritionEvent extends Event {
 	public boolean isModified() {
 		return modified!=null;
 	}
+
+	@Nullable
 	public Nutrition queryNutrition(ItemStack stack) {
 		if(consumer!=null)
 			return NutritionRecipe.getRecipeFromItem(consumer, stack);
