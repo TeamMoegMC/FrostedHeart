@@ -99,7 +99,14 @@ public class DrinkContainerItem extends ItemFluidContainer {
 				//player.setItemInHand(hand, result);
 				return InteractionResultHolder.sidedSuccess(result,level.isClientSide);
 			}
-		}
+
+            // if failed at picking up, empty the fluid inside if shift
+            if (player.isShiftKeyDown()) {
+                cur.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(handler -> {
+                    handler.drain(capacity, FluidAction.EXECUTE);
+                });
+            }
+        }
 		
         if (canDrink(player, cur)) return ItemUtils.startUsingInstantly(level, player, hand);
         return InteractionResultHolder.pass(cur);
