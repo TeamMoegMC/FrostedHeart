@@ -165,7 +165,7 @@ public class FountainTileEntity extends CBlockEntity implements CTickableBlockEn
             }
         } else {
             // make water steamy
-            if (level.random.nextInt(4) == 0) {
+            if (level.random.nextInt(10) == 0) {
                 BlockPos water = findWater();
                 if (water != null) {
                     FHClientUtils.spawnSteamParticles(level, water);

@@ -83,9 +83,8 @@ public class RadiatorLogic extends HeatingLogic<RadiatorLogic, RadiatorState> {
     @Override
     public void tickEffects(IMultiblockContext<RadiatorState> ctx, BlockPos master, boolean isActive) {
         Level level = ctx.getLevel().getRawLevel();
-        BlockPos pos = CMultiblockHelper.getAbsoluteMaster(ctx);
         if (level != null && level.isClientSide && isActive && level.random.nextFloat() < 0.2) {
-            FHClientUtils.spawnSteamParticles(level, pos);
+            FHClientUtils.spawnSteamParticles(level, master);
         }
     }
 
