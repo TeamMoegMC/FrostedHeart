@@ -234,7 +234,11 @@ public class ClimateCommonEvents {
 								if(itemstack.isDamageableItem())
 								itemstack.hurtAndBreak(CMath.randomValue(rs, rate * amount), player,
 									t -> t.broadcastBreakEvent(part.slot));
-								rate*=(1-ArmorTempData.getData(itemstack, part).getHeatProof());
+								ArmorTempData atd=ArmorTempData.getData(itemstack, part);
+								float proof=.7f;
+								if(atd!=null)
+									proof=atd.getHeatProof();
+								rate*=(1-proof);
 							}
 						}
 					}

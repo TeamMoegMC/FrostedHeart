@@ -25,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.capability.capabilities.ItemHandlerWrapper;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
@@ -46,6 +47,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -82,7 +84,6 @@ public class GeneratorData implements SpecialData {
             ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o -> o.dimension == null ? Optional.empty() : Optional.of(o.dimension.location()))
     ).apply(t, GeneratorData::new));
     public final ItemStackHandler inventory = new ItemStackHandler(2) {
-
 		@Override
 		public boolean isItemValid(int slot, @NotNull ItemStack stack) {
 			if(slot==1)return false;
@@ -90,7 +91,24 @@ public class GeneratorData implements SpecialData {
 		}
     	
     };
-    public final LazyOptional<ItemStackHandler> invCap = LazyOptional.of(() -> inventory);
+    public final ItemHandlerWrapper invWrapper=new ItemHandlerWrapper(()->inventory) {
+
+		@Override
+		public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
+			if(slot==OUTPUT_SLOT)
+				return stack;
+			return super.insertItem(slot, stack, simulate);
+		}
+
+		@Override
+		public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
+			if(slot==OUTPUT_SLOT)
+				return ItemStack.EMPTY;
+			return super.extractItem(slot, amount, simulate);
+		}
+    	
+    };
+    public final LazyOptional<IItemHandler> invCap = LazyOptional.of(() -> invWrapper);
     final float heatChance = .05f;
     public int process = 0, processMax = 0;
     public int overdriveLevel = 0;

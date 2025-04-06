@@ -313,7 +313,7 @@ public class TemperatureUpdate {
                         int wind = WorldTemperature.wind(world);
                         // Range 0-1
                         float openness = data.getAirOpenness();
-                        System.out.println(data.windStrengh);
+                        //System.out.println(data.windStrengh);
                         // [0,1]
                         float effectiveWind = openness * Mth.clamp(wind, 0, 100) / 100F;
 
