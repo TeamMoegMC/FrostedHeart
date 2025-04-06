@@ -373,7 +373,7 @@ public class TemperatureUpdate {
                             
                             // May be negative! (when dt < 0)
                             float heatExchangedUnits = (float) ((1 + fluidModifier) * unit * (dt / FHConfig.SERVER.heatExchangeTempConstant.get()));
-                            System.out.println("fm:"+fluidModifier);
+                            // System.out.println("fm:"+fluidModifier);
                             // Self-Heating
                             float selfHeatRate = data.getDifficulty().heat_unit; // normally 1
                             float movementHeatedUnits = 0;
