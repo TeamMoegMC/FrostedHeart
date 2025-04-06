@@ -25,6 +25,7 @@ import java.util.function.Function;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
+import com.teammoeg.frostedheart.content.climate.ClientClimateData;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
@@ -40,6 +41,7 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.util.ShapeType;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -76,8 +78,9 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
             boolean isOverdrive = ctx.getState().getData(pos).map(t -> t.isOverdrive).orElse(false);
             if (random.nextFloat() < (isOverdrive ? 0.8F : 0.5F)) {
                 ClientUtils.spawnT2FireParticles(level, blockpos);
-                Vec3 wind = new Vec3(0, 0, 0);
-                FHClientUtils.spawnInvertedConeSteam(level, blockpos, wind);
+                float windSpeed = Mth.clampedMap(ClientClimateData.getWind(), 0F, 100F, 0F, 100F);
+                Vec3 windVec = new Vec3(windSpeed, 0, windSpeed);
+                FHClientUtils.spawnInvertedConeSteam(level, blockpos, windVec);
             }
         }
     }

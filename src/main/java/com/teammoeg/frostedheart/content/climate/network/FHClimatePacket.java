@@ -35,17 +35,20 @@ public class FHClimatePacket implements CMessage {
     private final short[] data;
     private final long sec;
     private final ClimateType climate;
+    private final int wind;
 
     public FHClimatePacket() {
         data = new short[0];
         sec = 0;
         climate = ClimateType.NONE;
+        wind = 0;
     }
 
     private FHClimatePacket(FriendlyByteBuf buffer) {
         data = SerializeUtil.readShortArray(buffer);
         sec = buffer.readVarLong();
         climate = ClimateType.values()[buffer.readByte() & 0xff];
+        wind = buffer.readVarInt();
     }
 
     public FHClimatePacket(WorldClimate climateData) {
@@ -53,10 +56,12 @@ public class FHClimatePacket implements CMessage {
     		data = new short[0];
             sec = 0;
             climate = ClimateType.NONE;
+            wind = 0;
     	}else {
 	        data = climateData.getFrames();
 	        sec = climateData.getSec();
 	        climate = climateData.getClimate();
+            wind = climateData.getWind();
     	}
     }
 
@@ -64,6 +69,7 @@ public class FHClimatePacket implements CMessage {
         SerializeUtil.writeShortArray(buffer, data);
         buffer.writeVarLong(sec);
         buffer.writeByte((byte) climate.ordinal());
+        buffer.writeVarInt(wind);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
@@ -84,6 +90,7 @@ public class FHClimatePacket implements CMessage {
             ClientClimateData.climate = climate;
 
             ClientClimateData.secs = sec;
+            ClientClimateData.wind = wind;
         });
         context.get().setPacketHandled(true);
     }
