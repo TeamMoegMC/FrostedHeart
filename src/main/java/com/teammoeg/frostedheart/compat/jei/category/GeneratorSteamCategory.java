@@ -100,12 +100,12 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
         List<Component> tooltip = new ArrayList<>();
 
         if (isMouseIn(mouseX, mouseY, 8, 9, 2, 54)) {
-            tooltip.add(Lang.translateGui("generator.temperature.level").append(String.valueOf(recipe.level)));
+            tooltip.add(Lang.translateGui("generator.temperature_level").append(String.valueOf(recipe.level)));
         }
 
 
         if (isMouseIn(mouseX, mouseY, 142, 9, 2, 54)) {
-            tooltip.add(Lang.translateGui("generator.power.level").append(String.valueOf(recipe.power)));
+            tooltip.add(Lang.translateGui("generator.pressure").append(String.valueOf(recipe.power)));
         }
         return tooltip;
     }

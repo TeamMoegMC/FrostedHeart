@@ -23,6 +23,7 @@ import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.teammoeg.chorda.block.CBlockInterfaces;
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
@@ -32,7 +33,10 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
@@ -68,10 +72,12 @@ import net.minecraftforge.network.NetworkHooks;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public class SaunaTileEntity extends CBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState, IIEInventory, MenuProvider {
+public class SaunaTileEntity extends CBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState,
+        IIEInventory, MenuProvider, HeatNetworkProvider, IHaveGoggleInformation {
 
     private static final int RANGE = 5;
     private static final int WALL_HEIGHT = 3;
@@ -370,4 +376,14 @@ public class SaunaTileEntity extends CBlockEntity implements CTickableBlockEntit
 		heatcap.invalidate();
 		super.invalidateCaps();
 	}
+
+    @Override
+    public @org.jetbrains.annotations.Nullable HeatNetwork getNetwork() {
+        return network.getNetwork();
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        return TemperatureGoogleRenderer.addHeatNetworkInfoToTooltip(tooltip, isPlayerSneaking, worldPosition);
+    }
 }

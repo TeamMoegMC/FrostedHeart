@@ -21,11 +21,24 @@ package com.teammoeg.frostedheart.content.climate.block.radiator;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.StoredCapability;
 
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.content.climate.block.generator.HeatingState;
+import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
+import com.teammoeg.frostedheart.content.steamenergy.ClientHeatNetworkData;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
+import com.teammoeg.frostedheart.util.Lang;
+import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.Nullable;
 
-public class RadiatorState extends HeatingState {
+import java.util.List;
+
+import static net.minecraft.ChatFormatting.GRAY;
+
+public class RadiatorState extends HeatingState implements HeatNetworkProvider, IHaveGoggleInformation {
 
     HeatEndpoint network = new HeatEndpoint(100, 100, 0, 4);
     StoredCapability<HeatEndpoint> heatCap=new StoredCapability<>(network);
@@ -60,5 +73,53 @@ public class RadiatorState extends HeatingState {
     @Override
     public int getRadius() {
         return 7;
+    }
+
+    @Override
+    public @Nullable HeatNetwork getNetwork() {
+        return network.getNetwork();
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        Lang.tooltip("heat_stats").forGoggles(tooltip);
+
+        if (TemperatureGoogleRenderer.hasHeatNetworkData()) {
+            ClientHeatNetworkData data = TemperatureGoogleRenderer.getHeatNetworkData();
+
+            Lang.translate("tooltip", "pressure.network")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+
+            Lang.number(data.totalEndpointIntake)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.intake")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            Lang.number(data.totalEndpointOutput)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.output")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            // show number of endpoints
+            Lang.number(data.endpoints.size())
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.endpoints")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            Lang.translate("tooltip", "pressure.endpoint")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+        }
+
+        return true;
     }
 }

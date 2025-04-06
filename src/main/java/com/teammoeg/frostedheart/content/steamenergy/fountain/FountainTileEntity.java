@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.teammoeg.chorda.block.CBlockInterfaces;
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
@@ -28,11 +29,15 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -41,11 +46,14 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 import java.util.UUID;
 
-public class FountainTileEntity extends CBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState {
+public class FountainTileEntity extends CBlockEntity implements CTickableBlockEntity,
+        CBlockInterfaces.IActiveState, HeatNetworkProvider, IHaveGoggleInformation {
 
     public static final int RANGE_PER_NOZZLE = 1;
     public static final int MAX_HEIGHT = 5;
@@ -266,4 +274,14 @@ public class FountainTileEntity extends CBlockEntity implements CTickableBlockEn
 		heatcap.invalidate();
 		super.invalidateCaps();
 	}
+
+    @Override
+    public @Nullable HeatNetwork getNetwork() {
+        return network.getNetwork();
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        return TemperatureGoogleRenderer.addHeatNetworkInfoToTooltip(tooltip, isPlayerSneaking, worldPosition);
+    }
 }

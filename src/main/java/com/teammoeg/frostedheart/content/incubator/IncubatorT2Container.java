@@ -42,7 +42,8 @@ public class IncubatorT2Container extends CBlockEntityMenu<HeatIncubatorTileEnti
     	this(id,inventoryPlayer,tile,false);
     }
     public IncubatorT2Container(int id, Inventory inventoryPlayer, HeatIncubatorTileEntity tile,boolean isServer) {
-        super(FHMenuTypes.INCUBATOR_T2.get(), tile, id,inventoryPlayer.player, 4);
+        // note that T2 does not have quicklime slot
+        super(FHMenuTypes.INCUBATOR_T2.get(), tile, id,inventoryPlayer.player, 3);
         if(isServer) {
         	tankin.bind(tile.fluid[0]);
         	tankout.bind(tile.fluid[1]);

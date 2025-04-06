@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockBE;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.AllBlocks;
@@ -49,6 +51,8 @@ import com.simibubi.create.foundation.utility.Iterate;
 import com.simibubi.create.foundation.utility.Lang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.config.CClient;
+import com.teammoeg.chorda.multiblock.CMultiblockHelper;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
@@ -61,6 +65,7 @@ import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkRequestC2SPacket
 import com.teammoeg.frostedheart.content.utility.SoilThermometer;
 import com.teammoeg.frostedheart.content.utility.TemperatureProbe;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.GuiGraphics;
@@ -81,6 +86,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
+
+import static net.minecraft.ChatFormatting.GRAY;
 
 /**
  * Adapted from @link{com.simibubi.create.content.equipment.goggles.GoggleOverlayRenderer}
@@ -144,6 +151,7 @@ public class TemperatureGoogleRenderer {
         pos = proxiedOverlayPosition(world, pos);
 
         BlockEntity be = world.getBlockEntity(pos);
+
         boolean wearingGoggles = GogglesItem.isWearingGoggles(mc.player);
 
         BlockState state = world.getBlockState(pos);
@@ -165,15 +173,31 @@ public class TemperatureGoogleRenderer {
 
         boolean hasHeatNetworkInformation = be instanceof HeatNetworkProvider;
 
+        // special case: multiblock heat network provider
+        boolean hasMBGoogleInformation = false;
+        boolean hasMBHoveringInformation = false;
+        boolean hasMBHeatNetworkInformation = false;
+        if (be instanceof IMultiblockBE multiblockBE) {
+            IMultiblockState mbState = multiblockBE.getHelper().getState();
+            if (mbState != null) {
+                hasMBGoogleInformation = mbState instanceof IHaveGoggleInformation;
+                hasMBHoveringInformation = mbState instanceof IHaveHoveringInformation;
+                hasMBHeatNetworkInformation = mbState instanceof HeatNetworkProvider;
+            }
+        }
+
         // Request HeatNetwork data
         // Note: We cannot really do cache by pos as heat network data can change every tick...
         // TODO: Separate network request and endpoint request
-        if (wearingGoggles && hasGoggleInformation && hasHeatNetworkInformation) {
+        if (wearingGoggles &&
+                (
+                        (hasGoggleInformation && hasHeatNetworkInformation) || (hasMBGoogleInformation && hasMBHeatNetworkInformation)
+                )
+        ) {
             // Set invalid data by default
             if (lastHeatNetworkData == null)
                 lastHeatNetworkData = new ClientHeatNetworkData(pos);
             // Try to request the data
-//            FHMain.LOGGER.debug("Requesting ClientHeatNetworkData from HeatNetworkProvider at " + pos);
             FHNetwork.INSTANCE.sendToServer(new HeatNetworkRequestC2SPacket(pos));
         }
 
@@ -190,6 +214,16 @@ public class TemperatureGoogleRenderer {
             IHaveGoggleInformation gte = (IHaveGoggleInformation) be;
             goggleAddedInformation = gte.addToGoggleTooltip(tooltip, isShifting);
             item = gte.getIcon(isShifting);
+        }
+
+        if (hasMBGoogleInformation && wearingGoggles) {
+            boolean isShifting = mc.player.isShiftKeyDown();
+            IMultiblockState mbState = ((IMultiblockBE) be).getHelper().getState();
+            if (mbState != null) {
+                IHaveGoggleInformation gte = (IHaveGoggleInformation) mbState;
+                goggleAddedInformation = gte.addToGoggleTooltip(tooltip, isShifting);
+                item = gte.getIcon(isShifting);
+            }
         }
 
         if (hasHoveringInformation) {
@@ -370,5 +404,99 @@ public class TemperatureGoogleRenderer {
         if (targetedState.getBlock() instanceof IProxyHoveringInformation proxy)
             return proxy.getInformationSource(level, pos, targetedState);
         return pos;
+    }
+
+    public static boolean addHeatNetworkInfoToTooltip(List<Component> tooltip, boolean isPlayerSneaking, BlockPos worldPosition) {
+        com.teammoeg.frostedheart.util.Lang.tooltip("heat_stats").forGoggles(tooltip);
+
+        if (TemperatureGoogleRenderer.hasHeatNetworkData()) {
+            ClientHeatNetworkData data = TemperatureGoogleRenderer.getHeatNetworkData();
+
+            com.teammoeg.frostedheart.util.Lang.translate("tooltip", "pressure.network")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+
+            com.teammoeg.frostedheart.util.Lang.number(data.totalEndpointIntake)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(com.teammoeg.frostedheart.util.Lang.translate("tooltip", "pressure.intake")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            com.teammoeg.frostedheart.util.Lang.number(data.totalEndpointOutput)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(com.teammoeg.frostedheart.util.Lang.translate("tooltip", "pressure.output")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            // show number of endpoints
+            com.teammoeg.frostedheart.util.Lang.number(data.endpoints.size())
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(com.teammoeg.frostedheart.util.Lang.translate("tooltip", "pressure.endpoints")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            com.teammoeg.frostedheart.util.Lang.translate("tooltip", "pressure.endpoint")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+
+            // stream through endpoints, filter by pos
+            data.endpoints.stream()
+                    .filter(e -> e.getPos().equals(worldPosition))
+                    .forEach(e -> {
+                        float maxIntake = e.getMaxIntake();
+                        float maxOutput = e.getMaxOutput();
+                        float avgIntake = e.getAvgIntake();
+                        float avgOutput = e.getAvgOutput();
+
+                        if (maxIntake > 0)
+                            com.teammoeg.frostedheart.util.Lang.number(e.getMaxIntake())
+                                    .translate("generic", "unit.pressure")
+                                    .style(ChatFormatting.AQUA)
+                                    .space()
+                                    .add(com.teammoeg.frostedheart.util.Lang.translate("tooltip", "pressure.max_intake")
+                                            .style(ChatFormatting.DARK_GRAY))
+                                    .forGoggles(tooltip, 1);
+
+                        if (maxOutput > 0)
+                            com.teammoeg.frostedheart.util.Lang.number(e.getMaxOutput())
+                                    .translate("generic", "unit.pressure")
+                                    .style(ChatFormatting.AQUA)
+                                    .space()
+                                    .add(com.teammoeg.frostedheart.util.Lang.translate("tooltip", "pressure.max_output")
+                                            .style(ChatFormatting.DARK_GRAY))
+                                    .forGoggles(tooltip, 1);
+
+                        if (avgIntake > 0)
+                            com.teammoeg.frostedheart.util.Lang.number(e.getAvgIntake())
+                                    .translate("generic", "unit.pressure")
+                                    .style(ChatFormatting.AQUA)
+                                    .space()
+                                    .add(com.teammoeg.frostedheart.util.Lang.translate("tooltip", "pressure.average_intake")
+                                            .style(ChatFormatting.DARK_GRAY))
+                                    .forGoggles(tooltip, 1);
+
+                        if (avgOutput > 0)
+                            com.teammoeg.frostedheart.util.Lang.number(e.getAvgOutput())
+                                    .translate("generic", "unit.pressure")
+                                    .style(ChatFormatting.AQUA)
+                                    .space()
+                                    .add(com.teammoeg.frostedheart.util.Lang.translate("tooltip", "pressure.average_output")
+                                            .style(ChatFormatting.DARK_GRAY))
+                                    .forGoggles(tooltip, 1);
+                    });
+
+        } else {
+            com.teammoeg.frostedheart.util.Lang.translate("tooltip", "pressure.no_network")
+                    .style(ChatFormatting.RED)
+                    .forGoggles(tooltip);
+        }
+
+        return true;
+
     }
 }

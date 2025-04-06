@@ -19,18 +19,30 @@
 
 package com.teammoeg.frostedheart.content.climate.block.generator.t2;
 
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorState;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
+import com.teammoeg.frostedheart.content.steamenergy.ClientHeatNetworkData;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.StoredCapability;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
+import com.teammoeg.frostedheart.util.Lang;
+import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
+import org.jetbrains.annotations.Nullable;
 
-public class T2GeneratorState extends GeneratorState {
+import java.util.List;
+
+import static net.minecraft.ChatFormatting.GRAY;
+
+public class T2GeneratorState extends GeneratorState implements HeatNetworkProvider, IHaveGoggleInformation {
     public static final int TANK_CAPACITY = 200 * 1000;
     public FluidTank tank = new FluidTank(TANK_CAPACITY,
             f -> GeneratorSteamRecipe.findRecipe(f) != null);
@@ -74,4 +86,52 @@ public class T2GeneratorState extends GeneratorState {
     }
 
 
+    @Override
+    public @Nullable HeatNetwork getNetwork() {
+        return manager;
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        Lang.tooltip("heat_stats").forGoggles(tooltip);
+
+        if (TemperatureGoogleRenderer.hasHeatNetworkData()) {
+            ClientHeatNetworkData data = TemperatureGoogleRenderer.getHeatNetworkData();
+
+            Lang.translate("tooltip", "pressure.network")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+
+            Lang.number(data.totalEndpointIntake)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.intake")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            Lang.number(data.totalEndpointOutput)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.output")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            // show number of endpoints
+            Lang.number(data.endpoints.size())
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.endpoints")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            Lang.translate("tooltip", "pressure.endpoint")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+
+        }
+
+        return true;
+    }
 }

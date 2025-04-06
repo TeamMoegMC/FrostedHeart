@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
+import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockBE;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.chorda.network.CMessage;
 import net.minecraft.core.BlockPos;
@@ -55,7 +57,22 @@ public class HeatNetworkRequestC2SPacket implements CMessage {
             if (player != null) {
                 ServerLevel level = player.serverLevel();
                 BlockEntity be = level.getBlockEntity(pos);
-                if (be instanceof HeatNetworkProvider hp) {
+
+                if (be instanceof IMultiblockBE multiblockBE) {
+                    IMultiblockState mbState = multiblockBE.getHelper().getState();
+                    if (mbState instanceof HeatNetworkProvider hp) {
+                        HeatNetwork network = hp.getNetwork();
+                        if (network != null) {
+//                        FHMain.LOGGER.debug("Client request received. Sending server HeatNetwork data to client");
+                            ClientHeatNetworkData data = new ClientHeatNetworkData(pos, network);
+                            FHNetwork.INSTANCE.sendPlayer(player, new HeatNetworkResponseS2CPacket(data));
+                        } else {
+//                        FHMain.LOGGER.debug("Client request received. No HeatNetwork found at the position. Sending nothing.");
+                        }
+                    }
+                }
+
+                else if (be instanceof HeatNetworkProvider hp) {
                     HeatNetwork network = hp.getNetwork();
                     if (network != null) {
 //                        FHMain.LOGGER.debug("Client request received. Sending server HeatNetwork data to client");

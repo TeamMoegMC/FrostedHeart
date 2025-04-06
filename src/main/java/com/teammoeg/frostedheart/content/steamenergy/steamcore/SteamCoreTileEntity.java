@@ -24,23 +24,29 @@ import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
 import com.teammoeg.chorda.block.CBlockInterfaces;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Objects;
 
 public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
         CTickableBlockEntity, IHaveGoggleInformation,
-        CBlockInterfaces.IActiveState {
+        CBlockInterfaces.IActiveState, HeatNetworkProvider {
     HeatEndpoint network = new HeatEndpoint(10, FHConfig.COMMON.steamCoreMaxPower.get().floatValue(), 0, FHConfig.COMMON.steamCorePowerIntake.get().floatValue());
     LazyOptional<HeatEndpoint> heatcap = LazyOptional.of(() -> network);
 
@@ -128,4 +134,15 @@ public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
 		heatcap.invalidate();
 		super.invalidateCaps();
 	}
+
+    @Override
+    public @Nullable HeatNetwork getNetwork() {
+        return network.getNetwork();
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        super.addToGoggleTooltip(tooltip, isPlayerSneaking);
+        return TemperatureGoogleRenderer.addHeatNetworkInfoToTooltip(tooltip, isPlayerSneaking, worldPosition);
+    }
 }

@@ -79,15 +79,12 @@ public class HeatPipeTileEntity extends CPipeBlockEntity implements NetworkConne
     }
 
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        float output = 0;
-        float intake = 0;
-
         Lang.tooltip("heat_stats").forGoggles(tooltip);
 
         if (TemperatureGoogleRenderer.hasHeatNetworkData()) {
             ClientHeatNetworkData data = TemperatureGoogleRenderer.getHeatNetworkData();
 
-            Lang.translate("tooltip", "pressure")
+            Lang.translate("tooltip", "pressure.network")
                     .style(GRAY)
                     .forGoggles(tooltip);
             Lang.number(data.totalEndpointIntake)

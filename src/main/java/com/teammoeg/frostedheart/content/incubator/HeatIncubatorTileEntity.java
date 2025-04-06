@@ -21,11 +21,19 @@ package com.teammoeg.frostedheart.content.incubator;
 
 import javax.annotation.Nonnull;
 
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 
+import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
+import com.teammoeg.frostedheart.content.steamenergy.ClientHeatNetworkData;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
+import com.teammoeg.frostedheart.util.Lang;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -36,13 +44,17 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import org.jetbrains.annotations.Nullable;
 
-public class HeatIncubatorTileEntity extends IncubatorTileEntity{
+import java.util.List;
+
+import static net.minecraft.ChatFormatting.GRAY;
+
+public class HeatIncubatorTileEntity extends IncubatorTileEntity implements HeatNetworkProvider, IHaveGoggleInformation {
     HeatEndpoint network = new HeatEndpoint(10, 80, 0, 5);
 
     public HeatIncubatorTileEntity(BlockPos bp,BlockState bs) {
         super(FHBlockEntityTypes.INCUBATOR2.get(),bp,bs);
-        
     }
     
 
@@ -106,4 +118,13 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity{
 		return new IncubatorT2Container(pContainerId,pPlayerInventory,this,true);
 	}
 
+    @Override
+    public @Nullable HeatNetwork getNetwork() {
+        return network.getNetwork();
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        return TemperatureGoogleRenderer.addHeatNetworkInfoToTooltip(tooltip, isPlayerSneaking, worldPosition);
+    }
 }

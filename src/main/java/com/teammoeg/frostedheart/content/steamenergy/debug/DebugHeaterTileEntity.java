@@ -118,7 +118,7 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements CTickabl
         if (networkHandler.hasNetwork()) {
             output = networkHandler.getNetwork().getTotalEndpointOutput();
             intake = networkHandler.getNetwork().getTotalEndpointIntake();
-            Lang.translate("tooltip", "pressure")
+            Lang.translate("tooltip", "pressure.network")
                     .style(GRAY)
                     .forGoggles(tooltip);
         } else {
