@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:plant_temp",
   "blizzard_vulnerable": false,
-  "block": "minecraft:netherrack",
+  "block": "minecraft:crimson_nylium",
   "dead": "minecraft:blackstone",
   "max_fertilize": 200.0,
   "max_grow": 200.0,

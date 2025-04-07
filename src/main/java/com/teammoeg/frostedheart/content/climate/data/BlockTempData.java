@@ -37,6 +37,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
+import javax.annotation.Nullable;
+
 public record BlockTempData(Block block,float temperature, boolean level, boolean lit){
 	public static final Codec<BlockTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 		ForgeRegistries.BLOCKS.getCodec().fieldOf("block").forGetter(o->o.block),
@@ -46,7 +48,8 @@ public record BlockTempData(Block block,float temperature, boolean level, boolea
 	public static RegistryObject<CodecRecipeSerializer<BlockTempData>> TYPE;
 	private static Map<Block,BlockTempData> CACHE =ImmutableMap.of();
 
-    public static BlockTempData getData(Level level, Block block) {
+    @Nullable
+    public static BlockTempData getData(Block block) {
         return CACHE.get(block);
     }
 

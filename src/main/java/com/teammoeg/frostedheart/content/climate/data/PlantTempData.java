@@ -33,9 +33,11 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
+import javax.annotation.Nullable;
+
 public record PlantTempData(Block block,float minFertilize, float minGrow, float minSurvive,
 	 float maxFertilize, float maxGrow, float maxSurvive,
-	 boolean snowVulnerable, boolean blizzardVulnerable, Block dead) implements PlantTemperature{
+	 boolean snowVulnerable, boolean blizzardVulnerable, Block dead, boolean willDie) implements PlantTemperature{
 	public static final Codec<PlantTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 			ForgeRegistries.BLOCKS.getCodec().fieldOf("block").forGetter(o->o.block),
 			// min
@@ -50,11 +52,13 @@ public record PlantTempData(Block block,float minFertilize, float minGrow, float
 			Codec.BOOL.optionalFieldOf("snow_vulnerable",PlantTemperature.DEFAULT_SNOW_VULNERABLE).forGetter(o->o.snowVulnerable),
 			Codec.BOOL.optionalFieldOf("blizzard_vulnerable",PlantTemperature.DEFAULT_BLIZZARD_VULNERABLE).forGetter(o->o.blizzardVulnerable),
 			// turns to what when dead
-			ForgeRegistries.BLOCKS.getCodec().fieldOf("dead").forGetter(o->o.dead)
-	).apply(t, PlantTempData::new));
+			ForgeRegistries.BLOCKS.getCodec().fieldOf("dead").forGetter(o->o.dead),
+			Codec.BOOL.optionalFieldOf("blizzard_vulnerable", true).forGetter(o->o.willDie)
+			).apply(t, PlantTempData::new));
 	public static RegistryObject<CodecRecipeSerializer<PlantTempData>> TYPE;
 	public static Map<Block,PlantTempData> cacheList=ImmutableMap.of();
-	
+
+	@Nullable
 	public static PlantTempData getPlantData(Block block) {
 		return cacheList.get(block);
 	}
@@ -62,7 +66,7 @@ public record PlantTempData(Block block,float minFertilize, float minGrow, float
 	public PlantTempData(Block blk) {
 		this(blk,PlantTemperature.DEFAULT_BONEMEAL_TEMP, PlantTemperature.DEFAULT_GROW_TEMP, PlantTemperature.DEFAULT_SURVIVE_TEMP,
 				PlantTemperature.DEFAULT_BONEMEAL_MAX_TEMP, PlantTemperature.DEFAULT_GROW_MAX_TEMP, PlantTemperature.DEFAULT_SURVIVE_MAX_TEMP,
-				PlantTemperature.DEFAULT_SNOW_VULNERABLE, PlantTemperature.DEFAULT_BLIZZARD_VULNERABLE, Blocks.DEAD_BUSH);
+				PlantTemperature.DEFAULT_SNOW_VULNERABLE, PlantTemperature.DEFAULT_BLIZZARD_VULNERABLE, Blocks.DEAD_BUSH, true);
 	}
     public FinishedRecipe toFinished(ResourceLocation name) {
     	return TYPE.get().toFinished(name, this);

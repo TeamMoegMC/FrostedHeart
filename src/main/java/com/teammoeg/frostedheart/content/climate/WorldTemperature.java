@@ -547,10 +547,10 @@ public class WorldTemperature {
 
         if(openToAir(level,pos)) {
             if (WorldClimate.isBlizzard(level)&&data.blizzardVulnerable()) {
-                return PlantStatus.WILL_DIE;
+                return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
             }
             if (WorldClimate.isSnowing(level)&&data.snowVulnerable()) {
-                return PlantStatus.WILL_DIE;
+                return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
             }
         }
         if (data.isValidTemperature(TemperatureType.BONEMEAL, blockTemp)) {
@@ -562,6 +562,6 @@ public class WorldTemperature {
         if (data.isValidTemperature(TemperatureType.SURVIVE, blockTemp)) {
             return PlantStatus.CAN_SURVIVE;
         }
-        return PlantStatus.WILL_DIE;
+        return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
     }
 }

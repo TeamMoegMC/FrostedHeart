@@ -156,7 +156,7 @@ public class TemperatureGoogleRenderer {
 
         BlockState state = world.getBlockState(pos);
         Block block = world.getBlockState(pos).getBlock();
-        BlockTempData blockData = BlockTempData.getData(Minecraft.getInstance().level, block);
+        BlockTempData blockData = BlockTempData.getData(block);
         PlantTempData plantData = PlantTempData.cacheList.get(block);
         boolean hasBlockTempInfo = blockData != null;
         boolean hasPlantTempInfo = plantData != null;

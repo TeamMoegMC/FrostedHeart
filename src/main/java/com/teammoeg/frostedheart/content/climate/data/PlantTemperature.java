@@ -56,6 +56,10 @@ public interface PlantTemperature {
 		public Block dead() {
 			return Blocks.DEAD_BUSH;
 		}
+
+		public boolean willDie() {
+			return true;
+		}
     	
     };
     PlantTemperature DEFAULT_SAPLINGS=new PlantTemperature() {
@@ -106,6 +110,10 @@ public interface PlantTemperature {
 		public Block dead() {
 			return Blocks.DEAD_BUSH;
 		}
+
+		public boolean willDie() {
+			return true;
+		}
     };
 	float DEFAULT_BONEMEAL_TEMP = 10;
 	float DEFAULT_GROW_TEMP = 0;
@@ -132,6 +140,8 @@ public interface PlantTemperature {
 	boolean blizzardVulnerable();
 
 	Block dead();
+
+	boolean willDie();
 	
 	default boolean shouldShowSurvive() {
 		return true;

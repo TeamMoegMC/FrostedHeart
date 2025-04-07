@@ -131,3 +131,4 @@ run/
 /logs/
 /.apt_generated/
 /.apt_generated_tests/
+/src/datagen/resources/data/frostedheart/data/~$plant_temperature.xlsx

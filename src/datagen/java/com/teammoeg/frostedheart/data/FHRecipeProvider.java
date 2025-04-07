@@ -30,6 +30,7 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
+import com.teammoeg.frostedheart.content.climate.data.*;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.OfficeXmlFileException;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -40,12 +41,6 @@ import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.ExcelHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
-import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
-import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
-import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
-import com.teammoeg.frostedheart.content.climate.data.DrinkTempData;
-import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
-import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.trade.policy.TradeBuilder;
 
@@ -124,6 +119,28 @@ public class FHRecipeProvider extends RecipeProvider {
 					ExcelHelper.getCellValueAsBoolean(m.get("must_lit"))
 					).toFinished(FHMain.rl("block_temperature/"+block.getPath())));
 		});
+		// state transition
+		ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/state_transition.xlsx"), m->{
+
+			ResourceLocation block=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("block")));
+			ResourceLocation solid=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("solid")));
+			ResourceLocation liquid=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("liquid")));
+			ResourceLocation gas=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("gas")));
+			if(!block.getPath().isEmpty())
+				out.accept(new StateTransitionData(
+						CRegistryHelper.getBlock(block),
+						ExcelHelper.getCellValueAsString(m.get("state")),
+						CRegistryHelper.getBlock(solid),
+						CRegistryHelper.getBlock(liquid),
+						CRegistryHelper.getBlock(gas),
+						(float)ExcelHelper.getCellValueAsNumber(m.get("freeze_temp")),
+						(float)ExcelHelper.getCellValueAsNumber(m.get("melt_temp")),
+						(float)ExcelHelper.getCellValueAsNumber(m.get("condense_temp")),
+						(float)ExcelHelper.getCellValueAsNumber(m.get("evaporate_temp")),
+						(int)ExcelHelper.getCellValueAsNumber(m.get("heat_capacity")),
+						ExcelHelper.getCellValueAsBoolean(m.get("will_transit"))
+				).toFinished(FHMain.rl("state_transition/"+block.getPath())));
+		});
 		//world
 		out.accept(new WorldTempData(new ResourceLocation("the_nether"),300).toFinished(FHMain.rl("level_temperature/nether")));
 		out.accept(new WorldTempData(new ResourceLocation("the_end"),-300).toFinished(FHMain.rl("level_temperature/the_end")));
@@ -140,7 +157,8 @@ public class FHRecipeProvider extends RecipeProvider {
 					(float)ExcelHelper.getCellValueAsNumber(m.get("max_survive")),
 					!ExcelHelper.getCellValueAsBoolean(m.get("survive_snow")),
 					!ExcelHelper.getCellValueAsBoolean(m.get("survive_blizzard")),
-					CRegistryHelper.getBlock(dead)
+					CRegistryHelper.getBlock(dead),
+					ExcelHelper.getCellValueAsBoolean(m.get("will_die"))
 					).toFinished(FHMain.rl("plant_temperature/"+block.getPath())));
 		});
 		//drink
