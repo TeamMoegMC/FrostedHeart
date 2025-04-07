@@ -25,6 +25,7 @@ import com.simibubi.create.AllTags;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.item.ItemDescription;
+import com.teammoeg.caupona.CPTags;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.item.DyedItemList;
 import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
@@ -1169,6 +1170,16 @@ thinner.png
             .tag(FHTags.Items.DRY_FOOD.tag)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food((new FoodProperties.Builder()).nutrition(4).saturationMod(0.8F).meat().fast().build()))
+            .register();
+    public static ItemEntry<Item> RAW_WHALE_MEAT = REGISTRATE
+            .item("raw_whale_meat", Item::new)
+            .tag(CPTags.Items.MEAT)
+            .tag(CPTags.Items.MEATS)
+            .properties(p -> p.food((new FoodProperties.Builder()).nutrition(4).saturationMod(0.8F).meat().fast().build()))
+            .register();
+    public static ItemEntry<Item> COOKED_WHALE_MEAT = REGISTRATE
+            .item("cooked_whale_meat", Item::new)
+            .properties(p -> p.food((new FoodProperties.Builder()).nutrition(8).saturationMod(1.6F).meat().fast().build()))
             .register();
 
     static {
