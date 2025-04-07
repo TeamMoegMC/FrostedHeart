@@ -2,14 +2,16 @@ package com.teammoeg.frostedheart.content.climate.data;
 
 import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 
 public interface PlantTemperature {
-	public static enum TemperatureType{
+	enum TemperatureType{
 		SURVIVE,
 		GROW,
 		BONEMEAL;
 	}
-    public static final PlantTemperature DEFAULT_PLANTS=new PlantTemperature() {
+    PlantTemperature DEFAULT_PLANTS=new PlantTemperature() {
 
 		@Override
 		public float minFertilize() {
@@ -50,9 +52,13 @@ public interface PlantTemperature {
 		public boolean blizzardVulnerable() {
 			return PlantTemperature.DEFAULT_BLIZZARD_VULNERABLE;
 		}
+
+		public Block dead() {
+			return Blocks.DEAD_BUSH;
+		}
     	
     };
-    public static final PlantTemperature DEFAULT_SAPLINGS=new PlantTemperature() {
+    PlantTemperature DEFAULT_SAPLINGS=new PlantTemperature() {
 
 		@Override
 		public float minFertilize() {
@@ -96,6 +102,10 @@ public interface PlantTemperature {
 		public boolean shouldShowSurvive() {
 			return false;
 		}
+
+		public Block dead() {
+			return Blocks.DEAD_BUSH;
+		}
     };
 	float DEFAULT_BONEMEAL_TEMP = 10;
 	float DEFAULT_GROW_TEMP = 0;
@@ -120,6 +130,8 @@ public interface PlantTemperature {
 	boolean snowVulnerable();
 
 	boolean blizzardVulnerable();
+
+	Block dead();
 	
 	default boolean shouldShowSurvive() {
 		return true;

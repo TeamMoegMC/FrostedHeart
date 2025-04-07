@@ -50,6 +50,7 @@
     "minecraft.temperature.PigMixin",
     "minecraft.temperature.RabbitMixin",
     "minecraft.temperature.ServerLevelMixin_PlaceExtraSnow",
+    "minecraft.temperature.ServerLevelMixin_TemperatureUpdate",
     "minecraft.temperature.ServerLevelMixin_WeatherCycle",
     "minecraft.temperature.ServerPlayNetHandlerMixin_FlyingFix",
     "minecraft.temperature.SheepMixin",

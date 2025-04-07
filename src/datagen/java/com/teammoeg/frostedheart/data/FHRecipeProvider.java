@@ -130,6 +130,7 @@ public class FHRecipeProvider extends RecipeProvider {
 		//plant
 		ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/plant_temperature.xlsx"), m->{
 			ResourceLocation block=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("block")));
+			ResourceLocation dead=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("dead")));
 			out.accept(new PlantTempData(CRegistryHelper.getBlock(block),
 					(float)ExcelHelper.getCellValueAsNumber(m.get("min_fertilize")),
 					(float)ExcelHelper.getCellValueAsNumber(m.get("min_grow")),
@@ -138,7 +139,8 @@ public class FHRecipeProvider extends RecipeProvider {
 					(float)ExcelHelper.getCellValueAsNumber(m.get("max_grow")),
 					(float)ExcelHelper.getCellValueAsNumber(m.get("max_survive")),
 					!ExcelHelper.getCellValueAsBoolean(m.get("survive_snow")),
-					!ExcelHelper.getCellValueAsBoolean(m.get("survive_blizzard"))
+					!ExcelHelper.getCellValueAsBoolean(m.get("survive_blizzard")),
+					CRegistryHelper.getBlock(dead)
 					).toFinished(FHMain.rl("plant_temperature/"+block.getPath())));
 		});
 		//drink
