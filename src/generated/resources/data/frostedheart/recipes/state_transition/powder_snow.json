@@ -5,7 +5,7 @@
   "evaporate_temp": 100.0,
   "freeze_temp": -5.0,
   "gas": "minecraft:air",
-  "heat_capacity": 2,
+  "heat_capacity": 5,
   "liquid": "minecraft:air",
   "melt_temp": 2.0,
   "solid": "minecraft:powder_snow",
