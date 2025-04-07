@@ -741,6 +741,7 @@ public class FrostedHud {
         if (player.getOffhandItem().isEmpty()) {
             HUDElements.off_hand_slot.blitAt(stack, x, y, BasePos.off_hand);
         } else {
+        	HUDElements.off_hand_slot.blitAt(stack, x, y, BasePos.off_hand);
             HUDElements.selected.blitAt(stack, x, y, BasePos.off_hand);
         }
 
