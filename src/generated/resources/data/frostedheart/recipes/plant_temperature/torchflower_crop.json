@@ -1,0 +1,11 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "minecraft:torchflower_crop",
+  "dead": "minecraft:dead_bush",
+  "max_fertilize": 32.0,
+  "max_grow": 36.0,
+  "max_survive": 45.0,
+  "min_fertilize": 22.0,
+  "min_grow": 16.0,
+  "min_survive": 5.0
+}

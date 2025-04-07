@@ -1,0 +1,12 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "caupona:walnut_leaves",
+  "dead": "minecraft:air",
+  "max_fertilize": 28.0,
+  "max_grow": 32.0,
+  "max_survive": 36.0,
+  "min_fertilize": 22.0,
+  "min_grow": 14.0,
+  "min_survive": 0.0,
+  "snow_vulnerable": false
+}

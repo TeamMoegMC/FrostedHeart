@@ -1,0 +1,13 @@
+{
+  "type": "frostedheart:plant_temp",
+  "blizzard_vulnerable": false,
+  "block": "minecraft:lily_of_the_valley",
+  "dead": "minecraft:air",
+  "max_fertilize": 20.0,
+  "max_grow": 24.0,
+  "max_survive": 30.0,
+  "min_fertilize": 12.0,
+  "min_grow": 6.0,
+  "min_survive": -20.0,
+  "snow_vulnerable": false
+}

@@ -59,12 +59,8 @@ public class PlantTempStats implements TooltipModifier {
     public static PlantTempStats create(Item item) {
         if (item instanceof BlockItem blockItem) {
             Block block = blockItem.getBlock();
-            // TODO: I don't know better way to do this
-            // In general, BonemeableBlock is growable
-            // IPlantable is plantable
-            // but there are exceptions...
-            // suggest: fully datapack define instead of old check.
-            if (block instanceof BonemealableBlock || block instanceof IPlantable) {
+            PlantTempData data = PlantTempData.getPlantData(block);
+            if (data != null) {
                 return new PlantTempStats(block);
             }
         }
@@ -114,40 +110,43 @@ public class PlantTempStats implements TooltipModifier {
 
     public static List<Component> getStats(Block block, @Nullable ItemStack stack, @Nullable Player player) {
         List<Component> list = new ArrayList<>();
-        PlantTemperature data = WorldTemperature.getPlantDataWithDefault(block);
+        PlantTempData data = PlantTempData.getPlantData(block);
         boolean bonemealable = block instanceof BonemealableBlock;
-        if(data.shouldShowSurvive()) {
-        	Lang.translate("tooltip", "temp.plant.survive").style(ChatFormatting.GRAY).addTo(list);
-        	getTempProgressBar(data.minSurvive(), data.maxSurvive()).addTo(list);
-        }
-        Lang.translate("tooltip", "temp.plant.grow").style(ChatFormatting.GRAY).addTo(list);
-        getTempProgressBar(data.minGrow(), data.maxGrow()).addTo(list);
 
-        if (bonemealable&&data.shouldShowFertilize()) {
-            Lang.translate("tooltip", "temp.plant.fertilize").style(ChatFormatting.GRAY).addTo(list);
-            getTempProgressBar(data.minFertilize(), data.maxFertilize()).addTo(list);
-        }
+        if (data != null) {
+            if(data.shouldShowSurvive()) {
+                Lang.translate("tooltip", "temp.plant.survive").style(ChatFormatting.GRAY).addTo(list);
+                getTempProgressBar(data.minSurvive(), data.maxSurvive()).addTo(list);
+            }
+            Lang.translate("tooltip", "temp.plant.grow").style(ChatFormatting.GRAY).addTo(list);
+            getTempProgressBar(data.minGrow(), data.maxGrow()).addTo(list);
 
-        boolean vulnerableSnow = data.snowVulnerable();
-        if (vulnerableSnow) {
-            Lang.translate("tooltip", "temp.plant.snow_vulnerable")
-                    .style(ChatFormatting.RED)
-                    .addTo(list);
-        } else {
-            Lang.translate("tooltip", "temp.plant.snow_resistant")
-                    .style(ChatFormatting.GREEN)
-                    .addTo(list);
-        }
+            if (bonemealable&&data.shouldShowFertilize()) {
+                Lang.translate("tooltip", "temp.plant.fertilize").style(ChatFormatting.GRAY).addTo(list);
+                getTempProgressBar(data.minFertilize(), data.maxFertilize()).addTo(list);
+            }
 
-        boolean vulnerableBlizzard = data.blizzardVulnerable();
-        if (vulnerableBlizzard) {
-            Lang.translate("tooltip", "temp.plant.blizzard_vulnerable")
-                    .style(ChatFormatting.RED)
-                    .addTo(list);
-        } else {
-            Lang.translate("tooltip", "temp.plant.blizzard_resistant")
-                    .style(ChatFormatting.GREEN)
-                    .addTo(list);
+            boolean vulnerableSnow = data.snowVulnerable();
+            if (vulnerableSnow) {
+                Lang.translate("tooltip", "temp.plant.snow_vulnerable")
+                        .style(ChatFormatting.RED)
+                        .addTo(list);
+            } else {
+                Lang.translate("tooltip", "temp.plant.snow_resistant")
+                        .style(ChatFormatting.GREEN)
+                        .addTo(list);
+            }
+
+            boolean vulnerableBlizzard = data.blizzardVulnerable();
+            if (vulnerableBlizzard) {
+                Lang.translate("tooltip", "temp.plant.blizzard_vulnerable")
+                        .style(ChatFormatting.RED)
+                        .addTo(list);
+            } else {
+                Lang.translate("tooltip", "temp.plant.blizzard_resistant")
+                        .style(ChatFormatting.GREEN)
+                        .addTo(list);
+            }
         }
 
         return list;

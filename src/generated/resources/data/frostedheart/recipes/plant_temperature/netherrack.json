@@ -9,5 +9,6 @@
   "min_fertilize": 80.0,
   "min_grow": 80.0,
   "min_survive": 80.0,
-  "snow_vulnerable": false
+  "snow_vulnerable": false,
+  "will_die": false
 }

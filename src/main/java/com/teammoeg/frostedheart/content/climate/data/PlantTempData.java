@@ -53,7 +53,7 @@ public record PlantTempData(Block block,float minFertilize, float minGrow, float
 			Codec.BOOL.optionalFieldOf("blizzard_vulnerable",PlantTemperature.DEFAULT_BLIZZARD_VULNERABLE).forGetter(o->o.blizzardVulnerable),
 			// turns to what when dead
 			ForgeRegistries.BLOCKS.getCodec().fieldOf("dead").forGetter(o->o.dead),
-			Codec.BOOL.optionalFieldOf("blizzard_vulnerable", true).forGetter(o->o.willDie)
+			Codec.BOOL.optionalFieldOf("will_die", true).forGetter(o->o.willDie)
 			).apply(t, PlantTempData::new));
 	public static RegistryObject<CodecRecipeSerializer<PlantTempData>> TYPE;
 	public static Map<Block,PlantTempData> cacheList=ImmutableMap.of();

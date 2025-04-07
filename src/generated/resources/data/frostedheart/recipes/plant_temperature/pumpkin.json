@@ -1,0 +1,12 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "minecraft:pumpkin",
+  "dead": "minecraft:dead_bush",
+  "max_fertilize": 28.0,
+  "max_grow": 32.0,
+  "max_survive": 35.0,
+  "min_fertilize": 18.0,
+  "min_grow": 12.0,
+  "min_survive": 0.0,
+  "snow_vulnerable": false
+}

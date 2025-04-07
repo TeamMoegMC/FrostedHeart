@@ -2,9 +2,10 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:wheat",
   "dead": "minecraft:dead_bush",
-  "max_fertilize": 30.0,
+  "max_fertilize": 24.0,
   "max_grow": 30.0,
-  "min_fertilize": 20.0,
-  "min_grow": 10.0,
-  "min_survive": 0.0
+  "max_survive": 35.0,
+  "min_fertilize": 15.0,
+  "min_grow": 5.0,
+  "min_survive": -5.0
 }

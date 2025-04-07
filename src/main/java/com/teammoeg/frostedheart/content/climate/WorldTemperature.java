@@ -431,7 +431,7 @@ public class WorldTemperature {
     }
 
     @Nonnull
-    public static PlantTemperature getPlantDataWithDefault(Block block) {
+    private static PlantTemperature getPlantDataWithDefault(Block block) {
 
     	PlantTempData data = PlantTempData.getPlantData(block);
 

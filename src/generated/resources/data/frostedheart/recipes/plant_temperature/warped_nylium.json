@@ -1,6 +1,5 @@
 {
   "type": "frostedheart:plant_temp",
-  "blizzard_vulnerable": false,
   "block": "minecraft:warped_nylium",
   "dead": "minecraft:netherrack",
   "max_fertilize": 200.0,
@@ -8,6 +7,5 @@
   "max_survive": 200.0,
   "min_fertilize": 80.0,
   "min_grow": 80.0,
-  "min_survive": 80.0,
-  "snow_vulnerable": false
+  "min_survive": 80.0
 }

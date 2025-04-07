@@ -1,0 +1,11 @@
+{
+  "type": "frostedheart:plant_temp",
+  "blizzard_vulnerable": false,
+  "block": "minecraft:tall_grass",
+  "dead": "minecraft:air",
+  "max_fertilize": 28.0,
+  "max_grow": 32.0,
+  "min_fertilize": 16.0,
+  "min_grow": 10.0,
+  "snow_vulnerable": false
+}

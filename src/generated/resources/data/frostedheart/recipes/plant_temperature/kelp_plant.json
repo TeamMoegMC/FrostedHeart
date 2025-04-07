@@ -1,0 +1,13 @@
+{
+  "type": "frostedheart:plant_temp",
+  "blizzard_vulnerable": false,
+  "block": "minecraft:kelp_plant",
+  "dead": "minecraft:air",
+  "max_fertilize": 20.0,
+  "max_grow": 24.0,
+  "max_survive": 28.0,
+  "min_fertilize": 12.0,
+  "min_grow": 5.0,
+  "min_survive": 0.0,
+  "snow_vulnerable": false
+}
