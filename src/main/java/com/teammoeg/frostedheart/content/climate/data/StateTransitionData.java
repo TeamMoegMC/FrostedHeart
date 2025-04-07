@@ -19,16 +19,23 @@ import java.util.stream.Collectors;
 
 /**
  * General specification for physical state transition
+ *
+ * Note: In some sense, some entries can be omitted bse on "state".
+ *
  * @param block the block to consider
  * @param state the current state of the block. For example, Water would be "liquid", and Ice would be "solid".
  *              This avoid certain updates when the block is already in certain state to save performance.
  * @param solid the solid state for the block
  * @param liquid the liquid state for the block
  * @param gas the gas state for the block
- * @param freezeTemp the temp below which the block goes to solid
- * @param meltTemp the temp above which the block goes to liquid
- * @param condenseTemp the temp below which the block goes to liquid
- * @param evaporateTemp the temp above which the block goes to gas
+ * @param freezeTemp the temp below which the block goes to solid.
+ *                   may be omitted if state is solid.
+ * @param meltTemp the temp above which the block goes to liquid.
+ *                 may be omitted if state is liquid or gas.
+ * @param condenseTemp the temp below which the block goes to liquid.
+ *                     may be omitted if state is liquid or solid.
+ * @param evaporateTemp the temp above which the block goes to gas.
+ *                      may be omitted if state is gas.
  * @param heatCapacity higher this is, less likely the transition happens. transition rate ~ 1 / heatCapacity
  * @param willTransit an overriding switch disallowing any transition, saves performance. in general this is true.
  */

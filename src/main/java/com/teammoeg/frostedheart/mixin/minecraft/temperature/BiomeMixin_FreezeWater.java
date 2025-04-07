@@ -38,36 +38,45 @@ import net.minecraft.world.level.biome.Biome;
  * */
 @Mixin(Biome.class)
 public abstract class BiomeMixin_FreezeWater {
+//	/**
+//	 * @author khjxiaogu
+//	 * @reason decide when to freeze water
+//	 * */
+//	@Overwrite
+//    public boolean shouldFreeze(LevelReader pLevel, BlockPos pWater, boolean pMustBeAtEdge) {
+//	      if (this.warmEnoughToRain(pWater)) {
+//	          return false;
+//	       } else {
+//	          if (pWater.getY() >= pLevel.getMinBuildHeight()
+//					  && pWater.getY() < pLevel.getMaxBuildHeight()
+//					  && pLevel.getBrightness(LightLayer.BLOCK, pWater) < 10
+//					  &&  WorldTemperature.block(pLevel, pWater) < WorldTemperature.WATER_FREEZES) {
+//	             BlockState blockstate = pLevel.getBlockState(pWater);
+//	             FluidState fluidstate = pLevel.getFluidState(pWater);
+//	             if (fluidstate.getType() == Fluids.WATER && blockstate.getBlock() instanceof LiquidBlock) {
+//	                if (!pMustBeAtEdge) {
+//	                   return true;
+//	                }
+//
+//	                boolean flag = pLevel.isWaterAt(pWater.west()) && pLevel.isWaterAt(pWater.east()) && pLevel.isWaterAt(pWater.north()) && pLevel.isWaterAt(pWater.south());
+//	                if (!flag) {
+//	                   return true;
+//	                }
+//	             }
+//	          }
+//
+//	          return false;
+//	       }
+//    }
+
 	/**
-	 * @author khjxiaogu
-	 * @reason decide when to freeze water
+	 * @author yuesha
+	 * @reason Disable vanilla freezing logic. We handle it on our own.
 	 * */
 	@Overwrite
-    public boolean shouldFreeze(LevelReader pLevel, BlockPos pWater, boolean pMustBeAtEdge) {
-	      if (this.warmEnoughToRain(pWater)) {
-	          return false;
-	       } else {
-	          if (pWater.getY() >= pLevel.getMinBuildHeight()
-					  && pWater.getY() < pLevel.getMaxBuildHeight()
-					  && pLevel.getBrightness(LightLayer.BLOCK, pWater) < 10
-					  &&  WorldTemperature.block(pLevel, pWater) < WorldTemperature.WATER_FREEZES) {
-	             BlockState blockstate = pLevel.getBlockState(pWater);
-	             FluidState fluidstate = pLevel.getFluidState(pWater);
-	             if (fluidstate.getType() == Fluids.WATER && blockstate.getBlock() instanceof LiquidBlock) {
-	                if (!pMustBeAtEdge) {
-	                   return true;
-	                }
-
-	                boolean flag = pLevel.isWaterAt(pWater.west()) && pLevel.isWaterAt(pWater.east()) && pLevel.isWaterAt(pWater.north()) && pLevel.isWaterAt(pWater.south());
-	                if (!flag) {
-	                   return true;
-	                }
-	             }
-	          }
-
-	          return false;
-	       }
-    }
+	public boolean shouldFreeze(LevelReader pLevel, BlockPos pWater, boolean pMustBeAtEdge) {
+		return false;
+	}
 
     @Shadow
     public abstract boolean warmEnoughToRain(BlockPos pPos);
