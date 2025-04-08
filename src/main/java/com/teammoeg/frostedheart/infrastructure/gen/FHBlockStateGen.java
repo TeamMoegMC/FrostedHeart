@@ -23,6 +23,7 @@ import java.util.NoSuchElementException;
 
 import com.teammoeg.chorda.block.CBlockProperties;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.providers.DataGenContext;
@@ -118,6 +119,67 @@ public class FHBlockStateGen {
         };
     }
 
+    // snow layered block state
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> thinIceLayered(
+            String layerPath, String blockPath, String texturePath) {
+        return (c, p) -> {
+            LayeredThinIceBlock layer = (LayeredThinIceBlock) c.get();
+            ResourceLocation texture = p.modLoc("block/" + texturePath);
+
+            ModelFile[] models = new ModelFile[8];
+            models[0] = p.models().withExistingParent(layerPath + "_height2", p.mcLoc("block/snow_height2"))
+                    .texture("particle", texture)
+                    .texture("texture", texture)
+                    .renderType("translucent");
+            models[1] = p.models().withExistingParent(layerPath + "_height4", p.mcLoc("block/snow_height4"))
+                    .texture("particle", texture)
+                    .texture("texture", texture)
+                    .renderType("translucent");
+            models[2] = p.models().withExistingParent(layerPath + "_height6", p.mcLoc("block/snow_height6"))
+                    .texture("particle", texture)
+                    .texture("texture", texture)
+                    .renderType("translucent");
+            models[3] = p.models().withExistingParent(layerPath + "_height8", p.mcLoc("block/snow_height8"))
+                    .texture("particle", texture)
+                    .texture("texture", texture)
+                    .renderType("translucent");
+            models[4] = p.models().withExistingParent(layerPath + "_height10", p.mcLoc("block/snow_height10"))
+                    .texture("particle", texture)
+                    .texture("texture", texture)
+                    .renderType("translucent");
+            models[5] = p.models().withExistingParent(layerPath + "_height12", p.mcLoc("block/snow_height12"))
+                    .texture("particle", texture)
+                    .texture("texture", texture)
+                    .renderType("translucent");
+            models[6] = p.models().withExistingParent(layerPath + "_height14", p.mcLoc("block/snow_height14"))
+                    .texture("particle", texture)
+                    .texture("texture", texture)
+                    .renderType("translucent");
+            models[7] = p.models().withExistingParent(blockPath, p.mcLoc("block/cube_all"))
+                    .texture("all", texture)
+                    .renderType("translucent");
+
+            p.getVariantBuilder(layer)
+                    .partialState().with(LayeredThinIceBlock.LAYERS, 1)
+                    .addModels(new ConfiguredModel(models[0]), new ConfiguredModel(models[1]))
+                    .modelForState().modelFile(models[0]).addModel()
+                    .partialState().with(LayeredThinIceBlock.LAYERS, 2)
+                    .modelForState().modelFile(models[1]).addModel()
+                    .partialState().with(LayeredThinIceBlock.LAYERS, 3)
+                    .modelForState().modelFile(models[2]).addModel()
+                    .partialState().with(LayeredThinIceBlock.LAYERS, 4)
+                    .modelForState().modelFile(models[3]).addModel()
+                    .partialState().with(LayeredThinIceBlock.LAYERS, 5)
+                    .modelForState().modelFile(models[4]).addModel()
+                    .partialState().with(LayeredThinIceBlock.LAYERS, 6)
+                    .modelForState().modelFile(models[5]).addModel()
+                    .partialState().with(LayeredThinIceBlock.LAYERS, 7)
+                    .modelForState().modelFile(models[6]).addModel()
+                    .partialState().with(LayeredThinIceBlock.LAYERS, 8)
+                    .modelForState().modelFile(models[7]).addModel();
+        };
+    }
+
     public static NonNullBiConsumer<DataGenContext<Item, BlockItem>, RegistrateItemModelProvider> itemModelLayered(
             String path, String texturePath) {
         return (c, p) -> {
@@ -125,6 +187,17 @@ public class FHBlockStateGen {
             p.withExistingParent(path, p.mcLoc("block/snow_height2"))
                     .texture("particle", texture)
                     .texture("texture", texture);
+        };
+    }
+
+    public static NonNullBiConsumer<DataGenContext<Item, BlockItem>, RegistrateItemModelProvider> itemModelLayeredTranslucent(
+            String path, String texturePath) {
+        return (c, p) -> {
+            ResourceLocation texture = p.modLoc("block/" + texturePath);
+            p.withExistingParent(path, p.mcLoc("block/snow_height2"))
+                    .texture("particle", texture)
+                    .texture("texture", texture)
+                    .renderType("translucent");
         };
     }
 

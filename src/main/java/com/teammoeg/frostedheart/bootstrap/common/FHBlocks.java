@@ -37,6 +37,7 @@ import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
+import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.decoration.*;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
@@ -113,10 +114,11 @@ public class FHBlocks {
     }
 
     // thin_ice
-    public static final BlockEntry<Block> THIN_ICE = REGISTRATE.block("thin_ice", Block::new)
+    public static final BlockEntry<IceBlock> THIN_ICE_BLOCK = REGISTRATE.block("thin_ice", IceBlock::new)
             .initialProperties(() -> Blocks.ICE)
             .tag(BlockTags.ICE, BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .blockstate(FHBlockStateGen.existed())
+            .lang("Thin Ice Block")
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.ICE_CHIP.get(), ConstantValue.exactly(4))))
             .item()
             .model(AssetLookup.existingItemModel())
@@ -283,7 +285,22 @@ public class FHBlocks {
             .simpleItem()
             .register();
 
-    // Condensed ores
+    // layered thin ice
+    public static final BlockEntry<LayeredThinIceBlock> LAYERED_THIN_ICE = REGISTRATE.block("layered_thin_ice", LayeredThinIceBlock::new)
+            .initialProperties(() -> ICE)
+            .tag(BlockTags.MINEABLE_WITH_SHOVEL)
+            .tag(BlockTags.MINEABLE_WITH_PICKAXE)
+            .tag(BlockTags.ICE)
+            .tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
+            .loot((lt, block) -> lt.add(block, FHLootGen.buildSnowLootTable(block, THIN_ICE_BLOCK.get(), FHItems.ICE_CHIP.get())))
+            .blockstate(FHBlockStateGen.thinIceLayered("layered_thin_ice", "thin_ice", "thin_ice_1"))
+            .item()
+            .model(FHBlockStateGen.itemModelLayeredTranslucent("layered_thin_ice", "thin_ice_1"))
+            .build()
+            .lang("Thin Ice")
+            .register();
+
+    // twigs and debris
     public static final BlockEntry<SnowLayerBlock> BESNOWED_DEBRIS = REGISTRATE.block("besnowed_debris", SnowLayerBlock::new)
             .initialProperties(() -> SNOW)
             .properties(p -> p.mapColor(MapColor.SNOW)
@@ -324,6 +341,7 @@ public class FHBlocks {
             .model(AssetLookup.existingItemModel())
             .build()
             .register();
+    // condensed ores
     public static final BlockEntry<SnowLayerBlock> CONDENSED_IRON_ORE = REGISTRATE.block("condensed_iron_ore", SnowLayerBlock::new)
             .initialProperties(() -> SNOW)
             .tag(FHTags.Blocks.CONDENSED_ORES.tag)

@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import net.minecraft.core.BlockPos;
@@ -23,16 +24,22 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.concurrent.Flow;
+
 @Mixin(ServerLevel.class)
-public class ServerLevelMixin_TemperatureUpdate {
+public abstract class ServerLevelMixin_TemperatureUpdate {
+
+    @Shadow public abstract boolean isFlat();
 
     @Unique
     private static final int TEMPERATUE_RANDOM_TICK_SPEED_DIVISOR = 2;
@@ -65,42 +72,41 @@ public class ServerLevelMixin_TemperatureUpdate {
 
         // Custom water freezing logic
         level.getProfiler().popPush("water");
-        for (int l1 = 0; l1 < temperatureChecks; ++l1) {
-            if (level.random.nextInt(WATER_FREEZE_CHANCE_INVERSE) == 0) {
-                BlockPos blockpos1 = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(i, 0, j, 15));
-                BlockPos blockpos2 = blockpos1.below();
-                Biome biome = level.getBiome(blockpos1).value();
-                if (level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
-                    // Check if the block should freeze based on our custom logic
-                    if (frostedHeart$shouldFreezeCustom(level, blockpos2)) {
-                        level.setBlockAndUpdate(blockpos2, FHBlocks.THIN_ICE.get().defaultBlockState());
-                    }
+        if (pRandomTickSpeed > 0) {
+            for (int l1 = 0; l1 < temperatureChecks; ++l1) {
+                if (level.random.nextInt(WATER_FREEZE_CHANCE_INVERSE) == 0) {
+                    BlockPos blockpos1 = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(i, 0, j, 15));
+                    BlockPos blockpos2 = blockpos1.below();
+                    Biome biome = level.getBiome(blockpos1).value();
+                    if (level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
+                        // Check if the block should freeze based on our custom logic
+                        frostedheart$freezeWater(level, blockpos2);
 
-                if (isRaining) {
-                    int i1 = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
-                    if (i1 > 0 && frostedHeart$shouldSnowCustom(level, blockpos1)) {
-                        BlockState blockstate = level.getBlockState(blockpos1);
-                        if (blockstate.is(Blocks.SNOW)) {
-                            int k = blockstate.getValue(SnowLayerBlock.LAYERS);
-                            if (k < Math.min(i1, 8)) {
-                                BlockState blockstate1 = blockstate.setValue(SnowLayerBlock.LAYERS, Integer.valueOf(k + 1));
-                                Block.pushEntitiesUp(blockstate, blockstate1, level, blockpos1);
-                                level.setBlockAndUpdate(blockpos1, blockstate1);
+                    if (isRaining) {
+                        int i1 = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
+                        if (i1 > 0 && frostedHeart$shouldSnowCustom(level, blockpos1)) {
+                            BlockState blockstate = level.getBlockState(blockpos1);
+                            if (blockstate.is(Blocks.SNOW)) {
+                                int k = blockstate.getValue(SnowLayerBlock.LAYERS);
+                                if (k < Math.min(i1, 8)) {
+                                    BlockState blockstate1 = blockstate.setValue(SnowLayerBlock.LAYERS, Integer.valueOf(k + 1));
+                                    Block.pushEntitiesUp(blockstate, blockstate1, level, blockpos1);
+                                    level.setBlockAndUpdate(blockpos1, blockstate1);
+                                }
+                            } else {
+                                level.setBlockAndUpdate(blockpos1, Blocks.SNOW.defaultBlockState());
                             }
-                        } else {
-                            level.setBlockAndUpdate(blockpos1, Blocks.SNOW.defaultBlockState());
                         }
-                    }
 
-                    Biome.Precipitation biome$precipitation = biome.getPrecipitationAt(blockpos2);
-                    if (biome$precipitation != Biome.Precipitation.NONE) {
-                        BlockState blockstate3 = level.getBlockState(blockpos2);
-                        blockstate3.getBlock().handlePrecipitation(blockstate3, level, blockpos2, biome$precipitation);
+                        Biome.Precipitation biome$precipitation = biome.getPrecipitationAt(blockpos2);
+                        if (biome$precipitation != Biome.Precipitation.NONE) {
+                            BlockState blockstate3 = level.getBlockState(blockpos2);
+                            blockstate3.getBlock().handlePrecipitation(blockstate3, level, blockpos2, biome$precipitation);
+                        }
                     }
                 }
             }
         }
-
 
         // Add temperature profiler section
         level.getProfiler().popPush("temperature");
@@ -189,18 +195,20 @@ public class ServerLevelMixin_TemperatureUpdate {
     }
 
     /**
-     * Custom version of shouldFreeze that keeps all checks except the light level check
+     * Custom version of shouldFreeze that keeps all checks except the light level check.
+     *
+     * Freezes flowing water too.
+     *
+     * And it freeze water based on its level, so it turns into various thin ice.
      */
     @Unique
-    private boolean frostedHeart$shouldFreezeCustom(ServerLevel level, BlockPos pos) {
-        // From original shouldFreeze method, but without warmEnoughToRain check
-        // and without the light level check
-
+    private void frostedheart$freezeWater(ServerLevel level, BlockPos pos) {
         if (pos.getY() >= level.getMinBuildHeight() && pos.getY() < level.getMaxBuildHeight()
                 && WorldTemperature.block(level, pos) < WorldTemperature.WATER_FREEZES) {
             BlockState blockstate = level.getBlockState(pos);
             FluidState fluidstate = level.getFluidState(pos);
 
+            // source
             if (fluidstate.getType() == Fluids.WATER && blockstate.getBlock() instanceof LiquidBlock) {
                 // Check if block is at edge of water (from original code)
                 boolean isAtEdge = !level.isWaterAt(pos.west()) ||
@@ -209,12 +217,37 @@ public class ServerLevelMixin_TemperatureUpdate {
                         !level.isWaterAt(pos.south());
 
                 if (isAtEdge) {
-                    return true;
+                    level.setBlockAndUpdate(pos, FHBlocks.THIN_ICE_BLOCK.get().defaultBlockState());
+                }
+            }
+
+            // flowing
+            else if (fluidstate.getType() == Fluids.FLOWING_WATER && blockstate.getBlock() instanceof LiquidBlock) {
+                // Check if block is at edge of water (from original code)
+                boolean isAtEdge = !level.isWaterAt(pos.west()) ||
+                        !level.isWaterAt(pos.east()) ||
+                        !level.isWaterAt(pos.north()) ||
+                        !level.isWaterAt(pos.south());
+
+                if (isAtEdge) {
+                    // don't freeze falling water
+                    if (fluidstate.hasProperty(FlowingFluid.FALLING) && fluidstate.getValue(FlowingFluid.FALLING)) {
+                        return;
+                    }
+
+                    if (fluidstate.hasProperty(FlowingFluid.LEVEL)) {
+                        // range 1-8
+                        int flowingLevel = fluidstate.getValue(FlowingFluid.LEVEL);
+                        if (flowingLevel == 8) {
+                            level.setBlockAndUpdate(pos, FHBlocks.THIN_ICE_BLOCK.get().defaultBlockState());
+                        } else {
+                            level.setBlockAndUpdate(pos, FHBlocks.LAYERED_THIN_ICE.get().defaultBlockState()
+                                    .setValue(LayeredThinIceBlock.LAYERS, flowingLevel));
+                        }
+                    }
                 }
             }
         }
-
-        return false;
     }
 
     @Unique

@@ -1,8 +1,13 @@
 {
   "variants": {
-    "layers=1": {
-      "model": "frostedheart:block/besnowed_debris_height2"
-    },
+    "layers=1": [
+      {
+        "model": "frostedheart:block/besnowed_debris_height2"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height2_2"
+      }
+    ],
     "layers=2": {
       "model": "frostedheart:block/besnowed_debris_height4"
     },
