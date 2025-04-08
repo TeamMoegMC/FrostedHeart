@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
@@ -10,16 +11,26 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerLevel.class)
@@ -28,20 +39,88 @@ public class ServerLevelMixin_TemperatureUpdate {
     @Unique
     private static final int TEMPERATUE_RANDOM_TICK_SPEED_DIVISOR = 2;
 
+
+    /**
+     * Redirects the "iceandsnow" profiler call to immediately go to "tickBlocks" instead
+     * This effectively skips all the code in the iceandsnow section
+     */
+    @Redirect(
+            method = "tickChunk",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V",
+                    ordinal = 0  // This targets the profiler.popPush("iceandsnow") call
+            )
+    )
+    private void redirectIceAndSnowToProfiller(ProfilerFiller profiler, String section) {
+        // Instead of pushing "iceandsnow", we push "tickBlocks" directly
+        // This skips the entire "iceandsnow" section
+        profiler.popPush("tickBlocks");
+    }
+
+    /**
+     * Adds our custom temperature section before tickBlocks
+     */
     @Inject(
             method = "tickChunk",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V",
-                    ordinal = 1,  // This targets the profiler.popPush("tickBlocks") call
+                    ordinal = 1,
                     shift = At.Shift.BEFORE
             )
     )
-    private void injectTemperatureLogic(LevelChunk pChunk, int pRandomTickSpeed, CallbackInfo ci) {
+    private void addTemperatureSection(LevelChunk pChunk, int pRandomTickSpeed, CallbackInfo ci) {
+
         ServerLevel level = (ServerLevel)(Object)this;
         ChunkPos chunkpos = pChunk.getPos();
+        boolean isRaining = level.isRaining();
         int i = chunkpos.getMinBlockX();
         int j = chunkpos.getMinBlockZ();
+
+        // Custom water freezing logic
+        level.getProfiler().popPush("water");
+        if (level.random.nextInt(16) == 0) {
+            BlockPos blockpos1 = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(i, 0, j, 15));
+            BlockPos blockpos2 = blockpos1.below();
+            Biome biome = level.getBiome(blockpos1).value();
+            if (level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
+                // Check if the block should freeze based on our custom logic
+                if (frostedHeart$shouldFreezeCustom(level, blockpos2)) {
+                    // Get temperature from our custom class
+                    float temperature = WorldTemperature.block(level, blockpos2);
+
+                    // Apply different ice types based on temperature
+                    if (temperature < -5) {
+                        level.setBlockAndUpdate(blockpos2, FHBlocks.THIN_ICE.get().defaultBlockState());
+                    }
+
+                }
+
+            if (isRaining) {
+                int i1 = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
+                if (i1 > 0 && frostedHeart$shouldSnowCustom(level, blockpos1)) {
+                    BlockState blockstate = level.getBlockState(blockpos1);
+                    if (blockstate.is(Blocks.SNOW)) {
+                        int k = blockstate.getValue(SnowLayerBlock.LAYERS);
+                        if (k < Math.min(i1, 8)) {
+                            BlockState blockstate1 = blockstate.setValue(SnowLayerBlock.LAYERS, Integer.valueOf(k + 1));
+                            Block.pushEntitiesUp(blockstate, blockstate1, level, blockpos1);
+                            level.setBlockAndUpdate(blockpos1, blockstate1);
+                        }
+                    } else {
+                        level.setBlockAndUpdate(blockpos1, Blocks.SNOW.defaultBlockState());
+                    }
+                }
+
+                Biome.Precipitation biome$precipitation = biome.getPrecipitationAt(blockpos2);
+                if (biome$precipitation != Biome.Precipitation.NONE) {
+                    BlockState blockstate3 = level.getBlockState(blockpos2);
+                    blockstate3.getBlock().handlePrecipitation(blockstate3, level, blockpos2, biome$precipitation);
+                }
+            }
+        }
+
 
         // Add temperature profiler section
         level.getProfiler().popPush("temperature");
@@ -79,6 +158,53 @@ public class ServerLevelMixin_TemperatureUpdate {
         }
 
         // The tickBlocks section will be handled by the original method after this injection
+
+        // Note: We don't need to add the "tickBlocks" pop/push here
+        // because the redirect will handle that
+    }
+
+    /**
+     * Custom version of shouldSnow that keeps all checks except the light level check
+     */
+    @Unique
+    public boolean frostedHeart$shouldSnowCustom(LevelReader pLevel, BlockPos pPos) {
+        if (pPos.getY() >= pLevel.getMinBuildHeight() && pPos.getY() < pLevel.getMaxBuildHeight()
+                && WorldTemperature.air(pLevel, pPos) < WorldTemperature.SNOW_REACHES_GROUND) {
+            BlockState blockstate = pLevel.getBlockState(pPos);
+            if ((blockstate.isAir() || blockstate.is(Blocks.SNOW)) && Blocks.SNOW.defaultBlockState().canSurvive(pLevel, pPos)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Custom version of shouldFreeze that keeps all checks except the light level check
+     */
+    @Unique
+    private boolean frostedHeart$shouldFreezeCustom(ServerLevel level, BlockPos pos) {
+        // From original shouldFreeze method, but without warmEnoughToRain check
+        // and without the light level check
+
+        if (pos.getY() >= level.getMinBuildHeight() && pos.getY() < level.getMaxBuildHeight()) {
+            BlockState blockstate = level.getBlockState(pos);
+            FluidState fluidstate = level.getFluidState(pos);
+
+            if (fluidstate.getType() == Fluids.WATER && blockstate.getBlock() instanceof LiquidBlock) {
+                // Check if block is at edge of water (from original code)
+                boolean isAtEdge = !level.isWaterAt(pos.west()) ||
+                        !level.isWaterAt(pos.east()) ||
+                        !level.isWaterAt(pos.north()) ||
+                        !level.isWaterAt(pos.south());
+
+                if (isAtEdge) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     @Unique
@@ -103,6 +229,8 @@ public class ServerLevelMixin_TemperatureUpdate {
         }
 
         // general state transition
+        // we do not handle water freezing logic in seas
+
         StateTransitionData std = StateTransitionData.getData(block);
         if (std == null) {
             return;
@@ -260,4 +388,5 @@ public class ServerLevelMixin_TemperatureUpdate {
             );
         }
     }
+
 }
