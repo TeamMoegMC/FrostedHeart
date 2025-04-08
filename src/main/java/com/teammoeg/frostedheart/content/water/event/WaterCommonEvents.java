@@ -181,8 +181,8 @@ public class WaterCommonEvents {
 //                }
             }
         }
-        //Punishment/Reward - 20s
-        if (tick % 100 == 0 && !(player instanceof FakePlayer)) {
+        //Punishment/Reward - 30s
+        if (tick % 600 == 0 && !(player instanceof FakePlayer)) {
             WaterLevelCapability.getCapability(player).ifPresent(data -> {
                 if (!player.isCreative()) {
                     data.punishment(player);
