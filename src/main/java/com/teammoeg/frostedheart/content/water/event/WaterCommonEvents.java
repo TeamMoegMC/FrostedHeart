@@ -148,7 +148,7 @@ public class WaterCommonEvents {
         if(player.isCreative() || player.isSpectator()) return;
         long tick = level.getGameTime();
         if (WaterLevelUtil.canPlayerAddWaterExhaustionLevel(player)) {
-            if (tick % 2 == 0) {
+            if (tick % 40 == 0) {
                 player.getDeltaMovement();
                 if (player.onGround() || player.isInWater()) {
                     double x = player.getDeltaMovement().length();
@@ -170,35 +170,23 @@ public class WaterCommonEvents {
                         data.restoreWater(player, 1);
                     });
                 }
-/*
-                Biome biome = level.getBiome(BlockPos.containing(player.getPosition(0f).x,player.getPosition(0f).y,player.getPosition(0f).z)).value();
-                if (level.getLightEmission(BlockPos.containing(player.getPosition(0f).x,player.getPosition(0f).y,player.getPosition(0f).z)) == 15 && level.getDayTime() < 11000 && level.getDayTime() > 450 && !level.isRainingAt(BlockPos.containing(player.getPosition(0f).x,player.getPosition(0f).y,player.getPosition(0f).z))) {
-                    if (biome.getBaseTemperature() > 0.3) {
-                        WaterLevelCapability.getCapability(player).ifPresent(data -> {
-                            data.addExhaustion(player, 0.0075f);
-                        });
-                    }
-                    if (biome.getBaseTemperature() > 0.9) {
-                        WaterLevelCapability.getCapability(player).ifPresent(data -> {
-                            data.addExhaustion(player, 0.0055f);
-                        });
-                    }
-                }*/
-                //}
+
                 //Thirty State
-                MobEffectInstance effectInstance = player.getEffect(FHMobEffects.THIRST.get());
-                if (effectInstance != null) {
-                    WaterLevelCapability.getCapability(player).ifPresent(data -> {
-                        data.addExhaustion(player, 0.07f + 0.05f * effectInstance.getAmplifier());
-                    });
-                }
+                // TODO: no need for this. we already punish for thirst in addExhaust
+//                MobEffectInstance effectInstance = player.getEffect(FHMobEffects.THIRST.get());
+//                if (effectInstance != null) {
+//                    WaterLevelCapability.getCapability(player).ifPresent(data -> {
+//                        data.addExhaustion(player, 0.07f + 0.05f * effectInstance.getAmplifier());
+//                    });
+//                }
             }
         }
-        //Punishment/Reward - 5s
+        //Punishment/Reward - 20s
         if (tick % 100 == 0 && !(player instanceof FakePlayer)) {
             WaterLevelCapability.getCapability(player).ifPresent(data -> {
                 if (!player.isCreative()) {
                     data.punishment(player);
+                    // TODO: don't understand what this does.
                     data.award(player);
                 }
             });

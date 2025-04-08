@@ -80,13 +80,15 @@ public class WaterLevelCapability implements NBTSerializable {
     }
 
     public void addExhaustion(Player player, float add) {
-        //float moisturizingRate = WaterLevelUtil.getMoisturizingRate(player);
-        float moisturizingRate =1;
-        float finalValue = (float) ((double) add * FHConfig.SERVER.waterReducingRate.get()) * moisturizingRate;
+        float finalValue = (float) (add * FHConfig.SERVER.waterReducingRate.get());
+
         MobEffectInstance effect = player.getEffect(FHMobEffects.THIRST.get());
+        // around 2 times faster at level zero thirst, 0.5 more each level
         if (effect != null) {
             addExhaustion(finalValue * (4 + effect.getAmplifier()) / 2);
-        } else addExhaustion(finalValue);
+        } else {
+            addExhaustion(finalValue);
+        }
 
         if (player instanceof ServerPlayer serverPlayer) {
             syncToClient(serverPlayer);
