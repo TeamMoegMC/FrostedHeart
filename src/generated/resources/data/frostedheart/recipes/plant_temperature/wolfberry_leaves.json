@@ -1,0 +1,13 @@
+{
+  "type": "frostedheart:plant_temp",
+  "blizzard_vulnerable": false,
+  "block": "caupona:wolfberry_leaves",
+  "dead": "minecraft:air",
+  "max_fertilize": 28.0,
+  "max_grow": 32.0,
+  "max_survive": 36.0,
+  "min_fertilize": 20.0,
+  "min_grow": 12.0,
+  "min_survive": -5.0,
+  "snow_vulnerable": false
+}

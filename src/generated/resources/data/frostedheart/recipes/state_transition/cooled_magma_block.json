@@ -1,0 +1,13 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": "frostedheart:cooled_magma_block",
+  "condense_temp": 700.0,
+  "evaporate_temp": 800.0,
+  "freeze_temp": 300.0,
+  "gas": "minecraft:lava",
+  "heat_capacity": 50,
+  "liquid": "minecraft:magma_block",
+  "melt_temp": 400.0,
+  "solid": "frostedheart:cooled_magma_block",
+  "will_transit": true
+}

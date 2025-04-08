@@ -1,0 +1,13 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": "frostedheart:mud_permafrost",
+  "condense_temp": 90.0,
+  "evaporate_temp": 100.0,
+  "freeze_temp": -5.0,
+  "gas": "minecraft:coarse_dirt",
+  "heat_capacity": 100,
+  "liquid": "minecraft:mud",
+  "melt_temp": 2.0,
+  "solid": "frostedheart:mud_permafrost",
+  "will_transit": true
+}

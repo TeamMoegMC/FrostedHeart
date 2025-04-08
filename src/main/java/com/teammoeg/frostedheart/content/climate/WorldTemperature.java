@@ -431,7 +431,7 @@ public class WorldTemperature {
     }
 
     @Nonnull
-    public static PlantTemperature getPlantDataWithDefault(Block block) {
+    private static PlantTemperature getPlantDataWithDefault(Block block) {
 
     	PlantTempData data = PlantTempData.getPlantData(block);
 
@@ -483,7 +483,8 @@ public class WorldTemperature {
         CAN_FERTILIZE,
         CAN_GROW,
         CAN_SURVIVE,
-        WILL_DIE;
+        WILL_DIE,
+        NOT_PLANT;
 
         public boolean canFertilize() {
             return this == CAN_FERTILIZE;
@@ -500,6 +501,10 @@ public class WorldTemperature {
         public boolean willDie() {
             return this == WILL_DIE;
         }
+
+        public boolean notPlant() {
+            return this == NOT_PLANT;
+        }
     }
 
     /**
@@ -507,7 +512,12 @@ public class WorldTemperature {
      */
     public static PlantStatus checkPlantStatus(LevelAccessor level, BlockPos pos, Block block) {
         float blockTemp = block(level, pos);
-        PlantTemperature data=getPlantDataWithDefault(block);
+        PlantTempData data = PlantTempData.getPlantData(block);
+
+        if (data == null) {
+            return PlantStatus.NOT_PLANT;
+        }
+
         if(openToAir(level,pos)) {
 	        if (WorldClimate.isBlizzard(level)&&data.blizzardVulnerable()) {
 	            return PlantStatus.WILL_DIE;
@@ -526,5 +536,32 @@ public class WorldTemperature {
             return PlantStatus.CAN_SURVIVE;
         }
         return PlantStatus.WILL_DIE;
+    }
+
+    public static PlantStatus checkPlantStatus(LevelAccessor level, BlockPos pos, PlantTempData data) {
+        float blockTemp = block(level, pos);
+
+        if (data == null) {
+            return PlantStatus.NOT_PLANT;
+        }
+
+        if(openToAir(level,pos)) {
+            if (WorldClimate.isBlizzard(level)&&data.blizzardVulnerable()) {
+                return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
+            }
+            if (WorldClimate.isSnowing(level)&&data.snowVulnerable()) {
+                return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
+            }
+        }
+        if (data.isValidTemperature(TemperatureType.BONEMEAL, blockTemp)) {
+            return PlantStatus.CAN_FERTILIZE;
+        }
+        if (data.isValidTemperature(TemperatureType.GROW, blockTemp)) {
+            return PlantStatus.CAN_GROW;
+        }
+        if (data.isValidTemperature(TemperatureType.SURVIVE, blockTemp)) {
+            return PlantStatus.CAN_SURVIVE;
+        }
+        return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
     }
 }

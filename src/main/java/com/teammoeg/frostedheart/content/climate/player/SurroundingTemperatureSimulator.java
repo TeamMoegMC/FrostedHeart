@@ -343,7 +343,7 @@ public class SurroundingTemperatureSimulator {
      */
     private CachedBlockInfo getInfo(BlockPos pos, BlockState bs) {
         //boolean isExpose = getTopY(pos.getX(), pos.getZ()) < pos.getY();
-        BlockTempData b = BlockTempData.getData(level, bs.getBlock());
+        BlockTempData b = BlockTempData.getData(bs.getBlock());
         VoxelShape shape;
         
         if(bs.getBlock().hasDynamicShape()) {

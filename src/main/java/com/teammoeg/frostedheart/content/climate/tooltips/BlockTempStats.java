@@ -64,7 +64,7 @@ public class BlockTempStats implements TooltipModifier {
 
 	@Override
 	public void modify(ItemTooltipEvent context) {
-		final BlockTempData data = BlockTempData.getData(Minecraft.getInstance().level, block);
+		final BlockTempData data = BlockTempData.getData(block);
 		final ItemStack stack = context.getItemStack();
 		final Player player = context.getEntity();
 
@@ -77,7 +77,7 @@ public class BlockTempStats implements TooltipModifier {
 		}
 	}
 	public static List<Component> getStats(Block block, @Nullable ItemStack stack, @Nullable Player player) {
-		final BlockTempData data = BlockTempData.getData(Minecraft.getInstance().level, block);
+		final BlockTempData data = BlockTempData.getData(block);
 		return getStats(data,stack,player);
 	}
 

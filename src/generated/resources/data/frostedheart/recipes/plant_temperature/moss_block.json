@@ -1,0 +1,12 @@
+{
+  "type": "frostedheart:plant_temp",
+  "blizzard_vulnerable": false,
+  "block": "minecraft:moss_block",
+  "dead": "frostedheart:dirt_permafrost",
+  "max_fertilize": 50.0,
+  "max_grow": 50.0,
+  "max_survive": 50.0,
+  "min_grow": 5.0,
+  "min_survive": 0.0,
+  "snow_vulnerable": false
+}

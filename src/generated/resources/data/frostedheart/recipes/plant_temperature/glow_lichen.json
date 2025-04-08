@@ -1,0 +1,12 @@
+{
+  "type": "frostedheart:plant_temp",
+  "blizzard_vulnerable": false,
+  "block": "minecraft:glow_lichen",
+  "dead": "minecraft:air",
+  "max_fertilize": 18.0,
+  "max_grow": 24.0,
+  "min_fertilize": 6.0,
+  "min_grow": -5.0,
+  "min_survive": -40.0,
+  "snow_vulnerable": false
+}

@@ -1,0 +1,14 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": "minecraft:mycelium",
+  "condense_temp": 90.0,
+  "evaporate_temp": 100.0,
+  "freeze_temp": -5.0,
+  "gas": "minecraft:coarse_dirt",
+  "heat_capacity": 100,
+  "liquid": "minecraft:mycelium",
+  "melt_temp": 2.0,
+  "solid": "frostedheart:mycelium_permafrost",
+  "state": "liquid",
+  "will_transit": true
+}

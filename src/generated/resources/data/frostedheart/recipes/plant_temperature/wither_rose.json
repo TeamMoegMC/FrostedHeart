@@ -1,0 +1,13 @@
+{
+  "type": "frostedheart:plant_temp",
+  "blizzard_vulnerable": false,
+  "block": "minecraft:wither_rose",
+  "dead": "minecraft:air",
+  "max_fertilize": 100.0,
+  "max_grow": 100.0,
+  "max_survive": 100.0,
+  "min_fertilize": -100.0,
+  "min_grow": -100.0,
+  "min_survive": -100.0,
+  "snow_vulnerable": false
+}

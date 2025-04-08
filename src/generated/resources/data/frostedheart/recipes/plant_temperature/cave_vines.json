@@ -1,0 +1,11 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "minecraft:cave_vines",
+  "dead": "minecraft:air",
+  "max_fertilize": 26.0,
+  "max_grow": 30.0,
+  "max_survive": 35.0,
+  "min_fertilize": 18.0,
+  "min_grow": 12.0,
+  "min_survive": 5.0
+}

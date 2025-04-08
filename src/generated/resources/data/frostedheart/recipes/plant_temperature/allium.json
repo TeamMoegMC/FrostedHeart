@@ -1,0 +1,11 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "minecraft:allium",
+  "dead": "minecraft:air",
+  "max_fertilize": 22.0,
+  "max_grow": 26.0,
+  "max_survive": 32.0,
+  "min_fertilize": 14.0,
+  "min_grow": 8.0,
+  "snow_vulnerable": false
+}

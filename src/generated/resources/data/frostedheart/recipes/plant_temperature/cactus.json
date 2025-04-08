@@ -1,0 +1,11 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "minecraft:cactus",
+  "dead": "minecraft:air",
+  "max_fertilize": 38.0,
+  "max_grow": 45.0,
+  "max_survive": 50.0,
+  "min_fertilize": 28.0,
+  "min_grow": 20.0,
+  "min_survive": 5.0
+}

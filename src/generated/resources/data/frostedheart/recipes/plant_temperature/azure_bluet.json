@@ -1,0 +1,11 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "minecraft:azure_bluet",
+  "dead": "minecraft:air",
+  "max_fertilize": 22.0,
+  "max_grow": 26.0,
+  "max_survive": 30.0,
+  "min_fertilize": 16.0,
+  "min_grow": 10.0,
+  "min_survive": -5.0
+}

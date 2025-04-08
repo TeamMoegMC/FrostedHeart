@@ -155,6 +155,10 @@ public class FHRegistrateTags {
                 .add(FHMultiblocks.GENERATOR_T2.getBlock())
                 .add(FHMultiblocks.RADIATOR.getBlock());
 
+        prov.tag(BlockTags.DEAD_BUSH_MAY_PLACE_ON)
+                .addTag(FHTags.Blocks.SOIL.tag)
+                .addTag(FHTags.Blocks.PERMAFROST.tag);
+
         for (FHTags.Blocks tag : FHTags.Blocks.values()) {
             if (tag.alwaysDatagen) {
                 prov.getOrCreateRawBuilder(tag.tag);

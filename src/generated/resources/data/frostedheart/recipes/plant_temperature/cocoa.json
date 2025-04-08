@@ -1,0 +1,10 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "minecraft:cocoa",
+  "dead": "minecraft:air",
+  "max_fertilize": 32.0,
+  "max_grow": 36.0,
+  "min_fertilize": 24.0,
+  "min_grow": 20.0,
+  "min_survive": 15.0
+}

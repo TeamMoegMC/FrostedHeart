@@ -1,0 +1,12 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "minecraft:pink_petals",
+  "dead": "minecraft:air",
+  "max_fertilize": 22.0,
+  "max_grow": 26.0,
+  "max_survive": 35.0,
+  "min_fertilize": 12.0,
+  "min_grow": 8.0,
+  "min_survive": -20.0,
+  "snow_vulnerable": false
+}

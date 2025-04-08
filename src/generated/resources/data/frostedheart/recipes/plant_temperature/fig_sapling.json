@@ -1,0 +1,10 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "caupona:fig_sapling",
+  "dead": "minecraft:dead_bush",
+  "max_fertilize": 30.0,
+  "max_grow": 35.0,
+  "min_fertilize": 20.0,
+  "min_grow": 15.0,
+  "min_survive": -5.0
+}

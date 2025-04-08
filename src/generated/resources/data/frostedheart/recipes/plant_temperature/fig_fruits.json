@@ -1,0 +1,11 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "caupona:fig_fruits",
+  "dead": "minecraft:air",
+  "max_fertilize": 32.0,
+  "max_grow": 36.0,
+  "max_survive": 38.0,
+  "min_fertilize": 24.0,
+  "min_grow": 18.0,
+  "min_survive": 5.0
+}
