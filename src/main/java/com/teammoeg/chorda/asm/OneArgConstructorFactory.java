@@ -8,7 +8,10 @@ import java.util.function.Function;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
-
+/**
+ * A magic code for accessing one-arg constructor reflectively but with significant higher performance(about 10x-100x)
+ * 
+ * */
 public class OneArgConstructorFactory<T, R> extends AbstractConstructorFactory {
 	private final Class<T> clazz;
 	private final Type inType;

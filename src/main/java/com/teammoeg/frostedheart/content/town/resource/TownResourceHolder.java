@@ -19,20 +19,23 @@
 
 package com.teammoeg.frostedheart.content.town.resource;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+
+import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.apache.commons.lang3.mutable.MutableDouble;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.io.CodecUtil;
-import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.chorda.util.CDistHelper;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 
 import lombok.Getter;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.DoubleAdder;
 
 /**
  * 此类用于封装resources，仅提供addUnsafe和costUnsafe两个方法来修改resources，确保在修改资源数量时，occupiedCapacity也会随之修改。
@@ -83,7 +86,7 @@ public class TownResourceHolder {
 
     //不输入已占用容量，自行计算。
     public TownResourceHolder(Map<ItemStackWrapper, Double> itemResources, Map<VirtualResourceKey, Double> virtualResources) {
-        DoubleAdder adder = new DoubleAdder();
+        MutableDouble adder = new MutableDouble();
         itemResources.values().forEach(adder::add);
         virtualResources.entrySet().stream()
                 .filter(entry -> entry.getKey().getType().needCapacity)
@@ -100,7 +103,7 @@ public class TownResourceHolder {
      */
     public static boolean isCached(ItemStack pItemStack){
         ItemStack itemStack = pItemStack.copyWithCount(1);
-        AtomicBoolean isCached = new AtomicBoolean(false);
+        MutableBoolean isCached = new MutableBoolean(false);
         itemStack.getTags()
                 .filter(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::containsKey)
                 .findFirst()
@@ -108,12 +111,12 @@ public class TownResourceHolder {
                 .ifPresent(key -> {
                     HashSet<ItemStackWrapper> itemOfKey = ITEM_RESOURCE_KEY_CACHE.get(key);
                     if(itemOfKey == null || itemOfKey.isEmpty()){
-                        isCached.set(false);
+                        isCached.setValue(false);
                         return;
                     }
-                    isCached.set(ITEM_RESOURCE_KEY_CACHE.get(key).contains(new ItemStackWrapper(itemStack)));
+                    isCached.setValue(ITEM_RESOURCE_KEY_CACHE.get(key).contains(new ItemStackWrapper(itemStack)));
                 });
-        return isCached.get();
+        return isCached.getValue();
     }
 
     /**
@@ -124,13 +127,13 @@ public class TownResourceHolder {
      */
     public static double getResourceAmount(ItemStackWrapper itemStackWrapper, ItemResourceKey key){
         if(ITEM_RESOURCE_AMOUNTS.isEmpty()) loadItemResourceAmounts();
-        AtomicReference<Double> amount = new AtomicReference<>(0.0);
+        MutableDouble amount = new MutableDouble(0.0);
         HashSet<ItemStackWrapper> itemsOfKey = ITEM_RESOURCE_KEY_CACHE.get(key);
         if(itemsOfKey == null || itemsOfKey.isEmpty()) return 0.0;
         if(itemsOfKey.contains(itemStackWrapper)){
             Map<ItemResourceKey, Double> itemAmounts = ITEM_RESOURCE_AMOUNTS.get(itemStackWrapper);
             if(itemAmounts == null) return 1.0;
-            amount.set(itemAmounts.getOrDefault(key, 1.0));
+            amount.setValue(itemAmounts.getOrDefault(key, 1.0));
         } else{
             itemStackWrapper.getItemStack().getTags()
                     .map(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::get)
@@ -139,13 +142,13 @@ public class TownResourceHolder {
                     .ifPresent(key1 -> {
                         Map<ItemResourceKey, Double> itemAmounts = ITEM_RESOURCE_AMOUNTS.get(itemStackWrapper);
                         if(itemAmounts == null || itemAmounts.isEmpty()) {
-                            amount.set(1.0);
+                            amount.setValue(1.0);
                             return;
                         }
-                        amount.set(itemAmounts.getOrDefault(key1, 1.0));
+                        amount.setValue(itemAmounts.getOrDefault(key1, 1.0));
                     });
         }
-        return amount.get();
+        return amount.getValue();
     }
 
     /**
@@ -206,7 +209,7 @@ public class TownResourceHolder {
      */
     public double get(ITownResourceKey key){
         if(key instanceof ItemResourceKey){
-            DoubleAdder adder = new DoubleAdder();
+        	MutableDouble adder = new MutableDouble();
             for(ItemStackWrapper itemStackWrapper : ITEM_RESOURCE_KEY_CACHE.getOrDefault((ItemResourceKey)key, new HashSet<>())){
                 adder.add(get(itemStackWrapper) * getResourceAmount(itemStackWrapper, (ItemResourceKey)key));
             }

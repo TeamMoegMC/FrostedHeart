@@ -51,6 +51,8 @@ import com.teammoeg.frostedheart.content.climate.particle.SteamParticle;
 import com.teammoeg.frostedheart.content.climate.particle.WetSteamParticle;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
+import com.teammoeg.frostedresearch.gui.InsightOverlay;
+
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
@@ -122,6 +124,7 @@ public class FHClientEventsMod {
     }
     @SubscribeEvent
     public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
+    	event.registerAboveAll("insight", new InsightOverlay());
         event.registerAboveAll("wheel_menu", WheelMenuRenderer.OVERLAY);
     }
     @SubscribeEvent

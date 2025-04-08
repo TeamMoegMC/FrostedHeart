@@ -4,12 +4,14 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.compat.JEICompat;
 import com.teammoeg.frostedresearch.events.ClientResearchStatusEvent;
+import com.teammoeg.frostedresearch.gui.InsightOverlay;
 import com.teammoeg.frostedresearch.gui.ResearchToast;
 import com.teammoeg.frostedresearch.research.effects.Effect;
 import com.teammoeg.frostedresearch.research.effects.EffectCrafting;
 import com.teammoeg.frostedresearch.research.effects.EffectShowCategory;
 
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -32,5 +34,10 @@ public class ResearchClientEvents {
                 return;
             }
     }
-
+    @SubscribeEvent
+    public static void tickClient(ClientTickEvent event) {
+    	if(ClientUtils.getPlayer()!=null&&InsightOverlay.INSTANCE!=null) {
+    		InsightOverlay.INSTANCE.tick();
+    	}
+    }
 }

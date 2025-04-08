@@ -30,6 +30,7 @@ import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.compat.JEICompat;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
+import com.teammoeg.frostedresearch.gui.InsightOverlay;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
@@ -62,9 +63,10 @@ public class FHResearchDataSyncPacket implements CMessage {
                 CClientTeamDataManager.INSTANCE.getInstance().setData(FRSpecialDataTypes.RESEARCH_DATA, FRSpecialDataTypes.RESEARCH_DATA.loadData(DataOps.COMPRESSED, dat));
                 // Grant Effects on Client
                 
-                // TODO: Why not just sync the UnlockLists through TeamResearchData.Codec, so that the above line is all we need?
+
                  TeamDataClosure<TeamResearchData> closure = CClientTeamDataManager.INSTANCE.getInstance().getDataHolder(FRSpecialDataTypes.RESEARCH_DATA);
                  closure.get().initResearch(closure.team());
+                 DistExecutor.safeRunWhenOn(Dist.CLIENT, ()->InsightOverlay::initOverlay);
             } catch (Exception e) {
                 FRMain.LOGGER.error("Failed to load data when syncing research data", e);
             }
