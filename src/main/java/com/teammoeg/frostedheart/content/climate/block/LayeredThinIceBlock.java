@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.climate.block;
 
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -38,10 +39,21 @@ public class LayeredThinIceBlock extends IceBlock {
     public void randomTick(BlockState pState, ServerLevel pLevel, BlockPos pPos, RandomSource pRandom) {
     }
 
-    // no skip rendering because it can be adjacent to layers less than 8
+    /**
+     * We skip rendering our face if the adjacent thin ice is taller than us.
+     */
     @Override
-    public boolean skipRendering(BlockState pState, BlockState pAdjacentBlockState, Direction pSide) {
-        return false;
+    public boolean skipRendering(BlockState state, BlockState adj, Direction side) {
+        if (adj.is(this) && adj.hasProperty(LAYERS) && state.hasProperty(LAYERS)) {
+            if (adj.getValue(LAYERS) >= state.getValue(LAYERS)) {
+                return true;
+            }
+        }
+        // always taller
+        if (adj.is(FHBlocks.THIN_ICE_BLOCK.get())) {
+            return true;
+        }
+        return super.skipRendering(state, adj, side);
     }
 
     public boolean isPathfindable(BlockState pState, BlockGetter pLevel, BlockPos pPos, PathComputationType pType) {

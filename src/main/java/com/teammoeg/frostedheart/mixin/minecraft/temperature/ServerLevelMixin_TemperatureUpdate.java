@@ -217,7 +217,22 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
                         !level.isWaterAt(pos.south());
 
                 if (isAtEdge) {
+                    // TODO: this is not good because the below new formed water will
+                    // be covered by the above thin ice, which makes the below one
+                    // no longer the motion blocking height map
+                    // check if the block below is a falling water
+//                    BlockPos below = pos.below();
+//                    BlockState belowState = level.getBlockState(below);
+//                    FluidState belowFluidState = level.getFluidState(below);
+//                    // if so, replace it with a source water
+//                    if (belowFluidState.getType() == Fluids.FLOWING_WATER && belowState.getBlock() instanceof LiquidBlock) {
+//                        if (fluidstate.hasProperty(FlowingFluid.FALLING) && belowFluidState.getValue(FlowingFluid.FALLING)) {
+//                            level.setBlockAndUpdate(pos.below(), Blocks.WATER.defaultBlockState());
+//                        }
+//                    }
+
                     level.setBlockAndUpdate(pos, FHBlocks.THIN_ICE_BLOCK.get().defaultBlockState());
+
                 }
             }
 
@@ -230,9 +245,9 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
                         !level.isWaterAt(pos.south());
 
                 if (isAtEdge) {
-                    // don't freeze falling water
+                    // TODO: should we do Icicles?
                     if (fluidstate.hasProperty(FlowingFluid.FALLING) && fluidstate.getValue(FlowingFluid.FALLING)) {
-                        return;
+                        level.setBlockAndUpdate(pos, FHBlocks.THIN_ICE_BLOCK.get().defaultBlockState());
                     }
 
                     if (fluidstate.hasProperty(FlowingFluid.LEVEL)) {

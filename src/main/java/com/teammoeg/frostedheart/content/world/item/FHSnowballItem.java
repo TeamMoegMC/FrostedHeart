@@ -17,11 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.ore;
-
-import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
-import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
-import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+package com.teammoeg.frostedheart.content.world.item;
 
 import net.minecraft.world.item.SnowballItem;
 

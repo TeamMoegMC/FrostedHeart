@@ -38,7 +38,7 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.health.food.CannedFoodItem;
 import com.teammoeg.frostedheart.content.health.food.FHSoupItem;
-import com.teammoeg.frostedheart.content.ore.FHSnowballItem;
+import com.teammoeg.frostedheart.content.world.item.FHSnowballItem;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
 import com.teammoeg.frostedheart.content.utility.CeramicBucket;
 import com.teammoeg.frostedheart.content.utility.DebugItem;

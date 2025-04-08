@@ -187,14 +187,14 @@ public class ClimateCommonEvents {
 		if (status.canGrow()) {
 			event.setResult(Event.Result.DEFAULT);
 		}
-		if (status.canSurvive()) {
+		else if (status.canSurvive()) {
 			if (event.getLevel().getRandom().nextInt(3) == 0) {
 				if (state.is(crop) && state != crop.defaultBlockState())
 					event.getLevel().setBlock(event.getPos(), crop.defaultBlockState(), 2);
 			}
 			event.setResult(Event.Result.DENY);
 		}
-		if (status.willDie()) {
+		else if (status.willDie()) {
 			if (level.getBlockState(pos.below()).is(Blocks.FARMLAND)) {
 				level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
 			}

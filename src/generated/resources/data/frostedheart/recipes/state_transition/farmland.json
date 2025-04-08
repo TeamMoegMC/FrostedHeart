@@ -3,7 +3,7 @@
   "block": "minecraft:farmland",
   "condense_temp": 90.0,
   "evaporate_temp": 100.0,
-  "freeze_temp": -5.0,
+  "freeze_temp": -40.0,
   "gas": "minecraft:coarse_dirt",
   "heat_capacity": 100,
   "liquid": "minecraft:farmland",

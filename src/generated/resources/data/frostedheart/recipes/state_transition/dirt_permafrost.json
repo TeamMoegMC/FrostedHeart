@@ -6,7 +6,7 @@
   "freeze_temp": -5.0,
   "gas": "minecraft:coarse_dirt",
   "heat_capacity": 100,
-  "liquid": "minecraft:dirt",
+  "liquid": "minecraft:coarse_dirt",
   "melt_temp": 2.0,
   "solid": "frostedheart:dirt_permafrost",
   "will_transit": true

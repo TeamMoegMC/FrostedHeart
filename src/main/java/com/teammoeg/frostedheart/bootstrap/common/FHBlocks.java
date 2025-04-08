@@ -38,6 +38,7 @@ import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
+import com.teammoeg.frostedheart.content.climate.block.ThinIceBlock;
 import com.teammoeg.frostedheart.content.decoration.*;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
@@ -114,7 +115,7 @@ public class FHBlocks {
     }
 
     // thin_ice
-    public static final BlockEntry<IceBlock> THIN_ICE_BLOCK = REGISTRATE.block("thin_ice", IceBlock::new)
+    public static final BlockEntry<ThinIceBlock> THIN_ICE_BLOCK = REGISTRATE.block("thin_ice", ThinIceBlock::new)
             .initialProperties(() -> Blocks.ICE)
             .tag(BlockTags.ICE, BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .blockstate(FHBlockStateGen.simpleCubeAllRandom("thin_ice", 5, true))
