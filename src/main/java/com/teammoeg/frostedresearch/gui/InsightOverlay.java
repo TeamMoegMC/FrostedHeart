@@ -40,7 +40,7 @@ public class InsightOverlay implements IGuiOverlay{
 	@Override
 	public void render(ForgeGui gui, GuiGraphics guiGraphics, float partialTick, int screenWidth, int screenHeight) {
 		if(!isShown)return;
-		partialTick=PartialTickTracker.getTickAlignedPartialTicks();
+		//partialTick=PartialTickTracker.getTickAlignedPartialTicks();
 		//FGuis.drawRing(guiGraphics, screenWidth/2, 25, 11, 14, -60,30, 0xff8cffd6);
 		float angleProgress=0;
 		if(renderingInsightNextProgress!=renderingInsightProgress)
@@ -80,6 +80,7 @@ public class InsightOverlay implements IGuiOverlay{
 		if(ClientUtils.mc().isPaused())return;
 		if(textScrollTicks>0) {
 			textScrollTicks--;
+			renderingInsightLevel=renderingNextInsightLevel;
 			if(textScrollTicks<=0) {
 				textScrollTicks=0;
 				if(renderingInsightLevel>renderingNextInsightLevel) {
