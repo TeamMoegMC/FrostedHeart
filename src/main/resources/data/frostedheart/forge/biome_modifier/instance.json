@@ -1,19 +1,7 @@
 {
   "type": "frostedheart:instance",
   "surface_structures": [
-    "frostedheart:ice_spikes",
-    "frostedheart:ice_patch",
-    "frostedheart:thin_ice_patch",
-    "frostedheart:snow_patch",
-    "frostedheart:powder_snow_patch",
-    "frostedheart:clay_permafrost_patch",
-    "frostedheart:gravel_permafrost_patch",
-    "frostedheart:condensed_copper_ore_patch",
-    "frostedheart:condensed_tin_ore_patch",
-    "frostedheart:besnowed_debris_patch",
-    "frostedheart:besnowed_twigs_patch",
-    "frostedheart:ice_covered_gravel",
-    "frostedheart:ice_covered_clay"
+
   ],
   "top_layer_modification": [
     "frostedheart:freeze_top_layer"
