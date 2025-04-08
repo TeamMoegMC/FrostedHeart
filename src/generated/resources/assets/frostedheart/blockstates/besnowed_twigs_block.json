@@ -1,0 +1,15 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "frostedheart:block/besnowed_twigs_block_1"
+      },
+      {
+        "model": "frostedheart:block/besnowed_twigs_block_2"
+      },
+      {
+        "model": "frostedheart:block/besnowed_twigs_block_3"
+      }
+    ]
+  }
+}

@@ -117,7 +117,7 @@ public class FHBlocks {
     public static final BlockEntry<IceBlock> THIN_ICE_BLOCK = REGISTRATE.block("thin_ice", IceBlock::new)
             .initialProperties(() -> Blocks.ICE)
             .tag(BlockTags.ICE, BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
-            .blockstate(FHBlockStateGen.existed())
+            .blockstate(FHBlockStateGen.simpleCubeAllRandom("thin_ice", 5, true))
             .lang("Thin Ice Block")
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.ICE_CHIP.get(), ConstantValue.exactly(4))))
             .item()
@@ -130,7 +130,7 @@ public class FHBlocks {
             .tag(BlockTags.MINEABLE_WITH_SHOVEL)
             .tag(BlockTags.SNOW)
             .tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
-            .blockstate(FHBlockStateGen.existed())
+            .blockstate(FHBlockStateGen.simpleCubeAllRandom("besnowed_debris", 3, false))
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, Items.SNOWBALL, ConstantValue.exactly(4))))
             .item()
             .model(AssetLookup.existingItemModel())
@@ -141,7 +141,7 @@ public class FHBlocks {
             .tag(BlockTags.MINEABLE_WITH_SHOVEL)
             .tag(BlockTags.SNOW)
             .tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
-            .blockstate(FHBlockStateGen.existed())
+            .blockstate(FHBlockStateGen.simpleCubeAllRandom("besnowed_twigs", 3, false))
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, Items.SNOWBALL, ConstantValue.exactly(4))))
             .item()
             .model(AssetLookup.existingItemModel())
@@ -288,12 +288,14 @@ public class FHBlocks {
     // layered thin ice
     public static final BlockEntry<LayeredThinIceBlock> LAYERED_THIN_ICE = REGISTRATE.block("layered_thin_ice", LayeredThinIceBlock::new)
             .initialProperties(() -> ICE)
+            .properties((p) -> p.forceSolidOn())
             .tag(BlockTags.MINEABLE_WITH_SHOVEL)
             .tag(BlockTags.MINEABLE_WITH_PICKAXE)
             .tag(BlockTags.ICE)
             .tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
             .loot((lt, block) -> lt.add(block, FHLootGen.buildSnowLootTable(block, THIN_ICE_BLOCK.get(), FHItems.ICE_CHIP.get())))
-            .blockstate(FHBlockStateGen.thinIceLayered("layered_thin_ice", "thin_ice", "thin_ice_1"))
+            .blockstate(FHBlockStateGen.layeredRandom("layered_thin_ice", "thin_ice",
+                    "thin_ice", 5, 8, true))
             .item()
             .model(FHBlockStateGen.itemModelLayeredTranslucent("layered_thin_ice", "thin_ice_1"))
             .build()
@@ -316,9 +318,10 @@ public class FHBlocks {
             .tag(BlockTags.SNOW)
             .tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
             .loot((lt, block) -> lt.add(block, FHLootGen.buildSnowLootTable(block, BESNOWED_DEBRIS_BLOCK.get(), Items.SNOWBALL)))
-            .blockstate(FHBlockStateGen.existed())
+            .blockstate(FHBlockStateGen.layeredRandom("besnowed_debris", "besnowed_debris_block",
+                    "besnowed_debris", 3, 8, false))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.itemModelLayered("besnowed_debris", "besnowed_debris_1"))
             .build()
             .register();
     public static final BlockEntry<SnowLayerBlock> BESNOWED_TWIGS = REGISTRATE.block("besnowed_twigs", SnowLayerBlock::new)
@@ -336,9 +339,10 @@ public class FHBlocks {
             .tag(BlockTags.SNOW)
             .tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
             .loot((lt, block) -> lt.add(block, FHLootGen.buildSnowLootTable(block, BESNOWED_TWIGS_BLOCK.get(), Items.SNOWBALL)))
-            .blockstate(FHBlockStateGen.existed())
+            .blockstate(FHBlockStateGen.layeredRandom("besnowed_twigs", "besnowed_twigs_block",
+                    "besnowed_twigs", 3, 8, false))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.itemModelLayered("besnowed_twigs", "besnowed_twigs_1"))
             .build()
             .register();
     // condensed ores

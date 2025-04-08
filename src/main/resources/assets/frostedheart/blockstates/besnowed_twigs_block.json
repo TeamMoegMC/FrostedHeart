@@ -1,9 +1,0 @@
-{
-	"variants": {
-		"": [
-			{"model": "frostedheart:block/besnowed_twigs_1"},
-			{"model": "frostedheart:block/besnowed_twigs_2"},
-			{"model": "frostedheart:block/besnowed_twigs_3"}
-		]
-	}
-}

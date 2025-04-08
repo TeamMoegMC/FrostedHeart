@@ -1,0 +1,15 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "frostedheart:block/besnowed_debris_block_1"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_block_2"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_block_3"
+      }
+    ]
+  }
+}

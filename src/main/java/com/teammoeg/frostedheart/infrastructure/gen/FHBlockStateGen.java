@@ -21,9 +21,7 @@ package com.teammoeg.frostedheart.infrastructure.gen;
 
 import java.util.NoSuchElementException;
 
-import com.teammoeg.chorda.block.CBlockProperties;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.providers.DataGenContext;
@@ -33,7 +31,6 @@ import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
 
 import net.minecraft.core.Direction;
-import net.minecraft.core.Direction.Axis;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.tags.BlockTags;
@@ -47,7 +44,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelFile;
-import net.minecraftforge.client.model.generators.ModelFile.UncheckedModelFile;
+import net.minecraftforge.client.model.generators.VariantBlockStateBuilder;
 
 public class FHBlockStateGen {
 	
@@ -65,6 +62,31 @@ public class FHBlockStateGen {
             String path) {
         return (c, p) -> p.simpleBlock(c.get(), p.models()
                 .cubeAll(c.getName(), p.modLoc("block/" + path)));
+    }
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> simpleCubeAllRandom(
+            String texturePath, int textureCount, boolean translucent) {
+
+        return (c, p) -> {
+            ResourceLocation texture = p.modLoc("block/" + texturePath);
+
+            VariantBlockStateBuilder builder = p.getVariantBuilder(c.get());
+
+            ConfiguredModel[] models = new ConfiguredModel[textureCount];
+            for (int t = 1; t < textureCount + 1; t++) {
+                ModelFile file;
+                if (translucent) {
+                    file = p.models().withExistingParent(c.getName() + "_" + t, p.mcLoc("block/cube_all"))
+                            .texture("all", texture + "_" + t)
+                            .renderType("translucent");
+                } else {
+                    file = p.models().withExistingParent(c.getName() + "_" + t, p.mcLoc("block/cube_all"))
+                            .texture("all", texture + "_" + t);
+                }
+                models[t - 1] = new ConfiguredModel(file);
+            }
+
+            builder.partialState().addModels(models);
+        };
     }
 
     // snow layered block state
@@ -120,63 +142,48 @@ public class FHBlockStateGen {
     }
 
     // snow layered block state
-    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> thinIceLayered(
-            String layerPath, String blockPath, String texturePath) {
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> layeredRandom(
+            String layerPath, String blockPath, String texturePath, int textureCount, int layerCount, boolean translucent
+    ) {
         return (c, p) -> {
-            LayeredThinIceBlock layer = (LayeredThinIceBlock) c.get();
             ResourceLocation texture = p.modLoc("block/" + texturePath);
 
-            ModelFile[] models = new ModelFile[8];
-            models[0] = p.models().withExistingParent(layerPath + "_height2", p.mcLoc("block/snow_height2"))
-                    .texture("particle", texture)
-                    .texture("texture", texture)
-                    .renderType("translucent");
-            models[1] = p.models().withExistingParent(layerPath + "_height4", p.mcLoc("block/snow_height4"))
-                    .texture("particle", texture)
-                    .texture("texture", texture)
-                    .renderType("translucent");
-            models[2] = p.models().withExistingParent(layerPath + "_height6", p.mcLoc("block/snow_height6"))
-                    .texture("particle", texture)
-                    .texture("texture", texture)
-                    .renderType("translucent");
-            models[3] = p.models().withExistingParent(layerPath + "_height8", p.mcLoc("block/snow_height8"))
-                    .texture("particle", texture)
-                    .texture("texture", texture)
-                    .renderType("translucent");
-            models[4] = p.models().withExistingParent(layerPath + "_height10", p.mcLoc("block/snow_height10"))
-                    .texture("particle", texture)
-                    .texture("texture", texture)
-                    .renderType("translucent");
-            models[5] = p.models().withExistingParent(layerPath + "_height12", p.mcLoc("block/snow_height12"))
-                    .texture("particle", texture)
-                    .texture("texture", texture)
-                    .renderType("translucent");
-            models[6] = p.models().withExistingParent(layerPath + "_height14", p.mcLoc("block/snow_height14"))
-                    .texture("particle", texture)
-                    .texture("texture", texture)
-                    .renderType("translucent");
-            models[7] = p.models().withExistingParent(blockPath, p.mcLoc("block/cube_all"))
-                    .texture("all", texture)
-                    .renderType("translucent");
+            VariantBlockStateBuilder builder = p.getVariantBuilder(c.get());
 
-            p.getVariantBuilder(layer)
-                    .partialState().with(LayeredThinIceBlock.LAYERS, 1)
-                    .addModels(new ConfiguredModel(models[0]), new ConfiguredModel(models[1]))
-                    .modelForState().modelFile(models[0]).addModel()
-                    .partialState().with(LayeredThinIceBlock.LAYERS, 2)
-                    .modelForState().modelFile(models[1]).addModel()
-                    .partialState().with(LayeredThinIceBlock.LAYERS, 3)
-                    .modelForState().modelFile(models[2]).addModel()
-                    .partialState().with(LayeredThinIceBlock.LAYERS, 4)
-                    .modelForState().modelFile(models[3]).addModel()
-                    .partialState().with(LayeredThinIceBlock.LAYERS, 5)
-                    .modelForState().modelFile(models[4]).addModel()
-                    .partialState().with(LayeredThinIceBlock.LAYERS, 6)
-                    .modelForState().modelFile(models[5]).addModel()
-                    .partialState().with(LayeredThinIceBlock.LAYERS, 7)
-                    .modelForState().modelFile(models[6]).addModel()
-                    .partialState().with(LayeredThinIceBlock.LAYERS, 8)
-                    .modelForState().modelFile(models[7]).addModel();
+            for (int l = 1; l < layerCount + 1; l++) {
+
+                ConfiguredModel[] models = new ConfiguredModel[textureCount];
+                for (int t = 1; t < textureCount + 1; t++) {
+                    ModelFile file;
+                    if (l == 8) {
+                        if (translucent) {
+                            file = p.models().withExistingParent(blockPath + "_" + t, p.mcLoc("block/cube_all"))
+                                    .texture("all", texture + "_" + t)
+                                    .renderType("translucent");
+                        } else {
+                            file = p.models().withExistingParent(blockPath + "_" + t, p.mcLoc("block/cube_all"))
+                                    .texture("all", texture + "_" + t);
+                        }
+                    } else {
+                        int pixels = l * 2;
+                        if (translucent) {
+                            file = p.models().withExistingParent(layerPath + "_height" + pixels + "_" + t, p.mcLoc("block/snow_height" + pixels))
+                                    .texture("particle", texture + "_" + t)
+                                    .texture("texture", texture + "_" + t)
+                                    .renderType("translucent");
+                        } else {
+                            file = p.models().withExistingParent(layerPath + "_height" + pixels + "_" + t, p.mcLoc("block/snow_height" + pixels))
+                                    .texture("particle", texture + "_" + t)
+                                    .texture("texture", texture + "_" + t);
+                        }
+
+                    }
+
+                    models[t - 1] = new ConfiguredModel(file);
+                }
+
+                builder.partialState().with(SnowLayerBlock.LAYERS, l).addModels(models);
+            }
         };
     }
 

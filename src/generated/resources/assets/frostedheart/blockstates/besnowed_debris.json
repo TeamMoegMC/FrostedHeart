@@ -1,0 +1,92 @@
+{
+  "variants": {
+    "layers=1": [
+      {
+        "model": "frostedheart:block/besnowed_debris_height2_1"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height2_2"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height2_3"
+      }
+    ],
+    "layers=2": [
+      {
+        "model": "frostedheart:block/besnowed_debris_height4_1"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height4_2"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height4_3"
+      }
+    ],
+    "layers=3": [
+      {
+        "model": "frostedheart:block/besnowed_debris_height6_1"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height6_2"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height6_3"
+      }
+    ],
+    "layers=4": [
+      {
+        "model": "frostedheart:block/besnowed_debris_height8_1"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height8_2"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height8_3"
+      }
+    ],
+    "layers=5": [
+      {
+        "model": "frostedheart:block/besnowed_debris_height10_1"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height10_2"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height10_3"
+      }
+    ],
+    "layers=6": [
+      {
+        "model": "frostedheart:block/besnowed_debris_height12_1"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height12_2"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height12_3"
+      }
+    ],
+    "layers=7": [
+      {
+        "model": "frostedheart:block/besnowed_debris_height14_1"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height14_2"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_height14_3"
+      }
+    ],
+    "layers=8": [
+      {
+        "model": "frostedheart:block/besnowed_debris_block_1"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_block_2"
+      },
+      {
+        "model": "frostedheart:block/besnowed_debris_block_3"
+      }
+    ]
+  }
+}
