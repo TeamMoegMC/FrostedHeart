@@ -1036,6 +1036,7 @@ public class FHBlocks {
                     .requiresCorrectToolForDrops()
                     .friction(0.8F)
                     .sound(SoundType.MUD)
+                    .strength(0.8F)
             )
             .blockstate((c, p) -> {
                 p.getExistingMultipartBuilder(c.get());
@@ -1054,6 +1055,7 @@ public class FHBlocks {
                     .requiresCorrectToolForDrops()
                     .friction(0.8F)
                     .sound(SoundType.MUD)
+                    .strength(0.8F)
             )
             .blockstate((c, p) -> {
                 p.getExistingMultipartBuilder(c.get());
