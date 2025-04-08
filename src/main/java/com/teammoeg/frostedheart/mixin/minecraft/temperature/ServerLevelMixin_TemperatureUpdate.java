@@ -69,14 +69,7 @@ public class ServerLevelMixin_TemperatureUpdate {
             if (level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
                 // Check if the block should freeze based on our custom logic
                 if (frostedHeart$shouldFreezeCustom(level, blockpos2)) {
-                    // Get temperature from our custom class
-                    float temperature = WorldTemperature.block(level, blockpos2);
-
-                    // Apply different ice types based on temperature
-                    if (temperature < -5) {
-                        level.setBlockAndUpdate(blockpos2, FHBlocks.THIN_ICE.get().defaultBlockState());
-                    }
-
+                    level.setBlockAndUpdate(blockpos2, FHBlocks.THIN_ICE.get().defaultBlockState());
                 }
 
             if (isRaining) {
@@ -202,7 +195,8 @@ public class ServerLevelMixin_TemperatureUpdate {
         // From original shouldFreeze method, but without warmEnoughToRain check
         // and without the light level check
 
-        if (pos.getY() >= level.getMinBuildHeight() && pos.getY() < level.getMaxBuildHeight()) {
+        if (pos.getY() >= level.getMinBuildHeight() && pos.getY() < level.getMaxBuildHeight()
+                && WorldTemperature.block(level, pos) < WorldTemperature.WATER_FREEZES) {
             BlockState blockstate = level.getBlockState(pos);
             FluidState fluidstate = level.getFluidState(pos);
 
