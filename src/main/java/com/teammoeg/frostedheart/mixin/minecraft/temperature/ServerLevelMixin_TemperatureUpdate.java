@@ -39,37 +39,19 @@ public class ServerLevelMixin_TemperatureUpdate {
     @Unique
     private static final int TEMPERATUE_RANDOM_TICK_SPEED_DIVISOR = 2;
 
-
     /**
-     * Redirects the "iceandsnow" profiler call to immediately go to "tickBlocks" instead
-     * This effectively skips all the code in the iceandsnow section
-     */
-    @Redirect(
-            method = "tickChunk",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V",
-                    ordinal = 0  // This targets the profiler.popPush("iceandsnow") call
-            )
-    )
-    private void redirectIceAndSnowToProfiller(ProfilerFiller profiler, String section) {
-        // Instead of pushing "iceandsnow", we push "tickBlocks" directly
-        // This skips the entire "iceandsnow" section
-        profiler.popPush("tickBlocks");
-    }
-
-    /**
-     * Adds our custom temperature section before tickBlocks
+     * Adds our custom temperature section before iceandsnow.
+     * Implement the tickBlocks section too.
      */
     @Inject(
             method = "tickChunk",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V",
-                    ordinal = 1,
+                    ordinal = 0, // This targets the profiler.popPush("iceandsnow") call
                     shift = At.Shift.BEFORE
-            )
-    )
+            ),
+            cancellable = true)
     private void addTemperatureSection(LevelChunk pChunk, int pRandomTickSpeed, CallbackInfo ci) {
 
         ServerLevel level = (ServerLevel)(Object)this;
@@ -157,10 +139,43 @@ public class ServerLevelMixin_TemperatureUpdate {
             }
         }
 
-        // The tickBlocks section will be handled by the original method after this injection
+        // Continue with tickBlocks section
+        level.getProfiler().popPush("tickBlocks");
 
-        // Note: We don't need to add the "tickBlocks" pop/push here
-        // because the redirect will handle that
+        // Now manually implement the tickBlocks section from the original method
+        if (pRandomTickSpeed > 0) {
+            LevelChunkSection[] alevelchunksection = pChunk.getSections();
+
+            for(int l = 0; l < alevelchunksection.length; ++l) {
+                LevelChunkSection levelchunksection = alevelchunksection[l];
+                if (levelchunksection.isRandomlyTicking()) {
+                    int j1 = pChunk.getSectionYFromSectionIndex(l);
+                    int k1 = SectionPos.sectionToBlockCoord(j1);
+
+                    for(int l1 = 0; l1 < pRandomTickSpeed; ++l1) {
+                        BlockPos blockpos3 = level.getBlockRandomPos(i, k1, j, 15);
+                        level.getProfiler().push("randomTick");
+                        BlockState blockstate2 = levelchunksection.getBlockState(blockpos3.getX() - i, blockpos3.getY() - k1, blockpos3.getZ() - j);
+                        if (blockstate2.isRandomlyTicking()) {
+                            blockstate2.randomTick(level, blockpos3, level.random);
+                        }
+
+                        FluidState fluidstate = blockstate2.getFluidState();
+                        if (fluidstate.isRandomlyTicking()) {
+                            fluidstate.randomTick(level, blockpos3, level.random);
+                        }
+
+                        level.getProfiler().pop();
+                    }
+                }
+            }
+        }
+
+        // Pop the final profiler section
+        level.getProfiler().pop();
+
+        // Cancel the original method
+        ci.cancel();
     }
 
     /**
