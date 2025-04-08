@@ -738,13 +738,13 @@ public class FrostedHud {
         HUDElements.selected.blitAt(stack, x - 1 + player.getInventory().selected * 20, y - 1,
                 BasePos.hotbar_1);
 
-        if (player.getOffhandItem().isEmpty()) {
+        /*if (player.getOffhandItem().isEmpty()) {
             HUDElements.off_hand_slot.blitAt(stack, x, y, BasePos.off_hand);
         } else {
         	HUDElements.off_hand_slot.blitAt(stack, x, y, BasePos.off_hand);
             HUDElements.selected.blitAt(stack, x, y, BasePos.off_hand);
-        }
-
+        }*/
+        HUDElements.off_hand_slot.blitAt(stack, x, y, BasePos.off_hand);
         ItemStack itemstack = player.getOffhandItem();
         HumanoidArm handside = player.getMainArm().getOpposite();
         //RenderSystem.enableRescaleNormal();
