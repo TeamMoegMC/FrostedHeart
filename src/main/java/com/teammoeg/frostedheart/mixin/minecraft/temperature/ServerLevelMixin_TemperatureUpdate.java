@@ -11,7 +11,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.LevelReader;
@@ -30,7 +29,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerLevel.class)
@@ -38,6 +36,8 @@ public class ServerLevelMixin_TemperatureUpdate {
 
     @Unique
     private static final int TEMPERATUE_RANDOM_TICK_SPEED_DIVISOR = 2;
+    @Unique
+    private static final int WATER_FREEZE_CHANCE_INVERSE = 10;
 
     /**
      * Adds our custom temperature section before iceandsnow.
@@ -59,39 +59,44 @@ public class ServerLevelMixin_TemperatureUpdate {
         boolean isRaining = level.isRaining();
         int i = chunkpos.getMinBlockX();
         int j = chunkpos.getMinBlockZ();
+        // Process fewer blocks for temperature checks to reduce performance impact
+        // Adjust this divisor based on your performance needs
+        int temperatureChecks = Math.max(1, pRandomTickSpeed / TEMPERATUE_RANDOM_TICK_SPEED_DIVISOR);
 
         // Custom water freezing logic
         level.getProfiler().popPush("water");
-        if (level.random.nextInt(16) == 0) {
-            BlockPos blockpos1 = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(i, 0, j, 15));
-            BlockPos blockpos2 = blockpos1.below();
-            Biome biome = level.getBiome(blockpos1).value();
-            if (level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
-                // Check if the block should freeze based on our custom logic
-                if (frostedHeart$shouldFreezeCustom(level, blockpos2)) {
-                    level.setBlockAndUpdate(blockpos2, FHBlocks.THIN_ICE.get().defaultBlockState());
-                }
-
-            if (isRaining) {
-                int i1 = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
-                if (i1 > 0 && frostedHeart$shouldSnowCustom(level, blockpos1)) {
-                    BlockState blockstate = level.getBlockState(blockpos1);
-                    if (blockstate.is(Blocks.SNOW)) {
-                        int k = blockstate.getValue(SnowLayerBlock.LAYERS);
-                        if (k < Math.min(i1, 8)) {
-                            BlockState blockstate1 = blockstate.setValue(SnowLayerBlock.LAYERS, Integer.valueOf(k + 1));
-                            Block.pushEntitiesUp(blockstate, blockstate1, level, blockpos1);
-                            level.setBlockAndUpdate(blockpos1, blockstate1);
-                        }
-                    } else {
-                        level.setBlockAndUpdate(blockpos1, Blocks.SNOW.defaultBlockState());
+        for (int l1 = 0; l1 < temperatureChecks; ++l1) {
+            if (level.random.nextInt(WATER_FREEZE_CHANCE_INVERSE) == 0) {
+                BlockPos blockpos1 = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(i, 0, j, 15));
+                BlockPos blockpos2 = blockpos1.below();
+                Biome biome = level.getBiome(blockpos1).value();
+                if (level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
+                    // Check if the block should freeze based on our custom logic
+                    if (frostedHeart$shouldFreezeCustom(level, blockpos2)) {
+                        level.setBlockAndUpdate(blockpos2, FHBlocks.THIN_ICE.get().defaultBlockState());
                     }
-                }
 
-                Biome.Precipitation biome$precipitation = biome.getPrecipitationAt(blockpos2);
-                if (biome$precipitation != Biome.Precipitation.NONE) {
-                    BlockState blockstate3 = level.getBlockState(blockpos2);
-                    blockstate3.getBlock().handlePrecipitation(blockstate3, level, blockpos2, biome$precipitation);
+                if (isRaining) {
+                    int i1 = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
+                    if (i1 > 0 && frostedHeart$shouldSnowCustom(level, blockpos1)) {
+                        BlockState blockstate = level.getBlockState(blockpos1);
+                        if (blockstate.is(Blocks.SNOW)) {
+                            int k = blockstate.getValue(SnowLayerBlock.LAYERS);
+                            if (k < Math.min(i1, 8)) {
+                                BlockState blockstate1 = blockstate.setValue(SnowLayerBlock.LAYERS, Integer.valueOf(k + 1));
+                                Block.pushEntitiesUp(blockstate, blockstate1, level, blockpos1);
+                                level.setBlockAndUpdate(blockpos1, blockstate1);
+                            }
+                        } else {
+                            level.setBlockAndUpdate(blockpos1, Blocks.SNOW.defaultBlockState());
+                        }
+                    }
+
+                    Biome.Precipitation biome$precipitation = biome.getPrecipitationAt(blockpos2);
+                    if (biome$precipitation != Biome.Precipitation.NONE) {
+                        BlockState blockstate3 = level.getBlockState(blockpos2);
+                        blockstate3.getBlock().handlePrecipitation(blockstate3, level, blockpos2, biome$precipitation);
+                    }
                 }
             }
         }
@@ -109,10 +114,6 @@ public class ServerLevelMixin_TemperatureUpdate {
                 if (levelchunksection.isRandomlyTicking()) {
                     int j1 = pChunk.getSectionYFromSectionIndex(l);
                     int k1 = SectionPos.sectionToBlockCoord(j1);
-
-                    // Process fewer blocks for temperature checks to reduce performance impact
-                    // Adjust this divisor based on your performance needs
-                    int temperatureChecks = Math.max(1, pRandomTickSpeed / TEMPERATUE_RANDOM_TICK_SPEED_DIVISOR);
 
                     for (int l1 = 0; l1 < temperatureChecks; ++l1) {
                         // Get a random block position in this chunk section
