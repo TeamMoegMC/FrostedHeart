@@ -56,8 +56,7 @@ public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
     }
 
     public float getGeneratedSpeed() {
-        float speed = FHConfig.COMMON.steamCoreGeneratedSpeed.get().floatValue();
-        if (getIsActive()) return speed;
+        if (getIsActive()) return FHConfig.COMMON.steamCoreGeneratedSpeed.get().floatValue();
         return 0f;
     }
 

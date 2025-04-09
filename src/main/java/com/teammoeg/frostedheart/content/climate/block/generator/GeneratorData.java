@@ -102,7 +102,7 @@ public class GeneratorData implements SpecialData {
 
 		@Override
 		public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
-			if(slot==OUTPUT_SLOT)
+			if(slot==INPUT_SLOT)
 				return ItemStack.EMPTY;
 			return super.extractItem(slot, amount, simulate);
 		}
@@ -259,6 +259,11 @@ public class GeneratorData implements SpecialData {
             if (heated > 0) {
                 if (world.random.nextFloat() < heatChance * 2) {
                     heated--;
+                }
+            }
+            if (ranged >0) {
+            	if (world.random.nextFloat() < heatChance * 2) {
+            		ranged --;
                 }
             }
         }
