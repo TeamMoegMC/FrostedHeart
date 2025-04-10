@@ -24,6 +24,7 @@ import java.util.Map;
 
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.menu.CBaseMenu;
+import com.teammoeg.chorda.menu.CBaseMenu.QuickMoveStackBuilder;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.chorda.menu.slots.ArmorSlot;
@@ -47,8 +48,14 @@ public class ClothesInventoryMenu extends CBaseMenu {
 		this(id, inventoryPlayer);
 	}
 
+	@Override
+	public QuickMoveStackBuilder defineQuickMoveStack() {
+
+		return QuickMoveStackBuilder.first(0,2).then(3,5).then(5,16).then(2);
+	}
+
 	public ClothesInventoryMenu(int id, Inventory inventoryPlayer) {
-		super(FHMenuTypes.CLOTHES_GUI.get(), id, inventoryPlayer.player, 14);
+		super(FHMenuTypes.CLOTHES_GUI.get(), id, inventoryPlayer.player, 16);
 		PlayerTemperatureData ptd = PlayerTemperatureData.getCapability(inventoryPlayer.player).resolve().get();
 		createLiningSlots(inventoryPlayer,ptd);
 		//for(BodyPart bp:BodyPart.values()) {

@@ -39,10 +39,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
-import net.minecraft.world.level.ClipContext.Fluid;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BucketPickup;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
@@ -74,26 +75,11 @@ public class DrinkContainerItem extends ItemFluidContainer {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        BlockHitResult ray = Item.getPlayerPOVHitResult(level, player, Fluid.SOURCE_ONLY);
+    	BlockHitResult ray = Item.getPlayerPOVHitResult(level, player, ClipContext.Fluid.SOURCE_ONLY);
 		ItemStack cur=player.getItemInHand(hand);
 		if (ray.getType() == Type.BLOCK) {
 			BlockPos blockpos = ray.getBlockPos();
-			//FluidState state = level.getFluidState(blockpos);
-			//BlockState blk=level.getBlockState(blockpos);
-			/*if(blk.getBlock() instanceof BucketPickup bucket) {
-				IFluidHandlerItem handler=cur.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
-				if(handler!=null) {
-					FluidStack fluid=handler.getFluidInTank(0);
-					if(!fluid.isEmpty()&&fluid.getAmount()<handler.getTankCapacity(0)&&fluid.getFluid().isSame(state.getType())) {
-						int amt=handler.fill(new FluidStack(state.getType(),FluidType.BUCKET_VOLUME),FluidAction.EXECUTE);
-						if(amt>0) {
-							bucket.pickupBlock(level, blockpos, blk);
-							return InteractionResultHolder.sidedSuccess(cur,level.isClientSide);
-						}
-					}
-				}
-			}*/
-			FluidActionResult res=FluidUtil.tryPickUpFluid(cur, player, level, blockpos,ray.getDirection());
+			FluidActionResult res=CUtils.pickupFluidFromWorld(cur, player, level, blockpos,ray.getDirection(),true);
 			if(res.isSuccess()) {
 				ItemStack result=res.getResult();
 				//player.setItemInHand(hand, result);
@@ -102,9 +88,11 @@ public class DrinkContainerItem extends ItemFluidContainer {
 
             // if failed at picking up, empty the fluid inside if shift
             if (player.isShiftKeyDown()) {
-                cur.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(handler -> {
+            	IFluidHandlerItem handler=cur.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
+            	if(handler!=null ) {
                     handler.drain(capacity, FluidAction.EXECUTE);
-                });
+                    return InteractionResultHolder.sidedSuccess(handler.getContainer(), level.isClientSide);
+                }
             }
         }
 		

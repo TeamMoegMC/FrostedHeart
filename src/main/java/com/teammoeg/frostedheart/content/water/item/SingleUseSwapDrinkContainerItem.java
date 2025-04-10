@@ -36,13 +36,13 @@ public abstract class SingleUseSwapDrinkContainerItem extends SingleUseDrinkCont
 
 			@Override
 			public @NotNull FluidStack drain(FluidStack resource, FluidAction action) {
-				if(resource.getAmount()!=this.capacity)return FluidStack.EMPTY;
+				if(resource.getAmount()<this.capacity)return FluidStack.EMPTY;
 				return super.drain(resource, action);
 			}
 
 			@Override
 			public @NotNull FluidStack drain(int maxDrain, FluidAction action) {
-				if(maxDrain!=this.capacity)return FluidStack.EMPTY;
+				if(maxDrain<this.capacity)return FluidStack.EMPTY;
 				return super.drain(maxDrain, action);
 			}
 			
