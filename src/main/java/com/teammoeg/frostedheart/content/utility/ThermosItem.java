@@ -59,7 +59,7 @@ public class ThermosItem extends DurableDrinkContainerItem implements ITempAdjus
     final boolean doAddItems;
 
     public ThermosItem(int capacity, boolean add) {
-        super(new Properties().stacksTo(1).setNoRepair().durability(capacity).food(new FoodProperties.Builder().nutrition(1).saturationMod(1).build()), capacity);
+        super(new Properties().stacksTo(1).setNoRepair().durability(capacity), capacity);
         doAddItems = add;
     }
 
