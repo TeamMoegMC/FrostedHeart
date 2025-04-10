@@ -160,13 +160,18 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
         this.maxIntake = maxIntake;
     }
 
-    public HeatEndpoint(float maxOutput, float maxIntake) {
-        this.priority = 0;
+    private HeatEndpoint(int priority,float maxOutput, float maxIntake,int capacityRatio) {
+        this.priority = priority;
         this.capacity = 4 * Math.max(maxIntake, maxOutput);
         this.maxOutput = maxOutput;
         this.maxIntake = maxIntake;
     }
-
+    public static HeatEndpoint consumer(int priority,float maxIntake) {
+    	return new HeatEndpoint(priority,0,maxIntake,4);
+    }
+    public static HeatEndpoint provider(int priority,float maxOutput) {
+    	return new HeatEndpoint(priority,maxOutput,0,1);
+    }
     /**
      * Receive connection from network.
      *

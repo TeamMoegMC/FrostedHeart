@@ -40,7 +40,7 @@ import static net.minecraft.ChatFormatting.GRAY;
 
 public class RadiatorState extends HeatingState implements HeatNetworkProvider, IHaveGoggleInformation {
 
-    HeatEndpoint network = new HeatEndpoint(100, 100, 0, 4);
+    HeatEndpoint network = HeatEndpoint.consumer(100, 4);
     StoredCapability<HeatEndpoint> heatCap=new StoredCapability<>(network);
     @Override
     public void readSaveNBT(CompoundTag nbt) {

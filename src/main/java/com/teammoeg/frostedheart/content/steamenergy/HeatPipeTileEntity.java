@@ -47,8 +47,14 @@ public class HeatPipeTileEntity extends CPipeBlockEntity implements NetworkConne
     }
 
     @Override
+	public void onRemoved() {
+		super.onRemoved();
+		networkHandler.onBlockRemoved();
+	}
+
+	@Override
     public boolean canConnectTo(Direction to) {
-        return this.getState().getValue(CPipeBlock.PROPERTY_BY_DIRECTION.get(to));
+        return this.getBlockState().getValue(CPipeBlock.PROPERTY_BY_DIRECTION.get(to));
     }
 	@Override
 	public void setNetwork(HeatNetwork network) {

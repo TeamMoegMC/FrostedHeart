@@ -276,10 +276,11 @@ public class GeneratorData implements SpecialData {
     }
     private static final Style WARN_STYLE=Style.EMPTY.withColor(ChatFormatting.RED).withBold(true);
     public boolean tickFuelProcess(Level w,SpecialDataHolder<?> teamData) {
-        if (!isWorking || isBroken)
-            return false;
+
         boolean hasFuel = true;
         int lastOverdrive=overdriveLevel;
+        if (!isWorking || isBroken)
+            return false;
         overdriveLevel -= 5 * (teamData.getData(FRSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER) + 1);
         boolean isWorking=false;
         	
@@ -287,15 +288,16 @@ public class GeneratorData implements SpecialData {
             while (process <= 1 && hasFuel) {
                 hasFuel = consumesFuel(w,teamData);
             }
-            overdriveLevel += 20;
-            if(overdriveLevel<0)
-            	overdriveLevel=0;
-            if (overdriveLevel >= this.getMaxOverdrive()) {
-                isBroken = true;
-            }
+           
             if (process > 1) {
                 process -= 2;
                 isWorking=true;
+                overdriveLevel += 20;
+                if(overdriveLevel<0)
+                	overdriveLevel=0;
+                if (overdriveLevel >= this.getMaxOverdrive()) {
+                    isBroken = true;
+                }
             }
 
 

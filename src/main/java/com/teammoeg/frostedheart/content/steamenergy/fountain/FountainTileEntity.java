@@ -60,7 +60,7 @@ public class FountainTileEntity extends CBlockEntity implements CTickableBlockEn
     private static final UUID WARMTH_EFFECT_UUID = UUID.fromString("95c1f024-8f3a-4828-aaa7-a86733cffbf2");
     private static final float POWER_CAP = 400;
     private static final float REFILL_THRESHOLD = 200;
-    HeatEndpoint network = new HeatEndpoint(10, 10, 0, 1);
+    HeatEndpoint network = HeatEndpoint.consumer(10, 1);;
     LazyOptional<HeatEndpoint> heatcap = LazyOptional.of(() -> network);
     private float power = 0;
     private boolean refilling = false;

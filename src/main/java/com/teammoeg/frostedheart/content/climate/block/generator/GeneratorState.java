@@ -45,7 +45,7 @@ public class GeneratorState extends HeatingState {
 		this.hasFuel = hasFuel;
 	}
 
-	public HeatEndpoint ep = new HeatEndpoint(200, 0);
+	public HeatEndpoint ep = HeatEndpoint.provider(0,200);
     public GeneratorState() {
         super();
     }

@@ -73,7 +73,7 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity {
     private double temperatureModifier = 0;
 
     /** Tile data, stored in tile entity. */
-    HeatEndpoint endpoint = new HeatEndpoint(99, 10, 0, 1);
+    HeatEndpoint endpoint = HeatEndpoint.consumer(99, 1);
 
     public HouseBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.HOUSE.get(),pos,state);

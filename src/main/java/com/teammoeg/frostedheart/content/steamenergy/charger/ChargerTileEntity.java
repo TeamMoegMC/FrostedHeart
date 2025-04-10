@@ -67,7 +67,7 @@ public class ChargerTileEntity extends CBlockEntity implements CTickableBlockEnt
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
-    HeatEndpoint network = new HeatEndpoint(-10, 200, 0, 5);
+    HeatEndpoint network =HeatEndpoint.consumer(-10, 5);
     float power;
     LazyOptional<HeatEndpoint> heatcap = LazyOptional.of(() -> network);
 
@@ -127,8 +127,10 @@ public class ChargerTileEntity extends CBlockEntity implements CTickableBlockEnt
         if (is != null) {
             LazyOptional<HeatStorageCapability> cap=FHCapabilities.ITEM_HEAT.getCapability(is);
             if (cap.isPresent()) {
-                power -= cap.resolve().get().receiveEnergy(power, false);
-                drawEffect();
+                float actual= cap.resolve().get().receiveEnergy(power, false);
+                power -=actual;
+                if(actual>0)
+                	drawEffect();
                 return InteractionResult.SUCCESS;
             }
             ChargerRecipe cr = findRecipe(is);

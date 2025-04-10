@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.pipe;
 
+import com.teammoeg.chorda.block.entity.CBlockEntity;
+
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,7 +28,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-public abstract class CPipeBlockEntity extends IEBaseBlockEntity{
+public abstract class CPipeBlockEntity extends CBlockEntity{
 
 	public CPipeBlockEntity(BlockEntityType<? extends BlockEntity> type, BlockPos l, BlockState state) {
 		super(type,l,state);

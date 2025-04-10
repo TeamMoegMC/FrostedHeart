@@ -51,7 +51,7 @@ import java.util.List;
 import static net.minecraft.ChatFormatting.GRAY;
 
 public class HeatIncubatorTileEntity extends IncubatorTileEntity implements HeatNetworkProvider, IHaveGoggleInformation {
-    HeatEndpoint network = new HeatEndpoint(10, 80, 0, 5);
+    HeatEndpoint network = HeatEndpoint.consumer(10, 5);
 
     public HeatIncubatorTileEntity(BlockPos bp,BlockState bs) {
         super(FHBlockEntityTypes.INCUBATOR2.get(),bp,bs);

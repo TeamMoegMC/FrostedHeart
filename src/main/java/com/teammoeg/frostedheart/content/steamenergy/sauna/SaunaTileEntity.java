@@ -86,7 +86,7 @@ public class SaunaTileEntity extends CBlockEntity implements CTickableBlockEntit
     protected NonNullList<ItemStack> inventory;
     Set<BlockPos> floor = new HashSet<>();
     Set<BlockPos> edges = new HashSet<>();
-    HeatEndpoint network = new HeatEndpoint(10, 10, 0, 1);
+    HeatEndpoint network = HeatEndpoint.consumer(10, 1);;
     LazyOptional<HeatEndpoint> heatcap = LazyOptional.of(() -> network);
     private int remainTime = 0;
     private int maxTime = 0;

@@ -47,7 +47,6 @@ import java.util.*;
 
 import javax.annotation.Nullable;
 
-// TODO: Auto-generated Javadoc
 /**
  * Class HeatProviderManager.
  * <p>
@@ -430,7 +429,18 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         // Retrieve heat from the endpoints
         float accumulated = 0;
         totalEndpointOutput = 0;
-        endpoints.removeIf(t->!t.isPresent());
+        endpoints.removeIf(t->{
+        	if(t.isPresent()) {
+        		HeatEndpoint ep=t.resolve().get();
+        		if(ep.network!=this) {
+        			if(ep.network==null||!ep.network.isValid())
+        				ep.network=this;
+        			else return true;
+        		}
+        	}else return true;
+        	return false;
+        	
+        });
         for (LazyOptional<HeatEndpoint> lep : endpoints) {
         	HeatEndpoint endpoint=lep.orElse(null);
         	if(endpoint!=null)
@@ -442,7 +452,8 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
 	                tlevel = Math.max(endpoint.getTempLevel(), tlevel);
 	                // update display data
 	                endpoint.output = provided;
-	            }
+	            }else
+	            	endpoint.output=0;
         }
 
         totalEndpointOutput = accumulated;

@@ -67,7 +67,7 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity {
     @Getter
     private double temperature;
     private Map<String, Integer> decorations;
-    HeatEndpoint endpoint = new HeatEndpoint(99,10, 0, 1);
+    HeatEndpoint endpoint = HeatEndpoint.consumer(99, 1);
     LazyOptional<HeatEndpoint> endpointCap = LazyOptional.of(()-> endpoint);
     private double temperatureModifier = 0;
     //get max resident

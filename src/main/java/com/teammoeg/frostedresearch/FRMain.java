@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.teammoeg.chorda.CompatModule;
+import com.teammoeg.frostedresearch.compat.CreateCompat;
 import com.teammoeg.frostedresearch.compat.ftb.FRRewardTypes;
 import com.teammoeg.frostedresearch.compat.ftb.FTBTeamsEvents;
 import com.teammoeg.frostedresearch.compat.tetra.TetraCompat;
@@ -36,6 +37,8 @@ public class FRMain {
         	FRRewardTypes.init();
         if(CompatModule.isFTBTLoaded())
         	FTBTeamsEvents.init();
+        if(CompatModule.isCreateLoaded())
+        	CreateCompat.init();
         
 	}
 	public static ResourceLocation rl(String path) {

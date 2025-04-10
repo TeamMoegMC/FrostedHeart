@@ -34,7 +34,6 @@ public class ConnectorNetworkRevalidator<T extends BlockEntity&NetworkConnector>
 	 * Current connected network
 	 * */
 	@Getter
-	@Setter
 	private HeatNetwork network;
 	
 	private int revalidateTick;
@@ -50,13 +49,24 @@ public class ConnectorNetworkRevalidator<T extends BlockEntity&NetworkConnector>
 		super();
 		this.current = current;
 	}
+	public void setNetwork(HeatNetwork newNetwork) {
+		if(newNetwork==null) {
+			network=null;
+			return;
+		}
+		HeatNetwork oldNetwork=network;
+		network=newNetwork;
+		if(oldNetwork!=null&&oldNetwork.isValid()&&oldNetwork!=newNetwork) {//properly detach the old network
+			oldNetwork.requestUpdate();//detach the old network
+		}
+	}
 
 	/**
 	 * Tick.
 	 */
 	public void tick() {
 		if(network!=null&&!network.isValid())
-			network=null;
+			setNetwork(null);
 		if(network!=null)
 			if(++revalidateTick>=10) {
 				network.refreshConnectedEndpoints(current.getBlockPos());
@@ -75,9 +85,12 @@ public class ConnectorNetworkRevalidator<T extends BlockEntity&NetworkConnector>
         if (isConnect)
         	network.startConnectionFromBlock(current, face);
         else
-            network.requestUpdate();
+            network.requestUpdate();//always request an full update because we don't track route
 	}
-	
+	public void onBlockRemoved() {
+		if(network!=null)
+		network.requestUpdate();
+	}
 	/**
 	 * Checks for network.
 	 *

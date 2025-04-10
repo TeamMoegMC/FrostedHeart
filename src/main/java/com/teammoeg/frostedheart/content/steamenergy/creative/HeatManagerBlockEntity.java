@@ -43,7 +43,7 @@ public class HeatManagerBlockEntity extends HeatBlockEntity implements NetworkCo
                 manager.connectTo(level, worldPosition.relative(d),getBlockPos(), d.getOpposite());
             }
         });
-        endpoint = new HeatEndpoint(-1, Integer.MAX_VALUE, Integer.MAX_VALUE, 0);
+        endpoint = HeatEndpoint.provider(-1, Integer.MAX_VALUE);
         heatcap = LazyOptional.of(() -> endpoint);
     }
 
