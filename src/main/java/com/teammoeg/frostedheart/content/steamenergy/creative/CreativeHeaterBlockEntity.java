@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -63,7 +64,13 @@ public class CreativeHeaterBlockEntity extends HeatManagerBlockEntity {
         endpoint.setMaxOutput(generatedHeat.getValue());
     }
 
-    class HeaterValueBox extends ValueBoxTransform.Sided {
+    @Override
+	protected void read(CompoundTag tag, boolean clientPacket) {
+		super.read(tag, clientPacket);
+		endpoint.setMaxOutput(generatedHeat.getValue());
+	}
+
+	class HeaterValueBox extends ValueBoxTransform.Sided {
 
         @Override
         protected Vec3 getSouthLocation() {

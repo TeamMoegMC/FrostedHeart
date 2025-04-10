@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.chorda.client.cui.CUIScreenManager;
 import com.teammoeg.chorda.client.cui.Layer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;

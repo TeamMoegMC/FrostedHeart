@@ -88,7 +88,7 @@ public class T2GeneratorState extends GeneratorState implements HeatNetworkProvi
 
     @Override
     public @Nullable HeatNetwork getNetwork() {
-        return manager;
+        return ep.getNetwork();
     }
 
     @Override
