@@ -25,6 +25,7 @@ import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.chorda.CompatModule;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedheart.compat.ie.FHManual;
 import com.teammoeg.frostedheart.compat.tetra.TetraClient;
 import com.teammoeg.frostedheart.content.climate.particle.SnowParticle;
@@ -254,7 +255,7 @@ public class FHClientEventsMod {
 			if(idx==1) {
 	
 			FluidStack stack=a.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).map(t->t.getFluidInTank(0)).get();
-			return stack.isEmpty()?0xff733f31:IClientFluidTypeExtensions.of(stack.getFluid()).getTintColor(stack);
+			return stack.isEmpty()?0xff733f31:CGuiHelper.getFluidColor(stack)
 				}else return -1;
 			}, FHItems.ceramic_bucket.asItem());
 		
