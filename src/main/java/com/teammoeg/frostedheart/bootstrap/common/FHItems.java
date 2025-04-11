@@ -1540,14 +1540,6 @@ thinner.png
             .register();
     public static ItemEntry<WoodenCupItem> wooden_cup = REGISTRATE
             .item("wooden_cup", p -> new WoodenCupItem(new Item.Properties(), 250)
-            /* TODO: @yuqijun I can't add this somehow. Any other way to avoid this kind of definition?
-             {
-                @Override
-                public ICapabilityProvider initCapabilities(@Nonnull ItemStack stack, @Nullable CompoundTag nbt) {
-                    return super.initCapabilities(new ItemStack(wooden_cup_drink.get()), nbt);
-                }
-            }
-             */
             )
             .model(AssetLookup.existingItemModel())
             .lang("Wooden Cup")
@@ -1556,6 +1548,7 @@ thinner.png
             .item("wooden_cup_drink", p -> new WoodenCupItem(new Item.Properties().stacksTo(1), 250))
             .model(AssetLookup.existingItemModel())
             .lang("Wooden Cup With Drink")
+            .removeTab(FHTabs.TOOLS.getKey())
             .register();
     public static ItemEntry<LeatherWaterBagItem> LEATHER_WATER_BAG = REGISTRATE
             .item("leather_water_bag", p -> new LeatherWaterBagItem(new Item.Properties().stacksTo(1).setNoRepair(), 1500))

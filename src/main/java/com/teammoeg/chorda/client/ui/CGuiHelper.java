@@ -19,11 +19,16 @@
 
 package com.teammoeg.chorda.client.ui;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
+import javax.imageio.ImageIO;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.widget.IconButton;
@@ -50,15 +55,21 @@ import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.client.ForgeRenderTypes;
+import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
+import net.minecraftforge.fluids.FluidStack;
 
 /**
  * Convenience functions for gui rendering
@@ -472,6 +483,37 @@ public class CGuiHelper {
 	}
 	public static void drawUISlot(GuiGraphics graphics,int x,int y,int w,int h) {
 		graphics.blitNineSliced(RECIPE_BOOK_LOCATION, x, y, w, h, 2, 24, 24, 29, 206);
+	}
+	public static int getFluidColor(FluidStack fluid) {
+		IClientFluidTypeExtensions ext=IClientFluidTypeExtensions.of(fluid.getFluid());
+		int tint=ext.getTintColor(fluid);
+		if((tint&0xffffff)!=0xffffff) {
+			return tint;
+		}
+		TextureAtlasSprite sprite = Minecraft.getInstance().getModelManager().getAtlas(InventoryMenu.BLOCK_ATLAS)
+			.getSprite(ext.getStillTexture(fluid));
+		int abgr=sprite.getPixelRGBA(0, 0, 0);
+		return FastColor.ARGB32.color(FastColor.ABGR32.alpha(abgr),FastColor.ABGR32.red(abgr),FastColor.ABGR32.green(abgr),FastColor.ABGR32.blue(abgr));
+	}
+	private static Map<Fluid,Integer> fluidColor=new HashMap<>();
+	public static int getColorReadingTexture(FluidStack fluid) {
+		Integer color=fluidColor.get(fluid.getFluid());
+		if(color!=null)return color;
+		IClientFluidTypeExtensions ext=IClientFluidTypeExtensions.of(fluid.getFluid());
+		TextureAtlasSprite sprite = Minecraft.getInstance().getModelManager().getAtlas(InventoryMenu.BLOCK_ATLAS)
+			.getSprite(ext.getStillTexture(fluid));
+		int realcolor=getColorReadingTexture(sprite);
+		return realcolor;
+	}
+	public static int getColorReadingTexture(TextureAtlasSprite sprite) {
+		return Minecraft.getInstance().getResourceManager().getResource(sprite.atlasLocation()).map(t->{
+			try(InputStream i=t.open()){
+				return ImageIO.read(i).getRGB(sprite.getX(), sprite.getY());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}return 0xffffffff;
+			
+		}).orElse(0xffffffff);
 	}
 	public static void blitNineSliced(GuiGraphics graphics,ResourceLocation pAtlasLocation, int pTargetX, int pTargetY, int pTargetWidth, int pTargetHeight, int pCorner, int pSourceWidth, int pSourceHeight, int pSourceX, int pSourceY,int textureWidth,int textureHeight) {
 		blitNineSliced(graphics,pAtlasLocation,pTargetX,pTargetY,pTargetWidth,pTargetHeight,pCorner,pCorner,pCorner,pCorner,pSourceWidth,pSourceHeight,pSourceX,pSourceY,textureWidth,textureHeight);

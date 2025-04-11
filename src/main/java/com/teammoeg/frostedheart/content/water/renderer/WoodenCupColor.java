@@ -19,9 +19,11 @@
 
 package com.teammoeg.frostedheart.content.water.renderer;
 
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedheart.content.water.util.FluidHelper;
 import net.minecraft.client.color.item.ItemColor;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraftforge.fluids.FluidUtil;
 
 
@@ -29,7 +31,7 @@ public class WoodenCupColor implements ItemColor {
     @Override
     public int getColor(ItemStack itemStack, int tintIndex) {
         if (tintIndex == 1) {
-            int color = FluidUtil.getFluidHandler(itemStack).map(h -> h.getFluidInTank(0).getFluid()).map(FluidHelper::getColor).get();
+            int color = FluidUtil.getFluidHandler(itemStack).map(h -> h.getFluidInTank(0)).map(CGuiHelper::getFluidColor).get();
             if (color == 0) {
                 return -1;
             }

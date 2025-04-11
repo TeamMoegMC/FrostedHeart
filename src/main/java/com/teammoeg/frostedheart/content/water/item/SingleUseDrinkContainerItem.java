@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.content.water.item;
 
+import javax.annotation.Nonnull;
+
 import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.nbt.CompoundTag;
@@ -17,7 +19,10 @@ public class SingleUseDrinkContainerItem extends DrinkContainerItem {
     @Override
 	public ICapabilityProvider initCapabilities(ItemStack stack, CompoundTag nbt) {
 		return new FluidHandlerItemStack(stack,super.capacity) {
-
+			@Override
+            public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
+                return isValidFluid(stack);
+            }
 			@Override
 			public int fill(FluidStack resource, FluidAction doFill) {
 				if(resource.getAmount()!=this.capacity)return 0;

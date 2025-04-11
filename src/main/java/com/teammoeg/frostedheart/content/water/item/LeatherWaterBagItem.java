@@ -19,9 +19,16 @@
 
 package com.teammoeg.frostedheart.content.water.item;
 
+import net.minecraftforge.fluids.FluidStack;
+
 public class LeatherWaterBagItem extends DurableDrinkContainerItem{
     public LeatherWaterBagItem( Properties properties, int capacity) {
         super(properties, capacity);
     }
+    @Override
+	public boolean isValidFluid(FluidStack stack) {
+
+		return super.isValidFluid(stack)&&stack.getFluid().getFluidType().getTemperature()<500&&!stack.getFluid().getFluidType().isLighterThanAir();
+	}
 
 }

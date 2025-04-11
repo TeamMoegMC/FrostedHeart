@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.content.water.item;
 
+import javax.annotation.Nonnull;
+
 import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.nbt.CompoundTag;
@@ -20,7 +22,10 @@ public abstract class SingleUseSwapDrinkContainerItem extends SingleUseDrinkCont
 	@Override
 	public ICapabilityProvider initCapabilities(ItemStack stack, CompoundTag nbt) {
 		return new FluidHandlerItemStack.SwapEmpty(stack,getContainerItem(),super.capacity) {
-
+			@Override
+            public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
+                return isValidFluid(stack);
+            }
 			@Override
 			protected void setFluid(FluidStack fluid) {
 				if(!fluid.isEmpty())

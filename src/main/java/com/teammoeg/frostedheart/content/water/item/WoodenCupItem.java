@@ -20,6 +20,8 @@
 package com.teammoeg.frostedheart.content.water.item;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
@@ -32,6 +34,12 @@ public class WoodenCupItem extends SingleUseSwapDrinkContainerItem {
     }
 
     @Override
+	public boolean isValidFluid(FluidStack stack) {
+
+		return super.isValidFluid(stack)&&stack.getFluid().is(FHTags.Fluids.WOODEN_CUP_DRINK.tag);
+	}
+
+	@Override
     public Component getName(ItemStack stack) {
         IFluidHandlerItem fluidHandlerItem =  stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
         FluidStack fluidStack = fluidHandlerItem.getFluidInTank(0);

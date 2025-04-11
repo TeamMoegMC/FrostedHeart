@@ -167,11 +167,13 @@ public class DrinkContainerItem extends ItemFluidContainer {
         return new FluidHandlerItemStack(stack, this.capacity) {
 			@Override
             public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
-                return stack.getFluid().is(FHTags.Fluids.DRINK.tag);
+                return isValidFluid(stack);
             }
         };
     }
-
+    public boolean isValidFluid(FluidStack stack) {
+    	return stack.getFluid().is(FHTags.Fluids.DRINK.tag);
+    }
     @Override
     public void appendHoverText(ItemStack itemStack, @Nullable Level level, List<Component> components, TooltipFlag tooltipFlag) {
         super.appendHoverText(itemStack, level, components, tooltipFlag);

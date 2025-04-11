@@ -19,14 +19,18 @@
 
 package com.teammoeg.frostedheart.content.water.item;
 
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 
-import com.teammoeg.frostedheart.bootstrap.common.FHItems;
-
-import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.fluids.FluidStack;
 
 public class IronBottleItem extends DurableDrinkContainerItem{
     public IronBottleItem(Properties properties, int capacity) {
         super(properties, capacity);
     }
+    @Override
+	public boolean isValidFluid(FluidStack stack) {
+
+		return super.isValidFluid(stack)&&stack.getFluid().is(FHTags.Fluids.IRON_CUP_DRINK.tag);
+	}
 
 }

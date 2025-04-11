@@ -400,7 +400,10 @@ public class CUtils {
 				targetFluidHandler = new BucketPickupHandlerWrapper((BucketPickup) block, level, pos);
 			} else return FluidActionResult.FAILURE;
 		}
-		return FluidUtil.tryFillContainer(emptyContainer, targetFluidHandler, Integer.MAX_VALUE, playerIn, true);
+		FluidActionResult result=FluidUtil.tryFillContainer(emptyContainer, targetFluidHandler, Integer.MAX_VALUE, playerIn, true);
+		if(result.success)
+			emptyContainer.shrink(1);
+		return result;
 	}
 
 }

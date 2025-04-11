@@ -331,7 +331,9 @@ public class FHTags {
 	public enum Fluids {
 		DRINK(false),
 		HIDDEN_DRINK(false),
-		FLAMMABLE_FLUID(false)
+		FLAMMABLE_FLUID(false),
+		WOODEN_CUP_DRINK(false),
+		IRON_CUP_DRINK(false)
 		;
 
 		public final TagKey<Fluid> tag;
