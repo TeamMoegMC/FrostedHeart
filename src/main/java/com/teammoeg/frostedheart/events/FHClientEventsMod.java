@@ -255,7 +255,7 @@ public class FHClientEventsMod {
 			if(idx==1) {
 	
 			FluidStack stack=a.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).map(t->t.getFluidInTank(0)).get();
-			return stack.isEmpty()?0xff733f31:CGuiHelper.getFluidColor(stack)
+			return stack.isEmpty()?0xff733f31:CGuiHelper.getFluidColor(stack);
 				}else return -1;
 			}, FHItems.ceramic_bucket.asItem());
 		
