@@ -28,7 +28,6 @@ public class ChordaClientRegistry {
 	}
 	@SubscribeEvent
 	public static void onCreativeTabContents(BuildCreativeModeTabContentsEvent event) {
-		System.out.println("Filling tab "+event.getTabKey());
 		CreativeTabItemHelper helper = new CreativeTabItemHelper(event.getTabKey());
 		ForgeRegistries.ITEMS.forEach(e -> {
 			if (e instanceof ICreativeModeTabItem item) {

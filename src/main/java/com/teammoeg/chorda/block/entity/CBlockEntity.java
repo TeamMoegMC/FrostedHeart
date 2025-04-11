@@ -149,7 +149,7 @@ public abstract class CBlockEntity extends BlockEntity implements SyncableBlockE
 	}
 	@Override
 	public void setBlock(BlockState state) {
-		this.level.setBlock(this.worldPosition, state, 4);
+		this.level.setBlock(this.worldPosition, state, 6);
 		this.setBlockState(state);
 		
 	}

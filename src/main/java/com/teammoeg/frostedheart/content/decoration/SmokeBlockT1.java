@@ -38,7 +38,7 @@ public class SmokeBlockT1 extends CBlock {
         super.animateTick(stateIn, worldIn, pos, rand);
         for (int i = 0; i < rand.nextInt(2) + 2; ++i) {
             ClientUtils.spawnSmokeParticles(worldIn, pos.above());
-            ClientUtils.spawnFireParticles(worldIn, pos.above());
+            ClientUtils.spawnFireParticles2(worldIn, pos.above());
         }
     }
 }

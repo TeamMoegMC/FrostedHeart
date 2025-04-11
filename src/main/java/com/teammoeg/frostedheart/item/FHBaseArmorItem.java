@@ -19,17 +19,27 @@
 
 package com.teammoeg.frostedheart.item;
 
+import java.util.function.Consumer;
+
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.ItemStack;
 
 public class FHBaseArmorItem extends ArmorItem implements ICreativeModeTabItem{
     public FHBaseArmorItem(ArmorMaterial materialIn, Type slot, Properties builderIn) {
         super(materialIn, slot, builderIn);
     }
+
+	@Override
+	public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
+		return super.damageItem(stack, amount, entity, onBroken);
+	}
 
 	@Override
 	public void fillItemCategory(CreativeTabItemHelper helper) {

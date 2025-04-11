@@ -67,7 +67,16 @@ public class ClientUtils {
     public static Minecraft mc() {
         return Minecraft.getInstance();
     }
-
+    public static void spawnFireParticles2(Level worldIn, BlockPos pos) {
+        RandomSource random = worldIn.getRandom();
+        // Upward flame
+        worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.25D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.25D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.01D, 0.0D);
+        // Side flame (4 directions)
+        worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.25D + random.nextDouble() / 2, pos.getY() + 0.4D, pos.getZ() + 0.25D + random.nextDouble() / 2, 0.01D, 0D, 0.0D);
+        worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.25D + random.nextDouble() / 2, pos.getY() + 0.4D, pos.getZ() + 0.25D + random.nextDouble() / 2, -0.01D, 0D, 0.0D);
+        worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.25D + random.nextDouble() / 2, pos.getY() + 0.4D, pos.getZ() + 0.25D + random.nextDouble() / 2, 0.0D, 0D, 0.01D);
+        worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.25D + random.nextDouble() / 2, pos.getY() + 0.4D, pos.getZ() + 0.25D + random.nextDouble() / 2, 0.0D, 0D, -0.01D);
+    }
     public static void spawnFireParticles(Level worldIn, BlockPos pos) {
         RandomSource random = worldIn.getRandom();
         // Upward flame

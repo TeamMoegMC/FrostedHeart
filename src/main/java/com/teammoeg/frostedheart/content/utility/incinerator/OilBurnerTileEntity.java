@@ -59,7 +59,8 @@ public class OilBurnerTileEntity extends CBlockEntity implements IActiveState, C
     }
 
     @Override
-    public void readCustomNBT(CompoundTag nbt, boolean dp) {
+    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
+    	if(!descPacket)
         input.readFromNBT(nbt.getCompound("in"));
         vals = nbt.getInt("burntick");
     }
@@ -101,8 +102,10 @@ public class OilBurnerTileEntity extends CBlockEntity implements IActiveState, C
             if (drained >= 5) {
                 vals = Math.min(vals + drained / 5, 100);
             }
-            if(vals>0)
+            if(vals>0) {
             	this.setChanged();
+            	//this.syncData();
+            }
             if (this.getIsActive()) {
                 vals--;
             } else if (vals > 20) {
@@ -115,7 +118,8 @@ public class OilBurnerTileEntity extends CBlockEntity implements IActiveState, C
     }
 
     @Override
-    public void writeCustomNBT(CompoundTag nbt, boolean dp) {
+    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
+    	if(!descPacket)
         nbt.put("in", input.writeToNBT(new CompoundTag()));
         nbt.putInt("burntick", vals);
     }

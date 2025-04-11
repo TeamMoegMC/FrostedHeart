@@ -59,7 +59,7 @@ public class OilBurnerBlock extends CBlock implements CEntityBlock<OilBurnerTile
         if (stateIn.getValue(LIT)) {
             for (int i = 0; i < rand.nextInt(2) + 2; ++i) {
                 ClientUtils.spawnSmokeParticles(worldIn, pos.above());
-                ClientUtils.spawnFireParticles(worldIn, pos.above());
+                ClientUtils.spawnFireParticles2(worldIn, pos.above());
             }
         }
     }
