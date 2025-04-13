@@ -147,7 +147,7 @@ public class FHFluids {
             .build()
             .register();
     public static final FluidEntry<VirtualFluid> LATEX = REGISTRATE.virtualColoredLiquid(
-            "latex", 0xFFFFD700)
+            "latex", 0xFAFDF300)
             .tag(FHTags.forgeFluidTag("latex"))
             .register();
     public static final FluidEntry<VirtualFluid> RESIN = REGISTRATE.virtualColoredLiquid(
