@@ -65,16 +65,9 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.food.Foods;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.ArmorItem.Type;
-import net.minecraft.world.item.ArmorMaterials;
-import net.minecraft.world.item.AxeItem;
-import net.minecraft.world.item.HoeItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.PickaxeItem;
-import net.minecraft.world.item.ShovelItem;
-import net.minecraft.world.item.SwordItem;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -1077,6 +1070,9 @@ thinner.png
     public static ItemEntry<Item> rye = REGISTRATE
             .item("rye", Item::new)
             .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> INULIN = REGISTRATE
+            .item("inulin", Item::new)
             .register();
     public static ItemEntry<Item> frozen_seeds = REGISTRATE
             .item("frozen_seeds", Item::new)

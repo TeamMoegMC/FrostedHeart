@@ -1,0 +1,13 @@
+{
+  "type": "frostedheart:plant_temp",
+  "blizzard_vulnerable": false,
+  "block": "frostedheart:rubber_dandelion",
+  "dead": "minecraft:dead_bush",
+  "max_fertilize": 22.0,
+  "max_grow": 26.0,
+  "max_survive": 30.0,
+  "min_fertilize": 14.0,
+  "min_grow": 6.0,
+  "min_survive": -20.0,
+  "snow_vulnerable": false
+}

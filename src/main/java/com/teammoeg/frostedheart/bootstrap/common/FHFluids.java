@@ -148,7 +148,16 @@ public class FHFluids {
             .register();
     public static final FluidEntry<VirtualFluid> LATEX = REGISTRATE.virtualColoredLiquid(
             "latex", 0xFAFDF300)
+            .properties(b -> b.viscosity(2000)
+                    .density(1400))
+            .fluidProperties(p -> p.levelDecreasePerBlock(2)
+                    .tickRate(25)
+                    .slopeFindDistance(3)
+                    .explosionResistance(100f))
             .tag(FHTags.forgeFluidTag("latex"))
+            .bucket()
+            .tag(AllTags.forgeItemTag("buckets/latex"))
+            .build()
             .register();
     public static final FluidEntry<VirtualFluid> RESIN = REGISTRATE.virtualColoredLiquid(
             "resin", 0xFF8B4513)

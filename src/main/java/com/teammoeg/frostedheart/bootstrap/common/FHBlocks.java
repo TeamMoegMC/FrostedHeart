@@ -36,6 +36,7 @@ import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.agriculture.RubberDandelionBlock;
 import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.ThinIceBlock;
@@ -75,6 +76,7 @@ import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.data.loot.packs.VanillaBlockLoot;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemNameBlockItem;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.*;
@@ -1108,6 +1110,15 @@ public class FHBlocks {
             .model(AssetLookup.existingItemModel())
             .build()
             .lang("White Turnip")
+            .register();
+    public static final BlockEntry<RubberDandelionBlock> RUBBER_DANDELION = REGISTRATE.block("rubber_dandelion",
+                    p -> new RubberDandelionBlock(FHProps.cropProps))
+            .blockstate(FHBlockStateGen.existed())
+            .loot(FHLootGen.existed())
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Rubber Root")
             .register();
 
     public static final BlockEntry<CooledMagmaBlock> COOLED_MAGMA_BLOCK = REGISTRATE.block("cooled_magma_block", CooledMagmaBlock::new)
