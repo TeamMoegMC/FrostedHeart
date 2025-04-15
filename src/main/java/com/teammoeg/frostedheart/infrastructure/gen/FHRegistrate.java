@@ -21,13 +21,10 @@ package com.teammoeg.frostedheart.infrastructure.gen;
 
 import com.simibubi.create.CreateClient;
 import com.simibubi.create.content.decoration.encasing.CasingConnectivity;
-import com.simibubi.create.content.fluids.VirtualFluid;
 import com.simibubi.create.foundation.block.connected.CTModel;
 import com.simibubi.create.foundation.block.connected.ConnectedTextureBehaviour;
 import com.simibubi.create.foundation.data.CreateBlockEntityBuilder;
 import com.simibubi.create.foundation.data.CreateEntityBuilder;
-import com.simibubi.create.foundation.data.CreateRegistrate;
-import com.simibubi.create.foundation.data.VirtualFluidBuilder;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.simibubi.create.foundation.utility.RegisteredObjects;
 import com.tterrag.registrate.AbstractRegistrate;
@@ -57,7 +54,9 @@ import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.fluids.ForgeFlowingFluid;
+import net.minecraftforge.fluids.ForgeFlowingFluid.Flowing;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import org.jetbrains.annotations.Nullable;
 
@@ -330,29 +329,31 @@ public class FHRegistrate extends AbstractRegistrate<FHRegistrate> {
     }
 
     // Virtual fluid with name-based textures
-    public FluidBuilder<VirtualFluid, FHRegistrate> virtualFluid(String name) {
+    public FluidBuilder<ForgeFlowingFluid.Flowing, FHRegistrate> virtualFluid(String name) {
         return entry(name,
-                c -> new SimpleFluidBuilder<VirtualFluid, FHRegistrate>(self(), self(), name, c,
+                c -> new SimpleFluidBuilder<ForgeFlowingFluid.Flowing, FHRegistrate>(self(), self(), name, c,
                         new ResourceLocation(getModid(), "fluid/" + name + "_still"),
                         new ResourceLocation(getModid(), "fluid/" + name + "_flow"),
-                        FHRegistrate::simpleFluidType, VirtualFluid::new)).defaultLang();
+                        FHRegistrate::simpleFluidType, ForgeFlowingFluid.Flowing::new)).defaultLang();
     }
 
     // Virtual fluid with custom textures
-    public FluidBuilder<VirtualFluid, FHRegistrate> virtualFluid(String name, ResourceLocation still, ResourceLocation flow) {
+    public FluidBuilder<ForgeFlowingFluid.Flowing, FHRegistrate> virtualFluid(String name, ResourceLocation still, ResourceLocation flow) {
         return entry(name, c -> new SimpleFluidBuilder<>(self(), self(), name, c, still, flow,
-                FHRegistrate::simpleFluidType, VirtualFluid::new)).defaultLang();
+                FHRegistrate::simpleFluidType, ForgeFlowingFluid.Flowing::new)).defaultLang();
     }
-
     // Virtual colored fluids
 
     // Cuation: you must set properties in this method due to registrate limitations
     // By default properties are empty except for the descriptionId
 
-    public FluidBuilder<VirtualFluid, FHRegistrate> virtualColoredFluid(String name, ResourceLocation still,
+    public SourceOnlyFluidBuilder<Flowing, FHRegistrate> virtualColoredFluid(String name, ResourceLocation still,
                                                                         ResourceLocation flow, int color, FluidType.Properties properties) {
+
+    			
+    	//Fxxking Stupid Registrate are stucked in registering its dumbass flowing fluid, making it incompatible sxxk
         return entry(name,
-                c -> new SimpleFluidBuilder<VirtualFluid, FHRegistrate>(self(), self(), name, c,
+                c -> new SourceOnlyFluidBuilder<ForgeFlowingFluid.Flowing, FHRegistrate>(self(), self(), name, c,
                         still, flow, () -> new FluidType(properties
                         .descriptionId(Util.makeDescriptionId("fluid", new ResourceLocation(getModid(), name)))) {
                     @Override
@@ -374,27 +375,27 @@ public class FHRegistrate extends AbstractRegistrate<FHRegistrate> {
                             }
                         });
                     }
-                }, VirtualFluid::new)).defaultLang();
+                }, ForgeFlowingFluid.Flowing::new)).defaultLang();
     }
 
-    public FluidBuilder<VirtualFluid, FHRegistrate> virtualColoredFluid(String name, ResourceLocation still,
+    public SourceOnlyFluidBuilder<Flowing, FHRegistrate> virtualColoredFluid(String name, ResourceLocation still,
                                                                         ResourceLocation flow, int color) {
         return virtualColoredFluid(name, still, flow, color, FluidType.Properties.create().descriptionId(Util.makeDescriptionId("fluid", new ResourceLocation(getModid(), name))));
     }
 
-    public FluidBuilder<VirtualFluid, FHRegistrate> virtualColoredWater(String name, int color,
+    public SourceOnlyFluidBuilder<ForgeFlowingFluid.Flowing, FHRegistrate> virtualColoredWater(String name, int color,
                                                                         FluidType.Properties properties) {
         return virtualColoredFluid(name, STILL, FLOW, color, properties);
     }
 
-    public FluidBuilder<VirtualFluid, FHRegistrate> virtualColoredWater(String name, int color) {
+    public SourceOnlyFluidBuilder<ForgeFlowingFluid.Flowing, FHRegistrate> virtualColoredWater(String name, int color) {
         return virtualColoredFluid(name, STILL, FLOW, color, FluidType.Properties.create().descriptionId(Util.makeDescriptionId("fluid", new ResourceLocation(getModid(), name))));
     }
 
-    public FluidBuilder<VirtualFluid, FHRegistrate> virtualColoredGas(String name, int color) {
+    public SourceOnlyFluidBuilder<ForgeFlowingFluid.Flowing, FHRegistrate> virtualColoredGas(String name, int color) {
         return virtualColoredFluid(name, STILL, FLOW, color, FluidType.Properties.create().density(-1000).descriptionId(Util.makeDescriptionId("fluid", new ResourceLocation(getModid(), name))));
     }
-    public FluidBuilder<VirtualFluid, FHRegistrate> virtualColoredLiquid(String name, int color) {
+    public SourceOnlyFluidBuilder<ForgeFlowingFluid.Flowing, FHRegistrate> virtualColoredLiquid(String name, int color) {
         return virtualColoredFluid(name, STILL, FLOW, color, FluidType.Properties.create().density(1000).descriptionId(Util.makeDescriptionId("fluid", new ResourceLocation(getModid(), name))));
     }
 

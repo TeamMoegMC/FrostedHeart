@@ -41,7 +41,7 @@ public class SimpleFluidBuilder<T extends ForgeFlowingFluid, P> extends FluidBui
                                ResourceLocation stillTexture, ResourceLocation flowingTexture, NonNullSupplier<FluidType> typeFactory,
                                NonNullFunction<ForgeFlowingFluid.Properties, T> factory) {
         super(owner, parent, name, callback, stillTexture, flowingTexture, typeFactory, factory);
-        source(factory);
+        //source(factory);
     }
 
     // Use typefactory
@@ -49,7 +49,7 @@ public class SimpleFluidBuilder<T extends ForgeFlowingFluid, P> extends FluidBui
                                ResourceLocation stillTexture, ResourceLocation flowingTexture, FluidBuilder.FluidTypeFactory typeFactory,
                                NonNullFunction<ForgeFlowingFluid.Properties, T> factory) {
         super(owner, parent, name, callback, stillTexture, flowingTexture, typeFactory, factory);
-        source(factory);
+        //source(factory);
     }
 
 

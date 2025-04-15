@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.bootstrap.common;
 import static com.teammoeg.frostedheart.FHMain.*;
 
 import com.simibubi.create.AllTags;
-import com.simibubi.create.content.fluids.VirtualFluid;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
@@ -52,80 +51,80 @@ public class FHFluids {
                             .density(-1000).viscosity(10).temperature(300).canConvertToSource(false))
             .register();
 
-    public static final FluidEntry<VirtualFluid> TEST3 = REGISTRATE.virtualColoredFluid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> TEST3 = REGISTRATE.virtualColoredFluid(
             "test3", DEFAULT_STILL_TEXTURE, DEFAULT_FLOWING_TEXTURE, 0xFF00FF00)
             .register();
 
-    public static final FluidEntry<VirtualFluid> RED_WATER = REGISTRATE.virtualColoredWater(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> RED_WATER = REGISTRATE.virtualColoredWater(
                     "red_water", 0xFFFF0000)
             .register();
 
-    public static final FluidEntry<VirtualFluid> GREEN_WATER = REGISTRATE.virtualColoredWater(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> GREEN_WATER = REGISTRATE.virtualColoredWater(
             "green_water", 0xFF00FF00)
             .register();
 
-    public static final FluidEntry<VirtualFluid> BLUE_WATER = REGISTRATE.virtualColoredWater(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> BLUE_WATER = REGISTRATE.virtualColoredWater(
             "blue_water", 0xFF0000FF)
             .register();
 
     // purple
-    public static final FluidEntry<VirtualFluid> PURPLE_WATER = REGISTRATE.virtualColoredWater(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> PURPLE_WATER = REGISTRATE.virtualColoredWater(
             "purple_water", 0xFF800080)
             .register();
 
-    public static final FluidEntry<VirtualFluid> FLUORINE = REGISTRATE.virtualColoredGas(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> FLUORINE = REGISTRATE.virtualColoredGas(
                     "fluorine", 0xFF00AA00)
             .tag(FHTags.forgeFluidTag("fluorine"))
             .register();
-    public static final FluidEntry<VirtualFluid> CHLORINE = REGISTRATE.virtualColoredGas(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> CHLORINE = REGISTRATE.virtualColoredGas(
             "chlorine", 0xFFADFF2F)
             .tag(FHTags.forgeFluidTag("chlorine"))
             .register();
-    public static final FluidEntry<VirtualFluid> STEAM = REGISTRATE.virtualColoredGas(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> STEAM = REGISTRATE.virtualColoredGas(
             "steam", 0xFFFFFFFF)
             .tag(FHTags.forgeFluidTag("steam"))
             .register();
-    public static final FluidEntry<VirtualFluid> SO2 = REGISTRATE.virtualColoredGas(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> SO2 = REGISTRATE.virtualColoredGas(
             "sulfur_dioxide", 0xFFEEE888)
             .tag(FHTags.forgeFluidTag("sulfur_dioxide"))
             .register();
-    public static final FluidEntry<VirtualFluid> FERROUS_CHLORIDE = REGISTRATE.virtualColoredLiquid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> FERROUS_CHLORIDE = REGISTRATE.virtualColoredLiquid(
             "ferrous_chloride", 0xFFBB3333)
             .tag(FHTags.forgeFluidTag("ferrous_chloride"))
             .register();
-    public static final FluidEntry<VirtualFluid> FERRIC_CHLORIDE = REGISTRATE.virtualColoredLiquid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> FERRIC_CHLORIDE = REGISTRATE.virtualColoredLiquid(
             "ferric_chloride", 0xFFB0FFDE)
             .tag(FHTags.forgeFluidTag("ferric_chloride"))
             .register();
-    public static final FluidEntry<VirtualFluid> COPPER_CHLORIDE = REGISTRATE.virtualColoredLiquid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> COPPER_CHLORIDE = REGISTRATE.virtualColoredLiquid(
             "copper_chloride", 0xFFB0FFDE)
             .tag(FHTags.forgeFluidTag("copper_chloride"))
             .register();
-    public static final FluidEntry<VirtualFluid> ZINC_SULFATE = REGISTRATE.virtualColoredLiquid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> ZINC_SULFATE = REGISTRATE.virtualColoredLiquid(
             "zinc_sulfate", 0xFFB0C4FF)
             .tag(FHTags.forgeFluidTag("zinc_sulfate"))
             .register();
-    public static final FluidEntry<VirtualFluid> LIME_WATER = REGISTRATE.virtualColoredLiquid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> LIME_WATER = REGISTRATE.virtualColoredLiquid(
             "lime_water", 0xFFB0C4DE)
             .tag(FHTags.forgeFluidTag("lime_water"))
             .register();
-    public static final FluidEntry<VirtualFluid> MAGNESIUM_CHLORIDE = REGISTRATE.virtualColoredLiquid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> MAGNESIUM_CHLORIDE = REGISTRATE.virtualColoredLiquid(
             "magnesium_chloride", 0xFFDEDEEE)
             .tag(FHTags.forgeFluidTag("magnesium_chloride"))
             .register();
-    public static final FluidEntry<VirtualFluid> SULFURIC_ACID = REGISTRATE.virtualColoredLiquid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> SULFURIC_ACID = REGISTRATE.virtualColoredLiquid(
             "sulfuric_acid", 0xFFEEE8AA)
             .tag(FHTags.forgeFluidTag("sulfuric_acid"))
             .register();
-    public static final FluidEntry<VirtualFluid> HYDROCHLORIC_ACID = REGISTRATE.virtualColoredLiquid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> HYDROCHLORIC_ACID = REGISTRATE.virtualColoredLiquid(
             "hydrochloric_acid", 0xFFAAFFAA)
             .tag(FHTags.forgeFluidTag("hydrochloric_acid"))
             .register();
-    public static final FluidEntry<VirtualFluid> CRYOLITE = REGISTRATE.virtualColoredLiquid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> CRYOLITE = REGISTRATE.virtualColoredLiquid(
             "cryolite", 0xFF90EE90)
             .tag(FHTags.forgeFluidTag("cryolite"))
             .register();
-    public static final FluidEntry<VirtualFluid> TAR = REGISTRATE.virtualColoredLiquid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> TAR = REGISTRATE.virtualColoredLiquid(
             "tar", 0xFF000000)
             .tag(FHTags.forgeFluidTag("tar"))
             .register();
@@ -146,7 +145,7 @@ public class FHFluids {
             .tag(AllTags.forgeItemTag("buckets/protein"))
             .build()
             .register();
-    public static final FluidEntry<VirtualFluid> LATEX = REGISTRATE.virtualColoredLiquid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> LATEX = REGISTRATE.virtualColoredLiquid(
             "latex", 0xFAFDF300)
             .properties(b -> b.viscosity(2000)
                     .density(1400))
@@ -159,17 +158,17 @@ public class FHFluids {
             .tag(AllTags.forgeItemTag("buckets/latex"))
             .build()
             .register();
-    public static final FluidEntry<VirtualFluid> RESIN = REGISTRATE.virtualColoredLiquid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> RESIN = REGISTRATE.virtualColoredLiquid(
             "resin", 0xFF8B4513)
             .tag(FHTags.forgeFluidTag("resin"))
             .register();
     // purified water
-    public static final FluidEntry<VirtualFluid> PURIFIED_WATER = REGISTRATE.virtualColoredLiquid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> PURIFIED_WATER = REGISTRATE.virtualColoredLiquid(
             "purified_water", 0xFF3ABDFF)
             .tag(FHTags.forgeFluidTag("purified_water"))
             .register();
     // wolfberry tea
-    public static final FluidEntry<VirtualFluid> WOLFBERRY_TEA = REGISTRATE.virtualColoredLiquid(
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> WOLFBERRY_TEA = REGISTRATE.virtualColoredLiquid(
             "wolfberry_tea", 0xFF6ABDFF)
             .tag(FHTags.forgeFluidTag("wolfberry_tea"))
             .register();
