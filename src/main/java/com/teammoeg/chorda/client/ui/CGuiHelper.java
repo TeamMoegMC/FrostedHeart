@@ -485,6 +485,7 @@ public class CGuiHelper {
 		graphics.blitNineSliced(RECIPE_BOOK_LOCATION, x, y, w, h, 2, 24, 24, 29, 206);
 	}
 	public static int getFluidColor(FluidStack fluid) {
+		if(fluid.isEmpty()||fluid.getAmount()==0)return 0xffffffff;
 		IClientFluidTypeExtensions ext=IClientFluidTypeExtensions.of(fluid.getFluid());
 		int tint=ext.getTintColor(fluid);
 		if((tint&0xffffff)!=0xffffff) {

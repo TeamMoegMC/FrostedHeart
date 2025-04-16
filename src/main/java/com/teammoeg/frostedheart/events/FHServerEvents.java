@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.events.ServerLevelDataSaveEvent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
@@ -28,8 +29,11 @@ import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.event.server.*;
+import net.minecraftforge.event.server.ServerAboutToStartEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.event.server.ServerStoppedEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -42,7 +46,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class FHServerEvents {
 	@SubscribeEvent
-	public static void serverLevelSave(final LevelEvent.Save event) {
+	public static void serverLevelSave(final ServerLevelDataSaveEvent event) {
 	}
 
 	@SubscribeEvent

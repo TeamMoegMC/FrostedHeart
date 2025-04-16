@@ -21,8 +21,13 @@ package com.teammoeg.chorda.listeners;
 
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.event.server.*;
+import com.teammoeg.chorda.events.ServerLevelDataSaveEvent;
+
+import net.minecraftforge.event.server.ServerAboutToStartEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.event.server.ServerStoppedEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -34,7 +39,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = Chorda.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ChordaServerEvents {
     @SubscribeEvent
-    public static void serverLevelSave(final LevelEvent.Save event) {
+    public static void serverLevelSave(final ServerLevelDataSaveEvent event) {
         if (CTeamDataManager.INSTANCE != null) {
             CTeamDataManager.INSTANCE.save();
         }

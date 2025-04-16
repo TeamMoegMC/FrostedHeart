@@ -1,5 +1,6 @@
 package com.teammoeg.frostedresearch.handler;
 
+import com.teammoeg.chorda.events.ServerLevelDataSaveEvent;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRMain;
 
@@ -16,7 +17,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = FRMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class FHServerEvents {
 	@SubscribeEvent
-	public static void serverLevelSave(final LevelEvent.Save event) {
+	public static void serverLevelSave(final ServerLevelDataSaveEvent event) {
 		FHResearch.save();
 	}
 
