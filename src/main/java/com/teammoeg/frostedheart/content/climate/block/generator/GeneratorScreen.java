@@ -165,7 +165,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
 
         // System.out.println(ininvarrx+","+ininvarry+"-"+inarryl);
         // range circle
-        int actualRangeLvl = (int) (menu.rangeLevel.getValue() + 0.05);
+        int actualRangeLvl = Math.round(menu.rangeLevel.getValue());
         rangeicons.blitAtlas(matrixStack, leftPos, topPos, rangePoint, actualRangeLvl);
 
         // fuel slots
