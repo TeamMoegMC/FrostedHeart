@@ -125,7 +125,7 @@ public class FHFluids {
 		"cryolite", 0xFF90EE90)
 		.tag(FHTags.forgeFluidTag("cryolite"))
 		.register();
-	public static final FluidEntry<Flowing> TAR = REGISTRATE.standardColoredWater(
+	public static final FluidEntry<CFluid> TAR = REGISTRATE.virtualColoredLiquid(
 		"tar", 0xFF000000)
 		.properties(b -> b.viscosity(3200)
 			.density(2000))
@@ -134,8 +134,8 @@ public class FHFluids {
 			.slopeFindDistance(2)
 			.explosionResistance(100f))
 		.tag(FHTags.forgeFluidTag("tar"))
-		.source(ForgeFlowingFluid.Source::new) // TODO: remove when Registrate fixes FluidBuilder
-		/*.bucket()
+		/*.source(ForgeFlowingFluid.Source::new) // TODO: remove when Registrate fixes FluidBuilder
+		.bucket()
 		.tag(AllTags.forgeItemTag("buckets/tar"))
 		.build()*/
 		.register();
@@ -156,7 +156,7 @@ public class FHFluids {
 		.tag(AllTags.forgeItemTag("buckets/protein"))
 		.build()
 		.register();
-	public static final FluidEntry<Flowing> LATEX = REGISTRATE.standardColoredWater(
+	public static final FluidEntry<CFluid> LATEX = REGISTRATE.virtualColoredLiquid(
 		"latex", 0xFAFDF300)
 		.properties(b -> b.viscosity(2000)
 			.density(1400))
@@ -165,8 +165,8 @@ public class FHFluids {
 			.slopeFindDistance(3)
 			.explosionResistance(100f))
 		.tag(FHTags.forgeFluidTag("latex"))
-		.source(ForgeFlowingFluid.Source::new) // TODO: remove when Registrate fixes FluidBuilder
-		/*.bucket()
+		/*.source(ForgeFlowingFluid.Source::new) // TODO: remove when Registrate fixes FluidBuilder
+		.bucket()
 		.tag(AllTags.forgeItemTag("buckets/latex"))
 		.build()*/
 		.register();
