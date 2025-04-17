@@ -1,0 +1,13 @@
+{
+  "type": "frostedheart:water_level_and_effect",
+  "ingredient": {
+    "item": "minecraft:potion",
+    "count": 1
+  },
+  "fluid": "minecraft:water",
+  "waterLevel": 4,
+  "waterSaturationLevel": 2,
+  "duration": 1600,
+  "amplifier": 0,
+  "probability": 75
+}
