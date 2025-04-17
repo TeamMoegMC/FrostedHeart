@@ -480,8 +480,9 @@ public class SourceOnlyFluidBuilder<T extends ForgeFlowingFluid, P> extends Abst
      *            The tags to assign
      * @return this {@link SourceOnlyFluidBuilder}
      */
+
     @SafeVarargs
-    public final SourceOnlyFluidBuilder<T, P> tag(TagKey<Fluid>... tags) {
+	public final SourceOnlyFluidBuilder<T, P> tag(TagKey<Fluid>... tags) {
         SourceOnlyFluidBuilder<T, P> ret = this.tag(ProviderType.FLUID_TAGS, tags);
         if (this.tags.isEmpty()) {
             ret.getOwner().<RegistrateTagsProvider<Fluid>, Fluid>setDataGenerator(ret.getName(), getRegistryKey(), ProviderType.FLUID_TAGS,
