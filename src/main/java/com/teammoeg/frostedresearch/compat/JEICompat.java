@@ -211,9 +211,9 @@ public class JEICompat implements IModPlugin {
         man = jeiRuntime.getRecipeManager();
         jei = jeiRuntime;
         syncJEI();
-        man.hideRecipeCategory(RecipeTypes.BLASTING);
-        man.hideRecipeCategory(RecipeTypes.SMOKING);
-        man.hideRecipeCategory(RecipeTypes.SMELTING);
+        // man.hideRecipeCategory(RecipeTypes.BLASTING);
+        // man.hideRecipeCategory(RecipeTypes.SMOKING);
+        // man.hideRecipeCategory(RecipeTypes.SMELTING);
         Function<? super Object, ? extends Set<RecipeType<?>>> creator=o->new HashSet<>();
         Function<? super Object,Set<RecipeType<?>>> getter=o->types.computeIfAbsent((Object)o, creator);
         man.createRecipeCategoryLookup().includeHidden().get().forEach(t->{
