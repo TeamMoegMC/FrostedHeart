@@ -158,6 +158,8 @@ public class ClimateCommonEvents {
 			Collection<AttributeModifier> attr=event.getItemStack().getItem().getAttributeModifiers(event.getSlotType(),event.getItemStack()).get(Attributes.ARMOR);
 			if(!attr.isEmpty()) {
 				SlotKey ecs = EquipmentSlotType.fromVanilla(event.getSlotType());
+				event.addModifier(FHAttributes.INSULATION.get(),
+						ecs.createAttribute(100f, Operation.ADDITION));
 				event.addModifier(FHAttributes.WIND_PROOF.get(),
 						ecs.createAttribute(1f, Operation.MULTIPLY_TOTAL));
 				event.addModifier(FHAttributes.HEAT_PROOF.get(),
