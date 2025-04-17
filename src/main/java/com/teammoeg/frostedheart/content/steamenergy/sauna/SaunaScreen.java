@@ -55,7 +55,7 @@ public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
     }
 
     @Override
-    public void render(GuiGraphics matrixStack, int x, int y, float partialTicks) {
+    public void drawContainerBackgroundPre(GuiGraphics matrixStack, float partialTicks, int x, int y) {
         Minecraft mc = Minecraft.getInstance();
 
         SaunaTileEntity tile = this.menu.getBlock();

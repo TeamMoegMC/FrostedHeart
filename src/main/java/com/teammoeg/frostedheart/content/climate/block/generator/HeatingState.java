@@ -158,4 +158,15 @@ public class HeatingState extends OwnerState {
     public int getUpwardRange() {
         return Mth.ceil(getRangeLevel() * 4);
     }
+	@Override
+	public void writeSyncNBT(CompoundTag nbt) {
+		super.writeSyncNBT(nbt);
+		nbt.putBoolean("isActive", isActive());
+	}
+
+	@Override
+	public void readSyncNBT(CompoundTag nbt) {
+		super.readSyncNBT(nbt);
+		setActive(nbt.getBoolean("isActive"));
+	}
 }

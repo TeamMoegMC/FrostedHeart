@@ -42,14 +42,7 @@ public class SaunaContainer extends CBlockEntityMenu<SaunaTileEntity> {
                 return tile.isStackValid(0, stack);
             }
         });
-
-        // player inventory
-        for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 9; j++)
-                addSlot(new Slot(inventoryPlayer, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
-        // hotbar
-        for (int i = 0; i < 9; i++)
-            addSlot(new Slot(inventoryPlayer, i, 8 + i * 18, 142));
+        super.addPlayerInventory(inventoryPlayer, 8, 84, 142);
     }
 
     @Override

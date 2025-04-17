@@ -162,14 +162,13 @@ public class GeneratorState extends HeatingState {
 	public void writeSyncNBT(CompoundTag nbt) {
 		super.writeSyncNBT(nbt);
 		nbt.putBoolean("hasFuel", hasFuel);
-		nbt.putBoolean("isActive", isActive());
 	}
 
 	@Override
 	public void readSyncNBT(CompoundTag nbt) {
 		super.readSyncNBT(nbt);
 		hasFuel=nbt.getBoolean("hasFuel");
-		super.setActive(nbt.getBoolean("isActive"));
+
 	}
 
 }
