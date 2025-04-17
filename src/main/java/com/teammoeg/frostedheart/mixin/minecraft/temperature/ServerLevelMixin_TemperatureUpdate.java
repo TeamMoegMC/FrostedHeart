@@ -11,6 +11,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BiomeTags;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameRules;
@@ -78,7 +79,9 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
                     BlockPos blockpos1 = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(i, 0, j, 15));
                     BlockPos blockpos2 = blockpos1.below();
                     Biome biome = level.getBiome(blockpos1).value();
-                    if (level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
+                    // TODO: for ocean freezing, we need some special handling...
+                    boolean isOcean = level.getBiome(blockpos1).is(BiomeTags.IS_OCEAN);
+                    if (!isOcean && level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
                         // Check if the block should freeze based on our custom logic
                         frostedheart$freezeWater(level, blockpos2);
 
@@ -270,6 +273,13 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         // Get temperature at this block position using your existing system
         float t = WorldTemperature.block(level, pos);
         Block block = currentState.getBlock();
+
+        // TODO: For ocean melting we need special handling...
+        boolean isOcean = level.getBiome(pos).is(BiomeTags.IS_OCEAN);
+        boolean isIce = currentState.is(BlockTags.ICE);
+        if (isOcean && isIce) {
+            return;
+        }
 
         // plant related
         PlantTempData data = PlantTempData.getPlantData(block);
