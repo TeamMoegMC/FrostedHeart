@@ -187,7 +187,7 @@ repositories {
     }
     maven {
         name = "saps maven"
-        url = "http://maven.ftb.dev/releases"
+        url = "https://maven.ftb.dev/releases"
         content {
             includeGroup "dev.ftb.mods"
         }
