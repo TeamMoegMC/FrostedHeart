@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import lombok.Getter;
@@ -21,6 +22,10 @@ public class LogisticChest implements IItemHandler, IGridElement{
 		IntArraySet slots=new IntArraySet();
 		@Getter
 		int totalCount;
+		@Override
+		public String toString() {
+			return "ItemData [slots=" + slots + ", totalCount=" + totalCount + "]";
+		}
 		
 	}
 	private static final int MAX_SLOT=27;
@@ -29,7 +34,7 @@ public class LogisticChest implements IItemHandler, IGridElement{
 	ItemKey[] slotRef=new ItemKey[MAX_SLOT];
 	boolean isChanged;
 	@Getter
-	int emptySlotCount=0;
+	int emptySlotCount=MAX_SLOT;
 	private boolean isCacheInvalidated;
 	public LogisticChest() {
 		
@@ -137,7 +142,7 @@ public class LogisticChest implements IItemHandler, IGridElement{
 			return ItemStack.EMPTY;
 		int totake=amount;
 		IntIterator ii=id.slots.iterator();
-		
+		IntArrayList il=new IntArrayList();
 		while(ii.hasNext()) {
 			int slot=ii.nextInt();
 			ItemStack inslot=chest.getStackInSlot(slot);
@@ -150,7 +155,7 @@ public class LogisticChest implements IItemHandler, IGridElement{
 			if(slotToReduce>0) {
 				id.totalCount-=slotToReduce;
 				if(slotToReduce==inslot.getCount()) {
-					id.slots.remove(slot);
+					il.add(slot);
 					chest.setStackInSlot(slot, ItemStack.EMPTY);
 					emptySlotCount++;
 				}else {
@@ -160,6 +165,10 @@ public class LogisticChest implements IItemHandler, IGridElement{
 				if(totake<=0)
 					break;
 			}
+		}
+		id.slots.removeAll(il);
+		if(id.slots.isEmpty()||id.totalCount<=0){
+			cachedData.remove(key);
 		}
 		return key.createStackWithSize(amount-totake);
 		

@@ -1,6 +1,8 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.grid;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -14,13 +16,20 @@ import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import lombok.Getter;
+import net.minecraft.SharedConstants;
+import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemStackHandler;
 
 public class LogisticHub implements IGridElement {
 	
 	private static class ItemData implements ItemCountProvider{
+		@Override
+		public String toString() {
+			return "ItemData [countmap=" + countmap + ", totalCount=" + totalCount + "]";
+		}
 		Reference2IntOpenHashMap<LazyOptional<IGridElement>> countmap=new Reference2IntOpenHashMap<>();
 		@Getter
 		int totalCount;
@@ -264,6 +273,41 @@ public class LogisticHub implements IGridElement {
 	@Override
 	public boolean consumeChange() {
 		return false;
+	}
+	public static void main(String[] args) {
+	      SharedConstants.tryDetectVersion();
+	      SharedConstants.enableDataFixerOptimizations();
+		Bootstrap.bootStrap();
+		LogisticHub hub=new LogisticHub();
+		LogisticChest chestA=new LogisticChest();
+		LazyOptional<LogisticChest> cacap=LazyOptional.of(()->chestA);
+		LogisticChest chestB=new LogisticChest();
+		LazyOptional<LogisticChest> cbcap=LazyOptional.of(()->chestB);
+		LogisticChest chestC=new LogisticChest();
+		LazyOptional<LogisticChest> cccap=LazyOptional.of(()->chestC);
+		hub.addElement(cacap.cast());
+		hub.addElement(cbcap.cast());
+		hub.addElement(cccap.cast());
+		List<IGridElement> ige=new ArrayList<>(Arrays.asList(hub,chestA,chestB,chestC));
+		List<IGridElement> igeo=new ArrayList<>(Arrays.asList(hub,chestA,chestB,chestC));
+		Collections.shuffle(ige);
+		
+		chestA.insertItem(0, new ItemStack(Items.STONE,10), false);
+		chestB.insertItem(0, new ItemStack(Items.BIRCH_PLANKS,30), false);
+		chestB.insertItem(3, new ItemStack(Items.BIRCH_PLANKS,30), false);
+		chestC.insertItem(0, new ItemStack(Items.BIRCH_PLANKS,15), false);
+		for(IGridElement grid:ige) {
+			grid.tick();
+		}
+		cccap.invalidate();
+		for(IGridElement grid:igeo)
+			System.out.println(grid);
+		System.out.println(hub.takeItem(new ItemStack(Items.BIRCH_PLANKS,70)));
+		for(IGridElement grid:ige) {
+			grid.tick();
+		}
+		for(IGridElement grid:igeo)
+			System.out.println(grid);
 	}
 
 }
