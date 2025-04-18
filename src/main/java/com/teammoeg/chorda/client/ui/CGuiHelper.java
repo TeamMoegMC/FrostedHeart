@@ -121,25 +121,13 @@ public class CGuiHelper {
 		float scaleY, boolean drawDecorations, @Nullable String countReplacement) {
 		guiGraphics.pose().pushPose();
 		guiGraphics.pose().translate(x, y, zindex + 150);
-		guiGraphics.pose().scale(scaleX, scaleY, scaleX);
-		/*
-		 * guiGraphics.renderItem(stack, 0, 0, 0,300);
-		 */
-		// if(stack.getItem() instanceof BlockItem bl) {//A hack for item render
-		// lighting.
-		// BlockState bs=bl.getBlock().defaultBlockState();
-		// BlockRenderDispatcher rd = Minecraft.getInstance().getBlockRenderer();
-		// rd.renderSingleBlock(bs, guiGraphics.pose(), guiGraphics.bufferSource(),
-		// LightTexture.FULL_BRIGHT,
-		// OverlayTexture.NO_OVERLAY,ModelData.builder().build(),RenderType.cutout());
-		// }else {
-		// guiGraphics.renderItem( stack, 0, 0,0,-50);
-		// }c
-		Matrix4f matrix4f = null;
+		guiGraphics.pose().scale(scaleX, scaleY, scaleX); 
 		if (!stack.isEmpty()) {
 			BakedModel bakedmodel = ClientUtils.mc().getItemRenderer().getModel(stack, ClientUtils.mc().level,
 				ClientUtils.mc().player, 0);
+			
 			boolean flag = !bakedmodel.usesBlockLight();
+			Matrix4f matrix4f = null;
 			if (!flag) {
 				matrix4f = new Matrix4f(guiGraphics.pose().last().pose()).rotationYXZ(1.0821041F, 3.2375858F, 0.0F).rotateYXZ((-(float) Math.PI / 8F), 2.3561945F, 0.0F);
 			}

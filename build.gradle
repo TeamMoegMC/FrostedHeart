@@ -5,7 +5,7 @@ plugins {
 //    id "dev.architectury.loom" version "1.2-SNAPSHOT"
 	id "com.diffplug.eclipse.apt" version "4.2.0"
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
-    id 'net.neoforged.gradle' version "${forgegradle_version}"
+    id 'net.minecraftforge.gradle' version "${forgegradle_version}"
     id 'org.spongepowered.mixin' version "${mixingradle_version}"
     id 'org.parchmentmc.librarian.forgegradle' version "${librarian_version}"
     id 'org.jetbrains.gradle.plugin.idea-ext' version '1.1.6'
@@ -238,7 +238,7 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok:1.18.36'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.36'
 
-    minecraft "net.neoforged:forge:${minecraft_version}-${forge_version}"
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 //    implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     // IE
@@ -279,7 +279,7 @@ dependencies {
     compileOnly fg.deobf("curse.maven:mutil-351914:4824501")
 	noDatagenRuntimeOnly fg.deobf("curse.maven:mutil-351914:4824501")
     // Caupona
-    implementation fg.deobf("curse.maven:caupona-656147:6354879") 
+    implementation fg.deobf("curse.maven:caupona-656147:6406685") 
     //datagenImplementation fg.deobf("curse.maven:caupona-656147:6354879")
 
     // LDLib
