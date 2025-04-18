@@ -65,6 +65,7 @@
   "fluid.frostedheart.steam": "任意蒸汽",
   "fluid.frostedheart.sulfur_dioxide": "二氧化硫",
   "fluid.frostedheart.wolfberry_tea": "枸杞水",
+  "fluid.frostedheart.pulp": "纸浆",
   "gui.frostedheart.any_food": "任意食物",
   "gui.frostedheart.debug.clear_cache": "清空提示缓存 (重新从文件读取)",
   "gui.frostedheart.debug.clear_queue": "清空提示显示队列",

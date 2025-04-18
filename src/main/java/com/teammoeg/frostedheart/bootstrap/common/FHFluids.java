@@ -109,6 +109,10 @@ public class FHFluids {
 		"lime_water", 0xFFB0C4DE)
 		.tag(FHTags.forgeFluidTag("lime_water"))
 		.register();
+	public static final FluidEntry<CFluid> PULP = REGISTRATE.virtualColoredLiquid(
+			"pulp", 0xFFB0C4DE)
+			.tag(FHTags.forgeFluidTag("pulp"))
+			.register();
 	public static final FluidEntry<CFluid> MAGNESIUM_CHLORIDE = REGISTRATE.virtualColoredLiquid(
 		"magnesium_chloride", 0xFFDEDEEE)
 		.tag(FHTags.forgeFluidTag("magnesium_chloride"))
