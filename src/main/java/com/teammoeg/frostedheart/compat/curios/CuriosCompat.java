@@ -78,6 +78,7 @@ public class CuriosCompat {
                 }).orElse(ItemStack.EMPTY);
     }
 
+    @SuppressWarnings({"UnstableApiUsage", "removal"})
     public static void sendIMCS() {
         InterModComms.sendTo(CuriosApi.MODID, SlotTypeMessage.REGISTER_TYPE,
                 () -> SlotTypePreset.BACK.getMessageBuilder().build());

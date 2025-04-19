@@ -2,5 +2,6 @@
 	"parent": "minecraft:block/crop",
 	"textures": {
 		"crop": "frostedheart:block/rubber_dandelion_stage3"
-	}
+	},
+	"render_type": "cutout"
 }
