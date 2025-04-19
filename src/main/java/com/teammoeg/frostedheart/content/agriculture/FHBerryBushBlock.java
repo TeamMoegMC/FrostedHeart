@@ -28,6 +28,9 @@ import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
 public class FHBerryBushBlock extends SweetBerryBushBlock {
     public FHBerryBushBlock(Properties pProperties) {
         super(pProperties);
