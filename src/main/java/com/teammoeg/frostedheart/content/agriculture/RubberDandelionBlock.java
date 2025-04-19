@@ -38,7 +38,6 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.common.ForgeHooks;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -46,8 +45,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class RubberDandelionBlock extends BushBlock implements BonemealableBlock {
     
-    public static final IntegerProperty RUBBER_DANDELION_AGE = BlockStateProperties.AGE_2;
-    private static final VoxelShape[] SHAPE_BY_AGE = new VoxelShape[]{Block.box(0.0D, 0.0D, 0.0D, 16.0D, 2.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 4.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 6.0D, 16.0D)};
+    public static final IntegerProperty RUBBER_DANDELION_AGE = BlockStateProperties.AGE_3;
+    private static final VoxelShape[] SHAPE_BY_AGE = new VoxelShape[]{Block.box(0.0D, 0.0D, 0.0D, 16.0D, 2.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 4.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 6.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 10.0D, 16.0D)};
 
     public RubberDandelionBlock(Properties properties) {
         super(properties);
@@ -59,13 +58,9 @@ public class RubberDandelionBlock extends BushBlock implements BonemealableBlock
         builder.add(RUBBER_DANDELION_AGE);
     }
     
-    public @NotNull IntegerProperty getAgeProperty() {
-        return RUBBER_DANDELION_AGE;
-    }
-    
     public boolean canGrow(LevelReader pLevel, BlockPos pPos, BlockState pState) {
         int i = pState.getValue(RUBBER_DANDELION_AGE);
-        return  i < 2 &&
+        return  i < 3 &&
                 pLevel.getRawBrightness(pPos.above(), 0) >= 9 &&
                 //No growth in wild.
                 pLevel.getBlockState(pPos.below()).is(Blocks.FARMLAND) ;
@@ -90,7 +85,7 @@ public class RubberDandelionBlock extends BushBlock implements BonemealableBlock
     @Override
     @SuppressWarnings("deprecation")
     public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
-        return SHAPE_BY_AGE[state.getValue(this.getAgeProperty())];
+        return SHAPE_BY_AGE[state.getValue(RUBBER_DANDELION_AGE)];
     }
     
     @Override

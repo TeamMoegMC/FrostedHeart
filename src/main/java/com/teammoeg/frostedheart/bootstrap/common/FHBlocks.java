@@ -1124,7 +1124,7 @@ public class FHBlocks {
                             LootTable.lootTable()
                                     .withPool(LootPool.lootPool().add(LootItem.lootTableItem(block)
                                             .apply(SetItemCountFunction.setCount(ConstantValue.exactly(2)))
-                                            .when(LootItemBlockStatePropertyCondition.hasBlockStateProperties(block).setProperties(StatePropertiesPredicate.Builder.properties().hasProperty(RubberDandelionBlock.RUBBER_DANDELION_AGE,2)))))
+                                            .when(LootItemBlockStatePropertyCondition.hasBlockStateProperties(block).setProperties(StatePropertiesPredicate.Builder.properties().hasProperty(RubberDandelionBlock.RUBBER_DANDELION_AGE,3)))))
                                     .withPool(LootPool.lootPool().add(LootItem.lootTableItem(block)))
                     ))
             .item()
