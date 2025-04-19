@@ -73,6 +73,7 @@ import com.teammoeg.frostedheart.item.FHBlockItem;
 import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
 import com.tterrag.registrate.util.entry.BlockEntry;
 
+import net.minecraft.advancements.critereon.StatePropertiesPredicate;
 import net.minecraft.data.loot.packs.VanillaBlockLoot;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
@@ -83,8 +84,12 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
+import net.minecraft.world.level.storage.loot.LootPool;
+import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
+import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
+import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.DeferredRegister;
@@ -1114,7 +1119,14 @@ public class FHBlocks {
     public static final BlockEntry<RubberDandelionBlock> RUBBER_DANDELION = REGISTRATE.block("rubber_dandelion",
                     p -> new RubberDandelionBlock(FHProps.cropProps))
             .blockstate(FHBlockStateGen.existed())
-            .loot(FHLootGen.existed())
+            .loot((lootTable,block) ->
+                    lootTable.add(block,
+                            LootTable.lootTable()
+                                    .withPool(LootPool.lootPool().add(LootItem.lootTableItem(block)
+                                            .apply(SetItemCountFunction.setCount(ConstantValue.exactly(2)))
+                                            .when(LootItemBlockStatePropertyCondition.hasBlockStateProperties(block).setProperties(StatePropertiesPredicate.Builder.properties().hasProperty(RubberDandelionBlock.RUBBER_DANDELION_AGE,2)))))
+                                    .withPool(LootPool.lootPool().add(LootItem.lootTableItem(block)))
+                    ))
             .item()
             .model(AssetLookup.existingItemModel())
             .build()

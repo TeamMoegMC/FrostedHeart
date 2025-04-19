@@ -1,13 +1,13 @@
 {
   "variants": {
     "age=0": {
-      "model": "frostedheart:block/rubber_dandelion_1"
+      "model": "frostedheart:block/rubber_dandelion_3"
     },
     "age=1": {
       "model": "frostedheart:block/rubber_dandelion_2"
     },
     "age=2": {
-      "model": "frostedheart:block/rubber_dandelion_3"
+      "model": "frostedheart:block/rubber_dandelion_1"
     }
   }
 }
