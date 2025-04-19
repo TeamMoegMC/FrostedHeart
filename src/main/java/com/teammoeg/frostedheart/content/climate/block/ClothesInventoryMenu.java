@@ -51,11 +51,11 @@ public class ClothesInventoryMenu extends CBaseMenu {
 	@Override
 	public QuickMoveStackBuilder defineQuickMoveStack() {
 
-		return QuickMoveStackBuilder.first(0,2).then(3,5).then(5,16).then(2);
+		return QuickMoveStackBuilder.first(0,2).then(3,5).then(5,14).then(2);
 	}
 
 	public ClothesInventoryMenu(int id, Inventory inventoryPlayer) {
-		super(FHMenuTypes.CLOTHES_GUI.get(), id, inventoryPlayer.player, 16);
+		super(FHMenuTypes.CLOTHES_GUI.get(), id, inventoryPlayer.player, 14);
 		PlayerTemperatureData ptd = PlayerTemperatureData.getCapability(inventoryPlayer.player).resolve().get();
 		createLiningSlots(inventoryPlayer,ptd);
 		//for(BodyPart bp:BodyPart.values()) {
@@ -68,11 +68,13 @@ public class ClothesInventoryMenu extends CBaseMenu {
 	private void createLiningSlots(Inventory inventoryPlayer,PlayerTemperatureData ptd) {
 		
 		int y0 = 6;
+		// total 5 slots here: 0-4
 		this.addSlot(new ArmorSlot(inventoryPlayer.player, EquipmentSlot.HEAD, inventoryPlayer, 39, 6, y0));
 		this.addSlot(new ArmorSlot(inventoryPlayer.player, EquipmentSlot.CHEST, inventoryPlayer, 38, 6, y0 + 18));
 		this.addSlot(new OffHandSlot(inventoryPlayer.player, inventoryPlayer, 40, 6, y0 + 18 * 2));
 		this.addSlot(new ArmorSlot(inventoryPlayer.player, EquipmentSlot.LEGS, inventoryPlayer, 37, 6, y0 + 18 * 3));
 		this.addSlot(new ArmorSlot(inventoryPlayer.player, EquipmentSlot.FEET, inventoryPlayer, 36, 6, y0 + 18 * 4));
+		// total 9 slots here: 5-13
 		for (int j = 0; j < 5; j++) {
 			BodyPart bp=BodyPart.values()[j];
 			BodyPartData clothes=ptd.clothesOfParts.get(bp);

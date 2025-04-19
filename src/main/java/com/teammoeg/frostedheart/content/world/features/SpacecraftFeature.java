@@ -24,11 +24,13 @@ import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
@@ -192,7 +194,10 @@ public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
         for (int y = maxY; y < maxY + 50; y++) {
             for (int x = trenchStartX; x <= centerX + craterRadius; x++) {
                 for (int z = centerZ - trenchWidth / 2; z <= centerZ + trenchWidth / 2; z++) {
-                    level.setBlock(new BlockPos(x, y, z), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 2);
+                    BlockState state = level.getBlockState(new BlockPos(x, y, z));
+                    if (state.is(BlockTags.LEAVES) || state.is(BlockTags.LOGS)) {
+                        level.setBlock(new BlockPos(x, y, z), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 2);
+                    }
                 }
             }
         }
