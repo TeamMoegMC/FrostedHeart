@@ -37,6 +37,7 @@ import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.agriculture.RubberDandelionBlock;
+import com.teammoeg.frostedheart.content.agriculture.WildRubberDandelionBlock;
 import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.ThinIceBlock;
@@ -77,7 +78,6 @@ import net.minecraft.advancements.critereon.StatePropertiesPredicate;
 import net.minecraft.data.loot.packs.VanillaBlockLoot;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemNameBlockItem;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.*;
@@ -91,11 +91,13 @@ import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
 import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
 import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
+import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
+@SuppressWarnings("unused")
 public class FHBlocks {
 
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
@@ -1048,7 +1050,11 @@ public class FHBlocks {
             .blockstate((c, p) -> {
                 p.getExistingMultipartBuilder(c.get());
             })
-            .loot(FHLootGen.existed())
+            .loot((lt, b) -> lt.add(b,
+                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
+                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_WHALE_MEAT.get())
+                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
+            .tag(BlockTags.NEEDS_STONE_TOOL)
             .tag(BlockTags.SWORD_EFFICIENT)
             .simpleItem()
             .register();
@@ -1063,7 +1069,11 @@ public class FHBlocks {
             .blockstate((c, p) -> {
                 p.getExistingMultipartBuilder(c.get());
             })
-            .loot(FHLootGen.existed())
+            .loot((lt, b) -> lt.add(b,
+                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
+                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_WHALE_MEAT.get())
+                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
+            .tag(BlockTags.NEEDS_STONE_TOOL)
             .tag(BlockTags.SWORD_EFFICIENT)
             .simpleItem()
             .register();
@@ -1102,12 +1112,12 @@ public class FHBlocks {
                     p -> new WhiteTurnipBlock(FHProps.cropProps))
             .blockstate(FHBlockStateGen.existed())
             .loot(FHLootGen.existed())
-           
             .item()
             .model(AssetLookup.existingItemModel())
             .build()
             .lang("White Turnip")
             .register();
+    
     public static final BlockEntry<RubberDandelionBlock> RUBBER_DANDELION = REGISTRATE.block("rubber_dandelion",
                     p -> new RubberDandelionBlock(FHProps.cropProps))
             .blockstate(FHBlockStateGen.existed())
@@ -1123,6 +1133,22 @@ public class FHBlocks {
             .model(AssetLookup.existingItemModel())
             .build()
             .lang("Rubber Root")
+            .register();
+    
+    public static final BlockEntry<WildRubberDandelionBlock> WILD_RUBBER_DANDELION = REGISTRATE.block("wild_rubber_dandelion",
+            p -> new WildRubberDandelionBlock(FHProps.cropProps))
+            .blockstate(FHBlockStateGen.existed())
+            .loot((lootTable,block) ->
+                    lootTable.add(block,
+                            LootTable.lootTable().withPool(
+                                    LootPool.lootPool().add(lootTable.applyExplosionDecay(RUBBER_DANDELION,
+                                    LootItem.lootTableItem(RUBBER_DANDELION)
+                                            .apply(ApplyBonusCount.addUniformBonusCount(Enchantments.BLOCK_FORTUNE))
+                                            .apply(SetItemCountFunction.setCount(UniformGenerator.between(0,3))))))))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Wild Rubber Root")
             .register();
 
     public static final BlockEntry<CooledMagmaBlock> COOLED_MAGMA_BLOCK = REGISTRATE.block("cooled_magma_block", CooledMagmaBlock::new)

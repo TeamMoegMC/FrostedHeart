@@ -23,6 +23,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.simibubi.create.foundation.utility.FilesHelper;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.world.FHBiomeModifiers;
+import com.teammoeg.frostedheart.content.world.FHFeatures;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrateTags;
 import com.tterrag.registrate.providers.ProviderType;
 import net.minecraft.Util;
@@ -40,6 +42,7 @@ import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
 import java.util.Map;
@@ -76,6 +79,9 @@ public class FHDataGenerator {
 //        registryBuilder.add(Registries.PLACED_FEATURE, ctx -> bootstrapPlacedFeatures(ctx, registrations));
 //        registryBuilder.add(ForgeRegistries.Keys.BIOME_MODIFIERS, ctx -> bootstrapBiomeModifiers(ctx, registrations));
         registryBuilder.add(Registries.DAMAGE_TYPE, FHDamageTypeProvider::bootstrap);
+        registryBuilder.add(Registries.CONFIGURED_FEATURE, FHFeatures.FHConfiguredFeatures::bootstrap);
+        registryBuilder.add(Registries.PLACED_FEATURE, FHFeatures.FHPlacedFeatures::bootstrap);
+        registryBuilder.add(ForgeRegistries.Keys.BIOME_MODIFIERS, FHBiomeModifiers::bootstrap);
         return List.of(
                 new DatapackBuiltinEntriesProvider(output, vanillaRegistries, registryBuilder, Set.of(FHMain.MODID)),
                 new FHDamageTypeTagProvider(output, vanillaRegistries.thenApply(r -> append(r, registryBuilder)), exFiles)
