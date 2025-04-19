@@ -1048,11 +1048,7 @@ public class FHBlocks {
             .blockstate((c, p) -> {
                 p.getExistingMultipartBuilder(c.get());
             })
-            .loot((lt, b) -> lt.add(b,
-                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
-                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_WHALE_MEAT.get())
-                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
-            .tag(BlockTags.NEEDS_STONE_TOOL)
+            .loot(FHLootGen.existed())
             .tag(BlockTags.SWORD_EFFICIENT)
             .simpleItem()
             .register();
@@ -1067,11 +1063,7 @@ public class FHBlocks {
             .blockstate((c, p) -> {
                 p.getExistingMultipartBuilder(c.get());
             })
-            .loot((lt, b) -> lt.add(b,
-                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
-                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_WHALE_MEAT.get())
-                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
-            .tag(BlockTags.NEEDS_STONE_TOOL)
+            .loot(FHLootGen.existed())
             .tag(BlockTags.SWORD_EFFICIENT)
             .simpleItem()
             .register();
