@@ -26,7 +26,7 @@ public class ResearchEditors {
 	Research::getIcon).open();
 	public ResearchEditors() {
 	}
-	public static final Editor<Collection<Research>> RESEARCH_LIST=(p,l,v,c)->new EditListDialog<>(p, l, v,null,ResearchEditors.EDITOR_RESEARCH, Research::getName, Research::getIcon, c);
+	public static final Editor<Collection<Research>> RESEARCH_LIST=(p,l,v,c)->new EditListDialog<>(p, l, v,null,ResearchEditors.EDITOR_RESEARCH, Research::getName, Research::getIcon, c).open();
 	public static final Editor<Research> RESEARCH_EDITOR=EditorDialogBuilder.create(b->b
 		.add(Editors.STRING_ID.withName("id").forGetter( Research::getId))
 		.add(Editors.STRING.withName("name").forGetter( t->t.name))
