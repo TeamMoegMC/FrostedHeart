@@ -51,7 +51,7 @@
   "gui.frostedresearch.research_hierarchy": "Research Relationship",
   "gui.frostedresearch.research_progress": "Research Progress",
   "gui.frostedresearch.research_time_left": "Time Remaining: %s Minutes",
-  "gui.frostedresearch.research.insight_required": "Insight: %s/%s",
+  "gui.frostedresearch.research.insight_required": "Needed / Current Insight Level : %s/%s",
   "gui.frostedresearch.minigame.can_start": "Click reset button at bottom right to start a paper",
   "gui.frostedresearch.minigame.display": "Game Rules(Hover on text to magnify)",
   "gui.frostedresearch.minigame.match": "Matching Combinations",
