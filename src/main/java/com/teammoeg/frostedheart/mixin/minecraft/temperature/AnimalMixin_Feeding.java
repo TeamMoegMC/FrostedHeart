@@ -40,7 +40,7 @@ import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 
-@Mixin({Sheep.class, Bee.class, Pig.class, Rabbit.class})
+@Mixin({Sheep.class, Bee.class, Pig.class})
 public class AnimalMixin_Feeding extends Mob {
     short hxteTimer;
 
