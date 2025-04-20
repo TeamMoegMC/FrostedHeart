@@ -49,6 +49,7 @@
     "minecraft.temperature.MooshroomMixin",
     "minecraft.temperature.MushroomBlockMixin",
     "minecraft.temperature.PigMixin",
+    "minecraft.temperature.PolarBearMeleeAttackGoalMixin",
     "minecraft.temperature.PolarBearMixin",
     "minecraft.temperature.ServerLevelMixin_PlaceExtraSnow",
     "minecraft.temperature.ServerLevelMixin_TemperatureUpdate",
