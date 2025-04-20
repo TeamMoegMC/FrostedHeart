@@ -282,19 +282,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         }
 
         // plant related
-        PlantTempData data = PlantTempData.getPlantData(block);
-        if (data != null) {
-            WorldTemperature.PlantStatus status = WorldTemperature.checkPlantStatus(level, pos, data);
-            Block dead = data.dead();
-
-            if (status.willDie()) {
-                BlockState below = level.getBlockState(pos.below());
-                if (dead == Blocks.DEAD_BUSH && !below.isAir() && !below.is(BlockTags.DEAD_BUSH_MAY_PLACE_ON)) {
-                    level.setBlockAndUpdate(pos.below(), Blocks.DIRT.defaultBlockState());
-                }
-                level.setBlockAndUpdate(pos, dead.defaultBlockState());
-            }
-        }
+        WorldTemperature.updatePlant(level, pos);
 
         // general state transition
         // we do not handle water freezing logic in seas

@@ -95,7 +95,7 @@ public class FHFeatures {
             Holder<ConfiguredFeature<?,?>> wildRubberDandelion = featureLookup.getOrThrow(FHConfiguredFeatures.WILD_RUBBER_DANDELION);
             
             PlacementUtils.register(ctx,WILD_RUBBER_DANDELION,wildRubberDandelion,
-                    RarityFilter.onAverageOnceEvery(48),
+                    RarityFilter.onAverageOnceEvery(64),
                     InSquarePlacement.spread(),
                     PlacementUtils.HEIGHTMAP_WORLD_SURFACE,
                     BiomeFilter.biome());
