@@ -26,7 +26,6 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.world.FHBiomeModifiers;
 import com.teammoeg.frostedheart.content.world.FHFeatures;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrateTags;
-import com.tterrag.registrate.providers.ProviderType;
 import net.minecraft.Util;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistryAccess;

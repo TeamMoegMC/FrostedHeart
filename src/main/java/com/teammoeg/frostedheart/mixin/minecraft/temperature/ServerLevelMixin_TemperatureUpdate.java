@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
-import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -34,8 +33,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.concurrent.Flow;
 
 @Mixin(ServerLevel.class)
 public abstract class ServerLevelMixin_TemperatureUpdate {

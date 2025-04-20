@@ -40,8 +40,6 @@ import net.minecraftforge.registries.tags.ITag;
 import java.util.Collection;
 import java.util.stream.Stream;
 
-import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
-
 public class CRegistryHelper {
 	public static String getPath(Block v) {
 		return getRegistryName(v).getPath();
