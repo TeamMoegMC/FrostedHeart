@@ -131,6 +131,7 @@ public class TeamResearchData implements SpecialData {
 	 * The used insights level.<br>
 	 * <p>
 	 * Completing one research would increment this value.
+	 * In general, this should always be less than insightLevel!
 	 */
 	int usedInsightLevel = 0;
 	/**
@@ -681,17 +682,23 @@ public class TeamResearchData implements SpecialData {
 		return (float) (insight - currentLevelInsights) / (nextLevelInsights - currentLevelInsights);
 	}
 
-	public boolean costInsight(TeamDataHolder team,int insightLvl) {
-		if (this.usedInsightLevel + insightLvl >= this.insightLevel) {
-			this.usedInsightLevel += insightLvl;
+	public boolean costInsight(TeamDataHolder team,int toCostLevel) {
+		if (hasInsight(toCostLevel)) {
+			this.usedInsightLevel += toCostLevel;
 			sendInsightChangePacket(team);
 			return true;
+		} else {
+			return false;
 		}
-		return false;
 	}
 
-	public boolean hasInsight(int insightLvl) {
-		return this.usedInsightLevel + insightLvl >= this.insightLevel;
+	public boolean hasInsight(int toCostLevel) {
+		// This should not Happen!
+		if (insightLevel < usedInsightLevel) {
+			FRMain.LOGGER.warn("Insight Level should not less than Used Insight Level. Contact Admins!");
+		}
+
+		return toCostLevel <= this.insightLevel - this.usedInsightLevel;
 	}
 
 	/**
