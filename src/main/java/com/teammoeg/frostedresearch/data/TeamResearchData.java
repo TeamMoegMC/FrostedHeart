@@ -684,8 +684,8 @@ public class TeamResearchData implements SpecialData {
 
 	public boolean costInsight(TeamDataHolder team,int toCostLevel) {
 		if (hasInsight(toCostLevel)) {
-			this.usedInsightLevel += toCostLevel;
-			sendInsightChangePacket(team);
+			int newUsedInsightLevel = this.usedInsightLevel + toCostLevel;
+			setUsedInsightLevel(team, newUsedInsightLevel);
 			return true;
 		} else {
 			return false;
