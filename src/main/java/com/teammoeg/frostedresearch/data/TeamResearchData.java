@@ -62,13 +62,12 @@ import java.util.Map;
  */
 public class TeamResearchData implements SpecialData {
 
-	public static final double GROWTH_RATE_MULTIPLIER = 0.5;
+	public static final double GROWTH_RATE_MULTIPLIER = 8;
 	public static final Codec<TeamResearchData> CODEC = RecordCodecBuilder.create(t -> t.group(
 		CompoundTag.CODEC.fieldOf("vars").forGetter(o -> o.variants),
 		Codec.unboundedMap(Codec.STRING, ResearchData.CODEC).fieldOf("researches").forGetter(o -> o.rdata),
 		Codec.INT.optionalFieldOf("active",-1).forGetter(o -> o.activeResearchId),
 		Codec.INT.optionalFieldOf("insight",0).forGetter(o -> o.insight),
-		Codec.INT.optionalFieldOf("insightLevel",0).forGetter(o -> o.insightLevel),
 		Codec.INT.optionalFieldOf("usedInsightLevel",0).forGetter(o -> o.usedInsightLevel)// ,
 	// BlockUnlockList.CODEC.optionalFieldOf("blockUnlockList", new
 	// BlockUnlockList()).forGetter(o -> o.block),
@@ -84,7 +83,6 @@ public class TeamResearchData implements SpecialData {
 		CodecUtil.discreteList(ResearchData.CODEC).fieldOf("researches").forGetter(o -> FHResearch.researches.toList(o.rdata)),
 		Codec.INT.optionalFieldOf("active",-1).forGetter(o -> o.activeResearchId),
 		Codec.INT.optionalFieldOf("insight",0).forGetter(o -> o.insight),
-		Codec.INT.optionalFieldOf("insightLevel",0).forGetter(o -> o.insightLevel),
 		Codec.INT.optionalFieldOf("usedInsightLevel",0).forGetter(o -> o.usedInsightLevel)// ,
 	// BlockUnlockList.CODEC.optionalFieldOf("blockUnlockList", new
 	// BlockUnlockList()).forGetter(o -> o.block),
@@ -152,26 +150,26 @@ public class TeamResearchData implements SpecialData {
 	}
 
 	public TeamResearchData(CompoundTag variants, Map<String, ResearchData> rdata, int activeResearchId,
-		int insight, int insightLevel, int usedInsightLevel) {
+		int insight, int usedInsightLevel) {
 		super();
 		this.rdata.clear();
 		this.rdata.putAll(rdata);
 		this.activeResearchId = activeResearchId;
 		this.insight = insight;
-		this.insightLevel = insightLevel;
+		this.insightLevel = computeLevelFromInsight(insight);
 		this.usedInsightLevel = usedInsightLevel;
 		this.variants = variants;
 
 	}
 
 	public TeamResearchData(CompoundTag variants, List<ResearchData> rdata, int activeResearchId,
-		int insight, int insightLevel, int usedInsightLevel) {
+		int insight, int usedInsightLevel) {
 		super();
 		this.rdata.clear();
 		FHResearch.researches.fromList(rdata, this.rdata::put);
 		this.activeResearchId = activeResearchId;
 		this.insight = insight;
-		this.insightLevel = insightLevel;
+		this.insightLevel = computeLevelFromInsight(insight);
 		this.usedInsightLevel = usedInsightLevel;
 		this.variants = variants;
 

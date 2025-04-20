@@ -140,12 +140,12 @@ public class ResearchCommand {
                         })))
                 // Transfer
                 .then(Commands.literal("transfer")
-                        .then(Commands.argument("from", UuidArgument.uuid()).then(Commands.argument("to", UuidArgument.uuid())).executes(ct -> {
+                        .then(Commands.argument("from", UuidArgument.uuid()).then(Commands.argument("to", UuidArgument.uuid()).executes(ct -> {
                             Team team = FTBTeamsAPI.api().getManager().getTeamByID(UuidArgument.getUuid(ct, "to")).orElse(null);
                             CTeamDataManager.INSTANCE.transfer(UuidArgument.getUuid(ct, "from"), team);
                             ct.getSource().sendSuccess(() -> Components.str("Transfered to " + team.getName()).withStyle(ChatFormatting.GREEN), false);
                             return Command.SINGLE_SUCCESS;
-                        })))
+                        }))))
                 // Edit
                 .then(Commands.literal("edit")
                         .then(Commands.argument("enable", BoolArgumentType.bool()).executes(ct -> {

@@ -144,6 +144,7 @@ public class FHBlocks {
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, Items.SNOWBALL, ConstantValue.exactly(4))))
             .item()
             .model(AssetLookup.existingItemModel())
+            
             .build()
             .register();
     public static final BlockEntry<Block> BESNOWED_TWIGS_BLOCK = REGISTRATE.block("besnowed_twigs_block", Block::new)
@@ -331,7 +332,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.layeredRandom("besnowed_debris", "besnowed_debris_block",
                     "besnowed_debris", 3, 8, false))
             .item()
-            .model(FHBlockStateGen.itemModelLayered("besnowed_debris", "besnowed_debris_1"))
+            .model(AssetLookup.existingItemModel())
             .build()
             .register();
     public static final BlockEntry<SnowLayerBlock> BESNOWED_TWIGS = REGISTRATE.block("besnowed_twigs", SnowLayerBlock::new)
@@ -352,7 +353,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.layeredRandom("besnowed_twigs", "besnowed_twigs_block",
                     "besnowed_twigs", 3, 8, false))
             .item()
-            .model(FHBlockStateGen.itemModelLayered("besnowed_twigs", "besnowed_twigs_1"))
+            .model(AssetLookup.existingItemModel())
             .build()
             .register();
     // condensed ores

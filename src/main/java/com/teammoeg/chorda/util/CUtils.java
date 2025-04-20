@@ -401,8 +401,12 @@ public class CUtils {
 			} else return FluidActionResult.FAILURE;
 		}
 		FluidActionResult result=FluidUtil.tryFillContainer(emptyContainer, targetFluidHandler, Integer.MAX_VALUE, playerIn, true);
-		if(result.success)
-			emptyContainer.shrink(1);
+		if(result.success) {
+			if(emptyContainer.getCount()>1) {
+				CUtils.giveItem(playerIn, result.getResult());
+				return new FluidActionResult(emptyContainer.copyWithCount(emptyContainer.getCount()-1));
+			}
+		}
 		return result;
 	}
 
