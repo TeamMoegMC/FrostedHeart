@@ -129,19 +129,19 @@ public class TemperatureComputation {
 
         // frostbite
         float lowestEffectiveTemperature = data.getLowestFeelTemp();
-        if (lowestEffectiveTemperature < -200) {
+        if (lowestEffectiveTemperature < -250) {
             if (r.nextFloat() < 1.0)
                 player.hurt(FHDamageSources.hypothermiaInstant(player.level()), 4.0F);
         }
-        else if (lowestEffectiveTemperature < -150) {
+        else if (lowestEffectiveTemperature < -200) {
             if (r.nextFloat() < 0.75)
                 player.hurt(FHDamageSources.hypothermiaInstant(player.level()), 3.0F);
         }
-        else if (lowestEffectiveTemperature < -100) {
+        else if (lowestEffectiveTemperature < -150) {
             if (r.nextFloat() < 5)
                 player.hurt(FHDamageSources.hypothermiaInstant(player.level()), 2.0F);
         }
-        else if (lowestEffectiveTemperature < -50) {
+        else if (lowestEffectiveTemperature < -100) {
             if (r.nextFloat() < 0.25)
                 player.hurt(FHDamageSources.hypothermiaInstant(player.level()), 1.0F);
         }
