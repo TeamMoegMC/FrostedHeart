@@ -265,7 +265,7 @@ public class TeamResearchData implements SpecialData {
 				return false;
 			}
 		}
-		if (!this.hasInsight(research.getInsight()))
+		if (!this.hasInsight(team, research.getInsight()))
 			return false;
 		if (!research.getRequiredItems().isEmpty() && !RecipeUtils.costItems(player, research.getRequiredItems()))
 			return false;
@@ -683,7 +683,7 @@ public class TeamResearchData implements SpecialData {
 	}
 
 	public boolean costInsight(TeamDataHolder team,int toCostLevel) {
-		if (hasInsight(toCostLevel)) {
+		if (hasInsight(team, toCostLevel)) {
 			int newUsedInsightLevel = this.usedInsightLevel + toCostLevel;
 			setUsedInsightLevel(team, newUsedInsightLevel);
 			return true;
@@ -692,10 +692,11 @@ public class TeamResearchData implements SpecialData {
 		}
 	}
 
-	public boolean hasInsight(int toCostLevel) {
+	public boolean hasInsight(TeamDataHolder team, int toCostLevel) {
 		// This should not Happen!
 		if (insightLevel < usedInsightLevel) {
-			FRMain.LOGGER.warn("Insight Level should not less than Used Insight Level. Contact Admins!");
+			FRMain.LOGGER.warn("Insight Level should not less than Used Insight Level. Setting them equal.");
+			setUsedInsightLevel(team, insightLevel);
 		}
 
 		return toCostLevel <= this.insightLevel - this.usedInsightLevel;
