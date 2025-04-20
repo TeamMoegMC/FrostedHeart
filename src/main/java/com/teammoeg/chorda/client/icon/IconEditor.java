@@ -51,15 +51,16 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
     public static final Editor<CombinedIcon> COMBINED_EDITOR = (p, l, v, c) -> new Combined(p, l, v, c).open();
     public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<String>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), CIcons.internals::keySet, Components::str, e -> new String[]{e}, CIcons.internals::get).open();
     public static final Editor<TextureUVIcon> UV_EDITOR = (p, l, v, c) -> new UV(p, l, v, c).open();
+    public static final Editor<CIcon> NOP_CHANGE_EDITOR = (p, l, v, c) -> getEditor().open(p, l, null, c);
     T v;
     public IconEditor(UIWidget panel, T v) {
         super(panel);
         this.v = v;
-    }        public static final Editor<CIcon> NOP_CHANGE_EDITOR = (p, l, v, c) -> getEditor().open(p, l, null, c);
+    }        
 
     @Override
     public void render(GuiGraphics arg0, int arg2, int arg3, int arg4, int arg5) {
-        super.render(arg0,arg2 + 300, arg3 + 20, 32, 32);
+        super.render(arg0,arg2, arg3, arg4, arg5);
     }
     public static final Editor<AnimatedIcon> ANIMATED_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v == null ? null : v.icons, null, getEditor(), e -> Components.str(e.getClass().getSimpleName()),
             e -> e, e -> c.accept(new AnimatedIcon(e.toArray(new CIcon[0])))).open();

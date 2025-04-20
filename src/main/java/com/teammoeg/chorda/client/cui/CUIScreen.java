@@ -113,12 +113,15 @@ public class CUIScreen extends Screen implements CUIScreenManager {
 		CGuiHelper.resetGuiDrawing();
 		Window win = super.minecraft.getWindow();
 		primaryLayer.onBeforeRender();
-		x = (win.getGuiScaledWidth() - primaryLayer.width) / 2;
-		y = (win.getGuiScaledHeight() - primaryLayer.height) / 2;
-		primaryLayer.updateGui(mouseX - x, mouseY - y, partialTicks);
-		primaryLayer.updateMouseOver();
 		int w = primaryLayer.width;
 		int h = primaryLayer.height;
+		x = (win.getGuiScaledWidth() - w) / 2;
+		y = (win.getGuiScaledHeight() - h) / 2;
+		
+		System.out.println("x="+x+"y="+y+"w="+w+"h="+h);
+		primaryLayer.updateGui(mouseX - x, mouseY - y, partialTicks);
+		primaryLayer.updateMouseOver();
+
 		primaryLayer.render(graphics, x, y, w, h);
 		primaryLayer.drawForeground(graphics, x, y, w, h);
 		this.width = w;

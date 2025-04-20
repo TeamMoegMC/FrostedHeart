@@ -82,11 +82,11 @@ public class ClueEditors {
         GAME.open(p, l, ex, o->{if(findex>=0)fclues.set(findex,o);else fclues.add(o);c.accept(fclues);});
     };
     public static final Editor<Clue> EDITOR = new EditorSelector.EditorSelectorBuilder<Clue>()
-        .addEditor("Submit Item", ITEM,v->v instanceof ItemClue)
-        .addEditor("Triger in program", CUSTOM,v->v instanceof CustomClue)
-        .addEditor("Advancement", ADVA,v->v instanceof AdvancementClue)
-        .addEditor("Kill Entity", KILL,v->v instanceof KillClue)
-        .addEditor("Complete minigame", GAME,v->v instanceof MinigameClue)
+        .addEditor("Submit Item", ITEM,v->v.getClass()== ItemClue.class)
+        .addEditor("Triger in program", CUSTOM,v->v.getClass()== CustomClue.class)
+        .addEditor("Advancement", ADVA,v->v.getClass()== AdvancementClue.class)
+        .addEditor("Kill Entity", KILL,v->v.getClass()== KillClue.class)
+        .addEditor("Complete minigame", GAME,v->v.getClass()== MinigameClue.class)
         .build();
     public static <T extends Clue> Applicative6<SetterAndGetter<T, ?>, String, String, String, String, Float, Boolean> applyBase(Applicative0<SetterAndGetter<T, ?>> app) {
     	return app.add(Editors.STRING_ID.withName("nonce").forGetter(Clue::getNonce))

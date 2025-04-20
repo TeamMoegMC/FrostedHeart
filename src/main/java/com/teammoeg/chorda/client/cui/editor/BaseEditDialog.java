@@ -29,6 +29,7 @@ public abstract class BaseEditDialog extends EditDialog {
     public BaseEditDialog(UIWidget panel) {
         super(panel);
         setWidth(400);
+        setHeight(250);
     }
 
 	@Override

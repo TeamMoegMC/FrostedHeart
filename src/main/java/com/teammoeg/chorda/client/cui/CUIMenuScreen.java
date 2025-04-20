@@ -111,10 +111,10 @@ public class CUIMenuScreen<T extends AbstractContainerMenu> extends AbstractCont
 	@Override
 	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
 		graphics.pose().pushPose();
-		graphics.pose().translate(-leftPos, -topPos, 0);
+		//graphics.pose().translate(-leftPos, -topPos, 0);
 		CGuiHelper.resetGuiDrawing();
 
-		primaryLayer.drawForeground(graphics, leftPos, topPos, imageWidth, imageHeight);
+		primaryLayer.drawForeground(graphics, 0, 0, imageWidth, imageHeight);
 
 		primaryLayer.getTooltip(display::add);
 
@@ -144,6 +144,8 @@ public class CUIMenuScreen<T extends AbstractContainerMenu> extends AbstractCont
         topPos=(win.getGuiScaledHeight() - primaryLayer.height) / 2;
 		imageWidth = primaryLayer.width;
 		imageHeight = primaryLayer.height;
+		
+		
 		primaryLayer.updateGui(mouseX-leftPos, mouseY-topPos, partialTicks);
 		primaryLayer.updateMouseOver();
 		super.render(graphics, mouseX, mouseY, partialTicks);
