@@ -40,8 +40,6 @@ import net.minecraftforge.registries.tags.ITag;
 import java.util.Collection;
 import java.util.stream.Stream;
 
-import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
-
 public class CRegistryHelper {
 	public static String getPath(Block v) {
 		return getRegistryName(v).getPath();
@@ -79,8 +77,9 @@ public class CRegistryHelper {
 		return ForgeRegistries.ITEMS.getValue(rl);
 	}
 	public static Item getItemThrow(ResourceLocation rl) {
-		if(!ForgeRegistries.ITEMS.containsKey(rl))
-			new IllegalStateException("Item: " + rl + " does not exist");
+		if(!ForgeRegistries.ITEMS.containsKey(rl)){
+			throw new IllegalStateException("Item: " + rl + " does not exist");
+		}
 		return ForgeRegistries.ITEMS.getValue(rl);
 	}
 	public static MobEffect getEffect(ResourceLocation rl) {
@@ -99,6 +98,12 @@ public class CRegistryHelper {
 		return ForgeRegistries.ENCHANTMENTS.getKey(enchID);
 	}
 	public static Block getBlock(ResourceLocation resourceLocation) {
+		return ForgeRegistries.BLOCKS.getValue(resourceLocation);
+	}
+	public static Block getBlockThrow(ResourceLocation resourceLocation) {
+		if(!ForgeRegistries.BLOCKS.containsKey(resourceLocation)){
+			throw new IllegalStateException("Block: " + resourceLocation + " does not exist");
+		}
 		return ForgeRegistries.BLOCKS.getValue(resourceLocation);
 	}
 	public static VillagerProfession getProfess(ResourceLocation resourceLocation) {

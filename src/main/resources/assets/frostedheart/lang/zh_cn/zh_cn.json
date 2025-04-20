@@ -800,7 +800,8 @@
   "block.frostedheart.layered_thin_ice": "薄冰",
   "item.frostedheart.cooked_whale_meat": "熟鲸肉",
   "item.frostedheart.raw_whale_meat": "生鲸肉",
-  "block.frostedheart.rubber_dandelion": "橡胶草",
+  "block.frostedheart.rubber_dandelion": "橡胶草根",
+  "block.frostedheart.wild_rubber_dandelion": "野生橡胶草",
   "item.frostedheart.dandelion_root": "橡胶草根",
   "item.frostedheart.inulin": "菊粉"
 }

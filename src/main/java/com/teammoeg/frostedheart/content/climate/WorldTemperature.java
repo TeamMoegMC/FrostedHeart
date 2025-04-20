@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTemperature;
@@ -33,6 +34,8 @@ import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
@@ -41,6 +44,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -511,39 +515,16 @@ public class WorldTemperature {
      * Use this when you need a comprehensive check on plant status
      */
     public static PlantStatus checkPlantStatus(LevelAccessor level, BlockPos pos, Block block) {
-        float blockTemp = block(level, pos);
         PlantTempData data = PlantTempData.getPlantData(block);
-
-        if (data == null) {
-            return PlantStatus.NOT_PLANT;
-        }
-
-        if(openToAir(level,pos)) {
-	        if (WorldClimate.isBlizzard(level)&&data.blizzardVulnerable()) {
-	            return PlantStatus.WILL_DIE;
-	        }
-	        if (WorldClimate.isSnowing(level)&&data.snowVulnerable()) {
-	            return PlantStatus.WILL_DIE;
-	        }
-        }
-        if (data.isValidTemperature(TemperatureType.BONEMEAL, blockTemp)) {
-            return PlantStatus.CAN_FERTILIZE;
-        }
-        if (data.isValidTemperature(TemperatureType.GROW, blockTemp)) {
-            return PlantStatus.CAN_GROW;
-        }
-        if (data.isValidTemperature(TemperatureType.SURVIVE, blockTemp)) {
-            return PlantStatus.CAN_SURVIVE;
-        }
-        return PlantStatus.WILL_DIE;
+        return checkPlantStatus(level,pos,data);
     }
 
-    public static PlantStatus checkPlantStatus(LevelAccessor level, BlockPos pos, PlantTempData data) {
-        float blockTemp = block(level, pos);
-
+    public static PlantStatus checkPlantStatus(LevelAccessor level, BlockPos pos,@Nullable PlantTempData data) {
         if (data == null) {
             return PlantStatus.NOT_PLANT;
         }
+        
+        float blockTemp = block(level, pos);
 
         if(openToAir(level,pos)) {
             if (WorldClimate.isBlizzard(level)&&data.blizzardVulnerable()) {
@@ -563,5 +544,32 @@ public class WorldTemperature {
             return PlantStatus.CAN_SURVIVE;
         }
         return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
+    }
+    
+    
+    public static void updatePlant(ServerLevel level, BlockPos pos) {
+        //TODO[xkball] 实现土变冻土时枯死上方植物? 注释掉的方案不可行,因为土变冻土也是用植物温度数据实现的,直接递归会导致一次性变一条的冻土.
+//        var abovePos = pos.above();
+//        var aboveBlock = level.getBlockState(abovePos).getBlock();
+//        var aboveStatus = checkPlantStatus(level, abovePos, aboveBlock);
+//        if(!aboveStatus.notPlant()){
+//            updatePlantRecursive(level,abovePos,aboveStatus);
+//        }
+        
+        var selfBlock = level.getBlockState(pos).getBlock();
+        var selfData = PlantTempData.getPlantData(selfBlock);
+        if(selfData == null){
+            return;
+        }
+        
+        var selfStatus = checkPlantStatus(level,pos,selfData);
+        if (selfStatus.willDie()) {
+            var dead =  selfData.dead();
+            var belowBlockState = level.getBlockState(pos.below());
+            if (dead == Blocks.DEAD_BUSH && !belowBlockState.isAir() && !belowBlockState.is(BlockTags.DEAD_BUSH_MAY_PLACE_ON)) {
+                level.setBlockAndUpdate(pos.below(), Blocks.DIRT.defaultBlockState());
+            }
+            level.setBlockAndUpdate(pos, dead.defaultBlockState());
+        }
     }
 }

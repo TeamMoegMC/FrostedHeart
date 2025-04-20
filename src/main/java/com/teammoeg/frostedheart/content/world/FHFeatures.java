@@ -21,22 +21,39 @@ package com.teammoeg.frostedheart.content.world;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.content.agriculture.WildRubberDandelionBlock;
 import com.teammoeg.frostedheart.content.world.features.*;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderGetter;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.data.worldgen.BootstapContext;
+import net.minecraft.data.worldgen.features.FeatureUtils;
+import net.minecraft.data.worldgen.placement.PlacementUtils;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.valueproviders.UniformInt;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.DiskFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FossilFeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.DiskConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.RandomPatchConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.SimpleBlockConfiguration;
+import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
+import net.minecraft.world.level.levelgen.feature.stateproviders.RandomizedIntStateProvider;
+import net.minecraft.world.level.levelgen.placement.BiomeFilter;
+import net.minecraft.world.level.levelgen.placement.InSquarePlacement;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
+import net.minecraft.world.level.levelgen.placement.RarityFilter;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 import java.util.function.Function;
 
+@SuppressWarnings("unused")
 public class FHFeatures {
     public static final DeferredRegister<Feature<?>> FEATURES = DeferredRegister.create(ForgeRegistries.FEATURES, FHMain.MODID);
 
@@ -52,7 +69,7 @@ public class FHFeatures {
         return FEATURES.register(name, () -> feature.apply(codec));
     }
 
-    public static final class Keys
+    public static final class FHPlacedFeatures
     {
         public static final ResourceKey<PlacedFeature> FREEZE_TOP_LAYER = key("freeze_top_layer");
         public static final ResourceKey<PlacedFeature> ICE_SPIKES = key("ice_spikes");
@@ -65,10 +82,41 @@ public class FHFeatures {
 
         public static final ResourceKey<PlacedFeature> FH_FOSSIL = key("fossil");
         // public static final ResourceKey<PlacedFeature> THIN_ICE_PATCH = key("thin_ice_patch");
+        public static final ResourceKey<PlacedFeature> WILD_RUBBER_DANDELION = key("wild_rubber_dandelion");
 
         private static ResourceKey<PlacedFeature> key(String name)
         {
             return ResourceKey.create(Registries.PLACED_FEATURE, FHMain.rl(name));
+        }
+        
+        public static void bootstrap(BootstapContext<PlacedFeature> ctx){
+            HolderGetter<ConfiguredFeature<?, ?>> featureLookup = ctx.lookup(Registries.CONFIGURED_FEATURE);
+            Holder<ConfiguredFeature<?,?>> wildRubberDandelion = featureLookup.getOrThrow(FHConfiguredFeatures.WILD_RUBBER_DANDELION);
+            
+            PlacementUtils.register(ctx,WILD_RUBBER_DANDELION,wildRubberDandelion,
+                    RarityFilter.onAverageOnceEvery(64),
+                    InSquarePlacement.spread(),
+                    PlacementUtils.HEIGHTMAP_WORLD_SURFACE,
+                    BiomeFilter.biome());
+        }
+    }
+    
+    public static final class FHConfiguredFeatures{
+        public static final ResourceKey<ConfiguredFeature<?, ?>> WILD_RUBBER_DANDELION = key("wild_rubber_dandelion");
+        
+        private static ResourceKey<ConfiguredFeature<?, ?>> key(String name){
+            return ResourceKey.create(Registries.CONFIGURED_FEATURE, FHMain.rl(name));
+        }
+        
+        public static void bootstrap(BootstapContext<ConfiguredFeature<?, ?>> ctx){
+            FeatureUtils.register(ctx, WILD_RUBBER_DANDELION,Feature.RANDOM_PATCH,
+                    new RandomPatchConfiguration(64,12,4,
+                            PlacementUtils.onlyWhenEmpty(Feature.SIMPLE_BLOCK,
+                                    new SimpleBlockConfiguration(
+                                            new RandomizedIntStateProvider(
+                                                    BlockStateProvider.simple(FHBlocks.WILD_RUBBER_DANDELION.get()),
+                                                    WildRubberDandelionBlock.VARIANT,
+                                                    UniformInt.of(0,2))))));
         }
     }
 
