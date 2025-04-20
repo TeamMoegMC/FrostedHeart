@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRMain;
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.effects.Effect;
@@ -76,7 +76,7 @@ public class JEICompat implements IModPlugin {
         FRMain.LOGGER.info("added research jei info");
         cachedInfoAdd = false;
         Set<Item> items = new HashSet<>();
-        for (Recipe<?> i : ResearchListeners.recipe) {
+        for (Recipe<?> i : ResearchHooks.recipe) {
             ItemStack out = RecipeUtil.getResultItem(i);
             if (out != null && !out.isEmpty()) {
                 items.add(out.getItem());
@@ -137,7 +137,7 @@ public class JEICompat implements IModPlugin {
             addInfo();
         Set<Item> locked = new HashSet<>();
         Set<Item> unlocked = new HashSet<>();
-        for (Recipe<?> i : ResearchListeners.recipe) {
+        for (Recipe<?> i : ResearchHooks.recipe) {
             //System.out.println(i.getType().toString()+":"+String.join(",",all.stream().map(Object::toString).collect(Collectors.toList())));
             ItemStack irs = RecipeUtil.getResultItem(i);
            
@@ -175,7 +175,7 @@ public class JEICompat implements IModPlugin {
                 man.hideRecipes(RecipeTypes.INFORMATION,entry.getValue());
             }
         }
-        for (ResourceLocation rl : ResearchListeners.categories) {
+        for (ResourceLocation rl : ResearchHooks.categories) {
         	RecipeType<?> type=man.getRecipeType(rl).orElse(null);
         	if(type!=null) {
 	            if (!ClientResearchDataAPI.getData().get().categories.has(rl)) {

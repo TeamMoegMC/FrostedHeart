@@ -36,7 +36,7 @@ import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.chorda.util.IERecipeUtils;
 import com.teammoeg.chorda.util.struct.LazyTickWorker;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 
 import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -318,7 +318,7 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
 	public void upgradeStructure(IMultiblockContext<R> ctx, ServerPlayer entityplayer) {
 		if (!nextLevelHasValidStructure(ctx.getLevel().getRawLevel(), ctx))
 			return;
-		if (!ResearchListeners.hasMultiblock(ctx.getState().getOwner(), getNextLevelMultiblock()))
+		if (!ResearchHooks.hasMultiblock(ctx.getState().getOwner(), getNextLevelMultiblock()))
 			return;
 		List<IngredientWithSize> upgradecost = getUpgradeCost(ctx.getLevel().getRawLevel());
 		if (!IERecipeUtils.costItems(entityplayer, upgradecost))

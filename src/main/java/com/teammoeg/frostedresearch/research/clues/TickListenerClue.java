@@ -20,7 +20,7 @@
 package com.teammoeg.frostedresearch.research.clues;
 
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 import com.teammoeg.frostedresearch.research.Research;
 
@@ -52,14 +52,14 @@ public abstract class TickListenerClue extends ListenerClue {
 
 	@Override
     public void initListener(TeamDataHolder t, Research parent) {
-        ResearchListeners.getTickClues().add(super.getClueClosure(parent), t.getId());
+        ResearchHooks.getTickClues().add(super.getClueClosure(parent), t.getId());
     }
 
     public abstract boolean isCompleted(TeamResearchData t, ServerPlayer player);
 
     @Override
     public void removeListener(TeamDataHolder t, Research parent) {
-        ResearchListeners.getTickClues().remove(super.getClueClosure(parent), t.getId());
+        ResearchHooks.getTickClues().remove(super.getClueClosure(parent), t.getId());
     }
 
 }

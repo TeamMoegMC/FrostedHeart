@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.kinetics.crafter.MechanicalCraftingRecipe;
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
@@ -47,6 +47,6 @@ public class MixinMechanicalCraftingRecipe extends ShapedRecipe {
 
 	@Inject(at = @At("HEAD"), method = "matches", cancellable = true)
     public void fh$matches(CraftingContainer inv, Level worldIn, CallbackInfoReturnable<Boolean> cbi) {
-        if (!ResearchListeners.canUseRecipe(ResearchListeners.te, this)) cbi.setReturnValue(false);
+        if (!ResearchHooks.canUseRecipe(ResearchHooks.te, this)) cbi.setReturnValue(false);
     }
 }

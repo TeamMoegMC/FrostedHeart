@@ -26,7 +26,7 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FRContents;
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardPos;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.GenerateInfo;
@@ -93,7 +93,7 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
 
     public void initGame(ServerPlayer player) {
         if (inventory.get(PAPER_SLOT).isEmpty()) return;
-        int lvl = ResearchListeners.fetchGameLevel(player);
+        int lvl = ResearchHooks.fetchGameLevel(player);
         if (lvl < 0) return;
         Optional<ResearchPaperRecipe> pr = CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.get(PAPER_SLOT))).findAny();
         if (!pr.isPresent()) return;
@@ -110,14 +110,14 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
         ItemStack is = inventory.get(INK_SLOT);
         if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
         IPen pen = (IPen) is.getItem();
-        return pen.getLevel(is, ClientUtils.getPlayer()) >= ResearchListeners.fetchGameLevel() && pen.canUse(ClientUtils.getPlayer(), is, val);
+        return pen.getLevel(is, ClientUtils.getPlayer()) >= ResearchHooks.fetchGameLevel() && pen.canUse(ClientUtils.getPlayer(), is, val);
     }
 
     @OnlyIn(Dist.CLIENT)
     public boolean isPaperSatisfied() {
         ItemStack is = inventory.get(PAPER_SLOT);
         if (is.isEmpty()) return false;
-        int lvl = ResearchListeners.fetchGameLevel();
+        int lvl = ResearchHooks.fetchGameLevel();
         return CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.maxlevel >= lvl && r.paper.test(is));
     }
 
@@ -146,7 +146,7 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
     }
 
     public void submitItem(ServerPlayer sender) {
-        inventory.set(EXAMINE_SLOT, ResearchListeners.submitItem(sender, inventory.get(EXAMINE_SLOT)));
+        inventory.set(EXAMINE_SLOT, ResearchHooks.submitItem(sender, inventory.get(EXAMINE_SLOT)));
     }
 
     public boolean tryCombine(ServerPlayer player, CardPos cp1, CardPos cp2) {
@@ -166,7 +166,7 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
     public void updateGame(ServerPlayer player) {
         if (game.isFinished()) {
 
-            ResearchListeners.commitGameLevel(player, game.getLvl());
+            ResearchHooks.commitGameLevel(player, game.getLvl());
             game.reset();
         }
     }

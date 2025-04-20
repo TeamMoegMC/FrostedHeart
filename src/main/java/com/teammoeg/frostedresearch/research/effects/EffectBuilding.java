@@ -35,7 +35,7 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedresearch.Lang;
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.data.ResearchData;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 
@@ -114,7 +114,7 @@ public class EffectBuilding extends Effect {
 
     @Override
     public void init() {
-        ResearchListeners.multiblock.add(multiblock);
+        ResearchHooks.multiblock.add(multiblock);
     }
 
     @OnlyIn(Dist.CLIENT)

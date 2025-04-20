@@ -20,7 +20,7 @@
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
 import com.teammoeg.frostedresearch.Lang;
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedresearch.gui.TechButton;
 import com.teammoeg.frostedresearch.gui.TechIcons;
@@ -174,7 +174,7 @@ class MainGamePanel extends Panel {
             DrawDeskIcons.DIALOG_FRAME.draw(matrixStack, x + 7, y + 54, 137, 52);
             status.draw(matrixStack, theme, status.getX(), status.getY(), status.width, status.height);
         }
-        if (ResearchListeners.fetchGameLevel() == -1) {
+        if (ResearchHooks.fetchGameLevel() == -1) {
             if (lstatus != 4) {
                 status.setText(Lang.translateGui("minigame.no_clue"));
                 status.setPosAndSize(22, 54, 108, 50);

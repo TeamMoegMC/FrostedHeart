@@ -24,7 +24,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FRMain;
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 import com.teammoeg.frostedresearch.research.Research;
 
@@ -83,7 +83,7 @@ public class KillClue extends ListenerClue {
 
     @Override
     public void initListener(TeamDataHolder t, Research parent) {
-        ResearchListeners.getKillClues().add(super.getClueClosure(parent), t.getId());
+        ResearchHooks.getKillClues().add(super.getClueClosure(parent), t.getId());
     }
 
     public boolean isCompleted(TeamResearchData trd, LivingEntity e) {
@@ -95,7 +95,7 @@ public class KillClue extends ListenerClue {
 
     @Override
     public void removeListener(TeamDataHolder t, Research parent) {
-        ResearchListeners.getKillClues().remove(super.getClueClosure(parent), t.getId());
+        ResearchHooks.getKillClues().remove(super.getClueClosure(parent), t.getId());
     }
 
 }

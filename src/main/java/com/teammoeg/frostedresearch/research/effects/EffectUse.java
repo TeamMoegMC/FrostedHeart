@@ -27,7 +27,7 @@ import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.frostedresearch.Lang;
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -102,7 +102,7 @@ public class EffectUse extends Effect {
 
     @Override
     public void init() {
-        ResearchListeners.block.addAll(blocks);
+        ResearchHooks.block.addAll(blocks);
     }
 
     @Override

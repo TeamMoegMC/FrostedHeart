@@ -59,7 +59,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public class ResearchListeners {
+public class ResearchHooks {
     public static RecipeUnlockList recipe = new RecipeUnlockList();
     public static MultiblockUnlockList multiblock = new MultiblockUnlockList();
     public static BlockUnlockList block = new BlockUnlockList();
@@ -67,7 +67,7 @@ public class ResearchListeners {
     public static UUID te;
     private static ListenerList<TickListenerClue> tickClues = new ListenerList<>();
     private static ListenerList<KillClue> killClues = new ListenerList<>();
-    private ResearchListeners() {
+    private ResearchHooks() {
 
     }
 
@@ -206,7 +206,7 @@ public class ResearchListeners {
     }
 
     public static boolean hasMultiblock(UUID rid, IETemplateMultiblock mb) {
-        if (ResearchListeners.multiblock.has(mb))
+        if (ResearchHooks.multiblock.has(mb))
             if (rid == null) {
                 if (!ClientResearchDataAPI.getData().get().building.has(mb)) {
                     return false;

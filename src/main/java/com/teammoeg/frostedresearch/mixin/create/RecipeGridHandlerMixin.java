@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlockEntity;
 import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler;
 import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler.GroupedItems;
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 
 import net.minecraft.world.inventory.CraftingContainer;
@@ -39,19 +39,19 @@ import net.minecraft.world.level.Level;
 public class RecipeGridHandlerMixin {
     @Inject(at = @At("HEAD"), method = "getTargetingCrafter", remap = false)
     private static void fh$getTargetingCrafter(MechanicalCrafterBlockEntity crafter, CallbackInfoReturnable<MechanicalCrafterBlockEntity> cbi) {
-        ResearchListeners.te = IOwnerTile.getOwner(crafter);
+        ResearchHooks.te = IOwnerTile.getOwner(crafter);
     }
 
     @Inject(at = @At("HEAD"), method = "isRecipeAllowed", cancellable = true, remap = false)
     private static void fh$isRecipeAllowed(CraftingRecipe recipe, CraftingContainer inventory, CallbackInfoReturnable<Boolean> cbi) {
-        if (!ResearchListeners.canUseRecipe(ResearchListeners.te, recipe))
+        if (!ResearchHooks.canUseRecipe(ResearchHooks.te, recipe))
             cbi.setReturnValue(false);
 
     }
 
     @Inject(at = @At("RETURN"), method = "tryToApplyRecipe", cancellable = true, remap = false)
     private static void fh$tryToApplyRecipe(Level world, GroupedItems items, CallbackInfoReturnable<ItemStack> cbi) {
-        ResearchListeners.te = null;
+        ResearchHooks.te = null;
     }
 
     public RecipeGridHandlerMixin() {

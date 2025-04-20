@@ -32,7 +32,7 @@ import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FRMain;
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.compat.JEICompat;
 import com.teammoeg.frostedresearch.data.ResearchData;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
@@ -161,7 +161,7 @@ public class EffectCrafting extends Effect {
     public void init() {
         if (ingredient != null)
             initItem();
-        ResearchListeners.recipe.addAll(unlocks);
+        ResearchHooks.recipe.addAll(unlocks);
     }
 
     private void initItem() {

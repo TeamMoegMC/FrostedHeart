@@ -21,7 +21,7 @@ package com.teammoeg.frostedresearch.mixin.minecraft.research;
 
 import org.spongepowered.asm.mixin.Mixin;
 
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.ResultContainer;
@@ -41,7 +41,7 @@ public abstract class ResultContainerMixin_Research implements RecipeHolder, Con
 
     @Override
     public boolean setRecipeUsed(Level worldIn, ServerPlayer player, Recipe<?> recipe) {
-        if (ResearchListeners.canUseRecipe(player, recipe))
+        if (ResearchHooks.canUseRecipe(player, recipe))
             return RecipeHolder.super.setRecipeUsed(worldIn, player, recipe);
         return false;
     }

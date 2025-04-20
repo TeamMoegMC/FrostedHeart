@@ -189,7 +189,7 @@ public class FHResearch {
      */
     public static void init() {
         ClientResearchData.last = null;
-        ResearchListeners.reload();
+        ResearchHooks.reload();
         // No need to clear all as data manager would handle this.
 
         // FHResearch.clearAll();
@@ -204,7 +204,7 @@ public class FHResearch {
 
     public static void initFromRegistry(CompoundTag data) {
         ClientResearchData.last = null;
-        ResearchListeners.reload();
+        ResearchHooks.reload();
 
         // no need
         FHResearch.clearAll();
@@ -219,12 +219,12 @@ public class FHResearch {
         finishReload();
         MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResearchListeners::reloadEditor);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResearchHooks::reloadEditor);
     }
 
     public static void initFromPacket(CompoundTag data, List<Research> rs) {
         ClientResearchData.last = null;
-        ResearchListeners.reload();
+        ResearchHooks.reload();
         // no need
         FHResearch.clearAll();
         prepareReload();
@@ -235,7 +235,7 @@ public class FHResearch {
         finishReload();
         MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResearchListeners::reloadEditor);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResearchHooks::reloadEditor);
         // FHResearch.saveAll();
     }
 

@@ -31,7 +31,7 @@ import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 import com.teammoeg.frostedresearch.compat.JEICompat;
@@ -81,7 +81,7 @@ public class ResearchCommonEvents {
     public static void tickResearch(TickEvent.PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == TickEvent.Phase.START
                 && event.player instanceof ServerPlayer) {
-            ResearchListeners.tick((ServerPlayer) event.player);
+            ResearchHooks.tick((ServerPlayer) event.player);
         }
     }
 	@SubscribeEvent
@@ -102,7 +102,7 @@ public class ResearchCommonEvents {
         if (ent.getCommandSenderWorld().isClientSide) return;
         ServerPlayer p = (ServerPlayer) ent;
 
-        ResearchListeners.kill(p, event.getEntity());
+        ResearchHooks.kill(p, event.getEntity());
     }
 
     @SubscribeEvent
@@ -111,7 +111,7 @@ public class ResearchCommonEvents {
             event.setCanceled(true);
             return;
         }
-        if (ResearchListeners.multiblock.has(event.getMultiblock()))
+        if (ResearchHooks.multiblock.has(event.getMultiblock()))
             if (event.getEntity().getCommandSenderWorld().isClientSide) {
                 if (!ClientResearchDataAPI.getData().get().building.has(event.getMultiblock())) {
                     event.setCanceled(true);
@@ -127,7 +127,7 @@ public class ResearchCommonEvents {
 
     @SubscribeEvent
     public static void canUseBlock(PlayerInteractEvent.RightClickBlock event) {
-        if (!ResearchListeners.canUseBlock(event.getEntity(), event.getLevel().getBlockState(event.getHitVec().getBlockPos()).getBlock())) {
+        if (!ResearchHooks.canUseBlock(event.getEntity(), event.getLevel().getBlockState(event.getHitVec().getBlockPos()).getBlock())) {
             event.setUseBlock(Event.Result.DENY);
 
             event.getEntity().displayClientMessage(Lang.translateMessage("research.cannot_use_block"), true);

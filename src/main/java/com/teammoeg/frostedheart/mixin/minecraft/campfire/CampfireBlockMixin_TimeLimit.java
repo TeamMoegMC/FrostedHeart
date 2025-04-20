@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.mixin.minecraft.campfire;
 
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -99,7 +99,7 @@ public abstract class CampfireBlockMixin_TimeLimit extends BaseEntityBlock {
 //                        }
                         Optional<CampfireCookingRecipe> optional = campfiretileentity.getCookableRecipe(itemstack);
                         if (optional.isPresent()) {
-                            if (ResearchListeners.canUseRecipe(player, optional.get()) && campfiretileentity.placeFood(player,player.getAbilities().instabuild ? itemstack.copy() : itemstack, optional.get().getCookingTime())) {
+                            if (ResearchHooks.canUseRecipe(player, optional.get()) && campfiretileentity.placeFood(player,player.getAbilities().instabuild ? itemstack.copy() : itemstack, optional.get().getCookingTime())) {
                                 player.awardStat(Stats.INTERACT_WITH_CAMPFIRE);
                                 return InteractionResult.CONSUME;
                             }

@@ -25,7 +25,7 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedresearch.Lang;
-import com.teammoeg.frostedresearch.ResearchListeners;
+import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.compat.JEICompat;
 import com.teammoeg.frostedresearch.data.ResearchData;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
@@ -99,7 +99,7 @@ public class EffectShowCategory extends Effect {
 
     @Override
     public void init() {
-        ResearchListeners.categories.add(cate);
+        ResearchHooks.categories.add(cate);
     }
 
     @OnlyIn(Dist.CLIENT)
