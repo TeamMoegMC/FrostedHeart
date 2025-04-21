@@ -381,7 +381,7 @@ public class WorldTemperature {
         float climateAffection=climate(world) * climateBlockAffection +dimension(world) + biome(world, pos) + altitude(world, pos);
         float heat=heat(world,pos);
 
-        return  Math.max(climateAffection+heat*2, heat)/*+ gaussian(world, 0, 0.3F)*/;
+        return  Math.min(climateAffection+heat*2, heat)/*+ gaussian(world, 0, 0.3F)*/;
     }
 
     /**
