@@ -196,7 +196,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         	tierOffset+=1;
         }
         // generator symbol
-        generatorSymbol.blitAtlas(matrixStack, leftPos, topPos, generatorPos, menu.isBroken.getValue()?0:((menu.isWorking.getValue() && menu.process.getValue() > 0) ? 2 : 1), (menu.getTier() - 1-tierOffset));
+        generatorSymbol.blitAtlas(matrixStack, leftPos, topPos, generatorPos,(tierOffset!=0||menu.isBroken.getValue())?0:((menu.isWorking.getValue() && menu.process.getValue() > 0) ? 2 : 1), (menu.getTier() - 1+tierOffset));
 
         // range gauge
         minorPointer.blitRotated(matrixStack, leftPos, topPos, rangeGauge, menu.rangeLevel.getValue() / 4f * 271f);
