@@ -3,10 +3,9 @@
   "block": "minecraft:cherry_sapling",
   "dead": "minecraft:dead_bush",
   "max_fertilize": 22.0,
-  "max_grow": 26.0,
-  "max_survive": 35.0,
+  "max_grow": 32.0,
   "min_fertilize": 12.0,
-  "min_grow": 8.0,
+  "min_grow": 10.0,
   "min_survive": -20.0,
   "snow_vulnerable": false
 }
