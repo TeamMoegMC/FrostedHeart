@@ -51,11 +51,13 @@ public class HealthCommonEvents {
         Player original = event.getOriginal();
 
         if (!(player instanceof ServerPlayer)) return;
+        player.reviveCaps();
         NutritionCapability.getCapability(player).ifPresent(nutrition->{
             NutritionCapability.getCapability(original).ifPresent(n->{
                 nutrition.set(n.get());
             });
         });
+        player.invalidateCaps();
     }
 
     @SubscribeEvent
