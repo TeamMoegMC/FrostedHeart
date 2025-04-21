@@ -110,19 +110,19 @@ public class TemperatureComputation {
         // burning
         // https://www.sciencedirect.com/topics/medicine-and-dentistry/thermal-injury#:~:text=Mechanism%20of%20Injury,is%20given%20in%20Table%202.&text=Source:%20Data%20modified%20from%20Moritz,Churchill%20Livingstone%20(Chapter%205).
         float highestEffectiveTemperature = data.getHighestFeelTemp();
-        if (highestEffectiveTemperature > 250) {
+        if (highestEffectiveTemperature > 230) {
             if (r.nextFloat() < 1.0)
                 player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 4.0F);
         }
-        else if (highestEffectiveTemperature > 200) {
+        else if (highestEffectiveTemperature > 180) {
             if (r.nextFloat() < 0.75)
                 player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 3.0F);
         }
-        else if (highestEffectiveTemperature > 150) {
+        else if (highestEffectiveTemperature > 130) {
             if (r.nextFloat() < 0.5)
                 player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 2.0F);
         }
-        else if (highestEffectiveTemperature > 100) {
+        else if (highestEffectiveTemperature > 80) {
             if (r.nextFloat() < 0.25)
                 player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 1.0F);
         }

@@ -360,6 +360,7 @@ public class PlayerTemperatureData implements NBTSerializable {
         float highestTemp = Float.NEGATIVE_INFINITY;
 
         for (BodyPart p : BodyPart.values()) {
+        	if(p==BodyPart.HANDS)continue;
             float temp = getFeelTempByPart(p);
             if (temp > highestTemp) {
                 highestTemp = temp;
@@ -373,6 +374,7 @@ public class PlayerTemperatureData implements NBTSerializable {
         float lowestTemp = Float.POSITIVE_INFINITY;
 
         for (BodyPart p : BodyPart.values()) {
+        	if(p==BodyPart.HANDS)continue;
             float temp = getFeelTempByPart(p);
             if (temp < lowestTemp) {
                 lowestTemp = temp;
