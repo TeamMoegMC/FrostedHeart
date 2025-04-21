@@ -4,6 +4,7 @@ import java.util.function.Function;
 
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
+import com.teammoeg.chorda.client.ui.ScreenAcceptor;
 import com.teammoeg.frostedresearch.blocks.MechCalcRenderer;
 import com.teammoeg.frostedresearch.compat.ftb.FTBQCompat;
 import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskScreen;
@@ -40,6 +41,13 @@ public class FRClient {
     }
     public static <C extends AbstractContainerMenu, S extends BaseScreen> MenuScreens.ScreenConstructor<C, MenuScreenWrapper<C>>
     FTBScreenFactory(Function<C, S> factory) {
-        return (c, i, t) -> new MenuScreenWrapper<>(factory.apply(c), c, i, t).disableSlotDrawing();
+        return (c, i, t) ->{
+        	S menu=factory.apply(c);
+        	MenuScreenWrapper<C> msw=new MenuScreenWrapper<>(menu, c, i, t).disableSlotDrawing();
+        	if(menu instanceof ScreenAcceptor sa) {
+        		sa.setScreen(msw);
+        	}
+        	return msw;
+        };
     }
 }

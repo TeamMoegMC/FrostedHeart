@@ -20,28 +20,48 @@
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
 import com.teammoeg.chorda.client.cui.editor.EditDialog;
+import com.teammoeg.chorda.client.ui.ScreenAcceptor;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedresearch.gui.ResearchGui;
 import com.teammoeg.frostedresearch.gui.tech.ResearchPanel;
 
+import blusunrize.immersiveengineering.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.util.TooltipList;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 
-public class DrawDeskScreen extends BaseScreen implements ResearchGui {
+public class DrawDeskScreen extends BaseScreen implements ResearchGui, ScreenAcceptor {
     DrawDeskContainer cx;
     DrawDeskPanel p;
     ResearchPanel r;
     EditDialog dialog;
-
+    @Setter
+    AbstractContainerScreen screen;
     public DrawDeskScreen(DrawDeskContainer cx) {
         super();
         this.cx = cx;
         p = new DrawDeskPanel(this);
         p.setEnabled(true);
+        this.screen=screen;
     }
 
     @Override
+	public boolean shouldAddMouseOverText() {
+		return true;
+	}
+
+	@Override
+	public void addMouseOverText(TooltipList list) {
+		if (this.cx.getCarried().isEmpty() && screen.getSlotUnderMouse() != null && screen.getSlotUnderMouse().hasItem()) {
+			AbstractContainerScreen.getTooltipFromItem(ClientUtils.mc(), screen.getSlotUnderMouse().getItem()).forEach(list::add);
+		}
+		super.addMouseOverText(list);
+	}
+
+	@Override
     public void addWidgets() {
         if (p != null && p.isEnabled())
             add(p);

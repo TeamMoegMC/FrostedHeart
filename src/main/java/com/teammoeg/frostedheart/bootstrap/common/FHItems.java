@@ -1540,11 +1540,13 @@ thinner.png
             .model(AssetLookup.existingItemModel())
             .lang("Wooden Cup")
             .register();
+
     public static ItemEntry<WoodenCupItem> wooden_cup_drink = REGISTRATE
             .item("wooden_cup_drink", p -> new WoodenCupItem(new Item.Properties().stacksTo(1), 250))
             .model(AssetLookup.existingItemModel())
             .lang("Wooden Cup With Drink")
             .removeTab(FHTabs.TOOLS.getKey())
+            
             .register();
     public static ItemEntry<LeatherWaterBagItem> LEATHER_WATER_BAG = REGISTRATE
             .item("leather_water_bag", p -> new LeatherWaterBagItem(new Item.Properties().stacksTo(1).setNoRepair(), 1000))

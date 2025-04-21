@@ -32,6 +32,8 @@ import com.tterrag.registrate.AbstractRegistrate;
 import com.tterrag.registrate.builders.BlockEntityBuilder;
 import com.tterrag.registrate.builders.Builder;
 import com.tterrag.registrate.builders.FluidBuilder;
+import com.tterrag.registrate.builders.ItemBuilder;
+import com.tterrag.registrate.util.CreativeModeTabModifier;
 import com.tterrag.registrate.util.entry.RegistryEntry;
 import com.tterrag.registrate.util.nullness.NonNullConsumer;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
@@ -47,6 +49,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.api.distmarker.Dist;
@@ -126,13 +129,25 @@ public class FHRegistrate extends AbstractRegistrate<FHRegistrate> {
                 TooltipModifier.REGISTRY.registerDeferred(entry.getId(), currentTooltipModifierFactory);
             }
         }
-        if (currentTab != null) {
+       /* if (currentTab != null) {
             TAB_LOOKUP.put(entry, currentTab);
-        }
+        }*/
         return entry;
     }
 
-    @Override
+
+
+	@Override
+	public <T extends Item, P> ItemBuilder<T, P> item(P parent, String name, NonNullFunction<Properties, T> factory) {
+		return super.item(parent, name, factory).tab(this.getCreativeTab().getKey());
+	}
+
+	/*@Override
+	public FHRegistrate modifyCreativeModeTab(ResourceKey<CreativeModeTab> creativeModeTab, Consumer<CreativeModeTabModifier> modifier) {
+		return this;
+	}*/
+
+	@Override
     public <T extends BlockEntity> CreateBlockEntityBuilder<T, FHRegistrate> blockEntity(String name,
                                                                                              BlockEntityBuilder.BlockEntityFactory<T> factory) {
         return blockEntity(self(), name, factory);
