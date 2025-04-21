@@ -264,7 +264,6 @@ public class FountainTileEntity extends CBlockEntity implements CTickableBlockEn
     }
 
     private void removeHeat() {
-        if (!heatAdjusted) return;
 
         ChunkHeatData.removeTempAdjust(level, worldPosition);
         heatAdjusted = false;

@@ -311,7 +311,8 @@ public class FHCommonEvents {
 
 			if (nw != null && orig != null)
 				nw.copy(orig);
-			nw.calledClone();
+			if (nw != null)
+				nw.calledClone();
 		}
 		//re-invalidate to make capability discarded
 		ev.getOriginal().invalidateCaps();

@@ -370,9 +370,10 @@ public class TemperatureUpdate {
                                     fluidModifier += 10F * (1 - partFluidResist);
                                 }
                             }
-                            
+                            float actualEffective=(1 + fluidModifier)*dt;
                             // May be negative! (when dt < 0)
-                            float heatExchangedUnits = (float) ((1 + fluidModifier) * unit * (dt / FHConfig.SERVER.heatExchangeTempConstant.get()));
+                            float heatExchangedUnits = (float) (actualEffective * unit  / FHConfig.SERVER.heatExchangeTempConstant.get());
+                            pctx.setEffectiveTemperature(actualEffective/5);
                             // System.out.println("fm:"+fluidModifier);
                             // Self-Heating
                             float selfHeatRate = data.getDifficulty().heat_unit; // normally 1

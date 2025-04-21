@@ -14,9 +14,10 @@ public class ColoredCubeWidget extends AbstractWidget {
 
     private static final Font font = Minecraft.getInstance().font;
     private static final int hotColor = 0xFFE60101;
-    private static final int warmColor = 0xFFFFA630;
+    private static final int warmColor = 0xFF000000;
     private static final int coldColor = 0xFF36A0FD;
     private static final int frozenColor = 0xFF130DB8;
+    private static final int outline=0xFFFFFFFF;
 
     private final Component desc;
 
@@ -42,10 +43,14 @@ public class ColoredCubeWidget extends AbstractWidget {
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, progress);
 
         guiGraphics.fill(x1, y1, x2, y2, color);
-        if(isHovered()) {
+        guiGraphics.fill(x1, y1, x2, y1+1, outline);
+        guiGraphics.fill(x1, y1, x1+1, y2, outline);
+        guiGraphics.fill(x1, y2-1, x2, y2, outline);
+        guiGraphics.fill(x2-1, y1, x2, y2, outline);
+        /*if(isHovered()) {
             //guiGraphics.drawString(Minecraft.getInstance().font, desc, i, i1, 0xFFFFFF);
             guiGraphics.drawString(font, (temp+37)+"°", i, i1-9, 0xFFFFFF);
-        }
+        }*/
 
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
