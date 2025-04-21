@@ -100,7 +100,6 @@ public class FountainTileEntity extends CBlockEntity implements CTickableBlockEn
         // server side logic
         if (!level.isClientSide) {
             // power logic
-            if (network.hasValidNetwork()) {
                 // start refill if power is below REFILL_THRESHOLD
                 // keep refill until network is full
                 if (refilling || power < REFILL_THRESHOLD) {
@@ -138,7 +137,6 @@ public class FountainTileEntity extends CBlockEntity implements CTickableBlockEn
                 }
                 setChanged();
                 this.syncData();
-            } else this.setActive(false);
 
             // grant player effect if structure is valid
             if (height > 0 && power > 0) {
