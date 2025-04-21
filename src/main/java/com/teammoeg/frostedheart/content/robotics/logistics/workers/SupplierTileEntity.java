@@ -19,80 +19,73 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
+import java.util.Optional;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.robotics.logistics.ItemChangeListener;
-import com.teammoeg.frostedheart.content.robotics.logistics.ItemHandlerListener;
-import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticInternalPushTask;
+import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
+import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticChest;
+import com.teammoeg.frostedheart.content.robotics.logistics.grid.RequestLogisticChest;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemStackHandler;
 
 @SuppressWarnings("unused")
-public class SupplierTileEntity extends CBlockEntity implements TaskableLogisticStorage,ItemChangeListener, CTickableBlockEntity {
-	ItemStackHandler container=new ItemStackHandler(27);
-	ItemHandlerListener handler=new ItemHandlerListener(container,this);
-	LogisticTask[] tasks=new LogisticTask[27];
-
-	public SupplierTileEntity(BlockEntityType<? extends BlockEntity> type,BlockPos pos,BlockState bs) {
-		super(type,pos,bs);
-	}
-
-	@Override
-	public ItemStackHandler getInventory() {
-		return container;
+public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEntity {
+	RequestLogisticChest container;
+	public LazyOptional<LogisticChest> grid=LazyOptional.of(()->container);
+	public LazyOptional<LogisticNetwork> network;
+	public SupplierTileEntity(BlockPos pos,BlockState bs) {
+		super(FHBlockEntityTypes.SUPPLIER_CHEST.get(),pos,bs);
+		container=new RequestLogisticChest(null,pos);
 	}
 
 
 
 	@Override
-	public LogisticTask[] getTasks() {
-		return tasks;
+	public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
+		container.deserialize(nbt.getCompound("chest"));
 	}
-
 	@Override
-	public void readCustomNBT(CompoundTag arg0, boolean arg1) {
-		if(!arg1) {
-			arg0.put("container", container.serializeNBT());
-		}
-	}
-
-	@Override
-	public void writeCustomNBT(CompoundTag arg0, boolean arg1) {
-		container.deserializeNBT(arg0.getCompound("container"));
-	}
-
-	@Override
-	public void onSlotChange(int slot, ItemStack after) {
-		tasks[slot]=new LogisticInternalPushTask(this,slot);
-	}
-
-	@Override
-	public void onSlotClear(int slot) {
-		tasks[slot]=null;
-	}
-
-	@Override
-	public void onCountChange(int slot, int before, int after) {
+	public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
+		nbt.put("chest",container.serialize());
 	}
 
 	@Override
 	public void tick() {
-		FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.getCapability(this.level).resolve()
-		.map(t->t.getNetworkFor(level,worldPosition))
-		.ifPresent(t->t.update(this));
+		container.tick();
+		if(network==null||!network.isPresent()) {
+			Optional<LazyOptional<LogisticNetwork>> chunkData=FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.
+			getCapability(this.level.getChunk(this.worldPosition)).map(t->t.getNetworkFor(level, worldPosition));
+			if(chunkData.isPresent()) {
+				LazyOptional<LogisticNetwork> ln=chunkData.get();
+				if(ln.isPresent()) {
+					network=ln;
+					ln.resolve().get().getHub().addElement(grid.cast());
+				}
+			}
+		}
 	}
-
 	@Override
-	public boolean isValidFor(ItemStack stack) {
-		return false;
+	public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
+		if(cap==ForgeCapabilities.ITEM_HANDLER)
+			return grid.cast();
+		return super.getCapability(cap, side);
 	}
 
 }

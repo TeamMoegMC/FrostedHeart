@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import com.teammoeg.frostedheart.content.health.dailykitchen.WantedFoodCapability;
+import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 import com.teammoeg.frostedheart.content.robotics.logistics.RobotChunk;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
@@ -48,10 +49,11 @@ public class FHCapabilities {
 	public static final CodecCapabilityType<ChunkHeatData> CHUNK_HEAT=register(ChunkHeatData.class,ChunkHeatData.CODEC);
 	public static final NBTCapabilityType<HeatEndpoint> HEAT_EP=register(HeatEndpoint.class);
 	public static final TransientCapability<HeatStorageCapability> ITEM_HEAT=registerTransient(HeatStorageCapability.class);
+	public static final TransientCapability<LogisticNetwork> LOGISTIC=registerTransient(LogisticNetwork.class);
 
 	public static final NBTCapabilityType<WantedFoodCapability> WANTED_FOOD=register(WantedFoodCapability.class);
 	public static final NBTCapabilityType<ChunkTownResourceCapability> CHUNK_TOWN_RESOURCE=register(ChunkTownResourceCapability.class);
-	public static final TransientCapability<RobotChunk> ROBOTIC_LOGISTIC_CHUNK=registerTransient(RobotChunk.class);
+	public static final NBTCapabilityType<RobotChunk> ROBOTIC_LOGISTIC_CHUNK=register(RobotChunk.class);
 	public static final NBTCapabilityType<WaypointCapability> WAYPOINT=register(WaypointCapability.class);
 	public static final NBTCapabilityType<WaterLevelCapability> PLAYER_WATER_LEVEL = register(WaterLevelCapability.class);
 	public static final NBTCapabilityType<NutritionCapability> PLAYER_NUTRITION = register(NutritionCapability.class);

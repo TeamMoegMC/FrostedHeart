@@ -33,6 +33,10 @@ import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlockEnt
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.NetworkCoreTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.RequesterTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.StorageTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.SupplierTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.creative.CreativeHeaterBlockEntity;
@@ -137,6 +141,16 @@ public class FHBlockEntityTypes {
             "wardrobe", makeType(WardrobeBlockEntity::new, FHBlocks.WARDROBE::get)
     );
 
+    public static final RegistryObject<BlockEntityType<RequesterTileEntity>> REQUESTER_CHEST = REGISTER.register(
+        "requester_chest", makeType(RequesterTileEntity::new, FHBlocks.REQUESTER_CHEST::get)
+);
+    public static final RegistryObject<BlockEntityType<StorageTileEntity>> STORAGE_CHEST = REGISTER.register(
+        "requester_chest", makeType(StorageTileEntity::new, FHBlocks.STORAGE_CHEST::get)
+);
+    public static final RegistryObject<BlockEntityType<SupplierTileEntity>> SUPPLIER_CHEST = REGISTER.register(
+        "requester_chest", makeType(SupplierTileEntity::new, FHBlocks.SUPPLIER_CHEST::get)
+);    public static final RegistryObject<BlockEntityType<NetworkCoreTileEntity>> NETWORK_CORE = REGISTER.register(
+    "requester_chest", makeType(NetworkCoreTileEntity::new, FHBlocks.TEST_CORE::get));
     private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntitySupplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }
