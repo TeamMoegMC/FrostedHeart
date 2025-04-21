@@ -427,6 +427,26 @@ public class FHCommonEvents {
 	}
 
 	@SubscribeEvent
+	public static void tillMudIntoDirt(BlockEvent.BlockToolModificationEvent event) {
+		if (!event.getLevel().isClientSide() && event.getPlayer() instanceof ServerPlayer player
+				&& event.getToolAction() == ToolActions.HOE_TILL) {
+			BlockState state = event.getState();
+			if (state.is(Blocks.MUD)) {
+				BlockPos pos = event.getPos();
+				ServerLevel level = (ServerLevel) event.getLevel();
+				ItemStack offHand = player.getOffhandItem();
+				if (offHand.isEmpty()) {
+					event.setCanceled(true);
+				} else if (offHand.is(FHItems.BIOMASS.get())) {
+					level.setBlock(pos, Blocks.DIRT.defaultBlockState(), 2);
+					offHand.shrink(1);
+					event.getHeldItemStack().hurtAndBreak(1, player, entity -> entity.broadcastBreakEvent(event.getContext().getHand()));
+				}
+			}
+		}
+	}
+
+	@SubscribeEvent
 	public static void shovelSnow(BlockEvent.BlockToolModificationEvent event) {
 		if (!event.getLevel().isClientSide() && event.getToolAction() == ToolActions.SHOVEL_FLATTEN) {
 			var state = event.getState();
