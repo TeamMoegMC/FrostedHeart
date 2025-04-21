@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.climate.gamedata.chunkheat;
+package com.teammoeg.frostedheart.content.climate.network;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +27,8 @@ import java.util.function.Supplier;
 
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.IHeatArea;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;

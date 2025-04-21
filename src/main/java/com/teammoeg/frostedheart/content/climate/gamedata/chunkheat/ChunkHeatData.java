@@ -35,6 +35,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.climate.network.FHNotifyChunkHeatUpdatePacket;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;

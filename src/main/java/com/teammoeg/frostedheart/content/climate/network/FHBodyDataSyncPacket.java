@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.climate.gamedata.chunkheat;
+package com.teammoeg.frostedheart.content.climate.network;
 
 import java.util.function.Supplier;
 

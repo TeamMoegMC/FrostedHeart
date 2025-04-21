@@ -17,12 +17,15 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.climate.gamedata.chunkheat;
+package com.teammoeg.frostedheart.content.climate.network;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 import com.lowdragmc.lowdraglib.LDLib;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.IHeatArea;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 
 import net.minecraft.network.FriendlyByteBuf;
@@ -30,27 +33,44 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.network.NetworkEvent;
 
 
-public class FHNotifyChunkHeatUpdatePacket implements CMessage {
+public class FHResponseInfraredViewDataSyncPacket implements CMessage {
     private final ChunkPos chunkPos;
+    private final int[] data;
 
-    public FHNotifyChunkHeatUpdatePacket(ChunkPos chunkPos) {
+    public FHResponseInfraredViewDataSyncPacket(ChunkPos chunkPos, List<IHeatArea> heatAreas) {
         this.chunkPos = chunkPos;
+        data = new int[heatAreas.size() * 8];
+        var index = 0;
+        for (var heatArea: heatAreas) {
+            for (float value : heatArea.getStructData()) {
+                // we convert float to int for better serialization
+                int intBits = Float.floatToIntBits(value);
+                data[index++] = intBits;
+            }
+        }
     }
 
-    public FHNotifyChunkHeatUpdatePacket(FriendlyByteBuf buffer) {
+    public FHResponseInfraredViewDataSyncPacket(FriendlyByteBuf buffer) {
         this.chunkPos = new ChunkPos(buffer.readVarLong());
+        this.data = buffer.readVarIntArray();
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeVarLong(chunkPos.toLong());
+        buffer.writeVarIntArray(data);
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             if (LDLib.isClient()) {
-                InfraredViewRenderer.notifyChunkDataUpdate();
+                if (!RenderSystem.isOnRenderThread()) {
+                    RenderSystem.recordRenderCall(() -> InfraredViewRenderer.updateData(chunkPos, data));
+                } else {
+                    InfraredViewRenderer.updateData(chunkPos, data);
+                }
+
             }
         });
         context.get().setPacketHandled(true);
