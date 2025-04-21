@@ -28,6 +28,7 @@ import com.teammoeg.frostedresearch.data.TeamResearchData;
 
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftbquests.net.DisplayRewardToastMessage;
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.reward.Reward;
@@ -94,7 +95,7 @@ public class InsightReward extends Reward {
         trd.get().addInsight(trd.team(),insight);
         if (notify) {
             MutableComponent message = Lang.questReward("insight").text(": +" + insight).style(ChatFormatting.GREEN).component();
-            new DisplayRewardToastMessage(id, message, Color4I.empty()).sendTo(player);
+            new DisplayRewardToastMessage(id, message, Icon.getIcon("frostedresearch:item/quill_and_ink")).sendTo(player);
         }
     }
 
