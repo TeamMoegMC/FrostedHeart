@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticHub;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
@@ -49,6 +51,7 @@ public class LogisticNetwork {
 		return !tasks.containsKey(key);
 	}
 	public void addTask(LogisticTaskKey key,LogisticTask task) {
+		task.taskKey=key;
 		this.tasks.put(key, task);
 	}
 	public Level getWorld() {
@@ -60,30 +63,38 @@ public class LogisticNetwork {
 		for(int i=0;i<num;i++) {
 			if(!tid.hasNext())return task;
 			task.add(tid.next());
-			tid.remove();
 		}
 		return task;
 	}
 	public void tick() {
+		FHMain.LOGGER.info("hub "+hub);
 		hub.tick();
+		FHMain.LOGGER.info("Logistic tasks working:"+working.size()+",queued:"+tasks.size());
 		List<LogisticTask> nextCycle=new ArrayList<>(working);
 		working.clear();
 		for(LogisticTask lt:nextCycle) {
+			
 			if(lt.ticks>0) {
 				lt.ticks--;
 				working.add(lt);
 			}else {
+				FHMain.LOGGER.info("Logistic task working");
+				tasks.remove(lt.taskKey);
 				LogisticTask nlt=lt.work(this);
 				if(nlt!=null)
 					working.add(nlt);
 			}
 		}
-		for(LogisticTask wrapper:getTasks(MAX_WORKING_TASKS-working.size())) {
-			LogisticTask lt=wrapper.prepare(this);
-			if(lt!=null)
-				working.add(lt);
-			if(working.size()>=MAX_WORKING_TASKS)
-				break;
+		if(working.size()<MAX_WORKING_TASKS) {
+			FHMain.LOGGER.info("Logistic task preparing");
+			for(LogisticTask wrapper:getTasks(MAX_WORKING_TASKS-working.size())) {
+				
+				LogisticTask lt=wrapper.prepare(this);
+				if(lt!=null)
+					working.add(lt);
+				if(working.size()>=MAX_WORKING_TASKS)
+					break;
+			}
 		}
 	}
 	public void setWorld(Level world) {

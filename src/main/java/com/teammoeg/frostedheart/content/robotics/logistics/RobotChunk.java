@@ -20,7 +20,9 @@
 package com.teammoeg.frostedheart.content.robotics.logistics;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.NBTSerializable;
@@ -34,12 +36,13 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class RobotChunk implements NBTSerializable{
-	List<BlockPos> networks = new ArrayList<>();
+	Set<BlockPos> networks = new HashSet<>();
     public LazyOptional<LogisticNetwork> getNetworkFor(Level world,BlockPos actual) {
     	var it=networks.iterator();
     	while(it.hasNext()) {
     		BlockPos pos=it.next();
     		BlockEntity core = CUtils.getExistingTileEntity(world, pos);
+    		//System.out.println(core);
     		if(core!=null)
     			return FHCapabilities.LOGISTIC.getCapability(core);
     		else
@@ -67,6 +70,10 @@ public class RobotChunk implements NBTSerializable{
 	}
 	@Override
 	public void load(CompoundTag nbt, boolean isPacket) {
-		networks=CodecUtil.fromNBTList(nbt.getList("networks", Tag.TAG_COMPOUND), BlockPos.CODEC);
+		networks.addAll(CodecUtil.fromNBTList(nbt.getList("networks", Tag.TAG_COMPOUND), BlockPos.CODEC));
+	}
+
+	public RobotChunk() {
+		super();
 	}
 }

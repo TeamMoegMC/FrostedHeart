@@ -107,6 +107,8 @@ public class LogisticPushTask extends LogisticTask {
 		key=new ItemKey(stack);
 		
 		GridAndAmount gaa=network.getHub().findGridForPlace(key, stack);
+		if(gaa==null)
+			return null;
 		target=gaa.grid();
 		targetPos=target.resolve().get().getPos();
 		stack=itemHandler.extractItem(fromSlot, gaa.amount(), false);

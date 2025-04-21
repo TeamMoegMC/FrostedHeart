@@ -98,6 +98,8 @@ public class LogisticRequestTask extends LogisticTask {
 	public LogisticTask prepare(LogisticNetwork network) {
 		key=getActualKey(network);
 		GridAndAmount gaa=network.getHub().findGridForTake(key);
+		if(gaa==null)
+			return null;
 		IGridElement grid=gaa.grid().resolve().get();
 		origin=grid.getPos();
 		stack=network.getHub().takeItem(gaa.grid(), key, size);

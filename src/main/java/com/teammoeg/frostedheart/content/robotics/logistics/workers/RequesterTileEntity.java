@@ -29,17 +29,27 @@ import org.jetbrains.annotations.Nullable;
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.util.struct.LazyTickWorker;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.Filter;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticRequestTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
 
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -49,15 +59,16 @@ import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemStackHandler;
 
-public class RequesterTileEntity extends CBlockEntity implements  CTickableBlockEntity {
+public class RequesterTileEntity extends CBlockEntity implements  CTickableBlockEntity,MenuProvider {
 	ItemStackHandler container=new ItemStackHandler(27);
 	public LazyOptional<ItemStackHandler> grid=LazyOptional.of(()->container);
 	public LazyOptional<LogisticNetwork> network;
 	Filter[] filters=new Filter[8];
+	
 	List<Supplier<LogisticTaskKey>> keys=new ArrayList<>(8);
 	public RequesterTileEntity(BlockPos pos,BlockState bs) {
 		super(FHBlockEntityTypes.REQUESTER_CHEST.get(),pos,bs);
-		for(int i=0;i<filters.length;i++){
+		for(int i=0;i<20;i++){
 			final int cnt=i;
 			keys.add(Lazy.of(()->new LogisticTaskKey(pos,cnt)));
 		}
@@ -67,12 +78,27 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 	@Override
 	public void readCustomNBT(CompoundTag arg0, boolean arg1) {
 		container.deserializeNBT(arg0.getCompound("container"));
+		ListTag list=arg0.getList("filters", Tag.TAG_COMPOUND);
+		for(Tag t:list) {
+			CompoundTag tag=(CompoundTag) t;
+			filters[tag.getInt("slot")]=Filter.CODEC.decode(NbtOps.INSTANCE, tag.getCompound("filter")).getOrThrow(false,FHMain.LOGGER::info).getFirst();
+		}
 		
 	}
 
 	@Override
 	public void writeCustomNBT(CompoundTag arg0, boolean arg1) {
 		arg0.put("container", container.serializeNBT());
+		ListTag list=new ListTag();
+		for(int i=0;i<filters.length;i++) {
+			if(filters[i]!=null) {
+				CompoundTag tag=new CompoundTag();
+				tag.putInt("slot", i);
+				tag.put("filter", Filter.CODEC.encodeStart(NbtOps.INSTANCE, filters[i]).getOrThrow(false, FHMain.LOGGER::info));
+				list.add(tag);
+			}
+		}
+		arg0.put("filters", list);
 	}
 	LazyTickWorker worker=new LazyTickWorker(10,()->{
 		if(network!=null&&network.isPresent()) {
@@ -106,6 +132,7 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 			if(chunkData.isPresent()) {
 				LazyOptional<LogisticNetwork> ln=chunkData.get();
 				if(ln.isPresent()) {
+					FHMain.LOGGER.info("register self against network req "+ln);
 					network=ln;
 				}
 			}
@@ -121,6 +148,20 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 		return super.getCapability(cap, side);
 	}
 
+	@Override
+	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
+		return new RequesterChestMenu(pContainerId,pPlayerInventory,container);
+	}
+
+	@Override
+	public Component getDisplayName() {
+		return Component.translatable(this.getBlockState().getBlock().getDescriptionId());
+	}
+	@Override
+	public void onRemoved() {
+		super.onRemoved();
+		grid.invalidate();
+	}
 
 
 }

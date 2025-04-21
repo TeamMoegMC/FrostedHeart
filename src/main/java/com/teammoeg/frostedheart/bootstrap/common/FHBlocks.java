@@ -52,6 +52,7 @@ import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticChestBlock;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.NetworkCoreTileEntity;
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.RequesterTileEntity;
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.StorageTileEntity;
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.SupplierTileEntity;
@@ -2009,7 +2010,7 @@ public class FHBlocks {
         .model(AssetLookup.existingItemModel())
         .build()
         .register();
-    public static final BlockEntry<LogisticChestBlock<SupplierTileEntity>> TEST_CORE = REGISTRATE.block("test_logistic_core", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.SUPPLIER_CHEST))
+    public static final BlockEntry<LogisticChestBlock<NetworkCoreTileEntity>> TEST_CORE = REGISTRATE.block("test_logistic_core", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.NETWORK_CORE))
         .initialProperties(() -> Blocks.CHEST)
         .tag(FHTags.Blocks.METAL_MACHINES.get())
         .item()

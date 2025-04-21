@@ -26,17 +26,25 @@ import org.jetbrains.annotations.Nullable;
 
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticChest;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.RequestLogisticChest;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
 
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -46,7 +54,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemStackHandler;
 
 @SuppressWarnings("unused")
-public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEntity {
+public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEntity,MenuProvider {
 	RequestLogisticChest container;
 	public LazyOptional<LogisticChest> grid=LazyOptional.of(()->container);
 	public LazyOptional<LogisticNetwork> network;
@@ -76,10 +84,15 @@ public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEn
 				LazyOptional<LogisticNetwork> ln=chunkData.get();
 				if(ln.isPresent()) {
 					network=ln;
+					FHMain.LOGGER.info("register self against network sup "+ln);
 					ln.resolve().get().getHub().addElement(grid.cast());
 				}
 			}
 		}
+	}
+	@Override
+	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
+		return new SupplierChestMenu(pContainerId,pPlayerInventory,container);
 	}
 	@Override
 	public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
@@ -88,4 +101,16 @@ public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEn
 		return super.getCapability(cap, side);
 	}
 
+	@Override
+	public Component getDisplayName() {
+		return Component.translatable(this.getBlockState().getBlock().getDescriptionId());
+	}
+
+
+
+	@Override
+	public void onRemoved() {
+		super.onRemoved();
+		grid.invalidate();
+	}
 }

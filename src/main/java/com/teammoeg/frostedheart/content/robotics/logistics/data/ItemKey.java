@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.data;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -12,7 +13,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public final class ItemKey {
 	public static final Codec<ItemKey> CODEC=RecordCodecBuilder.create(t->t.group(ForgeRegistries.ITEMS.getCodec().fieldOf("item").forGetter(o->o.item),
-		CompoundTag.CODEC.fieldOf("nbt").forGetter(o->o.nbt)).apply(t, ItemKey::new));
+		CompoundTag.CODEC.optionalFieldOf("nbt").forGetter(o->Optional.ofNullable(o.nbt))).apply(t, ItemKey::new));
 	public final Item item;
 	public final CompoundTag nbt;
 	ItemStack stackCache;
@@ -22,6 +23,10 @@ public final class ItemKey {
 		super();
 		this.item = item;
 		this.nbt = nbt;
+	}
+	public ItemKey(Item item,Optional<CompoundTag> tag) {
+		this.item=item;
+		this.nbt=tag.orElse(null);
 	}
 
 	public ItemKey(ItemStack stack) {

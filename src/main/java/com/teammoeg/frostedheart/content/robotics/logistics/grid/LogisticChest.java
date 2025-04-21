@@ -18,9 +18,10 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
 
-public class LogisticChest implements IItemHandler, IGridElement{
+public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerModifiable{
 	private static class ItemData implements ItemCountProvider{
 		IntArraySet slots=new IntArraySet();
 		@Getter
@@ -167,6 +168,7 @@ public class LogisticChest implements IItemHandler, IGridElement{
 				id.totalCount-=slotToReduce;
 				if(slotToReduce==inslot.getCount()) {
 					il.add(slot);
+					slotRef[slot]=null;
 					chest.setStackInSlot(slot, ItemStack.EMPTY);
 					emptySlotCount++;
 				}else {
@@ -196,7 +198,7 @@ public class LogisticChest implements IItemHandler, IGridElement{
 		if(remain.getCount()<=stack.getCount()) {
 			ItemStack after=chest.getStackInSlot(slot);
 			isChanged=true;
-			if(origin==null) {
+			if(origin==null||originCount==0) {
 				onStackAdded(slot);
 			}else {
 				modifySlotCount(slot,after.getCount()-originCount);
@@ -247,6 +249,14 @@ public class LogisticChest implements IItemHandler, IGridElement{
 		super();
 		this.level = level;
 		this.pos = pos;
+	}
+	@Override
+	public void setStackInSlot(int slot, @NotNull ItemStack stack) {
+		ItemStack original=chest.getStackInSlot(slot);
+		onStackRemoved(slot,original.getCount());
+		chest.setStackInSlot(slot, stack);
+		onStackAdded(slot);
+		isChanged=true;
 	}
 	
 

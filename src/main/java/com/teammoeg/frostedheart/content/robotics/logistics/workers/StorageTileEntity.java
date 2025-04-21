@@ -26,21 +26,29 @@ import org.jetbrains.annotations.Nullable;
 
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticChest;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestMenu;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class StorageTileEntity extends CBlockEntity implements CTickableBlockEntity{
+public class StorageTileEntity extends CBlockEntity implements CTickableBlockEntity,MenuProvider{
 	public LogisticChest container;
 	public LazyOptional<LogisticChest> grid=LazyOptional.of(()->container);
 	public LazyOptional<LogisticNetwork> network;
@@ -67,11 +75,16 @@ public class StorageTileEntity extends CBlockEntity implements CTickableBlockEnt
 				LazyOptional<LogisticNetwork> ln=chunkData.get();
 				if(ln.isPresent()) {
 					network=ln;
+					FHMain.LOGGER.info("register self against network sto "+ln);
 					ln.resolve().get().getHub().addElement(grid.cast());
 				}
 			}
 		}
 		//.ifPresent(t->t.getNetworkFor(level, worldPosition));
+	}
+	@Override
+	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
+		return new StorageChestMenu(pContainerId,pPlayerInventory,container);
 	}
 	@Override
 	public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
@@ -80,5 +93,13 @@ public class StorageTileEntity extends CBlockEntity implements CTickableBlockEnt
 		return super.getCapability(cap, side);
 	}
 
-
+	@Override
+	public Component getDisplayName() {
+		return Component.translatable(this.getBlockState().getBlock().getDescriptionId());
+	}
+	@Override
+	public void onRemoved() {
+		super.onRemoved();
+		grid.invalidate();
+	}
 }

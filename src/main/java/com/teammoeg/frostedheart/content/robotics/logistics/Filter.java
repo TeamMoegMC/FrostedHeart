@@ -10,7 +10,7 @@ import net.minecraft.world.item.ItemStack;
 
 public class Filter {
 	public static final Codec<Filter> CODEC=RecordCodecBuilder.create(t->t.group(ItemKey.CODEC.fieldOf("key").forGetter(o->o.key),
-		Codec.BOOL.fieldOf("ignoreNBT").forGetter(o->o.ignoreNbt),
+		Codec.BOOL.optionalFieldOf("ignoreNBT",false).forGetter(o->o.ignoreNbt),
 		Codec.INT.fieldOf("size").forGetter(o->o.size)).apply(t, Filter::new));
 	@Getter
 	@Setter
