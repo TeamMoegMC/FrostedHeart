@@ -156,6 +156,17 @@ public class FountainTileEntity extends CBlockEntity implements CTickableBlockEn
                     }
                 }
             } else {
+            	if(height>0) {
+            		for (int i = 0; i < height; i++) {
+                        BlockPos nozzle = worldPosition.relative(Direction.UP, i + 1);
+                        level.setBlock(nozzle,
+                                FHBlocks.FOUNTAIN_NOZZLE.get().defaultBlockState()
+                                        .setValue(FountainNozzleBlock.HEIGHT, 0),
+                                Block.UPDATE_ALL_IMMEDIATE
+                        );
+                    }
+            		height=0;
+            	}
                 removeHeat();
             }
         } else {
@@ -259,8 +270,8 @@ public class FountainTileEntity extends CBlockEntity implements CTickableBlockEn
     }
 
     private void removeHeat() {
-
-        ChunkHeatData.removeTempAdjust(level, worldPosition);
+    	if(heatAdjusted)
+    		ChunkHeatData.removeTempAdjust(level, worldPosition);
         heatAdjusted = false;
     }
 	@Override
