@@ -1547,12 +1547,12 @@ thinner.png
             .removeTab(FHTabs.TOOLS.getKey())
             .register();
     public static ItemEntry<LeatherWaterBagItem> LEATHER_WATER_BAG = REGISTRATE
-            .item("leather_water_bag", p -> new LeatherWaterBagItem(new Item.Properties().stacksTo(1).setNoRepair(), 1500))
+            .item("leather_water_bag", p -> new LeatherWaterBagItem(new Item.Properties().stacksTo(1).setNoRepair(), 1000))
             .model(AssetLookup.existingItemModel())
             .lang("Leather Water Bag")
             .register();
     public static ItemEntry<IronBottleItem> IRON_BOTTLE = REGISTRATE
-            .item("iron_bottle", p -> new IronBottleItem(new Item.Properties().stacksTo(1).setNoRepair(), 1500))
+            .item("iron_bottle", p -> new IronBottleItem(new Item.Properties().stacksTo(1).setNoRepair(), 1000))
             .model(AssetLookup.existingItemModel())
             .lang("Iron Bottle")
             .register();
