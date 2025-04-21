@@ -277,7 +277,7 @@ public class SurroundingTemperatureSimulator {
 
                 VoxelShape shape = info.shape;
                 BlockHitResult bhr = shape.clip(svec, dvec, bpos);
-                if (shape != EMPTY && bhr != null && (shape == FULL || bhr.isInside())) {
+                if (bhr != null && (shape == FULL || bhr.isInside())) {
                     BlockHitResult brtr = AABB.clip(info.aabbList, svec, dvec, bpos);
                     if (brtr != null) {
                         if (rnd.nextDouble() < 0.33f) {
