@@ -5,7 +5,7 @@
   "evaporate_temp": 100.0,
   "freeze_temp": -5.0,
   "gas": "frostedheart:peat_block",
-  "heat_capacity": 100,
+  "heat_capacity": 200,
   "liquid": "frostedheart:peat_block",
   "melt_temp": 2.0,
   "solid": "frostedheart:peat_permafrost",
