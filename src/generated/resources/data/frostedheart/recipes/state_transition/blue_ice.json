@@ -5,7 +5,7 @@
   "evaporate_temp": -15.0,
   "freeze_temp": -30.0,
   "gas": "minecraft:ice",
-  "heat_capacity": 200,
+  "heat_capacity": 500,
   "liquid": "minecraft:packed_ice",
   "melt_temp": -25.0,
   "solid": "minecraft:blue_ice",

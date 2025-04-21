@@ -67,12 +67,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseFireBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.CampfireBlock;
-import net.minecraft.world.level.block.CandleBlock;
-import net.minecraft.world.level.block.CandleCakeBlock;
-import net.minecraft.world.level.block.SnowLayerBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -417,6 +412,16 @@ public class FHCommonEvents {
 			if (FHConfig.SERVER.keepEquipments.get() && !event.getEntity().level().isClientSide) {
 				if (dit != null)
 					dit.alive(event.getEntity().getInventory());
+			}
+		}
+	}
+
+	@SubscribeEvent
+	public static void disableTillingCoarseDirtIntoDirt(BlockEvent.BlockToolModificationEvent event) {
+		if (!event.getLevel().isClientSide() && event.getToolAction() == ToolActions.HOE_TILL) {
+			BlockState state = event.getState();
+			if (state.is(Blocks.COARSE_DIRT)) {
+				event.setCanceled(true);
 			}
 		}
 	}

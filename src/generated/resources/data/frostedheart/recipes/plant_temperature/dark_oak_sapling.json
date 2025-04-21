@@ -3,7 +3,7 @@
   "block": "minecraft:dark_oak_sapling",
   "dead": "minecraft:dead_bush",
   "max_fertilize": 26.0,
-  "max_grow": 30.0,
+  "max_grow": 32.0,
   "max_survive": 38.0,
   "min_fertilize": 16.0,
   "min_grow": 10.0,

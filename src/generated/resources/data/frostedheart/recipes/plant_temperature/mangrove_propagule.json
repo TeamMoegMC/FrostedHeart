@@ -3,9 +3,9 @@
   "block": "minecraft:mangrove_propagule",
   "dead": "minecraft:dead_bush",
   "max_fertilize": 34.0,
-  "max_grow": 38.0,
+  "max_grow": 42.0,
   "max_survive": 45.0,
   "min_fertilize": 26.0,
-  "min_grow": 22.0,
+  "min_grow": 20.0,
   "min_survive": 15.0
 }

@@ -7,7 +7,6 @@
   "max_grow": 22.0,
   "max_survive": 35.0,
   "min_fertilize": 8.0,
-  "min_grow": 5.0,
   "min_survive": -25.0,
   "snow_vulnerable": false
 }

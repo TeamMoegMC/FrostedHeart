@@ -4,10 +4,10 @@
   "block": "minecraft:spruce_sapling",
   "dead": "minecraft:dead_bush",
   "max_fertilize": 12.0,
-  "max_grow": 15.0,
+  "max_grow": 22.0,
   "max_survive": 25.0,
   "min_fertilize": -2.0,
-  "min_grow": -5.0,
+  "min_grow": -10.0,
   "min_survive": -40.0,
   "snow_vulnerable": false
 }
