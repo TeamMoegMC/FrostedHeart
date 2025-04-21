@@ -279,49 +279,48 @@ public class GeneratorData implements SpecialData {
 
         boolean hasFuel = true;
         int lastOverdrive=overdriveLevel;
-        if (!isWorking || isBroken)
+        if (isBroken)
             return false;
         overdriveLevel -= 5 * (teamData.getData(FRSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER) + 1);
         boolean isWorking=false;
+        
+        if(this.isWorking) {
         	
-        if (isOverdrive) {
-            while (process <= 1 && hasFuel) {
-                hasFuel = consumesFuel(w,teamData);
-            }
-           
-            if (process > 1) {
-                process -= 2;
-                isWorking=true;
-                overdriveLevel += 20;
-                if(overdriveLevel<0)
-                	overdriveLevel=0;
-                if (overdriveLevel >= this.getMaxOverdrive()) {
-                    isBroken = true;
-                }
-            }
-
-
-        } else {
-            if(overdriveLevel<0)
-            	overdriveLevel=0;
-            while (process <= 0 && hasFuel) {
-                hasFuel = consumesFuel(w,teamData);
-            }
-            if (process > 0) {
-                process--;
-                isWorking=true;
-            }
-        }
-        if(teamData instanceof TeamDataHolder team) {
-        	if(lastOverdrive<=getCriticalOverdriveValue()&&overdriveLevel>getCriticalOverdriveValue()) {
-	        	team.forEachOnline(t->t.sendSystemMessage(Lang.translateTooltip("generator.critical").withStyle(WARN_STYLE)));
-	        }else
-	        if(lastOverdrive<=getWarningOverdriveValue()&&overdriveLevel>getWarningOverdriveValue()) {
-	        	team.forEachOnline(t->t.sendSystemMessage(Lang.translateTooltip("generator.warning").withStyle(WARN_STYLE)));
+	        if (isOverdrive) {
+	            while (process <= 1 && hasFuel) {
+	                hasFuel = consumesFuel(w,teamData);
+	            }
+	           
+	            if (process > 1) {
+	                process -= 2;
+	                isWorking=true;
+	                overdriveLevel += 20;
+	                if (overdriveLevel >= this.getMaxOverdrive()) {
+	                    isBroken = true;
+	                }
+	            }
+	
+	
+	        } else {
+	            while (process <= 0 && hasFuel) {
+	                hasFuel = consumesFuel(w,teamData);
+	            }
+	            if (process > 0) {
+	                process--;
+	                isWorking=true;
+	            }
 	        }
-	        
+	        if(teamData instanceof TeamDataHolder team) {
+	        	if(lastOverdrive<=getCriticalOverdriveValue()&&overdriveLevel>getCriticalOverdriveValue()) {
+		        	team.forEachOnline(t->t.sendSystemMessage(Lang.translateTooltip("generator.critical").withStyle(WARN_STYLE)));
+		        }else
+		        if(lastOverdrive<=getWarningOverdriveValue()&&overdriveLevel>getWarningOverdriveValue()) {
+		        	team.forEachOnline(t->t.sendSystemMessage(Lang.translateTooltip("generator.warning").withStyle(WARN_STYLE)));
+		        }
+		        
+	        }
         }
-
+        overdriveLevel=Math.max(0, overdriveLevel);
         return isWorking;
     }
 
