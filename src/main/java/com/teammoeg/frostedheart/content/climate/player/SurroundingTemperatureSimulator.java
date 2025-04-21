@@ -262,6 +262,8 @@ public class SurroundingTemperatureSimulator {
         	 System.out.println(sb.toString());
         }*/
         float heat = 0;
+        float minTemp=0;
+        float maxTemp=0;
         for (int round = 0; round < num_rounds; ++round) // time-to-live for each particle is `num_rounds`
         {
             for (int i = 0; i < n; ++i) // for all particles:
@@ -289,7 +291,12 @@ public class SurroundingTemperatureSimulator {
                 }
                 Qpos[i] = dvec;
                 vid[i] = nid;
-                heat += (float) (getHeat(bpos) * Mth.lerp(Mth.clamp(-curspeed.y(), 0, 0.4) * 2.5, 1, 0.5)); // add heat\
+                float curheat=getHeat(bpos);
+                if(curheat!=0) {
+                minTemp=Math.min(minTemp, curheat);
+                maxTemp=Math.max(maxTemp, curheat);
+                heat += (float) (curheat * Mth.lerp(Mth.clamp(-(Math.signum(curheat))*curspeed.y(), 0, 0.4) * 2.5, 1, 0.5)); // add heat, simulates hot air goes up and cold air goes down
+                }
                 if(getAir(bpos)) {//open to air, great wind
                 	wind +=  2;
                 }else if(bpos.distToCenterSqr(qx0, qy0, qz0)>=16&&getInfoCached(bpos).shape.isEmpty()) {//particle go further than 4 bl far and meets air
@@ -297,7 +304,7 @@ public class SurroundingTemperatureSimulator {
                 }
             }
         }
-        return new SimulationResult(heat / n, wind / n);
+        return new SimulationResult(Mth.clamp(heat / n, minTemp, maxTemp), wind / n);
     }
 
     /**
