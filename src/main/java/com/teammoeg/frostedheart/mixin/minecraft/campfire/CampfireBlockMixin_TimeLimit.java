@@ -82,30 +82,18 @@ public abstract class CampfireBlockMixin_TimeLimit extends BaseEntityBlock {
                 CampfireBlockEntity campfiretileentity = (CampfireBlockEntity) tileentity;
                 ItemStack itemstack = player.getItemInHand(handIn);
                 RandomSource rand = worldIn.random;
-                if (!worldIn.isClientSide) {
-                    if (!player.getMainHandItem().isEmpty()) {
-                        // moved to events
-//                        if (CampfireBlock.canLight(state)) {
-//                            if (itemstack.getItem() == Items.FLINT && player.getOffhandItem().getItem() == Items.FLINT) {
-//                                player.swing(InteractionHand.MAIN_HAND);
-//                                if (rand.nextFloat() < 0.33) {
-//                                    worldIn.setBlock(pos, state.setValue(BlockStateProperties.LIT, Boolean.TRUE), 3);
-//                                }
-//
-//                                worldIn.playSound(null, pos, SoundEvents.STONE_STEP, SoundSource.BLOCKS, 1.0F, 2F + rand.nextFloat() * 0.4F);
-//
-//                                return InteractionResult.SUCCESS;
-//                            }
-//                        }
-                        Optional<CampfireCookingRecipe> optional = campfiretileentity.getCookableRecipe(itemstack);
-                        if (optional.isPresent()) {
-                            if (ResearchHooks.canUseRecipe(player, optional.get()) && campfiretileentity.placeFood(player,player.getAbilities().instabuild ? itemstack.copy() : itemstack, optional.get().getCookingTime())) {
-                                player.awardStat(Stats.INTERACT_WITH_CAMPFIRE);
-                                return InteractionResult.CONSUME;
-                            }
+                if (!player.getMainHandItem().isEmpty()) {
+                    Optional<CampfireCookingRecipe> optional = campfiretileentity.getCookableRecipe(itemstack);
+                    if (optional.isPresent()) {
+                        if (ResearchHooks.canUseRecipe(player, optional.get()) && campfiretileentity.placeFood(player,player.getAbilities().instabuild ? itemstack.copy() : itemstack, optional.get().getCookingTime())) {
+                            player.awardStat(Stats.INTERACT_WITH_CAMPFIRE);
+                            return InteractionResult.sidedSuccess(worldIn.isClientSide);
                         }
+                    }
 
-                    } else {
+                }
+                if (!worldIn.isClientSide) {
+                    
                         ICampfireExtra info = (ICampfireExtra) campfiretileentity;
                         if (state.getValue(CampfireBlock.LIT)) {
                             player.displayClientMessage(Lang.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), true);
@@ -115,7 +103,7 @@ public abstract class CampfireBlockMixin_TimeLimit extends BaseEntityBlock {
                             player.displayClientMessage(Lang.translateMessage("campfire.fuel"), true);
                         }
                         return InteractionResult.SUCCESS;
-                    }
+                    
                 }
                 // moved to events
                 /*
