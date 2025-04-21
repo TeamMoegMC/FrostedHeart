@@ -131,17 +131,14 @@ public class FountainTileEntity extends CBlockEntity implements CTickableBlockEn
                             this.setActive(false);
                         }
                     }
-                } else {
-                    // if not refilling, consume power
-                    power--;
                 }
                 setChanged();
-                this.syncData();
+                //this.syncData();
 
             // grant player effect if structure is valid
             if (height > 0 && power > 0) {
+            	power--;
                 setChanged();
-                this.syncData();
                 adjustHeat(getRange());
 
                 for (Player p : this.getLevel().players()) {
