@@ -52,6 +52,7 @@ public class DailyKitchen {
      */
     public static void generateWantedFood(Player player){
     	WantedFoodCapability wantedFoodCapability = FHCapabilities.WANTED_FOOD.getCapability(player).orElse(null);
+    	if(wantedFoodCapability==null)return;
        /* LazyOptional<IDietTracker> dietTracker = DietCapability.get(player);
         if(!dietTracker.isPresent()){
             return;
