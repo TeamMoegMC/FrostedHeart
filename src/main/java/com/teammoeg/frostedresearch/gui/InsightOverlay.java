@@ -25,7 +25,8 @@ public class InsightOverlay implements IGuiOverlay{
 		}
 	}
 	private static final int LEVEL_SCROLL_TICKS=10;//ticks for animation when level changes
-	private static final int LINGERING_TICKS=100;//ticks the overlay stay on screen after all animation ends
+	// at least enough for viewing after exiting quest book
+	private static final int LINGERING_TICKS=200;//ticks the overlay stay on screen after all animation ends
 	private static final int COLOR=0xff8cffd6;//color style 
 	private static final float MAX_PROGRESS_PRE_TICK=0.05f;//max progress added per tick
 	private static final float MIN_PROGRESS_PRE_TICK=0.01f;//min progress added per tick
