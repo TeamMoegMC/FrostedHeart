@@ -324,6 +324,29 @@ public class TemperatureUpdate {
 
                         // Apply Exchanged Temperature, and Self-Heating
                         // Temporary storage map
+                        double speedSquared = player.getDeltaMovement().horizontalDistanceSqr(); // Horizontal movement speed squared
+                        boolean isSprinting = player.isSprinting();
+                        boolean isOnVehicle = player.getVehicle() != null;
+                        boolean isWalking = speedSquared > 0.001 && !isSprinting && !isOnVehicle;
+                        
+                        // System.out.println("fm:"+fluidModifier);
+                        // Self-Heating
+                        float selfHeatRate = data.getDifficulty().heat_unit; // normally 1
+                        // By default heatExchangeTimeConstant = 167
+                        // Since this logic is invoked every 20 ticks (1s), this means
+                        // 1 unit = 0.006 degrees per second
+                        float unit = 1F / FHConfig.SERVER.heatExchangeTimeConstant.get();
+                        float movementHeatedUnits = 0;
+                        // Apply Self-heating based on movement status
+                        // Food exhaustion is handled by Vanilla, so we don't repeat here
+
+                        if (isSprinting) {
+                            movementHeatedUnits += 4 * selfHeatRate * unit; // Running increases temperature by 4 units
+                        } else if (isWalking) { // Assuming there's a method to check walking
+                            movementHeatedUnits += 2 * selfHeatRate * unit; // Walking increases temperature by 2 units
+                        } else {
+                            movementHeatedUnits += 1F * selfHeatRate *unit;
+                        }
                         FastEnumMap<PlayerTemperatureData.BodyPart, Float> partBodyTemps = new FastEnumMap<>(PlayerTemperatureData.BodyPart.values());
                         for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
                             // Apply effective heat exchange to part temperature
@@ -346,37 +369,28 @@ public class TemperatureUpdate {
                             // Default: No wind, Dry, then 0
                             float fluidModifier = 0F;
                             float partFluidResist = clothDataMap.get(part).windResist;
-                            if (player.isInWater()) {
-                                fluidModifier = 20F * (1 - partFluidResist);
-                                relativeHumidity = 2F;
-                            }
+                            if (player.isInWater())
+                                fluidModifier = 25F * (1 - partFluidResist);
                             // interestingly powdered snow does not affect conductivity that much, it just makes envtemp low
                             // however, the human body melts snow, and that generates water, which may go into the body,
                             // if clothing is not fluid resisting enough, and take away heats.
                             // thus a solution here is an average...
-                            else if (player.isInPowderSnow) {
-                                fluidModifier = 10F * (1 - partFluidResist);
-                                relativeHumidity = 1F;
-                            }
+                            else if (player.isInPowderSnow)
+                                fluidModifier = 15F * (1 - partFluidResist);
                             else {
-                                // full relativeHumidity may raise the fluidModifier to 1F -- wet level, when it is full (rare)
-                                // that essentially means the whole air is full of water droplets
-                                fluidModifier += (1F * relativeHumidity) * (1 - partFluidResist);
-                                // gets up to 5F, no wind is just 0
-                                fluidModifier += (5F * relativeWind) * (1 - partFluidResist);
+                                // gets up to 5F
+                                fluidModifier += 5F * relativeWind * (1 - partFluidResist);
                                 // evaporation takes away a LOT of heat. it gets up to 10F
                                 if (player.hasEffect(FHMobEffects.WET.get())) {
                                     fluidModifier += 10F * (1 - partFluidResist);
                                 }
                             }
+                            
 
                             // Part Body Temperature
                             float pbTemp = pctx.getBodyTemperature();
                             float dryEffectiveTemp = pctx.getEffectiveTemperature();
-                            // By default heatExchangeTimeConstant = 167
-                            // Since this logic is invoked every 20 ticks (1s), this means
-                            // 1 unit = 0.006 degrees per second
-                            float unit = 1F / FHConfig.SERVER.heatExchangeTimeConstant.get();
+
                             // Since 1Y degree deviation leads to hypothermia, that means at one unit rate,
                             // it takes 167 (= 1/0.006) seconds to reach hypothermia
                             // For every heatExchangeTimeConstant (default = 5) degrees of deviation, we increase the loss rate by 1 unit.
@@ -388,30 +402,23 @@ public class TemperatureUpdate {
                             // Deviation 26% * 50Y = 13Y, Rate 2.6 units, 64.2 sec to hypothermia (effectively, wool suit)
 
                             // this combines effect from humidity and wind speed
-                            float wetWindEffectiveTemp = (float) TemperatureComputation.feelTemperature(dryEffectiveTemp + 37F, relativeHumidity, relativeWind) - 37F;
-                            pctx.setFeelTemperature(wetWindEffectiveTemp);
-                            float dt = wetWindEffectiveTemp - pbTemp;
+                           // float wetWindEffectiveTemp = (float) TemperatureComputation.feelTemperature(dryEffectiveTemp + 37F, relativeHumidity, relativeWind) - 37F;
+                            float pbTempOld=pbTemp;
+                            float dt = dryEffectiveTemp - pbTemp;
                             // May be negative! (when dt < 0)
                             float fluidModifiedDT = (1 + fluidModifier) * dt;
+                            
+                            
+                            
+                            
                             float heatExchangedUnits = (float) (fluidModifiedDT * unit / FHConfig.SERVER.heatExchangeTempConstant.get());
+                            
+                            
+                            
+                            
+                            
+                           
 
-                            // System.out.println("fm:"+fluidModifier);
-                            // Self-Heating
-                            float selfHeatRate = data.getDifficulty().heat_unit; // normally 1
-                            float movementHeatedUnits = 0;
-                            // Apply Self-heating based on movement status
-                            // Food exhaustion is handled by Vanilla, so we don't repeat here
-                            double speedSquared = player.getDeltaMovement().horizontalDistanceSqr(); // Horizontal movement speed squared
-                            boolean isSprinting = player.isSprinting();
-                            boolean isOnVehicle = player.getVehicle() != null;
-                            boolean isWalking = speedSquared > 0.001 && !isSprinting && !isOnVehicle;
-                            if (isSprinting) {
-                                movementHeatedUnits += 4 * selfHeatRate * unit; // Running increases temperature by 4 units
-                            } else if (isWalking) { // Assuming there's a method to check walking
-                                movementHeatedUnits += 2 * selfHeatRate * unit; // Walking increases temperature by 2 units
-                            } else {
-                                movementHeatedUnits += 1F * selfHeatRate *unit;
-                            }
 
                             // Additional Homeostasis using Stored (Food) Energy
                             float homeostasisUnits = 0;
@@ -431,7 +438,13 @@ public class TemperatureUpdate {
                                     player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 4F * part.area);
                                 }
                             }
-
+                            float modifiedDt=fluidModifiedDT/4;
+                            
+                            if(Math.abs(modifiedDt)>Math.abs(dt)) {//simple interpolation of temperature display
+                            	pctx.setFeelTemperature(modifiedDt+pbTemp);
+                            }else {
+                            	pctx.setFeelTemperature(dt+pbTemp);
+                            }
                                             /*
                                             FHMain.LOGGER.debug("Deviation: " + deviation);
                                             FHMain.LOGGER.debug("Homeostasis: " + homeostasisUnits);
@@ -447,7 +460,7 @@ public class TemperatureUpdate {
                             } else {
                                 pbTemp += movementHeatedUnits;
                             }
-
+                            
                             // FHMain.LOGGER.debug("pbTemp: " + pbTemp);
 
                             partBodyTemps.put(part, pbTemp);
@@ -489,9 +502,9 @@ public class TemperatureUpdate {
                         for (BodyPart part : BodyPart.values()) {
                             ctx.setBodyTemperature(part, partBodyTemps.get(part));
                         }
-
+                        float movementTempEquiv=Math.max(0,(float) ((movementHeatedUnits/unit-1)*FHConfig.SERVER.heatExchangeTempConstant.get()));
                         // Update data and do the relevant display purpose computation there
-                        data.update((float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get()), ctx);
+                        data.update((float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get()), ctx,movementTempEquiv);
 
                     }
                     // Apply insulation effect. Above 100 amplifiers are treated as 100.
