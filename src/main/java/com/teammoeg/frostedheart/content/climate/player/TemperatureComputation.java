@@ -68,8 +68,10 @@ public class TemperatureComputation {
 
         if (player.isInPowderSnow)
             envtemp = -30 - 37;
-        if (player.isInWater())
-            envtemp = Math.max(envtemp, -37);
+        if (player.isInWater()) {
+            // water cannot freeze or boil
+            envtemp = Mth.clamp(envtemp, -37, 63);
+        }
         if (player.isOnFire())
             envtemp = 300 - 37;
         if (player.isInLava())

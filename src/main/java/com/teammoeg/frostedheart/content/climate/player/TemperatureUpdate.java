@@ -46,8 +46,8 @@ import static com.teammoeg.frostedheart.content.climate.player.TemperatureComput
 
 public class TemperatureUpdate {
 
-	//Do not use static final in config because this is reloaded each world
-    public static final float FOOD_EXHAUST_COLD=.05F;
+    //Do not use static final in config because this is reloaded each world
+    public static final float FOOD_EXHAUST_COLD = .05F;
     /*
     public static final int TEMP_SKY_LIGHT_THRESHOLD = FHConfig.SERVER.tempSkyLightThreshold.get();
     public static final int SNOW_TEMP_MODIFIER = FHConfig.SERVER.snowTempModifier.get();
@@ -59,6 +59,7 @@ public class TemperatureUpdate {
     public static final int MAX_BODY_TEMP_CHANGE = FHConfig.SERVER.maxBodyTempChange.get();*/
 
     public static TemperatureThreadingPool threadingPool;
+
     /**
      * Perform temperature effect
      *
@@ -247,7 +248,7 @@ public class TemperatureUpdate {
     public static void updateTemperature(PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.START && event.player instanceof ServerPlayer player) {
 
-        	// Fetch the player temperature data
+            // Fetch the player temperature data
             PlayerTemperatureData.getCapability(player).ifPresent((data) -> {
 
                 /* MULTI-THREADED SURROUNDING BLOCK TEMPERATURE SIMULATION STARTS */
@@ -270,9 +271,6 @@ public class TemperatureUpdate {
                     // Compute environment
                     float rawenvtemp = TemperatureComputation.environment(player, data);
 
-                    
-
-
                     /* ENVIRONMENT TEMPERATURE COMPUTATION ENDS */
 
                     /* EFFECTIVE AND BODY TEMPERATURE COMPUTATION STARTS */
@@ -280,7 +278,7 @@ public class TemperatureUpdate {
                     // Temporary storage context handled in each update cycle
                     HeatingDeviceContext ctx = new HeatingDeviceContext(player);
                     if (!player.hasEffect(FHMobEffects.INSULATION.get()) && !player.getAbilities().invulnerable) {
-                    	// Store environment temperature in attribute
+                        // Store environment temperature in attribute
                         AttributeInstance envTempAttribute = player.getAttribute(FHAttributes.ENV_TEMPERATURE.get());
                         if (envTempAttribute != null) {
                             envTempAttribute.removeModifier(ENV_TEMP_ATTRIBUTE_UUID);
@@ -288,11 +286,11 @@ public class TemperatureUpdate {
                         }
                         // Environment-Body Exchange based on clothing, computes effective temperature
                         float envtemp = (float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
-                        FastEnumMap<BodyPart,PartClothData> clothDataMap=new FastEnumMap<>(BodyPart.values());
+                        FastEnumMap<BodyPart, PartClothData> clothDataMap = new FastEnumMap<>(BodyPart.values());
                         // Environment-Body Exchange
                         for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
                             // ranges [0, 1]
-                        	PartClothData  clothData=data.getClothDataByPart(player, part);
+                            PartClothData clothData = data.getClothDataByPart(player, part);
                             clothDataMap.put(part, clothData);
                             // This is a body part's "Body Temperature" from last time
                             float partBodyTemp = data.getBodyTempByPart(part);
@@ -318,7 +316,6 @@ public class TemperatureUpdate {
                         int wind = WorldTemperature.wind(world);
                         // Range 0-1
                         float openness = data.getAirOpenness();
-                        //System.out.println(data.windStrengh);
                         // [0,1]
                         float relativeWind = openness * Mth.clamp(wind, 0, 100) / 100F;
 
@@ -328,7 +325,7 @@ public class TemperatureUpdate {
                         boolean isSprinting = player.isSprinting();
                         boolean isOnVehicle = player.getVehicle() != null;
                         boolean isWalking = speedSquared > 0.001 && !isSprinting && !isOnVehicle;
-                        
+
                         // System.out.println("fm:"+fluidModifier);
                         // Self-Heating
                         float selfHeatRate = data.getDifficulty().heat_unit; // normally 1
@@ -345,7 +342,7 @@ public class TemperatureUpdate {
                         } else if (isWalking) { // Assuming there's a method to check walking
                             movementHeatedUnits += 2 * selfHeatRate * unit; // Walking increases temperature by 2 units
                         } else {
-                            movementHeatedUnits += 1F * selfHeatRate *unit;
+                            movementHeatedUnits += 1F * selfHeatRate * unit;
                         }
                         FastEnumMap<PlayerTemperatureData.BodyPart, Float> partBodyTemps = new FastEnumMap<>(PlayerTemperatureData.BodyPart.values());
                         for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
@@ -371,10 +368,10 @@ public class TemperatureUpdate {
                             float partFluidResist = clothDataMap.get(part).windResist;
                             if (player.isInWater())
                                 fluidModifier = 25F * (1 - partFluidResist);
-                            // interestingly powdered snow does not affect conductivity that much, it just makes envtemp low
-                            // however, the human body melts snow, and that generates water, which may go into the body,
-                            // if clothing is not fluid resisting enough, and take away heats.
-                            // thus a solution here is an average...
+                                // interestingly powdered snow does not affect conductivity that much, it just makes envtemp low
+                                // however, the human body melts snow, and that generates water, which may go into the body,
+                                // if clothing is not fluid resisting enough, and take away heats.
+                                // thus a solution here is an average...
                             else if (player.isInPowderSnow)
                                 fluidModifier = 15F * (1 - partFluidResist);
                             else {
@@ -385,39 +382,20 @@ public class TemperatureUpdate {
                                     fluidModifier += 10F * (1 - partFluidResist);
                                 }
                             }
-                            
+
 
                             // Part Body Temperature
                             float pbTemp = pctx.getBodyTemperature();
                             float dryEffectiveTemp = pctx.getEffectiveTemperature();
 
-                            // Since 1Y degree deviation leads to hypothermia, that means at one unit rate,
-                            // it takes 167 (= 1/0.006) seconds to reach hypothermia
-                            // For every heatExchangeTimeConstant (default = 5) degrees of deviation, we increase the loss rate by 1 unit.
-                            // Time = 167 / (Deviation / 5)
-                            // Scenarios: (no self-heating, environment effective temp -13C)
-                            // Deviation 50Y, Rate 10 units, 16.7 sec to hypothermia
-                            // Deviation 53% * 50Y = 24Y, Rate 5 units, 34.8 sec to hypothermia (effectively, straw suit)
-                            // Deviation 36% * 50Y = 18Y, Rate 3.6 units, 46.4 sec to hypothermia (effectively, leather suit)
-                            // Deviation 26% * 50Y = 13Y, Rate 2.6 units, 64.2 sec to hypothermia (effectively, wool suit)
-
                             // this combines effect from humidity and wind speed
-                           // float wetWindEffectiveTemp = (float) TemperatureComputation.feelTemperature(dryEffectiveTemp + 37F, relativeHumidity, relativeWind) - 37F;
-                            float pbTempOld=pbTemp;
+                            // float wetWindEffectiveTemp = (float) TemperatureComputation.feelTemperature(dryEffectiveTemp + 37F, relativeHumidity, relativeWind) - 37F;
+                            float pbTempOld = pbTemp;
                             float dt = dryEffectiveTemp - pbTemp;
                             // May be negative! (when dt < 0)
                             float fluidModifiedDT = (1 + fluidModifier) * dt;
-                            
-                            
-                            
-                            
+                            // Units from heat exchange
                             float heatExchangedUnits = (float) (fluidModifiedDT * unit / FHConfig.SERVER.heatExchangeTempConstant.get());
-                            
-                            
-                            
-                            
-                            
-                           
 
 
                             // Additional Homeostasis using Stored (Food) Energy
@@ -438,12 +416,12 @@ public class TemperatureUpdate {
                                     player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 4F * part.area);
                                 }
                             }
-                            float modifiedDt=fluidModifiedDT/4;
-                            
-                            if(Math.abs(modifiedDt)>Math.abs(dt)) {//simple interpolation of temperature display
-                            	pctx.setFeelTemperature(modifiedDt+pbTemp);
-                            }else {
-                            	pctx.setFeelTemperature(dt+pbTemp);
+                            float modifiedDt = fluidModifiedDT / 4;
+
+                            if (Math.abs(modifiedDt) > Math.abs(dt)) {//simple interpolation of temperature display
+                                pctx.setFeelTemperature(modifiedDt + pbTemp);
+                            } else {
+                                pctx.setFeelTemperature(dt + pbTemp);
                             }
                                             /*
                                             FHMain.LOGGER.debug("Deviation: " + deviation);
@@ -460,7 +438,7 @@ public class TemperatureUpdate {
                             } else {
                                 pbTemp += movementHeatedUnits;
                             }
-                            
+
                             // FHMain.LOGGER.debug("pbTemp: " + pbTemp);
 
                             partBodyTemps.put(part, pbTemp);
@@ -502,9 +480,10 @@ public class TemperatureUpdate {
                         for (BodyPart part : BodyPart.values()) {
                             ctx.setBodyTemperature(part, partBodyTemps.get(part));
                         }
-                        float movementTempEquiv=Math.max(0,(float) ((movementHeatedUnits/unit-1)*FHConfig.SERVER.heatExchangeTempConstant.get()));
+                        // A movement induced feel temperature delta
+                        float movementFeelTempDelta = Math.max(0, (float) ((movementHeatedUnits / unit - 1 * selfHeatRate) * FHConfig.SERVER.heatExchangeTempConstant.get()));
                         // Update data and do the relevant display purpose computation there
-                        data.update((float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get()), ctx,movementTempEquiv);
+                        data.update((float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get()), ctx, movementFeelTempDelta);
 
                     }
                     // Apply insulation effect. Above 100 amplifiers are treated as 100.
@@ -528,12 +507,13 @@ public class TemperatureUpdate {
         }
     }
 
-	public static void init() {
-		threadingPool=new TemperatureThreadingPool(FHConfig.SERVER.envTempThreadCount.get());
-		
-	}
-	public static void shutdown() {
-		threadingPool.close();
-		threadingPool=null;
-	}
+    public static void init() {
+        threadingPool = new TemperatureThreadingPool(FHConfig.SERVER.envTempThreadCount.get());
+
+    }
+
+    public static void shutdown() {
+        threadingPool.close();
+        threadingPool = null;
+    }
 }
