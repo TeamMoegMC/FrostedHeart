@@ -82,18 +82,19 @@ public abstract class CampfireBlockMixin_TimeLimit extends BaseEntityBlock {
                 CampfireBlockEntity campfiretileentity = (CampfireBlockEntity) tileentity;
                 ItemStack itemstack = player.getItemInHand(handIn);
                 RandomSource rand = worldIn.random;
-                if (!player.getMainHandItem().isEmpty()) {
+                if (!player.getItemInHand(handIn).isEmpty()) {
                     Optional<CampfireCookingRecipe> optional = campfiretileentity.getCookableRecipe(itemstack);
                     if (optional.isPresent()) {
                         if (ResearchHooks.canUseRecipe(player, optional.get()) && campfiretileentity.placeFood(player,player.getAbilities().instabuild ? itemstack.copy() : itemstack, optional.get().getCookingTime())) {
                             player.awardStat(Stats.INTERACT_WITH_CAMPFIRE);
+                           // System.out.println("has recipe");
                             return InteractionResult.sidedSuccess(worldIn.isClientSide);
                         }
                     }
 
-                }
+                }else
                 if (!worldIn.isClientSide) {
-                    
+                	//System.out.println("has succeed");
                         ICampfireExtra info = (ICampfireExtra) campfiretileentity;
                         if (state.getValue(CampfireBlock.LIT)) {
                             player.displayClientMessage(Lang.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), true);

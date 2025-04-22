@@ -85,6 +85,7 @@ minecraft {
             arg "-mixin.config=" + "frostedheart.mixins.json"
             arg "-mixin.config=" + "frostedresearch.mixins.json"
             arg "-mixin.config=" + "chorda.mixins.json"
+            arg "-uuid 87fb189d-1840-4b18-9b3f-84a4f427294e"
             mods {
                 frostedheart {
                 	source sourceSets.noDatagen

@@ -118,7 +118,7 @@ public class CUIScreen extends Screen implements CUIScreenManager {
 		x = (win.getGuiScaledWidth() - w) / 2;
 		y = (win.getGuiScaledHeight() - h) / 2;
 		
-		System.out.println("x="+x+"y="+y+"w="+w+"h="+h);
+		//System.out.println("x="+x+"y="+y+"w="+w+"h="+h);
 		primaryLayer.updateGui(mouseX - x, mouseY - y, partialTicks);
 		primaryLayer.updateMouseOver();
 

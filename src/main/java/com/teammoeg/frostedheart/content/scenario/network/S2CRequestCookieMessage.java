@@ -22,7 +22,7 @@ public record S2CRequestCookieMessage(int id,List<String> keys) implements CMess
 	}
 	@Override
 	public void encode(FriendlyByteBuf buffer) {
-		System.out.println(keys);
+		//System.out.println(keys);
 		buffer.writeVarInt(id);
 		SerializeUtil.writeList2(buffer, keys, FriendlyByteBuf::writeUtf);
 	}
