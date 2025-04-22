@@ -4,7 +4,9 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
 public interface IGridElement {
 
@@ -26,5 +28,8 @@ public interface IGridElement {
 	boolean isChanged();
 	void tick();
 	boolean consumeChange();
+	BlockPos getPos();
+	Level getLevel();
 
+	boolean fillable();
 }

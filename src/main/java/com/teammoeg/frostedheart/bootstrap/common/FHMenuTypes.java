@@ -40,6 +40,12 @@ import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Container;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Container;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestMenu;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestMenu;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.RequesterTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.StorageTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.SupplierTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
@@ -52,6 +58,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.extensions.IForgeMenuType;
+import net.minecraftforge.network.IContainerFactory;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -73,7 +80,12 @@ public class FHMenuTypes {
 	public static final MultiblockMenuType<T2GeneratorState, T2GeneratorContainer> GENERATOR_T2 = registerMultiblock("generator_t2",T2GeneratorContainer::new,T2GeneratorContainer::new);
 
 	public static final RegistryObject<MenuType<RelicChestContainer>> RELIC_CHEST = register(RelicChestTileEntity.class, ("relic_chest"), RelicChestContainer::new);
+	
+	public static final RegistryObject<MenuType<RequesterChestMenu>> REQUEST_CHEST = register(("reqeust_chest"), RequesterChestMenu::new);
+	public static final RegistryObject<MenuType<StorageChestMenu>> STORAGE_CHEST = register(("storage_chest"), StorageChestMenu::new);
+	public static final RegistryObject<MenuType<SupplierChestMenu>> SUPPLY_CHEST = register(("supply_chest"), SupplierChestMenu::new);
 
+	
 	public static final RegistryObject<MenuType<SaunaContainer>> SAUNA = register(SaunaTileEntity.class, ("sauna_vent"), SaunaContainer::new);
 	public static final RegistryObject<MenuType<IncubatorT1Container>> INCUBATOR_T1 = register(IncubatorTileEntity.class, ("incubator"), IncubatorT1Container::new);
 	public static final RegistryObject<MenuType<IncubatorT2Container>> INCUBATOR_T2 = register(HeatIncubatorTileEntity.class, ("heat_incubator"), IncubatorT2Container::new);
@@ -89,7 +101,10 @@ public class FHMenuTypes {
 			return null;
 		}));
 	}
-
+	@SuppressWarnings("unchecked")
+	public static <T extends AbstractContainerMenu> RegistryObject<MenuType<T>> register(String name, IContainerFactory<T> factory) {
+		return CONTAINERS.register(name, () -> IForgeMenuType.create(factory));
+	}
 	public static <S extends IMultiblockState, C extends AbstractContainerMenu> MultiblockMenuType<S, C> registerMultiblock(
 		String name,
 		MultiBlockMenuServerFactory<S, C> container,

@@ -137,7 +137,7 @@ public class CTeamDataManager {
             cn=UUID.randomUUID();
             dataByFTBId.put(team.getId(), cn);
             GameProfile owner = CDistHelper.getServer().getProfileCache().get(team.getOwner()).orElse(null);
-            System.out.println(owner);
+            //System.out.println(owner);
             if (owner != null&&(!CDistHelper.getServer().usesAuthentication()||CDistHelper.getServer().isSingleplayer()))
                 for (Entry<UUID, TeamDataHolder> dat : dataByOwnId.entrySet()) {
                     if (owner.getName().equals(dat.getValue().getOwnerName())) {

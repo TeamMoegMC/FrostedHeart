@@ -19,35 +19,97 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.tasks;
 
-import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
+import java.util.Map;
 
+import com.teammoeg.frostedheart.content.robotics.logistics.Filter;
+import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
+import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
+import com.teammoeg.frostedheart.content.robotics.logistics.grid.GridAndAmount;
+import com.teammoeg.frostedheart.content.robotics.logistics.grid.IGridElement;
+import com.teammoeg.frostedheart.content.robotics.logistics.grid.ItemCountProvider;
+
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
 
-public class LogisticRequestTask implements LogisticTask {
-	ItemStack filter;
+public class LogisticRequestTask extends LogisticTask {
+	/**
+	 * original data for a request task
+	 * */
+	Filter filter;
 	int size;
-	boolean fetchNBT;
-	BlockEntity storage;
+	
+	
+	
+	/**
+	 * position of from and to pos, for rendering purpose
+	 * */
+	BlockPos origin;
+	BlockPos targetPos;
 
-	public LogisticRequestTask(ItemStack filter, int size, boolean fetchNBT, BlockEntity storage) {
+	/**
+	 * Carried stack in this task, should drop if task canceled
+	 * */
+	ItemStack stack;
+	/**
+	 * ItemKey to put
+	 * */
+	ItemKey key;
+	/**
+	 * Grid element to put
+	 * */
+	LazyOptional<IItemHandler> target;
+	public LogisticRequestTask(Filter filter, int size,BlockPos targetPos, LazyOptional<IItemHandler> storage) {
 		super();
 		this.filter = filter;
 		this.size = size;
-		this.fetchNBT = fetchNBT;
-		this.storage = storage;
+		this.target = storage;
+		this.targetPos=targetPos;
 	}
 
-	public ItemStack fetch(LogisticNetwork network,int msize) {
-		ItemStack rets= network.fetchItem(filter, fetchNBT, Math.min(msize, size));
-		size-=rets.getCount();
-		return rets;
+
+	@Override
+	public LogisticTask work(LogisticNetwork network) {
+		if(target.isPresent()) {
+			stack=ItemHandlerHelper.insertItemStacked(target.resolve().get(), stack, false);
+		}
+		if(!stack.isEmpty()) {
+			GridAndAmount gaa=network.getHub().findGridForPlace(key, stack);
+			IGridElement grid=gaa.grid().resolve().get();
+			return new LogisticPushTask(targetPos,grid.getPos(),stack,key,gaa.grid());
+		}
+		return null;
+	}
+	public ItemKey getActualKey(LogisticNetwork network) {
+		if(filter.isIgnoreNbt()) {
+			Map<ItemKey, ? extends ItemCountProvider> items=network.getHub().getAllItems();
+			for(ItemKey ik:items.keySet()) {
+				if(filter.matches(ik)) {
+					return ik;
+				}
+			}
+		}
+		return filter.getKey();
+	}
+	@Override
+	public LogisticTask prepare(LogisticNetwork network) {
+		key=getActualKey(network);
+		GridAndAmount gaa=network.getHub().findGridForTake(key);
+		if(gaa==null)
+			return null;
+		IGridElement grid=gaa.grid().resolve().get();
+		origin=grid.getPos();
+		stack=network.getHub().takeItem(gaa.grid(), key, size);
+		this.ticks=20;
+		return this;
 	}
 
 	@Override
-	public void work(LogisticNetwork network,int msize) {
-		int rets= network.fetchItemInto(filter, network.getStorage(storage.getBlockPos()).getInventory(), fetchNBT, Math.min(msize, size));
-		size-=rets;
+	public boolean isStillValid() {
+		return target.isPresent();
 	}
 
 }

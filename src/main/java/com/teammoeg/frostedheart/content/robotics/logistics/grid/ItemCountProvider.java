@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.grid;
 
-interface ItemCountProvider {
+public interface ItemCountProvider {
 
 	int getTotalCount();
 

@@ -68,7 +68,7 @@ public class TownCommand {
                 Commands.literal("list_virtual")
                         .executes(ct -> {
                             TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                            System.out.println(town.getResourceManager().resourceHolder.getAllVirtualResources());
+                            //System.out.println(town.getResourceManager().resourceHolder.getAllVirtualResources());
                             ct.getSource().sendSuccess(()-> Components.str(town.getResourceManager().resourceHolder.getAllVirtualResources() ), true);
                             return Command.SINGLE_SUCCESS;
                         });

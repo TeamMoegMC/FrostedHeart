@@ -52,7 +52,7 @@ public class ResearchEditUtils {
         final Research old=r;
         ResearchEditors.RESEARCH_EDITOR.open(EditUtils.openEditorScreen(), Components.str("Edit Research"), r, b->{
         	if(!b.equals(old)) {
-        		System.out.println("modified");
+        		//System.out.println("modified");
         		if(old!=null)
         			old.delete();
 				b.getChildren().forEach(t->t.addParent(b));

@@ -188,7 +188,7 @@ public class FHClientEvents {
         // TODO: temporary fix for client not sending ready packet
         ClientScene.INSTANCE = new ClientScene();
         ClientScene.INSTANCE.sendClientReady();
-        System.out.println("loaded wheel menu");
+        FHMain.LOGGER.info("loaded wheel menu");
         WheelMenuRenderer.load();
 
     }

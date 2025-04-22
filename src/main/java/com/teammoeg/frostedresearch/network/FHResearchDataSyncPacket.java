@@ -49,7 +49,7 @@ public class FHResearchDataSyncPacket implements CMessage {
     public FHResearchDataSyncPacket(TeamResearchData team) {
         try {
             this.dat = (FRSpecialDataTypes.RESEARCH_DATA.saveData(DataOps.COMPRESSED, team));
-            System.out.println(dat);
+            //System.out.println(dat);
         } catch (Exception e) {
             FRMain.LOGGER.error("Failed to save research data when syncing research data", e);
         }

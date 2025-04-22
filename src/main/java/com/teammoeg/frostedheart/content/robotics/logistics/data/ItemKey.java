@@ -1,12 +1,19 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.data;
 
 import java.util.Objects;
+import java.util.Optional;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public final class ItemKey {
+	public static final Codec<ItemKey> CODEC=RecordCodecBuilder.create(t->t.group(ForgeRegistries.ITEMS.getCodec().fieldOf("item").forGetter(o->o.item),
+		CompoundTag.CODEC.optionalFieldOf("nbt").forGetter(o->Optional.ofNullable(o.nbt))).apply(t, ItemKey::new));
 	public final Item item;
 	public final CompoundTag nbt;
 	ItemStack stackCache;
@@ -17,6 +24,10 @@ public final class ItemKey {
 		this.item = item;
 		this.nbt = nbt;
 	}
+	public ItemKey(Item item,Optional<CompoundTag> tag) {
+		this.item=item;
+		this.nbt=tag.orElse(null);
+	}
 
 	public ItemKey(ItemStack stack) {
 		this(stack.getItem(),stack.getTag());
@@ -26,6 +37,9 @@ public final class ItemKey {
 			stackCache=new ItemStack(item,1,nbt);
 		}
 		return stackCache;
+	}
+	public int getMaxStackSize() {
+		return this.getStack().getMaxStackSize();
 	}
 	public boolean isSameItem(ItemStack stack) {
 		if(stack.getItem()!=this.item)return false;

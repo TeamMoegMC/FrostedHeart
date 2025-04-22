@@ -20,9 +20,16 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.tasks;
 
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
-
-public interface LogisticTask {
-
-	void work(LogisticNetwork network,int msize);
-
+/**
+ * Stage for tasks:
+ * Queue->Prepared->Working->finished
+ *            ^-------|
+ * 
+ * */
+public abstract class LogisticTask {
+	public int ticks;
+	public LogisticTaskKey taskKey;
+	public abstract LogisticTask prepare(LogisticNetwork network);
+	public abstract LogisticTask work(LogisticNetwork network);
+	public abstract boolean isStillValid() ;
 }

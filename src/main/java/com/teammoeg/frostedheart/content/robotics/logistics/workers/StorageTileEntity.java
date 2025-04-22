@@ -19,58 +19,87 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
+import java.util.Optional;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.chorda.block.entity.CBlockEntity;
-import com.teammoeg.frostedheart.content.robotics.logistics.FilterSlot;
-import com.teammoeg.frostedheart.content.robotics.logistics.ItemChangeListener;
-import com.teammoeg.frostedheart.content.robotics.logistics.ItemHandlerListener;
-import net.minecraft.world.item.ItemStack;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
+import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
+import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticChest;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestMenu;
+
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
 
-public class StorageTileEntity extends CBlockEntity implements ILogisticsStorage,ItemChangeListener{
-	ItemStackHandler container=new ItemStackHandler(27);
-	ItemHandlerListener handler=new ItemHandlerListener(container,this);
-	FilterSlot filter;
-	public StorageTileEntity(BlockEntityType<? extends BlockEntity> type,BlockPos pos,BlockState bs) {
-		super(type,pos,bs);
-		filter=new FilterSlot();
+public class StorageTileEntity extends CBlockEntity implements CTickableBlockEntity,MenuProvider{
+	public LogisticChest container;
+	public LazyOptional<LogisticChest> grid=LazyOptional.of(()->container);
+	public LazyOptional<LogisticNetwork> network;
+	ItemKey filter;
+	public StorageTileEntity(BlockPos pos,BlockState bs) {
+		super(FHBlockEntityTypes.STORAGE_CHEST.get(),pos,bs);
+		container=new LogisticChest(null,pos);
+	}
+	@Override
+	public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
+		container.deserialize(nbt.getCompound("chest"));
+	}
+	@Override
+	public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
+		nbt.put("chest",container.serialize());
+	}
+	@Override
+	public void tick() {
+		container.tick();
+		if(network==null||!network.isPresent()) {
+			Optional<LazyOptional<LogisticNetwork>> chunkData=FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.
+			getCapability(this.level.getChunk(this.worldPosition)).map(t->t.getNetworkFor(level, worldPosition));
+			if(chunkData.isPresent()) {
+				LazyOptional<LogisticNetwork> ln=chunkData.get();
+				if(ln.isPresent()) {
+					network=ln;
+					FHMain.LOGGER.info("register self against network sto "+ln);
+					ln.resolve().get().getHub().addElement(grid.cast());
+				}
+			}
+		}
+		//.ifPresent(t->t.getNetworkFor(level, worldPosition));
+	}
+	@Override
+	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
+		return new StorageChestMenu(pContainerId,pPlayerInventory,container);
+	}
+	@Override
+	public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
+		if(cap==ForgeCapabilities.ITEM_HANDLER)
+			return grid.cast();
+		return super.getCapability(cap, side);
 	}
 
 	@Override
-	public ItemStackHandler getInventory() {
-		return container;
+	public Component getDisplayName() {
+		return Component.translatable(this.getBlockState().getBlock().getDescriptionId());
 	}
-
 	@Override
-	public boolean isValidFor(ItemStack stack) {
-		return filter.isValidFor(stack);
+	public void onRemoved() {
+		super.onRemoved();
+		grid.invalidate();
 	}
-
-
-	@Override
-	public void onSlotChange(int slot, ItemStack after) {
-	}
-
-	@Override
-	public void onSlotClear(int slot) {
-	}
-
-	@Override
-	public void onCountChange(int slot, int before, int after) {
-	}
-
-	@Override
-	public void readCustomNBT(CompoundTag arg0, boolean arg1) {
-		container.deserializeNBT(arg0.getCompound("container"));
-	}
-
-	@Override
-	public void writeCustomNBT(CompoundTag arg0, boolean arg1) {
-		arg0.put("container", container.serializeNBT());
-	}
-
 }
