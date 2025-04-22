@@ -359,9 +359,9 @@ public class TemperatureUpdate {
                                 relativeHumidity = 1F;
                             }
                             else {
-                                // full relativeHumidity may raise the fluidModifier to 10F -- wet level, when it is full (rare)
+                                // full relativeHumidity may raise the fluidModifier to 1F -- wet level, when it is full (rare)
                                 // that essentially means the whole air is full of water droplets
-                                fluidModifier += (10F * relativeHumidity) * (1 - partFluidResist);
+                                fluidModifier += (1F * relativeHumidity) * (1 - partFluidResist);
                                 // gets up to 5F, no wind is just 0
                                 fluidModifier += (5F * relativeWind) * (1 - partFluidResist);
                                 // evaporation takes away a LOT of heat. it gets up to 10F
