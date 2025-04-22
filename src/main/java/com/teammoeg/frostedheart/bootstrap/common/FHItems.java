@@ -1298,39 +1298,39 @@ thinner.png
             .register();
     public static ItemEntry<ProspectorPick> copper_pro_pick = REGISTRATE
             .item("copper_pro_pick", p -> new ProspectorPick(1, createProps().defaultDurability(128)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<ProspectorPick> iron_pro_pick = REGISTRATE
             .item("iron_pro_pick", p -> new ProspectorPick(2, createProps().defaultDurability(192)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<ProspectorPick> steel_pro_pick = REGISTRATE
             .item("steel_pro_pick", p -> new ProspectorPick(3, createProps().defaultDurability(256)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<CoreSpade> copper_core_spade = REGISTRATE
             .item("copper_core_spade", p -> new CoreSpade(1, createProps().defaultDurability(96)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<CoreSpade> iron_core_spade = REGISTRATE
             .item("iron_core_spade", p -> new CoreSpade(2, createProps().defaultDurability(128)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<CoreSpade> steel_core_spade = REGISTRATE
             .item("steel_core_spade", p -> new CoreSpade(3, createProps().defaultDurability(160)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<GeologistsHammer> copper_geologists_hammer = REGISTRATE
             .item("copper_geologists_hammer", p -> new GeologistsHammer(1, createProps().defaultDurability(96)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<GeologistsHammer> iron_geologists_hammer = REGISTRATE
             .item("iron_geologists_hammer", p -> new GeologistsHammer(2, createProps().defaultDurability(128)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<GeologistsHammer> steel_geologists_hammer = REGISTRATE
             .item("steel_geologists_hammer", p -> new GeologistsHammer(3, createProps().defaultDurability(160)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<SoilThermometer> soil_thermometer = REGISTRATE
             .item("soil_thermometer", SoilThermometer::new)
