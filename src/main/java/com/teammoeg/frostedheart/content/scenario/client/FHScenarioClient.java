@@ -46,11 +46,11 @@ public class FHScenarioClient {
     }
     public static <T> Optional<Holder<T>> getPathFrom(IForgeRegistry<T> registry,ResourceLocation orig,String path) {
     	ResourceLocation rl= new ResourceLocation(orig.getNamespace(),path+ClientUtils.mc().getLanguageManager().getSelected()+"/"+orig.getPath());
-    	System.out.println(rl);
+    	//System.out.println(rl);
     	if(registry.containsKey(rl)) {
     		return registry.getHolder(rl);
     	}
-    	System.out.println(new ResourceLocation(orig.getNamespace(),path+orig.getPath()));
+    	//System.out.println(new ResourceLocation(orig.getNamespace(),path+orig.getPath()));
     	return registry.getHolder(new ResourceLocation(orig.getNamespace(),path+orig.getPath()));
     }
     public static void register(Class<?> clazz) {

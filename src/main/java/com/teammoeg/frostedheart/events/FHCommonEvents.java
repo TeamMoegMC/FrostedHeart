@@ -298,14 +298,14 @@ public class FHCommonEvents {
 		CUtils.copyPlayerCapability(FHCapabilities.PLAYER_TEMP, ev.getOriginal(), ev.getEntity());
 		//System.out.println("clone called");
 		//System.out.println(FHCapabilities.PLAYER_TEMP.getCapability(ev.getEntity()).orElse(null));
-		System.out.println("called cloneex");
+		//System.out.println("called cloneex");
 		if(ev.isWasDeath()) 
 			FHCapabilities.PLAYER_TEMP.getCapability(ev.getEntity()).ifPresent(t -> t.deathResetTemperature());
 		// FHMain.LOGGER.info("clone");
 
 			DeathInventoryData orig = DeathInventoryData.get(ev.getOriginal());
 			DeathInventoryData nw = DeathInventoryData.get(ev.getEntity());
-			System.out.println("dit:"+orig+"/"+nw);
+			//System.out.println("dit:"+orig+"/"+nw);
 			if (nw != null && orig != null)
 				nw.copy(orig);
 			if (nw != null)
@@ -409,10 +409,10 @@ public class FHCommonEvents {
 		if (event.getEntity() instanceof ServerPlayer && !(event.getEntity() instanceof FakePlayer)) {
 			DeathInventoryData dit = DeathInventoryData.get(event.getEntity());
 			//dit.tryCallClone(event.getEntity());
-			System.out.println("respawn called");
+			//System.out.println("respawn called");
 			if (FHConfig.SERVER.keepEquipments.get() && !event.getEntity().level().isClientSide) {
 				if (dit != null) {
-					System.out.println("restore items");
+					//System.out.println("restore items");
 					dit.alive(event.getEntity().getInventory());
 				}
 			}
