@@ -47,6 +47,7 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.Grap
 import com.teammoeg.frostedheart.util.Lang;
 
 import dev.ftb.mods.ftbquests.api.FTBQuestsAPI;
+import dev.ftb.mods.ftbquests.client.FTBQuestsClient;
 import dev.ftb.mods.ftbquests.quest.BaseQuestFile;
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.task.ItemTask;
@@ -82,7 +83,8 @@ public class ClientControl implements IClientControlCommand {
 	}
 	@Override
 	public void showTask(IClientScene runner,@Param("q")String q,@Param("t")int t) {
-		BaseQuestFile qf=FTBQuestsAPI.api().getQuestFile(false);
+		
+		BaseQuestFile qf=FTBQuestsClient.getClientQuestFile();
 		Quest quest=qf.getQuest(BaseQuestFile.parseCodeString(q));
 		Task tsk=quest.getTasksAsList().get(t);
 		Component itt;
