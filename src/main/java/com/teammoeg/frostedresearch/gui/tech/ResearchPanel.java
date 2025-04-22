@@ -67,7 +67,7 @@ public abstract class ResearchPanel extends Panel {
                 if (super.mousePressed(arg0))
                     return true;
                 if (isMouseOver()) {
-                    Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
+                    Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
                     if (inprog != null) {
                         selectResearch(inprog);
                         return true;
@@ -101,7 +101,7 @@ public abstract class ResearchPanel extends Panel {
 	            cr = FHResearch.researches.get(ClientResearchData.last);
 	        }
 	        if(cr==null)
-	            cr = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
+	            cr = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
 	        if(cr==null)
 	        	cr= FHResearch.getFirstResearchInCategory(selectedCategory);
 	        selectedCategory = cr == null ? ResearchCategory.RESCUE : cr.getCategory();

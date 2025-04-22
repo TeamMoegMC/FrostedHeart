@@ -97,7 +97,7 @@ public class EffectCommand extends Effect {
         overrides.put("x", pos.getX());
         overrides.put("y", pos.getY());
         overrides.put("z", pos.getZ());
-        team.getTeam().map(t -> t.getId()).ifPresent(t -> overrides.put("t", t));
+        overrides.put("t", team.getTeam().getId());
         Commands cmds = CDistHelper.getServer().getCommands();
         CommandSourceStack source = CDistHelper.getServer().createCommandSourceStack();
         for (String s : rewards) {

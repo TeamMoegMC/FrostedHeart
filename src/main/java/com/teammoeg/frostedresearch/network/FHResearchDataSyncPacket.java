@@ -48,7 +48,7 @@ public class FHResearchDataSyncPacket implements CMessage {
 
     public FHResearchDataSyncPacket(TeamResearchData team) {
         try {
-            this.dat = (FRSpecialDataTypes.RESEARCH_DATA.saveData(DataOps.COMPRESSED, team));
+            this.dat = (TeamResearchData.NETWORK_CODEC.encodeStart(DataOps.COMPRESSED, team).getOrThrow(false, FRMain.LOGGER::warn));
             //System.out.println(dat);
         } catch (Exception e) {
             FRMain.LOGGER.error("Failed to save research data when syncing research data", e);
@@ -60,7 +60,7 @@ public class FHResearchDataSyncPacket implements CMessage {
         context.get().enqueueWork(() -> {
             try {
                 // Sync Server Data to Client
-                CClientTeamDataManager.INSTANCE.getInstance().setData(FRSpecialDataTypes.RESEARCH_DATA, FRSpecialDataTypes.RESEARCH_DATA.loadData(DataOps.COMPRESSED, dat));
+                CClientTeamDataManager.INSTANCE.getInstance().setData(FRSpecialDataTypes.RESEARCH_DATA, TeamResearchData.NETWORK_CODEC.parse(DataOps.COMPRESSED, dat).getOrThrow(false,FRMain.LOGGER::warn));
                 // Grant Effects on Client
                 
 

@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Our own registry type to reduce network and storage cost.
@@ -81,12 +82,11 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T> {
      }*/
     private ArrayList<T> items = new ArrayList<>();//registered objects
     private Map<String, Integer> rnames = new HashMap<>();//registry mappings
-    private final Function<String, OptionalLazy<T>> cacheGen = (n) -> OptionalLazy.of(() -> getByName(n));
-    private Function<String, T> strLazyGetter = x -> lazyGet(x).orElse(null);
+    private final Function<String, Supplier<T>> cacheGen = (n) -> () -> getByName(n);
     /*public Codec<Supplier<T>> SUPPLIER_CODEC=new CompressDifferCodec<Supplier<T>>(Codec.STRING.xmap(this::get,o->((RegisteredSupplier<T>)o).key),
     	Codec.INT.xmap(this::get, o->this.getIntId(((RegisteredSupplier<T>)o).key)));*/
     private ArrayList<String> rnamesl = new ArrayList<>();//reverse mappings
-    private Map<String, OptionalLazy<T>> cache = new HashMap<>();//object cache
+    private Map<String, Supplier<T>> cache = new HashMap<>();//object cache
 
 /*    public static <T extends FHRegisteredItem> String serializeSupplier(Supplier<T> s) {
         if (s instanceof RegisteredSupplier) {
@@ -280,7 +280,7 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T> {
      * @param id the id<br>
      * @return returns LazyOptional for name
      */
-    public OptionalLazy<T> lazyGet(String id) {
+    public Supplier<T> lazyGet(String id) {
         return cache.computeIfAbsent(id, cacheGen);
     }
 
@@ -336,7 +336,9 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T> {
     }
 
     public void runIfPresent(String id, Consumer<T> in) {
-        lazyGet(id).ifPresent(in::accept);
+        T t=lazyGet(id).get();
+        if(t!=null)
+        	in.accept(t);
     }
 
     /**

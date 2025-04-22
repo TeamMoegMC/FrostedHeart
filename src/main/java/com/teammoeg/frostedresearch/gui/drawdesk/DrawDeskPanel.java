@@ -82,7 +82,7 @@ public class DrawDeskPanel extends Panel {
 
             @Override
             public void onClicked(MouseButton arg0) {
-                Research current = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
+                Research current = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
                 if (current != null)
                 	FRNetwork.INSTANCE.sendToServer(new FHResearchControlPacket(Operator.PAUSE, current));
             }

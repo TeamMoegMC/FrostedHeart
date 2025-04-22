@@ -19,19 +19,19 @@
 
 package com.teammoeg.frostedresearch.events;
 
+import com.teammoeg.chorda.dataholders.team.AbstractTeam;
 import com.teammoeg.frostedresearch.research.Research;
 
-import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraftforge.eventbus.api.Event;
 
 public class ResearchStatusEvent extends Event {
     Research research;
-    Team team;
+    AbstractTeam team;
     boolean completion;
 
-    public ResearchStatusEvent(Research research, Team team, boolean completion) {
+    public ResearchStatusEvent(Research research, AbstractTeam abstractTeam, boolean completion) {
         this.research = research;
-        this.team = team;
+        this.team = abstractTeam;
         this.completion = completion;
     }
 
@@ -39,7 +39,7 @@ public class ResearchStatusEvent extends Event {
         return research;
     }
 
-    public Team getTeam() {
+    public AbstractTeam getTeam() {
         return team;
     }
 

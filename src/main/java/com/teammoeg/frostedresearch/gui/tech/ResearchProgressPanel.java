@@ -43,7 +43,7 @@ public class ResearchProgressPanel extends Panel {
     public void addWidgets() {
         RTextField tf = new RTextField(this);
         tf.setMaxWidth(71).setMaxLine(2).setColor(TechIcons.text).setPos(40, 15);
-        Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
+        Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
         if (inprog != null)
             tf.setText(inprog.getName());
         else
@@ -67,7 +67,7 @@ public class ResearchProgressPanel extends Panel {
         // float progress = researchScreen.getInProgressResearch().getProgressFraction();
         // float reqTime = researchScreen.getInProgressResearch().getCurrentPoints();
         // float finTIme = researchScreen.getInProgressResearch().getRequiredPoints();
-        Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
+        Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
         if (inprog != null) {
             float prog = inprog.getProgressFraction();
             TechIcons.SLIDER_FRAME.draw(matrixStack, x + 40, y + 32, 70, 8);

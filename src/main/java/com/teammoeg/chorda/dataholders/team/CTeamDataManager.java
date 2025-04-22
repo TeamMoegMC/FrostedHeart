@@ -39,6 +39,7 @@ import javax.annotation.Nullable;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataType;
+import com.teammoeg.chorda.events.PlayerTeamChangedEvent;
 import com.teammoeg.chorda.events.TeamLoadedEvent;
 import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.struct.OptionalLazy;
@@ -122,7 +123,9 @@ public class CTeamDataManager {
      * @return the data
      */
 	public static TeamDataHolder get(Player player) {
-		return FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer)player).map(INSTANCE::get).orElse(null);
+		AbstractTeam team=TeamsAPI.getAPI().getTeamByPlayer((ServerPlayer)player);
+		if(team==null)return null;
+		return INSTANCE.get(team);
 		
 	}
 
@@ -131,11 +134,12 @@ public class CTeamDataManager {
      * @param team the team
      * @return the data
      */
-    public TeamDataHolder get(Team team) {
+    public TeamDataHolder get(AbstractTeam team) {
         UUID cn = dataByFTBId.get(team.getId());
         if (cn == null) {
             cn=UUID.randomUUID();
             dataByFTBId.put(team.getId(), cn);
+            /*
             GameProfile owner = CDistHelper.getServer().getProfileCache().get(team.getOwner()).orElse(null);
             //System.out.println(owner);
             if (owner != null&&(!CDistHelper.getServer().usesAuthentication()||CDistHelper.getServer().isSingleplayer()))
@@ -145,9 +149,14 @@ public class CTeamDataManager {
                         cn=dat.getKey();
                         break;
                     }
-                }
+                }*/
         }
-        TeamDataHolder data= dataByOwnId.computeIfAbsent(cn, c -> new TeamDataHolder(c, OptionalLazy.of(()->team)));
+        TeamDataHolder data= dataByOwnId.get(cn);
+        if(data==null) {
+        	data=new TeamDataHolder(cn, team);
+        	
+        	dataByOwnId.put(cn, data);
+        }
         if (data.getOwnerName() == null) {
         	//System.out.println("filling owner name");
             GameProfileCache cache = CDistHelper.getServer().getProfileCache();
@@ -203,7 +212,7 @@ public class CTeamDataManager {
 	                if(nbt.contains("teamId"))
 	                	tud=nbt.getUUID("teamId");
 	                final UUID ftbid=tud;
-	                TeamDataHolder trd = new TeamDataHolder(nbt.getUUID("uuid"),OptionalLazy.ofOptional(() -> FTBTeamsAPI.api().getManager().getTeamByID(ftbid)));
+	                TeamDataHolder trd = new TeamDataHolder(nbt.getUUID("uuid"),TeamsAPI.getAPI().getTeamByUuid(ftbid));
 	                trd.deserialize(nbt, false);
 	                dataByFTBId.put(ftbid, trd.getId());
 	                dataByOwnId.put(trd.getId(), trd);
@@ -249,23 +258,28 @@ public class CTeamDataManager {
      * @param orig the original team id
      * @param team the new team
      */
-    public void transfer(UUID orig, Team team) {
+    public void transfer(UUID orig, AbstractTeam team) {
     	UUID rid=dataByFTBId.remove(orig);
+    	UUID orid=dataByFTBId.get(team.getId());
         TeamDataHolder odata = dataByOwnId.get(rid);
+        System.out.println("rid:"+rid+",orid:"+orid+",odata"+odata);
         if (odata != null) {
-            odata.setTeam(OptionalLazy.of(()->team));
+            odata.setTeam(team);
             odata.setOwnerName(CDistHelper.getServer().getProfileCache().get(team.getOwner()).map(GameProfile::getName).orElse(null));
+            
+            TeamDataHolder otdh=dataByOwnId.remove(orid);
             dataByFTBId.put(team.getId(), rid);
+           
         }else {
         	this.get(team);
         }
 
 
     }
-    public void transferByRid(UUID rid, Team team) {
+    public void transferByRid(UUID rid, AbstractTeam team) {
         TeamDataHolder odata = dataByOwnId.get(rid);
         if (odata != null) {
-            odata.setTeam(OptionalLazy.of(()->team));
+            odata.setTeam(team);
             odata.setOwnerName(CDistHelper.getServer().getProfileCache().get(team.getOwner()).map(GameProfile::getName).orElse(null));
             dataByFTBId.put(team.getId(), rid);
         }

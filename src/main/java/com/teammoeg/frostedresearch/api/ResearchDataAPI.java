@@ -22,6 +22,7 @@ package com.teammoeg.frostedresearch.api;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
+import com.teammoeg.chorda.dataholders.team.TeamsAPI;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.data.ResearchVariant;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
@@ -40,8 +41,8 @@ public class ResearchDataAPI {
     }
 
     public static TeamDataClosure<TeamResearchData> getData(Player id) {
-        if (id instanceof ServerPlayer)
-            return CTeamDataManager.INSTANCE.get(FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer) id).get()).getDataHolder(FRSpecialDataTypes.RESEARCH_DATA);
+        if (id instanceof ServerPlayer sp)
+            return CTeamDataManager.INSTANCE.get(TeamsAPI.getAPI().getTeamByPlayer(sp)).getDataHolder(FRSpecialDataTypes.RESEARCH_DATA);
         // return TeamResearchData.getClientInstance();
         return ClientResearchDataAPI.getData();
     }
@@ -107,8 +108,8 @@ public class ResearchDataAPI {
      * A convenience method to check if specific research is completed in both sides, for easier compat
      * */
     public static boolean isResearchComplete(Player id, String research) {
-        if (id instanceof ServerPlayer)
-            return CTeamDataManager.INSTANCE.get(FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer) id).get()).getData(FRSpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();
+        if (id instanceof ServerPlayer sp)
+            return CTeamDataManager.INSTANCE.get(TeamsAPI.getAPI().getTeamByPlayer(sp)).getData(FRSpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();
         return ClientResearchDataAPI.getData().get().getData(research).isCompleted();
     }
 
