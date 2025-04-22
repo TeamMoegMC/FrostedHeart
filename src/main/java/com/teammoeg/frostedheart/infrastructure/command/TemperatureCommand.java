@@ -26,6 +26,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import net.minecraft.commands.CommandSourceStack;
@@ -70,9 +71,10 @@ public class TemperatureCommand {
                         WorldTemperature.air(player.level(), pos),
                         WorldTemperature.block(player.level(), pos)
                 ));
-                result.append(String.format("§6Wind:§r %s | §6Openness:§r %.2f\n",
+                result.append(String.format("§6Wind:§r %s | §6Openness:§r %.2f | §6Humidity:§r %.2f\n",
                         WorldTemperature.wind(player.level()),
-                        data.getAirOpenness()
+                        data.getAirOpenness(),
+                        WorldClimate.getHumidity(player.level()) * 2F
                 ));
 
                 // Body parts information
