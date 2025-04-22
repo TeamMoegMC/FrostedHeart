@@ -257,7 +257,7 @@ public class TeamResearchData implements SpecialData {
 		Supplier<Research> rs = getCurrentResearch();
 		Research r=rs.get();
 		if (r!=null) {
-			doResearch(team,r,points);
+			return doResearch(team,r,points);
 		}
 		return points;
 	}

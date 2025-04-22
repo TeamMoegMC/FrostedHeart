@@ -50,7 +50,7 @@ public class InsightHandler {
         		theta=theta - PI2 * Math.floor((theta + Math.PI) / PI2)+Math.PI;
         		int m=Mth.floor(theta/seg_angle);
         		int index=n*n+m;
-        		System.out.println(index);
+        		//System.out.println(index);
         		ResearchHooks.onAreaVisited(serverPlayer, index);
         	}
            
