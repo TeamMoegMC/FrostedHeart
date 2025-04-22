@@ -390,7 +390,12 @@ public class TeamResearchData implements SpecialData {
 			grantEffects(holder, null, rs);
 		}
 	}
-
+	public void onAreaVisited(TeamDataHolder holder,int index) {
+		if(!visitedArea.get(index)) {
+			visitedArea.set(index);
+			this.addInsight(holder, 1);
+		}
+	}
 	private void sendClueProgressPacket(TeamDataHolder team, Research par, int clue, boolean trig) {
 		team.sendToOnline(FRNetwork.INSTANCE,new FHS2CClueProgressSyncPacket(trig, FHResearch.researches.getIntId(par), clue));
 	}

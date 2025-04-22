@@ -30,6 +30,7 @@ public class FRMain {
         CompatModule.enableCompatModule();
         FRContents.init(mod);
         FRSpecialDataTypes.init();
+        FRConfig.register();
         mod.addListener(this::setup);
         if(CompatModule.isTetraLoaded())
         	TetraCompat.init();

@@ -233,6 +233,10 @@ public class ResearchHooks {
 		FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
 		CTeamDataManager.INSTANCE.forAllData(FRSpecialDataTypes.RESEARCH_DATA, TeamResearchData::sendUpdate);
 	}
+	public static void onAreaVisited(ServerPlayer s,int index) {
+		TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(s);
+		trd.get().onAreaVisited(trd.team(), index);
+	}
 
 	public static ItemStack submitItem(ServerPlayer s, ItemStack i) {
 		TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(s);
