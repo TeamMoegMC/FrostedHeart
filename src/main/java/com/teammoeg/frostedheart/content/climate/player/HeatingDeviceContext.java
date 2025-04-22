@@ -16,11 +16,15 @@ public class HeatingDeviceContext {
         @Getter
         @Setter
         private float effectiveTemperature;
+        @Getter
+        @Setter
+        private float feelTemperature;
 
         private BodyPartContext(float bodyTemperature, float effectiveTemperature) {
             super();
             this.bodyTemperature = bodyTemperature;
             this.effectiveTemperature = effectiveTemperature;
+            this.feelTemperature = effectiveTemperature;
         }
 
         private BodyPartContext() {
@@ -49,6 +53,7 @@ public class HeatingDeviceContext {
         BodyPartContext ctx = getPartData(part);
         ctx.bodyTemperature = bodyTemperature;
         ctx.effectiveTemperature = effectiveTemperature;
+        ctx.feelTemperature = effectiveTemperature;
     }
 
     public float getEffectiveTemperature(BodyPart part) {
@@ -69,6 +74,18 @@ public class HeatingDeviceContext {
 
     public void addEffectiveTemperature(BodyPart part, float value) {
         getPartData(part).effectiveTemperature += value;
+    }
+
+    public void setFeelTemperature(BodyPart part, float value) {
+        getPartData(part).feelTemperature += value;
+    }
+
+    public float getFeelTemperature(BodyPart part) {
+        return getPartData(part).feelTemperature;
+    }
+
+    public void addFeelTemperature(BodyPart part, float value) {
+        getPartData(part).feelTemperature += value;
     }
 
     public Level getLevel() {

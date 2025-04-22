@@ -328,13 +328,23 @@ public class WorldClimate implements NBTSerializable {
     }
 
     /**
-     * Retrieves hourly updated temperature from cache
+     * Retrieves hourly updated wind from cache
      * Useful in client-side tick-frequency temperature rendering
      *
      * @return wind level at current hour, range 0-100
      */
     public static int getWind(LevelAccessor world) {
         return getCapability(world).map(t->t.getWind()).orElse(0);
+    }
+
+    /**
+     * Retrieves daily updated humidity from cache
+     * Useful in client-side tick-frequency temperature rendering
+     *
+     * @return humidity level at current hour, range 0-50
+     */
+    public static float getHumidity(LevelAccessor world) {
+        return getCapability(world).map(t->t.getHumidity()).orElse(0F);
     }
 
     public static long getWorldDay(LevelAccessor w) {
@@ -645,6 +655,12 @@ public class WorldClimate implements NBTSerializable {
     		return daycache.getWind(hourInDay);
     	return 0;
     }
+    public float getHumidity() {
+        if (daycache!=null)
+            return daycache.dayHumidity;
+        return 0;
+    }
+
     private int getTemperatureLevel(float temp) {
         if (temp >= WorldTemperature.WARM_PERIOD_PEAK - 2) {
             return 2;
