@@ -58,6 +58,7 @@ import com.teammoeg.frostedheart.content.water.item.FluidBottleItem;
 import com.teammoeg.frostedheart.content.water.item.IronBottleItem;
 import com.teammoeg.frostedheart.content.water.item.LeatherWaterBagItem;
 import com.teammoeg.frostedheart.content.water.item.WoodenCupItem;
+import com.teammoeg.frostedheart.util.FHAssetsUtils;
 import com.tterrag.registrate.util.entry.ItemEntry;
 
 import net.minecraft.core.registries.Registries;
@@ -1479,54 +1480,67 @@ thinner.png
     public static final ItemEntry<KnifeItem> MAKESHIFT_KNIFE =
             REGISTRATE.item("makeshift_knife", p -> new KnifeItem(FHToolMaterials.FLINT, 1, -1.5F, new Item.Properties()))
                     .tag(ItemTags.SWORDS)
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<PickaxeItem> MAKESHIFT_PICKAXE =
             REGISTRATE.item("makeshift_pickaxe", p -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES)
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<AxeItem> MAKESHIFT_AXE =
             REGISTRATE.item("makeshift_axe", p -> new AxeItem(FHToolMaterials.FLINT, 4.0F, -3.2F, new Item.Properties()))
                     .tag(ItemTags.AXES)
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<ShovelItem> MAKESHIFT_SHOVEL =
             REGISTRATE.item("makeshift_shovel", p -> new ShovelItem(FHToolMaterials.FLINT, 1.5F, -3.0F, new Item.Properties()))
                     .tag(ItemTags.SHOVELS)
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<HoeItem> MAKESHIFT_HOE =
             REGISTRATE.item("makeshift_hoe", p -> new HoeItem(FHToolMaterials.FLINT, 0, -3.0F, new Item.Properties()))
                     .tag(ItemTags.HOES)
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<KnifeItem> BRONZE_KNIFE =
             REGISTRATE.item("bronze_knife", p -> new KnifeItem(FHToolMaterials.BRONZE, 1, -1.5F, new Item.Properties()))
                     .tag(ItemTags.SWORDS, forgeItemTag("knifes"), forgeItemTag("knifes/bronze"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<PickaxeItem> BRONZE_PICKAXE =
             REGISTRATE.item("bronze_pickaxe", p -> new PickaxeItem(FHToolMaterials.BRONZE, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES, forgeItemTag("pickaxes"), forgeItemTag("pickaxes/bronze"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<AxeItem> BRONZE_AXE =
             REGISTRATE.item("bronze_axe", p -> new AxeItem(FHToolMaterials.BRONZE, 4.0F, -3.2F, new Item.Properties()))
                     .tag(ItemTags.AXES, forgeItemTag("axes"), forgeItemTag("axes/bronze"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<ShovelItem> BRONZE_SHOVEL =
             REGISTRATE.item("bronze_shovel", p -> new ShovelItem(FHToolMaterials.BRONZE, 1.5F, -3.0F, new Item.Properties()))
                     .tag(ItemTags.SHOVELS, forgeItemTag("shovels"), forgeItemTag("shovels/bronze"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<HoeItem> BRONZE_HOE =
             REGISTRATE.item("bronze_hoe", p -> new HoeItem(FHToolMaterials.BRONZE, 0, -3.0F, new Item.Properties()))
                     .tag(ItemTags.HOES, forgeItemTag("hoes"), forgeItemTag("hoes/bronze"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<SwordItem> BRONZE_SWORD =
             REGISTRATE.item("bronze_sword", p -> new SwordItem(FHToolMaterials.BRONZE, 3, -2.4F, new Item.Properties()))
                     .tag(ItemTags.SWORDS, forgeItemTag("swords"), forgeItemTag("swords/bronze"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<PickaxeItem> STONE_HAMMER =
             REGISTRATE.item("stone_hammer", p -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/stone"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<PickaxeItem> BRONZE_HAMMER =
             REGISTRATE.item("bronze_hammer", p -> new PickaxeItem(FHToolMaterials.BRONZE, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/bronze"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
 
     public static ItemEntry<FluidBottleItem> fluid_bottle = REGISTRATE
