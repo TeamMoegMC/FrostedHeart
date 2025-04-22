@@ -197,7 +197,8 @@ public class FHTags {
 		FORBIDDEN_IN_CRATES(NameSpace.IE),
 		COW_FEED,
 		PIG_FEED,
-		CAT_FEED, RABBIT_FEED
+		CAT_FEED, RABBIT_FEED,
+		IMPORTANT_ITEM(false)
 		;
 
 		public final TagKey<Item> tag;

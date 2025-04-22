@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
@@ -91,6 +92,7 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.registries.ForgeRegistries;
 import se.mickelus.tetra.items.modular.IModularItem;
 import top.theillusivec4.curios.api.event.DropRulesEvent;
@@ -373,35 +375,33 @@ public class FHCommonEvents {
 	@SubscribeEvent
 	public static void playerXPPickUp(PickupXp event) {
 		Player player = event.getEntity();
-		for (ItemStack stack : player.getArmorSlots()) {
-			if (!stack.isEmpty()) {
-				CompoundTag cn = stack.getTag();
-				if (cn == null)
-					continue;
-				String inner = cn.getString("inner_cover");
-				if (inner.isEmpty() || cn.getBoolean("inner_bounded"))
-					continue;
-				CompoundTag cnbt = cn.getCompound("inner_cover_tag");
-				int crdmg = cnbt.getInt("Damage");
-				if (crdmg > 0 && CUtils.getEnchantmentLevel(Enchantments.MENDING, cnbt) > 0) {
-					event.setCanceled(true);
-					ExperienceOrb orb = event.getOrb();
-					player.takeXpDelay = 2;
-					player.take(orb, 1);
-
-					int toRepair = Math.min(orb.value * 2, crdmg);
-					orb.value -= toRepair / 2;
-					crdmg = crdmg - toRepair;
-					cnbt.putInt("Damage", crdmg);
-					cn.put("inner_cover_tag", cnbt);
-					if (orb.value > 0) {
-						player.giveExperiencePoints(orb.value);
+		FHCapabilities.PLAYER_TEMP.getCapability(player).ifPresent(p->{
+			for(BodyPart bp:BodyPart.values()) {
+				ItemStackHandler ish=p.getClothesByPart(bp);
+				for(int i=0;i<ish.getSlots();i++) {
+					ItemStack stack=ish.getStackInSlot(i);
+					if (!stack.isEmpty()) {
+						if (stack.getDamageValue() > 0 && stack.getEnchantmentLevel(Enchantments.MENDING) > 0) {
+							event.setCanceled(true);
+							ExperienceOrb orb = event.getOrb();
+							player.takeXpDelay = 2;
+							player.take(orb, 1);
+							int damage=stack.getDamageValue();
+							int toRepair = Math.min(orb.value * 2, damage);
+							orb.value -= toRepair / 2;
+							stack.setDamageValue(damage-toRepair);
+							if (orb.value > 0) {
+								player.giveExperiencePoints(orb.value);
+							}
+							orb.remove(RemovalReason.DISCARDED);
+							return;
+						}
 					}
-					orb.remove(RemovalReason.DISCARDED);
-					return;
 				}
 			}
-		}
+			
+		});
+		
 	}
 
 	@SubscribeEvent

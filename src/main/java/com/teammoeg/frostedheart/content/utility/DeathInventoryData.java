@@ -22,12 +22,15 @@ package com.teammoeg.frostedheart.content.utility;
 import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.io.NBTSerializable;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.NonNullList;
 import net.minecraftforge.common.MinecraftForge;
@@ -38,6 +41,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 public class DeathInventoryData implements NBTSerializable {
     private static class CopyInventory {
         NonNullList<ItemStack> inv = NonNullList.withSize(9, ItemStack.EMPTY);
+        NonNullList<ItemStack> invex = NonNullList.withSize(27, ItemStack.EMPTY);
         NonNullList<ItemStack> armor = NonNullList.withSize(4, ItemStack.EMPTY);
         ItemStack offhand = ItemStack.EMPTY;
 
@@ -49,6 +53,7 @@ public class DeathInventoryData implements NBTSerializable {
         private CopyInventory(CompoundTag nbt) {
             super();
             ContainerHelper.loadAllItems(nbt.getCompound("main"), inv);
+            ContainerHelper.loadAllItems(nbt.getCompound("back"), invex);
             ContainerHelper.loadAllItems(nbt.getCompound("armor"), armor);
             this.offhand = ItemStack.of(nbt.getCompound("off"));
 
@@ -58,9 +63,18 @@ public class DeathInventoryData implements NBTSerializable {
             for (int i = 0; i < 9; i++) {
                 ItemStack itemstack = othis.items.get(i);
                 if (!itemstack.isEmpty()) {
-                    if (itemstack.isDamageableItem() || itemstack.getMaxStackSize()==1) {
+                    if (itemstack.isDamageableItem() || itemstack.getMaxStackSize()==1||itemstack.is(FHTags.Items.IMPORTANT_ITEM.tag)) {
                         inv.set(i, itemstack);
                         othis.setItem(i, ItemStack.EMPTY);
+                    }
+                }
+            }
+            for(int i=0;i<27;i++) {
+            	ItemStack itemstack=othis.items.get(i+9);
+            	if (!itemstack.isEmpty()) {
+                    if (itemstack.is(FHTags.Items.IMPORTANT_ITEM.tag)) {
+                        inv.set(i+9, itemstack);
+                        othis.setItem(i+9, ItemStack.EMPTY);
                     }
                 }
             }
@@ -70,32 +84,58 @@ public class DeathInventoryData implements NBTSerializable {
                 othis.offhand.set(0, ItemStack.EMPTY);
             }
             for (int i = 0; i < 4; i++) {
-                armor.set(i, othis.armor.get(i));
-                othis.armor.set(i, ItemStack.EMPTY);
+            	if(othis.armor.get(i).getEnchantmentLevel(Enchantments.BINDING_CURSE)<=0) {
+	                armor.set(i, othis.armor.get(i));
+	                othis.armor.set(i, ItemStack.EMPTY);
+            	}
             }
         }
 
         public void restoreInventory(Inventory othis) {
             for (int i = 0; i < 9; i++) {
                 ItemStack ret = inv.get(i);
-                if (!ret.isEmpty())
+                if (!ret.isEmpty()) {
+                	ItemStack ois=othis.getItem(i);
+                	if(!ois.isEmpty())
+                		CUtils.giveItem(othis.player, ois);
                     othis.setItem(i, ret);
+                    
+                }
+            }
+            for(int i=0;i<27;i++) {
+            	ItemStack ret=invex.get(i);
+            	if(!ret.isEmpty())
+            		CUtils.giveItem(othis.player, ret);
             }
             for (int i = 0; i < 4; i++) {
                 ItemStack ret = armor.get(i);
-                if (!ret.isEmpty())
+
+                if (!ret.isEmpty()) {
+                	ItemStack ois=othis.armor.get(i);
+                	if(!ois.isEmpty())
+                		CUtils.giveItem(othis.player, ois);
                     othis.armor.set(i, ret);
+                }
             }
             if (offhand != null && !offhand.isEmpty()) {
+            	ItemStack ois=othis.offhand.get(0);
+            	if(!ois.isEmpty())
+            		CUtils.giveItem(othis.player, ois);
                 othis.offhand.set(0, offhand);
             }
         }
 
-        public CompoundTag serializeNBT() {
+        @Override
+		public String toString() {
+			return "CopyInventory [inv=" + inv + ", armor=" + armor + ", offhand=" + offhand + "]";
+		}
+
+		public CompoundTag serializeNBT() {
             CompoundTag cnbto = new CompoundTag();
 
 
             cnbto.put("main", ContainerHelper.saveAllItems(new CompoundTag(), inv));
+            cnbto.put("back", ContainerHelper.saveAllItems(new CompoundTag(), invex));
             cnbto.put("armor", ContainerHelper.saveAllItems(new CompoundTag(), armor));
             cnbto.put("off", offhand.serializeNBT());
             return cnbto;
