@@ -84,10 +84,10 @@ public class DeathInventoryData implements NBTSerializable {
                 othis.offhand.set(0, ItemStack.EMPTY);
             }
             for (int i = 0; i < 4; i++) {
-            	if(othis.armor.get(i).getEnchantmentLevel(Enchantments.BINDING_CURSE)<=0) {
+            	//if(othis.armor.get(i).getEnchantmentLevel(Enchantments.BINDING_CURSE)<=0) {
 	                armor.set(i, othis.armor.get(i));
 	                othis.armor.set(i, ItemStack.EMPTY);
-            	}
+            	//}
             }
         }
 
@@ -189,11 +189,6 @@ public class DeathInventoryData implements NBTSerializable {
         this.inv = new CopyInventory(inv);
     }
 
-    @Override
-    public void deserializeNBT(CompoundTag nbt) {
-
-    }
-
     public void startClone() {
         calledClone = false;
     }
@@ -217,11 +212,14 @@ public class DeathInventoryData implements NBTSerializable {
 	public void load(CompoundTag nbt, boolean isPacket) {
         inv = null;
         calledClone = nbt.getBoolean("cloned");
-        if (nbt.contains("data")) {
-            nbt.getList("data", Tag.TAG_COMPOUND).stream().map(t -> (CompoundTag) t).findFirst().ifPresent(e-> inv = CopyInventory.deserializeNBT(e.getCompound("inv")));
-        } else if (nbt.contains("inv")) {
+        if (nbt.contains("inv")) {
             inv = CopyInventory.deserializeNBT(nbt.getCompound("inv"));
         }
+	}
+
+	@Override
+	public String toString() {
+		return "DeathInventoryData [inv=" + inv + "]";
 	}
 
 }
