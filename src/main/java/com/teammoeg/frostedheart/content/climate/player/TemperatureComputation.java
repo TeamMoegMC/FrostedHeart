@@ -147,6 +147,29 @@ public class TemperatureComputation {
         }
     }
 
+    /**
+     * Compute feel temperature from a realistic model.
+     * <a href="https://en.wikipedia.org/wiki/Apparent_temperature">...</a>
+     *
+     * @param dryT 0C based dry effective temperature
+     * @param relativeHumidity [0,1]
+     * @param relativeWindSpeed [0,1]
+     * @return 0C based feel temperature
+     */
+    public static double feelTemperature(double dryT, double relativeHumidity, double relativeWindSpeed) {
+        double e = waterVaporPressure(dryT, relativeHumidity);
+        double v = windSpeed(relativeWindSpeed);
+        return dryT + 0.33 * e - 0.7 * v - 4.00;
+    }
 
+    // https://en.wikipedia.org/wiki/Apparent_temperature
+    public static double waterVaporPressure(double dryT, double relativeHumidity) {
+        return relativeHumidity * 6.105 * Math.exp((17.27 * dryT) / (237.7 + dryT));
+    }
 
+    // https://en.wikipedia.org/wiki/Beaufort_scale
+    public static double windSpeed(double relativeWindSpeed) {
+        // we assume the greatest wind speed is 35 m/s (most intense hurricane)
+        return relativeWindSpeed * 35;
+    }
 }

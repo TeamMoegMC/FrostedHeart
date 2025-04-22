@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -309,13 +310,17 @@ public class TemperatureUpdate {
 
                         // Body temperature exchange: from effective and from self-heating
                         Level world = player.level();
+                        // Range 0-50
+                        float humidity = WorldClimate.getHumidity(world);
+                        // Range [0,1]
+                        float relativeHumidity = Mth.clamp(humidity, 0, 50) / 50F;
                         // Range 0-100
                         int wind = WorldTemperature.wind(world);
                         // Range 0-1
                         float openness = data.getAirOpenness();
                         //System.out.println(data.windStrengh);
                         // [0,1]
-                        float effectiveWind = openness * Mth.clamp(wind, 0, 100) / 100F;
+                        float relativeWind = openness * Mth.clamp(wind, 0, 100) / 100F;
 
                         // Apply Exchanged Temperature, and Self-Heating
                         // Temporary storage map
@@ -323,9 +328,51 @@ public class TemperatureUpdate {
                         for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
                             // Apply effective heat exchange to part temperature
                             HeatingDeviceContext.BodyPartContext pctx = ctx.getPartData(part);
+
+
+                            // fluid conductivity is different in different medium,
+                            // fluid resistance [0,1] from clothing helps dealing with this
+                            // by linearly diminishing the conductivity multiplier due to various fluid movement
+
+                            // wikipedia: https://en.wikipedia.org/wiki/Thermal_conductivity_and_resistivity
+                            // thermal conductivity:
+                            // water: 0.6089
+                            // air: 0.026
+                            // powdered snow: 0.05
+                            // water/air = 23.41
+                            // we use ratio = 25
+
+                            // Normally we assume humidity is moderate
+                            // Default: No wind, Dry, then 0
+                            float fluidModifier = 0F;
+                            float partFluidResist = clothDataMap.get(part).windResist;
+                            if (player.isInWater()) {
+                                fluidModifier = 20F * (1 - partFluidResist);
+                                relativeHumidity = 2F;
+                            }
+                            // interestingly powdered snow does not affect conductivity that much, it just makes envtemp low
+                            // however, the human body melts snow, and that generates water, which may go into the body,
+                            // if clothing is not fluid resisting enough, and take away heats.
+                            // thus a solution here is an average...
+                            else if (player.isInPowderSnow) {
+                                fluidModifier = 10F * (1 - partFluidResist);
+                                relativeHumidity = 1F;
+                            }
+                            else {
+                                // full relativeHumidity may raise the fluidModifier to 10F -- wet level, when it is full (rare)
+                                // that essentially means the whole air is full of water droplets
+                                fluidModifier += (10F * relativeHumidity) * (1 - partFluidResist);
+                                // gets up to 5F, no wind is just 0
+                                fluidModifier += (5F * relativeWind) * (1 - partFluidResist);
+                                // evaporation takes away a LOT of heat. it gets up to 10F
+                                if (player.hasEffect(FHMobEffects.WET.get())) {
+                                    fluidModifier += 10F * (1 - partFluidResist);
+                                }
+                            }
+
                             // Part Body Temperature
                             float pbTemp = pctx.getBodyTemperature();
-                            float dt = pctx.getEffectiveTemperature() - pbTemp;
+                            float dryEffectiveTemp = pctx.getEffectiveTemperature();
                             // By default heatExchangeTimeConstant = 167
                             // Since this logic is invoked every 20 ticks (1s), this means
                             // 1 unit = 0.006 degrees per second
@@ -340,40 +387,14 @@ public class TemperatureUpdate {
                             // Deviation 36% * 50Y = 18Y, Rate 3.6 units, 46.4 sec to hypothermia (effectively, leather suit)
                             // Deviation 26% * 50Y = 13Y, Rate 2.6 units, 64.2 sec to hypothermia (effectively, wool suit)
 
-                            // fluid conductivity is different in different medium,
-                            // fluid resistance [0,1] from clothing helps dealing with this
-                            // by linearly diminishing the conductivity multiplier due to various fluid movement
-
-                            // wikipedia: https://en.wikipedia.org/wiki/Thermal_conductivity_and_resistivity
-                            // thermal conductivity:
-                            // water: 0.6089
-                            // air: 0.026
-                            // powdered snow: 0.05
-                            // water/air = 23.41
-                            // we use ratio = 25
-
-                            float fluidModifier = 0F;
-                            float partFluidResist = clothDataMap.get(part).windResist;
-                            if (player.isInWater())
-                                fluidModifier = 25F * (1 - partFluidResist);
-                            // interestingly powdered snow does not affect conductivity that much, it just makes envtemp low
-                            // however, the human body melts snow, and that generates water, which may go into the body,
-                            // if clothing is not fluid resisting enough, and take away heats.
-                            // thus a solution here is an average...
-                            else if (player.isInPowderSnow)
-                                fluidModifier = 15F * (1 - partFluidResist);
-                            else {
-                                // gets up to 5F
-                                fluidModifier += 5F * effectiveWind * (1 - partFluidResist);
-                                // evaporation takes away a LOT of heat. it gets up to 10F
-                                if (player.hasEffect(FHMobEffects.WET.get())) {
-                                    fluidModifier += 10F * (1 - partFluidResist);
-                                }
-                            }
-                            float actualEffective=(1 + fluidModifier)*dt;
+                            // this combines effect from humidity and wind speed
+                            float wetWindEffectiveTemp = (float) TemperatureComputation.feelTemperature(dryEffectiveTemp + 37F, relativeHumidity, relativeWind) - 37F;
+                            pctx.setFeelTemperature(wetWindEffectiveTemp);
+                            float dt = wetWindEffectiveTemp - pbTemp;
                             // May be negative! (when dt < 0)
-                            float heatExchangedUnits = (float) (actualEffective * unit  / FHConfig.SERVER.heatExchangeTempConstant.get());
-                            pctx.setEffectiveTemperature(actualEffective/5);
+                            float fluidModifiedDT = (1 + fluidModifier) * dt;
+                            float heatExchangedUnits = (float) (fluidModifiedDT * unit / FHConfig.SERVER.heatExchangeTempConstant.get());
+
                             // System.out.println("fm:"+fluidModifier);
                             // Self-Heating
                             float selfHeatRate = data.getDifficulty().heat_unit; // normally 1

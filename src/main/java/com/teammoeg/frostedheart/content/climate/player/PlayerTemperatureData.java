@@ -250,17 +250,17 @@ public class PlayerTemperatureData implements NBTSerializable {
 
         // Compute feelTemp as area-weighted average of parts
         // Also, set each part feel temp
-        float newFeelTemp = 0;
         for (BodyPart part : BodyPart.values()) {
-            newFeelTemp += ctx.getEffectiveTemperature(part) * part.area;
-            setFeelTempByPart(part, ctx.getEffectiveTemperature(part) + 37F);
+            setFeelTempByPart(part, ctx.getFeelTemperature(part) + 37F);
         }
 
         // Interpolate with previous feelTemp
+        // Use the part with most absolute value
+        float extremeFeelTemp = getExtremeFeelTemp();
         if (totalFeelTemp == INVALID_TEMPERATURE)
-            totalFeelTemp = newFeelTemp + 37F;
+            totalFeelTemp = extremeFeelTemp;
         else
-            totalFeelTemp = (newFeelTemp + 37F) * .2f + totalFeelTemp * .8f;
+            totalFeelTemp = (extremeFeelTemp) * .2f + totalFeelTemp * .8f;
 
     }
 
@@ -382,6 +382,22 @@ public class PlayerTemperatureData implements NBTSerializable {
         }
 
         return lowestTemp;
+    }
+
+    public float getExtremeFeelTemp() {
+        // get the one with largest abs value
+        float extremeAbsTemp = Float.NEGATIVE_INFINITY;
+        float extremeTemp = Float.NEGATIVE_INFINITY;
+        for (BodyPart p : BodyPart.values()) {
+            if(p==BodyPart.HANDS)continue;
+            float temp = getFeelTempByPart(p);
+            float absTemp = Math.abs(temp);
+            if (absTemp > extremeAbsTemp) {
+                extremeAbsTemp = absTemp;
+                extremeTemp = temp;
+            }
+        }
+        return extremeTemp;
     }
 
     /**
