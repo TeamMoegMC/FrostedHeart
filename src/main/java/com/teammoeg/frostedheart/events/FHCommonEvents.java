@@ -84,6 +84,7 @@ import net.minecraftforge.event.entity.living.LivingHealEvent;
 import net.minecraftforge.event.entity.living.MobEffectEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerSpawnPhantomsEvent;
 import net.minecraftforge.event.entity.player.PlayerXpEvent.PickupXp;
 import net.minecraftforge.event.entity.player.SleepingTimeCheckEvent;
 import net.minecraftforge.event.level.BlockEvent;
@@ -494,6 +495,11 @@ public class FHCommonEvents {
 				}
 			}
 		}
+	}
+
+	@SubscribeEvent
+	public static void disableSpawningPhantoms(PlayerSpawnPhantomsEvent event) {
+		event.setResult(Result.DENY);
 	}
 
 }
