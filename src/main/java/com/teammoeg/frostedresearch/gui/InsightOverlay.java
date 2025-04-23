@@ -29,7 +29,7 @@ public class InsightOverlay implements IGuiOverlay{
 	private static final int LINGERING_TICKS=200;//ticks the overlay stay on screen after all animation ends
 	private static final int COLOR=0xff8cffd6;//color style 
 	private static final float MAX_PROGRESS_PRE_TICK=0.05f;//max progress added per tick
-	private static final float MIN_PROGRESS_PRE_TICK=0.01f;//min progress added per tick
+	private static final float MIN_PROGRESS_PRE_TICK=0.002f;//min progress added per tick
 	private static final int CENTER_Y=35;//Y-POS for the whole ui
 	int renderingInsightLevel;
 	int renderingNextInsightLevel;
@@ -108,7 +108,7 @@ public class InsightOverlay implements IGuiOverlay{
 			float direction=Math.signum(delta);
 			float value=Math.abs(delta);
 			//calculate smoothed value
-			float smoothedvalue=Mth.clamp(value/5F, MIN_PROGRESS_PRE_TICK, MAX_PROGRESS_PRE_TICK);
+			float smoothedvalue=Mth.clamp(value/10F, MIN_PROGRESS_PRE_TICK, MAX_PROGRESS_PRE_TICK);
 			
 			//do not obey min-progress if smoothed value is larger than value itself
 			value=Math.min(value, smoothedvalue);
