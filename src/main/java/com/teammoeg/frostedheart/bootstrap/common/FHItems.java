@@ -1049,6 +1049,15 @@ thinner.png
             .item("raw_hide", Item::new)
             .model(AssetLookup.existingItemModel())
             .register();
+    public static ItemEntry<Item> fox_hide = REGISTRATE
+            .item("fox_hide", Item::new)
+            .register();
+    public static ItemEntry<Item> wolf_hide = REGISTRATE
+            .item("wolf_hide", Item::new)
+            .register();
+    public static ItemEntry<Item> polar_bear_hide = REGISTRATE
+            .item("polar_bear_hide", Item::new)
+            .register();
     public static ItemEntry<Item> makeshift_core_broken = REGISTRATE
             .item("makeshift_core_broken", Item::new)
             .model(AssetLookup.existingItemModel())
@@ -1193,6 +1202,42 @@ thinner.png
             .item("cooked_whale_meat", Item::new)
             .properties(p -> p.food((new FoodProperties.Builder()).nutrition(8).saturationMod(1.6F).meat().fast().build()))
             .register();
+    public static ItemEntry<Item> SQUID_TENTACLES = REGISTRATE
+            .item("squid_tentacles", Item::new)
+            .tag(CPTags.Items.MEAT)
+            .properties(p -> p.food(FHFoodProperties.SQUID_TENTACLES))
+            .register();
+    public static ItemEntry<Item> COOKED_SQUID_TENTACLES = REGISTRATE
+            .item("cooked_squid_tentacles", Item::new)
+            .properties(p -> p.food(FHFoodProperties.COOKED_SQUID_TENTACLES))
+            .register();
+    public static ItemEntry<Item> FOX_MEAT = REGISTRATE
+            .item("fox_meat", Item::new)
+            .tag(CPTags.Items.MEAT)
+            .properties(p -> p.food(FHFoodProperties.FOX_MEAT))
+            .register();
+    public static ItemEntry<Item> COOKED_FOX_MEAT = REGISTRATE
+            .item("cooked_fox_meat", Item::new)
+            .properties(p -> p.food(FHFoodProperties.COOKED_FOX_MEAT))
+            .register();
+    public static ItemEntry<Item> WOLF_MEAT = REGISTRATE
+            .item("wolf_meat", Item::new)
+            .tag(CPTags.Items.MEAT)
+            .properties(p -> p.food(FHFoodProperties.WOLF_MEAT))
+            .register();
+    public static ItemEntry<Item> COOKED_WOLF_MEAT = REGISTRATE
+            .item("cooked_wolf_meat", Item::new)
+            .properties(p -> p.food(FHFoodProperties.COOKED_WOLF_MEAT))
+            .register();
+    public static ItemEntry<Item> POLAR_BEAR_MEAT = REGISTRATE
+            .item("polar_bear_meat", Item::new)
+            .tag(CPTags.Items.MEAT)
+            .properties(p -> p.food(FHFoodProperties.POLAR_BEAR_MEAT))
+            .register();
+    public static ItemEntry<Item> COOKED_POLAR_BEAR_MEAT = REGISTRATE
+            .item("cooked_polar_bear_meat", Item::new)
+            .properties(p -> p.food(FHFoodProperties.COOKED_POLAR_BEAR_MEAT))
+            .register();
 
     static {
         REGISTRATE.setCreativeTab(FHTabs.TOOLS);
@@ -1266,6 +1311,10 @@ thinner.png
             .item("hay_pants", p -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.LEGGINGS, createProps()))
             .model(AssetLookup.existingItemModel())
             .register();
+    public static ItemEntry<Item> hay_gloves = REGISTRATE
+            .item("hay_gloves", Item::new)
+            .properties(p -> p.defaultDurability(256))
+            .register();
     public static ItemEntry<FHBaseArmorItem> wool_boots = REGISTRATE
             .item("wool_boots", p -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.BOOTS, createProps()))
             .model(AssetLookup.existingItemModel())
@@ -1281,6 +1330,10 @@ thinner.png
     public static ItemEntry<FHBaseArmorItem> wool_pants = REGISTRATE
             .item("wool_pants", p -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.LEGGINGS, createProps()))
             .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> wool_gloves = REGISTRATE
+            .item("wool_gloves", Item::new)
+            .properties(p -> p.defaultDurability(384))
             .register();
     public static ItemEntry<FHBaseArmorItem> hide_boots = REGISTRATE
             .item("hide_boots", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.BOOTS, createProps()))
@@ -1298,6 +1351,79 @@ thinner.png
             .item("hide_pants", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.LEGGINGS, createProps()))
             .model(AssetLookup.existingItemModel())
             .register();
+    public static ItemEntry<Item> hide_gloves = REGISTRATE
+            .item("hide_gloves", Item::new)
+            .properties(p -> p.defaultDurability(384))
+            .register();
+    // Rabbit
+    public static ItemEntry<FHBaseArmorItem> rabbit_fur_socks = REGISTRATE
+            .item("rabbit_fur_socks", p -> new FHBaseArmorItem(FHArmorMaterial.RABBIT, Type.BOOTS, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> rabbit_hat = REGISTRATE
+            .item("rabbit_fur_hat", p -> new FHBaseArmorItem(FHArmorMaterial.RABBIT, Type.HELMET, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> rabbit_jacket = REGISTRATE
+            .item("rabbit_fur_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.RABBIT, Type.CHESTPLATE, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> rabbit_pants = REGISTRATE
+            .item("rabbit_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.RABBIT, Type.LEGGINGS, createProps()))
+            .register();
+    public static ItemEntry<Item> rabbit_gloves = REGISTRATE
+            .item("rabbit_fur_gloves", Item::new)
+            .properties(p -> p.defaultDurability(384))
+            .register();
+    // Fox
+    public static ItemEntry<FHBaseArmorItem> fox_boots = REGISTRATE
+            .item("fox_fur_socks", p -> new FHBaseArmorItem(FHArmorMaterial.FOX, Type.BOOTS, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> fox_hat = REGISTRATE
+            .item("fox_fur_hat", p -> new FHBaseArmorItem(FHArmorMaterial.FOX, Type.HELMET, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> fox_jacket = REGISTRATE
+            .item("fox_fur_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.FOX, Type.CHESTPLATE, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> fox_pants = REGISTRATE
+            .item("fox_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.FOX, Type.LEGGINGS, createProps()))
+            .register();
+    public static ItemEntry<Item> fox_gloves = REGISTRATE
+            .item("fox_fur_gloves", Item::new)
+            .properties(p -> p.defaultDurability(384))
+            .register();
+    // Wolf
+    public static ItemEntry<FHBaseArmorItem> wolf_boots = REGISTRATE
+            .item("wolf_fur_socks", p -> new FHBaseArmorItem(FHArmorMaterial.WOLF, Type.BOOTS, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> wolf_hat = REGISTRATE
+            .item("wolf_fur_hat", p -> new FHBaseArmorItem(FHArmorMaterial.WOLF, Type.HELMET, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> wolf_jacket = REGISTRATE
+            .item("wolf_fur_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.WOLF, Type.CHESTPLATE, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> wolf_pants = REGISTRATE
+            .item("wolf_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.WOLF, Type.LEGGINGS, createProps()))
+            .register();
+    public static ItemEntry<Item> wolf_gloves = REGISTRATE
+            .item("wolf_fur_gloves", Item::new)
+            .properties(p -> p.defaultDurability(384))
+            .register();
+    // Polar Bear
+    public static ItemEntry<FHBaseArmorItem> polar_bear_boots = REGISTRATE
+            .item("polar_bear_fur_socks", p -> new FHBaseArmorItem(FHArmorMaterial.POLAR_BEAR, Type.BOOTS, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> polar_bear_hat = REGISTRATE
+            .item("polar_bear_fur_hat", p -> new FHBaseArmorItem(FHArmorMaterial.POLAR_BEAR, Type.HELMET, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> polar_bear_jacket = REGISTRATE
+            .item("polar_bear_fur_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.POLAR_BEAR, Type.CHESTPLATE, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> polar_bear_pants = REGISTRATE
+            .item("polar_bear_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.POLAR_BEAR, Type.LEGGINGS, createProps()))
+            .register();
+    public static ItemEntry<Item> polar_bear_gloves = REGISTRATE
+            .item("polar_bear_fur_gloves", Item::new)
+            .properties(p -> p.defaultDurability(384))
+            .register();
+
     public static ItemEntry<FHBaseArmorItem> space_boots = REGISTRATE
             .item("spacesuit_boots", p -> new FHBaseArmorItem(FHArmorMaterial.SPACESUIT, Type.BOOTS, createProps()))
             .register();

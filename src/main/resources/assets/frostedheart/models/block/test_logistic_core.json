@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "texture0": "frostedheart:block/bot_dispatcher",
+    "particle": "frostedheart:block/bot_dispatcher"
+  },
+  "loader": "forge:obj",
+  "model": "frostedheart:models/block/bot_dispatcher.obj",
+  "automatic_culling": false,
+  "flip_v": true,
+  "render_type": "cutout"
+}

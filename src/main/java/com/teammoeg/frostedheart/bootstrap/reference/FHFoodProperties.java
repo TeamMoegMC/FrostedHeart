@@ -27,8 +27,15 @@ public class FHFoodProperties {
     public static final FoodProperties RYE_BREAD = buildStew(6);
     public static final FoodProperties BLACK_BREAD = buildStew(5, 0.0F);
     public static final FoodProperties WHITE_TURNIP = buildStew(3, 0.5F);
-    public static final FoodProperties WOLFBERRIES = buildStew(2, 0.0F);
     public static final FoodProperties DRIED_WOLFBERRIES = buildStew(1);
+    public static final FoodProperties COOKED_SQUID_TENTACLES = (new FoodProperties.Builder()).nutrition(5).saturationMod(0.6F).build();
+    public static final FoodProperties COOKED_FOX_MEAT = (new FoodProperties.Builder()).nutrition(6).saturationMod(0.8F).meat().build();
+    public static final FoodProperties COOKED_WOLF_MEAT = (new FoodProperties.Builder()).nutrition(6).saturationMod(0.8F).meat().build();
+    public static final FoodProperties COOKED_POLAR_BEAR_MEAT = (new FoodProperties.Builder()).nutrition(8).saturationMod(0.8F).meat().build();
+    public static final FoodProperties SQUID_TENTACLES = (new FoodProperties.Builder()).nutrition(2).saturationMod(0.1F).build();
+    public static final FoodProperties FOX_MEAT = (new FoodProperties.Builder()).nutrition(2).saturationMod(0.3F).meat().build();
+    public static final FoodProperties WOLF_MEAT = (new FoodProperties.Builder()).nutrition(2).saturationMod(0.3F).meat().build();
+    public static final FoodProperties POLAR_BEAR_MEAT = (new FoodProperties.Builder()).nutrition(3).saturationMod(0.3F).meat().build();
 
     private static FoodProperties buildStew(int hunger) {
         return (new FoodProperties.Builder()).nutrition(hunger).saturationMod(0.6F).build();

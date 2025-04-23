@@ -41,7 +41,11 @@ import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.fml.ModList;
 
 public enum FHArmorMaterial implements ArmorMaterial {
-    HIDE("hide", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(FHItems.raw_hide.get())),
+    HIDE("hide", 5, new int[]{1, 2, 3, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(FHItems.raw_hide.get())),
+    RABBIT("rabbit", 3, new int[]{1, 2, 3, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(Items.RABBIT_HIDE)),
+    FOX("fox", 4, new int[]{1, 2, 3, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(FHItems.fox_hide.get())),
+    WOLF("wolf", 5, new int[]{1, 2, 3, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(FHItems.wolf_hide.get())),
+    POLAR_BEAR("polar_bear", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(FHItems.polar_bear_hide.get())),
     HAY("hay", 4, new int[]{1, 1, 1, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(CompatModule.isCharcoalPitLoaded() ? CRegistryHelper.getItem(new ResourceLocation("charcoal_pit", "straw")) : Items.WHEAT)),
     WOOL("wool", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(Items.WHITE_WOOL)),
     WEATHER("weather", 15, new int[]{2, 5, 6, 2}, 9, SoundEvents.ARMOR_EQUIP_IRON, 0.0F, 0.0F, () -> Ingredient.of(Items.IRON_INGOT)),
