@@ -23,11 +23,13 @@ import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.chorda.util.struct.FastEnumMap;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
+import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import net.minecraft.server.level.ServerPlayer;
@@ -38,6 +40,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.LogicalSide;
@@ -48,6 +51,7 @@ public class TemperatureUpdate {
 
     //Do not use static final in config because this is reloaded each world
     public static final float FOOD_EXHAUST_COLD = .05F;
+    public static final float WATER_EXHAUST_HOT =.05F;
     /*
     public static final int TEMP_SKY_LIGHT_THRESHOLD = FHConfig.SERVER.tempSkyLightThreshold.get();
     public static final int SNOW_TEMP_MODIFIER = FHConfig.SERVER.snowTempModifier.get();
@@ -319,7 +323,7 @@ public class TemperatureUpdate {
                         // [0,1]
                         float relativeWind = openness * Mth.clamp(wind, 0, 100) / 100F;
 
-                        // Apply Exchanged Temperature, and Self-Heating
+                        //since movement status wont change by part, we could calculate them outsides part calculation
                         // Temporary storage map
                         double speedSquared = player.getDeltaMovement().horizontalDistanceSqr(); // Horizontal movement speed squared
                         boolean isSprinting = player.isSprinting();
@@ -390,7 +394,6 @@ public class TemperatureUpdate {
 
                             // this combines effect from humidity and wind speed
                             // float wetWindEffectiveTemp = (float) TemperatureComputation.feelTemperature(dryEffectiveTemp + 37F, relativeHumidity, relativeWind) - 37F;
-                            float pbTempOld = pbTemp;
                             float dt = dryEffectiveTemp - pbTemp;
                             // May be negative! (when dt < 0)
                             float fluidModifiedDT = (1 + fluidModifier) * dt;
@@ -400,44 +403,54 @@ public class TemperatureUpdate {
 
                             // Additional Homeostasis using Stored (Food) Energy
                             float homeostasisUnits = 0;
-                            // homeostasis only happens when deviation is negative even after heat exchange and movement
-                            // Note 0Y here represents the normal body temperature of 37C
-                            final float deviation = 0 + (pbTemp + heatExchangedUnits + movementHeatedUnits);
-                            // We apply additional units based on a deviation need, exhausting more food
-                            if (deviation < 0 && player.getFoodData().getFoodLevel() > 0) {
-                                if (deviation > -0.5) {
-                                    homeostasisUnits += 2F * selfHeatRate * unit;
-                                    player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 2F * part.area);
-                                } else if (deviation > -1) {
-                                    homeostasisUnits += 3F * selfHeatRate * unit;
-                                    player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 3F * part.area);
-                                } else {
-                                    homeostasisUnits += 4F * selfHeatRate * unit;
-                                    player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 4F * part.area);
-                                }
+                            
+                            //check because selfHeatRate may be 0 in hardcore mode
+                            if(selfHeatRate>0&&part.canGenerateHeat()) {
+                            	// homeostasis only happens when deviation is negative even after heat exchange and movement
+                                // Note 0Y here represents the normal body temperature of 37C
+                                final float deviation = 0 + (pbTemp + heatExchangedUnits + movementHeatedUnits);
+                                // We apply additional units based on a deviation need, exhausting more food
+	                            if (deviation < -0.1 && player.getFoodData().getFoodLevel() > 0) {
+	                                if (deviation > -0.5) {
+	                                    homeostasisUnits += 2F * selfHeatRate * unit;
+	                                    player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 2F * part.area);
+	                                } else if (deviation > -1) {
+	                                    homeostasisUnits += 3F * selfHeatRate * unit;
+	                                    player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 3F * part.area);
+	                                } else {
+	                                    homeostasisUnits += 4F * selfHeatRate * unit;
+	                                    player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 4F * part.area);
+	                                }
+	                            }
+	                            LazyOptional<WaterLevelCapability> waterlevel=FHCapabilities.PLAYER_WATER_LEVEL.getCapability(player);
+	                            if (deviation > 0.1 && waterlevel.map(t->t.getWaterLevel()).orElse(1) > 0) {
+	                                if (deviation > 0.5) {
+	                                    homeostasisUnits -= 2F * selfHeatRate * unit;
+	                                    waterlevel.ifPresent(t->t.addExhaustion(player, WATER_EXHAUST_HOT * 2F * part.area));
+	                                } else if (deviation > 1) {
+	                                    homeostasisUnits -= 3F * selfHeatRate * unit;
+	                                    waterlevel.ifPresent(t->t.addExhaustion(player, WATER_EXHAUST_HOT * 3F * part.area));
+	                                } else {
+	                                    homeostasisUnits -= 1F * selfHeatRate * unit;
+	                                    waterlevel.ifPresent(t->t.addExhaustion(player, WATER_EXHAUST_HOT * 1F * part.area));
+	                                }
+	                            }
                             }
-                            float modifiedDt = fluidModifiedDT / 4;
-
-                            if (Math.abs(modifiedDt) > Math.abs(dt)) {//simple interpolation of temperature display
-                                pctx.setFeelTemperature(modifiedDt + pbTemp);
-                            } else {
-                                pctx.setFeelTemperature(dt + pbTemp);
-                            }
-                                            /*
-                                            FHMain.LOGGER.debug("Deviation: " + deviation);
-                                            FHMain.LOGGER.debug("Homeostasis: " + homeostasisUnits);
-                                            FHMain.LOGGER.debug("Movement: " + movementHeatedUnits);
-                                            FHMain.LOGGER.debug("Exchange: " + heatExchangedUnits);
-                                             */
+                            //simple interpolation of temperature display
+                            pctx.setFeelTemperature(Math.max(1, fluidModifier/4)*dt + pbTemp);
+                           
+                            /*
+                            FHMain.LOGGER.debug("Deviation: " + deviation);
+                            FHMain.LOGGER.debug("Homeostasis: " + homeostasisUnits);
+                            FHMain.LOGGER.debug("Movement: " + movementHeatedUnits);
+                            FHMain.LOGGER.debug("Exchange: " + heatExchangedUnits);
+                             */
 
                             // Apply all to pbTemp
                             pbTemp += heatExchangedUnits;
 
-                            if (part.canGenerateHeat()) {
-                                pbTemp += movementHeatedUnits + homeostasisUnits;
-                            } else {
-                                pbTemp += movementHeatedUnits;
-                            }
+                            pbTemp += movementHeatedUnits + homeostasisUnits;
+                           
 
                             // FHMain.LOGGER.debug("pbTemp: " + pbTemp);
 
