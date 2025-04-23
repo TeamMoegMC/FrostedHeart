@@ -247,7 +247,7 @@ public class ResearchHooks {
 				if (c instanceof ItemClue ic)
 					i.shrink(ic.test(trd.team(), rs, i));
 		if (!i.isEmpty() && i.getCount() > 0) {
-			if (i.getItem() instanceof RubbingTool && ResearchDataAPI.isResearchComplete(s, "rubbing_tool")) {
+			if (i.getItem() instanceof RubbingTool) {
 				if (RubbingTool.hasResearch(i)) {
 					int pts = RubbingTool.getPoint(i);
 					if (pts > 0) {
