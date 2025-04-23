@@ -150,7 +150,7 @@ public class FHBlockEntityTypes {
     public static final RegistryObject<BlockEntityType<SupplierTileEntity>> SUPPLIER_CHEST = REGISTER.register(
         "supplier_chest", makeType(SupplierTileEntity::new, FHBlocks.SUPPLIER_CHEST::get)
 );    public static final RegistryObject<BlockEntityType<NetworkCoreTileEntity>> NETWORK_CORE = REGISTER.register(
-    "logistic_test_core", makeType(NetworkCoreTileEntity::new, FHBlocks.TEST_CORE::get));
+    "logistic_test_core", makeType(NetworkCoreTileEntity::new, FHBlocks.TEST_LOGISTIC_CORE::get));
     private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntitySupplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }

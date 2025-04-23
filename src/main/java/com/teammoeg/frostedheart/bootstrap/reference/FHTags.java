@@ -79,7 +79,8 @@ public class FHTags {
 		IE("immersiveengineering"),
 		TETRA("tetra"),
 		SP("steampowered"),
-		CP("caupona")
+		CP("caupona"),
+		CURIOS("curios"),
 
 		;
 
@@ -198,7 +199,15 @@ public class FHTags {
 		COW_FEED,
 		PIG_FEED,
 		CAT_FEED, RABBIT_FEED,
-		IMPORTANT_ITEM(false)
+		IMPORTANT_ITEM(false),
+
+		// caupona
+		WOLFBERRIES(NameSpace.CP),
+
+		// curios
+		CURIOS_BACK(NameSpace.CURIOS, "back"),
+		CURIOS_CHARM(NameSpace.CURIOS, "charm"),
+		CURIOS_HANDS(NameSpace.CURIOS, "hands"),
 		;
 
 		public final TagKey<Item> tag;

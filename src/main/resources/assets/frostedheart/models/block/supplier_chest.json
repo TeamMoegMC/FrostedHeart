@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "texture0": "frostedheart:block/bot_station_universal",
+    "particle": "frostedheart:block/bot_station_universal"
+  },
+  "loader": "forge:obj",
+  "model": "frostedheart:models/block/bot_dock_out.obj",
+  "automatic_culling": false,
+  "flip_v": true,
+  "render_type": "cutout"
+}

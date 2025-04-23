@@ -233,7 +233,7 @@ public class PlayerTemperatureData implements NBTSerializable {
         setAllPartsFeelTemp(totalFeelTemp);
     }
 
-    public void update(float currentEnv, HeatingDeviceContext ctx) {
+    public void update(float currentEnv, HeatingDeviceContext ctx,float feelTempDelta) {
         prevCoreBodyTemp = coreBodyTemp;
         float newCoreBodyTemp = 0;
         for (BodyPart part : BodyPart.values()) {
@@ -256,7 +256,11 @@ public class PlayerTemperatureData implements NBTSerializable {
 
         // Interpolate with previous feelTemp
         // Use the part with most absolute value
-        float extremeFeelTemp = getExtremeFeelTemp();
+        //float extremeFeelTemp = getExtremeFeelTemp();
+        float extremeFeelTemp =feelTempDelta;
+        for(BodyPart part:BodyPart.values()) {
+        	extremeFeelTemp+=this.getFeelTempByPart(part)*part.area;
+        }
         if (totalFeelTemp == INVALID_TEMPERATURE)
             totalFeelTemp = extremeFeelTemp;
         else

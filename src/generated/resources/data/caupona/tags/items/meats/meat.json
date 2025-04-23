@@ -1,5 +1,10 @@
 {
   "values": [
-    "frostedheart:raw_whale_meat"
+    "frostedheart:military_rations",
+    "frostedheart:raw_whale_meat",
+    "frostedheart:squid_tentacles",
+    "frostedheart:fox_meat",
+    "frostedheart:wolf_meat",
+    "frostedheart:polar_bear_meat"
   ]
 }

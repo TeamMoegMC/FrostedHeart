@@ -58,6 +58,7 @@ import com.teammoeg.frostedheart.content.water.item.FluidBottleItem;
 import com.teammoeg.frostedheart.content.water.item.IronBottleItem;
 import com.teammoeg.frostedheart.content.water.item.LeatherWaterBagItem;
 import com.teammoeg.frostedheart.content.water.item.WoodenCupItem;
+import com.teammoeg.frostedheart.util.FHAssetsUtils;
 import com.tterrag.registrate.util.entry.ItemEntry;
 
 import net.minecraft.core.registries.Registries;
@@ -369,6 +370,7 @@ thinner.png
     public static ItemEntry<Item> RAW_MAGNESITE =
             taggedIngredient("raw_magnesite",
                     forgeItemTag("raw_materials/magnesite"),
+                    forgeItemTag("raw_materials/magnesium"),
                     forgeItemTag("raw_materials"));
 
     // MATERIALS
@@ -571,7 +573,8 @@ thinner.png
     public static ItemEntry<Item> LEAD_INGOT =
             taggedIngredient("lead_ingot",
                     forgeItemTag("ingots"),
-                    forgeItemTag("ingots/lead")
+                    forgeItemTag("ingots/lead"),
+                    forgeItemTag("ingots/battery_alloy")
             );
     public static ItemEntry<Item> TITANIUM_INGOT =
             taggedIngredient("titanium_ingot",
@@ -816,7 +819,9 @@ thinner.png
                     forgeItemTag("sheets"),
                     forgeItemTag("plates"),
                     forgeItemTag("sheets/lead"),
-                    forgeItemTag("plates/lead")
+                    forgeItemTag("plates/lead"),
+                    forgeItemTag("sheets/battery_alloy"),
+                    forgeItemTag("plates/battery_alloy")
             );
     public static ItemEntry<Item> TITANIUM_SHEET =
             taggedIngredient("titanium_sheet",
@@ -972,7 +977,8 @@ thinner.png
     public static ItemEntry<Item> ALUMINIUM_HYDROXIDE_DUST =
             taggedIngredient("aluminium_hydroxide_dust",
                     forgeItemTag("dusts"),
-                    forgeItemTag("dusts/aluminium_hydroxide")
+                    forgeItemTag("dusts/aluminium_hydroxide"),
+                    forgeItemTag("dusts/aluminum_hydroxide")
             );
     public static ItemEntry<Item> SODIUM_HYDROXIDE_DUST =
             taggedIngredient("sodium_hydroxide_dust",
@@ -1010,7 +1016,9 @@ thinner.png
             ingredient("high_refractory_brick");
     public static ItemEntry<Item> SAWDUST =
             taggedIngredient("sawdust",
-                    forgeItemTag("dusts/wooden")
+                    forgeItemTag("dusts/wooden"),
+                    forgeItemTag("dusts/wood"),
+                    CPTags.Items.COOKABLE
             );
     public static ItemEntry<Item> BIOMASS =
             ingredient("biomass");
@@ -1041,6 +1049,15 @@ thinner.png
             .item("raw_hide", Item::new)
             .model(AssetLookup.existingItemModel())
             .register();
+    public static ItemEntry<Item> fox_hide = REGISTRATE
+            .item("fox_hide", Item::new)
+            .register();
+    public static ItemEntry<Item> wolf_hide = REGISTRATE
+            .item("wolf_hide", Item::new)
+            .register();
+    public static ItemEntry<Item> polar_bear_hide = REGISTRATE
+            .item("polar_bear_hide", Item::new)
+            .register();
     public static ItemEntry<Item> makeshift_core_broken = REGISTRATE
             .item("makeshift_core_broken", Item::new)
             .model(AssetLookup.existingItemModel())
@@ -1064,6 +1081,7 @@ thinner.png
     // Foods and plants
     public static ItemEntry<Item> dried_wolfberries = REGISTRATE
             .item("dried_wolfberries", Item::new)
+            .tag(FHTags.Items.WOLFBERRIES.tag)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food(FHFoodProperties.DRIED_WOLFBERRIES))
             .register();
@@ -1093,11 +1111,13 @@ thinner.png
     public static ItemEntry<Item> rye_bread = REGISTRATE
             .item("rye_bread", Item::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .tag(CPTags.Items.BAKED)
             .properties(p -> p.food(FHFoodProperties.RYE_BREAD))
             .register();
     public static ItemEntry<Item> black_bread = REGISTRATE
             .item("black_bread", Item::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .tag(CPTags.Items.BAKED)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food(FHFoodProperties.BLACK_BREAD))
             .register();
@@ -1129,6 +1149,7 @@ thinner.png
             .item("military_rations", CannedFoodItem::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
             .tag(FHTags.Items.INSULATED_FOOD.tag)
+            .tag(CPTags.Items.BAKED, CPTags.Items.VEGETABLES, CPTags.Items.MEAT, CPTags.Items.COOKABLE)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food(new FoodProperties.Builder().nutrition(6).saturationMod(0.6f).build()))
             .register();
@@ -1136,6 +1157,7 @@ thinner.png
             .item("compressed_biscuits_pack", CannedFoodItem::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
             .tag(FHTags.Items.DRY_FOOD.tag)
+            .tag(CPTags.Items.BAKED)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food(Foods.BREAD))
             .register();
@@ -1143,6 +1165,7 @@ thinner.png
             .item("compressed_biscuits", CannedFoodItem::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
             .tag(FHTags.Items.DRY_FOOD.tag)
+            .tag(CPTags.Items.BAKED)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food(Foods.BREAD))
             .register();
@@ -1150,6 +1173,7 @@ thinner.png
             .item("packed_nuts", CannedFoodItem::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
             .tag(FHTags.Items.DRY_FOOD.tag)
+            .tag(CPTags.Items.WALNUT, CPTags.Items.COOKABLE)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food((new FoodProperties.Builder()).nutrition(2).saturationMod(0.8F).build()))
             .register();
@@ -1157,6 +1181,7 @@ thinner.png
             .item("dried_vegetables", CannedFoodItem::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
             .tag(FHTags.Items.DRY_FOOD.tag)
+            .tag(CPTags.Items.VEGETABLES)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food((new FoodProperties.Builder()).nutrition(4).saturationMod(0.6F).build()))
             .register();
@@ -1164,18 +1189,54 @@ thinner.png
             .item("chocolate", Item::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
             .tag(FHTags.Items.DRY_FOOD.tag)
+            .tag(CPTags.Items.MEATS)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food((new FoodProperties.Builder()).nutrition(4).saturationMod(0.8F).meat().fast().build()))
             .register();
     public static ItemEntry<Item> RAW_WHALE_MEAT = REGISTRATE
             .item("raw_whale_meat", Item::new)
             .tag(CPTags.Items.MEAT)
-            .tag(CPTags.Items.MEATS)
             .properties(p -> p.food((new FoodProperties.Builder()).nutrition(4).saturationMod(0.8F).meat().fast().build()))
             .register();
     public static ItemEntry<Item> COOKED_WHALE_MEAT = REGISTRATE
             .item("cooked_whale_meat", Item::new)
             .properties(p -> p.food((new FoodProperties.Builder()).nutrition(8).saturationMod(1.6F).meat().fast().build()))
+            .register();
+    public static ItemEntry<Item> SQUID_TENTACLES = REGISTRATE
+            .item("squid_tentacles", Item::new)
+            .tag(CPTags.Items.MEAT)
+            .properties(p -> p.food(FHFoodProperties.SQUID_TENTACLES))
+            .register();
+    public static ItemEntry<Item> COOKED_SQUID_TENTACLES = REGISTRATE
+            .item("cooked_squid_tentacles", Item::new)
+            .properties(p -> p.food(FHFoodProperties.COOKED_SQUID_TENTACLES))
+            .register();
+    public static ItemEntry<Item> FOX_MEAT = REGISTRATE
+            .item("fox_meat", Item::new)
+            .tag(CPTags.Items.MEAT)
+            .properties(p -> p.food(FHFoodProperties.FOX_MEAT))
+            .register();
+    public static ItemEntry<Item> COOKED_FOX_MEAT = REGISTRATE
+            .item("cooked_fox_meat", Item::new)
+            .properties(p -> p.food(FHFoodProperties.COOKED_FOX_MEAT))
+            .register();
+    public static ItemEntry<Item> WOLF_MEAT = REGISTRATE
+            .item("wolf_meat", Item::new)
+            .tag(CPTags.Items.MEAT)
+            .properties(p -> p.food(FHFoodProperties.WOLF_MEAT))
+            .register();
+    public static ItemEntry<Item> COOKED_WOLF_MEAT = REGISTRATE
+            .item("cooked_wolf_meat", Item::new)
+            .properties(p -> p.food(FHFoodProperties.COOKED_WOLF_MEAT))
+            .register();
+    public static ItemEntry<Item> POLAR_BEAR_MEAT = REGISTRATE
+            .item("polar_bear_meat", Item::new)
+            .tag(CPTags.Items.MEAT)
+            .properties(p -> p.food(FHFoodProperties.POLAR_BEAR_MEAT))
+            .register();
+    public static ItemEntry<Item> COOKED_POLAR_BEAR_MEAT = REGISTRATE
+            .item("cooked_polar_bear_meat", Item::new)
+            .properties(p -> p.food(FHFoodProperties.COOKED_POLAR_BEAR_MEAT))
             .register();
 
     static {
@@ -1185,6 +1246,7 @@ thinner.png
     // Equipment and tools
     public static ItemEntry<CoalHandStove> hand_stove = REGISTRATE.item("hand_stove", CoalHandStove::new)
             .properties(p -> p.defaultDurability(10))
+            .tag(FHTags.Items.CURIOS_HANDS.tag)
             .model(AssetLookup.existingItemModel())
             .lang("Copper Hand Stove")
             .register();
@@ -1194,10 +1256,12 @@ thinner.png
             .register();
     public static ItemEntry<Item> coal_stick = REGISTRATE
             .item("coal_stick", Item::new)
+            .tag(CPTags.Items.PORTABLE_BRAZIER_FUEL_TYPE)
             .model(AssetLookup.existingItemModel())
             .register();
     public static ItemEntry<Item> charcoal_stick = REGISTRATE
             .item("charcoal_stick", Item::new)
+            .tag(CPTags.Items.PORTABLE_BRAZIER_FUEL_TYPE)
             .model(AssetLookup.existingItemModel())
             .register();
     public static ItemEntry<ThermometerItem> mercury_body_thermometer = REGISTRATE
@@ -1206,6 +1270,7 @@ thinner.png
             .register();
     public static ItemEntry<SteamBottleItem> steam_bottle = REGISTRATE
             .item("steam_bottle", SteamBottleItem::new)
+            .tag(FHTags.Items.CURIOS_CHARM.tag)
             .properties(p -> p.stacksTo(1))
             .model(AssetLookup.existingItemModel())
             .register();
@@ -1246,6 +1311,10 @@ thinner.png
             .item("hay_pants", p -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.LEGGINGS, createProps()))
             .model(AssetLookup.existingItemModel())
             .register();
+    public static ItemEntry<Item> hay_gloves = REGISTRATE
+            .item("hay_gloves", Item::new)
+            .properties(p -> p.defaultDurability(256))
+            .register();
     public static ItemEntry<FHBaseArmorItem> wool_boots = REGISTRATE
             .item("wool_boots", p -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.BOOTS, createProps()))
             .model(AssetLookup.existingItemModel())
@@ -1261,6 +1330,10 @@ thinner.png
     public static ItemEntry<FHBaseArmorItem> wool_pants = REGISTRATE
             .item("wool_pants", p -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.LEGGINGS, createProps()))
             .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> wool_gloves = REGISTRATE
+            .item("wool_gloves", Item::new)
+            .properties(p -> p.defaultDurability(384))
             .register();
     public static ItemEntry<FHBaseArmorItem> hide_boots = REGISTRATE
             .item("hide_boots", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.BOOTS, createProps()))
@@ -1278,6 +1351,79 @@ thinner.png
             .item("hide_pants", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.LEGGINGS, createProps()))
             .model(AssetLookup.existingItemModel())
             .register();
+    public static ItemEntry<Item> hide_gloves = REGISTRATE
+            .item("hide_gloves", Item::new)
+            .properties(p -> p.defaultDurability(384))
+            .register();
+    // Rabbit
+    public static ItemEntry<FHBaseArmorItem> rabbit_fur_socks = REGISTRATE
+            .item("rabbit_fur_socks", p -> new FHBaseArmorItem(FHArmorMaterial.RABBIT, Type.BOOTS, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> rabbit_hat = REGISTRATE
+            .item("rabbit_fur_hat", p -> new FHBaseArmorItem(FHArmorMaterial.RABBIT, Type.HELMET, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> rabbit_jacket = REGISTRATE
+            .item("rabbit_fur_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.RABBIT, Type.CHESTPLATE, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> rabbit_pants = REGISTRATE
+            .item("rabbit_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.RABBIT, Type.LEGGINGS, createProps()))
+            .register();
+    public static ItemEntry<Item> rabbit_gloves = REGISTRATE
+            .item("rabbit_fur_gloves", Item::new)
+            .properties(p -> p.defaultDurability(384))
+            .register();
+    // Fox
+    public static ItemEntry<FHBaseArmorItem> fox_boots = REGISTRATE
+            .item("fox_fur_socks", p -> new FHBaseArmorItem(FHArmorMaterial.FOX, Type.BOOTS, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> fox_hat = REGISTRATE
+            .item("fox_fur_hat", p -> new FHBaseArmorItem(FHArmorMaterial.FOX, Type.HELMET, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> fox_jacket = REGISTRATE
+            .item("fox_fur_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.FOX, Type.CHESTPLATE, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> fox_pants = REGISTRATE
+            .item("fox_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.FOX, Type.LEGGINGS, createProps()))
+            .register();
+    public static ItemEntry<Item> fox_gloves = REGISTRATE
+            .item("fox_fur_gloves", Item::new)
+            .properties(p -> p.defaultDurability(384))
+            .register();
+    // Wolf
+    public static ItemEntry<FHBaseArmorItem> wolf_boots = REGISTRATE
+            .item("wolf_fur_socks", p -> new FHBaseArmorItem(FHArmorMaterial.WOLF, Type.BOOTS, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> wolf_hat = REGISTRATE
+            .item("wolf_fur_hat", p -> new FHBaseArmorItem(FHArmorMaterial.WOLF, Type.HELMET, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> wolf_jacket = REGISTRATE
+            .item("wolf_fur_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.WOLF, Type.CHESTPLATE, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> wolf_pants = REGISTRATE
+            .item("wolf_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.WOLF, Type.LEGGINGS, createProps()))
+            .register();
+    public static ItemEntry<Item> wolf_gloves = REGISTRATE
+            .item("wolf_fur_gloves", Item::new)
+            .properties(p -> p.defaultDurability(384))
+            .register();
+    // Polar Bear
+    public static ItemEntry<FHBaseArmorItem> polar_bear_boots = REGISTRATE
+            .item("polar_bear_fur_socks", p -> new FHBaseArmorItem(FHArmorMaterial.POLAR_BEAR, Type.BOOTS, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> polar_bear_hat = REGISTRATE
+            .item("polar_bear_fur_hat", p -> new FHBaseArmorItem(FHArmorMaterial.POLAR_BEAR, Type.HELMET, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> polar_bear_jacket = REGISTRATE
+            .item("polar_bear_fur_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.POLAR_BEAR, Type.CHESTPLATE, createProps()))
+            .register();
+    public static ItemEntry<FHBaseArmorItem> polar_bear_pants = REGISTRATE
+            .item("polar_bear_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.POLAR_BEAR, Type.LEGGINGS, createProps()))
+            .register();
+    public static ItemEntry<Item> polar_bear_gloves = REGISTRATE
+            .item("polar_bear_fur_gloves", Item::new)
+            .properties(p -> p.defaultDurability(384))
+            .register();
+
     public static ItemEntry<FHBaseArmorItem> space_boots = REGISTRATE
             .item("spacesuit_boots", p -> new FHBaseArmorItem(FHArmorMaterial.SPACESUIT, Type.BOOTS, createProps()))
             .register();
@@ -1292,44 +1438,45 @@ thinner.png
             .register();
     public static ItemEntry<HeaterVestItem> heater_vest = REGISTRATE
             .item("heater_vest", HeaterVestItem::new)
+            .tag(FHTags.Items.CURIOS_BACK.tag)
             .properties(p -> p.stacksTo(1).setNoRepair())
             .model(AssetLookup.existingItemModel())
             .register();
     public static ItemEntry<ProspectorPick> copper_pro_pick = REGISTRATE
             .item("copper_pro_pick", p -> new ProspectorPick(1, createProps().defaultDurability(128)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<ProspectorPick> iron_pro_pick = REGISTRATE
             .item("iron_pro_pick", p -> new ProspectorPick(2, createProps().defaultDurability(192)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<ProspectorPick> steel_pro_pick = REGISTRATE
             .item("steel_pro_pick", p -> new ProspectorPick(3, createProps().defaultDurability(256)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<CoreSpade> copper_core_spade = REGISTRATE
             .item("copper_core_spade", p -> new CoreSpade(1, createProps().defaultDurability(96)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<CoreSpade> iron_core_spade = REGISTRATE
             .item("iron_core_spade", p -> new CoreSpade(2, createProps().defaultDurability(128)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<CoreSpade> steel_core_spade = REGISTRATE
             .item("steel_core_spade", p -> new CoreSpade(3, createProps().defaultDurability(160)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<GeologistsHammer> copper_geologists_hammer = REGISTRATE
             .item("copper_geologists_hammer", p -> new GeologistsHammer(1, createProps().defaultDurability(96)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<GeologistsHammer> iron_geologists_hammer = REGISTRATE
             .item("iron_geologists_hammer", p -> new GeologistsHammer(2, createProps().defaultDurability(128)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<GeologistsHammer> steel_geologists_hammer = REGISTRATE
             .item("steel_geologists_hammer", p -> new GeologistsHammer(3, createProps().defaultDurability(160)))
-            .model(AssetLookup.existingItemModel())
+            .model(FHAssetsUtils.handheld())
             .register();
     public static ItemEntry<SoilThermometer> soil_thermometer = REGISTRATE
             .item("soil_thermometer", SoilThermometer::new)
@@ -1341,11 +1488,13 @@ thinner.png
             .register();
     public static ItemEntry<MushroomBed> red_mushroombed = REGISTRATE
             .item("straw_briquette_red_mushroom", p -> new MushroomBed(Items.RED_MUSHROOM, createProps().defaultDurability(4800)))
+            .tag(FHTags.Items.CURIOS_CHARM.tag)
             .model(AssetLookup.existingItemModel())
             .lang("Red Fungus Bed")
             .register();
     public static ItemEntry<MushroomBed> brown_mushroombed = REGISTRATE
             .item("straw_briquette_brown_mushroom", p -> new MushroomBed(Items.BROWN_MUSHROOM, createProps().defaultDurability(4800)))
+            .tag(FHTags.Items.CURIOS_CHARM.tag)
             .model(AssetLookup.existingItemModel())
             .lang("Brown Fungus Bed")
             .register();
@@ -1372,16 +1521,18 @@ thinner.png
 
     // Thermos
     public static ItemEntry<ThermosItem> thermos = REGISTRATE
-        .item("thermos", p -> new ThermosItem(1500, true))
-        .model(AssetLookup.existingItemModel())
-        .tag(FHTags.Items.INSULATED_FOOD.tag)
-        .tag(FHTags.Items.THERMOS.tag)
-        .lang("Thermos")
-        .register();
+            .item("thermos", p -> new ThermosItem(1500, true))
+            .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INSULATED_FOOD.tag)
+            .tag(FHTags.Items.THERMOS.tag)
+            .tag(CPTags.Items.CONTAINER)
+            .lang("Thermos")
+            .register();
     public static ItemEntry<ThermosItem> advanced_thermos = REGISTRATE.item("advanced_thermos", p -> new ThermosItem(3000, true))
             .model(AssetLookup.existingItemModel())
             .tag(FHTags.Items.INSULATED_FOOD.tag)
             .tag(FHTags.Items.THERMOS.tag)
+            .tag(CPTags.Items.CONTAINER)
             .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.thermos"))
             .lang("Advanced Thermos")
             .register();
@@ -1403,6 +1554,7 @@ thinner.png
                 .tag(FHTags.Items.INSULATED_FOOD.tag)
                 .tag(FHTags.Items.COLORED_THERMOS.tag)
                 .tag(FHTags.Items.THERMOS.tag)
+                .tag(CPTags.Items.CONTAINER)
                 .lang(fromIdToDisplay(color.getName()) + "Thermos")
                 .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.thermos"))
                 .register();
@@ -1414,6 +1566,7 @@ thinner.png
                 .tag(FHTags.Items.INSULATED_FOOD.tag)
                 .tag(FHTags.Items.COLORED_ADVANCED_THERMOS.tag)
                 .tag(FHTags.Items.THERMOS.tag)
+                .tag(CPTags.Items.CONTAINER)
                 .lang(fromIdToDisplay(color.getName()) + "Advanced Thermos")
                 .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.thermos"))
                 .register();
@@ -1479,70 +1632,86 @@ thinner.png
     public static final ItemEntry<KnifeItem> MAKESHIFT_KNIFE =
             REGISTRATE.item("makeshift_knife", p -> new KnifeItem(FHToolMaterials.FLINT, 1, -1.5F, new Item.Properties()))
                     .tag(ItemTags.SWORDS)
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<PickaxeItem> MAKESHIFT_PICKAXE =
             REGISTRATE.item("makeshift_pickaxe", p -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES)
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<AxeItem> MAKESHIFT_AXE =
             REGISTRATE.item("makeshift_axe", p -> new AxeItem(FHToolMaterials.FLINT, 4.0F, -3.2F, new Item.Properties()))
                     .tag(ItemTags.AXES)
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<ShovelItem> MAKESHIFT_SHOVEL =
             REGISTRATE.item("makeshift_shovel", p -> new ShovelItem(FHToolMaterials.FLINT, 1.5F, -3.0F, new Item.Properties()))
                     .tag(ItemTags.SHOVELS)
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<HoeItem> MAKESHIFT_HOE =
             REGISTRATE.item("makeshift_hoe", p -> new HoeItem(FHToolMaterials.FLINT, 0, -3.0F, new Item.Properties()))
                     .tag(ItemTags.HOES)
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<KnifeItem> BRONZE_KNIFE =
             REGISTRATE.item("bronze_knife", p -> new KnifeItem(FHToolMaterials.BRONZE, 1, -1.5F, new Item.Properties()))
                     .tag(ItemTags.SWORDS, forgeItemTag("knifes"), forgeItemTag("knifes/bronze"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<PickaxeItem> BRONZE_PICKAXE =
             REGISTRATE.item("bronze_pickaxe", p -> new PickaxeItem(FHToolMaterials.BRONZE, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES, forgeItemTag("pickaxes"), forgeItemTag("pickaxes/bronze"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<AxeItem> BRONZE_AXE =
             REGISTRATE.item("bronze_axe", p -> new AxeItem(FHToolMaterials.BRONZE, 4.0F, -3.2F, new Item.Properties()))
                     .tag(ItemTags.AXES, forgeItemTag("axes"), forgeItemTag("axes/bronze"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<ShovelItem> BRONZE_SHOVEL =
             REGISTRATE.item("bronze_shovel", p -> new ShovelItem(FHToolMaterials.BRONZE, 1.5F, -3.0F, new Item.Properties()))
                     .tag(ItemTags.SHOVELS, forgeItemTag("shovels"), forgeItemTag("shovels/bronze"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<HoeItem> BRONZE_HOE =
             REGISTRATE.item("bronze_hoe", p -> new HoeItem(FHToolMaterials.BRONZE, 0, -3.0F, new Item.Properties()))
                     .tag(ItemTags.HOES, forgeItemTag("hoes"), forgeItemTag("hoes/bronze"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<SwordItem> BRONZE_SWORD =
             REGISTRATE.item("bronze_sword", p -> new SwordItem(FHToolMaterials.BRONZE, 3, -2.4F, new Item.Properties()))
                     .tag(ItemTags.SWORDS, forgeItemTag("swords"), forgeItemTag("swords/bronze"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<PickaxeItem> STONE_HAMMER =
             REGISTRATE.item("stone_hammer", p -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/stone"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
     public static final ItemEntry<PickaxeItem> BRONZE_HAMMER =
             REGISTRATE.item("bronze_hammer", p -> new PickaxeItem(FHToolMaterials.BRONZE, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/bronze"))
+                    .model(FHAssetsUtils.handheld())
                     .register();
 
     public static ItemEntry<FluidBottleItem> fluid_bottle = REGISTRATE
             .item("fluid_bottle", FluidBottleItem::new)
+            .tag(CPTags.Items.CONTAINER)
             .properties(p -> p.stacksTo(16))
             .model(AssetLookup.existingItemModel())
             .register();
     public static ItemEntry<WoodenCupItem> wooden_cup = REGISTRATE
             .item("wooden_cup", p -> new WoodenCupItem(new Item.Properties(), 250)
             )
+            .tag(CPTags.Items.CONTAINER)
             .model(AssetLookup.existingItemModel())
             .lang("Wooden Cup")
             .register();
 
     public static ItemEntry<WoodenCupItem> wooden_cup_drink = REGISTRATE
             .item("wooden_cup_drink", p -> new WoodenCupItem(new Item.Properties().stacksTo(1), 250))
+            .tag(CPTags.Items.CONTAINER)
             .model(AssetLookup.existingItemModel())
             .lang("Wooden Cup With Drink")
             .removeTab(FHTabs.TOOLS.getKey())
@@ -1550,11 +1719,13 @@ thinner.png
             .register();
     public static ItemEntry<LeatherWaterBagItem> LEATHER_WATER_BAG = REGISTRATE
             .item("leather_water_bag", p -> new LeatherWaterBagItem(new Item.Properties().stacksTo(1).setNoRepair(), 1000))
+            .tag(CPTags.Items.CONTAINER)
             .model(AssetLookup.existingItemModel())
             .lang("Leather Water Bag")
             .register();
     public static ItemEntry<IronBottleItem> IRON_BOTTLE = REGISTRATE
             .item("iron_bottle", p -> new IronBottleItem(new Item.Properties().stacksTo(1).setNoRepair(), 1000))
+            .tag(CPTags.Items.CONTAINER)
             .model(AssetLookup.existingItemModel())
             .lang("Iron Bottle")
             .register();

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "frostedheart:item/copper_geologists_hammer"
+  }
+}

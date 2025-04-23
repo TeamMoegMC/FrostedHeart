@@ -11,6 +11,10 @@
     "frostedheart:sauna_vent",
     "frostedheart:fountain_base",
     "frostedheart:fountain_nozzle",
-    "frostedheart:steam_core"
+    "frostedheart:steam_core",
+    "frostedheart:requester_chest",
+    "frostedheart:storage_chest",
+    "frostedheart:supplier_chest",
+    "frostedheart:test_logistic_core"
   ]
 }

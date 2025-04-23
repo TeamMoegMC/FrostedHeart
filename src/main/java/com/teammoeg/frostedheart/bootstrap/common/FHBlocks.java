@@ -33,9 +33,11 @@ import com.google.common.collect.ImmutableMap;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.ModelGen;
+import com.teammoeg.caupona.CPTags;
 import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
 import com.teammoeg.frostedheart.content.agriculture.RubberDandelionBlock;
 import com.teammoeg.frostedheart.content.agriculture.WildRubberDandelionBlock;
 import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
@@ -47,7 +49,6 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
 import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
-import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
@@ -1104,21 +1105,24 @@ public class FHBlocks {
             .tag(BlockTags.CROPS)
             .register();
 
-    public static final BlockEntry<WolfBerryBushBlock> WOLFBERRY_BUSH_BLOCK = REGISTRATE.block("wolfberry_bush_block",
-                    p -> new WolfBerryBushBlock(FHProps.berryBushBlocks))
-            .blockstate(FHBlockStateGen.existed())
-            .item()
-            .model(AssetLookup.existingItemModel())
-            .build()
-            .lang("Chinese Wolfberry")
-            .tag(BlockTags.CROPS)
-            .register();
+//    public static final BlockEntry<WolfBerryBushBlock> WOLFBERRY_BUSH_BLOCK = REGISTRATE.block("wolfberry_bush_block",
+//                    p -> new WolfBerryBushBlock(FHProps.berryBushBlocks))
+//            .blockstate(FHBlockStateGen.existed())
+//            .item()
+//            .model(AssetLookup.existingItemModel())
+//            .build()
+//            .lang("Chinese Wolfberry")
+//            .tag(BlockTags.CROPS)
+//            .register();
 
     public static final BlockEntry<WhiteTurnipBlock> WHITE_TURNIP_BLOCK = REGISTRATE.block("white_turnip_block",
                     p -> new WhiteTurnipBlock(FHProps.cropProps))
             .blockstate(FHBlockStateGen.existed())
             .loot(FHLootGen.existed())
+            .tag(BlockTags.CROPS)
             .item()
+            .properties(p -> p.food(FHFoodProperties.WHITE_TURNIP))
+            .tag(CPTags.Items.VEGETABLES)
             .model(AssetLookup.existingItemModel())
             .build()
             .lang("White Turnip")
@@ -1127,6 +1131,7 @@ public class FHBlocks {
     public static final BlockEntry<RubberDandelionBlock> RUBBER_DANDELION = REGISTRATE.block("rubber_dandelion",
                     p -> new RubberDandelionBlock(FHProps.cropProps))
             .blockstate(FHBlockStateGen.existed())
+            .tag(BlockTags.CROPS)
             .loot((lootTable,block) ->
                     lootTable.add(block,
                             LootTable.lootTable()
@@ -1991,32 +1996,32 @@ public class FHBlocks {
     // Logistic blocks
     public static final BlockEntry<LogisticChestBlock<RequesterTileEntity>> REQUESTER_CHEST = REGISTRATE.block("requester_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.REQUESTER_CHEST))
             .initialProperties(() -> Blocks.CHEST)
+            .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.get())
             .item()
-            .model(AssetLookup.existingItemModel())
             .build()
             .register();
     public static final BlockEntry<LogisticChestBlock<StorageTileEntity>> STORAGE_CHEST = REGISTRATE.block("storage_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.STORAGE_CHEST))
-        .initialProperties(() -> Blocks.CHEST)
-        .tag(FHTags.Blocks.METAL_MACHINES.get())
-        .item()
-        .model(AssetLookup.existingItemModel())
-        .build()
-        .register();
+            .initialProperties(() -> Blocks.CHEST)
+            .blockstate(FHBlockStateGen.existed())
+            .tag(FHTags.Blocks.METAL_MACHINES.get())
+            .item()
+            .build()
+            .register();
     public static final BlockEntry<LogisticChestBlock<SupplierTileEntity>> SUPPLIER_CHEST = REGISTRATE.block("supplier_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.SUPPLIER_CHEST))
-        .initialProperties(() -> Blocks.CHEST)
-        .tag(FHTags.Blocks.METAL_MACHINES.get())
-        .item()
-        .model(AssetLookup.existingItemModel())
-        .build()
-        .register();
-    public static final BlockEntry<LogisticChestBlock<NetworkCoreTileEntity>> TEST_CORE = REGISTRATE.block("test_logistic_core", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.NETWORK_CORE))
-        .initialProperties(() -> Blocks.CHEST)
-        .tag(FHTags.Blocks.METAL_MACHINES.get())
-        .item()
-        .model(AssetLookup.existingItemModel())
-        .build()
-        .register();
+            .initialProperties(() -> Blocks.CHEST)
+            .blockstate(FHBlockStateGen.existed())
+            .tag(FHTags.Blocks.METAL_MACHINES.get())
+            .item()
+            .build()
+            .register();
+    public static final BlockEntry<LogisticChestBlock<NetworkCoreTileEntity>> TEST_LOGISTIC_CORE = REGISTRATE.block("test_logistic_core", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.NETWORK_CORE))
+            .initialProperties(() -> Blocks.CHEST)
+            .blockstate(FHBlockStateGen.existed())
+            .tag(FHTags.Blocks.METAL_MACHINES.get())
+            .item()
+            .build()
+            .register();
     public static void init() { }
 
     public static final Map<Block, Supplier<? extends Block>> SNOWY_TERRAIN_BLOCKS = new HashMap<>(new ImmutableMap.Builder<Block, Supplier<? extends Block>>()

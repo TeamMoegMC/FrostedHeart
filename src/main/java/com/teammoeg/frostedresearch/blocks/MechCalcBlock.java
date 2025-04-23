@@ -97,6 +97,9 @@ public class MechCalcBlock extends CKineticBlock implements CEntityBlock<MechCal
         InteractionResult superResult = super.use(state, world, pos, player, hand, hit);
         if (superResult.consumesAction() || player instanceof FakePlayer)
             return superResult;
+        if(player.getItemInHand(hand).getItem() instanceof RubbingTool) {
+        	return InteractionResult.PASS;
+        }
         BlockEntity te = Utils.getExistingTileEntity(world, pos);
         if (te instanceof MechCalcTileEntity)
             return ((MechCalcTileEntity) te).onClick(player);
