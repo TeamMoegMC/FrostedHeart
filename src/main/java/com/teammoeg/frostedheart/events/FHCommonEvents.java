@@ -430,6 +430,16 @@ public class FHCommonEvents {
 	}
 
 	@SubscribeEvent
+	public static void disableShovellingCoarseDirtIntoPath(BlockEvent.BlockToolModificationEvent event) {
+		if (!event.getLevel().isClientSide() && event.getToolAction() == ToolActions.SHOVEL_FLATTEN) {
+			BlockState state = event.getState();
+			if (state.is(Blocks.COARSE_DIRT)) {
+				event.setCanceled(true);
+			}
+		}
+	}
+
+	@SubscribeEvent
 	public static void tillMudIntoDirt(BlockEvent.BlockToolModificationEvent event) {
 		if (!event.getLevel().isClientSide() && event.getPlayer() instanceof ServerPlayer player
 				&& event.getToolAction() == ToolActions.HOE_TILL) {
