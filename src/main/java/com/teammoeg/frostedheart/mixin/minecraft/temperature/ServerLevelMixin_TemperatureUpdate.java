@@ -4,6 +4,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -77,8 +78,8 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
                     BlockPos blockpos2 = blockpos1.below();
                     Biome biome = level.getBiome(blockpos1).value();
                     // TODO: for ocean freezing, we need some special handling...
-                    boolean isOcean = level.getBiome(blockpos1).is(BiomeTags.IS_OCEAN);
-                    if (!isOcean && level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
+                    boolean notWinterBiome = level.getBiome(blockpos1).unwrapKey().map(k -> !FHConfig.isWinterBiome(k.location())).orElse(true);
+                    if (!notWinterBiome && level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
                         // Check if the block should freeze based on our custom logic
                         frostedheart$freezeWater(level, blockpos2);
 
