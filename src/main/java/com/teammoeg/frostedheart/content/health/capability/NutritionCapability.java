@@ -19,12 +19,11 @@
 
 package com.teammoeg.frostedheart.content.health.capability;
 
+import com.teammoeg.caupona.CPTags;
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -34,7 +33,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nullable;
@@ -119,7 +117,7 @@ public class NutritionCapability implements NBTSerializable {
      * @param food 食物
      */
     public void eat(Player player, ItemStack food) {
-        if(!food.isEdible()) return;
+        if(!food.isEdible()||!food.is(CPTags.Items.CONTAINER)) return;
         Nutrition wRecipe = NutritionRecipe.getRecipeFromItem(player, food);
         if(wRecipe == null) return;
         FoodProperties fp = food.getFoodProperties(player);
