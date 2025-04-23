@@ -111,7 +111,8 @@ public class FrostedHud {
         static final Point hotbar_7 = new Point(30, -20);
         static final Point hotbar_8 = new Point(50, -20);
         static final Point hotbar_9 = new Point(70, -20);
-        static final Point off_hand = new Point(-124, -21);
+        static final Point off_hand_left = new Point(-124, -21);
+        static final Point off_hand_right = new Point(98, -21);
         static final Point exp_bar = new Point(-112 + 19, -27);
         static final Point temperature_orb_frame = new Point(-22, -76);
         static final Point left_threequarters = new Point(-59, -66);
@@ -744,9 +745,11 @@ public class FrostedHud {
         	HUDElements.off_hand_slot.blitAt(stack, x, y, BasePos.off_hand);
             HUDElements.selected.blitAt(stack, x, y, BasePos.off_hand);
         }*/
-        HUDElements.off_hand_slot.blitAt(stack, x, y, BasePos.off_hand);
+        HumanoidArm offhandSide = player.getMainArm().getOpposite();
+        boolean isLeftOffHand = offhandSide == HumanoidArm.LEFT;
+        HUDElements.off_hand_slot.blitAt(stack, x, y, isLeftOffHand ?BasePos.off_hand_left : BasePos.off_hand_right);
         ItemStack itemstack = player.getOffhandItem();
-        HumanoidArm handside = player.getMainArm().getOpposite();
+       
         //RenderSystem.enableRescaleNormal();
         int l=1;
         for (int i1 = 0; i1 < 9; ++i1) {
@@ -757,7 +760,7 @@ public class FrostedHud {
 
         if (!itemstack.isEmpty()) {
             int i2 = y - 16 - 3 + 1; // +1
-            if (handside == HumanoidArm.LEFT) {
+            if (isLeftOffHand) {
                 renderHotbarItem(stack,x - 91 - 26 - 2 - 2, i2, partialTicks, player, itemstack,l++);
             } else {
                 renderHotbarItem(stack,x + 91 + 10, i2, partialTicks, player, itemstack,l++);
@@ -769,7 +772,7 @@ public class FrostedHud {
             if (f < 1.0F) {
                 int j2 = y - 20;
                 int k2 = x + 91 + 6;
-                if (handside == HumanoidArm.RIGHT) {
+                if (offhandSide == HumanoidArm.RIGHT) {
                     k2 = x - 91 - 22;
                 }
 
