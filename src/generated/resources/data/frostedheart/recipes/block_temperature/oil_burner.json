@@ -2,5 +2,5 @@
   "type": "frostedheart:block_temp",
   "block": "frostedheart:oil_burner",
   "must_lit": true,
-  "temperature": 400.0
+  "temperature": 500.0
 }

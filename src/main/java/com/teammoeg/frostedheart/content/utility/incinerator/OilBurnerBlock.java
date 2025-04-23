@@ -74,7 +74,7 @@ public class OilBurnerBlock extends CBlock implements CEntityBlock<OilBurnerTile
     public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player,
                                              InteractionHand handIn, BlockHitResult hit) {
         if (FluidUtil.interactWithFluidHandler(player, handIn, worldIn, pos, hit.getDirection()))
-            return InteractionResult.SUCCESS;
+            return InteractionResult.sidedSuccess(worldIn.isClientSide);
         return super.use(state, worldIn, pos, player, handIn, hit);
     }
 

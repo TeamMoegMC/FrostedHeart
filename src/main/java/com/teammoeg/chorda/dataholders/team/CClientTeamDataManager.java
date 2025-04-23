@@ -21,8 +21,6 @@ package com.teammoeg.chorda.dataholders.team;
 
 import java.util.UUID;
 
-import com.teammoeg.chorda.util.struct.OptionalLazy;
-
 /**
  * Synced client data manager.
  */
@@ -31,7 +29,7 @@ public class CClientTeamDataManager {
 	/** The instance. */
 	public static CClientTeamDataManager INSTANCE=new CClientTeamDataManager();
 	
-	private TeamDataHolder holder=new TeamDataHolder(UUID.randomUUID(),OptionalLazy.empty());
+	private TeamDataHolder holder=new TeamDataHolder(UUID.randomUUID(),new ClientTeam());
 	private CClientTeamDataManager() {
 	}
 	
@@ -39,7 +37,7 @@ public class CClientTeamDataManager {
 	 * Reset all data for client.
 	 */
 	public void reset() {
-		holder=new TeamDataHolder(UUID.randomUUID(),OptionalLazy.empty());
+		holder=new TeamDataHolder(UUID.randomUUID(),new ClientTeam());
 	}
 	
 	/**

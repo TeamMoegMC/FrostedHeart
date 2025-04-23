@@ -47,6 +47,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -383,9 +384,10 @@ public class Research implements FHRegisteredItem {
 
     @OnlyIn(Dist.CLIENT)
     public boolean isInProgress() {
-        OptionalLazy<Research> r = ClientResearchDataAPI.getData().get().getCurrentResearch();
-        if (r.isPresent()) {
-            return r.resolve().get().equals(this);
+        Supplier<Research> r = ClientResearchDataAPI.getData().get().getCurrentResearch();
+        Research rs=r.get();
+        if (rs!=null) {
+            return rs.equals(this);
         }
         return false;
     }

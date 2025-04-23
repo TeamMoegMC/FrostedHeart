@@ -68,8 +68,10 @@ public class TemperatureComputation {
 
         if (player.isInPowderSnow)
             envtemp = -30 - 37;
-        if (player.isInWater())
-            envtemp = Math.max(envtemp, -37);
+        if (player.isInWater()) {
+            // water cannot freeze or boil
+            envtemp = Mth.clamp(envtemp, -37, 63);
+        }
         if (player.isOnFire())
             envtemp = 300 - 37;
         if (player.isInLava())
@@ -110,19 +112,19 @@ public class TemperatureComputation {
         // burning
         // https://www.sciencedirect.com/topics/medicine-and-dentistry/thermal-injury#:~:text=Mechanism%20of%20Injury,is%20given%20in%20Table%202.&text=Source:%20Data%20modified%20from%20Moritz,Churchill%20Livingstone%20(Chapter%205).
         float highestEffectiveTemperature = data.getHighestFeelTemp();
-        if (highestEffectiveTemperature > 230) {
+        if (highestEffectiveTemperature > 250) {
             if (r.nextFloat() < 1.0)
                 player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 4.0F);
         }
-        else if (highestEffectiveTemperature > 180) {
+        else if (highestEffectiveTemperature > 200) {
             if (r.nextFloat() < 0.75)
                 player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 3.0F);
         }
-        else if (highestEffectiveTemperature > 130) {
+        else if (highestEffectiveTemperature > 150) {
             if (r.nextFloat() < 0.5)
                 player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 2.0F);
         }
-        else if (highestEffectiveTemperature > 80) {
+        else if (highestEffectiveTemperature > 100) {
             if (r.nextFloat() < 0.25)
                 player.hurt(FHDamageSources.hyperthermiaInstant(player.level()), 1.0F);
         }
@@ -147,6 +149,29 @@ public class TemperatureComputation {
         }
     }
 
+    /**
+     * Compute feel temperature from a realistic model.
+     * <a href="https://en.wikipedia.org/wiki/Apparent_temperature">...</a>
+     *
+     * @param dryT 0C based dry effective temperature
+     * @param relativeHumidity [0,1]
+     * @param relativeWindSpeed [0,1]
+     * @return 0C based feel temperature
+     */
+    public static double feelTemperature(double dryT, double relativeHumidity, double relativeWindSpeed) {
+        double e = waterVaporPressure(dryT, relativeHumidity);
+        double v = windSpeed(relativeWindSpeed);
+        return dryT + 0.33 * e - 0.7 * v - 4.00;
+    }
 
+    // https://en.wikipedia.org/wiki/Apparent_temperature
+    public static double waterVaporPressure(double dryT, double relativeHumidity) {
+        return relativeHumidity * 6.105 * Math.exp((17.27 * dryT) / (237.7 + dryT));
+    }
 
+    // https://en.wikipedia.org/wiki/Beaufort_scale
+    public static double windSpeed(double relativeWindSpeed) {
+        // we assume the greatest wind speed is 35 m/s (most intense hurricane)
+        return relativeWindSpeed * 35;
+    }
 }

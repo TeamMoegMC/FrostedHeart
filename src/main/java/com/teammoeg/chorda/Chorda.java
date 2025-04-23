@@ -36,6 +36,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
+import com.teammoeg.chorda.compat.ftb.FTBTeamsEvents;
 import com.teammoeg.chorda.dataholders.client.CClientDataStorage;
 
 @Mod(Chorda.MODID)
@@ -91,6 +92,9 @@ public class Chorda {
         LOGGER.info(COMMON_INIT, "Proceeding to Client Initialization");
         if (FMLEnvironment.dist == Dist.CLIENT) {
             ChordaClient.init();
+        }
+        if(CompatModule.isFTBTLoaded()) {
+        	FTBTeamsEvents.init();
         }
     }
 

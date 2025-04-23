@@ -19,14 +19,18 @@
 
 package com.teammoeg.frostedresearch;
 
+import java.util.UUID;
+
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.teammoeg.chorda.dataholders.team.AbstractTeam;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
+import com.teammoeg.chorda.dataholders.team.TeamsAPI;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
@@ -141,9 +145,15 @@ public class ResearchCommand {
                 // Transfer
                 .then(Commands.literal("transfer")
                         .then(Commands.argument("from", UuidArgument.uuid()).then(Commands.argument("to", UuidArgument.uuid()).executes(ct -> {
-                            Team team = FTBTeamsAPI.api().getManager().getTeamByID(UuidArgument.getUuid(ct, "to")).orElse(null);
-                            CTeamDataManager.INSTANCE.transfer(UuidArgument.getUuid(ct, "from"), team);
-                            ct.getSource().sendSuccess(() -> Components.str("Transfered to " + team.getName()).withStyle(ChatFormatting.GREEN), false);
+                            UUID team = UuidArgument.getUuid(ct, "to");
+                            AbstractTeam uteam=TeamsAPI.getAPI().getTeamByUuid(team);
+                            if(uteam!=null) {
+                            	CTeamDataManager.INSTANCE.transfer(UuidArgument.getUuid(ct, "from"), uteam);
+                            	ct.getSource().sendSuccess(() -> Components.str("Transfered to " + uteam.getName()).withStyle(ChatFormatting.GREEN), false);
+                            }else {
+                            	ct.getSource().sendFailure(Components.str("Team not exists").withStyle(ChatFormatting.RED));
+                            	return 0;
+                            }
                             return Command.SINGLE_SUCCESS;
                         }))))
                 // Edit

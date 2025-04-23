@@ -133,3 +133,5 @@ run/
 /.apt_generated_tests/
 /src/datagen/resources/data/frostedheart/data/~$plant_temperature.xlsx
 /src/datagen/resources/data/frostedheart/data/~$nutrition.xlsx
+/usercache.json
+/usernamecache.json

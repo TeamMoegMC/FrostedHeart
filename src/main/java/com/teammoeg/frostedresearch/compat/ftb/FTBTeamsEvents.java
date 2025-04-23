@@ -19,9 +19,8 @@
 
 package com.teammoeg.frostedresearch.compat.ftb;
 
-import java.util.UUID;
-
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.TeamsAPI;
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 import com.teammoeg.frostedresearch.network.FHResearchDataSyncPacket;
@@ -37,23 +36,24 @@ import net.minecraft.server.level.ServerPlayer;
 public class FTBTeamsEvents {
 
     public static void init() {
-        TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
-        TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
-        TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
-        TeamEvent.OWNERSHIP_TRANSFERRED.register(FTBTeamsEvents::syncDataWhenTeamTransfer);
+        //TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
+        //TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
+        //TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
+        //TeamEvent.OWNERSHIP_TRANSFERRED.register(FTBTeamsEvents::syncDataWhenTeamTransfer);
     }
 
     public static void syncDataWhenTeamChange(PlayerChangedTeamEvent event) {
-    	if(event.getPlayer()!=null)
-    		FRNetwork.INSTANCE.sendPlayer(event.getPlayer(),
-                new FHResearchDataSyncPacket(ResearchDataAPI.getData(event.getPlayer()).get()));
+    	if(FTBTeamsAPI.api().isManagerLoaded()&&TeamsAPI.getAPI().getProviderName().equals("ftbteams")) {
+	    	if(event.getPlayer()!=null)
+	    		FRNetwork.INSTANCE.sendPlayer(event.getPlayer(),
+	                new FHResearchDataSyncPacket(ResearchDataAPI.getData(event.getPlayer()).get()));
+    	}
     }
 
     public static void syncDataWhenTeamCreated(TeamCreatedEvent event) {
-        if (FTBTeamsAPI.api().isManagerLoaded()) {
+        if (FTBTeamsAPI.api().isManagerLoaded()&&TeamsAPI.getAPI().getProviderName().equals("ftbteams")) {
             Team orig = FTBTeamsAPI.api().getManager().getPlayerTeamForPlayerID(event.getCreator().getUUID()).orElse(null);
 
-            CTeamDataManager.INSTANCE.transfer(orig.getId(), event.getTeam());
             for(ServerPlayer p:event.getTeam().getOnlineMembers()) {
             	FRNetwork.INSTANCE.sendPlayer(p,
 	                    new FHResearchDataSyncPacket(ResearchDataAPI.getData(p).get()));
@@ -63,11 +63,7 @@ public class FTBTeamsEvents {
     }
 
     public static void syncDataWhenTeamDeleted(TeamEvent event) {
-        if (FTBTeamsAPI.api().isManagerLoaded()) {
-            UUID owner = event.getTeam().getOwner();
-            Team orig = FTBTeamsAPI.api().getManager().getPlayerTeamForPlayerID(owner).orElse(null);
-
-            CTeamDataManager.INSTANCE.transfer(event.getTeam().getId(), orig);
+        if (FTBTeamsAPI.api().isManagerLoaded()&&TeamsAPI.getAPI().getProviderName().equals("ftbteams")) {
             for(ServerPlayer p:event.getTeam().getOnlineMembers()) {
             	FRNetwork.INSTANCE.sendPlayer(p,
 	                    new FHResearchDataSyncPacket(ResearchDataAPI.getData(p).get()));
@@ -78,10 +74,7 @@ public class FTBTeamsEvents {
     }
 
     public static void syncDataWhenTeamTransfer(PlayerTransferredTeamOwnershipEvent event) {
-        if (FTBTeamsAPI.api().isManagerLoaded()) {
-
-            CTeamDataManager.INSTANCE.get(event.getTeam()).setOwnerName(event.getFrom().getGameProfile().getName());
-        }
+       
 
     }
    /* public static void syncDataWhenOwnerLeft(PlayerLeftPartyTeamEvent event) {

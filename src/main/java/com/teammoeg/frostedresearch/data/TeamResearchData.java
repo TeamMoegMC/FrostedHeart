@@ -42,14 +42,19 @@ import com.teammoeg.frostedresearch.research.effects.Effect;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.ExtraCodecs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 
 import javax.annotation.Nullable;
+
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Class TeamResearchData.
@@ -68,7 +73,8 @@ public class TeamResearchData implements SpecialData {
 		Codec.unboundedMap(Codec.STRING, ResearchData.CODEC).fieldOf("researches").forGetter(o -> o.rdata),
 		Codec.INT.optionalFieldOf("active",-1).forGetter(o -> o.activeResearchId),
 		Codec.INT.optionalFieldOf("insight",0).forGetter(o -> o.insight),
-		Codec.INT.optionalFieldOf("usedInsightLevel",0).forGetter(o -> o.usedInsightLevel)// ,
+		Codec.INT.optionalFieldOf("usedInsightLevel",0).forGetter(o -> o.usedInsightLevel),
+		ExtraCodecs.BIT_SET.optionalFieldOf("visitedArea").forGetter(o->Optional.of(o.visitedArea))// ,
 	// BlockUnlockList.CODEC.optionalFieldOf("blockUnlockList", new
 	// BlockUnlockList()).forGetter(o -> o.block),
 	// RecipeUnlockList.CODEC.optionalFieldOf("recipeUnlockList", new
@@ -144,13 +150,17 @@ public class TeamResearchData implements SpecialData {
 	 * The variants.<br>
 	 */
 	CompoundTag variants = new CompoundTag();
+	/**
+	 * visited area
+	 * */
+	BitSet visitedArea=new BitSet();
 	boolean isInited;;
 
 	public TeamResearchData(SpecialDataHolder team) {
 	}
 
 	public TeamResearchData(CompoundTag variants, Map<String, ResearchData> rdata, int activeResearchId,
-		int insight, int usedInsightLevel) {
+		int insight, int usedInsightLevel,Optional<BitSet> visited) {
 		super();
 		this.rdata.clear();
 		this.rdata.putAll(rdata);
@@ -159,6 +169,8 @@ public class TeamResearchData implements SpecialData {
 		this.insightLevel = computeLevelFromInsight(insight);
 		this.usedInsightLevel = usedInsightLevel;
 		this.variants = variants;
+		visited.ifPresent(t->visitedArea=t
+			);
 
 	}
 
@@ -195,9 +207,9 @@ public class TeamResearchData implements SpecialData {
 	 * @return true, if a research is selected and it is ready for research
 	 */
 	public boolean canResearch() {
-		OptionalLazy<Research> rs = getCurrentResearch();
-		if (rs.isPresent()) {
-			Research r = rs.resolve().get();
+		Supplier<Research> rs = getCurrentResearch();
+		Research r=rs.get();
+		if (r!=null) {
 			return this.getData(r).canResearch();
 		}
 		return false;
@@ -242,20 +254,23 @@ public class TeamResearchData implements SpecialData {
 	 * @return unused points after commit to current research.
 	 */
 	public long doResearch(TeamDataHolder team, long points) {
-		OptionalLazy<Research> rs = getCurrentResearch();
-		if (rs.isPresent()) {
-			Research r = rs.resolve().get();
-			ResearchData rd = this.getData(r);
-			if (!rd.active || rd.finished)
-				return points;
-			return rd.commitPoints(r, points, () -> {
-				checkResearchComplete(team, r);
-				sendResearchProgressPacket(team, r);
-			});
+		Supplier<Research> rs = getCurrentResearch();
+		Research r=rs.get();
+		if (r!=null) {
+			return doResearch(team,r,points);
 		}
 		return points;
 	}
-
+	public long doResearch(TeamDataHolder team,Research r, long points) {
+		
+		ResearchData rd = this.getData(r);
+		if (!rd.active || rd.finished)
+			return points;
+		return rd.commitPoints(r, points, () -> {
+			checkResearchComplete(team, r);
+			sendResearchProgressPacket(team, r);
+		});
+	}
 	public boolean commitItem(ServerPlayer player, TeamDataHolder team, Research research) {
 		if (research.isInCompletable()) return false;
 		for (Research par : research.getParents()) {
@@ -375,7 +390,12 @@ public class TeamResearchData implements SpecialData {
 			grantEffects(holder, null, rs);
 		}
 	}
-
+	public void onAreaVisited(TeamDataHolder holder,int index) {
+		if(!visitedArea.get(index)) {
+			visitedArea.set(index);
+			this.addInsight(holder, 1);
+		}
+	}
 	private void sendClueProgressPacket(TeamDataHolder team, Research par, int clue, boolean trig) {
 		team.sendToOnline(FRNetwork.INSTANCE,new FHS2CClueProgressSyncPacket(trig, FHResearch.researches.getIntId(par), clue));
 	}
@@ -393,7 +413,7 @@ public class TeamResearchData implements SpecialData {
 	}
 
 	private void annouceResearchComplete(TeamDataHolder team, Research par) {
-		team.getTeam().ifPresent(e -> MinecraftForge.EVENT_BUS.post(new ResearchStatusEvent(par, e, getData(par).finished)));
+		MinecraftForge.EVENT_BUS.post(new ResearchStatusEvent(par, team.getTeam(), getData(par).finished));
 	}
 
 	private void sendResearchProgressPacket(TeamDataHolder team, Research par) {
@@ -427,10 +447,8 @@ public class TeamResearchData implements SpecialData {
 	 *
 	 * @return current research<br>
 	 */
-	public OptionalLazy<Research> getCurrentResearch() {
-		if (activeResearchId == -1)
-			return OptionalLazy.empty();
-		return OptionalLazy.of(() -> FHResearch.getResearch(activeResearchId));
+	public Supplier<Research> getCurrentResearch() {
+		return () -> activeResearchId==-1?null:FHResearch.getResearch(activeResearchId);
 	}
 
 	@OnlyIn(Dist.CLIENT)

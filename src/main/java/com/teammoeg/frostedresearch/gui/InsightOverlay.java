@@ -25,10 +25,11 @@ public class InsightOverlay implements IGuiOverlay{
 		}
 	}
 	private static final int LEVEL_SCROLL_TICKS=10;//ticks for animation when level changes
-	private static final int LINGERING_TICKS=80;//ticks the overlay stay on screen after all animation ends
+	// at least enough for viewing after exiting quest book
+	private static final int LINGERING_TICKS=200;//ticks the overlay stay on screen after all animation ends
 	private static final int COLOR=0xff8cffd6;//color style 
 	private static final float MAX_PROGRESS_PRE_TICK=0.05f;//max progress added per tick
-	private static final float MIN_PROGRESS_PRE_TICK=0.01f;//min progress added per tick
+	private static final float MIN_PROGRESS_PRE_TICK=0.002f;//min progress added per tick
 	private static final int CENTER_Y=35;//Y-POS for the whole ui
 	int renderingInsightLevel;
 	int renderingNextInsightLevel;
@@ -40,6 +41,7 @@ public class InsightOverlay implements IGuiOverlay{
 	@Override
 	public void render(ForgeGui gui, GuiGraphics guiGraphics, float partialTick, int screenWidth, int screenHeight) {
 		if(!isShown)return;
+		if(ClientUtils.mc().isPaused())return;
 		//partialTick=PartialTickTracker.getTickAlignedPartialTicks();
 		//FGuis.drawRing(guiGraphics, screenWidth/2, 25, 11, 14, -60,30, 0xff8cffd6);
 		float angleProgress=0;
@@ -78,7 +80,7 @@ public class InsightOverlay implements IGuiOverlay{
 		hiddenTicks=0;
 	}
 	public void tick() {
-		//if(ClientUtils.mc().isPaused())return;
+		if(ClientUtils.mc().isPaused())return;
 		if(textScrollTicks>0) {//text is scrolling, wait until text scroll finished
 			textScrollTicks--;
 			renderingInsightProgress=renderingInsightNextProgress;
@@ -106,7 +108,7 @@ public class InsightOverlay implements IGuiOverlay{
 			float direction=Math.signum(delta);
 			float value=Math.abs(delta);
 			//calculate smoothed value
-			float smoothedvalue=Mth.clamp(value/5F, MIN_PROGRESS_PRE_TICK, MAX_PROGRESS_PRE_TICK);
+			float smoothedvalue=Mth.clamp(value/10F, MIN_PROGRESS_PRE_TICK, MAX_PROGRESS_PRE_TICK);
 			
 			//do not obey min-progress if smoothed value is larger than value itself
 			value=Math.min(value, smoothedvalue);

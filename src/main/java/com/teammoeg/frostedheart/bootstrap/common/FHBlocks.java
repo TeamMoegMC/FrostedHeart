@@ -33,9 +33,11 @@ import com.google.common.collect.ImmutableMap;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.ModelGen;
+import com.teammoeg.caupona.CPTags;
 import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
 import com.teammoeg.frostedheart.content.agriculture.RubberDandelionBlock;
 import com.teammoeg.frostedheart.content.agriculture.WildRubberDandelionBlock;
 import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
@@ -1104,21 +1106,24 @@ public class FHBlocks {
             .tag(BlockTags.CROPS)
             .register();
 
-    public static final BlockEntry<WolfBerryBushBlock> WOLFBERRY_BUSH_BLOCK = REGISTRATE.block("wolfberry_bush_block",
-                    p -> new WolfBerryBushBlock(FHProps.berryBushBlocks))
-            .blockstate(FHBlockStateGen.existed())
-            .item()
-            .model(AssetLookup.existingItemModel())
-            .build()
-            .lang("Chinese Wolfberry")
-            .tag(BlockTags.CROPS)
-            .register();
+//    public static final BlockEntry<WolfBerryBushBlock> WOLFBERRY_BUSH_BLOCK = REGISTRATE.block("wolfberry_bush_block",
+//                    p -> new WolfBerryBushBlock(FHProps.berryBushBlocks))
+//            .blockstate(FHBlockStateGen.existed())
+//            .item()
+//            .model(AssetLookup.existingItemModel())
+//            .build()
+//            .lang("Chinese Wolfberry")
+//            .tag(BlockTags.CROPS)
+//            .register();
 
     public static final BlockEntry<WhiteTurnipBlock> WHITE_TURNIP_BLOCK = REGISTRATE.block("white_turnip_block",
                     p -> new WhiteTurnipBlock(FHProps.cropProps))
             .blockstate(FHBlockStateGen.existed())
             .loot(FHLootGen.existed())
+            .tag(BlockTags.CROPS)
             .item()
+            .properties(p -> p.food(FHFoodProperties.WHITE_TURNIP))
+            .tag(CPTags.Items.VEGETABLES)
             .model(AssetLookup.existingItemModel())
             .build()
             .lang("White Turnip")
@@ -1127,6 +1132,7 @@ public class FHBlocks {
     public static final BlockEntry<RubberDandelionBlock> RUBBER_DANDELION = REGISTRATE.block("rubber_dandelion",
                     p -> new RubberDandelionBlock(FHProps.cropProps))
             .blockstate(FHBlockStateGen.existed())
+            .tag(BlockTags.CROPS)
             .loot((lootTable,block) ->
                     lootTable.add(block,
                             LootTable.lootTable()

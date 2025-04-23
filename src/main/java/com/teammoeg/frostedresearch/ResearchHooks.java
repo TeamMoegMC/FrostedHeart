@@ -58,431 +58,428 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class ResearchHooks {
-    public static RecipeUnlockList recipe = new RecipeUnlockList();
-    public static MultiblockUnlockList multiblock = new MultiblockUnlockList();
-    public static BlockUnlockList block = new BlockUnlockList();
-    public static CategoryUnlockList categories = new CategoryUnlockList();
-    public static UUID te;
-    private static ListenerList<TickListenerClue> tickClues = new ListenerList<>();
-    private static ListenerList<KillClue> killClues = new ListenerList<>();
-    private ResearchHooks() {
+	public static RecipeUnlockList recipe = new RecipeUnlockList();
+	public static MultiblockUnlockList multiblock = new MultiblockUnlockList();
+	public static BlockUnlockList block = new BlockUnlockList();
+	public static CategoryUnlockList categories = new CategoryUnlockList();
+	public static UUID te;
+	private static ListenerList<TickListenerClue> tickClues = new ListenerList<>();
+	private static ListenerList<KillClue> killClues = new ListenerList<>();
 
-    }
+	private ResearchHooks() {
 
-    @OnlyIn(Dist.CLIENT)
-    public static boolean canExamine(ItemStack i) {
-        if (i.isEmpty()) return false;
-        for (InspireRecipe ir : CUtils.filterRecipes(null, InspireRecipe.TYPE)) {
-            if (ir.item.test(i)) {
-                return true;
-            }
-        }
-        return true;
-    }
+	}
 
-    public static boolean canUseBlock(Player player, Block b) {
-        if (block.has(b)) {
-            if (player instanceof FakePlayer) return false;
-            if (player.getCommandSenderWorld().isClientSide)
-                return ClientResearchDataAPI.getData().get().block.has(b);
-            return ResearchDataAPI.getData(player).get().block.has(b);
-        }
-        return true;
+	@OnlyIn(Dist.CLIENT)
+	public static boolean canExamine(ItemStack i) {
+		if (i.isEmpty()) return false;
+		for (InspireRecipe ir : CUtils.filterRecipes(null, InspireRecipe.TYPE)) {
+			if (ir.item.test(i)) {
+				return true;
+			}
+		}
+		return true;
+	}
 
-    }
+	public static boolean canUseBlock(Player player, Block b) {
+		if (block.has(b)) {
+			if (player instanceof FakePlayer) return false;
+			if (player.getCommandSenderWorld().isClientSide)
+				return ClientResearchDataAPI.getData().get().block.has(b);
+			return ResearchDataAPI.getData(player).get().block.has(b);
+		}
+		return true;
 
-    public static boolean canUseRecipe(Recipe<?> r) {
-        if (recipe.has(r)) {
-            return ClientResearchDataAPI.getData().get().crafting.has(r);
-        }
-        return true;
-    }
+	}
 
-    public static boolean canUseRecipe(Player s, Recipe<?> r) {
-        if (s == null)
-            return canUseRecipe(r);
-        if (recipe.has(r)) {
-            if (s.getCommandSenderWorld().isClientSide)
-                return ClientResearchDataAPI.getData().get().crafting.has(r);
-            return ResearchDataAPI.getData(s).get().crafting.has(r);
-        }
-        return true;
-    }
+	public static boolean canUseRecipe(Recipe<?> r) {
+		if (recipe.has(r)) {
+			return ClientResearchDataAPI.getData().get().crafting.has(r);
+		}
+		return true;
+	}
 
-    public static boolean canUseRecipe(UUID team, Recipe<?> r) {
-        if (recipe.has(r)) {
-            if (team == null) return false;
-            return ResearchDataAPI.getData(team).map(t -> t.get().crafting.has(r)).orElse(false);
-        }
-        return true;
-    }
+	public static boolean canUseRecipe(Player s, Recipe<?> r) {
+		if (s == null)
+			return canUseRecipe(r);
+		if (recipe.has(r)) {
+			if (s.getCommandSenderWorld().isClientSide)
+				return ClientResearchDataAPI.getData().get().crafting.has(r);
+			return ResearchDataAPI.getData(s).get().crafting.has(r);
+		}
+		return true;
+	}
 
-    public static boolean commitGameLevel(ServerPlayer s, int lvl) {
-        TeamDataClosure<TeamResearchData> data = ResearchDataAPI.getData(s);
-        OptionalLazy<Research> cur = data.get().getCurrentResearch();
-        if (cur.isPresent()) {
-            Research rs = cur.orElse(null);
-            if (rs != null) {
-                for (Clue cl : rs.getClues()) {
-                    if (data.get().isClueCompleted(rs, cl)) continue;
-                    if (cl instanceof MinigameClue) {
-                        if (((MinigameClue) cl).getLevel() <= lvl) {
-                            data.get().setClueCompleted(data.team(), rs, cl, true);
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
+	public static boolean canUseRecipe(UUID team, Recipe<?> r) {
+		if (recipe.has(r)) {
+			if (team == null) return false;
+			return ResearchDataAPI.getData(team).map(t -> t.get().crafting.has(r)).orElse(false);
+		}
+		return true;
+	}
 
-    @OnlyIn(Dist.CLIENT)
-    public static int fetchGameLevel() {
-        TeamDataClosure<TeamResearchData> trd = ClientResearchDataAPI.getData();
-        OptionalLazy<Research> cur = trd.get().getCurrentResearch();
-        if (cur.isPresent()) {
-            Research rs = cur.orElse(null);
-            if (rs != null) {
-                for (Clue cl : rs.getClues()) {
-                    if (trd.get().isClueCompleted(rs, cl)) continue;
-                    if (cl instanceof MinigameClue) {
-                        return ((MinigameClue) cl).getLevel();
-                    }
-                }
-            }
-        }
-        return -1;
-    }
+	public static boolean commitGameLevel(ServerPlayer s, int lvl) {
+		TeamDataClosure<TeamResearchData> data = ResearchDataAPI.getData(s);
+		Supplier<Research> cur = data.get().getCurrentResearch();
+		Research rs = cur.get();
+		if (rs != null) {
+			for (Clue cl : rs.getClues()) {
+				if (data.get().isClueCompleted(rs, cl)) continue;
+				if (cl instanceof MinigameClue) {
+					if (((MinigameClue) cl).getLevel() <= lvl) {
+						data.get().setClueCompleted(data.team(), rs, cl, true);
+						return true;
+					}
+				}
+			}
+		}
 
-    public static int fetchGameLevel(ServerPlayer s) {
-        TeamDataHolder data = CTeamDataManager.get(s);
-        TeamResearchData trd = data.getData(FRSpecialDataTypes.RESEARCH_DATA);
-        OptionalLazy<Research> cur = trd.getCurrentResearch();
-        if (cur.isPresent()) {
-            Research rs = cur.orElse(null);
-            if (rs != null) {
-                for (Clue cl : rs.getClues()) {
-                    if (trd.isClueCompleted(rs, cl)) continue;
-                    if (cl instanceof MinigameClue mgc) {
-                        return mgc.getLevel();
-                    }
-                }
-            }
-        }
-        return -1;
-    }
+		return false;
+	}
 
-    public static ListenerList<KillClue> getKillClues() {
-        return killClues;
-    }
+	@OnlyIn(Dist.CLIENT)
+	public static int fetchGameLevel() {
+		TeamDataClosure<TeamResearchData> trd = ClientResearchDataAPI.getData();
+		Supplier<Research> cur = trd.get().getCurrentResearch();
+		Research rs = cur.get();
+		if (rs != null) {
+			for (Clue cl : rs.getClues()) {
+				if (trd.get().isClueCompleted(rs, cl)) continue;
+				if (cl instanceof MinigameClue) {
+					return ((MinigameClue) cl).getLevel();
+				}
+			}
+		}
 
-    public static ListenerList<TickListenerClue> getTickClues() {
-        return tickClues;
-    }
+		return -1;
+	}
 
-    public static void kill(ServerPlayer s, LivingEntity e) {
-        TeamDataClosure<TeamResearchData> data = ResearchDataAPI.getData(s);
-        killClues.call(data.getId(), c -> {
+	public static int fetchGameLevel(ServerPlayer s) {
+		TeamDataHolder data = CTeamDataManager.get(s);
+		TeamResearchData trd = data.getData(FRSpecialDataTypes.RESEARCH_DATA);
+		Supplier<Research> cur = trd.getCurrentResearch();
+		Research rs = cur.get();
+		if (rs != null) {
+			for (Clue cl : rs.getClues()) {
+				if (trd.isClueCompleted(rs, cl)) continue;
+				if (cl instanceof MinigameClue mgc) {
+					return mgc.getLevel();
+				}
+			}
+		}
 
-            if (data.get().isClueCompleted(c.research(), c.clue())) {
-                data.get().setClueCompleted(data.team(), c.research(), c.clue(), true);
-                return true;
-            }
-            return false;
-        });
-    }
+		return -1;
+	}
 
-    public static void reload() {
-        recipe.clear();
-        multiblock.clear();
-        block.clear();
-        categories.clear();
-        tickClues.clear();
-        killClues.clear();
-        te = null;
-    }
+	public static ListenerList<KillClue> getKillClues() {
+		return killClues;
+	}
 
-    public static boolean hasMultiblock(UUID rid, IETemplateMultiblock mb) {
-        if (ResearchHooks.multiblock.has(mb))
-            if (rid == null) {
-                if (!ClientResearchDataAPI.getData().get().building.has(mb)) {
-                    return false;
-                }
-            } else {
-                if (!ResearchDataAPI.getData(rid).map(t -> t.get().building.has(mb)).orElse(false)) {
-                    return false;
-                }
+	public static ListenerList<TickListenerClue> getTickClues() {
+		return tickClues;
+	}
 
-            }
-        return true;
-    }
+	public static void kill(ServerPlayer s, LivingEntity e) {
+		TeamDataClosure<TeamResearchData> data = ResearchDataAPI.getData(s);
+		killClues.call(data.getId(), c -> {
 
-    @OnlyIn(Dist.CLIENT)
-    public static void reloadEditor() {
-        if (!Minecraft.getInstance().hasSingleplayerServer())
-            FHResearch.editor = false;
-    }
+			if (data.get().isClueCompleted(c.research(), c.clue())) {
+				data.get().setClueCompleted(data.team(), c.research(), c.clue(), true);
+				return true;
+			}
+			return false;
+		});
+	}
 
-    public static void ServerReload() {
-        if (CTeamDataManager.INSTANCE == null) return;
-        FRMain.LOGGER.info("reloading research system");
-        CTeamDataManager.INSTANCE.save();
-        CTeamDataManager.INSTANCE.load();
-        FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
-        CTeamDataManager.INSTANCE.forAllData(FRSpecialDataTypes.RESEARCH_DATA, TeamResearchData::sendUpdate);
-    }
+	public static void reload() {
+		recipe.clear();
+		multiblock.clear();
+		block.clear();
+		categories.clear();
+		tickClues.clear();
+		killClues.clear();
+		te = null;
+	}
 
-    public static ItemStack submitItem(ServerPlayer s, ItemStack i) {
-        TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(s);
-        OptionalLazy<Research> cur = trd.get().getCurrentResearch();
+	public static boolean hasMultiblock(UUID rid, IETemplateMultiblock mb) {
+		if (ResearchHooks.multiblock.has(mb))
+			if (rid == null) {
+				if (!ClientResearchDataAPI.getData().get().building.has(mb)) {
+					return false;
+				}
+			} else {
+				if (!ResearchDataAPI.getData(rid).map(t -> t.get().building.has(mb)).orElse(false)) {
+					return false;
+				}
 
-        if (cur.isPresent())
-            for (Clue c : cur.get().getClues())
-                if (c instanceof ItemClue ic)
-                    i.shrink(ic.test(trd.team(), cur.get(), i));
-        if (!i.isEmpty() && i.getCount() > 0) {
-            if (i.getItem() instanceof RubbingTool && ResearchDataAPI.isResearchComplete(s, "rubbing_tool")) {
-                if (RubbingTool.hasResearch(i)) {
-                    int pts = RubbingTool.getPoint(i);
-                    if (pts > 0) {
-                        Research rs = FHResearch.getResearch(RubbingTool.getResearch(i));
-                        if (rs != null && pts > 0) {
-                            trd.get().doResearch(trd.team(), pts);
-                        }
-                    }
-                    return new ItemStack(FRContents.Items.rubbing_pad.get());
-                }
-                cur.ifPresent(r -> RubbingTool.setResearch(i, r.getId()));
-            }
-            for (InspireRecipe ir : CUtils.filterRecipes(s.level().getRecipeManager(), InspireRecipe.TYPE)) {
-                if (ir.item.test(i)) {
-                    i.shrink(1);
-                    trd.get().addInsight(trd.team(),ir.inspire);
+			}
+		return true;
+	}
 
-                    return i;
-                }
-            }
+	@OnlyIn(Dist.CLIENT)
+	public static void reloadEditor() {
+		if (!Minecraft.getInstance().hasSingleplayerServer())
+			FHResearch.editor = false;
+	}
 
-        }
-        return i;
-    }
+	public static void ServerReload() {
+		if (CTeamDataManager.INSTANCE == null) return;
+		FRMain.LOGGER.info("reloading research system");
+		CTeamDataManager.INSTANCE.save();
+		CTeamDataManager.INSTANCE.load();
+		FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
+		CTeamDataManager.INSTANCE.forAllData(FRSpecialDataTypes.RESEARCH_DATA, TeamResearchData::sendUpdate);
+	}
+	public static void onAreaVisited(ServerPlayer s,int index) {
+		TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(s);
+		trd.get().onAreaVisited(trd.team(), index);
+	}
 
-    public static void tick(ServerPlayer s) {
-        TeamDataClosure<TeamResearchData> data = ResearchDataAPI.getData(s);
-        tickClues.call(data.team().getId(), e -> {
-            if (e.clue().isCompleted(data.get(), s)) {
-                data.get().setClueCompleted(data.team(), e.research(), e.clue(), true);
-                return true;
-            }
-            return false;
-        });
-    }
+	public static ItemStack submitItem(ServerPlayer s, ItemStack i) {
+		TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(s);
+		Supplier<Research> curr = trd.get().getCurrentResearch();
+		Research rs=curr.get();
+		if (rs!=null)
+			for (Clue c : rs.getClues())
+				if (c instanceof ItemClue ic)
+					i.shrink(ic.test(trd.team(), rs, i));
+		if (!i.isEmpty() && i.getCount() > 0) {
+			if (i.getItem() instanceof RubbingTool) {
+				if (RubbingTool.hasResearch(i)) {
+					int pts = RubbingTool.getPoint(i);
+					if (pts > 0) {
+						Research rssubmit = FHResearch.getResearch(RubbingTool.getResearch(i));
+						if (rssubmit != null && pts > 0) {
+							trd.get().doResearch(trd.team(),rssubmit, pts);
+						}
+					}
+					return new ItemStack(FRContents.Items.rubbing_pad.get());
+				}
+				if(rs!=null)
+					RubbingTool.setResearch(i, rs.getId());
+			}
+			for (InspireRecipe ir : CUtils.filterRecipes(s.level().getRecipeManager(), InspireRecipe.TYPE)) {
+				if (ir.item.test(i)) {
+					i.shrink(1);
+					trd.get().addInsight(trd.team(), ir.inspire);
 
-    public static class BlockUnlockList extends UnlockList<Block> {
-        public static final Codec<BlockUnlockList> CODEC = RecordCodecBuilder.create(
-                instance -> instance.group(
-                        Codec.list(Codec.STRING).fieldOf("unlocked").forGetter(BlockUnlockList::getStrings)
-                ).apply(instance, BlockUnlockList::new)
-        );
-        public BlockUnlockList() {
-            super();
-        }
+					return i;
+				}
+			}
 
-        public BlockUnlockList(List<String> strings) {
-            super(strings);
-        }
+		}
+		return i;
+	}
 
-        public BlockUnlockList(ListTag nbt) {
-            super(nbt);
-        }
+	public static void tick(ServerPlayer s) {
+		TeamDataClosure<TeamResearchData> data = ResearchDataAPI.getData(s);
+		tickClues.call(data.team().getId(), e -> {
+			if (e.clue().isCompleted(data.get(), s)) {
+				data.get().setClueCompleted(data.team(), e.research(), e.clue(), true);
+				return true;
+			}
+			return false;
+		});
+	}
 
-        @Override
-        public Block getObject(String s) {
-            return CRegistryHelper.getBlock(new ResourceLocation(s));
-        }
+	public static class BlockUnlockList extends UnlockList<Block> {
+		public static final Codec<BlockUnlockList> CODEC = RecordCodecBuilder.create(
+			instance -> instance.group(
+				Codec.list(Codec.STRING).fieldOf("unlocked").forGetter(BlockUnlockList::getStrings)).apply(instance, BlockUnlockList::new));
 
-        @Override
-        public String getString(Block item) {
-            return CRegistryHelper.getRegistryName(item).toString();
-        }
-    }
+		public BlockUnlockList() {
+			super();
+		}
 
-    public static class CategoryUnlockList extends UnlockList<ResourceLocation> {
-        public static final Codec<CategoryUnlockList> CODEC = RecordCodecBuilder.create(
-                instance -> instance.group(
-                        Codec.list(Codec.STRING).fieldOf("unlocked").forGetter(CategoryUnlockList::getStrings)
-                ).apply(instance, CategoryUnlockList::new)
-        );
-        public CategoryUnlockList() {
-            super();
-        }
+		public BlockUnlockList(List<String> strings) {
+			super(strings);
+		}
 
-        public CategoryUnlockList(ListTag nbt) {
-            super(nbt);
-        }
+		public BlockUnlockList(ListTag nbt) {
+			super(nbt);
+		}
 
-        public CategoryUnlockList(List<String> strings) {
-            super(strings);
-        }
+		@Override
+		public Block getObject(String s) {
+			return CRegistryHelper.getBlock(new ResourceLocation(s));
+		}
 
-        @Override
-        public ResourceLocation getObject(String s) {
-            return new ResourceLocation(s);
-        }
+		@Override
+		public String getString(Block item) {
+			return CRegistryHelper.getRegistryName(item).toString();
+		}
+	}
 
-        @Override
-        public String getString(ResourceLocation item) {
-            return item.toString();
-        }
+	public static class CategoryUnlockList extends UnlockList<ResourceLocation> {
+		public static final Codec<CategoryUnlockList> CODEC = RecordCodecBuilder.create(
+			instance -> instance.group(
+				Codec.list(Codec.STRING).fieldOf("unlocked").forGetter(CategoryUnlockList::getStrings)).apply(instance, CategoryUnlockList::new));
 
-    }
+		public CategoryUnlockList() {
+			super();
+		}
 
-    private static class ListenerInfo<T extends Clue> {
-        ClueClosure<T> listener;
-        List<UUID> trigger;
+		public CategoryUnlockList(ListTag nbt) {
+			super(nbt);
+		}
 
-        public ListenerInfo(ClueClosure<T> listener, UUID first) {
-            super();
-            this.listener = listener;
-            if (first != null) {
-                trigger = new ArrayList<>();
-                trigger.add(first);
-            }
-        }
+		public CategoryUnlockList(List<String> strings) {
+			super(strings);
+		}
 
-        public boolean add(UUID t) {
-            if (trigger == null) return false;
-            return trigger.add(t);
-        }
+		@Override
+		public ResourceLocation getObject(String s) {
+			return new ResourceLocation(s);
+		}
 
-        public ClueClosure<T> getListener() {
-            return listener;
-        }
+		@Override
+		public String getString(ResourceLocation item) {
+			return item.toString();
+		}
 
-        public boolean remove(UUID t) {
-            if (trigger == null) return false;
-            return trigger.remove(t);
-        }
+	}
 
-        public boolean shouldCall(UUID t2) {
-            if (trigger == null) return true;
-            for (UUID t : trigger)
-                if (t.equals(t2))
-                    return true;
-            return false;
-        }
-    }
+	private static class ListenerInfo<T extends Clue> {
+		ClueClosure<T> listener;
+		List<UUID> trigger;
 
-    public static class ListenerList<T extends Clue> extends ArrayList<ListenerInfo<T>> {
+		public ListenerInfo(ClueClosure<T> listener, UUID first) {
+			super();
+			this.listener = listener;
+			if (first != null) {
+				trigger = new ArrayList<>();
+				trigger.add(first);
+			}
+		}
 
-        /**
-         *
-         */
-        private static final long serialVersionUID = -5579427246923453321L;
+		public boolean add(UUID t) {
+			if (trigger == null) return false;
+			return trigger.add(t);
+		}
 
-        public boolean add(ClueClosure<T> c, UUID t) {
-            if (t != null) {
-                for (ListenerInfo<T> cl : this) {
-                    if (cl.getListener().equals(c))
-                        return cl.add(t);
-                }
-            } else
-                this.removeIf(cl -> cl.getListener() == c);
-            return super.add(new ListenerInfo<>(c, t));
-        }
+		public ClueClosure<T> getListener() {
+			return listener;
+		}
 
-        public void call(UUID t, Consumer<ClueClosure<T>> c) {
-            for (ListenerInfo<T> cl : this) {
-                if (cl.shouldCall(t))
-                    c.accept(cl.getListener());
-            }
-        }
+		public boolean remove(UUID t) {
+			if (trigger == null) return false;
+			return trigger.remove(t);
+		}
 
-        public void call(UUID t, Predicate<ClueClosure<T>> c) {
-            for (ListenerInfo<T> cl : this) {
-                if (cl.shouldCall(t)) {
+		public boolean shouldCall(UUID t2) {
+			if (trigger == null) return true;
+			for (UUID t : trigger)
+				if (t.equals(t2))
+					return true;
+			return false;
+		}
+	}
 
-                    if (c.test(cl.getListener()))
-                        cl.remove(t);
-                }
-            }
-        }
+	public static class ListenerList<T extends Clue> extends ArrayList<ListenerInfo<T>> {
 
-        public boolean remove(ClueClosure<T> c, UUID t) {
-            if (t != null)
-                for (ListenerInfo<T> cl : this) {
-                    if (cl.getListener().equals(c))
-                        return cl.remove(t);
-                }
-            else
-                this.removeIf(cl -> cl.getListener().equals(c));
-            return false;
-        }
-    }
+		/**
+		 *
+		 */
+		private static final long serialVersionUID = -5579427246923453321L;
 
-    public static class MultiblockUnlockList extends UnlockList<IMultiblock> {
-        public static final Codec<MultiblockUnlockList> CODEC = RecordCodecBuilder.create(
-                instance -> instance.group(
-                        Codec.list(Codec.STRING).fieldOf("unlocked").forGetter(MultiblockUnlockList::getStrings)
-                ).apply(instance, MultiblockUnlockList::new)
-        );
+		public boolean add(ClueClosure<T> c, UUID t) {
+			if (t != null) {
+				for (ListenerInfo<T> cl : this) {
+					if (cl.getListener().equals(c))
+						return cl.add(t);
+				}
+			} else
+				this.removeIf(cl -> cl.getListener() == c);
+			return super.add(new ListenerInfo<>(c, t));
+		}
 
-        public MultiblockUnlockList() {
-            super();
-        }
+		public void call(UUID t, Consumer<ClueClosure<T>> c) {
+			for (ListenerInfo<T> cl : this) {
+				if (cl.shouldCall(t))
+					c.accept(cl.getListener());
+			}
+		}
 
-        public MultiblockUnlockList(ListTag nbt) {
-            super(nbt);
-        }
+		public void call(UUID t, Predicate<ClueClosure<T>> c) {
+			for (ListenerInfo<T> cl : this) {
+				if (cl.shouldCall(t)) {
 
-        public MultiblockUnlockList(List<String> strings) {
-            super(strings);
-        }
+					if (c.test(cl.getListener()))
+						cl.remove(t);
+				}
+			}
+		}
 
-        @Override
-        public IMultiblock getObject(String s) {
-            return MultiblockHandler.getByUniqueName(new ResourceLocation(s));
-        }
+		public boolean remove(ClueClosure<T> c, UUID t) {
+			if (t != null)
+				for (ListenerInfo<T> cl : this) {
+					if (cl.getListener().equals(c))
+						return cl.remove(t);
+				}
+			else
+				this.removeIf(cl -> cl.getListener().equals(c));
+			return false;
+		}
+	}
 
-        @Override
-        public String getString(IMultiblock item) {
-            return item.getUniqueName().toString();
-        }
+	public static class MultiblockUnlockList extends UnlockList<IMultiblock> {
+		public static final Codec<MultiblockUnlockList> CODEC = RecordCodecBuilder.create(
+			instance -> instance.group(
+				Codec.list(Codec.STRING).fieldOf("unlocked").forGetter(MultiblockUnlockList::getStrings)).apply(instance, MultiblockUnlockList::new));
 
+		public MultiblockUnlockList() {
+			super();
+		}
 
-    }
+		public MultiblockUnlockList(ListTag nbt) {
+			super(nbt);
+		}
 
-    public static class RecipeUnlockList extends UnlockList<Recipe<?>> {
-        public static final Codec<RecipeUnlockList> CODEC = RecordCodecBuilder.create(
-                instance -> instance.group(
-                        Codec.list(Codec.STRING).fieldOf("unlocked").forGetter(RecipeUnlockList::getStrings)
-                ).apply(instance, RecipeUnlockList::new)
-        );
+		public MultiblockUnlockList(List<String> strings) {
+			super(strings);
+		}
 
-        public RecipeUnlockList() {
-            super();
-        }
+		@Override
+		public IMultiblock getObject(String s) {
+			return MultiblockHandler.getByUniqueName(new ResourceLocation(s));
+		}
 
-        public RecipeUnlockList(ListTag nbt) {
-            super(nbt);
-        }
+		@Override
+		public String getString(IMultiblock item) {
+			return item.getUniqueName().toString();
+		}
 
-        public RecipeUnlockList(List<String> strings) {
-            super(strings);
-        }
+	}
 
-        @Override
-        public Recipe<?> getObject(String s) {
-            return CDistHelper.getRecipeManager().byKey(new ResourceLocation(s)).orElse(null);
-        }
+	public static class RecipeUnlockList extends UnlockList<Recipe<?>> {
+		public static final Codec<RecipeUnlockList> CODEC = RecordCodecBuilder.create(
+			instance -> instance.group(
+				Codec.list(Codec.STRING).fieldOf("unlocked").forGetter(RecipeUnlockList::getStrings)).apply(instance, RecipeUnlockList::new));
 
-        @Override
-        public String getString(Recipe<?> item) {
-            return item.getId().toString();
-        }
+		public RecipeUnlockList() {
+			super();
+		}
 
-    }
+		public RecipeUnlockList(ListTag nbt) {
+			super(nbt);
+		}
+
+		public RecipeUnlockList(List<String> strings) {
+			super(strings);
+		}
+
+		@Override
+		public Recipe<?> getObject(String s) {
+			return CDistHelper.getRecipeManager().byKey(new ResourceLocation(s)).orElse(null);
+		}
+
+		@Override
+		public String getString(Recipe<?> item) {
+			return item.getId().toString();
+		}
+
+	}
 }

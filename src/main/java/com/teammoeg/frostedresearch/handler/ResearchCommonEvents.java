@@ -23,6 +23,7 @@ import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 
 import java.util.Map;
 
+import com.teammoeg.chorda.events.PlayerTeamChangedEvent;
 import com.teammoeg.chorda.events.TeamLoadedEvent;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -72,9 +73,8 @@ public class ResearchCommonEvents {
         }
     }
     @SubscribeEvent
-    public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
-        //Common capabilities
-        //event.addCapability(new ResourceLocation(FHMain.MODID, "rsenergy"), FHCapabilities.ENERGY.provider());
+    public static void syncDataChangeTeam(PlayerTeamChangedEvent event) {
+    	FRNetwork.INSTANCE.sendPlayer(event.player,new FHResearchDataSyncPacket(ResearchDataAPI.getData(event.player).get()));
     }
 
     @SubscribeEvent

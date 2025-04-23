@@ -31,6 +31,7 @@ public class ClientClimateData {
     public static long climateChange;//store climate change time for transition
     public static long secs = 0;
     public static int wind = 0;
+    public static float humidity = 0;
 
     public static void clear() {
         secs = 0;
@@ -39,6 +40,7 @@ public class ClientClimateData {
         lastClimate = ClimateType.NONE;
         climateChange = -1;
         wind = 0;
+        humidity = 0;
     }
 
     public static long getDate() {
@@ -63,6 +65,10 @@ public class ClientClimateData {
 
     public static int getWind() {
         return wind;
+    }
+
+    public static float getHumidity() {
+        return humidity;
     }
 
     public ClientClimateData() {

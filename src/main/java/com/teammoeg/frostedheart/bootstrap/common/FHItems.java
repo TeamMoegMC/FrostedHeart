@@ -370,6 +370,7 @@ thinner.png
     public static ItemEntry<Item> RAW_MAGNESITE =
             taggedIngredient("raw_magnesite",
                     forgeItemTag("raw_materials/magnesite"),
+                    forgeItemTag("raw_materials/magnesium"),
                     forgeItemTag("raw_materials"));
 
     // MATERIALS
@@ -572,7 +573,8 @@ thinner.png
     public static ItemEntry<Item> LEAD_INGOT =
             taggedIngredient("lead_ingot",
                     forgeItemTag("ingots"),
-                    forgeItemTag("ingots/lead")
+                    forgeItemTag("ingots/lead"),
+                    forgeItemTag("ingots/battery_alloy")
             );
     public static ItemEntry<Item> TITANIUM_INGOT =
             taggedIngredient("titanium_ingot",
@@ -817,7 +819,9 @@ thinner.png
                     forgeItemTag("sheets"),
                     forgeItemTag("plates"),
                     forgeItemTag("sheets/lead"),
-                    forgeItemTag("plates/lead")
+                    forgeItemTag("plates/lead"),
+                    forgeItemTag("sheets/battery_alloy"),
+                    forgeItemTag("plates/battery_alloy")
             );
     public static ItemEntry<Item> TITANIUM_SHEET =
             taggedIngredient("titanium_sheet",
@@ -973,7 +977,8 @@ thinner.png
     public static ItemEntry<Item> ALUMINIUM_HYDROXIDE_DUST =
             taggedIngredient("aluminium_hydroxide_dust",
                     forgeItemTag("dusts"),
-                    forgeItemTag("dusts/aluminium_hydroxide")
+                    forgeItemTag("dusts/aluminium_hydroxide"),
+                    forgeItemTag("dusts/aluminum_hydroxide")
             );
     public static ItemEntry<Item> SODIUM_HYDROXIDE_DUST =
             taggedIngredient("sodium_hydroxide_dust",
@@ -1011,7 +1016,9 @@ thinner.png
             ingredient("high_refractory_brick");
     public static ItemEntry<Item> SAWDUST =
             taggedIngredient("sawdust",
-                    forgeItemTag("dusts/wooden")
+                    forgeItemTag("dusts/wooden"),
+                    forgeItemTag("dusts/wood"),
+                    CPTags.Items.COOKABLE
             );
     public static ItemEntry<Item> BIOMASS =
             ingredient("biomass");
@@ -1065,6 +1072,7 @@ thinner.png
     // Foods and plants
     public static ItemEntry<Item> dried_wolfberries = REGISTRATE
             .item("dried_wolfberries", Item::new)
+            .tag(FHTags.Items.WOLFBERRIES.tag)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food(FHFoodProperties.DRIED_WOLFBERRIES))
             .register();
@@ -1094,11 +1102,13 @@ thinner.png
     public static ItemEntry<Item> rye_bread = REGISTRATE
             .item("rye_bread", Item::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .tag(CPTags.Items.BAKED)
             .properties(p -> p.food(FHFoodProperties.RYE_BREAD))
             .register();
     public static ItemEntry<Item> black_bread = REGISTRATE
             .item("black_bread", Item::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .tag(CPTags.Items.BAKED)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food(FHFoodProperties.BLACK_BREAD))
             .register();
@@ -1130,6 +1140,7 @@ thinner.png
             .item("military_rations", CannedFoodItem::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
             .tag(FHTags.Items.INSULATED_FOOD.tag)
+            .tag(CPTags.Items.BAKED, CPTags.Items.VEGETABLES, CPTags.Items.MEAT, CPTags.Items.COOKABLE)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food(new FoodProperties.Builder().nutrition(6).saturationMod(0.6f).build()))
             .register();
@@ -1137,6 +1148,7 @@ thinner.png
             .item("compressed_biscuits_pack", CannedFoodItem::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
             .tag(FHTags.Items.DRY_FOOD.tag)
+            .tag(CPTags.Items.BAKED)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food(Foods.BREAD))
             .register();
@@ -1144,6 +1156,7 @@ thinner.png
             .item("compressed_biscuits", CannedFoodItem::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
             .tag(FHTags.Items.DRY_FOOD.tag)
+            .tag(CPTags.Items.BAKED)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food(Foods.BREAD))
             .register();
@@ -1151,6 +1164,7 @@ thinner.png
             .item("packed_nuts", CannedFoodItem::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
             .tag(FHTags.Items.DRY_FOOD.tag)
+            .tag(CPTags.Items.WALNUT, CPTags.Items.COOKABLE)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food((new FoodProperties.Builder()).nutrition(2).saturationMod(0.8F).build()))
             .register();
@@ -1158,6 +1172,7 @@ thinner.png
             .item("dried_vegetables", CannedFoodItem::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
             .tag(FHTags.Items.DRY_FOOD.tag)
+            .tag(CPTags.Items.VEGETABLES)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food((new FoodProperties.Builder()).nutrition(4).saturationMod(0.6F).build()))
             .register();
@@ -1165,13 +1180,13 @@ thinner.png
             .item("chocolate", Item::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
             .tag(FHTags.Items.DRY_FOOD.tag)
+            .tag(CPTags.Items.MEATS)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food((new FoodProperties.Builder()).nutrition(4).saturationMod(0.8F).meat().fast().build()))
             .register();
     public static ItemEntry<Item> RAW_WHALE_MEAT = REGISTRATE
             .item("raw_whale_meat", Item::new)
             .tag(CPTags.Items.MEAT)
-            .tag(CPTags.Items.MEATS)
             .properties(p -> p.food((new FoodProperties.Builder()).nutrition(4).saturationMod(0.8F).meat().fast().build()))
             .register();
     public static ItemEntry<Item> COOKED_WHALE_MEAT = REGISTRATE
@@ -1186,6 +1201,7 @@ thinner.png
     // Equipment and tools
     public static ItemEntry<CoalHandStove> hand_stove = REGISTRATE.item("hand_stove", CoalHandStove::new)
             .properties(p -> p.defaultDurability(10))
+            .tag(FHTags.Items.CURIOS_HANDS.tag)
             .model(AssetLookup.existingItemModel())
             .lang("Copper Hand Stove")
             .register();
@@ -1195,10 +1211,12 @@ thinner.png
             .register();
     public static ItemEntry<Item> coal_stick = REGISTRATE
             .item("coal_stick", Item::new)
+            .tag(CPTags.Items.PORTABLE_BRAZIER_FUEL_TYPE)
             .model(AssetLookup.existingItemModel())
             .register();
     public static ItemEntry<Item> charcoal_stick = REGISTRATE
             .item("charcoal_stick", Item::new)
+            .tag(CPTags.Items.PORTABLE_BRAZIER_FUEL_TYPE)
             .model(AssetLookup.existingItemModel())
             .register();
     public static ItemEntry<ThermometerItem> mercury_body_thermometer = REGISTRATE
@@ -1207,6 +1225,7 @@ thinner.png
             .register();
     public static ItemEntry<SteamBottleItem> steam_bottle = REGISTRATE
             .item("steam_bottle", SteamBottleItem::new)
+            .tag(FHTags.Items.CURIOS_CHARM.tag)
             .properties(p -> p.stacksTo(1))
             .model(AssetLookup.existingItemModel())
             .register();
@@ -1293,6 +1312,7 @@ thinner.png
             .register();
     public static ItemEntry<HeaterVestItem> heater_vest = REGISTRATE
             .item("heater_vest", HeaterVestItem::new)
+            .tag(FHTags.Items.CURIOS_BACK.tag)
             .properties(p -> p.stacksTo(1).setNoRepair())
             .model(AssetLookup.existingItemModel())
             .register();
@@ -1342,11 +1362,13 @@ thinner.png
             .register();
     public static ItemEntry<MushroomBed> red_mushroombed = REGISTRATE
             .item("straw_briquette_red_mushroom", p -> new MushroomBed(Items.RED_MUSHROOM, createProps().defaultDurability(4800)))
+            .tag(FHTags.Items.CURIOS_CHARM.tag)
             .model(AssetLookup.existingItemModel())
             .lang("Red Fungus Bed")
             .register();
     public static ItemEntry<MushroomBed> brown_mushroombed = REGISTRATE
             .item("straw_briquette_brown_mushroom", p -> new MushroomBed(Items.BROWN_MUSHROOM, createProps().defaultDurability(4800)))
+            .tag(FHTags.Items.CURIOS_CHARM.tag)
             .model(AssetLookup.existingItemModel())
             .lang("Brown Fungus Bed")
             .register();
@@ -1373,16 +1395,18 @@ thinner.png
 
     // Thermos
     public static ItemEntry<ThermosItem> thermos = REGISTRATE
-        .item("thermos", p -> new ThermosItem(1500, true))
-        .model(AssetLookup.existingItemModel())
-        .tag(FHTags.Items.INSULATED_FOOD.tag)
-        .tag(FHTags.Items.THERMOS.tag)
-        .lang("Thermos")
-        .register();
+            .item("thermos", p -> new ThermosItem(1500, true))
+            .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INSULATED_FOOD.tag)
+            .tag(FHTags.Items.THERMOS.tag)
+            .tag(CPTags.Items.CONTAINER)
+            .lang("Thermos")
+            .register();
     public static ItemEntry<ThermosItem> advanced_thermos = REGISTRATE.item("advanced_thermos", p -> new ThermosItem(3000, true))
             .model(AssetLookup.existingItemModel())
             .tag(FHTags.Items.INSULATED_FOOD.tag)
             .tag(FHTags.Items.THERMOS.tag)
+            .tag(CPTags.Items.CONTAINER)
             .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.thermos"))
             .lang("Advanced Thermos")
             .register();
@@ -1404,6 +1428,7 @@ thinner.png
                 .tag(FHTags.Items.INSULATED_FOOD.tag)
                 .tag(FHTags.Items.COLORED_THERMOS.tag)
                 .tag(FHTags.Items.THERMOS.tag)
+                .tag(CPTags.Items.CONTAINER)
                 .lang(fromIdToDisplay(color.getName()) + "Thermos")
                 .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.thermos"))
                 .register();
@@ -1415,6 +1440,7 @@ thinner.png
                 .tag(FHTags.Items.INSULATED_FOOD.tag)
                 .tag(FHTags.Items.COLORED_ADVANCED_THERMOS.tag)
                 .tag(FHTags.Items.THERMOS.tag)
+                .tag(CPTags.Items.CONTAINER)
                 .lang(fromIdToDisplay(color.getName()) + "Advanced Thermos")
                 .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.thermos"))
                 .register();
@@ -1545,18 +1571,21 @@ thinner.png
 
     public static ItemEntry<FluidBottleItem> fluid_bottle = REGISTRATE
             .item("fluid_bottle", FluidBottleItem::new)
+            .tag(CPTags.Items.CONTAINER)
             .properties(p -> p.stacksTo(16))
             .model(AssetLookup.existingItemModel())
             .register();
     public static ItemEntry<WoodenCupItem> wooden_cup = REGISTRATE
             .item("wooden_cup", p -> new WoodenCupItem(new Item.Properties(), 250)
             )
+            .tag(CPTags.Items.CONTAINER)
             .model(AssetLookup.existingItemModel())
             .lang("Wooden Cup")
             .register();
 
     public static ItemEntry<WoodenCupItem> wooden_cup_drink = REGISTRATE
             .item("wooden_cup_drink", p -> new WoodenCupItem(new Item.Properties().stacksTo(1), 250))
+            .tag(CPTags.Items.CONTAINER)
             .model(AssetLookup.existingItemModel())
             .lang("Wooden Cup With Drink")
             .removeTab(FHTabs.TOOLS.getKey())
@@ -1564,11 +1593,13 @@ thinner.png
             .register();
     public static ItemEntry<LeatherWaterBagItem> LEATHER_WATER_BAG = REGISTRATE
             .item("leather_water_bag", p -> new LeatherWaterBagItem(new Item.Properties().stacksTo(1).setNoRepair(), 1000))
+            .tag(CPTags.Items.CONTAINER)
             .model(AssetLookup.existingItemModel())
             .lang("Leather Water Bag")
             .register();
     public static ItemEntry<IronBottleItem> IRON_BOTTLE = REGISTRATE
             .item("iron_bottle", p -> new IronBottleItem(new Item.Properties().stacksTo(1).setNoRepair(), 1000))
+            .tag(CPTags.Items.CONTAINER)
             .model(AssetLookup.existingItemModel())
             .lang("Iron Bottle")
             .register();

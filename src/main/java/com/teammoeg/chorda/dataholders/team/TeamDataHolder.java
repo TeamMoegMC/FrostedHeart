@@ -27,8 +27,6 @@ import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataType;
 import com.teammoeg.chorda.network.CBaseNetwork;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.chorda.util.struct.OptionalLazy;
-import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import java.util.*;
@@ -46,7 +44,7 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
     private String ownerName;
     
     /** The FTB team. */
-    private OptionalLazy<Team> team;
+    private AbstractTeam team;
 	
 	/**
 	 * Instantiates a new team data holder.
@@ -54,7 +52,7 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
 	 * @param id the frostedheart team id
 	 * @param team the FTB team
 	 */
-	public TeamDataHolder(UUID id,OptionalLazy<Team> team) {
+	public TeamDataHolder(UUID id,AbstractTeam team) {
 		super("TeamData");
 		this.team=team;
 		this.id=id;
@@ -67,7 +65,8 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
         if (ownerName != null)
             nbt.putString("owner", ownerName);
         nbt.putUUID("uuid", id);
-        team.ifPresent(t->nbt.putUUID("teamId", t.getId()));//ftb team id
+        if(team!=null)
+        	nbt.putUUID("teamId", team.getId());//team id
 	}
 	
 	@Override
@@ -86,9 +85,8 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
 	 * @param consumer the player consumer
 	 */
 	public void forEachOnline(Consumer<ServerPlayer> consumer) {
-		if(team.isPresent())
-	        for (ServerPlayer spe : team.get().getOnlineMembers())
-	        	consumer.accept(spe);
+        for (ServerPlayer spe : team.getOnlineMembers())
+        	consumer.accept(spe);
 	}
 	
 	/**
@@ -97,9 +95,8 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
 	 * @param packet the packet
 	 */
 	public void sendToOnline(CBaseNetwork network,CMessage packet) {
-		if(team.isPresent())
-	        for (ServerPlayer spe : team.get().getOnlineMembers())
-	        	network.sendPlayer(spe, packet);
+        for (ServerPlayer spe : team.getOnlineMembers())
+        	network.sendPlayer(spe, packet);
 	}
     public UUID getId() {
         return id;
@@ -108,17 +105,15 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
     public String getOwnerName() {
         return ownerName;
     }
-    public Optional<Team> getTeam() {
-        if (team == null)
-            return Optional.empty();
-        return team.resolve();
+    public AbstractTeam getTeam() {
+        return team;
     }
     
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
     }
 
-    public void setTeam(OptionalLazy<Team> team) {
+    public void setTeam(AbstractTeam team) {
         this.team = team;
     }
 	
@@ -128,7 +123,7 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
 	 * @return the online members
 	 */
 	public Collection<ServerPlayer> getOnlineMembers() {
-		return team.get().getOnlineMembers();
+		return team.getOnlineMembers();
 	}
 	Map<SpecialDataType,TeamDataClosure> dataHolderCache=new HashMap<>();
 	public synchronized <U extends SpecialData> TeamDataClosure<U> getDataHolder(SpecialDataType<U> cap){

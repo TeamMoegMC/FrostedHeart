@@ -84,6 +84,7 @@ import net.minecraftforge.event.entity.living.LivingHealEvent;
 import net.minecraftforge.event.entity.living.MobEffectEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerSpawnPhantomsEvent;
 import net.minecraftforge.event.entity.player.PlayerXpEvent.PickupXp;
 import net.minecraftforge.event.entity.player.SleepingTimeCheckEvent;
 import net.minecraftforge.event.level.BlockEvent;
@@ -430,6 +431,16 @@ public class FHCommonEvents {
 	}
 
 	@SubscribeEvent
+	public static void disableShovellingCoarseDirtIntoPath(BlockEvent.BlockToolModificationEvent event) {
+		if (!event.getLevel().isClientSide() && event.getToolAction() == ToolActions.SHOVEL_FLATTEN) {
+			BlockState state = event.getState();
+			if (state.is(Blocks.COARSE_DIRT)) {
+				event.setCanceled(true);
+			}
+		}
+	}
+
+	@SubscribeEvent
 	public static void tillMudIntoDirt(BlockEvent.BlockToolModificationEvent event) {
 		if (!event.getLevel().isClientSide() && event.getPlayer() instanceof ServerPlayer player
 				&& event.getToolAction() == ToolActions.HOE_TILL) {
@@ -484,6 +495,11 @@ public class FHCommonEvents {
 				}
 			}
 		}
+	}
+
+	@SubscribeEvent
+	public static void disableSpawningPhantoms(PlayerSpawnPhantomsEvent event) {
+		event.setResult(Result.DENY);
 	}
 
 }
