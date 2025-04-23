@@ -369,6 +369,7 @@ thinner.png
     public static ItemEntry<Item> RAW_MAGNESITE =
             taggedIngredient("raw_magnesite",
                     forgeItemTag("raw_materials/magnesite"),
+                    forgeItemTag("raw_materials/magnesium"),
                     forgeItemTag("raw_materials"));
 
     // MATERIALS
@@ -571,7 +572,8 @@ thinner.png
     public static ItemEntry<Item> LEAD_INGOT =
             taggedIngredient("lead_ingot",
                     forgeItemTag("ingots"),
-                    forgeItemTag("ingots/lead")
+                    forgeItemTag("ingots/lead"),
+                    forgeItemTag("ingots/battery_alloy")
             );
     public static ItemEntry<Item> TITANIUM_INGOT =
             taggedIngredient("titanium_ingot",
@@ -816,7 +818,9 @@ thinner.png
                     forgeItemTag("sheets"),
                     forgeItemTag("plates"),
                     forgeItemTag("sheets/lead"),
-                    forgeItemTag("plates/lead")
+                    forgeItemTag("plates/lead"),
+                    forgeItemTag("sheets/battery_alloy"),
+                    forgeItemTag("plates/battery_alloy")
             );
     public static ItemEntry<Item> TITANIUM_SHEET =
             taggedIngredient("titanium_sheet",
@@ -972,7 +976,8 @@ thinner.png
     public static ItemEntry<Item> ALUMINIUM_HYDROXIDE_DUST =
             taggedIngredient("aluminium_hydroxide_dust",
                     forgeItemTag("dusts"),
-                    forgeItemTag("dusts/aluminium_hydroxide")
+                    forgeItemTag("dusts/aluminium_hydroxide"),
+                    forgeItemTag("dusts/aluminum_hydroxide")
             );
     public static ItemEntry<Item> SODIUM_HYDROXIDE_DUST =
             taggedIngredient("sodium_hydroxide_dust",
@@ -1011,6 +1016,7 @@ thinner.png
     public static ItemEntry<Item> SAWDUST =
             taggedIngredient("sawdust",
                     forgeItemTag("dusts/wooden"),
+                    forgeItemTag("dusts/wood"),
                     CPTags.Items.COOKABLE
             );
     public static ItemEntry<Item> BIOMASS =
@@ -1204,10 +1210,12 @@ thinner.png
             .register();
     public static ItemEntry<Item> coal_stick = REGISTRATE
             .item("coal_stick", Item::new)
+            .tag(CPTags.Items.PORTABLE_BRAZIER_FUEL_TYPE)
             .model(AssetLookup.existingItemModel())
             .register();
     public static ItemEntry<Item> charcoal_stick = REGISTRATE
             .item("charcoal_stick", Item::new)
+            .tag(CPTags.Items.PORTABLE_BRAZIER_FUEL_TYPE)
             .model(AssetLookup.existingItemModel())
             .register();
     public static ItemEntry<ThermometerItem> mercury_body_thermometer = REGISTRATE
