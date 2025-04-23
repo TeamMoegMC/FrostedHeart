@@ -1120,6 +1120,7 @@ public class FHBlocks {
                     p -> new WhiteTurnipBlock(FHProps.cropProps))
             .blockstate(FHBlockStateGen.existed())
             .loot(FHLootGen.existed())
+            .tag(BlockTags.CROPS)
             .item()
             .properties(p -> p.food(FHFoodProperties.WHITE_TURNIP))
             .tag(CPTags.Items.VEGETABLES)
@@ -1131,6 +1132,7 @@ public class FHBlocks {
     public static final BlockEntry<RubberDandelionBlock> RUBBER_DANDELION = REGISTRATE.block("rubber_dandelion",
                     p -> new RubberDandelionBlock(FHProps.cropProps))
             .blockstate(FHBlockStateGen.existed())
+            .tag(BlockTags.CROPS)
             .loot((lootTable,block) ->
                     lootTable.add(block,
                             LootTable.lootTable()
