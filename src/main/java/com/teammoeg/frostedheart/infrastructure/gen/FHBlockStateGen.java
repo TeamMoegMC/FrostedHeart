@@ -20,7 +20,11 @@
 package com.teammoeg.frostedheart.infrastructure.gen;
 
 import java.util.NoSuchElementException;
+import java.util.function.Supplier;
 
+import javax.annotation.Nullable;
+
+import com.google.common.base.Preconditions;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 import com.tterrag.registrate.builders.BlockBuilder;
@@ -31,6 +35,7 @@ import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
 
 import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.tags.BlockTags;
@@ -41,10 +46,14 @@ import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelFile;
 import net.minecraftforge.client.model.generators.VariantBlockStateBuilder;
+import net.minecraftforge.client.model.generators.VariantBlockStateBuilder.PartialBlockstate;
+import net.minecraftforge.client.model.generators.loaders.ObjModelBuilder;
 
 public class FHBlockStateGen {
 	
@@ -58,6 +67,19 @@ public class FHBlockStateGen {
         return (c, p) -> p.simpleBlock(c.get(), p.models()
                 .cubeAll(c.getName(), texture));
     }
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> simpleObj(
+            ResourceLocation model) {
+        return (c, p) -> p.simpleBlock(c.get(), p.models().withExistingParent(model.getPath(), new ResourceLocation("minecraft:block/block")).customLoader(ObjModelBuilder::begin)
+                .automaticCulling(false)
+                .modelLocation(makeObjRl(model))
+                .flipV(true).end().renderType("cutout"));
+    }
+
+    public static ResourceLocation makeObjRl(ResourceLocation in)
+    {
+        return new ResourceLocation(in.getNamespace(), "models/block/"+in.getPath()+".obj");
+    }
+
     public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> simpleCubeAll(
             String path) {
         return (c, p) -> p.simpleBlock(c.get(), p.models()
