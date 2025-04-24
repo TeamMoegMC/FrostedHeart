@@ -94,9 +94,9 @@ public class ProspectorPick extends FHLeveledTool {
                             }
                         }
                         if (ore_name != null) {
-                            if (count < 20)
+                            if (count < 10)
                                 player.displayClientMessage(Lang.translateMessage("vein_size.small").append(Lang.translateKey(ore_name)).withStyle(ChatFormatting.GOLD), false);
-                            else if (count < 40)
+                            else if (count < 20)
                                 player.displayClientMessage(Lang.translateMessage("vein_size.medium").append(Lang.translateKey(ore_name)).withStyle(ChatFormatting.GOLD), false);
                             else {
                                 player.displayClientMessage(Lang.translateMessage("vein_size.large").append(Lang.translateKey(ore_name)).withStyle(ChatFormatting.GOLD), false);

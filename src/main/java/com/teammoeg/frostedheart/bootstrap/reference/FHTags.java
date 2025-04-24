@@ -25,8 +25,12 @@ import com.teammoeg.frostedheart.content.town.resource.ItemResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.util.Lang;
 
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet.Named;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BiomeTags;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.ItemTags;
@@ -36,6 +40,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
@@ -398,6 +403,55 @@ public class FHTags {
 		}
 		public ITag<Fluid> getTagCollection(){
 			return CRegistryHelper.getFluidTag(tag);
+		}
+		private static void init() {}
+	}
+	public enum Biomes {
+		IS_ORE_VEIN(false),
+		IS_CAVE(false)
+		;
+
+		public final TagKey<Biome> tag;
+		public final boolean alwaysDatagen;
+
+		Biomes() {
+			this(NameSpace.MOD);
+		}
+
+		Biomes(String path) {
+			this(NameSpace.MOD, path);
+		}
+
+		Biomes(NameSpace namespace) {
+			this(namespace, namespace.alwaysDatagenDefault);
+		}
+
+		Biomes(NameSpace namespace, String path) {
+			this(namespace, path, namespace.alwaysDatagenDefault);
+		}
+		Biomes(boolean alwaysDatagen) {
+			this(NameSpace.MOD, null, alwaysDatagen);
+		}
+		Biomes(NameSpace namespace, boolean alwaysDatagen) {
+			this(namespace, null, alwaysDatagen);
+		}
+
+		Biomes(NameSpace namespace, String path,  boolean alwaysDatagen) {
+			ResourceLocation id = new ResourceLocation(namespace.id, path == null ? Lang.asId(name()) : path);
+			tag=TagKey.create(Registries.BIOME,id);
+			this.alwaysDatagen = alwaysDatagen;
+		}
+
+		public boolean matches(Holder<Biome> biome) {
+			return biome.is(tag);
+		}
+
+
+		public TagKey<Biome> get() {
+			return tag;
+		}
+		public Named<Biome> getTagCollection(RegistryAccess ra){
+			return ra.registry(ForgeRegistries.Keys.BIOMES).get().getOrCreateTag(tag);
 		}
 		private static void init() {}
 	}

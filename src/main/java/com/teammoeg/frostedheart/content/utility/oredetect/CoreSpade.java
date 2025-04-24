@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.utility.oredetect;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.Predicate;
 
@@ -41,24 +42,21 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.tags.TagKey;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderLookup.RegistryLookup;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.registries.ForgeRegistries;
 import se.mickelus.tetra.properties.IToolProvider;
 
 public class CoreSpade extends FHLeveledTool {
-
+	
     public static InteractionResult doProspect(Player player, Level world, BlockPos blockpos, ItemStack is, InteractionHand h) {
         if (player != null && (!(player instanceof FakePlayer))) {// fake players does not deserve XD
-            if (!world.isClientSide && world.getBlockState(blockpos).is(FHTags.Blocks.ORES.tag)) {// early exit 'cause ore found
-                player.displayClientMessage(
-                        Lang.translateKey(world.getBlockState(blockpos).getBlock().getDescriptionId())
-                                .withStyle(ChatFormatting.GOLD),
-                        false);
-                return InteractionResult.SUCCESS;
-            }
             int x = blockpos.getX();
             int y = blockpos.getY();
             int z = blockpos.getZ();
@@ -68,20 +66,20 @@ public class CoreSpade extends FHLeveledTool {
                 Random rnd = new Random(BlockPos.asLong(x, y, z) ^ 0x9a6dc5270b92313dL);// randomize
                 // This is predictable, but not any big problem. Cheaters can use x-ray or other
                 // things rather than hacking in this.
-
-                Predicate<BlockState> tagdet;
+                
+                Predicate<Holder<Biome>> tagdet;
                 float corr = getCorrectness(is);
                 if (rnd.nextInt((int) (20 * corr)) != 0) {
-                    tagdet = ts -> (ts.is(FHTags.Blocks.ORES.tag)) || ts.is(FHTags.Blocks.STONE.tag);
+                    tagdet = ts -> FHTags.Biomes.IS_CAVE.matches(ts)||FHTags.Biomes.IS_ORE_VEIN.matches(ts);
                 } else
-                    tagdet = ts -> ts.is(FHTags.Blocks.STONE.tag);
+                    tagdet = ts -> FHTags.Biomes.IS_CAVE.matches(ts);
                 BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos(x, y, z);
-                BlockState ore;
-                HashMap<String, Integer> founded = new HashMap<>();
+                Holder<Biome> ore;
+                HashMap<Holder<Biome>, Integer> founded = new HashMap<>();
                 final int hrange = getHorizonalRange(is);
                 int vrange = getVerticalRange(is);
                 vrange = Math.min(y, (rnd.nextInt(vrange) + vrange) / 2);
-
+                //RegistryLookup<Biome> biomeRegistry=world.registryAccess().lookup(ForgeRegistries.Keys.BIOMES).get();
 
                 for (int y2 = -vrange; y2 < 0; y2++)
                     for (int x2 = -hrange; x2 < hrange; x2++)
@@ -89,18 +87,21 @@ public class CoreSpade extends FHLeveledTool {
                             int BlockX = x + x2;
                             int BlockY = y + y2;
                             int BlockZ = z + z2;
-                            ore = world.getBlockState(mutable.set(BlockX, BlockY, BlockZ));
-                            if (!CRegistryHelper.getRegistryName(ore.getBlock()).getNamespace().equals("minecraft") && tagdet.test(ore)) {
-                                founded.merge(ore.getBlock().getDescriptionId(), 1, Integer::sum);
+                            
+                            ore = world.getBiome(mutable.set(BlockX, BlockY, BlockZ));
+                            //System.out.println(ore);
+                            if (tagdet.test(ore)) {
+                                founded.merge(ore, 1, Integer::sum);
                             }
                         }
 
                 if (!founded.isEmpty()) {
                     int count = 0;
                     MutableComponent s = Lang.translateMessage("corespade.ore");
-                    for (Entry<String, Integer> f : founded.entrySet()) {
+                    for (Entry<Holder<Biome>, Integer> f : founded.entrySet()) {
                         if (rnd.nextInt((int) (f.getValue() * corr)) != 0) {
-                            s = s.append(Lang.translateKey(f.getKey())
+                        	;
+                        	s = s.append(Lang.translateKey(f.getKey().unwrapKey().get().location().toLanguageKey("biome"))
                                     .withStyle(ChatFormatting.GREEN).append(","));
                             count++;
                         }
