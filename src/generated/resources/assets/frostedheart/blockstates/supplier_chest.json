@@ -1,7 +1,7 @@
 {
   "variants": {
     "": {
-      "model": "frostedheart:block/bot_dock_transfer"
+      "model": "frostedheart:block/bot_dock_out"
     }
   }
 }

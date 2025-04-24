@@ -126,19 +126,20 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 	});
 	@Override
 	public void tick() {
-		if(network==null||!network.isPresent()) {
-			Optional<LazyOptional<LogisticNetwork>> chunkData=FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.
-			getCapability(this.level.getChunk(this.worldPosition)).map(t->t.getNetworkFor(level, worldPosition));
-			if(chunkData.isPresent()) {
-				LazyOptional<LogisticNetwork> ln=chunkData.get();
-				if(ln.isPresent()) {
-					FHMain.LOGGER.info("register self against network req "+ln);
-					network=ln;
+		if(!this.level.isClientSide) {
+			if(network==null||!network.isPresent()) {
+				Optional<LazyOptional<LogisticNetwork>> chunkData=FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.
+				getCapability(this.level.getChunk(this.worldPosition)).map(t->t.getNetworkFor(level, worldPosition));
+				if(chunkData.isPresent()) {
+					LazyOptional<LogisticNetwork> ln=chunkData.get();
+					if(ln.isPresent()) {
+						FHMain.LOGGER.info("register self against network req "+ln);
+						network=ln;
+					}
 				}
 			}
+			worker.tick();
 		}
-		worker.tick();
-
 	}
 
 	@Override

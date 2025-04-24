@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.trade;
 import net.minecraft.nbt.CompoundTag;
 
 public class PlayerRelationData {
-    public static final PlayerRelationData EMPTY = new PlayerRelationData();
+    public static final PlayerRelationData EMPTY = new PlayerRelationData(0);
     public int totalbenefit;
     int sawmurder;
 
@@ -52,4 +52,9 @@ public class PlayerRelationData {
         }
         lastUpdated = day;
     }
+
+	public PlayerRelationData(long lastUpdated) {
+		super();
+		this.lastUpdated = lastUpdated;
+	}
 }
