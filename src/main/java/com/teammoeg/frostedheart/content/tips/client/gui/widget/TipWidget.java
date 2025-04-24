@@ -125,6 +125,7 @@ public class TipWidget extends AbstractWidget {
         if (tip == null || tip.getContents().isEmpty()) return;
 
         if (context == null) context = new RenderContext(tip);
+        context.update();
         setWidth(context.size.width);
         setHeight(context.size.height);
         setX(context.screenSize.width - super.getWidth() - 4 - RenderContext.BG_BORDER + (int) context.pYaw);
@@ -298,7 +299,6 @@ public class TipWidget extends AbstractWidget {
         RenderContext(Tip tip) {
             this.tip = tip;
             originalImageSize = getImgSize(tip.getImage());
-            update();
         }
 
         void update() {
