@@ -268,12 +268,23 @@ public class TipManager {
             tipStates.clear();
             // 为所有已加载的tip创建空的TipState
             loadedTips.forEach((id, tip) -> tipStates.put(tip, new State(tip)));
+
+            if (!TIP_STATE_FILE.exists()) {
+                try {
+                    TIP_STATE_FILE.createNewFile();
+                } catch (IOException e) {
+                    LOGGER.error("Unable to create file: '{}'", TIP_STATE_FILE, e);
+                    displayException(Tip.ErrorType.SAVE, "tip_states.json", e);
+                }
+                return;
+            }
+
             try (FileReader reader = new FileReader(TIP_STATE_FILE)) {
                 Set<State> stateList = GSON.fromJson(reader, STATE_TYPE);
                 if (stateList == null) {
                     // 文件存在但是无法正确读取
                     if (TIP_STATE_FILE.exists()) {
-                        String message = "The file '" + TIP_STATE_FILE + "' already exists but cannot be read correctly, it may be corrupted";
+                        String message = "'" + TIP_STATE_FILE + "' is exists but cannot be read correctly, it may corrupted";
                         displayException(Tip.ErrorType.LOAD, "tip_states.json", new Exception(message));
                         LOGGER.warn(message);
                     }
