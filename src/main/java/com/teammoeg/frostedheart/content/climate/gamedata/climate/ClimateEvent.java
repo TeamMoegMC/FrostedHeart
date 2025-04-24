@@ -113,12 +113,13 @@ public class ClimateEvent {
         switch (random.nextInt(10)+((startTime/secondsPerDay<=15)?5:0)) {
             case 0:
             case 1:
-            	return getBlizzardClimateEvent(startTime);
             case 2:
+                return getBlizzardClimateEvent(startTime);
             case 3:
             case 4:
             case 5:
             case 6:
+            case 7:
             	return getColdClimateEvent(startTime);
             default:
             	return getWarmClimateEvent(startTime);
