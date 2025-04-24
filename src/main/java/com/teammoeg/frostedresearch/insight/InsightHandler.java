@@ -39,7 +39,7 @@ public class InsightHandler {
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.player instanceof ServerPlayer serverPlayer&&event.phase==TickEvent.Phase.END) {
         	if(serverPlayer.tickCount%20==0) {//check per 1 sec as the area is large
-        		double x=serverPlayer.getX(),y=serverPlayer.getY();
+        		double x=serverPlayer.getX(),y=serverPlayer.getZ();
         		double rho=Math.sqrt(x*x+y*y);
         		double theta = Math.atan2(x, y);
         		int n=Mth.floor(rho/FRConfig.SERVER.rangeInsight.get());
