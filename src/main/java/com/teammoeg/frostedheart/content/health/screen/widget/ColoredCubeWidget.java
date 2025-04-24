@@ -14,7 +14,7 @@ public class ColoredCubeWidget extends AbstractWidget {
 
     private static final Font font = Minecraft.getInstance().font;
     private static final int hotColor = 0xFFE60101;
-    private static final int warmColor = 0xFF000000;
+    private static final int warmColor = 0x00000000;
     private static final int coldColor = 0xFF36A0FD;
     private static final int frozenColor = 0xFF130DB8;
     private static final int outline=0xFFFFFFFF;
