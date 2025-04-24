@@ -1318,6 +1318,7 @@ thinner.png
     public static ItemEntry<FHBaseArmorItem> wool_boots = REGISTRATE
             .item("wool_boots", p -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.BOOTS, createProps()))
             .model(AssetLookup.existingItemModel())
+            .lang("Wool Socks")
             .register();
     public static ItemEntry<FHBaseArmorItem> wool_hat = REGISTRATE
             .item("wool_hat", p -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.HELMET, createProps()))
