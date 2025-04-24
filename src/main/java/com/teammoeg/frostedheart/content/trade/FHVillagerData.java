@@ -46,19 +46,20 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.stats.ServerStatsCounter;
 import net.minecraft.stats.Stats;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.gossip.GossipType;
 import net.minecraft.server.level.ServerLevel;
 
 public class FHVillagerData implements MenuProvider {
+    // same as name in policy class
     public ResourceLocation policytype;
     public Map<String, Float> storage = new HashMap<>();
     public Map<String, Integer> flags = new HashMap<>();
     Map<UUID, PlayerRelationData> relations = new HashMap<>();
     long lastUpdated = -1;
     public int bargain;
+    // traded amount of total price
     public long totaltraded;
     private int tradelevel;
     public Villager parent;
@@ -144,6 +145,11 @@ public class FHVillagerData implements MenuProvider {
         return relations.computeIfAbsent(pe.getUUID(), d -> new PlayerRelationData());
     }
 
+    /**
+     * Get relation list given player's current interaction history and research stuff with villager.
+     * @param pe
+     * @return
+     */
     public RelationList getRelationShip(Player pe) {
         RelationList list = new RelationList();
         PlayerRelationData player = relations.getOrDefault(pe.getUUID(), PlayerRelationData.EMPTY);
@@ -176,9 +182,20 @@ public class FHVillagerData implements MenuProvider {
         return tradelevel;
     }
 
-    public void initLegacy(Villager ve) {
+    /**
+     * Init the data with a radnom policy type from all loaded policies (recipes) if not yet have one.
+     *
+     * Set the old villager profession.
+     *
+     * @param ve
+     */
+    public void initWithRandomPolicy(Villager ve) {
         if (policytype == null) {
-            policytype = TradePolicy.random(ve.getRandom()).getName();
+            TradePolicy policy = TradePolicy.random(ve.getRandom());
+            if (policy == null)
+                policytype = null;
+            else
+                policytype = policy.getName();
             parent.setVillagerData(parent.getVillagerData().setProfession(getPolicyType().getProfession()));
         }
     }
@@ -232,12 +249,13 @@ public class FHVillagerData implements MenuProvider {
         this.tradelevel = tradelevel;
     }
 
-    public InteractionResult trade(Player pe) {
-        return InteractionResult.sidedSuccess(pe.level().isClientSide);
-    }
-
+    /**
+     * Must be called before a player attempts to trade
+     * @param w
+     * @param trigger
+     */
     public void update(ServerLevel w, Player trigger) {
-        initLegacy(parent);
+        initWithRandomPolicy(parent);
         long day = WorldClimate.getWorldDay(w);
         CUtils.ofMap(relations, trigger.getUUID()).ifPresent(t -> t.update(day));
         if (lastUpdated == -1) {

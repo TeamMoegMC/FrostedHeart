@@ -57,6 +57,10 @@ import net.minecraftforge.items.SlotItemHandler;
 import net.minecraftforge.network.PacketDistributor;
 
 public class TradeContainer extends AbstractContainerMenu {
+
+    public static final int MIN_BARGAIN_RELATION = 40;
+    public static final int MAX_RELATION_CAP = 100;
+
     public class DetectionSlot extends Slot {
         boolean isSaleable = false;
 
@@ -245,14 +249,20 @@ public class TradeContainer extends AbstractContainerMenu {
     }
 
     public void handleBargain(ServerPlayer pe) {
-        if (relations.sum() < 40)
+        if (relations.sum() < MIN_BARGAIN_RELATION)
             return;
         recalc();
         if (order.isEmpty())
             return;
 
         boolean succeed = false;
-        if (true) {// TODO:simulates bargain success
+
+        // bargain based on relation
+        int playerRelation = Math.min(relations.sum(), MAX_RELATION_CAP);
+        int relationSurplus = playerRelation - MIN_BARGAIN_RELATION;
+        float probability = (float) relationSurplus / (MAX_RELATION_CAP - MIN_BARGAIN_RELATION);
+
+        if (pe.getRandom().nextFloat() < probability) {
             discountRatio = maxdiscount / ((float) voffer);
             discountRatio = Math.min(0.4f, discountRatio + 0.1f);
             maxdiscount = (int) (voffer * discountRatio);

@@ -57,7 +57,7 @@
     "minecraft.temperature.ServerPlayNetHandlerMixin_FlyingFix",
     "minecraft.temperature.SheepMixin",
     "minecraft.temperature.SnowLayerBlockMixin_Melt",
-    "minecraft.temperature.VillagerMixin",
+    "minecraft.trade.VillagerMixin",
     "minecraft.temperature.WolfMixin",
     "minecraft.trade.AssignProfessionFromJobSite_DisableVanillaProfession",
     "minecraft.trade.ResetProfession_DisableVanillaProfession",

@@ -43,6 +43,7 @@ import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.util.Mth;
@@ -69,6 +70,18 @@ public class TradeScreen extends BaseScreen {
                 updateOffers();
             }
 
+            @Override
+            public void addMouseOverText(TooltipList list) {
+                super.addMouseOverText(list);
+                // buy
+                if (getState()) {
+                    list.add(Lang.gui("trade.buying").component());
+                }
+                // sell
+                else {
+                    list.add(Lang.gui("trade.selling").component());
+                }
+            }
         };
         tab.setPosAndSize(182, 157, 54, 31);
         for (int i = 0; i < 3; i++)

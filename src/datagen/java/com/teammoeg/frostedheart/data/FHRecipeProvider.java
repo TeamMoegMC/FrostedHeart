@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -254,7 +253,7 @@ public class FHRecipeProvider extends RecipeProvider {
 		out.accept(armorData(FHItems.wool_gloves, BodyPart.HANDS, 500f,.2f,0.1f));
 
 
-		//recipeTrade(out);
+		buildTradePolicies(out);
 	}
 	private FinishedRecipe armorData(ItemLike item,BodyPart part,float insulation,float heat_proof,float cold_proof) {
 		
@@ -288,7 +287,7 @@ public class FHRecipeProvider extends RecipeProvider {
 		parfile.mkdirs();
 		return new File(parfile,name);
 	}
-	private void recipeTrade(@Nonnull Consumer<FinishedRecipe> out) {
+	private void buildTradePolicies(@Nonnull Consumer<FinishedRecipe> out) {
 		trade().group().buy(10,10,10,FHItems.rye_bread.get())
 		.buy(1, 0.1f,20,FHItems.straw_lining.get())
 		.buy(10,10,10,Items.RAW_COPPER).useAction().addFlag("copper", 1).finish()
@@ -296,7 +295,9 @@ public class FHRecipeProvider extends RecipeProvider {
 		.sell(10, 1, 5,Items.COPPER_INGOT).restockAction().addFlag("copper", -1).finish().restocksBy().hasFlag("copper").finish()
 		.basic()
 		.finish()
-		.weight(1).id("test").finish(out);;
+		.weight(1).id("test").finish(out);
+
+
 		
 	}
 	private TradeBuilder trade() {

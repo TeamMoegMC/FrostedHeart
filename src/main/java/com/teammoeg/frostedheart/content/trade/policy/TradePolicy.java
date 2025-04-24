@@ -19,13 +19,16 @@
 
 package com.teammoeg.frostedheart.content.trade.policy;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.chorda.io.SerializeUtil;
@@ -120,8 +123,17 @@ public class TradePolicy extends IESerializableRecipe {
 
     int weight = 0;
 
+    @Nullable
     public static TradePolicy random(RandomSource rnd) {
         return WeightedRandom.getRandomItem(rnd, items, totalW).map(t->t.policy).orElse(null);
+    }
+
+    @Nonnull
+    public static TradePolicy dummy() {
+        FHMain.LOGGER.info("A dummy trade policy is used. Check your data packs because polices don't exist.");
+        int[] expLevels = {1, 2, 3, 4, 5};
+        List<PolicyGroup> groups = new ArrayList<>();
+        return new TradePolicy(FHMain.rl("dummy"), FHMain.rl("dummy"), groups, 1, VillagerProfession.NONE, expLevels);
     }
 
     public TradePolicy(ResourceLocation id, ResourceLocation name, List<PolicyGroup> groups, int weight, VillagerProfession vp, int[] expBar) {
