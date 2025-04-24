@@ -23,15 +23,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
-import com.teammoeg.frostedheart.util.Lang;
+
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
-import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
@@ -240,11 +238,7 @@ public class Waypoint extends AbstractWaypoint {
     public void deserializeNBT(CompoundTag nbt) {
         this.id = nbt.getString("id");
         String displayName = nbt.getString("display_name");
-        if (I18n.exists(displayName)) {
-            this.displayName = Lang.translateKey(displayName);
-        } else {
-            this.displayName = Components.str(displayName);
-        }
+        this.displayName = Component.translatable(displayName);
         this.dimension = Level.RESOURCE_KEY_CODEC.parse(NbtOps.INSTANCE, nbt.get("dimension")).resultOrPartial(LOGGER::error).orElse(Level.OVERWORLD).location();
         this.target = new Vec3(nbt.getDouble("x"), nbt.getDouble("y"), nbt.getDouble("z"));
         this.focus = nbt.getBoolean("focus");

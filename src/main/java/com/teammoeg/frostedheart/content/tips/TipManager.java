@@ -270,8 +270,8 @@ public class TipManager {
             loadedTips.forEach((id, tip) -> tipStates.put(tip, new State(tip)));
 
             if (!TIP_STATE_FILE.exists()) {
-                try {
-                    TIP_STATE_FILE.createNewFile();
+                try (FileWriter writer = new FileWriter(TIP_STATE_FILE)) {
+                    writer.write("[]");
                 } catch (IOException e) {
                     LOGGER.error("Unable to create file: '{}'", TIP_STATE_FILE, e);
                     displayException(Tip.ErrorType.SAVE, "tip_states.json", e);

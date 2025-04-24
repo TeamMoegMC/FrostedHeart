@@ -26,7 +26,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.logging.LogUtils;
-import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.lang.Components;
 
@@ -38,16 +37,12 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.common.util.Size2i;
 import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -83,11 +78,6 @@ public class Tip {
      */
     @Nullable
     private final ResourceLocation image;
-    /**
-     * 图像的宽高
-     */
-    @Nullable
-    private final Size2i imageSize;
     /**
      * 是否始终显示
      */
@@ -127,7 +117,6 @@ public class Tip {
         this.category = builder.category;
         this.nextTip = builder.nextTip;
         this.image = builder.image;
-        this.imageSize = builder.imageSize;
         this.alwaysVisible = builder.alwaysVisible;
         this.onceOnly = builder.onceOnly;
         this.hide = builder.hide;
@@ -255,7 +244,6 @@ public class Tip {
         private String category = "";
         private String nextTip = "";
         private ResourceLocation image;
-        private Size2i imageSize;
         private boolean alwaysVisible;
         private boolean onceOnly;
         private boolean hide;
@@ -316,7 +304,6 @@ public class Tip {
         public Builder image(ResourceLocation image) {
             if (!editable) return this;
             this.image = image;
-            imageSize(image);
             return this;
         }
 
@@ -382,7 +369,6 @@ public class Tip {
             this.category = source.category;
             this.nextTip = source.nextTip;
             this.image = source.image;
-            this.imageSize = source.imageSize;
             this.alwaysVisible = source.alwaysVisible;
             this.onceOnly = source.onceOnly;
             this.hide = source.hide;
@@ -413,7 +399,7 @@ public class Tip {
                 if (!location.isBlank()) image(ResourceLocation.tryParse(location));
 
                 var contents = nbt.getList("contents", Tag.TAG_STRING);
-                var list = contents.stream().map(tag -> Components.translateOrElseStr(tag.getAsString())).toList();
+                var list = contents.stream().map(tag -> Component.translatable(tag.getAsString())).toList();
                 this.contents.addAll(list);
             }
             if (id.isBlank()) {
@@ -443,7 +429,7 @@ public class Tip {
                 if (jsonContents != null) {
                     for (int i = 0; i < jsonContents.size(); i++) {
                         String s = jsonContents.get(i).getAsString();
-                        line(Components.translateOrElseStr(s));
+                        line(Component.translatable(s));
                     }
                 }
             }
@@ -499,25 +485,6 @@ public class Tip {
             var desc = new ArrayList<>(List.of(descriptions));
             desc.add(Component.literal(exception.getMessage()));
             return error(type, desc);
-        }
-
-        private void imageSize(ResourceLocation location) {
-            var resource = ClientUtils.mc().getResourceManager().getResource(location);
-            if (resource.isPresent()) {
-                try (InputStream stream = resource.get().open()) {
-                    BufferedImage image= ImageIO.read(stream);
-                    Size2i size = new Size2i(image.getWidth(), image.getHeight());
-                    if (size.width != 0 || size.height != 0) {
-                        this.imageSize = size;
-                        return;
-                    }
-                } catch (IOException e) {
-                    LOGGER.error("Invalid texture resource location {}", location, e);
-                    error(ErrorType.LOAD, e,Component.translatable("tips.frostedheart.error.load.invalid_image", location));
-                }
-            }
-            this.image = null;
-            error(ErrorType.LOAD,Component.translatable("tips.frostedheart.error.load.invalid_image", location));
         }
 
         private int getColorOrElse(JsonObject json, String name, int defColor) {

@@ -116,7 +116,7 @@ public class Popup {
     public static void put(String message) {
         if (message.isBlank())
             return;
-        put(Components.translateOrElseStr(message));
+        put(Component.translatable(message));
     }
 
     public static boolean isEmpty() {

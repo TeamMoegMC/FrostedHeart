@@ -35,12 +35,17 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraftforge.common.util.Size2i;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +59,7 @@ public class TipWidget extends AbstractWidget {
     private State state;
     @Getter
     private float progress;
-    private final RenderContext context;
+    private RenderContext context;
     private boolean alwaysVisibleOverride;
 
     /**
@@ -77,7 +82,6 @@ public class TipWidget extends AbstractWidget {
         this.visible = false;
         this.closeButton.visible = false;
         this.pinButton.visible = false;
-        this.context = new RenderContext();
     }
 
     @Override
@@ -119,8 +123,8 @@ public class TipWidget extends AbstractWidget {
 
     private void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick, float progress) {
         if (tip == null || tip.getContents().isEmpty()) return;
-        
-        context.update(tip);
+
+        if (context == null) context = new RenderContext(tip);
         setWidth(context.size.width);
         setHeight(context.size.height);
         setX(context.screenSize.width - super.getWidth() - 4 - RenderContext.BG_BORDER + (int) context.pYaw);
@@ -209,7 +213,7 @@ public class TipWidget extends AbstractWidget {
         lastTip = tip;
         tip = null;
         progress = 0;
-        context.clear();
+        context = null;
         state = State.IDLE;
         alwaysVisibleOverride = false;
         visible = false;
@@ -276,6 +280,9 @@ public class TipWidget extends AbstractWidget {
         static final int MIN_WIDTH = 160;
         static final int MAX_WIDTH = 360;
 
+        final Tip tip;
+        final Size2i originalImageSize;
+
         List<FormattedCharSequence> titleLines;
         List<FormattedCharSequence> contentLines;
         Size2i imageSize;
@@ -288,7 +295,13 @@ public class TipWidget extends AbstractWidget {
         float pYaw;
         float pPitch;
 
-        void update(Tip tip) {
+        RenderContext(Tip tip) {
+            this.tip = tip;
+            originalImageSize = getImgSize(tip.getImage());
+            update();
+        }
+
+        void update() {
             BGColor = ColorHelper.setAlpha(tip.getBackgroundColor(), (isGuiOpened() ? 0.8F : 0.5F));
             fontColor = ColorHelper.setAlpha(tip.getFontColor(), 1.0F);
 
@@ -323,15 +336,14 @@ public class TipWidget extends AbstractWidget {
                 for (int i = 1; i < contents.size(); i++)
                     contentLines.addAll(ClientUtils.font().split(contents.get(i), width));
             totalLineSize = titleLines.size() + contentLines.size();
-            int height = (totalLineSize * RenderContext.LINE_SPACE);
+            int height = (totalLineSize * LINE_SPACE);
 
             // 图片
-            hasImage = tip.getImage() != null && tip.getImageSize() != null;
             int imgW = 0;
             int imgH = 0;
             if (hasImage) {
-                imgW = tip.getImageSize().width;
-                imgH = tip.getImageSize().height;
+                imgW = originalImageSize.width;
+                imgH = originalImageSize.height;
                 // 缩放图片以适应屏幕
                 if (Math.abs(imgW - imgH) < 8 && imgW <= 32) {
                     imgW = imgW * (32 / imgW);
@@ -342,8 +354,8 @@ public class TipWidget extends AbstractWidget {
                     imgH = (int) (imgH * scale);
                     imgW = (int) (imgW * scale);
                 }
-                if (context.screenSize.height * 0.3F + height + imgH > screenSize.height) {
-                    float availableHeight = screenSize.height - context.screenSize.height * 0.3F - height - 8;
+                if (screenSize.height * 0.3F + height + imgH > screenSize.height) {
+                    float availableHeight = screenSize.height - screenSize.height * 0.3F - height - 8;
                     if (availableHeight > 0) {
                         float scale = availableHeight / imgH;
                         imgH = (int) (imgH * scale);
@@ -356,18 +368,21 @@ public class TipWidget extends AbstractWidget {
             size = new Size2i(width, height + imageSize.height);
         }
 
-        void clear() {
-            titleLines = null;
-            contentLines = null;
-            imageSize = null;
-            screenSize = null;
-            size = null;
+        Size2i getImgSize(ResourceLocation location) {
+            if (location != null) {
+                var resource = ClientUtils.mc().getResourceManager().getResource(location);
+                if (resource.isPresent()) {
+                    try (InputStream stream = resource.get().open()) {
+                        BufferedImage image= ImageIO.read(stream);
+                        hasImage = true;
+                        return new Size2i(image.getWidth(), image.getHeight());
+                    } catch (IOException e) {
+                    }
+                }
+            }
+
             hasImage = false;
-            totalLineSize = 0;
-            BGColor = 0;
-            fontColor = 0;
-            pYaw = 0;
-            pPitch = 0;
+            return new Size2i(0, 0);
         }
     }
 

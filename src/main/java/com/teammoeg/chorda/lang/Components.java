@@ -19,7 +19,6 @@
 
 package com.teammoeg.chorda.lang;
 
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.LiteralContents;
@@ -79,7 +78,7 @@ public final class Components {
             sb.append(v.toString()).append("\n");
         }
         // remove the last newline if the string is not empty
-        if (sb.length() > 0) {
+        if (!sb.isEmpty()) {
             sb.setLength(sb.length() - 1);
         }
         return str(sb.toString());
@@ -110,10 +109,6 @@ public final class Components {
         } else {
             return component.getString();
         }
-    }
-
-    public static MutableComponent translateOrElseStr(String string) {
-        return I18n.exists(string) ? Component.translatable(string) : str(string);
     }
 }
 

@@ -28,9 +28,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.ServerTipSender;
 import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
-import com.teammoeg.frostedheart.util.Lang;
 
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -94,7 +92,7 @@ public class TipCommand {
         List<Component> contents = new ArrayList<>();
         if (!content.isEmpty()) {
             for (String s : content.split("\\$\\$")) {
-                contents.add(I18n.exists(s) ? Lang.translateKey(s) : Components.str(s));
+                contents.add(Component.translatable(s));
             }
         }
         return Tip.builder(title)
