@@ -25,6 +25,7 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 /**
  * A climate event defined by a set of timestamps and temperature
@@ -110,19 +111,14 @@ public class ClimateEvent {
      */
     public static ClimateEvent getClimateEvent(long startTime) {
         Random random = new Random();
-        switch (random.nextInt(10)+((startTime/secondsPerDay<=15)?5:0)) {
-            case 0:
-            case 1:
-            case 2:
-                return getBlizzardClimateEvent(startTime);
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-            case 7:
-            	return getColdClimateEvent(startTime);
-            default:
-            	return getWarmClimateEvent(startTime);
+        int blizzardFrequency = FHConfig.SERVER.blizzardFrequency.get();
+        int rand = random.nextInt(10)+((startTime/secondsPerDay<=15)?5:0);
+        if (rand < blizzardFrequency) {
+            return getBlizzardClimateEvent(startTime);
+        } else if (rand > 7) {
+            return getWarmClimateEvent(startTime);
+        } else {
+            return getColdClimateEvent(startTime);
         }
     }
 

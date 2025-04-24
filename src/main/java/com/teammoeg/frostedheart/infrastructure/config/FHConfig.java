@@ -287,7 +287,7 @@ public class FHConfig {
 
         public final ForgeConfigSpec.ConfigValue<Double> nutritionConsumptionRate;
         public final ForgeConfigSpec.ConfigValue<Double> nutritionGainRate;
-
+        public final ForgeConfigSpec.ConfigValue<Integer> blizzardFrequency;
 
         Server(ForgeConfigSpec.Builder builder) {
             builder.push("Temperature");
@@ -342,6 +342,8 @@ public class FHConfig {
                     .defineInRange("maxBodyTempChange", 10, -100, 100);
             addInitClimate =builder.comment("Whether should an initial climate event added to newly created world: a snowstorm after three days")
             	.define("addInitClimate", true);
+            blizzardFrequency = builder.comment("Frequency out of 10 a blizzard happens when a new climate event happens.")
+                    .defineInRange("blizzardFrequency", 3, 0, 10);
             builder.pop();
 
             builder.push("Water & Nutrition");
