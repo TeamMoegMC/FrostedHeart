@@ -140,7 +140,7 @@ public class TradeContainer extends AbstractContainerMenu {
         CompoundTag d = pb.readNbt();
         // System.out.println(d);
         data.deserializeFromRecv(d);
-        pld = new PlayerRelationData();
+        pld = new PlayerRelationData(0);
         pld.deserialize(pb.readNbt());
         relations = new RelationList();
         relations.read(pb);
