@@ -19,12 +19,11 @@
 
 package com.teammoeg.frostedheart.content.health.capability;
 
+import com.teammoeg.caupona.CPTags;
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -34,14 +33,13 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
 
 public class NutritionCapability implements NBTSerializable {
-	@Override
+    @Override
     public void save(CompoundTag compound, boolean isPacket) {
         compound.putFloat("fat", nutrition.fat);
         compound.putFloat("carbohydrate", nutrition.carbohydrate);
@@ -51,50 +49,52 @@ public class NutritionCapability implements NBTSerializable {
 
     @Override
     public void load(CompoundTag nbt, boolean isPacket) {
-        set(new ImmutableNutrition(nbt.getFloat("fat"),nbt.getFloat("carbohydrate"),nbt.getFloat("protein"),nbt.getFloat("vegetable")));
+        set(new ImmutableNutrition(nbt.getFloat("fat"), nbt.getFloat("carbohydrate"), nbt.getFloat("protein"), nbt.getFloat("vegetable")));
     }
-    public static final ImmutableNutrition DEFAULT_VALUE=new ImmutableNutrition(5000);
+
+    public static final ImmutableNutrition DEFAULT_VALUE = new ImmutableNutrition(5000);
     private MutableNutrition nutrition = DEFAULT_VALUE.mutableCopy();
 
 
     public void addFat(Player player, float add) {
-        this.nutrition.fat+=add;
+        this.nutrition.fat += add;
         syncToClientOnRestore(player);
     }
 
     public void addCarbohydrate(Player player, float add) {
-        this.nutrition.carbohydrate+=add;
+        this.nutrition.carbohydrate += add;
         syncToClientOnRestore(player);
     }
 
     public void addProtein(Player player, float add) {
-        this.nutrition.protein+=add;
+        this.nutrition.protein += add;
         syncToClientOnRestore(player);
     }
 
     public void addVegetable(Player player, float add) {
-        this.nutrition.vegetable+=add;
+        this.nutrition.vegetable += add;
         syncToClientOnRestore(player);
     }
 
     public void set(Nutrition temp) {
-    	if(temp!=this.nutrition)
-    		this.nutrition.set(temp);
+        if (temp != this.nutrition)
+            this.nutrition.set(temp);
     }
+
     public void setFat(float temp) {
-        this.nutrition.fat=temp;
+        this.nutrition.fat = temp;
     }
 
     public void setCarbohydrate(float temp) {
-        this.nutrition.carbohydrate=temp;
+        this.nutrition.carbohydrate = temp;
     }
 
     public void setProtein(float temp) {
-        this.nutrition.protein=temp;
+        this.nutrition.protein = temp;
     }
 
     public void setVegetable(float temp) {
-        this.nutrition.vegetable=temp;
+        this.nutrition.vegetable = temp;
     }
 
     public Nutrition get() {
@@ -115,23 +115,25 @@ public class NutritionCapability implements NBTSerializable {
     /**
      * 如一个食物营养值为0.1，0，0，0.2，饱食度是4，那么这个食物给玩家增加的基础营养值就是0.1*4,0,0,0.2*4
      * 再乘以营养增加比例，默认是40
+     *
      * @param player 玩家
-     * @param food 食物
+     * @param food   食物
      */
     public void eat(Player player, ItemStack food) {
-        if(!food.isEdible()) return;
-        Nutrition wRecipe = NutritionRecipe.getRecipeFromItem(player, food);
-        if(wRecipe == null) return;
-        FoodProperties fp = food.getFoodProperties(player);
-        if (fp != null) {
-            int nutrition = fp.getNutrition();
-            this.nutrition.addScaled(wRecipe, (float) (nutrition*FHConfig.SERVER.nutritionGainRate.get()));
-            syncToClientOnRestore(player);
+        if (food.isEdible() || food.is(CPTags.Items.CONTAINER)) {
+            Nutrition wRecipe = NutritionRecipe.getRecipeFromItem(player, food);
+            if (wRecipe == null) return;
+            FoodProperties fp = food.getFoodProperties(player);
+            if (fp != null) {
+                int nutrition = fp.getNutrition();
+                this.nutrition.addScaled(wRecipe, (float) (nutrition * FHConfig.SERVER.nutritionGainRate.get()));
+                syncToClientOnRestore(player);
+            }
         }
     }
 
     public void consume(Player player) {
-        double radio = - 0.1 * FHConfig.SERVER.nutritionConsumptionRate.get();
+        double radio = -0.1 * FHConfig.SERVER.nutritionConsumptionRate.get();
 
         this.nutrition.addScaled(this.nutrition, (float) radio / nutrition.getNutritionValue());
         syncToClientOnRestore(player);
@@ -142,45 +144,45 @@ public class NutritionCapability implements NBTSerializable {
         //TODO 营养值过高或过低的惩罚
         int count = 0;
 
-        if(nutrition.fat<2000){
-            count+=2;
+        if (nutrition.fat < 2000) {
+            count += 2;
 
         }
-        if(nutrition.fat>8000){
+        if (nutrition.fat > 8000) {
             count++;
 
         }
-        if(nutrition.carbohydrate<2000){
-            count+=2;
+        if (nutrition.carbohydrate < 2000) {
+            count += 2;
 
         }
-        if(nutrition.carbohydrate>8000){
+        if (nutrition.carbohydrate > 8000) {
             count++;
 
         }
-        if(nutrition.protein<2000){
-            count+=2;
+        if (nutrition.protein < 2000) {
+            count += 2;
 
         }
-        if(nutrition.protein>8000){
+        if (nutrition.protein > 8000) {
             count++;
 
         }
-        if(nutrition.vegetable<2000){
-            count+=2;
+        if (nutrition.vegetable < 2000) {
+            count += 2;
 
             //player.addEffect(new MobEffectInstance(FHMobEffects.SCURVY.get(), 300, count - 1));
         }
-        if(nutrition.vegetable>8000){
+        if (nutrition.vegetable > 8000) {
             count++;
 
         }
-        count/=2;
-        int a = count/2;
-        if(count>0) {
+        count /= 2;
+        int a = count / 2;
+        if (count > 0) {
             player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 300, count - 1));
         }
-        if(a>0) {
+        if (a > 0) {
             player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 300, a));
         }
 
@@ -191,7 +193,7 @@ public class NutritionCapability implements NBTSerializable {
         int v = (int) (20 - nutrition.getNutritionValue() / 1000);
         AttributeInstance instance = player.getAttributes().getInstance(Attributes.MAX_HEALTH);
         AttributeModifier modifier = new AttributeModifier(NutritionUUID, "nutrition", -v, AttributeModifier.Operation.ADDITION);
-        if(instance.hasModifier(modifier))
+        if (instance.hasModifier(modifier))
             instance.removeModifier(modifier);
         instance.addPermanentModifier(modifier);
     }
@@ -202,8 +204,8 @@ public class NutritionCapability implements NBTSerializable {
     }
 
     @Nullable
-    public static Nutrition getFoodNutrition(Player player,ItemStack food) {
+    public static Nutrition getFoodNutrition(Player player, ItemStack food) {
         return NutritionRecipe.getRecipeFromItem(player, food);
-        
+
     }
 }
