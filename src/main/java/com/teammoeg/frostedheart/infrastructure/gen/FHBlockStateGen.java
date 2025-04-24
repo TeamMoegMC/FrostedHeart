@@ -45,6 +45,7 @@ import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelFile;
 import net.minecraftforge.client.model.generators.VariantBlockStateBuilder;
+import net.minecraftforge.client.model.generators.loaders.ObjModelBuilder;
 
 public class FHBlockStateGen {
 	
@@ -58,6 +59,19 @@ public class FHBlockStateGen {
         return (c, p) -> p.simpleBlock(c.get(), p.models()
                 .cubeAll(c.getName(), texture));
     }
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> simpleObj(
+            ResourceLocation model) {
+        return (c, p) -> p.simpleBlock(c.get(), p.models().withExistingParent(model.getPath(), new ResourceLocation("minecraft:block/block")).customLoader(ObjModelBuilder::begin)
+                .automaticCulling(false)
+                .modelLocation(makeObjRl(model))
+                .flipV(true).end().renderType("cutout"));
+    }
+
+    public static ResourceLocation makeObjRl(ResourceLocation in)
+    {
+        return new ResourceLocation(in.getNamespace(), "models/block/"+in.getPath()+".obj");
+    }
+
     public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> simpleCubeAll(
             String path) {
         return (c, p) -> p.simpleBlock(c.get(), p.models()
