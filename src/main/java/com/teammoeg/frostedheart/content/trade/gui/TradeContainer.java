@@ -29,10 +29,7 @@ import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
-import com.teammoeg.frostedheart.content.trade.ClientTradeHandler;
-import com.teammoeg.frostedheart.content.trade.FHVillagerData;
-import com.teammoeg.frostedheart.content.trade.PlayerRelationData;
-import com.teammoeg.frostedheart.content.trade.RelationList;
+import com.teammoeg.frostedheart.content.trade.*;
 import com.teammoeg.frostedheart.content.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
@@ -55,12 +52,8 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
-import net.minecraftforge.network.PacketDistributor;
 
 public class TradeContainer extends AbstractContainerMenu {
-
-    public static final int MIN_BARGAIN_RELATION = 40;
-    public static final int MAX_RELATION_CAP = 100;
 
     public class DetectionSlot extends Slot {
         boolean isSaleable = false;
@@ -96,7 +89,7 @@ public class TradeContainer extends AbstractContainerMenu {
         }
 
     }
-    public static final int RELATION_TO_TRADE = -30;
+
     public FHVillagerData data;
     public PlayerRelationData pld;
     public RelationList relations;
@@ -223,7 +216,7 @@ public class TradeContainer extends AbstractContainerMenu {
                 prd.totalbenefit += benefits / 10;
             }
             poffer += discountAmount;
-            if (relations.sum() > RELATION_TO_TRADE) {
+            if (relations.sum() > TradeConstants.RELATION_TO_TRADE) {
                 for (Entry<String, Integer> entry : order.entrySet()) {
                     SellData sd = policy.getSells().get(entry.getKey());
                     int cnt = Math.min(sd.getStore(), entry.getValue());
@@ -250,7 +243,7 @@ public class TradeContainer extends AbstractContainerMenu {
     }
 
     public void handleBargain(ServerPlayer pe) {
-        if (relations.sum() < MIN_BARGAIN_RELATION)
+        if (relations.sum() < TradeConstants.RELATION_TO_BARGAIN)
             return;
         recalc();
         if (order.isEmpty())
@@ -259,9 +252,9 @@ public class TradeContainer extends AbstractContainerMenu {
         boolean succeed = false;
 
         // bargain based on relation
-        int playerRelation = Math.min(relations.sum(), MAX_RELATION_CAP);
-        int relationSurplus = playerRelation - MIN_BARGAIN_RELATION;
-        float probability = (float) relationSurplus / (MAX_RELATION_CAP - MIN_BARGAIN_RELATION);
+        int playerRelation = Math.min(relations.sum(), TradeConstants.RELATION_MAX);
+        int relationSurplus = playerRelation - TradeConstants.RELATION_TO_BARGAIN;
+        float probability = (float) relationSurplus / (TradeConstants.RELATION_MAX - TradeConstants.RELATION_TO_BARGAIN);
 
         if (pe.getRandom().nextFloat() < probability) {
             discountRatio = maxdiscount / ((float) voffer);
@@ -316,7 +309,7 @@ public class TradeContainer extends AbstractContainerMenu {
         discountAmount = 0;
         int relation = relations.sum();
         if (!order.isEmpty()) {
-            if (relation < RELATION_TO_TRADE) {
+            if (relation < TradeConstants.RELATION_TO_TRADE) {
                 relationMinus = 10000000;
             } else if (relation < 0 && voffer > 0) {
                 relationMinus = (int) (Mth.lerp(Mth.clamp(-relation / 30f, 0, 1), 0, 0.2) * voffer);

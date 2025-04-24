@@ -154,8 +154,10 @@ public class FHVillagerData implements MenuProvider {
         RelationList list = new RelationList();
         PlayerRelationData player = relations.getOrDefault(pe.getUUID(), PlayerRelationData.EMPTY);
         list.put(RelationModifier.FOREIGNER, -10);
-        if (!ResearchDataAPI.isResearchComplete(pe, "villager_language"))
-            list.put(RelationModifier.UNKNOWN_LANGUAGE, -30);
+        if (!ResearchDataAPI.isResearchComplete(pe, TradeConstants.VILLAGER_LANGUAGE_RESEARCH_ID))
+            list.put(RelationModifier.UNKNOWN_LANGUAGE, -15);
+        else
+            list.put(RelationModifier.UNKNOWN_LANGUAGE, +15);
         list.put(RelationModifier.CHARM, (int) ResearchDataAPI.getVariantDouble(pe, ResearchVariant.VILLAGER_RELATION));
         int killed=0;
         

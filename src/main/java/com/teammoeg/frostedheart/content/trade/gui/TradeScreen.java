@@ -32,6 +32,7 @@ import com.teammoeg.chorda.client.cui.TristateButton;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.trade.RelationModifier;
+import com.teammoeg.frostedheart.content.trade.TradeConstants;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer.DetectionSlot;
 import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
@@ -117,7 +118,7 @@ public class TradeScreen extends BaseScreen {
         rels = new RelationSlot(this, () -> cx.relationMinus - cx.discountAmount);
         rels.setTooltip(c -> {
             int relation = cx.relations.sum();
-            if (relation < TradeContainer.RELATION_TO_TRADE && !cx.order.isEmpty()) {
+            if (relation < TradeConstants.RELATION_TO_TRADE && !cx.order.isEmpty()) {
                 c.add(Lang.translateGui("trade.unwilling").withStyle(ChatFormatting.DARK_RED));
                 return;
             }

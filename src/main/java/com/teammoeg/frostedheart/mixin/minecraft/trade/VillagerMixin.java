@@ -50,8 +50,6 @@ import net.minecraft.world.level.Level;
  */
 @Mixin(Villager.class)
 public abstract class VillagerMixin extends AbstractVillager implements VillagerDataHolder {
-    private static final int BAD_RELATION = -30;
-    private static final int GREAT_RELATION = 30;
     FHVillagerData fh$data = new FHVillagerData(getThis());
 
     public VillagerMixin(EntityType<? extends AbstractVillager> type, Level worldIn) {
@@ -95,14 +93,14 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
                     fh$data.update((ServerLevel) super.level(), playerIn);
                     RelationList list = fh$data.getRelationShip(playerIn);
                     int unknownLanguage = list.get(RelationModifier.UNKNOWN_LANGUAGE);
-                    if (list.sum() < BAD_RELATION) {
+                    if (list.sum() < TradeConstants.RELATION_TO_TRADE) {
                         this.setUnhappy();
                         if (unknownLanguage < 0) {
                             playerIn.displayClientMessage(Lang.translateMessage("trade.language_barrier"), false);
                         } else {
                             playerIn.displayClientMessage(Lang.translateMessage("trade.bad_relation"), false);
                         }
-                    } else if (list.sum() < GREAT_RELATION) {
+                    } else if (list.sum() < TradeConstants.RELATION_TO_BARGAIN) {
                         playerIn.displayClientMessage(Lang.translateMessage("trade.normal_relation"), false);
                     } else {
                         playerIn.displayClientMessage(Lang.translateMessage("trade.great_relation"), false);
