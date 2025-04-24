@@ -23,8 +23,11 @@ import java.util.function.Supplier;
 
 import com.teammoeg.chorda.block.CGuiBlock;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class LogisticChestBlock<T extends BlockEntity> extends CGuiBlock<T> {
 	Supplier<BlockEntityType<T>> blockEntity;
@@ -33,6 +36,12 @@ public class LogisticChestBlock<T extends BlockEntity> extends CGuiBlock<T> {
 	public LogisticChestBlock(Properties blockProps, Supplier<BlockEntityType<T>> blockEntity) {
 		super(blockProps);
 		this.blockEntity = blockEntity;
+	}
+
+
+	@Override
+	public float getShadeBrightness(BlockState pState, BlockGetter pLevel, BlockPos pPos) {
+		return 1f;
 	}
 
 

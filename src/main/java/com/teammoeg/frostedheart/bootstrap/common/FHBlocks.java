@@ -1996,18 +1996,21 @@ public class FHBlocks {
     // Logistic blocks
     public static final BlockEntry<LogisticChestBlock<RequesterTileEntity>> REQUESTER_CHEST = REGISTRATE.block("requester_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.REQUESTER_CHEST))
             .initialProperties(() -> Blocks.CHEST)
+            .properties(t->t.noOcclusion())
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dock_in")))
             .tag(FHTags.Blocks.METAL_MACHINES.get())
             .simpleItem()
             .register();
     public static final BlockEntry<LogisticChestBlock<StorageTileEntity>> STORAGE_CHEST = REGISTRATE.block("storage_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.STORAGE_CHEST))
             .initialProperties(() -> Blocks.CHEST)
+            .properties(t->t.noOcclusion())
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dock_transfer")))
             .tag(FHTags.Blocks.METAL_MACHINES.get())
             .simpleItem()
             .register();
     public static final BlockEntry<LogisticChestBlock<SupplierTileEntity>> SUPPLIER_CHEST = REGISTRATE.block("supplier_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.SUPPLIER_CHEST))
             .initialProperties(() -> Blocks.CHEST)
+            .properties(t->t.noOcclusion())
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dock_out")))
             .tag(FHTags.Blocks.METAL_MACHINES.get())
             .simpleItem()
