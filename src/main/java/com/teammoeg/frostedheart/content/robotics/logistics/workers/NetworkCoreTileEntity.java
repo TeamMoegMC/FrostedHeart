@@ -55,14 +55,16 @@ public class NetworkCoreTileEntity extends CBlockEntity implements CTickableBloc
 	});
 	@Override
 	public void tick() {
-		if(ln==null) {
-			ln=new LogisticNetwork(level,worldPosition);
-			cap=LazyOptional.of(()->ln);
-			ticker.enqueue();
+		if(!this.level.isClientSide) {
+			if(ln==null) {
+				ln=new LogisticNetwork(level,worldPosition);
+				cap=LazyOptional.of(()->ln);
+				ticker.enqueue();
+			}
+	
+			ticker.tick();
+			ln.tick();
 		}
-
-		ticker.tick();
-		ln.tick();
 		
 	}
 
