@@ -103,6 +103,10 @@ void main() {
             }
             float dist = length(worldSpacePos.xz - adjust.position.xz);
             heatValue = mix(MIN_TEMP, heatValue, step(dist, radius));
+        } else if (mode < 2.5){
+            // sphere
+            float dist = length(worldSpacePos.xyz - adjust.position.xyz);
+            heatValue = mix(MIN_TEMP, heatValue, step(dist, radius));
         }
         heat = max(heatValue, heat);
     }

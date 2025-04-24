@@ -96,6 +96,7 @@ public interface IHeatArea {
      * <br>
      * mode = 0: {@link CubicHeatArea}
      * mode = 1: {@link PillarHeatArea}
+     * mode = 2: {@link SphereHeatArea}
      *
      * @return the data of this adjust in a float array.
      */

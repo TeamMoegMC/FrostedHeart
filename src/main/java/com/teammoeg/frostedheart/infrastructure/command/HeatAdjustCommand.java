@@ -65,6 +65,13 @@ public class HeatAdjustCommand {
                                     IntegerArgumentType.getInteger(ct, "temperature"));
                             return Command.SINGLE_SUCCESS;
                         })
+                        .then(Commands.literal("sphere").executes((ct) -> {
+                            ChunkHeatData.addSphereTempAdjust(ct.getSource().getLevel(),
+                                    BlockPosArgument.getBlockPos(ct, "position"),
+                                    IntegerArgumentType.getInteger(ct, "range"),
+                                    IntegerArgumentType.getInteger(ct, "temperature"));
+                            return Command.SINGLE_SUCCESS;
+                        }))
                         .then(Commands.argument("top", IntegerArgumentType.integer()).suggests((ct,sb)->sb.suggest(2).buildFuture())
                         		.then(Commands.argument("bottom", IntegerArgumentType.integer()).suggests((ct,sb)->sb.suggest(2).buildFuture())
                         		.executes(ct->{

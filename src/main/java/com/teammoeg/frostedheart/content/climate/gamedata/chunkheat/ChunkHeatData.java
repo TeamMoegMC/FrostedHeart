@@ -50,6 +50,7 @@ public class ChunkHeatData {
             CodecUtil.dispatch(IHeatArea.class)
                     .type("cubic", CubicHeatArea.class, CubicHeatArea.CODEC)
                     .type("pillar", PillarHeatArea.class, PillarHeatArea.CODEC)
+                    .type("sphere", SphereHeatArea.class, SphereHeatArea.CODEC)
                     .buildByInt()
     ), o -> o.emptyList(), "adjs", "temperature");
     public static final Codec<ChunkHeatData> CODEC = RecordCodecBuilder.create(t -> t.group(
@@ -116,6 +117,18 @@ public class ChunkHeatData {
      */
     public static void addPillarTempAdjust(LevelAccessor world, BlockPos heatPos, int range, int up, int down, int tempMod) {
     	addTempAdjust(world, new PillarHeatArea(heatPos, range, up, down, tempMod));
+    }
+
+    /**
+     * Used on a ServerWorld context to add temperature in a sphere region
+     *
+     * @param world   must be server side
+     * @param heatPos the position of the heating block, at the center of the cube
+     * @param range   the distance from the heatPos to the boundary
+     * @param tempMod the temperature added
+     */
+    public static void addSphereTempAdjust(LevelAccessor world, BlockPos heatPos, int range, int tempMod) {
+    	addTempAdjust(world, new SphereHeatArea(heatPos, range, tempMod));
     }
 
     /**
