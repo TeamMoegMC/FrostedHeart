@@ -17,8 +17,6 @@
  *
  */
 /**
- * All seperate content module, for easyier management
- * 
- * 
- * */
-package com.teammoeg.frostedheart.content;
+ * This package is used to store keys/references of datapack registries for convenience
+ */
+package com.teammoeg.frostedheart.bootstrap.reference;

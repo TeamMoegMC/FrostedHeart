@@ -17,8 +17,6 @@
  *
  */
 /**
- * All seperate content module, for easyier management
- * 
- * 
+ * This package is used to store client bootstrap registries
  * */
-package com.teammoeg.frostedheart.content;
+package com.teammoeg.frostedheart.bootstrap.client;

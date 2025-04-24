@@ -17,8 +17,7 @@
  *
  */
 /**
- * All seperate content module, for easyier management
- * 
+ * This package is used to stored common bootstrap registriess
  * 
  * */
-package com.teammoeg.frostedheart.content;
+package com.teammoeg.frostedheart.bootstrap.common;
