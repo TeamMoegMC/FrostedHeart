@@ -62,13 +62,18 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.BaseFireBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.level.block.CandleBlock;
+import net.minecraft.world.level.block.CandleCakeBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -311,7 +316,7 @@ public class FHCommonEvents {
 				nw.copy(orig);
 			if (nw != null)
 				nw.calledClone();
-		
+
 		//re-invalidate to make capability discarded
 		ev.getOriginal().invalidateCaps();
 	}
@@ -400,9 +405,9 @@ public class FHCommonEvents {
 					}
 				}
 			}
-			
+
 		});
-		
+
 	}
 
 	@SubscribeEvent
@@ -474,13 +479,7 @@ public class FHCommonEvents {
 				state = level.getBlockState(pos);
 
 				// 减少1层雪
-				int layers = state.getValue(SnowLayerBlock.LAYERS);
-				if (layers > 1) {
-					level.setBlockAndUpdate(pos, state.setValue(SnowLayerBlock.LAYERS, layers - 1));
-				} else {
-					level.destroyBlock(pos, false);
-				}
-				level.sendBlockUpdated(pos, event.getState(), state, 11);
+				peelSnowLayer(level, state, pos);
 
 				// 生成掉落物
 				var player = (ServerPlayer)event.getPlayer();
@@ -495,6 +494,25 @@ public class FHCommonEvents {
 				}
 			}
 		}
+	}
+
+	/**
+	 * 削掉一层雪
+	 *
+	 * @return 雪片是否被摧毁
+	 */
+	public static boolean peelSnowLayer(Level level, BlockState snowState, BlockPos snowPos) {
+		int layers = snowState.getValue(SnowLayerBlock.LAYERS);
+		BlockState newState;
+		if (layers > 1) {
+			newState = snowState.setValue(SnowLayerBlock.LAYERS, layers - 1);
+			level.setBlockAndUpdate(snowPos, newState);
+		} else {
+			newState = Blocks.AIR.defaultBlockState();
+			level.destroyBlock(snowPos, false);
+		}
+		level.sendBlockUpdated(snowPos, snowState, newState, 11);
+		return layers <= 1;
 	}
 
 	@SubscribeEvent
