@@ -98,7 +98,7 @@ public class FHVillagerData implements MenuProvider {
         relations.clear();
         for (Tag u : rel) {
             CompoundTag item = (CompoundTag) u;
-            PlayerRelationData prd = new PlayerRelationData();
+            PlayerRelationData prd = new PlayerRelationData(0);
             prd.deserialize(item);
             relations.put(item.getUUID("id"), prd);
         }
@@ -141,8 +141,8 @@ public class FHVillagerData implements MenuProvider {
         return relations.getOrDefault(pe.getUUID(), PlayerRelationData.EMPTY);
     }
 
-    public PlayerRelationData getRelationDataForWrite(Player pe) {
-        return relations.computeIfAbsent(pe.getUUID(), d -> new PlayerRelationData());
+    public PlayerRelationData getRelationDataForWrite(Player pe,long date) {
+        return relations.computeIfAbsent(pe.getUUID(), d -> new PlayerRelationData(date));
     }
 
     /**

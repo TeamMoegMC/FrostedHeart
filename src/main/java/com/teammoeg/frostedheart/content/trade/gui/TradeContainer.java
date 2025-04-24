@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.trade.ClientTradeHandler;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.PlayerRelationData;
@@ -218,7 +219,7 @@ public class TradeContainer extends AbstractContainerMenu {
             int benefits = this.poffer - this.originalVOffer;
             System.out.println(benefits);
             if (benefits > 10) {
-                PlayerRelationData prd = this.data.getRelationDataForWrite(pe);
+                PlayerRelationData prd = this.data.getRelationDataForWrite(pe,WorldClimate.getWorldDay(pe.level()));
                 prd.totalbenefit += benefits / 10;
             }
             poffer += discountAmount;
