@@ -59,7 +59,7 @@ public class FHVillagerData implements MenuProvider {
     Map<UUID, PlayerRelationData> relations = new HashMap<>();
     long lastUpdated = -1;
     public int bargain;
-    // traded amount of total price
+    // traded amount of total price, same unit as exp
     public long totaltraded;
     private int tradelevel;
     public Villager parent;

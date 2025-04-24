@@ -1,0 +1,338 @@
+{
+  "type": "frostedheart:trade",
+  "exps": [
+    1000,
+    2000,
+    3000,
+    4000,
+    5000
+  ],
+  "policies": [
+    {
+      "conditions": [],
+      "data": [
+        {
+          "actions": [],
+          "demand": {
+            "tag": "frostedheart:refugee_needs"
+          },
+          "hide_stockout": false,
+          "id": "refugee_needs",
+          "price": 3,
+          "recover": 5.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:white_turnip_block"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:white_turnip_block",
+          "price": 5,
+          "recover": 5.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:straw_lining"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:straw_lining",
+          "price": 15,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:buff_coat"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:buff_coat",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:gambeson"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:gambeson",
+          "price": 60,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:iron_pickaxe"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:iron_pickaxe",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:iron_shovel"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:iron_shovel",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:bronze_pickaxe"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:bronze_pickaxe",
+          "price": 15,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:bronze_shovel"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:bronze_shovel",
+          "price": 15,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:tnt"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:tnt",
+          "price": 10,
+          "recover": 10.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:torch"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:torch",
+          "price": 1,
+          "recover": 10.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:coal",
+          "price": 1,
+          "produce": "minecraft:coal",
+          "recover": 64.0,
+          "restock_condition": [],
+          "store": 128,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:raw_copper",
+          "price": 1,
+          "produce": "minecraft:raw_copper",
+          "recover": 64.0,
+          "restock_condition": [],
+          "store": 128,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:raw_iron",
+          "price": 2,
+          "produce": "minecraft:raw_iron",
+          "recover": 32.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:raw_tin",
+          "price": 2,
+          "produce": "frostedheart:raw_tin",
+          "recover": 32.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:raw_magnesite",
+          "price": 5,
+          "produce": "frostedheart:raw_magnesite",
+          "recover": 16.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:raw_halite",
+          "price": 5,
+          "produce": "frostedheart:raw_halite",
+          "recover": 16.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:raw_sylvite",
+          "price": 5,
+          "produce": "frostedheart:raw_sylvite",
+          "recover": 16.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:raw_pyrite",
+          "price": 5,
+          "produce": "frostedheart:raw_pyrite",
+          "recover": 16.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:kaolin",
+          "price": 5,
+          "produce": "frostedheart:kaolin",
+          "recover": 16.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:bauxite",
+          "price": 5,
+          "produce": "frostedheart:bauxite",
+          "recover": 16.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:peat",
+          "price": 3,
+          "produce": "frostedheart:peat",
+          "recover": 16.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:raw_gold",
+          "price": 50,
+          "produce": "minecraft:raw_gold",
+          "recover": 8.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:diamond",
+          "price": 100,
+          "produce": "minecraft:diamond",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 16,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:lapis_lazuli",
+          "price": 10,
+          "produce": "minecraft:lapis_lazuli",
+          "recover": 10.0,
+          "restock_condition": [],
+          "store": 32,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:emerald",
+          "price": 500,
+          "produce": "minecraft:emerald",
+          "recover": 0.2,
+          "restock_condition": [],
+          "store": 16,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:amethyst_shard",
+          "price": 30,
+          "produce": "minecraft:amethyst_shard",
+          "recover": 5.0,
+          "restock_condition": [],
+          "store": 32,
+          "use_actions": []
+        }
+      ]
+    }
+  ],
+  "profession": "minecraft:toolsmith",
+  "weight": 1
+}

@@ -1,6 +1,6 @@
 {
   "type": "frostedheart:steam_generator",
   "input":{"tag":"forge:water","amount":1},
-  "energy":16,
+  "energy":32,
   "level":0
 }

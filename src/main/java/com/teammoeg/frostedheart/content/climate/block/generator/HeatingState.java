@@ -106,18 +106,18 @@ public class HeatingState extends OwnerState {
     /**
      * Get the actual range of the heating device.
      * The range is calculated by the formula:
-     * 12 + 4 * (rangeLevel - 1) if rangeLevel>1
+     * 16 + 8 * (rangeLevel - 1) if rangeLevel>1
      * <p>
-     * The Base range at level 1 is 12 blocks.
-     * For each additional level, the range increases by 4 blocks.
+     * The Base range at level 1 is 16 blocks.
+     * For each additional level, the range increases by 8 blocks.
      *
      * @return in blocks
      */
     public int getRadius() {
         float rlevel = getRangeLevel();
         if (rlevel <= 1)
-            return (int) (12 * rlevel);
-        return (int) (12 + (rlevel - 1) * 4);
+            return (int) (16 * rlevel);
+        return (int) (16 + (rlevel - 1) * 8);
     }
 
     /**

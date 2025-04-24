@@ -72,7 +72,7 @@ public class RadiatorState extends HeatingState implements HeatNetworkProvider, 
 
     @Override
     public int getRadius() {
-        return 7;
+        return 8;
     }
 
     @Override

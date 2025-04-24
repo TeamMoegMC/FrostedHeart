@@ -29,7 +29,11 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.data.*;
+import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.item.crafting.Ingredient;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.OfficeXmlFileException;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -288,15 +292,97 @@ public class FHRecipeProvider extends RecipeProvider {
 		return new File(parfile,name);
 	}
 	private void buildTradePolicies(@Nonnull Consumer<FinishedRecipe> out) {
-		trade().group().buy(10,10,10,FHItems.rye_bread.get())
-		.buy(1, 0.1f,20,FHItems.straw_lining.get())
-		.buy(10,10,10,Items.RAW_COPPER).useAction().addFlag("copper", 1).finish()
-		.sell(10, 1, 100,FHItems.energy_core.get())
-		.sell(10, 1, 5,Items.COPPER_INGOT).restockAction().addFlag("copper", -1).finish().restocksBy().hasFlag("copper").finish()
-		.basic()
-		.finish()
-		.weight(1).id("test").finish(out);
 
+		// test
+//		trade().group().buy(10,10,10,FHItems.rye_bread.get())
+//		.buy(1, 0.1f,20,FHItems.straw_lining.get())
+//		.buy(10,10,10,Items.RAW_COPPER)
+//		.sell(10, 1, 100,FHItems.energy_core.get())
+//		.sell(10, 1, 5,Items.COPPER_INGOT)
+//		.basic()
+//		.finish()
+//		.weight(1).id("test").finish(out);
+
+		// general:
+		// maxstore: storage capacity for that item
+		// recover: average daily recover of the need (for buying) and for saling.
+		// price: relative "value" of item
+
+		// hunting
+		trade().group()
+				// buys food
+				.buy("refugee_needs", 30, 5, 3, Ingredient.of(FHTags.Items.REFUGEE_NEEDS.tag))
+				.buy(30, 5, 5, FHBlocks.WHITE_TURNIP_BLOCK.get().asItem())
+				// buys clothes
+				.buy(5, 0.1f, 15, FHItems.straw_lining.get())
+				.buy(5, 0.1f, 30, FHItems.buff_coat.get())
+				.buy(5, 0.1f, 60, FHItems.gambeson.get())
+				// buys job related tools
+				.buy(64, 10, 1, Items.ARROW)
+				.buy(5, 1, 10, Items.BOW)
+				.buy(5, 1, 20, Items.IRON_SWORD)
+				.buy(5, 1, 15, FHItems.BRONZE_SWORD.get())
+				// sells hunting results
+				.sell(32, 0.5f, 5, FHItems.wolf_hide.get())
+				.sell(32, 0.3f, 10, FHItems.fox_hide.get())
+				.sell(32, 0.1f, 20, FHItems.polar_bear_hide.get())
+				.sell(32, 1, 3, Items.RABBIT_HIDE)
+				.sell(32, 3f, 2, FHItems.WOLF_MEAT.get())
+				.sell(32, 2f, 2, FHItems.FOX_MEAT.get())
+				.sell(32, 1f, 3, FHItems.POLAR_BEAR_MEAT.get())
+				.sell(32, 1f, 3, FHItems.RAW_WHALE_MEAT.get())
+				.sell(32, 1f, 10, CRegistryHelper.getItem(new ResourceLocation("stone_age", "fat")))
+				.sell(32, 5F, 2, Items.RABBIT)
+				.sell(32, 5F, 2, Items.BROWN_MUSHROOM)
+				.sell(32, 5F, 2, Items.RED_MUSHROOM)
+				.basic()
+				.finish()
+				.profession(VillagerProfession.BUTCHER)
+				.levelExp(1000, 2000, 3000, 4000, 5000)
+				.weight(1)
+				.id("hunter")
+				.finish(out);
+
+		// mining
+		trade().group()
+				// buys food
+				.buy("refugee_needs", 30, 5, 3, Ingredient.of(FHTags.Items.REFUGEE_NEEDS.tag))
+				.buy(30, 5, 5, FHBlocks.WHITE_TURNIP_BLOCK.get().asItem())
+				// buys clothes
+				.buy(5, 0.1f, 15, FHItems.straw_lining.get())
+				.buy(5, 0.1f, 30, FHItems.buff_coat.get())
+				.buy(5, 0.1f, 60, FHItems.gambeson.get())
+				// buys job related tools
+				.buy(5, 1, 20, Items.IRON_PICKAXE)
+				.buy(5, 1, 20, Items.IRON_SHOVEL)
+				.buy(5, 1, 15, FHItems.BRONZE_PICKAXE.asItem())
+				.buy(5, 1, 15, FHItems.BRONZE_SHOVEL.asItem())
+				.buy(64, 10, 10, Items.TNT)
+				.buy(64, 10, 1, Items.TORCH)
+				// sells mining results
+				.sell(128, 64, 1, Items.COAL)
+				.sell(128, 64, 1, Items.RAW_COPPER)
+				.sell(64, 32, 2, Items.RAW_IRON)
+				.sell(64, 32, 2, FHItems.RAW_TIN.asItem())
+				.sell(64, 16, 5, FHItems.RAW_MAGNESITE.asItem())
+				.sell(64, 16, 5, FHItems.RAW_HALITE.asItem())
+				.sell(64, 16, 5, FHItems.RAW_SYLVITE.asItem())
+				.sell(64, 16, 5, FHItems.RAW_PYRITE.asItem())
+				.sell(64, 16, 5, FHItems.KAOLIN.asItem())
+				.sell(64, 16, 5, FHItems.BAUXITE.asItem())
+				.sell(64, 16, 3, FHItems.PEAT.asItem())
+				.sell(64, 8, 50, Items.RAW_GOLD)
+				.sell(16, 1, 100, Items.DIAMOND)
+				.sell(32, 10, 10, Items.LAPIS_LAZULI)
+				.sell(16, .2f, 500, Items.EMERALD)
+				.sell(32, 5, 30, Items.AMETHYST_SHARD)
+				.basic()
+				.finish()
+				.profession(VillagerProfession.TOOLSMITH)
+				.levelExp(1000, 2000, 3000, 4000, 5000)
+				.weight(1)
+				.id("miner")
+				.finish(out);
 
 		
 	}
