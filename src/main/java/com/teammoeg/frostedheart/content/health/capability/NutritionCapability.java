@@ -184,7 +184,10 @@ public class NutritionCapability implements NBTSerializable {
             player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 300, a));
         }
 
-        // 对生命值上限的修改
+        
+    }
+    public void addAttributes(Player player) {
+    	// 对生命值上限的修改
         int v = (int) (20 - nutrition.getNutritionValue() / 1000);
         AttributeInstance instance = player.getAttributes().getInstance(Attributes.MAX_HEALTH);
         AttributeModifier modifier = new AttributeModifier(NutritionUUID, "nutrition", -v, AttributeModifier.Operation.ADDITION);
@@ -192,7 +195,6 @@ public class NutritionCapability implements NBTSerializable {
             instance.removeModifier(modifier);
         instance.addPermanentModifier(modifier);
     }
-
     public static final UUID NutritionUUID = UUID.fromString("f3f5f6f7-8f9f-afbf-cfcf-dfdfefeff0f1");
 
     public static LazyOptional<NutritionCapability> getCapability(@Nullable Player player) {

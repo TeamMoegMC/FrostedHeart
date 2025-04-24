@@ -101,27 +101,7 @@ public class ChunkHeatData {
      * @param tempMod the temperature added
      */
     public static void addCubicTempAdjust(LevelAccessor world, BlockPos heatPos, int range, int tempMod) {
-        removeTempAdjust(world, heatPos);//remove current first
-        int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
-
-        // these are block position offset
-        int offsetN = sourceZ - range;
-        int offsetS = sourceZ + range + 1;
-        int offsetW = sourceX - range;
-        int offsetE = sourceX + range + 1;
-
-        // these are chunk position offset
-        int chunkOffsetW = offsetW >> 4;
-        int chunkOffsetE = offsetE >> 4;
-        int chunkOffsetN = offsetN >> 4;
-        int chunkOffsetS = offsetS >> 4;
-        // add adjust to effected chunks
-        IHeatArea adj = new CubicHeatArea(heatPos, range, tempMod);
-        for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
-            for (int z = chunkOffsetN; z <= chunkOffsetS; z++) {
-                ChunkPos cp = new ChunkPos(x, z);
-                addChunkAdjust(world, cp, adj);
-            }
+    	addTempAdjust(world,new CubicHeatArea(heatPos, range, tempMod));
     }
 
     /**
@@ -135,27 +115,7 @@ public class ChunkHeatData {
      * @param tempMod the temperature added
      */
     public static void addPillarTempAdjust(LevelAccessor world, BlockPos heatPos, int range, int up, int down, int tempMod) {
-        removeTempAdjust(world, heatPos);
-        int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
-
-        // these are block position offset
-        int offsetN = sourceZ - range;
-        int offsetS = sourceZ + range + 1;
-        int offsetW = sourceX - range;
-        int offsetE = sourceX + range + 1;
-
-        // these are chunk position offset
-        int chunkOffsetW = offsetW >> 4;
-        int chunkOffsetE = offsetE >> 4;
-        int chunkOffsetN = offsetN >> 4;
-        int chunkOffsetS = offsetS >> 4;
-        // add adjust to effected chunks
-        IHeatArea adj = new PillarHeatArea(heatPos, range, up, down, tempMod);
-        for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
-            for (int z = chunkOffsetN; z <= chunkOffsetS; z++) {
-                ChunkPos cp = new ChunkPos(x, z);
-                addChunkAdjust(world, cp, adj);
-            }
+    	addTempAdjust(world, new PillarHeatArea(heatPos, range, up, down, tempMod));
     }
 
     /**
@@ -165,9 +125,9 @@ public class ChunkHeatData {
      * @param adj   adjust
      */
     public static void addTempAdjust(LevelAccessor world, IHeatArea adj) {
-
+    	removeTempAdjust(world, adj.getCenter());
         int sourceX = adj.getCenter().getX(), sourceZ = adj.getCenter().getZ();
-        removeTempAdjust(world, new BlockPos(sourceX, adj.getCenter().getY(), sourceZ));
+        
         // these are block position offset
         int offsetN = sourceZ - adj.getRadius();
         int offsetS = sourceZ + adj.getRadius() + 1;
@@ -202,9 +162,11 @@ public class ChunkHeatData {
     }
 
     public static ChunkHeatData get(LevelAccessor world, BlockPos pos) {
-        return get(world, new ChunkPos(pos)).orElse(null);
+        return get(world, pos,false);
     }
-
+    public static ChunkHeatData get(LevelAccessor world, BlockPos pos,boolean loadChunk) {
+        return get(world, new ChunkPos(pos),loadChunk).orElse(null);
+    }
     /**
      * Called to get chunk data when a world context is available.
      * On client, will query capability, falling back to cache, and send request
@@ -214,18 +176,21 @@ public class ChunkHeatData {
      */
     @SuppressWarnings("deprecation")
     public static Optional<ChunkHeatData> get(LevelReader world, ChunkPos pos) {
+        return get(world,pos,false);
+    }
+    @SuppressWarnings("deprecation")
+    public static Optional<ChunkHeatData> get(LevelReader world, ChunkPos pos,boolean loadChunk) {
         // Query cache first, picking the correct cache for the current logical side
         //ChunkData data = ChunkDataCache.get(world).get(pos);
         //if (data == null) {
         //System.out.println("no cache at"+pos);
         if (world instanceof LevelAccessor)
-            return ((LevelAccessor) world).getChunkSource().hasChunk(pos.x, pos.z) ? getCapability(world.getChunk(pos.getWorldPosition()))
+            return (loadChunk||((LevelAccessor) world).getChunkSource().hasChunk(pos.x, pos.z)) ? getCapability(world.getChunk(pos.getWorldPosition()))
                     .resolve() : Optional.empty();
-        return world.hasChunk(pos.x, pos.z) ? getCapability(world.getChunk(pos.getWorldPosition())).resolve() : Optional.empty();
+        return loadChunk||world.hasChunk(pos.x, pos.z) ? getCapability(world.getChunk(pos.getWorldPosition())).resolve() : Optional.empty();
         //}
         //return data;
     }
-
     /**
      * Called to get temperature adjusts at location when a world context is available.
      * on server, will either query capability falling back to cache, or query
@@ -345,11 +310,11 @@ public class ChunkHeatData {
      */
     public static void removeTempAdjust(LevelAccessor world, BlockPos heatPos) {
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
-        ChunkHeatData cd = ChunkHeatData.get(world, heatPos);
+        ChunkHeatData cd = get(world, heatPos,true);//Fix: force load chunk when adding/removing heat area, protects data integrity
         if (cd == null) return;
         IHeatArea oadj = cd.getAdjustAt(heatPos);
         if (oadj == null) return;
-        int range = oadj.getRadius();
+        int range = oadj.getRadius()+8;//workaround: search more chunks
 
         // these are block position offset
         int offsetN = sourceZ - range;
@@ -375,22 +340,7 @@ public class ChunkHeatData {
      * @param adj   adjust
      */
     public static void removeTempAdjust(LevelAccessor world, IHeatArea adj) {
-        int sourceX = adj.getCenter().getX(), sourceZ = adj.getCenter().getZ();
-
-        // these are block position offset
-        int offsetN = sourceZ - adj.getRadius();
-        int offsetS = sourceZ + adj.getRadius() + 1;
-        int offsetW = sourceX - adj.getRadius();
-        int offsetE = sourceX + adj.getRadius() + 1;
-
-        // these are chunk position offset
-        int chunkOffsetW = offsetW >> 4;
-        int chunkOffsetE = offsetE >> 4;
-        int chunkOffsetN = offsetN >> 4;
-        int chunkOffsetS = offsetS >> 4;
-        for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
-            for (int z = chunkOffsetN; z <= chunkOffsetS; z++)
-                removeChunkAdjust(world, new ChunkPos(x, z), adj);
+    	removeTempAdjust(world,adj.getCenter());
     }
 
     /**

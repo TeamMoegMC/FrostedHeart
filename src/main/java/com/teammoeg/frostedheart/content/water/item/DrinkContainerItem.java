@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.content.water.item;
 
+import com.teammoeg.caupona.api.CauponaHooks;
+import com.teammoeg.caupona.fluid.SoupFluid;
+import com.teammoeg.caupona.util.StewInfo;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.water.util.FluidHelper;
@@ -34,6 +37,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUtils;
@@ -65,6 +69,8 @@ import javax.annotation.Nullable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Optional;
+
 import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.FLUID_NBT_KEY;
 
 public class DrinkContainerItem extends ItemFluidContainer {
@@ -140,7 +146,16 @@ public class DrinkContainerItem extends ItemFluidContainer {
     }
 
 
-    /**
+    @Override
+	public boolean isEdible() {
+		return true;
+	}
+    private static final FoodProperties EMPTY=new FoodProperties.Builder().build();
+	@Override
+	public @org.jetbrains.annotations.Nullable FoodProperties getFoodProperties(ItemStack stack, @org.jetbrains.annotations.Nullable LivingEntity entity) {
+		return stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).resolve().flatMap(s->Optional.ofNullable(SoupFluid.getInfoOrNull(s.getFluidInTank(0)))).map(StewInfo::getFood).orElse(EMPTY);
+	}
+	/**
      * Check if the item has fluid and fluid amount is greater than 250mB
      * @param stack
      * @return

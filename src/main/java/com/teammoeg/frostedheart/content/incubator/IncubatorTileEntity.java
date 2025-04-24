@@ -366,7 +366,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                     ItemStack catalyst = inventory.get(1);
 
                     ItemStack in = inventory.get(2);
-                    if (!in.isEmpty() && in.isEdible()) {
+                    if (!in.isEmpty() && in.isEdible()&&in.getFoodProperties(null).getNutrition()>0) {
                         if (!catalyst.isEmpty() && catalyst.getItem() == Items.ROTTEN_FLESH && (efficiency <= 0.01 || !isFoodRecipe)) {
                             isFoodRecipe = true;
                             last = food;

@@ -56,7 +56,9 @@ public class HealthCommonEvents {
             NutritionCapability.getCapability(original).ifPresent(n->{
                 nutrition.set(n.get());
             });
+            nutrition.addAttributes(player);
         });
+       
         original.invalidateCaps();
     }
 
@@ -100,6 +102,7 @@ public class HealthCommonEvents {
         if(gameTime%200==0){
             NutritionCapability.getCapability(player).ifPresent(nutrition->{
                 nutrition.punishment(player);
+                nutrition.addAttributes(player);
             });
         }
 
