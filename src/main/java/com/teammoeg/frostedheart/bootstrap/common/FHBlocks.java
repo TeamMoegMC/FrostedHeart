@@ -1341,7 +1341,7 @@ public class FHBlocks {
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
             .blockstate(FHBlockStateGen.simpleCubeAll("tungsten_steel_block"))
-            .transform(tagBlockAndItem("storage_blocks/tungsten_steel_block"))
+            .transform(tagBlockAndItem("storage_blocks/tungsten_steel"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
             .lang("Block of Tungsten Steel")
