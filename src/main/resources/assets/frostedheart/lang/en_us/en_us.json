@@ -96,6 +96,7 @@
   "gui.frostedheart.trade.relation.saw_murder": "Seen murder",
   "gui.frostedheart.trade.relation.total_trade": "Familiar",
   "gui.frostedheart.trade.relation.unknown_language": "Can\u0027t speak their language",
+  "gui.frostedheart.trade.relation.known_language": "Can speak their language",
   "gui.frostedheart.trade.restocking": "Restocking...",
   "gui.frostedheart.trade.title": "Trading",
   "gui.frostedheart.trade.too_much_offering": "This deal improves our relations.",

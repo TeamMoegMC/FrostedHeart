@@ -26,6 +26,7 @@ import net.minecraft.network.chat.MutableComponent;
 public enum RelationModifier {
     KILLED_HISTORY("history_killed"),
     UNKNOWN_LANGUAGE("unknown_language"),
+    KNOWN_LANGUAGE("known_language"),
     CHARM("charm"),
     KILLED_SAW("saw_murder"),
     HURT("hurt"),

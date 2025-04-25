@@ -125,6 +125,7 @@
   "gui.frostedheart.trade.relation.saw_murder": "目击了谋杀",
   "gui.frostedheart.trade.relation.total_trade": "熟悉",
   "gui.frostedheart.trade.relation.unknown_language": "不会说他们的语言",
+  "gui.frostedheart.trade.relation.known_language": "会说他们的语言",
   "gui.frostedheart.trade.restocking": "正在补货...",
   "gui.frostedheart.trade.title": "交易",
   "gui.frostedheart.trade.too_much_offering": "这笔交易改善了我们的关系。",
