@@ -1117,7 +1117,6 @@ thinner.png
     public static ItemEntry<Item> black_bread = REGISTRATE
             .item("black_bread", Item::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
-            .tag(CPTags.Items.BAKED)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food(FHFoodProperties.BLACK_BREAD))
             .register();
