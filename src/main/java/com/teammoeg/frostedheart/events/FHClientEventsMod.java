@@ -99,8 +99,7 @@ public class FHClientEventsMod {
         LOGGER.info(CLIENT_SETUP, "FML Client setup event finished");
 
         REGISTRATE.setTooltipModifierFactory(item -> {
-			return new ItemDescription.Modifier(item, TooltipHelper.Palette.STANDARD_CREATE)
-				.andThen(new FoodTempStats(item))
+			return new FoodTempStats(item)
 				.andThen(TooltipModifier.mapNull(FoodNutritionStats.create(item)))
 				.andThen(TooltipModifier.mapNull(PlantTempStats.create(item)))
 				.andThen(TooltipModifier.mapNull(BlockTempStats.create(item)))
