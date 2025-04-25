@@ -283,6 +283,8 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         if (isMouseIn(mouseX, mouseY, 75, 116, 26, 18)) {
             costStr.forEach(addLine);
             isUpgradeHovered=true;
+        }else {
+        	isUpgradeHovered=false;
         }
     }
 

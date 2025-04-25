@@ -22,13 +22,15 @@ package com.teammoeg.frostedheart.content.climate.block.generator.t1;
 import com.teammoeg.chorda.multiblock.CMultiblock;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
+import com.teammoeg.frostedheart.content.climate.block.generator.HeatingMultiblock;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class T1GeneratorMultiblock extends CMultiblock {
+public class T1GeneratorMultiblock extends HeatingMultiblock {
     @OnlyIn(Dist.CLIENT)
     private static ItemStack renderStack;
 

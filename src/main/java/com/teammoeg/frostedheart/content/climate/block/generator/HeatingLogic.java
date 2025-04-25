@@ -67,7 +67,7 @@ public abstract class HeatingLogic<T extends HeatingLogic<T, ?>, R extends Heati
         if (state.shouldUpdateAdjust()) {
             BlockPos pos =  CMultiblockHelper.getMultiblock(ctx).masterPosInMB();
             int masterYPosInMB = pos.getY();
-            FHMain.LOGGER.debug("masterPosInMB " + pos);
+//            FHMain.LOGGER.debug("masterPosInMB " + pos);
             if (state.getRadius() > 0 && state.getTempMod() > 0) {
 //                ChunkHeatData.addPillarTempAdjust(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx), state.getRadius(), state.getUpwardRange(),
 //                        state.getDownwardRange(), state.getTempMod());
