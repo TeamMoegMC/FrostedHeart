@@ -38,7 +38,7 @@ public class ColoredCubeWidget extends AbstractWidget {
         int y1 = this.getY();
         int x2 = this.getX() + this.getWidth();
         int y2 = this.getY() + this.getHeight();
-        int color = getTempColor(temp+37);
+        int color = getTempColor(temp);
 
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, progress);
 
@@ -61,14 +61,16 @@ public class ColoredCubeWidget extends AbstractWidget {
     }
 
     private static int getTempColor(float temp) {
-        if (temp > 39) {
+        if (temp > 2) {
             return hotColor;
-        }else if (temp > 36) {
-            return mixColor(warmColor, hotColor, (temp - 36) / 3);
-        }else if (temp > 34) {
-            return mixColor(coldColor,warmColor , (temp - 34) / 2);
-        }else if (temp > 32) {
-            return mixColor(frozenColor, coldColor, (temp - 32) / 2);
+        }else if (temp > 0.5) {
+            return mixColor(warmColor, hotColor, (temp - 0.5f) / 1.5f);	
+        }else if (temp > -0.5) {
+            return warmColor;
+        }else if (temp > -2) {
+            return mixColor(coldColor,warmColor , 1-(temp + 0.5f) / 1.5f);
+        }else if (temp > -4) {
+            return mixColor(frozenColor, coldColor, 1-(temp + 2f) / 2f);
         }else {
             return frozenColor;
         }

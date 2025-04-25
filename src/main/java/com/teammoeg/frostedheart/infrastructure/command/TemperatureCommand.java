@@ -137,7 +137,7 @@ public class TemperatureCommand {
                         .then(Commands.argument("value", FloatArgumentType.floatArg()).executes((ct) -> {
                             Player player = ct.getSource().getPlayerOrException();
                             PlayerTemperatureData.getCapability(player).ifPresent(data -> {
-                                data.setAllPartsBodyTemp(ct.getArgument("amount", Float.class));
+                                data.setAllPartsBodyTemp(ct.getArgument("value", Float.class));
                             });
                             return Command.SINGLE_SUCCESS;
                         }))
@@ -147,7 +147,7 @@ public class TemperatureCommand {
                         .then(Commands.argument("value", FloatArgumentType.floatArg()).executes((ct) -> {
                             Player player = ct.getSource().getPlayerOrException();
                             PlayerTemperatureData.getCapability(player).ifPresent(data -> {
-                                data.setEnvTemp(ct.getArgument("amount", Float.class));
+                                data.setEnvTemp(ct.getArgument("value", Float.class));
                             });
                             return Command.SINGLE_SUCCESS;
                         }))
@@ -157,7 +157,7 @@ public class TemperatureCommand {
                         .then(Commands.argument("value", FloatArgumentType.floatArg()).executes((ct) -> {
                             Player player = ct.getSource().getPlayerOrException();
                             PlayerTemperatureData.getCapability(player).ifPresent(data -> {
-                                data.setAllPartsFeelTemp(ct.getArgument("amount", Float.class));
+                                data.setAllPartsFeelTemp(ct.getArgument("value", Float.class));
                             });
                             return Command.SINGLE_SUCCESS;
                         }))
