@@ -118,5 +118,9 @@
   "message.frostedresearch.research.multiblock.cannot_build": "我完全不知道怎么建造这个结构。我需要更多的研究。",
   "message.frostedresearch.research.not_owned": "这不是我的论文，我没法读懂上面的文字.",
   "message.frostedresearch.research.too_cold": "这里太冷了，我写字时手指在发抖...",
-  "message.frostedresearch.research.too_dark": "这里太黑了，我没办法写字..."
+  "message.frostedresearch.research.too_dark": "这里太黑了，我没办法写字...",
+  "gui.frostedresearch.effect.stats.vlg_relationship": "难民关系",
+  "gui.frostedresearch.effect.stats.vlg_forgive": "难民忘记了你",
+  "gui.frostedresearch.effect.stats.has_forecast": "拥有天气预报",
+  "gui.frostedresearch.effect.stats.overdrive_recover": "过载恢复"
 }
