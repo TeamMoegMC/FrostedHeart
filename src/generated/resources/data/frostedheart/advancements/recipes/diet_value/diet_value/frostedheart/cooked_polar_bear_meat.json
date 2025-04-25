@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "frostedheart:diet_value/stone_age/cooked_squid_tentacles"
+        "recipe": "frostedheart:diet_value/frostedheart/cooked_polar_bear_meat"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -15,7 +15,7 @@
   ],
   "rewards": {
     "recipes": [
-      "frostedheart:diet_value/stone_age/cooked_squid_tentacles"
+      "frostedheart:diet_value/frostedheart/cooked_polar_bear_meat"
     ]
   },
   "sends_telemetry_event": false
