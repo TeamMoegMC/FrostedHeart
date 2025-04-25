@@ -8,7 +8,7 @@
   "heat_capacity": 100,
   "liquid": "minecraft:ice",
   "melt_temp": -15.0,
-  "solid": "minecraft:packed_ice",
+  "solid": "minecraft:ice",
   "state": "liquid",
   "will_transit": true
 }

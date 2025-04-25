@@ -7,5 +7,5 @@
   "max_survive": 38.0,
   "min_fertilize": 22.0,
   "min_grow": 16.0,
-  "min_survive": 5.0
+  "min_survive": -40.0
 }
