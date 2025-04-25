@@ -275,7 +275,7 @@ public class TradeScreen extends BaseScreen {
         if (!tab.getState()) {
             SellData sd = sds[sno];
             boolean shift = Widget.isShiftKeyDown();
-            if (cx.order.size() >= 26 && !cx.order.containsKey(sd.getId()))
+            if (cx.order.size() >= 11 && !cx.order.containsKey(sd.getId()))
                 return;
             if (sd == null)
                 return;

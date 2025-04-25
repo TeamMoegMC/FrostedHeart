@@ -51,7 +51,7 @@ public class ServerLifecycleHooksMixin {
     private static Logger LOGGER;
 
     //automatically update serverconfig
-    @Inject(at = @At("HEAD"), method = "handleServerAboutToStart", remap = false)
+    @Inject(at = @At("HEAD"), method = "handleServerAboutToStart", remap = false,require=1,allow=1)
     private static void fh$updateConfig(MinecraftServer server, CallbackInfoReturnable cir) {
         Path config = server.getWorldPath(SERVERCONFIG);
         Path configbkf = server.getWorldPath(bkfconfig);
@@ -62,8 +62,15 @@ public class ServerLifecycleHooksMixin {
         FHMain.lastServerConfig = config.toFile();
         FHVersion local = FHMain.local.fetchVersion().orElse(FHVersion.empty);
         String localVersion = local.getOriginal();
-        if(!saveVersion.exists())
+        if(!saveVersion.exists()) {
+        	try {
+				FileUtil.transfer(localVersion, saveVersion);
+			} catch (IOException e) {
+
+				e.printStackTrace();
+			}
         	return;
+        }
         if (saveVersion.exists() && !localVersion.isEmpty()) {
             try {
                 String lw = FileUtil.readString(saveVersion);
@@ -86,7 +93,7 @@ public class ServerLifecycleHooksMixin {
             zf.close();
             fconfig.mkdirs();
 
-            LOGGER.info("Trying to copy new files...");
+           /* LOGGER.info("Trying to copy new files...");
             File defau = FMLPaths.GAMEDIR.get().resolve("defaultconfigs").toFile();
             for (File f : defau.listFiles(f -> f.getName().endsWith(".toml"))) {
                 File nf = new File(fconfig, f.getName());
@@ -94,7 +101,7 @@ public class ServerLifecycleHooksMixin {
                 FileUtil.transfer(f, nf);
                 LOGGER.info("Copied " + f.getName());
 
-            }
+            }*/
 
             LOGGER.info("Finishing update...");
             FileUtil.transfer(localVersion, saveVersion);
