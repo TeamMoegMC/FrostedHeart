@@ -177,6 +177,19 @@ public class WorldClimate implements NBTSerializable {
         return data.dailyTempData.get(deltaDays + 1).isBlizzard(deltaHours);
     }
 
+    private static boolean getFutureSnow(WorldClimate data, int deltaDays, int deltaHours) {
+    	if(data==null)
+    		return false;
+        if (deltaDays < 0 || deltaDays > DAY_CACHE_LENGTH) {
+            return false;
+        }
+        if (deltaHours < 0 || deltaHours >= 24)
+            throw new IllegalArgumentException("Hours must be in range [0,24)");
+        if (data.dailyTempData.size() <= DAY_CACHE_LENGTH) { //this rarely happens, but for safety
+            data.populateDays();
+        }
+        return data.dailyTempData.get(deltaDays + 1).isSnow(deltaHours);
+    }
     public static Iterable<Pair<Float, ClimateType>> getFutureClimateIterator(WorldClimate data, int deltaHours) {
         long thours = data.clockSource.getHours() + deltaHours;
         long ddate = thours / 24 - data.clockSource.getDate() + 1;
@@ -395,7 +408,36 @@ public class WorldClimate implements NBTSerializable {
     public static boolean isFutureBlizzard(LevelAccessor world, int deltaDays, int deltaHours) {
         return getFutureBlizzard(get(world), deltaDays, deltaHours);
     }
+    /**
+     * Retrieves hourly updated temperature from cache
+     * If exceeds cache size, return NaN
+     * Useful in long range weather forecast
+     *
+     * @param world      world instance
+     * @param deltaHours delta hours from now to forecast;
+     * @return temperature at hour at index
+     */
+    public static boolean isFutureSnow(LevelAccessor world, int deltaHours) {
+        WorldClimate data = get(world);
+        if(data==null)return false;
+        long thours = data.clockSource.getHours() + deltaHours;
+        long ddate = thours / 24 - data.clockSource.getDate();
+        long dhours = thours % 24;
+        return getFutureSnow(data, (int) ddate, (int) dhours);
+    }
 
+    /**
+     * Retrieves hourly updated temperature from cache.
+     * Useful in weather forecast.
+     *
+     * @param world      world instance
+     * @param deltaDays  delta days from now to forecast
+     * @param deltaHours in that day to forecast
+     * @return temperature at hour at index. If exceeds cache size, return NaN.
+     */
+    public static boolean isFutureSnow(LevelAccessor world, int deltaDays, int deltaHours) {
+        return getFutureSnow(get(world), deltaDays, deltaHours);
+    }
     public static boolean isSnowing(LevelAccessor world) {
         return getCapability(world).map(t->t.getHourData().getType() == ClimateType.SNOW).orElse(false);
     }

@@ -65,10 +65,8 @@ public class ForecastHandler {
                     float tomorrowMorningTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 4, 0) * 10) / 10.0F;
                     TemperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.morning", false, morningTemp-10, noonTemp-10,
                             nightTemp-10, midnightTemp-10, tomorrowMorningTemp-10);
-                    boolean snow = morningTemp < WorldTemperature.SNOW_REACHES_GROUND
-                            || noonTemp < WorldTemperature.SNOW_REACHES_GROUND || nightTemp < WorldTemperature.SNOW_REACHES_GROUND
-                            || midnightTemp < WorldTemperature.SNOW_REACHES_GROUND
-                            || tomorrowMorningTemp < WorldTemperature.SNOW_REACHES_GROUND;
+                    boolean snow = WorldClimate.isSnowing(serverPlayer.level())
+                        || WorldClimate.isFutureSnow(serverPlayer.level(), 0, 12);
                     boolean blizzard = WorldClimate.isBlizzard(serverPlayer.level())
                             || WorldClimate.isFutureBlizzard(serverPlayer.level(), 0, 12);
                     if (blizzard)
@@ -92,11 +90,8 @@ public class ForecastHandler {
                             / 10.0F;
                     TemperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.night", false, nightTemp-10, midnightTemp-10,
                             tomorrowMorningTemp-10, tomorrowNoonTemp-10, tomorrowNightTemp-10);
-                    boolean snow = nightTemp < WorldTemperature.SNOW_REACHES_GROUND
-                            || midnightTemp < WorldTemperature.SNOW_REACHES_GROUND
-                            || tomorrowMorningTemp < WorldTemperature.SNOW_REACHES_GROUND
-                            || tomorrowNoonTemp < WorldTemperature.SNOW_REACHES_GROUND
-                            || tomorrowNightTemp < WorldTemperature.SNOW_REACHES_GROUND;
+                    boolean snow = WorldClimate.isSnowing(serverPlayer.level())
+                        || WorldClimate.isFutureSnow(serverPlayer.level(), 0, 12);;
                     boolean blizzard = WorldClimate.isBlizzard(serverPlayer.level())
                             || WorldClimate.isFutureBlizzard(serverPlayer.level(), 12, 0);
                     if (blizzard)
