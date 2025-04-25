@@ -54,7 +54,7 @@ public abstract class PolarBearMixin implements NeutralMob {
                 .add(Attributes.MOVEMENT_SPEED, 0.3D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 1.0D)
                 .add(Attributes.ATTACK_KNOCKBACK, 1.5D)
-                .add(Attributes.ATTACK_DAMAGE, 8.0D);
+                .add(Attributes.ATTACK_DAMAGE, 12.0D);
 
         // Return the modified builder
         cir.setReturnValue(builder);
