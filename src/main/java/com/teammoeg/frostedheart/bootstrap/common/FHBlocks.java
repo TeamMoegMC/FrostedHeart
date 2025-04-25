@@ -1049,7 +1049,6 @@ public class FHBlocks {
     // Natural biological blocks
     public static final BlockEntry<HugeMushroomBlock> WHALE_BLOCK = REGISTRATE.block("whale_block", HugeMushroomBlock::new)
             .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
-                    .requiresCorrectToolForDrops()
                     .friction(0.8F)
                     .sound(SoundType.MUD)
                     .strength(0.8F)
@@ -1057,18 +1056,13 @@ public class FHBlocks {
             .blockstate((c, p) -> {
                 p.getExistingMultipartBuilder(c.get());
             })
-            .loot((lt, b) -> lt.add(b,
-                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
-                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_WHALE_MEAT.get())
-                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
-            .tag(BlockTags.NEEDS_STONE_TOOL)
-            .tag(BlockTags.SWORD_EFFICIENT)
+            .loot(FHLootGen.existed())
+            .tag(BlockTags.MINEABLE_WITH_AXE)
             .simpleItem()
             .register();
 
     public static final BlockEntry<HugeMushroomBlock> WHALE_BELLY_BLOCK = REGISTRATE.block("whale_belly_block", HugeMushroomBlock::new)
             .properties(p -> p.mapColor(MapColor.COLOR_YELLOW)
-                    .requiresCorrectToolForDrops()
                     .friction(0.8F)
                     .sound(SoundType.MUD)
                     .strength(0.8F)
@@ -1076,12 +1070,8 @@ public class FHBlocks {
             .blockstate((c, p) -> {
                 p.getExistingMultipartBuilder(c.get());
             })
-            .loot((lt, b) -> lt.add(b,
-                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
-                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_WHALE_MEAT.get())
-                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
-            .tag(BlockTags.NEEDS_STONE_TOOL)
-            .tag(BlockTags.SWORD_EFFICIENT)
+            .loot(FHLootGen.existed())
+            .tag(BlockTags.MINEABLE_WITH_AXE)
             .simpleItem()
             .register();
 

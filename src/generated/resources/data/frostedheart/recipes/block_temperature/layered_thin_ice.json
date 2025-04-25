@@ -1,0 +1,6 @@
+{
+  "type": "frostedheart:block_temp",
+  "block": "frostedheart:layered_thin_ice",
+  "level_divide": true,
+  "temperature": -5.0
+}

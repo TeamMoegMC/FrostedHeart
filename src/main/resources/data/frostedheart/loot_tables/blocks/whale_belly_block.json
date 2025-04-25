@@ -24,15 +24,15 @@
                   }
                 }
               ],
-              "name": "frostedheart:whale_block"
+              "name": "frostedheart:whale_belly_block"
             },
             {
               "type": "minecraft:item",
               "functions": [
                 {
-                  "enchantment": "minecraft:fortune",
-                  "formula": "minecraft:ore_drops",
-                  "function": "minecraft:apply_bonus"
+                  "add": false,
+                  "count": 4.0,
+                  "function": "minecraft:set_count"
                 },
                 {
                   "function": "minecraft:explosion_decay"
@@ -46,5 +46,5 @@
       "rolls": 1.0
     }
   ],
-  "random_sequence": "frostedheart:blocks/whale_block"
+  "random_sequence": "frostedheart:blocks/whale_belly_block"
 }

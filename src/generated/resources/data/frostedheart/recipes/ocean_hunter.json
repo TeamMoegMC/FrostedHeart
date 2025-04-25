@@ -170,24 +170,11 @@
         {
           "actions": [],
           "demand": {
-            "item": "minecraft:iron_sword"
+            "item": "minecraft:fishing_rod"
           },
           "hide_stockout": false,
-          "id": "minecraft:iron_sword",
-          "price": 20,
-          "recover": 1.0,
-          "restock_condition": [],
-          "store": 5,
-          "use_actions": []
-        },
-        {
-          "actions": [],
-          "demand": {
-            "item": "frostedheart:bronze_sword"
-          },
-          "hide_stockout": false,
-          "id": "frostedheart:bronze_sword",
-          "price": 15,
+          "id": "minecraft:fishing_rod",
+          "price": 10,
           "recover": 1.0,
           "restock_condition": [],
           "store": 5,
@@ -221,11 +208,50 @@
         },
         {
           "actions": [],
+          "demand": {
+            "tag": "minecraft:boats"
+          },
           "hide_stockout": false,
-          "id": "frostedheart:wolf_hide",
-          "price": 5,
-          "produce": "frostedheart:wolf_hide",
-          "recover": 0.5,
+          "id": "boats",
+          "price": 50,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:iron_sword"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:iron_sword",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:bronze_sword"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:bronze_sword",
+          "price": 15,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:polar_bear_hide",
+          "price": 20,
+          "produce": "frostedheart:polar_bear_hide",
+          "recover": 0.1,
           "restock_condition": [],
           "store": 32,
           "use_actions": []
@@ -233,20 +259,9 @@
         {
           "actions": [],
           "hide_stockout": false,
-          "id": "frostedheart:fox_hide",
-          "price": 10,
-          "produce": "frostedheart:fox_hide",
-          "recover": 0.3,
-          "restock_condition": [],
-          "store": 32,
-          "use_actions": []
-        },
-        {
-          "actions": [],
-          "hide_stockout": false,
-          "id": "minecraft:rabbit_hide",
+          "id": "frostedheart:polar_bear_meat",
           "price": 3,
-          "produce": "minecraft:rabbit_hide",
+          "produce": "frostedheart:polar_bear_meat",
           "recover": 1.0,
           "restock_condition": [],
           "store": 32,
@@ -255,61 +270,50 @@
         {
           "actions": [],
           "hide_stockout": false,
-          "id": "frostedheart:wolf_meat",
+          "id": "frostedheart:raw_whale_meat",
+          "price": 3,
+          "produce": "frostedheart:raw_whale_meat",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 32,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:cod",
           "price": 2,
-          "produce": "frostedheart:wolf_meat",
-          "recover": 3.0,
+          "produce": "minecraft:cod",
+          "recover": 4.0,
           "restock_condition": [],
-          "store": 32,
+          "store": 64,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
-          "id": "frostedheart:fox_meat",
-          "price": 2,
-          "produce": "frostedheart:fox_meat",
-          "recover": 2.0,
+          "id": "minecraft:seagrass",
+          "price": 50,
+          "produce": "minecraft:seagrass",
+          "recover": 1.0,
           "restock_condition": [],
-          "store": 32,
+          "store": 10,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
-          "id": "minecraft:rabbit",
-          "price": 2,
-          "produce": "minecraft:rabbit",
-          "recover": 5.0,
+          "id": "minecraft:sea_pickle",
+          "price": 50,
+          "produce": "minecraft:sea_pickle",
+          "recover": 1.0,
           "restock_condition": [],
-          "store": 32,
-          "use_actions": []
-        },
-        {
-          "actions": [],
-          "hide_stockout": false,
-          "id": "minecraft:brown_mushroom",
-          "price": 5,
-          "produce": "minecraft:brown_mushroom",
-          "recover": 5.0,
-          "restock_condition": [],
-          "store": 32,
-          "use_actions": []
-        },
-        {
-          "actions": [],
-          "hide_stockout": false,
-          "id": "minecraft:red_mushroom",
-          "price": 5,
-          "produce": "minecraft:red_mushroom",
-          "recover": 5.0,
-          "restock_condition": [],
-          "store": 32,
+          "store": 10,
           "use_actions": []
         }
       ]
     }
   ],
   "profession": "minecraft:butcher",
-  "weight": 10
+  "weight": 2
 }
