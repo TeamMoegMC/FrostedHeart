@@ -329,7 +329,7 @@
   "gui.frostedheart.nutrition.carbohydrate": "Carbohydrate",
   "gui.frostedheart.nutrition.vegetable": "Vegetable",
   "gui.frostedheart.wheel_menu.message": "Move the mouse to select, release [%s] to execute",
-  "gui.frostedheart.wheel_menu.selection.nutrition": "Nutritional Information",
+  "gui.frostedheart.wheel_menu.selection.nutrition": "Health Info",
   "gui.frostedheart.wheel_menu.selection.clothing": "View Clothing",
   "gui.frostedheart.wheel_menu.selection.debug": "Open Debug Menu"
 }
