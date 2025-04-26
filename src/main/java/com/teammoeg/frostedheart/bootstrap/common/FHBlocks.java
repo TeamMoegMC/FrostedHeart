@@ -140,6 +140,15 @@ public class FHBlocks {
             .model(AssetLookup.existingItemModel())
             .build()
             .register();
+    public static final BlockEntry<Block> FIRM_ICE_BLOCK = REGISTRATE.block("firm_ice", Block::new)
+            .initialProperties(() -> ICE)
+            .tag(BlockTags.ICE, BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
+            .lang("Firm Ice Block")
+            .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.ICE_CHIP.get(), ConstantValue.exactly(4))))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
     // Condensed ore blocks
     public static final BlockEntry<Block> BESNOWED_DEBRIS_BLOCK = REGISTRATE.block("besnowed_debris_block", Block::new)
             .initialProperties(() -> SNOW_BLOCK)

@@ -747,6 +747,7 @@
   "gui.frostedheart.tip_editor.info.resource_location": "填入完整的纹理资源路径(Resource Location) \n示例: 'minecraft:textures/item/apple.png'",
   "block.frostedheart.creative_heater": "创造气压生成器",
   "block.frostedheart.thin_ice": "薄冰块",
+  "block.frostedheart.firm_ice": "坚冰",
   "block.frostedheart.wardrobe": "衣柜",
   "item.frostedheart.antifreeze": "防冻剂",
   "item.frostedheart.cable": "线缆",
