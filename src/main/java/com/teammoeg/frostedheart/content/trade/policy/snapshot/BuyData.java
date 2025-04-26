@@ -60,5 +60,6 @@ public class BuyData {
     public void reduceStock(FHVillagerData data, int count) {
         bd.soldactions.forEach(c -> c.deal(data, count));
         data.storage.computeIfPresent(id, (k, v) -> v - count);
+        store-=count;
     }
 }
