@@ -712,6 +712,7 @@
   "tips.frostedheart.error.display": "错误：无法显示提示",
   "tips.frostedheart.error.invalid_id": "提示ID中不能包含以下字符: \n\\/:*?\"<>|",
   "tips.frostedheart.error.save": "错误：无法保存文件",
+  "tips.frostedheart.error.save.duplicate_id_warn": "重复的提示ID，保存将会覆盖重复提示",
   "tips.frostedheart.error.load": "错误：无法加载文件",
   "tips.frostedheart.error.load.no_id": "提示ID为空",
   "tips.frostedheart.error.load.duplicate_id": "重复的提示ID",

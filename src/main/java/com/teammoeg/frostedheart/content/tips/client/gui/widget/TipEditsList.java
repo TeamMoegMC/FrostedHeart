@@ -64,7 +64,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         idEntry.input.setResponder(s -> {
             if (TipManager.INSTANCE.hasTip(s)) {
                 idEntry.input.setTextColor(ColorHelper.RED);
-                updatePreview(Component.translatable("tips.frostedheart.error.load.duplicate_id").withStyle(ChatFormatting.RED));
+                updatePreview(Component.translatable("tips.frostedheart.error.save.duplicate_id_warn").withStyle(ChatFormatting.RED));
                 return;
             } else if (Tip.isTipIdInvalid(s)) {
                 idEntry.input.setTextColor(ColorHelper.RED);
@@ -216,7 +216,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
                 if (contents.size() == 1) {
                     key += ".title";
                 } else {
-                    key += ".desc" + contents.size();
+                    key += ".desc" + (contents.size()-1);
                 }
                 translationContents.add(key);
 

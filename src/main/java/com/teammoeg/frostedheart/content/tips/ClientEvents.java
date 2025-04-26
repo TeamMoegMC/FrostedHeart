@@ -34,11 +34,11 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onPlayerLoggedIn(ClientPlayerNetworkEvent.LoggingIn event) {
         // default tip
-        if (!TipManager.INSTANCE.hasTip("default")) {
-            Tip.builder("default").line(Components.str("Default Tip")).image(new ResourceLocation(FHMain.MODID, "textures/item/debug_item.png")).build().saveAsFile();
-            TipManager.INSTANCE.loadFromFile();
-        }
-//        TipManager.INSTANCE.display().clearRenderQueue();
+//        if (!TipManager.INSTANCE.hasTip("default")) {
+//            Tip.builder("default").line(Components.str("Default Tip")).image(new ResourceLocation(FHMain.MODID, "textures/item/debug_item.png")).build().saveAsFile();
+//            TipManager.INSTANCE.loadFromFile();
+//        }
+        TipManager.INSTANCE.display().clearRenderQueue();
 //        TipManager.INSTANCE.display().general("default");
 //        if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) == 0) {
 //            TipDisplayManager.displayTip("music_warning", false);

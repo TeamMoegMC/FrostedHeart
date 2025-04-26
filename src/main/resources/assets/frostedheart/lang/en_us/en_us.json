@@ -289,6 +289,7 @@
   "tips.frostedheart.error.display": "[Error] Unable to display tip",
   "tips.frostedheart.error.invalid_id": "Tip id contains illegal characters: \n\\/:*?\"\u003c\u003e|",
   "tips.frostedheart.error.save": "[Error] Unable to save file",
+  "tips.frostedheart.error.save.duplicate_id_warn": "Tip id is duplicate, saving will overwrite duplicate tip",
   "tips.frostedheart.error.load": "[Error] Unable to load file",
   "tips.frostedheart.error.load.no_id": "Tip id is empty/blank",
   "tips.frostedheart.error.load.duplicate_id": "Tip id is duplicate",
