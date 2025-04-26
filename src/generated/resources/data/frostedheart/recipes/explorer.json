@@ -227,7 +227,7 @@
           "produce": "caupona:walnut_sapling",
           "recover": 0.05,
           "restock_condition": [],
-          "store": 3,
+          "store": 1,
           "use_actions": []
         },
         {
@@ -238,7 +238,7 @@
           "produce": "caupona:fig_sapling",
           "recover": 0.05,
           "restock_condition": [],
-          "store": 3,
+          "store": 1,
           "use_actions": []
         },
         {
@@ -249,7 +249,7 @@
           "produce": "caupona:wolfberry_sapling",
           "recover": 0.05,
           "restock_condition": [],
-          "store": 3,
+          "store": 1,
           "use_actions": []
         },
         {
@@ -260,7 +260,7 @@
           "produce": "minecraft:oak_sapling",
           "recover": 0.05,
           "restock_condition": [],
-          "store": 3,
+          "store": 1,
           "use_actions": []
         },
         {
@@ -282,7 +282,7 @@
           "produce": "minecraft:jungle_sapling",
           "recover": 0.05,
           "restock_condition": [],
-          "store": 3,
+          "store": 1,
           "use_actions": []
         },
         {
@@ -293,7 +293,7 @@
           "produce": "minecraft:acacia_sapling",
           "recover": 0.05,
           "restock_condition": [],
-          "store": 3,
+          "store": 1,
           "use_actions": []
         },
         {
@@ -304,7 +304,7 @@
           "produce": "minecraft:dark_oak_sapling",
           "recover": 0.05,
           "restock_condition": [],
-          "store": 3,
+          "store": 1,
           "use_actions": []
         },
         {
@@ -315,7 +315,7 @@
           "produce": "minecraft:mangrove_propagule",
           "recover": 0.05,
           "restock_condition": [],
-          "store": 3,
+          "store": 1,
           "use_actions": []
         },
         {
@@ -326,7 +326,7 @@
           "produce": "minecraft:cherry_sapling",
           "recover": 0.05,
           "restock_condition": [],
-          "store": 3,
+          "store": 1,
           "use_actions": []
         },
         {
@@ -337,7 +337,7 @@
           "produce": "minecraft:azalea",
           "recover": 0.05,
           "restock_condition": [],
-          "store": 3,
+          "store": 1,
           "use_actions": []
         },
         {
@@ -348,7 +348,7 @@
           "produce": "minecraft:flowering_azalea",
           "recover": 0.05,
           "restock_condition": [],
-          "store": 3,
+          "store": 1,
           "use_actions": []
         },
         {
@@ -359,7 +359,7 @@
           "produce": "minecraft:bamboo",
           "recover": 0.05,
           "restock_condition": [],
-          "store": 3,
+          "store": 1,
           "use_actions": []
         },
         {
@@ -403,7 +403,7 @@
           "produce": "minecraft:honeycomb_block",
           "recover": 0.05,
           "restock_condition": [],
-          "store": 3,
+          "store": 1,
           "use_actions": []
         },
         {
@@ -414,7 +414,7 @@
           "produce": "caupona:silphium",
           "recover": 0.05,
           "restock_condition": [],
-          "store": 3,
+          "store": 1,
           "use_actions": []
         },
         {
@@ -447,18 +447,18 @@
           "produce": "minecraft:dandelion",
           "recover": 1.0,
           "restock_condition": [],
-          "store": 12,
+          "store": 8,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "minecraft:glow_berries",
-          "price": 20,
+          "price": 30,
           "produce": "minecraft:glow_berries",
           "recover": 1.0,
           "restock_condition": [],
-          "store": 12,
+          "store": 6,
           "use_actions": []
         },
         {
@@ -469,7 +469,7 @@
           "produce": "minecraft:sweet_berries",
           "recover": 1.0,
           "restock_condition": [],
-          "store": 12,
+          "store": 10,
           "use_actions": []
         },
         {
@@ -480,7 +480,7 @@
           "produce": "frostedheart:rubber_dandelion",
           "recover": 1.0,
           "restock_condition": [],
-          "store": 12,
+          "store": 6,
           "use_actions": []
         }
       ]
