@@ -63,8 +63,6 @@ public class FHConfig {
         public final ForgeConfigSpec.IntValue scenarioRenderThread;
         public final ForgeConfigSpec.IntValue infraredViewUBOOffset;
         public final ForgeConfigSpec.IntValue wheelMenuRadius;
-        public final ForgeConfigSpec.ConfigValue<List<? extends String>> enabledSelections;
-        public final ForgeConfigSpec.ConfigValue<List<? extends String>> disabledSelections;
         public final ForgeConfigSpec.BooleanValue enableTooltips;
 
         Client(ForgeConfigSpec.Builder builder) {
@@ -160,12 +158,6 @@ public class FHConfig {
             scenarioRenderThread = builder.comment("Scenario rendering thread, Scenario screen are pre-rendered in seperate pool to prevent lag")
                     .defineInRange("scenarioRenderThread", 2, 1, 16);
 
-            builder.pop();
-            builder.push("wheelmenu");
-            enabledSelections=builder.comment("Enabled selections")
-            	.defineList("enabledSelections", new ArrayList<String>(), s->ResourceLocation.isValidResourceLocation(String.valueOf(s)));
-            disabledSelections=builder.comment("Disabled selections")
-            	.defineList("disabledSelections",  new ArrayList<String>(),s->ResourceLocation.isValidResourceLocation(String.valueOf(s)));
             builder.pop();
 
             builder.push("other");
