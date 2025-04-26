@@ -7,6 +7,7 @@
   "plugin": "com.teammoeg.frostedheart.mixin.FrostedHeartMixinPlugin",
   "mixins": [
     "caupona.CauponaBonemealableBlockMixin_CheckTemp",
+    "client.SelfEntitySpawnDataMixin",
     "create.HandCrankBlockMixin",
     "create.MixinAbstractContraption",
     "create.MixinBlockBreakingMovementBehaviour",
@@ -57,10 +58,10 @@
     "minecraft.temperature.ServerPlayNetHandlerMixin_FlyingFix",
     "minecraft.temperature.SheepMixin",
     "minecraft.temperature.SnowLayerBlockMixin_Melt",
-    "minecraft.trade.VillagerMixin",
     "minecraft.temperature.WolfMixin",
     "minecraft.trade.AssignProfessionFromJobSite_DisableVanillaProfession",
     "minecraft.trade.ResetProfession_DisableVanillaProfession",
+    "minecraft.trade.VillagerMixin",
     "registrate.RegistrateBlockLootTablesMixin_RemoveExisted"
   ],
   "client": [
@@ -70,6 +71,7 @@
     "client.GuiMixin",
     "client.IngameGuiAccess",
     "client.LevelRendererMixin",
+    "client.LivingEntityRendererMixin",
     "client.MixinClientEvents",
     "client.MixinLightTexture",
     "client.MouseHandlerMixin_MouseCapture",

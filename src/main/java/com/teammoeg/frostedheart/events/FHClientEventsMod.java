@@ -38,6 +38,9 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyph
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestExtension;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestModel;
+import com.teammoeg.frostedheart.content.utility.seld.ContainerHolderEntityRenderer;
+import com.teammoeg.frostedheart.content.utility.seld.SledEntityRenderer;
+import com.teammoeg.frostedheart.content.utility.seld.SledModel;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.client.FHScreens;
@@ -242,11 +245,16 @@ public class FHClientEventsMod {
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(FHEntityTypes.CURIOSITY.get(), CuriosityEntityRenderer::new);
         event.registerEntityRenderer(FHEntityTypes.WANDERING_REFUGEE.get(), WanderingRefugeeRenderer::new);
+        event.registerEntityRenderer(FHEntityTypes.SLED.get(), SledEntityRenderer::new);
+        event.registerEntityRenderer(FHEntityTypes.CONTAINER_ENTITY.get(), ContainerHolderEntityRenderer::new);
     }
 
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(CuriosityEntityModel.LAYER_LOCATION, CuriosityEntityModel::createBodyLayer);
+        event.registerLayerDefinition(SledModel.SLED_LAYER, SledModel::createMesh);
+        event.registerLayerDefinition(SledModel.QUILT_LAYER, SledEntityRenderer.QuiltModel::createBodyLayer);
+
     }
 	@SubscribeEvent
 	public static void onTint(RegisterColorHandlersEvent.Item ev) {
