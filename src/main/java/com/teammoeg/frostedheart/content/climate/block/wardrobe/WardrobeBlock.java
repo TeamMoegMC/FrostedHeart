@@ -234,7 +234,6 @@ public class WardrobeBlock extends CBlock implements CEntityBlock<WardrobeBlockE
             BlockEntity tile = pLevel.getBlockEntity(masterPos);
             if (tile instanceof WardrobeBlockEntity wardrobe) {
                 NetworkHooks.openScreen((ServerPlayer) pPlayer, wardrobe, masterPos);
-                pLevel.playSound(null, pPos, SoundEvents.LAVA_EXTINGUISH, SoundSource.BLOCKS, 0.3F, 1.5F);
             }
         }
         return InteractionResult.sidedSuccess(pLevel.isClientSide);

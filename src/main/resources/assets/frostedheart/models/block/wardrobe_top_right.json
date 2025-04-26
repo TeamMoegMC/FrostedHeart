@@ -1,5 +1,5 @@
 {
-	
+	"parent": "minecraft:block/block",
 	"textures": {
 		"0": "frostedheart:block/wardrobe",
 		"particle": "frostedheart:block/wardrobe"
@@ -51,36 +51,6 @@
 			}
 		}
 	],
-	"display": {
-		"thirdperson_righthand": {
-			"rotation": [75, 34, 0],
-			"scale": [0.2, 0.2, 0.2]
-		},
-		"thirdperson_lefthand": {
-			"rotation": [75, 34, 0],
-			"scale": [0.2, 0.2, 0.2]
-		},
-		"firstperson_righthand": {
-			"rotation": [0, 106, 0],
-			"scale": [0.3, 0.3, 0.3]
-		},
-		"firstperson_lefthand": {
-			"rotation": [0, 106, 0],
-			"scale": [0.3, 0.3, 0.3]
-		},
-		"ground": {
-			"translation": [0, 3, 0],
-			"scale": [0.25, 0.25, 0.25]
-		},
-		"gui": {
-			"rotation": [30, 225, 0],
-			"translation": [-2.25, 28, 0],
-			"scale": [0.425, 0.425, 0.425]
-		},
-		"fixed": {
-			"scale": [0.4, 0.4, 0.4]
-		}
-	},
 	"groups": [
 		{
 			"name": "doorup",
