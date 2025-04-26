@@ -1279,7 +1279,7 @@ public class SledEntity extends Entity {
     }
 
     public Item getSledItem() {
-        return FHItems.KAOLIN.get();
+        return FHItems.SLED.get();
     }
 
     //if it can prevent freezing
