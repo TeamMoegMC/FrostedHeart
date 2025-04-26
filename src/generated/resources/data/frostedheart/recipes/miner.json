@@ -170,14 +170,27 @@
         {
           "actions": [],
           "demand": {
-            "item": "minecraft:iron_pickaxe"
+            "item": "immersiveengineering:pickaxe_steel"
           },
           "hide_stockout": false,
-          "id": "minecraft:iron_pickaxe",
-          "price": 20,
-          "recover": 1.0,
+          "id": "immersiveengineering:pickaxe_steel",
+          "price": 40,
+          "recover": 0.5,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "immersiveengineering:shovel_steel"
+          },
+          "hide_stockout": false,
+          "id": "immersiveengineering:shovel_steel",
+          "price": 40,
+          "recover": 0.5,
+          "restock_condition": [],
+          "store": 3,
           "use_actions": []
         },
         {
@@ -190,7 +203,33 @@
           "price": 20,
           "recover": 1.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:iron_pickaxe"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:iron_pickaxe",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:iron_shovel"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:iron_shovel",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 3,
           "use_actions": []
         },
         {
@@ -203,7 +242,7 @@
           "price": 15,
           "recover": 1.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
           "use_actions": []
         },
         {
@@ -216,7 +255,7 @@
           "price": 15,
           "recover": 1.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
           "use_actions": []
         },
         {
@@ -227,19 +266,6 @@
           "hide_stockout": false,
           "id": "minecraft:tnt",
           "price": 10,
-          "recover": 10.0,
-          "restock_condition": [],
-          "store": 64,
-          "use_actions": []
-        },
-        {
-          "actions": [],
-          "demand": {
-            "item": "minecraft:torch"
-          },
-          "hide_stockout": false,
-          "id": "minecraft:torch",
-          "price": 1,
           "recover": 10.0,
           "restock_condition": [],
           "store": 64,

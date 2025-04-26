@@ -142,6 +142,7 @@ public class FHBlocks {
             .register();
     public static final BlockEntry<Block> FIRM_ICE_BLOCK = REGISTRATE.block("firm_ice", Block::new)
             .initialProperties(() -> ICE)
+            .blockstate(FHBlockStateGen.existed())
             .tag(BlockTags.ICE, BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .lang("Firm Ice Block")
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.ICE_CHIP.get(), ConstantValue.exactly(4))))

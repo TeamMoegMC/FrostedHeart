@@ -222,6 +222,19 @@
         {
           "actions": [],
           "demand": {
+            "item": "immersiveengineering:sword_steel"
+          },
+          "hide_stockout": false,
+          "id": "immersiveengineering:sword_steel",
+          "price": 40,
+          "recover": 0.5,
+          "restock_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
             "item": "minecraft:iron_sword"
           },
           "hide_stockout": false,
@@ -229,7 +242,7 @@
           "price": 20,
           "recover": 1.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
           "use_actions": []
         },
         {
@@ -242,7 +255,7 @@
           "price": 15,
           "recover": 1.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
           "use_actions": []
         },
         {
@@ -253,40 +266,40 @@
           "produce": "frostedheart:polar_bear_hide",
           "recover": 0.1,
           "restock_condition": [],
-          "store": 32,
+          "store": 8,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "frostedheart:polar_bear_meat",
-          "price": 3,
+          "price": 8,
           "produce": "frostedheart:polar_bear_meat",
           "recover": 1.0,
           "restock_condition": [],
-          "store": 32,
+          "store": 16,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "frostedheart:raw_whale_meat",
-          "price": 3,
+          "price": 8,
           "produce": "frostedheart:raw_whale_meat",
           "recover": 1.0,
           "restock_condition": [],
-          "store": 32,
+          "store": 16,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "minecraft:cod",
-          "price": 2,
+          "price": 5,
           "produce": "minecraft:cod",
           "recover": 4.0,
           "restock_condition": [],
-          "store": 64,
+          "store": 16,
           "use_actions": []
         },
         {
@@ -310,10 +323,21 @@
           "restock_condition": [],
           "store": 10,
           "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "stone_age:fat",
+          "price": 30,
+          "produce": "stone_age:fat",
+          "recover": 0.5,
+          "restock_condition": [],
+          "store": 8,
+          "use_actions": []
         }
       ]
     }
   ],
-  "profession": "minecraft:butcher",
+  "profession": "minecraft:fisherman",
   "weight": 2
 }

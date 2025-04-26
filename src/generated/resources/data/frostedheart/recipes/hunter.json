@@ -164,7 +164,7 @@
           "price": 10,
           "recover": 1.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
           "use_actions": []
         },
         {
@@ -177,7 +177,7 @@
           "price": 20,
           "recover": 1.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
           "use_actions": []
         },
         {
@@ -190,7 +190,20 @@
           "price": 15,
           "recover": 1.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "immersiveengineering:sword_steel"
+          },
+          "hide_stockout": false,
+          "id": "immersiveengineering:sword_steel",
+          "price": 40,
+          "recover": 0.5,
+          "restock_condition": [],
+          "store": 3,
           "use_actions": []
         },
         {
@@ -223,62 +236,84 @@
           "actions": [],
           "hide_stockout": false,
           "id": "frostedheart:wolf_hide",
-          "price": 5,
+          "price": 15,
           "produce": "frostedheart:wolf_hide",
           "recover": 0.5,
           "restock_condition": [],
-          "store": 32,
+          "store": 4,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "frostedheart:fox_hide",
-          "price": 10,
+          "price": 20,
           "produce": "frostedheart:fox_hide",
           "recover": 0.3,
           "restock_condition": [],
-          "store": 32,
+          "store": 4,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "minecraft:rabbit_hide",
-          "price": 3,
+          "price": 10,
           "produce": "minecraft:rabbit_hide",
           "recover": 1.0,
           "restock_condition": [],
-          "store": 32,
+          "store": 4,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "frostedheart:wolf_meat",
-          "price": 2,
+          "price": 5,
           "produce": "frostedheart:wolf_meat",
           "recover": 3.0,
           "restock_condition": [],
-          "store": 32,
+          "store": 8,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "frostedheart:fox_meat",
-          "price": 2,
+          "price": 7,
           "produce": "frostedheart:fox_meat",
           "recover": 2.0,
           "restock_condition": [],
-          "store": 32,
+          "store": 8,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "stone_age:venison",
+          "price": 5,
+          "produce": "stone_age:venison",
+          "recover": 2.0,
+          "restock_condition": [],
+          "store": 8,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "stone_age:fat",
+          "price": 30,
+          "produce": "stone_age:fat",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 4,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "minecraft:rabbit",
-          "price": 2,
+          "price": 4,
           "produce": "minecraft:rabbit",
           "recover": 5.0,
           "restock_condition": [],
