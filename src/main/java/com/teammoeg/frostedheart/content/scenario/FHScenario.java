@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
+import com.teammoeg.frostedheart.content.scenario.commands.client.TipCommand;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.objectweb.asm.Type;
@@ -205,6 +206,7 @@ public class FHScenario {
 		registerScenarioProvider(new FTBQProvider());
 		register(MCCommands.class);
 		register(CookieCommand.class);
+		register(TipCommand.class);
 	}
 	static Path local;
 	static final LevelResource dataFolder = new LevelResource("fhscenario");
