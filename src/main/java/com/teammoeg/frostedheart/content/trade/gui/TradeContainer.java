@@ -156,7 +156,7 @@ public class TradeContainer extends AbstractContainerMenu {
         //ve.setCustomer(inventoryPlayer.player);
         for (int i = 0; i < 3; i++)
             for (int j = 0; j < 4; j++)
-                addSlot(new SlotItemHandler(inv, j + i * 4, 62 + j * 16, 18 + i * 16) {
+                addSlot(new SlotItemHandler(inv, j + i * 4, 62 + j * 16, 4 + i * 16) {
 
                     @Override
                     public void onQuickCraft(ItemStack oldStackIn, ItemStack newStackIn) {
