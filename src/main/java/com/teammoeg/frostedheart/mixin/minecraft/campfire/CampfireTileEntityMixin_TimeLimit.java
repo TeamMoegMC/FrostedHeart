@@ -75,6 +75,7 @@ public abstract class CampfireTileEntityMixin_TimeLimit extends BlockEntity impl
 			int rawBurnTime = ForgeHooks.getBurnTime(stack,RecipeType.CAMPFIRE_COOKING);
 			if(rawBurnTime<=0)return stack;
 			int maxcs = (19200 - getLifeTime()) / rawBurnTime / 3;
+			if(maxcs<=0)return stack;
             int rcs = Math.min(maxcs, stack.getCount());
             //int burnTime = rawBurnTime * 3 * rcs;
             if(!simulate) {
