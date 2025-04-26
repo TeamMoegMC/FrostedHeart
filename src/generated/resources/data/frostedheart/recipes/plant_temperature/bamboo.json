@@ -2,6 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:bamboo",
   "dead": "minecraft:air",
+  "grow_speed": 50.0,
   "max_fertilize": 30.0,
   "max_grow": 35.0,
   "max_survive": 42.0,

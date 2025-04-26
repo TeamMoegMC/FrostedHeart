@@ -31,6 +31,8 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.ForecastHandler;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
+import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
+import com.teammoeg.frostedheart.content.climate.data.PlantTemperature;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
@@ -49,6 +51,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -185,9 +188,29 @@ public class ClimateCommonEvents {
 		Block crop = state.getBlock();
 		BlockPos pos = event.getPos();
 		LevelAccessor level = event.getLevel();
+		PlantTempData data = PlantTempData.getPlantData(crop);
 		WorldTemperature.PlantStatus status = WorldTemperature.checkPlantStatus(level, pos, crop);
-		if (status.canGrow()) {
-			event.setResult(Event.Result.DEFAULT);
+		float growSpeed = PlantTemperature.DEFAULT_GROW_SPEED;
+		if (data != null) {
+			growSpeed = data.growSpeed();
+		}
+		float growChance = Mth.clamp(growSpeed / 100f, 0, 1);
+		float fertilizeGrowChance =  Mth.clamp(growSpeed * 2 / 100f, 0, 1);
+		// faster
+		if (status.canFertilize()) {
+			if (level.getRandom().nextFloat() < fertilizeGrowChance) {
+				event.setResult(Event.Result.DEFAULT);
+			} else {
+				event.setResult(Event.Result.DENY);
+			}
+		}
+		// slower
+		else if (status.canGrow()) {
+			if (level.getRandom().nextFloat() < growChance) {
+				event.setResult(Event.Result.DEFAULT);
+			} else {
+				event.setResult(Event.Result.DENY);
+			}
 		}
 		else if (status.canSurvive()) {
 			if (event.getLevel().getRandom().nextInt(3) == 0) {
@@ -400,14 +423,16 @@ public class ClimateCommonEvents {
 	public static void finishUsingItems(LivingEntityUseItemEvent.Finish event) {
 		FoodTemperatureHandler.checkFoodAfterEating(event);
 	}
-	
+
+	/*
+	@Deprecated
 	@SubscribeEvent
 	public static void saplingGrow(SaplingGrowTreeEvent event) {
 		BlockPos pos = event.getPos();
 		LevelAccessor worldIn = event.getLevel();
 		RandomSource rand = event.getRandomSource();
 		BlockState sapling = event.getLevel().getBlockState(pos);
-		
+
 		if (WorldTemperature.isBlizzardHarming(worldIn, pos)) {
 			worldIn.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
 			event.setResult(Event.Result.DENY);
@@ -417,6 +442,62 @@ public class ClimateCommonEvents {
 			}
 		}else if (!WorldTemperature.canTreeGrow(worldIn, pos, rand))
 			event.setResult(Event.Result.DENY);
+	}
+	 */
+	@SubscribeEvent
+	public static void saplingGrow(SaplingGrowTreeEvent event) {
+		BlockPos pos = event.getPos();
+		LevelAccessor level = event.getLevel();
+		RandomSource rand = event.getRandomSource();
+		BlockState state = event.getLevel().getBlockState(pos);
+		Block crop = state.getBlock();
+
+		// no need to check for blizzard or snow harm because we handled that altogether in server tick
+
+		PlantTempData data = PlantTempData.getPlantData(crop);
+		WorldTemperature.PlantStatus status = WorldTemperature.checkPlantStatus(level, pos, crop);
+		float growSpeed = PlantTemperature.DEFAULT_GROW_SPEED;
+		if (data != null) {
+			growSpeed = data.growSpeed();
+		}
+
+		// big tree can grow, but takes extremely long
+		if (event.getFeature() != null && event.getFeature().is(FHTags.BIG_TREE)) {
+			growSpeed *= 0.1f;
+		}
+
+		float growChance = Mth.clamp(growSpeed / 100f, 0, 1);
+		float fertilizeGrowChance =  Mth.clamp(growSpeed * 2 / 100f, 0, 1);
+		// faster
+		if (status.canFertilize()) {
+			if (level.getRandom().nextFloat() < fertilizeGrowChance) {
+				event.setResult(Event.Result.DEFAULT);
+			} else {
+				event.setResult(Event.Result.DENY);
+			}
+		}
+		// slower
+		else if (status.canGrow()) {
+			if (level.getRandom().nextFloat() < growChance) {
+				event.setResult(Event.Result.DEFAULT);
+			} else {
+				event.setResult(Event.Result.DENY);
+			}
+		}
+		else if (status.canSurvive()) {
+			if (event.getLevel().getRandom().nextInt(3) == 0) {
+				if (state.is(crop) && state != crop.defaultBlockState())
+					event.getLevel().setBlock(event.getPos(), crop.defaultBlockState(), 2);
+			}
+			event.setResult(Event.Result.DENY);
+		}
+		else if (status.willDie()) {
+			if (level.getBlockState(pos.below()).is(Blocks.FARMLAND)) {
+				level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
+			}
+			level.setBlock(pos, Blocks.DEAD_BUSH.defaultBlockState(), 2);
+			event.setResult(Event.Result.DENY);
+		}
 	}
 
 	@SubscribeEvent

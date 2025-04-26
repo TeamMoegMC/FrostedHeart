@@ -2,6 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:mangrove_leaves",
   "dead": "minecraft:air",
+  "grow_speed": 50.0,
   "max_fertilize": 30.0,
   "max_grow": 35.0,
   "max_survive": 35.0,

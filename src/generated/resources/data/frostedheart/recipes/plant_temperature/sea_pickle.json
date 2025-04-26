@@ -3,6 +3,7 @@
   "blizzard_vulnerable": false,
   "block": "minecraft:sea_pickle",
   "dead": "minecraft:air",
+  "grow_speed": 50.0,
   "max_fertilize": 28.0,
   "max_grow": 30.0,
   "max_survive": 34.0,

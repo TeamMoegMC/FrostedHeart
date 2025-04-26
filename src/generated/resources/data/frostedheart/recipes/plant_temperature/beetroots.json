@@ -2,6 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:beetroots",
   "dead": "minecraft:dead_bush",
+  "grow_speed": 50.0,
   "max_fertilize": 22.0,
   "max_grow": 26.0,
   "max_survive": 30.0,

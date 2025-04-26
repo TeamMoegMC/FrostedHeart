@@ -2,6 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:sunflower",
   "dead": "minecraft:dead_bush",
+  "grow_speed": 50.0,
   "max_fertilize": 28.0,
   "max_grow": 32.0,
   "max_survive": 38.0,

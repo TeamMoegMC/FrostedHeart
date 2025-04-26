@@ -2,6 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "frostedheart:white_turnip_block",
   "dead": "minecraft:dead_bush",
+  "grow_speed": 50.0,
   "max_fertilize": 20.0,
   "max_grow": 24.0,
   "max_survive": 30.0,

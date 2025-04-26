@@ -2,6 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:big_dripleaf",
   "dead": "minecraft:dead_bush",
+  "grow_speed": 50.0,
   "max_fertilize": 30.0,
   "max_grow": 34.0,
   "max_survive": 38.0,

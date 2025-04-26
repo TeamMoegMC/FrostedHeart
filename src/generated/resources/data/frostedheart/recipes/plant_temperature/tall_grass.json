@@ -3,6 +3,7 @@
   "blizzard_vulnerable": false,
   "block": "minecraft:tall_grass",
   "dead": "minecraft:air",
+  "grow_speed": 50.0,
   "max_fertilize": 28.0,
   "max_grow": 32.0,
   "min_fertilize": 16.0,
