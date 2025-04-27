@@ -120,6 +120,7 @@ public class IconButton extends Button {
         GIVE          (10,20),
         GAIN          (20,20),
         LEAVE         (30,20),
+        JUMP          (40,20),
         BOX           (0 ,30),
         BOX_ON        (10,30),
         CROSS         (20,30),

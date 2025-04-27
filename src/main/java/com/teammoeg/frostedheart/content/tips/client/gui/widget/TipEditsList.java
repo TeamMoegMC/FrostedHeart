@@ -25,6 +25,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipClickActions;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.content.tips.TipRenderer;
 import com.teammoeg.chorda.client.ClientUtils;
@@ -59,7 +60,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         this.font = pMinecraft.font;
         setRenderHeader(true, 10);
 
-        var idEntry = (StringEntry)children().get(addEntry(new StringEntry("id", Component.translatable("gui.frostedheart.tip_editor.id"))));
+        var idEntry = new StringEntry("id", Component.translatable("gui.frostedheart.tip_editor.id"));
         idEntry.input.setMaxLength(240);
         idEntry.input.setResponder(s -> {
             if (TipManager.INSTANCE.hasTip(s)) {
@@ -68,22 +69,22 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
                 return;
             } else if (Tip.isTipIdInvalid(s)) {
                 idEntry.input.setTextColor(ColorHelper.RED);
+                updatePreview(Component.translatable("tips.frostedheart.error.invalid_id").withStyle(ChatFormatting.RED));
             } else {
                 idEntry.input.setTextColor(ColorHelper.WHITE);
             }
             updatePreview();
         });
 
-        addEntry(new MultiComponentEntry("contents", Component.translatable("gui.frostedheart.tip_editor.contents")));
+        var imageEntry = new StringEntry("image", Component.translatable("gui.frostedheart.tip_editor.image"));
+        imageEntry.input.setResponder(s -> updatePreview(Component.translatable("gui.frostedheart.tip_editor.info.resource_location")));
 
-        var nextTipEntry = (StringEntry)children().get(addEntry(new StringEntry("nextTip", Component.translatable("gui.frostedheart.tip_editor.next_tip"))));
+        var nextTipEntry = new StringEntry("nextTip", Component.translatable("gui.frostedheart.tip_editor.next_tip"));
         nextTipEntry.input.setResponder(s -> {
             if (Tip.isTipIdInvalid(s)) {
                 nextTipEntry.input.setTextColor(ColorHelper.RED);
-                updatePreview(
-                        Component.translatable("tips.frostedheart.error.invalid_id").withStyle(ChatFormatting.RED),
-                        Component.translatable("tips.frostedheart.error.load.tip_not_exists", s).withStyle(ChatFormatting.GOLD));
-            } else if (!s.isBlank() && !TipManager.INSTANCE.hasTip(s)) {
+                updatePreview(Component.translatable("tips.frostedheart.error.invalid_id").withStyle(ChatFormatting.RED));
+            } else if (!TipManager.INSTANCE.hasTip(s)) {
                 nextTipEntry.input.setTextColor(0xFFFF9F00);
                 updatePreview(Component.translatable("tips.frostedheart.error.load.tip_not_exists", s).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
             } else {
@@ -92,11 +93,23 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
             }
         });
 
+        var clickActionEntry = new StringEntry("clickAction", Component.translatable("gui.frostedheart.tip_editor.click_action"));
+        clickActionEntry.input.setResponder(s -> {
+            if (!TipClickActions.hasAction(s)) {
+                nextTipEntry.input.setTextColor(0xFFFF9F00);
+            } else {
+                nextTipEntry.input.setTextColor(ColorHelper.WHITE);
+            }
+            updatePreview(Component.translatable("gui.frostedheart.tip_editor.available_click_actions"));
+        });
+
+        addEntry(idEntry);
+        addEntry(new MultiComponentEntry("contents", Component.translatable("gui.frostedheart.tip_editor.contents")));
+        addEntry(imageEntry);
+        addEntry(clickActionEntry);
+        addEntry(new StringEntry("clickActionContent", Component.translatable("gui.frostedheart.tip_editor.click_action_content")));
+        addEntry(nextTipEntry);
         addEntry(new StringEntry("category", Component.translatable("gui.frostedheart.tip_editor.category")));
-
-        var imageEntry = (StringEntry)children().get(addEntry(new StringEntry("image", Component.translatable("gui.frostedheart.tip_editor.image"))));
-        imageEntry.input.setResponder(s -> updatePreview(Component.translatable("gui.frostedheart.tip_editor.info.resource_location")));
-
         addEntry(new ColorEntry("fontColor", Component.translatable("gui.frostedheart.tip_editor.font_color"), ColorHelper.CYAN));
         addEntry(new ColorEntry("backgroundColor", Component.translatable("gui.frostedheart.tip_editor.background_color"), ColorHelper.BLACK));
         addEntry(new IntegerEntry("displayTime", Component.translatable("gui.frostedheart.tip_editor.display_time")));

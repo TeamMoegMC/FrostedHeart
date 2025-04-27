@@ -84,11 +84,13 @@ public class TipRenderer {
         if (!event.getListenersList().contains(TipWidget.INSTANCE)) {
             event.addListener(TipWidget.INSTANCE.closeButton);
             event.addListener(TipWidget.INSTANCE.pinButton);
+            event.addListener(TipWidget.INSTANCE.linkButton);
             event.addListener(TipWidget.INSTANCE);
 
             // 将tipWidget和按钮从screen的渲染列表中移除
             event.getScreen().renderables.remove(TipWidget.INSTANCE.closeButton);
             event.getScreen().renderables.remove(TipWidget.INSTANCE.pinButton);
+            event.getScreen().renderables.remove(TipWidget.INSTANCE.linkButton);
             event.getScreen().renderables.remove(TipWidget.INSTANCE);
         }
     }
