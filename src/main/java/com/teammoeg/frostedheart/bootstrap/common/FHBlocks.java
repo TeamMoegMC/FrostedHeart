@@ -141,7 +141,7 @@ public class FHBlocks {
             .build()
             .register();
     public static final BlockEntry<Block> FIRM_ICE_BLOCK = REGISTRATE.block("firm_ice", Block::new)
-            .initialProperties(() -> ICE)
+            .properties(p -> p.mapColor(MapColor.ICE).friction(0.98F).randomTicks().strength(0.5F).sound(SoundType.GLASS))
             .blockstate(FHBlockStateGen.existed())
             .tag(BlockTags.ICE, BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .lang("Firm Ice Block")
