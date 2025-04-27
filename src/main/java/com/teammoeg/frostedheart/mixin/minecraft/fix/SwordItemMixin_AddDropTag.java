@@ -9,18 +9,23 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.TieredItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 @Mixin(SwordItem.class)
-public class SwordItemMixin_AddDropTag extends SwordItem {
+public class SwordItemMixin_AddDropTag extends TieredItem {
 
-	public SwordItemMixin_AddDropTag(Tier pTier, int pAttackDamageModifier, float pAttackSpeedModifier, Properties pProperties) {
-		super(pTier, pAttackDamageModifier, pAttackSpeedModifier, pProperties);
+
+
+	public SwordItemMixin_AddDropTag(Tier pTier, Properties pProperties) {
+		super(pTier, pProperties);
+		// TODO Auto-generated constructor stub
 	}
 
 	@Inject(at = @At("HEAD"), method = "mineBlock", cancellable = true)

@@ -84,10 +84,10 @@ public class DeathInventoryData implements NBTSerializable {
                 othis.offhand.set(0, ItemStack.EMPTY);
             }
             for (int i = 0; i < 4; i++) {
-            	//if(othis.armor.get(i).getEnchantmentLevel(Enchantments.BINDING_CURSE)<=0) {
+            	if(othis.armor.get(i).getEnchantmentLevel(Enchantments.BINDING_CURSE)<=0||othis.armor.get(i).getEnchantmentLevel(Enchantments.VANISHING_CURSE)<=0) {
 	                armor.set(i, othis.armor.get(i));
 	                othis.armor.set(i, ItemStack.EMPTY);
-            	//}
+            	}
             }
         }
 
