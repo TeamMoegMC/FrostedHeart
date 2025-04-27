@@ -151,8 +151,8 @@ public class TradeScreen extends BaseScreen {
             }
 
         };
-        trade.setPosAndSize(139, 2, 20, 14);
-        bargain.setPosAndSize(161, 2, 20, 14);
+        trade.setPosAndSize(73, 57, 20, 14);
+        bargain.setPosAndSize(95, 57, 20, 14);
         updateOffers();
     }
 
@@ -213,7 +213,7 @@ public class TradeScreen extends BaseScreen {
 
         TradeIcons.icons[cx.balance + 3].draw(matrixStack, x, y, 56, 45);
         if (cx.poffer != 0)
-            TradeIcons.POFFER_EMP.draw(matrixStack, x + 54, y + 14, 76, 60);
+            TradeIcons.POFFER_EMP.draw(matrixStack, x + 54, y, 76, 60);
         if (!cx.order.isEmpty())
             TradeIcons.VOFFER_EMP.draw(matrixStack, x + 57, y + 73, 74, 60);
         if (tab.getState())

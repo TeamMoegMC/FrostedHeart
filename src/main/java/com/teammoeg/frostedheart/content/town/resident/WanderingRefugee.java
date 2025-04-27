@@ -21,36 +21,42 @@ package com.teammoeg.frostedheart.content.town.resident;
 
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.content.climate.AttractedByGeneratorGoal;
 import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.trade.*;
 import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.stats.Stats;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.NeutralMob;
-import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.ResetUniversalAngerTargetGoal;
+import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.monster.*;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.npc.Npc;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
+public class WanderingRefugee extends AbstractVillager implements NeutralMob, VillagerDataHolder {
 //    private static final EntityDataAccessor<Boolean> HIRED = SynchedEntityData.defineId(WanderingRefugee.class, EntityDataSerializers.BOOLEAN);
 //    private static final EntityDataAccessor<Integer> AMOUNT_NEEDED = SynchedEntityData.defineId(WanderingRefugee.class, EntityDataSerializers.INT);
 //
@@ -91,11 +97,13 @@ public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
     private int amountNeeded = 3 + (int) (getRandom().nextFloat() * 5);
     private String lastName = LAST_NAMES[(int) (Math.random() * LAST_NAMES.length)];
     private String firstName = FIRST_NAMES[(int) (Math.random() * FIRST_NAMES.length)];
+    FHVillagerData fh$data = new FHVillagerData(this);
 
-    public WanderingRefugee(EntityType<? extends PathfinderMob> pEntityType, Level pLevel) {
+    public WanderingRefugee(EntityType<? extends AbstractVillager> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
     }
 
+    /*
     @Override
     protected @NotNull InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (level().isClientSide()) {
@@ -133,6 +141,44 @@ public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
             return InteractionResult.CONSUME;
         }
     }
+    */
+
+    public InteractionResult mobInteract(Player playerIn, InteractionHand hand) {
+        // FHMain.LOGGER.info("Villager mobInteract side = {}", level().isClientSide ? "CLIENT" : "SERVER");
+        ItemStack itemstack = playerIn.getItemInHand(hand);
+        if (itemstack.getItem() != Items.VILLAGER_SPAWN_EGG && this.isAlive() && !this.isTrading()
+                && !this.isSleeping() && !playerIn.isSecondaryUseActive()) {
+            if (this.isBaby()) {
+                // this.setUnhappy();
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
+            } else {
+                if (!this.level().isClientSide) {
+                    fh$data.update((ServerLevel) super.level(), playerIn);
+                    RelationList list = fh$data.getRelationShip(playerIn);
+                    int unknownLanguage = list.get(RelationModifier.UNKNOWN_LANGUAGE);
+                    if (list.sum() < TradeConstants.RELATION_TO_TRADE) {
+                        //this.setUnhappy();
+                        if (unknownLanguage < 0) {
+                            playerIn.displayClientMessage(Lang.translateMessage("trade.language_barrier"), false);
+                        } else {
+                            playerIn.displayClientMessage(Lang.translateMessage("trade.bad_relation"), false);
+                        }
+                    } else if (list.sum() < TradeConstants.RELATION_TO_BARGAIN) {
+                        playerIn.displayClientMessage(Lang.translateMessage("trade.normal_relation"), false);
+                    } else {
+                        playerIn.displayClientMessage(Lang.translateMessage("trade.great_relation"), false);
+                    }
+                    playerIn.awardStat(Stats.TALKED_TO_VILLAGER);
+                    setTradingPlayer(playerIn);
+                    TradeHandler.openTradeScreen((ServerPlayer) playerIn, fh$data);
+                }
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
+            }
+        } else {
+            return super.mobInteract(playerIn, hand);
+        }
+
+    }
 
 //    @Override
 //    protected void defineSynchedData() {
@@ -144,12 +190,25 @@ public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
 //    }
 
     @Override
+    protected void rewardTradeXp(MerchantOffer pOffer) {
+
+    }
+
+    @Override
+    public @Nullable AgeableMob getBreedOffspring(ServerLevel pLevel, AgeableMob pOtherParent) {
+        return null;
+    }
+
+    @Override
     public void addAdditionalSaveData(CompoundTag pCompound) {
         super.addAdditionalSaveData(pCompound);
         pCompound.putBoolean("hired", this.hired);
         pCompound.putInt("amountNeeded", this.amountNeeded);
         pCompound.putString("lastName", this.lastName);
         pCompound.putString("firstName", this.firstName);
+        CompoundTag cnbt = new CompoundTag();
+        fh$data.serialize(cnbt);
+        pCompound.put("fhdata", cnbt);
     }
 
     @Override
@@ -167,6 +226,15 @@ public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
         if ((pCompound.contains("hired", Tag.TAG_BYTE))) {
             hired = pCompound.getBoolean("hired");
         }
+        if ((pCompound.contains("fhdata", Tag.TAG_COMPOUND))) {
+            fh$data.deserialize(pCompound.getCompound("fhdata"));
+        }
+
+    }
+
+    @Override
+    protected void updateTrades() {
+
     }
 
     @Override
@@ -180,11 +248,13 @@ public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
         this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Pillager.class, 15.0F, 0.5D, 0.5D));
         this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Illusioner.class, 12.0F, 0.5D, 0.5D));
         this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Zoglin.class, 10.0F, 0.5D, 0.5D));
+        this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Wolf.class, 10.0F, 0.5D, 0.5D));
 //        this.goalSelector.addGoal(1, new PanicGoal(this, 0.5D));
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.25D, true));
         this.goalSelector.addGoal(3, new MoveTowardsTargetGoal(this, 1.25D, 16.0F));
         this.goalSelector.addGoal(4, new TemptGoal(this, 1.25D, Ingredient.of(FHTags.Items.REFUGEE_NEEDS.tag), false));
         this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1.0D));
+        this.goalSelector.addGoal(5, new AttractedByGeneratorGoal(this,1.0D));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 6.0F));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
         this.targetSelector.addGoal(1, (new HurtByTargetGoal(this)).setAlertOthers());
@@ -228,5 +298,10 @@ public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
     @Override
     public void startPersistentAngerTimer() {
         this.setRemainingPersistentAngerTime(PERSISTENT_ANGER_TIME.sample(this.random));
+    }
+
+    @Override
+    public FHVillagerData getFHData() {
+        return fh$data;
     }
 }

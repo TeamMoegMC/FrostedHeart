@@ -3,6 +3,7 @@
   "blizzard_vulnerable": false,
   "block": "minecraft:kelp_plant",
   "dead": "minecraft:air",
+  "grow_speed": 50.0,
   "max_fertilize": 20.0,
   "max_grow": 24.0,
   "max_survive": 28.0,

@@ -1,0 +1,343 @@
+{
+  "type": "frostedheart:trade",
+  "exps": [
+    1000,
+    2000,
+    3000,
+    4000,
+    5000
+  ],
+  "policies": [
+    {
+      "conditions": [],
+      "data": [
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:vegetables"
+          },
+          "hide_stockout": false,
+          "id": "vegetables",
+          "price": 8,
+          "recover": 3.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:cereals"
+          },
+          "hide_stockout": false,
+          "id": "cereals",
+          "price": 5,
+          "recover": 3.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:cereals/baked"
+          },
+          "hide_stockout": false,
+          "id": "cereals_baked",
+          "price": 7,
+          "recover": 3.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:eggs"
+          },
+          "hide_stockout": false,
+          "id": "eggs",
+          "price": 10,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:sugar"
+          },
+          "hide_stockout": false,
+          "id": "sugar",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:walnut"
+          },
+          "hide_stockout": false,
+          "id": "walnut",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:straw_lining"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:straw_lining",
+          "price": 15,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:buff_coat"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:buff_coat",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:gambeson"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:gambeson",
+          "price": 60,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "immersiveengineering:coal_coke"
+          },
+          "hide_stockout": false,
+          "id": "immersiveengineering:coal_coke",
+          "price": 6,
+          "recover": 5.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:arrow"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:arrow",
+          "price": 1,
+          "recover": 10.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:bow"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:bow",
+          "price": 10,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:fishing_rod"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:fishing_rod",
+          "price": 10,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:snowshoes"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:snowshoes",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:ice_skates"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:ice_skates",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "minecraft:boats"
+          },
+          "hide_stockout": false,
+          "id": "boats",
+          "price": 50,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "immersiveengineering:sword_steel"
+          },
+          "hide_stockout": false,
+          "id": "immersiveengineering:sword_steel",
+          "price": 40,
+          "recover": 0.5,
+          "restock_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:iron_sword"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:iron_sword",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:bronze_sword"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:bronze_sword",
+          "price": 15,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:polar_bear_hide",
+          "price": 20,
+          "produce": "frostedheart:polar_bear_hide",
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 8,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:polar_bear_meat",
+          "price": 8,
+          "produce": "frostedheart:polar_bear_meat",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 16,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:raw_whale_meat",
+          "price": 8,
+          "produce": "frostedheart:raw_whale_meat",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 16,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:cod",
+          "price": 5,
+          "produce": "minecraft:cod",
+          "recover": 4.0,
+          "restock_condition": [],
+          "store": 16,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:seagrass",
+          "price": 50,
+          "produce": "minecraft:seagrass",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 10,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:sea_pickle",
+          "price": 50,
+          "produce": "minecraft:sea_pickle",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 10,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "stone_age:fat",
+          "price": 30,
+          "produce": "stone_age:fat",
+          "recover": 0.5,
+          "restock_condition": [],
+          "store": 8,
+          "use_actions": []
+        }
+      ]
+    }
+  ],
+  "profession": "minecraft:fisherman",
+  "weight": 2
+}

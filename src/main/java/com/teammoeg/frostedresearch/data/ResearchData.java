@@ -227,6 +227,8 @@ public class ResearchData implements IEnvironment {
         level = packet.level();
         committed = packet.committed();
         int i = 0;
+        this.clueData.clear();
+        this.effectData.clear();
         for (Clue c : r.getClues()) {
             if (i >= packet.clueData().size()) break;
             this.clueData.put(c.getNonce(), packet.clueData().get(i++));

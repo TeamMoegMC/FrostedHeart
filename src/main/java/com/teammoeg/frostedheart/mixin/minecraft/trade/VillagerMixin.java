@@ -81,7 +81,7 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
      */
     @Overwrite
     public InteractionResult mobInteract(Player playerIn, InteractionHand hand) {
-        FHMain.LOGGER.info("Villager mobInteract side = {}", level().isClientSide ? "CLIENT" : "SERVER");
+        // FHMain.LOGGER.info("Villager mobInteract side = {}", level().isClientSide ? "CLIENT" : "SERVER");
         ItemStack itemstack = playerIn.getItemInHand(hand);
         if (itemstack.getItem() != Items.VILLAGER_SPAWN_EGG && this.isAlive() && !this.isTrading()
                 && !this.isSleeping() && !playerIn.isSecondaryUseActive()) {

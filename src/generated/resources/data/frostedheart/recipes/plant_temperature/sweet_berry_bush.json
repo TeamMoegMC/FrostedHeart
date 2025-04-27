@@ -3,6 +3,7 @@
   "blizzard_vulnerable": false,
   "block": "minecraft:sweet_berry_bush",
   "dead": "minecraft:dead_bush",
+  "grow_speed": 50.0,
   "max_fertilize": 20.0,
   "max_grow": 24.0,
   "max_survive": 30.0,

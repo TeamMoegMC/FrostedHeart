@@ -14,12 +14,12 @@
         {
           "actions": [],
           "demand": {
-            "tag": "frostedheart:refugee_needs"
+            "tag": "caupona:vegetables"
           },
           "hide_stockout": false,
-          "id": "refugee_needs",
-          "price": 3,
-          "recover": 5.0,
+          "id": "vegetables",
+          "price": 8,
+          "recover": 3.0,
           "restock_condition": [],
           "store": 30,
           "use_actions": []
@@ -27,12 +27,64 @@
         {
           "actions": [],
           "demand": {
-            "item": "frostedheart:white_turnip_block"
+            "tag": "caupona:cereals"
           },
           "hide_stockout": false,
-          "id": "frostedheart:white_turnip_block",
+          "id": "cereals",
           "price": 5,
-          "recover": 5.0,
+          "recover": 3.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:cereals/baked"
+          },
+          "hide_stockout": false,
+          "id": "cereals_baked",
+          "price": 7,
+          "recover": 3.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:eggs"
+          },
+          "hide_stockout": false,
+          "id": "eggs",
+          "price": 10,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:sugar"
+          },
+          "hide_stockout": false,
+          "id": "sugar",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:walnut"
+          },
+          "hide_stockout": false,
+          "id": "walnut",
+          "price": 20,
+          "recover": 1.0,
           "restock_condition": [],
           "store": 30,
           "use_actions": []
@@ -79,6 +131,19 @@
         {
           "actions": [],
           "demand": {
+            "item": "immersiveengineering:coal_coke"
+          },
+          "hide_stockout": false,
+          "id": "immersiveengineering:coal_coke",
+          "price": 6,
+          "recover": 5.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
             "item": "minecraft:arrow"
           },
           "hide_stockout": false,
@@ -99,7 +164,7 @@
           "price": 10,
           "recover": 1.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
           "use_actions": []
         },
         {
@@ -112,7 +177,7 @@
           "price": 20,
           "recover": 1.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
           "use_actions": []
         },
         {
@@ -125,113 +190,130 @@
           "price": 15,
           "recover": 1.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "immersiveengineering:sword_steel"
+          },
+          "hide_stockout": false,
+          "id": "immersiveengineering:sword_steel",
+          "price": 40,
+          "recover": 0.5,
+          "restock_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:snowshoes"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:snowshoes",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:ice_skates"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:ice_skates",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 1,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "frostedheart:wolf_hide",
-          "price": 5,
+          "price": 15,
           "produce": "frostedheart:wolf_hide",
           "recover": 0.5,
           "restock_condition": [],
-          "store": 32,
+          "store": 4,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "frostedheart:fox_hide",
-          "price": 10,
+          "price": 20,
           "produce": "frostedheart:fox_hide",
           "recover": 0.3,
           "restock_condition": [],
-          "store": 32,
-          "use_actions": []
-        },
-        {
-          "actions": [],
-          "hide_stockout": false,
-          "id": "frostedheart:polar_bear_hide",
-          "price": 20,
-          "produce": "frostedheart:polar_bear_hide",
-          "recover": 0.1,
-          "restock_condition": [],
-          "store": 32,
+          "store": 4,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "minecraft:rabbit_hide",
-          "price": 3,
+          "price": 10,
           "produce": "minecraft:rabbit_hide",
           "recover": 1.0,
           "restock_condition": [],
-          "store": 32,
+          "store": 4,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "frostedheart:wolf_meat",
-          "price": 2,
+          "price": 5,
           "produce": "frostedheart:wolf_meat",
           "recover": 3.0,
           "restock_condition": [],
-          "store": 32,
+          "store": 8,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "frostedheart:fox_meat",
-          "price": 2,
+          "price": 7,
           "produce": "frostedheart:fox_meat",
           "recover": 2.0,
           "restock_condition": [],
-          "store": 32,
+          "store": 8,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
-          "id": "frostedheart:polar_bear_meat",
-          "price": 3,
-          "produce": "frostedheart:polar_bear_meat",
-          "recover": 1.0,
+          "id": "stone_age:venison",
+          "price": 5,
+          "produce": "stone_age:venison",
+          "recover": 2.0,
           "restock_condition": [],
-          "store": 32,
+          "store": 8,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
-          "id": "frostedheart:raw_whale_meat",
-          "price": 3,
-          "produce": "frostedheart:raw_whale_meat",
+          "id": "stone_age:fat",
+          "price": 30,
+          "produce": "stone_age:fat",
           "recover": 1.0,
           "restock_condition": [],
-          "store": 32,
-          "use_actions": []
-        },
-        {
-          "actions": [],
-          "hide_stockout": false,
-          "id": "minecraft:air",
-          "price": 10,
-          "produce": "minecraft:air",
-          "recover": 1.0,
-          "restock_condition": [],
-          "store": 32,
+          "store": 4,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
           "id": "minecraft:rabbit",
-          "price": 2,
+          "price": 4,
           "produce": "minecraft:rabbit",
           "recover": 5.0,
           "restock_condition": [],
@@ -242,7 +324,7 @@
           "actions": [],
           "hide_stockout": false,
           "id": "minecraft:brown_mushroom",
-          "price": 2,
+          "price": 5,
           "produce": "minecraft:brown_mushroom",
           "recover": 5.0,
           "restock_condition": [],
@@ -253,7 +335,7 @@
           "actions": [],
           "hide_stockout": false,
           "id": "minecraft:red_mushroom",
-          "price": 2,
+          "price": 5,
           "produce": "minecraft:red_mushroom",
           "recover": 5.0,
           "restock_condition": [],
@@ -264,5 +346,5 @@
     }
   ],
   "profession": "minecraft:butcher",
-  "weight": 1
+  "weight": 10
 }

@@ -283,8 +283,8 @@ public class FHCommonEvents {
 			rs = ProspectorPick.doProspect(event.getEntity(), event.getLevel(), event.getPos(), event.getItemStack(),
 					event.getHand());
 		if (rs != null) {
-			if (event instanceof IModularItem && event.getLevel().getRandom().nextBoolean())
-				((IModularItem) event.getItemStack().getItem()).tickProgression(event.getEntity(), event.getItemStack(),1);
+			if (event.getItemStack().getItem() instanceof IModularItem mo && event.getLevel().getRandom().nextBoolean())
+				mo.tickProgression(event.getEntity(), event.getItemStack(),1);
 			event.setCancellationResult(rs);
 			event.setCanceled(true);
 		}

@@ -19,6 +19,12 @@
 
 package com.teammoeg.frostedheart.content.wheelmenu;
 
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.stream.JsonReader;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.JsonOps;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseCaptureUtil;
 import com.teammoeg.chorda.client.MouseHelper;
@@ -28,9 +34,11 @@ import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.config.ConfigFileType;
 import com.teammoeg.chorda.io.ConfigFileUtil;
+import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.math.CircleDimension;
 import com.teammoeg.chorda.math.Dimension2D;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FGuis;
@@ -42,8 +50,12 @@ import net.minecraft.util.Mth;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.loading.FMLPaths;
+
 import org.joml.Quaternionf;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -74,7 +86,7 @@ public class WheelMenuRenderer {
 	protected static final List<Selection> availableSelections = new ArrayList<>();
 	protected static final List<Selection> visibleSelections = new ArrayList<>();
 	public static final ConfigFileType<UserSelection> configType=new ConfigFileType<>(UserSelection.CODEC,"wheelmenu");
-	
+	public static final File wheelmenuConfig=new File(FMLPaths.CONFIGDIR.get().toFile(),"wheelmenu-visibility.json");
 	@Override
 	public String toString() {
 		return "WheelMenuRenderer";
@@ -319,18 +331,51 @@ public class WheelMenuRenderer {
 			hoveredSelection.selectAction.execute(hoveredSelection);
 		}
 	}
-
+	private static class WheelMenuConfig{
+		public  List<ResourceLocation> displayed;
+		public  List<ResourceLocation> hidden;
+		public WheelMenuConfig(List<ResourceLocation> displayed, List<ResourceLocation> hidden) {
+			super();
+			this.displayed = displayed;
+			this.hidden = hidden;
+		}
+		public WheelMenuConfig(List<ResourceLocation> displayed, Set<ResourceLocation> hidden) {
+			super();
+			this.displayed = displayed;
+			this.hidden = new ArrayList<>(hidden);
+		}
+	
+		
+	}
+	private static final Codec<WheelMenuConfig> CONFIG_CODEC=RecordCodecBuilder.create(i->i.group(
+			Codec.list(ResourceLocation.CODEC).fieldOf("displayed").forGetter(o->o.displayed),
+			Codec.list(ResourceLocation.CODEC).fieldOf("hidden").forGetter(o->o.hidden)
+			).apply(i, WheelMenuConfig::new));
+	
+	
 	public static void saveUserSelectedOptions() {
-		FHConfig.CLIENT.enabledSelections.set(displayedSelections.stream().map(ResourceLocation::toString).toList());
-		FHConfig.CLIENT.disabledSelections.set(hiddenSelections.stream().map(ResourceLocation::toString).toList());
+		try {
+			FileUtil.transfer(CONFIG_CODEC.encodeStart(JsonOps.INSTANCE, new WheelMenuConfig(displayedSelections,hiddenSelections)).getOrThrow(false, FHMain.LOGGER::warn).toString(),wheelmenuConfig);
+		} catch (IOException e) {
+			FHMain.LOGGER.error("Could not save wheelmenu display settings",e);
+		}
 	}
 	public static void load() {
 		WheelMenuRenderer.userSelections.clear();
         WheelMenuRenderer.userSelections.addAll(ConfigFileUtil.loadAll(WheelMenuRenderer.configType).values());
         displayedSelections.clear();
-        displayedSelections.addAll(FHConfig.CLIENT.enabledSelections.get().stream().map(ResourceLocation::new).toList());
         hiddenSelections.clear();
-        hiddenSelections.addAll(FHConfig.CLIENT.disabledSelections.get().stream().map(ResourceLocation::new).toList());
+  		try {
+  			if(wheelmenuConfig.exists()) {
+			WheelMenuConfig config = CONFIG_CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(FileUtil.readString(wheelmenuConfig))).getOrThrow(true, FHMain.LOGGER::warn);
+			displayedSelections.addAll(config.displayed);
+      
+			hiddenSelections.addAll(config.hidden);
+  			}
+		} catch (JsonSyntaxException | IOException e) {
+			FHMain.LOGGER.error("Could not load wheelmenu display settings",e);
+		}
+        
         WheelMenuRenderer.collectSelections();
 	}
 }

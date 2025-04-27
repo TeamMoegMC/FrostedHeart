@@ -104,6 +104,7 @@ public class WorldTemperature {
         } else return world.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos).getY() <= pos.getY();
     }
 
+    @Deprecated
     public static boolean canBigTreeGenerate(LevelAccessor worldIn, BlockPos p, RandomSource r) {
     	float temp = block(worldIn, p);
     	 BlockState bs=worldIn.getBlockState(p);
@@ -118,6 +119,7 @@ public class WorldTemperature {
 
     }
 
+    @Deprecated
     public static boolean canTreeGrow(LevelAccessor worldIn, BlockPos p, RandomSource rand) {
         float temp = block(worldIn, p);
         BlockState bs=worldIn.getBlockState(p);
@@ -131,6 +133,7 @@ public class WorldTemperature {
         return canTreeGenerate(worldIn, p, rand,Math.max(1, Mth.ceil(minTemp+6-temp / 2)));
     }
 
+    @Deprecated
     public static boolean canTreeGenerate(LevelAccessor w, BlockPos p, RandomSource r, int chance) {
         return r.nextInt(chance) == 0;
 
@@ -529,7 +532,7 @@ public class WorldTemperature {
         float blockTemp = block(level, pos);
 
         if(openToAir(level,pos)) {
-            if (WorldClimate.isBlizzard(level)&&data.blizzardVulnerable()) {
+            if (WorldTemperature.isBlizzard(level)&&data.blizzardVulnerable()) {
                 return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
             }
             if (WorldClimate.isSnowing(level)&&data.snowVulnerable()) {

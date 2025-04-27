@@ -20,10 +20,8 @@
 package com.teammoeg.frostedheart.compat.ftbq;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftbquests.quest.reward.RewardType;
 import dev.ftb.mods.ftbquests.quest.reward.RewardTypes;
 
@@ -32,6 +30,8 @@ public interface FHRewardTypes {
 
     RewardType TEMPERATURE_DIFFICULTY = RewardTypes.register(FHMain.rl("temperature_difficulty"), TemperatureDifficultyReward::new,
             () -> Icon.getIcon("frostedheart:item/mercury_body_thermometer"));
+    RewardType TIP = RewardTypes.register(FHMain.rl("tip"), TipReward::new,
+            () -> Icon.getIcon("minecraft:item/oak_sign"));
 
     static void init() {
     }

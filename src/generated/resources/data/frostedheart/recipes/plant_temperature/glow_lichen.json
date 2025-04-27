@@ -3,6 +3,7 @@
   "blizzard_vulnerable": false,
   "block": "minecraft:glow_lichen",
   "dead": "minecraft:air",
+  "grow_speed": 50.0,
   "max_fertilize": 18.0,
   "max_grow": 24.0,
   "min_fertilize": 6.0,

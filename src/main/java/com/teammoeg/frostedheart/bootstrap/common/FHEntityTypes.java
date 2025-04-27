@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
+import com.teammoeg.frostedheart.content.utility.seld.ContainerHolderEntity;
+import com.teammoeg.frostedheart.content.utility.seld.SledEntity;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntity;
 
 import net.minecraft.resources.ResourceLocation;
@@ -42,5 +44,15 @@ public class FHEntityTypes {
             () -> EntityType.Builder.<CuriosityEntity>of(CuriosityEntity::new, MobCategory.CREATURE)
                     .sized(1.0f, 1.0f)
                     .build(new ResourceLocation(FHMain.MODID, "curiosity_entity").toString())
+    );
+    public static final RegistryObject<EntityType<SledEntity>> SLED = ENTITY_TYPES.register("sled_entity",
+            () -> EntityType.Builder.<SledEntity>of(SledEntity::new, MobCategory.MISC)
+                    .sized(1.375F, 0.5625F).clientTrackingRange(10)
+                    .build(new ResourceLocation(FHMain.MODID, "sled_entity").toString())
+    );
+    public static final RegistryObject<EntityType<ContainerHolderEntity>> CONTAINER_ENTITY = ENTITY_TYPES.register("container_entity",
+            () -> EntityType.Builder.<ContainerHolderEntity>of(ContainerHolderEntity::new, MobCategory.MISC)
+                    .sized(0.75f, 0.75f).clientTrackingRange(8)
+                    .build(new ResourceLocation(FHMain.MODID, "container_entity").toString())
     );
 }

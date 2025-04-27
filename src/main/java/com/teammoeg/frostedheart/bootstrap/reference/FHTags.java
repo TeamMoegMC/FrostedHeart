@@ -30,7 +30,6 @@ import net.minecraft.core.HolderSet.Named;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.BiomeTags;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.ItemTags;
@@ -121,7 +120,9 @@ public class FHTags {
 		SNOW_MOVEMENT("movement_modifiers/snow"),
 		ICE_MOVEMENT("movement_modifiers/ice"),
 		STONE(NameSpace.FORGE),
-		ORES(NameSpace.FORGE)
+		ORES(NameSpace.FORGE),
+		SLED_SNOW(),
+		SLED_SAND()
 
 
 		;
@@ -213,6 +214,7 @@ public class FHTags {
 		CURIOS_BACK(NameSpace.CURIOS, "back"),
 		CURIOS_CHARM(NameSpace.CURIOS, "charm"),
 		CURIOS_HANDS(NameSpace.CURIOS, "hands"),
+		VALID_CONTAINERS (NameSpace.MOD, "sled_container")
 		;
 
 		public final TagKey<Item> tag;
@@ -297,7 +299,7 @@ public class FHTags {
 
 	public enum FHEntityTags {
 
-		// Nothing yet
+		SLED_PULLERS
 		// NANITES,
 
 		;

@@ -36,7 +36,7 @@ import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
 
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.server.level.ServerPlayer;
@@ -95,7 +95,7 @@ public class TradeContainer extends AbstractContainerMenu {
     public RelationList relations;
     public PolicySnapshot policy;
 
-    public Villager ve;
+    public AbstractVillager ve;
 
     ItemStackHandler inv = new ItemStackHandler(12) {
 
@@ -127,7 +127,7 @@ public class TradeContainer extends AbstractContainerMenu {
 
     public TradeContainer(int id, Inventory inventoryPlayer, FriendlyByteBuf pb) {
         this(id, inventoryPlayer,
-                (Villager) inventoryPlayer.player.getCommandSenderWorld().getEntity(pb.readVarInt()));
+                (AbstractVillager) inventoryPlayer.player.getCommandSenderWorld().getEntity(pb.readVarInt()));
 
         data = new FHVillagerData(ve);
         CompoundTag d = pb.readNbt();
@@ -142,7 +142,7 @@ public class TradeContainer extends AbstractContainerMenu {
     }
 
     public TradeContainer(int id, Inventory inventoryPlayer,
-                          Villager ve /* ,PlayerRelationData prd,RelationList rel */) {
+                          AbstractVillager ve /* ,PlayerRelationData prd,RelationList rel */) {
         super(FHMenuTypes.TRADE_GUI.get(), id);
         // Server does not need such data as server always have access to all data.
         /*
@@ -156,7 +156,7 @@ public class TradeContainer extends AbstractContainerMenu {
         //ve.setCustomer(inventoryPlayer.player);
         for (int i = 0; i < 3; i++)
             for (int j = 0; j < 4; j++)
-                addSlot(new SlotItemHandler(inv, j + i * 4, 62 + j * 16, 18 + i * 16) {
+                addSlot(new SlotItemHandler(inv, j + i * 4, 62 + j * 16, 4 + i * 16) {
 
                     @Override
                     public void onQuickCraft(ItemStack oldStackIn, ItemStack newStackIn) {

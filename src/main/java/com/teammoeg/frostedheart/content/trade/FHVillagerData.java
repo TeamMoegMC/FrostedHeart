@@ -34,6 +34,7 @@ import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 import com.teammoeg.frostedresearch.data.ResearchVariant;
 
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
@@ -62,7 +63,7 @@ public class FHVillagerData implements MenuProvider {
     // traded amount of total price, same unit as exp
     public long totaltraded;
     private int tradelevel;
-    public Villager parent;
+    public AbstractVillager parent;
 
     private static ServerStatsCounter getStats(Player pe) {
         if (pe instanceof ServerPlayer)
@@ -71,7 +72,7 @@ public class FHVillagerData implements MenuProvider {
         //return pe.getStats();
     }
 
-    public FHVillagerData(Villager parent) {
+    public FHVillagerData(AbstractVillager parent) {
         super();
         this.parent = parent;
     }
@@ -165,8 +166,10 @@ public class FHVillagerData implements MenuProvider {
         	killed = getStats(pe).getValue(Stats.ENTITY_KILLED.get(EntityType.VILLAGER));
         int kdc = (int) Math.min(killed, ResearchDataAPI.getVariantDouble(pe, ResearchVariant.VILLAGER_FORGIVENESS));
         list.put(RelationModifier.KILLED_HISTORY, (killed - kdc) * -5);
-        if (parent.getGossips().getReputation(pe.getUUID(), e -> e == GossipType.MINOR_NEGATIVE) > 0)
-            list.put(RelationModifier.HURT, -10);
+        if (parent instanceof Villager villager) {
+            if (villager.getGossips().getReputation(pe.getUUID(), e -> e == GossipType.MINOR_NEGATIVE) > 0)
+                list.put(RelationModifier.HURT, -10);
+        }
         list.put(RelationModifier.KILLED_SAW, -25 * player.sawmurder);
         if (pe.getEffect(MobEffects.HERO_OF_THE_VILLAGE) != null)
             list.put(RelationModifier.SAVED_VILLAGE, 10);
@@ -191,14 +194,15 @@ public class FHVillagerData implements MenuProvider {
      *
      * @param ve
      */
-    public void initWithRandomPolicy(Villager ve) {
+    public void initWithRandomPolicy(AbstractVillager ve) {
         if (policytype == null) {
             TradePolicy policy = TradePolicy.random(ve.getRandom());
             if (policy == null)
                 policytype = null;
             else
                 policytype = policy.getName();
-            parent.setVillagerData(parent.getVillagerData().setProfession(getPolicyType().getProfession()));
+            if (ve instanceof Villager villager)
+                villager.setVillagerData(villager.getVillagerData().setProfession(getPolicyType().getProfession()));
         }
     }
 

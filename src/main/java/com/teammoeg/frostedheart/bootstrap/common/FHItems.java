@@ -27,6 +27,7 @@ import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.item.ItemDescription;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.utility.seld.SledItem;
 import com.teammoeg.frostedheart.item.DyedItemList;
 import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
 import com.teammoeg.frostedheart.item.FHBaseArmorItem;
@@ -1117,7 +1118,6 @@ thinner.png
     public static ItemEntry<Item> black_bread = REGISTRATE
             .item("black_bread", Item::new)
             .tag(FHTags.Items.REFUGEE_NEEDS.tag)
-            .tag(CPTags.Items.BAKED)
             .model(AssetLookup.existingItemModel())
             .properties(p -> p.food(FHFoodProperties.BLACK_BREAD))
             .register();
@@ -1731,4 +1731,9 @@ thinner.png
             .lang("Iron Bottle")
             .register();
 
+    public static ItemEntry<SledItem> SLED = REGISTRATE
+            .item("sled", SledItem::new)
+            .properties(p -> p.stacksTo(1))
+            .lang("Sled")
+            .register();
 }

@@ -190,6 +190,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 			throw new ScenarioExecutionException("Invalid return at "+getScenario().name());
 		}
 		jump(ctx,getCallStack().pollLast());
+		nodeNum++;//start from net command
 	}
     
     /**
@@ -199,6 +200,7 @@ public class BaseScenarioRunner implements ScenarioThread{
     public void tryPopCallStack(ScenarioContext ctx) {
 		if(!getCallStack().isEmpty()) {
 			jump(ctx,getCallStack().pollLast());
+			nodeNum++;
 		}
 	}
 	
@@ -223,7 +225,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 	public ExecuteStackElement getCurrentPosition(int offset) {
 		if(sp==null)
 			return NullTarget.NULL_STACK;
-    	return new ExecuteStackElement(sp.name(),nodeNum+offset);
+    	return new ExecuteStackElement(sp.name(),nodeNum+offset-1);
     }
 	
 	/**

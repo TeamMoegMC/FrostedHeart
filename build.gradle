@@ -310,6 +310,7 @@ dependencies {
     datagenImplementation fg.deobf("curse.maven:crock-pot-404523:5458905")
 //    datagenImplementation fg.deobf("curse.maven:charcoal-pit-reloaded-534602:5861935")
     datagenImplementation fg.deobf("curse.maven:selene-499980:5854670") // supp api
+    datagenImplementation fg.deobf("curse.maven:neolithic-world-534605:6342604")
 	//Excel reader for datagen
 	minecraftLibrary 'org.apache.poi:poi:4.0.0'
 	minecraftLibrary 'org.apache.poi:poi-ooxml:4.0.0'

@@ -41,6 +41,7 @@ import com.teammoeg.frostedheart.content.health.screen.HealthStatScreen;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
+import com.teammoeg.frostedheart.content.utility.seld.SledEntity;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.wheelmenu.Selection;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuSelectionRegisterEvent;
@@ -59,6 +60,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -67,15 +69,11 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.client.event.RecipesUpdatedEvent;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.client.event.RenderPlayerEvent;
-import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
@@ -467,6 +465,18 @@ public class FHClientEvents {
 //            }
 //        }
 //    }
-
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onInputUpdate(MovementInputUpdateEvent event) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null) {
+            Entity riddenEntity = mc.player.getVehicle();
+            if (riddenEntity instanceof SledEntity entity) {
+                Input movementInput = event.getInput();
+                entity.onInputUpdate(movementInput.left, movementInput.right,
+                        movementInput.up, movementInput.down,
+                        mc.options.keySprint.isDown(), movementInput.jumping);
+            }
+        }
+}
 
 }

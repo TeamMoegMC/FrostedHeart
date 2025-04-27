@@ -140,6 +140,16 @@ public class FHBlocks {
             .model(AssetLookup.existingItemModel())
             .build()
             .register();
+    public static final BlockEntry<Block> FIRM_ICE_BLOCK = REGISTRATE.block("firm_ice", Block::new)
+            .initialProperties(() -> ICE)
+            .blockstate(FHBlockStateGen.existed())
+            .tag(BlockTags.ICE, BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
+            .lang("Firm Ice Block")
+            .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.ICE_CHIP.get(), ConstantValue.exactly(4))))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
     // Condensed ore blocks
     public static final BlockEntry<Block> BESNOWED_DEBRIS_BLOCK = REGISTRATE.block("besnowed_debris_block", Block::new)
             .initialProperties(() -> SNOW_BLOCK)
@@ -1049,7 +1059,6 @@ public class FHBlocks {
     // Natural biological blocks
     public static final BlockEntry<HugeMushroomBlock> WHALE_BLOCK = REGISTRATE.block("whale_block", HugeMushroomBlock::new)
             .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
-                    .requiresCorrectToolForDrops()
                     .friction(0.8F)
                     .sound(SoundType.MUD)
                     .strength(0.8F)
@@ -1057,18 +1066,13 @@ public class FHBlocks {
             .blockstate((c, p) -> {
                 p.getExistingMultipartBuilder(c.get());
             })
-            .loot((lt, b) -> lt.add(b,
-                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
-                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_WHALE_MEAT.get())
-                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
-            .tag(BlockTags.NEEDS_STONE_TOOL)
-            .tag(BlockTags.SWORD_EFFICIENT)
+            .loot(FHLootGen.existed())
+            .tag(BlockTags.MINEABLE_WITH_AXE)
             .simpleItem()
             .register();
 
     public static final BlockEntry<HugeMushroomBlock> WHALE_BELLY_BLOCK = REGISTRATE.block("whale_belly_block", HugeMushroomBlock::new)
             .properties(p -> p.mapColor(MapColor.COLOR_YELLOW)
-                    .requiresCorrectToolForDrops()
                     .friction(0.8F)
                     .sound(SoundType.MUD)
                     .strength(0.8F)
@@ -1076,12 +1080,8 @@ public class FHBlocks {
             .blockstate((c, p) -> {
                 p.getExistingMultipartBuilder(c.get());
             })
-            .loot((lt, b) -> lt.add(b,
-                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
-                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_WHALE_MEAT.get())
-                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
-            .tag(BlockTags.NEEDS_STONE_TOOL)
-            .tag(BlockTags.SWORD_EFFICIENT)
+            .loot(FHLootGen.existed())
+            .tag(BlockTags.MINEABLE_WITH_AXE)
             .simpleItem()
             .register();
 
@@ -1351,7 +1351,7 @@ public class FHBlocks {
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
             .blockstate(FHBlockStateGen.simpleCubeAll("tungsten_steel_block"))
-            .transform(tagBlockAndItem("storage_blocks/tungsten_steel_block"))
+            .transform(tagBlockAndItem("storage_blocks/tungsten_steel"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
             .lang("Block of Tungsten Steel")

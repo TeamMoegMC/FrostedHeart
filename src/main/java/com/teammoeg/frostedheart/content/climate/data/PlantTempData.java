@@ -35,11 +35,13 @@ import net.minecraftforge.registries.RegistryObject;
 
 import javax.annotation.Nullable;
 
-public record PlantTempData(Block block,float minFertilize, float minGrow, float minSurvive,
+public record PlantTempData(Block block, float growSpeed, float minFertilize, float minGrow, float minSurvive,
 	 float maxFertilize, float maxGrow, float maxSurvive,
 	 boolean snowVulnerable, boolean blizzardVulnerable, Block dead, boolean willDie) implements PlantTemperature{
 	public static final Codec<PlantTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 			ForgeRegistries.BLOCKS.getCodec().fieldOf("block").forGetter(o->o.block),
+			// grow speed
+			Codec.FLOAT.optionalFieldOf("grow_speed",PlantTemperature.DEFAULT_GROW_SPEED).forGetter(o->o.growSpeed),
 			// min
 			Codec.FLOAT.optionalFieldOf("min_fertilize",PlantTemperature.DEFAULT_BONEMEAL_TEMP).forGetter(o->o.minFertilize),
 			Codec.FLOAT.optionalFieldOf("min_grow",PlantTemperature.DEFAULT_GROW_TEMP).forGetter(o->o.minGrow),
@@ -64,7 +66,7 @@ public record PlantTempData(Block block,float minFertilize, float minGrow, float
 	}
 	// default constructor
 	public PlantTempData(Block blk) {
-		this(blk,PlantTemperature.DEFAULT_BONEMEAL_TEMP, PlantTemperature.DEFAULT_GROW_TEMP, PlantTemperature.DEFAULT_SURVIVE_TEMP,
+		this(blk, PlantTemperature.DEFAULT_GROW_SPEED, PlantTemperature.DEFAULT_BONEMEAL_TEMP, PlantTemperature.DEFAULT_GROW_TEMP, PlantTemperature.DEFAULT_SURVIVE_TEMP,
 				PlantTemperature.DEFAULT_BONEMEAL_MAX_TEMP, PlantTemperature.DEFAULT_GROW_MAX_TEMP, PlantTemperature.DEFAULT_SURVIVE_MAX_TEMP,
 				PlantTemperature.DEFAULT_SNOW_VULNERABLE, PlantTemperature.DEFAULT_BLIZZARD_VULNERABLE, Blocks.DEAD_BUSH, true);
 	}

@@ -146,10 +146,10 @@ public class Tip {
         } else if (isTipIdInvalid(this.id)) {
             builder("exception").error(ErrorType.SAVE, Component.literal("ID: " + this.id), Component.translatable("tips.frostedheart.error.invalid_id")).build().forceDisplay();
             return false;
-        } else if (TipManager.INSTANCE.hasTip(this.id)) {
+        } /*else if (TipManager.INSTANCE.hasTip(this.id)) {
             builder("exception").error(ErrorType.SAVE, Component.literal("ID: " + this.id), Component.translatable("tips.frostedheart.error.load.duplicate_id")).build().forceDisplay();
             return false;
-        }
+        }*/
 
         File file = new File(TipManager.TIP_PATH, this.id + ".json");
         try (FileWriter writer = new FileWriter(file)) {

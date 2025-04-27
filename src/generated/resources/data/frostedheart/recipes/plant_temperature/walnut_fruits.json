@@ -2,6 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "caupona:walnut_fruits",
   "dead": "minecraft:air",
+  "grow_speed": 50.0,
   "max_fertilize": 30.0,
   "max_grow": 34.0,
   "max_survive": 36.0,

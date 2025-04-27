@@ -1,0 +1,491 @@
+{
+  "type": "frostedheart:trade",
+  "exps": [
+    1000,
+    2000,
+    3000,
+    4000,
+    5000
+  ],
+  "policies": [
+    {
+      "conditions": [],
+      "data": [
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:vegetables"
+          },
+          "hide_stockout": false,
+          "id": "vegetables",
+          "price": 8,
+          "recover": 3.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:cereals"
+          },
+          "hide_stockout": false,
+          "id": "cereals",
+          "price": 5,
+          "recover": 3.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:cereals/baked"
+          },
+          "hide_stockout": false,
+          "id": "cereals_baked",
+          "price": 7,
+          "recover": 3.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:eggs"
+          },
+          "hide_stockout": false,
+          "id": "eggs",
+          "price": 10,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:sugar"
+          },
+          "hide_stockout": false,
+          "id": "sugar",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:walnut"
+          },
+          "hide_stockout": false,
+          "id": "walnut",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:straw_lining"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:straw_lining",
+          "price": 15,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:buff_coat"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:buff_coat",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:gambeson"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:gambeson",
+          "price": 60,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "immersiveengineering:coal_coke"
+          },
+          "hide_stockout": false,
+          "id": "immersiveengineering:coal_coke",
+          "price": 6,
+          "recover": 5.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:snowshoes"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:snowshoes",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:ice_skates"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:ice_skates",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:arrow"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:arrow",
+          "price": 1,
+          "recover": 5.0,
+          "restock_condition": [],
+          "store": 32,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:bow"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:bow",
+          "price": 10,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:compass"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:compass",
+          "price": 50,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:map"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:map",
+          "price": 100,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "caupona:walnut_sapling",
+          "price": 300,
+          "produce": "caupona:walnut_sapling",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "caupona:fig_sapling",
+          "price": 500,
+          "produce": "caupona:fig_sapling",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "caupona:wolfberry_sapling",
+          "price": 300,
+          "produce": "caupona:wolfberry_sapling",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:oak_sapling",
+          "price": 100,
+          "produce": "minecraft:oak_sapling",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:birch_sapling",
+          "price": 100,
+          "produce": "minecraft:birch_sapling",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:jungle_sapling",
+          "price": 500,
+          "produce": "minecraft:jungle_sapling",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:acacia_sapling",
+          "price": 300,
+          "produce": "minecraft:acacia_sapling",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:dark_oak_sapling",
+          "price": 100,
+          "produce": "minecraft:dark_oak_sapling",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:mangrove_propagule",
+          "price": 500,
+          "produce": "minecraft:mangrove_propagule",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:cherry_sapling",
+          "price": 800,
+          "produce": "minecraft:cherry_sapling",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:azalea",
+          "price": 500,
+          "produce": "minecraft:azalea",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:flowering_azalea",
+          "price": 500,
+          "produce": "minecraft:flowering_azalea",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:bamboo",
+          "price": 800,
+          "produce": "minecraft:bamboo",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:sugar_cane",
+          "price": 200,
+          "produce": "minecraft:sugar_cane",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:cactus",
+          "price": 800,
+          "produce": "minecraft:cactus",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:lily_pad",
+          "price": 200,
+          "produce": "minecraft:lily_pad",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:honeycomb_block",
+          "price": 100,
+          "produce": "minecraft:honeycomb_block",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "caupona:silphium",
+          "price": 100,
+          "produce": "caupona:silphium",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:brown_mushroom",
+          "price": 5,
+          "produce": "minecraft:brown_mushroom",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 12,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:red_mushroom",
+          "price": 5,
+          "produce": "minecraft:red_mushroom",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 12,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:dandelion",
+          "price": 20,
+          "produce": "minecraft:dandelion",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 8,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:glow_berries",
+          "price": 30,
+          "produce": "minecraft:glow_berries",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 6,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:sweet_berries",
+          "price": 20,
+          "produce": "minecraft:sweet_berries",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 10,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:rubber_dandelion",
+          "price": 50,
+          "produce": "frostedheart:rubber_dandelion",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 6,
+          "use_actions": []
+        }
+      ]
+    }
+  ],
+  "profession": "minecraft:cartographer",
+  "weight": 1
+}

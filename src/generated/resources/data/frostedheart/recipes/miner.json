@@ -14,12 +14,12 @@
         {
           "actions": [],
           "demand": {
-            "tag": "frostedheart:refugee_needs"
+            "tag": "caupona:vegetables"
           },
           "hide_stockout": false,
-          "id": "refugee_needs",
-          "price": 3,
-          "recover": 5.0,
+          "id": "vegetables",
+          "price": 8,
+          "recover": 3.0,
           "restock_condition": [],
           "store": 30,
           "use_actions": []
@@ -27,12 +27,64 @@
         {
           "actions": [],
           "demand": {
-            "item": "frostedheart:white_turnip_block"
+            "tag": "caupona:cereals"
           },
           "hide_stockout": false,
-          "id": "frostedheart:white_turnip_block",
+          "id": "cereals",
           "price": 5,
-          "recover": 5.0,
+          "recover": 3.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:cereals/baked"
+          },
+          "hide_stockout": false,
+          "id": "cereals_baked",
+          "price": 7,
+          "recover": 3.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:eggs"
+          },
+          "hide_stockout": false,
+          "id": "eggs",
+          "price": 10,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:sugar"
+          },
+          "hide_stockout": false,
+          "id": "sugar",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:walnut"
+          },
+          "hide_stockout": false,
+          "id": "walnut",
+          "price": 20,
+          "recover": 1.0,
           "restock_condition": [],
           "store": 30,
           "use_actions": []
@@ -79,14 +131,66 @@
         {
           "actions": [],
           "demand": {
-            "item": "minecraft:iron_pickaxe"
+            "item": "immersiveengineering:coal_coke"
           },
           "hide_stockout": false,
-          "id": "minecraft:iron_pickaxe",
-          "price": 20,
-          "recover": 1.0,
+          "id": "immersiveengineering:coal_coke",
+          "price": 6,
+          "recover": 5.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:snowshoes"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:snowshoes",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:ice_skates"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:ice_skates",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "immersiveengineering:pickaxe_steel"
+          },
+          "hide_stockout": false,
+          "id": "immersiveengineering:pickaxe_steel",
+          "price": 40,
+          "recover": 0.5,
+          "restock_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "immersiveengineering:shovel_steel"
+          },
+          "hide_stockout": false,
+          "id": "immersiveengineering:shovel_steel",
+          "price": 40,
+          "recover": 0.5,
+          "restock_condition": [],
+          "store": 3,
           "use_actions": []
         },
         {
@@ -99,7 +203,33 @@
           "price": 20,
           "recover": 1.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:iron_pickaxe"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:iron_pickaxe",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:iron_shovel"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:iron_shovel",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 3,
           "use_actions": []
         },
         {
@@ -112,7 +242,7 @@
           "price": 15,
           "recover": 1.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
           "use_actions": []
         },
         {
@@ -125,7 +255,7 @@
           "price": 15,
           "recover": 1.0,
           "restock_condition": [],
-          "store": 5,
+          "store": 3,
           "use_actions": []
         },
         {
@@ -143,24 +273,11 @@
         },
         {
           "actions": [],
-          "demand": {
-            "item": "minecraft:torch"
-          },
-          "hide_stockout": false,
-          "id": "minecraft:torch",
-          "price": 1,
-          "recover": 10.0,
-          "restock_condition": [],
-          "store": 64,
-          "use_actions": []
-        },
-        {
-          "actions": [],
           "hide_stockout": false,
           "id": "minecraft:coal",
-          "price": 1,
+          "price": 3,
           "produce": "minecraft:coal",
-          "recover": 64.0,
+          "recover": 32.0,
           "restock_condition": [],
           "store": 128,
           "use_actions": []
@@ -171,7 +288,7 @@
           "id": "minecraft:raw_copper",
           "price": 1,
           "produce": "minecraft:raw_copper",
-          "recover": 64.0,
+          "recover": 32.0,
           "restock_condition": [],
           "store": 128,
           "use_actions": []
@@ -182,7 +299,7 @@
           "id": "minecraft:raw_iron",
           "price": 2,
           "produce": "minecraft:raw_iron",
-          "recover": 32.0,
+          "recover": 16.0,
           "restock_condition": [],
           "store": 64,
           "use_actions": []
@@ -193,7 +310,7 @@
           "id": "frostedheart:raw_tin",
           "price": 2,
           "produce": "frostedheart:raw_tin",
-          "recover": 32.0,
+          "recover": 16.0,
           "restock_condition": [],
           "store": 64,
           "use_actions": []
@@ -204,7 +321,7 @@
           "id": "frostedheart:raw_magnesite",
           "price": 5,
           "produce": "frostedheart:raw_magnesite",
-          "recover": 16.0,
+          "recover": 4.0,
           "restock_condition": [],
           "store": 64,
           "use_actions": []
@@ -215,7 +332,7 @@
           "id": "frostedheart:raw_halite",
           "price": 5,
           "produce": "frostedheart:raw_halite",
-          "recover": 16.0,
+          "recover": 4.0,
           "restock_condition": [],
           "store": 64,
           "use_actions": []
@@ -226,7 +343,7 @@
           "id": "frostedheart:raw_sylvite",
           "price": 5,
           "produce": "frostedheart:raw_sylvite",
-          "recover": 16.0,
+          "recover": 4.0,
           "restock_condition": [],
           "store": 64,
           "use_actions": []
@@ -237,7 +354,7 @@
           "id": "frostedheart:raw_pyrite",
           "price": 5,
           "produce": "frostedheart:raw_pyrite",
-          "recover": 16.0,
+          "recover": 8.0,
           "restock_condition": [],
           "store": 64,
           "use_actions": []
@@ -248,7 +365,7 @@
           "id": "frostedheart:kaolin",
           "price": 5,
           "produce": "frostedheart:kaolin",
-          "recover": 16.0,
+          "recover": 8.0,
           "restock_condition": [],
           "store": 64,
           "use_actions": []
@@ -259,7 +376,7 @@
           "id": "frostedheart:bauxite",
           "price": 5,
           "produce": "frostedheart:bauxite",
-          "recover": 16.0,
+          "recover": 8.0,
           "restock_condition": [],
           "store": 64,
           "use_actions": []
@@ -281,7 +398,7 @@
           "id": "minecraft:raw_gold",
           "price": 50,
           "produce": "minecraft:raw_gold",
-          "recover": 8.0,
+          "recover": 2.0,
           "restock_condition": [],
           "store": 64,
           "use_actions": []
@@ -292,7 +409,7 @@
           "id": "minecraft:diamond",
           "price": 100,
           "produce": "minecraft:diamond",
-          "recover": 1.0,
+          "recover": 0.2,
           "restock_condition": [],
           "store": 16,
           "use_actions": []
@@ -303,7 +420,7 @@
           "id": "minecraft:lapis_lazuli",
           "price": 10,
           "produce": "minecraft:lapis_lazuli",
-          "recover": 10.0,
+          "recover": 3.0,
           "restock_condition": [],
           "store": 32,
           "use_actions": []
@@ -314,7 +431,7 @@
           "id": "minecraft:emerald",
           "price": 500,
           "produce": "minecraft:emerald",
-          "recover": 0.2,
+          "recover": 0.1,
           "restock_condition": [],
           "store": 16,
           "use_actions": []
@@ -325,7 +442,7 @@
           "id": "minecraft:amethyst_shard",
           "price": 30,
           "produce": "minecraft:amethyst_shard",
-          "recover": 5.0,
+          "recover": 1.0,
           "restock_condition": [],
           "store": 32,
           "use_actions": []
@@ -334,5 +451,5 @@
     }
   ],
   "profession": "minecraft:toolsmith",
-  "weight": 1
+  "weight": 5
 }
