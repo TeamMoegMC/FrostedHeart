@@ -696,27 +696,19 @@ public class FrostedHud {
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
-    public static void renderHeatVignette(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
+    public static void renderHeatVignette(GuiGraphics pGuiGraphics, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_vignette");
         float tempDelta = Mth.clamp(Math.abs(PlayerTemperatureData.getCapability(player).map(t->t.smoothedBody).orElse(0F)), 0.5f, 5.0f);
         float opacityDelta = 0.5F * (tempDelta - 0.5F) / 4.5F;
+        //RenderSystem.disableAlphaTest();
         RenderSystem.enableBlend();
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
-        RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
-        //RenderSystem.disableAlphaTest();
-        mc.getTextureManager().bindForSetup(FIRE_VIGNETTE);
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder buffer = tessellator.getBuilder();
-        buffer.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
-        buffer.vertex(0.0D, y, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(0.0F, 1.0F).endVertex();
-        buffer.vertex(x * 2, y, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(1.0F, 1.0F).endVertex();
-        buffer.vertex(x * 2, 0.0D, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(1.0F, 0.0F).endVertex();
-        buffer.vertex(0.0D, 0.0D, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(0.0F, 0.0F).endVertex();
-        tessellator.end();
+        pGuiGraphics.setColor(1.0F, 1.0F, 1.0F, Math.min(opacityDelta, 1));
+        pGuiGraphics.blit(FIRE_VIGNETTE, 0, 0, -90, 0.0F, 0.0F, pGuiGraphics.guiWidth(), pGuiGraphics.guiHeight(), pGuiGraphics.guiWidth(), pGuiGraphics.guiHeight());
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
-        //RenderSystem.enableAlphaTest();
+        pGuiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }

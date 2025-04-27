@@ -29,6 +29,7 @@
     "minecraft.campfire.CampfireBlockMixin_TimeLimit",
     "minecraft.campfire.CampfireTileEntityMixin_TimeLimit",
     "minecraft.fix.PistonBaseBlockMixin",
+    "minecraft.fix.SwordItemMixin_AddDropTag",
     "minecraft.misc.MinecraftServerMixin_GenerateSpacecraft",
     "minecraft.misc.PlayerInventoryMixin_KeepEquipment",
     "minecraft.misc.PlayerMixin_KeepEquipment",
