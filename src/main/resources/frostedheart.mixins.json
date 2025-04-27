@@ -74,6 +74,7 @@
     "client.LevelRendererMixin",
     "client.LivingEntityRendererMixin",
     "client.MixinClientEvents",
+    "client.create.ClientEventsMixin",
     "client.MixinLightTexture",
     "client.MouseHandlerMixin_MouseCapture",
     "client.PrimaryLevelDataMixin",
