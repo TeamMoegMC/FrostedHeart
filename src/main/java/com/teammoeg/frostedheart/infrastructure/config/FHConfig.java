@@ -268,6 +268,8 @@ public class FHConfig {
         public final ForgeConfigSpec.BooleanValue addInitClimate;
         public final ForgeConfigSpec.IntValue envTempUpdateIntervalTicks;
         public final ForgeConfigSpec.IntValue envTempThreadCount;
+        public final ForgeConfigSpec.IntValue tempBlockstateUpdateIntervalTicks;
+        public final ForgeConfigSpec.IntValue tempRandomTickSpeedDivisor;
         /*
         public static final double HURTING_HEAT_UPDATE = 0.1;
     public static final int MIN_BODY_TEMP_CHANGE = -10;
@@ -290,10 +292,14 @@ public class FHConfig {
                     .defineInRange("temperatureChangeRate", 1f, 0, 20);
             temperatureUpdateIntervalTicks = builder.comment("The interval of temperature update in ticks.")
                     .defineInRange("temperatureUpdateIntervalTicks", 20, 1, Integer.MAX_VALUE);
-            envTempUpdateIntervalTicks = builder.comment("The shortest interval of enviroment(block) temperature update in ticks.")
+            envTempUpdateIntervalTicks = builder.comment("The shortest interval of environment(block) temperature update in ticks.")
                 .defineInRange("environmentTempMinTicks", 20, 1, Integer.MAX_VALUE);
+            tempBlockstateUpdateIntervalTicks = builder.comment("The interval for block state update due to temperature.")
+                    .defineInRange("tempBlockstateUpdateIntervalTicks", 20, 1, Integer.MAX_VALUE);
+            tempRandomTickSpeedDivisor = builder.comment("The random tick speed is divided by this value when used for temperature related updates.")
+                    .defineInRange("tempRandomTickSpeedDivisor", 1, 1, Integer.MAX_VALUE);
             int numProcessor=Runtime.getRuntime().availableProcessors();
-            envTempThreadCount = builder.comment("The number of threads used for enviroment(block) temperature update, set to 0 disables multithreading, default to min(processors/2,2)")
+            envTempThreadCount = builder.comment("The number of threads used for environment(block) temperature update, set to 0 disables multithreading, default to min(processors/2,2)")
                 .defineInRange("environmentTempMinTicks", Math.min(2, numProcessor/2), 0, 16);
             wetEffectDuration = builder.comment("The duration of the wet effect applied in water in ticks.")
                     .defineInRange("wetEffectDuration", 100, 1, Integer.MAX_VALUE);
