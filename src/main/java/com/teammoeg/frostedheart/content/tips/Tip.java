@@ -51,8 +51,8 @@ import java.util.List;
 
 @Getter
 public class Tip {
-    private static final Logger LOGGER = LogUtils.getLogger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    public static final Logger LOGGER = LogUtils.getLogger();
     public static final Component ERROR_DESC = Component.translatable("tips.frostedheart.error.desc");
     public static final Tip EMPTY = Tip.builder("empty").error(ErrorType.OTHER,Component.translatable("tips.frostedheart.error.other"), ERROR_DESC).build();
 
@@ -110,6 +110,14 @@ public class Tip {
      * 背景颜色
      */
     private final int backgroundColor;
+    /**
+     * 跳转按钮的操作
+     */
+    private final String clickAction;
+    /**
+     * 跳转按钮的内容
+     */
+    private final String clickActionContent;
 
     protected Tip(Tip.Builder builder) {
         this.contents = builder.contents;
@@ -125,6 +133,8 @@ public class Tip {
         this.displayTime = builder.displayTime;
         this.fontColor = builder.fontColor;
         this.backgroundColor = builder.BGColor;
+        this.clickAction = builder.clickAction;
+        this.clickActionContent = builder.clickActionContent;
     }
 
     public void display() {
@@ -137,6 +147,10 @@ public class Tip {
 
     public boolean hasNext() {
         return TipManager.INSTANCE.hasTip(nextTip);
+    }
+
+    public boolean hasClickAction() {
+        return !clickAction.isBlank() && !clickActionContent.isBlank();
     }
 
     public boolean saveAsFile() {
@@ -173,6 +187,8 @@ public class Tip {
         nbt.putString("category", category);
         nbt.putString("nextTip", nextTip);
         nbt.putString("image", image == null ? "" : image.toString());
+        nbt.putString("clickAction", clickAction);
+        nbt.putString("clickActionContent", clickActionContent);
         nbt.putBoolean("alwaysVisible", alwaysVisible);
         nbt.putBoolean("onceOnly", onceOnly);
         nbt.putBoolean("hide", hide);
@@ -193,6 +209,8 @@ public class Tip {
         json.addProperty("category", category);
         json.addProperty("nextTip", nextTip);
         json.addProperty("image", image == null ? "" : image.toString());
+        json.addProperty("clickAction", clickAction);
+        json.addProperty("clickActionContent", clickActionContent);
         json.addProperty("alwaysVisible", alwaysVisible);
         json.addProperty("onceOnly", onceOnly);
         json.addProperty("hide", hide);
@@ -243,6 +261,8 @@ public class Tip {
         private String id = "";
         private String category = "";
         private String nextTip = "";
+        private String clickAction = "";
+        private String clickActionContent = "";
         private ResourceLocation image;
         private boolean alwaysVisible;
         private boolean onceOnly;
@@ -362,6 +382,13 @@ public class Tip {
             return this;
         }
 
+        public Builder clickAction(String name, String content) {
+            if (!editable) return this;
+            this.clickAction = name;
+            this.clickActionContent = content;
+            return this;
+        }
+
         public Builder copy(Tip source) {
             if (!editable) return this;
 
@@ -388,6 +415,7 @@ public class Tip {
                 this.id = nbt.getString("id");
                 category(nbt.getString("category"));
                 nextTip(nbt.getString("nextTip"));
+                clickAction(nbt.getString("clickAction"), nbt.getString("clickActionContent"));
                 alwaysVisible(nbt.getBoolean("alwaysVisible"));
                 onceOnly(nbt.getBoolean("onceOnly"));
                 hide(nbt.getBoolean("hide"));
@@ -453,6 +481,7 @@ public class Tip {
 
             if (json.has("category"       )) category     (json.get("category").getAsString());
             if (json.has("nextTip"        )) nextTip      (json.get("nextTip").getAsString());
+            if (json.has("clickAction"    )) clickAction  (json.get("clickAction").getAsString(), json.get("clickActionContent").getAsString());
             if (json.has("alwaysVisible"  )) alwaysVisible(json.get("alwaysVisible").getAsBoolean());
             if (json.has("onceOnly"       )) onceOnly     (json.get("onceOnly").getAsBoolean());
             if (json.has("hide"           )) hide         (json.get("hide").getAsBoolean());

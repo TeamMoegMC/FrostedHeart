@@ -26,6 +26,7 @@ import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipClickActions;
 import com.teammoeg.frostedheart.util.Lang;
 
 import lombok.Getter;
@@ -52,6 +53,7 @@ import java.util.List;
 public class TipWidget extends AbstractWidget {
     public final IconButton closeButton;
     public final IconButton pinButton;
+    public final IconButton linkButton;
     public Tip lastTip;
     @Nullable
     public Tip tip;
@@ -79,9 +81,16 @@ public class TipWidget extends AbstractWidget {
                     this.alwaysVisibleOverride = true;
                     b.setFocused(false);
                 });
+        this.linkButton = new IconButton(0, 0, IconButton.Icon.JUMP, ColorHelper.CYAN, Lang.gui("link").component(),
+                b -> {
+                    if (tip != null && tip.hasClickAction()) {
+                        TipClickActions.run(tip.getClickAction(), tip.getClickActionContent());
+                    }
+                });
         this.visible = false;
         this.closeButton.visible = false;
         this.pinButton.visible = false;
+        this.linkButton.visible = false;
     }
 
     @Override
@@ -98,6 +107,7 @@ public class TipWidget extends AbstractWidget {
                 if (f == 1F) {
                     pinButton.setAlpha(1F);
                     closeButton.setAlpha(1F);
+                    linkButton.setAlpha(1F);
                     state = isAlwaysVisible() ? State.DONE : State.PROGRESSING;
                     AnimationUtil.remove(RenderContext.FADE_ANIM_NAME);
                 }
@@ -179,10 +189,20 @@ public class TipWidget extends AbstractWidget {
         closeButton.visible = true;
         closeButton.setPosition(getX() + super.getWidth() - 10, getY());
         closeButton.render(graphics, mouseX, mouseY, partialTick);
+        int b = 0;
+        if (tip.hasClickAction()) {
+            b++;
+            linkButton.color = context.fontColor;
+            linkButton.visible = true;
+            linkButton.setPosition(getX() + super.getWidth() - 22, getY());
+            linkButton.render(graphics, mouseX, mouseY, partialTick);
+        } else {
+            linkButton.visible = false;
+        }
         if (isGuiOpened() && !isAlwaysVisible() && state != State.FADING_OUT) {
             pinButton.color = context.fontColor;
             pinButton.visible = true;
-            pinButton.setPosition(getX() + super.getWidth() - 22, getY());
+            pinButton.setPosition(getX() + super.getWidth() - 22 - (12*b), getY());
             pinButton.render(graphics, mouseX, mouseY, partialTick);
         } else {
             pinButton.visible = false;
@@ -220,11 +240,13 @@ public class TipWidget extends AbstractWidget {
         visible = false;
         pinButton.visible = false;
         closeButton.visible = false;
-        setFocused(false);
+        linkButton.visible = false;
         pinButton.setFocused(false);
         closeButton.setFocused(false);
+        linkButton.setFocused(false);
         pinButton.setAlpha(1F);
         closeButton.setAlpha(1F);
+        linkButton.setAlpha(1F);
         AnimationUtil.remove(RenderContext.FADE_ANIM_NAME);
         AnimationUtil.remove(RenderContext.PROGRESS_ANIM_NAME);
         // 将位置设置到屏幕外避免影响屏幕内的元素
@@ -376,7 +398,7 @@ public class TipWidget extends AbstractWidget {
                         BufferedImage image= ImageIO.read(stream);
                         hasImage = true;
                         return new Size2i(image.getWidth(), image.getHeight());
-                    } catch (IOException e) {
+                    } catch (IOException ignored) {
                     }
                 }
             }

@@ -3,9 +3,11 @@ package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
+import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -40,11 +42,6 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
 
     @Shadow public abstract boolean isFlat();
 
-    @Unique
-    private static final int TEMPERATUE_RANDOM_TICK_SPEED_DIVISOR = 2;
-    @Unique
-    private static final int WATER_FREEZE_CHANCE_INVERSE = 10;
-
     /**
      * Adds our custom temperature section before iceandsnow.
      * Implement the tickBlocks section too.
@@ -61,49 +58,50 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
     private void addTemperatureSection(LevelChunk pChunk, int pRandomTickSpeed, CallbackInfo ci) {
 
         ServerLevel level = (ServerLevel)(Object)this;
+        final long now = level.getGameTime();
         ChunkPos chunkpos = pChunk.getPos();
+        boolean updateTempBlock = (now + chunkpos.hashCode()) % FHConfig.SERVER.tempBlockstateUpdateIntervalTicks.get() == 0;
         boolean isRaining = level.isRaining();
         int i = chunkpos.getMinBlockX();
         int j = chunkpos.getMinBlockZ();
         // Process fewer blocks for temperature checks to reduce performance impact
         // Adjust this divisor based on your performance needs
-        int temperatureChecks = Math.max(1, pRandomTickSpeed / TEMPERATUE_RANDOM_TICK_SPEED_DIVISOR);
+        int temperatureChecks = Math.max(1, pRandomTickSpeed / FHConfig.SERVER.tempRandomTickSpeedDivisor.get());
 
         // Custom water freezing logic
         level.getProfiler().popPush("water");
-        if (pRandomTickSpeed > 0) {
+        if (pRandomTickSpeed > 0 && updateTempBlock) {
             for (int l1 = 0; l1 < temperatureChecks; ++l1) {
-                if (level.random.nextInt(WATER_FREEZE_CHANCE_INVERSE) == 0) {
-                    BlockPos blockpos1 = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(i, 0, j, 15));
-                    BlockPos blockpos2 = blockpos1.below();
-                    Biome biome = level.getBiome(blockpos1).value();
-                    // TODO: for ocean freezing, we need some special handling...
-                    boolean notWinterBiome = level.getBiome(blockpos1).unwrapKey().map(k -> !FHConfig.isWinterBiome(k.location())).orElse(true);
-                    if (!notWinterBiome && level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
-                        // Check if the block should freeze based on our custom logic
-                        frostedheart$freezeWater(level, blockpos2);
+                BlockPos blockpos1 = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(i, 0, j, 15));
+                BlockPos blockpos2 = blockpos1.below();
+                Holder<Biome> biomeHolder = level.getBiome(blockpos1);
+                Biome biome = biomeHolder.value();
+                // TODO: for ocean freezing, we need some special handling...
+                boolean notWinterBiome = biomeHolder.unwrapKey().map(k -> !FHConfig.isWinterBiome(k.location())).orElse(true);
+                if (!notWinterBiome && level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
+                    // Check if the block should freeze based on our custom logic
+                    frostedheart$freezeWater(level, blockpos2);
 
-                    if (isRaining) {
-                        int i1 = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
-                        if (i1 > 0 && frostedHeart$shouldSnowCustom(level, blockpos1)) {
-                            BlockState blockstate = level.getBlockState(blockpos1);
-                            if (blockstate.is(Blocks.SNOW)) {
-                                int k = blockstate.getValue(SnowLayerBlock.LAYERS);
-                                if (k < Math.min(i1, 8)) {
-                                    BlockState blockstate1 = blockstate.setValue(SnowLayerBlock.LAYERS, Integer.valueOf(k + 1));
-                                    Block.pushEntitiesUp(blockstate, blockstate1, level, blockpos1);
-                                    level.setBlockAndUpdate(blockpos1, blockstate1);
-                                }
-                            } else {
-                                level.setBlockAndUpdate(blockpos1, Blocks.SNOW.defaultBlockState());
+                if (isRaining) {
+                    int i1 = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
+                    if (i1 > 0 && frostedHeart$shouldSnowCustom(level, blockpos1)) {
+                        BlockState blockstate = level.getBlockState(blockpos1);
+                        if (blockstate.is(Blocks.SNOW)) {
+                            int k = blockstate.getValue(SnowLayerBlock.LAYERS);
+                            if (k < Math.min(i1, 8)) {
+                                BlockState blockstate1 = blockstate.setValue(SnowLayerBlock.LAYERS, Integer.valueOf(k + 1));
+                                Block.pushEntitiesUp(blockstate, blockstate1, level, blockpos1);
+                                level.setBlockAndUpdate(blockpos1, blockstate1);
                             }
+                        } else {
+                            level.setBlockAndUpdate(blockpos1, Blocks.SNOW.defaultBlockState());
                         }
+                    }
 
-                        Biome.Precipitation biome$precipitation = biome.getPrecipitationAt(blockpos2);
-                        if (biome$precipitation != Biome.Precipitation.NONE) {
-                            BlockState blockstate3 = level.getBlockState(blockpos2);
-                            blockstate3.getBlock().handlePrecipitation(blockstate3, level, blockpos2, biome$precipitation);
-                        }
+                    Biome.Precipitation biome$precipitation = biome.getPrecipitationAt(blockpos2);
+                    if (biome$precipitation != Biome.Precipitation.NONE) {
+                        BlockState blockstate3 = level.getBlockState(blockpos2);
+                        blockstate3.getBlock().handlePrecipitation(blockstate3, level, blockpos2, biome$precipitation);
                     }
                 }
             }
@@ -113,7 +111,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         level.getProfiler().popPush("temperature");
 
         // Only process if random tick speed is positive
-        if (pRandomTickSpeed > 0) {
+        if (pRandomTickSpeed > 0 && updateTempBlock) {
             LevelChunkSection[] sections = pChunk.getSections();
 
             for (int l = 0; l < sections.length; ++l) {
@@ -268,74 +266,91 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
 
     @Unique
     private void frostedHeart$updateBlockBasedOnTemperature(ServerLevel level, BlockPos pos, BlockState currentState) {
-        // Get temperature at this block position using your existing system
-        float t = WorldTemperature.block(level, pos);
+
         Block block = currentState.getBlock();
 
-        // TODO: For ocean melting we need special handling...
-        boolean isOcean = level.getBiome(pos).is(BiomeTags.IS_OCEAN);
-        boolean isIce = currentState.is(BlockTags.ICE);
-        if (isOcean && isIce) {
-            return;
-        }
-
-        // plant related
-        WorldTemperature.updatePlant(level, pos);
-
-        // general state transition
-        // we do not handle water freezing logic in seas
-
+        boolean doStateTransition = true;
         StateTransitionData std = StateTransitionData.getData(block);
         if (std == null) {
-            return;
+            doStateTransition = false;
         }
-        if (!std.willTransit())
-            return;
-
-        // Determine the target state based on temperature thresholds
-        // We check transitions in order of priority (solid->gas, gas->solid, etc.)
-        String targetState = std.state(); // Default to current state
-        Block targetBlock = block; // Default to current block
-
-        // Check for phase transitions in order of precedence
-        // 1. Check solid -> gas (sublimation, highest priority if temp is high enough)
-        if ("solid".equals(std.state()) && t >= std.evaporateTemp() && std.gas() != null) {
-            targetState = "gas";
-            targetBlock = std.gas();
-        }
-        // 2. Check gas -> solid (deposition, highest priority if temp is low enough)
-        else if ("gas".equals(std.state()) && t <= std.freezeTemp() && std.solid() != null) {
-            targetState = "solid";
-            targetBlock = std.solid();
-        }
-        // 3. Check liquid -> gas (evaporation)
-        else if ("liquid".equals(std.state()) && t >= std.evaporateTemp() && std.gas() != null) {
-            targetState = "gas";
-            targetBlock = std.gas();
-        }
-        // 4. Check gas -> liquid (condensation)
-        else if ("gas".equals(std.state()) && t <= std.condenseTemp() && std.liquid() != null) {
-            targetState = "liquid";
-            targetBlock = std.liquid();
-        }
-        // 5. Check solid -> liquid (melting)
-        else if ("solid".equals(std.state()) && t >= std.meltTemp() && std.liquid() != null) {
-            targetState = "liquid";
-            targetBlock = std.liquid();
-        }
-        // 6. Check liquid -> solid (freezing)
-        else if ("liquid".equals(std.state()) && t <= std.freezeTemp() && std.solid() != null) {
-            targetState = "solid";
-            targetBlock = std.solid();
-        }
-
-        // Skip update if target state is the same as current state
-        if (targetState.equals(std.state())) {
-            return;
-        }
-
+        else if (!std.willTransit())
+            doStateTransition = false;
         // Apply heat capacity check - only perform transition if random check passes
-        if (level.getRandom().nextInt(std.heatCapacity()) == 0) {
+        else if (level.getRandom().nextInt(std.heatCapacity()) != 0) {
+            doStateTransition = false;
+        }
+        // TODO: For ocean melting we need special handling...
+        // get biome call is expensive.
+        else if (level.getBiome(pos).is(BiomeTags.IS_OCEAN) && currentState.is(BlockTags.ICE)) {
+            doStateTransition = false;
+        }
+
+        boolean doPlantTransition = true;
+        var selfData = PlantTempData.getPlantData(currentState.getBlock());
+        if (selfData == null) {
+            doPlantTransition = false;
+        }
+
+        // plant state transition
+        if (doPlantTransition) {
+            float t = WorldTemperature.block(level, pos);
+            var selfStatus = WorldTemperature.checkPlantStatus(level, pos, selfData, t);
+            if (selfStatus.willDie()) {
+                var dead = selfData.dead();
+                var belowBlockState = level.getBlockState(pos.below());
+                if (dead == Blocks.DEAD_BUSH && !belowBlockState.isAir() && !belowBlockState.is(BlockTags.DEAD_BUSH_MAY_PLACE_ON)) {
+                    level.setBlockAndUpdate(pos.below(), Blocks.DIRT.defaultBlockState());
+                }
+                level.setBlockAndUpdate(pos, dead.defaultBlockState());
+            }
+        }
+
+        // general state transition
+
+        if (doStateTransition) {
+            float t = WorldTemperature.block(level, pos);
+            // Determine the target state based on temperature thresholds
+            // We check transitions in order of priority (solid->gas, gas->solid, etc.)
+            String targetState = std.state(); // Default to current state
+            Block targetBlock = block; // Default to current block
+
+            // Check for phase transitions in order of precedence
+            // 1. Check solid -> gas (sublimation, highest priority if temp is high enough)
+            if ("solid".equals(std.state()) && t >= std.evaporateTemp() && std.gas() != null) {
+                targetState = "gas";
+                targetBlock = std.gas();
+            }
+            // 2. Check gas -> solid (deposition, highest priority if temp is low enough)
+            else if ("gas".equals(std.state()) && t <= std.freezeTemp() && std.solid() != null) {
+                targetState = "solid";
+                targetBlock = std.solid();
+            }
+            // 3. Check liquid -> gas (evaporation)
+            else if ("liquid".equals(std.state()) && t >= std.evaporateTemp() && std.gas() != null) {
+                targetState = "gas";
+                targetBlock = std.gas();
+            }
+            // 4. Check gas -> liquid (condensation)
+            else if ("gas".equals(std.state()) && t <= std.condenseTemp() && std.liquid() != null) {
+                targetState = "liquid";
+                targetBlock = std.liquid();
+            }
+            // 5. Check solid -> liquid (melting)
+            else if ("solid".equals(std.state()) && t >= std.meltTemp() && std.liquid() != null) {
+                targetState = "liquid";
+                targetBlock = std.liquid();
+            }
+            // 6. Check liquid -> solid (freezing)
+            else if ("liquid".equals(std.state()) && t <= std.freezeTemp() && std.solid() != null) {
+                targetState = "solid";
+                targetBlock = std.solid();
+            }
+
+            // Skip update if target state is the same as current state
+            if (targetState.equals(std.state())) {
+                return;
+            }
 
             // Create effects before changing the block
             frostedHeart$addTransitionEffects(level, pos, std.state(), targetState, block, targetBlock);
