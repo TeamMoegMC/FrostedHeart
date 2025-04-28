@@ -3,7 +3,7 @@
   "blizzard_vulnerable": false,
   "block": "minecraft:tall_seagrass",
   "dead": "minecraft:air",
-  "grow_speed": 50.0,
+  "grow_time_days": 7.0,
   "max_fertilize": 24.0,
   "max_grow": 28.0,
   "max_survive": 32.0,

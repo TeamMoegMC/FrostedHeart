@@ -2,11 +2,11 @@
   "type": "frostedheart:plant_temp",
   "block": "caupona:snail_block",
   "dead": "minecraft:air",
-  "grow_speed": 50.0,
-  "max_fertilize": 24.0,
+  "grow_time_days": 7.0,
+  "max_fertilize": 32.0,
   "max_grow": 28.0,
   "max_survive": 32.0,
   "min_fertilize": 18.0,
-  "min_grow": 12.0,
+  "min_grow": 8.0,
   "min_survive": 5.0
 }

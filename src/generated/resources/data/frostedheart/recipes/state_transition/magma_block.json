@@ -5,7 +5,7 @@
   "evaporate_temp": 800.0,
   "freeze_temp": 300.0,
   "gas": "minecraft:lava",
-  "heat_capacity": 200,
+  "heat_capacity": 5,
   "liquid": "minecraft:magma_block",
   "melt_temp": 400.0,
   "solid": "frostedheart:cooled_magma_block",

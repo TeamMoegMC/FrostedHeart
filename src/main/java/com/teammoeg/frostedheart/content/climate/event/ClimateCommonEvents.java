@@ -36,7 +36,6 @@ import com.teammoeg.frostedheart.content.climate.data.PlantTemperature;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
-import com.teammoeg.frostedheart.content.climate.player.BodyPartData;
 import com.teammoeg.frostedheart.content.climate.player.ClothData;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
@@ -99,6 +98,7 @@ import static com.teammoeg.frostedheart.content.climate.WorldTemperature.SNOW_RE
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ClimateCommonEvents {
+	public static final int random_tick_interval_per_block = 4096 / 3;
 	@SubscribeEvent
 	public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
 		// Common capabilities
@@ -179,6 +179,9 @@ public class ClimateCommonEvents {
 	 * }
 	 */
 
+	// wet farmland, best pattern, seven stages
+	public static final int vanilla_default_crop_grow_chance_inverse_per_random_tick = 3 * 7;
+	// worst pattern it gets doubled
 	/**
 	 * Controls the growth of crops based on the temperature.
 	 */
@@ -190,12 +193,15 @@ public class ClimateCommonEvents {
 		LevelAccessor level = event.getLevel();
 		PlantTempData data = PlantTempData.getPlantData(crop);
 		WorldTemperature.PlantStatus status = WorldTemperature.checkPlantStatus(level, pos, crop);
-		float growSpeed = PlantTemperature.DEFAULT_GROW_SPEED;
+		float growTimeGameDays = PlantTemperature.DEFAULT_GROW_TIME_GAME_DAYS;
 		if (data != null) {
-			growSpeed = data.growSpeed();
+			growTimeGameDays = data.growTimeDays();
 		}
-		float growChance = Mth.clamp(growSpeed / 100f, 0, 1);
-		float fertilizeGrowChance =  Mth.clamp(growSpeed * 2 / 100f, 0, 1);
+
+		float growSpeed = growTimeGameDays * 24000 / (vanilla_default_crop_grow_chance_inverse_per_random_tick * random_tick_interval_per_block);
+
+		float growChance = Mth.clamp(1 / growSpeed, 0, 1);
+		float fertilizeGrowChance =  Mth.clamp(3 / growSpeed, 0, 1);
 		// faster
 		if (status.canFertilize()) {
 			if (level.getRandom().nextFloat() < fertilizeGrowChance) {
@@ -444,6 +450,8 @@ public class ClimateCommonEvents {
 			event.setResult(Event.Result.DENY);
 	}
 	 */
+
+	public static final int vanilla_default_tree_grow_chance_inverse_per_random_tick = 7 * 2;
 	@SubscribeEvent
 	public static void saplingGrow(SaplingGrowTreeEvent event) {
 		BlockPos pos = event.getPos();
@@ -456,18 +464,20 @@ public class ClimateCommonEvents {
 
 		PlantTempData data = PlantTempData.getPlantData(crop);
 		WorldTemperature.PlantStatus status = WorldTemperature.checkPlantStatus(level, pos, crop);
-		float growSpeed = PlantTemperature.DEFAULT_GROW_SPEED;
+		float growTimeGameDays = PlantTemperature.DEFAULT_GROW_TIME_GAME_DAYS;
 		if (data != null) {
-			growSpeed = data.growSpeed();
+			growTimeGameDays = data.growTimeDays();
 		}
 
 		// big tree can grow, but takes extremely long
 		if (event.getFeature() != null && event.getFeature().is(FHTags.BIG_TREE)) {
-			growSpeed *= 0.1f;
+			growTimeGameDays *= 10;
 		}
 
-		float growChance = Mth.clamp(growSpeed / 100f, 0, 1);
-		float fertilizeGrowChance =  Mth.clamp(growSpeed * 2 / 100f, 0, 1);
+		float growSpeed = growTimeGameDays * 24000 / (vanilla_default_tree_grow_chance_inverse_per_random_tick * random_tick_interval_per_block);
+
+		float growChance = Mth.clamp(1 / growSpeed, 0, 1);
+		float fertilizeGrowChance =  Mth.clamp(3 / growSpeed, 0, 1);
 		// faster
 		if (status.canFertilize()) {
 			if (level.getRandom().nextFloat() < fertilizeGrowChance) {

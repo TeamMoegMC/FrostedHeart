@@ -2,7 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:lily_pad",
   "dead": "minecraft:air",
-  "grow_speed": 50.0,
+  "grow_time_days": 8.0,
   "max_fertilize": 28.0,
   "max_grow": 32.0,
   "max_survive": 36.0,

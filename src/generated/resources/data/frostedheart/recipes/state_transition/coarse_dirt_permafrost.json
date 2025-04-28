@@ -5,7 +5,6 @@
   "evaporate_temp": 100.0,
   "freeze_temp": -5.0,
   "gas": "minecraft:coarse_dirt",
-  "heat_capacity": 100,
   "liquid": "minecraft:mud",
   "melt_temp": 2.0,
   "solid": "frostedheart:coarse_dirt_permafrost",

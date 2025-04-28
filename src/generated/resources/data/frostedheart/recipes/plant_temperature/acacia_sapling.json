@@ -2,11 +2,11 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:acacia_sapling",
   "dead": "minecraft:dead_bush",
-  "grow_speed": 50.0,
+  "grow_time_days": 12.0,
   "max_fertilize": 32.0,
   "max_grow": 42.0,
   "max_survive": 45.0,
-  "min_fertilize": 22.0,
-  "min_grow": 20.0,
+  "min_fertilize": 25.0,
+  "min_grow": 15.0,
   "min_survive": 5.0
 }

@@ -2,7 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:pitcher_plant",
   "dead": "minecraft:dead_bush",
-  "grow_speed": 50.0,
+  "grow_time_days": 5.0,
   "max_fertilize": 26.0,
   "max_grow": 30.0,
   "max_survive": 35.0,

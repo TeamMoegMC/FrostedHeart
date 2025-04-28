@@ -155,7 +155,7 @@ public class FHRecipeProvider extends RecipeProvider {
 			ResourceLocation block=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("block")));
 			ResourceLocation dead=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("dead")));
 			out.accept(new PlantTempData(CRegistryHelper.getBlockThrow(block),
-					(float)ExcelHelper.getCellValueAsNumber(m.get("grow_speed")),
+					(float)ExcelHelper.getCellValueAsNumber(m.get("grow_time_days")),
 					(float)ExcelHelper.getCellValueAsNumber(m.get("min_fertilize")),
 					(float)ExcelHelper.getCellValueAsNumber(m.get("min_grow")),
 					(float)ExcelHelper.getCellValueAsNumber(m.get("min_survive")),

@@ -2,12 +2,12 @@
   "type": "frostedheart:plant_temp",
   "block": "caupona:wolfberry_fruits",
   "dead": "minecraft:air",
-  "grow_speed": 50.0,
-  "max_fertilize": 30.0,
-  "max_grow": 34.0,
+  "grow_time_days": 7.0,
+  "max_fertilize": 32.0,
+  "max_grow": 32.0,
   "max_survive": 36.0,
   "min_fertilize": 22.0,
-  "min_grow": 15.0,
+  "min_grow": 12.0,
   "min_survive": 5.0,
   "snow_vulnerable": false
 }

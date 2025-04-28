@@ -1,9 +1,8 @@
 {
   "type": "frostedheart:plant_temp",
-  "blizzard_vulnerable": false,
   "block": "minecraft:dandelion",
   "dead": "minecraft:air",
-  "grow_speed": 50.0,
+  "grow_time_days": 11.0,
   "max_fertilize": 22.0,
   "max_grow": 26.0,
   "max_survive": 32.0,
