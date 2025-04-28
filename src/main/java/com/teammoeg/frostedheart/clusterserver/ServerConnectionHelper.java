@@ -2,12 +2,17 @@ package com.teammoeg.frostedheart.clusterserver;
 
 import java.nio.charset.StandardCharsets;
 import java.security.AlgorithmParameters;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 import java.util.Date;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHNetwork;
@@ -42,22 +47,24 @@ public class ServerConnectionHelper {
 	public static String constructRedirectMessage(String ip,boolean temp) {
 		return HEADER+(temp?"\uFF03":"\uFF02")+ip;
 	}
+
 	public static String encode(String data) {
 		try {
 			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-			cipher.init(Cipher.ENCRYPT_MODE, currentKey);
-			AlgorithmParameters params = cipher.getParameters();
+			cipher.init(Cipher.ENCRYPT_MODE, currentKey,new IvParameterSpec(new byte[cipher.getBlockSize()]));
 			return Base64.getEncoder().encodeToString(cipher.doFinal(data.getBytes(StandardCharsets.UTF_8)));
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			return null;
 		}
 	}
 	public static String decode(String data) {
 		try {
 			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-			cipher.init(Cipher.DECRYPT_MODE, currentKey);
+			cipher.init(Cipher.DECRYPT_MODE, currentKey,new IvParameterSpec(new byte[cipher.getBlockSize()]));
 			return new String(cipher.doFinal(Base64.getDecoder().decode(data)), StandardCharsets.UTF_8);
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			return null;
 		}
 	}
