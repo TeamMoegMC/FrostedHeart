@@ -20,6 +20,8 @@
 package com.teammoeg.frostedheart;
 
 import com.teammoeg.chorda.network.CBaseNetwork;
+import com.teammoeg.frostedheart.clusterserver.network.S2CRedirectPacket;
+import com.teammoeg.frostedheart.clusterserver.network.S2CTokenPacket;
 import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
@@ -141,5 +143,9 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("notify_chunk_heat_update", FHNotifyChunkHeatUpdatePacket.class);
         //Sled
         registerMessage("sled", FHServerBoundUpdateSledState.class);
+        
+        //Server Cluster
+        registerMessage("sc_redirect_ip",S2CRedirectPacket.class);
+        registerMessage("sc_token",S2CTokenPacket.class);
     }
 }
