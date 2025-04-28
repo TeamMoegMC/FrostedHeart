@@ -317,29 +317,29 @@
           "produce": "minecraft:rabbit",
           "recover": 5.0,
           "restock_condition": [],
-          "store": 32,
+          "store": 16,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
-          "id": "minecraft:brown_mushroom",
-          "price": 5,
-          "produce": "minecraft:brown_mushroom",
+          "id": "minecraft:chicken",
+          "price": 20,
+          "produce": "minecraft:chicken",
           "recover": 5.0,
           "restock_condition": [],
-          "store": 32,
+          "store": 8,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
-          "id": "minecraft:red_mushroom",
-          "price": 5,
-          "produce": "minecraft:red_mushroom",
+          "id": "minecraft:feather",
+          "price": 20,
+          "produce": "minecraft:feather",
           "recover": 5.0,
           "restock_condition": [],
-          "store": 32,
+          "store": 8,
           "use_actions": []
         }
       ]

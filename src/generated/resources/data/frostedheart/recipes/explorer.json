@@ -221,6 +221,19 @@
         },
         {
           "actions": [],
+          "demand": {
+            "item": "minecraft:book"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:book",
+          "price": 50,
+          "recover": 0.1,
+          "restock_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
           "hide_stockout": false,
           "id": "caupona:walnut_sapling",
           "price": 300,
