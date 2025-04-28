@@ -373,6 +373,7 @@
   "key.frostedheart.health": "打开饮食均衡",
   "key.frostedheart.open_wheel_menu": "打开轮盘菜单",
   "manual.frostedheart.main": "能量塔",
+  "message.frostedheart.disallowed_mods":"服务器拒绝连接：你的客户端包含禁止使用的模组",
   "message.frostedheart.container_entity_name": "雪橇%s",
   "message.frostedheart.campfire.forever": "这个篝火不会熄灭！",
   "message.frostedheart.campfire.fuel": "点不着了，向篝火上丢一些燃料吧。",

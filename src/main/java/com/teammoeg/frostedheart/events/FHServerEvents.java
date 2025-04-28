@@ -19,9 +19,25 @@
 
 package com.teammoeg.frostedheart.events;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.events.ServerLevelDataSaveEvent;
+import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.clusterserver.ServerConnectionHelper;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
 import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
@@ -37,6 +53,7 @@ import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.loading.FMLPaths;
 
 /**
  * Events fired only on logical server side.
@@ -66,8 +83,25 @@ public class FHServerEvents {
 	public static void serverAboutToStart(final ServerAboutToStartEvent event) {
 		SurroundingTemperatureSimulator.init();
 		TemperatureUpdate.init();
-		if(FMLEnvironment.dist==Dist.DEDICATED_SERVER)
+		if(FMLEnvironment.dist==Dist.DEDICATED_SERVER) {
 			TssapProtocolHandler.serverPrepareUpdateReminder();
+			File authConfig=new File(FMLPaths.CONFIGDIR.get().toFile(),"auth.json");
+			if(authConfig.exists()) {
+				try {
+					JsonObject authCfg=JsonParser.parseString(FileUtil.readString(authConfig)).getAsJsonObject();
+					SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+					PBEKeySpec spec = new PBEKeySpec(authCfg.get("key").getAsString().toCharArray(), "Frostedheart".getBytes(StandardCharsets.UTF_8), 65536, 256);
+					SecretKey tmp = factory.generateSecret(spec);
+					ServerConnectionHelper.currentKey = new SecretKeySpec(tmp.getEncoded(), "AES");
+					ServerConnectionHelper.isAuthEnabled=authCfg.get("enabled").getAsBoolean();
+					ServerConnectionHelper.timeout=authCfg.get("timeout").getAsLong();
+					ServerConnectionHelper.loginServer=authCfg.get("loginServer").getAsString();
+				} catch (JsonSyntaxException | IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+					e.printStackTrace();
+				}
+				
+			}
+		}
 	}
 
 	/**

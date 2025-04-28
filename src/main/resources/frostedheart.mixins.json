@@ -24,6 +24,8 @@
     "forge.FluidHandlerItemStackMixin",
     "forge.FluidHandlerItemStackSimpleMixin",
     "forge.ServerLifecycleHooksMixin",
+    "forge.C2SModListReplyMixin",
+    "forge.FMLHandshakeAntiCheatMixin",
     "immersiveengineering.IERegistrationMixin",
     "immersiveengineering.OwnerableStateMixin",
     "minecraft.accessors.NewChatGuiAccessor",
@@ -63,6 +65,7 @@
     "minecraft.trade.AssignProfessionFromJobSite_DisableVanillaProfession",
     "minecraft.trade.ResetProfession_DisableVanillaProfession",
     "minecraft.trade.VillagerMixin",
+    
     "registrate.RegistrateBlockLootTablesMixin_RemoveExisted"
   ],
   "client": [
@@ -79,6 +82,9 @@
     "client.PrimaryLevelDataMixin",
     "client.ToastComponentMixin",
     "create.MixinOpenConfigButtonHandler",
+    "client.ConnectScreenAccess",
+    "client.ConnectScreenMixin",
+    "client.ClientPacketListenerMixin",
     "minecraft.water.LocalPlayerMixin",
     "oculus.IrisRenderingPipelineAccess"
   ],
