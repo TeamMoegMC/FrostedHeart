@@ -27,7 +27,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 @Mixin(HandshakeHandler.class)
 public class FMLHandshakeAntiCheatMixin {
-	@Inject(at = @At("TAIL"), method = "handleClientModListOnServer", remap = false,cancellable=true)
+	@Inject(at = @At("HEAD"), method = "handleClientModListOnServer", remap = false,cancellable=true)
 	void fh$handleClientModListOnServer(HandshakeMessages.C2SModListReply clientModList,
 			Supplier<NetworkEvent.Context> c, CallbackInfo cbi) {
 		Set<String> cli=clientModList.getModList().stream().map(String::toLowerCase).collect(Collectors.toSet());
@@ -40,18 +40,21 @@ public class FMLHandshakeAntiCheatMixin {
 				return;
 			}
 		}
+		
+		
 		if(ServerConnectionHelper.isAuthEnabled) {
 			NetworkEvent.Context ctx=c.get();
 			try {
 				String token=ServerConnectionHelper.currentToken.get();
 				if(token!=null) {
 					String decoded=ServerConnectionHelper.decode(token);
-					System.out.println(decoded);
+					FHMain.LOGGER.debug(decoded);
 					if(decoded!=null) {
 						JsonObject decodedJson=JsonParser.parseString(decoded).getAsJsonObject();
-						String name=((ServerLoginPacketListenerImpl) ctx.getNetworkManager().getPacketListener()).getUserName();
+						String name=((ServerLoginPacketListenerImpl) ctx.getNetworkManager().getPacketListener()).gameProfile.getName();
 						long now=new Date().getTime();
 						long dat=decodedJson.get("timeout").getAsLong();
+						
 						if(dat>=now&&name.equals(decodedJson.get("userName").getAsString())) {
 							return;
 						}
@@ -61,6 +64,8 @@ public class FMLHandshakeAntiCheatMixin {
 				
 			}
 			ServerConnectionHelper.sendRedirect(ctx, ServerConnectionHelper.loginServer, true);
+			ctx.getNetworkManager().disconnect(Component.translatable("message.frostedheart.not_authorized"));
+			cbi.cancel();
 		}
 		
 	}
