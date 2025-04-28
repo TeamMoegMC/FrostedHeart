@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 import java.util.Date;
+import java.util.UUID;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -37,8 +38,12 @@ public class ServerConnectionHelper {
 	}
 	public static String constructAuthMessage(String name) {
 		JsonObject info=new JsonObject();
+		//pad head and end with random data to improve security
+		info.addProperty("_ps", UUID.randomUUID().toString());
+		
 		info.addProperty("userName", name);
 		info.addProperty("timeout", new Date().getTime()+timeout);
+		info.addProperty("es_", UUID.randomUUID().toString());
 		return HEADER+"\uFF00"+encode(info.toString());
 	}
 	public static String constructBackMessage(String name) {
