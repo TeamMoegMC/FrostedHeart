@@ -56,7 +56,7 @@ public class FHMultiblocks {
 			.notMirrored()
 			.component(FHMenuTypes.GENERATOR_T2.createComponent())
 			.build();
-		public static final MultiblockRegistration<RadiatorState> RADIATOR = metal(new RadiatorLogic(), "radiator",t->t)
+		public static final MultiblockRegistration<RadiatorState> RADIATOR = metal(new RadiatorLogic(), "radiator",t->t.lightLevel(bs->bs.getValue(NonMirrorableWithActiveBlock.ACTIVE)?15:0))
 			.structure(() -> FHMultiblocks.RADIATOR)
 			.notMirrored()
 			.build();
