@@ -24,8 +24,11 @@ public class ClientConnectionHelper {
 
 	@SuppressWarnings("resource")
 	public static void handleDisconnect() {
-		if(ClientUtils.mc().level!=null)
+		if(ClientUtils.mc().level!=null) {
 			ClientUtils.mc().level.disconnect();
+			ClientUtils.mc().clearLevel();
+			ClientUtils.mc().setScreen(new JoinMultiplayerScreen(new TitleScreen()));
+		}
 	}
 
 	public static void back2ServerScreen() {
@@ -38,21 +41,26 @@ public class ClientConnectionHelper {
 	}
 	@SuppressWarnings("resource")
 	public static void joinNewServer(String ip,boolean temporary) {
+		try {
 		if(temporary) {
 			callStack.addLast(last.toString());
 		}
+		handleDisconnect();
+		JoinMultiplayerScreen jms=new JoinMultiplayerScreen(new TitleScreen());
+		if(ClientUtils.mc().screen instanceof ConnectScreenAccess)
+			ClientUtils.mc().setScreen(jms);
 		ServerList servers = new ServerList(ClientUtils.mc());
 		servers.load();
 		ServerData serverdata = servers.get(ip);
 		if (serverdata == null) {
-			serverdata = new ServerData(I18n.get("selectServer.defaultName"), "", false);
+			serverdata = new ServerData(ip, ip, false);
 			servers.add(serverdata, true);
 			servers.save();
 		}
-		handleDisconnect();
-		if(ClientUtils.mc().screen instanceof ConnectScreenAccess)
-			ClientUtils.mc().screen=null;
-		ConnectScreen.startConnecting(new JoinMultiplayerScreen(new TitleScreen()), ClientUtils.mc(), ServerAddress.parseString(serverdata.ip), serverdata, false);
-		
+
+		ConnectScreen.startConnecting(jms, ClientUtils.mc(), ServerAddress.parseString(serverdata.ip), serverdata, false);
+		}catch(Throwable t) {
+			t.printStackTrace();
+		}
 	}
 }

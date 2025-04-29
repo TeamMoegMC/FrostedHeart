@@ -105,7 +105,7 @@ public class ServerClusterCommand {
                                 )
 
                 ;
-        Commands.literal("cs").then(Commands.literal("list").executes(ct->{
+        LiteralArgumentBuilder<CommandSourceStack> cmd=Commands.literal("cs").then(Commands.literal("list").executes(ct->{
         	CommandSourceStack sp=ct.getSource();
         	sp.sendSystemMessage(Components.translatable("message.frostedheart.servers").withStyle(Style.EMPTY.withColor(ChatFormatting.GOLD)));
         	for(Entry<String, ServerEntry> se:AuthConfig.servers.entrySet()) {
@@ -131,6 +131,7 @@ public class ServerClusterCommand {
         for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
             dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(Commands.literal("server_cluster").then(permCmd)));
         }
+        dispatcher.register(cmd);
 
     }
 }

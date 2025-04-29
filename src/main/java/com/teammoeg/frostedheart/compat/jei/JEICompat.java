@@ -81,6 +81,7 @@ import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -183,6 +184,7 @@ public class JEICompat implements IModPlugin {
         registration.addRecipeCatalyst(new ItemStack(FHBlocks.SAUNA_VENT.get()), SaunaCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHBlocks.INCUBATOR.get()), IncubatorCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHBlocks.HEAT_INCUBATOR.get()), IncubatorCategory.UID);
+ 
     }
 
     @Override
