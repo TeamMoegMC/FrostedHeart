@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart;
 
+import com.teammoeg.caupona.CPItems;
+import com.teammoeg.caupona.CPMain;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.ChordaMetaEvents;
 import com.teammoeg.chorda.CompatModule;
@@ -53,9 +56,12 @@ import com.teammoeg.frostedheart.content.world.FHFeatures;
 import com.teammoeg.frostedheart.util.FHRemote;
 import com.teammoeg.frostedheart.util.FHVersion;
 
+import com.yanny.age.stone.subscribers.ItemSubscriber;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameRules.IntegerValue;
+import net.minecraft.world.level.block.ComposterBlock;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -225,6 +231,83 @@ public class FHMain {
 		// modify default value
 		GameRules.GAME_RULE_TYPES.put(GameRules.RULE_SPAWN_RADIUS, IntegerValue.create(0));
 
+		// stupid vanilla
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHBlocks.RYE_BLOCK.asItem(), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHBlocks.WHITE_TURNIP_BLOCK.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.dried_wolfberries.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.rye.asItem(), 0.5f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.INULIN.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.frozen_seeds.asItem(), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.rye_flour.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.raw_rye_bread.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.random_seeds.asItem(), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.rye_bread.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.black_bread.asItem(), 0.1f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.vegetable_sawdust_soup.asItem(), 0.1f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.rye_sawdust_porridge.asItem(), 0.1f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.rye_porridge.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.vegetable_soup.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.military_rations.asItem(), 0.5f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.compressed_biscuits_pack.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.compressed_biscuits.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.packed_nuts.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.dried_vegetables.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.chocolate.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.RAW_WHALE_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.COOKED_WHALE_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.SQUID_TENTACLES.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.COOKED_SQUID_TENTACLES.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.FOX_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.COOKED_FOX_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.WOLF_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.COOKED_WOLF_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.POLAR_BEAR_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.COOKED_POLAR_BEAR_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.COOKED_POLAR_BEAR_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.BEEF, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.PORKCHOP, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.CHICKEN, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COD, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.MUTTON, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.RABBIT, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.SALMON, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COOKED_BEEF, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COOKED_PORKCHOP, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COOKED_CHICKEN, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COOKED_COD, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COOKED_MUTTON, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COOKED_RABBIT, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COOKED_SALMON, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.ROTTEN_FLESH, 0.6f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("walnut_sapling")), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("fig_sapling")), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("wolfberry_sapling")), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("walnut_leaves")), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("fig_leaves")), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("wolfberry_leaves")), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("snail")), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("plump_snail")), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("fig")), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("walnut")), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("wolfberries")), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_auroch_meat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_fat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_boar_meat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_fowl_meat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_mammoth_meat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_mouflon_meat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_rhino_meat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_tiger_meat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_venison, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.auroch_meat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.fat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.boar_meat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.fowl_meat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.mammoth_meat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.mouflon_meat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.rhino_meat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.tiger_meat, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.venison, 0.8f);
 	}
 
 	/**
