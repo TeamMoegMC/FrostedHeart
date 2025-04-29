@@ -2,9 +2,12 @@ package com.teammoeg.frostedheart.clusterserver.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.clusterserver.ClientConnectionHelper;
 
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.network.NetworkEvent.Context;
@@ -21,11 +24,16 @@ public record S2CRedirectPacket(String ip, boolean temporarily) implements CMess
 
 	@Override
 	public void handle(Supplier<Context> context) {
-		
-		//ClientConnectionHelper.handleDisconnect();
 		context.get().getNetworkManager().disconnect(Component.translatable("multiplayer.status.quitting"));
-		//context.get().getNetworkManager().
-		ClientConnectionHelper.joinNewServer(ip,temporarily);
+		context.get().enqueueWork(()->{
+			//ClientConnectionHelper.handleDisconnect();
+			
+			//context.get().getNetworkManager().
+			//ClientConnectionHelper.back2ServerScreen();
+			ClientUtils.mc().screen=null;
+			ClientConnectionHelper.rawJoinNewServer(new JoinMultiplayerScreen(ClientUtils.mc().screen),ip,temporarily);
+		});
+		
 		
 	}
 

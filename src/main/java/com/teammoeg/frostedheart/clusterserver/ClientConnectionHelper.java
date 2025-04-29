@@ -9,6 +9,7 @@ import com.teammoeg.frostedheart.mixin.client.ConnectScreenAccess;
 
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.multiplayer.ServerData;
@@ -40,7 +41,7 @@ public class ClientConnectionHelper {
 				ClientUtils.mc().setScreen(new TitleScreen());
 			}else {
 				ClientUtils.mc().clearLevel();
-				ClientUtils.mc().setScreen(new JoinMultiplayerScreen(new TitleScreen()));
+				back2ServerScreen();
 			}
 			
 			
@@ -62,11 +63,15 @@ public class ClientConnectionHelper {
 			ClientUtils.mc().submitAsync(()->joinNewServer(ip,temporary));
 			return;
 		}
+		handleDisconnect();
+		rawJoinNewServer(ClientUtils.mc().screen,ip,temporary);
+	}
+	@SuppressWarnings("resource")
+	public static void rawJoinNewServer(Screen previous,String ip,boolean temporary) {
 		try {
 		if(temporary) {
 			callStack.addLast(last.toString());
 		}
-		handleDisconnect();
 			
 		ServerList servers = new ServerList(ClientUtils.mc());
 		servers.load();
@@ -77,7 +82,7 @@ public class ClientConnectionHelper {
 			servers.save();
 		}
 
-		ConnectScreen.startConnecting(ClientUtils.mc().screen, ClientUtils.mc(), ServerAddress.parseString(serverdata.ip), serverdata, false);
+		ConnectScreen.startConnecting(previous, ClientUtils.mc(), ServerAddress.parseString(serverdata.ip), serverdata, false);
 		}catch(Throwable t) {
 			t.printStackTrace();
 		}
