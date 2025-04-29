@@ -1,0 +1,13 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": "frostedheart:layered_thin_ice",
+  "condense_temp": -5.0,
+  "evaporate_temp": 2.0,
+  "freeze_temp": -10.0,
+  "gas": "minecraft:air",
+  "liquid": "frostedheart:layered_thin_ice",
+  "melt_temp": -5.0,
+  "solid": "frostedheart:layered_thin_ice",
+  "state": "liquid",
+  "will_transit": true
+}
