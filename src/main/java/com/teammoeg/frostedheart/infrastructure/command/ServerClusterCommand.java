@@ -20,20 +20,31 @@
 package com.teammoeg.frostedheart.infrastructure.command;
 
 import java.util.Collection;
+import java.util.Map.Entry;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.clusterserver.AuthConfig;
+import com.teammoeg.frostedheart.clusterserver.AuthConfig.ServerEntry;
 import com.teammoeg.frostedheart.clusterserver.ServerConnectionHelper;
+import com.teammoeg.frostedheart.clusterserver.network.S2CRedirectPacket;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.GameProfileArgument;
+import net.minecraft.commands.arguments.GameProfileArgument.Result;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -45,8 +56,7 @@ public class ServerClusterCommand {
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        LiteralArgumentBuilder<CommandSourceStack> cmd = Commands.literal("server_cluster")
-                .then(Commands.argument("target", GameProfileArgument.gameProfile()).then(
+        RequiredArgumentBuilder<CommandSourceStack, Result> permCmd = Commands.argument("target", GameProfileArgument.gameProfile()).then(
                 	Commands.literal("auth")
                         .executes(ct -> {
                         	Collection<GameProfile> gp=GameProfileArgument.getGameProfiles(ct, "target");
@@ -94,9 +104,32 @@ public class ServerClusterCommand {
                             		))
                                 )
 
-                );
+                ;
+        Commands.literal("cs").then(Commands.literal("list").executes(ct->{
+        	CommandSourceStack sp=ct.getSource();
+        	sp.sendSystemMessage(Components.translatable("message.frostedheart.servers").withStyle(Style.EMPTY.withColor(ChatFormatting.GOLD)));
+        	for(Entry<String, ServerEntry> se:AuthConfig.servers.entrySet()) {
+        		if(!se.getValue().hidden)
+        			sp.sendSystemMessage(Components.str(se.getValue().name).withStyle(Style.EMPTY.withColor(ChatFormatting.GOLD).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+												Components.str(se.getValue().desc)))));
+        	}
+        	 return Command.SINGLE_SUCCESS;
+        }).then(Commands.literal("join").then(Commands.argument("server", StringArgumentType.string()).suggests((ct,builder)->{
+        	AuthConfig.servers.values().stream().filter(n->!n.hidden).filter(n->n.name.startsWith(ct.getInput())).forEach(n->builder.suggest(n.name, Components.str(n.desc)));
+        	return builder.buildFuture();
+        }).executes(ct->{
+        	String server=StringArgumentType.getString(ct, "server");
+        	ServerEntry serv=AuthConfig.servers.get(server);
+        	if(serv!=null) {
+        		FHNetwork.INSTANCE.sendPlayer(ct.getSource().getPlayerOrException(), new S2CRedirectPacket(serv.address,false));
+        	}else {
+        		ct.getSource().sendSystemMessage(Components.translatable("message.frostedheart.no_such_server"));
+        	}
+        	
+        	return Command.SINGLE_SUCCESS;
+        }))));
         for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
-            dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(cmd));
+            dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(Commands.literal("server_cluster").then(permCmd)));
         }
 
     }

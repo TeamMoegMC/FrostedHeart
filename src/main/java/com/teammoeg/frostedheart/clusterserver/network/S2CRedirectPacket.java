@@ -9,15 +9,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.network.NetworkEvent.Context;
 
-public class S2CRedirectPacket implements CMessage{
-	String ip;
-	boolean temporarily;
-
-	public S2CRedirectPacket(String ip, boolean temporarily) {
-		super();
-		this.ip = ip;
-		this.temporarily = temporarily;
-	}
+public record S2CRedirectPacket(String ip, boolean temporarily) implements CMessage{
 	public S2CRedirectPacket(FriendlyByteBuf buffer) {
 		this(buffer.readUtf(),buffer.readBoolean());
 	}

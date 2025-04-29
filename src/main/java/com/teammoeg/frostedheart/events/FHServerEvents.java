@@ -37,6 +37,7 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.events.ServerLevelDataSaveEvent;
 import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.clusterserver.AuthConfig;
 import com.teammoeg.frostedheart.clusterserver.ServerConnectionHelper;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
@@ -85,22 +86,7 @@ public class FHServerEvents {
 		TemperatureUpdate.init();
 		if(FMLEnvironment.dist==Dist.DEDICATED_SERVER) {
 			TssapProtocolHandler.serverPrepareUpdateReminder();
-			File authConfig=new File(FMLPaths.CONFIGDIR.get().toFile(),"auth.json");
-			if(authConfig.exists()) {
-				try {
-					JsonObject authCfg=JsonParser.parseString(FileUtil.readString(authConfig)).getAsJsonObject();
-					SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-					PBEKeySpec spec = new PBEKeySpec(authCfg.get("key").getAsString().toCharArray(), "Frostedheart".getBytes(StandardCharsets.UTF_8), 65536, 256);
-					SecretKey tmp = factory.generateSecret(spec);
-					ServerConnectionHelper.currentKey = new SecretKeySpec(tmp.getEncoded(), "AES");
-					ServerConnectionHelper.isAuthEnabled=authCfg.get("enabled").getAsBoolean();
-					ServerConnectionHelper.timeout=authCfg.get("timeout").getAsLong();
-					ServerConnectionHelper.loginServer=authCfg.get("loginServer").getAsString();
-				} catch (JsonSyntaxException | IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-					e.printStackTrace();
-				}
-				
-			}
+			AuthConfig.reload();
 		}
 	}
 

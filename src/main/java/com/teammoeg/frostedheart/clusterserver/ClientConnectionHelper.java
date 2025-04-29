@@ -47,9 +47,10 @@ public class ClientConnectionHelper {
 			servers.add(serverdata, true);
 			servers.save();
 		}
-		
+		handleDisconnect();
 		if(ClientUtils.mc().screen instanceof ConnectScreenAccess csa)
 			ClientUtils.mc().screen=null;
 		ConnectScreen.startConnecting(new JoinMultiplayerScreen(new TitleScreen()), ClientUtils.mc(), ServerAddress.parseString(serverdata.ip), serverdata, false);
+		
 	}
 }
