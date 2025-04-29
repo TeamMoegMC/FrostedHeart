@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
@@ -162,8 +163,11 @@ public class FHVillagerData implements MenuProvider {
         list.put(RelationModifier.CHARM, (int) ResearchDataAPI.getVariantDouble(pe, ResearchVariant.VILLAGER_RELATION));
         int killed=0;
         
-        if(getStats(pe)!=null)
-        	killed = getStats(pe).getValue(Stats.ENTITY_KILLED.get(EntityType.VILLAGER));
+        if(getStats(pe)!=null) {
+            killed = getStats(pe).getValue(Stats.ENTITY_KILLED.get(EntityType.VILLAGER));
+            killed += getStats(pe).getValue(Stats.ENTITY_KILLED.get(FHEntityTypes.WANDERING_REFUGEE.get()));
+            killed += getStats(pe).getValue(Stats.ENTITY_KILLED.get(EntityType.WANDERING_TRADER));
+        }
         int kdc = (int) Math.min(killed, ResearchDataAPI.getVariantDouble(pe, ResearchVariant.VILLAGER_FORGIVENESS));
         list.put(RelationModifier.KILLED_HISTORY, (killed - kdc) * -5);
         if (parent instanceof Villager villager) {
