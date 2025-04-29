@@ -72,7 +72,10 @@ public class RadiatorState extends HeatingState implements HeatNetworkProvider, 
 
     @Override
     public int getRadius() {
-        return 8;
+        float rlevel = getRangeLevel();
+        if (rlevel <= 1)
+            return (int) (8 * rlevel);
+        return (int) (8 + (rlevel - 1) * 8);
     }
 
     @Override

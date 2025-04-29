@@ -92,7 +92,8 @@ public class GeneratorState extends HeatingState {
         	if(origin.equals(dat.actualPos)) {
         		dat.tick(level, teamData);
         		ep.setHeat(dat.lastPower);
-        		this.setRangeLevel(dat.RLevel);
+                ep.setTempLevel(dat.TLevel);
+                this.setRangeLevel(dat.RLevel);
         		this.setTempLevel(dat.TLevel);
         		dat.lastPower=0;
         		return;

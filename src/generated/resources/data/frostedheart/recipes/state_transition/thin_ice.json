@@ -5,6 +5,7 @@
   "evaporate_temp": 2.0,
   "freeze_temp": -10.0,
   "gas": "minecraft:water",
+  "heat_capacity": 10,
   "liquid": "frostedheart:thin_ice",
   "melt_temp": -5.0,
   "solid": "minecraft:ice",

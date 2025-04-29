@@ -424,7 +424,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
             interval = -1;
         }
         // Heat accumulated this tick!
-        int tlevel = 1;
+        float tlevel = 0;
         
         // Retrieve heat from the endpoints
         float accumulated = 0;
