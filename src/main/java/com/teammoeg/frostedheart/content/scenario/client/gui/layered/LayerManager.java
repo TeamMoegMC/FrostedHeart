@@ -164,28 +164,34 @@ public class LayerManager extends GLLayerContent {
 			}
 		}
 		CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
-		.thenRunAsync(()->{renderPrerendered(inext,t,ticks);},renderThread);
+		.whenCompleteAsync((r,ex)->{renderPrerendered(inext,t,ticks);},renderThread);
 		
 		
 	}
 	public void renderPrerendered(LayerContext inext,TransitionFunction t, int ticks) {
-		if (!names.isEmpty()) {
-			final PrerenderParams prerender=new PrerenderParams();
-			inext.pq.forEach(s->s.prerender(prerender));				
-			inext.glc.texture=prerender.loadTexture();
-
+		try {
+			if (!names.isEmpty()) {
+				final PrerenderParams prerender=new PrerenderParams();
+				inext.pq.forEach(s->s.prerender(prerender));				
+				inext.glc.texture=prerender.loadTexture();
+	
+			}
+			if (t != null) {
+				this.nextlayer=inext;
+				this.trans = new TransitionInfo(ticks,t);
+			}else {
+				try {
+					LayerContext otex=current;
+					current=inext;
+					if(otex!=null)
+						otex.close();
+				}finally {
+					ClientScene.INSTANCE.onTransitionComplete.setFinished();
+				}
+			}
+		}finally {
+			ClientScene.INSTANCE.onRenderComplete.setFinished();
 		}
-		if (t != null) {
-			this.nextlayer=inext;
-			this.trans = new TransitionInfo(ticks,t);
-		}else {
-			LayerContext otex=current;
-			current=inext;
-			if(otex!=null)
-				otex.close();
-			ClientScene.INSTANCE.onTransitionComplete.setFinished();
-		}
-		ClientScene.INSTANCE.onRenderComplete.setFinished();
 	}
 
 	@Override

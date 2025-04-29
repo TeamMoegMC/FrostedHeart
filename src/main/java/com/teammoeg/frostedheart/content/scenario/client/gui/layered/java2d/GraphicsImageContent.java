@@ -73,22 +73,29 @@ public class GraphicsImageContent extends GraphicLayerContent {
 	@Override
 	public CompletableFuture<Void> prepare(ExecutorService threadPool) {
 		return CompletableFuture.runAsync(() -> {
-			Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(showingImage);
-			if (resource.isPresent()) {
-				try (
-					InputStream stream = resource.get().open()) {
-					BufferedImage image = ImageIO.read(stream);
-					if (iw < 0)
-						iw = image.getWidth();
-					if (ih < 0)
-						ih = image.getHeight();
-					this.cachedImage = image;
-				} catch (IOException e) {
-					e.printStackTrace();
-					FHMain.LOGGER.fatal(showingImage + " load error");
+			try {
+				
+				Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(showingImage);
+				if (resource.isPresent()) {
+					try (
+						InputStream stream = resource.get().open()) {
+						BufferedImage image = ImageIO.read(stream);
+						if (iw < 0)
+							iw = image.getWidth();
+						if (ih < 0)
+							ih = image.getHeight();
+						this.cachedImage = image;
+					} catch (IOException e) {
+						this.cachedImage=null;
+						FHMain.LOGGER.fatal(showingImage + " load error",e);
+					}
+				} else {
+					this.cachedImage=null;
+					FHMain.LOGGER.error(showingImage + " not found");
 				}
-			} else {
-				FHMain.LOGGER.error(showingImage + " not found");
+			}catch(Throwable t) {
+				this.cachedImage=null;
+				FHMain.LOGGER.error("Exception when loading scenario image "+showingImage,t);
 			}
 		}, threadPool);
 	}
