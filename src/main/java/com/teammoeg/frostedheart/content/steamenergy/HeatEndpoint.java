@@ -55,7 +55,8 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * <p>
      * This is normally defined by the Generator, or a Heat Debugger.
      */
-    int tempLevel = 1;
+    @Setter
+    float tempLevel = 0;
     /**
      * The max capacity to store heat.
      */
@@ -240,7 +241,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * @param level  the actual temperature level, which my differ from HeatEndpoint#tempLevel
      * @return the amount of heat actually filled
      */
-    protected float receiveHeatFromNetwork(float filled, int level) {
+    protected float receiveHeatFromNetwork(float filled, float level) {
         float required = Math.min(maxIntake, capacity - heat);
         tempLevel = level;
         if (required > 0) {
