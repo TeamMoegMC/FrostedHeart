@@ -28,7 +28,7 @@ public class ClientConnectionHelper {
 	public static void handleDisconnect() {
 		if (!ClientUtils.mc().isSameThread()) {
 			FHMain.LOGGER.warn("not same thread");
-			ClientUtils.mc().submitAsync(()->joinNewServer(ip,temporary));
+			ClientUtils.mc().submitAsync(()->handleDisconnect());
 			return;
 		}
 		if(ClientUtils.mc().level!=null) {
