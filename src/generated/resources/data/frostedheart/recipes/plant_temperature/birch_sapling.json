@@ -1,13 +1,12 @@
 {
   "type": "frostedheart:plant_temp",
-  "blizzard_vulnerable": false,
   "block": "minecraft:birch_sapling",
   "dead": "minecraft:dead_bush",
-  "grow_speed": 50.0,
+  "grow_time_days": 10.0,
   "max_fertilize": 18.0,
   "max_grow": 22.0,
   "max_survive": 35.0,
-  "min_fertilize": 8.0,
+  "min_fertilize": 7.0,
   "min_survive": -25.0,
   "snow_vulnerable": false
 }

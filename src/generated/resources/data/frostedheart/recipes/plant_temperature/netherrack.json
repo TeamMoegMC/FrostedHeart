@@ -3,7 +3,7 @@
   "blizzard_vulnerable": false,
   "block": "minecraft:netherrack",
   "dead": "minecraft:netherrack",
-  "grow_speed": 50.0,
+  "grow_time_days": 1.0,
   "max_fertilize": 200.0,
   "max_grow": 200.0,
   "max_survive": 200.0,

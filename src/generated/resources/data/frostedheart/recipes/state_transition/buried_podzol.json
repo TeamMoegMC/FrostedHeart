@@ -5,7 +5,7 @@
   "evaporate_temp": 100.0,
   "freeze_temp": -5.0,
   "gas": "minecraft:coarse_dirt",
-  "heat_capacity": 200,
+  "heat_capacity": 2,
   "liquid": "frostedheart:buried_podzol",
   "melt_temp": 2.0,
   "solid": "frostedheart:podzol_permafrost",

@@ -2,7 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:nether_sprouts",
   "dead": "minecraft:air",
-  "grow_speed": 50.0,
+  "grow_time_days": 7.0,
   "max_fertilize": 200.0,
   "max_grow": 200.0,
   "max_survive": 200.0,

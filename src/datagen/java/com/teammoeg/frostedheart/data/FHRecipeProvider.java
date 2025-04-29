@@ -29,7 +29,9 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
+import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.common.register.IEItems;
+import com.simibubi.create.Create;
 import com.teammoeg.caupona.CPMain;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
@@ -155,7 +157,7 @@ public class FHRecipeProvider extends RecipeProvider {
 			ResourceLocation block=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("block")));
 			ResourceLocation dead=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("dead")));
 			out.accept(new PlantTempData(CRegistryHelper.getBlockThrow(block),
-					(float)ExcelHelper.getCellValueAsNumber(m.get("grow_speed")),
+					(float)ExcelHelper.getCellValueAsNumber(m.get("grow_time_days")),
 					(float)ExcelHelper.getCellValueAsNumber(m.get("min_fertilize")),
 					(float)ExcelHelper.getCellValueAsNumber(m.get("min_grow")),
 					(float)ExcelHelper.getCellValueAsNumber(m.get("min_survive")),
@@ -344,9 +346,9 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(8, 2f, 7, FHItems.FOX_MEAT.get())
 				.sell(8, 2f, 5, ItemSubscriber.venison)
 				.sell(4, 1f, 30, ItemSubscriber.fat)
-				.sell(32, 5F, 4, Items.RABBIT)
-				.sell(32, 5F, 5, Items.BROWN_MUSHROOM)
-				.sell(32, 5F, 5, Items.RED_MUSHROOM)
+				.sell(16, 5F, 4, Items.RABBIT)
+				.sell(8, 5F, 20, Items.CHICKEN)
+				.sell(8, 5F, 20, Items.FEATHER)
 				.basic()
 				.finish()
 				.profession(VillagerProfession.BUTCHER)
@@ -431,14 +433,21 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(64, 4, 5, FHItems.RAW_HALITE.asItem())
 				.sell(64, 4, 5, FHItems.RAW_SYLVITE.asItem())
 				.sell(64, 8, 5, FHItems.RAW_PYRITE.asItem())
-				.sell(64, 8, 5, FHItems.KAOLIN.asItem())
-				.sell(64, 8, 5, FHItems.BAUXITE.asItem())
+				.sell(32, 8, 5, CRegistryHelper.getItem(ImmersiveEngineering.rl("raw_nickel")))
+				.sell(32, 8, 5, CRegistryHelper.getItem(ImmersiveEngineering.rl("raw_lead")))
+				.sell(16, 2, 30, CRegistryHelper.getItem(ImmersiveEngineering.rl("raw_silver")))
+				.sell(64, 16, 2, CRegistryHelper.getItem(Create.asResource("raw_zinc")))
+				.sell(64, 16, 5, FHItems.KAOLIN.asItem())
+				.sell(64, 16, 5, FHItems.BAUXITE.asItem())
 				.sell(64, 16, 3, FHItems.PEAT.asItem())
-				.sell(64, 2, 50, Items.RAW_GOLD)
+				.sell(16, 2, 50, Items.RAW_GOLD)
 				.sell(16, .2f, 100, Items.DIAMOND)
 				.sell(32, 3, 10, Items.LAPIS_LAZULI)
+				.sell(32, 3, 10, Items.REDSTONE)
 				.sell(16, .1f, 500, Items.EMERALD)
 				.sell(32, 1, 30, Items.AMETHYST_SHARD)
+				.sell(32, 1, 200, Items.LAVA_BUCKET)
+				.sell(32, 1, 100, Items.MAGMA_BLOCK)
 				.basic()
 				.finish()
 				.profession(VillagerProfession.TOOLSMITH)
@@ -469,6 +478,7 @@ public class FHRecipeProvider extends RecipeProvider {
 				.buy(1, .1f, 10, Items.BOW)
 				.buy(5, .1f, 50, Items.COMPASS)
 				.buy(5, .1f, 100, Items.MAP)
+				.buy(5, .1f, 50, Items.BOOK)
 				// sells
 				// rare saplings
 				.sell(1, 0.05f, 300, CRegistryHelper.getItem(CPMain.rl("walnut_sapling")))

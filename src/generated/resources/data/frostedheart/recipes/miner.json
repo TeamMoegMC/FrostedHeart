@@ -362,10 +362,54 @@
         {
           "actions": [],
           "hide_stockout": false,
+          "id": "immersiveengineering:raw_nickel",
+          "price": 5,
+          "produce": "immersiveengineering:raw_nickel",
+          "recover": 8.0,
+          "restock_condition": [],
+          "store": 32,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "immersiveengineering:raw_lead",
+          "price": 5,
+          "produce": "immersiveengineering:raw_lead",
+          "recover": 8.0,
+          "restock_condition": [],
+          "store": 32,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "immersiveengineering:raw_silver",
+          "price": 30,
+          "produce": "immersiveengineering:raw_silver",
+          "recover": 2.0,
+          "restock_condition": [],
+          "store": 16,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "create:raw_zinc",
+          "price": 2,
+          "produce": "create:raw_zinc",
+          "recover": 16.0,
+          "restock_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
           "id": "frostedheart:kaolin",
           "price": 5,
           "produce": "frostedheart:kaolin",
-          "recover": 8.0,
+          "recover": 16.0,
           "restock_condition": [],
           "store": 64,
           "use_actions": []
@@ -376,7 +420,7 @@
           "id": "frostedheart:bauxite",
           "price": 5,
           "produce": "frostedheart:bauxite",
-          "recover": 8.0,
+          "recover": 16.0,
           "restock_condition": [],
           "store": 64,
           "use_actions": []
@@ -400,7 +444,7 @@
           "produce": "minecraft:raw_gold",
           "recover": 2.0,
           "restock_condition": [],
-          "store": 64,
+          "store": 16,
           "use_actions": []
         },
         {
@@ -428,6 +472,17 @@
         {
           "actions": [],
           "hide_stockout": false,
+          "id": "minecraft:redstone",
+          "price": 10,
+          "produce": "minecraft:redstone",
+          "recover": 3.0,
+          "restock_condition": [],
+          "store": 32,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
           "id": "minecraft:emerald",
           "price": 500,
           "produce": "minecraft:emerald",
@@ -442,6 +497,28 @@
           "id": "minecraft:amethyst_shard",
           "price": 30,
           "produce": "minecraft:amethyst_shard",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 32,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:lava_bucket",
+          "price": 200,
+          "produce": "minecraft:lava_bucket",
+          "recover": 1.0,
+          "restock_condition": [],
+          "store": 32,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:magma_block",
+          "price": 100,
+          "produce": "minecraft:magma_block",
           "recover": 1.0,
           "restock_condition": [],
           "store": 32,

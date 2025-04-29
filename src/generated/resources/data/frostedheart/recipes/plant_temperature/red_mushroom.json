@@ -3,7 +3,7 @@
   "blizzard_vulnerable": false,
   "block": "minecraft:red_mushroom",
   "dead": "minecraft:air",
-  "grow_speed": 50.0,
+  "grow_time_days": 10.0,
   "max_fertilize": 20.0,
   "max_grow": 24.0,
   "max_survive": 30.0,

@@ -2,7 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:pumpkin",
   "dead": "minecraft:dead_bush",
-  "grow_speed": 50.0,
+  "grow_time_days": 8.0,
   "max_fertilize": 28.0,
   "max_grow": 32.0,
   "max_survive": 35.0,

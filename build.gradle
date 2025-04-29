@@ -282,6 +282,7 @@ dependencies {
     // Caupona
     implementation fg.deobf("curse.maven:caupona-656147:6406685") 
     //datagenImplementation fg.deobf("curse.maven:caupona-656147:6354879")
+    implementation fg.deobf("curse.maven:neolithic-world-534605:6342604")
 
     // LDLib
     compileOnly fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }

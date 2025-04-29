@@ -2,7 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:torchflower",
   "dead": "minecraft:air",
-  "grow_speed": 50.0,
+  "grow_time_days": 5.0,
   "max_fertilize": 32.0,
   "max_grow": 36.0,
   "max_survive": 45.0,

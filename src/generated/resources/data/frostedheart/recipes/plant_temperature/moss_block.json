@@ -3,7 +3,7 @@
   "blizzard_vulnerable": false,
   "block": "minecraft:moss_block",
   "dead": "frostedheart:dirt_permafrost",
-  "grow_speed": 50.0,
+  "grow_time_days": 1.0,
   "max_fertilize": 50.0,
   "max_grow": 50.0,
   "max_survive": 50.0,

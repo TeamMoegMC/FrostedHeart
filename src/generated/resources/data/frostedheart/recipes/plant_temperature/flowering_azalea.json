@@ -2,11 +2,11 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:flowering_azalea",
   "dead": "minecraft:dead_bush",
-  "grow_speed": 50.0,
+  "grow_time_days": 10.0,
   "max_fertilize": 24.0,
   "max_grow": 32.0,
   "max_survive": 35.0,
   "min_fertilize": 14.0,
-  "min_grow": 10.0,
+  "min_grow": 8.0,
   "snow_vulnerable": false
 }

@@ -1,13 +1,12 @@
 {
   "type": "frostedheart:plant_temp",
-  "blizzard_vulnerable": false,
   "block": "caupona:walnut_sapling",
   "dead": "minecraft:dead_bush",
-  "grow_speed": 50.0,
-  "max_fertilize": 28.0,
-  "max_grow": 32.0,
-  "min_fertilize": 20.0,
-  "min_grow": 12.0,
+  "grow_time_days": 8.0,
+  "max_fertilize": 32.0,
+  "max_grow": 34.0,
+  "min_fertilize": 24.0,
+  "min_grow": 14.0,
   "min_survive": -20.0,
   "snow_vulnerable": false
 }

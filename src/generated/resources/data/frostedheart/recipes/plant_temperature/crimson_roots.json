@@ -2,7 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:crimson_roots",
   "dead": "minecraft:air",
-  "grow_speed": 50.0,
+  "grow_time_days": 6.0,
   "max_fertilize": 200.0,
   "max_grow": 200.0,
   "max_survive": 200.0,

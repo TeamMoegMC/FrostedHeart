@@ -115,7 +115,7 @@ public interface PlantTemperature {
 			return true;
 		}
     };
-	float DEFAULT_GROW_SPEED = 100;
+	float DEFAULT_GROW_TIME_GAME_DAYS = 3;
 	float DEFAULT_BONEMEAL_TEMP = 10;
 	float DEFAULT_GROW_TEMP = 0;
 	float DEFAULT_SURVIVE_TEMP = -10;

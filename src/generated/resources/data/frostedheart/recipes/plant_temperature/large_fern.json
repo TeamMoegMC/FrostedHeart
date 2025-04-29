@@ -2,7 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:large_fern",
   "dead": "minecraft:air",
-  "grow_speed": 50.0,
+  "grow_time_days": 11.0,
   "max_fertilize": 24.0,
   "max_grow": 28.0,
   "max_survive": 35.0,

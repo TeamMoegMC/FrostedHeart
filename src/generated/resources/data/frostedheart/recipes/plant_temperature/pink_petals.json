@@ -2,7 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:pink_petals",
   "dead": "minecraft:air",
-  "grow_speed": 50.0,
+  "grow_time_days": 7.0,
   "max_fertilize": 22.0,
   "max_grow": 26.0,
   "max_survive": 35.0,

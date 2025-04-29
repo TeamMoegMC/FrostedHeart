@@ -1,9 +1,8 @@
 {
   "type": "frostedheart:plant_temp",
-  "blizzard_vulnerable": false,
   "block": "frostedheart:wild_rubber_dandelion",
   "dead": "minecraft:dead_bush",
-  "grow_speed": 50.0,
+  "grow_time_days": 6.0,
   "max_fertilize": 22.0,
   "max_grow": 26.0,
   "max_survive": 30.0,
