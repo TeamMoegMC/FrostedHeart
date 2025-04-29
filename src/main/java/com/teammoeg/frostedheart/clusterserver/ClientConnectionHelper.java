@@ -8,12 +8,14 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.mixin.client.ConnectScreenAccess;
 
 import net.minecraft.client.gui.screens.ConnectScreen;
+import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
 
 public class ClientConnectionHelper {
 	public static ServerAddress last;
@@ -33,8 +35,15 @@ public class ClientConnectionHelper {
 		}
 		if(ClientUtils.mc().level!=null) {
 			ClientUtils.mc().level.disconnect();
-			ClientUtils.mc().clearLevel();
-			ClientUtils.mc().setScreen(new JoinMultiplayerScreen(new TitleScreen()));
+			if(ClientUtils.mc().isLocalServer()) {
+				ClientUtils.mc().clearLevel(new GenericDirtMessageScreen(Component.translatable("menu.savingLevel")));
+				ClientUtils.mc().setScreen(new TitleScreen());
+			}else {
+				ClientUtils.mc().clearLevel();
+				ClientUtils.mc().setScreen(new JoinMultiplayerScreen(new TitleScreen()));
+			}
+			
+			
 		}
 	}
 

@@ -79,10 +79,22 @@ public class ServerClusterCommand {
                             	}
                                 return Command.SINGLE_SUCCESS;
                             })).then(
-                            	Commands.literal("go").then(Commands.argument("ip", StringArgumentType.string()).then(Commands.argument("port", IntegerArgumentType.integer(0, 65536))
+                            	Commands.literal("go").then(Commands.argument("ip", StringArgumentType.string())
                             		.executes(ct -> {
                                     	Collection<GameProfile> gp=GameProfileArgument.getGameProfiles(ct, "target");
-                                    	String ip=StringArgumentType.getString(ct, "ip")+IntegerArgumentType.getInteger(ct, "port");
+                                    	String ip=StringArgumentType.getString(ct, "ip");
+                                    	if(gp.size()==0)
+                                    		return 0;
+                                    	for(GameProfile gps:gp) {
+                                    		ServerPlayer sp=ct.getSource().getServer().getPlayerList().getPlayer(gps.getId());
+                                    		sp.connection.send(new ClientboundSetTitleTextPacket(Components.str(ServerConnectionHelper.constructRedirectMessage(ip,false))));
+                                    	}
+                                        return Command.SINGLE_SUCCESS;
+                                    })
+                            		.then(Commands.argument("port", IntegerArgumentType.integer(0, 65536))
+                            		.executes(ct -> {
+                                    	Collection<GameProfile> gp=GameProfileArgument.getGameProfiles(ct, "target");
+                                    	String ip=StringArgumentType.getString(ct, "ip")+":"+IntegerArgumentType.getInteger(ct, "port");
                                     	if(gp.size()==0)
                                     		return 0;
                                     	for(GameProfile gps:gp) {
