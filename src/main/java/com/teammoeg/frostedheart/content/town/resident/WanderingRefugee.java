@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.town.resident;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.AttractedByGeneratorGoal;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.trade.*;
 import com.teammoeg.frostedheart.util.Lang;
@@ -167,6 +168,10 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
                         playerIn.displayClientMessage(Lang.translateMessage("trade.normal_relation"), false);
                     } else {
                         playerIn.displayClientMessage(Lang.translateMessage("trade.great_relation"), false);
+                    }
+                    float t = WorldTemperature.block(level(), blockPosition());
+                    if (t < 0) {
+                        playerIn.displayClientMessage(Lang.translateMessage("trade.low_temp"), false);
                     }
                     playerIn.awardStat(Stats.TALKED_TO_VILLAGER);
                     setTradingPlayer(playerIn);
