@@ -71,7 +71,7 @@ public class GeologistsHammer extends FHLeveledTool {
                     int hrange = getHorizonalRange(is);
                     int vrange = getVerticalRange(is);
                     for (int x2 = -hrange; x2 < hrange; x2++)
-                        for (int y2 = -Math.min(y, vrange); y2 < vrange; y2++)
+                        for (int y2 = - vrange; y2 < vrange; y2++)
                             for (int z2 = -hrange; z2 < hrange; z2++) {
                                 int BlockX = x + x2;
                                 int BlockY = y + y2;
