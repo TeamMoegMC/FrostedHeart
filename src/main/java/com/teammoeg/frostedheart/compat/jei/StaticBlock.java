@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.compat.jei;
 
 import org.joml.Quaternionf;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.compat.jei.category.animations.AnimatedKinetics;
 
 import net.minecraft.client.gui.GuiGraphics;

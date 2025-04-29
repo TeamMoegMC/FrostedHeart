@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import com.simibubi.create.compat.jei.DoubleItemIcon;
@@ -40,9 +39,6 @@ import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;

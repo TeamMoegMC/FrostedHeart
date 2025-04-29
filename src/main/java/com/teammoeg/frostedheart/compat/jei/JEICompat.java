@@ -25,7 +25,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
+
+import org.jetbrains.annotations.NotNull;
 
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.util.CUtils;
@@ -46,24 +49,23 @@ import com.teammoeg.frostedheart.compat.jei.category.SaunaCategory;
 import com.teammoeg.frostedheart.compat.jei.category.SmokingDefrostCategory;
 import com.teammoeg.frostedheart.compat.jei.extension.DamageModifierExtension;
 import com.teammoeg.frostedheart.compat.jei.extension.FuelingExtension;
-import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
-import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
-import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorContainer;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorScreen;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
-import com.teammoeg.frostedheart.content.utility.recipe.ModifyDamageRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.SmokingDefrostRecipe;
+import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
+import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
+import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
+import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
+import com.teammoeg.frostedheart.content.utility.recipe.ModifyDamageRecipe;
 
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
-import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.handlers.IGlobalGuiHandler;
 import mezz.jei.api.gui.handlers.IGuiClickableArea;
@@ -77,15 +79,14 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
-import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeManager;
-import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.world.level.block.Blocks;
 
 @JeiPlugin
 public class JEICompat implements IModPlugin {

@@ -33,6 +33,9 @@ public class CompatModule {
 	public static boolean isCauponaLoaded() {
 		return cauponaLoaded;
 	}
+	public static boolean isStoneAgeLoaded() {
+		return stoneAgeLoaded;
+	}
 	private static boolean curiosLoaded;
 	private static boolean tetraLoaded;
 	private static boolean createLoaded;
@@ -42,7 +45,9 @@ public class CompatModule {
 	private static boolean LdLibLoaded;
 	private static boolean IELoaded;
 	private static boolean cauponaLoaded;
+	private static boolean stoneAgeLoaded;
 	private static boolean isModlistLoaded;
+
 	/**
 	 * Call this method at the start of your mod to enable compat module
 	 * */
@@ -66,5 +71,7 @@ public class CompatModule {
 		IELoaded=ModList.get().isLoaded("immersiveengineering");
 		FTBTLoaded=ModList.get().isLoaded("ftbteams");
 		cauponaLoaded=ModList.get().isLoaded("caupona");
+		stoneAgeLoaded=ModList.get().isLoaded("stone_age");
 	}
+
 }

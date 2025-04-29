@@ -290,24 +290,26 @@ public class FHMain {
 		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("fig")), 0.65f);
 		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("walnut")), 0.65f);
 		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("wolfberries")), 0.65f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_auroch_meat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_fat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_boar_meat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_fowl_meat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_mammoth_meat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_mouflon_meat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_rhino_meat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_tiger_meat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_venison, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.auroch_meat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.fat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.boar_meat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.fowl_meat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.mammoth_meat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.mouflon_meat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.rhino_meat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.tiger_meat, 0.8f);
-		ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.venison, 0.8f);
+		if(CompatModule.isStoneAgeLoaded()) {
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_auroch_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_fat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_boar_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_fowl_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_mammoth_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_mouflon_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_rhino_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_tiger_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_venison, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.auroch_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.fat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.boar_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.fowl_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.mammoth_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.mouflon_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.rhino_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.tiger_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.venison, 0.8f);
+		}
 	}
 
 	/**

@@ -1,19 +1,13 @@
 package com.teammoeg.frostedheart.clusterserver;
 
 import java.nio.charset.StandardCharsets;
-import java.security.AlgorithmParameters;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHNetwork;

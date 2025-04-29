@@ -22,6 +22,7 @@ public class ClientConnectionHelper {
 
 	}
 
+	@SuppressWarnings("resource")
 	public static void handleDisconnect() {
 		if(ClientUtils.mc().level!=null)
 			ClientUtils.mc().level.disconnect();
@@ -35,6 +36,7 @@ public class ClientConnectionHelper {
 		if(name!=null)
 			joinNewServer(name,false);
 	}
+	@SuppressWarnings("resource")
 	public static void joinNewServer(String ip,boolean temporary) {
 		if(temporary) {
 			callStack.addLast(last.toString());
@@ -48,7 +50,7 @@ public class ClientConnectionHelper {
 			servers.save();
 		}
 		handleDisconnect();
-		if(ClientUtils.mc().screen instanceof ConnectScreenAccess csa)
+		if(ClientUtils.mc().screen instanceof ConnectScreenAccess)
 			ClientUtils.mc().screen=null;
 		ConnectScreen.startConnecting(new JoinMultiplayerScreen(new TitleScreen()), ClientUtils.mc(), ServerAddress.parseString(serverdata.ip), serverdata, false);
 		
