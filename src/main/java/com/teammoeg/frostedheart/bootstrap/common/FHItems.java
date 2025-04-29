@@ -1021,8 +1021,9 @@ thinner.png
                     forgeItemTag("dusts/wood"),
                     CPTags.Items.COOKABLE
             );
-    public static ItemEntry<Item> BIOMASS =
-            ingredient("biomass");
+    public static ItemEntry<BoneMealItem> BIOMASS = REGISTRATE
+            .item("biomass", BoneMealItem::new)
+            .register();
     public static ItemEntry<Item> SYNTHETIC_LEATHER =
             taggedIngredient("synthetic_leather",
                     forgeItemTag("leather")
