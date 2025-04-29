@@ -4,7 +4,7 @@
   "condense_temp": -20.0,
   "evaporate_temp": -15.0,
   "freeze_temp": -30.0,
-  "gas": "minecraft:ice",
+  "gas": "frostedheart:firm_ice",
   "heat_capacity": 10,
   "liquid": "minecraft:packed_ice",
   "melt_temp": -25.0,
