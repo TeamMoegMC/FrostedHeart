@@ -29,9 +29,9 @@ public record S2CRedirectPacket(String ip, boolean temporarily) implements CMess
 			//ClientConnectionHelper.handleDisconnect();
 			
 			//context.get().getNetworkManager().
-			//ClientConnectionHelper.back2ServerScreen();
-			ClientUtils.mc().screen=null;
-			ClientConnectionHelper.rawJoinNewServer(new JoinMultiplayerScreen(ClientUtils.mc().screen),ip,temporarily);
+			ClientConnectionHelper.back2ServerScreen();
+			
+			ClientConnectionHelper.joinNewServer(ip,temporarily);
 		});
 		
 		

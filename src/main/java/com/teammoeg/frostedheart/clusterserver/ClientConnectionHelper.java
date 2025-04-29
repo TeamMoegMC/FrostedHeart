@@ -56,6 +56,7 @@ public class ClientConnectionHelper {
 		if(name!=null)
 			joinNewServer(name,false);
 	}
+	
 	@SuppressWarnings("resource")
 	public static void joinNewServer(String ip,boolean temporary) {
 		if (!ClientUtils.mc().isSameThread()) {
