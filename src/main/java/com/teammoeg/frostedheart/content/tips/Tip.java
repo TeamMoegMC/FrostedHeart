@@ -27,6 +27,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.logging.LogUtils;
 import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.lang.Components;
 
 import lombok.Getter;
@@ -43,8 +44,6 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -236,7 +235,7 @@ public class Tip {
             builder.error(ErrorType.LOAD, Component.literal(filePath.toString()),Component.translatable("tips.frostedheart.error.load.file_not_exists", ERROR_DESC));
         } else {
             try {
-                String content = new String(Files.readAllBytes(Paths.get(String.valueOf(filePath))));
+                String content = FileUtil.readString(filePath);
                 builder.fromJson(GSON.fromJson(content, JsonElement.class).getAsJsonObject());
                 return new Tip(builder);
 
