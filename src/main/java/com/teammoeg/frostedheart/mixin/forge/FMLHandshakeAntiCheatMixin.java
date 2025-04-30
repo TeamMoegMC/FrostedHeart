@@ -33,9 +33,11 @@ public class FMLHandshakeAntiCheatMixin {
 		Set<String> cli=clientModList.getModList().stream().map(String::toLowerCase).collect(Collectors.toSet());
 		for(String s:FHConfig.COMMON.blackmods.get()) {
 			if(cli.contains(s)) {
+				c.get().setPacketHandled(true);
 				FHMain.LOGGER.warn("Rejected Connection: Blacklisted mods ");
 				Component t=Component.translatable("message.frostedheart.disallowed_mods");
 				c.get().getNetworkManager().disconnect(t);
+				
 				cbi.cancel();
 				return;
 			}
@@ -63,8 +65,10 @@ public class FMLHandshakeAntiCheatMixin {
 			}catch(Throwable t) {
 				
 			}
+			c.get().setPacketHandled(true);
 			ServerConnectionHelper.sendRedirect(ctx, ServerConnectionHelper.loginServer, true);
 			ctx.getNetworkManager().disconnect(Component.translatable("message.frostedheart.not_authorized"));
+			
 			cbi.cancel();
 		}
 		
