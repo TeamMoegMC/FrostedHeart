@@ -7,6 +7,7 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.mixin.client.ConnectScreenAccess;
 
+import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -34,6 +35,7 @@ public class ClientConnectionHelper {
 			ClientUtils.mc().submitAsync(()->handleDisconnect());
 			return;
 		}
+		
 		if(ClientUtils.mc().level!=null) {
 			ClientUtils.mc().level.disconnect();
 			if(ClientUtils.mc().isLocalServer()) {
@@ -73,7 +75,7 @@ public class ClientConnectionHelper {
 		if(temporary) {
 			callStack.addLast(last.toString());
 		}
-			
+		MapManager.shutdown();
 		ServerList servers = new ServerList(ClientUtils.mc());
 		servers.load();
 		ServerData serverdata = servers.get(ip);
