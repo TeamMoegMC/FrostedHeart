@@ -27,8 +27,8 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.bootstrap.common.ToolCompat;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
@@ -273,13 +273,13 @@ public class FHCommonEvents {
 	@SubscribeEvent
 	public static void prospecting(PlayerInteractEvent.RightClickBlock event) {
 		InteractionResult rs = null;
-		if (event.getItemStack().canPerformAction(TetraCompat.coreSpade))
+		if (event.getItemStack().canPerformAction(ToolCompat.coreSpade))
 			rs = CoreSpade.doProspect(event.getEntity(), event.getLevel(), event.getPos(), event.getItemStack(),
 					event.getHand());
-		else if (event.getItemStack().canPerformAction(TetraCompat.geoHammer))
+		else if (event.getItemStack().canPerformAction(ToolCompat.geoHammer))
 			rs = GeologistsHammer.doProspect(event.getEntity(), event.getLevel(), event.getPos(), event.getItemStack(),
 					event.getHand());
-		else if (event.getItemStack().canPerformAction(TetraCompat.proPick))
+		else if (event.getItemStack().canPerformAction(ToolCompat.proPick))
 			rs = ProspectorPick.doProspect(event.getEntity(), event.getLevel(), event.getPos(), event.getItemStack(),
 					event.getHand());
 		if (rs != null) {

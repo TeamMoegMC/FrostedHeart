@@ -23,6 +23,7 @@ import com.mojang.serialization.Codec;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 import com.teammoeg.chorda.recipe.DataContainerRecipe;
+import com.teammoeg.chorda.recipe.ToolActionIngredient;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
@@ -45,6 +46,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraftforge.common.crafting.CraftingHelper;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -54,11 +56,13 @@ public class FHRecipes {
 		ForgeRegistries.RECIPE_SERIALIZERS, FHMain.MODID);
 	public static final DeferredRegister<RecipeType<?>> RECIPE_TYPES = DeferredRegister.create(
 		ForgeRegistries.RECIPE_TYPES, FHMain.MODID);
+
 	public static final DeferredRegister<RecipeSerializer<?>> CRECIPE_SERIALIZERS = DeferredRegister.create(
 		ForgeRegistries.RECIPE_SERIALIZERS, Chorda.MODID);
 	public static final DeferredRegister<RecipeType<?>> CRECIPE_TYPES = DeferredRegister.create(
 		ForgeRegistries.RECIPE_TYPES, Chorda.MODID);
 	static {
+		 
 		GeneratorRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("generator", GeneratorRecipe.Serializer::new);
 		GeneratorSteamRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("steam_generator", GeneratorSteamRecipe.Serializer::new);
 		// InstallInnerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("recipe_inner",

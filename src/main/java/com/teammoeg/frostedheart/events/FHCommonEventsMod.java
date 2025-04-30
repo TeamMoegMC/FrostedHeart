@@ -19,21 +19,29 @@
 
 package com.teammoeg.frostedheart.events;
 
+import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.recipe.TagActionIngredient;
+import com.teammoeg.chorda.recipe.ToolActionIngredient;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntity;
+
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraftforge.common.crafting.CraftingHelper;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.event.entity.SpawnPlacementRegisterEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegisterEvent;
 
 /**
  * Common side events fired on mod bus.
@@ -63,7 +71,15 @@ public class FHCommonEventsMod {
         ModLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "modids"), new LootItemConditionType(new ModLootCondition.Serializer()));
         BlizzardDamageCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "blizzard_damage"), new LootItemConditionType(new BlizzardDamageCondition.Serializer()));
     }*/
+	@SubscribeEvent
+	public static void registerIngredient(RegisterEvent event) {
+		if (event.getRegistryKey().equals(ForgeRegistries.Keys.RECIPE_SERIALIZERS)) {
+			CraftingHelper.register(new ResourceLocation(Chorda.MODID,"tool"), ToolActionIngredient.SERIALIZER);
+			CraftingHelper.register(new ResourceLocation(Chorda.MODID,"tag"), TagActionIngredient.SERIALIZER);
 
+		}
+	}
+    
 	@SubscribeEvent
 	public static void entityAttributes(EntityAttributeCreationEvent event) {
 		event.put(FHEntityTypes.CURIOSITY.get(), CuriosityEntity.createAttributes().build());

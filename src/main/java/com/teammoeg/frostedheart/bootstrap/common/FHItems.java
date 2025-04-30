@@ -33,7 +33,7 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
 import com.teammoeg.frostedheart.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.item.FHToolMaterials;
-
+import com.teammoeg.frostedheart.item.HammerItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
@@ -1686,13 +1686,13 @@ thinner.png
                     .tag(ItemTags.SWORDS, forgeItemTag("swords"), forgeItemTag("swords/bronze"))
                     .model(FHAssetsUtils.handheld())
                     .register();
-    public static final ItemEntry<PickaxeItem> STONE_HAMMER =
-            REGISTRATE.item("stone_hammer", p -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()))
+    public static final ItemEntry<HammerItem> STONE_HAMMER =
+            REGISTRATE.item("stone_hammer", p -> new HammerItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/stone"))
                     .model(FHAssetsUtils.handheld())
                     .register();
-    public static final ItemEntry<PickaxeItem> BRONZE_HAMMER =
-            REGISTRATE.item("bronze_hammer", p -> new PickaxeItem(FHToolMaterials.BRONZE, 1, -2.8F, new Item.Properties()))
+    public static final ItemEntry<HammerItem> BRONZE_HAMMER =
+            REGISTRATE.item("bronze_hammer", p -> new HammerItem(FHToolMaterials.BRONZE, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/bronze"))
                     .model(FHAssetsUtils.handheld())
                     .register();

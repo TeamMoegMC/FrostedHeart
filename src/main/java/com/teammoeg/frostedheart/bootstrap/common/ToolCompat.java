@@ -17,17 +17,18 @@
  *
  */
 
-package com.teammoeg.frostedheart.compat.tetra;
+package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraftforge.common.ToolAction;
 import se.mickelus.tetra.module.schematic.requirement.CraftingRequirementDeserializer;
 
-public class TetraCompat {
+public class ToolCompat {
     public static ToolAction coreSpade = ToolAction.get("core_spade");
     public static ToolAction proPick = ToolAction.get("prospector_pick");
     public static ToolAction geoHammer = ToolAction.get("geo_hammer");
+    public static ToolAction hammer = ToolAction.get("hammer_dig");
 
 
 }

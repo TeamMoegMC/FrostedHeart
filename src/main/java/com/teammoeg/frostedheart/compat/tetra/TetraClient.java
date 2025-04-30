@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.compat.tetra;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.frostedheart.bootstrap.common.ToolCompat;
 import com.teammoeg.frostedheart.content.wheelmenu.Selection;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuSelectionRegisterEvent;
 
@@ -41,12 +42,12 @@ import se.mickelus.tetra.items.modular.impl.holo.gui.craft.HoloStatsGui;
 
 public class TetraClient {
     public static void init() {
-        WorkbenchStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, TetraCompat.coreSpade));
-        WorkbenchStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, TetraCompat.geoHammer));
-        WorkbenchStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, TetraCompat.proPick));
-        HoloStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, TetraCompat.coreSpade));
-        HoloStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, TetraCompat.geoHammer));
-        HoloStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, TetraCompat.proPick));
+        WorkbenchStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, ToolCompat.coreSpade));
+        WorkbenchStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, ToolCompat.geoHammer));
+        WorkbenchStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, ToolCompat.proPick));
+        HoloStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, ToolCompat.coreSpade));
+        HoloStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, ToolCompat.geoHammer));
+        HoloStatsGui.addBar(new GuiStatBarTool(0, 0, StatsHelper.barLength, ToolCompat.proPick));
         MinecraftForge.EVENT_BUS.addListener(TetraClient::registerWheelSelections);
     }
     public static void registerWheelSelections(WheelMenuSelectionRegisterEvent event) {

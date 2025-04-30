@@ -27,8 +27,8 @@ import java.util.Random;
 import java.util.function.Predicate;
 
 import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.frostedheart.bootstrap.common.ToolCompat;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.utility.FHLeveledTool;
 import com.teammoeg.frostedheart.util.Lang;
 
@@ -122,7 +122,7 @@ public class CoreSpade extends FHLeveledTool {
         if (item.getItem() instanceof FHLeveledTool)
             return 1;
 
-        return ((IToolProvider) item.getItem()).getToolEfficiency(item, TetraCompat.coreSpade) + 1;
+        return ((IToolProvider) item.getItem()).getToolEfficiency(item, ToolCompat.coreSpade) + 1;
     }
 
     public static int getHorizonalRange(ItemStack item) {

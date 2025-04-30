@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.utility;
 
-import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
+import com.teammoeg.frostedheart.bootstrap.common.ToolCompat;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 
 import net.minecraft.world.item.ItemStack;
@@ -46,7 +46,7 @@ public class FHLeveledTool extends FHBaseItem {
         if (item.getItem() instanceof FHLeveledTool)
             return ((FHLeveledTool) item.getItem()).getLevel();
 
-        return ((IToolProvider) item.getItem()).getToolLevel(item, TetraCompat.coreSpade);
+        return ((IToolProvider) item.getItem()).getToolLevel(item, ToolCompat.coreSpade);
     }
 
 }

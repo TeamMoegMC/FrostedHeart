@@ -24,8 +24,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import com.teammoeg.frostedheart.bootstrap.common.ToolCompat;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.utility.FHLeveledTool;
 import com.teammoeg.frostedheart.util.Lang;
 
@@ -115,7 +115,7 @@ public class ProspectorPick extends FHLeveledTool {
         if (item.getItem() instanceof FHLeveledTool)
             return 1;
 
-        return ((IToolProvider) item.getItem()).getToolEfficiency(item, TetraCompat.proPick) + 1;
+        return ((IToolProvider) item.getItem()).getToolEfficiency(item, ToolCompat.proPick) + 1;
     }
 
     public static int getHorizonalRange(ItemStack item) {
