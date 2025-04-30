@@ -160,6 +160,8 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
                 final FluidStack fs2 = ctx.getState().tank.drain(actualDrain, FluidAction.EXECUTE);
                 data.ifPresent(t -> t.fluid = fs2.getFluid());
                 return;
+            }else {
+            	ctx.getState().tank.setFluid(FluidStack.EMPTY);
             }
         }
     	data.ifPresent(t -> {
