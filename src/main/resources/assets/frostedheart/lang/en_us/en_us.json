@@ -213,6 +213,8 @@
   "message.frostedheart.trade.bad_relation": "You are not welcomed.",
   "message.frostedheart.trade.normal_relation": "You are back.",
   "message.frostedheart.trade.great_relation": "Great to see you.",
+  "message.frostedheart.trade.no_home": "It has been almost impossible for me to work - I have no place to sleep.",
+  "message.frostedheart.trade.low_temp": "It has been hard for me to work - I am cold.",
   "message.frostedheart.wanted_foods": "Today I wants to eat...",
   "message.frostedheart.restarting": "§a[AutoRestart]§cServer to be restarted in %s minutes to update, be hold!",
   "subtitle.frostedheart.wind": "Wind",

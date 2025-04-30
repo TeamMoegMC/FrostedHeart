@@ -28,12 +28,19 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.io.Writeable;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.ai.Brain;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.entity.npc.Villager;
 
 public abstract class BaseData implements Writeable {
+    public static final int NO_HOME_RECOVER_PUNISHEMENT_DIVISOR = 6;
+    public static final int TEMPERATURE_RECOVER_DIVISOR = 3;
     private String id;
     public int maxstore;
     float recover;
@@ -129,9 +136,31 @@ public abstract class BaseData implements Writeable {
     public void tick(int deltaDay, FHVillagerData data) {
         //System.out.println("try recover for "+id+" : "+deltaDay);
         if (deltaDay > 0 && canRestock(data)) {
+            float actualRecover = recover;
+            AbstractVillager v = data.parent;
+            if (v instanceof Villager villager) {
+                // if a villager does not have a home (bed), then it produces much less
+                Brain<Villager> brain   = villager.getBrain();
+                // Does it *have* a home (claimed bed)?
+                boolean hasHome = brain.hasMemoryValue(MemoryModuleType.HOME);
+                if (!hasHome) {
+                    actualRecover /= NO_HOME_RECOVER_PUNISHEMENT_DIVISOR;
+                } else {
+                    float t = WorldTemperature.block(v.level(), v.blockPosition());
+                    if (t < 0) {
+                        actualRecover /= TEMPERATURE_RECOVER_DIVISOR;
+                    }
+                }
+            }
+            // other types are all wandering, very slow!
+            else {
+                actualRecover /= NO_HOME_RECOVER_PUNISHEMENT_DIVISOR;
+            }
+
+
             float curstore = data.storage.getOrDefault(getId(), 0f);
-            int recDay = Math.min((int) Math.ceil((maxstore - curstore) / recover), deltaDay);
-            float val = Math.min(recover * recDay + curstore, maxstore);
+            int recDay = Math.min((int) Math.ceil((maxstore - curstore) / actualRecover), deltaDay);
+            float val = Math.min(actualRecover * recDay + curstore, maxstore);
             data.storage.put(getId(), val);
             actions.forEach(c -> c.deal(data, recDay));
         }

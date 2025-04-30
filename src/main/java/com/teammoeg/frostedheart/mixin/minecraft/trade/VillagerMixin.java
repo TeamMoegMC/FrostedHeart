@@ -22,9 +22,12 @@ package com.teammoeg.frostedheart.mixin.minecraft.trade;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.trade.*;
 import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.Brain;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -105,6 +108,20 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
                     } else {
                         playerIn.displayClientMessage(Lang.translateMessage("trade.great_relation"), false);
                     }
+                    Brain<Villager> brain = getThis().getBrain();
+                    boolean hasHome = brain.hasMemoryValue(MemoryModuleType.HOME);
+                    if (!hasHome) {
+                        this.setUnhappy();
+                        playerIn.displayClientMessage(Lang.translateMessage("trade.no_home"), false);
+                    }
+                    else {
+                        float t = WorldTemperature.block(getThis().level(), getThis().blockPosition());
+                        if (t < 0) {
+                            this.setUnhappy();
+                            playerIn.displayClientMessage(Lang.translateMessage("trade.low_temp"), false);
+                        }
+                    }
+
                     playerIn.awardStat(Stats.TALKED_TO_VILLAGER);
                     setTradingPlayer(playerIn);
                     TradeHandler.openTradeScreen((ServerPlayer) playerIn, fh$data);
