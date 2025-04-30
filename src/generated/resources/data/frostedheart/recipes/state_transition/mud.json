@@ -3,11 +3,11 @@
   "block": "minecraft:mud",
   "condense_temp": 90.0,
   "evaporate_temp": 100.0,
-  "freeze_temp": -5.0,
+  "freeze_temp": -10.0,
   "gas": "minecraft:coarse_dirt",
   "heat_capacity": 2,
   "liquid": "minecraft:mud",
-  "melt_temp": 2.0,
+  "melt_temp": 9.0,
   "solid": "frostedheart:mud_permafrost",
   "state": "liquid",
   "will_transit": true

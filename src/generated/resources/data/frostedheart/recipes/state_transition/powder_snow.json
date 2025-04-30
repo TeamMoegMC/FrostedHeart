@@ -3,10 +3,10 @@
   "block": "minecraft:powder_snow",
   "condense_temp": 90.0,
   "evaporate_temp": 100.0,
-  "freeze_temp": -5.0,
+  "freeze_temp": -10.0,
   "gas": "minecraft:air",
   "liquid": "minecraft:air",
-  "melt_temp": 2.0,
+  "melt_temp": 9.0,
   "solid": "minecraft:powder_snow",
   "will_transit": true
 }
