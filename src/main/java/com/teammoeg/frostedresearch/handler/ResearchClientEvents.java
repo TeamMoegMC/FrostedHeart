@@ -1,6 +1,10 @@
 package com.teammoeg.frostedresearch.handler;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
+import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.compat.JEICompat;
 import com.teammoeg.frostedresearch.events.ClientResearchStatusEvent;
@@ -11,8 +15,10 @@ import com.teammoeg.frostedresearch.research.effects.EffectCrafting;
 import com.teammoeg.frostedresearch.research.effects.EffectShowCategory;
 
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = FRMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -39,5 +45,11 @@ public class ResearchClientEvents {
     	if(ClientUtils.getPlayer()!=null&&InsightOverlay.INSTANCE!=null) {
     		InsightOverlay.INSTANCE.tick();
     	}
+    }
+    @SubscribeEvent
+    public static void fireLogin(ClientPlayerNetworkEvent.LoggingIn event) {
+        if(InsightOverlay.INSTANCE!=null)
+        	InsightOverlay.INSTANCE.reset();
+
     }
 }

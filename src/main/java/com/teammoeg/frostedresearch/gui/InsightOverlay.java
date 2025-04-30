@@ -79,6 +79,13 @@ public class InsightOverlay implements IGuiOverlay{
 		isShown=false;
 		hiddenTicks=0;
 	}
+	public void reset() {
+		renderingNextInsightLevel=renderingInsightLevel=0;
+		renderingInsightNextProgress=renderingInsightProgress=0;
+		textScrollTicks=0;
+		isShown=false;
+		hiddenTicks=0;
+	}
 	public void tick() {
 		if(ClientUtils.mc().isPaused())return;
 		if(textScrollTicks>0) {//text is scrolling, wait until text scroll finished
