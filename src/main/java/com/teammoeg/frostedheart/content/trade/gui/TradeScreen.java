@@ -48,6 +48,7 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.util.Mth;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.ChatFormatting;
 
@@ -95,6 +96,12 @@ public class TradeScreen extends BaseScreen {
                         super.onClick(btn);
                         onSlotClick(no, btn);
                     }
+                    @Override
+					public void addMouseOverText(TooltipList list) {
+						if(tab.getState()||cx.relations.sum()>TradeConstants.RELATION_TO_TRADE) {
+				    		super.addMouseOverText(list);
+						}else list.add(Component.translatable("gui.frostedheart.trade.no_trade_will"));
+					}
                 };
                 slots[no] = fs;
                 fs.setPos(i * 16 + 189, j * 16 + 8);
@@ -111,6 +118,14 @@ public class TradeScreen extends BaseScreen {
                         super.onClick(btn);
                         onOrderSlotClick(no, btn);
                     }
+
+					@Override
+					public void addMouseOverText(TooltipList list) {
+						if(cx.relations.sum()>TradeConstants.RELATION_TO_TRADE) {
+				    		super.addMouseOverText(list);
+						}else list.add(Component.translatable("gui.frostedheart.trade.no_trade_will"));
+					}
+                    
                 };
                 orders[no] = fs;
                 fs.setPos(i * 16 + 62, j * 16 + 76);
@@ -182,7 +197,9 @@ public class TradeScreen extends BaseScreen {
             int tot = cx.relations.sum();
             list.add(Lang.translateGui("trade.relation").append(Components.str(tot > 0 ? " +" + tot : "" + tot)
                     .withStyle(tot > 0 ? ChatFormatting.GREEN : ChatFormatting.RED)));
-
+            if(tot<=TradeConstants.RELATION_TO_TRADE) {
+            	list.add(Component.translatable("gui.frostedheart.trade.no_trade_will"));
+            }
             for (RelationModifier m : RelationModifier.values()) {
                 int rel = cx.relations.get(m);
                 if (rel == 0)
@@ -253,6 +270,7 @@ public class TradeScreen extends BaseScreen {
     }
 
     public void onOrderSlotClick(int sno, MouseButton btn) {
+
         boolean shift = Widget.isShiftKeyDown();
         String sd = cx.order.keySet().stream().skip(sno).findFirst().orElse(null);
         if (sd == null)
@@ -273,6 +291,9 @@ public class TradeScreen extends BaseScreen {
 
     public void onSlotClick(int sno, MouseButton btn) {
         if (!tab.getState()) {
+        	if(cx.relations.sum()<=TradeConstants.RELATION_TO_TRADE) {
+        		return;
+        	}
             SellData sd = sds[sno];
             boolean shift = Widget.isShiftKeyDown();
             if (cx.order.size() >= 11 && !cx.order.containsKey(sd.getId()))

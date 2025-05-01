@@ -139,6 +139,9 @@ public class TradeContainer extends AbstractContainerMenu {
         relations.read(pb);
         policy = data.getPolicy();
         policy.fetchTrades(data.storage);
+        if(relations.sum()<=TradeConstants.RELATION_TO_TRADE) {//Not selling anything if bad relations
+        	policy.getSells().clear();
+        }
     }
 
     public TradeContainer(int id, Inventory inventoryPlayer,
@@ -341,8 +344,13 @@ public class TradeContainer extends AbstractContainerMenu {
         data = dat;
         pld = data.getRelationDataForRead(pe);
         relations = data.getRelationShip(pe);
-        policy = data.getPolicy();
-        policy.fetchTrades(data.storage);
+        
+        	policy = data.getPolicy();
+        	policy.fetchTrades(data.storage);
+        if(relations.sum()<=TradeConstants.RELATION_TO_TRADE) {//Not selling anything if bad relations
+        	policy.getSells().clear();
+        }
+        
     }
 
     public void setOrder(Map<String, Integer> order) {
@@ -400,6 +408,10 @@ public class TradeContainer extends AbstractContainerMenu {
         policy = data.getPolicy();
         policy.fetchTrades(data.storage);
         relations.copy(rels);
+        if(relations.sum()<=TradeConstants.RELATION_TO_TRADE) {//Not selling anything if bad relations
+        	policy.getSells().clear();
+        }
+        
         if (isReset) {
             order.clear();
             balance = 0;

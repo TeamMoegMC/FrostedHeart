@@ -103,6 +103,7 @@
   "gui.frostedheart.save_updated": "已经自动更新您的存档，旧的配置备份在",
   "gui.frostedheart.temperature.desc": "平均气温",
   "gui.frostedheart.trade.bad_relation": "关系较差",
+  "gui.frostedheart.trade.no_trade_will": "他不愿意与你交易，提升关系以解锁交易。",
   "gui.frostedheart.trade.bargain": "讨价还价",
   "gui.frostedheart.trade.deal": "交易成功！",
   "gui.frostedheart.trade.discount": "折扣",

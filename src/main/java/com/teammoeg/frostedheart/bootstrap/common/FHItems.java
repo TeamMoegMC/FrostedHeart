@@ -225,7 +225,7 @@ thinner.png
             taggedIngredient("peat",
                     forgeItemTag("raw_materials"),
                     forgeItemTag("raw_materials/peat"),
-                    ItemTags.create(new ResourceLocation("Caupona","fuel/fossil")));
+                    ItemTags.create(new ResourceLocation("caupona","fuel/fossil")));
     public static ItemEntry<Item> KAOLIN =
             taggedIngredient("kaolin",
                     forgeItemTag("raw_materials"),
