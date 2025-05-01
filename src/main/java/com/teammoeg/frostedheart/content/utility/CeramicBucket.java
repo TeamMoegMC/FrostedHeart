@@ -22,10 +22,12 @@ package com.teammoeg.frostedheart.content.utility;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.world.item.BucketItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -52,11 +54,16 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.fluids.FluidActionResult;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
+import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStackSimple;
 
 public class CeramicBucket extends FHBaseItem {
@@ -117,54 +124,29 @@ public class CeramicBucket extends FHBaseItem {
 
 			if (pLevel.mayInteract(pPlayer, blockpos) && pPlayer.mayUseItemAt(blockpos1, direction, itemstack)) {
 				if (content == Fluids.EMPTY) {
-					BlockState blockstate = pLevel.getBlockState(blockpos);
-					if (blockstate.getBlock() instanceof BucketPickup) {
-						BucketPickup bucketpickup = (BucketPickup) blockstate.getBlock();
-						ItemStack pickedUpVanilla = bucketpickup.pickupBlock(pLevel, blockpos, blockstate);
-
-						if (!pickedUpVanilla.isEmpty() && pickedUpVanilla.getItem() instanceof BucketItem) {
-							// Get fluid from vanilla bucket
-							Fluid fluid = ((BucketItem) pickedUpVanilla.getItem()).getFluid();
-
-							if (fluid.isSame(Fluids.WATER) || fluid.isSame(Fluids.LAVA)) {
-								// Create new ceramic bucket with fluid
-								ItemStack filledCeramic = itemstack.copyWithCount(1);
-								filledCeramic.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(handler -> {
-									handler.fill(new FluidStack(fluid, 1000), IFluidHandler.FluidAction.EXECUTE);
-								});
-
-								// Play effects
-								pPlayer.awardStat(Stats.ITEM_USED.get(this));
-								bucketpickup.getPickupSound(blockstate).ifPresent(sound ->
-										pPlayer.playSound(sound, 1.0F, 1.0F));
-								pLevel.gameEvent(pPlayer, GameEvent.FLUID_PICKUP, blockpos);
-
-								// Return modified ceramic bucket
-								ItemStack resultStack = ItemUtils.createFilledResult(itemstack, pPlayer, filledCeramic,false);
-								if (!pLevel.isClientSide) {
-									CriteriaTriggers.FILLED_BUCKET.trigger((ServerPlayer) pPlayer, filledCeramic);
-								}
-								return InteractionResultHolder.sidedSuccess(resultStack, pLevel.isClientSide());
-							}
-						}
-					}
-					return InteractionResultHolder.fail(itemstack);
-				} else {
-					// Existing fluid placement logic
-					BlockState blockstate = pLevel.getBlockState(blockpos);
-					BlockPos targetPos = canBlockContainFluid(pLevel, blockpos, blockstate, content) ?
-							blockpos : blockpos1;
-
-					if (this.emptyContents(pPlayer, pLevel, targetPos, blockhitresult, itemstack, content)) {
-						this.checkExtraContent(pPlayer, pLevel, itemstack, targetPos);
-						if (pPlayer instanceof ServerPlayer) {
-							CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayer) pPlayer, targetPos, itemstack);
-						}
-						pPlayer.awardStat(Stats.ITEM_USED.get(this));
-						return InteractionResultHolder.sidedSuccess(emptyBucket(itemstack, pPlayer), pLevel.isClientSide());
+					FluidActionResult res=CUtils.pickupFluidFromWorld(itemstack, pPlayer, pLevel, blockpos,direction,true);
+					if(res.isSuccess()) {
+						ItemStack result=res.getResult();
+						//player.setItemInHand(hand, result);
+						return InteractionResultHolder.sidedSuccess(result,pLevel.isClientSide);
 					}
 					return InteractionResultHolder.fail(itemstack);
 				}
+				//FluidUtil.tryPlaceFluid(pPlayer, pLevel, pHand, blockpos1, itemstack, null)
+				// Existing fluid placement logic
+				BlockState blockstate = pLevel.getBlockState(blockpos);
+				BlockPos targetPos = canBlockContainFluid(pLevel, blockpos, blockstate, content) ?
+						blockpos : blockpos1;
+
+				if (this.emptyContents(pPlayer, pLevel, targetPos, blockhitresult, itemstack, content)) {
+					this.checkExtraContent(pPlayer, pLevel, itemstack, targetPos);
+					if (pPlayer instanceof ServerPlayer) {
+						CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayer) pPlayer, targetPos, itemstack);
+					}
+					pPlayer.awardStat(Stats.ITEM_USED.get(this));
+					return InteractionResultHolder.sidedSuccess(emptyBucket(itemstack, pPlayer), pLevel.isClientSide());
+				}
+				return InteractionResultHolder.fail(itemstack);
 			}
 		}
 		return InteractionResultHolder.pass(itemstack);
