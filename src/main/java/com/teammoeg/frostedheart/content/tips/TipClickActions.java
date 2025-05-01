@@ -1,5 +1,8 @@
 package com.teammoeg.frostedheart.content.tips;
 
+import com.teammoeg.chorda.CompatModule;
+import dev.ftb.mods.ftbquests.client.ClientQuestFile;
+import dev.ftb.mods.ftbquests.client.FTBQuestsClient;
 import net.minecraft.Util;
 
 import java.util.HashMap;
@@ -11,6 +14,14 @@ public class TipClickActions {
 
     static {
         register("OpenURL", s -> Util.getPlatform().openUri(s));
+        register("OpenQuest", s -> {
+            if (CompatModule.isFTBQLoaded()) {
+                if (FTBQuestsClient.getClientQuestFile() != null) {
+                    var quest = FTBQuestsClient.getClientQuestFile().getQuest(Long.parseLong(s, 16));
+                    ClientQuestFile.openGui(quest, true);
+                }
+            }
+        });
     }
 
     public static boolean hasAction(String name) {

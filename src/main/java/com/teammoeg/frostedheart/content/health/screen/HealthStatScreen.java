@@ -155,8 +155,12 @@ public class HealthStatScreen extends Screen implements MenuAccess<HealthStatMen
         super.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
     }
 
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
 
-	@Override
+    @Override
 	public HealthStatMenu getMenu() {
 		return menu;
 	}
