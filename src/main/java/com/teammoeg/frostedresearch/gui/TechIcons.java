@@ -122,8 +122,9 @@ public class TechIcons {
         if (vwr > 0 && vhr > 0) {
         	getOf(vwr,vhr,hl).draw(matrixStack, x + w - vwr, y + h - vhr, vwr, vhr);
         }
-
-        BUTTON_FRAME.draw(matrixStack, x, y, w, h);
-
+        if(w>1&&h>1)
+        	BUTTON_FRAME.draw(matrixStack, x, y, w, h);
+        else
+        	text.draw(matrixStack, x, y, w, h);
     }
 }
