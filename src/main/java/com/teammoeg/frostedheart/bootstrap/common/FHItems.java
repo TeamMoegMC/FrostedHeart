@@ -63,6 +63,7 @@ import com.teammoeg.frostedheart.util.FHAssetsUtils;
 import com.tterrag.registrate.util.entry.ItemEntry;
 
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.food.FoodProperties;
@@ -223,7 +224,8 @@ thinner.png
     public static ItemEntry<Item> PEAT =
             taggedIngredient("peat",
                     forgeItemTag("raw_materials"),
-                    forgeItemTag("raw_materials/peat"));
+                    forgeItemTag("raw_materials/peat"),
+                    ItemTags.create(new ResourceLocation("Caupona","fuel/fossil")));
     public static ItemEntry<Item> KAOLIN =
             taggedIngredient("kaolin",
                     forgeItemTag("raw_materials"),
