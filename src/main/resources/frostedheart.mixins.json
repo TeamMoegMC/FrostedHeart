@@ -67,6 +67,7 @@
     "minecraft.trade.AssignProfessionFromJobSite_DisableVanillaProfession",
     "minecraft.trade.ResetProfession_DisableVanillaProfession",
     "minecraft.trade.VillagerMixin",
+	"minecraft.fix.LevelStorageSourceMixin_FixBiome",
     "registrate.RegistrateBlockLootTablesMixin_RemoveExisted"
   ],
   "client": [
@@ -87,7 +88,6 @@
     "client.ToastComponentMixin",
     "client.create.ClientEventsMixin",
     "create.MixinOpenConfigButtonHandler",
-    "minecraft.MixinWorldOpenFlows",
     "minecraft.water.LocalPlayerMixin",
     "oculus.IrisRenderingPipelineAccess"
   ],
