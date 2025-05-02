@@ -87,6 +87,7 @@
     "client.ToastComponentMixin",
     "client.create.ClientEventsMixin",
     "create.MixinOpenConfigButtonHandler",
+    "minecraft.MixinWorldOpenFlows",
     "minecraft.water.LocalPlayerMixin",
     "oculus.IrisRenderingPipelineAccess"
   ],
