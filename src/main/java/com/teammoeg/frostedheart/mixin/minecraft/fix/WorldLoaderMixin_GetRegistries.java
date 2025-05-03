@@ -13,8 +13,6 @@ import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.util.mixin.WorldGenDatapack;
 
 import net.minecraft.core.LayeredRegistryAccess;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.RegistryDataLoader;
 import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.WorldLoader;
 import net.minecraft.server.packs.resources.CloseableResourceManager;
