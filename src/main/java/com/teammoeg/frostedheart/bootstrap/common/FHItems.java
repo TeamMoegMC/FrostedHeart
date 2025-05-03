@@ -1282,99 +1282,123 @@ thinner.png
     public static ItemEntry<FHBaseItem> buff_coat = REGISTRATE
             .item("buff_coat", p -> new FHBaseItem(createProps().defaultDurability(384)).setRepairItem(raw_hide.get()))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseItem> gambeson = REGISTRATE
             .item("gambeson", p -> new FHBaseItem(createProps().defaultDurability(384)).setRepairItem(Items.WHITE_WOOL))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseItem> kelp_lining = REGISTRATE
             .item("kelp_lining", p -> new FHBaseItem(createProps().defaultDurability(256)).setRepairItem(Items.KELP))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<Item> straw_lining = REGISTRATE
             .item("straw_lining", Item::new)
             .properties(p -> p.defaultDurability(256))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
 
     
     public static ItemEntry<FHBaseArmorItem> hay_boots = REGISTRATE
             .item("hay_boots", p -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.BOOTS, createProps()))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> hay_hat = REGISTRATE
             .item("hay_hat", p -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.HELMET, createProps()))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> hay_jacket = REGISTRATE
             .item("hay_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.CHESTPLATE, createProps()))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> hay_pants = REGISTRATE
             .item("hay_pants", p -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.LEGGINGS, createProps()))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<Item> hay_gloves = REGISTRATE
             .item("hay_gloves", Item::new)
             .properties(p -> p.defaultDurability(256))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> wool_boots = REGISTRATE
             .item("wool_boots", p -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.BOOTS, createProps()))
             .model(AssetLookup.existingItemModel())
             .lang("Wool Socks")
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> wool_hat = REGISTRATE
             .item("wool_hat", p -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.HELMET, createProps()))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> wool_jacket = REGISTRATE
             .item("wool_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.CHESTPLATE, createProps()))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> wool_pants = REGISTRATE
             .item("wool_pants", p -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.LEGGINGS, createProps()))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<Item> wool_gloves = REGISTRATE
             .item("wool_gloves", Item::new)
             .properties(p -> p.defaultDurability(384))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> hide_boots = REGISTRATE
             .item("hide_boots", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.BOOTS, createProps()))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> hide_hat = REGISTRATE
             .item("hide_hat", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.HELMET, createProps()))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> hide_jacket = REGISTRATE
             .item("hide_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.CHESTPLATE, createProps()))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> hide_pants = REGISTRATE
             .item("hide_pants", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.LEGGINGS, createProps()))
             .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<Item> hide_gloves = REGISTRATE
             .item("hide_gloves", Item::new)
             .properties(p -> p.defaultDurability(384))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     // Rabbit
     public static ItemEntry<FHBaseArmorItem> rabbit_fur_socks = REGISTRATE
             .item("rabbit_fur_socks", p -> new FHBaseArmorItem(FHArmorMaterial.RABBIT, Type.BOOTS, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> rabbit_hat = REGISTRATE
             .item("rabbit_fur_hat", p -> new FHBaseArmorItem(FHArmorMaterial.RABBIT, Type.HELMET, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> rabbit_jacket = REGISTRATE
             .item("rabbit_fur_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.RABBIT, Type.CHESTPLATE, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> rabbit_pants = REGISTRATE
             .item("rabbit_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.RABBIT, Type.LEGGINGS, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<Item> rabbit_gloves = REGISTRATE
             .item("rabbit_fur_gloves", Item::new)
             .properties(p -> p.defaultDurability(384))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     // Fox
     public static ItemEntry<FHBaseArmorItem> fox_boots = REGISTRATE

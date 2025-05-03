@@ -206,7 +206,7 @@ public class FHTags {
 		PIG_FEED,
 		CAT_FEED, RABBIT_FEED,
 		IMPORTANT_ITEM(false),
-
+		INNER_LINNING(),
 		// caupona
 		WOLFBERRIES(NameSpace.CP),
 

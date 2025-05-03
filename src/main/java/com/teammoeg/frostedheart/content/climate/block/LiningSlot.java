@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.content.climate.block;
 
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import net.minecraft.resources.ResourceLocation;
@@ -34,7 +35,7 @@ public class LiningSlot extends SlotItemHandler{
 		return 1;
 	}
 	public boolean mayPlace(ItemStack p_39746_) {
-		return (part.slot.getType()==EquipmentSlot.Type.ARMOR&&p_39746_.canEquip(part.slot, owner))||ArmorTempData.getData(p_39746_, part)!=null;
+		return p_39746_.is(FHTags.Items.INNER_LINNING.tag)&&((part.slot.getType()==EquipmentSlot.Type.ARMOR&&p_39746_.canEquip(part.slot, owner))||ArmorTempData.getData(p_39746_, part)!=null);
 	}
 	public boolean mayPickup(Player p_39744_) {
 		ItemStack itemstack = this.getItem();
