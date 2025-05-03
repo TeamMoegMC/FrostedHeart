@@ -1403,36 +1403,46 @@ thinner.png
     // Fox
     public static ItemEntry<FHBaseArmorItem> fox_boots = REGISTRATE
             .item("fox_fur_socks", p -> new FHBaseArmorItem(FHArmorMaterial.FOX, Type.BOOTS, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> fox_hat = REGISTRATE
             .item("fox_fur_hat", p -> new FHBaseArmorItem(FHArmorMaterial.FOX, Type.HELMET, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> fox_jacket = REGISTRATE
             .item("fox_fur_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.FOX, Type.CHESTPLATE, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> fox_pants = REGISTRATE
             .item("fox_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.FOX, Type.LEGGINGS, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<Item> fox_gloves = REGISTRATE
             .item("fox_fur_gloves", Item::new)
             .properties(p -> p.defaultDurability(384))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     // Wolf
     public static ItemEntry<FHBaseArmorItem> wolf_boots = REGISTRATE
             .item("wolf_fur_socks", p -> new FHBaseArmorItem(FHArmorMaterial.WOLF, Type.BOOTS, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> wolf_hat = REGISTRATE
             .item("wolf_fur_hat", p -> new FHBaseArmorItem(FHArmorMaterial.WOLF, Type.HELMET, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> wolf_jacket = REGISTRATE
             .item("wolf_fur_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.WOLF, Type.CHESTPLATE, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseArmorItem> wolf_pants = REGISTRATE
             .item("wolf_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.WOLF, Type.LEGGINGS, createProps()))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<Item> wolf_gloves = REGISTRATE
             .item("wolf_fur_gloves", Item::new)
             .properties(p -> p.defaultDurability(384))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     // Polar Bear
     public static ItemEntry<FHBaseArmorItem> polar_bear_boots = REGISTRATE
