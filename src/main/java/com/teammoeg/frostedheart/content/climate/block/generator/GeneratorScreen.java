@@ -271,7 +271,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         }
 
         if (isMouseIn(mouseX, mouseY, 63, 0, 50, 50)) {
-            addLine.accept(Lang.translateGui("generator.temperature.level").append(TemperatureDisplayHelper.toTemperatureDeltaIntString(menu.tempDegree.getValue())));
+            addLine.accept(Lang.translateGui("generator.temperature.level").append(TemperatureDisplayHelper.toTemperatureIntString(menu.tempDegree.getValue())));
         }
 
         if (isMouseIn(mouseX, mouseY, 18, 18, 32, 32)) {

@@ -123,8 +123,8 @@ public class CGuiHelper {
 		guiGraphics.pose().translate(x, y, zindex + 150);
 		guiGraphics.pose().scale(scaleX, scaleY, scaleX); 
 		if (!stack.isEmpty()) {
-			BakedModel bakedmodel = ClientUtils.mc().getItemRenderer().getModel(stack, ClientUtils.mc().level,
-				ClientUtils.mc().player, 0);
+			BakedModel bakedmodel = ClientUtils.getMc().getItemRenderer().getModel(stack, ClientUtils.getMc().level,
+				ClientUtils.getMc().player, 0);
 			
 			boolean flag = !bakedmodel.usesBlockLight();
 			Matrix4f matrix4f = null;
@@ -143,14 +143,14 @@ public class CGuiHelper {
 				Lighting.setupLevel(matrix4f);
 			}
 
-			ClientUtils.mc().getItemRenderer().render(stack, ItemDisplayContext.GUI, false, guiGraphics.pose(),
+			ClientUtils.getMc().getItemRenderer().render(stack, ItemDisplayContext.GUI, false, guiGraphics.pose(),
 				guiGraphics.bufferSource(), 15728880, OverlayTexture.NO_OVERLAY, bakedmodel);
 			guiGraphics.flush();
 			Lighting.setupFor3DItems();
 			guiGraphics.pose().popPose();
 		}
 		if (drawDecorations)
-			guiGraphics.renderItemDecorations(ClientUtils.mc().font, stack, 0, 0, countReplacement);
+			guiGraphics.renderItemDecorations(ClientUtils.getMc().font, stack, 0, 0, countReplacement);
 		guiGraphics.pose().popPose();
 	}
 

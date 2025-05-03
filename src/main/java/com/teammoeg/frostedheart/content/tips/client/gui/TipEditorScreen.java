@@ -41,7 +41,7 @@ public class TipEditorScreen extends Screen {
 
     public TipEditorScreen() {
         super(Components.str("Tip Editor"));
-        this.list = new TipEditsList(ClientUtils.mc(), ClientUtils.screenWidth() + 172, ClientUtils.screenHeight(), 10, ClientUtils.screenHeight() - 30, 28);
+        this.list = new TipEditsList(ClientUtils.getMc(), ClientUtils.screenWidth() + 172, ClientUtils.screenHeight(), 10, ClientUtils.screenHeight() - 30, 28);
         list.setRenderBackground(false);
         list.setLeftPos(-172);
     }

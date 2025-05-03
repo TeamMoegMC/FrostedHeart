@@ -95,16 +95,16 @@ public class RenderParams {
 		this.offsetY = 0;
 	}
 	public int getScreenWidth() {
-		return ClientUtils.mc().getWindow().getGuiScaledWidth();
+		return ClientUtils.getMc().getWindow().getGuiScaledWidth();
 	}
 	public int getScreenHeight() {
-		return ClientUtils.mc().getWindow().getGuiScaledHeight();
+		return ClientUtils.getMc().getWindow().getGuiScaledHeight();
 	}
 	public RenderParams copy() {
 		return new RenderParams(screen, matrixStack, mouseX, mouseY, partialTicks, opacity, x, y, width, height,xzoom,yzoom,offsetX,offsetY,contentWidth,contentHeight);
 	}
 	public Font getFont() {
-		return ClientUtils.mc().font;
+		return ClientUtils.getMc().font;
 	}
 	public RenderParams copyWithCurrent(GLLayerContent layer) {
 		return new RenderParams(screen, matrixStack, mouseX-ClientScene.fromRelativeXW(layer.getX()), mouseY-ClientScene.fromRelativeYH(layer.getY()), partialTicks,
@@ -187,7 +187,7 @@ public class RenderParams {
 	}
 
 	public Minecraft getMinecraft() {
-		return ClientUtils.mc();
+		return ClientUtils.getMc();
 	}
 	public int getContentWidth() {
 		return (int) (xzoom*this.contentWidth);

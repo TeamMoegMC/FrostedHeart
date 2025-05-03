@@ -65,7 +65,7 @@ public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
 
 	@Override
 	public Font getFont() {
-		return ClientUtils.mc().font;
+		return ClientUtils.getMc().font;
 	}
 
 	@Override
@@ -146,7 +146,7 @@ public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
 
 		if (openPrevScreen && getPrevScreen() != null) {
 			mc.setScreen(getPrevScreen());
-			GLFW.glfwSetCursorPos(ClientUtils.mc().getWindow().getWindow(), mx, my);
+			GLFW.glfwSetCursorPos(ClientUtils.getMc().getWindow().getWindow(), mx, my);
 		}
 
 		onClosed();

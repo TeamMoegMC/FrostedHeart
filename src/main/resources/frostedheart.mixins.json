@@ -68,6 +68,7 @@
     "minecraft.trade.ResetProfession_DisableVanillaProfession",
     "minecraft.trade.VillagerMixin",
 	"minecraft.fix.LevelStorageSourceMixin_FixBiome",
+	"minecraft.fix.WorldLoaderMixin_GetRegistries",
     "registrate.RegistrateBlockLootTablesMixin_RemoveExisted"
   ],
   "client": [

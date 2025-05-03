@@ -28,11 +28,11 @@ import com.teammoeg.chorda.client.ClientUtils;
 
 public class ClientHeatHandler {
 	public static void loadEndPoint(Collection<HeatEndpoint> data) {
-		AbstractContainerMenu c=ClientUtils.mc().player.containerMenu;
+		AbstractContainerMenu c=ClientUtils.getMc().player.containerMenu;
 		if(c instanceof HeatStatContainer) {
 			((HeatStatContainer)c).data=data;
-			if(ClientUtils.mc().screen instanceof MenuScreenWrapper) {
-				MenuScreenWrapper<?> msw=(MenuScreenWrapper<?>) ClientUtils.mc().screen;
+			if(ClientUtils.getMc().screen instanceof MenuScreenWrapper) {
+				MenuScreenWrapper<?> msw=(MenuScreenWrapper<?>) ClientUtils.getMc().screen;
 				msw.getGui().refreshWidgets();
 			}
 		}

@@ -109,7 +109,7 @@ public class FHClientEvents {
                     for (FormattedCharSequence line : list) {
                         //TODO Uncomment after draw line fixed
                     	//CGuis.drawLine(matrixStack, Color4I.rgba(0, 0, 0, 255), 0, gui.height / 2 - 1 + l, 72,gui.height / 2 + 9 + l);
-                        matrixStack.drawString(ClientUtils.mc().font, line, 1, gui.height / 2.0F + l, 0xFFFFFF, true);
+                        matrixStack.drawString(ClientUtils.getMc().font, line, 1, gui.height / 2.0F + l, 0xFFFFFF, true);
                         l += 9;
                     }
                     if (isStable) {
@@ -122,7 +122,7 @@ public class FHClientEvents {
                                 needEvents = false;
                                 break;
                             }
-                        matrixStack.drawString(ClientUtils.mc().font, itxc, 1, (int) (gui.height / 2.0F + l), 0xFFFFFF);
+                        matrixStack.drawString(ClientUtils.getMc().font, itxc, 1, (int) (gui.height / 2.0F + l), 0xFFFFFF);
                         Style opencf = Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
                                 "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue"));
                         // Though the capture is ? extends IGuiEventListener, I can't add new to it
@@ -194,9 +194,9 @@ public class FHClientEvents {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onRenderAfterBlockEntity(RenderLevelStageEvent event) {
         if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_LEVEL) {
-            ClientUtils.mc().getProfiler().push("frostedheart:render_infrared_view");
+            ClientUtils.getMc().getProfiler().push("frostedheart:render_infrared_view");
             InfraredViewRenderer.renderInfraredView();
-            ClientUtils.mc().getProfiler().pop();
+            ClientUtils.getMc().getProfiler().pop();
         }
     }
 
@@ -344,7 +344,7 @@ public class FHClientEvents {
     public static void tickClient(ClientTickEvent event) {
         if (event.phase == Phase.START) {
             InfraredViewRenderer.clientTick();
-            Minecraft mc = ClientUtils.mc();
+            Minecraft mc = ClientUtils.getMc();
             Player pe = ClientUtils.getPlayer();
             if (mc.level != null) {
                 if (ClientScene.INSTANCE != null)

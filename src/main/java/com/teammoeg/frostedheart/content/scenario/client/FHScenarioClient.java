@@ -38,14 +38,14 @@ public class FHScenarioClient {
         client.callCommand(name, runner, params);
     }
     public static ResourceLocation getPathOf(ResourceLocation orig,String path) {
-    	ResourceLocation rl= new ResourceLocation(orig.getNamespace(),path+ClientUtils.mc().getLanguageManager().getSelected()+"/"+orig.getPath());
-    	if(ClientUtils.mc().getResourceManager().getResource(rl).isPresent()) {
+    	ResourceLocation rl= new ResourceLocation(orig.getNamespace(),path+ClientUtils.getMc().getLanguageManager().getSelected()+"/"+orig.getPath());
+    	if(ClientUtils.getMc().getResourceManager().getResource(rl).isPresent()) {
     		return rl;
     	}
     	return new ResourceLocation(orig.getNamespace(),path+orig.getPath());
     }
     public static <T> Optional<Holder<T>> getPathFrom(IForgeRegistry<T> registry,ResourceLocation orig,String path) {
-    	ResourceLocation rl= new ResourceLocation(orig.getNamespace(),path+ClientUtils.mc().getLanguageManager().getSelected()+"/"+orig.getPath());
+    	ResourceLocation rl= new ResourceLocation(orig.getNamespace(),path+ClientUtils.getMc().getLanguageManager().getSelected()+"/"+orig.getPath());
     	//System.out.println(rl);
     	if(registry.containsKey(rl)) {
     		return registry.getHolder(rl);

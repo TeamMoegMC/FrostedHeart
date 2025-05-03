@@ -121,7 +121,7 @@ public class CUIMenuScreen<T extends AbstractContainerMenu> extends AbstractCont
 		 if (!display.isEmpty()){
 			 graphics.pose().translate(0, 0, 600);
 	            graphics.setColor(1f, 1f, 1f, 0.8f);
-	            graphics.renderTooltip(ClientUtils.mc().font, display, Optional.empty(), mouseX, Math.max(mouseY, 18));
+	            graphics.renderTooltip(ClientUtils.getMc().font, display, Optional.empty(), mouseX, Math.max(mouseY, 18));
 	            graphics.setColor(1f, 1f, 1f, 1f);
 		}
 

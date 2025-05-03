@@ -252,7 +252,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
                         String content = translationContents.get(i);
                         copy.append("\"").append(content).append("\": \"").append(contents.get(i)).append("\",\n");
                     }
-                    ClientUtils.mc().keyboardHandler.setClipboard(copy.substring(0, copy.length()-2)); // 删除最后一行的逗号和换行
+                    ClientUtils.getMc().keyboardHandler.setClipboard(copy.substring(0, copy.length()-2)); // 删除最后一行的逗号和换行
 
                     translation = !translation;
                     updatePreview();

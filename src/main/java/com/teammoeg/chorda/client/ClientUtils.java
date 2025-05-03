@@ -49,22 +49,22 @@ public class ClientUtils {
 	.memoize(dir -> new Quaternionf().rotateAxis(-(float) (dir.toYRot() / 180 * Math.PI), 0, 1, 0));
 
     public static LocalPlayer getPlayer() {
-        return mc().player;
+        return getMc().player;
     }
 
     public static Level getWorld() {
-        return mc().level;
+        return getMc().level;
     }
 
     public static float partialTicks() {
-    	return mc().getFrameTime();
+    	return getMc().getFrameTime();
     }
 
     public static long gameTick() {
         return getWorld().getLevelData().getGameTime();
     }
 
-    public static Minecraft mc() {
+    public static Minecraft getMc() {
         return Minecraft.getInstance();
     }
     public static void spawnFireParticles2(Level worldIn, BlockPos pos) {
@@ -119,11 +119,11 @@ public class ClientUtils {
     }
 
     public static int screenWidth() {
-        return mc().getWindow().getGuiScaledWidth();
+        return getMc().getWindow().getGuiScaledWidth();
     }
 
     public static int screenHeight() {
-        return mc().getWindow().getGuiScaledHeight();
+        return getMc().getWindow().getGuiScaledHeight();
     }
 
     public static int screenCenterX() {
@@ -135,7 +135,7 @@ public class ClientUtils {
     }
 
     public static boolean isKeyDown(int key) {
-        return InputConstants.isKeyDown(mc().getWindow().getWindow(), key);
+        return InputConstants.isKeyDown(getMc().getWindow().getWindow(), key);
     }
 
     public static ResourceLocation getDimLocation() {
@@ -149,6 +149,6 @@ public class ClientUtils {
     }
 
 	public static Font font() {
-	    return mc().font;
+	    return getMc().font;
 	}
 }

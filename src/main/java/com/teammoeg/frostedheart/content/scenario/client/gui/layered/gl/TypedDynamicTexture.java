@@ -41,7 +41,7 @@ public class TypedDynamicTexture {
 	public TypedDynamicTexture(NativeImage texture) {
 		this.texture = new DynamicTexture(texture);
 		resourceLocation = FHMain.rl("fhscenario/generated_" + this.hashCode());
-		ClientUtils.mc().textureManager.register(resourceLocation, this.texture);
+		ClientUtils.getMc().textureManager.register(resourceLocation, this.texture);
 		this.renderType = CGuiHelper.RenderStateAccess.createTempType(resourceLocation);
 	}
 
@@ -49,7 +49,7 @@ public class TypedDynamicTexture {
 		if(!isClosed) {
 			isClosed = true;
 			texture.close();
-			ClientUtils.mc().textureManager.release(resourceLocation);
+			ClientUtils.getMc().textureManager.release(resourceLocation);
 		}
 	}
 	public void addRef() {

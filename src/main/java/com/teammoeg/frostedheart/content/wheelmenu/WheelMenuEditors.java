@@ -40,7 +40,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public class WheelMenuEditors {
 	public static final Editor<KeyMapping> KEY_EDITOR = (p, l, v, c) -> new SelectDialog<>(p, l, v, c,
-		() -> Arrays.asList(ClientUtils.mc().options.keyMappings),
+		() -> Arrays.asList(ClientUtils.getMc().options.keyMappings),
 		o -> Components.translatable(o.getCategory()).append(": ").append(Components.translatable(o.getName())).append("(").append(o.getTranslatedKeyMessage()).append(")")).open();
 	public static final Editor<KeyMappingTriggerAction> KEY_ACTION_EDITOR = KEY_EDITOR.xmap(t->t.getName(), KeyMapping.ALL::get).xmap(KeyMappingTriggerAction::new, KeyMappingTriggerAction::getKey);
 

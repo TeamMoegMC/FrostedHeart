@@ -46,7 +46,7 @@ public class SunStationWaypoint extends Waypoint {
     public void render(GuiGraphics graphics) {
         float sunAngle = 0;
         if (ClientUtils.getWorld() != null) {
-            sunAngle = ClientUtils.getWorld().getSunAngle(ClientUtils.mc().getPartialTick());
+            sunAngle = ClientUtils.getWorld().getSunAngle(ClientUtils.getMc().getPartialTick());
         }
         float x = (float) Math.sin(sunAngle);
         float y = (float) Math.cos(sunAngle);

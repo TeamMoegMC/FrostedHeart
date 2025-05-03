@@ -28,7 +28,7 @@ import net.minecraft.client.gui.screens.Screen;
 
 public class ResearchUtils {
     public static void refreshResearchGui() {
-        Screen cur = ClientUtils.mc().screen;
+        Screen cur = ClientUtils.getMc().screen;
         if (cur instanceof IScreenWrapper) {
             BaseScreen bs = ((IScreenWrapper) cur).getGui();
             if (bs instanceof ResearchGui) {

@@ -127,7 +127,7 @@ public class EffectBuilding extends Effect {
             ManualEntry entry = ManualHelper.getManual().getEntry(manual);
             if (entry != null) {
 
-                ClientUtils.mc().setScreen(screen);
+                ClientUtils.getMc().setScreen(screen);
                 //System.out.println(manual);
                 screen.setCurrentNode(entry.getTreeNode());
                 screen.page = 0;

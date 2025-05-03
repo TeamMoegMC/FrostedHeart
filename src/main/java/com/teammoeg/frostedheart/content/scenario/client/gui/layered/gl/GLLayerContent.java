@@ -40,11 +40,11 @@ public abstract class GLLayerContent extends OrderedRenderableContent {
 		this.x = x;
 		this.y = y;
 		if(w<0) {
-			w=ClientUtils.mc().getWindow().getGuiScaledWidth();
+			w=ClientUtils.getMc().getWindow().getGuiScaledWidth();
 		}
 		this.width = w;
 		if(h<0) {
-			h=ClientUtils.mc().getWindow().getGuiScaledHeight();
+			h=ClientUtils.getMc().getWindow().getGuiScaledHeight();
 		}
 		this.height = h;
 	}

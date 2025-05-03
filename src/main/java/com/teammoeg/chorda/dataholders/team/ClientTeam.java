@@ -26,12 +26,12 @@ public class ClientTeam implements AbstractTeam {
 
 	@Override
 	public String getName() {
-		return ClientUtils.mc().player.getName().getString();
+		return ClientUtils.getMc().player.getName().getString();
 	}
 
 	@Override
 	public UUID getOwner() {
-		return ClientUtils.mc().player.getUUID();
+		return ClientUtils.getMc().player.getUUID();
 	}
 
 }

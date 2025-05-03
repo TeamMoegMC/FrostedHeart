@@ -139,11 +139,11 @@ public class ClientControl implements IClientControlCommand {
 		Component t1=null,t2=null;
 		if(t!=null) {
 			t1=StringTextComponentParser.parse(t);
-			ClientUtils.mc().gui.setTitle(t1);
+			ClientUtils.getMc().gui.setTitle(t1);
 		}
 		if(st!=null) {
 			t2=StringTextComponentParser.parse(st);
-			ClientUtils.mc().gui.setSubtitle(t2);
+			ClientUtils.getMc().gui.setSubtitle(t2);
 		}
 		
 	}
@@ -174,7 +174,7 @@ public class ClientControl implements IClientControlCommand {
 					if(ClientScene.INSTANCE.dialog!=null)
 						ClientScene.INSTANCE.dialog.closeDialog();
 					ClientScene.INSTANCE.dialog=id;
-					ClientUtils.mc().setScreen(id);
+					ClientUtils.getMc().setScreen(id);
 				}else {
 					id=(ImageScreenDialog) ClientScene.INSTANCE.dialog;
 				}
@@ -312,7 +312,7 @@ public class ClientControl implements IClientControlCommand {
 	@Override
 	public void bgm(IClientScene runner,@Param("n")@Param("name")String name) {
 		//ISound sound=SimpleSound.music();
-		ClientUtils.mc().getMusicManager().stopPlaying();
+		ClientUtils.getMc().getMusicManager().stopPlaying();
 		//ForgeRegistries.SOUND_EVENTS.getKeys().forEach(System.out::println);
 		/*FHScenarioClient.getPathFrom(ForgeRegistries.SOUND_EVENTS,new ResourceLocation(name),"")
 		.ifPresentOrElse(t->ClientUtils.mc().getMusicManager().startPlaying(new Music(t, 0, 0, true)), ()->{
@@ -320,7 +320,7 @@ public class ClientControl implements IClientControlCommand {
 		});*/
 		Optional<Reference<SoundEvent>> sound=ClientUtils.getWorld().registryAccess().lookup(Registries.SOUND_EVENT).get().get(ResourceKey.create(Registries.SOUND_EVENT, new ResourceLocation(name)));
 		//ClientUtils.mc().getSoundManager().play(SimpleSoundInstance.forMusic(SoundEvent.createVariableRangeEvent(new ResourceLocation(name))));
-		sound.ifPresentOrElse(t->ClientUtils.mc().getMusicManager().startPlaying(new Music(t, 0, 0, true)), ()->{
+		sound.ifPresentOrElse(t->ClientUtils.getMc().getMusicManager().startPlaying(new Music(t, 0, 0, true)), ()->{
 			FHMain.LOGGER.error("[FHScenario] Music "+name+" Not found");
 		});
 		
@@ -329,7 +329,7 @@ public class ClientControl implements IClientControlCommand {
 	@Override
 	public void stopbgm(IClientScene runner) {
 		//ISound sound=SimpleSound.music();
-		ClientUtils.mc().getMusicManager().stopPlaying();
+		ClientUtils.getMc().getMusicManager().stopPlaying();
 	}
 	List<SoundInstance> current=new ArrayList<>();
 	@Override
@@ -337,12 +337,12 @@ public class ClientControl implements IClientControlCommand {
 		//ISound sound=SimpleSound.music();
 		
 		SoundInstance sound=new SimpleSoundInstance(FHScenarioClient.getPathOf(new ResourceLocation(name),""), SoundSource.MASTER,1, 1, ClientUtils.getWorld().getRandom(), rep>0, 0, Attenuation.LINEAR, 0, 0, 0, true);
-		ClientUtils.mc().getSoundManager().play(sound);
+		ClientUtils.getMc().getSoundManager().play(sound);
 		current.add(sound);
 	}
 	@Override
 	public void stopAllsounds(IClientScene runner) {
-		current.forEach(ClientUtils.mc().getSoundManager()::stop);
+		current.forEach(ClientUtils.getMc().getSoundManager()::stop);
 		current.clear();
 		
 	}

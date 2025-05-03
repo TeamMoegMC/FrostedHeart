@@ -30,7 +30,7 @@ public class CInputHelper {
 
 	public static boolean shouldCloseMenu(int keyCode,int scanCode) {
 		
-		return isEsc(keyCode) || ClientUtils.mc().options.keyInventory.matches(keyCode, scanCode);
+		return isEsc(keyCode) || ClientUtils.getMc().options.keyInventory.matches(keyCode, scanCode);
 	}
 
 	public static boolean isEnter(int keyCode) {
@@ -61,11 +61,11 @@ public class CInputHelper {
 		return keyCode == GLFW.GLFW_KEY_D && Screen.hasControlDown();
 	}
 	public static String getClipboardText() {
-		return ClientUtils.mc().keyboardHandler.getClipboard();
+		return ClientUtils.getMc().keyboardHandler.getClipboard();
 	}
 
 	public static void setClipboardText(String string) {
-		ClientUtils.mc().keyboardHandler.setClipboard(string);
+		ClientUtils.getMc().keyboardHandler.setClipboard(string);
 	}
 	public static boolean isShiftKeyDown() {
 		return Screen.hasShiftDown();
@@ -78,7 +78,7 @@ public class CInputHelper {
 		return GLFW.glfwGetKey(Minecraft.getInstance().getWindow().getWindow(), keyCode) == GLFW.GLFW_PRESS;
 	}
 	public static void playClickSound() {
-		ClientUtils.mc().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1));
+		ClientUtils.getMc().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1));
 	}
 	public static boolean isMouseLeftDown() {
 		return GLFW.glfwGetMouseButton(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;

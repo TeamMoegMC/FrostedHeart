@@ -25,10 +25,10 @@ public class InGameClientHandshakePacketListenerImpl extends ClientHandshakePack
 
 	@Override
 	public void handleGameProfile(ClientboundGameProfilePacket pPacket) {
-        ClientUtils.mc().clearLevel();
-        ClientUtils.mc().prepareForMultiplayer();
-        ClientUtils.mc().updateReportEnvironment(ReportEnvironment.thirdParty(pServerData != null ? pServerData.ip : "localhost"));
-        ClientUtils.mc().quickPlayLog().setWorldData(QuickPlayLog.Type.MULTIPLAYER, pServerData.ip, pServerData.name);
+        ClientUtils.getMc().clearLevel();
+        ClientUtils.getMc().prepareForMultiplayer();
+        ClientUtils.getMc().updateReportEnvironment(ReportEnvironment.thirdParty(pServerData != null ? pServerData.ip : "localhost"));
+        ClientUtils.getMc().quickPlayLog().setWorldData(QuickPlayLog.Type.MULTIPLAYER, pServerData.ip, pServerData.name);
 		super.handleGameProfile(pPacket);
 	}
 

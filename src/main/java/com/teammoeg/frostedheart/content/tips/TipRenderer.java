@@ -99,7 +99,7 @@ public class TipRenderer {
     public static void onHudRender(RenderGuiEvent.Post event) {
         if (!FHConfig.CLIENT.enableTip.get() || (TIP_QUEUE.isEmpty() && !isTipRendering()))
             return;
-        Minecraft MC = ClientUtils.mc();
+        Minecraft MC = ClientUtils.getMc();
         if (MC.screen != null && !SCREEN_BLACKLIST.contains(MC.screen.getClass()))
             return;
 
@@ -123,7 +123,7 @@ public class TipRenderer {
     @SubscribeEvent
     public static void onGuiRender(ScreenEvent.Render.Post event) {
         if (FrostedHud.renderDebugOverlay) {
-            FrostedHud.renderDebugOverlay(event.getGuiGraphics(), ClientUtils.mc());
+            FrostedHud.renderDebugOverlay(event.getGuiGraphics(), ClientUtils.getMc());
         }
         if (!FHConfig.CLIENT.enableTip.get() || (TIP_QUEUE.isEmpty() && !isTipRendering()))
             return;

@@ -79,7 +79,7 @@ public class DebugScreen extends Screen {
             TipManager.INSTANCE.loadFromFile()
         );
         addButton(IconButton.Icon.WRENCH, ColorHelper.CYAN, "Open Tip Editor UI", (b) ->
-            ClientUtils.mc().setScreen(new TipEditorScreen())
+            ClientUtils.getMc().setScreen(new TipEditorScreen())
         );
         addButton(IconButton.Icon.BOX_ON, ColorHelper.CYAN, "Create a Random Waypoint", (b) -> {
             Random random = new Random();

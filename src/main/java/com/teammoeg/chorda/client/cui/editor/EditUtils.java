@@ -41,7 +41,7 @@ public class EditUtils {
     public static UIWidget openEditorScreen() {
     	CUIScreen wrapper=new CUIScreen(new PrimaryLayer());
     	
-    	ClientUtils.mc().setScreen(wrapper);
+    	ClientUtils.getMc().setScreen(wrapper);
     	return wrapper.getPrimaryLayer();
     }
     public static TextField getTitle(UIWidget p, String title) {

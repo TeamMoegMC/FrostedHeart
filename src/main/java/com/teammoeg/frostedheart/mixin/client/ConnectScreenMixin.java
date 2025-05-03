@@ -25,7 +25,7 @@ public class ConnectScreenMixin {
 	@Inject(at = @At("HEAD"), method = "connect")
 	private void fh$connect(final Minecraft pMinecraft, final ServerAddress pServerAddress, @Nullable final ServerData pServerData, CallbackInfo cbi) {
 		ClientConnectionHelper.last=pServerAddress;
-		if(ClientUtils.mc().screen instanceof JoinMultiplayerScreen)
+		if(ClientUtils.getMc().screen instanceof JoinMultiplayerScreen)
 			ClientConnectionHelper.callStack.clear();
 	}
 }

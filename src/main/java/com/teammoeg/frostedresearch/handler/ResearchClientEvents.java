@@ -31,7 +31,7 @@ public class ResearchClientEvents {
     public static void onResearchStatus(ClientResearchStatusEvent event) {
         if (event.isStatusChanged()) {
             if (event.isCompletion())
-                ClientUtils.mc().getToasts().addToast(new ResearchToast(event.getResearch()));
+                ClientUtils.getMc().getToasts().addToast(new ResearchToast(event.getResearch()));
         } else if (!event.isCompletion())
             return;
         for (Effect e : event.getResearch().getEffects())

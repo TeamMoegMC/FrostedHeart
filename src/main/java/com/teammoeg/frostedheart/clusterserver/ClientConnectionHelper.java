@@ -30,19 +30,19 @@ public class ClientConnectionHelper {
 
 	@SuppressWarnings("resource")
 	public static void handleDisconnect() {
-		if (!ClientUtils.mc().isSameThread()) {
+		if (!ClientUtils.getMc().isSameThread()) {
 			FHMain.LOGGER.warn("not same thread");
-			ClientUtils.mc().submitAsync(()->handleDisconnect());
+			ClientUtils.getMc().submitAsync(()->handleDisconnect());
 			return;
 		}
 		
-		if(ClientUtils.mc().level!=null) {
-			ClientUtils.mc().level.disconnect();
-			if(ClientUtils.mc().isLocalServer()) {
-				ClientUtils.mc().clearLevel(new GenericDirtMessageScreen(Component.translatable("menu.savingLevel")));
-				ClientUtils.mc().setScreen(new TitleScreen());
+		if(ClientUtils.getMc().level!=null) {
+			ClientUtils.getMc().level.disconnect();
+			if(ClientUtils.getMc().isLocalServer()) {
+				ClientUtils.getMc().clearLevel(new GenericDirtMessageScreen(Component.translatable("menu.savingLevel")));
+				ClientUtils.getMc().setScreen(new TitleScreen());
 			}else {
-				ClientUtils.mc().clearLevel();
+				ClientUtils.getMc().clearLevel();
 				back2ServerScreen();
 			}
 			
@@ -51,7 +51,7 @@ public class ClientConnectionHelper {
 	}
 
 	public static void back2ServerScreen() {
-		ClientUtils.mc().setScreen(new JoinMultiplayerScreen(new TitleScreen()));
+		ClientUtils.getMc().setScreen(new JoinMultiplayerScreen(new TitleScreen()));
 	}
 	public static void back() {
 		String name=callStack.pollLast();
@@ -61,13 +61,13 @@ public class ClientConnectionHelper {
 	
 	@SuppressWarnings("resource")
 	public static void joinNewServer(String ip,boolean temporary) {
-		if (!ClientUtils.mc().isSameThread()) {
+		if (!ClientUtils.getMc().isSameThread()) {
 			FHMain.LOGGER.warn("not same thread");
-			ClientUtils.mc().submitAsync(()->joinNewServer(ip,temporary));
+			ClientUtils.getMc().submitAsync(()->joinNewServer(ip,temporary));
 			return;
 		}
 		handleDisconnect();
-		rawJoinNewServer(ClientUtils.mc().screen,ip,temporary);
+		rawJoinNewServer(ClientUtils.getMc().screen,ip,temporary);
 	}
 	@SuppressWarnings("resource")
 	public static void rawJoinNewServer(Screen previous,String ip,boolean temporary) {
@@ -76,7 +76,7 @@ public class ClientConnectionHelper {
 			callStack.addLast(last.toString());
 		}
 		MapManager.shutdown();
-		ServerList servers = new ServerList(ClientUtils.mc());
+		ServerList servers = new ServerList(ClientUtils.getMc());
 		servers.load();
 		ServerData serverdata = servers.get(ip);
 		if (serverdata == null) {
@@ -85,7 +85,7 @@ public class ClientConnectionHelper {
 			servers.save();
 		}
 
-		ConnectScreen.startConnecting(previous, ClientUtils.mc(), ServerAddress.parseString(serverdata.ip), serverdata, false);
+		ConnectScreen.startConnecting(previous, ClientUtils.getMc(), ServerAddress.parseString(serverdata.ip), serverdata, false);
 		}catch(Throwable t) {
 			t.printStackTrace();
 		}

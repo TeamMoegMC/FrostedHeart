@@ -125,10 +125,10 @@ public class TextInfo {
 	}
 
 	public int getMaxLen() {
-		return ClientUtils.mc().font.width(ClientScene.toString(getFinished()))+30;
+		return ClientUtils.getMc().font.width(ClientScene.toString(getFinished()))+30;
 	}
 	public int getCurLen() {
-		return ClientUtils.mc().font.width(ClientScene.toString(text))+30;
+		return ClientUtils.getMc().font.width(ClientScene.toString(text))+30;
 	}
 	public FormattedCharSequence asFinished() {
 		return (text instanceof SizedReorderingProcessor) ? ((SizedReorderingProcessor) text).asFinished() : text;

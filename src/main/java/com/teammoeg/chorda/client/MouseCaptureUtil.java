@@ -10,7 +10,7 @@ public class MouseCaptureUtil {
 
 	}
 	private static CapturableMouseHandler getHandler() {
-		return (CapturableMouseHandler) ClientUtils.mc().mouseHandler;
+		return (CapturableMouseHandler) ClientUtils.getMc().mouseHandler;
 	}
 	
 	/**

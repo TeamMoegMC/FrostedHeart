@@ -64,10 +64,10 @@ public class ClientScene implements IClientScene {
 		this.setSpeed(1);
 	}
 	public static int fromRelativeXW(float val) {
-		return (int) (val*ClientUtils.mc().getWindow().getGuiScaledWidth());
+		return (int) (val*ClientUtils.getMc().getWindow().getGuiScaledWidth());
 	}
 	public static int fromRelativeYH(float val) {
-		return (int) (val*ClientUtils.mc().getWindow().getGuiScaledHeight());
+		return (int) (val*ClientUtils.getMc().getWindow().getGuiScaledHeight());
 	}
 	LinkedList<Component> origmsgQueue=new LinkedList<>();
 	LinkedList<TextInfo> msgQueue = new LinkedList<>();
@@ -188,12 +188,12 @@ public class ClientScene implements IClientScene {
 
 	@Override
 	public void cls() {
-		Minecraft mc = ClientUtils.mc();
+		Minecraft mc = ClientUtils.getMc();
 		List<GuiMessage.Line> i = ((NewChatGuiAccessor) mc.gui.getChat()).getTrimmedMessages();
 		i.removeIf(l -> l.tag()==SCENARIO);
 		msgQueue.clear();
 		for(Component ic:origmsgQueue) {
-			for(FormattedCharSequence j:ComponentRenderUtils.wrapComponents(ic,w, ClientUtils.mc().font))
+			for(FormattedCharSequence j:ComponentRenderUtils.wrapComponents(ic,w, ClientUtils.getMc().font))
 				i.add(0, new GuiMessage.Line(mc.gui.getGuiTicks(), j, GuiMessageTag.system(),true));
 		}
 		origmsgQueue.clear();
@@ -239,7 +239,7 @@ public class ClientScene implements IClientScene {
 			MutableComponent ntext = ti.parent.copy().append(item);
 			origmsgQueue.pollLast();
 			origmsgQueue.add(ntext);
-			lines = ComponentRenderUtils.wrapComponents(ntext, getDialogWidth(), ClientUtils.mc().font);
+			lines = ComponentRenderUtils.wrapComponents(ntext, getDialogWidth(), ClientUtils.getMc().font);
 			for (int i = lastline; i < lines.size(); i++) {
 				FormattedCharSequence line = lines.get(i);
 				if (!isNowait) {
@@ -253,7 +253,7 @@ public class ClientScene implements IClientScene {
 			}
 		} else {
 			origmsgQueue.add(item);
-			lines = ComponentRenderUtils.wrapComponents(item, getDialogWidth(), ClientUtils.mc().font);
+			lines = ComponentRenderUtils.wrapComponents(item, getDialogWidth(), ClientUtils.getMc().font);
 			int i = 0;
 			for (FormattedCharSequence line : lines) {
 				msgQueue.add(new TextInfo(item, i++, isNowait ? line : new SizedReorderingProcessor(line)));
@@ -348,7 +348,7 @@ public class ClientScene implements IClientScene {
 		}
 	}
 	public void sendClientReady() {
-		FHNetwork.INSTANCE.sendToServer(new C2SClientReadyPacket(ClientUtils.mc().getLanguageManager().getSelected()));
+		FHNetwork.INSTANCE.sendToServer(new C2SClientReadyPacket(ClientUtils.getMc().getLanguageManager().getSelected()));
 	}
 	public void sendClientUpdate() {
 		FHNetwork.INSTANCE.sendToServer(new C2SSettingsPacket());

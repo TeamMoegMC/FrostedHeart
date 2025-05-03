@@ -141,6 +141,7 @@ mixin {
 }
 
 repositories {
+	maven { url 'https://maven.aliyun.com/repository/public/' }
     mavenCentral()
     mavenLocal()
     maven {
@@ -314,7 +315,7 @@ dependencies {
     datagenImplementation fg.deobf("curse.maven:steampowered-534610:5778650")
     
     datagenImplementation fg.deobf("curse.maven:supplementaries-412082:5676069")
-    datagenImplementation fg.deobf("curse.maven:crock-pot-404523:5458905")
+//    datagenImplementation fg.deobf("curse.maven:crock-pot-404523:5458905")
 //    datagenImplementation fg.deobf("curse.maven:charcoal-pit-reloaded-534602:5861935")
     datagenImplementation fg.deobf("curse.maven:selene-499980:5854670") // supp api
 	//Excel reader for datagen

@@ -75,7 +75,7 @@ public class ClimateClientEvents {
     @SubscribeEvent
     public static void tickGeneratorContainer(TickEvent.PlayerTickEvent event) {
         if (event.side == LogicalSide.CLIENT &&  event.phase == TickEvent.Phase.END) {
-        	if(ClientUtils.mc().screen instanceof GeneratorScreen gs) {
+        	if(ClientUtils.getMc().screen instanceof GeneratorScreen gs) {
         		if(event.player.tickCount%10==0)
         			gs.updateTooltip();
         	}

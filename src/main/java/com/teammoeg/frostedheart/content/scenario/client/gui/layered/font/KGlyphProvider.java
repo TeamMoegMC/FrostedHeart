@@ -63,7 +63,7 @@ public class KGlyphProvider extends SimplePreparableReloadListener<Object> {
 	}
 
 	public GlyphData getGlyph(int code) {
-		if (ClientUtils.mc().options.forceUnicodeFont().get()) {
+		if (ClientUtils.getMc().options.forceUnicodeFont().get()) {
 			return unicodeData.get(code);
 		}
 		return data.get(code);

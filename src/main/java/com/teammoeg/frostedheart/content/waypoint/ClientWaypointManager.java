@@ -67,7 +67,7 @@ public class ClientWaypointManager {
         if (!hasWaypoint() || ClientUtils.getWorld() == null) return;
 
         // 每 tick 更新一次路径点悬停信息
-        shouldUpdate = ClientUtils.isGameTimeUpdated() || ClientUtils.mc().isPaused();
+        shouldUpdate = ClientUtils.isGameTimeUpdated() || ClientUtils.getMc().isPaused();
 
         // Shift 键被按下或玩家潜行
         shouldShowExtra = ClientUtils.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT) || ClientUtils.getPlayer().isShiftKeyDown();
@@ -96,7 +96,7 @@ public class ClientWaypointManager {
         // 检查该路径点是否靠近玩家鼠标或屏幕中心区域
         Vec2 screenPos = waypoint.getScreenPos();
         boolean flag = false;
-        if (!ClientUtils.mc().mouseHandler.isMouseGrabbed()) {
+        if (!ClientUtils.getMc().mouseHandler.isMouseGrabbed()) {
             // 鼠标
             flag = MouseHelper.isMouseIn(MouseHelper.getScaledX(), MouseHelper.getScaledY(), (int)(screenPos.x-10), (int)(screenPos.y-10), 20, 20);
         }
@@ -118,7 +118,7 @@ public class ClientWaypointManager {
         }
 
         Vec2 pos;
-        if (!ClientUtils.mc().mouseHandler.isMouseGrabbed()) {
+        if (!ClientUtils.getMc().mouseHandler.isMouseGrabbed()) {
             // 鼠标坐标
             pos = new Vec2(MouseHelper.getScaledX(), MouseHelper.getScaledY());
         } else {

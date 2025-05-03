@@ -44,7 +44,7 @@ public class Editors {
 	public static final Editor<Integer> INT_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, String.valueOf(v), o -> c.accept(Integer.parseInt(o)),Verifiers.INT_STR);
 	public static final Editor<Double> REAL_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, String.valueOf(v), o -> c.accept(Double.parseDouble(o)),Verifiers.NUMBER_STR);
 	public static final Editor<Advancement> EDITOR_ADVANCEMENT = (p, l, v, c) -> {
-		ClientAdvancements cam = ClientUtils.mc().player.connection.getAdvancements();
+		ClientAdvancements cam = ClientUtils.getMc().player.connection.getAdvancements();
 	
 		new SelectDialog<>(p, l, v, c, () -> cam.getAdvancements().getAllAdvancements(),
 			Advancement::getChatComponent, advx -> new String[] { advx.getChatComponent().getString(), advx.getId().toString() },
@@ -86,7 +86,7 @@ public class Editors {
 	public static final EditorWidgetFactory<Float, RealBox> FLOAT = DOUBLE.xmap(Double::floatValue, Float::doubleValue);
 	public static final EditorWidgetFactory<Pair<Ingredient,Integer>,OpenEditorButton<Pair<Ingredient,Integer>>> SIZED_INGREDIENT=openDialog(IngredientEditor.EDITOR,e->CIcons.getIcon(e.getFirst(), e.getSecond()));
 	public static final EditorWidgetFactory<ResourceLocation, LabeledOpenEditorButton<Advancement>> ADVANCEMENT=
-		openDialogLabeled(EDITOR_ADVANCEMENT,CFunctionUtils.mapIfMapNullable(e->e.getDisplay(), e->CIcons.getIcon(e.getIcon()), e->CIcons.nop()),CFunctionUtils.mapIfMapNullable(e->e.getDisplay(), r->r.getTitle(), e->Components.str(e.getId().toString()))).xmap(e->e.getId(), ClientUtils.mc().player.connection.getAdvancements().getAdvancements()::get);
+		openDialogLabeled(EDITOR_ADVANCEMENT,CFunctionUtils.mapIfMapNullable(e->e.getDisplay(), e->CIcons.getIcon(e.getIcon()), e->CIcons.nop()),CFunctionUtils.mapIfMapNullable(e->e.getDisplay(), r->r.getTitle(), e->Components.str(e.getId().toString()))).xmap(e->e.getId(), ClientUtils.getMc().player.connection.getAdvancements().getAdvancements()::get);
 	public static final EditorWidgetFactory<Pair<Advancement,String>, AdvancementEditor> ADVANCEMENT_CITERION=EditorWidgetFactory.create(AdvancementEditor::new, AdvancementEditor::getValue,AdvancementEditor::setValue);
 	
 	

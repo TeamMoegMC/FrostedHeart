@@ -107,7 +107,7 @@ public class EntityWaypoint extends Waypoint {
     @Override
     public Vec2 getScreenPos() {
         if (entityTarget != null && entityTarget.isAlive()) {
-            Vec3 entityPos = entityTarget.getEyePosition(ClientUtils.mc().getPartialTick());
+            Vec3 entityPos = entityTarget.getEyePosition(ClientUtils.getMc().getPartialTick());
             target = new Vec3((float)entityPos.x, (float)entityPos.y, (float)entityPos.z);
         }
         return super.getScreenPos();

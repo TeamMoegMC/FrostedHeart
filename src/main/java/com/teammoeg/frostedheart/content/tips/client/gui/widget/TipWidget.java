@@ -220,7 +220,7 @@ public class TipWidget extends AbstractWidget {
      * 当前是否有打开 Gui
      */
     public boolean isGuiOpened() {
-        return ClientUtils.mc().screen != null;
+        return ClientUtils.getMc().screen != null;
     }
 
     public void close() {
@@ -328,7 +328,7 @@ public class TipWidget extends AbstractWidget {
             fontColor = ColorHelper.setAlpha(tip.getFontColor(), 1.0F);
 
             // 跟随视角晃动
-            Minecraft MC = ClientUtils.mc();
+            Minecraft MC = ClientUtils.getMc();
             if (MC.player != null) {
                 if (MC.isPaused()) {
                     pYaw   = (MC.player.getViewYRot(MC.getFrameTime()) - MC.player.yBob) * -0.1F;
@@ -392,7 +392,7 @@ public class TipWidget extends AbstractWidget {
 
         Size2i getImgSize(ResourceLocation location) {
             if (location != null) {
-                var resource = ClientUtils.mc().getResourceManager().getResource(location);
+                var resource = ClientUtils.getMc().getResourceManager().getResource(location);
                 if (resource.isPresent()) {
                     try (InputStream stream = resource.get().open()) {
                         BufferedImage image= ImageIO.read(stream);
