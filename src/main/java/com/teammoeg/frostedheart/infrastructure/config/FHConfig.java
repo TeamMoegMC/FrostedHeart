@@ -376,11 +376,7 @@ public class FHConfig {
                             Biomes.THE_VOID.location().toString(),
                             // oceans freeze already in their own style
                             Biomes.FROZEN_OCEAN.location().toString(),
-                            Biomes.DEEP_FROZEN_OCEAN.location().toString(),
-                            "terralith:yellowstone",
-                            "terralith:volcanic_crater",
-                            "terralith:volcanic_peaks",
-                            "terralith:caldera"
+                            Biomes.DEEP_FROZEN_OCEAN.location().toString()
                     ));
             invertNonWinterBiomes = builder.comment("If true, the 'nonWinterBiomes' config option will be interpreted as a list of winter biomes, and all others will be ignored.")
                     .define("invertNonWinterBiomes", false);
