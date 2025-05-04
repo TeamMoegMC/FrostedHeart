@@ -26,6 +26,7 @@
   "entity.frostedheart.curiosity_entity": "Curiosity of the Deep Frostland",
   "entity.frostedheart.wandering_refugee": "Wandering Refugee",
   "entity.frostedheart.sled": "Sled",
+  "entity.frostedheart.sled_entity": "Sled",
   "entity.frostedheart.container_entity": "Sled Chest",
   "tooltip.frostedheart.generator.critical": "Generator Overdrive Level CRITICAL!",
   "tooltip.frostedheart.generator.warning": "Generator Overdrive Level DANGER!",
