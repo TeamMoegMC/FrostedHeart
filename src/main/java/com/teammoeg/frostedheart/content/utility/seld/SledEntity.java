@@ -1181,7 +1181,7 @@ public class SledEntity extends Entity {
                         } else {
                             zPos = -0.8F;
                         }
-                        yPos -= cos * zPos;
+                        yPos -= Math.min(0,cos * zPos);
                     }
 
                     if (passenger instanceof Animal) {

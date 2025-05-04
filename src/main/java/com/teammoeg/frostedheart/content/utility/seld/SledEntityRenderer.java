@@ -62,7 +62,7 @@ public class SledEntityRenderer extends EntityRenderer<SledEntity> {
         double dy = Mth.lerp(partialTicks, sled.prevAdditionalY, sled.cachedAdditionalY);
         poseStack.pushPose();
 
-        poseStack.translate(0.0D, 1.525D+ dy, 0.0D);
+        poseStack.translate(0.0D, 1.505D+ dy, 0.0D);
 
         //same stuff that happens to yRot when its created
         float xRot = sled.getViewXRot(partialTicks);
