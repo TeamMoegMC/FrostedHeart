@@ -2,7 +2,7 @@
   "type": "frostedheart:plant_temp",
   "block": "minecraft:cherry_sapling",
   "dead": "minecraft:dead_bush",
-  "grow_time_days": 11.0,
+  "grow_time_days": 16.0,
   "max_fertilize": 22.0,
   "max_grow": 32.0,
   "min_fertilize": 12.0,
