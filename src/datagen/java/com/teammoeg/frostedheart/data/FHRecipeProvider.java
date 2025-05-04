@@ -494,6 +494,7 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(1, 0.05f, 500, Items.AZALEA)
 				.sell(1, 0.05f, 500, Items.FLOWERING_AZALEA)
 				.sell(1, 0.05f, 800, Items.BAMBOO)
+				.sell(1, 0.05f, 800, Items.COCOA_BEANS)
 				.sell(3, 0.05f, 200, Items.SUGAR_CANE)
 				.sell(3, 0.05f, 800, Items.CACTUS)
 				.sell(3, 0.05f, 200, Items.LILY_PAD)

@@ -378,6 +378,17 @@
         {
           "actions": [],
           "hide_stockout": false,
+          "id": "minecraft:cocoa_beans",
+          "price": 800,
+          "produce": "minecraft:cocoa_beans",
+          "recover": 0.05,
+          "restock_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
           "id": "minecraft:sugar_cane",
           "price": 200,
           "produce": "minecraft:sugar_cane",
