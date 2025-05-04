@@ -49,7 +49,7 @@ public class SledModel<T extends SledEntity> extends EntityModel<T> {
 //        PartDefinition chest = partdefinition.addOrReplaceChild("chest", CubeListBuilder.create().texOffs(0, 15).addBox(14.975F, -17.0F, 4.025F, 14.0F, 10.0F, 14.0F, new CubeDeformation(0.0F)), PartPose.offset(-11.975F, 24.0F, -11.025F));
 
 /*
-        PartDefinition rope = chest.addOrReplaceChild("rope", CubeListBuilder.create().texOffs(0, 63).addBox(23.4108F, -13.9059F, -3.975F, 1.0F, 1.0F, 16.0F, new CubeDeformation(0.0F))
+        PartDefinition rope = chest.addOrReplaceChild("rope", CubeListBuilder.create().texOffs(0, 63).addBox(23.4108F, -13.9059F, -3.975F, 1.0F, 1.0F, 16.0F, new CubeDeformation(-0.025F))
                 .texOffs(50, 39).addBox(23.4108F, -1.0F, -5.4608F, 1.0F, 1.0F, 19.0F, new CubeDeformation(0.0F)), PartPose.offset(-6.4358F, -4.0941F, 7.0F));
 
         PartDefinition cube_r1 = rope.addOrReplaceChild("cube_r1", CubeListBuilder.create().texOffs(34, 77).addBox(-1.0F, 0.0F, 0.0F, 1.0F, 1.0F, 11.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(24.4108F, -13.9059F, 12.025F, -1.4399F, 0.0F, 0.0F));
@@ -62,7 +62,7 @@ public class SledModel<T extends SledEntity> extends EntityModel<T> {
 */
 
 /*
-        PartDefinition rope2 = chest.addOrReplaceChild("rope2", CubeListBuilder.create().texOffs(0, 63).addBox(23.4108F, -13.9059F, -3.975F, 1.0F, 1.0F, 16.0F, new CubeDeformation(0.0F))
+        PartDefinition rope2 = chest.addOrReplaceChild("rope2", CubeListBuilder.create().texOffs(0, 63).addBox(23.4108F, -13.9059F, -3.975F, 1.0F, 1.0F, 16.0F, new CubeDeformation(-0.025F))
                 .texOffs(50, 39).addBox(23.4108F, -1.0F, -5.4608F, 1.0F, 1.0F, 19.0F, new CubeDeformation(0.0F)), PartPose.offset(2.5642F, -4.0941F, 7.0F));
 
         PartDefinition cube_r5 = rope2.addOrReplaceChild("cube_r5", CubeListBuilder.create().texOffs(34, 77).addBox(-1.0F, 0.0F, 0.0F, 1.0F, 1.0F, 11.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(24.4108F, -13.9059F, 12.025F, -1.4399F, 0.0F, 0.0F));
@@ -80,7 +80,7 @@ public class SledModel<T extends SledEntity> extends EntityModel<T> {
                 .texOffs(58, 77).addBox(10.05F, 0.0F, -6.0F, 2.0F, 1.0F, 7.0F, new CubeDeformation(0.0F))
                 .texOffs(58, 77).addBox(-9.95F, 0.0F, -6.0F, 2.0F, 1.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(4.225F, -0.0341F, 2.2412F, 1.309F, 0.0F, 0.0F));
 
-        PartDefinition cube_r10 = left.addOrReplaceChild("cube_r10", CubeListBuilder.create().texOffs(56, 34).addBox(-4.95F, -1.0F, -2.0F, 5.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-12.772F, 5.9829F, 2.25F, 0.0F, 0.0F, 0.3491F));
+        PartDefinition cube_r10 = left.addOrReplaceChild("cube_r10", CubeListBuilder.create().texOffs(56, 34).addBox(-4.95F, -1.0F, -2.0F, 5.0F, 1.0F, 3.0F, new CubeDeformation(0.025F)), PartPose.offsetAndRotation(-12.772F, 5.9829F, 2.25F, 0.0F, 0.0F, 0.3491F));
 
         PartDefinition cube_r11 = left.addOrReplaceChild("cube_r11", CubeListBuilder.create().texOffs(34, 63).addBox(-4.0F, -1.0F, -2.0F, 4.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-17.4235F, 4.2899F, 2.25F, 0.0F, 0.0F, 0.9599F));
 
@@ -90,7 +90,7 @@ public class SledModel<T extends SledEntity> extends EntityModel<T> {
                 .texOffs(58, 77).addBox(10.05F, 0.0F, -1.0F, 2.0F, 1.0F, 7.0F, new CubeDeformation(0.0F))
                 .texOffs(58, 77).addBox(-9.95F, 0.0F, -1.0F, 2.0F, 1.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(4.225F, -0.0341F, -2.2412F, -1.309F, 0.0F, 0.0F));
 
-        PartDefinition cube_r13 = right.addOrReplaceChild("cube_r13", CubeListBuilder.create().texOffs(56, 34).addBox(-4.95F, -1.0F, -1.0F, 5.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-12.772F, 5.9829F, -2.25F, 0.0F, 0.0F, 0.3491F));
+        PartDefinition cube_r13 = right.addOrReplaceChild("cube_r13", CubeListBuilder.create().texOffs(56, 34).addBox(-4.95F, -1.0F, -1.0F, 5.0F, 1.0F, 3.0F, new CubeDeformation(0.025F)), PartPose.offsetAndRotation(-12.772F, 5.9829F, -2.25F, 0.0F, 0.0F, 0.3491F));
 
         PartDefinition cube_r14 = right.addOrReplaceChild("cube_r14", CubeListBuilder.create().texOffs(34, 63).addBox(-4.0F, -1.0F, -1.0F, 4.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-17.4235F, 4.2899F, -2.25F, 0.0F, 0.0F, 0.9599F));
 

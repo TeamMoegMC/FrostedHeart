@@ -29,7 +29,7 @@ public class ContainerHolderModel<T extends ContainerHolderEntity> extends Entit
         PartDefinition partdefinition = meshdefinition.getRoot();
         PartDefinition chest = partdefinition.addOrReplaceChild("chest", CubeListBuilder.create().texOffs(0, 15).addBox(14.975F, -17.0F, 4.025F, 14.0F, 10.0F, 14.0F, new CubeDeformation(0.0F)), PartPose.offset(-11.975F, 24.0F, -11.025F));
 
-        PartDefinition rope = chest.addOrReplaceChild("rope", CubeListBuilder.create().texOffs(0, 63).addBox(23.4108F, -13.9059F, -3.975F, 1.0F, 1.0F, 16.0F, new CubeDeformation(0.0F))
+        PartDefinition rope = chest.addOrReplaceChild("rope", CubeListBuilder.create().texOffs(0, 63).addBox(23.4108F, -13.9059F, -3.975F, 1.0F, 1.0F, 16.0F, new CubeDeformation(-0.025F))
                 .texOffs(50, 39).addBox(23.4108F, -1.0F, -5.4608F, 1.0F, 1.0F, 19.0F, new CubeDeformation(0.0F)), PartPose.offset(-6.4358F, -4.0941F, 7.0F));
 
         PartDefinition cube_r1 = rope.addOrReplaceChild("cube_r1", CubeListBuilder.create().texOffs(34, 77).addBox(-1.0F, 0.0F, 0.0F, 1.0F, 1.0F, 11.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(24.4108F, -13.9059F, 12.025F, -1.4399F, 0.0F, 0.0F));
@@ -40,7 +40,7 @@ public class ContainerHolderModel<T extends ContainerHolderEntity> extends Entit
 
         PartDefinition cube_r4 = rope.addOrReplaceChild("cube_r4", CubeListBuilder.create().texOffs(34, 77).addBox(-1.0F, 0.0F, -11.0F, 1.0F, 1.0F, 11.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(24.4108F, -13.9059F, -3.975F, 1.4399F, 0.0F, 0.0F));
 
-        PartDefinition rope2 = chest.addOrReplaceChild("rope2", CubeListBuilder.create().texOffs(0, 63).addBox(23.4108F, -13.9059F, -3.975F, 1.0F, 1.0F, 16.0F, new CubeDeformation(0.0F))
+        PartDefinition rope2 = chest.addOrReplaceChild("rope2", CubeListBuilder.create().texOffs(0, 63).addBox(23.4108F, -13.9059F, -3.975F, 1.0F, 1.0F, 16.0F, new CubeDeformation(-0.025F))
                 .texOffs(50, 39).addBox(23.4108F, -1.0F, -5.4608F, 1.0F, 1.0F, 19.0F, new CubeDeformation(0.0F)), PartPose.offset(2.5642F, -4.0941F, 7.0F));
 
         PartDefinition cube_r5 = rope2.addOrReplaceChild("cube_r5", CubeListBuilder.create().texOffs(34, 77).addBox(-1.0F, 0.0F, 0.0F, 1.0F, 1.0F, 11.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(24.4108F, -13.9059F, 12.025F, -1.4399F, 0.0F, 0.0F));
