@@ -343,7 +343,7 @@ public class ContainerHolderEntity extends Entity implements Container, MenuProv
     }
 
     private static boolean isNormalContainer(ItemStack stack) {
-        return stack.is(FHTags.Items.VALID_CONTAINERS.tag) && stack.getItem() instanceof BlockItem;
+        return stack.is(FHTags.Items.SLED_CONTAINER.tag) && stack.getItem() instanceof BlockItem;
     }
 
     private static boolean isContainerWithNBT(ItemStack stack) {
@@ -355,10 +355,6 @@ public class ContainerHolderEntity extends Entity implements Container, MenuProv
         return i instanceof BlockItem bi && (bi.getBlock() instanceof ShulkerBoxBlock);
     }
 
-    private static boolean isSack(Item i) {
-            return ModList.get().isLoaded("supplementaries") && ForgeRegistries.ITEMS.getKey(i)
-                    .equals(new ResourceLocation("supplementaries", "sack"));
-    }
 
 
     //just delegates to inner container

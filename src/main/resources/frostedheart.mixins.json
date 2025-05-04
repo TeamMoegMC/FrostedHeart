@@ -7,7 +7,6 @@
   "plugin": "com.teammoeg.frostedheart.mixin.FrostedHeartMixinPlugin",
   "mixins": [
     "caupona.CauponaBonemealableBlockMixin_CheckTemp",
-    "client.SelfEntitySpawnDataMixin",
     "create.HandCrankBlockMixin",
     "create.MixinAbstractContraption",
     "create.MixinBlockBreakingMovementBehaviour",

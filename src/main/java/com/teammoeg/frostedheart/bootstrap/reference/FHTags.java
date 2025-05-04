@@ -214,8 +214,10 @@ public class FHTags {
 		CURIOS_BACK(NameSpace.CURIOS, "back"),
 		CURIOS_CHARM(NameSpace.CURIOS, "charm"),
 		CURIOS_HANDS(NameSpace.CURIOS, "hands"),
-		VALID_CONTAINERS (NameSpace.MOD, "sled_container")
+		SLED_CONTAINER(false)
+
 		;
+
 
 		public final TagKey<Item> tag;
 		public final boolean alwaysDatagen;
@@ -299,7 +301,7 @@ public class FHTags {
 
 	public enum FHEntityTags {
 
-		SLED_PULLERS
+		SLED_PULLERS(false)
 		// NANITES,
 
 		;
@@ -321,6 +323,10 @@ public class FHTags {
 
 		FHEntityTags(NameSpace namespace, boolean optional, boolean alwaysDatagen) {
 			this(namespace, null, optional, alwaysDatagen);
+		}
+
+		FHEntityTags(boolean alwaysDatagen) {
+			this(NameSpace.MOD, null, NameSpace.MOD.optionalDefault, alwaysDatagen);
 		}
 
 		FHEntityTags(NameSpace namespace, String path, boolean optional, boolean alwaysDatagen) {

@@ -1000,7 +1000,7 @@ public class SledEntity extends Entity {
 
     @Override
     public double getPassengersRidingOffset() {
-        return 0.2D + this.getAdditionalY() + (this.getSeatType() != null ? 0.0615 : 0);
+        return 0.125D + this.getAdditionalY() + (this.getSeatType() != null ? 0.0615 : 0);
     }
 
     @Nullable
@@ -1147,7 +1147,7 @@ public class SledEntity extends Entity {
 
                 this.updatePullerAnimations();
             } else {
-                float zPos = 0.0F;
+                float zPos = 0.1F;
                 float yPos = (float) ((this.isRemoved() ? 0.01 : this.getPassengersRidingOffset()) + passenger.getMyRidingOffset());
 
                 boolean isMoreThanOneOnBoard = false;
@@ -1160,9 +1160,9 @@ public class SledEntity extends Entity {
 
                     //passenger.yRotO = this.yRotO;
                     zPos = -0.4f;
-                    yPos += 0.3;
+//                    yPos += 0.3;
                     float cos = Mth.sin((float) (this.getXRot() * Math.PI / 180f));
-                    yPos -= cos * zPos;
+//                    yPos -= cos * zPos;
 
                 } else {
 

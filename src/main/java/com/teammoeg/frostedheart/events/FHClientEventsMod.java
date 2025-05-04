@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestExtension;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestModel;
 import com.teammoeg.frostedheart.content.utility.seld.ContainerHolderEntityRenderer;
+import com.teammoeg.frostedheart.content.utility.seld.ContainerHolderModel;
 import com.teammoeg.frostedheart.content.utility.seld.SledEntityRenderer;
 import com.teammoeg.frostedheart.content.utility.seld.SledModel;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
@@ -253,7 +254,8 @@ public class FHClientEventsMod {
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(CuriosityEntityModel.LAYER_LOCATION, CuriosityEntityModel::createBodyLayer);
-        event.registerLayerDefinition(SledModel.SLED_LAYER, SledModel::createMesh);
+        event.registerLayerDefinition(SledModel.SLED_LAYER, SledModel::createBodyLayer);
+        event.registerLayerDefinition(ContainerHolderModel.CONTAINER_HOLDER, ContainerHolderModel::createBodyLayer);
         event.registerLayerDefinition(SledModel.QUILT_LAYER, SledEntityRenderer.QuiltModel::createBodyLayer);
 
     }

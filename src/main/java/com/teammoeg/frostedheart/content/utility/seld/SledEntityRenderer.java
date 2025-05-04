@@ -62,14 +62,13 @@ public class SledEntityRenderer extends EntityRenderer<SledEntity> {
         double dy = Mth.lerp(partialTicks, sled.prevAdditionalY, sled.cachedAdditionalY);
         poseStack.pushPose();
 
-        poseStack.translate(0.0D, 0.375D + dy, 0.0D);
-
+        poseStack.translate(0.0D, 1.425D+ dy, 0.0D);
 
         //same stuff that happens to yRot when its created
         float xRot = sled.getViewXRot(partialTicks);
 
-        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - yRot));
-        poseStack.mulPose(Axis.XN.rotationDegrees(xRot));
+        poseStack.mulPose(Axis.YP.rotationDegrees(270.0F - yRot));
+//        poseStack.mulPose(Axis.ZN.rotationDegrees(xRot));
         float hurtTme = (float) sled.getHurtTime() - partialTicks;
         float damage = sled.getDamage() - partialTicks;
         if (damage < 0.0F) {
