@@ -35,6 +35,7 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.caupona.data.recipes.FoodValueRecipe;
 import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
@@ -52,6 +53,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -99,13 +101,20 @@ public class DebugCommand {
                         }
                         for (Item ix : CRegistryHelper.getItems()) {
                             if (ix == null || ix == Items.AIR) continue;
+                            
                             if (items.contains(ix)) continue;
-                            if (!ix.isEdible()) continue;
+                            ItemStack is=new ItemStack(ix);
+            				FoodValueRecipe fvr = null;
+            				if (FoodValueRecipe.recipes != null)
+            					fvr = FoodValueRecipe.recipes.get(ix);
+                            if (!is.isEdible()&&fvr==null) continue;
                            // if (ix instanceof StewItem) continue;
                             items.add(ix);
-                            FoodProperties f = ix.getFoodProperties();
+                            FoodProperties f = is.getFoodProperties(null);
                             if (f != null)
-                                ps.println(CRegistryHelper.getRegistryName(ix) + "," + f.getNutrition());
+                                ps.println(CRegistryHelper.getRegistryName(ix)+","+is.getDisplayName().getString() + "," + f.getNutrition()+","+f.getSaturationModifier());
+                            else if(fvr!=null) 
+                            	 ps.println(CRegistryHelper.getRegistryName(ix)+","+is.getDisplayName().getString() + "," + fvr.heal+","+fvr.sat);
                         }
                     } catch (Exception e) {
                         FHMain.LOGGER.error("Error while exporting food values");

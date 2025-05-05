@@ -31,6 +31,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodData;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
@@ -58,22 +59,22 @@ public class NutritionCapability implements NBTSerializable {
 
     public void addFat(Player player, float add) {
         this.nutrition.fat += add;
-        syncToClientOnRestore(player);
+        callOnChange(player);
     }
 
     public void addCarbohydrate(Player player, float add) {
         this.nutrition.carbohydrate += add;
-        syncToClientOnRestore(player);
+        callOnChange(player);
     }
 
     public void addProtein(Player player, float add) {
         this.nutrition.protein += add;
-        syncToClientOnRestore(player);
+        callOnChange(player);
     }
 
     public void addVegetable(Player player, float add) {
         this.nutrition.vegetable += add;
-        syncToClientOnRestore(player);
+        callOnChange(player);
     }
 
     public void set(Nutrition temp) {
@@ -105,7 +106,7 @@ public class NutritionCapability implements NBTSerializable {
         getCapability(player).ifPresent(t -> FHNetwork.sendPlayer(player, new PlayerNutritionSyncPacket(t.get())));
     }*/
 
-    public static void syncToClientOnRestore(Player player) {
+    public static void callOnChange(Player player) {
         /*if (!player.level().isClientSide()) {
             ServerPlayer serverPlayer = (ServerPlayer) player;
             syncToClient(serverPlayer);
@@ -125,18 +126,28 @@ public class NutritionCapability implements NBTSerializable {
             if (wRecipe == null) return;
             FoodProperties fp = food.getFoodProperties(player);
             if (fp != null) {
+            	float ratio = (float) (double)( FHConfig.SERVER.nutritionGainRate.get());
                 int nutrition = fp.getNutrition();
-                this.nutrition.addScaled(wRecipe, (float) (nutrition * FHConfig.SERVER.nutritionGainRate.get()));
-                syncToClientOnRestore(player);
+                FoodData fd=player.getFoodData();
+                int filling=20-fd.getFoodLevel();
+                if(filling<nutrition) {//replace overfilled hunger to new food hunger
+                	int overfill=filling-nutrition;
+                	this.nutrition.addScaled(this.nutrition, (float) ((FHConfig.SERVER.nutritionConsumptionRate.get())*overfill));
+                }
+                this.nutrition.addScaled(wRecipe, (float) (nutrition * ratio));
+                callOnChange(player);
             }
         }
     }
 
     public void consume(Player player) {
-        double radio = -0.1 * FHConfig.SERVER.nutritionConsumptionRate.get();
-
-        this.nutrition.addScaled(this.nutrition, (float) radio / nutrition.getNutritionValue());
-        syncToClientOnRestore(player);
+    	FoodData fd=player.getFoodData();
+    	if(fd.getLastFoodLevel()>fd.getFoodLevel()) {
+	        float ratio = (float) (double)( FHConfig.SERVER.nutritionConsumptionRate.get());
+	
+	        this.nutrition.addScaled(this.nutrition, ratio*(fd.getFoodLevel()-fd.getLastFoodLevel()));
+	        callOnChange(player);
+    	}
     }
 
 
