@@ -238,7 +238,7 @@
           "id": "frostedheart:wolf_hide",
           "price": 15,
           "produce": "frostedheart:wolf_hide",
-          "recover": 0.5,
+          "recover": 1.0,
           "restock_condition": [],
           "store": 4,
           "use_actions": []
@@ -249,7 +249,7 @@
           "id": "frostedheart:fox_hide",
           "price": 20,
           "produce": "frostedheart:fox_hide",
-          "recover": 0.3,
+          "recover": 0.6,
           "restock_condition": [],
           "store": 4,
           "use_actions": []
@@ -260,7 +260,7 @@
           "id": "minecraft:rabbit_hide",
           "price": 10,
           "produce": "minecraft:rabbit_hide",
-          "recover": 1.0,
+          "recover": 2.0,
           "restock_condition": [],
           "store": 4,
           "use_actions": []
@@ -271,9 +271,9 @@
           "id": "frostedheart:wolf_meat",
           "price": 5,
           "produce": "frostedheart:wolf_meat",
-          "recover": 3.0,
+          "recover": 6.0,
           "restock_condition": [],
-          "store": 8,
+          "store": 12,
           "use_actions": []
         },
         {
@@ -282,9 +282,9 @@
           "id": "frostedheart:fox_meat",
           "price": 7,
           "produce": "frostedheart:fox_meat",
-          "recover": 2.0,
+          "recover": 3.0,
           "restock_condition": [],
-          "store": 8,
+          "store": 12,
           "use_actions": []
         },
         {
@@ -293,9 +293,9 @@
           "id": "stone_age:venison",
           "price": 5,
           "produce": "stone_age:venison",
-          "recover": 2.0,
+          "recover": 3.0,
           "restock_condition": [],
-          "store": 8,
+          "store": 12,
           "use_actions": []
         },
         {
@@ -304,9 +304,9 @@
           "id": "stone_age:fat",
           "price": 30,
           "produce": "stone_age:fat",
-          "recover": 1.0,
+          "recover": 2.0,
           "restock_condition": [],
-          "store": 4,
+          "store": 12,
           "use_actions": []
         },
         {
@@ -315,7 +315,7 @@
           "id": "minecraft:rabbit",
           "price": 4,
           "produce": "minecraft:rabbit",
-          "recover": 5.0,
+          "recover": 6.0,
           "restock_condition": [],
           "store": 16,
           "use_actions": []

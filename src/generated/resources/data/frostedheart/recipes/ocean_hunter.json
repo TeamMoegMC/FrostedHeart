@@ -264,7 +264,7 @@
           "id": "frostedheart:polar_bear_hide",
           "price": 20,
           "produce": "frostedheart:polar_bear_hide",
-          "recover": 0.1,
+          "recover": 0.2,
           "restock_condition": [],
           "store": 8,
           "use_actions": []
@@ -275,7 +275,7 @@
           "id": "frostedheart:polar_bear_meat",
           "price": 8,
           "produce": "frostedheart:polar_bear_meat",
-          "recover": 1.0,
+          "recover": 2.0,
           "restock_condition": [],
           "store": 16,
           "use_actions": []
@@ -286,7 +286,7 @@
           "id": "frostedheart:raw_whale_meat",
           "price": 8,
           "produce": "frostedheart:raw_whale_meat",
-          "recover": 1.0,
+          "recover": 2.0,
           "restock_condition": [],
           "store": 16,
           "use_actions": []
@@ -297,7 +297,7 @@
           "id": "minecraft:cod",
           "price": 5,
           "produce": "minecraft:cod",
-          "recover": 4.0,
+          "recover": 8.0,
           "restock_condition": [],
           "store": 16,
           "use_actions": []
@@ -308,7 +308,7 @@
           "id": "minecraft:seagrass",
           "price": 50,
           "produce": "minecraft:seagrass",
-          "recover": 1.0,
+          "recover": 2.0,
           "restock_condition": [],
           "store": 10,
           "use_actions": []
@@ -319,7 +319,18 @@
           "id": "minecraft:sea_pickle",
           "price": 50,
           "produce": "minecraft:sea_pickle",
-          "recover": 1.0,
+          "recover": 2.0,
+          "restock_condition": [],
+          "store": 10,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:kelp",
+          "price": 50,
+          "produce": "minecraft:kelp",
+          "recover": 2.0,
           "restock_condition": [],
           "store": 10,
           "use_actions": []
@@ -330,7 +341,7 @@
           "id": "stone_age:fat",
           "price": 30,
           "produce": "stone_age:fat",
-          "recover": 0.5,
+          "recover": 1.0,
           "restock_condition": [],
           "store": 8,
           "use_actions": []
