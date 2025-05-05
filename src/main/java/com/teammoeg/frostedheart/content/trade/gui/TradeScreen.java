@@ -240,7 +240,7 @@ public class TradeScreen extends BaseScreen {
         int max = cx.policy.maxExp;
         if (max > 0) {
             float progress = ((float) (cx.data.totaltraded)) / max;
-
+            progress=Mth.clamp(progress, 0, 1);
             TradeIcons.EXP.draw(matrixStack, 133 + x, 25 + y, (int) (54 * progress), 5);
         } else {
             TradeIcons.EXP.draw(matrixStack, 133 + x, 25 + y, 54, 5);
