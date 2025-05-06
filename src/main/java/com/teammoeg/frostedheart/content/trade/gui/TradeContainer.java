@@ -314,7 +314,7 @@ public class TradeContainer extends AbstractContainerMenu {
 
     public void recalc() {
         poffer = 0;
-        Reference2IntOpenHashMap<BuyData> stock=new Reference2IntOpenHashMap<>();
+        Reference2IntOpenHashMap<BuyData> stock=new Reference2IntOpenHashMap<>(policy.getBuys().size());
         outer:
         for (int i = 0; i < inv.getSlots(); i++) {
             ItemStack is = inv.getStackInSlot(i);
