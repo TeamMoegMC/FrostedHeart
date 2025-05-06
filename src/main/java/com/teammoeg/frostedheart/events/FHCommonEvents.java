@@ -105,6 +105,11 @@ import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 
 import javax.annotation.Nonnull;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -382,7 +387,9 @@ public class FHCommonEvents {
 	public static void playerXPPickUp(PickupXp event) {
 		Player player = event.getEntity();
 		FHCapabilities.PLAYER_TEMP.getCapability(player).ifPresent(p->{
-			for(BodyPart bp:BodyPart.values()) {
+			List<BodyPart> randomized=new ArrayList<>(Arrays.asList(BodyPart.values()));
+			Collections.shuffle(randomized);
+			for(BodyPart bp:randomized) {
 				ItemStackHandler ish=p.getClothesByPart(bp);
 				for(int i=0;i<ish.getSlots();i++) {
 					ItemStack stack=ish.getStackInSlot(i);
@@ -393,8 +400,8 @@ public class FHCommonEvents {
 							player.takeXpDelay = 2;
 							player.take(orb, 1);
 							int damage=stack.getDamageValue();
-							int toRepair = Math.min(orb.value * 2, damage);
-							orb.value -= toRepair / 2;
+							int toRepair = (int) Math.min(orb.value * stack.getXpRepairRatio(), damage);
+							orb.value -= toRepair / stack.getXpRepairRatio();
 							stack.setDamageValue(damage-toRepair);
 							if (orb.value > 0) {
 								player.giveExperiencePoints(orb.value);

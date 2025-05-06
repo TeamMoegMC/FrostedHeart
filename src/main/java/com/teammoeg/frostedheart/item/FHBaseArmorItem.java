@@ -25,11 +25,13 @@ import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantments;
 
 public class FHBaseArmorItem extends ArmorItem implements ICreativeModeTabItem{
     public FHBaseArmorItem(ArmorMaterial materialIn, Type slot, Properties builderIn) {
@@ -45,6 +47,17 @@ public class FHBaseArmorItem extends ArmorItem implements ICreativeModeTabItem{
 	public void fillItemCategory(CreativeTabItemHelper helper) {
 		if(helper.isType(FHTabs.itemGroup))
 			helper.accept(this);
+	}
+
+
+	@Override
+	public float getXpRepairRatio(ItemStack stack) {
+		return 0;
+	}
+
+	@Override
+	public boolean isEnchantable(ItemStack pStack) {
+		return super.material==FHArmorMaterial.SPACESUIT?false:true;
 	}
 
 }
