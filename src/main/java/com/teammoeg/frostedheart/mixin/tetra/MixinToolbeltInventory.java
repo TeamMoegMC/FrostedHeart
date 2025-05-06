@@ -27,6 +27,6 @@ public abstract class MixinToolbeltInventory  implements Container{
 
 	@Overwrite(remap=false)
 	public boolean isItemValid(ItemStack itemStack) {
-		return (!itemStack.is(ModularToolbeltItem.instance.get())&&!itemStack.hasTag() && this.predicate.test(itemStack)&&IEApi.isAllowedInCrate(itemStack));
+		return (!itemStack.is(ModularToolbeltItem.instance.get())&&(!itemStack.hasTag()||itemStack.getMaxStackSize()==1) && this.predicate.test(itemStack)&&IEApi.isAllowedInCrate(itemStack));
 	}
 }
