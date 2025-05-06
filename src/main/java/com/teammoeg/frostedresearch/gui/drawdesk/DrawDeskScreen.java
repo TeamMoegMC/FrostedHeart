@@ -19,13 +19,13 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.editor.EditDialog;
 import com.teammoeg.chorda.client.ui.ScreenAcceptor;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedresearch.gui.ResearchGui;
 import com.teammoeg.frostedresearch.gui.tech.ResearchPanel;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
@@ -56,7 +56,7 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui, ScreenAcc
 	@Override
 	public void addMouseOverText(TooltipList list) {
 		if (this.cx.getCarried().isEmpty() && screen.getSlotUnderMouse() != null && screen.getSlotUnderMouse().hasItem()) {
-			AbstractContainerScreen.getTooltipFromItem(ClientUtils.mc(), screen.getSlotUnderMouse().getItem()).forEach(list::add);
+			AbstractContainerScreen.getTooltipFromItem(ClientUtils.getMc(), screen.getSlotUnderMouse().getItem()).forEach(list::add);
 		}
 		super.addMouseOverText(list);
 	}

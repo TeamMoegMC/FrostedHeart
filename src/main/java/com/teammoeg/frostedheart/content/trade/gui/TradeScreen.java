@@ -29,6 +29,7 @@ import com.teammoeg.chorda.client.cui.RTextField;
 import com.teammoeg.chorda.client.cui.SwitchButton;
 import com.teammoeg.chorda.client.cui.ToolTipWidget;
 import com.teammoeg.chorda.client.cui.TristateButton;
+import com.teammoeg.chorda.client.ui.ScreenAcceptor;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.trade.RelationModifier;
@@ -45,14 +46,16 @@ import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.util.Mth;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.ChatFormatting;
 
-public class TradeScreen extends BaseScreen {
+public class TradeScreen extends BaseScreen implements ScreenAcceptor {
     TradeContainer cx;
     SwitchButton tab;
     FakeSlot[] slots = new FakeSlot[27];
@@ -61,7 +64,8 @@ public class TradeScreen extends BaseScreen {
     TristateButton trade;
     TristateButton bargain;
     RelationSlot rels;
-
+    @Setter
+    AbstractContainerScreen screen;
     public TradeScreen(TradeContainer cx) {
         this.cx = cx;
         tab = new SwitchButton(this, TradeIcons.PTABSELL, TradeIcons.PTABBUY, false) {
@@ -170,7 +174,13 @@ public class TradeScreen extends BaseScreen {
         bargain.setPosAndSize(95, 57, 20, 14);
         updateOffers();
     }
-
+	@Override
+	public void addMouseOverText(TooltipList list) {
+		if (this.cx.getCarried().isEmpty() && screen.getSlotUnderMouse() != null && screen.getSlotUnderMouse().hasItem()) {
+			AbstractContainerScreen.getTooltipFromItem(ClientUtils.getMc(), screen.getSlotUnderMouse().getItem()).forEach(list::add);
+		}
+		super.addMouseOverText(list);
+	}
     @Override
     public void addWidgets() {
 
@@ -440,5 +450,7 @@ public class TradeScreen extends BaseScreen {
             bargain.setEnabled(false);
         }
     }
+
+
 
 }

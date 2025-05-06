@@ -40,6 +40,7 @@ import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
 
+import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
@@ -313,13 +314,19 @@ public class TradeContainer extends AbstractContainerMenu {
 
     public void recalc() {
         poffer = 0;
+        Reference2IntOpenHashMap<BuyData> stock=new Reference2IntOpenHashMap<>();
         outer:
         for (int i = 0; i < inv.getSlots(); i++) {
             ItemStack is = inv.getStackInSlot(i);
+            int cnt=is.getCount();
             for (BuyData bd : policy.getBuys()) {
                 if (bd.getItem().test(is)) {
-                    int cnt = Math.min(is.getCount(), bd.getStore());
-                    poffer += cnt * bd.getPrice();
+                	int curstock=bd.getStore()-stock.getInt(bd);
+                	
+                    int consume = Math.min(cnt, curstock);
+                    poffer += consume * bd.getPrice();
+                    cnt-=consume;
+                    stock.addTo(bd, consume);
                     continue outer;
                 }
             }
