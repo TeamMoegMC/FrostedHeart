@@ -19,16 +19,6 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
-import static com.teammoeg.frostedheart.FHMain.*;
-import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.*;
-import static com.teammoeg.frostedheart.infrastructure.gen.FHTagGen.*;
-import static net.minecraft.world.level.block.Blocks.*;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import com.google.common.collect.ImmutableMap;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.AssetLookup;
@@ -37,19 +27,21 @@ import com.teammoeg.caupona.CPTags;
 import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
+import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.agriculture.RubberDandelionBlock;
+import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
+import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WildRubberDandelionBlock;
+import com.teammoeg.frostedheart.content.agriculture.biogassystem.block.BiogasDigesterControllerBlock;
+import com.teammoeg.frostedheart.content.agriculture.biogassystem.block.BiogasDigesterIOBlock;
 import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.ThinIceBlock;
-import com.teammoeg.frostedheart.content.decoration.*;
-import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
-import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
-import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
-import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
+import com.teammoeg.frostedheart.content.decoration.*;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticChestBlock;
@@ -72,6 +64,8 @@ import com.teammoeg.frostedheart.content.town.hunting.HuntingCampBlock;
 import com.teammoeg.frostedheart.content.town.mine.MineBaseBlock;
 import com.teammoeg.frostedheart.content.town.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlock;
+import com.teammoeg.frostedheart.content.utility.gunpowder_barrel.GunpowderBarrelBlock;
+import com.teammoeg.frostedheart.content.utility.gunpowder_barrel.GunpowderBarrelBlockItem;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerBlock;
 import com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen;
@@ -79,7 +73,6 @@ import com.teammoeg.frostedheart.infrastructure.gen.FHLootGen;
 import com.teammoeg.frostedheart.item.FHBlockItem;
 import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
 import com.tterrag.registrate.util.entry.BlockEntry;
-
 import net.minecraft.advancements.critereon.StatePropertiesPredicate;
 import net.minecraft.data.loot.packs.VanillaBlockLoot;
 import net.minecraft.tags.BlockTags;
@@ -87,6 +80,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
@@ -99,9 +93,20 @@ import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePrope
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import net.minecraftforge.common.Tags;
+import net.minecraftforge.common.data.SoundDefinition;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
+import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.ruinedMachines;
+import static com.teammoeg.frostedheart.infrastructure.gen.FHTagGen.*;
+import static net.minecraft.world.level.block.Blocks.*;
 
 @SuppressWarnings("unused")
 public class FHBlocks {
@@ -2022,6 +2027,43 @@ public class FHBlocks {
             .properties(t->t.noOcclusion())
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dispatcher")))
             .tag(FHTags.Blocks.METAL_MACHINES.get())
+            .simpleItem()
+            .register();
+    // gunpowder_barrel
+    public static final RegistryObject<GunpowderBarrelBlock> GUNPOWDER_BARREL = register(
+            "gunpowder_barrel",
+            () -> new GunpowderBarrelBlock(BlockBehaviour.Properties.copy(TNT)
+                    .sound(SoundType.WOOD)
+                    .mapColor(SPRUCE_PLANKS.defaultMapColor())),
+            "gunpowder_barrel",
+            b -> new GunpowderBarrelBlockItem(new Item.Properties().stacksTo(1))
+            );
+    // Biogas System
+    public static final BlockEntry<BiogasDigesterControllerBlock> BIOGAS_DIGESTER_CONTROLLER = REGISTRATE.block("biogas_digester_controller", BiogasDigesterControllerBlock::new)
+            .initialProperties(() -> COPPER_BLOCK)
+            .properties(t->t.mapColor(IRON_BLOCK.defaultMapColor())
+                    .requiresCorrectToolForDrops())
+            .transform(pickaxeOnly())
+            .blockstate(FHBlockStateGen.existed())
+            .loot(RegistrateBlockLootTables::dropSelf)
+            .tag(FHTags.Blocks.METAL_MACHINES.get())
+            .tag(BlockTags.MINEABLE_WITH_PICKAXE)
+            .tag(BlockTags.NEEDS_STONE_TOOL)
+            .lang("Biogas Digester Controller")
+            .simpleItem()
+            .register();
+    public static final BlockEntry<BiogasDigesterIOBlock> BIOGAS_DIGESTER_IO = REGISTRATE.block("biogas_digester_io", BiogasDigesterIOBlock::new)
+            .initialProperties(() -> COPPER_BLOCK)
+            .properties(t->t.mapColor(IRON_BLOCK.defaultMapColor())
+                    .noOcclusion()
+                    .requiresCorrectToolForDrops())
+            .transform(pickaxeOnly())
+            .loot(RegistrateBlockLootTables::dropSelf)
+            .blockstate(FHBlockStateGen.existed())
+            .tag(FHTags.Blocks.METAL_MACHINES.get())
+            .tag(BlockTags.MINEABLE_WITH_PICKAXE)
+            .tag(BlockTags.NEEDS_STONE_TOOL)
+            .lang("Biogas Digester Input & Output")
             .simpleItem()
             .register();
     public static void init() { }

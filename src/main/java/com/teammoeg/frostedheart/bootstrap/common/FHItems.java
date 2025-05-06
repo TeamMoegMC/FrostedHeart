@@ -27,6 +27,7 @@ import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.item.ItemDescription;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.utility.gunpowder_barrel.GunpowderBarrelBlockItem;
 import com.teammoeg.frostedheart.content.utility.seld.SledItem;
 import com.teammoeg.frostedheart.item.DyedItemList;
 import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;

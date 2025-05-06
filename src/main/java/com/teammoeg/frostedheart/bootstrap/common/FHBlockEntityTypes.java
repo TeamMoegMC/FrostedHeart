@@ -19,16 +19,11 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
-import static com.teammoeg.frostedheart.FHMain.*;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.kinetics.base.HalfShaftInstance;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.agriculture.biogassystem.block.BiogasDigesterControllerBlockEntity;
+import com.teammoeg.frostedheart.content.agriculture.biogassystem.block.BiogasDigesterIOBlockEntity;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlockEntity;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
@@ -51,10 +46,10 @@ import com.teammoeg.frostedheart.content.town.hunting.HuntingCampBlockEntity;
 import com.teammoeg.frostedheart.content.town.mine.MineBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.mine.MineBlockEntity;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlockEntity;
+import com.teammoeg.frostedheart.content.utility.gunpowder_barrel.GunpowderBarrelBlockEntity;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentTileEntity;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerTileEntity;
 import com.tterrag.registrate.util.entry.BlockEntityEntry;
-
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -62,6 +57,13 @@ import net.minecraft.world.level.block.entity.BlockEntityType.BlockEntitySupplie
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
 
 public class FHBlockEntityTypes {
     public static final BlockEntityEntry<CreativeHeaterBlockEntity> CREATIVE_HEATER = REGISTRATE
@@ -151,6 +153,13 @@ public class FHBlockEntityTypes {
         "supplier_chest", makeType(SupplierTileEntity::new, FHBlocks.SUPPLIER_CHEST::get)
 );    public static final RegistryObject<BlockEntityType<NetworkCoreTileEntity>> NETWORK_CORE = REGISTER.register(
     "logistic_test_core", makeType(NetworkCoreTileEntity::new, FHBlocks.TEST_LOGISTIC_CORE::get));
+    public static final RegistryObject<BlockEntityType<BiogasDigesterControllerBlockEntity>> BIOGAS_DIGESTER_CONTROLLER = REGISTER.register(
+            "biogas_digest_controller", makeType(BiogasDigesterControllerBlockEntity::new, FHBlocks.BIOGAS_DIGESTER_CONTROLLER::get));
+    public static final RegistryObject<BlockEntityType<BiogasDigesterIOBlockEntity>> BIOGAS_DIGESTER_IO = REGISTER.register(
+            "biogas_digest_io", makeType(BiogasDigesterIOBlockEntity::new, FHBlocks.BIOGAS_DIGESTER_IO::get));
+    public static final RegistryObject<BlockEntityType<GunpowderBarrelBlockEntity>> GUNPOWDER_BARREL = REGISTER.register(
+            "gunpowder_barrel", makeType(GunpowderBarrelBlockEntity::new, FHBlocks.GUNPOWDER_BARREL::get));
+
     private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntitySupplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }

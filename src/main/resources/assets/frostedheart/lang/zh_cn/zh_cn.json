@@ -870,5 +870,10 @@
   "gui.frostedheart.trade.profession.frostedheart:hunter": "林地猎人",
   "gui.frostedheart.trade.profession.frostedheart:ocean_hunter": "海洋猎人",
   "gui.frostedheart.trade.profession.frostedheart:miner": "矿工",
-  "gui.frostedheart.trade.profession.frostedheart:explorer": "探险家"
+  "gui.frostedheart.trade.profession.frostedheart:explorer": "探险家",
+  "gui.frostedheart.biogas_digester_controller_menu.size": "容积",
+  "gui.frostedheart.biogas_digester_controller_menu.gas_value": "当前储气量",
+  "gui.frostedheart.biogas_digester_controller_menu.max_gas_value": "最大储气量",
+  "gui.frostedheart.biogas_digester_controller_menu.unavailable": "不可用",
+  "block.frostedheart.gunpowder_barrel": "炸药桶"
 }
