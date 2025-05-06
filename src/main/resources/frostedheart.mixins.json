@@ -68,6 +68,7 @@
     "minecraft.trade.VillagerMixin",
 	"minecraft.fix.LevelStorageSourceMixin_FixBiome",
 	"minecraft.fix.WorldLoaderMixin_GetRegistries",
+	"tetra.MixinToolbeltInventory",
     "registrate.RegistrateBlockLootTablesMixin_RemoveExisted"
   ],
   "client": [
