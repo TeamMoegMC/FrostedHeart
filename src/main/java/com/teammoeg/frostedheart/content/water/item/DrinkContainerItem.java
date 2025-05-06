@@ -94,7 +94,7 @@ public class DrinkContainerItem extends ItemFluidContainer {
             }
         }
 		
-        if (canDrink(player, cur)) return ItemUtils.startUsingInstantly(level, player, hand);
+        if (isDrinkable( cur)) return ItemUtils.startUsingInstantly(level, player, hand);
         return InteractionResultHolder.pass(cur);
 
     }
@@ -112,7 +112,7 @@ public class DrinkContainerItem extends ItemFluidContainer {
 	@Override
     public ItemStack finishUsingItem(ItemStack itemStack, Level level, LivingEntity livingEntity) {
         
-        if (livingEntity instanceof Player player) {
+        if (livingEntity instanceof Player player&&isDrinkable(itemStack)) {
             if (itemStack.getCount() == 1){
             	IFluidHandlerItem handler = itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
                 handler.drain(250, IFluidHandler.FluidAction.EXECUTE);
@@ -130,11 +130,11 @@ public class DrinkContainerItem extends ItemFluidContainer {
     }
 
     public int getUseDuration(ItemStack stack) {
-        return 32;
+        return isDrinkable(stack)?32:0;
     }
 
-    public UseAnim getUseAnimation(ItemStack p_42997_) {
-        return UseAnim.DRINK;
+    public UseAnim getUseAnimation(ItemStack itemStack) {
+        return isDrinkable(itemStack)?UseAnim.DRINK:UseAnim.NONE;
     }
 
 
@@ -153,18 +153,6 @@ public class DrinkContainerItem extends ItemFluidContainer {
      * @return
      */
     public boolean isDrinkable(ItemStack stack) {
-        IFluidHandlerItem fluidHandlerItem = stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
-        return !fluidHandlerItem.getFluidInTank(0).isEmpty() && fluidHandlerItem.getFluidInTank(0).getAmount() >= 250;
-    }
-
-    /**
-     * Check if player can drink
-     * @param playerIn
-     * @param stack
-     * @return
-     */
-    public boolean canDrink(Player playerIn, ItemStack stack) {
-        
         IFluidHandlerItem fluidHandlerItem = stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
         return !fluidHandlerItem.getFluidInTank(0).isEmpty() && fluidHandlerItem.getFluidInTank(0).getAmount() >= 250;
     }
