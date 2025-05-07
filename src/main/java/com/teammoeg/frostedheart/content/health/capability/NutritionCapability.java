@@ -150,6 +150,7 @@ public class NutritionCapability implements NBTSerializable {
     	}
     }
     public void consume(int amount) {
+    	if(amount<=0)return;
     	this.nutrition.addScaled(this.nutrition, (float) (FHConfig.SERVER.nutritionConsumptionRate.get()*(-amount))*this.nutrition.getNutritionValue()/40000);
     }
 
@@ -196,7 +197,7 @@ public class NutritionCapability implements NBTSerializable {
         
         count /= 2;
         if (count > 0) {
-            player.addEffect(new MobEffectInstance(FHMobEffects.ANEMIA.get(), 300, count-1));
+            player.addEffect(new MobEffectInstance(FHMobEffects.ANEMIA.get(), 200, count-1));
         }
 
 
