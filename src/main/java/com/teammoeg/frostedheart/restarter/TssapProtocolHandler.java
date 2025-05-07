@@ -67,6 +67,7 @@ public class TssapProtocolHandler {
 					
 				}
 			};
+			clientThread.setDaemon(true);
 			clientThread.start();
 		}
 	}
@@ -111,6 +112,7 @@ public class TssapProtocolHandler {
 					
 				}
 			};
+			serverThread.setDaemon(true);
 			serverThread.start();
 			LOGGER.info(VERSION_CHECK, "Server auto updater started");
 		}
