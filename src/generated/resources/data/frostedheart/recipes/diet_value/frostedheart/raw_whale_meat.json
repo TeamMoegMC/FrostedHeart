@@ -2,8 +2,8 @@
   "type": "frostedheart:diet_override",
   "group": {
     "carbohydrate": 0.0,
-    "fat": 0.0,
-    "protein": 0.11002437,
+    "fat": 0.033333335,
+    "protein": 0.06666667,
     "vegetable": 0.0
   },
   "item": "frostedheart:raw_whale_meat"

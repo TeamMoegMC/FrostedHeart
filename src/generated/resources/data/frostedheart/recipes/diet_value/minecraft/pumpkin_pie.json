@@ -1,10 +1,10 @@
 {
   "type": "frostedheart:diet_override",
   "group": {
-    "carbohydrate": 0.0,
+    "carbohydrate": 0.28,
     "fat": 0.0,
-    "protein": 0.0,
-    "vegetable": 1.185736
+    "protein": 0.14,
+    "vegetable": 0.28
   },
   "item": "minecraft:pumpkin_pie"
 }

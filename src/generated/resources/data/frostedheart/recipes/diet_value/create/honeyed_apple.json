@@ -1,10 +1,10 @@
 {
   "type": "frostedheart:diet_override",
   "group": {
-    "carbohydrate": 0.0,
+    "carbohydrate": 0.26666668,
     "fat": 0.0,
     "protein": 0.0,
-    "vegetable": 1.5973392
+    "vegetable": 0.53333336
   },
   "item": "create:honeyed_apple"
 }

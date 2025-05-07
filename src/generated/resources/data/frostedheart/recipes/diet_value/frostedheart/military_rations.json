@@ -1,10 +1,10 @@
 {
   "type": "frostedheart:diet_override",
   "group": {
-    "carbohydrate": 0.27118272,
-    "fat": 0.18227056,
-    "protein": 0.2995011,
-    "vegetable": 0.2223255
+    "carbohydrate": 0.175,
+    "fat": 0.0875,
+    "protein": 0.175,
+    "vegetable": 0.2625
   },
   "item": "frostedheart:military_rations"
 }

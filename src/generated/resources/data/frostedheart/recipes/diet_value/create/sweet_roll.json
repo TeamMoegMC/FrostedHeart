@@ -1,9 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "group": {
-    "carbohydrate": 0.444651,
+    "carbohydrate": 0.46666667,
     "fat": 0.0,
-    "protein": 0.444651,
+    "protein": 0.23333333,
     "vegetable": 0.0
   },
   "item": "create:sweet_roll"

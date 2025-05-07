@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.health.capability;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.nbt.CompoundTag;
@@ -154,11 +155,11 @@ public class NutritionCapability implements NBTSerializable {
         //TODO 营养值过高或过低的惩罚
         int count = 0;
 
-        if (nutrition.fat < 2000) {
+        /*if (nutrition.fat < 2000) {
             count += 2;
 
-        }
-        if (nutrition.fat > 8000) {
+        }*/
+        if (nutrition.fat > 9000) {
             count++;
 
         }
@@ -166,7 +167,7 @@ public class NutritionCapability implements NBTSerializable {
             count += 2;
 
         }
-        if (nutrition.carbohydrate > 8000) {
+        if (nutrition.carbohydrate > 9000) {
             count++;
 
         }
@@ -174,30 +175,27 @@ public class NutritionCapability implements NBTSerializable {
             count += 2;
 
         }
-        if (nutrition.protein > 8000) {
+        if (nutrition.protein > 9000) {
             count++;
 
         }
-        if (nutrition.vegetable < 2000) {
+        /*if (nutrition.vegetable < 2000) {
             count += 2;
 
             //player.addEffect(new MobEffectInstance(FHMobEffects.SCURVY.get(), 300, count - 1));
         }
-        if (nutrition.vegetable > 8000) {
+        if (nutrition.vegetable > 9000) {
             count++;
 
-        }
+        }*/
         
         
         
         count /= 2;
-        int a = count / 2;
         if (count > 0) {
-            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 300, count - 1));
+            player.addEffect(new MobEffectInstance(FHMobEffects.ANEMIA.get(), 300, count-1));
         }
-        if (a > 0) {
-            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 300, a));
-        }
+
 
         
     }
