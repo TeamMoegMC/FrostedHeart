@@ -104,11 +104,10 @@ public class HealthCommonEvents {
 
 		}
 		if (event.phase == TickEvent.Phase.END) {
-			if (gameTime % 20 == 0) {
-				NutritionCapability.getCapability(player).ifPresent(nutrition -> {
-					nutrition.consume(player);
-				});
-			}
+			NutritionCapability.getCapability(player).ifPresent(nutrition -> {
+				nutrition.consume(player);
+			});
+			
 		}
 
 	}
