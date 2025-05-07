@@ -18,7 +18,7 @@ public abstract class MixinToolbeltInventory  implements Container{
 	public MixinToolbeltInventory() {
 	}
 	@Shadow(remap=false)
-	  protected Predicate<ItemStack> predicate;
+	protected Predicate<ItemStack> predicate;
 	@Overwrite
 	@Override
 	public boolean canPlaceItem(int pIndex, ItemStack pStack) {
@@ -27,6 +27,6 @@ public abstract class MixinToolbeltInventory  implements Container{
 
 	@Overwrite(remap=false)
 	public boolean isItemValid(ItemStack itemStack) {
-		return (!itemStack.is(ModularToolbeltItem.instance.get())&&(!itemStack.hasTag()||itemStack.getMaxStackSize()==1) && this.predicate.test(itemStack)&&IEApi.isAllowedInCrate(itemStack));
+		return (!itemStack.is(ModularToolbeltItem.instance.get())&&(!itemStack.hasTag()||itemStack.getItem().getMaxStackSize()==1) && this.predicate.test(itemStack)&&IEApi.isAllowedInCrate(itemStack));
 	}
 }
