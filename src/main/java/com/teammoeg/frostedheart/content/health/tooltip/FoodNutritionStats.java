@@ -34,6 +34,7 @@ import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.health.capability.Nutrition;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.FineProgressBarBuilder;
 import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
@@ -106,6 +107,11 @@ public class FoodNutritionStats implements TooltipModifier {
             	builder.addElement(VEGETABLE_COLOR, "\uF503",nutrition.getVegetable());
             }
             list.add(builder.build());
+            list.add(Lang.gui("nutrition.per_hunger").component());
+            list.add(Lang.gui("nutrition.fat").percentage().number(nutrition.getFat()*4*FHConfig.SERVER.nutritionGainRate.get()).component());
+            list.add(Lang.gui("nutrition.protein").percentage().number(nutrition.getProtein()*4*FHConfig.SERVER.nutritionGainRate.get()).component());
+            list.add(Lang.gui("nutrition.carbohydrate").percentage().number(nutrition.getCarbohydrate()*4*FHConfig.SERVER.nutritionGainRate.get()).component());
+            list.add(Lang.gui("nutrition.vegetable").percentage().number(nutrition.getVegetable()*4*FHConfig.SERVER.nutritionGainRate.get()).component());
             return list;
         }
         return null;

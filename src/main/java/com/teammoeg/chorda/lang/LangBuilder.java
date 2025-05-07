@@ -167,6 +167,9 @@ public class LangBuilder {
     	currentNumberFormat=LangNumberFormat.numberFormat.get();
     	return this;
     }
+    public LangBuilder percentage() {
+        return setNumberFormat("0.0%");
+    }
     public LangBuilder number(long d) {
         return add(Components.literal(currentNumberFormat.format(d)));
     }

@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -133,7 +134,7 @@ public class NutritionCapability implements NBTSerializable {
                 if(filling<nutrition) {//replace overfilled hunger to new food hunger
                 	consume(nutrition-filling);
                 }
-                this.nutrition.addScaled(wRecipe, (float) (10000*nutrition * FHConfig.SERVER.nutritionGainRate.get()));
+                this.nutrition.addScaled(wRecipe, (float) (40000*nutrition * FHConfig.SERVER.nutritionGainRate.get()));
                 callOnChange(player);
             }
         }
@@ -142,7 +143,7 @@ public class NutritionCapability implements NBTSerializable {
     public void consume(Player player) {
     	FoodData fd=player.getFoodData();
     	if(fd.getLastFoodLevel()>fd.getFoodLevel()) {
-    		consume(fd.getFoodLevel()-fd.getLastFoodLevel());
+    		consume(fd.getLastFoodLevel()-fd.getFoodLevel());
 	        
 	        
 	        callOnChange(player);
@@ -203,9 +204,12 @@ public class NutritionCapability implements NBTSerializable {
     }
     public void addAttributes(Player player) {
     	// 对生命值上限的修改
-        int v = (int) (20 - nutrition.getNutritionValue() / 1000);
+    	float v1=Mth.clampedLerp(-5, 5, nutrition.getCarbohydrate()/10000f);
+    	float v2=Mth.clampedLerp(-5, 5, nutrition.getFat()/10000f);
+    	float v3=Mth.clampedLerp(-5, 5, nutrition.getProtein()/10000f);
+    	float v4=Mth.clampedLerp(-5, 5, nutrition.getVegetable()/10000f);
         AttributeInstance instance = player.getAttributes().getInstance(Attributes.MAX_HEALTH);
-        AttributeModifier modifier = new AttributeModifier(NutritionUUID, "nutrition", -v, AttributeModifier.Operation.ADDITION);
+        AttributeModifier modifier = new AttributeModifier(NutritionUUID, "nutrition", Math.round(v1+v2+v3+v4), AttributeModifier.Operation.ADDITION);
         if (instance.hasModifier(modifier))
             instance.removeModifier(modifier);
         instance.addPermanentModifier(modifier);

@@ -340,6 +340,7 @@
   "gui.frostedheart.nutrition.protein": "Protein",
   "gui.frostedheart.nutrition.carbohydrate": "Carbohydrate",
   "gui.frostedheart.nutrition.vegetable": "Vegetable",
+  "gui.frostedheart.nutrition.per_hunger": "Nutrition Per Hunger",
   "gui.frostedheart.wheel_menu.message": "Move the mouse to select, release [%s] to execute",
   "gui.frostedheart.wheel_menu.selection.nutrition": "Health Info",
   "gui.frostedheart.wheel_menu.selection.clothing": "View Clothing",
