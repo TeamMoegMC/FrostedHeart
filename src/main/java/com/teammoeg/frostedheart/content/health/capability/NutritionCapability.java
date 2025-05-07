@@ -132,9 +132,9 @@ public class NutritionCapability implements NBTSerializable {
                 int filling=20-fd.getFoodLevel();
                 if(filling<nutrition) {//replace overfilled hunger to new food hunger
                 	int overfill=filling-nutrition;
-                	this.nutrition.addScaled(this.nutrition, (float) ((FHConfig.SERVER.nutritionConsumptionRate.get())*overfill));
+                	this.nutrition.addScaled(this.nutrition, (float) (40000*(FHConfig.SERVER.nutritionConsumptionRate.get())*overfill));
                 }
-                this.nutrition.addScaled(wRecipe, (float) (nutrition * FHConfig.SERVER.nutritionGainRate.get()));
+                this.nutrition.addScaled(wRecipe, (float) (40000*nutrition * FHConfig.SERVER.nutritionGainRate.get()));
                 callOnChange(player);
             }
         }
@@ -145,7 +145,7 @@ public class NutritionCapability implements NBTSerializable {
     	if(fd.getLastFoodLevel()>fd.getFoodLevel()) {
 	
 	        
-	        this.nutrition.addScaled(this.nutrition, (float) (FHConfig.SERVER.nutritionConsumptionRate.get()*(fd.getFoodLevel()-fd.getLastFoodLevel())));
+	        this.nutrition.addScaled(this.nutrition, (float) (40000*FHConfig.SERVER.nutritionConsumptionRate.get()*(fd.getFoodLevel()-fd.getLastFoodLevel())));
 	        callOnChange(player);
     	}
     }
