@@ -737,6 +737,7 @@
   "gui.frostedheart.save_as_file": "保存为文件",
   "gui.frostedheart.saved": "已保存!",
   "gui.frostedheart.sent": "已发送!",
+  "gui.frostedheart.issue_tracker": "https://pd.qq.com/s/2a7h5msnl",
   "gui.frostedheart.tip_editor.title": "提示编辑器",
   "gui.frostedheart.tip_editor.id": "提示ID",
   "gui.frostedheart.tip_editor.category": "分类",
