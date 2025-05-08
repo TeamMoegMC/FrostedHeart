@@ -28,6 +28,7 @@ import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipClickActions;
+import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedheart.util.Lang;
 
 import lombok.Getter;
@@ -200,7 +201,7 @@ public class TipWidget extends AbstractWidget {
         } else {
             linkButton.visible = false;
         }
-        if (isGuiOpened() && !isAlwaysVisible() && state != State.FADING_OUT) {
+        if ((isGuiOpened() || WheelMenuRenderer.isOpened()) && !isAlwaysVisible() && state != State.FADING_OUT) {
             pinButton.color = context.fontColor;
             pinButton.visible = true;
             pinButton.setPosition(getX() + super.getWidth() - 22 - (12*b), getY());
