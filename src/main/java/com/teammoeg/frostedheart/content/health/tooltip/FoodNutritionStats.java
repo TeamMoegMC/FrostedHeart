@@ -108,10 +108,10 @@ public class FoodNutritionStats implements TooltipModifier {
             }
             list.add(builder.build());
             list.add(Lang.gui("nutrition.per_hunger").component());
-            list.add(Lang.gui("nutrition.fat").percentage().number(nutrition.getFat()*4*FHConfig.SERVER.nutritionGainRate.get()).component());
-            list.add(Lang.gui("nutrition.protein").percentage().number(nutrition.getProtein()*4*FHConfig.SERVER.nutritionGainRate.get()).component());
-            list.add(Lang.gui("nutrition.carbohydrate").percentage().number(nutrition.getCarbohydrate()*4*FHConfig.SERVER.nutritionGainRate.get()).component());
-            list.add(Lang.gui("nutrition.vegetable").percentage().number(nutrition.getVegetable()*4*FHConfig.SERVER.nutritionGainRate.get()).component());
+            list.add(Lang.gui("nutrition.fat").space().percentage().number(nutrition.getFat()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
+            list.add(Lang.gui("nutrition.protein").space().percentage().number(nutrition.getProtein()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
+            list.add(Lang.gui("nutrition.carbohydrate").space().percentage().number(nutrition.getCarbohydrate()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
+            list.add(Lang.gui("nutrition.vegetable").space().percentage().number(nutrition.getVegetable()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
             return list;
         }
         return null;

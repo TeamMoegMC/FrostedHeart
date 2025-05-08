@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.content.health.capability;
 
+import com.teammoeg.chorda.math.CMath;
+
 import lombok.Getter;
 
 public class MutableNutrition implements Nutrition{
@@ -44,6 +46,13 @@ public class MutableNutrition implements Nutrition{
         protein+=nutrition.getProtein()*scale;
         vegetable+=nutrition.getVegetable()*scale;
         return this;
+    }
+    public Nutrition ensureValid() {
+    	fat=CMath.toValidClampedValue(fat, 0, 100000);
+    	carbohydrate=CMath.toValidClampedValue(carbohydrate, 0, 100000);
+    	protein=CMath.toValidClampedValue(protein, 0, 100000);
+    	vegetable=CMath.toValidClampedValue(vegetable, 0, 100000);
+    	return this;
     }
     public float getNutritionValue(){
         return fat + carbohydrate + protein + vegetable;

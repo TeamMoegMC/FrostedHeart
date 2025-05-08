@@ -58,5 +58,27 @@ public class CMath {
 	public static boolean inRange(float value,float min,float max) {
     	return value>=min&&value<=max;
     }
+	public static float toValidValue(float origin) {
+		if(Float.isFinite(origin))
+			return origin;
+		if(Float.isNaN(origin))
+			return 0;
+		if(origin==Float.NEGATIVE_INFINITY)
+			return -8388605;
+		if(origin==Float.POSITIVE_INFINITY)
+			return 8388606;
+		return 0;
+	}
+	public static float toValidClampedValue(float origin,float min,float max) {
+		if(Float.isFinite(origin))
+			return Mth.clamp(origin, min, max);
+		if(Float.isNaN(origin))
+			return min;
+		if(origin==Float.NEGATIVE_INFINITY)
+			return min;
+		if(origin==Float.POSITIVE_INFINITY)
+			return max;
+		return min;
+	}
 }
 

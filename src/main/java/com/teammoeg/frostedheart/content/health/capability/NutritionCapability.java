@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.health.capability;
 
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.chorda.io.NBTSerializable;
+import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
@@ -52,7 +53,7 @@ public class NutritionCapability implements NBTSerializable {
 
     @Override
     public void load(CompoundTag nbt, boolean isPacket) {
-        set(new ImmutableNutrition(nbt.getFloat("fat"), nbt.getFloat("carbohydrate"), nbt.getFloat("protein"), nbt.getFloat("vegetable")));
+        set(new ImmutableNutrition(CMath.toValidClampedValue(nbt.getFloat("fat"), 0, 100000) , CMath.toValidClampedValue(nbt.getFloat("carbohydrate"), 0, 100000), CMath.toValidClampedValue(nbt.getFloat("protein"), 0, 100000), CMath.toValidClampedValue(nbt.getFloat("vegetable"), 0, 100000)));
     }
 
     public static final ImmutableNutrition DEFAULT_VALUE = new ImmutableNutrition(5000);
@@ -129,13 +130,16 @@ public class NutritionCapability implements NBTSerializable {
             FoodProperties fp = food.getFoodProperties(player);
             if (fp != null) {
                 int nutrition = fp.getNutrition();
-                FoodData fd=player.getFoodData();
-                int filling=20-fd.getFoodLevel();
-                if(filling<nutrition) {//replace overfilled hunger to new food hunger
-                	consume(nutrition-filling);
+                if(nutrition>0) {
+	                FoodData fd=player.getFoodData();
+	                int filling=20-fd.getFoodLevel();
+	                if(filling<nutrition) {//replace overfilled hunger to new food hunger
+	                	consume(nutrition-filling);
+	                }
+	                this.nutrition.addScaled(wRecipe, (float) (nutrition * FHConfig.SERVER.nutritionGainRate.get()));
+	                this.nutrition.ensureValid();
+	                callOnChange(player);
                 }
-                this.nutrition.addScaled(wRecipe, (float) (40000*nutrition * FHConfig.SERVER.nutritionGainRate.get()));
-                callOnChange(player);
             }
         }
     }
@@ -144,14 +148,13 @@ public class NutritionCapability implements NBTSerializable {
     	FoodData fd=player.getFoodData();
     	if(fd.getLastFoodLevel()>fd.getFoodLevel()) {
     		consume(fd.getLastFoodLevel()-fd.getFoodLevel());
-	        
-	        
 	        callOnChange(player);
     	}
     }
     public void consume(int amount) {
     	if(amount<=0)return;
-    	this.nutrition.addScaled(this.nutrition, (float) (FHConfig.SERVER.nutritionConsumptionRate.get()*(-amount))*this.nutrition.getNutritionValue()/40000);
+    	this.nutrition.addScaled(this.nutrition, (float) (FHConfig.SERVER.nutritionConsumptionRate.get()*(-amount)));
+    	this.nutrition.ensureValid();
     }
 
 

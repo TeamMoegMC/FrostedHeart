@@ -195,7 +195,7 @@ public class FHRecipeProvider extends RecipeProvider {
 			float ve=(float)ExcelHelper.getCellValueAsNumber(m.get("Vegetable"));
 			float oi=(float)ExcelHelper.getCellValueAsNumber(m.get("Fat"));
 			float pr=(float)ExcelHelper.getCellValueAsNumber(m.get("Protein"));
-			dvb.based(base/(gr+ve+oi+pr));
+			dvb.based(base/(gr+ve+oi+pr)*40000);
 			dvb.nutrition(gr,ve,oi,pr);
 			dvb.save(out,new ResourceLocation(FHMain.MODID,"diet_value/"+ itemid.getNamespace()+ "/"+ itemid.getPath()));
 

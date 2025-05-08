@@ -3,7 +3,7 @@
   "group": {
     "carbohydrate": 0.0,
     "fat": 0.0,
-    "protein": 0.3,
+    "protein": 12000.0,
     "vegetable": 0.0
   },
   "item": "minecraft:rabbit_stew"

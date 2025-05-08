@@ -4,7 +4,7 @@
     "carbohydrate": 0.0,
     "fat": 0.0,
     "protein": 0.0,
-    "vegetable": 0.5
+    "vegetable": 20000.0
   },
   "item": "frostedheart:dried_wolfberries"
 }

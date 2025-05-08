@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "group": {
-    "carbohydrate": 0.35,
-    "fat": 0.35,
+    "carbohydrate": 14000.0,
+    "fat": 14000.0,
     "protein": 0.0,
     "vegetable": 0.0
   },
