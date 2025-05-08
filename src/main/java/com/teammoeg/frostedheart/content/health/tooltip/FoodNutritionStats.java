@@ -91,7 +91,7 @@ public class FoodNutritionStats implements TooltipModifier {
             Lang.translate("tooltip", "nutrition")
                     .style(ChatFormatting.GRAY)
                     .addTo(list);
-            Nutrition nutrition = foodNutrition.scale(1/foodNutrition.getNutritionValue());
+            Nutrition nutrition = foodNutrition.mutableCopy().scale(1/foodNutrition.getNutritionValue());
             FineProgressBarBuilder builder=new FineProgressBarBuilder(PROGRESS_LENGTH);
             //list.add(Lang.str("\uF504").withStyle(FHTextIcon.applyFont(Style.EMPTY)));
             if(nutrition.getFat()>0) {
@@ -108,10 +108,10 @@ public class FoodNutritionStats implements TooltipModifier {
             }
             list.add(builder.build());
             list.add(Lang.gui("nutrition.per_hunger").component());
-            list.add(Lang.gui("nutrition.fat").space().percentage().number(nutrition.getFat()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
-            list.add(Lang.gui("nutrition.protein").space().percentage().number(nutrition.getProtein()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
-            list.add(Lang.gui("nutrition.carbohydrate").space().percentage().number(nutrition.getCarbohydrate()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
-            list.add(Lang.gui("nutrition.vegetable").space().percentage().number(nutrition.getVegetable()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
+            list.add(Lang.gui("nutrition.fat").space().percentage().number(foodNutrition.getFat()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
+            list.add(Lang.gui("nutrition.protein").space().percentage().number(foodNutrition.getProtein()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
+            list.add(Lang.gui("nutrition.carbohydrate").space().percentage().number(foodNutrition.getCarbohydrate()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
+            list.add(Lang.gui("nutrition.vegetable").space().percentage().number(foodNutrition.getVegetable()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
             return list;
         }
         return null;
