@@ -269,7 +269,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         public List<String> getContents() {
             var c = new ArrayList<>(translation ? translationContents : contents);
             if (!input.getValue().isBlank()) {
-                c.add(0, getValidInputValue());
+                c.add(getValidInputValue());
             }
             return c.isEmpty() ? List.of("tips.frostedheart.error.load.empty") : c;
         }
