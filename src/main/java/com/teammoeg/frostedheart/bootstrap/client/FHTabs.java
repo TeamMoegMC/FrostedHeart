@@ -23,6 +23,7 @@ import com.simibubi.create.foundation.item.TagDependentIngredientItem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.chorda.creativeTab.TabType;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
@@ -35,11 +36,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -50,7 +55,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
-
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class FHTabs {
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, FHMain.MODID);
 
@@ -120,6 +125,22 @@ public class FHTabs {
                     .build());
     public static final TabType itemGroup = new TabType(MISC);
 
+    @SubscribeEvent
+    public static void onBuildCreativeTabContents(BuildCreativeModeTabContentsEvent event) {
+        if (event.getTab() == TOOLS.get()){
+            Item item = Item.byBlock(FHBlocks.GUNPOWDER_BARREL.get());
+            for (int i = 1; i <= 3; i++) {
+                for (int j = 0; j <= 3; j++){
+                    ItemStack stack = new ItemStack(item);
+                    CompoundTag nbt = new CompoundTag();
+                    nbt.putInt("Power", i);
+                    nbt.putInt("Fortune", j);
+                    BlockItem.setBlockEntityData(stack, FHBlockEntityTypes.GUNPOWDER_BARREL.get(),nbt);
+                    event.accept(stack);
+                }
+            }
+        }
+    }
 
     public static void fillFHTab(CreativeModeTab.ItemDisplayParameters parms, CreativeModeTab.Output out) {
         for (final RegistryObject<Item> itemRef : FHItems.ITEMS.getEntries()) {

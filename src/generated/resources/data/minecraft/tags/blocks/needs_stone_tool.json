@@ -19,6 +19,8 @@
     "frostedheart:generator_amplifier_r1",
     "frostedheart:refractory_bricks",
     "frostedheart:high_refractory_bricks",
+    "frostedheart:biogas_digester_controller",
+    "frostedheart:biogas_digester_io",
     "#frostedheart:permafrost"
   ]
 }

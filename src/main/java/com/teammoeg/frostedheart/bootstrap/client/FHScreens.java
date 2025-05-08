@@ -25,6 +25,9 @@ import com.teammoeg.chorda.client.cui.CUIMenuScreen;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.ui.ScreenAcceptor;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
+import com.teammoeg.frostedheart.content.agriculture.biogassystem.screen.BiogasDigesterControllerMenu;
+import com.teammoeg.frostedheart.content.agriculture.biogassystem.screen.BiogasDigesterControllerScreen;
+import com.teammoeg.frostedheart.content.agriculture.biogassystem.screen.BiogasDigesterIOScreen;
 import com.teammoeg.frostedheart.content.climate.block.ClothesScreen;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorScreen;
 import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorLogic;
@@ -65,6 +68,9 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.SUPPLY_CHEST.get(), LogisticChestScreen::new);
         MenuScreens.register(FHMenuTypes.STORAGE_CHEST.get(), LogisticChestScreen::new);
         MenuScreens.register(FHMenuTypes.REQUEST_CHEST.get(), LogisticChestScreen::new);
+        MenuScreens.register(FHMenuTypes.BIOGAS_DIGESTER_CONTROLLER.get(), BiogasDigesterControllerScreen::new);
+        MenuScreens.register(FHMenuTypes.BIOGAS_DIGESTER_IO.get(), BiogasDigesterIOScreen::new);
+
     }
 
     public static <C extends AbstractContainerMenu, S extends BaseScreen> void

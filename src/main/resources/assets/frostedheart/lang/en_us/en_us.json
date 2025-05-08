@@ -344,5 +344,10 @@
   "gui.frostedheart.wheel_menu.message": "Move the mouse to select, release [%s] to execute",
   "gui.frostedheart.wheel_menu.selection.nutrition": "Health Info",
   "gui.frostedheart.wheel_menu.selection.clothing": "View Clothing",
-  "gui.frostedheart.wheel_menu.selection.debug": "Open Debug Menu"
+  "gui.frostedheart.wheel_menu.selection.debug": "Open Debug Menu",
+  "gui.frostedheart.biogas_digester_controller_menu.size": "Size",
+  "gui.frostedheart.biogas_digester_controller_menu.gas_value": "Gas Value",
+  "gui.frostedheart.biogas_digester_controller_menu.max_gas_value": "Max Gas Value",
+  "gui.frostedheart.biogas_digester_controller_menu.unavailable": "Unavailable",
+  "block.frostedheart.gunpowder_barrel": "Gunpowder Barrel"
 }

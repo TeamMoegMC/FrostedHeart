@@ -19,6 +19,14 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import com.teammoeg.frostedheart.content.agriculture.biogassystem.block.BiogasDigesterControllerBlockEntity;
+import com.teammoeg.frostedheart.content.agriculture.biogassystem.block.BiogasDigesterIOBlockEntity;
+import com.teammoeg.frostedheart.content.agriculture.biogassystem.screen.BiogasDigesterControllerMenu;
+import com.teammoeg.frostedheart.content.agriculture.biogassystem.screen.BiogasDigesterIOMenu;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.flag.FeatureFlagRegistry;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
@@ -63,6 +71,8 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
+import java.util.Objects;
+
 public class FHMenuTypes {
 	@FunctionalInterface
 	public interface BEMenuFactory<T extends AbstractContainerMenu, BE extends BlockEntity> {
@@ -91,7 +101,9 @@ public class FHMenuTypes {
 	public static final RegistryObject<MenuType<IncubatorT2Container>> INCUBATOR_T2 = register(HeatIncubatorTileEntity.class, ("heat_incubator"), IncubatorT2Container::new);
 	public static final RegistryObject<MenuType<WardrobeMenu>> WARDROBE = register(WardrobeBlockEntity.class, ("wardrobe"), WardrobeMenu::new);
 
-	
+	public static final RegistryObject<MenuType<BiogasDigesterControllerMenu>> BIOGAS_DIGESTER_CONTROLLER = CONTAINERS.register("biogas_digester_controller", () -> IForgeMenuType.create(BiogasDigesterControllerMenu::new));
+	public static final RegistryObject<MenuType<BiogasDigesterIOMenu>> BIOGAS_DIGESTER_IO = CONTAINERS.register("biogas_digester_io", () -> IForgeMenuType.create(BiogasDigesterIOMenu::new));
+
 	@SuppressWarnings("unchecked")
 	public static <T extends AbstractContainerMenu, BE extends BlockEntity> RegistryObject<MenuType<T>> register(Class<BE> BEClass, String name, BEMenuFactory<T, BE> factory) {
 		return CONTAINERS.register(name, () -> IForgeMenuType.create((id, inv, pb) -> {

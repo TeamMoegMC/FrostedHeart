@@ -15,6 +15,8 @@
     "frostedheart:requester_chest",
     "frostedheart:storage_chest",
     "frostedheart:supplier_chest",
-    "frostedheart:test_logistic_core"
+    "frostedheart:test_logistic_core",
+    "frostedheart:biogas_digester_controller",
+    "frostedheart:biogas_digester_io"
   ]
 }
