@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.tips.client.gui.widget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
@@ -346,19 +347,31 @@ public class TipWidget extends AbstractWidget {
 
             // 检查屏幕尺寸是否更新
             Size2i newSize = new Size2i(ClientUtils.screenWidth(), ClientUtils.screenHeight());
-            if (this.screenSize != null && this.screenSize.equals(newSize)) return;
+            if (this.screenSize != null && this.screenSize.equals(newSize) && this.size != null) return;
             this.screenSize = newSize;
             int width = (int)Mth.clamp(screenSize.width * 0.3F, MIN_WIDTH, MAX_WIDTH);
 
             // 文本换行
             var contents = tip.getContents();
-            titleLines = ClientUtils.font().split(contents.get(0), width);
+            titleLines = new ArrayList<>();
+            // StringTextComponentParser 会吞掉换行符，所以得先把它分割一下
+            var split = contents.get(0).getString().split("\\n");
+            for (String s : split) {
+                titleLines.addAll(ClientUtils.font().split(StringTextComponentParser.parse(s), width));
+            }
+
             contentLines = new ArrayList<>();
-            if (contents.size() > 1)
-                for (int i = 1; i < contents.size(); i++)
-                    contentLines.addAll(ClientUtils.font().split(contents.get(i), width));
+            if (contents.size() > 1) {
+                for (int i = 1; i < contents.size(); i++) {
+                    split = contents.get(i).getString().split("\\n");
+                    for (String s : split) {
+                        contentLines.addAll(ClientUtils.font().split(StringTextComponentParser.parse(s), width));
+                    }
+                }
+            }
+
             totalLineSize = titleLines.size() + contentLines.size();
-            int height = (totalLineSize * LINE_SPACE);
+            int height = totalLineSize * LINE_SPACE;
 
             // 图片
             int imgW = 0;

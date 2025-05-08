@@ -103,19 +103,6 @@ public class TipRenderer {
         if (MC.screen != null && !SCREEN_BLACKLIST.contains(MC.screen.getClass()))
             return;
 
-//        if (WIDGET_INSTANCE.getState() != TipWidget.State.IDLE) {
-//            //TODO 键位绑定
-//            if (InputConstants.isKeyDown(MC.getWindow().getWindow(), 258)) {
-//                MC.screen = new WheelSelectorScreen();
-//            } else if (MC.screen instanceof WheelSelectorScreen) {
-//                MC.popGuiLayer();
-//            }
-//        } else {
-//            if (MC.screen instanceof WheelSelectorScreen) {
-//                MC.popGuiLayer();
-//            }
-//        }
-
         TipWidget.INSTANCE.renderWidget(event.getGuiGraphics(), -1, -1, MC.getPartialTick());
         update();
     }

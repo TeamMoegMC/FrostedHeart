@@ -744,7 +744,7 @@
   "gui.frostedheart.tip_editor.image": "图片",
   "gui.frostedheart.tip_editor.click_action": "跳转按钮的操作",
   "gui.frostedheart.tip_editor.click_action_content": "跳转按钮的内容",
-  "gui.frostedheart.tip_editor.available_click_actions": "可用的跳转操作列表:\n OpenURL",
+  "gui.frostedheart.tip_editor.available_click_actions": "可用的跳转操作列表:%s",
   "gui.frostedheart.tip_editor.contents": "内容",
   "gui.frostedheart.tip_editor.font_color": "文本颜色",
   "gui.frostedheart.tip_editor.background_color": "背景颜色",

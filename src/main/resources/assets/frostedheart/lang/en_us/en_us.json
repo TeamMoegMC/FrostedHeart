@@ -320,7 +320,7 @@
   "gui.frostedheart.tip_editor.image": "Image",
   "gui.frostedheart.tip_editor.click_action": "Link Button Action",
   "gui.frostedheart.tip_editor.click_action_content": "Link Button Action Content",
-  "gui.frostedheart.tip_editor.available_click_actions": "Available Actions:\n OpenURL",
+  "gui.frostedheart.tip_editor.available_click_actions": "Available Actions:%s",
   "gui.frostedheart.tip_editor.contents": "Contents",
   "gui.frostedheart.tip_editor.font_color": "Font Color",
   "gui.frostedheart.tip_editor.background_color": "Background Color",

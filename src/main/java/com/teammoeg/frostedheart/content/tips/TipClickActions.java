@@ -7,6 +7,7 @@ import net.minecraft.Util;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class TipClickActions {
@@ -35,6 +36,14 @@ public class TipClickActions {
         } else {
             Tip.LOGGER.warn("Unknown click action name '{}', accepted context: '{}'", name, context);
         }
+    }
+
+    public static Set<String> getActionKeys() {
+        return CLICK_ACTIONS.keySet();
+    }
+
+    public static Consumer<String> getAction(String key) {
+        return CLICK_ACTIONS.get(key);
     }
 
     public static void register(String actionName, Consumer<String> runner) {
