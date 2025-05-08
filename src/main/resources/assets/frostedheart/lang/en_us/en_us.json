@@ -345,5 +345,7 @@
   "gui.frostedheart.wheel_menu.message": "Move the mouse to select, release [%s] to execute",
   "gui.frostedheart.wheel_menu.selection.nutrition": "Health Info",
   "gui.frostedheart.wheel_menu.selection.clothing": "View Clothing",
-  "gui.frostedheart.wheel_menu.selection.debug": "Open Debug Menu"
+  "gui.frostedheart.wheel_menu.selection.debug": "Open Debug Menu",
+  "waypoint.frostedheart.quick_waypoint": "Create Quick Waypoint",
+  "waypoint.frostedheart.del_quick_waypoint": "Delete Quick Waypoint"
 }

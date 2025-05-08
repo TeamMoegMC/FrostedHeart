@@ -813,6 +813,8 @@
   "gui.frostedheart.wheel_menu.selection.nutrition": "健康信息",
   "gui.frostedheart.wheel_menu.selection.clothing": "穿戴衣物",
   "gui.frostedheart.wheel_menu.selection.debug": "打开调试菜单",
+  "waypoint.frostedheart.quick_waypoint": "创建快捷路径点",
+  "waypoint.frostedheart.del_quick_waypoint": "删除快捷路径点",
   
   "block.frostedheart.besnowed_debris": "雪掩的残片",
   "block.frostedheart.besnowed_debris_block": "雪掩的残片块",

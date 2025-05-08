@@ -20,14 +20,13 @@
 package com.teammoeg.frostedheart.content.tips;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
-public class ClientEvents {
+public class TipClientEvents {
 
     @SubscribeEvent
     public static void onPlayerLoggedIn(ClientPlayerNetworkEvent.LoggingIn event) {
@@ -37,6 +36,5 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onPlayerLoggedOut(ClientPlayerNetworkEvent.LoggingOut event) {
         TipManager.INSTANCE.display().clearRenderQueue();
-        ClientWaypointManager.clear();
     }
 }
