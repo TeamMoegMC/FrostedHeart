@@ -108,10 +108,15 @@ public class FoodNutritionStats implements TooltipModifier {
             }
             list.add(builder.build());
             list.add(Lang.gui("nutrition.per_hunger").component());
-            list.add(Lang.gui("nutrition.fat").space().percentage().number(foodNutrition.getFat()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
-            list.add(Lang.gui("nutrition.protein").space().percentage().number(foodNutrition.getProtein()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
-            list.add(Lang.gui("nutrition.carbohydrate").space().percentage().number(foodNutrition.getCarbohydrate()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
-            list.add(Lang.gui("nutrition.vegetable").space().percentage().number(foodNutrition.getVegetable()*FHConfig.SERVER.nutritionGainRate.get()/10000f).component());
+            
+            if(foodNutrition.getFat()>0)
+            	list.add(Lang.gui("nutrition.fat").color(FAT_COLOR).space().percentage().number(foodNutrition.getFat()*FHConfig.SERVER.nutritionGainRate.get()/10000f).withStyle(ChatFormatting.GREEN).component());
+            if(foodNutrition.getProtein()>0)
+            	list.add(Lang.gui("nutrition.protein").color(PROTEIN_COLOR).space().percentage().number(foodNutrition.getProtein()*FHConfig.SERVER.nutritionGainRate.get()/10000f).withStyle(ChatFormatting.GREEN).component());
+            if(foodNutrition.getCarbohydrate()>0)
+            	list.add(Lang.gui("nutrition.carbohydrate").color(CARBOHYDRATE_COLOR).space().percentage().number(foodNutrition.getCarbohydrate()*FHConfig.SERVER.nutritionGainRate.get()/10000f).withStyle(ChatFormatting.GREEN).component());
+            if(foodNutrition.getVegetable()>0)
+            	list.add(Lang.gui("nutrition.vegetable").color(VEGETABLE_COLOR).space().percentage().number(foodNutrition.getVegetable()*FHConfig.SERVER.nutritionGainRate.get()/10000f).withStyle(ChatFormatting.GREEN).component());
             return list;
         }
         return null;
