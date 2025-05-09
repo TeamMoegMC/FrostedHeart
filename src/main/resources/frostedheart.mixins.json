@@ -28,6 +28,7 @@
     "immersiveengineering.IERegistrationMixin",
     "immersiveengineering.OwnerableStateMixin",
     "minecraft.accessors.NewChatGuiAccessor",
+    "minecraft.agriculture.CropBlockMixin",
     "minecraft.campfire.CampfireBlockMixin_TimeLimit",
     "minecraft.campfire.CampfireTileEntityMixin_TimeLimit",
     "minecraft.fix.PistonBaseBlockMixin",
@@ -66,8 +67,6 @@
     "minecraft.trade.AssignProfessionFromJobSite_DisableVanillaProfession",
     "minecraft.trade.ResetProfession_DisableVanillaProfession",
     "minecraft.trade.VillagerMixin",
-	"minecraft.fix.LevelStorageSourceMixin_FixBiome",
-	"minecraft.fix.WorldLoaderMixin_GetRegistries",
     "registrate.RegistrateBlockLootTablesMixin_RemoveExisted"
   ],
   "client": [

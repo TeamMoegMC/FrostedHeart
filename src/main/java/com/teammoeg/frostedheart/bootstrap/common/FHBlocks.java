@@ -95,6 +95,7 @@ import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
 import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
+import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -1760,6 +1761,19 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.farmland())
             .simpleItem()
             .lang("Fertilized Farmland")
+            .register();
+    public static BlockEntry<FertilizedDirt> FERTILIZED_DIRT = REGISTRATE.block("fertilized_dirt", FertilizedDirt::new)
+            .initialProperties(() -> DIRT)
+            .blockstate((c, p) -> {
+                p.getVariantBuilder(c.get()).forAllStates((state)->{
+                    return ConfiguredModel.builder()
+                            .modelFile(p.models().getExistingFile(p.modLoc("block/fertilized_dirt")))
+                            .build();
+                });
+            })
+            .simpleItem()
+            .tag(BlockTags.DIRT)
+            .lang("Fertilized Dirt")
             .register();
 
 

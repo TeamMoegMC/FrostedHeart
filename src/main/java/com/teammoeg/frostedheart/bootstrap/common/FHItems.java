@@ -1777,14 +1777,14 @@ thinner.png
 
     public static ItemEntry<Fertilizer> INCREASING_FERTILIZER = REGISTRATE
             .item("increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING_FERTILIZER))
-            .lang("Yield-increasing fertilizer")
+            .lang("Yield Booster")
             .register();
     public static ItemEntry<Fertilizer> ACCELERATED_FERTILIZER = REGISTRATE
             .item("accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED_FERTILIZER))
-            .lang("Accelerated fertilizer")
+            .lang("Growth Accelerater")
             .register();
     public static ItemEntry<Fertilizer> PRESERVED_FERTILIZER = REGISTRATE
             .item("preserving_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED_FERTILIZER))
-            .lang("Heat-preserving fertilizer")
+            .lang("Mulch")
             .register();
 }

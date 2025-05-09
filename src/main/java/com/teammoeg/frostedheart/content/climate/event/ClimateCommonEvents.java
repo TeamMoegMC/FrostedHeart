@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.agriculture.FertilizedDirt;
 import com.teammoeg.frostedheart.content.agriculture.FertilizedFarmlandBlock;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.climate.ForecastHandler;
@@ -51,6 +52,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -67,6 +69,8 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -94,6 +98,7 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.PacketDistributor.PacketTarget;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Supplier;
 
 import static com.teammoeg.frostedheart.content.climate.WorldTemperature.SNOW_REACHES_GROUND;
@@ -196,6 +201,7 @@ public class ClimateCommonEvents {
 		PlantTempData data = PlantTempData.getPlantData(crop);
 		BlockState farmlandBlockState=level.getBlockState(pos.below());
 		WorldTemperature.PlantStatus status;
+
 		if(farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
 			if (farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED_FERTILIZER.getType()) {
 				data= new PlantTempData(crop,data.growTimeDays(),data.minFertilize()-5,data.minGrow()-5,data.minSurvive()-5,data.maxFertilize(),data.maxGrow(),data.maxSurvive(),data.snowVulnerable(),data.blizzardVulnerable(),data.dead(),data.willDie());
@@ -483,12 +489,23 @@ public class ClimateCommonEvents {
 		// no need to check for blizzard or snow harm because we handled that altogether in server tick
 
 		PlantTempData data = PlantTempData.getPlantData(crop);
-		WorldTemperature.PlantStatus status = WorldTemperature.checkPlantStatus(level, pos, crop);
+		WorldTemperature.PlantStatus status;
+		if(farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
+			if (farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED_FERTILIZER.getType()) {
+				data= new PlantTempData(crop,data.growTimeDays(),data.minFertilize()-5,data.minGrow()-5,data.minSurvive()-5,data.maxFertilize(),data.maxGrow(),data.maxSurvive(),data.snowVulnerable(),data.blizzardVulnerable(),data.dead(),data.willDie());
+				status = WorldTemperature.checkPlantStatus(level, pos, data,true);
+			}else{
+				status = WorldTemperature.checkPlantStatus(level, pos, crop);
+			}
+		}
+		else {
+			status = WorldTemperature.checkPlantStatus(level, pos, crop);
+		}
 		float growTimeGameDays = PlantTemperature.DEFAULT_GROW_TIME_GAME_DAYS;
 		if (data != null) {
 			growTimeGameDays = data.growTimeDays();
-			if(farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
-				if (farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
+			if(farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
+				if (farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
 					growTimeGameDays *= 0.5f;
 				}
 			}
@@ -541,6 +558,33 @@ public class ClimateCommonEvents {
 			ServerLevel serverWorld = ((ServerPlayer) event.getEntity()).serverLevel();
 			FHNetwork.INSTANCE.sendPlayer((ServerPlayer) event.getEntity(), new FHClimatePacket(WorldClimate.get(serverWorld)));
 			//PlayerTemperatureData.getCapability(event.getEntity()).ifPresent(PlayerTemperatureData::deathResetTemperature);
+		}
+	}
+
+	@SubscribeEvent
+	public static void cropHarvest(BlockEvent.BreakEvent event) {
+		BlockState state = event.getState();
+		BlockPos pos = event.getPos();
+		LevelAccessor level = event.getLevel();
+		BlockState farmlandBlockState = level.getBlockState(pos.below());
+		if (farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
+			if (state.getTags().anyMatch(t -> t == BlockTags.CROPS)) {
+				CropBlock crop = (CropBlock) state.getBlock();
+				if (crop.getAge(state) == crop.getMaxAge()) {
+					if(farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.INCREASING_FERTILIZER.getType()) {
+						event.setCanceled(true);
+						level.removeBlock(pos, false);
+
+						List<ItemStack> drops = Block.getDrops(state, (ServerLevel) level, pos, null, event.getPlayer(), event.getPlayer().getMainHandItem());
+						for (ItemStack drop : drops) {
+							ItemStack doubleDrop = drop.copy();
+							doubleDrop.setCount(doubleDrop.getCount() * 2);
+							Block.popResource((Level) level, pos, doubleDrop);
+						}
+					}
+					level.setBlock(pos.below(),Blocks.FARMLAND.defaultBlockState().setValue(FarmBlock.MOISTURE,farmlandBlockState.getValue(FarmBlock.MOISTURE)), 2);
+				}
+			}
 		}
 	}
 }
