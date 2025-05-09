@@ -125,14 +125,15 @@ public class RubbingTool extends FRBaseItem{
             if (brtr.getType() == Type.MISS) return stack;
 
             BlockEntity te = CUtils.getExistingTileEntity(worldIn, brtr.getBlockPos());
-            if (te instanceof ComputeMachine) {
-            	ComputeMachine mcte = (ComputeMachine) te;
-                int crp = mcte.fetchPoint(1000);
-                if (crp > 0) {
-                    stack.setDamageValue(stack.getDamageValue() + 1);
-                    crp += getPoint(stack);
-                    setPoint(stack, crp);
-                }
+            if (te instanceof ComputeMachine mcte) {
+            	if(mcte.getFetchablePoints()>=100) {
+	                int crp = mcte.fetchPoint(10000);
+	                if (crp > 0) {
+	                    stack.setDamageValue(stack.getDamageValue() + 1);
+	                    crp += getPoint(stack);
+	                    setPoint(stack, crp);
+	                }
+            	}
             }
         }
         return stack;
