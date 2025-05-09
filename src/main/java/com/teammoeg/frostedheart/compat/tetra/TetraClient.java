@@ -24,6 +24,7 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.bootstrap.common.ToolCompat;
 import com.teammoeg.frostedheart.content.wheelmenu.Selection;
+import com.teammoeg.frostedheart.content.wheelmenu.SelectionBuilder;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuSelectionRegisterEvent;
 
 import dev.ftb.mods.ftbquests.item.FTBQuestsItems;
@@ -51,12 +52,15 @@ public class TetraClient {
         MinecraftForge.EVENT_BUS.addListener(TetraClient::registerWheelSelections);
     }
     public static void registerWheelSelections(WheelMenuSelectionRegisterEvent event) {
-    	event.register(new ResourceLocation("tetra","holo"),new Selection(Component.translatable("block.tetra.holosphere"), CIcons.getIcon(new ResourceLocation("tetra","textures/item/module/holo/frame/default.png")),
-			s ->{
-				HoloGui gui = HoloGui.getInstance();
+    	SelectionBuilder.create()
+    	.message(Component.translatable("block.tetra.holosphere"))
+    	.icon(CIcons.getIcon(new ResourceLocation("tetra","textures/item/module/holo/frame/default.png")))
+    	.selected(s ->{
+			HoloGui gui = HoloGui.getInstance();
 
-		        Minecraft.getInstance().setScreen(gui);
-		        gui.onShow();
-			}));
+	        Minecraft.getInstance().setScreen(gui);
+	        gui.onShow();
+		})
+    	.register(event,new ResourceLocation("tetra","holo"));
     }
 }
