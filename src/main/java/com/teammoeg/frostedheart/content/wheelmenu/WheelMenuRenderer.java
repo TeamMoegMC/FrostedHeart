@@ -40,6 +40,7 @@ import com.teammoeg.chorda.math.Dimension2D;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
+import com.teammoeg.frostedheart.content.tips.TipRenderer;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FGuis;
 import lombok.Getter;
@@ -192,6 +193,7 @@ public class WheelMenuRenderer {
 		}
 		return 0;
 	}
+
 	public static void registerSelections(){
 		//System.out.println("fire registries");
 		if(!isInitialized) {
@@ -214,6 +216,7 @@ public class WheelMenuRenderer {
 		worldSelections.forEach(u->selections.put(u.worldLocation(),new Selection(u)));
 		userSelections.forEach(u->selections.put(u.userLocation(), new Selection(u)));
 	}
+
 	public static void openIfNewSelection() {
 		
 		if(displayedSelections.size()<10) {
@@ -232,6 +235,7 @@ public class WheelMenuRenderer {
 			}
 		}
 	}
+
 	protected static boolean init() {
 		visibleSelections.clear();
 		availableSelections.clear();
@@ -239,7 +243,7 @@ public class WheelMenuRenderer {
 		degrees.clear();
 		wheelRadius = FHConfig.CLIENT.wheelMenuRadius.get();
 		ringWidth = 30 * Math.max(1, wheelRadius / FHConfig.CLIENT.wheelMenuRadius.getDefault());
-		virtualScreen = new CircleDimension(wheelRadius * 2);
+		virtualScreen = TipRenderer.isTipRendering() ? new CircleDimension(ClientUtils.screenWidth()) : new CircleDimension(wheelRadius * 2);
 		openIfNewSelection();
 		ArrayList<ResourceLocation> loc=new ArrayList<>(displayedSelections);
 		
@@ -331,6 +335,15 @@ public class WheelMenuRenderer {
 			hoveredSelection.selectAction.execute(hoveredSelection);
 		}
 	}
+
+	public static Point getMousePos() {
+		if (virtualScreen != null) {
+			return new Point((int) virtualScreen.getX(), (int) virtualScreen.getY());
+		} else {
+			return new Point(0, 0);
+		}
+	}
+
 	private static class WheelMenuConfig{
 		public  List<ResourceLocation> displayed;
 		public  List<ResourceLocation> hidden;
@@ -347,12 +360,13 @@ public class WheelMenuRenderer {
 	
 		
 	}
+
 	private static final Codec<WheelMenuConfig> CONFIG_CODEC=RecordCodecBuilder.create(i->i.group(
 			Codec.list(ResourceLocation.CODEC).fieldOf("displayed").forGetter(o->o.displayed),
 			Codec.list(ResourceLocation.CODEC).fieldOf("hidden").forGetter(o->o.hidden)
 			).apply(i, WheelMenuConfig::new));
-	
-	
+
+
 	public static void saveUserSelectedOptions() {
 		try {
 			FileUtil.transfer(CONFIG_CODEC.encodeStart(JsonOps.INSTANCE, new WheelMenuConfig(displayedSelections,hiddenSelections)).getOrThrow(false, FHMain.LOGGER::warn).toString(),wheelmenuConfig);
@@ -360,6 +374,7 @@ public class WheelMenuRenderer {
 			FHMain.LOGGER.error("Could not save wheelmenu display settings",e);
 		}
 	}
+
 	public static void load() {
 		WheelMenuRenderer.userSelections.clear();
         WheelMenuRenderer.userSelections.addAll(ConfigFileUtil.loadAll(WheelMenuRenderer.configType).values());

@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.ServerTipSender;
 import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
 
+import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -95,7 +96,7 @@ public class TipCommand {
                 contents.add(Component.translatable(s));
             }
         }
-        return Tip.builder(title)
+        return Tip.builder(String.valueOf(Util.getMillis()))
                 .line(Components.str(title))
                 .lines(contents)
                 .displayTime(displayTime)
