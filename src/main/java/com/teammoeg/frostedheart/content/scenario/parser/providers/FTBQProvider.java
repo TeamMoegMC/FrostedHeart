@@ -66,7 +66,7 @@ public class FTBQProvider extends StringScenarioProvider {
 			if(tsk instanceof CheckmarkTask)
 				b.append("@CompleteTask q=").append(quest.getCodeString()).append(" t=").append(it).append("\n");
 			b.append("@p\n");
-			
+			b.append("@actTitle st=\"\"\n");
 			it++;
 		}
 		if(param.containsKey("call"))

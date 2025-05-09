@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.scenario.commands;
 
+import com.simibubi.create.foundation.utility.Components;
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.runner.ActNamespace;
 import com.teammoeg.frostedheart.content.scenario.runner.ActScenarioContext;
@@ -35,6 +36,7 @@ public class ActCommand {
 	public void endAct(ScenarioCommandContext vrunner) {
 		if(vrunner.context() instanceof ActScenarioContext context) {
 			context.conductor().endAct();
+			context.getScene().sendTitles(vrunner.thread(), "","");
 		}
 	}
 	public void startAct(ScenarioCommandContext vrunner,@Param("s")String s,@Param("l")String l,@Param("c")String c,@Param("a")String a) {
