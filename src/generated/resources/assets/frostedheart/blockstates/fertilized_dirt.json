@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "fertilizer=0": {
+      "model": "frostedheart:block/fertilized_dirt"
+    },
+    "fertilizer=1": {
+      "model": "frostedheart:block/fertilized_dirt"
+    },
+    "fertilizer=2": {
+      "model": "frostedheart:block/fertilized_dirt"
+    },
+    "fertilizer=3": {
+      "model": "frostedheart:block/fertilized_dirt"
+    }
+  }
+}

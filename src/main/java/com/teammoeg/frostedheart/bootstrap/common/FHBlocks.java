@@ -1168,6 +1168,33 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_STONE_TOOL)
             .simpleItem()
             .register();
+    public static BlockEntry<FertilizedFarmlandBlock> FERTILIZED_FARMLAND = REGISTRATE.block("fertilized_farmland", FertilizedFarmlandBlock::new)
+            .initialProperties(() -> Blocks.FARMLAND)
+            .blockstate(FHBlockStateGen.farmland())
+            .simpleItem()
+            .lang("Fertilized Farmland")
+            .loot((p,b)->{
+                p.dropOther(b, DIRT);
+            })
+            .register();
+    public static BlockEntry<FertilizedDirt> FERTILIZED_DIRT = REGISTRATE.block("fertilized_dirt", FertilizedDirt::new)
+            .initialProperties(() -> DIRT)
+            .blockstate((c, p) -> {
+                p.getVariantBuilder(c.get()).forAllStates((state)->{
+                    return ConfiguredModel.builder()
+                            .modelFile(p.models().withExistingParent("fertilized_dirt", p.mcLoc("block/dirt")).texture("all", p.modLoc("block/fertilized_dirt")))
+                            .build();
+                });
+            })
+            .simpleItem()
+            .tag(BlockTags.DIRT)
+            .lang("Fertilized Dirt")
+            .loot((p,b)->{
+                p.dropOther(b, DIRT);
+            })
+            .register();
+
+
 
     static {
         REGISTRATE.setCreativeTab(FHTabs.BUILDING_BLOCKS);
@@ -1756,26 +1783,6 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.rotateOrient("ruined_machine_switch"))
             .simpleItem()
             .register();
-    public static BlockEntry<FertilizedFarmlandBlock> FERTILIZED_FARMLAND = REGISTRATE.block("fertilized_farmland", FertilizedFarmlandBlock::new)
-            .initialProperties(() -> Blocks.FARMLAND)
-            .blockstate(FHBlockStateGen.farmland())
-            .simpleItem()
-            .lang("Fertilized Farmland")
-            .register();
-    public static BlockEntry<FertilizedDirt> FERTILIZED_DIRT = REGISTRATE.block("fertilized_dirt", FertilizedDirt::new)
-            .initialProperties(() -> DIRT)
-            .blockstate((c, p) -> {
-                p.getVariantBuilder(c.get()).forAllStates((state)->{
-                    return ConfiguredModel.builder()
-                            .modelFile(p.models().getExistingFile(p.modLoc("block/fertilized_dirt")))
-                            .build();
-                });
-            })
-            .simpleItem()
-            .tag(BlockTags.DIRT)
-            .lang("Fertilized Dirt")
-            .register();
-
 
 
     static {

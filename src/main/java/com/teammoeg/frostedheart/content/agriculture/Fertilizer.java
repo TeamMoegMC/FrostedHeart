@@ -30,7 +30,7 @@ public class Fertilizer extends FHBaseItem {
             level.setBlock(blockpos,FHBlocks.FERTILIZED_FARMLAND.getDefaultState().setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()), 2);
             return InteractionResult.SUCCESS;
         }
-        if(blockstate.is(Blocks.DIRT)){
+        if(blockstate.is(Blocks.DIRT)|| blockstate.is(Blocks.GRASS_BLOCK)){
             level.setBlock(blockpos,FHBlocks.FERTILIZED_DIRT.getDefaultState().setValue(FertilizedDirt.FERTILIZER,this.type.getType()), 2);
             return InteractionResult.SUCCESS;
         }
