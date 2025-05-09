@@ -38,8 +38,7 @@ import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
-import com.teammoeg.frostedheart.content.agriculture.RubberDandelionBlock;
-import com.teammoeg.frostedheart.content.agriculture.WildRubberDandelionBlock;
+import com.teammoeg.frostedheart.content.agriculture.*;
 import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.ThinIceBlock;
@@ -47,8 +46,6 @@ import com.teammoeg.frostedheart.content.decoration.*;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
-import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
@@ -1757,6 +1754,12 @@ public class FHBlocks {
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.rotateOrient("ruined_machine_switch"))
             .simpleItem()
+            .register();
+    public static BlockEntry<FertilizedFarmlandBlock> FERTILIZED_FARMLAND = REGISTRATE.block("fertilized_farmland", FertilizedFarmlandBlock::new)
+            .initialProperties(() -> Blocks.FARMLAND)
+            .blockstate(FHBlockStateGen.farmland())
+            .simpleItem()
+            .lang("Fertilized Farmland")
             .register();
 
 

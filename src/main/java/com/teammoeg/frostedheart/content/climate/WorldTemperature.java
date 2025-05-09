@@ -582,4 +582,32 @@ public class WorldTemperature {
         }
         return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
     }
+
+    public static PlantStatus checkPlantStatus(LevelAccessor level, BlockPos pos,@Nullable PlantTempData data,boolean withTempPreserve) {
+        if(withTempPreserve){
+            return checkPlantStatus(level,pos,data);
+        }
+        else{
+            if (data == null) {
+                return PlantStatus.NOT_PLANT;
+            }
+
+            if(openToAir(level,pos)) {
+                if (WorldTemperature.isBlizzard(level)&&data.blizzardVulnerable()) {
+                    return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
+                }
+                if (WorldClimate.isSnowing(level)&&data.snowVulnerable()) {
+                    return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
+                }
+            }
+            float blockTemp = block(level, pos);
+            if (data.isValidTemperature(TemperatureType.BONEMEAL, blockTemp)) {
+                return PlantStatus.CAN_FERTILIZE;
+            }
+            if (data.isValidTemperature(TemperatureType.GROW, blockTemp)) {
+                return PlantStatus.CAN_GROW;
+            }
+            return PlantStatus.CAN_SURVIVE;
+        }
+    }
 }

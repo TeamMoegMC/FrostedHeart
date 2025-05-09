@@ -27,6 +27,7 @@ import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.item.ItemDescription;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.utility.seld.SledItem;
 import com.teammoeg.frostedheart.item.DyedItemList;
 import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
@@ -1772,5 +1773,18 @@ thinner.png
             .item("sled", SledItem::new)
             .properties(p -> p.stacksTo(1))
             .lang("Sled")
+            .register();
+
+    public static ItemEntry<Fertilizer> INCREASING_FERTILIZER = REGISTRATE
+            .item("increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING_FERTILIZER))
+            .lang("Yield-increasing fertilizer")
+            .register();
+    public static ItemEntry<Fertilizer> ACCELERATED_FERTILIZER = REGISTRATE
+            .item("accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED_FERTILIZER))
+            .lang("Accelerated fertilizer")
+            .register();
+    public static ItemEntry<Fertilizer> PRESERVED_FERTILIZER = REGISTRATE
+            .item("preserving_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED_FERTILIZER))
+            .lang("Heat-preserving fertilizer")
             .register();
 }

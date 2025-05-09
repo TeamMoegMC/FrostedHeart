@@ -28,6 +28,8 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.agriculture.FertilizedFarmlandBlock;
+import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.climate.ForecastHandler;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
@@ -192,10 +194,28 @@ public class ClimateCommonEvents {
 		BlockPos pos = event.getPos();
 		LevelAccessor level = event.getLevel();
 		PlantTempData data = PlantTempData.getPlantData(crop);
-		WorldTemperature.PlantStatus status = WorldTemperature.checkPlantStatus(level, pos, crop);
+		BlockState farmlandBlockState=level.getBlockState(pos.below());
+		WorldTemperature.PlantStatus status;
+		if(farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
+			if (farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED_FERTILIZER.getType()) {
+				data= new PlantTempData(crop,data.growTimeDays(),data.minFertilize()-5,data.minGrow()-5,data.minSurvive()-5,data.maxFertilize(),data.maxGrow(),data.maxSurvive(),data.snowVulnerable(),data.blizzardVulnerable(),data.dead(),data.willDie());
+				status = WorldTemperature.checkPlantStatus(level, pos, data,true);
+			}else{
+				status = WorldTemperature.checkPlantStatus(level, pos, crop);
+			}
+		}
+		else {
+			status = WorldTemperature.checkPlantStatus(level, pos, crop);
+		}
+
 		float growTimeGameDays = PlantTemperature.DEFAULT_GROW_TIME_GAME_DAYS;
 		if (data != null) {
 			growTimeGameDays = data.growTimeDays();
+			if(farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
+				if (farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
+					growTimeGameDays *= 0.5f;
+				}
+			}
 		}
 
 		float growSpeed = growTimeGameDays * 24000 / (vanilla_default_crop_grow_chance_inverse_per_random_tick * random_tick_interval_per_block);
@@ -459,7 +479,7 @@ public class ClimateCommonEvents {
 		RandomSource rand = event.getRandomSource();
 		BlockState state = event.getLevel().getBlockState(pos);
 		Block crop = state.getBlock();
-
+		BlockState farmlandBlockState=level.getBlockState(pos.below());
 		// no need to check for blizzard or snow harm because we handled that altogether in server tick
 
 		PlantTempData data = PlantTempData.getPlantData(crop);
@@ -467,6 +487,11 @@ public class ClimateCommonEvents {
 		float growTimeGameDays = PlantTemperature.DEFAULT_GROW_TIME_GAME_DAYS;
 		if (data != null) {
 			growTimeGameDays = data.growTimeDays();
+			if(farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
+				if (farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
+					growTimeGameDays *= 0.5f;
+				}
+			}
 		}
 
 		// big tree can grow, but takes extremely long
