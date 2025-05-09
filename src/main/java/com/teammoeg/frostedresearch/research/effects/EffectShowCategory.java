@@ -92,14 +92,14 @@ public class EffectShowCategory extends Effect {
 
     @Override
     public boolean grant(TeamDataHolder team, TeamResearchData trd, Player triggerPlayer, boolean isload) {
-        trd.categories.add(cate);
+        trd.getUnlockList(ResearchHooks.CATEGORY_UNLOCK_LIST).add(cate);
         return true;
     }
 
 
     @Override
     public void init() {
-        ResearchHooks.categories.add(cate);
+        ResearchHooks.getLockList(ResearchHooks.CATEGORY_UNLOCK_LIST).add(cate);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -111,6 +111,6 @@ public class EffectShowCategory extends Effect {
 
     @Override
     public void revoke(TeamResearchData team) {
-        team.categories.remove(cate);
+        team.getUnlockList(ResearchHooks.CATEGORY_UNLOCK_LIST).remove(cate);
     }
 }

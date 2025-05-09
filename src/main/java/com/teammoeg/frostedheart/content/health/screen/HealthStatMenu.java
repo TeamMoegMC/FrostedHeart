@@ -9,16 +9,17 @@ import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.common.util.LazyOptional;
 
 import java.util.Map;
 
 public class HealthStatMenu extends CBaseMenu {
-	public CDataSlot<Float> fat=CCustomMenuSlot.SLOT_FIXED.create(this);
-	public CDataSlot<Float> protein=CCustomMenuSlot.SLOT_FIXED.create(this);
-	public CDataSlot<Float> carbohydrate=CCustomMenuSlot.SLOT_FIXED.create(this);
-	public CDataSlot<Float> vegetable=CCustomMenuSlot.SLOT_FIXED.create(this);
+	public CDataSlot<Float> fat=CCustomMenuSlot.SLOT_PERCENTAGE.create(this);
+	public CDataSlot<Float> protein=CCustomMenuSlot.SLOT_PERCENTAGE.create(this);
+	public CDataSlot<Float> carbohydrate=CCustomMenuSlot.SLOT_PERCENTAGE.create(this);
+	public CDataSlot<Float> vegetable=CCustomMenuSlot.SLOT_PERCENTAGE.create(this);
 
 	public CDataSlot<Float> headTemperature=CCustomMenuSlot.SLOT_FIXED.create(this);
 	public CDataSlot<Float> bodyTemperature=CCustomMenuSlot.SLOT_FIXED.create(this);
@@ -36,10 +37,10 @@ public class HealthStatMenu extends CBaseMenu {
 		
 		LazyOptional<NutritionCapability> nut_lo=NutritionCapability.getCapability(inventoryPlayer.player);
 		nut_lo.ifPresent(cap->{
-			fat.bind(()->Math.min(cap.get().getFat()/10000,1));
-			protein.bind(()->Math.min(cap.get().getProtein()/10000,1));
-			carbohydrate.bind(()->Math.min(cap.get().getCarbohydrate()/10000,1));
-			vegetable.bind(()->Math.min(cap.get().getVegetable()/10000,1));
+			fat.bind(()->Mth.clamp(cap.get().getFat()/10000,0,1));
+			protein.bind(()->Mth.clamp(cap.get().getProtein()/10000,0,1));
+			carbohydrate.bind(()->Mth.clamp(cap.get().getCarbohydrate()/10000,0,1));
+			vegetable.bind(()->Mth.clamp(cap.get().getVegetable()/10000,0,1));
 		});
 
 		LazyOptional<PlayerTemperatureData> temp_lo = PlayerTemperatureData.getCapability(inventoryPlayer.player);

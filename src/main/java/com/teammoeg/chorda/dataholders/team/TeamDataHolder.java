@@ -25,10 +25,13 @@ package com.teammoeg.chorda.dataholders.team;
 import com.teammoeg.chorda.dataholders.DataHolderMap;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataType;
+import com.teammoeg.chorda.events.TeamLoadedEvent;
 import com.teammoeg.chorda.network.CBaseNetwork;
 import com.teammoeg.chorda.network.CMessage;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.common.MinecraftForge;
+
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -43,9 +46,11 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
     /** The player name of owner. */
     private String ownerName;
     
-    /** The FTB team. */
+    /** The Modded team. */
     private AbstractTeam team;
 	
+    /** True if this team is correctly loaded*/
+    private boolean isLoaded;
 	/**
 	 * Instantiates a new team data holder.
 	 *
@@ -78,7 +83,12 @@ public class TeamDataHolder extends DataHolderMap<TeamDataHolder> {
             id = nbt.getUUID("uuid");
         //no need to deserialize ftb team
 	}
-	
+	public void loadIfNeeded() {
+		if(!isLoaded) {
+			MinecraftForge.EVENT_BUS.post(new TeamLoadedEvent(this));
+			isLoaded=true;
+		}
+	}
 	/**
 	 * For each online player.
 	 *

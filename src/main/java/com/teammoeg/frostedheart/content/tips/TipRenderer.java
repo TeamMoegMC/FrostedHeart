@@ -20,8 +20,10 @@
 package com.teammoeg.frostedheart.content.tips;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
+import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import net.minecraft.client.Minecraft;
@@ -103,20 +105,23 @@ public class TipRenderer {
         if (MC.screen != null && !SCREEN_BLACKLIST.contains(MC.screen.getClass()))
             return;
 
-//        if (WIDGET_INSTANCE.getState() != TipWidget.State.IDLE) {
-//            //TODO 键位绑定
-//            if (InputConstants.isKeyDown(MC.getWindow().getWindow(), 258)) {
-//                MC.screen = new WheelSelectorScreen();
-//            } else if (MC.screen instanceof WheelSelectorScreen) {
-//                MC.popGuiLayer();
-//            }
-//        } else {
-//            if (MC.screen instanceof WheelSelectorScreen) {
-//                MC.popGuiLayer();
-//            }
-//        }
-
-        TipWidget.INSTANCE.renderWidget(event.getGuiGraphics(), -1, -1, MC.getPartialTick());
+        if (WheelMenuRenderer.isOpened()) {
+            var pos = WheelMenuRenderer.getMousePos();
+            int x = pos.getX()/2 + ClientUtils.screenWidth()/2;
+            int y = pos.getY()/2 + ClientUtils.screenHeight()/2;
+            TipWidget.INSTANCE.renderWidget(event.getGuiGraphics(), x, y, MC.getPartialTick());
+            if (MouseHelper.isLeftClicked()) {
+                if (TipWidget.INSTANCE.closeButton.isHoveredOrFocused()) {
+                    TipWidget.INSTANCE.closeButton.onClick(x, y);
+                } else if (TipWidget.INSTANCE.linkButton.isHoveredOrFocused()) {
+                    TipWidget.INSTANCE.linkButton.onClick(x, y);
+                } else if (TipWidget.INSTANCE.pinButton.isHoveredOrFocused()) {
+                    TipWidget.INSTANCE.pinButton.onClick(x, y);
+                }
+            }
+        } else {
+            TipWidget.INSTANCE.renderWidget(event.getGuiGraphics(), -1, -1, MC.getPartialTick());
+        }
         update();
     }
 

@@ -34,6 +34,9 @@ import com.teammoeg.frostedresearch.ResearchHooks.BlockUnlockList;
 import com.teammoeg.frostedresearch.ResearchHooks.CategoryUnlockList;
 import com.teammoeg.frostedresearch.ResearchHooks.MultiblockUnlockList;
 import com.teammoeg.frostedresearch.ResearchHooks.RecipeUnlockList;
+import com.teammoeg.frostedresearch.UnlockList;
+import com.teammoeg.frostedresearch.events.PopulateUnlockListEvent;
+import com.teammoeg.frostedresearch.events.ResearchDataLoadedEvent;
 import com.teammoeg.frostedresearch.events.ResearchStatusEvent;
 import com.teammoeg.frostedresearch.network.*;
 import com.teammoeg.frostedresearch.research.Research;
@@ -51,6 +54,7 @@ import javax.annotation.Nullable;
 
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -99,22 +103,8 @@ public class TeamResearchData implements SpecialData {
 	// CategoryUnlockList.CODEC.optionalFieldOf("categoryUnlockList", new
 	// CategoryUnlockList()).forGetter(o -> o.categories)
 	).apply(t, TeamResearchData::new));
-	/**
-	 * The crafting.<br>
-	 */
-	public RecipeUnlockList crafting = new RecipeUnlockList();
-	/**
-	 * The building.<br>
-	 */
-	public MultiblockUnlockList building = new MultiblockUnlockList();
-	/**
-	 * The block.<br>
-	 */
-	public BlockUnlockList block = new BlockUnlockList();
-	/**
-	 * The categories.<br>
-	 */
-	public CategoryUnlockList categories = new CategoryUnlockList();
+	public final Map<UnlockListType<?>,UnlockList<?>> unlocklists=new IdentityHashMap<>(10);
+
 	/**
 	 * The Insights point.<br>
 	 * <p>
@@ -155,13 +145,17 @@ public class TeamResearchData implements SpecialData {
 	 * */
 	BitSet visitedArea=new BitSet();
 	boolean isInited;;
-
+	public TeamResearchData() {
+		super();
+		MinecraftForge.EVENT_BUS.post(new PopulateUnlockListEvent(this));
+	}
 	public TeamResearchData(SpecialDataHolder team) {
+		this();
 	}
 
 	public TeamResearchData(CompoundTag variants, Map<String, ResearchData> rdata, int activeResearchId,
 		int insight, int usedInsightLevel,Optional<BitSet> visited) {
-		super();
+		this();
 		this.rdata.clear();
 		this.rdata.putAll(rdata);
 		this.activeResearchId = activeResearchId;
@@ -176,7 +170,7 @@ public class TeamResearchData implements SpecialData {
 
 	public TeamResearchData(CompoundTag variants, List<ResearchData> rdata, int activeResearchId,
 		int insight, int usedInsightLevel) {
-		super();
+		this();
 		this.rdata.clear();
 		FHResearch.researches.fromList(rdata, this.rdata::put);
 		this.activeResearchId = activeResearchId;
@@ -754,6 +748,7 @@ public class TeamResearchData implements SpecialData {
 			}
 
 		}
+		MinecraftForge.EVENT_BUS.post(new ResearchDataLoadedEvent(team,this));
 	}
 
 	public void putVariantDouble(String name, double val) {
@@ -763,5 +758,8 @@ public class TeamResearchData implements SpecialData {
 	public void putVariantLong(String name, long val) {
 		variants.putLong(name, val);
 	}
-
+	@SuppressWarnings("unchecked")
+	public <T> UnlockList<T> getUnlockList(UnlockListType<T> name){
+		return (UnlockList<T>) unlocklists.get(name);
+	}
 }

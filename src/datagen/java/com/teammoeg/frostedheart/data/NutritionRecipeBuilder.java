@@ -44,6 +44,7 @@ public class  NutritionRecipeBuilder  implements RecipeBuilder {
 	// Oi=油脂
 	// Pt=蛋白
 	private float fat,carbohydrate,protein,vegetable;
+	private float base=1;
 	protected Item item;
 	protected ResourceLocation itemID;
 	private final Advancement.Builder advancement = Advancement.Builder.recipeAdvancement();
@@ -68,7 +69,10 @@ public class  NutritionRecipeBuilder  implements RecipeBuilder {
 		this.vegetable = vegetable;
 		return this;
 	}
-
+	public  NutritionRecipeBuilder  based(float base) {
+		this.base = base;
+		return this;
+	}
 	public  NutritionRecipeBuilder  fat(float fat) {
 		this.fat = fat;
 		return this;
@@ -91,7 +95,6 @@ public class  NutritionRecipeBuilder  implements RecipeBuilder {
 
 	@Override
 	public  NutritionRecipeBuilder  unlockedBy(String s, CriterionTriggerInstance criterionTriggerInstance) {
-		this.advancement.addCriterion(s, criterionTriggerInstance);
 		return this;
 	}
 
@@ -107,8 +110,7 @@ public class  NutritionRecipeBuilder  implements RecipeBuilder {
 
 	@Override
 	public void save(Consumer<FinishedRecipe> pFinishedRecipeConsumer, ResourceLocation pRecipeId) {
-		this.advancement.parent(ROOT_RECIPE_ADVANCEMENT).addCriterion("has_the_recipe", RecipeUnlockedTrigger.unlocked(pRecipeId)).rewards(net.minecraft.advancements.AdvancementRewards.Builder.recipe(pRecipeId)).requirements(RequirementsStrategy.OR);
-		pFinishedRecipeConsumer.accept(new Result(pRecipeId,fat,carbohydrate,protein,vegetable,item,itemID, this.advancement, pRecipeId.withPrefix("recipes/diet_value/")));
+		pFinishedRecipeConsumer.accept(new Result(pRecipeId,fat*base,carbohydrate*base,protein*base,vegetable*base,item,itemID, null, null));
 	}
 	public static class Result implements FinishedRecipe {
 
@@ -157,6 +159,8 @@ public class  NutritionRecipeBuilder  implements RecipeBuilder {
 		@Nullable
 		@Override
 		public JsonObject serializeAdvancement() {
+			if(this.advancement==null)
+				return null;
 			return this.advancement.serializeToJson();
 		}
 

@@ -40,6 +40,11 @@ public class ComponentOptimizer implements ContentConsumer<Unit>,StyledContentCo
 	public ComponentOptimizer() {
 		
 	}
+	public static MutableComponent optimize(Component o) {
+		ComponentOptimizer com=new ComponentOptimizer();
+		o.visit(com, Style.EMPTY);
+		return com.build();
+	}
 	public void appendChar(String ch,Style style) {
 		if(style!=sty&&!style.equals(sty)) {
 			createComponent();
@@ -70,7 +75,7 @@ public class ComponentOptimizer implements ContentConsumer<Unit>,StyledContentCo
 		}
 		sb.append(ch);
 	}
-	public void appendComponent(Component c) {
+	public void appendRawComponent(Component c) {
 		createComponent();
 		calculated.add(c);
 	}

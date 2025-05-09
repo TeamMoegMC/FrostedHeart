@@ -39,6 +39,7 @@ public class TssapProtocolHandler {
 	static Thread clientThread;
 	public static void clientPrepareUpdateReminder() {
 		if(localVersion!=null&&selectedChannelAddr!=null&&FHConfig.COMMON.enableUpdateReminder.get()&&clientThread==null) {
+			
 			clientThread=new Thread() {
 				@Override
 				public void run() {
@@ -66,6 +67,7 @@ public class TssapProtocolHandler {
 					
 				}
 			};
+			clientThread.setDaemon(true);
 			clientThread.start();
 		}
 	}
@@ -75,38 +77,44 @@ public class TssapProtocolHandler {
 			serverThread=new Thread() {
 				@Override
 				public void run() {
-					try {
-						Thread.sleep(60000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-						return;
-					}
-					String newver=fetchLatestRemoteVersion();
-					if(newver!=null&&!newver.equals(latestRemote)) {
-						latestRemote=newver;
-						if(latestRemote!=null&&!latestRemote.equals(localVersion)) {
-							try {
-							FHMain.LOGGER.info(VERSION_CHECK, "new version "+latestRemote+" found, restarting...");
-							((DedicatedServer)CDistHelper.getServer()).handleConsoleInput("/tellraw @a "+Component.Serializer.toJson(Components.translatable("message.frostedheart.restarting",1)), CDistHelper.getServer().createCommandSourceStack());
-							try {
-								Thread.sleep(60000);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-							FHMain.LOGGER.info(VERSION_CHECK, "sending stop to server...");
-							((DedicatedServer)CDistHelper.getServer()).halt(false);
-							}catch(Throwable t) {
-								t.printStackTrace();
+					while(true) {
+						try {
+							Thread.sleep(60000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+							return;
+						}
+						try {
+						String newver=fetchLatestRemoteVersion();
+						if(newver!=null&&!newver.equals(latestRemote)) {
+							latestRemote=newver;
+							if(latestRemote!=null&&!latestRemote.equals(localVersion)) {
+								try {
+								FHMain.LOGGER.info(VERSION_CHECK, "new version "+latestRemote+" found, restarting...");
+								((DedicatedServer)CDistHelper.getServer()).handleConsoleInput("/tellraw @a "+Component.Serializer.toJson(Components.translatable("message.frostedheart.restarting",1)), CDistHelper.getServer().createCommandSourceStack());
+								try {
+									Thread.sleep(60000);
+								} catch (InterruptedException e) {
+									e.printStackTrace();
+								}
+								FHMain.LOGGER.info(VERSION_CHECK, "sending stop to server...");
+								((DedicatedServer)CDistHelper.getServer()).halt(false);
+								}catch(Throwable t) {
+									t.printStackTrace();
+								}
 							}
 						}
+						}catch(Throwable t) {
+							FHMain.LOGGER.info(VERSION_CHECK, "Could not fetch update",t);
+						}
 					}
-					
-					
 	
 					
 				}
 			};
+			serverThread.setDaemon(true);
 			serverThread.start();
+			LOGGER.info(VERSION_CHECK, "Server auto updater started");
 		}
 	}
 	private static String fetchLatestRemoteVersion() {
@@ -127,12 +135,10 @@ public class TssapProtocolHandler {
 	            try {
 	            	JsonElement je=JsonParser.parseString(FileUtil.readString(data));
 	                localVersion = je.getAsJsonObject().get("cachedModpack").getAsJsonObject().get("version").getAsString();
-	                FHMain.local.stableVersion=localVersion;
-	                FHMain.local.versionCache=null;
 	                channel=je.getAsJsonObject().get("cachedChannel").getAsString();
 	            } catch (Throwable e) {
 	                LOGGER.error(VERSION_CHECK, "Error fetching FH local version from tssap data", e);
-	                throw new RuntimeException("[TWR Version Check] Error fetching FH local version from .twrlastversion", e);
+	                throw new RuntimeException("[TWR Version Check] Error fetching FH local version", e);
 	            }
         }
     }

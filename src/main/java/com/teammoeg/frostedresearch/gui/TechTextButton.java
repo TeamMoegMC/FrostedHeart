@@ -19,8 +19,9 @@
 
 package com.teammoeg.frostedresearch.gui;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.chorda.client.ClientUtils;
+
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
@@ -57,7 +58,7 @@ public abstract class TechTextButton extends TechButton {
         FormattedText title = getTitle();
         int textX = x;
         int textY = y + (h - theme.getFontHeight() + 1) / 2;
-        int sw = ClientUtils.mc().font.width(title);
+        int sw = ClientUtils.getMc().font.width(title);
         int mw = w - (hasIcon() ? off + s : 0) - 6;
 
         if (sw > mw) {
@@ -77,9 +78,8 @@ public abstract class TechTextButton extends TechButton {
         //RenderSystem.setShaderColor(textY, sw, mw, h);
         RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
 
-        //FIXME: IDK WHY BUT SHADER SEEMS NULL WHEN RENDERING ANYTHING.
         //System.out.println(RenderSystem.getShader());
-        matrixStack.drawWordWrap(ClientUtils.mc().font, title, textX, textY, mw, TechIcons.text.rgba());
+        matrixStack.drawWordWrap(ClientUtils.font(), title, textX, textY, mw, TechIcons.text.rgba());
     }
 
     @Override

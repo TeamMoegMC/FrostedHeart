@@ -2,8 +2,8 @@
   "type": "frostedheart:diet_override",
   "group": {
     "carbohydrate": 0.0,
-    "fat": 0.0,
-    "protein": 0.889302,
+    "fat": 4800.0,
+    "protein": 19200.0,
     "vegetable": 0.0
   },
   "item": "minecraft:cooked_mutton"

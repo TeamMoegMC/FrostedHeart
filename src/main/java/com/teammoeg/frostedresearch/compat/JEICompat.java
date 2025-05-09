@@ -76,7 +76,7 @@ public class JEICompat implements IModPlugin {
         FRMain.LOGGER.info("added research jei info");
         cachedInfoAdd = false;
         Set<Item> items = new HashSet<>();
-        for (Recipe<?> i : ResearchHooks.recipe) {
+        for (Recipe<?> i : ResearchHooks.getLockList(ResearchHooks.RECIPE_UNLOCK_LIST)) {
             ItemStack out = RecipeUtil.getResultItem(i);
             if (out != null && !out.isEmpty()) {
                 items.add(out.getItem());
@@ -137,12 +137,12 @@ public class JEICompat implements IModPlugin {
             addInfo();
         Set<Item> locked = new HashSet<>();
         Set<Item> unlocked = new HashSet<>();
-        for (Recipe<?> i : ResearchHooks.recipe) {
+        for (Recipe<?> i : ResearchHooks.getLockList(ResearchHooks.RECIPE_UNLOCK_LIST)) {
             //System.out.println(i.getType().toString()+":"+String.join(",",all.stream().map(Object::toString).collect(Collectors.toList())));
             ItemStack irs = RecipeUtil.getResultItem(i);
            
             //Recipe<?> ovrd = overrides.get(i.getId());
-            if (!ClientResearchDataAPI.getData().get().crafting.has(i)) {
+            if (!ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).has(i)) {
             	Set<RecipeType<?>> type=types.get(i);
             	if(type!=null)
 	                for (RecipeType<?> rl : type) {
@@ -175,10 +175,10 @@ public class JEICompat implements IModPlugin {
                 man.hideRecipes(RecipeTypes.INFORMATION,entry.getValue());
             }
         }
-        for (ResourceLocation rl : ResearchHooks.categories) {
+        for (ResourceLocation rl : ResearchHooks.getLockList(ResearchHooks.CATEGORY_UNLOCK_LIST)) {
         	RecipeType<?> type=man.getRecipeType(rl).orElse(null);
         	if(type!=null) {
-	            if (!ClientResearchDataAPI.getData().get().categories.has(rl)) {
+	            if (!ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.CATEGORY_UNLOCK_LIST).has(rl)) {
 	                man.hideRecipeCategory(type);
 	            } else
 	                man.unhideRecipeCategory(type);

@@ -365,6 +365,20 @@ public class CCustomMenuSlot {
 			return 0f;
 		}
 	};
+	public static final DataSlotConverter<Float> SLOT_PERCENTAGE=new DataSlotConverter<>(){
+		@Override
+		public Float apply(int value) {
+			return value/10000f;
+		}
+		@Override
+		public int apply(Float t) {
+			return (int)((t==null?0:t)*10000);
+		}
+		@Override
+		public Float getDefault() {
+			return 0f;
+		}
+	};
 	public static final DataSlotConverter<Float> SLOT_FLOAT=new DataSlotConverter<>(){
 		@Override
 		public Float apply(int value) {

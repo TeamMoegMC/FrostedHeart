@@ -1461,6 +1461,7 @@ thinner.png
     public static ItemEntry<Item> polar_bear_gloves = REGISTRATE
             .item("polar_bear_fur_gloves", Item::new)
             .properties(p -> p.defaultDurability(384))
+            .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
 
     public static ItemEntry<FHBaseArmorItem> space_boots = REGISTRATE

@@ -57,7 +57,7 @@ public class NutritionBarWidget extends AbstractWidget {
         pose.translate(hoverProgress*5,0,0);
         FGuis.drawRing(guiGraphics, x,  y, 9, 16, start,start+0.2f*(end-start) * progress, 0xB0d4a31c);
         FGuis.drawRing(guiGraphics, x,  y, 9, 16, start+0.2f*(end-start) * progress,start+0.8f*(end-start) * progress, 0x40FFFFFF);
-        FGuis.drawRing(guiGraphics, x,  y, 9, 16, start+0.8f*(end-start) * progress,start+(end-start) * progress, 0xB0FF1111);
+        FGuis.drawRing(guiGraphics, x,  y, 9, 16, start+0.9f*(end-start) * progress,start+(end-start) * progress, 0xB0FF1111);
         FGuis.drawRing(guiGraphics, x,  y, 10, 15, start,start+(end-start) * progress, 0x80FFFFFF);
         FGuis.drawRing(guiGraphics, x,  y, 10.5f, 14.5f, start,start+value *(end-start) * progress, color);
         if(hoverProgress>0) {

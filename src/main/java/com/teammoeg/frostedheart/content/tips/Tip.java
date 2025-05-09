@@ -500,7 +500,8 @@ public class Tip {
                     .color(ColorHelper.RED, ColorHelper.BLACK)
                     .alwaysVisible(true)
                     .setTemporary()
-                    .pin(true);
+                    .pin(true)
+                    .clickAction("OpenURL", Component.translatable("gui.frostedheart.issue_tracker").getString());
             this.editable = false;
             return this;
         }

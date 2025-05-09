@@ -19,9 +19,8 @@
 
 package com.teammoeg.frostedresearch.blocks;
 
-import blusunrize.immersiveengineering.common.util.Utils;
-
 import com.teammoeg.frostedresearch.Lang;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.item.FRBaseItem;
 import com.teammoeg.frostedresearch.research.Research;
@@ -125,7 +124,7 @@ public class RubbingTool extends FRBaseItem{
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, Fluid.NONE);
             if (brtr.getType() == Type.MISS) return stack;
 
-            BlockEntity te = Utils.getExistingTileEntity(worldIn, brtr.getBlockPos());
+            BlockEntity te = CUtils.getExistingTileEntity(worldIn, brtr.getBlockPos());
             if (te instanceof ComputeMachine) {
             	ComputeMachine mcte = (ComputeMachine) te;
                 int crp = mcte.fetchPoint(1000);

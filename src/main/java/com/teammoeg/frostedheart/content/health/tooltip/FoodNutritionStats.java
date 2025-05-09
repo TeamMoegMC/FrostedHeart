@@ -34,6 +34,7 @@ import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.health.capability.Nutrition;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.FineProgressBarBuilder;
 import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
@@ -90,7 +91,7 @@ public class FoodNutritionStats implements TooltipModifier {
             Lang.translate("tooltip", "nutrition")
                     .style(ChatFormatting.GRAY)
                     .addTo(list);
-            Nutrition nutrition = foodNutrition.scale(1/foodNutrition.getNutritionValue());
+            Nutrition nutrition = foodNutrition.mutableCopy().scale(1/foodNutrition.getNutritionValue());
             FineProgressBarBuilder builder=new FineProgressBarBuilder(PROGRESS_LENGTH);
             //list.add(Lang.str("\uF504").withStyle(FHTextIcon.applyFont(Style.EMPTY)));
             if(nutrition.getFat()>0) {
@@ -106,6 +107,16 @@ public class FoodNutritionStats implements TooltipModifier {
             	builder.addElement(VEGETABLE_COLOR, "\uF503",nutrition.getVegetable());
             }
             list.add(builder.build());
+            list.add(Lang.gui("nutrition.per_hunger").component());
+            
+            if(foodNutrition.getFat()>0)
+            	list.add(Lang.gui("nutrition.fat").color(FAT_COLOR).space().percentage().number(foodNutrition.getFat()*FHConfig.SERVER.nutritionGainRate.get()/10000f).withStyle(ChatFormatting.GREEN).component());
+            if(foodNutrition.getProtein()>0)
+            	list.add(Lang.gui("nutrition.protein").color(PROTEIN_COLOR).space().percentage().number(foodNutrition.getProtein()*FHConfig.SERVER.nutritionGainRate.get()/10000f).withStyle(ChatFormatting.GREEN).component());
+            if(foodNutrition.getCarbohydrate()>0)
+            	list.add(Lang.gui("nutrition.carbohydrate").color(CARBOHYDRATE_COLOR).space().percentage().number(foodNutrition.getCarbohydrate()*FHConfig.SERVER.nutritionGainRate.get()/10000f).withStyle(ChatFormatting.GREEN).component());
+            if(foodNutrition.getVegetable()>0)
+            	list.add(Lang.gui("nutrition.vegetable").color(VEGETABLE_COLOR).space().percentage().number(foodNutrition.getVegetable()*FHConfig.SERVER.nutritionGainRate.get()/10000f).withStyle(ChatFormatting.GREEN).component());
             return list;
         }
         return null;

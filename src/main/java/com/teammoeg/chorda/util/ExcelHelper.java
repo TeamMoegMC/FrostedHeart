@@ -60,13 +60,13 @@ public class ExcelHelper {
 				switch(c.getCachedFormulaResultType()){
 			case NUMERIC:return c.getNumericCellValue();
 			case BOOLEAN:return c.getBooleanCellValue()?1d:0d;
-			case STRING:
-			case BLANK:return Double.valueOf(c.getStringCellValue());
+			case STRING:return Double.parseDouble(c.getStringCellValue());
+			case BLANK:return 0;
 			case ERROR:return 0;
 			}
 			case BOOLEAN:return c.getBooleanCellValue()?1d:0d;
-			case STRING:
-			case BLANK:return Double.valueOf(c.getStringCellValue());
+			case STRING:return Double.parseDouble(c.getStringCellValue());
+			case BLANK:return 0;
 			case ERROR:return 0;
 			}
 		}catch(NumberFormatException ex) {

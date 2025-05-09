@@ -51,18 +51,18 @@ public class ZipFile implements AutoCloseable {
     }
 
     public void addAndDel(File f, Predicate<File> p) throws IOException {
-        if (f.isDirectory() && p.test(f)) {
+        if (f.isDirectory()) {
             File[] fs = f.listFiles();
             if (fs != null) {
                 for (File file : fs) {
-                    addAndDel(file, p);
+                	addAndDel(file, p);
                 }
             }
             f.delete();
         } else {
             if (p.test(f)) {
                 addFile(f);
-                f.delete();
+                Files.delete(f.toPath());
             }
         }
     }

@@ -3,8 +3,8 @@
   "group": {
     "carbohydrate": 0.0,
     "fat": 0.0,
-    "protein": 0.27060598,
-    "vegetable": 0.27060598
+    "protein": 0.0,
+    "vegetable": 16000.0
   },
   "item": "minecraft:suspicious_stew"
 }

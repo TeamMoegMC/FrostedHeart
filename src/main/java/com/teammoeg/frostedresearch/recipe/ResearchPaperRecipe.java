@@ -19,51 +19,35 @@
 
 package com.teammoeg.frostedresearch.recipe;
 
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
-import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import com.google.gson.JsonObject;
-import net.minecraft.core.RegistryAccess;
+import com.teammoeg.chorda.recipe.DataRecipe;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
-import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.registries.RegistryObject;
 
-public class ResearchPaperRecipe extends IESerializableRecipe {
+public class ResearchPaperRecipe extends DataRecipe {
     public static RegistryObject<RecipeType<ResearchPaperRecipe>> TYPE;
-    public static Lazy<TypeWithClass<ResearchPaperRecipe>> IEType = Lazy.of(() -> new TypeWithClass<>(TYPE, ResearchPaperRecipe.class));
-    public static RegistryObject<IERecipeSerializer<ResearchPaperRecipe>> SERIALIZER;
+    public static RegistryObject<RecipeSerializer<ResearchPaperRecipe>> SERIALIZER;
     public Ingredient paper;
     public int maxlevel;
 
     public ResearchPaperRecipe(ResourceLocation id, Ingredient paper, int maxlevel) {
-        super(Lazy.of(() -> ItemStack.EMPTY), IEType.get(), id);
+        super(id);
         this.paper = paper;
         this.maxlevel = maxlevel;
     }
 
     @Override
-    protected IERecipeSerializer<ResearchPaperRecipe> getIESerializer() {
+	public RecipeSerializer<ResearchPaperRecipe> getSerializer() {
         return SERIALIZER.get();
     }
 
-    @Override
-    public ItemStack getResultItem(RegistryAccess registry) {
-        return ItemStack.EMPTY;
-    }
+    public static class Serializer implements RecipeSerializer<ResearchPaperRecipe> {
 
-    public static class Serializer extends IERecipeSerializer<ResearchPaperRecipe> {
-
-
-        @Override
-        public ItemStack getIcon() {
-            return new ItemStack(Items.PAPER);
-        }
 
         @Override
         public ResearchPaperRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
@@ -71,7 +55,7 @@ public class ResearchPaperRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public ResearchPaperRecipe readFromJson(ResourceLocation arg0, JsonObject arg1, IContext ctx) {
+        public ResearchPaperRecipe fromJson(ResourceLocation arg0, JsonObject arg1) {
             return new ResearchPaperRecipe(arg0, Ingredient.fromJson(arg1.get("item")), arg1.get("level").getAsInt());
         }
 
@@ -82,4 +66,9 @@ public class ResearchPaperRecipe extends IESerializableRecipe {
         }
 
     }
+
+	@Override
+	public RecipeType<?> getType() {
+		return TYPE.get();
+	}
 }

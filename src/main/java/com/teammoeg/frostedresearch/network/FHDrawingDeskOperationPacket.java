@@ -23,10 +23,10 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardPos;
 
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
@@ -95,7 +95,7 @@ public class FHDrawingDeskOperationPacket implements CMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             ServerLevel world = Objects.requireNonNull(context.get().getSender()).serverLevel();
-            BlockEntity tile = Utils.getExistingTileEntity(world, pos);
+            BlockEntity tile = CUtils.getExistingTileEntity(world, pos);
             if (tile instanceof DrawingDeskTileEntity) {
                 // ResearchGame rg = ((DrawingDeskTileEntity) tile).getGame();
                 boolean flag = true;
@@ -116,7 +116,7 @@ public class FHDrawingDeskOperationPacket implements CMessage {
                 if (flag) {
                     ((DrawingDeskTileEntity) tile).updateGame(context.get().getSender());
                     tile.setChanged();
-                    ((DrawingDeskTileEntity) tile).markContainingBlockForUpdate(null);
+                    ((DrawingDeskTileEntity) tile).syncData();
                 }
             }
 

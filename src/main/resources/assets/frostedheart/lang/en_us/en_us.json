@@ -313,6 +313,7 @@
   "gui.frostedheart.save_as_file": "Save as file",
   "gui.frostedheart.saved": "Saved!",
   "gui.frostedheart.sent": "Sent!",
+  "gui.frostedheart.issue_tracker": "https://github.com/TeamMoegMC/TheWinterRescue/issues",
   "gui.frostedheart.tip_editor.title": "Tip Editor",
   "gui.frostedheart.tip_editor.id": "Tip ID",
   "gui.frostedheart.tip_editor.category": "Category",
@@ -320,7 +321,7 @@
   "gui.frostedheart.tip_editor.image": "Image",
   "gui.frostedheart.tip_editor.click_action": "Link Button Action",
   "gui.frostedheart.tip_editor.click_action_content": "Link Button Action Content",
-  "gui.frostedheart.tip_editor.available_click_actions": "Available Actions:\n OpenURL",
+  "gui.frostedheart.tip_editor.available_click_actions": "Available Actions:%s",
   "gui.frostedheart.tip_editor.contents": "Contents",
   "gui.frostedheart.tip_editor.font_color": "Font Color",
   "gui.frostedheart.tip_editor.background_color": "Background Color",
@@ -340,8 +341,11 @@
   "gui.frostedheart.nutrition.protein": "Protein",
   "gui.frostedheart.nutrition.carbohydrate": "Carbohydrate",
   "gui.frostedheart.nutrition.vegetable": "Vegetable",
+  "gui.frostedheart.nutrition.per_hunger": "Nutrition Per Hunger",
   "gui.frostedheart.wheel_menu.message": "Move the mouse to select, release [%s] to execute",
   "gui.frostedheart.wheel_menu.selection.nutrition": "Health Info",
   "gui.frostedheart.wheel_menu.selection.clothing": "View Clothing",
-  "gui.frostedheart.wheel_menu.selection.debug": "Open Debug Menu"
+  "gui.frostedheart.wheel_menu.selection.debug": "Open Debug Menu",
+  "waypoint.frostedheart.quick_waypoint": "Create Quick Waypoint",
+  "waypoint.frostedheart.del_quick_waypoint": "Delete Quick Waypoint"
 }

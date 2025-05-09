@@ -19,7 +19,6 @@
 
 package com.teammoeg.chorda.lang;
 
-import joptsimple.internal.Strings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -28,10 +27,15 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.LinkedList;
 import java.util.List;
+
+import com.google.common.base.Strings;
 
 /**
  * A builder for creating localised components
@@ -44,7 +48,8 @@ import java.util.List;
  */
 public class LangBuilder {
     String namespace;
-    MutableComponent component;
+    LinkedList<MutableComponent> components=new LinkedList<>();
+    Style mainStyle=Style.EMPTY;
     NumberFormat currentNumberFormat=LangNumberFormat.numberFormat.get();
     public LangBuilder(String namespace) {
         this.namespace = namespace;
@@ -167,6 +172,9 @@ public class LangBuilder {
     	currentNumberFormat=LangNumberFormat.numberFormat.get();
     	return this;
     }
+    public LangBuilder percentage() {
+        return setNumberFormat("0.0%");
+    }
     public LangBuilder number(long d) {
         return add(Components.literal(currentNumberFormat.format(d)));
     }
@@ -196,7 +204,7 @@ public class LangBuilder {
      * @return
      */
     public LangBuilder add(MutableComponent customComponent) {
-        component = component == null ? customComponent : component.append(customComponent);
+    	components.add(customComponent);
         return this;
     }
 
@@ -222,8 +230,7 @@ public class LangBuilder {
      * @return
      */
     public LangBuilder style(ChatFormatting format) {
-        assertComponent();
-        component = component.withStyle(format);
+    	mainStyle = mainStyle.applyFormat(format);
         return this;
     }
 
@@ -234,8 +241,7 @@ public class LangBuilder {
      * @return
      */
     public LangBuilder style(Style style) {
-        assertComponent();
-        component = component.withStyle(style);
+    	mainStyle = style.applyTo(mainStyle);
         return this;
     }
     /**
@@ -245,16 +251,66 @@ public class LangBuilder {
      * @return
      */
     public LangBuilder color(int color) {
-        assertComponent();
-        component = component.withStyle(s -> s.withColor(color));
+    	mainStyle = mainStyle.withColor(color);
         return this;
     }
 
-    //
+    /**
+     * Applies the format to the last component
+     *
+     * @param format
+     * @return
+     */
+    public LangBuilder withStyle(ChatFormatting format) {
+    	components.addLast(components.pollLast().withStyle(format));
+        return this;
+    }
 
+    /**
+     * Applies the style to the last component
+     *
+     * @param style
+     * @return
+     */
+    public LangBuilder withStyle(Style style) {
+    	components.addLast(components.pollLast().withStyle(style));
+        return this;
+    }
+    /**
+     * Applies the color to the last component
+     *
+     * @param color
+     * @return
+     */
+    public LangBuilder withColor(int color) {
+    	components.addLast(components.pollLast().withStyle(s -> s.withColor(color)));
+        return this;
+    }
+    //
+    /**
+     * Build raw component
+     * */
     public MutableComponent component() {
-        assertComponent();
-        return component;
+    	if(components.isEmpty())
+    		return Components.empty();
+    	if(components.size()==1)
+    		return components.getFirst().withStyle(s->s.applyTo(mainStyle));
+    	MutableComponent parent=Components.empty().withStyle(mainStyle);
+    	components.forEach(parent::append);
+        return parent;
+    }
+    /**
+     * Build optimized component, merging component of same content and translate texts, client only
+     * */
+    @OnlyIn(Dist.CLIENT)
+    public MutableComponent optimizedComponent() {
+    	if(components.isEmpty())
+    		return Components.empty();
+    	if(components.size()==1)
+    		return components.getFirst().withStyle(s->s.applyTo(mainStyle));
+    	MutableComponent parent=Components.empty().withStyle(mainStyle);
+    	components.forEach(parent::append);
+    	return ComponentOptimizer.optimize(parent);
     }
 
     public String string() {
@@ -283,7 +339,7 @@ public class LangBuilder {
 
     public void forGoggles(List<? super MutableComponent> tooltip, int indents) {
         tooltip.add(new LangBuilder(this.namespace)
-                .text(Strings.repeat(' ', getIndents(Minecraft.getInstance().font, 4 + indents)))
+                .text(Strings.repeat(" ", getIndents(Minecraft.getInstance().font, 4 + indents)))
                 .add(this)
                 .component());
     }
@@ -297,8 +353,4 @@ public class LangBuilder {
         return Mth.ceil(DEFAULT_SPACE_WIDTH * defaultIndents / spaceWidth);
     }
 
-    private void assertComponent() {
-        if (component == null)
-            throw new IllegalStateException("No components were added to builder");
-    }
 }

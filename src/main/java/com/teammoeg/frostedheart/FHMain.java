@@ -142,9 +142,10 @@ public class FHMain {
 
 		// FH Remote Version Check
 		LOGGER.info(VERSION_CHECK, "Checking for updates");
+		TssapProtocolHandler.init();
 		local = new FHRemote.FHLocal();
 		remote = new FHRemote();
-		TssapProtocolHandler.init();
+		
 		LOGGER.info(VERSION_CHECK, "Check completes. Running on version " + local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
 
 		// Registrate

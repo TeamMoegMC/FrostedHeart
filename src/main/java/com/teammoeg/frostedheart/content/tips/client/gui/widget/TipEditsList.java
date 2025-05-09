@@ -100,7 +100,12 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
             } else {
                 nextTipEntry.input.setTextColor(ColorHelper.WHITE);
             }
-            updatePreview(Component.translatable("gui.frostedheart.tip_editor.available_click_actions"));
+            StringBuilder sb = new StringBuilder();
+            for (String key : TipClickActions.getActionKeys()) {
+                sb.append("\n ").append(key);
+            }
+            String actions = sb.isEmpty() ? "NONE" : sb.toString();
+            updatePreview(Component.translatable("gui.frostedheart.tip_editor.available_click_actions", actions));
         });
 
         addEntry(idEntry);
@@ -223,8 +228,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
             this.addButton = new IconButton(0, 0, IconButton.Icon.CHECK, ColorHelper.CYAN, Component.translatable("gui.frostedheart.tip_editor.add_line"), b -> {
                 if (cachedId.isBlank()) return;
 
-                String value = this.input.getValue().isBlank() ? " " : this.input.getValue();
-                contents.add(value);
+                contents.add(getValidInputValue());
                 String key = PREFIX + cachedId;
                 if (contents.size() == 1) {
                     key += ".title";
@@ -242,6 +246,8 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
                     contents.remove(contents.size() - 1);
                     translationContents.remove(contents.size());
                     updatePreview();
+                } else {
+                    input.setValue("");
                 }
             });
 
@@ -261,8 +267,20 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         }
 
         public List<String> getContents() {
-            var c = translation ? translationContents : contents;
+            var c = new ArrayList<>(translation ? translationContents : contents);
+            if (!input.getValue().isBlank()) {
+                c.add(getValidInputValue());
+            }
             return c.isEmpty() ? List.of("tips.frostedheart.error.load.empty") : c;
+        }
+
+        public String getValidInputValue() {
+            String value = this.input.getValue();
+            // 内容以"{"结尾时 TranslatableContents#getString 会爆炸，疑似原版bug
+            if (this.input.getValue().isBlank() || value.endsWith("{")) {
+                value += " ";
+            }
+            return value;
         }
 
         @Override

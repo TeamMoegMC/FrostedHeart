@@ -28,10 +28,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlock;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.LivingEntity;
@@ -62,7 +62,7 @@ public class OwnerBlockMixin_Research extends Block {
     @Inject(at = @At("HEAD"), method = "use")
     public void fh$use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn,BlockHitResult hit, CallbackInfoReturnable<InteractionResult> r) {
         if (!worldIn.isClientSide && !(player instanceof FakePlayer)) {
-            BlockEntity te = Utils.getExistingTileEntity(worldIn, pos);
+            BlockEntity te = CUtils.getExistingTileEntity(worldIn, pos);
             IOwnerTile.trySetOwner(te, CTeamDataManager.get(player).getId());
         }
     }
@@ -73,6 +73,6 @@ public class OwnerBlockMixin_Research extends Block {
         super.setPlacedBy(worldIn, pos, state, placer, stack);
 
         if (placer instanceof ServerPlayer && !(placer instanceof FakePlayer))
-            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(worldIn, pos), CTeamDataManager.get((Player) placer).getId());
+            IOwnerTile.trySetOwner(CUtils.getExistingTileEntity(worldIn, pos), CTeamDataManager.get((Player) placer).getId());
     }
 }

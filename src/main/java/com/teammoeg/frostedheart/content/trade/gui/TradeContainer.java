@@ -25,7 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
+
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
@@ -36,6 +40,7 @@ import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
 
+import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
@@ -112,6 +117,7 @@ public class TradeContainer extends AbstractContainerMenu {
         }
 
     };
+    private static final Marker TRADE=MarkerManager.getMarker("TRADE");
 
     // client side memory
     LinkedHashMap<String, Integer> order = new LinkedHashMap<>();
@@ -189,6 +195,7 @@ public class TradeContainer extends AbstractContainerMenu {
 
     public void commitTrade(ServerPlayer pe) {
         recalc();
+        FHMain.LOGGER.debug(TRADE,"===trade initialed by "+pe.getName().getString()+"started===");
         int poffer = 0;
         if (balance >= 0) {
 
@@ -201,29 +208,43 @@ public class TradeContainer extends AbstractContainerMenu {
                         if (ve.wantsToPickUp(is)) {
                             ve.getInventory().addItem(ItemHandlerHelper.copyStackWithSize(is, cnt));
                         }
+                        FHMain.LOGGER.debug(TRADE,"Provided: "+is+" actual:"+cnt+" stock:"+bd.getStore()+" per:"+bd.getPrice());
                         if (cnt == is.getCount())
                             inv.setStackInSlot(i, ItemStack.EMPTY);
                         else
                             is.shrink(cnt);
 
                         bd.reduceStock(data, cnt);
+                        
                         poffer += cnt * bd.getPrice();
                         continue outer;
                     }
                 }
             }
             int benefits = this.poffer - this.originalVOffer;
-            System.out.println(benefits);
+            FHMain.LOGGER.debug(TRADE,"===Trade statistics===");
+            FHMain.LOGGER.debug(TRADE,"original Offer:"+originalVOffer+",pre calculated offer:"+this.poffer+",actual offer:"+poffer+",discount:"+discountAmount+",punish:"+relationMinus);
             if (benefits > 10) {
                 PlayerRelationData prd = this.data.getRelationDataForWrite(pe,WorldClimate.getWorldDay(pe.level()));
                 prd.totalbenefit += benefits / 10;
             }
             poffer += discountAmount;
+            poffer -= relationMinus;
+            FHMain.LOGGER.debug(TRADE,"===Villager offer===");
             if (relations.sum() > TradeConstants.RELATION_TO_TRADE) {
                 for (Entry<String, Integer> entry : order.entrySet()) {
                     SellData sd = policy.getSells().get(entry.getKey());
                     int cnt = Math.min(sd.getStore(), entry.getValue());
                     int price = cnt * sd.getPrice();
+                    
+                    if (poffer < price){
+                    	FHMain.LOGGER.warn("Revalidation failed for trade: item "+sd.getItem()+" price "+sd.getPrice()+" player offered "+poffer+", reducing amount");
+                    	if(poffer>sd.getPrice()) {
+                    		cnt=Math.min(poffer/sd.getPrice(), cnt);
+                    		price = cnt * sd.getPrice();
+                    	}
+                    }
+                    FHMain.LOGGER.debug(TRADE,"Provided: "+sd.getItem()+" required:"+entry.getValue()+" stock:"+sd.getStore()+" actual:"+cnt+" per:"+sd.getPrice());
                     if (poffer >= price) {
                         poffer -= price;
                         CUtils.giveItem(pe, ItemHandlerHelper.copyStackWithSize(sd.getItem(), cnt));
@@ -235,6 +256,7 @@ public class TradeContainer extends AbstractContainerMenu {
                 data.updateLevel();
                 order.clear();
             }
+            FHMain.LOGGER.debug(TRADE,"===End trade===");
             this.setData(data, pe);
             FHNetwork.INSTANCE.sendPlayer(pe, new TradeUpdatePacket(
                     data.serializeForSend(new CompoundTag()), pld.serialize(new CompoundTag()), relations, true));
@@ -292,13 +314,19 @@ public class TradeContainer extends AbstractContainerMenu {
 
     public void recalc() {
         poffer = 0;
+        Reference2IntOpenHashMap<BuyData> stock=new Reference2IntOpenHashMap<>(policy.getBuys().size());
         outer:
         for (int i = 0; i < inv.getSlots(); i++) {
             ItemStack is = inv.getStackInSlot(i);
+            int cnt=is.getCount();
             for (BuyData bd : policy.getBuys()) {
                 if (bd.getItem().test(is)) {
-                    int cnt = Math.min(is.getCount(), bd.getStore());
-                    poffer += cnt * bd.getPrice();
+                	int curstock=bd.getStore()-stock.getInt(bd);
+                	
+                    int consume = Math.min(cnt, curstock);
+                    poffer += consume * bd.getPrice();
+                    cnt-=consume;
+                    stock.addTo(bd, consume);
                     continue outer;
                 }
             }

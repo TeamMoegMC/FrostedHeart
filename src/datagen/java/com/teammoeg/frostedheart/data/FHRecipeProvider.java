@@ -178,11 +178,25 @@ public class FHRecipeProvider extends RecipeProvider {
 					).toFinished(FHMain.rl("drink_temperature/"+block.getPath())));
 		});
 
-		ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/nutrition.xlsx"), m->{
+		/*ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/nutrition.xlsx"), m->{
 			ResourceLocation itemid = new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("ID")));
 			NutritionRecipeBuilder dvb =new NutritionRecipeBuilder().ItemID(itemid);
 			dvb.nutrition((float)ExcelHelper.getCellValueAsNumber(m.get("Gr2")),(float)ExcelHelper.getCellValueAsNumber(m.get("Va2")),
 					(float)ExcelHelper.getCellValueAsNumber(m.get("Oi2")),(float)ExcelHelper.getCellValueAsNumber(m.get("Pt2")));
+			dvb.save(out,new ResourceLocation(FHMain.MODID,"diet_value/"+ itemid.getNamespace()+ "/"+ itemid.getPath()));
+
+		});*/
+		ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/new_food_value.xlsx"), m->{
+			ResourceLocation itemid = new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("id")));
+			NutritionRecipeBuilder dvb =new NutritionRecipeBuilder().ItemID(itemid);
+			float base=(float)ExcelHelper.getCellValueAsNumber(m.get("Base"));
+			if(base<=0)return;
+			float gr=(float)ExcelHelper.getCellValueAsNumber(m.get("Grain"));
+			float ve=(float)ExcelHelper.getCellValueAsNumber(m.get("Vegetable"));
+			float oi=(float)ExcelHelper.getCellValueAsNumber(m.get("Fat"));
+			float pr=(float)ExcelHelper.getCellValueAsNumber(m.get("Protein"));
+			dvb.based(base/(gr+ve+oi+pr)*40000);
+			dvb.nutrition(gr,ve,oi,pr);
 			dvb.save(out,new ResourceLocation(FHMain.MODID,"diet_value/"+ itemid.getNamespace()+ "/"+ itemid.getPath()));
 
 		});

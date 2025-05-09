@@ -1,10 +1,10 @@
 {
   "type": "frostedheart:diet_override",
   "group": {
-    "carbohydrate": 0.0,
+    "carbohydrate": 16000.0,
     "fat": 0.0,
     "protein": 0.0,
-    "vegetable": 0.741085
+    "vegetable": 8000.0
   },
   "item": "minecraft:baked_potato"
 }

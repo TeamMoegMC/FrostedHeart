@@ -23,6 +23,7 @@ import java.util.function.Function;
 
 import com.teammoeg.chorda.client.cui.CUIMenuScreen;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
+import com.teammoeg.chorda.client.ui.ScreenAcceptor;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.climate.block.ClothesScreen;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorScreen;
@@ -76,7 +77,14 @@ public class FHScreens {
     }
     public static <C extends AbstractContainerMenu, S extends BaseScreen> MenuScreens.ScreenConstructor<C, MenuScreenWrapper<C>>
     FTBScreenFactory(Function<C, S> factory) {
-        return (c, i, t) -> new MenuScreenWrapper<>(factory.apply(c), c, i, t).disableSlotDrawing();
+        return (c, i, t) ->{
+        	S menu=factory.apply(c);
+        	MenuScreenWrapper<C> msw=new MenuScreenWrapper<>(menu, c, i, t).disableSlotDrawing();
+        	if(menu instanceof ScreenAcceptor sa) {
+        		sa.setScreen(msw);
+        	}
+        	return msw;
+        };
     }
     public static <C extends AbstractContainerMenu, S extends PrimaryLayer> MenuScreens.ScreenConstructor<C, CUIMenuScreen<C>>
     CUIScreenFactory(Function<C, S> factory) {
