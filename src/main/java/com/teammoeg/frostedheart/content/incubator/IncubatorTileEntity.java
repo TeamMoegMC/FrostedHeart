@@ -377,14 +377,9 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                         }
                         if (efficiency > 0.01) {
                             int value = in.getFoodProperties(null).getNutrition();
-                            //add caupona
-                            /*if (in.getItem() instanceof StewItem) {
-                                value = ThermopoliumApi.getInfo(in).healing;
-
-                            } else {
-                                out = in.getContainerItem();
-                                in.shrink(1);
-                            }*/
+                            out = in.getCraftingRemainingItem();
+                            in.shrink(1);
+                            
                             int nvalue = value * 25;
                             outfluid = new FluidStack(getProtein(), nvalue);
                             lprocess = 0;

@@ -71,10 +71,13 @@ public class CeramicBucket extends FHBaseItem {
 		super(properties);
 	}
 
-	private ItemStack emptyBucket(ItemStack stack, Player playerIn) {
-		if (playerIn.getAbilities().instabuild) {
+	private ItemStack emptyBucket(ItemStack stack,@Nullable Player playerIn) {
+		if (playerIn!=null&&playerIn.getAbilities().instabuild) {
 			return stack;
 		}
+		return emptyBucket(stack);
+	}
+	private ItemStack emptyBucket(ItemStack stack) {
 		ItemStack emptyStack = stack.copy();
 		emptyStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(handler -> handler.drain(Integer.MAX_VALUE, IFluidHandler.FluidAction.EXECUTE));
 		return emptyStack;
@@ -87,6 +90,11 @@ public class CeramicBucket extends FHBaseItem {
 	@Override
 	public int getMaxStackSize(ItemStack stack) {
 		return this.getFluid(stack) == Fluids.EMPTY ? 16 : 1;
+	}
+
+	@Override
+	public ItemStack getCraftingRemainingItem(ItemStack itemStack) {
+		return this.getFluid(itemStack) == Fluids.EMPTY?ItemStack.EMPTY:emptyBucket(itemStack);
 	}
 
 	@Override
@@ -205,10 +213,6 @@ public class CeramicBucket extends FHBaseItem {
 
 	protected boolean canBlockContainFluid(Level worldIn, BlockPos posIn, BlockState blockstate,Fluid content) {
 		return blockstate.getBlock() instanceof LiquidBlockContainer && ((LiquidBlockContainer) blockstate.getBlock()).canPlaceLiquid(worldIn, posIn, blockstate, content);
-	}
-
-	public static ItemStack getEmptySuccessItem(ItemStack pBucketStack, Player pPlayer) {
-		return !pPlayer.getAbilities().instabuild ? new ItemStack(Items.BUCKET) : pBucketStack;
 	}
 
 	public void checkExtraContent(@Nullable Player pPlayer, Level pLevel, ItemStack pContainerStack, BlockPos pPos) {
