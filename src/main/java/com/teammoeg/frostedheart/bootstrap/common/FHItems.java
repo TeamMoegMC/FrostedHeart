@@ -1026,6 +1026,14 @@ thinner.png
     public static ItemEntry<BoneMealItem> BIOMASS = REGISTRATE
             .item("biomass", BoneMealItem::new)
             .register();
+    public static ItemEntry<BoneMealItem> dung = REGISTRATE
+            .item("dung", BoneMealItem::new)
+            .tag(FHTags.Items.NITROGEN_RICH.tag)
+            .register();
+    public static ItemEntry<BoneMealItem> night_soil = REGISTRATE
+            .item("night_soil", BoneMealItem::new)
+            .tag(FHTags.Items.NITROGEN_RICH.tag)
+            .register();
     public static ItemEntry<Item> SYNTHETIC_LEATHER =
             taggedIngredient("synthetic_leather",
                     forgeItemTag("leather")

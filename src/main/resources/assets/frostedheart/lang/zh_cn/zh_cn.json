@@ -875,5 +875,9 @@
   "gui.frostedheart.trade.profession.frostedheart:hunter": "林地猎人",
   "gui.frostedheart.trade.profession.frostedheart:ocean_hunter": "海洋猎人",
   "gui.frostedheart.trade.profession.frostedheart:miner": "矿工",
-  "gui.frostedheart.trade.profession.frostedheart:explorer": "探险家"
+  "gui.frostedheart.trade.profession.frostedheart:explorer": "探险家",
+  "item.frostedheart.dung": "粪",
+  "item.frostedheart.night_soil": "夜香",
+  "effect.frostedheart.refreshed": "神清气爽",
+  "message.frostedheart.refreshed": "你感觉神清气爽！"
 }

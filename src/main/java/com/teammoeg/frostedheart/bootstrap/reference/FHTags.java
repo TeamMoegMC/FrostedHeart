@@ -207,6 +207,10 @@ public class FHTags {
 		CAT_FEED, RABBIT_FEED,
 		IMPORTANT_ITEM(false),
 		INNER_LINNING(),
+		POTASSIUM_RICH,
+		NITROGEN_RICH,
+		PHOSPHOROUS_RICH,
+
 		// caupona
 		WOLFBERRIES(NameSpace.CP),
 
