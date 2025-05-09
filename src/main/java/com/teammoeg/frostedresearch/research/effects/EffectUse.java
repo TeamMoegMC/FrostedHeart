@@ -96,17 +96,17 @@ public class EffectUse extends Effect {
 
     @Override
     public boolean grant(TeamDataHolder team, TeamResearchData trd, Player triggerPlayer, boolean isload) {
-        trd.block.addAll(blocks);
+        trd.getUnlockList(ResearchHooks.BLOCK_UNLOCK_LIST).addAll(blocks);
         return true;
     }
 
     @Override
     public void init() {
-        ResearchHooks.block.addAll(blocks);
+        ResearchHooks.getLockList(ResearchHooks.BLOCK_UNLOCK_LIST).addAll(blocks);
     }
 
     @Override
     public void revoke(TeamResearchData team) {
-        team.block.removeAll(blocks);
+        team.getUnlockList(ResearchHooks.BLOCK_UNLOCK_LIST).removeAll(blocks);
     }
 }

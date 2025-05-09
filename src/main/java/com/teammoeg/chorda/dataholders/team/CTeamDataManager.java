@@ -40,6 +40,7 @@ import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataType;
 import com.teammoeg.chorda.events.PlayerTeamChangedEvent;
+import com.teammoeg.chorda.events.TeamCreatedEvent;
 import com.teammoeg.chorda.events.TeamLoadedEvent;
 import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.struct.OptionalLazy;
@@ -128,7 +129,11 @@ public class CTeamDataManager {
 		return INSTANCE.get(team);
 		
 	}
-
+	public TeamDataHolder tryLoad(TeamDataHolder team) {
+		if(team==null)return null;
+		team.loadIfNeeded();
+		return team;
+	}
     /**
      * Get the data for a team, as well as check ownership and transfer if necessary.
      * @param team the team
@@ -151,11 +156,12 @@ public class CTeamDataManager {
                     }
                 }*/
         }
-        TeamDataHolder data= dataByOwnId.get(cn);
+        TeamDataHolder data= tryLoad(dataByOwnId.get(cn));
         if(data==null) {
         	data=new TeamDataHolder(cn, team);
         	
         	dataByOwnId.put(cn, data);
+        	MinecraftForge.EVENT_BUS.post(new TeamCreatedEvent(data));
         }
         if (data.getOwnerName() == null) {
         	//System.out.println("filling owner name");
@@ -181,7 +187,7 @@ public class CTeamDataManager {
      */
     @Nullable
     public TeamDataHolder get(UUID id) {
-        return dataByOwnId.get(id);
+        return tryLoad(dataByOwnId.get(id));
     }
 
     /**
@@ -216,7 +222,7 @@ public class CTeamDataManager {
 	                trd.deserialize(nbt, false);
 	                dataByFTBId.put(ftbid, trd.getId());
 	                dataByOwnId.put(trd.getId(), trd);
-                    MinecraftForge.EVENT_BUS.post(new TeamLoadedEvent(trd));
+                    
 	                Chorda.LOGGER.debug("Data file for team " + trd.getId().toString() + " loaded.");
 	            } catch (IllegalArgumentException ex) {
 	                ex.printStackTrace();

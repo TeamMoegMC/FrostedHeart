@@ -19,40 +19,22 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
-import blusunrize.immersiveengineering.common.gui.IESlot;
-
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedresearch.FRContents;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.items.SlotItemHandler;
 
 public class DrawDeskContainer extends CBlockEntityMenu<DrawingDeskTileEntity> {
     public DrawDeskContainer(int id, Inventory inventoryPlayer, DrawingDeskTileEntity tile) {
         super(FRContents.MenuTypes.DRAW_DESK.get(), tile, id, inventoryPlayer.player, 3);
-        this.addSlot(new EnableIESlot(this, inv, DrawingDeskTileEntity.PAPER_SLOT, 114, 161) {// paper
-            @Override
-            public boolean mayPlace(ItemStack itemStack) {
-                return tile.isStackValid(DrawingDeskTileEntity.PAPER_SLOT, itemStack);
-            }
-        });
-        this.addSlot(new EnableIESlot(this, inv, DrawingDeskTileEntity.INK_SLOT, 114, 178) {// pen
-            @Override
-            public boolean mayPlace(ItemStack itemStack) {
-                return tile.isStackValid(DrawingDeskTileEntity.INK_SLOT, itemStack);
-            }
-        });
-        this.addSlot(new EnableIESlot(this, inv, DrawingDeskTileEntity.EXAMINE_SLOT, 114, 93) {// research
-            @Override
-            public boolean mayPlace(ItemStack itemStack) {
-                return tile.isStackValid(DrawingDeskTileEntity.EXAMINE_SLOT, itemStack);
-            }
-
-        });
+        this.addSlot(new EnableSlotItemHandler(tile.getInventory(), DrawingDeskTileEntity.PAPER_SLOT, 114, 161) );
+        this.addSlot(new EnableSlotItemHandler(tile.getInventory(), DrawingDeskTileEntity.INK_SLOT, 114, 178));
+        this.addSlot(new EnableSlotItemHandler(tile.getInventory(), DrawingDeskTileEntity.EXAMINE_SLOT, 114, 93));
         for (int i = 0; i < 36; i++) {
             int posi = i;
             if (i < 9)
@@ -76,11 +58,11 @@ public class DrawDeskContainer extends CBlockEntityMenu<DrawingDeskTileEntity> {
         void setEnabled(boolean enabled);
     }
 
-    public static class EnableIESlot extends IESlot implements Enabled {
+    public static class EnableSlotItemHandler extends SlotItemHandler implements Enabled {
         boolean enabled = true;
 
-        public EnableIESlot(AbstractContainerMenu containerMenu, Container inv, int id, int x, int y) {
-            super(containerMenu, inv, id, x, y);
+        public EnableSlotItemHandler(ItemStackHandler inv, int id, int x, int y) {
+            super(inv, id, x, y);
         }
 
         public boolean isActive() {

@@ -94,7 +94,7 @@ public class DrawDeskPanel extends Panel {
             @Override
             public void addMouseOverText(TooltipList list) {
                 super.addMouseOverText(list);
-                if (!ResearchHooks.canExamine(dd.getTile().getInventory().get(DrawingDeskTileEntity.EXAMINE_SLOT)))
+                if (!ResearchHooks.canExamine(dd.getTile().getInventory().getStackInSlot(DrawingDeskTileEntity.EXAMINE_SLOT)))
                     list.add(Lang.translateGui("draw_desk.unable_examine"));
                 else
                     list.add(Lang.translateGui("draw_desk.examine"));
@@ -102,7 +102,7 @@ public class DrawDeskPanel extends Panel {
 
             @Override
             public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-                if (isMouseOver() || !ResearchHooks.canExamine(dd.getTile().getInventory().get(DrawingDeskTileEntity.EXAMINE_SLOT)))
+                if (isMouseOver() || !ResearchHooks.canExamine(dd.getTile().getInventory().getStackInSlot(DrawingDeskTileEntity.EXAMINE_SLOT)))
                     DrawDeskIcons.EXAMINE.draw(matrixStack, x, y, w, h);
             }
 

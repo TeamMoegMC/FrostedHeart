@@ -24,6 +24,7 @@ import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import java.util.Map;
 
 import com.teammoeg.chorda.events.PlayerTeamChangedEvent;
+import com.teammoeg.chorda.events.TeamCreatedEvent;
 import com.teammoeg.chorda.events.TeamLoadedEvent;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -33,10 +34,15 @@ import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.ResearchHooks;
+import com.teammoeg.frostedresearch.ResearchHooks.BlockUnlockList;
+import com.teammoeg.frostedresearch.ResearchHooks.CategoryUnlockList;
+import com.teammoeg.frostedresearch.ResearchHooks.MultiblockUnlockList;
+import com.teammoeg.frostedresearch.ResearchHooks.RecipeUnlockList;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 import com.teammoeg.frostedresearch.compat.JEICompat;
 import com.teammoeg.frostedresearch.events.DrawDeskOpenEvent;
+import com.teammoeg.frostedresearch.events.PopulateUnlockListEvent;
 import com.teammoeg.frostedresearch.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedresearch.recipe.InspireRecipe;
 
@@ -111,13 +117,13 @@ public class ResearchCommonEvents {
             event.setCanceled(true);
             return;
         }
-        if (ResearchHooks.multiblock.has(event.getMultiblock()))
+        if (ResearchHooks.getLockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).has(event.getMultiblock()))
             if (event.getEntity().getCommandSenderWorld().isClientSide) {
-                if (!ClientResearchDataAPI.getData().get().building.has(event.getMultiblock())) {
+                if (!ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).has(event.getMultiblock())) {
                     event.setCanceled(true);
                 }
             } else {
-                if (!ResearchDataAPI.getData(event.getEntity()).get().building.has(event.getMultiblock())) {
+                if (!ResearchDataAPI.getData(event.getEntity()).get().getUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).has(event.getMultiblock())) {
                     //event.getEntity().sendStatusMessage(GuiUtils.translateMessage("research.multiblock.cannot_build"), true);
                     event.setCanceled(true);
                 }
@@ -138,6 +144,23 @@ public class ResearchCommonEvents {
     public static void initData(TeamLoadedEvent ev) {
     	ev.getTeamData().getOptional(FRSpecialDataTypes.RESEARCH_DATA).ifPresent(t->t.initResearch(ev.getTeamData()));
     }
+    @SubscribeEvent
+    public static void createData(TeamCreatedEvent ev) {
+    	ev.getTeamData().getOptional(FRSpecialDataTypes.RESEARCH_DATA).ifPresent(t->t.initResearch(ev.getTeamData()));
+    }
+    @SubscribeEvent
+    public static void makeUnlocks(PopulateUnlockListEvent ev) {
+    	RecipeUnlockList crafting = new RecipeUnlockList();
+    	MultiblockUnlockList building = new MultiblockUnlockList();
+    	BlockUnlockList block = new BlockUnlockList();
+    	CategoryUnlockList categories = new CategoryUnlockList();
+    	ev.registerUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST, crafting);
+    	ev.registerUnlockList(ResearchHooks.BLOCK_UNLOCK_LIST, block);
+    	ev.registerUnlockList(ResearchHooks.CATEGORY_UNLOCK_LIST, categories);
+    	ev.registerUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST, building);
+    	
+    }
+    
     /**
      * Custom tooltip handling.
      */

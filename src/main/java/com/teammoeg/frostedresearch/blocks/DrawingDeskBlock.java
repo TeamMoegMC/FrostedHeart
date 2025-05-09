@@ -20,10 +20,10 @@
 package com.teammoeg.frostedresearch.blocks;
 
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
-import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FRContents;
 import com.teammoeg.frostedresearch.events.DrawDeskOpenEvent;
@@ -169,7 +169,7 @@ public class DrawingDeskBlock extends CBlock implements IModelOffsetProvider, CE
                 if (state.getValue(IS_NOT_MAIN)) {
                     pos = pos.relative(getNeighbourDirection(state.getValue(IS_NOT_MAIN), state.getValue(FACING)));
                 }
-                BlockEntity ii = Utils.getExistingTileEntity(worldIn, pos);
+                BlockEntity ii = CUtils.getExistingTileEntity(worldIn, pos);
                 UUID crid = CTeamDataManager.get(player).getId();
                 IOwnerTile.trySetOwner(ii, crid);
                 if (crid != null && crid.equals(IOwnerTile.getOwner(ii)))
@@ -195,7 +195,19 @@ public class DrawingDeskBlock extends CBlock implements IModelOffsetProvider, CE
         }
         super.playerWillDestroy(worldIn, pos, state, player);
     }
-
+	@SuppressWarnings("deprecation")
+	@Override
+	public void onRemove(BlockState state, Level worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
+		if (worldIn.getBlockEntity(pos) instanceof DrawingDeskTileEntity te && state.getBlock() != newState.getBlock()) {
+			for (int i = 0; i < te.getInventory().getSlots(); i++) {
+				ItemStack is = te.getInventory().getStackInSlot(i);
+				te.getInventory().setStackInSlot(i, ItemStack.EMPTY);
+				if (!is.isEmpty())
+					super.popResource(worldIn, pos, is);
+			}
+		}
+		super.onRemove(state, worldIn, pos, newState, isMoving);
+	}
     @Override
     public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         if (!worldIn.isClientSide) {

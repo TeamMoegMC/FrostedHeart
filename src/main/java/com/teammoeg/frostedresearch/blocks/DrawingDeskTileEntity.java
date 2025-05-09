@@ -22,6 +22,7 @@ package com.teammoeg.frostedresearch.blocks;
 import java.util.Optional;
 import java.util.Random;
 
+import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedresearch.Lang;
@@ -32,9 +33,6 @@ import com.teammoeg.frostedresearch.gui.drawdesk.game.CardPos;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.GenerateInfo;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.ResearchGame;
 import com.teammoeg.frostedresearch.recipe.ResearchPaperRecipe;
-
-import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
-import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -49,14 +47,28 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.items.ItemStackHandler;
 
-public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProvider, IIEInventory {
+public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider {
     public static final int INK_SLOT = 2;
     public static final int PAPER_SLOT = 1;
     public static final int EXAMINE_SLOT = 0;
     public static int ENERGY_PER_COMBINE = 100;
     public static int ENERGY_PER_PAPER = 3000;
-    protected NonNullList<ItemStack> inventory = NonNullList.withSize(3, ItemStack.EMPTY);
+    protected ItemStackHandler inventory = new ItemStackHandler(3) {
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack item) {
+            if (slot == EXAMINE_SLOT)
+                return true;
+            else if (slot == INK_SLOT)
+                return item.getItem() instanceof IPen && ((IPen) item.getItem()).canUse(null, item, 1);
+            else if (slot == PAPER_SLOT)
+                return CUtils.filterRecipes(getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.paper.test(item));
+            else
+                return false;
+        }
+    };
     ResearchGame game = new ResearchGame();
 
     public DrawingDeskTileEntity(BlockPos pos, BlockState state) {
@@ -65,49 +77,41 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
 
 
     private boolean damageInk(ServerPlayer spe, int val, int lvl) {
-        ItemStack is = inventory.get(INK_SLOT);
+        ItemStack is = inventory.getStackInSlot(INK_SLOT);
         if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
         IPen pen = (IPen) is.getItem();
         if (pen.getLevel(is, spe) < lvl) return false;
         return pen.damage(spe, is, val);
     }
 
-    @Override
-    public void doGraphicalUpdates() {
-    }
 
     public ResearchGame getGame() {
         return game;
     }
 
 
-    @Override
-    public NonNullList<ItemStack> getInventory() {
+    public ItemStackHandler getInventory() {
         return inventory;
     }
 
-    @Override
-    public int getSlotLimit(int slot) {
-        return 64;
-    }
 
     public void initGame(ServerPlayer player) {
-        if (inventory.get(PAPER_SLOT).isEmpty()) return;
+        if (inventory.getStackInSlot(PAPER_SLOT).isEmpty()) return;
         int lvl = ResearchHooks.fetchGameLevel(player);
         if (lvl < 0) return;
-        Optional<ResearchPaperRecipe> pr = CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.get(PAPER_SLOT))).findAny();
+        Optional<ResearchPaperRecipe> pr = CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.getStackInSlot(PAPER_SLOT))).findAny();
         if (!pr.isPresent()) return;
         //if (EnergyCore.getEnergy(player) <= 0) return;
         if (!damageInk(player, 5, lvl)) return;
         //EnergyCore.costEnergy(player, 1);
-        inventory.get(PAPER_SLOT).shrink(1);
+        inventory.getStackInSlot(PAPER_SLOT).shrink(1);
         game.init(GenerateInfo.all[lvl], new Random());
         game.setLvl(lvl);
     }
 
     @OnlyIn(Dist.CLIENT)
     public boolean isInkSatisfied(int val) {
-        ItemStack is = inventory.get(INK_SLOT);
+        ItemStack is = inventory.getStackInSlot(INK_SLOT);
         if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
         IPen pen = (IPen) is.getItem();
         return pen.getLevel(is, ClientUtils.getPlayer()) >= ResearchHooks.fetchGameLevel() && pen.canUse(ClientUtils.getPlayer(), is, val);
@@ -115,42 +119,40 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
 
     @OnlyIn(Dist.CLIENT)
     public boolean isPaperSatisfied() {
-        ItemStack is = inventory.get(PAPER_SLOT);
+        ItemStack is = inventory.getStackInSlot(PAPER_SLOT);
         if (is.isEmpty()) return false;
         int lvl = ResearchHooks.fetchGameLevel();
         return CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.maxlevel >= lvl && r.paper.test(is));
     }
 
-    @Override
-    public boolean isStackValid(int slot, ItemStack item) {
-        if (slot == EXAMINE_SLOT)
-            return true;
-        else if (slot == INK_SLOT)
-            return item.getItem() instanceof IPen && ((IPen) item.getItem()).canUse(null, item, 1);
-        else if (slot == PAPER_SLOT)
-            return CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.paper.test(item));
-        else
-            return false;
-    }
 
     @Override
     public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         if (nbt.contains("gamedata"))
             game.load(nbt.getCompound("gamedata"));
+        
         if (!descPacket) {
-
-            ContainerHelper.loadAllItems(nbt, inventory);
+        	if(nbt.contains("Items")) {
+        		NonNullList<ItemStack> invlist=NonNullList.withSize(3,ItemStack.EMPTY);
+        		
+        		ContainerHelper.loadAllItems(nbt, invlist);
+        		for(int i=0;i<invlist.size();i++) {
+        			inventory.setStackInSlot(i, invlist.get(i));
+        		}
+        	}else {
+        		inventory.deserializeNBT(nbt.getCompound("inv"));
+        	}
         }
 
 
     }
 
     public void submitItem(ServerPlayer sender) {
-        inventory.set(EXAMINE_SLOT, ResearchHooks.submitItem(sender, inventory.get(EXAMINE_SLOT)));
+        inventory.setStackInSlot(EXAMINE_SLOT, ResearchHooks.submitItem(sender, inventory.getStackInSlot(EXAMINE_SLOT)));
     }
 
     public boolean tryCombine(ServerPlayer player, CardPos cp1, CardPos cp2) {
-        ItemStack is = inventory.get(INK_SLOT);
+        ItemStack is = inventory.getStackInSlot(INK_SLOT);
         if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
         IPen pen = (IPen) is.getItem();
         if (pen.getLevel(is, player) < game.getLvl())
@@ -176,7 +178,7 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
         nbt.put("gamedata", game.serialize());
         if (!descPacket) {
 
-            ContainerHelper.saveAllItems(nbt, inventory);
+            nbt.put("inv", inventory.serializeNBT());
         }
     }
 

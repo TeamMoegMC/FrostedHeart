@@ -106,7 +106,7 @@ public class EffectBuilding extends Effect {
 
     @Override
     public boolean grant(TeamDataHolder team, TeamResearchData trd, Player triggerPlayer, boolean isload) {
-        trd.building.add(multiblock);
+        trd.getUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).add(multiblock);
         return true;
 
     }
@@ -114,7 +114,7 @@ public class EffectBuilding extends Effect {
 
     @Override
     public void init() {
-        ResearchHooks.multiblock.add(multiblock);
+        ResearchHooks.getLockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).add(multiblock);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -143,7 +143,7 @@ public class EffectBuilding extends Effect {
 
     @Override
     public void revoke(TeamResearchData team) {
-        team.building.remove(multiblock);
+        team.getUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).remove(multiblock);
     }
 
 }

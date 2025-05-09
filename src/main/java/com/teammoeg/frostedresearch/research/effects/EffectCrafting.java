@@ -64,7 +64,7 @@ public class EffectCrafting extends Effect {
                     ),
                     Effect.BASE_CODEC.forGetter(Effect::getBaseData))
             .apply(t, EffectCrafting::new));
-    List<Recipe<?>> unlocks = new ArrayList<>();
+    List<Recipe> unlocks = new ArrayList<>();
     Ingredient ingredient = null;
 
     EffectCrafting() {
@@ -153,7 +153,7 @@ public class EffectCrafting extends Effect {
 
     @Override
     public boolean grant(TeamDataHolder team, TeamResearchData trd, Player triggerPlayer, boolean isload) {
-        trd.crafting.addAll(unlocks);
+        trd.getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).addAll(unlocks);
         return true;
     }
 
@@ -161,7 +161,7 @@ public class EffectCrafting extends Effect {
     public void init() {
         if (ingredient != null)
             initItem();
-        ResearchHooks.recipe.addAll(unlocks);
+        ResearchHooks.getLockList(ResearchHooks.RECIPE_UNLOCK_LIST).addAll(unlocks);
     }
 
     private void initItem() {
@@ -198,7 +198,7 @@ public class EffectCrafting extends Effect {
 
     @Override
     public void revoke(TeamResearchData team) {
-        team.crafting.removeAll(unlocks);
+        team.getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).removeAll(unlocks);
     }
 
     public void setList(Collection<String> ls) {
@@ -210,7 +210,7 @@ public class EffectCrafting extends Effect {
         }
     }
 
-    public List<Recipe<?>> getUnlocks() {
+    public List<Recipe> getUnlocks() {
         return unlocks;
     }
 

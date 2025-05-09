@@ -35,6 +35,8 @@ import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 import com.teammoeg.frostedresearch.blocks.RubbingTool;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
+import com.teammoeg.frostedresearch.data.UnlockListType;
+import com.teammoeg.frostedresearch.events.PopulateUnlockListEvent;
 import com.teammoeg.frostedresearch.recipe.InspireRecipe;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.clues.*;
@@ -50,21 +52,22 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class ResearchHooks {
-	public static RecipeUnlockList recipe = new RecipeUnlockList();
-	public static MultiblockUnlockList multiblock = new MultiblockUnlockList();
-	public static BlockUnlockList block = new BlockUnlockList();
-	public static CategoryUnlockList categories = new CategoryUnlockList();
+	public final static Map<UnlockListType<?>,UnlockList<?>> locklists=new IdentityHashMap<>(10);
+
 	public static UUID te;
 	private static ListenerList<TickListenerClue> tickClues = new ListenerList<>();
 	private static ListenerList<KillClue> killClues = new ListenerList<>();
@@ -72,7 +75,10 @@ public class ResearchHooks {
 	private ResearchHooks() {
 
 	}
-
+	@SuppressWarnings("unchecked")
+	public static <T> UnlockList<T> getLockList(UnlockListType<T> name){
+		return (UnlockList<T>) locklists.get(name);
+	}
 	@OnlyIn(Dist.CLIENT)
 	public static boolean canExamine(ItemStack i) {
 		if (i.isEmpty()) return false;
@@ -85,19 +91,19 @@ public class ResearchHooks {
 	}
 
 	public static boolean canUseBlock(Player player, Block b) {
-		if (block.has(b)) {
+		if (getLockList(BLOCK_UNLOCK_LIST).has(b)) {
 			if (player instanceof FakePlayer) return false;
 			if (player.getCommandSenderWorld().isClientSide)
-				return ClientResearchDataAPI.getData().get().block.has(b);
-			return ResearchDataAPI.getData(player).get().block.has(b);
+				return ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.BLOCK_UNLOCK_LIST).has(b);
+			return ResearchDataAPI.getData(player).get().getUnlockList(ResearchHooks.BLOCK_UNLOCK_LIST).has(b);
 		}
 		return true;
 
 	}
 
 	public static boolean canUseRecipe(Recipe<?> r) {
-		if (recipe.has(r)) {
-			return ClientResearchDataAPI.getData().get().crafting.has(r);
+		if (getLockList(RECIPE_UNLOCK_LIST).has(r)) {
+			return ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).has(r);
 		}
 		return true;
 	}
@@ -105,18 +111,18 @@ public class ResearchHooks {
 	public static boolean canUseRecipe(Player s, Recipe<?> r) {
 		if (s == null)
 			return canUseRecipe(r);
-		if (recipe.has(r)) {
+		if (getLockList(RECIPE_UNLOCK_LIST).has(r)) {
 			if (s.getCommandSenderWorld().isClientSide)
-				return ClientResearchDataAPI.getData().get().crafting.has(r);
-			return ResearchDataAPI.getData(s).get().crafting.has(r);
+				return ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).has(r);
+			return ResearchDataAPI.getData(s).get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).has(r);
 		}
 		return true;
 	}
 
 	public static boolean canUseRecipe(UUID team, Recipe<?> r) {
-		if (recipe.has(r)) {
+		if (getLockList(RECIPE_UNLOCK_LIST).has(r)) {
 			if (team == null) return false;
-			return ResearchDataAPI.getData(team).map(t -> t.get().crafting.has(r)).orElse(false);
+			return ResearchDataAPI.getData(team).map(t -> t.get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).has(r)).orElse(false);
 		}
 		return true;
 	}
@@ -195,23 +201,21 @@ public class ResearchHooks {
 	}
 
 	public static void reload() {
-		recipe.clear();
-		multiblock.clear();
-		block.clear();
-		categories.clear();
+		locklists.clear();
+		MinecraftForge.EVENT_BUS.post(new PopulateUnlockListEvent(locklists));
 		tickClues.clear();
 		killClues.clear();
 		te = null;
 	}
 
 	public static boolean hasMultiblock(UUID rid, IETemplateMultiblock mb) {
-		if (ResearchHooks.multiblock.has(mb))
+		if (getLockList(MULTIBLOCK_UNLOCK_LIST).has(mb))
 			if (rid == null) {
-				if (!ClientResearchDataAPI.getData().get().building.has(mb)) {
+				if (!ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).has(mb)) {
 					return false;
 				}
 			} else {
-				if (!ResearchDataAPI.getData(rid).map(t -> t.get().building.has(mb)).orElse(false)) {
+				if (!ResearchDataAPI.getData(rid).map(t -> t.get().getUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).has(mb)).orElse(false)) {
 					return false;
 				}
 
@@ -284,7 +288,10 @@ public class ResearchHooks {
 			return false;
 		});
 	}
-
+	public static final UnlockListType<Block> BLOCK_UNLOCK_LIST=new UnlockListType<>("block",Block.class);
+	public static final UnlockListType<ResourceLocation> CATEGORY_UNLOCK_LIST=new UnlockListType<>("category",ResourceLocation.class);
+	public static final UnlockListType<Recipe> RECIPE_UNLOCK_LIST=new UnlockListType<>("recipe",Recipe.class);
+	public static final UnlockListType<IMultiblock> MULTIBLOCK_UNLOCK_LIST=new UnlockListType<>("multiblock",IMultiblock.class);
 	public static class BlockUnlockList extends UnlockList<Block> {
 		public static final Codec<BlockUnlockList> CODEC = RecordCodecBuilder.create(
 			instance -> instance.group(
@@ -454,7 +461,7 @@ public class ResearchHooks {
 
 	}
 
-	public static class RecipeUnlockList extends UnlockList<Recipe<?>> {
+	public static class RecipeUnlockList extends UnlockList<Recipe> {
 		public static final Codec<RecipeUnlockList> CODEC = RecordCodecBuilder.create(
 			instance -> instance.group(
 				Codec.list(Codec.STRING).fieldOf("unlocked").forGetter(RecipeUnlockList::getStrings)).apply(instance, RecipeUnlockList::new));
@@ -472,12 +479,12 @@ public class ResearchHooks {
 		}
 
 		@Override
-		public Recipe<?> getObject(String s) {
+		public Recipe getObject(String s) {
 			return CDistHelper.getRecipeManager().byKey(new ResourceLocation(s)).orElse(null);
 		}
 
 		@Override
-		public String getString(Recipe<?> item) {
+		public String getString(Recipe item) {
 			return item.getId().toString();
 		}
 

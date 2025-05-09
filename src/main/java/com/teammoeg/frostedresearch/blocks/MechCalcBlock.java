@@ -28,9 +28,9 @@ import com.teammoeg.chorda.block.CKineticBlock;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedresearch.FRContents;
 
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -100,7 +100,7 @@ public class MechCalcBlock extends CKineticBlock implements CEntityBlock<MechCal
         if(player.getItemInHand(hand).getItem() instanceof RubbingTool) {
         	return InteractionResult.PASS;
         }
-        BlockEntity te = Utils.getExistingTileEntity(world, pos);
+        BlockEntity te = CUtils.getExistingTileEntity(world, pos);
         if (te instanceof MechCalcTileEntity)
             return ((MechCalcTileEntity) te).onClick(player);
         return superResult;
@@ -110,7 +110,7 @@ public class MechCalcBlock extends CKineticBlock implements CEntityBlock<MechCal
     @Override
     public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
         if (stack.hasTag() && stack.getTag().getBoolean("prod")) {
-            BlockEntity te = Utils.getExistingTileEntity(worldIn, pos);
+            BlockEntity te = CUtils.getExistingTileEntity(worldIn, pos);
             if (te instanceof MechCalcTileEntity) {
                 ((MechCalcTileEntity) te).doProduct = false;
             }

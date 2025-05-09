@@ -210,7 +210,7 @@ public class CUtils {
 		return stack;
 	}
 
-	public static <R extends Recipe<Container>> List<R> filterRecipes(@Nullable RecipeManager recipeManager, RegistryObject<RecipeType<R>> recipeType) {
+	public static <C extends Container,R extends Recipe<C>> List<R> filterRecipes(@Nullable RecipeManager recipeManager, RegistryObject<RecipeType<R>> recipeType) {
 		if (recipeManager == null)
 			recipeManager = CDistHelper.getRecipeManager();
 		if (recipeManager == null)
