@@ -159,6 +159,12 @@ public class FHRegistrateTags {
                 .addTag(FHTags.Blocks.SOIL.tag)
                 .addTag(FHTags.Blocks.PERMAFROST.tag);
 
+        prov.tag(FHTags.Blocks.SLED_SNOW.tag)
+                .addTag(BlockTags.SNOW);
+
+        prov.tag(FHTags.Blocks.SLED_SAND.tag)
+                .addTag(BlockTags.SAND);
+
         for (FHTags.Blocks tag : FHTags.Blocks.values()) {
             if (tag.alwaysDatagen) {
                 prov.getOrCreateRawBuilder(tag.tag);
