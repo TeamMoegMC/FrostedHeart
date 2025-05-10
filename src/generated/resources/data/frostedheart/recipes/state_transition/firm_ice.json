@@ -3,7 +3,7 @@
   "block": "frostedheart:firm_ice",
   "condense_temp": -15.0,
   "evaporate_temp": 9.0,
-  "freeze_temp": -25.0,
+  "freeze_temp": -100.0,
   "gas": "minecraft:ice",
   "heat_capacity": 10,
   "liquid": "frostedheart:firm_ice",

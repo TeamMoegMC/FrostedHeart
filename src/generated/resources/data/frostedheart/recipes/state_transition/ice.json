@@ -3,12 +3,12 @@
   "block": "minecraft:ice",
   "condense_temp": -10.0,
   "evaporate_temp": 9.0,
-  "freeze_temp": -20.0,
+  "freeze_temp": -100.0,
   "gas": "frostedheart:thin_ice",
   "heat_capacity": 10,
   "liquid": "minecraft:ice",
   "melt_temp": 9.0,
-  "solid": "frostedheart:firm_ice",
+  "solid": "minecraft:ice",
   "state": "liquid",
   "will_transit": true
 }
