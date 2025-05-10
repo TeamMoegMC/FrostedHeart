@@ -106,7 +106,7 @@
   "subtitle.frostedresearch.ice_cracking": "Ice cracking",
   "subtitle.frostedresearch.mechanical_calculator_bell": "Mechanical calculator bell rings",
   "subtitle.frostedresearch.mechanical_calculator_roll": "Mechanical calculator rolls",
-  "tooltip.frostedresearch.inspire_item": "Inspect this in drawing desk yields inspiration",
+  "tooltip.frostedresearch.inspire_item": "Inspect this in drawing desk for new Insight.",
   "tooltip.frostedresearch.mechanical_calculator.full": "    Calculation points full!",
   "tooltip.frostedresearch.mechanical_calculator.points": "    Calculation points: %s/%s",
   "tooltip.frostedresearch.mechanical_calculator.too_fast": "    Too fast! Speed must under 64RPM",
