@@ -218,7 +218,7 @@ public class ClimateCommonEvents {
 		if (data != null) {
 			growTimeGameDays = data.growTimeDays();
 			if(farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
-				if (farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
+				if (farmlandBlockState.hasProperty(FertilizedDirt.FERTILIZER)&&farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
 					growTimeGameDays *= 0.5f;
 				}
 			}
@@ -505,7 +505,7 @@ public class ClimateCommonEvents {
 		if (data != null) {
 			growTimeGameDays = data.growTimeDays();
 			if(farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
-				if (farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
+				if (farmlandBlockState.hasProperty(FertilizedDirt.FERTILIZER)&&farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
 					growTimeGameDays *= 0.5f;
 				}
 			}
