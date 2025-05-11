@@ -87,6 +87,8 @@ import net.minecraft.world.level.levelgen.Heightmap;
 public class WorldTemperature {
 
 
+    public static final int ABSOLUTE_ZERO = -273;
+
     public static boolean isBlizzardHarming(LevelAccessor iWorld, BlockPos p) {
         return WorldClimate.isBlizzard(iWorld) && openToAir(iWorld,p);
     }
@@ -230,11 +232,13 @@ public class WorldTemperature {
     public static final float VANILLA_PLANT_GROW_TEMPERATURE_MAX = 50;
 
     // Altitudes
+    public static final int STRATOSPHERE_LEVEL = 240;
     public static final int SEA_LEVEL = 63;
     public static final int BUILD_UPPER_LIMIT = 320;
     public static final int STONE_INTERFACE_LEVEL = 0;
     public static final int LAVA_INTERFACE_LEVEL = -55;
     public static final int BUILD_LOWER_LIMIT = -64;
+    public static final float TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_STRATOSPHERE_LEVEL = -2F;
     public static final float TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_SEA_LEVEL = -0.1F;
     public static final float TEMPERATURE_CHANGE_PER_BLOCK_BELOW_STONE_INTERFACE = 0.1F;
     public static final float TEMPERATURE_CHANGE_PER_BLOCK_BELOW_LAVA_INTERFACE = 20F;
@@ -300,8 +304,13 @@ public class WorldTemperature {
     public static float altitude(LevelReader w, BlockPos pos) {
         // TODO: This is for only overworld
         int y = pos.getY();
+        // extremely lowers above stratosphere
+        if (y > STRATOSPHERE_LEVEL) {
+            int yc = Mth.clamp(y, STRATOSPHERE_LEVEL, BUILD_UPPER_LIMIT);
+            return (yc - STRATOSPHERE_LEVEL) * TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_STRATOSPHERE_LEVEL;
+        }
         // decrease above sea
-        if (y > SEA_LEVEL) {
+        else if (y > SEA_LEVEL) {
             int yc = Mth.clamp(y, SEA_LEVEL, BUILD_UPPER_LIMIT);
             return (yc - SEA_LEVEL) * TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_SEA_LEVEL;
         }
@@ -383,14 +392,17 @@ public class WorldTemperature {
         }
         float nature = climate(world) * climateBlockAffection +dimension(world) + biome(world, pos) + altitude(world, pos);
         float heat = heat(world,pos);
+        float result;
         // if nature is greater than heat, use nature: like underground
         if (nature > heat) {
-            return nature;
+            result =  nature;
         }
         // otherwise, heats up nature by heat * 2 until reaches heat ceiling: a kind of air conditioner
         else {
-            return  Math.min(nature+heat*2, heat);
+            result = Math.min(nature+heat*2, heat);
         }
+
+        return Math.max(ABSOLUTE_ZERO, result);
     }
 
     /**
@@ -420,8 +432,11 @@ public class WorldTemperature {
         else {
             climateAirAffection = 0.0F;
         }
-        return dimension(world) + biome(world, pos) + altitude(world, pos) +
+
+        float result = dimension(world) + biome(world, pos) + altitude(world, pos) +
                 climate(world) * climateAirAffection + heat(world,pos) + gaussian(world, 0, 0.3F);
+
+        return Math.max(ABSOLUTE_ZERO, result);
     }
 
     /**
