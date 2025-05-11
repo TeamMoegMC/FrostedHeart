@@ -1288,23 +1288,23 @@ thinner.png
 
 
     public static ItemEntry<FHBaseItem> buff_coat = REGISTRATE
-            .item("buff_coat", p -> new FHBaseItem(createProps().defaultDurability(384)).setRepairItem(raw_hide.get()))
+            .item("buff_coat", p -> new FHBaseItem(createProps().defaultDurability(72)).setRepairItem(raw_hide.get()))
             .model(AssetLookup.existingItemModel())
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseItem> gambeson = REGISTRATE
-            .item("gambeson", p -> new FHBaseItem(createProps().defaultDurability(384)).setRepairItem(Items.WHITE_WOOL))
+            .item("gambeson", p -> new FHBaseItem(createProps().defaultDurability(80)).setRepairItem(Items.WHITE_WOOL))
             .model(AssetLookup.existingItemModel())
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<FHBaseItem> kelp_lining = REGISTRATE
-            .item("kelp_lining", p -> new FHBaseItem(createProps().defaultDurability(256)).setRepairItem(Items.KELP))
+            .item("kelp_lining", p -> new FHBaseItem(createProps().defaultDurability(52)).setRepairItem(Items.KELP))
             .model(AssetLookup.existingItemModel())
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static ItemEntry<Item> straw_lining = REGISTRATE
             .item("straw_lining", Item::new)
-            .properties(p -> p.defaultDurability(256))
+            .properties(p -> p.defaultDurability(52))
             .model(AssetLookup.existingItemModel())
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
