@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.content.town.resource;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableDouble;
@@ -243,6 +242,16 @@ public class TownResourceHolder {
         return items;
     }
 
+    public Map<ItemStackWrapper, Double> getAllItemsByWrapper(ItemResourceKey itemResourceKey){
+        Map<ItemStackWrapper, Double> items = new HashMap<>();
+        for(ItemStackWrapper itemStackWrapper : itemResources.keySet()){
+            if(get(itemStackWrapper) > DELTA && ItemResourceKey.fromItemStack(itemStackWrapper.getItemStack()).contains(itemResourceKey)){
+                items.put(itemStackWrapper, get(itemStackWrapper));
+            }
+        }
+        return items;
+    }
+
     /**
      * Get all items of the given key stored in town.
      * Can't be used to change the resource.
@@ -262,23 +271,29 @@ public class TownResourceHolder {
         return Map.copyOf(virtualResources);
     }
 
+    public double getCapacityLeft(){
+        return this.get(VirtualResourceType.MAX_CAPACITY.generateKey(0)) - this.occupiedCapacity;
+    }
+
     /**
      * Add or subtract resource to the town. Add if amount >= 0, subtract if amount < 0.
      * Only used in this class.
      * Use addUnsafe and costUnsafe in this package.
      * Use methods in TownResourceManager in other classes.
      */
-    private void addSigned(ItemStack pItemStack, double amount){
-        if(pItemStack.isEmpty()) return;
-        ItemStackWrapper itemStackWrapper = new ItemStackWrapper(pItemStack);
-        Double amountExist = itemResources.get(itemStackWrapper);
+    private void addSigned(ItemStackWrapper pItemStackWrapper, double amount){
+        if(pItemStackWrapper.itemStack.isEmpty()) return;
+        Double amountExist = itemResources.get(pItemStackWrapper);
         if(amountExist == null || amountExist <= DELTA){
-            addItemToCache(itemStackWrapper);
+            addItemToCache(pItemStackWrapper);
         }
-        if(Math.abs(itemResources.merge(itemStackWrapper, amount, Double::sum)) <= DELTA){
-            itemResources.remove(itemStackWrapper);
+        if(Math.abs(itemResources.merge(pItemStackWrapper, amount, Double::sum)) <= DELTA){
+            itemResources.remove(pItemStackWrapper);
         }
         this.occupiedCapacity += amount;
+    }
+    private void addSigned(ItemStack pItemStack, double amount){
+        addSigned(new ItemStackWrapper(pItemStack), amount);
     }
     private void addSigned(VirtualResourceKey key, double amount){
         virtualResources.merge(key, amount, Double::sum);
@@ -345,6 +360,12 @@ public class TownResourceHolder {
         }
         addSigned(itemStack, -amount);
     }
+    void costUnsafe(ItemStackWrapper itemStack, double amount){
+        if(amount < 0){
+            throw new IllegalArgumentException("Amount putted in costUnsafe() must be positive.");
+        }
+        addSigned(itemStack, -amount);
+    }
 
     /**
      * Cost resource from the town without checking resource left.
@@ -390,39 +411,6 @@ public class TownResourceHolder {
     public void removeZeros(){
         itemResources.entrySet().removeIf(entry -> Math.abs(entry.getValue()) <= DELTA || entry.getKey().getItemStack().isEmpty());
         virtualResources.entrySet().removeIf(entry ->Math.abs(entry.getValue()) <= DELTA);
-    }
-
-    /**
-     * Wrapper for ItemStack, added special hashCode and equals method, for saving ItemStack in HashMap.
-     * The count of ItemStack will be changed to 1 when creating this wrapper. Because TownResourceHolder used other things to save the amount of items.
-     */
-    @Getter
-    public static class ItemStackWrapper {
-        public ItemStack itemStack;
-
-        public static final Codec<ItemStackWrapper> CODEC = RecordCodecBuilder.create(t -> t.group(
-        		ItemStack.CODEC.fieldOf("itemStack").forGetter(o->o.itemStack)
-                ).apply(t, ItemStackWrapper::new)
-        );
-
-        public ItemStackWrapper(ItemStack itemStack){
-            this.itemStack =itemStack.copyWithCount(1);
-        }
-
-        public boolean equals(Object o){
-            ItemStack itemStack2;
-            if(o instanceof ItemStackWrapper){
-                itemStack2 = ((ItemStackWrapper) o).getItemStack();
-            } else return false;
-            return ItemStack.isSameItemSameTags(itemStack,itemStack2);
-        }
-
-        public int hashCode(){
-            int itemHash = itemStack.getItem().hashCode();
-            int tagHash = itemStack.getTag() == null ? 0 : itemStack.getTag().hashCode();
-            return Objects.hash(itemHash,tagHash);
-        }
-
     }
 
 }
