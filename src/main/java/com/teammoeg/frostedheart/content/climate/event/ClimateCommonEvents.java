@@ -191,6 +191,13 @@ public class ClimateCommonEvents {
 		Block crop = state.getBlock();
 		BlockPos pos = event.getPos();
 		LevelAccessor level = event.getLevel();
+
+		// must see sky
+		if (!level.canSeeSky(pos)) {
+			event.setResult(Event.Result.DENY);
+			return;
+		}
+
 		PlantTempData data = PlantTempData.getPlantData(crop);
 		WorldTemperature.PlantStatus status = WorldTemperature.checkPlantStatus(level, pos, crop);
 		float growTimeGameDays = PlantTemperature.DEFAULT_GROW_TIME_GAME_DAYS;
@@ -456,6 +463,11 @@ public class ClimateCommonEvents {
 	public static void saplingGrow(SaplingGrowTreeEvent event) {
 		BlockPos pos = event.getPos();
 		LevelAccessor level = event.getLevel();
+		// must see sky
+		if (!level.canSeeSky(pos)) {
+			event.setResult(Event.Result.DENY);
+			return;
+		}
 		RandomSource rand = event.getRandomSource();
 		BlockState state = event.getLevel().getBlockState(pos);
 		Block crop = state.getBlock();
