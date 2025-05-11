@@ -381,10 +381,16 @@ public class WorldTemperature {
         else {
             climateBlockAffection = 0.0F;
         }
-        float climateAffection=climate(world) * climateBlockAffection +dimension(world) + biome(world, pos) + altitude(world, pos);
-        float heat=heat(world,pos);
-
-        return  Math.min(climateAffection+heat*2, heat)/*+ gaussian(world, 0, 0.3F)*/;
+        float nature = climate(world) * climateBlockAffection +dimension(world) + biome(world, pos) + altitude(world, pos);
+        float heat = heat(world,pos);
+        // if nature is greater than heat, use nature: like underground
+        if (nature > heat) {
+            return nature;
+        }
+        // otherwise, heats up nature by heat * 2 until reaches heat ceiling: a kind of air conditioner
+        else {
+            return  Math.min(nature+heat*2, heat);
+        }
     }
 
     /**
