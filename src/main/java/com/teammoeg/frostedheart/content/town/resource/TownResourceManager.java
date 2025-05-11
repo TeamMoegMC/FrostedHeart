@@ -39,18 +39,18 @@ public class TownResourceManager {
     }
 
     /**
-     * 获取城镇中某个ITownResourceKey的储量。
-     * 若为ItemResourceKey，获取的是城镇中，所有该ItemResourceKey对应物品的(物品数量 * 单个物品能转化为ItemResourceKey数量)之和。
-     * 这也是TownResourceManager中，两种cost(ItemResourceKey)能消耗的最大数量。
+     * 获取城镇中某个ITownResourceAttribute的储量。
+     * 若为ItemResourceAttribute，获取的是城镇中，所有该ItemResourceAttribute对应物品的(物品数量 * 单个物品能转化为ItemResourceAttribute数量)之和。
+     * 这也是TownResourceManager中，两种cost(ItemResourceAttribute)能消耗的最大数量。
      * 举个例子，比如城镇中，有20个铁锭、10个铁块，1个铁锭可转化为1 metal_1，1个铁块可转化为9 metal_1，使用这个get方法获取metal_1的数量，会得到20*1+10*9=110.
      */
-    public double get(ITownResourceKey key){
-        return resourceHolder.get(key);
+    public double get(ITownResourceAttribute attribute){
+        return resourceHolder.get(attribute);
     }
 
     /**
      * 获取此种ITownResourceType对应的所有资源数量。
-     * @return 该ITownResourceType对应的所有ITownResourceKey的资源数量之和。
+     * @return 该ITownResourceType对应的所有ITownResourceAttribute的资源数量之和。
      */
     public double get(ITownResourceType type){
         return getAllAboveLevel(type,0);
@@ -67,7 +67,7 @@ public class TownResourceManager {
      * 获取城镇剩余(未被占用)的容量。
      */
     public double getCapacityLeft(){
-        return get(VirtualResourceType.MAX_CAPACITY.generateKey(0)) - resourceHolder.getOccupiedCapacity();
+        return get(VirtualResourceType.MAX_CAPACITY.generateAttribute(0)) - resourceHolder.getOccupiedCapacity();
     }
 
     /**
@@ -77,7 +77,7 @@ public class TownResourceManager {
         if(!type.isLevelValid(minLevel)) return 0;
         double sum = 0;
         for(int i=minLevel;i<=type.getMaxLevel();i++){
-            sum += get(type.generateKey(i));
+            sum += get(type.generateAttribute(i));
         }
         return sum;
     }
@@ -89,7 +89,7 @@ public class TownResourceManager {
         if(!type.isLevelValid(minLevel) || !type.isLevelValid(maxLevel)) return 0;
         double sum = 0;
         for(int i=minLevel;i<=maxLevel;i++){
-            sum += get(type.generateKey(i));
+            sum += get(type.generateAttribute(i));
         }
         return sum;
     }
@@ -99,7 +99,7 @@ public class TownResourceManager {
      * @param key The resource key
      * @param amount The amount to add
      */
-    public SimpleResourceActionResult addIfHaveCapacity(VirtualResourceKey key, double amount){
+    public SimpleResourceActionResult addIfHaveCapacity(VirtualResourceAttribute key, double amount){
         if(!key.type.needCapacity){
             resourceHolder.addUnsafe(key,amount);
             return new SimpleResourceActionResult(true, amount, key);
@@ -119,7 +119,7 @@ public class TownResourceManager {
      * @param amount The amount to add
      */
     public SimpleResourceActionResult addIfHaveCapacity(VirtualResourceType type, double amount){
-        return addIfHaveCapacity(type.generateKey(0), amount);
+        return addIfHaveCapacity(type.generateAttribute(0), amount);
     }
 
     /**
@@ -136,7 +136,7 @@ public class TownResourceManager {
         return SimpleResourceActionResult.NOT_SUCCESS;
     }
 
-    //You can't add ItemResourceKey to town, because item resource are saved as ItemStack.
+    //You can't add ItemResourceAttribute to town, because item resource are saved as ItemStackKey.
 
     /**
      * Add resource to the town.
@@ -144,7 +144,7 @@ public class TownResourceManager {
      * @param amount The amount to add.
      * @return The result of the action. You can know if all the resource is added, and how many resources are added.
      */
-    public SimpleResourceActionResult addToMax(VirtualResourceKey key, double amount){
+    public SimpleResourceActionResult addToMax(VirtualResourceAttribute key, double amount){
         if(!key.type.needCapacity){
             resourceHolder.addUnsafe(key,amount);
             return new SimpleResourceActionResult(true, amount, key);
@@ -183,7 +183,7 @@ public class TownResourceManager {
      * If there is not enough resource, nothing will be cost.
      * @return The result of the action. You can know if all the resource is costed, and how many resources are costed, etc.
      */
-    public SimpleResourceActionResult costIfHaveEnough(VirtualResourceKey key, double amount){
+    public SimpleResourceActionResult costIfHaveEnough(VirtualResourceAttribute key, double amount){
         if(amount <=0) return SimpleResourceActionResult.NOT_SUCCESS;
         if(get(key) >= amount){
             resourceHolder.costUnsafe(key,amount);
@@ -211,29 +211,29 @@ public class TownResourceManager {
     /**
      * Cost resource from the town.
      * If there is not enough resource, nothing will be cost.
-     * ItemResourceKey对应的所有物品都有可能被消耗。
+     * ItemResourceAttribute对应的所有物品都有可能被消耗。
      * 消耗的模式是：按照某种顺序，先消耗某种物品直到消耗完，再消耗下一种物品。
      * 我也不知道这个“某种顺序”究竟是什么，这取决于从缓存中读取的顺序。
      * @return The result of the action. You can know if all the resource is costed, and how many resources are costed, etc.
      */
-    public SimpleResourceActionResult costIfHaveEnough(ItemResourceKey key, double amount){
-        double resourceLeft = get(key);
+    public SimpleResourceActionResult costIfHaveEnough(ItemResourceAttribute attribute, double amount){
+        double resourceLeft = get(attribute);
         if(resourceLeft<=amount) return SimpleResourceActionResult.NOT_SUCCESS;
         double toCost;
-        Map<ItemStack, Double> items = resourceHolder.getAllItems(key);
+        Map<ItemStack, Double> items = resourceHolder.getAllItems(attribute);
         toCost = amount;
         for(ItemStack itemStack : items.keySet()){
-            double itemResourceAmount = TownResourceHolder.getResourceAmount(itemStack, key);
+            double itemResourceAmount = TownResourceHolder.getResourceAmount(itemStack, attribute);
             SimpleResourceActionResult result = costToEmpty(itemStack, toCost / itemResourceAmount);
             toCost -= result.actualAmount() * itemResourceAmount;
             if(toCost<=TownResourceHolder.DELTA) break;
         }
-        return new SimpleResourceActionResult(true, amount, key);
+        return new SimpleResourceActionResult(true, amount, attribute);
     }
 
-    public SimpleResourceActionResult costIfHaveEnough(ITownResourceKey key, double amount){
-        if(key instanceof ItemResourceKey) return costIfHaveEnough((ItemResourceKey)key, amount);
-        if(key instanceof VirtualResourceKey) return costIfHaveEnough((VirtualResourceKey)key, amount);
+    public SimpleResourceActionResult costIfHaveEnough(ITownResourceAttribute attribute, double amount){
+        if(attribute instanceof ItemResourceAttribute) return costIfHaveEnough((ItemResourceAttribute)attribute, amount);
+        if(attribute instanceof VirtualResourceAttribute) return costIfHaveEnough((VirtualResourceAttribute)attribute, amount);
         return SimpleResourceActionResult.NOT_SUCCESS;
     }
 
@@ -258,23 +258,23 @@ public class TownResourceManager {
     /**
      * Cost resource from the town.
      * If there is not enough resource, all resource left will be cost.
-     * ItemResourceKey对应的所有物品都有可能被消耗。
+     * ItemResourceAttribute对应的所有物品都有可能被消耗。
      * 消耗的模式是：按照某种顺序，先消耗某种物品直到消耗完，再消耗下一种物品。
      * 我也不知道这个“某种顺序”究竟是什么，这取决于从缓存中读取的顺序。
      * @return The result of the action. You can know if all the resource is costed, and how many resources are costed, etc.
      */
-    public SimpleResourceActionResult costToEmpty(ItemResourceKey key, double amount){
-        double resourceLeft = get(key);
+    public SimpleResourceActionResult costToEmpty(ItemResourceAttribute attribute, double amount){
+        double resourceLeft = get(attribute);
         double toCost;
-        Map<ItemStack, Double> items = resourceHolder.getAllItems(key);
+        Map<ItemStack, Double> items = resourceHolder.getAllItems(attribute);
         toCost = Math.min(resourceLeft, amount);
         for(ItemStack itemStack : items.keySet()){
-            double itemResourceAmount = TownResourceHolder.getResourceAmount(itemStack, key);
+            double itemResourceAmount = TownResourceHolder.getResourceAmount(itemStack, attribute);
             SimpleResourceActionResult result = costToEmpty(itemStack, toCost / itemResourceAmount);
             toCost -= result.actualAmount() * itemResourceAmount;
             if(toCost<=TownResourceHolder.DELTA) break;
         }
-        return new SimpleResourceActionResult(amount <= resourceLeft, Math.min(resourceLeft, amount), key);
+        return new SimpleResourceActionResult(amount <= resourceLeft, Math.min(resourceLeft, amount), attribute);
     }
 
     /**
@@ -282,7 +282,7 @@ public class TownResourceManager {
      * If there is not enough resource, nothing will be cost.
      * @return The result of the action. You can know if all the resource is costed, and how many resources are costed, etc.
      */
-    public SimpleResourceActionResult costToEmpty(VirtualResourceKey key, double amount){
+    public SimpleResourceActionResult costToEmpty(VirtualResourceAttribute key, double amount){
         if(amount <=0) return SimpleResourceActionResult.NOT_SUCCESS;
         double resourceLeft = get(key);
         if(resourceLeft<=0) return SimpleResourceActionResult.NOT_SUCCESS;
@@ -295,16 +295,16 @@ public class TownResourceManager {
      * If there is not enough resource, nothing will be cost.
      * @return The result of the action. You can know if all the resource is costed, and how many resources are costed, etc.
      */
-    public SimpleResourceActionResult costToEmpty(ITownResourceKey key, double amount){
-        if(key instanceof ItemResourceKey) return costToEmpty((ItemResourceKey)key, amount);
-        else if (key instanceof VirtualResourceKey) return costToEmpty((VirtualResourceKey)key, amount);
+    public SimpleResourceActionResult costToEmpty(ITownResourceAttribute attribute, double amount){
+        if(attribute instanceof ItemResourceAttribute) return costToEmpty((ItemResourceAttribute)attribute, amount);
+        else if (attribute instanceof VirtualResourceAttribute) return costToEmpty((VirtualResourceAttribute)attribute, amount);
         return SimpleResourceActionResult.NOT_SUCCESS;
     }
 
     /**
      * Cost resource from the town.
      * 所有此TownResourceType、且等级在给定level之间的的资源都可以被消耗。
-     * 消耗顺序为：先消耗level低的TownResourceKey，后消耗level高的
+     * 消耗顺序为：先消耗level低的TownResourceAttribute，后消耗level高的
      * If there is not enough resource, nothing will be cost.
      */
     public SimpleResourceActionResult costBetweenLevelIfHaveEnough(ITownResourceType type, double amount, int minLevel, int maxLevel){
@@ -320,7 +320,7 @@ public class TownResourceManager {
         double averageLevelCount = 0;
         for(int level = minLevel; level <= maxLevel; level++){
             if(resourcesToCost<=0) break;
-            SimpleResourceActionResult result = costToEmpty(type.generateKey(level), resourcesToCost);
+            SimpleResourceActionResult result = costToEmpty(type.generateAttribute(level), resourcesToCost);
             resourcesToCost -= result.actualAmount();
             if(result.allSuccess()){
                 minLevelCount = Math.min(minLevelCount, level);
@@ -334,7 +334,7 @@ public class TownResourceManager {
     /**
      * Cost resource from the town.
      * 所有此TownResourceType、且等级大于minLevel的资源都可以被消耗。
-     * 消耗顺序为：先消耗level低的TownResourceKey，后消耗level高的
+     * 消耗顺序为：先消耗level低的TownResourceAttribute，后消耗level高的
      * If there is not enough resource, nothing will be cost.
      */
     public SimpleResourceActionResult costAboveLevelIfHaveEnough(ITownResourceType type, double amount, int minLevel){
@@ -344,7 +344,7 @@ public class TownResourceManager {
     /**
      * Cost resource from the town.
      * 所有此TownResourceType的资源都可以被消耗。
-     * 消耗顺序为：先消耗level低的TownResourceKey，后消耗level高的
+     * 消耗顺序为：先消耗level低的TownResourceAttribute，后消耗level高的
      * If there is not enough resource, nothing will be cost.
      */
     public SimpleResourceActionResult costLowestLevelIfHaveEnough(ITownResourceType type, double amount){
@@ -354,7 +354,7 @@ public class TownResourceManager {
     /**
      * Cost resource from the town.
      * 所有此TownResourceType的资源都可以被消耗。
-     * 消耗顺序为：先消耗level高的TownResourceKey，后消耗level低的
+     * 消耗顺序为：先消耗level高的TownResourceAttribute，后消耗level低的
      * If there is not enough resource, nothing will be cost.
      */
     public SimpleResourceActionResult costHighestLevelIfHaveEnough(ITownResourceType type, double amount){
@@ -369,7 +369,7 @@ public class TownResourceManager {
         double averageLevelCount = 0;
         for(int level = maxLevel; level >= 0; level--){
             if(resourcesToCost<=0) break;
-            SimpleResourceActionResult result = costToEmpty(type.generateKey(level), resourcesToCost);
+            SimpleResourceActionResult result = costToEmpty(type.generateAttribute(level), resourcesToCost);
             resourcesToCost -= result.actualAmount();
             if(result.allSuccess()){
                 minLevelCount = Math.min(minLevelCount, level);
@@ -383,7 +383,7 @@ public class TownResourceManager {
     /**
      * Cost resource from the town.
      * 所有此TownResourceType，且等级在给定level之间的资源都可以被消耗。
-     * 消耗顺序为：先消耗level低的TownResourceKey，后消耗level高的
+     * 消耗顺序为：先消耗level低的TownResourceAttribute，后消耗level高的
      * If there is not enough resource, all resource left will be cost.
      */
     public SimpleResourceActionResult costBetweenLevelToEmpty(ITownResourceType type, double amount, int minLevel, int maxLevel){
@@ -396,7 +396,7 @@ public class TownResourceManager {
         double averageLevelCount = 0;
         for(int level = minLevel; level <= maxLevel; level++){
             if(resourcesToCost<=0) break;
-            SimpleResourceActionResult result = costToEmpty(type.generateKey(level), resourcesToCost);
+            SimpleResourceActionResult result = costToEmpty(type.generateAttribute(level), resourcesToCost);
             resourcesToCost -= result.actualAmount();
             if(result.allSuccess()){
                 minLevelCount = Math.min(minLevelCount, level);
@@ -410,7 +410,7 @@ public class TownResourceManager {
     /**
      * Cost resource from the town.
      * 所有此TownResourceType，且等级大于等于minLevel的资源都可以被消耗。
-     * 消耗顺序为：先消耗level低的TownResourceKey，后消耗level高的
+     * 消耗顺序为：先消耗level低的TownResourceAttribute，后消耗level高的
      * If there is not enough resource, all resource left will be cost.
      */
     public SimpleResourceActionResult costAboveLevelToEmpty(ITownResourceType type, double amount, int minLevel){
@@ -420,7 +420,7 @@ public class TownResourceManager {
     /**
      * Cost resource from the town.
      * 所有此TownResourceType资源都可以被消耗。
-     * 消耗顺序为：先消耗level低的TownResourceKey，后消耗level高的
+     * 消耗顺序为：先消耗level低的TownResourceAttribute，后消耗level高的
      * If there is not enough resource, all resource left will be cost.
      */
     public SimpleResourceActionResult costLowestLevelToEmpty(ITownResourceType type, double amount){
@@ -430,7 +430,7 @@ public class TownResourceManager {
     /**
      * Cost resource from the town.
      * 所有此TownResourceType，且等级在给定level之间的资源都可以被消耗。
-     * 消耗顺序为：先消耗level高的TownResourceKey，后消耗level低的
+     * 消耗顺序为：先消耗level高的TownResourceAttribute，后消耗level低的
      * If there is not enough resource, all resource left will be cost.
      */
     public SimpleResourceActionResult costHighestLevelToEmpty(ITownResourceType type, double amount){
@@ -442,7 +442,7 @@ public class TownResourceManager {
         double averageLevelCount = 0;
         for(int level = maxLevel; level >= 0; level--){
             if(resourcesToCost<=0) break;
-            SimpleResourceActionResult result = costToEmpty(type.generateKey(level), resourcesToCost);
+            SimpleResourceActionResult result = costToEmpty(type.generateAttribute(level), resourcesToCost);
             resourcesToCost -= result.actualAmount();
             if(result.allSuccess()){
                 minLevelCount = Math.min(minLevelCount, level);
@@ -458,13 +458,13 @@ public class TownResourceManager {
      * 对于需要容量的资源，不建议使用这个方法，因为这可能使资源储量超过上限。
      */
     @Deprecated
-    public void set(VirtualResourceKey key, double amount){
+    public void set(VirtualResourceAttribute key, double amount){
         resourceHolder.set(key, amount);
     }
 
     @Deprecated
     public void set(VirtualResourceType type, double amount){
-        resourceHolder.set(type.generateKey(0), amount);
+        resourceHolder.set(type.generateAttribute(0), amount);
     }
 
     /**
@@ -501,12 +501,12 @@ public class TownResourceManager {
             }
         }
 
-        public SimpleResourceActionResult(boolean allSuccess, double actualAmount, ITownResourceKey key){
-            this(allSuccess, actualAmount, key.getLevel(), key.getLevel());
+        public SimpleResourceActionResult(boolean allSuccess, double actualAmount, ITownResourceAttribute attribute){
+            this(allSuccess, actualAmount, attribute.getLevel(), attribute.getLevel());
         }
 
         /**
-         * If you just costed a ItemStack, not a ITownResourceKey, use this constructor.
+         * If you just costed a ItemStack, not a ITownResourceAttribute, use this constructor.
          * ItemStack don't have a certain level so the lowestLevel and averageLevel are both 0.
          */
         public SimpleResourceActionResult(boolean allSuccess, double actualAmount){

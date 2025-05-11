@@ -97,7 +97,7 @@ public class TownCommand {
                                                         return Command.SINGLE_SUCCESS;
                                                     }
                                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                                                    TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().addIfHaveCapacity(VirtualResourceType.from(type).generateKey(level), amount);
+                                                    TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().addIfHaveCapacity(VirtualResourceType.from(type).generateAttribute(level), amount);
                                                     if(result.allSuccess()){
                                                         ct.getSource().sendSuccess(()-> Components.str("Resource added"), true);
                                                     } else ct.getSource().sendSuccess(()-> Components.str("Resource added failed: No enough capacity."), true);
@@ -140,7 +140,7 @@ public class TownCommand {
                                                     }
                                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                                     TownResourceManager.SimpleResourceActionResult result = null;
-                                                    result = town.getResourceManager().costIfHaveEnough(type.generateKey(level), amount);
+                                                    result = town.getResourceManager().costIfHaveEnough(type.generateAttribute(level), amount);
                                                     if(result.allSuccess()){
                                                         ct.getSource().sendSuccess(()-> Components.str("Resource costed."), true);
                                                     } else ct.getSource().sendSuccess(()-> Components.str("Resource cost failed: No enough resource."), true);

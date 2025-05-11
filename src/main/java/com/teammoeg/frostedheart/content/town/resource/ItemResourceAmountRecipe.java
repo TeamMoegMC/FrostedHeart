@@ -40,11 +40,13 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+import java.util.Objects;
+
 import static net.minecraft.world.item.crafting.ShapedRecipe.itemStackFromJson;
 
 /**
  * 表示物品能转换为多少某类型资源。
- * 若物品有某个ItemResourceKey的Tag，但是没有表示转换量的recipe，则默认为1.
+ * 若物品有某个ItemResourceAttribute的Tag，但是没有表示转换量的recipe，则默认为1.
  * 关于合成json的写法。可参考 src.main.resources.data.frostedneart.recipes.town_resource.test_bedrock.json
  */
 public class ItemResourceAmountRecipe extends IESerializableRecipe {
@@ -108,7 +110,9 @@ public class ItemResourceAmountRecipe extends IESerializableRecipe {
         public ItemResourceAmountRecipe readFromJson(ResourceLocation recipeId, JsonObject json, ICondition.IContext ctx) {
             ItemStack item = itemStackFromJson(json);//readOutput(json.get("item")).get();
             //itemStackFromJson(outputObject.getAsJsonObject())
-            TagKey<Item> resourceTagKey = ItemTags.create(new ResourceLocation(GsonHelper.getAsString(json, "resourceTagKey")));
+            String resourceTagKeyString = GsonHelper.getAsString(json, "resourceTagKey");
+            String[] split = resourceTagKeyString.split(":");
+            TagKey<Item> resourceTagKey = ItemTags.create(Objects.requireNonNull(ResourceLocation.tryBuild(split[0], split[1])));
             float amount = GsonHelper.getAsFloat(json, "amount");
             return new ItemResourceAmountRecipe(recipeId, item, resourceTagKey, amount);
         }

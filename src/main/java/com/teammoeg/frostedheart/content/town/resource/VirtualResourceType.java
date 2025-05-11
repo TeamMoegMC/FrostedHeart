@@ -64,13 +64,13 @@ public enum VirtualResourceType implements ITownResourceType{
     }
 
     /**
-     * Generate town resource key of this resource type with given level.
+     * Generate town resource attribute of this resource type with given level.
      * @param level The level of the resource. Shouldn't be negative or more than max level.
-     * @return TownResourceKey of this type and given level.
+     * @return TownResourceAttribute of this type and given level.
      */
     @Override
-    public VirtualResourceKey generateKey(int level) {
-        return VirtualResourceKey.of(this, level);
+    public VirtualResourceAttribute generateAttribute(int level) {
+        return VirtualResourceAttribute.of(this, level);
     }
 
     /**

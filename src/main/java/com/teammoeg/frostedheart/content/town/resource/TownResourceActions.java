@@ -15,47 +15,47 @@ import java.util.function.Predicate;
 public class TownResourceActions {
 
     /**
-     * 不可直接添加ItemResourceKey，只能添加对应的物品
+     * 不可直接添加ItemResourceAttribute，只能添加对应的物品
      */
-    public static record ItemResourceKeyCostAction(ItemResourceKey resourceToModify, double amount, ResourceActionMode actionMode) implements ITownResourceKeyAction{
+    public static record ItemResourceAttributeCostAction(ItemResourceAttribute resourceToModify, double amount, ResourceActionMode actionMode) implements ITownResourceAttributeAction {
 
         @Override
-        public ItemResourceKeyCostActionResult apply(TownResourceHolder resourceHolder) {
+        public ItemResourceAttributeCostActionResult apply(TownResourceHolder resourceHolder) {
             double availableAmount;
             availableAmount = resourceHolder.get(resourceToModify);
             double toCost = amount;
             if(availableAmount<amount){
                 if(actionMode==ResourceActionMode.ATTEMPT || availableAmount<=TownResourceHolder.DELTA){
-                    return new ItemResourceKeyCostActionResult(this, false, 0, amount, Collections.emptyMap());
+                    return new ItemResourceAttributeCostActionResult(this, false, 0, amount, Collections.emptyMap());
                 } else if(actionMode==ResourceActionMode.MAXIMIZE){
                     toCost = availableAmount;
                 }
             }
             double toCostCopy = toCost;//toCost接下来会修改，复制一份用于记录数量
-            Map<ItemStackWrapper, Double> costDetail = new HashMap<>();
-            Map<ItemStackWrapper, Double> items = resourceHolder.getAllItemsByWrapper(resourceToModify);
-            for(ItemStackWrapper itemStackWrapper : items.keySet()){
-                double itemResourceAmount = TownResourceHolder.getResourceAmount(itemStackWrapper, resourceToModify);
-                double itemLeft = resourceHolder.get(itemStackWrapper);
+            Map<ItemStackResourceKey, Double> costDetail = new HashMap<>();
+            Map<ItemStackResourceKey, Double> items = resourceHolder.getAllItemsByWrapper(resourceToModify);
+            for(ItemStackResourceKey itemStackResourceKey : items.keySet()){
+                double itemResourceAmount = TownResourceHolder.getResourceAmount(itemStackResourceKey, resourceToModify);
+                double itemLeft = resourceHolder.get(itemStackResourceKey);
                 double itemAmountToCost = Math.min(toCost/itemResourceAmount, itemLeft);
-                costDetail.put(itemStackWrapper, itemAmountToCost);
-                resourceHolder.costUnsafe(itemStackWrapper, itemAmountToCost);
+                costDetail.put(itemStackResourceKey, itemAmountToCost);
+                resourceHolder.costUnsafe(itemStackResourceKey, itemAmountToCost);
                 toCost -= itemAmountToCost * itemResourceAmount;
                 if(toCost<=TownResourceHolder.DELTA) break;
             }
-            return new ItemResourceKeyCostActionResult(this, true, toCostCopy, amount - toCost, costDetail);
+            return new ItemResourceAttributeCostActionResult(this, true, toCostCopy, amount - toCost, costDetail);
         }
     }
 
     /**
      *
-     * @param action 对应的ItemResourceKeyAction
+     * @param action 对应的ItemResourceAttributeAction
      * @param allModified 应修改量是否等于实际修改量
      * @param totalModifiedAmount 已修改资源总量
      * @param residualAmount 应修改但未修改的资源量
      * @param details 具体消耗的物品明细。Mao中Double均为正数，为消耗或添加量。action中可查看操作是添加还是消耗。
      */
-    public static record ItemResourceKeyCostActionResult(ItemResourceKeyCostAction action, boolean allModified, double totalModifiedAmount, double residualAmount, Map<ItemStackWrapper, Double> details) implements ITownResourceKeyActionResult{
+    public static record ItemResourceAttributeCostActionResult(ItemResourceAttributeCostAction action, boolean allModified, double totalModifiedAmount, double residualAmount, Map<ItemStackResourceKey, Double> details) implements ITownResourceAttributeActionResult {
         @Override
         public ITownResourceAction getAction() {
             return action;
@@ -77,7 +77,7 @@ public class TownResourceActions {
         }
 
         @Override
-        public ItemResourceKey getTownResourceKey() {
+        public ItemResourceAttribute getTownResourceAttribute() {
             return action.resourceToModify();
         }
     }
@@ -175,10 +175,10 @@ public class TownResourceActions {
                 step = -1;
             }
             double toCostCopy = toCost;
-            List<ITownResourceKeyActionResult> details = new ArrayList<>();
+            List<ITownResourceAttributeActionResult> details = new ArrayList<>();
             for(int level = startLevel ; levelLimit.test(level) ; level += step){
-                ITownResourceKeyAction action = ITownResourceKeyAction.create(resourceToCost.generateKey(level), toCost, ResourceActionMode.MAXIMIZE);
-                ITownResourceKeyActionResult result = action.apply(resourceHolder);
+                ITownResourceAttributeAction action = ITownResourceAttributeAction.create(resourceToCost.generateAttribute(level), toCost, ResourceActionMode.MAXIMIZE);
+                ITownResourceAttributeActionResult result = action.apply(resourceHolder);
                 toCost = result.residualAmount();
                 if(toCost<=TownResourceHolder.DELTA) break;
             }
@@ -192,9 +192,9 @@ public class TownResourceActions {
      * @param allCosted 应消耗量是否等于消耗量
      * @param totalModifiedAmount 实际消耗总量
      * @param residualAmount 应消耗但未消耗量
-     * @param details 具体每个等级的TownResourceKey的消耗情况。若消耗的是物品，在这些result里还可以找到具体消耗的物品数量
+     * @param details 具体每个等级的TownResourceAttribute的消耗情况。若消耗的是物品，在这些result里还可以找到具体消耗的物品数量
      */
-    public static record TownResourceTypeCostActionResult(TownResourceTypeCostAction action, boolean allCosted, double totalModifiedAmount, double residualAmount, List<ITownResourceKeyActionResult> details) implements IResourceActionResult {
+    public static record TownResourceTypeCostActionResult(TownResourceTypeCostAction action, boolean allCosted, double totalModifiedAmount, double residualAmount, List<ITownResourceAttributeActionResult> details) implements IResourceActionResult {
 
         @Override
         public ITownResourceAction getAction() {
@@ -208,7 +208,7 @@ public class TownResourceActions {
 
         public double getMinLevel(){
             return details.stream()
-                    .map(ITownResourceKeyActionResult::getLevel)
+                    .map(ITownResourceAttributeActionResult::getLevel)
                     .min(Double::compare)
                     .orElse(0);
         }
@@ -224,13 +224,13 @@ public class TownResourceActions {
     }
 
     /**
-     * 这个Result只记录数量，对应的ItemR
-     * @param action 对应的ResourceKeyAction
+     * 这个Result只记录数量，对应的资源类型可在action本身获取
+     * @param action 对应的ResourceAttributeAction
      * @param allModified 是否全部修改成功
      * @param modifiedAmount 实际添加/消耗的资源数量
      * @param residualAmount 应修改但未修改的资源数量
      */
-    public static record VirtualResourceKeyActionResult(VirtualResourceKeyAction action, boolean allModified, double modifiedAmount, double residualAmount ) implements ITownResourceKeyActionResult {
+    public static record VirtualResourceAttributeActionResult(VirtualResourceAttributeAction action, boolean allModified, double modifiedAmount, double residualAmount ) implements ITownResourceAttributeActionResult {
 
         @Override
         public ITownResourceAction getAction() {
@@ -239,7 +239,7 @@ public class TownResourceActions {
 
         @Override
         public void applyForce(TownResourceHolder resourceHolder) {
-            VirtualResourceKey resourceKey = action.resourceToModify();
+            VirtualResourceAttribute resourceKey = action.resourceToModify();
             if(action.isAdd()){
                 resourceHolder.addUnsafe(resourceKey,modifiedAmount);
             } else{
@@ -258,7 +258,7 @@ public class TownResourceActions {
         }
 
         @Override
-        public VirtualResourceKey getTownResourceKey() {
+        public VirtualResourceAttribute getTownResourceAttribute() {
             return action.resourceToModify();
         }
 
@@ -267,19 +267,19 @@ public class TownResourceActions {
         }
     }
 
-    public static record VirtualResourceKeyAction(VirtualResourceKey resourceToModify, double amount, ResourceActionType actionType, ResourceActionMode actionMode) implements ITownResourceKeyAction{
+    public static record VirtualResourceAttributeAction(VirtualResourceAttribute resourceToModify, double amount, ResourceActionType actionType, ResourceActionMode actionMode) implements ITownResourceAttributeAction {
         public boolean isAdd(){
             return actionType == ResourceActionType.ADD;
         }
         @Override
-        public VirtualResourceKeyActionResult apply(TownResourceHolder resourceHolder) {
+        public VirtualResourceAttributeActionResult apply(TownResourceHolder resourceHolder) {
             double availableAmount;
             if(isAdd()) availableAmount = resourceHolder.getCapacityLeft();
             else availableAmount = resourceHolder.get(resourceToModify);
             double toModify = amount;
             if(availableAmount < amount){
                 if(actionMode == ResourceActionMode.ATTEMPT || availableAmount <= TownResourceHolder.DELTA){
-                    return new VirtualResourceKeyActionResult(this, false, 0, amount);
+                    return new VirtualResourceAttributeActionResult(this, false, 0, amount);
                 } else if(actionMode == ResourceActionMode.MAXIMIZE){
                     toModify = availableAmount;
                 }
@@ -290,9 +290,9 @@ public class TownResourceActions {
                 resourceHolder.costUnsafe(resourceToModify, toModify);
             }
             if(availableAmount < amount){
-                return new VirtualResourceKeyActionResult(this, false, toModify, amount - toModify);
+                return new VirtualResourceAttributeActionResult(this, false, toModify, amount - toModify);
             } else{
-                return new VirtualResourceKeyActionResult(this, true, toModify, 0);
+                return new VirtualResourceAttributeActionResult(this, true, toModify, 0);
             }
         }
     }

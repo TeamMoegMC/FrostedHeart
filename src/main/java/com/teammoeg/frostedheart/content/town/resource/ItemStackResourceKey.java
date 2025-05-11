@@ -12,22 +12,22 @@ import java.util.Objects;
  * The count of ItemStack will be changed to 1 when creating this wrapper. Because TownResourceHolder used other things to save the amount of items.
  */
 @Getter
-public class ItemStackWrapper {
+public class ItemStackResourceKey implements ITownResourceKey<ItemStack>{
     public ItemStack itemStack;
 
-    public static final Codec<ItemStackWrapper> CODEC = RecordCodecBuilder.create(t -> t.group(
+    public static final Codec<ItemStackResourceKey> CODEC = RecordCodecBuilder.create(t -> t.group(
                     ItemStack.CODEC.fieldOf("itemStack").forGetter(o -> o.itemStack)
-            ).apply(t, ItemStackWrapper::new)
+            ).apply(t, ItemStackResourceKey::new)
     );
 
-    public ItemStackWrapper(ItemStack itemStack) {
+    public ItemStackResourceKey(ItemStack itemStack) {
         this.itemStack = itemStack.copyWithCount(1);
     }
 
     public boolean equals(Object o) {
         ItemStack itemStack2;
-        if (o instanceof ItemStackWrapper) {
-            itemStack2 = ((ItemStackWrapper) o).getItemStack();
+        if (o instanceof ItemStackResourceKey) {
+            itemStack2 = ((ItemStackResourceKey) o).getItemStack();
         } else return false;
         return ItemStack.isSameItemSameTags(itemStack, itemStack2);
     }
@@ -38,4 +38,8 @@ public class ItemStackWrapper {
         return Objects.hash(itemHash, tagHash);
     }
 
+    @Override
+    public ItemStack getThing() {
+        return this.itemStack;
+    }
 }

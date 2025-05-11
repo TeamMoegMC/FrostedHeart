@@ -22,33 +22,32 @@ package com.teammoeg.frostedheart.content.town.resource;
 import com.google.common.collect.Interner;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.io.CodecUtil;
 
 import lombok.Getter;
 
 /**
- * Town resource key of Items.
+ * Town resource attribute of virtual resources.
  * Holds the resource type and the level.
- * The amount of a resource with specific type and level can be read using this key.
+ * The amount of a resource with specific type and level can be read using this class.
 */
 @Getter
-public class VirtualResourceKey implements ITownResourceKey{
+public class VirtualResourceAttribute implements ITownResourceAttribute, ITownResourceKey<VirtualResourceAttribute> {
     public final VirtualResourceType type;
     private final int level;
 
     /**
-     * 用于缓存，避免创建重复的key，占用额外内存。
+     * 用于缓存，避免创建重复的attribute，占用额外内存。
      */
-    public static final Interner<VirtualResourceKey> INTERNER = com.google.common.collect.Interners.newWeakInterner();
+    public static final Interner<VirtualResourceAttribute> INTERNER = com.google.common.collect.Interners.newWeakInterner();
 
-    public static final Codec<VirtualResourceKey> CODEC = RecordCodecBuilder.create(t -> t.group(
+    public static final Codec<VirtualResourceAttribute> CODEC = RecordCodecBuilder.create(t -> t.group(
                     VirtualResourceType.CODEC.fieldOf("type").forGetter(o->o.type),
                    Codec.INT.optionalFieldOf("level",0).forGetter(o->o.level)
-            ).apply(t, VirtualResourceKey::new)
+            ).apply(t, VirtualResourceAttribute::new)
     );
 
 
-    VirtualResourceKey(VirtualResourceType type, int level){
+    VirtualResourceAttribute(VirtualResourceType type, int level){
         this.type=type;
         if(type.isLevelValid(level)){
             this.level=level;
@@ -57,7 +56,7 @@ public class VirtualResourceKey implements ITownResourceKey{
         }
     }
 
-    VirtualResourceKey(VirtualResourceType type){
+    VirtualResourceAttribute(VirtualResourceType type){
         this.type=type;
         this.level = 0;
     }
@@ -65,26 +64,26 @@ public class VirtualResourceKey implements ITownResourceKey{
 
 
     /**
-     * 创建一个VirtualResourceKey，并使用缓存，避免重复创建占用内存
+     * 创建一个VirtualResourceAttribute，并使用缓存，避免重复创建占用内存
      */
-    public static VirtualResourceKey of(VirtualResourceType type, int level) {
-        return INTERNER.intern(new VirtualResourceKey(type, level));
+    public static VirtualResourceAttribute of(VirtualResourceType type, int level) {
+        return INTERNER.intern(new VirtualResourceAttribute(type, level));
     }
 
 
     /**
-     * 创建一个VirtualResourceKey，并使用缓存，避免重复创建占用内存
+     * 创建一个VirtualResourceAttribute，并使用缓存，避免重复创建占用内存
      * 默认等级为0
      */
-    public static VirtualResourceKey of(VirtualResourceType type) {
-        return INTERNER.intern(new VirtualResourceKey(type));
+    public static VirtualResourceAttribute of(VirtualResourceType type) {
+        return INTERNER.intern(new VirtualResourceAttribute(type));
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if(o instanceof VirtualResourceKey otherKey){
-            return type==otherKey.type&&level==otherKey.level;
+        if(o instanceof VirtualResourceAttribute otherAttribute){
+            return type==otherAttribute.type&&level==otherAttribute.level;
         }
         return false;
     }
@@ -98,4 +97,8 @@ public class VirtualResourceKey implements ITownResourceKey{
         return type.getKey()+"_level:"+level;
     }
 
+    @Override
+    public VirtualResourceAttribute getThing() {
+        return this;
+    }
 }
