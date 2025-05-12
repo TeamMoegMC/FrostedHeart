@@ -110,11 +110,17 @@ public class CTeamDataManager {
 
     /**
      * Helper method to get the data from frostedheart team id.
+     * @apiNote DO NOT CALL IN CLIENT, or it would return empty data
      * @param id the research team id
      * @return data
      */
     @Nullable
     public static TeamDataHolder getDataByResearchID(UUID id) {
+    	//Note: this method should only be called in server, but create ponder make things wrost
+    	//So this is a fallback mechanic returning an empty data when called in client
+    	if(INSTANCE==null) {
+    		return new TeamDataHolder(UUID.randomUUID(),new ClientTeam());
+    	}
     	return INSTANCE.get(id);
     }
 
