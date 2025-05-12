@@ -219,7 +219,11 @@ public class ClimateCommonEvents {
 
 		if(farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
 			if (farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED_FERTILIZER.getType()) {
-				data= new PlantTempData(crop,data.growTimeDays(),data.minFertilize()-5,data.minGrow()-5,data.minSurvive()-5,data.maxFertilize(),data.maxGrow(),data.maxSurvive(),data.snowVulnerable(),data.blizzardVulnerable(),data.dead(),data.willDie());
+				int p=1;
+				if(farmlandBlockState.hasProperty(FertilizedFarmlandBlock.ADVANCED)){
+					p=farmlandBlockState.getValue(FertilizedFarmlandBlock.ADVANCED)?2:1;
+				}
+				data= new PlantTempData(crop,data.growTimeDays(),data.minFertilize()-5*p,data.minGrow()-5*p,data.minSurvive()-5*p,data.maxFertilize(),data.maxGrow(),data.maxSurvive(),data.snowVulnerable(),data.blizzardVulnerable(),data.dead(),data.willDie());
 				status = WorldTemperature.checkPlantStatus(level, pos, data,true);
 			}else{
 				status = WorldTemperature.checkPlantStatus(level, pos, crop);
@@ -233,8 +237,12 @@ public class ClimateCommonEvents {
 		if (data != null) {
 			growTimeGameDays = data.growTimeDays();
 			if(farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
-				if (farmlandBlockState.hasProperty(FertilizedDirt.FERTILIZER)&&farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
-					growTimeGameDays *= 0.5f;
+				if (farmlandBlockState.hasProperty(FertilizedFarmlandBlock.FERTILIZER)&&farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
+					float p2=1;
+					if(farmlandBlockState.hasProperty(FertilizedFarmlandBlock.ADVANCED)){
+						p2=farmlandBlockState.getValue(FertilizedFarmlandBlock.ADVANCED)?0.5f:1.0f;
+					}
+					growTimeGameDays *= (0.5f*p2);
 				}
 			}
 		}
@@ -522,7 +530,11 @@ public class ClimateCommonEvents {
 		WorldTemperature.PlantStatus status;
 		if(farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
 			if (farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED_FERTILIZER.getType()) {
-				data= new PlantTempData(crop,data.growTimeDays(),data.minFertilize()-5,data.minGrow()-5,data.minSurvive()-5,data.maxFertilize(),data.maxGrow(),data.maxSurvive(),data.snowVulnerable(),data.blizzardVulnerable(),data.dead(),data.willDie());
+				int p=1;
+				if(farmlandBlockState.hasProperty(FertilizedDirt.ADVANCED)){
+					p=farmlandBlockState.getValue(FertilizedDirt.ADVANCED)?2:1;
+				}
+				data= new PlantTempData(crop,data.growTimeDays(),data.minFertilize()-5*p,data.minGrow()-5*p,data.minSurvive()-5*p,data.maxFertilize(),data.maxGrow(),data.maxSurvive(),data.snowVulnerable(),data.blizzardVulnerable(),data.dead(),data.willDie());
 				status = WorldTemperature.checkPlantStatus(level, pos, data,true);
 			}else{
 				status = WorldTemperature.checkPlantStatus(level, pos, crop);
@@ -536,7 +548,11 @@ public class ClimateCommonEvents {
 			growTimeGameDays = data.growTimeDays();
 			if(farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
 				if (farmlandBlockState.hasProperty(FertilizedDirt.FERTILIZER)&&farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
-					growTimeGameDays *= 0.5f;
+					float p2=1;
+					if(farmlandBlockState.hasProperty(FertilizedDirt.ADVANCED)){
+						p2=farmlandBlockState.getValue(FertilizedDirt.ADVANCED)?0.5f:1.0f;
+					}
+					growTimeGameDays *= (0.5f*p2);
 				}
 			}
 		}
@@ -601,14 +617,18 @@ public class ClimateCommonEvents {
 			if (state.getTags().anyMatch(t -> t == BlockTags.CROPS)) {
 				CropBlock crop = (CropBlock) state.getBlock();
 				if (crop.getAge(state) == crop.getMaxAge()) {
-					if(farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.INCREASING_FERTILIZER.getType()) {
+					if(farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.INCREASING_FERTILIZER.getType()) {
 						event.setCanceled(true);
 						level.removeBlock(pos, false);
 
 						List<ItemStack> drops = Block.getDrops(state, (ServerLevel) level, pos, null, event.getPlayer(), event.getPlayer().getMainHandItem());
+						int p=2;
+						if(farmlandBlockState.hasProperty(FertilizedFarmlandBlock.ADVANCED)&&farmlandBlockState.getValue(FertilizedFarmlandBlock.ADVANCED) == true){
+							p=3;
+						}
 						for (ItemStack drop : drops) {
 							ItemStack doubleDrop = drop.copy();
-							doubleDrop.setCount(doubleDrop.getCount() * 2);
+							doubleDrop.setCount(doubleDrop.getCount() * p);
 							Block.popResource((Level) level, pos, doubleDrop);
 						}
 					}

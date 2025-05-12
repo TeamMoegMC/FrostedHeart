@@ -879,5 +879,7 @@
   "item.frostedheart.dung": "粪",
   "item.frostedheart.night_soil": "夜香",
   "effect.frostedheart.refreshed": "神清气爽",
-  "message.frostedheart.refreshed": "你感觉神清气爽！"
+  "message.frostedheart.refreshed": "你感觉神清气爽！",
+  "tooltip.frostedheart.fertilizer.basic": "低级肥料",
+  "tooltip.frostedheart.fertilizer.advanced": "高级肥料"
 }
