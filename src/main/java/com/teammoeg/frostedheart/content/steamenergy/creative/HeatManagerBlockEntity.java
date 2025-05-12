@@ -19,19 +19,19 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.creative;
 
+import javax.annotation.Nonnull;
+
 import com.teammoeg.frostedheart.content.steamenergy.ConnectorNetworkRevalidator;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.NetworkConnector;
-import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterTileEntity;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.util.LazyOptional;
-
-import javax.annotation.Nonnull;
 
 public class HeatManagerBlockEntity extends HeatBlockEntity implements NetworkConnector {
     HeatNetwork manager;

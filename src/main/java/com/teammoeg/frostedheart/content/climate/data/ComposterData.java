@@ -27,7 +27,7 @@ public record ComposterData(Item item, float value) {
 
     @Nullable
     public static ComposterData getData(Block block) {
-        return CACHE.get(block);
+        return CACHE.get(block.asItem());
     }
 
     public static void updateCache(RecipeManager manager) {

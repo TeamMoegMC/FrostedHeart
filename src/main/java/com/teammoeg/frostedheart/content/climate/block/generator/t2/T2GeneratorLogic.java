@@ -92,8 +92,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
         if (FHCapabilities.HEAT_EP.isCapability(capability) && NETWORK_CAP.equalsOrNullFace(position)) {
            return ctx.getState().heatCap.cast(ctx);
         } else if (capability == ForgeCapabilities.FLUID_HANDLER && FLUID_INPUT_CAP.equals(position)) {
-            LazyOptional<IFluidHandler> tankCap = ctx.getState().tankCap;
-            return tankCap.cast();
+            return ctx.getState().tankCap.cast(ctx);
         }
         return super.getCapability(ctx, position, capability);
     }

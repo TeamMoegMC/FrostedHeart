@@ -41,8 +41,10 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.Mth;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.QuartPos;
 import net.minecraft.core.HolderLookup.RegistryLookup;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Component;
@@ -81,14 +83,10 @@ public class CoreSpade extends FHLeveledTool {
                 vrange = Math.min(y, (rnd.nextInt(vrange) + vrange) / 2);
                 //RegistryLookup<Biome> biomeRegistry=world.registryAccess().lookup(ForgeRegistries.Keys.BIOMES).get();
 
-                for (int y2 = -vrange; y2 < 0; y2++)
-                    for (int x2 = -hrange; x2 < hrange; x2++)
-                        for (int z2 = -hrange; z2 < hrange; z2++) {
-                            int BlockX = x + x2;
-                            int BlockY = y + y2;
-                            int BlockZ = z + z2;
-                            
-                            ore = world.getBiome(mutable.set(BlockX, BlockY, BlockZ));
+                for (int y2 = QuartPos.fromBlock(y-vrange); y2 < QuartPos.fromBlock(y); y2++)
+                    for (int x2 = QuartPos.fromBlock(x-hrange); x2 < QuartPos.fromBlock(x+hrange); x2++)
+                        for (int z2 = QuartPos.fromBlock(z-hrange); z2 < QuartPos.fromBlock(z+hrange); z2++) {
+                            ore = world.getNoiseBiome(x2, y2, z2);
                             //System.out.println(ore);
                             if (tagdet.test(ore)) {
                                 founded.merge(ore, 1, Integer::sum);
