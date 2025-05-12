@@ -173,14 +173,9 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
         ctx.getState().noliquidtick = 40;
     }
 
-    // TODO: Check if the position is correct
     private void tickControls(IMultiblockContext<T2GeneratorState> ctx) {
-        // Get origin position of the MB
-        BlockPos origin = ctx.getLevel().getAbsoluteOrigin();
-        // get the position of the redstone block from the relative position in MB
-        BlockPos redstone = origin.offset(REDSTONE_OFFSET.posInMultiblock());
 
-        int power = ctx.getLevel().getRawLevel().getDirectSignalTo(redstone);
+        int power = ctx.getRedstoneInputValue(REDSTONE_OFFSET, 0);
 
         Optional<GeneratorData> data = getData(ctx);
 
