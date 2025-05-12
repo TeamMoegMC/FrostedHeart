@@ -65,13 +65,15 @@ public class ConnectorNetworkRevalidator<T extends BlockEntity&NetworkConnector>
 	 * Tick.
 	 */
 	public void tick() {
-		if(network!=null&&!network.isValid())
-			setNetwork(null);
-		if(network!=null)
-			if(++revalidateTick>=10) {
+		if(network!=null) {
+			if(!network.isValid()) {
+				setNetwork(null);
+			}else if(++revalidateTick>=10) {
 				network.refreshConnectedEndpoints(current.getBlockPos());
 				network.startConnectionFromBlock(current);
 			}
+		}
+			
 	}
 	
 	/**

@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.teammoeg.chorda.io.NBTSerializable;
+import com.teammoeg.frostedheart.FHMain;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +32,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
@@ -120,6 +122,9 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      */
     @Getter
     private boolean unloaded;
+    
+    //A special timer for endpoint before full heat network loaded,
+    int loadtick;
     public HeatEndpoint(Block block, BlockPos pos, int priority, float capacity) {
         this.blk = block;
         this.pos = pos;
@@ -183,16 +188,21 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * @return true, if the endpoint should receive connection
      */
     public boolean reciveConnection(Level level, BlockPos pos, HeatNetwork manager, Direction dir, int dist) {
-    	if(this.network!=null) {
+    	if(this.network!=null&&this.network.isValid()) {
     		if(network.getNetworkSize()<=manager.getNetworkSize()) {
-    			this.network=null;
-    			this.distance=-1;
-    			manager.removeEndpoint(this,level, pos, dir);
+    			return true;
     		}
+    		return false;
     	}
         return true;//manager.addEndpoint(this, dist, level, pos);
     }
-
+    public void setNetwork(Level level, BlockPos pos,LazyOptional<HeatEndpoint> lazyThis, HeatNetwork network) {
+    	if(this.network==network)return;
+    	if(this.network!=null&&this.network.isValid()) {
+    		this.network.removeEndpoint(lazyThis, level, pos);
+    	}
+    	this.network = network;
+    }
     /**
      * The network calls this method to provide information about the connection
      * This should only be called by network.
@@ -200,8 +210,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * @param network  the network
      * @param distance the distance
      */
-    public void setConnectionInfo(HeatNetwork network, int distance, BlockPos pos, Level level) {
-        this.network = network;
+    public void setConnectionInfo(int distance, BlockPos pos, Level level) {
         this.distance = distance;
         this.pos = pos;
         this.blk = level.getBlockState(pos).getBlock();
@@ -244,6 +253,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     protected float receiveHeatFromNetwork(float filled, float level) {
         float required = Math.min(maxIntake, capacity - heat);
         tempLevel = level;
+        loadtick=0;//reset loadticks when network connected
         if (required > 0) {
             if (filled >= required) {
                 filled -= required;
@@ -310,7 +320,9 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      */
     public float drainHeat(float val) {
         float drained = Math.min(heat, val);
-        heat -= drained;
+        if(loadtick<=0) {
+        	heat -= drained;
+        }else loadtick--;
         return drained;
     }
 
@@ -321,8 +333,10 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * @return if the heat is drained successfully
      */
     public boolean tryDrainHeat(float val) {
-        if (heat >= val) {
-            heat -= val;
+    	if (heat >= val) {
+            if(loadtick<=0) {
+            	heat -= val;
+            }else loadtick--;
             return true;
         }
         return false;
@@ -385,6 +399,9 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
 
     public void load(CompoundTag nbt, boolean isPacket) {
         heat = nbt.getFloat("net_power");
+        if(!isPacket) {
+        	loadtick=20;
+        }
         //pos = BlockPos.of(nbt.getLong("pos"));
         //blk = CRegistries.getBlock(new ResourceLocation(nbt.getString("block")));
     }
