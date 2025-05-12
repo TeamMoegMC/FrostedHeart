@@ -22,33 +22,19 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public class Fertilizer extends FHBaseItem {
-    private static final String TAG_GRADE = "FertilizerGrade";
+    private final FertilizerGrade grade;
     private final FertilizerType type;
-    public Fertilizer(Properties properties,FertilizerType type) {
+    public Fertilizer(Properties properties,FertilizerType type,FertilizerGrade grade) {
         super(properties);
         this.type = type;
-    }
-
-    public static ItemStack setGrade(ItemStack stack, FertilizerGrade grade) {
-        CompoundTag tag = stack.getOrCreateTag();
-        tag.putInt(TAG_GRADE, grade.ordinal());
-        return stack;
-    }
-
-    public static FertilizerGrade getGrade(ItemStack stack) {
-        CompoundTag tag = stack.getOrCreateTag();
-        if (tag.contains(TAG_GRADE)) {
-            int ordinal = tag.getInt(TAG_GRADE);
-            return FertilizerGrade.values()[ordinal];
-        }
-        return FertilizerGrade.BASIC;
+        this.grade = grade;
     }
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltipComponents, TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltipComponents, flag);
 
-        FertilizerGrade grade = getGrade(stack);
+        FertilizerGrade grade = this.getGrade();
         if (grade == FertilizerGrade.BASIC) {
             tooltipComponents.add(Component.translatable("tooltip.frostedheart.fertilizer.basic").withStyle(ChatFormatting.GRAY));
         } else {
@@ -64,24 +50,24 @@ public class Fertilizer extends FHBaseItem {
         ItemStack itemstack = pContext.getItemInHand();
 
         if(blockstate.is(Blocks.FARMLAND)){
-            level.setBlock(blockpos,FHBlocks.FERTILIZED_FARMLAND.getDefaultState().setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade(itemstack)==FertilizerGrade.ADVANCED), 2);
+            level.setBlock(blockpos,FHBlocks.FERTILIZED_FARMLAND.getDefaultState().setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
             return InteractionResult.SUCCESS;
         }
         if(blockstate.is(Blocks.DIRT)|| blockstate.is(Blocks.GRASS_BLOCK)){
-            level.setBlock(blockpos,FHBlocks.FERTILIZED_DIRT.getDefaultState().setValue(FertilizedDirt.FERTILIZER,this.type.getType()).setValue(FertilizedDirt.ADVANCED,getGrade(itemstack)==FertilizerGrade.ADVANCED), 2);
+            level.setBlock(blockpos,FHBlocks.FERTILIZED_DIRT.getDefaultState().setValue(FertilizedDirt.FERTILIZER,this.type.getType()).setValue(FertilizedDirt.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
             return InteractionResult.SUCCESS;
         }
         if(blockstate.getTags().anyMatch(t->t==BlockTags.CROPS)){
             BlockState blockstate1 = level.getBlockState(blockpos.below());
             if(blockstate1.is(Blocks.FARMLAND)){
-                level.setBlock(blockpos.below(),FHBlocks.FERTILIZED_FARMLAND.getDefaultState().setValue(FertilizedFarmlandBlock.MOISTURE,blockstate1.getValue(FarmBlock.MOISTURE)).setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade(itemstack)==FertilizerGrade.ADVANCED), 2);
+                level.setBlock(blockpos.below(),FHBlocks.FERTILIZED_FARMLAND.getDefaultState().setValue(FertilizedFarmlandBlock.MOISTURE,blockstate1.getValue(FarmBlock.MOISTURE)).setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
                 return InteractionResult.SUCCESS;
             }
         }
         if(blockstate.getTags().anyMatch(t->t==BlockTags.SAPLINGS)){
             BlockState blockstate1 = level.getBlockState(blockpos.below());
             if(blockstate1.is(Blocks.DIRT)|| blockstate1.is(Blocks.GRASS_BLOCK)){
-                level.setBlock(blockpos.below(),FHBlocks.FERTILIZED_DIRT.getDefaultState().setValue(FertilizedDirt.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade(itemstack)==FertilizerGrade.ADVANCED), 2);
+                level.setBlock(blockpos.below(),FHBlocks.FERTILIZED_DIRT.getDefaultState().setValue(FertilizedDirt.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
                 return InteractionResult.SUCCESS;
             }
         }
@@ -92,6 +78,9 @@ public class Fertilizer extends FHBaseItem {
         return type;
     }
 
+    public FertilizerGrade getGrade() {
+        return grade;
+    }
     public enum FertilizerGrade {
         BASIC,
         ADVANCED
