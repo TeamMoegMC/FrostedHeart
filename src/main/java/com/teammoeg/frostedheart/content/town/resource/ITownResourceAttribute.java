@@ -23,7 +23,7 @@ package com.teammoeg.frostedheart.content.town.resource;
  * A class that contains ITownResourceType and level of the resource.
  * You can change certain resources with this town resource attribute in TownResourceManager.
  */
-public interface ITownResourceAttribute {
+public interface ITownResourceAttribute extends IGettable {
     ITownResourceType getType();
     int getLevel();
 

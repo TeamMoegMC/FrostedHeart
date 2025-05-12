@@ -73,6 +73,15 @@ public class TownCommand {
                             return Command.SINGLE_SUCCESS;
                         });
 
+        LiteralArgumentBuilder<CommandSourceStack> listAllResources =
+                Commands.literal("list_all")
+                        .executes(ct -> {
+                            TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
+                            //System.out.println(town.getResourceManager().resourceHolder.getAllVirtualResources());
+                            ct.getSource().sendSuccess(()-> Components.str(town.getResourceManager().resourceHolder.getAllResources() ), true);
+                            return Command.SINGLE_SUCCESS;
+                        });
+
         LiteralArgumentBuilder<CommandSourceStack> addVirtualResources =
                 Commands.literal("addVirtual")
                         .then(Commands.argument("type", StringArgumentType.string())
@@ -210,6 +219,7 @@ public class TownCommand {
                                 .then(addVirtualResources)
                                     .then(addItemOnHand)
                                 .then(costResource)
+                                    .then(listAllResources)
                             )
                             .then(Commands.literal("residents")
                                     .then(listResidents)

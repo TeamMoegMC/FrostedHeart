@@ -33,7 +33,7 @@ public class TownResourceActions {
             }
             double toCostCopy = toCost;//toCost接下来会修改，复制一份用于记录数量
             Map<ItemStackResourceKey, Double> costDetail = new HashMap<>();
-            Map<ItemStackResourceKey, Double> items = resourceHolder.getAllItemsByWrapper(resourceToModify);
+            Map<ItemStackResourceKey, Double> items = resourceHolder.getAllItemsByResourceAttribute(resourceToModify);
             for(ItemStackResourceKey itemStackResourceKey : items.keySet()){
                 double itemResourceAmount = TownResourceHolder.getResourceAmount(itemStackResourceKey, resourceToModify);
                 double itemLeft = resourceHolder.get(itemStackResourceKey);

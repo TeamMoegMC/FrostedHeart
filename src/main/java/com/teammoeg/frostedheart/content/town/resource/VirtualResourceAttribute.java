@@ -26,12 +26,14 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import lombok.Getter;
 
 /**
+ * <strong>THIS IS ALSO A VIRTUAL RESOURCE KEY THAT DIRECTLY STORED IN {@link TownResourceHolder}!</strong>
+ * <p>
  * Town resource attribute of virtual resources.
  * Holds the resource type and the level.
  * The amount of a resource with specific type and level can be read using this class.
-*/
+ */
 @Getter
-public class VirtualResourceAttribute implements ITownResourceAttribute, ITownResourceKey<VirtualResourceAttribute> {
+public class VirtualResourceAttribute implements ITownResourceAttribute, ITownResourceKey {
     public final VirtualResourceType type;
     private final int level;
 
@@ -98,7 +100,7 @@ public class VirtualResourceAttribute implements ITownResourceAttribute, ITownRe
     }
 
     @Override
-    public VirtualResourceAttribute getThing() {
-        return this;
+    public KeyType getKeyType() {
+        return KeyType.VIRTUAL;
     }
 }

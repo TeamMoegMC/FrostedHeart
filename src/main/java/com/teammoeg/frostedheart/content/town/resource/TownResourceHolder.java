@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.town.resource;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableDouble;
@@ -44,10 +45,11 @@ import net.minecraft.world.item.ItemStack;
 public class TownResourceHolder {
     /**
      * The collection that saves all the resources of town.
-     * ItemStack没有实现equals和hashCode方法，使用ItemStackWrapper进行封装来代替。
      */
-    private Map<ItemStackResourceKey, Double> itemResources = new HashMap<>();
-    private Map<VirtualResourceAttribute, Double> virtualResources = new HashMap<>();
+    //private Map<ItemStackResourceKey, Double> itemResources = new HashMap<>();
+    //private Map<VirtualResourceAttribute, Double> virtualResources = new HashMap<>();
+    private Map<ITownResourceKey, Double> resources = new HashMap<>();
+
     /**
      * 表示已占用的资源容量。
      * 使用此类的中的addUnsafe和costUnsafe方法修改需要占用容量的资源时，已占用资源会随之修改。
@@ -68,31 +70,34 @@ public class TownResourceHolder {
     public static final double DELTA = 1.0/8192;//一个非常小的值，当资源数量小于这个值时，认为资源为0，抵消误差。
 
     public static final Codec<TownResourceHolder> CODEC = RecordCodecBuilder.create(t -> t.group(
-            CodecUtil.mapCodec("itemStack", ItemStackResourceKey.CODEC, "amount", Codec.DOUBLE) .optionalFieldOf("itemResources",Map.of()).forGetter(o->o.itemResources),
-            CodecUtil.mapCodec("virtualKey", VirtualResourceAttribute.CODEC, "amount", Codec.DOUBLE).optionalFieldOf("virtualResources",Map.of()).forGetter(o->o.virtualResources),
+            //CodecUtil.mapCodec("itemStack", ItemStackResourceKey.CODEC, "amount", Codec.DOUBLE) .optionalFieldOf("itemResources",Map.of()).forGetter(o->o.itemResources),
+            //CodecUtil.mapCodec("virtualKey", VirtualResourceAttribute.CODEC, "amount", Codec.DOUBLE).optionalFieldOf("virtualResources",Map.of()).forGetter(o->o.virtualResources),
+            CodecUtil.mapCodec("resourceKey", ITownResourceKey.CODEC, "amount", Codec.DOUBLE).optionalFieldOf("resources",Map.of()).forGetter(o->o.resources),
             Codec.DOUBLE.optionalFieldOf("occupiedCapacity",0d).forGetter(o->o.occupiedCapacity)
             ).apply(t, TownResourceHolder::new)
     );
 
     public TownResourceHolder() {}
-    public TownResourceHolder(Map<ItemStackResourceKey, Double> itemResources, Map<VirtualResourceAttribute, Double> virtualResources, double occupiedCapacity) {
-        this.itemResources.putAll(itemResources);
-        this.virtualResources.putAll(virtualResources);
+    public TownResourceHolder(Map<ITownResourceKey, Double> resources, double occupiedCapacity) {
+        this.resources.putAll(resources);
         this.occupiedCapacity = occupiedCapacity;
         removeZeros();
         updateCache();
     }
 
     //不输入已占用容量，自行计算。
-    public TownResourceHolder(Map<ItemStackResourceKey, Double> itemResources, Map<VirtualResourceAttribute, Double> virtualResources) {
-        MutableDouble adder = new MutableDouble();
-        itemResources.values().forEach(adder::add);
-        virtualResources.entrySet().stream()
-                .filter(entry -> entry.getKey().getType().needCapacity)
-                .forEach(entry -> adder.add(entry.getValue()));
-        this.itemResources = itemResources;
-        this.virtualResources = virtualResources;
-        this.occupiedCapacity = adder.doubleValue();
+    public TownResourceHolder(Map<ITownResourceKey, Double> resources) {
+        double adder = 0.0;
+        for(Map.Entry<ITownResourceKey, Double> entry : resources.entrySet()){
+            ITownResourceKey key = entry.getKey();
+            resources.put(key, entry.getValue());
+            if(key instanceof ItemStackResourceKey){
+                adder += entry.getValue();
+            } else if(key instanceof VirtualResourceAttribute virtualKey){
+                adder += virtualKey.getType().needCapacity? entry.getValue() : 0;
+            }
+        }
+        this.occupiedCapacity = adder;
         removeZeros();
         updateCache();
     }
@@ -119,7 +124,7 @@ public class TownResourceHolder {
     }
 
     /**
-     * 获取单个物品对应的的某资源数量。
+     * <b>获取【单个物品对应的的某资源数量】!!!</b>
      * @param itemStackResourceKey 物品（包装类）
      * @param attribute 物品要转化为的ItemResourceAttribute
      * @return 单个该物品能转化为输入的ItemResourceAttribute的数量
@@ -185,11 +190,40 @@ public class TownResourceHolder {
         addItemToCache(new ItemStackResourceKey(pItemStack));
     }
 
+
+
     /**
-     * 获取城镇中某个物品的储量。
+     * 获取城镇中某种或某类资源的数量。
+     * 支持获取{@link ITownResourceKey}, {@link ITownResourceAttribute}和{@link ITownResourceType}的数量
+     * <p>
+     * 当尝试获取Attribute数量时
+     * 若为ItemResourceAttribute，获取的是城镇中，所有该ItemResourceAttribute对应物品的(物品数量 * 单个物品能转化为ItemResourceAttribute数量)之和。
+     * 这也是TownResourceManager中，两种cost(ItemResourceAttribute)能消耗的最大数量。
+     * 举个例子，比如城镇中，有20个铁锭、10个铁块，1个铁锭可转化为1 metal_1，1个铁块可转化为9 metal_1，使用这个get方法获取metal_1的数量，会得到20*1+10*9=110.
+     * </p>
      */
-    public double get(ItemStackResourceKey itemStackResourceKey){
-        return itemResources.getOrDefault(itemStackResourceKey, 0.0);
+    public double get(IGettable thing){
+        if(thing instanceof ITownResourceKey townResourceKey){
+            return resources.getOrDefault(townResourceKey, 0.0);
+        }
+        if(thing instanceof ITownResourceAttribute attribute){
+            //VirtualResourceAttribute由于同时属于ITownResourceKey，在前面处理掉了
+            if(thing instanceof ItemResourceAttribute itemResourceAttribute){
+                MutableDouble adder = new MutableDouble();
+                for(ItemStackResourceKey itemStackResourceKey : ITEM_RESOURCE_ATTRIBUTE_CACHE.getOrDefault(itemResourceAttribute, new HashSet<>())){
+                    adder.add(get(itemStackResourceKey) * getResourceAmount(itemStackResourceKey, itemResourceAttribute));
+                }
+                return adder.doubleValue();
+            }
+        }
+        if(thing instanceof ITownResourceType type){
+            double sum = 0.0;
+            for(int i = 0; i <= type.getMaxLevel(); i++){
+                sum += get(type.generateAttribute(i));
+            }
+            return sum;
+        }
+        return 0.0;
     }
 
     /**
@@ -200,53 +234,33 @@ public class TownResourceHolder {
     }
 
     /**
-     * 获取城镇中某个ITownResourceAttribute的储量。
-
-     * 若为ItemResourceAttribute，获取的是城镇中，所有该ItemResourceAttribute对应物品的(物品数量 * 单个物品能转化为ItemResourceAttribute数量)之和。
-     * 这也是TownResourceManager中，两种cost(ItemResourceAttribute)能消耗的最大数量。
-     * 举个例子，比如城镇中，有20个铁锭、10个铁块，1个铁锭可转化为1 metal_1，1个铁块可转化为9 metal_1，使用这个get方法获取metal_1的数量，会得到20*1+10*9=110.
-     */
-    public double get(ITownResourceAttribute attribute){
-        if(attribute instanceof ItemResourceAttribute){
-        	MutableDouble adder = new MutableDouble();
-            for(ItemStackResourceKey itemStackResourceKey : ITEM_RESOURCE_ATTRIBUTE_CACHE.getOrDefault((ItemResourceAttribute)attribute, new HashSet<>())){
-                adder.add(get(itemStackResourceKey) * getResourceAmount(itemStackResourceKey, (ItemResourceAttribute)attribute));
-            }
-            return adder.doubleValue();
-        } else if(attribute instanceof VirtualResourceAttribute){
-            return virtualResources.getOrDefault(attribute, 0.0);
-        }
-        return 0.0;
-    }
-
-
-    public double get(ITownResourceType type){
-        double sum = 0.0;
-        for(int i = 0; i <= type.getMaxLevel(); i++){
-            sum += get(type.generateAttribute(i));
-        }
-        return sum;
-    }
-
-    /**
      * Get all items stored in town.
      * @return A map that contains all items stored in town.
      */
     public Map<ItemStack, Double> getAllItems(){
         Map<ItemStack, Double> items = new HashMap<>();
-        for(ItemStackResourceKey itemStackResourceKey : itemResources.keySet()){
-            if(get(itemStackResourceKey) > DELTA){
-                items.put(itemStackResourceKey.getItemStack(), get(itemStackResourceKey));
+        for(ITownResourceKey townResourceKey : resources.keySet()){
+            if(townResourceKey instanceof ItemStackResourceKey itemStackResourceKey) {
+                if (get(itemStackResourceKey) > DELTA) {
+                    items.put(itemStackResourceKey.getItemStack(), get(itemStackResourceKey));
+                }
             }
         }
         return items;
     }
 
-    public Map<ItemStackResourceKey, Double> getAllItemsByWrapper(ItemResourceAttribute itemResourceAttribute){
+    public Map<ItemStackResourceKey, Double> getAllItemsByResourceAttribute(ItemResourceAttribute itemResourceAttribute){
         Map<ItemStackResourceKey, Double> items = new HashMap<>();
-        for(ItemStackResourceKey itemStackResourceKey : itemResources.keySet()){
-            if(get(itemStackResourceKey) > DELTA && ItemResourceAttribute.fromItemStack(itemStackResourceKey.getItemStack()).contains(itemResourceAttribute)){
-                items.put(itemStackResourceKey, get(itemStackResourceKey));
+        for(ITownResourceKey townResourceKey : resources.keySet()){
+            if(townResourceKey instanceof ItemStackResourceKey itemStackResourceKey) {
+                for(ItemStackResourceKey itemKeyOfAttribute : ITEM_RESOURCE_ATTRIBUTE_CACHE.getOrDefault(itemResourceAttribute, new HashSet<>())){
+                    if(itemStackResourceKey.equals(itemKeyOfAttribute)){
+                        if (get(itemStackResourceKey) > DELTA) {
+                            items.put(itemStackResourceKey, get(itemStackResourceKey));
+                        }
+                        break;
+                    }
+                }
             }
         }
         return items;
@@ -268,7 +282,16 @@ public class TownResourceHolder {
     }
 
     public Map<VirtualResourceAttribute, Double> getAllVirtualResources() {
-        return Map.copyOf(virtualResources);
+        return resources.entrySet().stream()
+                .filter(entry -> entry.getKey().getKeyType() == ITownResourceKey.KeyType.VIRTUAL)
+                .collect(Collectors.toMap(
+                        entry -> (VirtualResourceAttribute) entry.getKey(),
+                        Map.Entry::getValue
+                ));
+    }
+
+    public Map<ITownResourceKey , Double> getAllResources(){
+        return Map.copyOf(resources);
     }
 
     public double getCapacityLeft(){
@@ -281,25 +304,30 @@ public class TownResourceHolder {
      * Use addUnsafe and costUnsafe in this package.
      * Use methods in TownResourceManager in other classes.
      */
-private void addSigned(ItemStackResourceKey pItemStackResourceKey, double amount){
-        if(pItemStackResourceKey.itemStack.isEmpty()) return;
-        Double amountExist = itemResources.get(pItemStackResourceKey);
-        if(amountExist == null || amountExist <= DELTA){
-            addItemToCache(pItemStackResourceKey);
+private void addSigned(ITownResourceKey townResourceKey, double amount){
+    System.out.println("resourcesBefore: " + resources);
+    if(townResourceKey instanceof ItemStackResourceKey itemStackResourceKey){
+        if(itemStackResourceKey.itemStack.isEmpty()) return;
+        double amountExist = get(itemStackResourceKey);
+        if(amountExist <= DELTA){
+            addItemToCache(itemStackResourceKey);
         }
-        if(Math.abs(itemResources.merge(pItemStackResourceKey, amount, Double::sum)) <= DELTA){
-            itemResources.remove(pItemStackResourceKey);
+        if(Math.abs(resources.merge(itemStackResourceKey, amount, Double::sum)) <= DELTA){
+            resources.remove(itemStackResourceKey);
         }
         this.occupiedCapacity += amount;
     }
-    private void addSigned(ItemStack pItemStack, double amount){
-        addSigned(new ItemStackResourceKey(pItemStack), amount);
-    }
-    private void addSigned(VirtualResourceAttribute key, double amount){
-        virtualResources.merge(key, amount, Double::sum);
-        if(key.type.needCapacity){
+    if(townResourceKey instanceof VirtualResourceAttribute virtualResourceKey){
+        resources.merge(virtualResourceKey, amount, Double::sum);
+        if(virtualResourceKey.type.needCapacity){
             this.occupiedCapacity += amount;
         }
+    }
+    System.out.println("addSigned: " + townResourceKey + " " + amount);
+    System.out.println("resources: " + resources);
+    }
+    private void addSigned(ItemStack pItemStack, double amount){
+        addSigned(new ItemStackResourceKey(pItemStack), amount);
     }
 
 
@@ -388,9 +416,11 @@ private void addSigned(ItemStackResourceKey pItemStackResourceKey, double amount
      * 遍历存储的所有物品，获取物品对应的ItemResourceAttribute及其数量，加入到缓存中。
      */
     public void updateCache(){
-        for(ItemStackResourceKey itemStackResourceKey : itemResources.keySet()){
-            if(itemStackResourceKey.getItemStack().isEmpty()) continue;
-            addItemToCache(itemStackResourceKey);
+        for(ITownResourceKey key : resources.keySet()){
+            if(key instanceof ItemStackResourceKey itemStackResourceKey){
+                if(itemStackResourceKey.getItemStack().isEmpty()) continue;
+                addItemToCache(itemStackResourceKey);
+            }
         }
     }
 
@@ -409,8 +439,7 @@ private void addSigned(ItemStackResourceKey pItemStackResourceKey, double amount
      * Remove all items and virtual resources with zero amount from map.
      */
     public void removeZeros(){
-        itemResources.entrySet().removeIf(entry -> Math.abs(entry.getValue()) <= DELTA || entry.getKey().getItemStack().isEmpty());
-        virtualResources.entrySet().removeIf(entry ->Math.abs(entry.getValue()) <= DELTA);
+        resources.entrySet().removeIf((entry) -> entry.getValue() < DELTA);
     }
 
 }

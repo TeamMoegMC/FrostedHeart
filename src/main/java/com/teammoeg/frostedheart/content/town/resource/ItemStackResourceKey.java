@@ -12,7 +12,7 @@ import java.util.Objects;
  * The count of ItemStack will be changed to 1 when creating this wrapper. Because TownResourceHolder used other things to save the amount of items.
  */
 @Getter
-public class ItemStackResourceKey implements ITownResourceKey<ItemStack>{
+public class ItemStackResourceKey implements ITownResourceKey {
     public ItemStack itemStack;
 
     public static final Codec<ItemStackResourceKey> CODEC = RecordCodecBuilder.create(t -> t.group(
@@ -39,7 +39,7 @@ public class ItemStackResourceKey implements ITownResourceKey<ItemStack>{
     }
 
     @Override
-    public ItemStack getThing() {
-        return this.itemStack;
+    public KeyType getKeyType() {
+        return KeyType.ITEM;
     }
 }

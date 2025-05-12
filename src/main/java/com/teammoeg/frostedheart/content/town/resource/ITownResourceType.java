@@ -25,7 +25,7 @@ package com.teammoeg.frostedheart.content.town.resource;
  * Town resource type have a max level as integer.
  * Max level can be 0 or any positive integer.
  */
-public interface ITownResourceType {
+public interface ITownResourceType extends IGettable {
     int getMaxLevel();
 
     /**
