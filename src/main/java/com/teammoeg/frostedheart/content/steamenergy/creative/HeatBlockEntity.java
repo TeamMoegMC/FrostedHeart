@@ -48,8 +48,8 @@ import static net.minecraft.ChatFormatting.GRAY;
  * It handles default client effects and tooltips and capabilities.
  */
 public class HeatBlockEntity extends SmartBlockEntity implements HeatNetworkProvider, IHaveGoggleInformation {
-    HeatEndpoint endpoint;
-    LazyOptional<HeatEndpoint> heatcap;
+    protected HeatEndpoint endpoint;
+    protected LazyOptional<HeatEndpoint> heatcap;
     public HeatBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }

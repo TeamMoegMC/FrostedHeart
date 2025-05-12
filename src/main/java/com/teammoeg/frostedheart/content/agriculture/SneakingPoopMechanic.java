@@ -23,7 +23,7 @@ public class SneakingPoopMechanic {
     private static final int POOP_DURATION = 400;
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END) {
+        if (false&&event.phase == TickEvent.Phase.END) {
             Player player = event.player;
             Level level = player.level();
 

@@ -296,8 +296,9 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
 	                        fuel--;
 	                        this.setActive(true);
 	                        this.setChanged();
-	                        return;
+	                        
                         }
+                        return;
                     }
                 }
                 efficiency -= 0.0005F;

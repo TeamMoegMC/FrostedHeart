@@ -5,5 +5,6 @@
 	"waterSaturationLevel": 2,
 	"duration": 1600,
 	"amplifier": 0,
-	"probability": 75
+	"probability": 75,
+	"mob_effects": [{"name":"minecraft:hunger","duration":400,"amplifier":1}]
 }

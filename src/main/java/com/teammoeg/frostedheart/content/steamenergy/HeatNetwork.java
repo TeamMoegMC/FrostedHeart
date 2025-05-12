@@ -82,7 +82,9 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
     private float totalEndpointIntake;
     @Getter
     private boolean valid=true;
-
+    
+    //Is current network just recovered from load?
+    private boolean restoreFromLoad;
     /**
      * Instantiates a new heat network.
      */
@@ -132,6 +134,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
 	            CompoundTag ccnbt = ((CompoundTag) ccn);
 	            propagated.put(BlockPos.of(ccnbt.getLong("pos")), ccnbt.getInt("len"));
 	        }
+	        restoreFromLoad=true;
     	}
         totalEndpointOutput = nbt.getFloat("totalEndpointOutput");
         totalEndpointIntake = nbt.getFloat("totalEndpointIntake");
@@ -300,17 +303,19 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
      */
     public boolean addEndpoint(LazyOptional<HeatEndpoint> capEndpoint, int dist, Level level, BlockPos pos) {
     	HeatEndpoint heatEndpoint=capEndpoint.orElse(null);
-    	if(heatEndpoint!=null)
+    	if(heatEndpoint!=null) {
+    		heatEndpoint.setNetwork(level, pos, capEndpoint, this);
 	        if (endpoints.contains(capEndpoint)) {
 	            if (dist < heatEndpoint.getDistance()||heatEndpoint.getDistance()==-1) {
-	                heatEndpoint.setConnectionInfo(this, dist, pos, level);
+	                heatEndpoint.setConnectionInfo( dist, pos, level);
 	                return true;
 	            }
 	        } else {
-	            heatEndpoint.setConnectionInfo(this, dist, pos, level);
+	            heatEndpoint.setConnectionInfo( dist, pos, level);
 	            endpoints.add(capEndpoint);
 	            return true;
 	        }
+    	}
         return false;
     }
     /**
@@ -321,8 +326,8 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
      * @param pos the position of endpoint
      * @return true, if successful
      */
-    public boolean removeEndpoint(HeatEndpoint heatEndpoint, Level level, BlockPos pos,Direction indir) {
-    	heatEndpoint.clearConnection();
+    public boolean removeEndpoint(LazyOptional<HeatEndpoint> heatEndpoint, Level level, BlockPos pos) {
+    	heatEndpoint.ifPresent(t->t.clearConnection());
     	return endpoints.remove(heatEndpoint);
     }
 
@@ -412,6 +417,19 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
      * @param level the level
      */
     public void tick(Level level) {
+    	if(restoreFromLoad) {
+    		interval=-1;
+    		restoreFromLoad=false;
+    		Iterator<BlockPos> it=this.propagated.keySet().iterator();
+    		while(it.hasNext()) {
+    			BlockPos pos=it.next();
+    			NetworkConnector conn=CUtils.getExistingTileEntity(level, pos, NetworkConnector.class);
+    			if(conn!=null)
+    				conn.setNetwork(this);
+    			else
+    				it.remove();
+    		}
+    	}
         // Do update if requested
         if (interval > 0) {
             interval--;

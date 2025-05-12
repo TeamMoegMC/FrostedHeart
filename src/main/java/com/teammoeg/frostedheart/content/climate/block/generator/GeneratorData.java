@@ -384,8 +384,8 @@ public class GeneratorData implements SpecialData {
     public int getRadius() {
         float rlevel = RLevel;
         if (rlevel <= 1)
-            return (int) (12 * rlevel);
-        return (int) (12 + (rlevel - 1) * 4);
+            return (int) (16 * rlevel);
+        return (int) (16 + (rlevel - 1) * 8);
     }
 
     /**

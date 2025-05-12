@@ -232,7 +232,7 @@ public class CIcons {
 			if (large != null)
 				large.draw(ms, x, y, w, h);
 			ms.pose().pushPose();
-			ms.pose().translate(0, 0, 110);// let's get top most
+			ms.pose().translate(0, 0, 300);// let's get top most
 			if (small != null)
 				small.draw(ms, x + w / 2, y + h / 2, w / 2, h / 2);
 			ms.pose().popPose();

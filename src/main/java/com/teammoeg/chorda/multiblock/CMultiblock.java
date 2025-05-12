@@ -75,8 +75,7 @@ public abstract class CMultiblock extends IETemplateMultiblock {
 
 	@Override
 	public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
-        BlockPos master = this.getMasterFromOriginOffset();
-        CMultiblockHelper.getBEHelperOptional(world, origin.offset(master)).ifPresent(te -> {
+        CMultiblockHelper.getBEHelperOptional(world, origin).ifPresent(te -> {
         	IMultiblockLogic<?> logic=te.getMultiblock().logic();
             if (logic instanceof DisassembleListener lis) {
             	lis.onDisassemble(this, te);

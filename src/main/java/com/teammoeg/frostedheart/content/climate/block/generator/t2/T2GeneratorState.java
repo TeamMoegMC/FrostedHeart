@@ -46,11 +46,10 @@ public class T2GeneratorState extends GeneratorState implements HeatNetworkProvi
     public static final int TANK_CAPACITY = 200 * 1000;
     public FluidTank tank = new FluidTank(TANK_CAPACITY,
             f -> GeneratorSteamRecipe.findRecipe(f) != null);
-    public LazyOptional<IFluidHandler> tankCap = LazyOptional.of(() -> tank);
+    public StoredCapability<IFluidHandler> tankCap = new StoredCapability<>(tank);
     
     public StoredCapability<HeatEndpoint> heatCap=new StoredCapability<>(ep);
     HeatNetwork manager=new HeatNetwork();
-
     int liquidtick = 0;
     int noliquidtick = 0;
     int tickUntilStopBoom = 20;
