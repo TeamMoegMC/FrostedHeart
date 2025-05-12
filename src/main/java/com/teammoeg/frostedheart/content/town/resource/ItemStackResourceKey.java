@@ -16,7 +16,13 @@ public class ItemStackResourceKey implements ITownResourceKey {
     public ItemStack itemStack;
 
     public static final Codec<ItemStackResourceKey> CODEC = RecordCodecBuilder.create(t -> t.group(
-                    ItemStack.CODEC.fieldOf("itemStack").forGetter(o -> o.itemStack)
+                    ItemStack.CODEC
+                            .xmap(
+                                    // 反序列化时强制 count=1
+                                    stack -> stack.copyWithCount(1),
+                                    // 序列化时也保持 count=1
+                                    stack -> stack.copyWithCount(1)
+                            ).fieldOf("itemStack").forGetter(o -> o.itemStack)
             ).apply(t, ItemStackResourceKey::new)
     );
 
@@ -39,7 +45,9 @@ public class ItemStackResourceKey implements ITownResourceKey {
     }
 
     @Override
-    public KeyType getKeyType() {
-        return KeyType.ITEM;
+    public String toString() {
+        return "{Item Resource: " +
+                itemStack +
+                '}';
     }
 }

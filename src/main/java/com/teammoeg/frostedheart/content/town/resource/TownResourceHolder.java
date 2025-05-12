@@ -283,7 +283,7 @@ public class TownResourceHolder {
 
     public Map<VirtualResourceAttribute, Double> getAllVirtualResources() {
         return resources.entrySet().stream()
-                .filter(entry -> entry.getKey().getKeyType() == ITownResourceKey.KeyType.VIRTUAL)
+                .filter(entry -> entry.getKey() instanceof VirtualResourceAttribute)
                 .collect(Collectors.toMap(
                         entry -> (VirtualResourceAttribute) entry.getKey(),
                         Map.Entry::getValue

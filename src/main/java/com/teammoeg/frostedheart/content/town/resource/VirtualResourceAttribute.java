@@ -43,13 +43,13 @@ public class VirtualResourceAttribute implements ITownResourceAttribute, ITownRe
     public static final Interner<VirtualResourceAttribute> INTERNER = com.google.common.collect.Interners.newWeakInterner();
 
     public static final Codec<VirtualResourceAttribute> CODEC = RecordCodecBuilder.create(t -> t.group(
-                    VirtualResourceType.CODEC.fieldOf("type").forGetter(o->o.type),
-                   Codec.INT.optionalFieldOf("level",0).forGetter(o->o.level)
-            ).apply(t, VirtualResourceAttribute::new)
+                    VirtualResourceType.CODEC.fieldOf("resourceType").forGetter(o->o.type),
+                    Codec.INT.optionalFieldOf("level",0).forGetter(o->o.level)
+            ).apply(t, VirtualResourceAttribute::of)
     );
 
 
-    VirtualResourceAttribute(VirtualResourceType type, int level){
+    private VirtualResourceAttribute(VirtualResourceType type, int level){
         this.type=type;
         if(type.isLevelValid(level)){
             this.level=level;
@@ -58,7 +58,7 @@ public class VirtualResourceAttribute implements ITownResourceAttribute, ITownRe
         }
     }
 
-    VirtualResourceAttribute(VirtualResourceType type){
+    private VirtualResourceAttribute(VirtualResourceType type){
         this.type=type;
         this.level = 0;
     }
@@ -96,11 +96,7 @@ public class VirtualResourceAttribute implements ITownResourceAttribute, ITownRe
     }
 
     public String toString(){
-        return type.getKey()+"_level:"+level;
+        return "{Virtual resource: " + type.getKey()+"_level" + level + "}";
     }
 
-    @Override
-    public KeyType getKeyType() {
-        return KeyType.VIRTUAL;
-    }
 }
