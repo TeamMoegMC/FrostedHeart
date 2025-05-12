@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.climate.event;
 
 import com.teammoeg.frostedheart.*;
+import com.simibubi.create.foundation.utility.worldWrappers.WrappedServerWorld;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.math.CMath;
@@ -34,6 +35,7 @@ import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTemperature;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
+import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.player.ClothData;
@@ -47,6 +49,8 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_PlaceExtraSnow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkLevel;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
@@ -59,6 +63,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LightLayer;
@@ -68,6 +73,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -92,6 +98,8 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.PacketDistributor.PacketTarget;
 
 import java.util.Collection;
+import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static com.teammoeg.frostedheart.content.climate.WorldTemperature.SNOW_REACHES_GROUND;
@@ -290,8 +298,7 @@ public class ClimateCommonEvents {
 	public static void onServerTick(TickEvent.LevelTickEvent event) {
 		if (event.side == LogicalSide.SERVER && event.phase == Phase.START && CTeamDataManager.INSTANCE != null) {
 			Level world = event.level;
-			if (!world.isClientSide && world instanceof ServerLevel) {
-				ServerLevel serverWorld = (ServerLevel) world;
+			if (!world.isClientSide && world instanceof ServerLevel serverWorld) {
 
 				// Town logic tick
 				int i = 0;
@@ -330,6 +337,17 @@ public class ClimateCommonEvents {
 					}
 
 				}
+				for(ChunkHolder lc:serverWorld.getChunkSource().chunkMap.getChunks()) {
+					ChunkPos cp=lc.getPos();
+					//Distribute heat validate ticks
+					if((serverWorld.getGameTime()+(cp.x%100+cp.z%100))%200==0) {
+						Optional<ChunkHeatData> chd=ChunkHeatData.get(world, cp);
+						if(chd.isPresent()) {
+							chd.get().revalidateHeatSources(world, cp);
+						}
+					}
+					
+				}
 			}
 
 		}
@@ -341,7 +359,7 @@ public class ClimateCommonEvents {
 	 */
 	@SubscribeEvent
 	public static void onPerformBonemeal(PerformBonemealEvent event) {
-		if (event.getLevel() instanceof ServerLevel level) {
+		if (event.getLevel() instanceof ServerLevel level&&(!(event.getLevel() instanceof WrappedServerWorld))) {//We don't do checks in create virtual world
 			WorldTemperature.PlantStatus status = WorldTemperature.checkPlantStatus(level, event.getPos(),
 					event.getState().getBlock());
 			if (!status.canFertilize()) {

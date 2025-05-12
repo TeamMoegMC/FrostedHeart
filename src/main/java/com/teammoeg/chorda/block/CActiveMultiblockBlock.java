@@ -30,6 +30,7 @@ public class CActiveMultiblockBlock<S extends IMultiblockState> extends NonMirro
 
 	public CActiveMultiblockBlock(Properties properties, MultiblockRegistration<S> multiblock) {
 		super(properties, multiblock);
+		super.registerDefaultState(super.defaultBlockState().setValue(NonMirrorableWithActiveBlock.ACTIVE, false));
 	}
 
 	@Override

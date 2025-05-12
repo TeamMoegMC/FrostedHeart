@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.climate.gamedata.chunkheat;
 
+import java.util.Objects;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
@@ -93,5 +95,21 @@ public class CubicHeatArea implements IHeatArea {
     public String toString() {
         return "CubicHeatArea [center=" + center + ", r=" + r + ", value=" + value + "]";
     }
+
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(center, r, value);
+	}
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		CubicHeatArea other = (CubicHeatArea) obj;
+		return Objects.equals(center, other.center) && r == other.r && value == other.value;
+	}
 
 }

@@ -21,9 +21,12 @@ package com.teammoeg.frostedheart.content.climate.gamedata.chunkheat;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -39,6 +42,7 @@ import com.teammoeg.frostedheart.content.climate.network.FHNotifyChunkHeatUpdate
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -81,6 +85,7 @@ public class ChunkHeatData {
             if (data != null) {
                 data.adjusters.remove(adjx.getCenter());
                 data.adjusters.put(adjx.getCenter(), adjx);
+                chunk.setUnsaved(true);
             }
 
             // we should notify players in chunk to refresh infrared view.
@@ -288,9 +293,11 @@ public class ChunkHeatData {
             ChunkAccess chunk = world.getChunk(chunkPos.x, chunkPos.z);
             ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
             // TODO: should use isPresent some how
-            if (data != null)
+            if (data != null) {
                 data.adjusters.remove(src);
-
+                chunk.setUnsaved(true);
+                
+            }
             // we should notify players in chunk to refresh infrared view.
             // we won't notify all clients, just players in the chunk is enough.
             if (chunk instanceof LevelChunk levelChunk) {
@@ -418,7 +425,35 @@ public class ChunkHeatData {
         }
         return WorldTemperature.base(world, pos) + ret;
     }*/
-
+    public void revalidateHeatSources(Level w,ChunkPos cp) {
+    	Iterator<Entry<BlockPos, IHeatArea>> it=adjusters.entrySet().iterator();
+    	boolean modified = false;
+    	while(it.hasNext()) {
+    		Entry<BlockPos, IHeatArea> adjust=it.next();
+    		ChunkPos adjustPos=new ChunkPos(adjust.getKey());
+    		if(cp.equals(adjustPos))continue;
+    		Optional<ChunkHeatData> sourceChunk=get(w,adjustPos);
+    		if(!sourceChunk.isPresent())continue;
+    		IHeatArea next=sourceChunk.get().getAdjustAt(adjust.getKey());
+    		if(next!=null) {
+    			if(!Objects.equals(next, adjust.getValue())) {
+	    			adjust.setValue(next);
+	    			modified=true;
+    			}
+    		}else { 
+    			it.remove();
+    			modified=true;
+    		}
+    	}
+    	if(modified) {
+    		ChunkAccess chunk = w.getChunk(cp.x, cp.z);
+    		if (chunk instanceof LevelChunk levelChunk) {
+                FHNetwork.INSTANCE.sendToTrackingChunk(levelChunk, new FHNotifyChunkHeatUpdatePacket(cp));
+            } else {
+                FHNetwork.INSTANCE.sendToAll(new FHNotifyChunkHeatUpdatePacket(cp));
+            }
+    	}
+    }
     private void reset() {
         adjusters.clear();
 
