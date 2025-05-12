@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.block.CBlockInterfaces;
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
+import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
@@ -281,46 +282,29 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                 if (fuel <= 0) {
                     fetchFuel();
                 }
-                if (fuel > 0) {
-                    boolean d = false;
-                    boolean e = false;
-                    if (efficiency <= 1)
-                        d = Math.random() < efficiency;
-                    else {
-                        d = Math.random() < efficiency - 1;
-                        e = true;
-                    }
-                    if ((process / 20 != lprocess) && (d || e)) {
-                        if (fluid[0].drain(water, FluidAction.SIMULATE).getAmount() == water) {
-                            efficiency += 0.005F;
-                            efficiency = Math.min(efficiency, getMaxEfficiency());
-                            fluid[0].drain(water, FluidAction.EXECUTE);
-                            lprocess = process / 20;
-                        } else {
-                            if (efficiency <= 0.2 && !isFoodRecipe) {
-                                efficiency = 0.2f;
-                                return;
-                            } else
-                                efficiency -= 0.005F;
-                            this.setActive(false);
-                            this.setChanged();
-                            return;
+                if (fuel > 0) { 
+                    if (fluid[0].drain(water, FluidAction.SIMULATE).getAmount() == water) {
+                    	int processValue=CMath.randomValue(this.level.random, efficiency);
+                        if (processValue>0) {
+                        	if((process / 20 != lprocess)) {
+		                        efficiency += 0.005F;
+		                        efficiency = Math.min(efficiency, getMaxEfficiency());
+		                        fluid[0].drain(water, FluidAction.EXECUTE);
+		                        lprocess = process / 20;
+                        	}
+	                        process-=processValue;
+	                        fuel--;
+	                        this.setActive(true);
+	                        this.setChanged();
+	                        
                         }
-                    }
-                    if (e) process--;
-                    if (d)
-                        process--;
-                    this.setActive(true);
-                    fuel--;
-                } else {
-                    if (efficiency <= 0.2 && !isFoodRecipe) {
-                        efficiency = 0.2f;
                         return;
-                    } else
-                        efficiency -= 0.0005F;
-                    this.setActive(false);
+                    }
                 }
-
+                efficiency -= 0.0005F;
+                if(!isFoodRecipe)
+                	efficiency=Math.max(.2f, efficiency);
+                this.setActive(false);
                 this.setChanged();
             } else if (!out.isEmpty() || !outfluid.isEmpty()) {
                 if (ItemHandlerHelper.canItemStacksStack(out, inventory.get(3))) {
@@ -377,14 +361,9 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
                         }
                         if (efficiency > 0.01) {
                             int value = in.getFoodProperties(null).getNutrition();
-                            //add caupona
-                            /*if (in.getItem() instanceof StewItem) {
-                                value = ThermopoliumApi.getInfo(in).healing;
-
-                            } else {
-                                out = in.getContainerItem();
-                                in.shrink(1);
-                            }*/
+                            out = in.getCraftingRemainingItem();
+                            in.shrink(1);
+                            
                             int nvalue = value * 25;
                             outfluid = new FluidStack(getProtein(), nvalue);
                             lprocess = 0;

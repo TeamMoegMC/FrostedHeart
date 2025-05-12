@@ -50,7 +50,7 @@ public class IncubatorT2Container extends CBlockEntityMenu<HeatIncubatorTileEnti
         	process.bind(()->tile.process*1f/tile.processMax);
         	fuel.bind(()->tile.fuel*1f/tile.fuelMax);
         	efficiency.bind(()->tile.efficiency);
-        	heat.bind(()->Mth.clamp(tile.network.getHeat()/tile.network.getMaxIntake(), 0, 1));
+        	heat.bind(()->Mth.clamp(tile.network.getAvgIntake()/tile.network.getMaxIntake()/2f, 0, 1));
         }
         /*this.addSlot(new IESlot(this, this.inv, 0, 34, 52) {
             @Override

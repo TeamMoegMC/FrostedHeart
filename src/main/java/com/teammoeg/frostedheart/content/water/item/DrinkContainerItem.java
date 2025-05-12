@@ -129,7 +129,16 @@ public class DrinkContainerItem extends ItemFluidContainer {
         return itemStack;
     }
 
-    public int getUseDuration(ItemStack stack) {
+    @Override
+	public ItemStack getCraftingRemainingItem(ItemStack itemStack) {
+    	if(!itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).isPresent())return ItemStack.EMPTY;
+    	IFluidHandlerItem handler = itemStack.copy().getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
+    	if(handler==null)return ItemStack.EMPTY;
+        handler.drain(250, IFluidHandler.FluidAction.EXECUTE);
+		return handler.getContainer();
+	}
+
+	public int getUseDuration(ItemStack stack) {
         return isDrinkable(stack)?32:0;
     }
 

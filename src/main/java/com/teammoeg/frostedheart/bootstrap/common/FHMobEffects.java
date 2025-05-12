@@ -31,6 +31,8 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaEffect;
 
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -57,6 +59,7 @@ public class FHMobEffects {
     public static final RegistryObject<MobEffect> WATER_RESTORING = register("water_restoring",() -> new BaseEffect(MobEffectCategory.BENEFICIAL, 0x379AD6));
     // Insulation: Perform no heat exchange with the environment during body temperature update. Useful for admins and creative mode.
     public static final RegistryObject<MobEffect> INSULATION = register("insulation",() -> new BaseEffect(MobEffectCategory.BENEFICIAL, 0x379AD6));
+    public static final RegistryObject<MobEffect> REFRESHED = register("refreshed",() -> new BaseEffect(MobEffectCategory.BENEFICIAL, 0x7FB069).addAttributeModifier(Attributes.MOVEMENT_SPEED, "03ba7635-4357-4db3-a5c1-18cf5e34d4a2", 0.1F, AttributeModifier.Operation.MULTIPLY_TOTAL));
 
     public static <T extends MobEffect> RegistryObject<T> register(String name, Supplier<T> effect) {
     	return EFFECTS.register(name, effect);

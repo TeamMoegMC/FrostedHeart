@@ -207,4 +207,9 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
 		updatePoints();
 		return ret;
 	}
+
+	@Override
+	public int getFetchablePoints() {
+		return currentPoints;
+	}
 }

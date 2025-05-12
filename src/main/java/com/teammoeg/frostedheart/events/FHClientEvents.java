@@ -44,6 +44,7 @@ import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.utility.seld.SledEntity;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.wheelmenu.Selection;
+import com.teammoeg.frostedheart.content.wheelmenu.SelectionBuilder;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuSelectionRegisterEvent;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -154,22 +155,35 @@ public class FHClientEvents {
     @SubscribeEvent
     public static void registerSelections(WheelMenuSelectionRegisterEvent event) {
 		if (CompatModule.isFTBQLoaded()) {
-			
-			event.register(new ResourceLocation("ftb_quests","open_book"),new Selection(Component.translatable("key.ftbquests.quests"), CIcons.getIcon(FTBQuestsItems.BOOK.get()),
-					s -> FTBQuestsClient.openGui()));
+			SelectionBuilder.create()
+			.message(Component.translatable("key.ftbquests.quests"))
+			.icon(FTBQuestsItems.BOOK.get())
+			.selected(s -> FTBQuestsClient.openGui())
+			.register(event,new ResourceLocation("ftb_quests","open_book"));
 		}
-		event.register(new ResourceLocation("curios","open_gui"),new Selection("key.curios.open.desc",CIcons.getIcon(FHItems.heater_vest)));
+		SelectionBuilder.fromKey("key.curios.open.desc",CIcons.getIcon(FHItems.heater_vest))
+		.defaultHidden()
+		.register(event, new ResourceLocation("curios","open_gui"));
 		
-		event.register(FHMain.rl("debug"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.debug"),
-				CIcons.getIcon(FHItems.debug_item), ColorHelper.CYAN, 
-				s -> ClientUtils.getPlayer().isCreative(), s -> DebugScreen.openDebugScreen(), Selection.NO_ACTION));
+		SelectionBuilder.create()
+		.message(Component.translatable("gui.frostedheart.wheel_menu.selection.debug"))
+		.icon(FHItems.debug_item)
+		.visibleWhen(s->ClientUtils.getPlayer().isCreative())
+		.selected(s -> DebugScreen.openDebugScreen())
+		.register(event,FHMain.rl("debug"));
+		
+		SelectionBuilder.create()
+		.message(Component.translatable("gui.frostedheart.wheel_menu.selection.nutrition"))
+		.icon(CIcons.getIcon(HealthStatScreen.fat_icon))
+		.selected(s -> FHNetwork.INSTANCE.sendToServer(new C2SOpenNutritionScreenMessage()))
+		.register(event,FHMain.rl("health"));
 
-		event.register(FHMain.rl("health"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.nutrition"),
-			CIcons.getIcon(HealthStatScreen.fat_icon), s -> FHNetwork.INSTANCE.sendToServer(new C2SOpenNutritionScreenMessage())));
+		SelectionBuilder.create()
+		.message(Component.translatable("gui.frostedheart.wheel_menu.selection.clothing"))
+		.icon(FHItems.gambeson)
+		.selected(s -> FHNetwork.INSTANCE.sendToServer(new C2SOpenClothesScreenMessage()))
+		.register(event,FHMain.rl("clothing"));
 
-		event.register(FHMain.rl("clothing"),new Selection(Component.translatable("gui.frostedheart.wheel_menu.selection.clothing"),
-			CIcons.getIcon(FHItems.gambeson), 
-				s -> FHNetwork.INSTANCE.sendToServer(new C2SOpenClothesScreenMessage())));
     }
 
     @SubscribeEvent(priority = EventPriority.HIGH)

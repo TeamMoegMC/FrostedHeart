@@ -352,9 +352,9 @@ public class FHConfig {
             resetWaterLevelInDeath = builder.comment("It decides if players' water level would reset in death.")
                     .define("resetWaterLevelInDeath", true);
             nutritionConsumptionRate = builder.comment("The rate of nutrition consumption.")
-                    .defineInRange("nutritionConsumptionRate", 0.015F, 0, 10);
+                    .defineInRange("nutritionConsumptionRate", 0.0025, 0, 10);
             nutritionGainRate = builder.comment("The rate of nutrition gain by eating food.")
-                    .defineInRange("nutritionGainRate", 0.015F, 0, 100);
+                    .defineInRange("nutritionGainRate", 0.0025, 0, 100);
             builder.pop();
 
             builder.push("Worldgen");

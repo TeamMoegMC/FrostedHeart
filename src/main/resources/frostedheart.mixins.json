@@ -70,7 +70,8 @@
 	"minecraft.fix.LevelStorageSourceMixin_FixBiome",
 	"minecraft.fix.WorldLoaderMixin_GetRegistries",
 	"tetra.MixinToolbeltInventory",
-    "registrate.RegistrateBlockLootTablesMixin_RemoveExisted"
+    "registrate.RegistrateBlockLootTablesMixin_RemoveExisted",
+    "drawer.ControllerBlockEntityMixin"
   ],
   "client": [
     "client.BossHealthOverlayAccess",

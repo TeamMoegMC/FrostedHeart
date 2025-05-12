@@ -257,7 +257,9 @@ dependencies {
 
     // create maven is no up to date
 //    implementation fg.deobf("curse.maven:create-328085:5838779")
-
+	// Storage Drawer
+	compileOnly fg.deobf("curse.maven:storage-drawers-223852:5981672")
+	
     // JEI
     compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"))
     compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}"))
@@ -292,10 +294,10 @@ dependencies {
 
     // LDLib
     compileOnly fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
-	implementation fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
+	// implementation fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
     // oculus
     compileOnly fg.deobf("maven.modrinth:oculus:${oculus_version}")
-    clientRuntimeOnly fg.deobf("maven.modrinth:oculus:${oculus_version}")
+//    clientRuntimeOnly fg.deobf("maven.modrinth:oculus:${oculus_version}")
 
     // embeddium
     implementation fg.deobf("org.embeddedt:embeddium-${minecraft_version}:${embeddium_version}")

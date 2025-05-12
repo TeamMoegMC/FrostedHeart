@@ -32,6 +32,7 @@ public class Selection {
 	protected boolean visible;
 	@Getter
 	protected boolean hovered;
+	protected boolean autoAdded=true;
 	public int color;
 	public Selection(UserSelection sel) {
 		this(sel.getParsedMessage(),sel.icon(),sel.selectAction()==null?Selection.NO_ACTION:sel.selectAction());
@@ -41,32 +42,21 @@ public class Selection {
 	 *                    {@link Component}, {@code null}
 	 * @param selectAction 选择后的行动 (选中 -> 松开Tab)
 	 */
-	public Selection(Component message, CIcon icon, Action selectAction) {
-		this(message, icon, ColorHelper.CYAN, ALWAYS_VISIBLE, selectAction, NO_ACTION);
+	Selection(Component message, CIcon icon, Action selectAction) {
+		this(ALWAYS_VISIBLE, selectAction, NO_ACTION,icon,message, true,ColorHelper.CYAN);
 	}
 
-	/**
-	 * @param icon        {@link ItemStack}, {@link IconButton.Icon},
-	 *                    {@link Component}, {@code null}
-	 * @param color       图标为 {@link IconButton.Icon} 时的颜色
-	 * @param visibility  选项在什么情况下可见，每tick更新
-	 * @param selectAction 选择后的行动 (选中 -> 松开Tab)
-	 * @param hoverAction 选中选项后的行动
-	 */
-	public Selection(Component message, CIcon icon, int color, Predicate<Selection> visibility, Action selectAction,
-			Action hoverAction) {
-		this.message = message;
-		this.icon = icon;
-		this.color = color;
+	
+	Selection(Predicate<Selection> visibility, Action selectAction, Action hoverAction, CIcon icon, Component message, boolean autoAdded, int color) {
+		super();
 		this.visibility = visibility;
 		this.selectAction = selectAction;
 		this.hoverAction = hoverAction;
+		this.icon = icon;
+		this.message = message;
+		this.autoAdded = autoAdded;
+		this.color = color;
 	}
-	public Selection(String keyDesc, CIcon icon) {
-		this(Components.translatable(keyDesc), icon, ColorHelper.CYAN, ALWAYS_VISIBLE, new KeyMappingTriggerAction(keyDesc), NO_ACTION);
-	}
-	
-
 	protected void render(ForgeGui gui, GuiGraphics graphics, float partialTick,int x,int y, int width, int height) {
 		if (!visible)
 			return;
@@ -98,9 +88,10 @@ public class Selection {
 
 	/**
 	 * Return true if this option should be added to selection list when became visible
-	 * Disable this makes this selection could only activate by program
+	 * Disable this makes this selection not added to selection list by default
 	 * */
 	public boolean isAutoAddable() {
-		return true;
+		return autoAdded;
 	}
+
 }

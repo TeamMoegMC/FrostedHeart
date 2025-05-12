@@ -102,7 +102,7 @@
   "subtitle.frostedresearch.ice_cracking": "冰块破裂",
   "subtitle.frostedresearch.mechanical_calculator_bell": "机械计算器响铃",
   "subtitle.frostedresearch.mechanical_calculator_roll": "机械计算器滚筒滚动",
-  "tooltip.frostedresearch.inspire_item": "在绘图台检验可以获得灵感",
+  "tooltip.frostedresearch.inspire_item": "在绘图台检验可以获得见闻。",
   "tooltip.frostedresearch.mechanical_calculator.full": "    累积计算点数已满",
   "tooltip.frostedresearch.mechanical_calculator.points": "    累积计算点数：%s/%s",
   "tooltip.frostedresearch.mechanical_calculator.too_fast": "    速度太快了，速度必须在64RPM以下",

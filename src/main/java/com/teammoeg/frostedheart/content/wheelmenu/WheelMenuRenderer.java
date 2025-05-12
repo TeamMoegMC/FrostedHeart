@@ -223,7 +223,10 @@ public class WheelMenuRenderer {
 			boolean modified=false;
 			HashSet<ResourceLocation> set=new HashSet<>(displayedSelections);
 			for(Entry<ResourceLocation, Selection> rl:selections.entrySet()) {
-				if(!rl.getValue().isAutoAddable())continue;
+				if(!rl.getValue().isAutoAddable()) {
+					hiddenSelections.add(rl.getKey());
+					continue;
+				}
 				rl.getValue().validateVisibility();
 				if(rl.getValue().isVisible()&&!hiddenSelections.contains(rl.getKey())&&!set.contains(rl.getKey())) {
 					displayedSelections.add(0,rl.getKey());
