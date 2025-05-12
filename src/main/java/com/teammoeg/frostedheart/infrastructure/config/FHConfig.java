@@ -185,6 +185,7 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Boolean> enableScenario;
         //public final ForgeConfigSpec.ConfigValue<Boolean> enableAutoRestart;
         public final ForgeConfigSpec.ConfigValue<Boolean> enableUpdateReminder;
+        public final ForgeConfigSpec.ConfigValue<Boolean> enablePlayerPooping;
 
         Common(ForgeConfigSpec.Builder builder) {
             builder.push("Weather Forecast");
@@ -226,11 +227,14 @@ public class FHConfig {
             enableScenario = builder
                     .comment("Enables the scenario system. ")
                     .define("enableScenario", true);
+            enablePlayerPooping = builder
+                    .comment("Enables the pooping mechanic through shifting.")
+                    .define("enablePlayerPooping", true);
             builder.pop();
             builder.push("AutoUpdate");
-            /*enableAutoRestart=builder.comment("Enable automatic restart if later snapshot was found, DONT TOUCH UNLESS INSTUCTED BY DEV TEAM.")
+            /*enableAutoRestart=builder.comment("Enable automatic restart if later snapshot was found, DONT TOUCH UNLESS INSTRUCTED BY DEV TEAM.")
             		.define("enableAutoRestart", false);*/
-            enableUpdateReminder=builder.comment("Enable update reminder if later snapshot was found, DONT TOUCH UNLESS INSTUCTED BY DEV TEAM.")
+            enableUpdateReminder=builder.comment("Enable update reminder if later snapshot was found, DONT TOUCH UNLESS INSTRUCTED BY DEV TEAM.")
             		.define("enableUpdateReminder", true);
             builder.pop();
         }
