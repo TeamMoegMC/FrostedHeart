@@ -25,7 +25,7 @@ package com.teammoeg.frostedheart.content.town.resource;
  * Town resource type have a max level as integer.
  * Max level can be 0 or any positive integer.
  */
-public interface ITownResourceType {
+public interface ITownResourceType extends IGettable {
     int getMaxLevel();
 
     /**
@@ -36,11 +36,11 @@ public interface ITownResourceType {
     String getKey();
 
     /**
-     * Generate town resource key of this resource type with given level.
+     * Generate town resource attribute of this resource type with given level.
      * @param level The level of the resource. Shouldn't be negative or more than max level.
-     * @return TownResourceKey of this type and given level.
+     * @return TownResourceAttribute of this type and given level.
      */
-    ITownResourceKey generateKey(int level);
+    ITownResourceAttribute generateAttribute(int level);
 
     static ITownResourceType from(String key){
         for(ITownResourceType type:ItemResourceType.values()){

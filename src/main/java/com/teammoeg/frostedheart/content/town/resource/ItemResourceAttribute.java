@@ -31,31 +31,31 @@ import net.minecraft.world.item.ItemStack;
 import java.util.List;
 
 /**
- * Town resource key of Items.
+ * Town resource attribute of Items.
  * Holds the resource type and the level.
- * The amount of a resource with specific type and level can be read using this key.
+ * The amount of a resource with specific type and level can be read using this class.
 
- * 每一个可能存在的ItemResourceKey（每一个ItemResourceType的所有合法等级对应的所有ItemResourceKey），都有一个对应的TagKey，在FHTags.Items中自动生成。
+ * 每一个可能存在的ItemResourceAttribute（每一个ItemResourceType的所有合法等级对应的所有ItemResourceAttribute），都有一个对应的TagKey，在FHTags.Items中自动生成。
  * 生成的TagKey，在FHTags中存入了两个Map，用于在TagKey和ItemResourceKey之间快速转换。
  */
 @Getter
-public class ItemResourceKey implements ITownResourceKey {
+public class ItemResourceAttribute implements ITownResourceAttribute {
     public final ItemResourceType type;
     private final int level;
 
     /**
-     * 用于缓存，避免创建重复的key，占用额外内存。
+     * 用于缓存，避免创建重复的attribute，占用额外内存。
      */
-    private static final Interner<ItemResourceKey> INTERNER = com.google.common.collect.Interners.newWeakInterner();
+    private static final Interner<ItemResourceAttribute> INTERNER = com.google.common.collect.Interners.newWeakInterner();
 
-    public static final Codec<ItemResourceKey> CODEC = RecordCodecBuilder.create(t -> t.group(
+    public static final Codec<ItemResourceAttribute> CODEC = RecordCodecBuilder.create(t -> t.group(
             ItemResourceType.CODEC.fieldOf("type").forGetter(o->o.type),
             Codec.INT.fieldOf("level").forGetter(o->o.level)
-            ).apply(t, ItemResourceKey::new)
+            ).apply(t, ItemResourceAttribute::new)
     );
 
 
-    private ItemResourceKey(ItemResourceType type, int level){
+    private ItemResourceAttribute(ItemResourceType type, int level){
         this.type=type;
         if(type.isLevelValid(level)){
             this.level=level;
@@ -65,59 +65,59 @@ public class ItemResourceKey implements ITownResourceKey {
     }
 
     /**
-     * 创建一个ItemResourceKey，默认等级为0
+     * 创建一个ItemResourceAttribute，默认等级为0
      */
-    private ItemResourceKey(ItemResourceType type){
+    private ItemResourceAttribute(ItemResourceType type){
         this.type=type;
         this.level = 0;
     }
 
 
     /**
-     * 创建一个ItemResourceKey，并使用缓存，避免重复创建占用内存
+     * 创建一个ItemResourceAttribute，并使用缓存，避免重复创建占用内存
      */
-    public static ItemResourceKey of(ItemResourceType type, int level) {
-        return INTERNER.intern(new ItemResourceKey(type, level));
+    public static ItemResourceAttribute of(ItemResourceType type, int level) {
+        return INTERNER.intern(new ItemResourceAttribute(type, level));
     }
 
     /**
-     * 创建一个ItemResourceKey，并使用缓存，避免重复创建占用内存
+     * 创建一个ItemResourceAttribute，并使用缓存，避免重复创建占用内存
      * 默认等级为0
      */
-    public static ItemResourceKey of(ItemResourceType type) {
-        return new ItemResourceKey(type);
+    public static ItemResourceAttribute of(ItemResourceType type) {
+        return new ItemResourceAttribute(type);
     }
 
     /**
-     * 读取物品的tag，并获取该物品所有的ItemResourceKey
+     * 读取物品的tag，并获取该物品所有的ItemResourceAttribute
      */
-    public static List<ItemResourceKey> fromItemStack(ItemStack itemStack){
+    public static List<ItemResourceAttribute> fromItemStack(ItemStack itemStack){
         return itemStack.getTags()
-                .filter(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::containsKey)
-                .map(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::get)
+                .filter(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE::containsKey)
+                .map(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE::get)
                 .toList();
     }
 
     /**
-     * 将ItemResourceKey转换为对应的TagKey
-     * @return 该ItemResourceKey对应的tagKey
+     * 将ItemResourceAttribute转换为对应的TagKey
+     * @return 该ItemResourceAttribute对应的tagKey
      */
     public TagKey<Item> toTagKey(){
-        return FHTags.Items.MAP_TOWN_RESOURCE_KEY_TO_TAG.get(this);
+        return FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(this);
     }
 
     /**
-     * 将tagKey转换为对应的ItemResourceKey
-     * @param tagKey 具有对应ItemResourceKey的tagKey
+     * 将tagKey转换为对应的ItemResourceAttribute
+     * @param tagKey 具有对应ItemResourceAttribute的tagKey
      */
-    public static ItemResourceKey fromTagKey(TagKey<Item> tagKey){
-        return FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY.get(tagKey);
+    public static ItemResourceAttribute fromTagKey(TagKey<Item> tagKey){
+        return FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE.get(tagKey);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if(o instanceof ItemResourceKey otherKey){
+        if(o instanceof ItemResourceAttribute otherKey){
             return type==otherKey.type&&level==otherKey.level;
         }
         return false;
