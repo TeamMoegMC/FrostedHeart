@@ -16,7 +16,7 @@ public class FertilizedFarmlandBlock extends FarmBlock {
 
     public FertilizedFarmlandBlock(Properties pProperties) {
         super(pProperties);
-        this.registerDefaultState(this.getStateDefinition().any().setValue(FERTILIZER, 0));
+        this.registerDefaultState(this.getStateDefinition().any().setValue(FERTILIZER, 0).setValue(MOISTURE,0));
     }
 
     @Override

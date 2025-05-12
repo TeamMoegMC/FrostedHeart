@@ -1179,12 +1179,19 @@ public class FHBlocks {
     public static BlockEntry<FertilizedDirt> FERTILIZED_DIRT = REGISTRATE.block("fertilized_dirt", FertilizedDirt::new)
             .initialProperties(() -> DIRT)
             .blockstate((c, p) -> {
-                p.getVariantBuilder(c.get()).forAllStates((state)->{
-                    return ConfiguredModel.builder()
-                            .modelFile(p.models().withExistingParent("fertilized_dirt", p.mcLoc("block/dirt")).texture("all", p.modLoc("block/fertilized_dirt")))
-                            .build();
-                });
-            })
+                p.getVariantBuilder(c.get()).partialState().with(FertilizedDirt.FERTILIZER, 0)
+                        .modelForState().modelFile(p.models().withExistingParent("fertilized_dirt",p.mcLoc("block/dirt")).texture("all",p.mcLoc("block/dirt")))
+                        .addModel()
+                        .partialState().with(FertilizedDirt.FERTILIZER, 1)
+                        .modelForState().modelFile(p.models().withExistingParent("fertilized_dirt_increasing",p.mcLoc("block/dirt")).texture("all",p.modLoc("block/fertilized/fertilized_dirt_increasing")))
+                        .addModel()
+                        .partialState().with(FertilizedDirt.FERTILIZER, 2)
+                        .modelForState().modelFile(p.models().withExistingParent("fertilized_dirt_accelerated",p.mcLoc("block/dirt")).texture("all",p.modLoc("block/fertilized/fertilized_dirt_accelerated")))
+                        .addModel()
+                        .partialState().with(FertilizedDirt.FERTILIZER, 3)
+                        .modelForState().modelFile(p.models().withExistingParent("fertilized_dirt_preserved",p.mcLoc("block/dirt")).texture("all",p.modLoc("block/fertilized/fertilized_dirt_preserved")))
+                        .addModel();
+                })
             .simpleItem()
             .tag(BlockTags.DIRT)
             .lang("Fertilized Dirt")
@@ -1192,7 +1199,6 @@ public class FHBlocks {
                 p.dropOther(b, DIRT);
             })
             .register();
-
 
 
     static {

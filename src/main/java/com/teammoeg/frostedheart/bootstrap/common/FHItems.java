@@ -1793,7 +1793,7 @@ thinner.png
             .lang("Growth Accelerater")
             .register();
     public static ItemEntry<Fertilizer> PRESERVED_FERTILIZER = REGISTRATE
-            .item("preserving_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED_FERTILIZER))
+            .item("preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED_FERTILIZER))
             .lang("Mulch")
             .register();
 }

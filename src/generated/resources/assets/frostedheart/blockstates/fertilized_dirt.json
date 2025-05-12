@@ -4,13 +4,13 @@
       "model": "frostedheart:block/fertilized_dirt"
     },
     "fertilizer=1": {
-      "model": "frostedheart:block/fertilized_dirt"
+      "model": "frostedheart:block/fertilized_dirt_increasing"
     },
     "fertilizer=2": {
-      "model": "frostedheart:block/fertilized_dirt"
+      "model": "frostedheart:block/fertilized_dirt_accelerated"
     },
     "fertilizer=3": {
-      "model": "frostedheart:block/fertilized_dirt"
+      "model": "frostedheart:block/fertilized_dirt_preserved"
     }
   }
 }

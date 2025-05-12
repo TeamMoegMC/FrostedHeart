@@ -284,14 +284,35 @@ public class FHBlockStateGen {
         return (c, p) -> {
             FertilizedFarmlandBlock layer = (FertilizedFarmlandBlock) c.get();
 
-            ModelFile origin = p.models().getExistingFile(p.mcLoc("block/farmland"));
-            ModelFile origin_moist = p.models().getExistingFile(p.mcLoc("block/farmland_moist"));
-            ModelFile fertilized = p.models().withExistingParent("fertilized_farmland",p.mcLoc("block/farmland"))
+            ModelFile origin = p.models().withExistingParent("fertilized_farmland",p.mcLoc("block/farmland"))
                     .texture("dirt",p.mcLoc("block/dirt"))
-                    .texture("top",p.modLoc("block/fertilized_farmland"));
-            ModelFile fertilized_moist = p.models().withExistingParent("fertilized_farmland_moist",p.mcLoc("block/farmland_moist"))
+                    .texture("top",p.mcLoc("block/farmland"));;
+            ModelFile origin_moist = p.models().withExistingParent("fertilized_farmland_moist",p.mcLoc("block/farmland_moist"))
                     .texture("dirt",p.mcLoc("block/dirt"))
-                    .texture("top",p.modLoc("block/fertilized_farmland_moist"));
+                    .texture("top",p.mcLoc("block/farmland_moist"));
+
+            ModelFile[] fertilized =new ModelFile[3];
+            fertilized[0] = p.models().withExistingParent("fertilized_farmland_increasing",p.mcLoc("block/farmland"))
+                    .texture("dirt",p.mcLoc("block/dirt"))
+                    .texture("top",p.modLoc("block/fertilized/fertilized_farmland_increasing"));
+            fertilized[1] = p.models().withExistingParent("fertilized_farmland_accelerated",p.mcLoc("block/farmland"))
+                    .texture("dirt",p.mcLoc("block/dirt"))
+                    .texture("top",p.modLoc("block/fertilized/fertilized_farmland_accelerated"));
+            fertilized[2] = p.models().withExistingParent("fertilized_farmland_preserved",p.mcLoc("block/farmland"))
+                    .texture("dirt",p.mcLoc("block/dirt"))
+                    .texture("top",p.modLoc("block/fertilized/fertilized_farmland_preserved"));
+
+            ModelFile[] fertilized_moist =new ModelFile[3];
+            fertilized_moist[0] = p.models().withExistingParent("fertilized_farmland_moist_increasing",p.mcLoc("block/farmland_moist"))
+                    .texture("dirt",p.mcLoc("block/dirt"))
+                    .texture("top",p.modLoc("block/fertilized/fertilized_farmland_moist_increasing"));
+            fertilized_moist[1] = p.models().withExistingParent("fertilized_farmland_moist_accelerated",p.mcLoc("block/farmland_moist"))
+                    .texture("dirt",p.mcLoc("block/dirt"))
+                    .texture("top",p.modLoc("block/fertilized/fertilized_farmland_moist_accelerated"));
+            fertilized_moist[2] = p.models().withExistingParent("fertilized_farmland_moist_preserved",p.mcLoc("block/farmland_moist"))
+                    .texture("dirt",p.mcLoc("block/dirt"))
+                    .texture("top",p.modLoc("block/fertilized/fertilized_farmland_moist_preserved"));
+
             for(int j = 0; j < 7; j++) {
                 p.getVariantBuilder(layer)
                         .partialState().with(FertilizedFarmlandBlock.FERTILIZER, 0).with(FertilizedFarmlandBlock.MOISTURE,j)
@@ -304,11 +325,11 @@ public class FHBlockStateGen {
                 for(int j = 0; j < 7; j++) {
                     p.getVariantBuilder(layer)
                             .partialState().with(FertilizedFarmlandBlock.FERTILIZER, i).with(FertilizedFarmlandBlock.MOISTURE,j)
-                            .modelForState().modelFile(fertilized).addModel();
+                            .modelForState().modelFile(fertilized[i-1]).addModel();
                 }
                 p.getVariantBuilder(layer)
                         .partialState().with(FertilizedFarmlandBlock.FERTILIZER, i).with(FertilizedFarmlandBlock.MOISTURE,7)
-                        .modelForState().modelFile(fertilized_moist).addModel();
+                        .modelForState().modelFile(fertilized_moist[i-1]).addModel();
             }
         };
     }
