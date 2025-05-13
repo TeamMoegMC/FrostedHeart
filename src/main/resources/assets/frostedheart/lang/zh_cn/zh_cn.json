@@ -881,5 +881,13 @@
   "effect.frostedheart.refreshed": "神清气爽",
   "message.frostedheart.refreshed": "你感觉神清气爽！",
   "tooltip.frostedheart.fertilizer.basic": "低级肥料",
-  "tooltip.frostedheart.fertilizer.advanced": "高级肥料"
+  "tooltip.frostedheart.fertilizer.advanced": "高级肥料",
+  "item.frostedheart.advanced_accelerated_fertilizer": "高级加速肥",
+  "item.frostedheart.advanced_increasing_fertilizer": "高级增产肥",
+  "item.frostedheart.advanced_preserved_fertilizer": "高级地覆膜",
+  "item.frostedheart.basic_accelerated_fertilizer": "加速肥",
+  "item.frostedheart.basic_increasing_fertilizer": "增产肥",
+  "item.frostedheart.basic_preserved_fertilizer": "地覆膜",
+  "block.frostedheart.fertilized_dirt": "施肥的泥土",
+  "block.frostedheart.fertilized_farmland": "施肥的耕地"
 }
