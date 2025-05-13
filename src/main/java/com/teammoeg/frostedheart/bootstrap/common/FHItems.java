@@ -939,6 +939,22 @@ thinner.png
             .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.rusted_metal"))
             .register();
 
+    public static ItemEntry<Item> RUSTED_IRON_NUGGET = REGISTRATE
+            .item("rusted_iron_nugget", Item::new)
+            .tag(forgeItemTag("nuggets"), forgeItemTag("nuggets/rusted_iron"))
+            .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.rusted_metal"))
+            .register();
+    public static ItemEntry<Item> RUSTED_COPPER_NUGGET = REGISTRATE
+            .item("rusted_copper_nugget", Item::new)
+            .tag(forgeItemTag("nuggets"), forgeItemTag("nuggets/rusted_copper"))
+            .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.rusted_metal"))
+            .register();
+    public static ItemEntry<Item> GRAY_TIN_NUGGET = REGISTRATE
+            .item("gray_tin_nugget", Item::new)
+            .tag(forgeItemTag("nuggets"), forgeItemTag("nuggets/gray_tin"))
+            .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.rusted_metal"))
+            .register();
+
     // Slags
     public static ItemEntry<Item> IRON_SLAG =
             taggedIngredient("iron_slag",
