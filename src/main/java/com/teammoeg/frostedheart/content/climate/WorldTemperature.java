@@ -605,7 +605,7 @@ public class WorldTemperature {
     }
 
     public static PlantStatus checkPlantStatus(LevelAccessor level, BlockPos pos,@Nullable PlantTempData data,boolean withTempPreserve) {
-        if(withTempPreserve){
+        if(!withTempPreserve){
             return checkPlantStatus(level,pos,data);
         }
         else{
@@ -628,10 +628,7 @@ public class WorldTemperature {
             if (data.isValidTemperature(TemperatureType.GROW, blockTemp)) {
                 return PlantStatus.CAN_GROW;
             }
-            if(withTempPreserve){
-                return PlantStatus.CAN_SURVIVE;
-            }
-            return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
+            return PlantStatus.CAN_SURVIVE;
         }
     }
 }
