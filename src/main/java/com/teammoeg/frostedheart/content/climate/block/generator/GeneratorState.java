@@ -36,6 +36,7 @@ public class GeneratorState extends HeatingState {
      */
     int explodeTicks;
     boolean hasFuel;
+    public HeatEndpoint endpoint = HeatEndpoint.provider(0,2000);
     //int upgradeProcess;
     public boolean hasFuel() {
 		return hasFuel;
@@ -45,7 +46,7 @@ public class GeneratorState extends HeatingState {
 		this.hasFuel = hasFuel;
 	}
 
-	public HeatEndpoint ep = HeatEndpoint.provider(0,2000);
+	
     public GeneratorState() {
         super();
     }
@@ -91,8 +92,8 @@ public class GeneratorState extends HeatingState {
         	
         	if(origin.equals(dat.actualPos)) {
         		dat.tick(level, teamData);
-        		ep.setHeat(dat.lastPower);
-                ep.setTempLevel(dat.TLevel);
+        		endpoint.setHeat(dat.lastPower);
+                endpoint.setTempLevel(dat.TLevel);
                 this.setRangeLevel(dat.RLevel);
         		this.setTempLevel(dat.TLevel);
         		dat.lastPower=0;

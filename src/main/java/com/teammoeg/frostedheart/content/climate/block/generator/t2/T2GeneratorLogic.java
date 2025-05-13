@@ -109,7 +109,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
         }
        
  
-    	if(!ctx.getState().ep.hasValidNetwork()) {
+    	if(!ctx.getState().endpoint.hasValidNetwork()) {
             BlockPos pos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
             Level level = ctx.getLevel().getRawLevel();
             ctx.getState().manager.addEndpoint(ctx.getState().heatCap.cast(ctx), 0, level, pos);

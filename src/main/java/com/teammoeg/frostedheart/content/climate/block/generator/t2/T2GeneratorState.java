@@ -48,7 +48,7 @@ public class T2GeneratorState extends GeneratorState implements HeatNetworkProvi
             f -> GeneratorSteamRecipe.findRecipe(f) != null);
     public StoredCapability<IFluidHandler> tankCap = new StoredCapability<>(tank);
     
-    public StoredCapability<HeatEndpoint> heatCap=new StoredCapability<>(ep);
+    public StoredCapability<HeatEndpoint> heatCap=new StoredCapability<>(endpoint);
     HeatNetwork manager=new HeatNetwork();
     int liquidtick = 0;
     int noliquidtick = 0;
@@ -87,7 +87,7 @@ public class T2GeneratorState extends GeneratorState implements HeatNetworkProvi
 
     @Override
     public @Nullable HeatNetwork getNetwork() {
-        return ep.getNetwork();
+        return endpoint.getNetwork();
     }
 
     @Override
