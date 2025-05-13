@@ -227,13 +227,13 @@ public class FHRegistrateTags {
         .add(Items.CARROT,Items.GOLDEN_CARROT,Blocks.DANDELION.asItem());
         
         //used for town test
-        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_KEY_TO_TAG.get(ItemResourceType.STONE.generateKey(0)))
+        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.STONE.generateAttribute(0)))
                 .add(Items.COBBLESTONE)
                 .add(Items.STONE)
                 .add(Items.BEDROCK);
-        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_KEY_TO_TAG.get(ItemResourceType.METAL.generateKey(0)))
+        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.METAL.generateAttribute(0)))
                 .add(Items.COPPER_INGOT);
-        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_KEY_TO_TAG.get(ItemResourceType.METAL.generateKey(1)))
+        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.METAL.generateAttribute(1)))
                 .add(Items.IRON_INGOT);
 
 
@@ -245,7 +245,7 @@ public class FHRegistrateTags {
 
         //register for town tags
         if(FHTags.NameSpace.MOD.alwaysDatagenDefault){
-            FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY.keySet().forEach(prov::getOrCreateRawBuilder);
+            FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE.keySet().forEach(prov::getOrCreateRawBuilder);
         }
     }
 

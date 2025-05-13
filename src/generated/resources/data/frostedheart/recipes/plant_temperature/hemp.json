@@ -1,0 +1,12 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "immersiveengineering:hemp",
+  "dead": "minecraft:air",
+  "grow_time_days": 7.0,
+  "max_fertilize": 30.0,
+  "max_grow": 30.0,
+  "max_survive": 35.0,
+  "min_fertilize": 22.0,
+  "min_grow": 12.0,
+  "min_survive": 0.0
+}

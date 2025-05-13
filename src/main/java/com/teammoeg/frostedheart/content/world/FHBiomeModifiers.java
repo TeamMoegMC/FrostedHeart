@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.world;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
@@ -80,7 +81,7 @@ public class FHBiomeModifiers {
         @Override
         public void modify(Holder<Biome> biome, Phase phase, ModifiableBiomeInfo.BiomeInfo.Builder builder)
         {
-            if (biome.unwrapKey().map(k -> !FHConfig.isWinterBiome(k.location())).orElse(true) || phase != Phase.MODIFY)
+            if (biome.is(FHTags.Biomes.NOT_WINTER.tag) || biome.unwrapKey().map(k -> !FHConfig.isWinterBiome(k.location())).orElse(true) || phase != Phase.MODIFY)
             {
                 return;
             }

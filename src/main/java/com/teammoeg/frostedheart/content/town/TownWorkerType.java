@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.mine.MineWorker;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
-import com.teammoeg.frostedheart.content.town.resource.ResourceActionResult;
+import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseWorker;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.nbt.CompoundTag;
@@ -69,7 +69,7 @@ public enum TownWorkerType {
         foodAmounts.clear();//清空这个Map的内容，之后当做costedFoods来使用
         //duck_egg: 未来或许会按照食物的质量(result.averageLevel)和均衡程度，影响房屋内居民的健康。但目前仅做一个基础的cost内容，以消除编译错误。
         for(ItemResourceType foodType : foodTypes){
-            ResourceActionResult result = town.getResourceManager().costHighestLevelToEmpty(foodType, residentNum);
+            TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().costHighestLevelToEmpty(foodType, residentNum);
             foodAmounts.put(foodType, result.actualAmount());
             toCost -= result.actualAmount();
         }
@@ -77,7 +77,7 @@ public enum TownWorkerType {
             return true;
         }
         for(ItemResourceType foodType : foodTypes){
-            ResourceActionResult result = town.getResourceManager().costHighestLevelToEmpty(foodType, toCost);
+            TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().costHighestLevelToEmpty(foodType, toCost);
             foodAmounts.merge(foodType, result.actualAmount(), Double::sum);
             toCost -= result.actualAmount();
         }

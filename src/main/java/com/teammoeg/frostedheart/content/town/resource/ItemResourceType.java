@@ -75,7 +75,7 @@ public enum ItemResourceType implements ITownResourceType {
 
     /**
      * 生成这个ItemResourceType的小写字符串。
-     * 并非ItemResourceKey.
+     * 并非ItemResourceAttribute.
      * @return 该ItemResourceType名字的小写字符串。
      */
     @Override
@@ -94,12 +94,12 @@ public enum ItemResourceType implements ITownResourceType {
     }
 
     /**
-     * 生成该type为ItemResourceType，level为传入值的ItemResourceKey。
+     * 生成该type为ItemResourceType，level为传入值的ItemResourceAttribute。
      * @param level The level of the resource. Shouldn't be negative or more than max level.
-     * @return The generated ItemResourceKey.
+     * @return The generated ItemResourceAttribute.
      */
     @Override
-    public ItemResourceKey generateKey(int level) {
-        return ItemResourceKey.of(this, level);
+    public ItemResourceAttribute generateAttribute(int level) {
+        return ItemResourceAttribute.of(this, level);
     }
 }

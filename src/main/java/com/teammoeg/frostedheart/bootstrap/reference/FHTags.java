@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.bootstrap.reference;
 
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.town.resource.ItemResourceKey;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceAttribute;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.util.Lang;
 
@@ -229,28 +229,31 @@ public class FHTags {
 		//something about town resource
 		/**
 		 * 下方的两个Map是用于快速转换ItemResourceKey和TagKey
-		 * 所有对应城镇资源的TagKey都在这里自动生成，每一个ItemResourceKey对应一个TagKey
+		 * 所有对应城镇资源的TagKey都在这里自动生成，每一个ItemResourceAttribute对应一个TagKey
 		 * 这些自动注册的TagKey都具有"frostedheaft:town_resource_XXX_YYY"的形式
-		 * 其中XXX为ItemResourceKey中，ItemResourceType名字的小写，YYY为ItemResourceKey的level
+		 * 其中XXX为ItemResourceAttribute中，ItemResourceType名字的小写，YYY为ItemResourceAttribute的level
 		 * com.teammoeg.frostedheart.infrastructure.gen.FHRegistrateTag中注册了这些TagKIey。
 		 * 同时，若需要在frostedheart环境中为物品添加城镇Tag，也应在FHRegistrateTag中进行。
 		 */
-		public static final Map<TagKey<Item>, ItemResourceKey> MAP_TAG_TO_TOWN_RESOURCE_KEY = new HashMap<>();
-		public static final Map<ItemResourceKey, TagKey<Item>> MAP_TOWN_RESOURCE_KEY_TO_TAG = new HashMap<>();
+		public static final Map<TagKey<Item>, ItemResourceAttribute> MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE = new HashMap<>();
+		public static final Map<ItemResourceAttribute, TagKey<Item>> MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG = new HashMap<>();
 		static{
 			NameSpace namespace = NameSpace.MOD;
             for(ItemResourceType type:ItemResourceType.values()){
 				for(int i = 0; i <= type.maxLevel; i++){
-					ResourceLocation resourceLocation = new ResourceLocation(namespace.id, "town_resource_" + type.getKey() + "_" + i);
-					ItemResourceKey resourceKey = ItemResourceKey.of(type, i);
+					ResourceLocation resourceLocation = ResourceLocation.tryBuild(namespace.id, "town_resource_" + type.getKey() + "_" + i);
+					ItemResourceAttribute resourceKey = ItemResourceAttribute.of(type, i);
 					if (namespace.optionalDefault) {
-						MAP_TAG_TO_TOWN_RESOURCE_KEY.put(optionalTag(ForgeRegistries.ITEMS, resourceLocation), resourceKey);
+						MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE.put(optionalTag(ForgeRegistries.ITEMS, resourceLocation), resourceKey);
 					} else {
-						MAP_TAG_TO_TOWN_RESOURCE_KEY.put(ItemTags.create(resourceLocation), resourceKey);
-					}
+                        if (resourceLocation != null) {
+                            MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE.put(ItemTags.create(resourceLocation), resourceKey);
+                        } else throw new IllegalArgumentException("ResourceLocation is null! Wrong String might be input when building ResourceLocation!\n" +
+								"Input String: " + namespace.id + ":" + "town_resource_" + type.getKey() + "_" + i);
+                    }
 				}
 			}
-			MAP_TAG_TO_TOWN_RESOURCE_KEY.forEach((tag, resourceKey) -> MAP_TOWN_RESOURCE_KEY_TO_TAG.put(resourceKey, tag));
+			MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE.forEach((tag, resourceAttribute) -> MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.put(resourceAttribute, tag));
 		}
 
 		Items() {
@@ -420,7 +423,8 @@ public class FHTags {
 	}
 	public enum Biomes {
 		IS_ORE_VEIN(false),
-		IS_CAVE(false)
+		IS_CAVE(false),
+		NOT_WINTER(false)
 		;
 
 		public final TagKey<Biome> tag;
