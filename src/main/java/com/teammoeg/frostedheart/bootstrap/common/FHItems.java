@@ -1044,11 +1044,9 @@ thinner.png
             .register();
     public static ItemEntry<Item> dung = REGISTRATE
             .item("dung", Item::new)
-            .tag(FHTags.Items.NITROGEN_RICH.tag)
             .register();
     public static ItemEntry<Item> night_soil = REGISTRATE
             .item("night_soil", Item::new)
-            .tag(FHTags.Items.NITROGEN_RICH.tag)
             .register();
     public static ItemEntry<Item> SYNTHETIC_LEATHER =
             taggedIngredient("synthetic_leather",
