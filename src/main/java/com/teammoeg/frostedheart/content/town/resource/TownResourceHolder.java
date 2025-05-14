@@ -305,7 +305,7 @@ public class TownResourceHolder {
      * Use methods in TownResourceManager in other classes.
      */
 private void addSigned(ITownResourceKey townResourceKey, double amount){
-    System.out.println("resourcesBefore: " + resources);
+    //System.out.println("resourcesBefore: " + resources);
     if(townResourceKey instanceof ItemStackResourceKey itemStackResourceKey){
         if(itemStackResourceKey.itemStack.isEmpty()) return;
         double amountExist = get(itemStackResourceKey);
@@ -323,8 +323,8 @@ private void addSigned(ITownResourceKey townResourceKey, double amount){
             this.occupiedCapacity += amount;
         }
     }
-    System.out.println("addSigned: " + townResourceKey + " " + amount);
-    System.out.println("resources: " + resources);
+    //System.out.println("addSigned: " + townResourceKey + " " + amount);
+    //System.out.println("resources: " + resources);
     }
     private void addSigned(ItemStack pItemStack, double amount){
         addSigned(new ItemStackResourceKey(pItemStack), amount);

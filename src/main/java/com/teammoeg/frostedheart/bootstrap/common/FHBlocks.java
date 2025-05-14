@@ -1167,7 +1167,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_STONE_TOOL)
             .simpleItem()
             .register();
-    public static BlockEntry<FertilizedFarmlandBlock> FERTILIZED_FARMLAND = REGISTRATE.block("fertilized_farmland", FertilizedFarmlandBlock::new)
+    public static final BlockEntry<FertilizedFarmlandBlock> FERTILIZED_FARMLAND = REGISTRATE.block("fertilized_farmland", FertilizedFarmlandBlock::new)
             .initialProperties(() -> Blocks.FARMLAND)
             .blockstate(FHBlockStateGen.farmland())
             .simpleItem()
@@ -1176,7 +1176,7 @@ public class FHBlocks {
                 p.dropOther(b, DIRT);
             })
             .register();
-    public static BlockEntry<FertilizedDirt> FERTILIZED_DIRT = REGISTRATE.block("fertilized_dirt", FertilizedDirt::new)
+    public static final BlockEntry<FertilizedDirt> FERTILIZED_DIRT = REGISTRATE.block("fertilized_dirt", FertilizedDirt::new)
             .initialProperties(() -> DIRT)
             .blockstate((c, p) -> {
                 p.getVariantBuilder(c.get()).partialState().with(FertilizedDirt.FERTILIZER, 0)
