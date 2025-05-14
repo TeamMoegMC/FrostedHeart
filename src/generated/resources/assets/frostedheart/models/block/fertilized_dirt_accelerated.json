@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/dirt",
+  "textures": {
+    "all": "frostedheart:block/fertilized/fertilized_dirt_accelerated"
+  }
+}

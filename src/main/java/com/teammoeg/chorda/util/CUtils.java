@@ -105,6 +105,7 @@ public class CUtils {
 		return Direction.fromDelta(Mth.clamp(delt.getX(), -1, 1), Mth.clamp(delt.getY(), -1, 1), Mth.clamp(delt.getZ(), -1, 1));
 	}
 
+	@Nullable
 	public static BlockEntity getExistingTileEntity(Level world, BlockPos pos) {
 		if (world == null)
 			return null;
@@ -113,6 +114,7 @@ public class CUtils {
 		return null;
 	}
 
+	@Nullable
 	public static BlockEntity getExistingTileEntity(LevelAccessor w, BlockPos pos) {
 		if (w == null)
 			return null;
@@ -126,6 +128,7 @@ public class CUtils {
 		return te;
 	}
 
+	@Nullable
 	public static <T> T getExistingTileEntity(LevelAccessor w, BlockPos pos, Class<T> type) {
 		BlockEntity te = getExistingTileEntity(w, pos);
 		if (type.isInstance(te))
@@ -133,6 +136,7 @@ public class CUtils {
 		return null;
 	}
 
+	@Nullable
 	public static <T> T getCapability(LevelAccessor w, BlockPos pos, Direction d, Capability<T> cap) {
 		BlockEntity te = getExistingTileEntity(w, pos);
 		if (te != null)

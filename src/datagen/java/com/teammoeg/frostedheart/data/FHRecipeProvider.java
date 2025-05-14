@@ -36,6 +36,7 @@ import com.teammoeg.caupona.CPMain;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.data.*;
+import com.teammoeg.frostedresearch.FRContents;
 import com.yanny.age.stone.subscribers.ItemSubscriber;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -363,6 +364,8 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(16, 6F, 4, Items.RABBIT)
 				.sell(8, 5F, 20, Items.CHICKEN)
 				.sell(8, 5F, 20, Items.FEATHER)
+				// sell intelligence, but slow
+				.sell(4, 0.1f, 100, FRContents.Items.intelligence.get())
 				.basic()
 				.finish()
 				.profession(VillagerProfession.BUTCHER)
@@ -405,6 +408,8 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(10, 2f, 50, Items.SEA_PICKLE)
 				.sell(10, 2f, 50, Items.KELP)
 				.sell(8, 1f, 30, ItemSubscriber.fat)
+				// sell intelligence, but slow
+				.sell(4, 0.1f, 100, FRContents.Items.intelligence.get())
 				.basic()
 				.finish()
 				.profession(VillagerProfession.FISHERMAN)
@@ -463,6 +468,8 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(32, 1, 30, Items.AMETHYST_SHARD)
 				.sell(32, 1, 200, Items.LAVA_BUCKET)
 				.sell(32, 1, 100, Items.MAGMA_BLOCK)
+				// sell intelligence, but slow
+				.sell(4, 0.1f, 100, FRContents.Items.intelligence.get())
 				.basic()
 				.finish()
 				.profession(VillagerProfession.TOOLSMITH)
@@ -521,6 +528,8 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(6, 1f, 30, Items.GLOW_BERRIES)
 				.sell(10, 1f, 20, Items.SWEET_BERRIES)
 				.sell(6, 1f, 50, FHBlocks.RUBBER_DANDELION.asItem())
+				// sell intelligence, but slow
+				.sell(4, 0.2f, 100, FRContents.Items.intelligence.get())
 				.basic()
 				.finish()
 				.profession(VillagerProfession.CARTOGRAPHER)

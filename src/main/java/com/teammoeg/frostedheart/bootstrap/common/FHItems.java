@@ -27,6 +27,7 @@ import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.item.ItemDescription;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.utility.seld.SledItem;
 import com.teammoeg.frostedheart.item.DyedItemList;
 import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
@@ -209,7 +210,6 @@ thinner.png
             taggedIngredient("stator", FHTags.Items.GARBAGE.tag);
     public static ItemEntry<Item> THINNER =
             taggedIngredient("thinner", FHTags.Items.GARBAGE.tag);
-
 
     static {
         REGISTRATE.setCreativeTab(FHTabs.INGREDIENTS);
@@ -1039,16 +1039,14 @@ thinner.png
                     forgeItemTag("dusts/wood"),
                     CPTags.Items.COOKABLE
             );
-    public static ItemEntry<BoneMealItem> BIOMASS = REGISTRATE
-            .item("biomass", BoneMealItem::new)
+    public static ItemEntry<Item> BIOMASS = REGISTRATE
+            .item("biomass", Item::new)
             .register();
-    public static ItemEntry<BoneMealItem> dung = REGISTRATE
-            .item("dung", BoneMealItem::new)
-            .tag(FHTags.Items.NITROGEN_RICH.tag)
+    public static ItemEntry<Item> dung = REGISTRATE
+            .item("dung", Item::new)
             .register();
-    public static ItemEntry<BoneMealItem> night_soil = REGISTRATE
-            .item("night_soil", BoneMealItem::new)
-            .tag(FHTags.Items.NITROGEN_RICH.tag)
+    public static ItemEntry<Item> night_soil = REGISTRATE
+            .item("night_soil", Item::new)
             .register();
     public static ItemEntry<Item> SYNTHETIC_LEATHER =
             taggedIngredient("synthetic_leather",
@@ -1797,5 +1795,30 @@ thinner.png
             .item("sled", SledItem::new)
             .properties(p -> p.stacksTo(1))
             .lang("Sled")
+            .register();
+
+    public static ItemEntry<Fertilizer> BASIC_INCREASING_FERTILIZER = REGISTRATE
+            .item("basic_increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING_FERTILIZER, Fertilizer.FertilizerGrade.BASIC))
+            .lang("Basic Yield Booster")
+            .register();
+    public static ItemEntry<Fertilizer> BASIC_ACCELERATED_FERTILIZER = REGISTRATE
+            .item("basic_accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED_FERTILIZER, Fertilizer.FertilizerGrade.BASIC))
+            .lang("Basic Growth Accelerater")
+            .register();
+    public static ItemEntry<Fertilizer> BASIC_PRESERVED_FERTILIZER = REGISTRATE
+            .item("basic_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED_FERTILIZER, Fertilizer.FertilizerGrade.BASIC))
+            .lang("Basic Mulch")
+            .register();
+    public static ItemEntry<Fertilizer> ADVANCED_INCREASING_FERTILIZER = REGISTRATE
+            .item("advanced_increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING_FERTILIZER, Fertilizer.FertilizerGrade.ADVANCED))
+            .lang("Advanced Yield Booster")
+            .register();
+    public static ItemEntry<Fertilizer> ADVANCED_ACCELERATED_FERTILIZER = REGISTRATE
+            .item("advanced_accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED_FERTILIZER, Fertilizer.FertilizerGrade.ADVANCED))
+            .lang("Advanced Growth Accelerater")
+            .register();
+    public static ItemEntry<Fertilizer> ADVANCED_PRESERVED_FERTILIZER = REGISTRATE
+            .item("advanced_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED_FERTILIZER, Fertilizer.FertilizerGrade.ADVANCED))
+            .lang("Advanced Mulch")
             .register();
 }
