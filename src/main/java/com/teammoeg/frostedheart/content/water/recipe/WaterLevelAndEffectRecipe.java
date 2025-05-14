@@ -154,8 +154,8 @@ public class WaterLevelAndEffectRecipe implements Recipe<Inventory>, Comparable<
             int duration = packetBuffer.readVarInt();
             int amplifier = packetBuffer.readVarInt();
             float probability = packetBuffer.readFloat();
-
-            for (int i = 0; i < packetBuffer.readByte(); i++) {
+            int count=packetBuffer.readByte();
+            for (int i = 0; i < count; i++) {
                 String mobEffectName = packetBuffer.readUtf();
                 int duratione = packetBuffer.readVarInt();
                 int amplifiere = packetBuffer.readVarInt();
