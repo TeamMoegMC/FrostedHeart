@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "frostedheart:item/accelerated_fertilizer"
+    "layer0": "frostedheart:item/gray_tin_nugget"
   }
 }

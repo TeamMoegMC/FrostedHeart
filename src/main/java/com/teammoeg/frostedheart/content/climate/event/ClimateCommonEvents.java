@@ -393,11 +393,13 @@ public class ClimateCommonEvents {
     @SubscribeEvent
     public static void onPerformBonemeal(PerformBonemealEvent event) {
         if (event.getLevel() instanceof ServerLevel level && (!(event.getLevel() instanceof WrappedServerWorld))) {//We don't do checks in create virtual world
-            WorldTemperature.PlantStatus status = WorldTemperature.checkPlantStatus(level, event.getPos(),
-                    event.getState().getBlock());
-            if (!status.canFertilize()) {
-                event.setCanceled(true);
-            }
+//            WorldTemperature.PlantStatus status = WorldTemperature.checkPlantStatus(level, event.getPos(),
+//                    event.getState().getBlock());
+//            if (!status.canFertilize()) {
+//                event.setCanceled(true);
+//            }
+            // In fact we just disable any kind of Vanilla bone mealing. We have our own system.
+            event.setCanceled(true);
         }
     }
 

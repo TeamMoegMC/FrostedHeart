@@ -94,6 +94,7 @@ public class FRContents {
 		public static RegistryObject<FHReusablePen> quill_and_ink = REGISTER.register("quill_and_ink", () -> new FHReusablePen(new Item.Properties().durability(101).setNoRepair(), 1));
 	    public static RegistryObject<FRBaseItem> rubbing_pad = REGISTER
             .register("rubbing_pad",()->new FRBaseItem(new Item.Properties().stacksTo(1)));
+		public static RegistryObject<FRBaseItem> intelligence = REGISTER.register("intelligence", () -> new FRBaseItem(new Item.Properties()));
 	}
 
 	public static class BlockEntityTypes {

@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "frostedheart:item/preserved_fertilizer"
+    "layer0": "frostedresearch:item/intelligence"
   }
 }

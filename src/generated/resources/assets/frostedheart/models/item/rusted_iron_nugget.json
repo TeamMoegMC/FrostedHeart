@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "frostedheart:item/preserving_fertilizer"
+    "layer0": "frostedheart:item/rusted_iron_nugget"
   }
 }

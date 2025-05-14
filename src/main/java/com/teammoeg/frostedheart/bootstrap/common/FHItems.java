@@ -211,7 +211,6 @@ thinner.png
     public static ItemEntry<Item> THINNER =
             taggedIngredient("thinner", FHTags.Items.GARBAGE.tag);
 
-
     static {
         REGISTRATE.setCreativeTab(FHTabs.INGREDIENTS);
     }
@@ -1040,15 +1039,15 @@ thinner.png
                     forgeItemTag("dusts/wood"),
                     CPTags.Items.COOKABLE
             );
-    public static ItemEntry<BoneMealItem> BIOMASS = REGISTRATE
-            .item("biomass", BoneMealItem::new)
+    public static ItemEntry<Item> BIOMASS = REGISTRATE
+            .item("biomass", Item::new)
             .register();
-    public static ItemEntry<BoneMealItem> dung = REGISTRATE
-            .item("dung", BoneMealItem::new)
+    public static ItemEntry<Item> dung = REGISTRATE
+            .item("dung", Item::new)
             .tag(FHTags.Items.NITROGEN_RICH.tag)
             .register();
-    public static ItemEntry<BoneMealItem> night_soil = REGISTRATE
-            .item("night_soil", BoneMealItem::new)
+    public static ItemEntry<Item> night_soil = REGISTRATE
+            .item("night_soil", Item::new)
             .tag(FHTags.Items.NITROGEN_RICH.tag)
             .register();
     public static ItemEntry<Item> SYNTHETIC_LEATHER =
