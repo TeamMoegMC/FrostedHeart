@@ -119,7 +119,7 @@ public class ClimateCommonEvents {
     public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
         // Common capabilities
 
-        event.addCapability(ResourceLocation.fromNamespaceAndPath(FHMain.MODID, "temperature"), FHCapabilities.PLAYER_TEMP.provider());
+        event.addCapability(new ResourceLocation(FHMain.MODID, "temperature"), FHCapabilities.PLAYER_TEMP.provider());
 
     }
 
@@ -127,7 +127,7 @@ public class ClimateCommonEvents {
     public static void attachToWorld(AttachCapabilitiesEvent<Level> event) {
         // only attach to dimension with skylight (i.e. overworld)
         if (!event.getObject().dimensionType().hasFixedTime()) {
-            event.addCapability(ResourceLocation.fromNamespaceAndPath(FHMain.MODID, "climate_data"),
+            event.addCapability(new ResourceLocation(FHMain.MODID, "climate_data"),
                     FHCapabilities.CLIMATE_DATA.provider());
         }
     }
@@ -149,7 +149,7 @@ public class ClimateCommonEvents {
         if (!event.getObject().isEmpty()) {
             Level world = event.getObject().getLevel();
             if (!world.isClientSide) {
-                event.addCapability(ResourceLocation.fromNamespaceAndPath(FHMain.MODID, "chunk_data"),
+                event.addCapability(new ResourceLocation(FHMain.MODID, "chunk_data"),
                         FHCapabilities.CHUNK_HEAT.provider());
             }
         }
