@@ -38,8 +38,7 @@ import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
-import com.teammoeg.frostedheart.content.agriculture.RubberDandelionBlock;
-import com.teammoeg.frostedheart.content.agriculture.WildRubberDandelionBlock;
+import com.teammoeg.frostedheart.content.agriculture.*;
 import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.ThinIceBlock;
@@ -47,8 +46,6 @@ import com.teammoeg.frostedheart.content.decoration.*;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
-import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
@@ -99,6 +96,7 @@ import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
 import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
+import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -1169,6 +1167,39 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_STONE_TOOL)
             .simpleItem()
             .register();
+    public static BlockEntry<FertilizedFarmlandBlock> FERTILIZED_FARMLAND = REGISTRATE.block("fertilized_farmland", FertilizedFarmlandBlock::new)
+            .initialProperties(() -> Blocks.FARMLAND)
+            .blockstate(FHBlockStateGen.farmland())
+            .simpleItem()
+            .lang("Fertilized Farmland")
+            .loot((p,b)->{
+                p.dropOther(b, DIRT);
+            })
+            .register();
+    public static BlockEntry<FertilizedDirt> FERTILIZED_DIRT = REGISTRATE.block("fertilized_dirt", FertilizedDirt::new)
+            .initialProperties(() -> DIRT)
+            .blockstate((c, p) -> {
+                p.getVariantBuilder(c.get()).partialState().with(FertilizedDirt.FERTILIZER, 0)
+                        .modelForState().modelFile(p.models().withExistingParent("fertilized_dirt",p.mcLoc("block/dirt")).texture("all",p.mcLoc("block/dirt")))
+                        .addModel()
+                        .partialState().with(FertilizedDirt.FERTILIZER, 1)
+                        .modelForState().modelFile(p.models().withExistingParent("fertilized_dirt_increasing",p.mcLoc("block/dirt")).texture("all",p.modLoc("block/fertilized/fertilized_dirt_increasing")))
+                        .addModel()
+                        .partialState().with(FertilizedDirt.FERTILIZER, 2)
+                        .modelForState().modelFile(p.models().withExistingParent("fertilized_dirt_accelerated",p.mcLoc("block/dirt")).texture("all",p.modLoc("block/fertilized/fertilized_dirt_accelerated")))
+                        .addModel()
+                        .partialState().with(FertilizedDirt.FERTILIZER, 3)
+                        .modelForState().modelFile(p.models().withExistingParent("fertilized_dirt_preserved",p.mcLoc("block/dirt")).texture("all",p.modLoc("block/fertilized/fertilized_dirt_preserved")))
+                        .addModel();
+                })
+            .simpleItem()
+            .tag(BlockTags.DIRT)
+            .lang("Fertilized Dirt")
+            .loot((p,b)->{
+                p.dropOther(b, DIRT);
+            })
+            .register();
+
 
     static {
         REGISTRATE.setCreativeTab(FHTabs.BUILDING_BLOCKS);
@@ -1757,7 +1788,6 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.rotateOrient("ruined_machine_switch"))
             .simpleItem()
             .register();
-
 
 
     static {

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/dirt",
+  "textures": {
+    "all": "minecraft:block/dirt"
+  }
+}

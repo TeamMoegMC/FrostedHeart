@@ -28,6 +28,7 @@
     "immersiveengineering.IERegistrationMixin",
     "immersiveengineering.OwnerableStateMixin",
     "minecraft.accessors.NewChatGuiAccessor",
+    "minecraft.agriculture.CropBlockMixin",
     "minecraft.campfire.CampfireBlockMixin_TimeLimit",
     "minecraft.campfire.CampfireTileEntityMixin_TimeLimit",
     "minecraft.fix.PistonBaseBlockMixin",
