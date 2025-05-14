@@ -219,7 +219,7 @@ public class ClimateCommonEvents {
         BlockState farmlandBlockState = level.getBlockState(pos.below());
         WorldTemperature.PlantStatus status;
 
-        if (farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
+        if (data != null && farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
             if (farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED_FERTILIZER.getType()) {
                 int p = 1;
                 if (farmlandBlockState.hasProperty(FertilizedFarmlandBlock.ADVANCED)) {
@@ -528,7 +528,7 @@ public class ClimateCommonEvents {
 
         PlantTempData data = PlantTempData.getPlantData(crop);
         WorldTemperature.PlantStatus status;
-        if (farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
+        if (data != null && farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
             if (farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED_FERTILIZER.getType()) {
                 int p = 1;
                 if (farmlandBlockState.hasProperty(FertilizedDirt.ADVANCED)) {
