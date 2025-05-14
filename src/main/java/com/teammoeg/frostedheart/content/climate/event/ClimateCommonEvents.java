@@ -313,6 +313,10 @@ public class ClimateCommonEvents {
                                 if (itemstack.isDamageableItem())
                                     itemstack.hurtAndBreak(CMath.randomValue(rs, rate * amount), player,
                                             t -> t.broadcastBreakEvent(part.slot));
+                                if(itemstack.isEmpty())
+                                	partItem.setStackInSlot(i, ItemStack.EMPTY);
+                                else
+                                	partItem.setStackInSlot(i, itemstack);
                                 ArmorTempData atd = ArmorTempData.getData(itemstack, part);
                                 float proof = .7f;
                                 if (atd != null)

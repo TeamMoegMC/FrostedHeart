@@ -810,7 +810,7 @@
   "gui.frostedheart.nutrition.protein": "蛋白质",
   "gui.frostedheart.nutrition.carbohydrate": "碳水化合物",
   "gui.frostedheart.nutrition.vegetable": "蔬菜",
-  "gui.frostedheart.nutrition.per_hunger": "每饱食度恢复",
+  "gui.frostedheart.nutrition.max_level": "最大营养维持",
   "gui.frostedheart.wheel_menu.message": "移动鼠标选择，松开[%s]执行",
   "gui.frostedheart.wheel_menu.selection.nutrition": "健康信息",
   "gui.frostedheart.wheel_menu.selection.clothing": "穿戴衣物",
