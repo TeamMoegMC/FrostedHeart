@@ -33,7 +33,7 @@ public class SneakingPoopMechanic {
             }
 
             // Check if player is sneaking
-            if (FHConfig.COMMON.enablePlayerPooping.get() && player.isShiftKeyDown()) {
+            if (FHConfig.COMMON.enablePlayerPooping.get() && !player.isCreative() && !player.isSpectator() && player.isShiftKeyDown()) {
                 // First check if player already has the Refreshed effect
                 // If yes, don't allow pooping
                 if (player.hasEffect(FHMobEffects.REFRESHED.get())) {
