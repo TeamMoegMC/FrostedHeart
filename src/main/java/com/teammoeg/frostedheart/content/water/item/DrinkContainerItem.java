@@ -19,19 +19,25 @@
 
 package com.teammoeg.frostedheart.content.water.item;
 
+import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.*;
+
+import java.util.List;
+import java.util.Optional;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.teammoeg.caupona.fluid.SoupFluid;
 import com.teammoeg.caupona.util.StewInfo;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.content.water.util.FluidHelper;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
@@ -44,7 +50,6 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult.Type;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
@@ -57,13 +62,6 @@ import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import java.util.List;
-import java.util.Optional;
-
-import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.FLUID_NBT_KEY;
 
 public class DrinkContainerItem extends ItemFluidContainer {
 
@@ -97,14 +95,6 @@ public class DrinkContainerItem extends ItemFluidContainer {
         if (isDrinkable( cur)) return ItemUtils.startUsingInstantly(level, player, hand);
         return InteractionResultHolder.pass(cur);
 
-    }
-
-    public ItemStack getFilledItem(ItemStack stack, Player player) {
-
-        player.playSound(SoundEvents.BUCKET_FILL, 1.0f, 1.0f);
-        player.awardStat(Stats.ITEM_USED.get(this));
-        return FluidHelper.fillContainer(stack, Fluids.WATER);
-        
     }
 
 

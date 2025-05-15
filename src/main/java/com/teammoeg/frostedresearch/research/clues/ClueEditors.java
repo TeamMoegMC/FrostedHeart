@@ -50,7 +50,7 @@ public class ClueEditors {
     	.add(Editors.ADVANCEMENT_CITERION.withName(""/*Unused*/).forGetter(e->{
     	
     		if(e.advancement!=null)
-    			return Pair.of(ClientUtils.getPlayer().connection.getAdvancements().getAdvancements().get(e.advancement), e.criterion);
+    			return Pair.of(ClientUtils.getLocalPlayer().connection.getAdvancements().getAdvancements().get(e.advancement), e.criterion);
     		return null;
     	}))
     	.apply(AdvancementClue::new));

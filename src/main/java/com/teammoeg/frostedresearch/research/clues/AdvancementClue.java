@@ -65,7 +65,7 @@ public class AdvancementClue extends TickListenerClue {
 
 	@Override
     public String getBrief() {
-    	ClientAdvancements cam = ClientUtils.getPlayer().connection.getAdvancements();
+    	ClientAdvancements cam = ClientUtils.getLocalPlayer().connection.getAdvancements();
         Advancement adv = cam.getAdvancements().get(advancement);
         if (adv != null)
             return "Advancement " +adv.getChatComponent().getString();
@@ -85,7 +85,7 @@ public class AdvancementClue extends TickListenerClue {
     public Component getDescription(Research parent) {
         Component itc = super.getDescription(parent);
         if (itc != null) return itc;
-        ClientAdvancements cam = ClientUtils.getPlayer().connection.getAdvancements();
+        ClientAdvancements cam = ClientUtils.getLocalPlayer().connection.getAdvancements();
         Advancement adv = cam.getAdvancements().get(advancement);
         if (adv != null)
             return adv.getChatComponent();

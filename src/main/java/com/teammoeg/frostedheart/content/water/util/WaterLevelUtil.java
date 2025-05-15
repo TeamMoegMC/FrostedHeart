@@ -41,7 +41,7 @@ import static net.minecraft.world.Difficulty.PEACEFUL;
 
 
 public class WaterLevelUtil {
-    public static void drink(Player player, ItemStack stack) {
+    public static boolean drink(Player player, ItemStack stack) {
         Level level = player.level();
         Random rand = new Random();
 
@@ -71,28 +71,19 @@ public class WaterLevelUtil {
                     player.addEffect(new MobEffectInstance(FHMobEffects.THIRST.get(), wRecipe.getDuration(), wRecipe.getAmplifier()));
                 }
             }
+            return true;
         }
+        return false;
     }
 
-    public static void drink(Player player, Fluid fluid) {
+    public static boolean drink(Player player, Fluid fluid) {
         ItemStack stack = new ItemStack(FHItems.fluid_bottle.get());
         IFluidHandler fluidHandler = FluidUtil.getFluidHandler(stack).orElse(null);
         fluidHandler.fill(new FluidStack(fluid, 250), IFluidHandler.FluidAction.EXECUTE);
-        WaterLevelUtil.drink(player, stack);
+        return WaterLevelUtil.drink(player, stack);
     }
 
     public static boolean canPlayerAddWaterExhaustionLevel(Player player) {
         return !(player instanceof FakePlayer) && !player.getAbilities().invulnerable && WaterLevelCapability.getCapability(player) != null&&player.level().getDifficulty()!=Difficulty.PEACEFUL;
-    }
-
-    public static float getMoisturizingRate(Player player) {
-        int moisturizingLevel = 0;
-//        for (ItemStack stack : player.getArmorSlots()) {
-//            moisturizingLevel += EnchantmentHelper.getItemEnchantmentLevel(EnchantmentRegistry.MOISTURIZING.get(), stack);
-//        }
-        float moisturizingRate = 1.0f;
-        if (moisturizingLevel == 1) moisturizingRate = 0.7f;
-        if (moisturizingLevel >= 2) moisturizingRate = 0.5f;
-        return moisturizingRate;
     }
 }

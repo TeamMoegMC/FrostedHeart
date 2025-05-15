@@ -21,7 +21,6 @@ package com.teammoeg.chorda.client;
 
 import java.util.function.Function;
 
-import net.minecraft.network.chat.Component;
 import org.joml.Quaternionf;
 
 import com.mojang.blaze3d.platform.InputConstants;
@@ -36,6 +35,7 @@ import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 /**
@@ -48,7 +48,7 @@ public class ClientUtils {
 	public static final Function<Direction, Quaternionf> DIR_TO_FACING = Util
 	.memoize(dir -> new Quaternionf().rotateAxis(-(float) (dir.toYRot() / 180 * Math.PI), 0, 1, 0));
 
-    public static LocalPlayer getPlayer() {
+    public static Player getPlayer() {
         return getMc().player;
     }
 
@@ -66,6 +66,9 @@ public class ClientUtils {
 
     public static Minecraft getMc() {
         return Minecraft.getInstance();
+    }
+    public static LocalPlayer getLocalPlayer() {
+        return getMc().player;
     }
     public static void spawnFireParticles2(Level worldIn, BlockPos pos) {
         RandomSource random = worldIn.getRandom();

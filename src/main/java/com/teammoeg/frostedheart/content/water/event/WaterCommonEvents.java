@@ -19,53 +19,32 @@
 
 package com.teammoeg.frostedheart.content.water.event;
 
-import com.teammoeg.chorda.util.CDamageSourceHelper;
-import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
-import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.content.water.util.WaterLevelUtil;
-import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.PacketDistributor;
-
-import java.util.Random;
 
 
 
@@ -110,8 +89,9 @@ public class WaterCommonEvents {
         if (FHConfig.SERVER.resetWaterLevelInDeath.get()) {
             flag = flag && !event.isWasDeath();
         }
-        if (flag && WaterLevelCapability.getCapability(player).isPresent()) {
-            WaterLevelCapability.getCapability(player).ifPresent(date -> {
+        if (flag) {
+        	event.getOriginal().reviveCaps();
+        	WaterLevelCapability.getCapability(player).ifPresent(date -> {
                 WaterLevelCapability.getCapability(event.getOriginal()).ifPresent(t -> {
                     date.setWaterLevel(t.getWaterLevel());
                     date.setWaterExhaustionLevel(t.getWaterExhaustionLevel());
@@ -130,14 +110,14 @@ public class WaterCommonEvents {
             //CriteriaTriggerRegistry.GUIDE_BOOK_TRIGGER.trigger(player);
         }
     }
-
+/*
     @SubscribeEvent
     public static void EntityJoinWorldEvent(EntityJoinLevelEvent event) {
         Entity entity = event.getEntity();
         if (entity instanceof ServerPlayer serverPlayer && !(entity instanceof FakePlayer)) {
             WaterLevelCapability.getCapability(serverPlayer).ifPresent(t -> FHNetwork.INSTANCE.sendPlayer(serverPlayer, new PlayerWaterLevelSyncPacket(t.getWaterLevel(), t.getWaterSaturationLevel(), t.getWaterExhaustionLevel())));
         }
-    }
+    }*/
 
 
     @SubscribeEvent
@@ -215,58 +195,4 @@ public class WaterCommonEvents {
         }
     }
 
-    @SubscribeEvent
-    public static void onPlayerRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
-        BlockState state = event.getLevel().getBlockState(event.getPos());
-        ItemStack heldItem = event.getItemStack();
-        Player player = event.getEntity();
-        //drink water block
-        if (heldItem.isEmpty() && event.getLevel().getFluidState(event.getHitVec().getBlockPos().offset(event.getFace().getNormal())).getType() == Fluids.WATER && player.getPose() == Pose.CROUCHING) {
-            drinkWaterBlock(player);
-        }
-    }
-
-    @SubscribeEvent
-    public static void onPlayerRightClickEmpty(PlayerInteractEvent.RightClickEmpty event) {
-        Player player = event.getEntity();
-        Level level = event.getLevel();
-        //drink water block
-        HitResult hitresult = getPlayerPOVHitResult(level, player, ClipContext.Fluid.SOURCE_ONLY);
-        if (player.getPose() == Pose.CROUCHING && hitresult.getType() == HitResult.Type.BLOCK && level.getFluidState(BlockPos.containing(hitresult.getLocation().x,hitresult.getLocation().y,hitresult.getLocation().z)).getType() == Fluids.WATER) {
-            level.playSound(player,BlockPos.containing(player.getPosition(0f).x,player.getPosition(0f).y,player.getPosition(0f).z), SoundEvents.GENERIC_DRINK, SoundSource.PLAYERS, 0.4f, 1.0f);
-            FHNetwork.INSTANCE.sendToServer(new PlayerDrinkWaterMessage());
-        }
-    }
-
-    public static void drinkWaterBlock(Player player) {
-        Level world = player.level();
-        WaterLevelCapability.getCapability(player).ifPresent(data -> {
-            data.addWaterLevel(player, 1);
-            world.playSound(player, BlockPos.containing(player.getPosition(0f).x,player.getPosition(0f).y,player.getPosition(0f).z), SoundEvents.GENERIC_DRINK, SoundSource.PLAYERS, 0.4f, 1.0f);
-            //0.05 poising，0.8 thirsty；
-            if (!world.isClientSide()) {
-                Random random = new Random();
-                double d1 = random.nextDouble();
-                double d2 = random.nextDouble();
-                if (d1 <= 0.05D) player.addEffect(new MobEffectInstance(MobEffects.POISON, 300, 0));
-                if (d2 <= 0.8D) player.addEffect(new MobEffectInstance(FHMobEffects.THIRST.get(), 900, 0));
-            }
-        });
-    }
-
-    //from Item.class=
-    protected static BlockHitResult getPlayerPOVHitResult(Level pLevel, Player pPlayer, ClipContext.Fluid pFluidMode) {
-        float f = pPlayer.getXRot();
-        float f1 = pPlayer.getYRot();
-        Vec3 vec3 = pPlayer.getEyePosition();
-        float f2 = Mth.cos(-f1 * 0.017453292F - 3.1415927F);
-        float f3 = Mth.sin(-f1 * 0.017453292F - 3.1415927F);
-        float f4 = -Mth.cos(-f * 0.017453292F);
-        float f5 = Mth.sin(-f * 0.017453292F);
-        float f6 = f3 * f4;
-        float f7 = f2 * f4;
-        double d0 = pPlayer.getBlockReach();
-        Vec3 vec31 = vec3.add((double)f6 * d0, (double)f5 * d0, (double)f7 * d0);
-        return pLevel.clip(new ClipContext(vec3, vec31, net.minecraft.world.level.ClipContext.Block.OUTLINE, pFluidMode, pPlayer));
-    }
 }
