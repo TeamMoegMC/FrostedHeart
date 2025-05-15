@@ -19,9 +19,11 @@
 
 package com.teammoeg.frostedheart.content.health.network;
 
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.health.capability.ImmutableNutrition;
 import com.teammoeg.frostedheart.content.health.capability.Nutrition;
+import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkDirection;
@@ -60,9 +62,10 @@ public class PlayerNutritionSyncPacket implements CMessage {
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        if (context.get().getDirection() == NetworkDirection.PLAY_TO_CLIENT) {
-            PlayerNutritionSyncHandler.handle(context, this);
-        }
+        context.get().enqueueWork(() -> NutritionCapability.getCapability(ClientUtils.getPlayer()).ifPresent(data -> {
+            data.set(getNutrition());
+        }));
+        context.get().setPacketHandled(true);
     }
 
     public ImmutableNutrition getNutrition(){

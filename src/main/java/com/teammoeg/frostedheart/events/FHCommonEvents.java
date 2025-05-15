@@ -54,7 +54,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -121,7 +123,7 @@ public class FHCommonEvents {
 
 	private static final Set<EntityType<?>> VANILLA_ENTITIES = Sets.newHashSet(EntityType.COW, EntityType.SHEEP,
 			EntityType.PIG, EntityType.CHICKEN);
-	private static final ResourceLocation DRAWERS = new ResourceLocation("storagedrawers:drawers");
+	private static final TagKey<Block> DRAWERS = BlockTags.create(new ResourceLocation("storagedrawers:drawers"));
 
 	@SubscribeEvent
 	public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {

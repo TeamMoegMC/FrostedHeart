@@ -25,6 +25,7 @@ import java.util.UUID;
 
 public class TemperatureComputation {
     public static final UUID ENV_TEMP_ATTRIBUTE_UUID = UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
+    //returns 37-based 
     protected static float environment(ServerPlayer player, PlayerTemperatureData data) {
         // World Temp: Dimension, Biome, Climate, Time, heat adjusts
         Level world = player.level();

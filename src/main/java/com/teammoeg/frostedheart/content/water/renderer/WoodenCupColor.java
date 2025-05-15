@@ -20,10 +20,9 @@
 package com.teammoeg.frostedheart.content.water.renderer;
 
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.frostedheart.content.water.util.FluidHelper;
+
 import net.minecraft.client.color.item.ItemColor;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraftforge.fluids.FluidUtil;
 
 

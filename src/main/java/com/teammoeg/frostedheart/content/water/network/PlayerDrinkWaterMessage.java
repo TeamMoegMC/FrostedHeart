@@ -19,40 +19,48 @@
 
 package com.teammoeg.frostedheart.content.water.network;
 
-import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.chorda.network.NBTMessage;
-import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
-import com.teammoeg.frostedheart.content.water.event.WaterCommonEvents;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
-
 import java.util.function.Supplier;
 
-public class PlayerDrinkWaterMessage extends NBTMessage {
+import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
+import com.teammoeg.frostedheart.content.water.util.WaterLevelUtil;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraftforge.network.NetworkEvent;
 
+public record PlayerDrinkWaterMessage(BlockPos drinkingLocation) implements CMessage {
+	
     public PlayerDrinkWaterMessage(FriendlyByteBuf buffer) {
-        super(buffer);
-    }
-    public PlayerDrinkWaterMessage() {
-        super(new CompoundTag());
+        this(buffer.readBlockPos());
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
-        buffer.writeNbt(new CompoundTag());
+        buffer.writeBlockPos(drinkingLocation);
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        Player player = context.get().getSender();
-        WaterCommonEvents.drinkWaterBlock(player);
-        WaterLevelCapability.getCapability(player).ifPresent(data -> {
-            FHNetwork.INSTANCE.sendPlayer( (ServerPlayer) player, new PlayerWaterLevelSyncPacket(data.getWaterLevel(), data.getWaterSaturationLevel(), data.getWaterExhaustionLevel()));
-        });
+        
+       context.get().enqueueWork(()->{
+    	   ServerPlayer player = context.get().getSender();
+    	   ServerLevel level=player.serverLevel();
+    	   if(level.isLoaded(drinkingLocation)&&drinkingLocation.distSqr(player.blockPosition())<=36) {
+    		   if(WaterLevelUtil.drink(player,level.getFluidState(drinkingLocation).getType())) {
+    			   player.playSound(SoundEvents.GENERIC_DRINK,.4f,1f);
+	        	   WaterLevelCapability.getCapability(player).ifPresent(data -> {
+	                   FHNetwork.INSTANCE.sendPlayer( (ServerPlayer) player, new PlayerWaterLevelSyncPacket(data.getWaterLevel(), data.getWaterSaturationLevel(), data.getWaterExhaustionLevel()));
+	               });
+    		   }
+    	   }
+       });
+       context.get().setPacketHandled(true);
+        
+       
     }
 }
