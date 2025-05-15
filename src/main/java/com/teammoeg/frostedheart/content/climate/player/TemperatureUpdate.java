@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -291,6 +292,30 @@ public class TemperatureUpdate {
                         // Environment-Body Exchange based on clothing, computes effective temperature
                         float envtemp = (float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
                         FastEnumMap<BodyPart, PartClothData> clothDataMap = new FastEnumMap<>(BodyPart.values());
+                        // Body temperature exchange: from effective and from self-heating
+                        Level world = player.level();
+                        float windAffectTemp=0;
+                        if(player.isInWater()) {
+                        	windAffectTemp=envtemp;
+                        	
+                        }else {//not in water, consider air and humidity bonus
+	                        // Range 0-50
+	                        float humidity = WorldClimate.getHumidity(world);
+	                        // Range [0,1]
+	                        float relativeHumidity = Mth.clamp(humidity, 0, 50) / 50F;
+	                        // Range 0-100
+	                        int wind = WorldTemperature.wind(world);
+	                        // Range 0-1
+	                        float openness = data.getAirOpenness();
+	                        // [0,1]
+	                        float relativeWind = openness * Mth.clamp(wind, 0, 100) / 100F;
+	                        //formular for wind chill temperature, see https://en.wikipedia.org/wiki/Wind_chill
+	                        //also assume 1.0 relative wind= 70km/h
+	                        double velocity16=Math.pow(relativeWind*70, 0.16);
+	                        
+	                        
+	                        windAffectTemp=(float) (13.12+0.6215*envtemp-11.37*velocity16+0.3965*envtemp*velocity16);
+                        }
                         // Environment-Body Exchange
                         for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
                             // ranges [0, 1]
@@ -298,10 +323,20 @@ public class TemperatureUpdate {
                             clothDataMap.put(part, clothData);
                             // This is a body part's "Body Temperature" from last time
                             float partBodyTemp = data.getBodyTempByPart(part);
+                            float partFullEnvTemp=windAffectTemp;
+                            
+                           
                             // according to wiki, body ends are 5 degrees lower than core parts, so they are 32-based
-                            float partEnvTemp = envtemp - (part.isBodyEnd() ? 5 : 0);
+                            float partEnvTemp = partFullEnvTemp - (part.isBodyEnd() ? 5 : 0);
+                            float dt=(partEnvTemp - partBodyTemp);
+                            //player in water, six times heat conductivity
+                            if(player.isInWater()) {
+                            	dt*=6;
+                            }else if(player.isInPowderSnow) {
+                            	dt*=2;
+                            }
                             // Env and Body exchanges temperature
-                            float partBodyEnvExchangeTemp = (partEnvTemp - partBodyTemp) * clothData.heatConductivity;
+                            float partBodyEnvExchangeTemp = dt * clothData.heatConductivity;
                             float partEffectiveTemp = partBodyTemp + partBodyEnvExchangeTemp;
                             // Store them in context
                             ctx.setPartData(part, partBodyTemp, partEffectiveTemp);
@@ -310,18 +345,6 @@ public class TemperatureUpdate {
                         // Equipment Heating modifies effective temp
                         TemperatureComputation.equipmentHeating(player, data, ctx);
 
-                        // Body temperature exchange: from effective and from self-heating
-                        Level world = player.level();
-                        // Range 0-50
-                        float humidity = WorldClimate.getHumidity(world);
-                        // Range [0,1]
-                        float relativeHumidity = Mth.clamp(humidity, 0, 50) / 50F;
-                        // Range 0-100
-                        int wind = WorldTemperature.wind(world);
-                        // Range 0-1
-                        float openness = data.getAirOpenness();
-                        // [0,1]
-                        float relativeWind = openness * Mth.clamp(wind, 0, 100) / 100F;
 
                         //since movement status wont change by part, we could calculate them outsides part calculation
                         // Temporary storage map
@@ -349,10 +372,14 @@ public class TemperatureUpdate {
                             movementHeatedUnits += 1F * selfHeatRate * unit;
                         }
                         FastEnumMap<PlayerTemperatureData.BodyPart, Float> partBodyTemps = new FastEnumMap<>(PlayerTemperatureData.BodyPart.values());
-                        for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
+
+                       float totalHeight= player.getBbHeight();
+                       double waterHeight=player.getFluidHeight(FluidTags.WATER);
+                       float heightRatio=(float) (waterHeight/totalHeight);
+                       for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
                             // Apply effective heat exchange to part temperature
                             HeatingDeviceContext.BodyPartContext pctx = ctx.getPartData(part);
-
+                            
 
                             // fluid conductivity is different in different medium,
                             // fluid resistance [0,1] from clothing helps dealing with this
@@ -368,37 +395,24 @@ public class TemperatureUpdate {
 
                             // Normally we assume humidity is moderate
                             // Default: No wind, Dry, then 0
-                            float fluidModifier = 0F;
+                            /*float fluidModifier = 0F;
                             float partFluidResist = clothDataMap.get(part).windResist;
-                            if (player.isInWater())
-                                fluidModifier = 25F * (1 - partFluidResist);
-                                // interestingly powdered snow does not affect conductivity that much, it just makes envtemp low
-                                // however, the human body melts snow, and that generates water, which may go into the body,
-                                // if clothing is not fluid resisting enough, and take away heats.
-                                // thus a solution here is an average...
-                            else if (player.isInPowderSnow)
-                                fluidModifier = 15F * (1 - partFluidResist);
-                            else {
-                                // gets up to 5F
-                                fluidModifier += 5F * relativeWind * (1 - partFluidResist);
-                                // evaporation takes away a LOT of heat. it gets up to 10F
-                                if (player.hasEffect(FHMobEffects.WET.get())) {
-                                    fluidModifier += 10F * (1 - partFluidResist);
-                                }
-                            }
+                            if(player.isInWater()) {
+                            	fluidModifier=5*partFluidResist;
+                            }*/
 
 
                             // Part Body Temperature
                             float pbTemp = pctx.getBodyTemperature();
-                            float dryEffectiveTemp = pctx.getEffectiveTemperature();
+                            float fullEffectiveTemp = pctx.getEffectiveTemperature();
 
                             // this combines effect from humidity and wind speed
                             // float wetWindEffectiveTemp = (float) TemperatureComputation.feelTemperature(dryEffectiveTemp + 37F, relativeHumidity, relativeWind) - 37F;
-                            float dt = dryEffectiveTemp - pbTemp;
+                            float dt = fullEffectiveTemp - pbTemp;
                             // May be negative! (when dt < 0)
-                            float fluidModifiedDT = (1 + fluidModifier) * dt;
+                            //float fluidModifiedDT = (1 + fluidModifier) * dt;
                             // Units from heat exchange
-                            float heatExchangedUnits = (float) (fluidModifiedDT * unit / FHConfig.SERVER.heatExchangeTempConstant.get());
+                            float heatExchangedUnits = (float) (dt * unit / FHConfig.SERVER.heatExchangeTempConstant.get());
 
 
                             // Additional Homeostasis using Stored (Food) Energy
@@ -437,7 +451,7 @@ public class TemperatureUpdate {
 	                            }
                             }
                             //simple interpolation of temperature display
-                            pctx.setFeelTemperature(Math.max(1, fluidModifier/4)*dt + pbTemp);
+                            pctx.setFeelTemperature(fullEffectiveTemp);
                            
                             /*
                             FHMain.LOGGER.debug("Deviation: " + deviation);
