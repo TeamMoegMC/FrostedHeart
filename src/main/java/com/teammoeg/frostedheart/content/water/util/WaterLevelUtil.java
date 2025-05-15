@@ -19,10 +19,13 @@
 
 package com.teammoeg.frostedheart.content.water.util;
 
+import java.util.Random;
+
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.water.recipe.WaterLevelAndEffectRecipe;
+
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -34,10 +37,6 @@ import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-
-import java.util.Random;
-
-import static net.minecraft.world.Difficulty.PEACEFUL;
 
 
 public class WaterLevelUtil {

@@ -23,9 +23,7 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
