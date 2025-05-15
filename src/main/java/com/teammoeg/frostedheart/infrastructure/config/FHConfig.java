@@ -274,6 +274,8 @@ public class FHConfig {
         public final ForgeConfigSpec.IntValue envTempThreadCount;
         public final ForgeConfigSpec.IntValue tempBlockstateUpdateIntervalTicks;
         public final ForgeConfigSpec.IntValue tempRandomTickSpeedDivisor;
+        public final ForgeConfigSpec.BooleanValue enableTownTick;
+        public final ForgeConfigSpec.BooleanValue enableTownTickMorning;
         /*
         public static final double HURTING_HEAT_UPDATE = 0.1;
     public static final int MIN_BODY_TEMP_CHANGE = -10;
@@ -400,6 +402,14 @@ public class FHConfig {
             //simulationParticleLife = builder.comment("The life ticks of the particles in the simulation.")
             //        .defineInRange("simulationParticleLife", 20, 1, 100);
             builder.pop();
+
+            builder.push("Town");
+            enableTownTick = builder.comment("Enables town tick every second.")
+                    .comment("This tick includes the running of town worker blocks.")
+                    .define("enableTownTick", true);
+            enableTownTickMorning = builder.comment("Enables town tick in the morning of each days.")
+                    .comment("This tick includes the refresh of some town things, like house allocating, checking overlap of buildings, work assigning...")
+                    .define("enableTownTickMorning", true);
 
             builder.push("Miscellaneous");
             alwaysKeepInventory = builder

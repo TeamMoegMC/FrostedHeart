@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.content.town.mine.MineBlockEntity;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.TownResourceHolder;
 
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.StringTag;
@@ -105,6 +106,7 @@ public class TeamTownData implements SpecialData{
      * @param world server world instance
      */
     public void tick(ServerLevel world) {
+        if(!FHConfig.SERVER.enableTownTick.get()) return;
         removeNonTownBlocks(world);
         PriorityQueue<TownWorkerData> pq = new PriorityQueue<>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
         for(TownWorkerData workerData : blocks.values()){
@@ -145,6 +147,7 @@ public class TeamTownData implements SpecialData{
     }
 
     public void tickMorning(ServerLevel world){
+        if(!FHConfig.SERVER.enableTownTickMorning.get()) return;
         this.updateAllBlocks(world);
         this.checkOccupiedAreaOverlap();
         this.connectMineAndBase();
