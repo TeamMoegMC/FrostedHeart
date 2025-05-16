@@ -50,24 +50,49 @@ public class Fertilizer extends FHBaseItem {
         ItemStack itemstack = pContext.getItemInHand();
 
         if(blockstate.is(Blocks.FARMLAND)){
-            level.setBlock(blockpos,FHBlocks.FERTILIZED_FARMLAND.getDefaultState().setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
+            level.setBlock(blockpos, FHBlocks.FERTILIZED_FARMLAND.getDefaultState().setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED).setValue(FertilizedFarmlandBlock.STORAGE, 15), 2);
             return InteractionResult.SUCCESS;
         }
+        if(blockstate.is(FHBlocks.FERTILIZED_FARMLAND.get())){
+            int currentStorage = blockstate.getValue(FertilizedFarmlandBlock.STORAGE);
+            int newStorage = Math.min(currentStorage + 15, 30);
+            level.setBlock(blockpos, blockstate.setValue(FertilizedFarmlandBlock.STORAGE, newStorage).setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
+            return InteractionResult.SUCCESS;
+        }
+
         if(blockstate.is(Blocks.DIRT)|| blockstate.is(Blocks.GRASS_BLOCK)){
-            level.setBlock(blockpos,FHBlocks.FERTILIZED_DIRT.getDefaultState().setValue(FertilizedDirt.FERTILIZER,this.type.getType()).setValue(FertilizedDirt.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
+            level.setBlock(blockpos,FHBlocks.FERTILIZED_DIRT.getDefaultState().setValue(FertilizedDirt.FERTILIZER,this.type.getType()).setValue(FertilizedDirt.ADVANCED,getGrade()==FertilizerGrade.ADVANCED).setValue(FertilizedDirt.STORAGE, 15), 2);
+            return InteractionResult.SUCCESS;
+        }
+        if(blockstate.is(FHBlocks.FERTILIZED_DIRT.get())){
+            int currentStorage = blockstate.getValue(FertilizedDirt.STORAGE);
+            int newStorage = Math.min(currentStorage + 15, 30);
+            level.setBlock(blockpos, blockstate.setValue(FertilizedDirt.STORAGE, newStorage).setValue(FertilizedDirt.FERTILIZER,this.type.getType()).setValue(FertilizedDirt.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
             return InteractionResult.SUCCESS;
         }
         if(blockstate.getTags().anyMatch(t->t==BlockTags.CROPS)){
             BlockState blockstate1 = level.getBlockState(blockpos.below());
             if(blockstate1.is(Blocks.FARMLAND)){
-                level.setBlock(blockpos.below(),FHBlocks.FERTILIZED_FARMLAND.getDefaultState().setValue(FertilizedFarmlandBlock.MOISTURE,blockstate1.getValue(FarmBlock.MOISTURE)).setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
+                level.setBlock(blockpos.below(),FHBlocks.FERTILIZED_FARMLAND.getDefaultState().setValue(FertilizedFarmlandBlock.MOISTURE,blockstate1.getValue(FarmBlock.MOISTURE)).setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED).setValue(FertilizedFarmlandBlock.STORAGE, 15), 2);
+                return InteractionResult.SUCCESS;
+            }
+            if(blockstate1.is(FHBlocks.FERTILIZED_FARMLAND.get())){
+                int currentStorage = blockstate1.getValue(FertilizedFarmlandBlock.STORAGE);
+                int newStorage = Math.min(currentStorage + 15, 30);
+                level.setBlock(blockpos.below(), blockstate1.setValue(FertilizedFarmlandBlock.STORAGE, newStorage).setValue(FertilizedFarmlandBlock.MOISTURE,blockstate1.getValue(FarmBlock.MOISTURE)).setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
                 return InteractionResult.SUCCESS;
             }
         }
         if(blockstate.getTags().anyMatch(t->t==BlockTags.SAPLINGS)){
             BlockState blockstate1 = level.getBlockState(blockpos.below());
             if(blockstate1.is(Blocks.DIRT)|| blockstate1.is(Blocks.GRASS_BLOCK)){
-                level.setBlock(blockpos.below(),FHBlocks.FERTILIZED_DIRT.getDefaultState().setValue(FertilizedDirt.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
+                level.setBlock(blockpos.below(),FHBlocks.FERTILIZED_DIRT.getDefaultState().setValue(FertilizedDirt.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED).setValue(FertilizedDirt.STORAGE, 15), 2);
+                return InteractionResult.SUCCESS;
+            }
+            if(blockstate1.is(FHBlocks.FERTILIZED_DIRT.get())){
+                int currentStorage = blockstate1.getValue(FertilizedDirt.STORAGE);
+                int newStorage = Math.min(currentStorage + 15, 30);
+                level.setBlock(blockpos.below(), blockstate1.setValue(FertilizedDirt.STORAGE, newStorage).setValue(FertilizedDirt.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
                 return InteractionResult.SUCCESS;
             }
         }

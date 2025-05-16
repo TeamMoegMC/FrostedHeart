@@ -676,6 +676,7 @@
   "tooltip.frostedheart.temp.plant.snow_vulnerable": "无法抵御降雪（需要遮蔽）",
   "tooltip.frostedheart.temp.plant.survive": "可存活于：",
   "tooltip.frostedheart.temp.plant.light": "需要阳光：",
+  "tooltip.frostedheart.temp.plant.fertilizer": "已施肥：",
   "tooltip.frostedheart.temp.plant.snow_resistant": "可抵御降雪",
   "tooltip.frostedheart.temp.plant.blizzard_resistant": "可抵御暴风雪",
   "tooltip.frostedheart.generator.critical":"能量塔过载已达临界！",

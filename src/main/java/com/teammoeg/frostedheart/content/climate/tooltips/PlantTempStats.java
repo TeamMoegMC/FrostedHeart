@@ -22,6 +22,12 @@ package com.teammoeg.frostedheart.content.climate.tooltips;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.content.agriculture.FertilizedDirt;
+import com.teammoeg.frostedheart.content.agriculture.FertilizedFarmlandBlock;
+import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -69,7 +75,7 @@ public class PlantTempStats implements TooltipModifier {
 
     @Override
     public void modify(ItemTooltipEvent context) {
-        List<Component> stats = getStats(block, context.getItemStack(), context.getEntity());
+        List<Component> stats = getStats(block, context.getItemStack(), context.getEntity(), null);
         
         if (!stats.isEmpty()) {
         	KeyControlledDesc desc = new KeyControlledDesc(()->stats, 
@@ -144,7 +150,74 @@ public class PlantTempStats implements TooltipModifier {
         return builder;
     }
 
-    public static List<Component> getStats(Block block, @Nullable ItemStack stack, @Nullable Player player) {
+    public static LangBuilder getFertilizerStorageBar(BlockState farmland) {
+        int type;
+        boolean isAdvanced;
+        int storage;
+
+        if (farmland.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
+            type = farmland.getValue(FertilizedFarmlandBlock.FERTILIZER);
+            isAdvanced = farmland.getValue(FertilizedFarmlandBlock.ADVANCED);
+            storage = farmland.getValue(FertilizedFarmlandBlock.STORAGE);
+        } else {
+            type = farmland.getValue(FertilizedDirt.FERTILIZER);
+            isAdvanced = farmland.getValue(FertilizedDirt.ADVANCED);
+            storage = farmland.getValue(FertilizedDirt.STORAGE);
+        }
+
+        // prevent 0
+        storage += 1;
+
+        // remap from 0 to 30 to 0 to 6
+        int low = Mth.ceil(Mth.clampedMap(0, 0, 31, 0, 6));
+        int high = Mth.ceil(Mth.clampedMap(storage, 0, 31, 0, 6));
+        if (low == high) {
+            if (low == 0) {
+                high += 1;
+            } else if (low == 6) {
+                low -= 1;
+            } else {
+                low -= 1;
+            }
+        }
+
+        int storagePercent = Mth.ceil(Mth.clampedMap(storage, 0, 30, 0, 100));
+
+        // bar
+        String s = TextProgressBarHelper.makeProgressBarInterval(6, low, high);
+        String s1 = s.substring(0, 3);
+        String s2 = s.substring(3);
+
+        MutableComponent icon = FHTextIcon.SOIL_THERMOMETER.getIcon();
+        if (type == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
+            if (isAdvanced)
+                icon = FHTextIcon.ADVANCED_ACCELERATED_FERTILIZER.getIcon();
+            else
+                icon = FHTextIcon.BASIC_ACCELERATED_FERTILIZER.getIcon();
+        } else if (type == Fertilizer.FertilizerType.INCREASING_FERTILIZER.getType()) {
+            if (isAdvanced)
+                icon = FHTextIcon.ADVANCED_INCREASING_FERTILIZER.getIcon();
+            else
+                icon = FHTextIcon.BASIC_INCREASING_FERTILIZER.getIcon();
+        } else if (type == Fertilizer.FertilizerType.PRESERVED_FERTILIZER.getType()) {
+            if (isAdvanced)
+                icon = FHTextIcon.ADVANCED_PRESERVED_FERTILIZER.getIcon();
+            else
+                icon = FHTextIcon.BASIC_PRESERVED_FERTILIZER.getIcon();
+        }
+
+        LangBuilder builder = Lang.builder()
+                .add(icon)
+                .add(Lang.text(" " + storagePercent + "%")
+                        .style(ChatFormatting.GREEN))
+                .add(Lang.text(" "))
+                .add(Lang.text(s1).style(ChatFormatting.GREEN))
+                .add(Lang.text(s2).style(ChatFormatting.GREEN));
+
+        return builder;
+    }
+
+    public static List<Component> getStats(Block block, @Nullable ItemStack stack, @Nullable Player player, @Nullable BlockState farmland) {
         List<Component> list = new ArrayList<>();
         PlantTempData data = PlantTempData.getPlantData(block);
         // boolean bonemealable = block instanceof BonemealableBlock;
@@ -163,6 +236,12 @@ public class PlantTempStats implements TooltipModifier {
             }
             Lang.translate("tooltip", "temp.plant.light").style(ChatFormatting.GRAY).addTo(list);
             getLightProgressBar(data.minSkylight(), data.maxSkylight()).addTo(list);
+
+            if (farmland != null && (farmland.is(FHBlocks.FERTILIZED_FARMLAND.get()) || farmland.is(FHBlocks.FERTILIZED_DIRT.get()))) {
+                Lang.translate("tooltip", "temp.plant.fertilizer").style(ChatFormatting.GRAY).addTo(list);
+                getFertilizerStorageBar(farmland).addTo(list);
+            }
+
 
 
             boolean vulnerableSnow = data.snowVulnerable();

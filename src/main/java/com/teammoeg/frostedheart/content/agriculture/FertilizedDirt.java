@@ -8,15 +8,16 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
 public class FertilizedDirt extends Block {
     public static final IntegerProperty FERTILIZER = IntegerProperty.create("fertilizer", 0, 3);
+    public static final IntegerProperty STORAGE = IntegerProperty.create("storage", 0, 30);
     public static final BooleanProperty ADVANCED = BooleanProperty.create("advanced");
     public FertilizedDirt(Properties pProperties) {
         super(pProperties);
-        this.registerDefaultState(this.getStateDefinition().any().setValue(FERTILIZER, 0).setValue(ADVANCED, false));
+        this.registerDefaultState(this.getStateDefinition().any().setValue(FERTILIZER, 0).setValue(ADVANCED, false).setValue(STORAGE, 0));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> pBuilder) {
         super.createBlockStateDefinition(pBuilder);
-        pBuilder.add(FERTILIZER, ADVANCED);
+        pBuilder.add(FERTILIZER, ADVANCED, STORAGE);
     }
 }

@@ -250,34 +250,48 @@ public class ClimateCommonEvents {
 
             float growChance = Mth.clamp(1 / growSpeed, 0, 1);
             float fertilizeGrowChance = Mth.clamp(3 / growSpeed, 0, 1);
+
+            boolean allow = false;
+
             // faster
             if (status.canFertilize()) {
                 if (level.getRandom().nextFloat() < fertilizeGrowChance) {
-                    event.setResult(Event.Result.DEFAULT);
-                } else {
-                    event.setResult(Event.Result.DENY);
+                    allow = true;
                 }
             }
             // slower
             else if (status.canGrow()) {
                 if (level.getRandom().nextFloat() < growChance) {
-                    event.setResult(Event.Result.DEFAULT);
-                } else {
-                    event.setResult(Event.Result.DENY);
+                    allow = true;
                 }
             } else if (status.canSurvive()) {
                 if (event.getLevel().getRandom().nextInt(3) == 0) {
                     if (state.is(crop) && state != crop.defaultBlockState())
                         event.getLevel().setBlock(event.getPos(), crop.defaultBlockState(), 2);
                 }
-                event.setResult(Event.Result.DENY);
             } else if (status.willDie()) {
                 if (level.getBlockState(pos.below()).is(Blocks.FARMLAND)) {
                     level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
                 }
                 level.setBlock(pos, Blocks.DEAD_BUSH.defaultBlockState(), 2);
+            }
+
+            if (allow) {
+                if (farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
+                    int currentStorage = farmlandBlockState.getValue(FertilizedFarmlandBlock.STORAGE);
+                    int newStorage = currentStorage - 1;
+                    if (newStorage < 0) {
+                        level.setBlock(pos.below(), Blocks.FARMLAND.defaultBlockState().setValue(FarmBlock.MOISTURE, farmlandBlockState.getValue(FarmBlock.MOISTURE)), 2);
+                    } else {
+                        level.setBlock(pos.below(), farmlandBlockState.setValue(FertilizedFarmlandBlock.STORAGE, newStorage), 2);
+                    }
+                }
+                event.setResult(Event.Result.DEFAULT);
+            } else {
                 event.setResult(Event.Result.DENY);
             }
+
+
         } else {
             event.setResult(Event.Result.DEFAULT);
         }
@@ -572,34 +586,47 @@ public class ClimateCommonEvents {
 
             float growChance = Mth.clamp(1 / growSpeed, 0, 1);
             float fertilizeGrowChance = Mth.clamp(3 / growSpeed, 0, 1);
+
+            boolean allow = false;
+
             // faster
             if (status.canFertilize()) {
                 if (level.getRandom().nextFloat() < fertilizeGrowChance) {
-                    event.setResult(Event.Result.DEFAULT);
-                } else {
-                    event.setResult(Event.Result.DENY);
+                    allow = true;
                 }
             }
             // slower
             else if (status.canGrow()) {
                 if (level.getRandom().nextFloat() < growChance) {
-                    event.setResult(Event.Result.DEFAULT);
-                } else {
-                    event.setResult(Event.Result.DENY);
+                    allow = true;
                 }
             } else if (status.canSurvive()) {
                 if (event.getLevel().getRandom().nextInt(3) == 0) {
                     if (state.is(crop) && state != crop.defaultBlockState())
                         event.getLevel().setBlock(event.getPos(), crop.defaultBlockState(), 2);
                 }
-                event.setResult(Event.Result.DENY);
             } else if (status.willDie()) {
                 if (level.getBlockState(pos.below()).is(Blocks.FARMLAND)) {
                     level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
                 }
                 level.setBlock(pos, Blocks.DEAD_BUSH.defaultBlockState(), 2);
+            }
+
+            if (allow) {
+                if (farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
+                    int currentStorage = farmlandBlockState.getValue(FertilizedDirt.STORAGE);
+                    int newStorage = currentStorage - 1;
+                    if (newStorage < 0) {
+                        level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
+                    } else {
+                        level.setBlock(pos.below(), farmlandBlockState.setValue(FertilizedDirt.STORAGE, newStorage), 2);
+                    }
+                }
+                event.setResult(Event.Result.DEFAULT);
+            } else {
                 event.setResult(Event.Result.DENY);
             }
+
         } else {
             event.setResult(Event.Result.DEFAULT);
         }
@@ -630,7 +657,7 @@ public class ClimateCommonEvents {
 
                         List<ItemStack> drops = Block.getDrops(state, (ServerLevel) level, pos, null, event.getPlayer(), event.getPlayer().getMainHandItem());
                         int p = 2;
-                        if (farmlandBlockState.hasProperty(FertilizedFarmlandBlock.ADVANCED) && farmlandBlockState.getValue(FertilizedFarmlandBlock.ADVANCED) == true) {
+                        if (farmlandBlockState.hasProperty(FertilizedFarmlandBlock.ADVANCED) && farmlandBlockState.getValue(FertilizedFarmlandBlock.ADVANCED)) {
                             p = 3;
                         }
                         for (ItemStack drop : drops) {
@@ -639,7 +666,7 @@ public class ClimateCommonEvents {
                             Block.popResource((Level) level, pos, doubleDrop);
                         }
                     }
-                    level.setBlock(pos.below(), Blocks.FARMLAND.defaultBlockState().setValue(FarmBlock.MOISTURE, farmlandBlockState.getValue(FarmBlock.MOISTURE)), 2);
+                    // level.setBlock(pos.below(), Blocks.FARMLAND.defaultBlockState().setValue(FarmBlock.MOISTURE, farmlandBlockState.getValue(FarmBlock.MOISTURE)), 2);
                 }
             }
         }

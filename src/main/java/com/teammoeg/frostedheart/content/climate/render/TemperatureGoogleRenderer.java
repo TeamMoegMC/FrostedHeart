@@ -54,6 +54,7 @@ import com.simibubi.create.infrastructure.config.CClient;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
@@ -155,6 +156,7 @@ public class TemperatureGoogleRenderer {
         boolean wearingGoggles = GogglesItem.isWearingGoggles(mc.player);
 
         BlockState state = world.getBlockState(pos);
+        BlockState belowState = world.getBlockState(pos.below());
         Block block = world.getBlockState(pos).getBlock();
         BlockTempData blockData = BlockTempData.getData(block);
         PlantTempData plantData = PlantTempData.cacheList.get(block);
@@ -253,7 +255,12 @@ public class TemperatureGoogleRenderer {
         boolean addedPlantTempInfo = false;
         // plant temperature
         if (wearingSoilThermometer && hasPlantTempInfo) {
-            List<Component> stats = PlantTempStats.getStats(block, null, mc.player);
+            List<Component> stats;
+            if (belowState.is(FHBlocks.FERTILIZED_FARMLAND.get()) || belowState.is(FHBlocks.FERTILIZED_DIRT.get())) {
+                stats = PlantTempStats.getStats(block, null, mc.player, belowState);
+            } else {
+                stats = PlantTempStats.getStats(block, null, mc.player, null);
+            }
             if (!stats.isEmpty()) {
                 addedPlantTempInfo = true;
                 if (!tooltip.isEmpty())

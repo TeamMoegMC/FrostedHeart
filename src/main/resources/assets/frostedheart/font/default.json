@@ -43,6 +43,30 @@
         {
             "type": "reference",
             "id": "frostedheart:include/light"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/basic_accelerated_fertilizer"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/basic_increasing_fertilizer"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/basic_preserved_fertilizer"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/advanced_accelerated_fertilizer"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/advanced_increasing_fertilizer"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/advanced_preserved_fertilizer"
         }
     ]
 }

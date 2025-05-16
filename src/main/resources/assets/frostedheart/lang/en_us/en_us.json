@@ -40,6 +40,7 @@
   "tooltip.frostedheart.temp.plant.grow": "Can Grow Between: ",
   "tooltip.frostedheart.temp.plant.survive": "Can Survive Between: ",
   "tooltip.frostedheart.temp.plant.light": "Needs Sunlight Between: ",
+  "tooltip.frostedheart.temp.plant.fertilizer": "Fertilized: ",
   "tooltip.frostedheart.temp.plant.snow_vulnerable": "Vulnerable to Snow",
   "tooltip.frostedheart.temp.plant.snow_resistant": "Resistant to Snow",
   "tooltip.frostedheart.temp.plant.blizzard_vulnerable": "Vulnerable to Blizzard",
