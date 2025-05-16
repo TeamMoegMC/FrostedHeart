@@ -1,10 +1,12 @@
 package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
+import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -77,8 +79,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
                 Holder<Biome> biomeHolder = level.getBiome(blockpos1);
                 Biome biome = biomeHolder.value();
                 // TODO: for ocean freezing, we need some special handling...
-                boolean notWinterBiome = biomeHolder.unwrapKey().map(k -> !FHConfig.isWinterBiome(k.location())).orElse(true);
-                if (!notWinterBiome && level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
+                if (!biomeHolder.is(FHTags.Biomes.WATER_DO_NOT_FREEZE.tag) && level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
                     // Check if the block should freeze based on our custom logic
                     frostedheart$freezeWater(level, blockpos2);
 
@@ -282,13 +283,16 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         }
         // TODO: For ocean melting we need special handling...
         // get biome call is expensive.
-        else if (level.getBiome(pos).is(BiomeTags.IS_OCEAN) && currentState.is(BlockTags.ICE)) {
+        else if (level.getBiome(pos).is(FHTags.Biomes.ICE_DO_NOT_SMELT.tag) && currentState.is(BlockTags.ICE)) {
             doStateTransition = false;
         }
 
         boolean doPlantTransition = true;
         var selfData = PlantTempData.getPlantData(currentState.getBlock());
         if (selfData == null) {
+            doPlantTransition = false;
+        }
+        else if (level.getRandom().nextInt(selfData.heatCapacity()) != 0) {
             doPlantTransition = false;
         }
 
@@ -309,6 +313,8 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         // general state transition
 
         if (doStateTransition) {
+            // we don't allow non-adjusted blocks to change to save performance
+            boolean hasActiveAdjust = ChunkHeatData.hasActiveAdjust(level, pos);
             float t = WorldTemperature.block(level, pos);
             // Determine the target state based on temperature thresholds
             // We check transitions in order of priority (solid->gas, gas->solid, etc.)
@@ -318,6 +324,9 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
             // Check for phase transitions in order of precedence
             // 1. Check solid -> gas (sublimation, highest priority if temp is high enough)
             if ("solid".equals(std.state()) && t >= std.evaporateTemp() && std.gas() != null) {
+                if (!hasActiveAdjust) {
+                    return;
+                }
                 targetState = "gas";
                 targetBlock = std.gas();
             }
@@ -328,6 +337,9 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
             }
             // 3. Check liquid -> gas (evaporation)
             else if ("liquid".equals(std.state()) && t >= std.evaporateTemp() && std.gas() != null) {
+                if (!hasActiveAdjust) {
+                    return;
+                }
                 targetState = "gas";
                 targetBlock = std.gas();
             }
@@ -338,6 +350,9 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
             }
             // 5. Check solid -> liquid (melting)
             else if ("solid".equals(std.state()) && t >= std.meltTemp() && std.liquid() != null) {
+                if (!hasActiveAdjust) {
+                    return;
+                }
                 targetState = "liquid";
                 targetBlock = std.liquid();
             }

@@ -208,34 +208,33 @@ public class ClimateCommonEvents {
         Block crop = state.getBlock();
         BlockPos pos = event.getPos();
         LevelAccessor level = event.getLevel();
-
-        // must see sky
-        if (!level.canSeeSky(pos)) {
-            event.setResult(Event.Result.DENY);
-            return;
-        }
-
         PlantTempData data = PlantTempData.getPlantData(crop);
-        BlockState farmlandBlockState = level.getBlockState(pos.below());
-        WorldTemperature.PlantStatus status;
 
-        if (data != null && farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
-            if (farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED_FERTILIZER.getType()) {
-                int p = 1;
-                if (farmlandBlockState.hasProperty(FertilizedFarmlandBlock.ADVANCED)) {
-                    p = farmlandBlockState.getValue(FertilizedFarmlandBlock.ADVANCED) ? 2 : 1;
-                }
-                data = new PlantTempData(crop, data.growTimeDays(), data.minFertilize() - 5 * p, data.minGrow() - 5 * p, data.minSurvive() - 5 * p, data.maxFertilize(), data.maxGrow(), data.maxSurvive(), data.snowVulnerable(), data.blizzardVulnerable(), data.dead(), data.willDie());
-                status = WorldTemperature.checkPlantStatus(level, pos, data, true);
-            } else {
-                status = WorldTemperature.checkPlantStatus(level, pos, crop);
-            }
-        } else {
-            status = WorldTemperature.checkPlantStatus(level, pos, crop);
-        }
-
-        float growTimeGameDays = PlantTemperature.DEFAULT_GROW_TIME_GAME_DAYS;
         if (data != null) {
+            // must see sky
+            if (!WorldTemperature.isSkylightNeeded(pos, level, data)) {
+                event.setResult(Event.Result.DENY);
+                return;
+            }
+            BlockState farmlandBlockState = level.getBlockState(pos.below());
+            WorldTemperature.PlantStatus status;
+            if (farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
+                if (farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED_FERTILIZER.getType()) {
+                    int p = 1;
+                    if (farmlandBlockState.hasProperty(FertilizedFarmlandBlock.ADVANCED)) {
+                        p = farmlandBlockState.getValue(FertilizedFarmlandBlock.ADVANCED) ? 2 : 1;
+                    }
+                    data = new PlantTempData(crop, data.growTimeDays(), data.minFertilize() - 5 * p, data.minGrow() - 5 * p, data.minSurvive() - 5 * p, data.maxFertilize(), data.maxGrow(), data.maxSurvive(), data.snowVulnerable(), data.blizzardVulnerable(), data.dead(), data.willDie(), data.heatCapacity(), data.minSkylight(), data.maxSkylight());
+                    status = WorldTemperature.checkPlantStatus(level, pos, data, true);
+                } else {
+                    status = WorldTemperature.checkPlantStatus(level, pos, data);
+                }
+            } else {
+                status = WorldTemperature.checkPlantStatus(level, pos, data);
+            }
+
+            float growTimeGameDays = PlantTemperature.DEFAULT_GROW_TIME_GAME_DAYS;
+
             growTimeGameDays = data.growTimeDays();
             if (farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
                 if (farmlandBlockState.hasProperty(FertilizedFarmlandBlock.FERTILIZER) && farmlandBlockState.getValue(FertilizedFarmlandBlock.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
@@ -246,39 +245,41 @@ public class ClimateCommonEvents {
                     growTimeGameDays *= (0.5f * p2);
                 }
             }
-        }
 
-        float growSpeed = growTimeGameDays * 24000 / (vanilla_default_crop_grow_chance_inverse_per_random_tick * random_tick_interval_per_block);
+            float growSpeed = growTimeGameDays * 24000 / (vanilla_default_crop_grow_chance_inverse_per_random_tick * random_tick_interval_per_block);
 
-        float growChance = Mth.clamp(1 / growSpeed, 0, 1);
-        float fertilizeGrowChance = Mth.clamp(3 / growSpeed, 0, 1);
-        // faster
-        if (status.canFertilize()) {
-            if (level.getRandom().nextFloat() < fertilizeGrowChance) {
-                event.setResult(Event.Result.DEFAULT);
-            } else {
+            float growChance = Mth.clamp(1 / growSpeed, 0, 1);
+            float fertilizeGrowChance = Mth.clamp(3 / growSpeed, 0, 1);
+            // faster
+            if (status.canFertilize()) {
+                if (level.getRandom().nextFloat() < fertilizeGrowChance) {
+                    event.setResult(Event.Result.DEFAULT);
+                } else {
+                    event.setResult(Event.Result.DENY);
+                }
+            }
+            // slower
+            else if (status.canGrow()) {
+                if (level.getRandom().nextFloat() < growChance) {
+                    event.setResult(Event.Result.DEFAULT);
+                } else {
+                    event.setResult(Event.Result.DENY);
+                }
+            } else if (status.canSurvive()) {
+                if (event.getLevel().getRandom().nextInt(3) == 0) {
+                    if (state.is(crop) && state != crop.defaultBlockState())
+                        event.getLevel().setBlock(event.getPos(), crop.defaultBlockState(), 2);
+                }
+                event.setResult(Event.Result.DENY);
+            } else if (status.willDie()) {
+                if (level.getBlockState(pos.below()).is(Blocks.FARMLAND)) {
+                    level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
+                }
+                level.setBlock(pos, Blocks.DEAD_BUSH.defaultBlockState(), 2);
                 event.setResult(Event.Result.DENY);
             }
-        }
-        // slower
-        else if (status.canGrow()) {
-            if (level.getRandom().nextFloat() < growChance) {
-                event.setResult(Event.Result.DEFAULT);
-            } else {
-                event.setResult(Event.Result.DENY);
-            }
-        } else if (status.canSurvive()) {
-            if (event.getLevel().getRandom().nextInt(3) == 0) {
-                if (state.is(crop) && state != crop.defaultBlockState())
-                    event.getLevel().setBlock(event.getPos(), crop.defaultBlockState(), 2);
-            }
-            event.setResult(Event.Result.DENY);
-        } else if (status.willDie()) {
-            if (level.getBlockState(pos.below()).is(Blocks.FARMLAND)) {
-                level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
-            }
-            level.setBlock(pos, Blocks.DEAD_BUSH.defaultBlockState(), 2);
-            event.setResult(Event.Result.DENY);
+        } else {
+            event.setResult(Event.Result.DEFAULT);
         }
     }
 
@@ -521,35 +522,35 @@ public class ClimateCommonEvents {
     public static void saplingGrow(SaplingGrowTreeEvent event) {
         BlockPos pos = event.getPos();
         LevelAccessor level = event.getLevel();
-        // must see sky
-        if (!level.canSeeSky(pos)) {
-            event.setResult(Event.Result.DENY);
-            return;
-        }
-        RandomSource rand = event.getRandomSource();
         BlockState state = event.getLevel().getBlockState(pos);
         Block crop = state.getBlock();
-        BlockState farmlandBlockState = level.getBlockState(pos.below());
-        // no need to check for blizzard or snow harm because we handled that altogether in server tick
-
         PlantTempData data = PlantTempData.getPlantData(crop);
-        WorldTemperature.PlantStatus status;
-        if (data != null && farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
-            if (farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED_FERTILIZER.getType()) {
-                int p = 1;
-                if (farmlandBlockState.hasProperty(FertilizedDirt.ADVANCED)) {
-                    p = farmlandBlockState.getValue(FertilizedDirt.ADVANCED) ? 2 : 1;
-                }
-                data = new PlantTempData(crop, data.growTimeDays(), data.minFertilize() - 5 * p, data.minGrow() - 5 * p, data.minSurvive() - 5 * p, data.maxFertilize(), data.maxGrow(), data.maxSurvive(), data.snowVulnerable(), data.blizzardVulnerable(), data.dead(), data.willDie());
-                status = WorldTemperature.checkPlantStatus(level, pos, data, true);
-            } else {
-                status = WorldTemperature.checkPlantStatus(level, pos, crop);
-            }
-        } else {
-            status = WorldTemperature.checkPlantStatus(level, pos, crop);
-        }
-        float growTimeGameDays = PlantTemperature.DEFAULT_GROW_TIME_GAME_DAYS;
+
         if (data != null) {
+            // must see sky
+            if (!WorldTemperature.isSkylightNeeded(pos, level, data)) {
+                event.setResult(Event.Result.DENY);
+                return;
+            }
+
+            BlockState farmlandBlockState = level.getBlockState(pos.below());
+            WorldTemperature.PlantStatus status;
+            if (farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
+                if (farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED_FERTILIZER.getType()) {
+                    int p = 1;
+                    if (farmlandBlockState.hasProperty(FertilizedDirt.ADVANCED)) {
+                        p = farmlandBlockState.getValue(FertilizedDirt.ADVANCED) ? 2 : 1;
+                    }
+                    data = new PlantTempData(crop, data.growTimeDays(), data.minFertilize() - 5 * p, data.minGrow() - 5 * p, data.minSurvive() - 5 * p, data.maxFertilize(), data.maxGrow(), data.maxSurvive(), data.snowVulnerable(), data.blizzardVulnerable(), data.dead(), data.willDie(), data.heatCapacity(), data.minSkylight(), data.maxSkylight());
+                    status = WorldTemperature.checkPlantStatus(level, pos, data, true);
+                } else {
+                    status = WorldTemperature.checkPlantStatus(level, pos, data);
+                }
+            } else {
+                status = WorldTemperature.checkPlantStatus(level, pos, data);
+            }
+            float growTimeGameDays = PlantTemperature.DEFAULT_GROW_TIME_GAME_DAYS;
+
             growTimeGameDays = data.growTimeDays();
             if (farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
                 if (farmlandBlockState.hasProperty(FertilizedDirt.FERTILIZER) && farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
@@ -560,44 +561,47 @@ public class ClimateCommonEvents {
                     growTimeGameDays *= (0.5f * p2);
                 }
             }
-        }
 
-        // big tree can grow, but takes extremely long
-        if (event.getFeature() != null && event.getFeature().is(FHTags.BIG_TREE)) {
-            growTimeGameDays *= 10;
-        }
 
-        float growSpeed = growTimeGameDays * 24000 / (vanilla_default_tree_grow_chance_inverse_per_random_tick * random_tick_interval_per_block);
+            // big tree can grow, but takes extremely long
+            if (event.getFeature() != null && event.getFeature().is(FHTags.BIG_TREE)) {
+                growTimeGameDays *= 10;
+            }
 
-        float growChance = Mth.clamp(1 / growSpeed, 0, 1);
-        float fertilizeGrowChance = Mth.clamp(3 / growSpeed, 0, 1);
-        // faster
-        if (status.canFertilize()) {
-            if (level.getRandom().nextFloat() < fertilizeGrowChance) {
-                event.setResult(Event.Result.DEFAULT);
-            } else {
+            float growSpeed = growTimeGameDays * 24000 / (vanilla_default_tree_grow_chance_inverse_per_random_tick * random_tick_interval_per_block);
+
+            float growChance = Mth.clamp(1 / growSpeed, 0, 1);
+            float fertilizeGrowChance = Mth.clamp(3 / growSpeed, 0, 1);
+            // faster
+            if (status.canFertilize()) {
+                if (level.getRandom().nextFloat() < fertilizeGrowChance) {
+                    event.setResult(Event.Result.DEFAULT);
+                } else {
+                    event.setResult(Event.Result.DENY);
+                }
+            }
+            // slower
+            else if (status.canGrow()) {
+                if (level.getRandom().nextFloat() < growChance) {
+                    event.setResult(Event.Result.DEFAULT);
+                } else {
+                    event.setResult(Event.Result.DENY);
+                }
+            } else if (status.canSurvive()) {
+                if (event.getLevel().getRandom().nextInt(3) == 0) {
+                    if (state.is(crop) && state != crop.defaultBlockState())
+                        event.getLevel().setBlock(event.getPos(), crop.defaultBlockState(), 2);
+                }
+                event.setResult(Event.Result.DENY);
+            } else if (status.willDie()) {
+                if (level.getBlockState(pos.below()).is(Blocks.FARMLAND)) {
+                    level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
+                }
+                level.setBlock(pos, Blocks.DEAD_BUSH.defaultBlockState(), 2);
                 event.setResult(Event.Result.DENY);
             }
-        }
-        // slower
-        else if (status.canGrow()) {
-            if (level.getRandom().nextFloat() < growChance) {
-                event.setResult(Event.Result.DEFAULT);
-            } else {
-                event.setResult(Event.Result.DENY);
-            }
-        } else if (status.canSurvive()) {
-            if (event.getLevel().getRandom().nextInt(3) == 0) {
-                if (state.is(crop) && state != crop.defaultBlockState())
-                    event.getLevel().setBlock(event.getPos(), crop.defaultBlockState(), 2);
-            }
-            event.setResult(Event.Result.DENY);
-        } else if (status.willDie()) {
-            if (level.getBlockState(pos.below()).is(Blocks.FARMLAND)) {
-                level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
-            }
-            level.setBlock(pos, Blocks.DEAD_BUSH.defaultBlockState(), 2);
-            event.setResult(Event.Result.DENY);
+        } else {
+            event.setResult(Event.Result.DEFAULT);
         }
     }
 

@@ -4,11 +4,13 @@
   "block": "minecraft:sea_pickle",
   "dead": "minecraft:air",
   "grow_time_days": 8.0,
+  "heat_capacity": 10,
   "max_fertilize": 28.0,
   "max_grow": 30.0,
   "max_survive": 34.0,
   "min_fertilize": 22.0,
   "min_grow": 18.0,
+  "min_skylight": 6,
   "min_survive": 10.0,
   "snow_vulnerable": false
 }

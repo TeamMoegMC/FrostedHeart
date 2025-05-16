@@ -3,11 +3,13 @@
   "block": "minecraft:large_fern",
   "dead": "minecraft:air",
   "grow_time_days": 11.0,
+  "heat_capacity": 10,
   "max_fertilize": 24.0,
   "max_grow": 28.0,
   "max_survive": 35.0,
   "min_fertilize": 14.0,
   "min_grow": 8.0,
+  "min_skylight": 9,
   "min_survive": -5.0,
   "snow_vulnerable": false
 }

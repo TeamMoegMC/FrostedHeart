@@ -3,9 +3,11 @@
   "block": "minecraft:cocoa",
   "dead": "minecraft:air",
   "grow_time_days": 7.0,
+  "heat_capacity": 10,
   "max_fertilize": 32.0,
   "max_grow": 36.0,
   "min_fertilize": 24.0,
   "min_grow": 18.0,
+  "min_skylight": 9,
   "min_survive": 15.0
 }

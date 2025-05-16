@@ -3,10 +3,12 @@
   "block": "minecraft:oxeye_daisy",
   "dead": "minecraft:air",
   "grow_time_days": 5.0,
+  "heat_capacity": 10,
   "max_fertilize": 22.0,
   "max_grow": 26.0,
   "max_survive": 32.0,
   "min_fertilize": 14.0,
   "min_grow": 8.0,
+  "min_skylight": 9,
   "snow_vulnerable": false
 }

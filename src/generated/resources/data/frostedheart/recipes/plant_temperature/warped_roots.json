@@ -3,10 +3,12 @@
   "block": "minecraft:warped_roots",
   "dead": "minecraft:air",
   "grow_time_days": 7.0,
+  "heat_capacity": 10,
   "max_fertilize": 200.0,
   "max_grow": 200.0,
   "max_survive": 200.0,
   "min_fertilize": 80.0,
   "min_grow": 80.0,
+  "min_skylight": 0,
   "min_survive": 80.0
 }

@@ -81,7 +81,7 @@ public class FHBiomeModifiers {
         @Override
         public void modify(Holder<Biome> biome, Phase phase, ModifiableBiomeInfo.BiomeInfo.Builder builder)
         {
-            if (biome.is(FHTags.Biomes.NOT_WINTER.tag) || biome.unwrapKey().map(k -> !FHConfig.isWinterBiome(k.location())).orElse(true) || phase != Phase.MODIFY)
+            if (biome.is(FHTags.Biomes.NOT_WINTER.tag) || phase != Phase.MODIFY)
             {
                 return;
             }

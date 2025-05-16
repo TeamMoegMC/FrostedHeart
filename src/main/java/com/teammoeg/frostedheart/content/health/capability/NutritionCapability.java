@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -159,6 +160,10 @@ public class NutritionCapability implements NBTSerializable {
 
 
     public void punishment(Player player) {
+        if (player.level().getDifficulty() == Difficulty.PEACEFUL) {
+            return;
+        }
+
         //TODO 营养值过高或过低的惩罚
         int count = 0;
 
@@ -168,7 +173,6 @@ public class NutritionCapability implements NBTSerializable {
         }*/
         if (nutrition.fat > 9000) {
             count++;
-
         }
         if (nutrition.carbohydrate < 2000) {
             count += 2;
@@ -176,7 +180,6 @@ public class NutritionCapability implements NBTSerializable {
         }
         if (nutrition.carbohydrate > 9000) {
             count++;
-
         }
         if (nutrition.protein < 2000) {
             count += 2;
@@ -184,7 +187,6 @@ public class NutritionCapability implements NBTSerializable {
         }
         if (nutrition.protein > 9000) {
             count++;
-
         }
         /*if (nutrition.vegetable < 2000) {
             count += 2;

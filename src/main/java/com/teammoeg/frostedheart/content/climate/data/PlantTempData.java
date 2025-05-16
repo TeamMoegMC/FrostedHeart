@@ -37,7 +37,8 @@ import javax.annotation.Nullable;
 
 public record PlantTempData(Block block, float growTimeDays, float minFertilize, float minGrow, float minSurvive,
 							float maxFertilize, float maxGrow, float maxSurvive,
-							boolean snowVulnerable, boolean blizzardVulnerable, Block dead, boolean willDie) implements PlantTemperature{
+							boolean snowVulnerable, boolean blizzardVulnerable, Block dead, boolean willDie,
+							int heatCapacity, int minSkylight, int maxSkylight) implements PlantTemperature{
 	public static final Codec<PlantTempData> CODEC=RecordCodecBuilder.create(t->t.group(
 			ForgeRegistries.BLOCKS.getCodec().fieldOf("block").forGetter(o->o.block),
 			// grow_time_days: unit is the expected game days to grow a crop / tree
@@ -55,7 +56,10 @@ public record PlantTempData(Block block, float growTimeDays, float minFertilize,
 			Codec.BOOL.optionalFieldOf("blizzard_vulnerable",PlantTemperature.DEFAULT_BLIZZARD_VULNERABLE).forGetter(o->o.blizzardVulnerable),
 			// turns to what when dead
 			ForgeRegistries.BLOCKS.getCodec().fieldOf("dead").forGetter(o->o.dead),
-			Codec.BOOL.optionalFieldOf("will_die", true).forGetter(o->o.willDie)
+			Codec.BOOL.optionalFieldOf("will_die", true).forGetter(o->o.willDie),
+			Codec.INT.optionalFieldOf("heat_capacity",1).forGetter(o->o.heatCapacity),
+			Codec.INT.optionalFieldOf("min_skylight",1).forGetter(o->o.minSkylight),
+			Codec.INT.optionalFieldOf("max_skylight",15).forGetter(o->o.maxSkylight)
 			).apply(t, PlantTempData::new));
 	public static RegistryObject<CodecRecipeSerializer<PlantTempData>> TYPE;
 	public static Map<Block,PlantTempData> cacheList=ImmutableMap.of();
@@ -68,7 +72,7 @@ public record PlantTempData(Block block, float growTimeDays, float minFertilize,
 	public PlantTempData(Block blk) {
 		this(blk, PlantTemperature.DEFAULT_GROW_TIME_GAME_DAYS, PlantTemperature.DEFAULT_BONEMEAL_TEMP, PlantTemperature.DEFAULT_GROW_TEMP, PlantTemperature.DEFAULT_SURVIVE_TEMP,
 				PlantTemperature.DEFAULT_BONEMEAL_MAX_TEMP, PlantTemperature.DEFAULT_GROW_MAX_TEMP, PlantTemperature.DEFAULT_SURVIVE_MAX_TEMP,
-				PlantTemperature.DEFAULT_SNOW_VULNERABLE, PlantTemperature.DEFAULT_BLIZZARD_VULNERABLE, Blocks.DEAD_BUSH, true);
+				PlantTemperature.DEFAULT_SNOW_VULNERABLE, PlantTemperature.DEFAULT_BLIZZARD_VULNERABLE, Blocks.DEAD_BUSH, true, 1, 1, 15);
 	}
     public FinishedRecipe toFinished(ResourceLocation name) {
     	return TYPE.get().toFinished(name, this);

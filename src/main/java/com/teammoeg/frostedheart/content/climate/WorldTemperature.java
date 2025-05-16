@@ -38,10 +38,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.*;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -104,6 +101,15 @@ public class WorldTemperature {
         } else if (!world.canSeeSky(pos)) {
             return false;
         } else return world.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos).getY() <= pos.getY();
+    }
+
+    public static boolean isSkylightNeeded(BlockPos pos, LevelReader level, int minLight, int maxLight) {
+        int skylight = level.getBrightness(LightLayer.SKY, pos);
+        return skylight >= minLight && skylight <= maxLight;
+    }
+
+    public static boolean isSkylightNeeded(BlockPos pos, LevelReader level, PlantTempData data) {
+        return isSkylightNeeded(pos, level, data.minSkylight(), data.maxSkylight());
     }
 
     @Deprecated

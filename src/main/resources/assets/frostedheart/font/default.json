@@ -39,6 +39,10 @@
         {
             "type": "reference",
             "id": "frostedheart:include/soil_thermometer"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/light"
         }
     ]
 }

@@ -424,7 +424,9 @@ public class FHTags {
 	public enum Biomes {
 		IS_ORE_VEIN(false),
 		IS_CAVE(false),
-		NOT_WINTER(false)
+		NOT_WINTER(false),
+		ICE_DO_NOT_SMELT,
+		WATER_DO_NOT_FREEZE
 		;
 
 		public final TagKey<Biome> tag;

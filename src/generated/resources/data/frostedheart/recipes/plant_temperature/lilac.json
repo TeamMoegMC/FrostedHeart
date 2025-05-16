@@ -3,11 +3,13 @@
   "block": "minecraft:lilac",
   "dead": "minecraft:dead_bush",
   "grow_time_days": 13.0,
+  "heat_capacity": 10,
   "max_fertilize": 22.0,
   "max_grow": 26.0,
   "max_survive": 32.0,
   "min_fertilize": 14.0,
   "min_grow": 8.0,
+  "min_skylight": 9,
   "min_survive": -15.0,
   "snow_vulnerable": false
 }

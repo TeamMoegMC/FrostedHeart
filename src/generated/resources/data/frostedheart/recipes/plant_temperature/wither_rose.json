@@ -3,11 +3,13 @@
   "block": "minecraft:wither_rose",
   "dead": "minecraft:air",
   "grow_time_days": 5.0,
+  "heat_capacity": 10,
   "max_fertilize": 100.0,
   "max_grow": 100.0,
   "max_survive": 100.0,
   "min_fertilize": -100.0,
   "min_grow": -100.0,
+  "min_skylight": 9,
   "min_survive": -100.0,
   "snow_vulnerable": false
 }

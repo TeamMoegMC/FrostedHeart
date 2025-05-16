@@ -49,8 +49,8 @@ public class AnemiaEffect extends MobEffect {
 
     @Override
     public void applyEffectTick(LivingEntity entityLivingBaseIn, int amplifier) {
-        entityLivingBaseIn.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, amplifier)));
-        entityLivingBaseIn.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, amplifier)));
+        // entityLivingBaseIn.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, amplifier)));
+        // entityLivingBaseIn.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, amplifier)));
         entityLivingBaseIn.addEffect(CUtils.noHeal(new MobEffectInstance(MobEffects.WEAKNESS, 100, amplifier * 2)));
         //entityLivingBaseIn.addEffect(CUtils.noHeal(new MobEffectInstance(EffectRegistry.THIRST, 100, amplifier * 2)));
     }

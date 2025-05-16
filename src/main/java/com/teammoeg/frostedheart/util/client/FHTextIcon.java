@@ -75,6 +75,7 @@ public class FHTextIcon {
 	/** thermometer icon . */
 	public static final TextIconType thermometer=new TextIconType("\uF500");
 	public static final TextIconType SOIL_THERMOMETER = new TextIconType("\uF520");
+	public static final TextIconType LIGHT = new TextIconType("\uF521");
 	public static Style applyFont(Style style) {
 		return style.withFont(iconFont);
 	}

@@ -3,11 +3,13 @@
   "block": "minecraft:beetroots",
   "dead": "minecraft:dead_bush",
   "grow_time_days": 7.0,
+  "heat_capacity": 10,
   "max_fertilize": 22.0,
   "max_grow": 26.0,
   "max_survive": 30.0,
   "min_fertilize": 14.0,
   "min_grow": 6.0,
+  "min_skylight": 9,
   "min_survive": -5.0,
   "snow_vulnerable": false
 }

@@ -168,7 +168,10 @@ public class FHRecipeProvider extends RecipeProvider {
 					!ExcelHelper.getCellValueAsBoolean(m.get("survive_snow")),
 					!ExcelHelper.getCellValueAsBoolean(m.get("survive_blizzard")),
 					CRegistryHelper.getBlockThrow(dead),
-					ExcelHelper.getCellValueAsBoolean(m.get("will_die"))
+					ExcelHelper.getCellValueAsBoolean(m.get("will_die")),
+					(int)ExcelHelper.getCellValueAsNumber(m.get("heat_capacity")),
+					(int)ExcelHelper.getCellValueAsNumber(m.get("min_skylight")),
+					(int)ExcelHelper.getCellValueAsNumber(m.get("max_skylight"))
 					).toFinished(FHMain.rl("plant_temperature/"+block.getPath())));
 		});
 		//drink

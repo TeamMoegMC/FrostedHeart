@@ -108,10 +108,46 @@ public class PlantTempStats implements TooltipModifier {
         return builder;
     }
 
+    public static LangBuilder getLightProgressBar(int min, int max) {
+        // remap from 0 to 15 to 0 to 6
+        int low = Mth.ceil(Mth.clampedMap(min, 0, 15, 0, 6));
+        int high = Mth.ceil(Mth.clampedMap(max, 0, 15, 0, 6));
+        if (low == high) {
+            if (low == 0) {
+                high += 1;
+            } else if (low == 6) {
+                low -= 1;
+            } else {
+                low -= 1;
+            }
+        }
+
+        int minPercent = Mth.ceil(Mth.clampedMap(min, 0, 15, 0, 100));
+        int maxPercent = Mth.ceil(Mth.clampedMap(max, 0, 15, 0, 100));
+
+        // bar
+        String s = TextProgressBarHelper.makeProgressBarInterval(6, low, high);
+        String s1 = s.substring(0, 3);
+        String s2 = s.substring(3);
+
+        LangBuilder builder = Lang.builder()
+                .add(FHTextIcon.LIGHT.getIcon())
+                .add(Lang.text(" " + minPercent + "%")
+                        .style(ChatFormatting.YELLOW))
+                .add(Lang.text(" - ").style(ChatFormatting.GRAY))
+                .add(Lang.text(maxPercent + "%")
+                        .style(ChatFormatting.YELLOW))
+                .add(Lang.text(" "))
+                .add(Lang.text(s1).style(ChatFormatting.YELLOW))
+                .add(Lang.text(s2).style(ChatFormatting.YELLOW));
+
+        return builder;
+    }
+
     public static List<Component> getStats(Block block, @Nullable ItemStack stack, @Nullable Player player) {
         List<Component> list = new ArrayList<>();
         PlantTempData data = PlantTempData.getPlantData(block);
-        boolean bonemealable = block instanceof BonemealableBlock;
+        // boolean bonemealable = block instanceof BonemealableBlock;
 
         if (data != null) {
             if(data.shouldShowSurvive()) {
@@ -121,10 +157,13 @@ public class PlantTempStats implements TooltipModifier {
             Lang.translate("tooltip", "temp.plant.grow").style(ChatFormatting.GRAY).addTo(list);
             getTempProgressBar(data.minGrow(), data.maxGrow()).addTo(list);
 
-            if (bonemealable&&data.shouldShowFertilize()) {
+            if (data.shouldShowFertilize()) {
                 Lang.translate("tooltip", "temp.plant.fertilize").style(ChatFormatting.GRAY).addTo(list);
                 getTempProgressBar(data.minFertilize(), data.maxFertilize()).addTo(list);
             }
+            Lang.translate("tooltip", "temp.plant.light").style(ChatFormatting.GRAY).addTo(list);
+            getLightProgressBar(data.minSkylight(), data.maxSkylight()).addTo(list);
+
 
             boolean vulnerableSnow = data.snowVulnerable();
             if (vulnerableSnow) {
