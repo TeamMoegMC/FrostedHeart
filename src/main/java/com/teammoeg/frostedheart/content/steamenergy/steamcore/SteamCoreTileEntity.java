@@ -54,15 +54,13 @@ public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
         super(type, pos, state);
         this.setLazyTickRate(20);
     }
-
+    float generatingSpeed=0;
     public float getGeneratedSpeed() {
-        if (getIsActive()) return FHConfig.COMMON.steamCoreGeneratedSpeed.get().floatValue();
-        return 0f;
+        return generatingSpeed;
     }
 
     public float calculateAddedStressCapacity() {
-        if (getIsActive()) return FHConfig.COMMON.steamCoreCapacity.get().floatValue();
-        return 0f;
+        return this.lastCapacityProvided =FHConfig.COMMON.steamCoreCapacity.get().floatValue();
     }
 
     @Override
@@ -70,14 +68,18 @@ public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
         super.tick();
         if (!level.isClientSide) {
             if (network.tryDrainHeat(FHConfig.COMMON.steamCorePowerIntake.get().floatValue())) {
-                this.setActive(true);
-                if (this.getSpeed() == 0f) {
-                    this.updateGeneratedRotation();
+                
+                if (generatingSpeed == 0f) {
+                	generatingSpeed=FHConfig.COMMON.steamCoreGeneratedSpeed.get().floatValue();
+                	this.setActive(true);
                 }
-                setChanged();
-            } else {
-                this.setActive(false);
                 this.updateGeneratedRotation();
+                setChanged();
+            } else if(generatingSpeed!=0){
+            	generatingSpeed=0;
+            	this.updateGeneratedRotation();
+            	this.setActive(false);
+                
             }
         }
     }
@@ -104,6 +106,7 @@ public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
     protected void write(CompoundTag tag, boolean client) {
         super.write(tag, client);
         network.save(tag, client);
+        tag.putFloat("generatingSpeed", generatingSpeed);
     }
 
     @Override
@@ -127,6 +130,7 @@ public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
     protected void read(CompoundTag compound, boolean clientPacket) {
         super.read(compound, clientPacket);
         network.load(compound, clientPacket);
+        generatingSpeed=compound.getFloat("generatingSpeed");
     }
 	@Override
 	public void invalidateCaps() {
