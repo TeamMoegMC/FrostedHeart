@@ -404,8 +404,9 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         propagated.clear();
         // Reset endpoints
         for (LazyOptional<HeatEndpoint> bp : endpoints) {
-        	HeatEndpoint ep=bp.orElse(null);
-        	ep.clearConnection();
+            bp.ifPresent(HeatEndpoint::clearConnection);
+        	// HeatEndpoint ep=bp.orElse(null);
+        	// ep.clearConnection();
         }
         // Clear endpoints
         endpoints.clear();
