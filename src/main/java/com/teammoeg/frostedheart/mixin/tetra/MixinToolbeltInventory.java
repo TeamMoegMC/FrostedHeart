@@ -19,12 +19,21 @@ public abstract class MixinToolbeltInventory  implements Container{
 	}
 	@Shadow(remap=false)
 	protected Predicate<ItemStack> predicate;
+	
+	/**
+	 * @author khjxiaogu
+	 * @reason
+	 */
 	@Overwrite
 	@Override
 	public boolean canPlaceItem(int pIndex, ItemStack pStack) {
 		return (!pStack.is(ModularToolbeltItem.instance.get()) && this.predicate.test(pStack)&&IEApi.isAllowedInCrate(pStack));
 	}
 
+	/**
+	 * @author khjxiaogu
+	 * @reason
+	 */
 	@Overwrite(remap=false)
 	public boolean isItemValid(ItemStack itemStack) {
 		return (!itemStack.is(ModularToolbeltItem.instance.get())&&(!itemStack.hasTag()||itemStack.getItem().getMaxStackSize()==1) && this.predicate.test(itemStack)&&IEApi.isAllowedInCrate(itemStack));
