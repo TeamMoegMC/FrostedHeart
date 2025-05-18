@@ -183,11 +183,11 @@ public class SaunaTileEntity extends CBlockEntity implements CTickableBlockEntit
         }
 
         // add sauna effect
-        if (level.getGameTime() % 1000L == 0L && !p.hasEffect(FHMobEffects.SAUNA.get())) {
+        if (!p.hasEffect(FHMobEffects.SAUNA.get())) {
             // initial reward
             //EnergyCore.addEnergy(p, 1000);
             // whole day reward
-            p.addEffect(new MobEffectInstance(FHMobEffects.SAUNA.get(), 23000, 0, true, false));
+            p.addEffect(new MobEffectInstance(FHMobEffects.SAUNA.get(), 100, 0, true, false));
         }
 
         // add medical effect

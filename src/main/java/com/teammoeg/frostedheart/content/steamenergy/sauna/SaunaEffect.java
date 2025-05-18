@@ -31,7 +31,7 @@ import java.util.List;
 
 public class SaunaEffect extends MobEffect {
 
-    protected SaunaEffect(MobEffectCategory typeIn, int liquidColorIn) {
+	public SaunaEffect(MobEffectCategory typeIn, int liquidColorIn) {
         super(typeIn, liquidColorIn);
     }
 

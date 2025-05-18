@@ -53,8 +53,7 @@ public class FHMobEffects {
     });
     public static final RegistryObject<MobEffect> SAD = register("lethargic",()->  new BaseEffect(MobEffectCategory.NEUTRAL, 816760296) {
     });
-    public static final RegistryObject<MobEffect> SAUNA = register("sauna",()-> new SaunaEffect(MobEffectCategory.BENEFICIAL, 816760296) {
-    });
+    public static final RegistryObject<MobEffect> SAUNA = register("sauna",()-> new SaunaEffect(MobEffectCategory.BENEFICIAL, 816760296));
     public static final RegistryObject<MobEffect> THIRST = register("thirst",() -> new BaseEffect(MobEffectCategory.BENEFICIAL, 0xE4D49F));
     public static final RegistryObject<MobEffect> WATER_RESTORING = register("water_restoring",() -> new BaseEffect(MobEffectCategory.BENEFICIAL, 0x379AD6));
     // Insulation: Perform no heat exchange with the environment during body temperature update. Useful for admins and creative mode.

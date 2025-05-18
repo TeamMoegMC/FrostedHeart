@@ -52,7 +52,10 @@ public class HyperthermiaEffect extends MobEffect {
     @Override
     public void applyEffectTick(LivingEntity entityLivingBaseIn, int amplifier) {
         if (entityLivingBaseIn instanceof ServerPlayer) {
-            if (entityLivingBaseIn.getHealth() > 20.0F) {
+        	
+        	if(amplifier > 8) {
+            	entityLivingBaseIn.hurt(FHDamageSources.hyperthermiaInstant(entityLivingBaseIn.level()), 20F);
+            }else if (entityLivingBaseIn.getHealth() > 20.0F) {
                 entityLivingBaseIn.hurt(FHDamageSources.hyperthermia(entityLivingBaseIn.level()) , 1F);
             } else if (entityLivingBaseIn.getHealth() > 10.0F) {
                 entityLivingBaseIn.hurt(FHDamageSources.hyperthermia(entityLivingBaseIn.level()) , 0.5F);

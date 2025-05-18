@@ -297,7 +297,8 @@ public class TemperatureUpdate {
                         float windAffectTemp=0;
                         if(player.isInWater()) {
                         	windAffectTemp=envtemp;
-                        	
+                        }else if(player.hasEffect(FHMobEffects.SAUNA.get())){
+                        	windAffectTemp=80;
                         }else {//not in water, consider air and humidity bonus
 	                        // Range 0-50
 	                        float humidity = WorldClimate.getHumidity(world);
@@ -364,9 +365,9 @@ public class TemperatureUpdate {
                         // Apply Self-heating based on movement status
                         // Food exhaustion is handled by Vanilla, so we don't repeat here
 
-                        if (isSprinting) {
+                        /*if (isSprinting) {
                             movementHeatedUnits += 4 * selfHeatRate * unit; // Running increases temperature by 4 units
-                        } else if (isWalking) { // Assuming there's a method to check walking
+                        } else*/ if (isWalking) { // Assuming there's a method to check walking
                             movementHeatedUnits += 2 * selfHeatRate * unit; // Walking increases temperature by 2 units
                         } else {
                             movementHeatedUnits += 1F * selfHeatRate * unit;
@@ -508,7 +509,7 @@ public class TemperatureUpdate {
                             ctx.setBodyTemperature(part, partBodyTemps.get(part));
                         }
                         // A movement induced feel temperature delta
-                        float movementFeelTempDelta = Math.max(0, (float) ((movementHeatedUnits / unit - 1 * selfHeatRate) * FHConfig.SERVER.heatExchangeTempConstant.get()));
+                        float movementFeelTempDelta = Math.max(0, (float) (((movementHeatedUnits-1) / unit - 1 * selfHeatRate) * FHConfig.SERVER.heatExchangeTempConstant.get()));
                         // Update data and do the relevant display purpose computation there
                         data.update((float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get()), ctx, movementFeelTempDelta);
 

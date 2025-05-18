@@ -52,8 +52,9 @@ public class HypothermiaEffect extends MobEffect {
     @Override
     public void applyEffectTick(LivingEntity entityLivingBaseIn, int amplifier) {
         if (entityLivingBaseIn instanceof ServerPlayer) {
-            ((ServerPlayer) entityLivingBaseIn).causeFoodExhaustion(amplifier < 2 ? 0.044f * (amplifier + 1) : 0.132f);
-            if (amplifier > 1) {
+            if(amplifier > 8) {
+            	entityLivingBaseIn.hurt(FHDamageSources.hypothermiaInstant(entityLivingBaseIn.level()), 20F);
+            }else if (amplifier > 1) {
                 if (entityLivingBaseIn.getHealth() > 20.0F) {
                     entityLivingBaseIn.hurt(FHDamageSources.hypothermia(entityLivingBaseIn.level()), 1F);
                 } else if (entityLivingBaseIn.getHealth() > 10.0F) {
