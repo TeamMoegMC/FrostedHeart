@@ -22,15 +22,14 @@ package com.teammoeg.frostedheart.content.world.features;
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
@@ -41,6 +40,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.IntUnaryOperator;
 
 public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
     public SpacecraftFeature(Codec<NoneFeatureConfiguration> pCodec) {
@@ -68,7 +68,12 @@ public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
 
         // Get bounding box for the spacecraft placement and use it to define the impact region
         BoundingBox boundingBox = template.getBoundingBox(settings, start);
-        createImpactRegion(level, boundingBox);
+        var headCenterPos = pos.offset(12,-2,0);
+        var backCenterPos = pos.offset(-9,-2,0);
+        createImpactRegionNew(level,headCenterPos,backCenterPos);
+        //level.setBlock(headCenterPos, Blocks.DIAMOND_BLOCK.defaultBlockState(), 2);
+        //level.setBlock(backCenterPos, Blocks.DIAMOND_BLOCK.defaultBlockState(), 2);
+        //createImpactRegion(level, boundingBox);
 
         return template.placeInWorld(level, start, boundingBox.getCenter(), settings, level.getRandom(), 2);
     }
@@ -123,12 +128,107 @@ public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
 //            }
 //        }
 //    }
+    
+    //todo[xkball] 地面上放火?
+    private void createImpactRegionNew(WorldGenLevel level, BlockPos headCenterPos, BlockPos backCenterPos) {
+        var centerPos = new BlockPos((headCenterPos.getX()+backCenterPos.getX())/2,headCenterPos.getY() + 5,headCenterPos.getZ());
+        var centerX = centerPos.getX();
+        var centerZ = centerPos.getZ();
+        var minY = headCenterPos.getY();
+        var maxY = minY + 8;
+        var depth = maxY - minY;
+        var rand = level.getRandom();
+        var clearHelper = new WorldClearHelper(level);
+        //这一部分逻辑没有改变
+        // 1. Create a circular crater around the center of the ship
+        int craterRadius = 12;
+        for (int x = centerX - craterRadius; x <= centerX + craterRadius; x++) {
+            for (int z = centerZ - craterRadius; z <= centerZ + craterRadius; z++) {
+                int dx = centerX - x;
+                int dz = centerZ - z;
+                if (dx * dx + dz * dz <= craterRadius * craterRadius) {
+                    // Calculate gradient depth for a sloped crater
+                    int offset = 10;
+                    double distance = Math.sqrt(dx * dx + dz * dz) - offset;
+                    int maxClearDepth = (int) ((1 - (distance / craterRadius)) * depth);
+                    maxClearDepth = Mth.clamp(maxClearDepth, 0, depth);
+                    
+                    // Add randomness to trench depth for ruggedness
+                    if (rand.nextInt(3) == 0) {
+                        maxClearDepth += rand.nextInt(3) - 1;
+                    }
+                    
+                    // Clear blocks down to maxClearDepth
+                    for (int y = maxY - maxClearDepth; y <= maxY; y++) {
+                        clearHelper.add(new BlockPos(x, y, z));
+                    }
+                    clearHelper.clear();
+                }
+            }
+        }
+        
+        IntUnaryOperator clearWidth = (int dx) ->  8 + dx/9;
+        IntUnaryOperator clearHeightOffset = (int dx) ->  dx/12;
+        IntUnaryOperator clearHeight = (int dx) ->  8 + dx/8;
+        IntUnaryOperator clearDepthOffset = (int dz) -> {
+            if(dz < 6) return 0;
+            if(dz < 15) return (dz-6)/2;
+            return dz-10;
+        };
+        boolean flag = true;
+        int dx = 0;
+        //创建梯形区域
+        while (flag) {
+            var heightOffset = clearHeightOffset.applyAsInt(dx);
+            var height = clearHeight.applyAsInt(dx);
+            for(int dz = 0; dz < clearWidth.applyAsInt(dx); dz++) {
+                var depthOffset = clearDepthOffset.applyAsInt(dz);
+                for(int dy = height; dy > depthOffset; dy--) {
+                    clearHelper.add(headCenterPos.offset(-dx,dy + heightOffset,dz));
+                    clearHelper.add(headCenterPos.offset(-dx,dy + heightOffset,-dz));
+                   
+                }
+                if(rand.nextInt(8) == 1){
+                    clearHelper.add(headCenterPos.offset(-dx,depthOffset + heightOffset,dz));
+                }
+                if(rand.nextInt(8) == 1){
+                    clearHelper.add(headCenterPos.offset(-dx,depthOffset + heightOffset,-dz));
+                }
+                clearHelper.clear();
+            }
+            
+            dx += 1;
+            flag = dx < 64;
+            var flagPos = headCenterPos.offset(-dx,height + heightOffset,0);
+            flag |= level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE, flagPos).getY() > flagPos.getY();
+            //todo[xkball] 多给几个采样点
+            for (int i = 0; i < 5; i++) {
+                flag |= !level.getBlockState(headCenterPos.offset(-dx-1,2,0)).isAir();
+            }
+            flag &= dx < 256;
+        }
+        
+        //创建中心的额外下沉区域
+        for(int dx_ = 0; dx_ < Math.min(128,dx-20); dx_++){
+            for(int dy = 4; dy > 0; dy--){
+                var dy_ = dy + dx_/11;
+                clearHelper.addWithChanceDigDeeper(backCenterPos.offset(-dx_,dy_,0),rand);
+                clearHelper.addWithChanceDigDeeper(backCenterPos.offset(-dx_,dy_,-1),rand);
+                clearHelper.addWithChanceDigDeeper(backCenterPos.offset(-dx_,dy_,1),rand);
+                if(dy != 1){
+                    clearHelper.addWithChanceDigDeeper(backCenterPos.offset(-dx_,dy_,-2),rand);
+                    clearHelper.addWithChanceDigDeeper(backCenterPos.offset(-dx_,dy_,2),rand);
+                }
+                clearHelper.clear();
+            }
+        }
+    }
 
     private void createImpactRegion(WorldGenLevel level, BoundingBox boundingBox) {
         int centerX = boundingBox.getCenter().getX();
         int centerZ = boundingBox.getCenter().getZ();
         int minY = boundingBox.minY();
-        int maxY = boundingBox.maxY();
+        int maxY = boundingBox.maxY() + 10;
         int depth = maxY - minY;
 
         RandomSource rand = level.getRandom();
@@ -155,9 +255,9 @@ public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
                     for (int y = maxY - maxClearDepth; y <= maxY; y++) {
                         if (y == maxY - maxClearDepth && rand.nextInt(3) == 0) {
                             // Add fire
-                            level.setBlock(new BlockPos(x, y, z), net.minecraft.world.level.block.Blocks.FIRE.defaultBlockState(), 2);
+                            level.setBlock(new BlockPos(x, y, z), Blocks.FIRE.defaultBlockState(), 2);
                         }
-                        level.setBlock(new BlockPos(x, y, z), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 2);
+                        level.setBlock(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState(), 2);
                     }
                 }
             }
@@ -183,9 +283,9 @@ public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
                 for (int y = maxY - maxClearDepth; y <= maxY; y++) {
                     if (y == maxY - maxClearDepth && rand.nextInt(3) == 0) {
                         // Add fire
-                        level.setBlock(new BlockPos(x, y, z), net.minecraft.world.level.block.Blocks.FIRE.defaultBlockState(), 2);
+                        level.setBlock(new BlockPos(x, y, z), Blocks.FIRE.defaultBlockState(), 2);
                     }
-                    level.setBlock(new BlockPos(x, y, z), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 2);
+                    level.setBlock(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState(), 2);
                 }
             }
         }
@@ -196,13 +296,38 @@ public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
                 for (int z = centerZ - trenchWidth / 2; z <= centerZ + trenchWidth / 2; z++) {
                     BlockState state = level.getBlockState(new BlockPos(x, y, z));
                     if (state.is(BlockTags.LEAVES) || state.is(BlockTags.LOGS)) {
-                        level.setBlock(new BlockPos(x, y, z), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 2);
+                        level.setBlock(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState(), 2);
                     }
                 }
             }
         }
     }
 
-
+    private static class WorldClearHelper {
+        private final WorldGenLevel worldGenLevel;
+        private final Set<BlockPos> posSet = new HashSet<>();
+        
+        private WorldClearHelper(WorldGenLevel worldGenLevel) {
+            this.worldGenLevel = worldGenLevel;
+        }
+        
+        public void add(BlockPos pos) {
+            posSet.add(pos);
+        }
+        
+        public void addWithChanceDigDeeper(BlockPos pos,RandomSource rand) {
+            posSet.add(pos);
+            if(rand.nextInt(8) == 1) {
+                posSet.add(pos.below());
+            }
+        }
+        
+        public void clear() {
+            for (var pos : posSet) {
+                worldGenLevel.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+            }
+            posSet.clear();
+        }
+    }
 
 }
