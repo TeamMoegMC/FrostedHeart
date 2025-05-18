@@ -59,11 +59,13 @@ public class ServerLifecycleHooksMixin {
         FHMain.saveNeedUpdate = false;
         File fconfig = config.toFile();
         File saveVersion = new File(fconfig, ".twrsaveversion");
+        
         FHMain.lastServerConfig = config.toFile();
         FHVersion local = FHMain.local.fetchVersion().orElse(FHVersion.empty);
         String localVersion = local.getOriginal();
         if(!saveVersion.exists()) {
         	try {
+        		saveVersion.getParentFile().mkdirs();
 				FileUtil.transfer(localVersion, saveVersion);
 			} catch (IOException e) {
 
