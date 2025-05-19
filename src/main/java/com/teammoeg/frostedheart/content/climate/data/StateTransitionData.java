@@ -3,7 +3,10 @@ package com.teammoeg.frostedheart.content.climate.data;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
+import com.teammoeg.frostedheart.content.climate.PhysicalState;
+
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Recipe;
@@ -39,14 +42,14 @@ import java.util.stream.Collectors;
  * @param heatCapacity higher this is, less likely the transition happens. transition rate ~ 1 / heatCapacity
  * @param willTransit an overriding switch disallowing any transition, saves performance. in general this is true.
  */
-public record StateTransitionData(Block block, String state,
+public record StateTransitionData(Block block, PhysicalState state,
                                   Block solid, Block liquid, Block gas,
                                   float freezeTemp, float meltTemp,
                                   float condenseTemp, float evaporateTemp,
                                   int heatCapacity, boolean willTransit){
     public static final Codec<StateTransitionData> CODEC= RecordCodecBuilder.create(t->t.group(
             ForgeRegistries.BLOCKS.getCodec().fieldOf("block").forGetter(o->o.block),
-            Codec.STRING.optionalFieldOf("state","solid").forGetter(o->o.state),
+            CodecUtil.enumCodec(PhysicalState.class).fieldOf("state").forGetter(o->o.state),
             ForgeRegistries.BLOCKS.getCodec().fieldOf("solid").forGetter(o->o.solid),
             ForgeRegistries.BLOCKS.getCodec().fieldOf("liquid").forGetter(o->o.liquid),
             ForgeRegistries.BLOCKS.getCodec().fieldOf("gas").forGetter(o->o.gas),

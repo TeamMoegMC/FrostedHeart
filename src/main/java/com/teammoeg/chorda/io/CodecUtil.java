@@ -247,9 +247,12 @@ public class CodecUtil {
 	}
 	public static <T extends Enum<T>> Codec<T> enumCodec(T[] values){
 		Map<String,T> maps=new HashMap<>();
-		for(T val:values)
+		Map<T,String> maps2=new HashMap<>();
+		for(T val:values) {
 			maps.put(val.name().toLowerCase(), val);
-		return new CompressDifferCodec<>(Codec.STRING.xmap(maps::get, v->v.name().toLowerCase()),Codec.BYTE.xmap(o->values[o], v->(byte)v.ordinal()));
+			maps2.put(val, val.name().toLowerCase());
+		}
+		return new CompressDifferCodec<>(Codec.STRING.xmap(maps::get, maps2::get),Codec.BYTE.xmap(o->values[o], v->(byte)v.ordinal()));
 	}
 	public static <O> BooleanCodecBuilder<O> booleans(String flag){
 		return new BooleanCodecBuilder<O>(flag);

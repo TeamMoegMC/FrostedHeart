@@ -1,7 +1,9 @@
 package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.content.climate.PhysicalState;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
@@ -10,6 +12,7 @@ import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatDat
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.QuartPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -76,7 +79,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
             for (int l1 = 0; l1 < temperatureChecks; ++l1) {
                 BlockPos blockpos1 = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(i, 0, j, 15));
                 BlockPos blockpos2 = blockpos1.below();
-                Holder<Biome> biomeHolder = level.getBiome(blockpos1);
+                Holder<Biome> biomeHolder = CUtils.fastGetBiome(level, blockpos2);
                 Biome biome = biomeHolder.value();
                 // TODO: for ocean freezing, we need some special handling...
                 if (!biomeHolder.is(FHTags.Biomes.WATER_DO_NOT_FREEZE.tag) && level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
@@ -156,15 +159,17 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
                         BlockPos blockpos3 = level.getBlockRandomPos(i, k1, j, 15);
                         level.getProfiler().push("randomTick");
                         BlockState blockstate2 = levelchunksection.getBlockState(blockpos3.getX() - i, blockpos3.getY() - k1, blockpos3.getZ() - j);
-                        if (blockstate2.isRandomlyTicking()) {
-                            blockstate2.randomTick(level, blockpos3, level.random);
+                        //@khjxiaogu: omit randomtick from the original block if temperature modification occurred
+                        if(!frostedHeart$updatePlantBasedOnTemperature(level,blockpos3,blockstate2)) {
+	                        if (blockstate2.isRandomlyTicking()) {
+	                            blockstate2.randomTick(level, blockpos3, level.random);
+	                        }
+	
+	                        FluidState fluidstate = blockstate2.getFluidState();
+	                        if (fluidstate.isRandomlyTicking()) {
+	                            fluidstate.randomTick(level, blockpos3, level.random);
+	                        }
                         }
-
-                        FluidState fluidstate = blockstate2.getFluidState();
-                        if (fluidstate.isRandomlyTicking()) {
-                            fluidstate.randomTick(level, blockpos3, level.random);
-                        }
-
                         level.getProfiler().pop();
                     }
                 }
@@ -264,115 +269,92 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
             }
         }
     }
-
+    //Plants should go seperately
+    @Unique
+    private boolean frostedHeart$updatePlantBasedOnTemperature(ServerLevel level, BlockPos pos, BlockState currentState) {
+        var selfData = PlantTempData.getPlantData(currentState.getBlock());
+        if (selfData == null) {
+            return false;
+        }
+        // plant state transition
+        float t = WorldTemperature.block(level, pos);
+        var selfStatus = WorldTemperature.checkPlantStatus(level, pos, selfData, t);
+        if (selfStatus.willDie()) {
+            var dead = selfData.dead();
+            var belowBlockState = level.getBlockState(pos.below());
+            if (dead == Blocks.DEAD_BUSH && !belowBlockState.isAir() && !belowBlockState.is(BlockTags.DEAD_BUSH_MAY_PLACE_ON)) {
+                level.setBlockAndUpdate(pos.below(), Blocks.DIRT.defaultBlockState());
+            }
+            level.setBlockAndUpdate(pos, dead.defaultBlockState());
+            return true;
+        }
+        return false;
+        
+    }
     @Unique
     private void frostedHeart$updateBlockBasedOnTemperature(ServerLevel level, BlockPos pos, BlockState currentState) {
 
         Block block = currentState.getBlock();
 
-        boolean doStateTransition = true;
         StateTransitionData std = StateTransitionData.getData(block);
-        if (std == null) {
-            doStateTransition = false;
-        }
-        else if (!std.willTransit())
-            doStateTransition = false;
-        // Apply heat capacity check - only perform transition if random check passes
-        else if (level.getRandom().nextInt(std.heatCapacity()) != 0) {
-            doStateTransition = false;
+        //if data file states that it should not transit
+        if (std == null||!std.willTransit()||level.getRandom().nextInt(std.heatCapacity()) != 0) {
+            return;
         }
         // TODO: For ocean melting we need special handling...
-        // get biome call is expensive.
-        else if (level.getBiome(pos).is(FHTags.Biomes.ICE_DO_NOT_SMELT.tag) && currentState.is(BlockTags.ICE)) {
-            doStateTransition = false;
+        else if (CUtils.fastGetBiome(level, pos).is(FHTags.Biomes.ICE_DO_NOT_SMELT.tag) && currentState.is(BlockTags.ICE)) {
+            return;
         }
-
-        boolean doPlantTransition = true;
-        var selfData = PlantTempData.getPlantData(currentState.getBlock());
-        if (selfData == null) {
-            doPlantTransition = false;
-        }
-        else if (level.getRandom().nextInt(selfData.heatCapacity()) != 0) {
-            doPlantTransition = false;
-        }
-
-        // plant state transition
-        if (doPlantTransition) {
-            float t = WorldTemperature.block(level, pos);
-            var selfStatus = WorldTemperature.checkPlantStatus(level, pos, selfData, t);
-            if (selfStatus.willDie()) {
-                var dead = selfData.dead();
-                var belowBlockState = level.getBlockState(pos.below());
-                if (dead == Blocks.DEAD_BUSH && !belowBlockState.isAir() && !belowBlockState.is(BlockTags.DEAD_BUSH_MAY_PLACE_ON)) {
-                    level.setBlockAndUpdate(pos.below(), Blocks.DIRT.defaultBlockState());
-                }
-                level.setBlockAndUpdate(pos, dead.defaultBlockState());
-            }
-        }
-
         // general state transition
 
-        if (doStateTransition) {
-            // we don't allow non-adjusted blocks to change to save performance
-            boolean hasActiveAdjust = ChunkHeatData.hasActiveAdjust(level, pos);
-            float t = WorldTemperature.block(level, pos);
-            // Determine the target state based on temperature thresholds
-            // We check transitions in order of priority (solid->gas, gas->solid, etc.)
-            String targetState = std.state(); // Default to current state
-            Block targetBlock = block; // Default to current block
-
-            // Check for phase transitions in order of precedence
-            // 1. Check solid -> gas (sublimation, highest priority if temp is high enough)
-            if ("solid".equals(std.state()) && t >= std.evaporateTemp() && std.gas() != null) {
-                if (!hasActiveAdjust) {
-                    return;
-                }
-                targetState = "gas";
-                targetBlock = std.gas();
-            }
-            // 2. Check gas -> solid (deposition, highest priority if temp is low enough)
-            else if ("gas".equals(std.state()) && t <= std.freezeTemp() && std.solid() != null) {
-                targetState = "solid";
-                targetBlock = std.solid();
-            }
-            // 3. Check liquid -> gas (evaporation)
-            else if ("liquid".equals(std.state()) && t >= std.evaporateTemp() && std.gas() != null) {
-                if (!hasActiveAdjust) {
-                    return;
-                }
-                targetState = "gas";
-                targetBlock = std.gas();
-            }
-            // 4. Check gas -> liquid (condensation)
-            else if ("gas".equals(std.state()) && t <= std.condenseTemp() && std.liquid() != null) {
-                targetState = "liquid";
-                targetBlock = std.liquid();
-            }
-            // 5. Check solid -> liquid (melting)
-            else if ("solid".equals(std.state()) && t >= std.meltTemp() && std.liquid() != null) {
-                if (!hasActiveAdjust) {
-                    return;
-                }
-                targetState = "liquid";
-                targetBlock = std.liquid();
-            }
-            // 6. Check liquid -> solid (freezing)
-            else if ("liquid".equals(std.state()) && t <= std.freezeTemp() && std.solid() != null) {
-                targetState = "solid";
-                targetBlock = std.solid();
-            }
-
-            // Skip update if target state is the same as current state
-            if (targetState.equals(std.state())) {
+        // To save performance, we only focus on blocks that player cares more about, otherwise we reduce translation rate
+        boolean shouldDoAdjust = ChunkHeatData.hasActiveAdjust(level, pos)||level.random.nextInt(10)==0;
+        float t = WorldTemperature.block(level, pos);
+        // Determine the target state based on temperature thresholds
+        // We check transitions in order of priority (solid->gas, gas->solid, etc.)
+        PhysicalState targetState = std.state(); // Default to current state
+        final PhysicalState sourceState = std.state(); 
+        Block targetBlock = block; // Default to current block
+        switch(sourceState) {
+        case SOLID:
+        	if (!shouldDoAdjust) {
                 return;
-            }
-
-            // Create effects before changing the block
-            frostedHeart$addTransitionEffects(level, pos, std.state(), targetState, block, targetBlock);
-
-            // Update the block state
-            level.setBlockAndUpdate(pos, targetBlock.defaultBlockState());
+            }else if(t >= std.evaporateTemp() && std.gas() != null) {
+            	targetState = PhysicalState.GAS;
+                targetBlock = std.gas();
+            }else if(t >= std.meltTemp() && std.liquid() != null) {
+            	targetState = PhysicalState.LIQUID;
+                targetBlock = std.liquid();
+            }break;
+        case LIQUID:
+        	if(t <= std.freezeTemp() && std.solid() != null) {
+        		targetState = PhysicalState.SOLID;
+                targetBlock = std.solid();
+        	}else if(!shouldDoAdjust) {
+        		return;
+        	}else if(t >= std.evaporateTemp() && std.gas() != null){
+        		targetState = PhysicalState.GAS;
+                targetBlock = std.gas();
+        	}break;
+        case GAS:
+        	if (t <= std.freezeTemp() && std.solid() != null) {
+                targetState = PhysicalState.SOLID;
+                targetBlock = std.solid();
+            }else if (t <= std.condenseTemp() && std.liquid() != null) {
+                targetState = PhysicalState.LIQUID;
+                targetBlock = std.liquid();
+            }break;
         }
+        // Skip update if target state is the same as current state
+        if (targetState==std.state()) {
+            return;
+        }
+        // Create effects before changing the block
+        frostedHeart$addTransitionEffects(level, pos, std.state(), targetState, block, targetBlock);
+
+        // Update the block state
+        level.setBlockAndUpdate(pos, targetBlock.defaultBlockState());
+        
 
     }
 
@@ -386,12 +368,12 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
      * @param newBlock The new block
      */
     @Unique
-    private void frostedHeart$addTransitionEffects(ServerLevel level, BlockPos pos, String oldState, String newState, Block oldBlock, Block newBlock) {
+    private void frostedHeart$addTransitionEffects(ServerLevel level, BlockPos pos, PhysicalState oldState, PhysicalState newState, Block oldBlock, Block newBlock) {
         // Create server-side particle effects that will be sent to clients
         // Use the transition type to determine appropriate particles
-
-        if (oldState.equals("solid") && newState.equals("liquid")) {
-            // Melting effect - dripping water particles
+    	switch(oldState.translate(newState)) {
+    	case MELTING:
+    		 // Melting effect - dripping water particles
             level.sendParticles(
                     ParticleTypes.DRIPPING_WATER,
                     pos.getX() + 0.5D,
@@ -405,25 +387,10 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
             );
             // Melting sound
             level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 2.6F + (level.random.nextFloat() - level.random.nextFloat()) * 0.8F);
-        }
-        else if (oldState.equals("liquid") && newState.equals("solid")) {
-            // Freezing effect - snowflake particles
-            level.sendParticles(
-                    ParticleTypes.SNOWFLAKE,
-                    pos.getX() + 0.5D,
-                    pos.getY() + 0.5D,
-                    pos.getZ() + 0.5D,
-                    10, // particle count
-                    0.3D, // spread X
-                    0.3D, // spread Y
-                    0.3D, // spread Z
-                    0.0D  // speed
-            );
-            // Freezing sound
-            level.playSound(null, pos, SoundEvents.GLASS_PLACE, SoundSource.BLOCKS, 0.5F, 1.0F + (level.random.nextFloat() - level.random.nextFloat()) * 0.4F);
-        }
-        else if (newState.equals("gas")) {
-            // Evaporation/sublimation effect - cloud particles
+            break;
+    	case SUBLIMATION:
+    	case EVAPORATION:
+    		// Evaporation/sublimation effect - cloud particles
             level.sendParticles(
                     ParticleTypes.CLOUD,
                     pos.getX() + 0.5D,
@@ -437,9 +404,26 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
             );
             // Steam hissing sound
             level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.4F, 2.0F + level.random.nextFloat() * 0.4F);
-        }
-        else if (oldState.equals("gas") && (newState.equals("liquid") || newState.equals("solid"))) {
-            // Condensation/deposition effect - dripping particles
+            break;
+    	case FREEZING:
+    		// Freezing effect - snowflake particles
+            level.sendParticles(
+                    ParticleTypes.SNOWFLAKE,
+                    pos.getX() + 0.5D,
+                    pos.getY() + 0.5D,
+                    pos.getZ() + 0.5D,
+                    10, // particle count
+                    0.3D, // spread X
+                    0.3D, // spread Y
+                    0.3D, // spread Z
+                    0.0D  // speed
+            );
+            // Freezing sound
+            level.playSound(null, pos, SoundEvents.GLASS_PLACE, SoundSource.BLOCKS, 0.5F, 1.0F + (level.random.nextFloat() - level.random.nextFloat()) * 0.4F);
+            break;
+    	case CONDENSATION:
+    	case DEPOSITION:
+    		// Condensation/deposition effect - dripping particles
             level.sendParticles(
                     ParticleTypes.DRIPPING_WATER,
                     pos.getX() + 0.5D,
@@ -453,8 +437,10 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
             );
             // Condensation sound - light rain-like sound
             level.playSound(null, pos, SoundEvents.POINTED_DRIPSTONE_DRIP_WATER, SoundSource.AMBIENT, 0.5F, 1.0F);
-        }
-
+    		break;
+    	default:
+    		break;
+    	}
         // You could also add custom particles for specific block transitions
         // For example, if water is turning to ice:
         if (oldBlock == Blocks.WATER && newBlock == Blocks.ICE) {
