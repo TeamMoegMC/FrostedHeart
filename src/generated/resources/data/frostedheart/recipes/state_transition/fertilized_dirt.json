@@ -2,6 +2,7 @@
   "type": "frostedheart:state_transition",
   "block": "frostedheart:fertilized_dirt",
   "condense_temp": 90.0,
+  "evaporate_temp": 100.0,
   "freeze_temp": -10.0,
   "gas": "minecraft:coarse_dirt",
   "heat_capacity": 10,

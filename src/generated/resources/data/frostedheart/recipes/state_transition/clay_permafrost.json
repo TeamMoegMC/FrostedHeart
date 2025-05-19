@@ -8,5 +8,6 @@
   "liquid": "minecraft:clay",
   "melt_temp": 9.0,
   "solid": "frostedheart:clay_permafrost",
+  "state": "solid",
   "will_transit": true
 }

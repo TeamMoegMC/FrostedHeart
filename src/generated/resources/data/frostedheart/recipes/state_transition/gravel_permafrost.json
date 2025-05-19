@@ -8,5 +8,6 @@
   "liquid": "minecraft:gravel",
   "melt_temp": 9.0,
   "solid": "frostedheart:gravel_permafrost",
+  "state": "solid",
   "will_transit": true
 }

@@ -8,5 +8,6 @@
   "liquid": "minecraft:podzol",
   "melt_temp": 9.0,
   "solid": "frostedheart:podzol_permafrost",
+  "state": "solid",
   "will_transit": true
 }
