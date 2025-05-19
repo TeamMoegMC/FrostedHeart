@@ -196,9 +196,9 @@ public class TemperatureGoogleRenderer {
                         (hasGoggleInformation && hasHeatNetworkInformation) || (hasMBGoogleInformation && hasMBHeatNetworkInformation)
                 )
         ) {
+        	if(lastHeatNetworkData==null||!lastHeatNetworkData.pos.equals(pos))
             // Set invalid data by default
-            if (lastHeatNetworkData == null)
-                lastHeatNetworkData = new ClientHeatNetworkData(pos);
+        		lastHeatNetworkData = new ClientHeatNetworkData(pos);
             // Try to request the data
             FHNetwork.INSTANCE.sendToServer(new HeatNetworkRequestC2SPacket(pos));
         }

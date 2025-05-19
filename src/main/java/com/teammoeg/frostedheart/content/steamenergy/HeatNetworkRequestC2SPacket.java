@@ -66,22 +66,19 @@ public class HeatNetworkRequestC2SPacket implements CMessage {
 //                        FHMain.LOGGER.debug("Client request received. Sending server HeatNetwork data to client");
                             ClientHeatNetworkData data = new ClientHeatNetworkData(pos, network);
                             FHNetwork.INSTANCE.sendPlayer(player, new HeatNetworkResponseS2CPacket(data));
-                        } else {
-//                        FHMain.LOGGER.debug("Client request received. No HeatNetwork found at the position. Sending nothing.");
+                            return;
                         }
                     }
-                }
-
-                else if (be instanceof HeatNetworkProvider hp) {
+                }else if (be instanceof HeatNetworkProvider hp) {
                     HeatNetwork network = hp.getNetwork();
                     if (network != null) {
 //                        FHMain.LOGGER.debug("Client request received. Sending server HeatNetwork data to client");
                         ClientHeatNetworkData data = new ClientHeatNetworkData(pos, network);
                         FHNetwork.INSTANCE.sendPlayer(player, new HeatNetworkResponseS2CPacket(data));
-                    } else {
-//                        FHMain.LOGGER.debug("Client request received. No HeatNetwork found at the position. Sending nothing.");
+                        return;
                     }
                 }
+                FHNetwork.INSTANCE.sendPlayer(player, new HeatNetworkResponseS2CPacket(new ClientHeatNetworkData(pos)));
             }
         });
         context.get().setPacketHandled(true);
