@@ -34,6 +34,7 @@ import com.google.gson.JsonObject;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.LongArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
@@ -42,6 +43,7 @@ import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.content.world.FHFeatures;
+import com.teammoeg.frostedheart.util.mixin.SeedSetable;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.ResearchCategory;
@@ -262,10 +264,11 @@ public class DebugCommand {
                 		ct.getSource().sendSuccess(()->Components.str(""+ct.getSource().getLevel().getSeed()), false);
                 		return Command.SINGLE_SUCCESS;
                 	})
-                	
                 	.then(Commands.literal("set").then(Commands.argument("seed", LongArgumentType.longArg()).executes(ct->{
-                	FHCapabilities.DIMENSION_SEED.getCapability(ct.getSource().getLevel()).ifPresent(t->t.setSeed(LongArgumentType.getLong(ct, "seed")));
-                	ct.getSource().sendSuccess(()->Components.str("seeds set.").withStyle(ChatFormatting.GREEN), true);
+                		if(ct.getSource().getLevel() instanceof SeedSetable ss) {
+                			ss.setSeed(LongArgumentType.getLong(ct, "seed"));
+                		}
+                		ct.getSource().sendSuccess(()->Components.str("seeds set.").withStyle(ChatFormatting.GREEN), true);
                 	 return Command.SINGLE_SUCCESS;
                 }))))
                 /*.then(Commands.literal("sort_chunks").executes(ct -> {

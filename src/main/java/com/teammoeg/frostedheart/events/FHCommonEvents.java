@@ -140,11 +140,6 @@ public class FHCommonEvents {
 
     @SubscribeEvent
     public static void attachToWorld(AttachCapabilitiesEvent<Level> event) {
-        // only attach to dimension with skylight (i.e. overworld)
-       if(event.getObject() instanceof ServerLevel level) {
-            event.addCapability(new ResourceLocation(FHMain.MODID, "seed"),
-                    FHCapabilities.DIMENSION_SEED.provider());
-       }
         
     }
 	@SubscribeEvent

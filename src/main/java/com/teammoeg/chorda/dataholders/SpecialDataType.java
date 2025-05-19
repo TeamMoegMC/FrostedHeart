@@ -118,6 +118,7 @@ public class SpecialDataType<T extends SpecialData>{
 	 * @return data component
 	 */
 	public <U extends SpecialDataHolder<U>> T getOrCreate(U data) {
+		if(data==null)return null;
 		return data.getData(this);
 	}
 

@@ -44,8 +44,6 @@ import static com.teammoeg.chorda.capability.CapabilityRegistry.*;
 public class FHCapabilities {
 	
 	
-	
-	public static final NBTCapabilityType<DimensionalSeed> DIMENSION_SEED=register(DimensionalSeed.class);
 	public static final NBTCapabilityType<WorldClimate> CLIMATE_DATA=register(WorldClimate.class);
 	public static final NBTCapabilityType<DeathInventoryData> DEATH_INV=register(DeathInventoryData.class);
 	public static final NBTCapabilityType<PlayerTemperatureData> PLAYER_TEMP=register(PlayerTemperatureData.class);

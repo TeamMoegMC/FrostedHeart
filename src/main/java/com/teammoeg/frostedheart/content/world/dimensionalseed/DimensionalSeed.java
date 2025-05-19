@@ -3,22 +3,28 @@ package com.teammoeg.frostedheart.content.world.dimensionalseed;
 import java.nio.charset.StandardCharsets;
 
 import com.google.common.hash.Hashing;
-import com.teammoeg.chorda.io.NBTSerializable;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.dataholders.SpecialData;
+import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 import com.teammoeg.frostedheart.FHMain;
-
 import lombok.Getter;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.BiomeManager;
 
-public class DimensionalSeed implements NBTSerializable {
+public class DimensionalSeed  implements SpecialData{
+	public static final Codec<DimensionalSeed> CODEC=RecordCodecBuilder.create(t->
+	t.group(Codec.LONG.optionalFieldOf("seed",0L).forGetter(o->o.seed),
+			Codec.BOOL.optionalFieldOf("hasSeed",false).forGetter(o->o.hasSeparateSeed),
+			Codec.BOOL.optionalFieldOf("isInit",false).forGetter(o->o.isInitialized))
+			.apply(t, DimensionalSeed::new));
 	@Getter
 	private long seed;
 	private boolean hasSeparateSeed;
 	private boolean isInitialized;
+	public DimensionalSeed(SpecialDataHolder t) {
+	}
 	public DimensionalSeed() {
 	}
-	
 	public DimensionalSeed(long seed) {
 		super();
 		this.seed = seed;
@@ -32,8 +38,7 @@ public class DimensionalSeed implements NBTSerializable {
 		if(!isInitialized) {
 			isInitialized=true;
 			if(l.dimension().equals(Level.OVERWORLD)||l.dimension().equals(Level.NETHER)||l.dimension().equals(Level.END)) {
-				this.seed=originseed;
-				hasSeparateSeed=true;
+				hasSeparateSeed=false;
 				FHMain.LOGGER.info("using vanilla seed for level "+l.dimension().location().toString()+":"+seed);
 			}else this.generateSeed(l, originseed);
 			
@@ -47,18 +52,12 @@ public class DimensionalSeed implements NBTSerializable {
 	public boolean hasSeed() {
 		return hasSeparateSeed;
 	}
-	@Override
-	public void save(CompoundTag nbt, boolean isPacket) {
-		nbt.putLong("seed", seed);
-		nbt.putBoolean("hasSeed", hasSeparateSeed);
-		nbt.putBoolean("init", isInitialized);
-		
-	}
-	@Override
-	public void load(CompoundTag nbt, boolean isPacket) {
-		seed=nbt.getLong("seed");
-		hasSeparateSeed=nbt.getBoolean("hasSeed");
-		isInitialized=nbt.getBoolean("init");
+
+	public DimensionalSeed(long seed, boolean hasSeparateSeed, boolean isInitialized) {
+		super();
+		this.seed = seed;
+		this.hasSeparateSeed = hasSeparateSeed;
+		this.isInitialized = isInitialized;
 	}
 
 }
