@@ -65,7 +65,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         ServerLevel level = (ServerLevel)(Object)this;
         final long now = level.getGameTime();
         ChunkPos chunkpos = pChunk.getPos();
-        boolean updateTempBlock = (now + chunkpos.hashCode()) % FHConfig.SERVER.tempBlockstateUpdateIntervalTicks.get() == 0;
+        boolean updateTempBlock = (now + (chunkpos.x)+(chunkpos.z)) % FHConfig.SERVER.tempBlockstateUpdateIntervalTicks.get() == 0;
         boolean isRaining = level.isRaining();
         int i = chunkpos.getMinBlockX();
         int j = chunkpos.getMinBlockZ();
@@ -76,16 +76,11 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         // Custom water freezing logic
         level.getProfiler().popPush("water");
         if (pRandomTickSpeed > 0 && updateTempBlock) {
-            for (int l1 = 0; l1 < temperatureChecks; ++l1) {
+            //for (int l1 = 0; l1 < temperatureChecks; ++l1) {
                 BlockPos blockpos1 = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(i, 0, j, 15));
                 BlockPos blockpos2 = blockpos1.below();
                 Holder<Biome> biomeHolder = CUtils.fastGetBiome(level, blockpos2);
                 Biome biome = biomeHolder.value();
-                // TODO: for ocean freezing, we need some special handling...
-                if (!biomeHolder.is(FHTags.Biomes.WATER_DO_NOT_FREEZE.tag) && level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
-                    // Check if the block should freeze based on our custom logic
-                    frostedheart$freezeWater(level, blockpos2);
-
                 if (isRaining) {
                     int i1 = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
                     if (i1 > 0 && frostedHeart$shouldSnowCustom(level, blockpos1)) {
@@ -108,39 +103,10 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
                         blockstate3.getBlock().handlePrecipitation(blockstate3, level, blockpos2, biome$precipitation);
                     }
                 }
-            }
+            //}
         }
 
         // Add temperature profiler section
-        level.getProfiler().popPush("temperature");
-
-        // Only process if random tick speed is positive
-        if (pRandomTickSpeed > 0 && updateTempBlock) {
-            LevelChunkSection[] sections = pChunk.getSections();
-
-            for (int l = 0; l < sections.length; ++l) {
-                LevelChunkSection levelchunksection = sections[l];
-                if (levelchunksection.isRandomlyTicking()) {
-                    int j1 = pChunk.getSectionYFromSectionIndex(l);
-                    int k1 = SectionPos.sectionToBlockCoord(j1);
-
-                    for (int l1 = 0; l1 < temperatureChecks; ++l1) {
-                        // Get a random block position in this chunk section
-                        BlockPos blockpos = level.getBlockRandomPos(i, k1, j, 15);
-
-                        // Get the block state at this position
-                        BlockState blockstate = levelchunksection.getBlockState(
-                                blockpos.getX() - i,
-                                blockpos.getY() - k1,
-                                blockpos.getZ() - j
-                        );
-
-                        // Check temperature and update block if necessary
-                        frostedHeart$updateBlockBasedOnTemperature(level, blockpos, blockstate);
-                    }
-                }
-            }
-        }
 
         // Continue with tickBlocks section
         level.getProfiler().popPush("tickBlocks");
@@ -159,17 +125,19 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
                         BlockPos blockpos3 = level.getBlockRandomPos(i, k1, j, 15);
                         level.getProfiler().push("randomTick");
                         BlockState blockstate2 = levelchunksection.getBlockState(blockpos3.getX() - i, blockpos3.getY() - k1, blockpos3.getZ() - j);
-                        //@khjxiaogu: omit randomtick from the original block if temperature modification occurred
-                        if(!frostedHeart$updatePlantBasedOnTemperature(level,blockpos3,blockstate2)) {
-	                        if (blockstate2.isRandomlyTicking()) {
-	                            blockstate2.randomTick(level, blockpos3, level.random);
+                        
+                        if(!frostedHeart$updateBlockBasedOnTemperature(level, blockpos3, blockstate2))
+	                    	//@khjxiaogu: omit randomtick from the original block if temperature modification occurred
+	                        if(!frostedHeart$updatePlantBasedOnTemperature(level,blockpos3,blockstate2)) {
+		                        if (blockstate2.isRandomlyTicking()) {
+		                            blockstate2.randomTick(level, blockpos3, level.random);
+		                        }
+		
+		                        FluidState fluidstate = blockstate2.getFluidState();
+		                        if (fluidstate.isRandomlyTicking()) {
+		                            fluidstate.randomTick(level, blockpos3, level.random);
+		                        }
 	                        }
-	
-	                        FluidState fluidstate = blockstate2.getFluidState();
-	                        if (fluidstate.isRandomlyTicking()) {
-	                            fluidstate.randomTick(level, blockpos3, level.random);
-	                        }
-                        }
                         level.getProfiler().pop();
                     }
                 }
@@ -207,11 +175,10 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
      * And it freeze water based on its level, so it turns into various thin ice.
      */
     @Unique
-    private void frostedheart$freezeWater(ServerLevel level, BlockPos pos) {
+    private boolean frostedheart$freezeWater(ServerLevel level, BlockPos pos,BlockState blockstate) {
         if (pos.getY() >= level.getMinBuildHeight() && pos.getY() < level.getMaxBuildHeight()
                 && WorldTemperature.block(level, pos) < WorldTemperature.WATER_FREEZES) {
-            BlockState blockstate = level.getBlockState(pos);
-            FluidState fluidstate = level.getFluidState(pos);
+            FluidState fluidstate = blockstate.getFluidState();
 
             // source
             if (fluidstate.getType() == Fluids.WATER && blockstate.getBlock() instanceof LiquidBlock) {
@@ -237,7 +204,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
 //                    }
 
                     level.setBlockAndUpdate(pos, FHBlocks.THIN_ICE_BLOCK.get().defaultBlockState());
-
+                    return true;
                 }
             }
 
@@ -264,12 +231,14 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
                             level.setBlockAndUpdate(pos, FHBlocks.LAYERED_THIN_ICE.get().defaultBlockState()
                                     .setValue(LayeredThinIceBlock.LAYERS, flowingLevel));
                         }
+                        return true;
                     }
                 }
             }
         }
+        return false;
     }
-    //Plants should go seperately
+    //Plants should go separately
     @Unique
     private boolean frostedHeart$updatePlantBasedOnTemperature(ServerLevel level, BlockPos pos, BlockState currentState) {
         var selfData = PlantTempData.getPlantData(currentState.getBlock());
@@ -292,23 +261,29 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         
     }
     @Unique
-    private void frostedHeart$updateBlockBasedOnTemperature(ServerLevel level, BlockPos pos, BlockState currentState) {
+    private boolean frostedHeart$updateBlockBasedOnTemperature(ServerLevel level, BlockPos pos, BlockState currentState) {
 
         Block block = currentState.getBlock();
+        Holder<Biome> biome=CUtils.fastGetBiome(level, pos);
+        //check water to freeze first
+        if (!biome.is(FHTags.Biomes.WATER_DO_NOT_FREEZE.tag) && level.isAreaLoaded(pos, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
+            // Check if the block should freeze based on our custom logic
+            if(frostedheart$freezeWater(level, pos,currentState))
+            	return true;
 
         StateTransitionData std = StateTransitionData.getData(block);
         //if data file states that it should not transit
         if (std == null||!std.willTransit()||level.getRandom().nextInt(std.heatCapacity()) != 0) {
-            return;
+            return false;
         }
         // TODO: For ocean melting we need special handling...
-        else if (CUtils.fastGetBiome(level, pos).is(FHTags.Biomes.ICE_DO_NOT_SMELT.tag) && currentState.is(BlockTags.ICE)) {
-            return;
+        else if (biome.is(FHTags.Biomes.ICE_DO_NOT_SMELT.tag) && currentState.is(BlockTags.ICE)) {
+            return false;
         }
         // general state transition
 
         // To save performance, we only focus on blocks that player cares more about, otherwise we reduce translation rate
-        boolean shouldDoAdjust = ChunkHeatData.hasActiveAdjust(level, pos)||level.random.nextInt(10)==0;
+        boolean shouldDoAdjust = ChunkHeatData.hasActiveAdjust(level, pos)||level.random.nextInt(FHConfig.SERVER.ambientBlockStateUpdateDivisor.get())==0;
         float t = WorldTemperature.block(level, pos);
         // Determine the target state based on temperature thresholds
         // We check transitions in order of priority (solid->gas, gas->solid, etc.)
@@ -318,7 +293,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         switch(sourceState) {
         case SOLID:
         	if (!shouldDoAdjust) {
-                return;
+                return false;
             }else if(t >= std.evaporateTemp() && std.gas() != null) {
             	targetState = PhysicalState.GAS;
                 targetBlock = std.gas();
@@ -331,7 +306,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         		targetState = PhysicalState.SOLID;
                 targetBlock = std.solid();
         	}else if(!shouldDoAdjust) {
-        		return;
+        		return false;
         	}else if(t >= std.evaporateTemp() && std.gas() != null){
         		targetState = PhysicalState.GAS;
                 targetBlock = std.gas();
@@ -347,14 +322,14 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         }
         // Skip update if target state is the same as current state
         if (targetState==std.state()) {
-            return;
+            return false;
         }
         // Create effects before changing the block
         frostedHeart$addTransitionEffects(level, pos, std.state(), targetState, block, targetBlock);
 
         // Update the block state
         level.setBlockAndUpdate(pos, targetBlock.defaultBlockState());
-        
+        return true;
 
     }
 

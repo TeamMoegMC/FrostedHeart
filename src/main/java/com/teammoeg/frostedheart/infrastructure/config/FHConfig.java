@@ -273,6 +273,7 @@ public class FHConfig {
         public final ForgeConfigSpec.IntValue envTempUpdateIntervalTicks;
         public final ForgeConfigSpec.IntValue envTempThreadCount;
         public final ForgeConfigSpec.IntValue tempBlockstateUpdateIntervalTicks;
+        public final ForgeConfigSpec.IntValue ambientBlockStateUpdateDivisor;
         public final ForgeConfigSpec.IntValue tempRandomTickSpeedDivisor;
         public final ForgeConfigSpec.BooleanValue enableTownTick;
         public final ForgeConfigSpec.BooleanValue enableTownTickMorning;
@@ -304,6 +305,8 @@ public class FHConfig {
                     .defineInRange("tempBlockstateUpdateIntervalTicks", 20, 1, Integer.MAX_VALUE);
             tempRandomTickSpeedDivisor = builder.comment("The random tick speed is divided by this value when used for temperature related updates.")
                     .defineInRange("tempRandomTickSpeedDivisor", 1, 1, Integer.MAX_VALUE);
+            ambientBlockStateUpdateDivisor = builder.comment("Block update divisor for ambient blocks(blocks without heat area).")
+                .defineInRange("ambientRandomTickSpeedDivisor", 10, 1, Integer.MAX_VALUE);
             int numProcessor=Runtime.getRuntime().availableProcessors();
             envTempThreadCount = builder.comment("The number of threads used for environment(block) temperature update, set to 0 disables multithreading, default to min(processors/2,2)")
                 .defineInRange("environmentTempMinTicks", Math.min(2, numProcessor/2), 0, 16);
@@ -348,6 +351,7 @@ public class FHConfig {
             	.define("addInitClimate", true);
             blizzardFrequency = builder.comment("Frequency out of 10 a blizzard happens when a new climate event happens.")
                     .defineInRange("blizzardFrequency", 3, 0, 10);
+            
             builder.pop();
 
             builder.push("Water & Nutrition");
