@@ -393,7 +393,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
                     0.0D  // speed
             );
             // Freezing sound
-            level.playSound(null, pos, SoundEvents.GLASS_PLACE, SoundSource.BLOCKS, 0.5F, 1.0F + (level.random.nextFloat() - level.random.nextFloat()) * 0.4F);
+            //level.playSound(null, pos, SoundEvents.GLASS_PLACE, SoundSource.BLOCKS, 0.5F, 1.0F + (level.random.nextFloat() - level.random.nextFloat()) * 0.4F);
             break;
     	case CONDENSATION:
     	case DEPOSITION:
