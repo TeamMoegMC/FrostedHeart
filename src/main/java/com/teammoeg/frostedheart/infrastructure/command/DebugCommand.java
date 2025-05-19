@@ -33,8 +33,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.caupona.data.recipes.FoodValueRecipe;
 import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.lang.Components;
@@ -46,6 +48,7 @@ import com.teammoeg.frostedresearch.research.ResearchCategory;
 import com.teammoeg.frostedresearch.research.clues.Clue;
 import com.teammoeg.frostedresearch.research.effects.Effect;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -254,7 +257,18 @@ public class DebugCommand {
                         e1.printStackTrace();
                     }
                     return Command.SINGLE_SUCCESS;
-                }))/*.then(Commands.literal("sort_chunks").executes(ct -> {
+                })).then(Commands.literal("seed")
+                	.executes(ct->{
+                		ct.getSource().sendSuccess(()->Components.str(""+ct.getSource().getLevel().getSeed()), false);
+                		return Command.SINGLE_SUCCESS;
+                	})
+                	
+                	.then(Commands.literal("set").then(Commands.argument("seed", LongArgumentType.longArg()).executes(ct->{
+                	FHCapabilities.DIMENSION_SEED.getCapability(ct.getSource().getLevel()).ifPresent(t->t.setSeed(LongArgumentType.getLong(ct, "seed")));
+                	ct.getSource().sendSuccess(()->Components.str("seeds set.").withStyle(ChatFormatting.GREEN), true);
+                	 return Command.SINGLE_SUCCESS;
+                }))))
+                /*.then(Commands.literal("sort_chunks").executes(ct -> {
                     long now = System.currentTimeMillis();
                     ReferenceValue<Integer> tchunks = new ReferenceValue<>(0);
                     Map<ResourceKey<Level>, Map<Team, List<SendChunkPacket.SingleChunk>>> chunksToSend = new HashMap<>();

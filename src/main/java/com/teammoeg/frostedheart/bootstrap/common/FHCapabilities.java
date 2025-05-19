@@ -37,10 +37,15 @@ import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.waypoint.capability.WaypointCapability;
+import com.teammoeg.frostedheart.content.world.dimensionalseed.DimensionalSeed;
+
 import static com.teammoeg.chorda.capability.CapabilityRegistry.*;
 
 public class FHCapabilities {
 	
+	
+	
+	public static final NBTCapabilityType<DimensionalSeed> DIMENSION_SEED=register(DimensionalSeed.class);
 	public static final NBTCapabilityType<WorldClimate> CLIMATE_DATA=register(WorldClimate.class);
 	public static final NBTCapabilityType<DeathInventoryData> DEATH_INV=register(DeathInventoryData.class);
 	public static final NBTCapabilityType<PlayerTemperatureData> PLAYER_TEMP=register(PlayerTemperatureData.class);
@@ -59,6 +64,7 @@ public class FHCapabilities {
 	public static final NBTCapabilityType<NutritionCapability> PLAYER_NUTRITION = register(NutritionCapability.class);
 	public static final TransientCapability<BodyHeatingCapability> EQUIPMENT_HEATING=registerTransient(BodyHeatingCapability.class);
 
+	
 	public static void setup() {
 	
 	}

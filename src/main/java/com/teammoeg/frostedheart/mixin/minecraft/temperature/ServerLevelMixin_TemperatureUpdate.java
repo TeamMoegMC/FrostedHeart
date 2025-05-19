@@ -81,6 +81,10 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
                 BlockPos blockpos2 = blockpos1.below();
                 Holder<Biome> biomeHolder = CUtils.fastGetBiome(level, blockpos2);
                 Biome biome = biomeHolder.value();
+                // TODO: for ocean freezing, we need some special handling...
+                if (!biomeHolder.is(FHTags.Biomes.WATER_DO_NOT_FREEZE.tag) && level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
+                    // Check if the block should freeze based on our custom logic
+                    frostedheart$freezeWater(level, blockpos2);
                 if (isRaining) {
                     int i1 = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
                     if (i1 > 0 && frostedHeart$shouldSnowCustom(level, blockpos1)) {
@@ -175,9 +179,10 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
      * And it freeze water based on its level, so it turns into various thin ice.
      */
     @Unique
-    private boolean frostedheart$freezeWater(ServerLevel level, BlockPos pos,BlockState blockstate) {
+    private boolean frostedheart$freezeWater(ServerLevel level, BlockPos pos) {
         if (pos.getY() >= level.getMinBuildHeight() && pos.getY() < level.getMaxBuildHeight()
                 && WorldTemperature.block(level, pos) < WorldTemperature.WATER_FREEZES) {
+        	BlockState blockstate=level.getBlockState(pos);
             FluidState fluidstate = blockstate.getFluidState();
 
             // source
@@ -265,11 +270,6 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
 
         Block block = currentState.getBlock();
         Holder<Biome> biome=CUtils.fastGetBiome(level, pos);
-        //check water to freeze first
-        if (!biome.is(FHTags.Biomes.WATER_DO_NOT_FREEZE.tag) && level.isAreaLoaded(pos, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
-            // Check if the block should freeze based on our custom logic
-            if(frostedheart$freezeWater(level, pos,currentState))
-            	return true;
 
         StateTransitionData std = StateTransitionData.getData(block);
         //if data file states that it should not transit
