@@ -321,11 +321,11 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
             }break;
         }
         // Skip update if target state is the same as current state
-        if (targetState==std.state()) {
+        if (targetState==sourceState||targetBlock.defaultBlockState()==currentState) {
             return false;
         }
         // Create effects before changing the block
-        frostedHeart$addTransitionEffects(level, pos, std.state(), targetState, block, targetBlock);
+        frostedHeart$addTransitionEffects(level, pos, sourceState, targetState, block, targetBlock);
 
         // Update the block state
         level.setBlockAndUpdate(pos, targetBlock.defaultBlockState());
