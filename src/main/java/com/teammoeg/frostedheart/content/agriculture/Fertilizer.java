@@ -2,12 +2,14 @@ package com.teammoeg.frostedheart.content.agriculture;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -41,62 +43,48 @@ public class Fertilizer extends FHBaseItem {
             tooltipComponents.add(Component.translatable("tooltip.frostedheart.fertilizer.advanced").withStyle(ChatFormatting.GOLD));
         }
     }
-
+    public InteractionResult transform(Level level,BlockPos pos,BlockState blockstate) {
+    	if(blockstate.is(Blocks.FARMLAND)){
+    		level.setBlock(pos,FHBlocks.FERTILIZED_FARMLAND.getDefaultState()
+            		.setValue(FertilizedDirt.FERTILIZER,this.type)
+            		.setValue(FertilizedDirt.ADVANCED,getGrade())
+            		.setValue(FertilizedDirt.STORAGE, 4),3);
+            return InteractionResult.SUCCESS;
+        }else if(blockstate.is(FHBlocks.FERTILIZED_FARMLAND.get())||blockstate.is(FHBlocks.FERTILIZED_DIRT.get())){
+        	int currentStorage =0;
+        	if(blockstate.getValue(FertilizedDirt.FERTILIZER)==this.type&&(blockstate.getValue(FertilizedDirt.ADVANCED)==getGrade())){
+        		currentStorage=blockstate.getValue(FertilizedDirt.STORAGE);
+        	}
+            if(currentStorage<=4) {
+            	currentStorage+=4;
+            	level.setBlock(pos,blockstate.setValue(FertilizedDirt.STORAGE, currentStorage)
+            			.setValue(FertilizedDirt.FERTILIZER,this.type)
+                		.setValue(FertilizedDirt.ADVANCED,getGrade()),3);
+            	return InteractionResult.SUCCESS;
+            }
+        }else if(blockstate.is(Blocks.DIRT)|| blockstate.is(Blocks.GRASS_BLOCK)){
+    		level.setBlock(pos,FHBlocks.FERTILIZED_DIRT.getDefaultState()
+            		.setValue(FertilizedDirt.FERTILIZER,this.type)
+            		.setValue(FertilizedDirt.ADVANCED,getGrade())
+            		.setValue(FertilizedDirt.STORAGE, 4),3);
+            return InteractionResult.SUCCESS;
+        }else if(blockstate.is(Blocks.COARSE_DIRT)){
+        	if(getType()!=FertilizerType.PRESERVED) {
+        		level.setBlock(pos,Blocks.DIRT.defaultBlockState(),3);
+        		return InteractionResult.SUCCESS;
+        	}
+        }else if(blockstate.is(FHTags.Blocks.CROP.get())) {
+        	BlockPos below=pos.below();
+        	return transform(level,below,level.getBlockState(below));
+        }
+    	return InteractionResult.PASS;
+    }
     @Override
     public InteractionResult useOn(UseOnContext pContext) {
         Level level = pContext.getLevel();
         BlockPos blockpos = pContext.getClickedPos();
         BlockState blockstate = level.getBlockState(blockpos);
-        ItemStack itemstack = pContext.getItemInHand();
-
-        if(blockstate.is(Blocks.FARMLAND)){
-            level.setBlock(blockpos, FHBlocks.FERTILIZED_FARMLAND.getDefaultState().setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED).setValue(FertilizedFarmlandBlock.STORAGE, 15), 2);
-            return InteractionResult.SUCCESS;
-        }
-        if(blockstate.is(FHBlocks.FERTILIZED_FARMLAND.get())){
-            int currentStorage = blockstate.getValue(FertilizedFarmlandBlock.STORAGE);
-            int newStorage = Math.min(currentStorage + 15, 30);
-            level.setBlock(blockpos, blockstate.setValue(FertilizedFarmlandBlock.STORAGE, newStorage).setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
-            return InteractionResult.SUCCESS;
-        }
-
-        if(blockstate.is(Blocks.DIRT)|| blockstate.is(Blocks.GRASS_BLOCK)){
-            level.setBlock(blockpos,FHBlocks.FERTILIZED_DIRT.getDefaultState().setValue(FertilizedDirt.FERTILIZER,this.type.getType()).setValue(FertilizedDirt.ADVANCED,getGrade()==FertilizerGrade.ADVANCED).setValue(FertilizedDirt.STORAGE, 15), 2);
-            return InteractionResult.SUCCESS;
-        }
-        if(blockstate.is(FHBlocks.FERTILIZED_DIRT.get())){
-            int currentStorage = blockstate.getValue(FertilizedDirt.STORAGE);
-            int newStorage = Math.min(currentStorage + 15, 30);
-            level.setBlock(blockpos, blockstate.setValue(FertilizedDirt.STORAGE, newStorage).setValue(FertilizedDirt.FERTILIZER,this.type.getType()).setValue(FertilizedDirt.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
-            return InteractionResult.SUCCESS;
-        }
-        if(blockstate.getTags().anyMatch(t->t==BlockTags.CROPS)){
-            BlockState blockstate1 = level.getBlockState(blockpos.below());
-            if(blockstate1.is(Blocks.FARMLAND)){
-                level.setBlock(blockpos.below(),FHBlocks.FERTILIZED_FARMLAND.getDefaultState().setValue(FertilizedFarmlandBlock.MOISTURE,blockstate1.getValue(FarmBlock.MOISTURE)).setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED).setValue(FertilizedFarmlandBlock.STORAGE, 15), 2);
-                return InteractionResult.SUCCESS;
-            }
-            if(blockstate1.is(FHBlocks.FERTILIZED_FARMLAND.get())){
-                int currentStorage = blockstate1.getValue(FertilizedFarmlandBlock.STORAGE);
-                int newStorage = Math.min(currentStorage + 15, 30);
-                level.setBlock(blockpos.below(), blockstate1.setValue(FertilizedFarmlandBlock.STORAGE, newStorage).setValue(FertilizedFarmlandBlock.MOISTURE,blockstate1.getValue(FarmBlock.MOISTURE)).setValue(FertilizedFarmlandBlock.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
-                return InteractionResult.SUCCESS;
-            }
-        }
-        if(blockstate.getTags().anyMatch(t->t==BlockTags.SAPLINGS)){
-            BlockState blockstate1 = level.getBlockState(blockpos.below());
-            if(blockstate1.is(Blocks.DIRT)|| blockstate1.is(Blocks.GRASS_BLOCK)){
-                level.setBlock(blockpos.below(),FHBlocks.FERTILIZED_DIRT.getDefaultState().setValue(FertilizedDirt.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED).setValue(FertilizedDirt.STORAGE, 15), 2);
-                return InteractionResult.SUCCESS;
-            }
-            if(blockstate1.is(FHBlocks.FERTILIZED_DIRT.get())){
-                int currentStorage = blockstate1.getValue(FertilizedDirt.STORAGE);
-                int newStorage = Math.min(currentStorage + 15, 30);
-                level.setBlock(blockpos.below(), blockstate1.setValue(FertilizedDirt.STORAGE, newStorage).setValue(FertilizedDirt.FERTILIZER,this.type.getType()).setValue(FertilizedFarmlandBlock.ADVANCED,getGrade()==FertilizerGrade.ADVANCED), 2);
-                return InteractionResult.SUCCESS;
-            }
-        }
-        return InteractionResult.PASS;
+        return transform(level, blockpos, blockstate);
     }
 
     public FertilizerType getType() {
@@ -106,15 +94,29 @@ public class Fertilizer extends FHBaseItem {
     public FertilizerGrade getGrade() {
         return grade;
     }
-    public enum FertilizerGrade {
-        BASIC,
-        ADVANCED
+    
+    public enum FertilizerGrade implements StringRepresentable {
+        BASIC(1,1,2),
+        ADVANCED(0.5f,2,3);
+    	public final float growSpeed;
+    	public final int preserve;
+    	public final float productivity;
+		@Override
+		public String getSerializedName() {
+			return this.name().toLowerCase();
+		}
+		private FertilizerGrade(float growSpeed, int preserve, float productivity) {
+			this.growSpeed = growSpeed;
+			this.preserve = preserve;
+			this.productivity = productivity;
+		}
+
     }
 
-    public enum FertilizerType {
-        INCREASING_FERTILIZER(1),
-        ACCELERATED_FERTILIZER(2),
-        PRESERVED_FERTILIZER(3);
+    public enum FertilizerType implements StringRepresentable{
+        INCREASING(1),
+        ACCELERATED(2),
+        PRESERVED(3);
 
         private final int type;
         FertilizerType(int type) {
@@ -123,5 +125,9 @@ public class Fertilizer extends FHBaseItem {
         public int getType() {
             return type;
         }
+		@Override
+		public String getSerializedName() {
+			return this.name().toLowerCase();
+		}
     }
 }

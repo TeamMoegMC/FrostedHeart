@@ -1,0 +1,31 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Name": "minecraft:podzol",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "condense_temp": 90.0,
+  "evaporate_temp": 100.0,
+  "freeze_temp": -10.0,
+  "gas": {
+    "Name": "minecraft:coarse_dirt"
+  },
+  "heat_capacity": 2,
+  "liquid": {
+    "Name": "minecraft:podzol",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "melt_temp": 9.0,
+  "solid": {
+    "Name": "frostedheart:podzol_permafrost",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "state": "liquid",
+  "will_transit": true
+}

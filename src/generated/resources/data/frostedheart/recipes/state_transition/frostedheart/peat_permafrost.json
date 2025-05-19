@@ -1,0 +1,27 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Name": "frostedheart:peat_permafrost",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "condense_temp": 90.0,
+  "evaporate_temp": 100.0,
+  "freeze_temp": -10.0,
+  "gas": {
+    "Name": "frostedheart:peat_block"
+  },
+  "liquid": {
+    "Name": "frostedheart:peat_block"
+  },
+  "melt_temp": 9.0,
+  "solid": {
+    "Name": "frostedheart:peat_permafrost",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "state": "solid",
+  "will_transit": true
+}

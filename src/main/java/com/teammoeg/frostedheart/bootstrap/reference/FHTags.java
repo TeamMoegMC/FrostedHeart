@@ -122,8 +122,8 @@ public class FHTags {
 		STONE(NameSpace.FORGE),
 		ORES(NameSpace.FORGE),
 		SLED_SNOW(),
-		SLED_SAND()
-
+		SLED_SAND(),
+		CROP()
 
 		;
 

@@ -1,15 +1,12 @@
 {
   "variants": {
-    "fertilizer=0": {
-      "model": "frostedheart:block/fertilized_dirt"
-    },
-    "fertilizer=1": {
-      "model": "frostedheart:block/fertilized_dirt_increasing"
-    },
-    "fertilizer=2": {
+    "fertilizer=accelerated": {
       "model": "frostedheart:block/fertilized_dirt_accelerated"
     },
-    "fertilizer=3": {
+    "fertilizer=increasing": {
+      "model": "frostedheart:block/fertilized_dirt_increasing"
+    },
+    "fertilizer=preserved": {
       "model": "frostedheart:block/fertilized_dirt_preserved"
     }
   }

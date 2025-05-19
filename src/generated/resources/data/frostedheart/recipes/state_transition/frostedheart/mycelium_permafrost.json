@@ -1,0 +1,30 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Name": "frostedheart:mycelium_permafrost",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "condense_temp": 90.0,
+  "evaporate_temp": 100.0,
+  "freeze_temp": -10.0,
+  "gas": {
+    "Name": "minecraft:coarse_dirt"
+  },
+  "liquid": {
+    "Name": "minecraft:mycelium",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "melt_temp": 9.0,
+  "solid": {
+    "Name": "frostedheart:mycelium_permafrost",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "state": "solid",
+  "will_transit": true
+}

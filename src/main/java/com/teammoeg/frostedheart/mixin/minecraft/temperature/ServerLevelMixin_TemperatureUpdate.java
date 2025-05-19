@@ -266,12 +266,11 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         
     }
     @Unique
-    private boolean frostedHeart$updateBlockBasedOnTemperature(ServerLevel level, BlockPos pos, BlockState currentState) {
+    private boolean frostedHeart$updateBlockBasedOnTemperature(ServerLevel level, BlockPos pos,final BlockState currentState) {
 
-        Block block = currentState.getBlock();
         Holder<Biome> biome=CUtils.fastGetBiome(level, pos);
 
-        StateTransitionData std = StateTransitionData.getData(block);
+        StateTransitionData std = StateTransitionData.getData(currentState);
         //if data file states that it should not transit
         if (std == null||!std.willTransit()||level.getRandom().nextInt(std.heatCapacity()) != 0) {
             return false;
@@ -289,7 +288,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         // We check transitions in order of priority (solid->gas, gas->solid, etc.)
         PhysicalState targetState = std.state(); // Default to current state
         final PhysicalState sourceState = std.state(); 
-        Block targetBlock = block; // Default to current block
+        BlockState targetBlock = currentState; // Default to current block
         switch(sourceState) {
         case SOLID:
         	if (!shouldDoAdjust) {
@@ -321,14 +320,14 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
             }break;
         }
         // Skip update if target state is the same as current state
-        if (targetState==sourceState||targetBlock.defaultBlockState()==currentState) {
+        if (targetState==sourceState||targetBlock==currentState) {
             return false;
         }
         // Create effects before changing the block
-        frostedHeart$addTransitionEffects(level, pos, sourceState, targetState, block, targetBlock);
+        frostedHeart$addTransitionEffects(level, pos, sourceState, targetState, currentState, targetBlock);
 
         // Update the block state
-        level.setBlockAndUpdate(pos, targetBlock.defaultBlockState());
+        level.setBlockAndUpdate(pos, targetBlock);
         return true;
 
     }
@@ -343,7 +342,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
      * @param newBlock The new block
      */
     @Unique
-    private void frostedHeart$addTransitionEffects(ServerLevel level, BlockPos pos, PhysicalState oldState, PhysicalState newState, Block oldBlock, Block newBlock) {
+    private void frostedHeart$addTransitionEffects(ServerLevel level, BlockPos pos, PhysicalState oldState, PhysicalState newState, BlockState oldBlock, BlockState newBlock) {
         // Create server-side particle effects that will be sent to clients
         // Use the transition type to determine appropriate particles
     	switch(oldState.translate(newState)) {
@@ -418,7 +417,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
     	}
         // You could also add custom particles for specific block transitions
         // For example, if water is turning to ice:
-        if (oldBlock == Blocks.WATER && newBlock == Blocks.ICE) {
+        if (oldBlock.is(Blocks.WATER) && newBlock.is(Blocks.ICE)) {
             // Special ice formation particles
             level.sendParticles(
                     ParticleTypes.ITEM_SNOWBALL,

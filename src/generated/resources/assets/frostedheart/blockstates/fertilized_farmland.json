@@ -1,99 +1,75 @@
 {
   "variants": {
-    "fertilizer=0,moisture=0": {
-      "model": "frostedheart:block/fertilized_farmland"
-    },
-    "fertilizer=0,moisture=1": {
-      "model": "frostedheart:block/fertilized_farmland"
-    },
-    "fertilizer=0,moisture=2": {
-      "model": "frostedheart:block/fertilized_farmland"
-    },
-    "fertilizer=0,moisture=3": {
-      "model": "frostedheart:block/fertilized_farmland"
-    },
-    "fertilizer=0,moisture=4": {
-      "model": "frostedheart:block/fertilized_farmland"
-    },
-    "fertilizer=0,moisture=5": {
-      "model": "frostedheart:block/fertilized_farmland"
-    },
-    "fertilizer=0,moisture=6": {
-      "model": "frostedheart:block/fertilized_farmland"
-    },
-    "fertilizer=0,moisture=7": {
-      "model": "frostedheart:block/fertilized_farmland_moist"
-    },
-    "fertilizer=1,moisture=0": {
-      "model": "frostedheart:block/fertilized_farmland_increasing"
-    },
-    "fertilizer=1,moisture=1": {
-      "model": "frostedheart:block/fertilized_farmland_increasing"
-    },
-    "fertilizer=1,moisture=2": {
-      "model": "frostedheart:block/fertilized_farmland_increasing"
-    },
-    "fertilizer=1,moisture=3": {
-      "model": "frostedheart:block/fertilized_farmland_increasing"
-    },
-    "fertilizer=1,moisture=4": {
-      "model": "frostedheart:block/fertilized_farmland_increasing"
-    },
-    "fertilizer=1,moisture=5": {
-      "model": "frostedheart:block/fertilized_farmland_increasing"
-    },
-    "fertilizer=1,moisture=6": {
-      "model": "frostedheart:block/fertilized_farmland_increasing"
-    },
-    "fertilizer=1,moisture=7": {
-      "model": "frostedheart:block/fertilized_farmland_moist_increasing"
-    },
-    "fertilizer=2,moisture=0": {
+    "fertilizer=accelerated,moisture=0": {
       "model": "frostedheart:block/fertilized_farmland_accelerated"
     },
-    "fertilizer=2,moisture=1": {
+    "fertilizer=accelerated,moisture=1": {
       "model": "frostedheart:block/fertilized_farmland_accelerated"
     },
-    "fertilizer=2,moisture=2": {
+    "fertilizer=accelerated,moisture=2": {
       "model": "frostedheart:block/fertilized_farmland_accelerated"
     },
-    "fertilizer=2,moisture=3": {
+    "fertilizer=accelerated,moisture=3": {
       "model": "frostedheart:block/fertilized_farmland_accelerated"
     },
-    "fertilizer=2,moisture=4": {
+    "fertilizer=accelerated,moisture=4": {
       "model": "frostedheart:block/fertilized_farmland_accelerated"
     },
-    "fertilizer=2,moisture=5": {
+    "fertilizer=accelerated,moisture=5": {
       "model": "frostedheart:block/fertilized_farmland_accelerated"
     },
-    "fertilizer=2,moisture=6": {
+    "fertilizer=accelerated,moisture=6": {
       "model": "frostedheart:block/fertilized_farmland_accelerated"
     },
-    "fertilizer=2,moisture=7": {
+    "fertilizer=accelerated,moisture=7": {
       "model": "frostedheart:block/fertilized_farmland_moist_accelerated"
     },
-    "fertilizer=3,moisture=0": {
+    "fertilizer=increasing,moisture=0": {
+      "model": "frostedheart:block/fertilized_farmland_increasing"
+    },
+    "fertilizer=increasing,moisture=1": {
+      "model": "frostedheart:block/fertilized_farmland_increasing"
+    },
+    "fertilizer=increasing,moisture=2": {
+      "model": "frostedheart:block/fertilized_farmland_increasing"
+    },
+    "fertilizer=increasing,moisture=3": {
+      "model": "frostedheart:block/fertilized_farmland_increasing"
+    },
+    "fertilizer=increasing,moisture=4": {
+      "model": "frostedheart:block/fertilized_farmland_increasing"
+    },
+    "fertilizer=increasing,moisture=5": {
+      "model": "frostedheart:block/fertilized_farmland_increasing"
+    },
+    "fertilizer=increasing,moisture=6": {
+      "model": "frostedheart:block/fertilized_farmland_increasing"
+    },
+    "fertilizer=increasing,moisture=7": {
+      "model": "frostedheart:block/fertilized_farmland_moist_increasing"
+    },
+    "fertilizer=preserved,moisture=0": {
       "model": "frostedheart:block/fertilized_farmland_preserved"
     },
-    "fertilizer=3,moisture=1": {
+    "fertilizer=preserved,moisture=1": {
       "model": "frostedheart:block/fertilized_farmland_preserved"
     },
-    "fertilizer=3,moisture=2": {
+    "fertilizer=preserved,moisture=2": {
       "model": "frostedheart:block/fertilized_farmland_preserved"
     },
-    "fertilizer=3,moisture=3": {
+    "fertilizer=preserved,moisture=3": {
       "model": "frostedheart:block/fertilized_farmland_preserved"
     },
-    "fertilizer=3,moisture=4": {
+    "fertilizer=preserved,moisture=4": {
       "model": "frostedheart:block/fertilized_farmland_preserved"
     },
-    "fertilizer=3,moisture=5": {
+    "fertilizer=preserved,moisture=5": {
       "model": "frostedheart:block/fertilized_farmland_preserved"
     },
-    "fertilizer=3,moisture=6": {
+    "fertilizer=preserved,moisture=6": {
       "model": "frostedheart:block/fertilized_farmland_preserved"
     },
-    "fertilizer=3,moisture=7": {
+    "fertilizer=preserved,moisture=7": {
       "model": "frostedheart:block/fertilized_farmland_moist_preserved"
     }
   }

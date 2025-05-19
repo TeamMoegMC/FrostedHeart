@@ -39,6 +39,7 @@ import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
 import com.teammoeg.frostedheart.content.agriculture.*;
+import com.teammoeg.frostedheart.content.agriculture.Fertilizer.FertilizerType;
 import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.ThinIceBlock;
@@ -1170,7 +1171,9 @@ public class FHBlocks {
     public static final BlockEntry<FertilizedFarmlandBlock> FERTILIZED_FARMLAND = REGISTRATE.block("fertilized_farmland", FertilizedFarmlandBlock::new)
             .initialProperties(() -> Blocks.FARMLAND)
             .blockstate(FHBlockStateGen.farmland())
-            .simpleItem()
+            .item().model((c,p)->{
+            	p.cubeAll(c.getName(), p.mcLoc("block/farmland"));
+            }).build()
             .lang("Fertilized Farmland")
             .loot((p,b)->{
                 p.dropOther(b, DIRT);
@@ -1179,20 +1182,22 @@ public class FHBlocks {
     public static final BlockEntry<FertilizedDirt> FERTILIZED_DIRT = REGISTRATE.block("fertilized_dirt", FertilizedDirt::new)
             .initialProperties(() -> DIRT)
             .blockstate((c, p) -> {
-                p.getVariantBuilder(c.get()).partialState().with(FertilizedDirt.FERTILIZER, 0)
+                p.getVariantBuilder(c.get())/*.partialState().with(FertilizedDirt.FERTILIZER, 0)
                         .modelForState().modelFile(p.models().withExistingParent("fertilized_dirt",p.mcLoc("block/dirt")).texture("all",p.mcLoc("block/dirt")))
-                        .addModel()
-                        .partialState().with(FertilizedDirt.FERTILIZER, 1)
+                        .addModel()*/
+                        .partialState().with(FertilizedDirt.FERTILIZER, FertilizerType.INCREASING)
                         .modelForState().modelFile(p.models().withExistingParent("fertilized_dirt_increasing",p.mcLoc("block/dirt")).texture("all",p.modLoc("block/fertilized/fertilized_dirt_increasing")))
                         .addModel()
-                        .partialState().with(FertilizedDirt.FERTILIZER, 2)
+                        .partialState().with(FertilizedDirt.FERTILIZER, FertilizerType.ACCELERATED)
                         .modelForState().modelFile(p.models().withExistingParent("fertilized_dirt_accelerated",p.mcLoc("block/dirt")).texture("all",p.modLoc("block/fertilized/fertilized_dirt_accelerated")))
                         .addModel()
-                        .partialState().with(FertilizedDirt.FERTILIZER, 3)
+                        .partialState().with(FertilizedDirt.FERTILIZER, FertilizerType.PRESERVED)
                         .modelForState().modelFile(p.models().withExistingParent("fertilized_dirt_preserved",p.mcLoc("block/dirt")).texture("all",p.modLoc("block/fertilized/fertilized_dirt_preserved")))
                         .addModel();
                 })
-            .simpleItem()
+            .item().model((c,p)->{
+            	p.cubeAll(c.getName(), p.mcLoc("block/dirt"));
+            }).build()
             .tag(BlockTags.DIRT)
             .lang("Fertilized Dirt")
             .loot((p,b)->{

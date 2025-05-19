@@ -26,6 +26,8 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.agriculture.FertilizedDirt;
 import com.teammoeg.frostedheart.content.agriculture.FertilizedFarmlandBlock;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
+import com.teammoeg.frostedheart.content.agriculture.Fertilizer.FertilizerGrade;
+
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
@@ -155,22 +157,16 @@ public class PlantTempStats implements TooltipModifier {
         boolean isAdvanced;
         int storage;
 
-        if (farmland.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
-            type = farmland.getValue(FertilizedFarmlandBlock.FERTILIZER);
-            isAdvanced = farmland.getValue(FertilizedFarmlandBlock.ADVANCED);
-            storage = farmland.getValue(FertilizedFarmlandBlock.STORAGE);
-        } else {
-            type = farmland.getValue(FertilizedDirt.FERTILIZER);
-            isAdvanced = farmland.getValue(FertilizedDirt.ADVANCED);
-            storage = farmland.getValue(FertilizedDirt.STORAGE);
-        }
+        type = farmland.getValue(FertilizedDirt.FERTILIZER).getType();
+        isAdvanced = farmland.getValue(FertilizedDirt.ADVANCED)==FertilizerGrade.ADVANCED;
+        storage = farmland.getValue(FertilizedDirt.STORAGE);
 
         // prevent 0
         storage += 1;
 
         // remap from 0 to 30 to 0 to 6
-        int low = Mth.ceil(Mth.clampedMap(0, 0, 31, 0, 6));
-        int high = Mth.ceil(Mth.clampedMap(storage, 0, 31, 0, 6));
+        int low = Mth.ceil(Mth.clampedMap(0, 0, 9, 0, 6));
+        int high = Mth.ceil(Mth.clampedMap(storage, 0, 9, 0, 6));
         if (low == high) {
             if (low == 0) {
                 high += 1;
@@ -181,7 +177,7 @@ public class PlantTempStats implements TooltipModifier {
             }
         }
 
-        int storagePercent = Mth.ceil(Mth.clampedMap(storage, 0, 30, 0, 100));
+        int storagePercent = Mth.ceil(Mth.clampedMap(storage, 0, 9, 0, 100));
 
         // bar
         String s = TextProgressBarHelper.makeProgressBarInterval(6, low, high);
@@ -189,17 +185,17 @@ public class PlantTempStats implements TooltipModifier {
         String s2 = s.substring(3);
 
         MutableComponent icon = FHTextIcon.SOIL_THERMOMETER.getIcon();
-        if (type == Fertilizer.FertilizerType.ACCELERATED_FERTILIZER.getType()) {
+        if (type == Fertilizer.FertilizerType.ACCELERATED.getType()) {
             if (isAdvanced)
                 icon = FHTextIcon.ADVANCED_ACCELERATED_FERTILIZER.getIcon();
             else
                 icon = FHTextIcon.BASIC_ACCELERATED_FERTILIZER.getIcon();
-        } else if (type == Fertilizer.FertilizerType.INCREASING_FERTILIZER.getType()) {
+        } else if (type == Fertilizer.FertilizerType.INCREASING.getType()) {
             if (isAdvanced)
                 icon = FHTextIcon.ADVANCED_INCREASING_FERTILIZER.getIcon();
             else
                 icon = FHTextIcon.BASIC_INCREASING_FERTILIZER.getIcon();
-        } else if (type == Fertilizer.FertilizerType.PRESERVED_FERTILIZER.getType()) {
+        } else if (type == Fertilizer.FertilizerType.PRESERVED.getType()) {
             if (isAdvanced)
                 icon = FHTextIcon.ADVANCED_PRESERVED_FERTILIZER.getIcon();
             else

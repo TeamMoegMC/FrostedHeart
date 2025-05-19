@@ -1,0 +1,27 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Name": "frostedheart:bauxite_permafrost",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "condense_temp": 90.0,
+  "evaporate_temp": 100.0,
+  "freeze_temp": -10.0,
+  "gas": {
+    "Name": "frostedheart:bauxite_block"
+  },
+  "liquid": {
+    "Name": "frostedheart:bauxite_block"
+  },
+  "melt_temp": 9.0,
+  "solid": {
+    "Name": "frostedheart:bauxite_permafrost",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "state": "solid",
+  "will_transit": true
+}

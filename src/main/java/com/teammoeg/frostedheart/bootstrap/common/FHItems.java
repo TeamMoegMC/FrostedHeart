@@ -1798,27 +1798,27 @@ thinner.png
             .register();
 
     public static ItemEntry<Fertilizer> BASIC_INCREASING_FERTILIZER = REGISTRATE
-            .item("basic_increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING_FERTILIZER, Fertilizer.FertilizerGrade.BASIC))
+            .item("basic_increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING, Fertilizer.FertilizerGrade.BASIC))
             .lang("Basic Yield Booster")
             .register();
     public static ItemEntry<Fertilizer> BASIC_ACCELERATED_FERTILIZER = REGISTRATE
-            .item("basic_accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED_FERTILIZER, Fertilizer.FertilizerGrade.BASIC))
+            .item("basic_accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED, Fertilizer.FertilizerGrade.BASIC))
             .lang("Basic Growth Accelerater")
             .register();
     public static ItemEntry<Fertilizer> BASIC_PRESERVED_FERTILIZER = REGISTRATE
-            .item("basic_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED_FERTILIZER, Fertilizer.FertilizerGrade.BASIC))
+            .item("basic_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED, Fertilizer.FertilizerGrade.BASIC))
             .lang("Basic Mulch")
             .register();
     public static ItemEntry<Fertilizer> ADVANCED_INCREASING_FERTILIZER = REGISTRATE
-            .item("advanced_increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING_FERTILIZER, Fertilizer.FertilizerGrade.ADVANCED))
+            .item("advanced_increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING, Fertilizer.FertilizerGrade.ADVANCED))
             .lang("Advanced Yield Booster")
             .register();
     public static ItemEntry<Fertilizer> ADVANCED_ACCELERATED_FERTILIZER = REGISTRATE
-            .item("advanced_accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED_FERTILIZER, Fertilizer.FertilizerGrade.ADVANCED))
+            .item("advanced_accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED, Fertilizer.FertilizerGrade.ADVANCED))
             .lang("Advanced Growth Accelerater")
             .register();
     public static ItemEntry<Fertilizer> ADVANCED_PRESERVED_FERTILIZER = REGISTRATE
-            .item("advanced_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED_FERTILIZER, Fertilizer.FertilizerGrade.ADVANCED))
+            .item("advanced_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED, Fertilizer.FertilizerGrade.ADVANCED))
             .lang("Advanced Mulch")
             .register();
 }

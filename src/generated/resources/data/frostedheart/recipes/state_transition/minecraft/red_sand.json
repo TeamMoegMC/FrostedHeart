@@ -1,0 +1,21 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Name": "minecraft:red_sand"
+  },
+  "condense_temp": 90.0,
+  "evaporate_temp": 100.0,
+  "freeze_temp": -10.0,
+  "heat_capacity": 2,
+  "liquid": {
+    "Name": "minecraft:red_sand"
+  },
+  "melt_temp": 9.0,
+  "solid": {
+    "Name": "frostedheart:red_sand_permafrost",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "state": "liquid"
+}

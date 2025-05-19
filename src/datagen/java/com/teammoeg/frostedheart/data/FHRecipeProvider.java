@@ -23,8 +23,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
@@ -54,15 +56,20 @@ import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.trade.policy.TradeBuilder;
 
+import net.minecraft.commands.arguments.blocks.BlockStateArgument;
+import net.minecraft.commands.arguments.blocks.BlockStateParser;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHRecipeProvider extends RecipeProvider {
 	private final HashMap<String, Integer> PATH_COUNT = new HashMap<>();
@@ -129,27 +136,62 @@ public class FHRecipeProvider extends RecipeProvider {
 					ExcelHelper.getCellValueAsBoolean(m.get("must_lit"))
 					).toFinished(FHMain.rl("block_temperature/"+block.getPath())));
 		});
+		Set<BlockState> allStates=new HashSet<>();
 		// state transition
 		ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/state_transition.xlsx"), m->{
-
-			ResourceLocation block=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("block")));
-			ResourceLocation solid=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("solid")));
-			ResourceLocation liquid=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("liquid")));
-			ResourceLocation gas=new ResourceLocation(ExcelHelper.getCellValueAsString(m.get("gas")));
-			if(!block.getPath().isEmpty())
+			try {
+				String name=ExcelHelper.getCellValueAsString(m.get("block"));
+			BlockState block=BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK.asLookup(),name,true).blockState();
+			String solidName=ExcelHelper.getCellValueAsString(m.get("solid"));
+			BlockState solid=null;
+			if(solidName!=null&&!solidName.isEmpty())
+				try {
+					solid=BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK.asLookup(),solidName,true).blockState();
+				}catch(Throwable t) {
+					FHMain.LOGGER.error("error parsing solid "+solidName+" for state transition");
+					t.printStackTrace();
+				}
+			String liquidName=ExcelHelper.getCellValueAsString(m.get("liquid"));
+			BlockState liquid=null;
+			if(liquidName!=null&&!liquidName.isEmpty())
+				try {
+					liquid=BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK.asLookup(),liquidName,true).blockState();
+				}catch(Throwable t) {
+					FHMain.LOGGER.error("error parsing liquid "+liquidName+" for state transition");
+					t.printStackTrace();
+				}
+			String gasName=ExcelHelper.getCellValueAsString(m.get("gas"));
+			BlockState gas=null;
+			if(gasName!=null&&!gasName.isEmpty())
+				try {
+					gas=BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK.asLookup(),gasName,true).blockState();
+				}catch(Throwable t) {
+					FHMain.LOGGER.error("error parsing gas "+gasName+" for state transition");
+					t.printStackTrace();
+				}
+			String blockPath=name.replaceAll(":", "/").replaceAll("[^A-Za-z_/]", "_");
+				if(!allStates.add(block)) {
+					FHMain.LOGGER.error("Duplicated state "+block+" for state transition");
+					return;
+				}
 				out.accept(new StateTransitionData(
-						CRegistryHelper.getBlock(block),
+						block,
+						ExcelHelper.getCellValueAsBoolean(m.get("all_state")),
 						PhysicalState.fromString(ExcelHelper.getCellValueAsString(m.get("state"))),
-						CRegistryHelper.getBlock(solid),
-						CRegistryHelper.getBlock(liquid),
-						CRegistryHelper.getBlock(gas),
+						solid,
+						liquid,
+						gas,
 						(float)ExcelHelper.getCellValueAsNumber(m.get("freeze_temp")),
 						(float)ExcelHelper.getCellValueAsNumber(m.get("melt_temp")),
 						(float)ExcelHelper.getCellValueAsNumber(m.get("condense_temp")),
 						(float)ExcelHelper.getCellValueAsNumber(m.get("evaporate_temp")),
 						(int)ExcelHelper.getCellValueAsNumber(m.get("heat_capacity")),
 						ExcelHelper.getCellValueAsBoolean(m.get("will_transit"))
-				).toFinished(FHMain.rl("state_transition/"+block.getPath())));
+				).toFinished(FHMain.rl("state_transition/"+blockPath)));
+
+			}catch(Throwable t) {
+				t.printStackTrace();
+			}
 		});
 		//world
 		out.accept(new WorldTempData(new ResourceLocation("the_nether"),300).toFinished(FHMain.rl("level_temperature/nether")));

@@ -1,0 +1,22 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Name": "minecraft:coarse_dirt"
+  },
+  "condense_temp": 90.0,
+  "evaporate_temp": 100.0,
+  "freeze_temp": -10.0,
+  "heat_capacity": 2,
+  "liquid": {
+    "Name": "minecraft:coarse_dirt"
+  },
+  "melt_temp": 9.0,
+  "solid": {
+    "Name": "frostedheart:coarse_dirt_permafrost",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "state": "liquid",
+  "will_transit": true
+}

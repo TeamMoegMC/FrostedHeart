@@ -63,6 +63,7 @@
     "minecraft.temperature.ServerLevelMixin_WeatherCycle",
     "minecraft.temperature.ServerPlayNetHandlerMixin_FlyingFix",
     "minecraft.temperature.SheepMixin",
+    "minecraft.temperature.BlockStateBaseMixin_RandomTick",
     "minecraft.temperature.SnowLayerBlockMixin_Melt",
     "minecraft.temperature.WolfMixin",
     "minecraft.trade.AssignProfessionFromJobSite_DisableVanillaProfession",

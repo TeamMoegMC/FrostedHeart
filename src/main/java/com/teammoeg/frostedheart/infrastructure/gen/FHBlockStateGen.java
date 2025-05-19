@@ -26,7 +26,9 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.agriculture.FertilizedDirt;
 import com.teammoeg.frostedheart.content.agriculture.FertilizedFarmlandBlock;
+import com.teammoeg.frostedheart.content.agriculture.Fertilizer.FertilizerType;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.providers.DataGenContext;
@@ -313,23 +315,24 @@ public class FHBlockStateGen {
                     .texture("dirt",p.mcLoc("block/dirt"))
                     .texture("top",p.modLoc("block/fertilized/fertilized_farmland_moist_preserved"));
 
-            for(int j = 0; j < 7; j++) {
+            /*for(int j = 0; j < 7; j++) {
                 p.getVariantBuilder(layer)
                         .partialState().with(FertilizedFarmlandBlock.FERTILIZER, 0).with(FertilizedFarmlandBlock.MOISTURE,j)
                         .modelForState().modelFile(origin).addModel();
             }
             p.getVariantBuilder(layer)
                     .partialState().with(FertilizedFarmlandBlock.FERTILIZER, 0).with(FertilizedFarmlandBlock.MOISTURE,7)
-                    .modelForState().modelFile(origin_moist).addModel();
-            for (int i = 1; i < 4; i++) {
+                    .modelForState().modelFile(origin_moist).addModel();*/
+            for (int i = 0; i < 3; i++) {
+            	FertilizerType type=FertilizerType.values()[i];
                 for(int j = 0; j < 7; j++) {
                     p.getVariantBuilder(layer)
-                            .partialState().with(FertilizedFarmlandBlock.FERTILIZER, i).with(FertilizedFarmlandBlock.MOISTURE,j)
-                            .modelForState().modelFile(fertilized[i-1]).addModel();
+                            .partialState().with(FertilizedDirt.FERTILIZER, type).with(FertilizedFarmlandBlock.MOISTURE,j)
+                            .modelForState().modelFile(fertilized[i]).addModel();
                 }
                 p.getVariantBuilder(layer)
-                        .partialState().with(FertilizedFarmlandBlock.FERTILIZER, i).with(FertilizedFarmlandBlock.MOISTURE,7)
-                        .modelForState().modelFile(fertilized_moist[i-1]).addModel();
+                        .partialState().with(FertilizedDirt.FERTILIZER, type).with(FertilizedFarmlandBlock.MOISTURE,7)
+                        .modelForState().modelFile(fertilized_moist[i]).addModel();
             }
         };
     }
