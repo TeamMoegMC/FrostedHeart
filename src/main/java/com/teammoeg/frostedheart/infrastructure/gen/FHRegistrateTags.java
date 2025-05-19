@@ -63,7 +63,8 @@ public class FHRegistrateTags {
 
     private static void genBlockTags(RegistrateTagsProvider<Block> provIn) {
         FHTagGen.FHTagsProvider<Block> prov = new FHTagGen.FHTagsProvider<>(provIn, Block::builtInRegistryHolder);
-
+        prov.tag(FHTags.Blocks.CROP.tag).addTag(BlockTags.SAPLINGS).addTag(BlockTags.CROPS);
+        
         prov.tag(FHTags.Blocks.TOWN_DECORATIONS.tag).add(Blocks.FLOWER_POT, Blocks.LANTERN, Blocks.SOUL_LANTERN,
                 Blocks.CAMPFIRE, Blocks.SOUL_CAMPFIRE, Blocks.ENCHANTING_TABLE, Blocks.ANVIL, Blocks.CHIPPED_ANVIL,
                 Blocks.DAMAGED_ANVIL, Blocks.STONECUTTER, Blocks.GRINDSTONE, Blocks.BELL, Blocks.LOOM, Blocks.SMITHING_TABLE);
