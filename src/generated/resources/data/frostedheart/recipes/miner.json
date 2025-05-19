@@ -528,7 +528,7 @@
           "actions": [],
           "hide_stockout": false,
           "id": "frostedresearch:intelligence",
-          "price": 100,
+          "price": 200,
           "produce": "frostedresearch:intelligence",
           "recover": 0.1,
           "restock_condition": [],

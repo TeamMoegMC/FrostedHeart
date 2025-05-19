@@ -8,5 +8,6 @@
   "liquid": "minecraft:mycelium",
   "melt_temp": 9.0,
   "solid": "frostedheart:mycelium_permafrost",
+  "state": "solid",
   "will_transit": true
 }

@@ -1,0 +1,13 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": "minecraft:sand",
+  "condense_temp": 90.0,
+  "evaporate_temp": 100.0,
+  "freeze_temp": -10.0,
+  "gas": "minecraft:sand",
+  "heat_capacity": 2,
+  "liquid": "minecraft:sand",
+  "melt_temp": 9.0,
+  "solid": "frostedheart:sand_permafrost",
+  "state": "liquid"
+}

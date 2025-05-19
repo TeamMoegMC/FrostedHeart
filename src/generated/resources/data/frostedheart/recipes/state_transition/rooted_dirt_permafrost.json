@@ -8,5 +8,6 @@
   "liquid": "minecraft:mud",
   "melt_temp": 9.0,
   "solid": "frostedheart:rooted_dirt_permafrost",
+  "state": "solid",
   "will_transit": true
 }

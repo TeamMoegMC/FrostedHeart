@@ -8,5 +8,6 @@
   "liquid": "frostedheart:bauxite_block",
   "melt_temp": 9.0,
   "solid": "frostedheart:bauxite_permafrost",
+  "state": "solid",
   "will_transit": true
 }

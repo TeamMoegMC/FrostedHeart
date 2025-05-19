@@ -27,4 +27,13 @@ public enum PhysicalState implements StringRepresentable{
 	public StateTranslation translate(PhysicalState newState) {
 		return StateTranslation.TRANSTION_MAP[this.ordinal()][newState.ordinal()];
 	}
+
+	public static PhysicalState fromString(String s) {
+		if (s.equalsIgnoreCase("solid"))
+			return SOLID;
+		else if (s.equalsIgnoreCase("liquid"))
+			return LIQUID;
+		else
+			return GAS;
+	}
 }
