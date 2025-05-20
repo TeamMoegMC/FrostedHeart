@@ -27,7 +27,9 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FireBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.Feature;
@@ -51,8 +53,7 @@ public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
     public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> context) {
         final WorldGenLevel level = context.level();
         BlockPos pos = context.origin();
-        RandomSource rand = level.getRandom();
-
+        
         // Set starting position and rotation for the spacecraft
         BlockPos start = new BlockPos(pos.getX() - 9, pos.getY() - 1, pos.getZ() - 7);
         StructurePlaceSettings settings = new StructurePlaceSettings()
@@ -71,8 +72,6 @@ public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
         var headCenterPos = pos.offset(12,-2,0);
         var backCenterPos = pos.offset(-9,-2,0);
         createImpactRegionNew(level,headCenterPos,backCenterPos);
-        //level.setBlock(headCenterPos, Blocks.DIAMOND_BLOCK.defaultBlockState(), 2);
-        //level.setBlock(backCenterPos, Blocks.DIAMOND_BLOCK.defaultBlockState(), 2);
         //createImpactRegion(level, boundingBox);
 
         return template.placeInWorld(level, start, boundingBox.getCenter(), settings, level.getRandom(), 2);
@@ -129,12 +128,11 @@ public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
 //        }
 //    }
     
-    //todo[xkball] 地面上放火?
     private void createImpactRegionNew(WorldGenLevel level, BlockPos headCenterPos, BlockPos backCenterPos) {
         var centerPos = new BlockPos((headCenterPos.getX()+backCenterPos.getX())/2,headCenterPos.getY() + 5,headCenterPos.getZ());
         var centerX = centerPos.getX();
         var centerZ = centerPos.getZ();
-        var minY = headCenterPos.getY();
+        var minY = headCenterPos.getY() + 1;
         var maxY = minY + 8;
         var depth = maxY - minY;
         var rand = level.getRandom();
@@ -167,8 +165,8 @@ public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
             }
         }
         
-        IntUnaryOperator clearWidth = (int dx) ->  8 + dx/9;
-        IntUnaryOperator clearHeightOffset = (int dx) ->  dx/12;
+        IntUnaryOperator clearWidth = (int dx) ->  8 + dx/14;
+        IntUnaryOperator clearHeightOffset = (int dx) -> (int) (10 * Math.log(dx/120. + 1) * Math.exp(dx/240.));
         IntUnaryOperator clearHeight = (int dx) ->  8 + dx/8;
         IntUnaryOperator clearDepthOffset = (int dz) -> {
             if(dz < 6) return 0;
@@ -184,40 +182,51 @@ public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
             for(int dz = 0; dz < clearWidth.applyAsInt(dx); dz++) {
                 var depthOffset = clearDepthOffset.applyAsInt(dz);
                 for(int dy = height; dy > depthOffset; dy--) {
-                    clearHelper.add(headCenterPos.offset(-dx,dy + heightOffset,dz));
-                    clearHelper.add(headCenterPos.offset(-dx,dy + heightOffset,-dz));
-                   
-                }
-                if(rand.nextInt(8) == 1){
-                    clearHelper.add(headCenterPos.offset(-dx,depthOffset + heightOffset,dz));
-                }
-                if(rand.nextInt(8) == 1){
-                    clearHelper.add(headCenterPos.offset(-dx,depthOffset + heightOffset,-dz));
+                    clearHelper.isBottom = dy == depthOffset + 1;
+                    clearHelper.addWithDecoration(headCenterPos.offset(-dx,dy + heightOffset,dz));
+                    clearHelper.addWithDecoration(headCenterPos.offset(-dx,dy + heightOffset,-dz));
                 }
                 clearHelper.clear();
             }
-            
+
             dx += 1;
             flag = dx < 64;
             var flagPos = headCenterPos.offset(-dx,height + heightOffset,0);
             flag |= level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE, flagPos).getY() > flagPos.getY();
-            //todo[xkball] 多给几个采样点
+
             for (int i = 0; i < 5; i++) {
                 flag |= !level.getBlockState(headCenterPos.offset(-dx-1,2,0)).isAir();
             }
             flag &= dx < 256;
         }
-        
+
+        IntUnaryOperator clearHeightOffsetCenter = (int dx_) -> (int) (10 * Math.log(dx_/110. + 1) * Math.exp(dx_/210.));
         //创建中心的额外下沉区域
         for(int dx_ = 0; dx_ < Math.min(128,dx-20); dx_++){
-            for(int dy = 4; dy > 0; dy--){
-                var dy_ = dy + dx_/11;
-                clearHelper.addWithChanceDigDeeper(backCenterPos.offset(-dx_,dy_,0),rand);
-                clearHelper.addWithChanceDigDeeper(backCenterPos.offset(-dx_,dy_,-1),rand);
-                clearHelper.addWithChanceDigDeeper(backCenterPos.offset(-dx_,dy_,1),rand);
+            for(int dy = 3; dy > 0; dy--){
+                clearHelper.isBottom = dy == 1;
+                var dy_ = dy + clearHeightOffsetCenter.applyAsInt(dx_);
+                clearHelper.addWithDecoration(backCenterPos.offset(-dx_,dy_,0));
+                clearHelper.addWithDecoration(backCenterPos.offset(-dx_,dy_,-1));
+                clearHelper.addWithDecoration(backCenterPos.offset(-dx_,dy_,1));
                 if(dy != 1){
-                    clearHelper.addWithChanceDigDeeper(backCenterPos.offset(-dx_,dy_,-2),rand);
-                    clearHelper.addWithChanceDigDeeper(backCenterPos.offset(-dx_,dy_,2),rand);
+                    clearHelper.addWithDecoration(backCenterPos.offset(-dx_,dy_,-2));
+                    clearHelper.addWithDecoration(backCenterPos.offset(-dx_,dy_,2));
+                }
+                clearHelper.clear();
+            }
+        }
+        
+        IntUnaryOperator clearHeightOffsetNew = (int dx_) -> (int) (Math.log(dx_ + 1) * Math.exp(dx_/8.));
+        //创建结尾
+        for(int dx_ = dx; dx_ < dx + 20; dx_++){
+            var heightOffset = clearHeightOffset.applyAsInt(dx) + clearHeightOffsetNew.applyAsInt(dx_-dx);
+            for(int dz = 0; dz < clearWidth.applyAsInt(dx); dz++){
+                var depthOffset = clearDepthOffset.applyAsInt(dz);
+                for(int dy = 128; dy > depthOffset; dy--) {
+                    clearHelper.isBottom = dy == depthOffset + 1;
+                    clearHelper.addWithDecoration(headCenterPos.offset(-dx_,dy + heightOffset,dz));
+                    clearHelper.addWithDecoration(headCenterPos.offset(-dx_,dy + heightOffset,-dz));
                 }
                 clearHelper.clear();
             }
@@ -305,28 +314,38 @@ public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
 
     private static class WorldClearHelper {
         private final WorldGenLevel worldGenLevel;
+        private final RandomSource rand;
         private final Set<BlockPos> posSet = new HashSet<>();
+        public boolean isBottom = false;
         
         private WorldClearHelper(WorldGenLevel worldGenLevel) {
             this.worldGenLevel = worldGenLevel;
+            this.rand = worldGenLevel.getRandom();
         }
         
         public void add(BlockPos pos) {
             posSet.add(pos);
         }
         
-        public void addWithChanceDigDeeper(BlockPos pos,RandomSource rand) {
+        public void addWithDecoration(BlockPos pos) {
             posSet.add(pos);
-            if(rand.nextInt(8) == 1) {
-                posSet.add(pos.below());
+            if (isBottom) {
+                if(rand.nextInt(8) == 1) {
+                    posSet.add(pos.below());
+                }
+                else if(rand.nextInt(16) == 1) {
+                    worldGenLevel.setBlock(pos, ((FireBlock)Blocks.FIRE).getStateForPlacement(worldGenLevel,pos), Block.UPDATE_CLIENTS);
+                    posSet.remove(pos);
+                }
             }
         }
         
         public void clear() {
             for (var pos : posSet) {
-                worldGenLevel.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+                worldGenLevel.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
             }
             posSet.clear();
+            isBottom = false;
         }
     }
 
