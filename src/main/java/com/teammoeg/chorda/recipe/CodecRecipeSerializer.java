@@ -24,9 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-import com.google.gson.JsonParseException;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import org.jetbrains.annotations.Nullable;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
