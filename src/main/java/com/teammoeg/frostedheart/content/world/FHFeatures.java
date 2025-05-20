@@ -104,6 +104,7 @@ public class FHFeatures {
     public static final class FHConfiguredFeatures{
         public static final ResourceKey<ConfiguredFeature<?, ?>> WILD_RUBBER_DANDELION = key("wild_rubber_dandelion");
         
+        @SuppressWarnings("SameParameterValue")
         private static ResourceKey<ConfiguredFeature<?, ?>> key(String name){
             return ResourceKey.create(Registries.CONFIGURED_FEATURE, FHMain.rl(name));
         }

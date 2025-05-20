@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
+import com.google.gson.JsonParseException;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.gson.JsonObject;
@@ -39,6 +41,10 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public record CodecRecipeSerializer<T>(Codec<T> codec,RecipeType<DataContainerRecipe<T>> type) implements RecipeSerializer<DataContainerRecipe<T>>{
 
 
@@ -51,7 +57,7 @@ public record CodecRecipeSerializer<T>(Codec<T> codec,RecipeType<DataContainerRe
 		}
 	}
 	@Override
-	public @Nullable DataContainerRecipe<T> fromNetwork(ResourceLocation pRecipeId, FriendlyByteBuf pBuffer) {
+	public DataContainerRecipe<T> fromNetwork(ResourceLocation pRecipeId, FriendlyByteBuf pBuffer) {
 		return new DataContainerRecipe<>(pRecipeId,this,CodecUtil.readCodec(pBuffer, codec));
 	}
 	@Override
@@ -63,7 +69,9 @@ public record CodecRecipeSerializer<T>(Codec<T> codec,RecipeType<DataContainerRe
 		RecipeReloadListener.registeredSerializer.add(this);
 		return this;
 	}
-	public List<DataContainerRecipe<T>> getRecipes(Collection<Recipe<?>> recipes){
+	
+	@SuppressWarnings({"rawtypes", "unchecked"})
+    public List<DataContainerRecipe<T>> getRecipes(Collection<Recipe<?>> recipes){
 		List<DataContainerRecipe<T>> recipeList=new ArrayList<>();
 		for(Recipe r:recipes) {
 			if(r instanceof DataContainerRecipe dcr&&r.getType()==type) {
@@ -76,7 +84,9 @@ public record CodecRecipeSerializer<T>(Codec<T> codec,RecipeType<DataContainerRe
 		return new DataContainerFinishedRecipe<>(rl,this,data);
 		
 	}
-	public Stream<DataContainerRecipe<T>> filterRecipes(Collection<Recipe<?>> recipes){
+	
+	@SuppressWarnings("unchecked")
+    public Stream<DataContainerRecipe<T>> filterRecipes(Collection<Recipe<?>> recipes){
 		return recipes.stream().filter(r->r instanceof DataContainerRecipe&&r.getType()==type).map(t->(DataContainerRecipe<T>)t);
 	}
 }
