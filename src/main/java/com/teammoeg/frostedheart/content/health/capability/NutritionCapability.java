@@ -26,7 +26,10 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
+import lombok.Setter;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -38,6 +41,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.CakeBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nullable;
@@ -55,11 +60,11 @@ public class NutritionCapability implements NBTSerializable {
     @Override
     public void load(CompoundTag nbt, boolean isPacket) {
         set(new ImmutableNutrition(CMath.toValidClampedValue(nbt.getFloat("fat"), 0, 100000) , CMath.toValidClampedValue(nbt.getFloat("carbohydrate"), 0, 100000), CMath.toValidClampedValue(nbt.getFloat("protein"), 0, 100000), CMath.toValidClampedValue(nbt.getFloat("vegetable"), 0, 100000)));
+        	
     }
 
     public static final ImmutableNutrition DEFAULT_VALUE = new ImmutableNutrition(5000);
     private MutableNutrition nutrition = DEFAULT_VALUE.mutableCopy();
-
 
     public void addFat(Player player, float add) {
         this.nutrition.fat += add;

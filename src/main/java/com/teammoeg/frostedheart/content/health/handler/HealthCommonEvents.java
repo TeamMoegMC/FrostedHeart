@@ -20,23 +20,29 @@
 package com.teammoeg.frostedheart.content.health.handler;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import com.teammoeg.frostedheart.content.health.dailykitchen.DailyKitchen;
 import com.teammoeg.frostedheart.content.health.event.GatherFoodNutritionEvent;
+import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
 import com.teammoeg.frostedheart.util.Lang;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -44,6 +50,17 @@ import org.apache.logging.log4j.Level;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class HealthCommonEvents {
+    @SubscribeEvent
+    public static void onPlayerRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        ItemStack heldItem = event.getItemStack();
+        Player player = event.getEntity();
+        //drink water block
+        if (heldItem.isEmpty()  && player.getPose() == Pose.CROUCHING) {
+        	BlockPos pos=event.getHitVec().getBlockPos().offset(event.getFace().getNormal());
+        	if(!event.getLevel().getFluidState(pos).isEmpty())
+        		FHNetwork.INSTANCE.sendToServer(new PlayerDrinkWaterMessage(pos));
+        }
+    }
 
 	@SubscribeEvent
 	public static void onPlayerRespawn(PlayerEvent.Clone event) {

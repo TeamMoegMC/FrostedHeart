@@ -40,6 +40,7 @@
     "minecraft.misc.PlayerMixin_KeepEquipment",
     "minecraft.misc.PortalSizeMixin_DisableNether",
     "minecraft.misc.ServerLevelMixin_Seed",
+    "minecraft.misc.ServerPlayerGameModeMixin_BlockUseComplete",
     "minecraft.temperature.AbstractTopPlantBlockMixin",
     "minecraft.temperature.AnimalEntityMixin",
     "minecraft.temperature.AnimalMixin_Feeding",
