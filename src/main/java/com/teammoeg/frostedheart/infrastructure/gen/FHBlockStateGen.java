@@ -295,25 +295,25 @@ public class FHBlockStateGen {
 
             ModelFile[] fertilized =new ModelFile[3];
             fertilized[0] = p.models().withExistingParent("fertilized_farmland_increasing",p.mcLoc("block/farmland"))
-                    .texture("dirt",p.mcLoc("block/dirt"))
-                    .texture("top",p.modLoc("block/fertilized/fertilized_farmland_increasing"));
+                    .texture("dirt",p.modLoc("block/fertilized/fertilized_dirt_increasing"))
+                    .texture("top", p.modLoc("block/fertilized/fertilized_farmland_increasing"));
             fertilized[1] = p.models().withExistingParent("fertilized_farmland_accelerated",p.mcLoc("block/farmland"))
-                    .texture("dirt",p.mcLoc("block/dirt"))
-                    .texture("top",p.modLoc("block/fertilized/fertilized_farmland_accelerated"));
+                    .texture("dirt",p.modLoc("block/fertilized/fertilized_dirt_accelerated"))
+                    .texture("top", p.modLoc("block/fertilized/fertilized_farmland_accelerated"));
             fertilized[2] = p.models().withExistingParent("fertilized_farmland_preserved",p.mcLoc("block/farmland"))
-                    .texture("dirt",p.mcLoc("block/dirt"))
-                    .texture("top",p.modLoc("block/fertilized/fertilized_farmland_preserved"));
+                    .texture("dirt",p.modLoc("block/fertilized/fertilized_dirt_preserved"))
+                    .texture("top", p.modLoc("block/fertilized/fertilized_farmland_preserved"));
 
             ModelFile[] fertilized_moist =new ModelFile[3];
             fertilized_moist[0] = p.models().withExistingParent("fertilized_farmland_moist_increasing",p.mcLoc("block/farmland_moist"))
-                    .texture("dirt",p.mcLoc("block/dirt"))
-                    .texture("top",p.modLoc("block/fertilized/fertilized_farmland_moist_increasing"));
+                    .texture("dirt",p.modLoc("block/fertilized/fertilized_dirt_increasing"))
+                    .texture("top", p.modLoc("block/fertilized/fertilized_farmland_moist_increasing"));
             fertilized_moist[1] = p.models().withExistingParent("fertilized_farmland_moist_accelerated",p.mcLoc("block/farmland_moist"))
-                    .texture("dirt",p.mcLoc("block/dirt"))
-                    .texture("top",p.modLoc("block/fertilized/fertilized_farmland_moist_accelerated"));
+                    .texture("dirt",p.modLoc("block/fertilized/fertilized_dirt_accelerated"))
+                    .texture("top", p.modLoc("block/fertilized/fertilized_farmland_moist_accelerated"));
             fertilized_moist[2] = p.models().withExistingParent("fertilized_farmland_moist_preserved",p.mcLoc("block/farmland_moist"))
-                    .texture("dirt",p.mcLoc("block/dirt"))
-                    .texture("top",p.modLoc("block/fertilized/fertilized_farmland_moist_preserved"));
+                    .texture("dirt",p.modLoc("block/fertilized/fertilized_dirt_preserved"))
+                    .texture("top", p.modLoc("block/fertilized/fertilized_farmland_moist_preserved"));
 
             /*for(int j = 0; j < 7; j++) {
                 p.getVariantBuilder(layer)

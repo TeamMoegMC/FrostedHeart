@@ -34,10 +34,10 @@ public class MixinWorldOpenFlows {
     )*/
     /**
      * @author dasb
-     * @reason
+     * @reason repair world config
      */
     @Overwrite
-    public WorldStem loadWorldStem(LevelStorageSource.LevelStorageAccess pLevelStorage, boolean pSafeMode, PackRepository pPackRepository) throws Exception {
+    private WorldStem loadWorldStem(LevelStorageSource.LevelStorageAccess pLevelStorage, boolean pSafeMode, PackRepository pPackRepository) throws Exception {
 
 //        if (cir.getReturnValue() == null) {
 //            System.out.println("WorldStem 正在重建默认配置...");

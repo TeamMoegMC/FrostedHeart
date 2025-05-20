@@ -3,8 +3,8 @@
   "block": {
     "Name": "frostedheart:fertilized_dirt",
     "Properties": {
-      "advanced": "basic",
       "fertilizer": "accelerated",
+      "grade": "basic",
       "storage": "1"
     }
   },
@@ -18,8 +18,8 @@
   "liquid": {
     "Name": "frostedheart:fertilized_dirt",
     "Properties": {
-      "advanced": "basic",
       "fertilizer": "accelerated",
+      "grade": "basic",
       "storage": "1"
     }
   },

@@ -1,7 +1,7 @@
 {
   "parent": "minecraft:block/farmland",
   "textures": {
-    "dirt": "minecraft:block/dirt",
+    "dirt": "frostedheart:block/fertilized/fertilized_dirt_increasing",
     "top": "frostedheart:block/fertilized/fertilized_farmland_increasing"
   }
 }

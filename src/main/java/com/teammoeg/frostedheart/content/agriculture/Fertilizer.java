@@ -47,31 +47,31 @@ public class Fertilizer extends FHBaseItem {
     	if(blockstate.is(Blocks.FARMLAND)){
     		level.setBlock(pos,FHBlocks.FERTILIZED_FARMLAND.getDefaultState()
             		.setValue(FertilizedDirt.FERTILIZER,this.type)
-            		.setValue(FertilizedDirt.ADVANCED,getGrade())
+            		.setValue(FertilizedDirt.GRADE,getGrade())
             		.setValue(FertilizedDirt.STORAGE, 4),3);
-            return InteractionResult.SUCCESS;
+            return InteractionResult.sidedSuccess(level.isClientSide);
         }else if(blockstate.is(FHBlocks.FERTILIZED_FARMLAND.get())||blockstate.is(FHBlocks.FERTILIZED_DIRT.get())){
         	int currentStorage =0;
-        	if(blockstate.getValue(FertilizedDirt.FERTILIZER)==this.type&&(blockstate.getValue(FertilizedDirt.ADVANCED)==getGrade())){
+        	if(blockstate.getValue(FertilizedDirt.FERTILIZER)==this.type&&(blockstate.getValue(FertilizedDirt.GRADE)==getGrade())){
         		currentStorage=blockstate.getValue(FertilizedDirt.STORAGE);
         	}
             if(currentStorage<=4) {
             	currentStorage+=4;
             	level.setBlock(pos,blockstate.setValue(FertilizedDirt.STORAGE, currentStorage)
             			.setValue(FertilizedDirt.FERTILIZER,this.type)
-                		.setValue(FertilizedDirt.ADVANCED,getGrade()),3);
-            	return InteractionResult.SUCCESS;
+                		.setValue(FertilizedDirt.GRADE,getGrade()),3);
+            	return InteractionResult.sidedSuccess(level.isClientSide);
             }
         }else if(blockstate.is(Blocks.DIRT)|| blockstate.is(Blocks.GRASS_BLOCK)){
     		level.setBlock(pos,FHBlocks.FERTILIZED_DIRT.getDefaultState()
             		.setValue(FertilizedDirt.FERTILIZER,this.type)
-            		.setValue(FertilizedDirt.ADVANCED,getGrade())
+            		.setValue(FertilizedDirt.GRADE,getGrade())
             		.setValue(FertilizedDirt.STORAGE, 4),3);
-            return InteractionResult.SUCCESS;
+            return InteractionResult.sidedSuccess(level.isClientSide);
         }else if(blockstate.is(Blocks.COARSE_DIRT)){
         	if(getType()!=FertilizerType.PRESERVED) {
         		level.setBlock(pos,Blocks.DIRT.defaultBlockState(),3);
-        		return InteractionResult.SUCCESS;
+        		return InteractionResult.sidedSuccess(level.isClientSide);
         	}
         }else if(blockstate.is(FHTags.Blocks.CROP.get())) {
         	BlockPos below=pos.below();
@@ -84,7 +84,11 @@ public class Fertilizer extends FHBaseItem {
         Level level = pContext.getLevel();
         BlockPos blockpos = pContext.getClickedPos();
         BlockState blockstate = level.getBlockState(blockpos);
-        return transform(level, blockpos, blockstate);
+        InteractionResult ir= transform(level, blockpos, blockstate);
+        if(ir.consumesAction()) {
+        	pContext.getItemInHand().shrink(1);
+        }
+        return ir;
     }
 
     public FertilizerType getType() {

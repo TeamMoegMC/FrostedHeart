@@ -221,8 +221,8 @@ public class ClimateCommonEvents {
             if (farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
                 if (farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED) {
                     int p = 1;
-                    if (farmlandBlockState.hasProperty(FertilizedDirt.ADVANCED)) {
-                        p = farmlandBlockState.getValue(FertilizedDirt.ADVANCED).preserve;
+                    if (farmlandBlockState.hasProperty(FertilizedDirt.GRADE)) {
+                        p = farmlandBlockState.getValue(FertilizedDirt.GRADE).preserve;
                     }
                     data = new PlantTempData(crop, data.growTimeDays(), data.minFertilize() - 5 * p, data.minGrow() - 5 * p, data.minSurvive() - 5 * p, data.maxFertilize(), data.maxGrow(), data.maxSurvive(), data.snowVulnerable(), data.blizzardVulnerable(), data.dead(), data.willDie(), data.heatCapacity(), data.minSkylight(), data.maxSkylight());
                     status = WorldTemperature.checkPlantStatus(level, pos, data, true);
@@ -239,8 +239,8 @@ public class ClimateCommonEvents {
             if (farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
                 if (farmlandBlockState.hasProperty(FertilizedDirt.FERTILIZER) && farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED) {
                     float p2 = 1;
-                    if (farmlandBlockState.hasProperty(FertilizedDirt.ADVANCED)) {
-                        p2 = farmlandBlockState.getValue(FertilizedDirt.ADVANCED).growSpeed;
+                    if (farmlandBlockState.hasProperty(FertilizedDirt.GRADE)) {
+                        p2 = farmlandBlockState.getValue(FertilizedDirt.GRADE).growSpeed;
                     }
                     growTimeGameDays *= (0.5f * p2);
                 }
@@ -552,8 +552,8 @@ public class ClimateCommonEvents {
             if (farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
                 if (farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.PRESERVED) {
                     int p = 1;
-                    if (farmlandBlockState.hasProperty(FertilizedDirt.ADVANCED)) {
-                        p = farmlandBlockState.getValue(FertilizedDirt.ADVANCED).preserve;
+                    if (farmlandBlockState.hasProperty(FertilizedDirt.GRADE)) {
+                        p = farmlandBlockState.getValue(FertilizedDirt.GRADE).preserve;
                     }
                     data = new PlantTempData(crop, data.growTimeDays(), data.minFertilize() - 5 * p, data.minGrow() - 5 * p, data.minSurvive() - 5 * p, data.maxFertilize(), data.maxGrow(), data.maxSurvive(), data.snowVulnerable(), data.blizzardVulnerable(), data.dead(), data.willDie(), data.heatCapacity(), data.minSkylight(), data.maxSkylight());
                     status = WorldTemperature.checkPlantStatus(level, pos, data, true);
@@ -569,8 +569,8 @@ public class ClimateCommonEvents {
             if (farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
                 if (farmlandBlockState.hasProperty(FertilizedDirt.FERTILIZER) && farmlandBlockState.getValue(FertilizedDirt.FERTILIZER) == Fertilizer.FertilizerType.ACCELERATED) {
                     float p2 = 1;
-                    if (farmlandBlockState.hasProperty(FertilizedDirt.ADVANCED)) {
-                        p2 = farmlandBlockState.getValue(FertilizedDirt.ADVANCED).growSpeed;
+                    if (farmlandBlockState.hasProperty(FertilizedDirt.GRADE)) {
+                        p2 = farmlandBlockState.getValue(FertilizedDirt.GRADE).growSpeed;
                     }
                     growTimeGameDays *= (0.5f * p2);
                 }
@@ -657,8 +657,8 @@ public class ClimateCommonEvents {
 
                         List<ItemStack> drops = Block.getDrops(state, (ServerLevel) level, pos, null, event.getPlayer(), event.getPlayer().getMainHandItem());
                         float p = 2;
-                        if (farmlandBlockState.hasProperty(FertilizedDirt.ADVANCED)) {
-                            p = farmlandBlockState.getValue(FertilizedDirt.ADVANCED).productivity;
+                        if (farmlandBlockState.hasProperty(FertilizedDirt.GRADE)) {
+                            p = farmlandBlockState.getValue(FertilizedDirt.GRADE).productivity;
                         }
                         for (ItemStack drop : drops) {
                             ItemStack doubleDrop = drop.copy();

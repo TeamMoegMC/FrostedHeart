@@ -155,7 +155,7 @@ public class PlantTempStats implements TooltipModifier {
     public static LangBuilder getFertilizerStorageBar(BlockState farmland) {
         int storage;
 
-        FertilizerGrade grade = farmland.getValue(FertilizedDirt.ADVANCED);
+        FertilizerGrade grade = farmland.getValue(FertilizedDirt.GRADE);
         storage = farmland.getValue(FertilizedDirt.STORAGE);
 
         int low = 0;

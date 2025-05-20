@@ -3,8 +3,8 @@
   "block": {
     "Name": "frostedheart:fertilized_farmland",
     "Properties": {
-      "advanced": "basic",
       "fertilizer": "accelerated",
+      "grade": "basic",
       "moisture": "0",
       "storage": "1"
     }
@@ -19,8 +19,8 @@
   "liquid": {
     "Name": "frostedheart:fertilized_farmland",
     "Properties": {
-      "advanced": "basic",
       "fertilizer": "accelerated",
+      "grade": "basic",
       "moisture": "0",
       "storage": "1"
     }
