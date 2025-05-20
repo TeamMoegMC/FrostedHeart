@@ -165,7 +165,7 @@ public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
             }
         }
         
-        IntUnaryOperator clearWidth = (int dx) ->  8 + dx/9;
+        IntUnaryOperator clearWidth = (int dx) ->  8 + dx/14;
         IntUnaryOperator clearHeightOffset = (int dx) -> (int) (10 * Math.log(dx/120. + 1) * Math.exp(dx/240.));
         IntUnaryOperator clearHeight = (int dx) ->  8 + dx/8;
         IntUnaryOperator clearDepthOffset = (int dz) -> {
