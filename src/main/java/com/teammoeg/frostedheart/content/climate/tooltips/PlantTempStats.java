@@ -161,26 +161,12 @@ public class PlantTempStats implements TooltipModifier {
         isAdvanced = farmland.getValue(FertilizedDirt.ADVANCED)==FertilizerGrade.ADVANCED;
         storage = farmland.getValue(FertilizedDirt.STORAGE);
 
-        // prevent 0
-        storage += 1;
+        int low = 0;
 
-        // remap from 0 to 30 to 0 to 6
-        int low = Mth.ceil(Mth.clampedMap(0, 0, 9, 0, 6));
-        int high = Mth.ceil(Mth.clampedMap(storage, 0, 9, 0, 6));
-        if (low == high) {
-            if (low == 0) {
-                high += 1;
-            } else if (low == 6) {
-                low -= 1;
-            } else {
-                low -= 1;
-            }
-        }
-
-        int storagePercent = Mth.ceil(Mth.clampedMap(storage, 0, 9, 0, 100));
+        int storagePercent = Mth.ceil(Mth.clampedMap(storage, 0, 8, 0, 100));
 
         // bar
-        String s = TextProgressBarHelper.makeProgressBarInterval(6, low, high);
+        String s = TextProgressBarHelper.makeProgressBarInterval(8, 0, storage);
         String s1 = s.substring(0, 3);
         String s2 = s.substring(3);
 

@@ -280,7 +280,7 @@ public class ClimateCommonEvents {
                 if (farmlandBlockState.is(FHBlocks.FERTILIZED_FARMLAND.get())) {
                     int currentStorage = farmlandBlockState.getValue(FertilizedDirt.STORAGE);
                     int newStorage = currentStorage - CMath.randomValue(level.getRandom(), 0.25);
-                    if (newStorage < 0) {
+                    if (newStorage <= 0) {
                         level.setBlock(pos.below(), Blocks.FARMLAND.defaultBlockState().setValue(FarmBlock.MOISTURE, farmlandBlockState.getValue(FarmBlock.MOISTURE)), 2);
                     } else if(newStorage!=currentStorage){
                         level.setBlock(pos.below(), farmlandBlockState.setValue(FertilizedDirt.STORAGE, newStorage), 2);
@@ -616,7 +616,7 @@ public class ClimateCommonEvents {
                 if (farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
                     int currentStorage = farmlandBlockState.getValue(FertilizedDirt.STORAGE);
                     int newStorage = currentStorage - 1;
-                    if (newStorage < 0) {
+                    if (newStorage <= 0) {
                         level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
                     } else {
                         level.setBlock(pos.below(), farmlandBlockState.setValue(FertilizedDirt.STORAGE, newStorage), 2);
