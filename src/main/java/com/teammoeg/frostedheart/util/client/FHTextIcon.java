@@ -40,7 +40,13 @@ public class FHTextIcon {
 	 * @param code the code point
 	 */
 	public static record TextIconType(String code){
-		
+		public static TextIconType[] create(String...codes) {
+			TextIconType[] types=new TextIconType[codes.length];
+			for(int i=0;i<codes.length;i++) {
+				types[i]=new TextIconType(codes[i]);
+			}
+			return types;
+		}
 		/**
 		 * Gets the sole icon component.
 		 * Must not add siblings or append to it as the style would be append to all siblings
@@ -76,12 +82,9 @@ public class FHTextIcon {
 	public static final TextIconType thermometer=new TextIconType("\uF500");
 	public static final TextIconType SOIL_THERMOMETER = new TextIconType("\uF520");
 	public static final TextIconType LIGHT = new TextIconType("\uF521");
-	public static final TextIconType BASIC_ACCELERATED_FERTILIZER = new TextIconType("\uF522");
-	public static final TextIconType BASIC_INCREASING_FERTILIZER = new TextIconType("\uF523");
-	public static final TextIconType BASIC_PRESERVED_FERTILIZER = new TextIconType("\uF524");
-	public static final TextIconType ADVANCED_ACCELERATED_FERTILIZER = new TextIconType("\uF525");
-	public static final TextIconType ADVANCED_INCREASING_FERTILIZER = new TextIconType("\uF526");
-	public static final TextIconType ADVANCED_PRESERVED_FERTILIZER = new TextIconType("\uF527");
+	public static final TextIconType[] ACCELERATED_FERTILIZER = TextIconType.create("\uF522","\uF525","\uF528");
+	public static final TextIconType[] INCREASING_FERTILIZER = TextIconType.create("\uF523","\uF526","\uF529");
+	public static final TextIconType[] PRESERVED_FERTILIZER = TextIconType.create("\uF524","\uF527","\uF530");
 	public static Style applyFont(Style style) {
 		return style.withFont(iconFont);
 	}

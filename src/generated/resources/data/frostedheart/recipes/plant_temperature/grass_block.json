@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:plant_temp",
   "block": "minecraft:grass_block",
-  "dead": "minecraft:dirt",
+  "dead": "frostedheart:dirt_permafrost",
   "grow_time_days": 1.0,
   "heat_capacity": 10,
   "min_fertilize": 20.0,

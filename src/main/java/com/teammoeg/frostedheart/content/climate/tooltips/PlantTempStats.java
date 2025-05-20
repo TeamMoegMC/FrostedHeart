@@ -153,12 +153,9 @@ public class PlantTempStats implements TooltipModifier {
     }
 
     public static LangBuilder getFertilizerStorageBar(BlockState farmland) {
-        int type;
-        boolean isAdvanced;
         int storage;
 
-        type = farmland.getValue(FertilizedDirt.FERTILIZER).getType();
-        isAdvanced = farmland.getValue(FertilizedDirt.ADVANCED)==FertilizerGrade.ADVANCED;
+        FertilizerGrade grade = farmland.getValue(FertilizedDirt.ADVANCED);
         storage = farmland.getValue(FertilizedDirt.STORAGE);
 
         int low = 0;
@@ -171,23 +168,14 @@ public class PlantTempStats implements TooltipModifier {
         String s2 = s.substring(3);
 
         MutableComponent icon = FHTextIcon.SOIL_THERMOMETER.getIcon();
-        if (type == Fertilizer.FertilizerType.ACCELERATED.getType()) {
-            if (isAdvanced)
-                icon = FHTextIcon.ADVANCED_ACCELERATED_FERTILIZER.getIcon();
-            else
-                icon = FHTextIcon.BASIC_ACCELERATED_FERTILIZER.getIcon();
-        } else if (type == Fertilizer.FertilizerType.INCREASING.getType()) {
-            if (isAdvanced)
-                icon = FHTextIcon.ADVANCED_INCREASING_FERTILIZER.getIcon();
-            else
-                icon = FHTextIcon.BASIC_INCREASING_FERTILIZER.getIcon();
-        } else if (type == Fertilizer.FertilizerType.PRESERVED.getType()) {
-            if (isAdvanced)
-                icon = FHTextIcon.ADVANCED_PRESERVED_FERTILIZER.getIcon();
-            else
-                icon = FHTextIcon.BASIC_PRESERVED_FERTILIZER.getIcon();
+        switch(farmland.getValue(FertilizedDirt.FERTILIZER)) {
+        case ACCELERATED:
+        	icon=FHTextIcon.ACCELERATED_FERTILIZER[grade.ordinal()].getIcon();break;
+        case INCREASING:
+        	icon=FHTextIcon.INCREASING_FERTILIZER[grade.ordinal()].getIcon();break;
+        case PRESERVED:
+        	icon=FHTextIcon.PRESERVED_FERTILIZER[grade.ordinal()].getIcon();break;
         }
-
         LangBuilder builder = Lang.builder()
                 .add(icon)
                 .add(Lang.text(" " + storagePercent + "%")

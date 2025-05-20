@@ -67,6 +67,18 @@
         {
             "type": "reference",
             "id": "frostedheart:include/advanced_preserved_fertilizer"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/ultimate_accelerated_fertilizer"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/ultimate_increasing_fertilizer"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/ultimate_preserved_fertilizer"
         }
     ]
 }

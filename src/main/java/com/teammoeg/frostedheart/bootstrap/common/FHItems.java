@@ -1807,7 +1807,7 @@ thinner.png
             .register();
     public static ItemEntry<Fertilizer> BASIC_PRESERVED_FERTILIZER = REGISTRATE
             .item("basic_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED, Fertilizer.FertilizerGrade.BASIC))
-            .lang("Basic Mulch")
+            .lang("Straw Mulch")
             .register();
     public static ItemEntry<Fertilizer> ADVANCED_INCREASING_FERTILIZER = REGISTRATE
             .item("advanced_increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING, Fertilizer.FertilizerGrade.ADVANCED))
@@ -1819,6 +1819,18 @@ thinner.png
             .register();
     public static ItemEntry<Fertilizer> ADVANCED_PRESERVED_FERTILIZER = REGISTRATE
             .item("advanced_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED, Fertilizer.FertilizerGrade.ADVANCED))
-            .lang("Advanced Mulch")
+            .lang("Rubber Mulch")
             .register();
+    public static ItemEntry<Fertilizer> ULTIMATE_INCREASING_FERTILIZER = REGISTRATE
+	        .item("ultimate_increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING, Fertilizer.FertilizerGrade.ULTIMATE))
+	        .lang("Ultimate Yield Booster")
+	        .register();
+	public static ItemEntry<Fertilizer> ULTIMATE_ACCELERATED_FERTILIZER = REGISTRATE
+	        .item("ultimate_accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED, Fertilizer.FertilizerGrade.ULTIMATE))
+	        .lang("Ultimate Growth Accelerater")
+	        .register();
+	public static ItemEntry<Fertilizer> ULTIMATE_PRESERVED_FERTILIZER = REGISTRATE
+	        .item("ultimate_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED, Fertilizer.FertilizerGrade.ULTIMATE))
+	        .lang("Ultimate Mulch")
+	        .register();
 }

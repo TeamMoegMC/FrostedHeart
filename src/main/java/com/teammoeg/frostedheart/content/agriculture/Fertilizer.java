@@ -37,10 +37,10 @@ public class Fertilizer extends FHBaseItem {
         super.appendHoverText(stack, level, tooltipComponents, flag);
 
         FertilizerGrade grade = this.getGrade();
-        if (grade == FertilizerGrade.BASIC) {
-            tooltipComponents.add(Component.translatable("tooltip.frostedheart.fertilizer.basic").withStyle(ChatFormatting.GRAY));
-        } else {
-            tooltipComponents.add(Component.translatable("tooltip.frostedheart.fertilizer.advanced").withStyle(ChatFormatting.GOLD));
+        switch(grade) {
+        case BASIC:tooltipComponents.add(Component.translatable("tooltip.frostedheart.fertilizer.basic").withStyle(ChatFormatting.GRAY));break;
+        case ADVANCED:tooltipComponents.add(Component.translatable("tooltip.frostedheart.fertilizer.advanced").withStyle(ChatFormatting.AQUA));break;
+        case ULTIMATE:tooltipComponents.add(Component.translatable("tooltip.frostedheart.fertilizer.ultimate").withStyle(ChatFormatting.GOLD));break;
         }
     }
     public InteractionResult transform(Level level,BlockPos pos,BlockState blockstate) {
@@ -97,7 +97,8 @@ public class Fertilizer extends FHBaseItem {
     
     public enum FertilizerGrade implements StringRepresentable {
         BASIC(1,1,2),
-        ADVANCED(0.5f,2,3);
+        ADVANCED(0.5f,2,3),
+        ULTIMATE(0.25f,4,4);
     	public final float growSpeed;
     	public final int preserve;
     	public final float productivity;
@@ -114,16 +115,10 @@ public class Fertilizer extends FHBaseItem {
     }
 
     public enum FertilizerType implements StringRepresentable{
-        INCREASING(1),
-        ACCELERATED(2),
-        PRESERVED(3);
-
-        private final int type;
-        FertilizerType(int type) {
-            this.type = type;
-        }
-        public int getType() {
-            return type;
+        INCREASING,
+        ACCELERATED,
+        PRESERVED;
+        FertilizerType() {
         }
 		@Override
 		public String getSerializedName() {
