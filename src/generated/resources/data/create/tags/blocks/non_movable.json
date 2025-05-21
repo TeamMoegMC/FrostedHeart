@@ -1,0 +1,33 @@
+{
+  "values": [
+    "frostedheart:wardrobe",
+    "frostedresearch:drawing_desk",
+    "immersiveengineering:fluid_pump",
+    "immersiveengineering:blastfurnace_preheater",
+    "frostedheart:generator_t1",
+    "frostedheart:generator_t2",
+    "frostedheart:radiator",
+    "immersiveengineering:crusher",
+    "immersiveengineering:sawmill",
+    "immersiveengineering:alloy_smelter",
+    "immersiveengineering:arc_furnace",
+    "immersiveengineering:assembler",
+    "immersiveengineering:auto_workbench",
+    "immersiveengineering:blast_furnace",
+    "immersiveengineering:advanced_blast_furnace",
+    "immersiveengineering:bottling_machine",
+    "immersiveengineering:bucket_wheel",
+    "immersiveengineering:coke_oven",
+    "immersiveengineering:diesel_generator",
+    "immersiveengineering:excavator",
+    "immersiveengineering:fermenter",
+    "immersiveengineering:lightning_rod",
+    "immersiveengineering:metal_press",
+    "immersiveengineering:mixer",
+    "immersiveengineering:refinery",
+    "immersiveengineering:tank",
+    "immersiveengineering:silo",
+    "immersiveengineering:squeezer",
+    "#frostedheart:town/blocks"
+  ]
+}
