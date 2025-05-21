@@ -58,10 +58,7 @@ so here's an overview:
 
 ### Core packages
 
-- `base`: The base package contains system level abstractions 
-that are used throughout the project. 
-However, it does *not* contain any actual game content.
-It's just the base classes.
+- `bootstrap`: Contains all type of registry and startup operations. `client` package for client or rendering registry. `common` package for most common registy. `reference` package for registries that are not part of built in registry such as datapack reference.
 - `util`: The util package contains *utility* classes that are
   used throughout the project.
 - `content`: The content package contains the game *content*,
@@ -73,7 +70,7 @@ want to add a new game mechanic, this is the place to put it.
   infrastructure of the game, such as commands, data, gen, config.
 - `compat`: Compatibility for other mods.
 - `mixin`: Mixin classes.
-- `events`: Event handling classes.
+- `events`: General events for initialization or compatibility, which does not belong to any content packs.
 
 ### Initializers
 The rest packages are what's normally called *initializer* classes,
