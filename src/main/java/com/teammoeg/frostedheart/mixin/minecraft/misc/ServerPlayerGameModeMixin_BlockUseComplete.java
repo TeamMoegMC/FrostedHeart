@@ -32,7 +32,8 @@ public class ServerPlayerGameModeMixin_BlockUseComplete {
 	@Inject(at=@At(value="INVOKE",target="Lnet/minecraft/advancements/critereon/ItemUsedOnLocationTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)V",ordinal=0),method="useItemOn",locals=LocalCapture.CAPTURE_FAILHARD)
 	public void fh$useItemOnPost(ServerPlayer pPlayer, Level pLevel, ItemStack pStack, InteractionHand pHand, BlockHitResult pHitResult,CallbackInfoReturnable<InteractionResult> result,BlockPos blockpos,BlockState state) {
 		if(nutritionBefore<pPlayer.getFoodData().getFoodLevel()) {
-			NutritionCapability.getCapability(pPlayer).ifPresent(t->t.eat(pPlayer, state.getCloneItemStack(pHitResult, pLevel, blockpos, pPlayer)));
+			int nutritionDiff=pPlayer.getFoodData().getFoodLevel()-nutritionBefore;
+			NutritionCapability.getCapability(pPlayer).ifPresent(t->t.eat(pPlayer, state.getCloneItemStack(pHitResult, pLevel, blockpos, pPlayer),nutritionDiff));
 		}
 	}
 }

@@ -149,7 +149,21 @@ public class NutritionCapability implements NBTSerializable {
             }
         }
     }
+    public void eat(Player player, ItemStack food,int hungerOverride) {
+        Nutrition wRecipe = NutritionRecipe.getRecipeFromItem(player, food);
+        if (wRecipe == null) return;
+        if(hungerOverride>0) {
+            FoodData fd=player.getFoodData();
+            int filling=20-fd.getFoodLevel();
+            if(filling<hungerOverride) {//replace overfilled hunger to new food hunger
+            	consume(hungerOverride-filling);
+            }
+            this.nutrition.addScaled(wRecipe, (float) (hungerOverride * FHConfig.SERVER.nutritionGainRate.get()));
+            this.nutrition.ensureValid();
+            callOnChange(player);
+        }
 
+    }
     public void consume(Player player) {
     	FoodData fd=player.getFoodData();
     	if(fd.getLastFoodLevel()>fd.getFoodLevel()) {

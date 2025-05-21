@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;
+import com.teammoeg.frostedheart.content.trade.PlayerTradeData;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.waypoint.capability.WaypointCapability;
@@ -49,6 +50,8 @@ public class FHCapabilities {
 	public static final NBTCapabilityType<PlayerTemperatureData> PLAYER_TEMP=register(PlayerTemperatureData.class);
 	//public static final NBTCapabilityType<EnergyCore> ENERGY=register(EnergyCore.class);
 	public static final NBTCapabilityType<ScenarioConductor> SCENARIO=register(ScenarioConductor.class);
+	public static final NBTCapabilityType<PlayerTradeData> TRADE_PLAYER=register(PlayerTradeData.class);
+	
 	public static final CodecCapabilityType<ChunkHeatData> CHUNK_HEAT=register(ChunkHeatData.class,ChunkHeatData.CODEC);
 	public static final NBTCapabilityType<HeatEndpoint> HEAT_EP=register(HeatEndpoint.class);
 	public static final TransientCapability<HeatStorageCapability> ITEM_HEAT=registerTransient(HeatStorageCapability.class);

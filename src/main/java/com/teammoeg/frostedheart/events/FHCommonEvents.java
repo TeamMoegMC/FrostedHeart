@@ -121,8 +121,6 @@ import java.util.Set;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class FHCommonEvents {
 
-	private static final Set<EntityType<?>> VANILLA_ENTITIES = Sets.newHashSet(EntityType.COW, EntityType.SHEEP,
-			EntityType.PIG, EntityType.CHICKEN);
 	private static final TagKey<Block> DRAWERS = BlockTags.create(new ResourceLocation("storagedrawers:drawers"));
 
 	@SubscribeEvent
@@ -130,8 +128,8 @@ public class FHCommonEvents {
 		if (event.getObject() instanceof ServerPlayer) {// server-side only capabilities
 			ServerPlayer player = (ServerPlayer) event.getObject();
 			if (!(player instanceof FakePlayer)) {
-				event.addCapability(new ResourceLocation(FHMain.MODID, "death_inventory"),
-						FHCapabilities.DEATH_INV.provider());
+				event.addCapability(FHMain.rl("death_inventory"),FHCapabilities.DEATH_INV.provider());
+				event.addCapability(FHMain.rl("trade_data"), FHCapabilities.TRADE_PLAYER.provider());
 			}
 		}
 		// Common capabilities
