@@ -52,6 +52,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.NotNull;
 
@@ -226,7 +227,7 @@ public class WardrobeBlock extends CBlock implements CEntityBlock<WardrobeBlockE
     }
     // Open/Close when right-clicked
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
-
+    	if(pPlayer instanceof FakePlayer)return InteractionResult.PASS;
     	setOpened(pLevel,pPos,pState,pPlayer,true);
         if (!pLevel.isClientSide) {
             // Open the Wardrobe GUI
