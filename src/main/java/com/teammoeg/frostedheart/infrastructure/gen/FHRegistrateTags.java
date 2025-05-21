@@ -21,13 +21,19 @@ package com.teammoeg.frostedheart.infrastructure.gen;
 
 import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.*;
 
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IEMultiblocks;
+import blusunrize.immersiveengineering.common.register.IEBlocks;
 import com.simibubi.create.AllItems;
+import com.simibubi.create.AllTags;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.*;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
+import com.teammoeg.frostedresearch.FRContents;
 import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.providers.RegistrateTagsProvider;
 import net.minecraft.core.registries.Registries;
@@ -165,6 +171,43 @@ public class FHRegistrateTags {
 
         prov.tag(FHTags.Blocks.SLED_SAND.tag)
                 .addTag(BlockTags.SAND);
+
+        prov.tag(AllTags.AllBlockTags.NON_MOVABLE.tag)
+                // multi parts
+                .add(FRContents.Blocks.DRAWING_DESK.get())
+                .add(IEBlocks.MetalDevices.FLUID_PUMP.get())
+                .add(IEBlocks.MetalDevices.BLAST_FURNACE_PREHEATER.get())
+                // MBS
+                .add(FHMultiblocks.GENERATOR_T1.getBlock())
+                .add(FHMultiblocks.GENERATOR_T2.getBlock())
+                .add(FHMultiblocks.RADIATOR.getBlock())
+                .add(IEMultiblocks.CRUSHER.getBlock())
+                .add(IEMultiblocks.SAWMILL.getBlock())
+                .add(IEMultiblocks.ALLOY_SMELTER.getBlock())
+                .add(IEMultiblocks.ARC_FURNACE.getBlock())
+                .add(IEMultiblocks.ASSEMBLER.getBlock())
+                .add(IEMultiblocks.AUTO_WORKBENCH.getBlock())
+                .add(IEMultiblocks.BLAST_FURNACE.getBlock())
+                .add(IEMultiblocks.ADVANCED_BLAST_FURNACE.getBlock())
+                .add(IEMultiblocks.BOTTLING_MACHINE.getBlock())
+                .add(IEMultiblocks.BUCKET_WHEEL.getBlock())
+                .add(IEMultiblocks.COKE_OVEN.getBlock())
+                .add(IEMultiblocks.DIESEL_GENERATOR.getBlock())
+                .add(IEMultiblocks.EXCAVATOR.getBlock())
+//                .add(IEMultiblocks.EXCAVATOR_DEMO.getBlock())
+//                .add(IEMultiblocks.FEEDTHROUGH.getBlock())
+                .add(IEMultiblocks.FERMENTER.getBlock())
+                .add(IEMultiblocks.LIGHTNING_ROD.getBlock())
+                .add(IEMultiblocks.METAL_PRESS.getBlock())
+                .add(IEMultiblocks.MIXER.getBlock())
+                .add(IEMultiblocks.REFINERY.getBlock())
+                .add(IEMultiblocks.SHEETMETAL_TANK.getBlock())
+                .add(IEMultiblocks.SILO.getBlock())
+                .add(IEMultiblocks.SQUEEZER.getBlock())
+                // town stuff
+                .addTag(FHTags.Blocks.TOWN_BLOCKS.tag);
+
+
 
         for (FHTags.Blocks tag : FHTags.Blocks.values()) {
             if (tag.alwaysDatagen) {

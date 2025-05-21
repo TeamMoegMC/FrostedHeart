@@ -1977,6 +1977,7 @@ public class FHBlocks {
             .initialProperties(() -> Blocks.SPRUCE_DOOR)
             .blockstate(FHBlockStateGen.wardrobeState("wardrobe"))
             .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
+            .tag(AllTags.AllBlockTags.NON_MOVABLE.tag)
             .item()
             .model(AssetLookup.existingItemModel())
             .build()
