@@ -31,6 +31,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 
 public class FHBaseArmorItem extends ArmorItem implements ICreativeModeTabItem{
@@ -49,11 +51,10 @@ public class FHBaseArmorItem extends ArmorItem implements ICreativeModeTabItem{
 			helper.accept(this);
 	}
 
+	public int getEnchantmentLevel(ItemStack stack, Enchantment enchantment){
+        return super.material==FHArmorMaterial.SPACESUIT?0:EnchantmentHelper.getTagEnchantmentLevel(enchantment, stack);
+    }
 
-	@Override
-	public float getXpRepairRatio(ItemStack stack) {
-		return 0;
-	}
 
 	@Override
 	public boolean isEnchantable(ItemStack pStack) {

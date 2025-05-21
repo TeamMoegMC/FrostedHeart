@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.bootstrap.common.ToolCompat;
+import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
@@ -37,6 +38,7 @@ import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
+import com.teammoeg.frostedheart.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.util.CConstants;
 import com.teammoeg.frostedheart.util.IgnitionHandler;
 import com.teammoeg.frostedheart.util.Lang;
@@ -139,6 +141,12 @@ public class FHCommonEvents {
     @SubscribeEvent
     public static void attachToWorld(AttachCapabilitiesEvent<Level> event) {
         
+    }
+    public static void spaceSuitUnmodifiable(AnvilUpdateEvent ev) {
+    	if(ev.getLeft().getItem() instanceof FHBaseArmorItem ai) {
+    		if(ai.getMaterial()==FHArmorMaterial.SPACESUIT)
+    			ev.setCanceled(true);
+    	}
     }
 	@SubscribeEvent
 	public static void loginReminder(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
