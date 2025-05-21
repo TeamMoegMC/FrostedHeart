@@ -6,5 +6,5 @@
 	"duration": 1600,
 	"amplifier": 0,
 	"probability": 75,
-	"mob_effects": [{"name":"minecraft:hunger","duration":400,"amplifier":1}]
+	"mob_effects": [{"name":"minecraft:hunger","duration":400,"amplifier":1},{"name":"minecraft:poison","duration":100,"amplifier":1}]
 }
