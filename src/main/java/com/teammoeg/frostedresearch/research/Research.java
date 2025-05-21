@@ -75,7 +75,7 @@ public class Research implements FHRegisteredItem {
                     .flag("keepShow", o -> o.alwaysShow)
                     .flag("infinite", o -> o.isInfinite()).build(),
             Codec.INT.fieldOf("points").forGetter(o -> o.points),
-            Codec.INT.optionalFieldOf("insight",0).forGetter(o->o.getInsight())
+            Codec.INT.optionalFieldOf("insight",1).forGetter(o->o.getInsight())
     ).apply(t, Research::new));
     /**
      * The icon for this research.<br>
@@ -188,6 +188,7 @@ public class Research implements FHRegisteredItem {
         this.alwaysShow = flags[4];
         this.setInfinite(flags[5]);
         this.points = points;
+        this.insight=insight;
 //		System.out.println(effects);
     }
 
