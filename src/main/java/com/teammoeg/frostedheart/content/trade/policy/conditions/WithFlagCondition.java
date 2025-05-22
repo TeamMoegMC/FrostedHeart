@@ -49,8 +49,8 @@ public class WithFlagCondition implements PolicyCondition {
     }
 
     @Override
-    public boolean test(FHVillagerData ve) {
-        return ve.flags.containsKey(name);
+    public int test(FHVillagerData ve) {
+        return ve.flags.containsKey(name)?Integer.MAX_VALUE:0;
     }
 
     @Override

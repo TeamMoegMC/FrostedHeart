@@ -50,8 +50,8 @@ public class FlagValueCondition extends WithFlagCondition {
     }
 
     @Override
-    public boolean test(FHVillagerData ve) {
-        return ve.flags.getOrDefault(name, 0) == value;
+    public int test(FHVillagerData ve) {
+        return ve.flags.getOrDefault(name, 0);
     }
 
     @Override

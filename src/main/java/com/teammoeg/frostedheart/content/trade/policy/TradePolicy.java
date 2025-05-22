@@ -151,14 +151,14 @@ public class TradePolicy extends IESerializableRecipe {
         return null;
     }
 
-    public void CollectPolicies(PolicySnapshot policy, FHVillagerData ve) {
-        groups.forEach(t -> t.CollectPolicies(policy, ve));
+    public void CollectPolicies(PolicySnapshot policy, FHVillagerData ve,int maxnum) {
+        groups.forEach(t -> t.CollectPolicies(policy, ve,maxnum));
     }
 
     public PolicySnapshot get(FHVillagerData ve) {
         PolicySnapshot ps = new PolicySnapshot();
         ps.maxExp = this.getExp(ve.getTradeLevel());
-        this.CollectPolicies(ps, ve);
+        this.CollectPolicies(ps, ve,Integer.MAX_VALUE);
         return ps;
     }
 

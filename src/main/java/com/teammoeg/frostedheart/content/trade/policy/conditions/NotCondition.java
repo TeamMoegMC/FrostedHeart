@@ -50,8 +50,8 @@ public class NotCondition implements PolicyCondition {
     }
 
     @Override
-    public boolean test(FHVillagerData ve) {
-        return !nested.test(ve);
+    public int test(FHVillagerData ve) {
+        return nested.test(ve)>0?0:Integer.MAX_VALUE;
     }
 
     @Override

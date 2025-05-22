@@ -48,7 +48,7 @@ public class BasicPolicyGroup extends PolicyGroup {
     }
 
     @Override
-    public void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve) {
+    public void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve,int max_num) {
         bdata.forEach(policy::register);
     }
 

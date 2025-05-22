@@ -64,13 +64,12 @@ public abstract class PolicyGroup implements Writeable {
         conditions = SerializeUtil.readList(pb, Conditions::deserialize);
     }
 
-    public void CollectPolicies(PolicySnapshot policy, FHVillagerData ve) {
-        if (conditions.stream().allMatch(t -> t.test(ve)))
-            CollectPoliciesNoCheck(policy, ve);
+    public void CollectPolicies(PolicySnapshot policy, FHVillagerData ve,int num) {
+            CollectPoliciesNoCheck(policy, ve,Math.min(num, conditions.stream().mapToInt(t -> t.test(ve)).reduce(Integer.MAX_VALUE, Math::min)));
 
     }
 
-    public abstract void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve);
+    public abstract void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve,int num);
 
     @Override
     public JsonElement serialize() {

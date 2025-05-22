@@ -49,8 +49,8 @@ public class TotalTradeCondition implements PolicyCondition {
     }
 
     @Override
-    public boolean test(FHVillagerData ve) {
-        return ve.getTotaltraded() >= level;
+    public int test(FHVillagerData ve) {
+        return ve.getTotaltraded() >= level?Integer.MAX_VALUE:0;
     }
 
     @Override

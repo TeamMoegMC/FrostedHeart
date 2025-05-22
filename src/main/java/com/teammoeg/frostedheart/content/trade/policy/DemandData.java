@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 
@@ -48,10 +49,10 @@ public class DemandData extends BaseData {
     }
 
     @Override
-    public void fetch(PolicySnapshot ps, Map<String, Float> data) {
-        int num = (int) (float) data.getOrDefault(getId(), 0f);
+    public void fetch(PolicySnapshot ps,FHVillagerData vd, Map<String, Float> data) {
+        int num = Math.min((int) (float) data.getOrDefault(getId(), 0f), this.sellconditions.stream().mapToInt(c->c.test(vd)).reduce(Integer.MAX_VALUE,Math::min));
         if (!hideStockout || num > 0)
-            ps.registerBuy(new BuyData(getId(), num, this));
+            ps.registerBuy(new BuyData(vd,getId(), num, this));
     }
 
     @Override
