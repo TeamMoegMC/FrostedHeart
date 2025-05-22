@@ -12,5 +12,6 @@
   "min_grow": 18.0,
   "min_skylight": 6,
   "min_survive": 10.0,
-  "snow_vulnerable": false
+  "snow_vulnerable": false,
+  "will_die": false
 }

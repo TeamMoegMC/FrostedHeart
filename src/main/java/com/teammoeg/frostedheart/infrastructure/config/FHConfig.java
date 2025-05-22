@@ -185,7 +185,6 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Boolean> enableScenario;
         //public final ForgeConfigSpec.ConfigValue<Boolean> enableAutoRestart;
         public final ForgeConfigSpec.ConfigValue<Boolean> enableUpdateReminder;
-        public final ForgeConfigSpec.ConfigValue<Boolean> enablePlayerPooping;
 
         Common(ForgeConfigSpec.Builder builder) {
             builder.push("Weather Forecast");
@@ -227,9 +226,6 @@ public class FHConfig {
             enableScenario = builder
                     .comment("Enables the scenario system. ")
                     .define("enableScenario", true);
-            enablePlayerPooping = builder
-                    .comment("Enables the pooping mechanic through shifting.")
-                    .define("enablePlayerPooping", true);
             builder.pop();
             builder.push("AutoUpdate");
             /*enableAutoRestart=builder.comment("Enable automatic restart if later snapshot was found, DONT TOUCH UNLESS INSTRUCTED BY DEV TEAM.")
@@ -289,6 +285,9 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> nutritionConsumptionRate;
         public final ForgeConfigSpec.ConfigValue<Double> nutritionGainRate;
         public final ForgeConfigSpec.ConfigValue<Integer> blizzardFrequency;
+
+        public final ForgeConfigSpec.ConfigValue<Boolean> enablePlayerPooping;
+
 
         Server(ForgeConfigSpec.Builder builder) {
             builder.push("Temperature");
@@ -427,6 +426,9 @@ public class FHConfig {
             developers = builder
                     .comment("Special array of players")
                     .defineList("Player Whitelist", DEFAULT_WHITELIST, s -> true);
+            enablePlayerPooping = builder
+                    .comment("Enables the pooping mechanic through shifting.")
+                    .define("enablePlayerPooping", true);
             builder.pop();
         }
     }

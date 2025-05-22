@@ -66,12 +66,25 @@
         {
           "actions": [],
           "demand": {
+            "item": "stone_age:fat"
+          },
+          "hide_stockout": false,
+          "id": "stone_age:fat",
+          "price": 10,
+          "recover": 2.0,
+          "restock_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
             "tag": "caupona:sugar"
           },
           "hide_stockout": false,
           "id": "sugar",
-          "price": 20,
-          "recover": 1.0,
+          "price": 10,
+          "recover": 2.0,
           "restock_condition": [],
           "store": 30,
           "use_actions": []
@@ -83,8 +96,8 @@
           },
           "hide_stockout": false,
           "id": "walnut",
-          "price": 20,
-          "recover": 1.0,
+          "price": 10,
+          "recover": 2.0,
           "restock_condition": [],
           "store": 30,
           "use_actions": []
@@ -269,6 +282,17 @@
           "recover": 10.0,
           "restock_condition": [],
           "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:night_soil",
+          "price": 1,
+          "produce": "frostedheart:night_soil",
+          "recover": 4.0,
+          "restock_condition": [],
+          "store": 16,
           "use_actions": []
         },
         {

@@ -375,6 +375,42 @@ public class FHRecipeProvider extends RecipeProvider {
 		// recover: average daily recover of the need (for buying) and for saling.
 		// price: relative "value" of item
 
+		// night soil collector
+		trade().group()
+				// buys food
+				// .buy("refugee_needs", 30, 5, 3, Ingredient.of(FHTags.Items.REFUGEE_NEEDS.tag))
+				.buy("vegetables", 30, 3, 8, Ingredient.of(CPTags.Items.VEGETABLES))
+				.buy("cereals", 30, 3, 5, Ingredient.of(CPTags.Items.CEREALS))
+				.buy("cereals_baked", 30, 3, 7, Ingredient.of(CPTags.Items.BAKED))
+				.buy("eggs", 30, 1, 10, Ingredient.of(CPTags.Items.EGGS))
+				.buy(30, 2, 10, ItemSubscriber.fat.asItem())
+				.buy("sugar", 30, 2, 10, Ingredient.of(CPTags.Items.SUGAR))
+				.buy("walnut", 30, 2, 10, Ingredient.of(CPTags.Items.WALNUT))
+				// buys clothes
+				.buy(5, 0.1f, 15, FHItems.straw_lining.get())
+				.buy(5, 0.1f, 30, FHItems.buff_coat.get())
+				.buy(5, 0.1f, 60, FHItems.gambeson.get())
+				// buys processed fuel
+				.buy(64, 5, 6, IEItems.Ingredients.COAL_COKE.asItem())
+				// buys job related tools
+				.buy(3, 1, 20, Items.IRON_SWORD.asItem())
+				.buy(3, 1, 15, FHItems.BRONZE_SHOVEL.get())
+				.buy(3, .5f, 40, IEItems.Tools.STEEL_SHOVEL.asItem())
+				.buy(1, .1f, 30, FHItems.SNOWSHOES.get())
+				.buy(1, .1f, 30, FHItems.ICE_SKATES.get())
+				// sells hunting results
+				.sell(256, 32F, 1, FHItems.night_soil.asItem())
+				.sell(256, 16F, 1, FHItems.dung.asItem())
+				// sell intelligence, but slow
+				.sell(4, 0.1f, 200, FRContents.Items.intelligence.get())
+				.basic()
+				.finish()
+				.profession(VillagerProfession.SHEPHERD)
+				.levelExp(1000, 2000, 3000, 4000, 5000)
+				.weight(1)
+				.id("night_soil_collector")
+				.finish(out);
+
 		// hunting
 		trade().group()
 				// buys food
@@ -383,8 +419,9 @@ public class FHRecipeProvider extends RecipeProvider {
 				.buy("cereals", 30, 3, 5, Ingredient.of(CPTags.Items.CEREALS))
 				.buy("cereals_baked", 30, 3, 7, Ingredient.of(CPTags.Items.BAKED))
 				.buy("eggs", 30, 1, 10, Ingredient.of(CPTags.Items.EGGS))
-				.buy("sugar", 30, 1, 20, Ingredient.of(CPTags.Items.SUGAR))
-				.buy("walnut", 30, 1, 20, Ingredient.of(CPTags.Items.WALNUT))
+				.buy(30, 2, 10, ItemSubscriber.fat.asItem())
+				.buy("sugar", 30, 2, 10, Ingredient.of(CPTags.Items.SUGAR))
+				.buy("walnut", 30, 2, 10, Ingredient.of(CPTags.Items.WALNUT))
 				// buys clothes
 				.buy(5, 0.1f, 15, FHItems.straw_lining.get())
 				.buy(5, 0.1f, 30, FHItems.buff_coat.get())
@@ -410,6 +447,8 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(16, 6F, 4, Items.RABBIT)
 				.sell(8, 5F, 20, Items.CHICKEN)
 				.sell(8, 5F, 20, Items.FEATHER)
+				.sell(16, 4F, 1, FHItems.night_soil.asItem())
+				.sell(16, 8F, 1, FHItems.dung.asItem())
 				// sell intelligence, but slow
 				.sell(4, 0.1f, 200, FRContents.Items.intelligence.get())
 				.basic()
@@ -427,8 +466,9 @@ public class FHRecipeProvider extends RecipeProvider {
 				.buy("cereals", 30, 3, 5, Ingredient.of(CPTags.Items.CEREALS))
 				.buy("cereals_baked", 30, 3, 7, Ingredient.of(CPTags.Items.BAKED))
 				.buy("eggs", 30, 1, 10, Ingredient.of(CPTags.Items.EGGS))
-				.buy("sugar", 30, 1, 20, Ingredient.of(CPTags.Items.SUGAR))
-				.buy("walnut", 30, 1, 20, Ingredient.of(CPTags.Items.WALNUT))
+				.buy(30, 2, 10, ItemSubscriber.fat.asItem())
+				.buy("sugar", 30, 2, 10, Ingredient.of(CPTags.Items.SUGAR))
+				.buy("walnut", 30, 2, 10, Ingredient.of(CPTags.Items.WALNUT))
 				// buys clothes
 				.buy(5, 0.1f, 15, FHItems.straw_lining.get())
 				.buy(5, 0.1f, 30, FHItems.buff_coat.get())
@@ -454,6 +494,8 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(10, 2f, 50, Items.SEA_PICKLE)
 				.sell(10, 2f, 50, Items.KELP)
 				.sell(8, 1f, 30, ItemSubscriber.fat)
+				.sell(16, 4F, 1, FHItems.night_soil.asItem())
+				.sell(16, 8F, 1, FHItems.dung.asItem())
 				// sell intelligence, but slow
 				.sell(4, 0.1f, 200, FRContents.Items.intelligence.get())
 				.basic()
@@ -471,8 +513,9 @@ public class FHRecipeProvider extends RecipeProvider {
 				.buy("cereals", 30, 3, 5, Ingredient.of(CPTags.Items.CEREALS))
 				.buy("cereals_baked", 30, 3, 7, Ingredient.of(CPTags.Items.BAKED))
 				.buy("eggs", 30, 1, 10, Ingredient.of(CPTags.Items.EGGS))
-				.buy("sugar", 30, 1, 20, Ingredient.of(CPTags.Items.SUGAR))
-				.buy("walnut", 30, 1, 20, Ingredient.of(CPTags.Items.WALNUT))
+				.buy(30, 2, 10, ItemSubscriber.fat.asItem())
+				.buy("sugar", 30, 2, 10, Ingredient.of(CPTags.Items.SUGAR))
+				.buy("walnut", 30, 2, 10, Ingredient.of(CPTags.Items.WALNUT))
 				// buys clothes
 				.buy(5, 0.1f, 15, FHItems.straw_lining.get())
 				.buy(5, 0.1f, 30, FHItems.buff_coat.get())
@@ -491,6 +534,7 @@ public class FHRecipeProvider extends RecipeProvider {
 				.buy(3, 1, 15, FHItems.BRONZE_SHOVEL.asItem())
 				.buy(64, 10, 10, Items.TNT)
 				// sells mining results
+				.sell(16, 4F, 1, FHItems.night_soil.asItem())
 				.sell(128, 32, 3, Items.COAL)
 				.sell(128, 32, 1, Items.RAW_COPPER)
 				.sell(64, 16, 2, Items.RAW_IRON)
@@ -527,18 +571,19 @@ public class FHRecipeProvider extends RecipeProvider {
 		// explorer
 		trade().group()
 				// buys food
-				.buy("vegetables", 30, 3, 8, Ingredient.of(CPTags.Items.VEGETABLES))
-				.buy("cereals", 30, 3, 5, Ingredient.of(CPTags.Items.CEREALS))
-				.buy("cereals_baked", 30, 3, 7, Ingredient.of(CPTags.Items.BAKED))
-				.buy("eggs", 30, 1, 10, Ingredient.of(CPTags.Items.EGGS))
-				.buy("sugar", 30, 1, 20, Ingredient.of(CPTags.Items.SUGAR))
-				.buy("walnut", 30, 1, 20, Ingredient.of(CPTags.Items.WALNUT))
+				.buy("vegetables", 64, 3, 8, Ingredient.of(CPTags.Items.VEGETABLES))
+				.buy("cereals", 64, 3, 5, Ingredient.of(CPTags.Items.CEREALS))
+				.buy("cereals_baked", 64, 3, 7, Ingredient.of(CPTags.Items.BAKED))
+				.buy("eggs", 64, 1, 10, Ingredient.of(CPTags.Items.EGGS))
+				.buy(64, 2, 10, ItemSubscriber.fat.asItem())
+				.buy("sugar", 64, 2, 10, Ingredient.of(CPTags.Items.SUGAR))
+				.buy("walnut", 64, 2, 10, Ingredient.of(CPTags.Items.WALNUT))
 				// buys clothes
-				.buy(5, 0.1f, 15, FHItems.straw_lining.get())
-				.buy(5, 0.1f, 30, FHItems.buff_coat.get())
-				.buy(5, 0.1f, 60, FHItems.gambeson.get())
+				.buy(10, 0.2f, 15, FHItems.straw_lining.get())
+				.buy(10, 0.2f, 30, FHItems.buff_coat.get())
+				.buy(10, 0.2f, 60, FHItems.gambeson.get())
 				// buys processed fuel
-				.buy(64, 5, 6, IEItems.Ingredients.COAL_COKE.asItem())
+				.buy(128, 5, 6, IEItems.Ingredients.COAL_COKE.asItem())
 				// buys job related tools
 				.buy(5, .1f, 30, FHItems.SNOWSHOES.get())
 				.buy(5, .1f, 30, FHItems.ICE_SKATES.get())
@@ -548,6 +593,7 @@ public class FHRecipeProvider extends RecipeProvider {
 				.buy(5, .1f, 100, Items.MAP)
 				.buy(5, .1f, 50, Items.BOOK)
 				// sells
+				.sell(16, 4F, 1, FHItems.night_soil.asItem())
 				// rare saplings
 				.sell(1, 0.05f, 300, CRegistryHelper.getItem(CPMain.rl("walnut_sapling")))
 				.sell(1, 0.05f, 500, CRegistryHelper.getItem(CPMain.rl("fig_sapling")))

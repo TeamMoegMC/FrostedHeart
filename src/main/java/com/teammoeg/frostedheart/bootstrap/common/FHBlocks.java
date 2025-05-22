@@ -79,13 +79,17 @@ import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
 import com.tterrag.registrate.util.entry.BlockEntry;
 
 import net.minecraft.advancements.critereon.StatePropertiesPredicate;
+import net.minecraft.core.BlockPos;
 import net.minecraft.data.loot.packs.VanillaBlockLoot;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
@@ -125,13 +129,20 @@ public class FHBlocks {
         return register(name, block, name, item);
     }
 
+    private static boolean never(BlockState state, BlockGetter getter, BlockPos pos) {
+        return false;
+    }
+
     static {
         REGISTRATE.setCreativeTab(FHTabs.NATURAL_BLOCKS);
     }
 
     // thin_ice
     public static final BlockEntry<ThinIceBlock> THIN_ICE_BLOCK = REGISTRATE.block("thin_ice", ThinIceBlock::new)
-            .initialProperties(() -> Blocks.ICE)
+            .properties(p -> p.mapColor(MapColor.ICE).friction(0.98F).randomTicks()
+                    .strength(0.25F).sound(SoundType.GLASS).noOcclusion()
+                    .isValidSpawn((state, getter, pos, type) -> type == EntityType.POLAR_BEAR)
+                    .isRedstoneConductor(FHBlocks::never))
             .tag(BlockTags.ICE, BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .tag(BlockTags.MINEABLE_WITH_PICKAXE)
             .blockstate(FHBlockStateGen.simpleCubeAllRandom("thin_ice", 5, true))
@@ -142,7 +153,10 @@ public class FHBlocks {
             .build()
             .register();
     public static final BlockEntry<Block> FIRM_ICE_BLOCK = REGISTRATE.block("firm_ice", Block::new)
-            .properties(p -> p.mapColor(MapColor.ICE).friction(0.98F).randomTicks().strength(0.5F).sound(SoundType.GLASS))
+            .properties(p -> p.mapColor(MapColor.SNOW).friction(0.989F).randomTicks()
+                    .strength(4.0F).sound(SoundType.GLASS)
+                    .isValidSpawn((state, getter, pos, type) -> type == EntityType.POLAR_BEAR)
+                    .isRedstoneConductor(FHBlocks::never))
             .blockstate(FHBlockStateGen.existed())
             .tag(BlockTags.ICE, BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .tag(BlockTags.MINEABLE_WITH_PICKAXE)
@@ -316,7 +330,7 @@ public class FHBlocks {
 
     // layered thin ice
     public static final BlockEntry<LayeredThinIceBlock> LAYERED_THIN_ICE = REGISTRATE.block("layered_thin_ice", LayeredThinIceBlock::new)
-            .initialProperties(() -> ICE)
+            .initialProperties(() -> FHBlocks.THIN_ICE_BLOCK.get())
             .properties((p) -> p.forceSolidOn())
             .tag(BlockTags.MINEABLE_WITH_SHOVEL)
             .tag(BlockTags.MINEABLE_WITH_PICKAXE)

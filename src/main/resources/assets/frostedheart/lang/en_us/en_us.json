@@ -95,6 +95,7 @@
   "gui.frostedheart.trade.profession.frostedheart:ocean_hunter": "Ocean Hunter",
   "gui.frostedheart.trade.profession.frostedheart:miner": "Miner",
   "gui.frostedheart.trade.profession.frostedheart:explorer": "Explorer",
+  "gui.frostedheart.trade.profession.frostedheart:night_soil_collector": "Night Soil Collector",
   "gui.frostedheart.trade.relation": "Relation:",
   "gui.frostedheart.trade.relation.beneficial_trade": "Dealt a trade benefits them",
   "gui.frostedheart.trade.relation.charm": "Charming",
@@ -217,8 +218,8 @@
   "message.frostedheart.trade.bad_relation": "You are not welcomed.",
   "message.frostedheart.trade.normal_relation": "You are back.",
   "message.frostedheart.trade.great_relation": "Great to see you.",
-  "message.frostedheart.trade.no_home": "It has been almost impossible for me to work - I have no place to sleep.",
-  "message.frostedheart.trade.low_temp": "It has been hard for me to work - I am cold.",
+  "message.frostedheart.trade.no_home": "If I can have a home, a bed, then I can go out to seek resources.",
+  "message.frostedheart.trade.low_temp": "If you can find me a warm dwelling place, it would ease resource collection.",
   "message.frostedheart.wanted_foods": "Today I wants to eat...",
   "message.frostedheart.restarting": "§a[AutoRestart]§cServer to be restarted in %s minutes to update, be hold!",
   "message.frostedheart.refreshed": "You feel refreshed!",
@@ -351,5 +352,8 @@
   "gui.frostedheart.wheel_menu.selection.clothing": "View Clothing",
   "gui.frostedheart.wheel_menu.selection.debug": "Open Debug Menu",
   "waypoint.frostedheart.quick_waypoint": "Create Quick Waypoint",
-  "waypoint.frostedheart.del_quick_waypoint": "Delete Quick Waypoint"
+  "waypoint.frostedheart.del_quick_waypoint": "Delete Quick Waypoint",
+  "tooltip.frostedheart.fertilizer.basic": "Basic Fertilizer",
+  "tooltip.frostedheart.fertilizer.advanced": "Advanced Fertilizer",
+  "tooltip.frostedheart.fertilizer.ultimate": "Modern Fertilizer"
 }

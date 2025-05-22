@@ -96,32 +96,36 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
                     fh$data.update((ServerLevel) super.level(), playerIn);
                     RelationList list = fh$data.getRelationShip(playerIn);
                     int unknownLanguage = list.get(RelationModifier.UNKNOWN_LANGUAGE);
-                    if (list.sum() < TradeConstants.RELATION_TO_TRADE) {
+
+                    // conversation
+                    if (unknownLanguage < 0) {
                         this.setUnhappy();
-                        if (unknownLanguage < 0) {
-                            playerIn.displayClientMessage(Lang.translateMessage("trade.language_barrier"), false);
-                        } else {
-                            playerIn.displayClientMessage(Lang.translateMessage("trade.bad_relation"), false);
-                        }
-                    } else if (list.sum() < TradeConstants.RELATION_TO_BARGAIN) {
-                        playerIn.displayClientMessage(Lang.translateMessage("trade.normal_relation"), false);
+                        playerIn.displayClientMessage(Lang.translateMessage("trade.language_barrier"), false);
                     } else {
-                        playerIn.displayClientMessage(Lang.translateMessage("trade.great_relation"), false);
-                    }
-                    Brain<Villager> brain = getThis().getBrain();
-                    boolean hasHome = brain.hasMemoryValue(MemoryModuleType.HOME);
-                    if (!hasHome) {
-                        this.setUnhappy();
-                        playerIn.displayClientMessage(Lang.translateMessage("trade.no_home"), false);
-                    }
-                    else {
-                        float t = WorldTemperature.block(getThis().level(), getThis().blockPosition());
-                        if (t < 0) {
+                        if (list.sum() < TradeConstants.RELATION_TO_TRADE) {
                             this.setUnhappy();
-                            playerIn.displayClientMessage(Lang.translateMessage("trade.low_temp"), false);
+                            playerIn.displayClientMessage(Lang.translateMessage("trade.bad_relation"), false);
+                        } else if (list.sum() < TradeConstants.RELATION_TO_BARGAIN) {
+                            playerIn.displayClientMessage(Lang.translateMessage("trade.normal_relation"), false);
+                        } else {
+                            playerIn.displayClientMessage(Lang.translateMessage("trade.great_relation"), false);
+                        }
+                        Brain<Villager> brain = getThis().getBrain();
+                        boolean hasHome = brain.hasMemoryValue(MemoryModuleType.HOME);
+                        if (!hasHome) {
+                            this.setUnhappy();
+                            playerIn.displayClientMessage(Lang.translateMessage("trade.no_home"), false);
+                        }
+                        else {
+                            float t = WorldTemperature.block(getThis().level(), getThis().blockPosition());
+                            if (t < TradeConstants.TOO_COLD_RECOVER_TEMP) {
+                                this.setUnhappy();
+                                playerIn.displayClientMessage(Lang.translateMessage("trade.low_temp"), false);
+                            }
                         }
                     }
 
+                    // always open screen though
                     playerIn.awardStat(Stats.TALKED_TO_VILLAGER);
                     setTradingPlayer(playerIn);
                     TradeHandler.openTradeScreen((ServerPlayer) playerIn, fh$data);

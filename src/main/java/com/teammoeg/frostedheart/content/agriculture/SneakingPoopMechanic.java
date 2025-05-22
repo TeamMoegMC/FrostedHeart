@@ -20,7 +20,7 @@ import net.minecraftforge.fml.common.Mod;
 public class SneakingPoopMechanic {
 
     private static final int EFFECT_DURATION = 12000; // 10 minutes (20 ticks * 60 seconds * 10 minutes)
-    private static final int POOP_DURATION = 200;
+    private static final int POOP_DURATION = 400;
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (false&&event.phase == TickEvent.Phase.END) {
@@ -33,7 +33,7 @@ public class SneakingPoopMechanic {
             }
 
             // Check if player is sneaking
-            if (FHConfig.COMMON.enablePlayerPooping.get() && !player.isCreative() && !player.isSpectator() && player.isShiftKeyDown()) {
+            if (FHConfig.SERVER.enablePlayerPooping.get() && !player.isCreative() && !player.isSpectator() && player.isShiftKeyDown()) {
                 // First check if player already has the Refreshed effect
                 // If yes, don't allow pooping
                 if (player.hasEffect(FHMobEffects.REFRESHED.get())) {

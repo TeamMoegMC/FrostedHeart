@@ -30,6 +30,7 @@ import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.io.Writeable;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
+import com.teammoeg.frostedheart.content.trade.TradeConstants;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 
 import net.minecraft.network.FriendlyByteBuf;
@@ -39,8 +40,6 @@ import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.npc.Villager;
 
 public abstract class BaseData implements Writeable {
-    public static final int NO_HOME_RECOVER_PUNISHEMENT_DIVISOR = 6;
-    public static final int TEMPERATURE_RECOVER_DIVISOR = 3;
     private String id;
     public int maxstore;
     float recover;
@@ -144,17 +143,17 @@ public abstract class BaseData implements Writeable {
                 // Does it *have* a home (claimed bed)?
                 boolean hasHome = brain.hasMemoryValue(MemoryModuleType.HOME);
                 if (!hasHome) {
-                    actualRecover /= NO_HOME_RECOVER_PUNISHEMENT_DIVISOR;
+                    actualRecover /= TradeConstants.NO_HOME_RECOVER_PUNISHEMENT_DIVISOR;
                 } else {
                     float t = WorldTemperature.block(v.level(), v.blockPosition());
-                    if (t < 0) {
-                        actualRecover /= TEMPERATURE_RECOVER_DIVISOR;
+                    if (t < TradeConstants.TOO_COLD_RECOVER_TEMP) {
+                        actualRecover /= TradeConstants.TEMPERATURE_RECOVER_DIVISOR;
                     }
                 }
             }
             // other types are all wandering, very slow!
             else {
-                actualRecover /= NO_HOME_RECOVER_PUNISHEMENT_DIVISOR;
+                actualRecover /= TradeConstants.NO_HOME_RECOVER_PUNISHEMENT_DIVISOR;
             }
 
 
