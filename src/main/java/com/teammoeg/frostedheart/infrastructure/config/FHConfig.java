@@ -64,7 +64,7 @@ public class FHConfig {
         public final ForgeConfigSpec.IntValue infraredViewUBOOffset;
         public final ForgeConfigSpec.IntValue wheelMenuRadius;
         public final ForgeConfigSpec.BooleanValue enableTooltips;
-
+        public final ForgeConfigSpec.BooleanValue enableShaderPackCompat;
         Client(ForgeConfigSpec.Builder builder) {
             builder.push("Frosted HUD");
             enableUI = builder
@@ -163,6 +163,8 @@ public class FHConfig {
             builder.push("other");
             enableTooltips = builder.comment("Enable item tooltips")
                     .define("enableTooltips", true);
+            enableShaderPackCompat = builder.comment("Enables shaderpack compatibility module, switch this off if your shader does not load correctly")
+            		.define("enableShaderCompatibility", true);
         }
 
         public int getScenarioScale() {

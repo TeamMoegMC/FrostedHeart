@@ -45,6 +45,7 @@ import com.teammoeg.frostedheart.content.utility.seld.SledModel;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.client.FHScreens;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
@@ -56,9 +57,11 @@ import com.teammoeg.frostedheart.content.climate.particle.SteamParticle;
 import com.teammoeg.frostedheart.content.climate.particle.WetSteamParticle;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
+import com.teammoeg.frostedheart.util.mixin.ShaderCompatHelper;
 import com.teammoeg.frostedresearch.gui.InsightOverlay;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.EntityRenderersEvent.AddLayers;
@@ -111,6 +114,9 @@ public class FHClientEventsMod {
 				.andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))
 				.andThen(TooltipModifier.mapNull(KineticStats.create(item)));
 		});
+        ShaderCompatHelper.use(Blocks.SNOW)
+        .add(FHBlocks.BESNOWED_TWIGS)
+        .add(FHBlocks.BESNOWED_DEBRIS);
 		// FHTooltips.registerTooltipModifiers();
         /*
          ItemBlockRenderTypes.setRenderLayer(FHBlocks.RYE_BLOCK.get(), RenderType.cutout());

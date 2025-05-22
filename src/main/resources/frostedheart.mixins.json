@@ -75,7 +75,8 @@
     "minecraft.trade.ResetProfession_DisableVanillaProfession",
     "minecraft.trade.VillagerMixin",
     "registrate.RegistrateBlockLootTablesMixin_RemoveExisted",
-    "tetra.MixinToolbeltInventory"
+    "tetra.MixinToolbeltInventory",
+    "drawer.ControllerBlockEntityMixin"
   ],
   "client": [
     "client.BossHealthOverlayAccess",
@@ -96,7 +97,8 @@
     "client.create.ClientEventsMixin",
     "create.MixinOpenConfigButtonHandler",
     "minecraft.water.LocalPlayerMixin",
-    "oculus.IrisRenderingPipelineAccess"
+    "oculus.IrisRenderingPipelineAccess",
+    "oculus.IdMapMixin_AddModdedBlocksAutomatically"
   ],
   "injectors": {
     "defaultRequire": 1
