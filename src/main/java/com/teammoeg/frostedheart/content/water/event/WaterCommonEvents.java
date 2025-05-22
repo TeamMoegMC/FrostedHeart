@@ -54,7 +54,11 @@ public class WaterCommonEvents {
     @SubscribeEvent
     public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
         //Common capabilities
-        event.addCapability(FHMain.rl("water_level"), FHCapabilities.PLAYER_WATER_LEVEL.provider());
+        if (event.getObject() instanceof ServerPlayer player) {
+            if (!(player instanceof FakePlayer)) {
+                event.addCapability(FHMain.rl("water_level"), FHCapabilities.PLAYER_WATER_LEVEL.provider());
+            }
+        }
     }
 
     @SubscribeEvent

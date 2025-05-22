@@ -86,10 +86,11 @@ public class HealthCommonEvents {
 			ServerPlayer player = (ServerPlayer) event.getObject();
 			if (!(player instanceof FakePlayer)) {
 				event.addCapability(FHMain.rl("wanted_food"), FHCapabilities.WANTED_FOOD.provider());
+				// Common capabilities
+				event.addCapability(FHMain.rl("nutrition"), FHCapabilities.PLAYER_NUTRITION.provider());
 			}
 		}
-		// Common capabilities
-		event.addCapability(FHMain.rl("nutrition"), FHCapabilities.PLAYER_NUTRITION.provider());
+
 	}
 
 	@SubscribeEvent
