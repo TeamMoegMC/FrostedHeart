@@ -216,8 +216,8 @@ public class TradeBuilder implements FinishedRecipe {
          * @param val  the value
          * @return returns self
          */
-        public ConditionBuilder<T> hasFlag(String flag, int val) {
-            return condition(new FlagValueCondition(flag, val));
+        public ConditionBuilder<T> flagValue(String flag) {
+            return condition(new FlagValueCondition(flag));
         }
 
         /**
@@ -228,17 +228,6 @@ public class TradeBuilder implements FinishedRecipe {
          */
         public ConditionBuilder<T> hasNoFlag(String flag) {
             return not(new WithFlagCondition(flag));
-        }
-
-        /**
-         * Require flag value not equal.<br>
-         *
-         * @param flag flag name
-         * @param val  the value
-         * @return returns self
-         */
-        public ConditionBuilder<T> hasNoFlag(String flag, int val) {
-            return not(new FlagValueCondition(flag, val));
         }
 
         /**
@@ -486,6 +475,9 @@ public class TradeBuilder implements FinishedRecipe {
          */
         public ConditionBuilder<GroupBuilder> restocksBy() {
             return new ConditionBuilder<>(lastAction.restockconditions::add, this);
+        }
+        public ConditionBuilder<GroupBuilder> sellsWhen() {
+            return new ConditionBuilder<>(lastAction.sellconditions::add, this);
         }
 
         /**

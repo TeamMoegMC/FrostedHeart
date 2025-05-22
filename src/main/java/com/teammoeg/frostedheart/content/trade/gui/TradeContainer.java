@@ -144,7 +144,7 @@ public class TradeContainer extends AbstractContainerMenu {
         relations = new RelationList();
         relations.read(pb);
         policy = data.getPolicy();
-        policy.fetchTrades(data.storage);
+        policy.fetchTrades(data,data.storage);
         if(relations.sum()<=TradeConstants.RELATION_TO_TRADE) {//Not selling anything if bad relations
         	policy.getSells().clear();
         }
@@ -374,7 +374,7 @@ public class TradeContainer extends AbstractContainerMenu {
         relations = data.getRelationShip(pe);
         
         	policy = data.getPolicy();
-        	policy.fetchTrades(data.storage);
+        	policy.fetchTrades(data,data.storage);
         if(relations.sum()<=TradeConstants.RELATION_TO_TRADE) {//Not selling anything if bad relations
         	policy.getSells().clear();
         }
@@ -434,7 +434,7 @@ public class TradeContainer extends AbstractContainerMenu {
         this.data.deserializeFromRecv(sdata);
         this.pld.deserialize(splayer);
         policy = data.getPolicy();
-        policy.fetchTrades(data.storage);
+        policy.fetchTrades(data,data.storage);
         relations.copy(rels);
         if(relations.sum()<=TradeConstants.RELATION_TO_TRADE) {//Not selling anything if bad relations
         	policy.getSells().clear();

@@ -34,7 +34,7 @@ public class PolicySnapshot {
         }
 
         @Override
-        public void fetchTrades(Map<String, Float> data) {
+        public void fetchTrades(FHVillagerData vd,Map<String, Float> data) {
         }
 
         @Override
@@ -50,8 +50,8 @@ public class PolicySnapshot {
         this.data.values().forEach(t -> t.tick(deltaDays, data));
     }
 
-    public void fetchTrades(Map<String, Float> data) {
-        this.data.values().forEach(t -> t.fetch(this, data));
+    public void fetchTrades(FHVillagerData vd,Map<String, Float> data) {
+        this.data.values().forEach(t -> t.fetch(this,vd, data));
     }
 
     public List<BuyData> getBuys() {

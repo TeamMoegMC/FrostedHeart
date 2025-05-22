@@ -48,8 +48,8 @@ public class ExtendPolicyGroup extends PolicyGroup {
     }
 
     @Override
-    public void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve) {
-        TradePolicy.policies.get(ref).CollectPolicies(policy, ve);
+    public void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve,int num) {
+        TradePolicy.policies.get(ref).CollectPolicies(policy, ve,num);
     }
 
     @Override

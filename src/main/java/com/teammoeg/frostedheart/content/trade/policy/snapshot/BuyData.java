@@ -29,16 +29,17 @@ public class BuyData {
     String id;
     int store;
     DemandData bd;
-
-    public BuyData(String id, int store, DemandData bd) {
+    int canRestock;
+    public BuyData(FHVillagerData vd,String id, int store, DemandData bd) {
         super();
         this.id = id;
         this.store = store;
         this.bd = bd;
+        canRestock=bd.canRestock(vd);
     }
 
-    public boolean canRestock(FHVillagerData data) {
-        return bd.canRestock(data);
+    public int canRestock(FHVillagerData data) {
+        return canRestock;
     }
 
     public Ingredient getItem() {

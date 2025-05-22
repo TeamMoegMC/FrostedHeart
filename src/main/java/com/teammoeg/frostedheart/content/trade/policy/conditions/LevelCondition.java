@@ -49,8 +49,8 @@ public class LevelCondition implements PolicyCondition {
     }
 
     @Override
-    public boolean test(FHVillagerData ve) {
-        return ve.getTradeLevel() >= level;
+    public int test(FHVillagerData ve) {
+        return ve.getTradeLevel() >= level?Integer.MAX_VALUE:0;
     }
 
     @Override

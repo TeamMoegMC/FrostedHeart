@@ -24,6 +24,7 @@ import java.util.Map;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.chorda.io.SerializeUtil;
+import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
 
@@ -50,11 +51,11 @@ public class ProductionData extends BaseData {
     }
 
     @Override
-    public void fetch(PolicySnapshot ps, Map<String, Float> data) {
+    public void fetch(PolicySnapshot ps,FHVillagerData vd, Map<String, Float> data) {
 
-        int num = (int) (float) data.getOrDefault(getId(), 0f);
+        int num = Math.min((int) (float) data.getOrDefault(getId(), 0f), this.sellconditions.stream().mapToInt(c->c.test(vd)).reduce(Integer.MAX_VALUE,Math::min));
         if (!hideStockout || num > 0)
-            ps.registerSell(new SellData(getId(), num, this));
+            ps.registerSell(new SellData(vd,getId(), num, this));
     }
 
     @Override

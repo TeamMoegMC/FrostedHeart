@@ -367,7 +367,7 @@ public class TradeScreen extends BaseScreen implements ScreenAcceptor {
                     sds[j] = sd;
                     FakeSlot slot = slots[j++];
                     if (sd.getStore() == 0) {
-                        if (sd.canRestock(cx.data)) {
+                        if (sd.canRestock(cx.data)>0) {
                             slot.setOverlay(TradeIcons.STOCKOUT, 7, 6);
                             slot.setTooltip(c -> c.add(Lang.translateGui("trade.no_stock").withStyle(ChatFormatting.RED)));
                         } else {
@@ -378,7 +378,7 @@ public class TradeScreen extends BaseScreen implements ScreenAcceptor {
                         if (sd.isFullStock()) {
                             slot.setOverlay(TradeIcons.FULL, 7, 6);
                             slot.setTooltip(c -> c.add(Lang.translateGui("trade.full_stock").withStyle(ChatFormatting.GREEN)));
-                        } else if (sd.canRestock(cx.data)) {
+                        } else if (sd.canRestock(cx.data)>0) {
                             slot.setOverlay(TradeIcons.RESTOCKS, 7, 6);
                             slot.setTooltip(c -> c.add(Lang.translateGui("trade.restocking").withStyle(ChatFormatting.YELLOW)));
                         } else {
