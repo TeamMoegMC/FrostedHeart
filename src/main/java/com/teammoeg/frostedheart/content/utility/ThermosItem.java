@@ -55,7 +55,7 @@ import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.tags.ITag;
 
-public class ThermosItem extends DurableDrinkContainerItem implements ITempAdjustFood,ICreativeModeTabItem {
+public class ThermosItem extends DurableDrinkContainerItem implements ICreativeModeTabItem {
     final boolean doAddItems;
 
     public ThermosItem(int capacity, boolean add) {
@@ -103,29 +103,29 @@ public class ThermosItem extends DurableDrinkContainerItem implements ITempAdjus
         return SoundEvents.GENERIC_DRINK;
     }
 
-    @Override
-    public float getHeat(ItemStack is, float env) {
-        LazyOptional<IFluidHandlerItem> ih = FluidUtil.getFluidHandler(is);
-        if (ih.isPresent()) {
-            IFluidHandlerItem f = ih.resolve().get();
-            FluidStack fs = f.getFluidInTank(0);
-            if (!fs.isEmpty()) {
-                return DrinkTempData.getDrinkHeat(fs);
-            }
-        }
-        return 0;
-    }
+//    @Override // TODO: Create a Heating Mob Effect instead
+//    public float getHeat(ItemStack is, float env) {
+//        LazyOptional<IFluidHandlerItem> ih = FluidUtil.getFluidHandler(is);
+//        if (ih.isPresent()) {
+//            IFluidHandlerItem f = ih.resolve().get();
+//            FluidStack fs = f.getFluidInTank(0);
+//            if (!fs.isEmpty()) {
+//                return DrinkTempData.getDrinkHeat(fs);
+//            }
+//        }
+//        return 0;
+//    }
 
-    @Override
-    public float getMaxTemp(ItemStack is) {
-        return 1;
-    }
+//    @Override
+//    public float getMaxTemp(ItemStack is) {
+//        return 1;
+//    }
 
 
-    @Override
-    public float getMinTemp(ItemStack is) {
-        return -1;
-    }
+//    @Override
+//    public float getMinTemp(ItemStack is) {
+//        return -1;
+//    }
 
     @Override
     public boolean isEnchantable(ItemStack stack) {
