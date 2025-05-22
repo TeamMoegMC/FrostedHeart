@@ -48,5 +48,11 @@ public class FHManual {
             builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator_t2"));
             man.addEntry(CATEGORY, builder.create(), 1);
         }
+        {
+            ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
+            builder.addSpecialElement(new ManualEntry.SpecialElementData("heat_radiator", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.RADIATOR)));
+            builder.readFromFile(new ResourceLocation(FHMain.MODID, "heat_radiator"));
+            man.addEntry(CATEGORY, builder.create(), 1);
+        }
     }
 }
