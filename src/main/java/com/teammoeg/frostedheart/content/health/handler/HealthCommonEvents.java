@@ -82,14 +82,18 @@ public class HealthCommonEvents {
 
 	@SubscribeEvent
 	public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
-		if (event.getObject() instanceof ServerPlayer) {// server-side only capabilities
-			ServerPlayer player = (ServerPlayer) event.getObject();
+		if (event.getObject() instanceof Player player) {
 			if (!(player instanceof FakePlayer)) {
-				event.addCapability(FHMain.rl("wanted_food"), FHCapabilities.WANTED_FOOD.provider());
 				// Common capabilities
 				event.addCapability(FHMain.rl("nutrition"), FHCapabilities.PLAYER_NUTRITION.provider());
+				// Server only
+				if (player instanceof ServerPlayer) {
+					event.addCapability(FHMain.rl("wanted_food"), FHCapabilities.WANTED_FOOD.provider());
+				}
 			}
 		}
+
+
 
 	}
 

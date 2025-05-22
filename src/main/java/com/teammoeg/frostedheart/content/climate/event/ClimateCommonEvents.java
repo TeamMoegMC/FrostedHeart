@@ -118,7 +118,7 @@ public class ClimateCommonEvents {
     @SubscribeEvent
     public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
         // Common capabilities
-        if (event.getObject() instanceof ServerPlayer player) {
+        if (event.getObject() instanceof Player player) {
             if (!(player instanceof FakePlayer)) {
                 event.addCapability(new ResourceLocation(FHMain.MODID, "temperature"), FHCapabilities.PLAYER_TEMP.provider());
             }
