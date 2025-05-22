@@ -24,13 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.lwjgl.opengl.GL11;
-
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.ui.AtlasUV;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
@@ -1004,6 +998,6 @@ public class FrostedHud {
             });
         }
 
-        CGuiHelper.drawStrings(stack, font, lines, 1, 12, ColorHelper.CYAN, 10, true, true);
+        CGuiHelper.drawStringLines(stack, font, lines, 1, 12, ColorHelper.CYAN, 10, true, true);
     }
 }

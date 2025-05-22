@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.wheelmenu;
 
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.stream.JsonReader;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -41,6 +40,7 @@ import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.content.tips.TipRenderer;
+import com.teammoeg.frostedheart.content.tips.client.gui.archive.Alignment;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FGuis;
 import lombok.Getter;
@@ -180,7 +180,7 @@ public class WheelMenuRenderer {
 		var message = hoveredSelection != null ? hoveredSelection.getMessage() : Component.translatable("gui.frostedheart.wheel_menu.message",
 				FHKeyMappings.key_openWheelMenu.get().getKey().getDisplayName());
 		var lines = font.split(message, (int) (innerRadius * 2 - 16));
-		CGuiHelper.drawCenteredStrings(graphics, font, lines, 0, -lines.size() * 5, ColorHelper.CYAN, 10, true, true);
+		CGuiHelper.drawStringLines(graphics, font, lines, 0, -lines.size() * 5, ColorHelper.CYAN, 10, true, true, Alignment.CENTER);
 		pose.popPose();
 	}
 

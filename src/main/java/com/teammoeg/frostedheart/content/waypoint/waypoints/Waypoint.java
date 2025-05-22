@@ -84,7 +84,7 @@ public class Waypoint extends AbstractWaypoint {
         pose.mulPose(new Quaternionf().rotateZ(Mth.PI/4));
         if (focus) {
             pose.scale(1.5F, 1.5F, 1.5F);
-            CGuiHelper.renderIcon(pose, focusIcon, -5, -5, color);
+            focusIcon.render(pose, -5, -5, color);
             //focus的动画效果
             float progress = AnimationUtil.fadeIn(750, "waypoints" + id, false);
             if (progress == 1 && AnimationUtil.progress(750, "waypoint2" + id, false) == 1) {
@@ -95,7 +95,7 @@ public class Waypoint extends AbstractWaypoint {
             pose.scale(progress+0.25F, progress+0.25F, progress+0.25F);
             graphics.fill(-5, -5, 5, 5, fadeColor);
         } else {
-            CGuiHelper.renderIcon(pose, icon, -5, -5, color);
+            icon.render(pose, -5, -5, color);
         }
         pose.popPose();
     }

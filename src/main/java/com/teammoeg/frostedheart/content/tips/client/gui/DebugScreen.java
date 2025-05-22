@@ -19,11 +19,14 @@
 
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
-import com.simibubi.create.foundation.config.ui.BaseConfigScreen;
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.chorda.client.StringTextComponentParser;
+import com.teammoeg.chorda.client.cui.CUIScreen;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.content.tips.Popup;
 import com.teammoeg.frostedheart.content.tips.TipManager;
+import com.teammoeg.frostedheart.content.tips.client.gui.archive.Alignment;
+import com.teammoeg.frostedheart.content.tips.client.gui.archive.ArchiveScreen;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.ColumbiatWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.SunStationWaypoint;
@@ -66,7 +69,7 @@ public class DebugScreen extends Screen {
     public void init() {
         super.init();
         buttons.clear();
-        var input = addRenderableWidget(new EditBox(ClientUtils.font(), 10, 50, 80, 12, Component.literal("input")));
+        var input = addRenderableWidget(new EditBox(ClientUtils.font(), ClientUtils.screenCenterX() - 60, ClientUtils.screenCenterY() + 20, 120, 12, Component.literal("input")));
         input.setMaxLength(1024);
 
         addButton(IconButton.Icon.CROSS, ColorHelper.CYAN, "Clear Tip Render Queue", (b) ->
@@ -121,7 +124,8 @@ public class DebugScreen extends Screen {
     // 方便热重载debug
     private String debug() {
         if (this.minecraft != null) {
-            var config = new BaseConfigScreen(this, FHMain.MODID);
+//            var config = new BaseConfigScreen(this, FHMain.MODID);
+            var config = new CUIScreen(new ArchiveScreen());
             this.minecraft.setScreen(config);
         }
         Popup.clear();

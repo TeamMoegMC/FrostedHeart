@@ -37,18 +37,14 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraftforge.common.util.Size2i;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,7 +82,7 @@ public class TipWidget extends AbstractWidget {
         this.linkButton = new IconButton(0, 0, IconButton.Icon.JUMP, ColorHelper.CYAN, Lang.gui("link").component(),
                 b -> {
                     if (tip != null && tip.hasClickAction()) {
-                        TipClickActions.run(tip.getClickAction(), tip.getClickActionContent());
+                        TipClickActions.run(tip.getClickAction(), I18n.get(tip.getClickActionContent()));
                     }
                 });
         this.visible = false;
@@ -211,8 +207,8 @@ public class TipWidget extends AbstractWidget {
         }
 
         // 标题和内容
-        CGuiHelper.drawStrings(graphics, ClientUtils.font(), context.titleLines, getX(), getY(), context.fontColor, RenderContext.LINE_SPACE, false, false);
-        CGuiHelper.drawStrings(graphics, ClientUtils.font(), context.contentLines, getX(), getY()+6 + (context.titleLines.size() * RenderContext.LINE_SPACE), context.fontColor, RenderContext.LINE_SPACE, false, false);
+        CGuiHelper.drawStringLines(graphics, ClientUtils.font(), context.titleLines, getX(), getY(), context.fontColor, RenderContext.LINE_SPACE, false, false);
+        CGuiHelper.drawStringLines(graphics, ClientUtils.font(), context.contentLines, getX(), getY()+6 + (context.titleLines.size() * RenderContext.LINE_SPACE), context.fontColor, RenderContext.LINE_SPACE, false, false);
 
         pose.popPose();
         graphics.setColor(1, 1, 1, 1);
@@ -322,7 +318,7 @@ public class TipWidget extends AbstractWidget {
 
         RenderContext(Tip tip) {
             this.tip = tip;
-            originalImageSize = getImgSize(tip.getImage());
+            originalImageSize = ClientUtils.getImgSize(tip.getImage());
         }
 
         void update() {
@@ -402,23 +398,6 @@ public class TipWidget extends AbstractWidget {
 
             imageSize = new Size2i(imgW, imgH);
             size = new Size2i(width, height + imageSize.height);
-        }
-
-        Size2i getImgSize(ResourceLocation location) {
-            if (location != null) {
-                var resource = ClientUtils.getMc().getResourceManager().getResource(location);
-                if (resource.isPresent()) {
-                    try (InputStream stream = resource.get().open()) {
-                        BufferedImage image= ImageIO.read(stream);
-                        hasImage = true;
-                        return new Size2i(image.getWidth(), image.getHeight());
-                    } catch (IOException ignored) {
-                    }
-                }
-            }
-
-            hasImage = false;
-            return new Size2i(0, 0);
         }
     }
 

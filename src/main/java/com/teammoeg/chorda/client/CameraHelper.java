@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 
 import net.minecraft.client.Camera;
@@ -63,11 +64,11 @@ public class CameraHelper {
         }
 
         // 视图矩阵
-        // 下面的代码来自 (https://github.com/LouisQuepierts/ThatSkyInteractions/blob/teacon-jiachen/src/main/java/net/quepierts/thatskyinteractions/client/gui/layer/World2ScreenWidgetLayer.java)
+        // 下面的代码参考自 (https://github.com/LouisQuepierts/TaaaaaaaaahatSkyInteractions/blob/teacon-jiachen/src/main/java/net/quepierts/thatskyinteractions/client/gui/layer/World2ScreenWidgetLayer.java)
         Matrix4f viewMatrix = new Matrix4f()
                 .rotation(cameraRotation)
                 .translate(getCameraPos().subtract(worldPos).reverse().toVector3f());
-        result = new Vector4f().mul(new Matrix4f(projectionMatrix).mul(viewMatrix));
+        result = new Vector4f().mul(projectionMatrix.mul(viewMatrix, new Matrix4f()));
 
         float screenX = (result.x / result.z * 0.5F + 0.5F) * screenWidth;
         float screenY = (1.0F - (result.y / result.z * 0.5F + 0.5F)) * screenHeight;
@@ -81,21 +82,14 @@ public class CameraHelper {
     public static boolean isPosInFrustum(Vec3 pos) {
         if (frustum == null) return false;
         Vec3 cameraPos = getCameraPos();
-        AABB pointAABB;
 
         double distance = cameraPos.distanceTo(pos);
-        if (distance > 512) {
-            double x = (pos.x() - cameraPos.x) / distance;
-            double y = (pos.y() - cameraPos.y) / distance;
-            double z = (pos.z() - cameraPos.z) / distance;
+        double x = (pos.x() - cameraPos.x) / distance;
+        double y = (pos.y() - cameraPos.y) / distance;
+        double z = (pos.z() - cameraPos.z) / distance;
+        AABB pointAABB = new AABB(x, y, z, x, y, z);
 
-            pointAABB = new AABB(x, y, z, x, y, z);
-            frustum.prepare(0,0, 0);
-        } else {
-            pointAABB = new AABB(pos.x(), pos.y(), pos.z(), pos.x(), pos.y(), pos.z());
-            frustum.prepare(cameraPos.x, cameraPos.y, cameraPos.z);
-        }
-
+        frustum.prepare(0,0, 0);
         return frustum.isVisible(pointAABB);
     }
 

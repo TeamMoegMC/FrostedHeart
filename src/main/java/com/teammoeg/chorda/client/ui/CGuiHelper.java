@@ -31,9 +31,8 @@ import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.widget.IconButton;
-import com.teammoeg.chorda.lang.Components;
 
+import com.teammoeg.frostedheart.content.tips.client.gui.archive.Alignment;
 import net.minecraft.client.gui.Font;
 import org.joml.Matrix4f;
 
@@ -49,7 +48,6 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.recipebook.OverlayRecipeComponent;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
@@ -58,9 +56,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -370,84 +366,171 @@ public class CGuiHelper {
 	}
 
 	/**
-	 * 换行文本并渲染
-	 * 
-	 * @param maxWidth  单行最大宽度
-	 * @param lineSpace 行间距
-	 * @param shadow    文本阴影
-	 * @return 换行后的行数
+	 * 渲染列表中的所有文本
+	 *
+	 * @param texts		 支持 {@link FormattedCharSequence} {@link Component} {@link Object}
+	 * @param lineSpace  行间距
+	 * @param shadow     是否添加文本阴影
+	 * @param background 是否渲染背景(参考F3显示的文本)
 	 */
-	public static int drawWordWarp(GuiGraphics graphics, Font font, FormattedText text, int x, int y, int color,
-		int maxWidth, int lineSpace, boolean shadow, boolean background) {
-		List<FormattedCharSequence> texts = font.split(text, maxWidth);
-		drawStrings(graphics, font, texts, x, y, color, lineSpace, shadow, background);
-		return texts.size();
+	public static void drawStringLines(GuiGraphics graphics, Font font, List<?> texts, int x, int y,
+									   int color, int lineSpace, boolean shadow, boolean background) {
+		drawStringLines(graphics, font, texts, x, y, color, lineSpace, shadow, background, Alignment.LEFT);
 	}
 
 	/**
 	 * 渲染列表中的所有文本
-	 * 
+	 *
+	 * @param texts		 支持 {@link FormattedCharSequence} {@link Component} {@link Object}
 	 * @param lineSpace  行间距
 	 * @param shadow     是否添加文本阴影
 	 * @param background 是否渲染背景(参考F3显示的文本)
+	 * @param alignment <p>
+	 * 		{@link Alignment#LEFT} 在给予的坐标右侧绘制左对齐文本<p>
+	 * 		{@link Alignment#CENTER} 以给予的坐标为中心绘制居中对齐文本<p>
+	 *      {@link Alignment#RIGHT} 在给予的坐标左侧绘制右对齐文本<p>
 	 */
-	public static void drawStrings(GuiGraphics graphics, Font font, List<?> texts, int x, int y,
-		int color, int lineSpace, boolean shadow, boolean background) {
-		for (int i = 0; i < texts.size(); i++) {
-			Object obj = texts.get(i);
-			if (obj instanceof FormattedCharSequence formatted) {
-				if (background) graphics.fill(x, y - 1 + i * lineSpace, x + font.width(formatted), y - 1 + (i + 1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
-				graphics.drawString(font, formatted, x, y + i * lineSpace, color, shadow);
+	public static void drawStringLines(GuiGraphics graphics, Font font, List<?> texts, int x, int y,
+									   int color, int lineSpace, boolean shadow, boolean background, Alignment alignment) {
+		if (texts.isEmpty()) return;
 
-			} else if (obj instanceof Component component) {
-				if (background) graphics.fill(x, y - 1 + i * lineSpace, x + font.width(component), y - 1 + (i + 1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
-				graphics.drawString(font, component, x, y + i * lineSpace, color, shadow);
+		int backgroundColor = background ? ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F) : 0;
 
+		int lineOffset = 0;
+		for (Object text : texts) {
+			int textWidth;
+			if (text instanceof FormattedCharSequence formatted) {
+				textWidth = font.width(formatted);
+			} else if (text instanceof Component component) {
+				textWidth = font.width(component);
 			} else {
-				if (background) graphics.fill(x, y - 1 + i * lineSpace, x + font.width(obj.toString()), y - 1 + (i + 1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
-				graphics.drawString(font, Components.str(obj.toString()), x, y + i * lineSpace, color, shadow);
+				textWidth = font.width(text.toString());
 			}
+
+			int drawX = switch (alignment) {
+				case LEFT -> x;
+				case CENTER -> x - textWidth / 2;
+				case RIGHT -> x - textWidth;
+			};
+			int drawY = y + lineOffset;
+
+			// 背景
+			if (background) {
+				int bgX1 = drawX - 2;
+				int bgY1 = drawY - 1;
+				int bgX2 = drawX + textWidth + 2;
+				int bgY2 = bgY1 + lineSpace;
+				graphics.fill(bgX1, bgY1, bgX2, bgY2, backgroundColor);
+			}
+
+			// 文本
+			if (text instanceof FormattedCharSequence formatted) {
+				graphics.drawString(font, formatted, drawX, drawY, color, shadow);
+			} else if (text instanceof Component component) {
+				graphics.drawString(font, component, drawX, drawY, color, shadow);
+			} else {
+				graphics.drawString(font, text.toString(), drawX, drawY, color, shadow);
+			}
+
+			lineOffset += lineSpace;
 		}
 	}
 
 	/**
-	 * 居中渲染列表中的所有文本
+	 * 在指定的区域内渲染文本
 	 *
 	 * @param lineSpace  行间距
 	 * @param shadow     是否添加文本阴影
 	 * @param background 是否渲染背景(参考F3显示的文本)
+	 * @param alignment <p>
+	 * 		{@link Alignment#LEFT} 在区域左侧绘制左对齐文本<p>
+	 * 		{@link Alignment#CENTER} 在区域中心绘制居中对齐文本<p>
+	 *      {@link Alignment#RIGHT} 在区域右侧绘制右对齐文本<p>
 	 */
-	public static void drawCenteredStrings(GuiGraphics graphics, Font font, List<?> texts, int x, int y,
-		int color, int lineSpace, boolean shadow, boolean background) {
-		for (int i = 0; i < texts.size(); i++) {
-			Object obj = texts.get(i);
-			if (obj instanceof FormattedCharSequence formatted) {
-				int textWidth = font.width(formatted) / 2;
-				if (background) graphics.fill(x - 2 - textWidth, y - 1 + i * lineSpace, x + 2 + textWidth, y - 1 + (i + 1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
-				graphics.drawString(font, formatted, x - textWidth, y + i * lineSpace, color, shadow);
+	public static void drawStringInBound(GuiGraphics graphics, Font font, Component text, int x, int y, int width,
+										 int color, int lineSpace, boolean shadow, boolean background, Alignment alignment){
 
-			} else if (obj instanceof Component component) {
-				int textWidth = font.width(component) / 2;
-				if (background) graphics.fill(x - 2 - textWidth, y - 1 + i * lineSpace, x + 2 + textWidth, y - 1 + (i + 1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
-				graphics.drawString(font, component, x - textWidth, y + i * lineSpace, color, shadow);
+		int backgroundColor = background ? ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F) : 0;
+		var split = font.split(text, width);
 
-			} else {
-				int textWidth = font.width(obj.toString()) / 2;
-				if (background) graphics.fill(x - 2 - textWidth, y - 1 + i * lineSpace, x + 2 + textWidth, y - 1 + (i + 1) * lineSpace, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F));
-				graphics.drawString(font, obj.toString(), x - textWidth, y + i * lineSpace, color, shadow);
+		int lineOffset = 0;
+		for (var line : split) {
+			int textWidth = font.width(line);
+			int drawX = switch (alignment) {
+				case LEFT -> x;
+				case CENTER -> x + (width - textWidth) / 2;
+				case RIGHT -> x + (width - textWidth);
+			};
+			int drawY = y + lineOffset;
+
+			// 背景
+			if (background) {
+				int bgX1 = drawX - 2;
+				int bgY1 = drawY - 1;
+				int bgX2 = drawX + textWidth + 2;
+				int bgY2 = bgY1 + lineSpace;
+				graphics.fill(bgX1, bgY1, bgX2, bgY2, backgroundColor);
 			}
+			// 文本
+			graphics.drawString(font, line, drawX, drawY, color, shadow);
+
+			lineOffset += lineSpace;
 		}
 	}
 
 	/**
-	 * 渲染一个图标
-	 * 
-	 * @param icon  {@link IconButton.Icon}
-	 * @param color 图标的颜色
+	 * 在指定的区域内渲染文本
+	 *
+	 * @param texts		 支持 {@link FormattedCharSequence} {@link Component} {@link Object}
+	 * @param lineSpace  行间距
+	 * @param shadow     是否添加文本阴影
+	 * @param backgroundColor 背景颜色，传入{@code 0}禁用
+	 * @param alignment <p>
+	 * 		{@link Alignment#LEFT} 在区域左侧绘制左对齐文本<p>
+	 * 		{@link Alignment#CENTER} 在区域中心绘制居中对齐文本<p>
+	 *      {@link Alignment#RIGHT} 在区域右侧绘制右对齐文本<p>
 	 */
-	public static void renderIcon(PoseStack pose, IconButton.Icon icon, int x, int y, int color) {
-		CGuiHelper.bindTexture(IconButton.ICON_LOCATION);
-		CGuiHelper.blitColored(pose, x, y, icon.size.width, icon.size.height, icon.x, icon.y, icon.size.width, icon.size.height, IconButton.TEXTURE_WIDTH, IconButton.TEXTURE_HEIGHT, color);
+	public static void drawStringLinesInBound(GuiGraphics graphics, Font font, List<?> texts, int x, int y, int maxWidth,
+										 int color, int lineSpace, boolean shadow, int backgroundColor, Alignment alignment) {
+		if (texts.isEmpty()) return;
+
+		int lineOffset = 0;
+		for (Object text : texts) {
+			int textWidth;
+			if (text instanceof FormattedCharSequence formatted) {
+				textWidth = font.width(formatted);
+			} else if (text instanceof Component component) {
+				textWidth = font.width(component);
+			} else {
+				textWidth = font.width(text.toString());
+			}
+
+			int drawX = switch (alignment) {
+				case LEFT -> x;
+				case CENTER -> x + (maxWidth - textWidth) / 2;
+				case RIGHT -> x + (maxWidth - textWidth);
+			};
+			int drawY = y + lineOffset;
+
+			// 背景
+			if (backgroundColor != 0) {
+				int bgX1 = drawX - 2;
+				int bgY1 = drawY - 2;
+				int bgX2 = drawX + textWidth + 2;
+				int bgY2 = bgY1 + lineSpace;
+				graphics.fill(bgX1, bgY1, bgX2, bgY2, backgroundColor);
+			}
+			// 文本
+			if (text instanceof FormattedCharSequence formatted) {
+				graphics.drawString(font, formatted, drawX, drawY, color, shadow);
+			} else if (text instanceof Component component) {
+				graphics.drawString(font, component, drawX, drawY, color, shadow);
+			} else {
+				graphics.drawString(font, text.toString(), drawX, drawY, color, shadow);
+			}
+
+			lineOffset += lineSpace;
+		}
 	}
 
 	public static void resetGuiDrawing() {
