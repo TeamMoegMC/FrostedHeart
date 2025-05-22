@@ -32,8 +32,7 @@ public class ResearchClientEvents {
         if (event.isStatusChanged()) {
             if (event.isCompletion())
                 ClientUtils.getMc().getToasts().addToast(new ResearchToast(event.getResearch()));
-        } else if (!event.isCompletion())
-            return;
+        }
         for (Effect e : event.getResearch().getEffects())
             if (e instanceof EffectCrafting || e instanceof EffectShowCategory) {
                 JEICompat.syncJEI();

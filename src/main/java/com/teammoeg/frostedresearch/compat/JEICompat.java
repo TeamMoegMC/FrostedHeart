@@ -20,6 +20,7 @@ import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.ResearchHooks;
+import com.teammoeg.frostedresearch.UnlockList;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.effects.Effect;
@@ -137,12 +138,13 @@ public class JEICompat implements IModPlugin {
             addInfo();
         Set<Item> locked = new HashSet<>();
         Set<Item> unlocked = new HashSet<>();
+        UnlockList<Recipe> unlockList=ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST);
         for (Recipe<?> i : ResearchHooks.getLockList(ResearchHooks.RECIPE_UNLOCK_LIST)) {
             //System.out.println(i.getType().toString()+":"+String.join(",",all.stream().map(Object::toString).collect(Collectors.toList())));
             ItemStack irs = RecipeUtil.getResultItem(i);
            
             //Recipe<?> ovrd = overrides.get(i.getId());
-            if (!ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).has(i)) {
+            if (!unlockList.has(i)) {
             	Set<RecipeType<?>> type=types.get(i);
             	if(type!=null)
 	                for (RecipeType<?> rl : type) {
@@ -175,10 +177,11 @@ public class JEICompat implements IModPlugin {
                 man.hideRecipes(RecipeTypes.INFORMATION,entry.getValue());
             }
         }
+        UnlockList<ResourceLocation> categoryUnlockList=ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.CATEGORY_UNLOCK_LIST);
         for (ResourceLocation rl : ResearchHooks.getLockList(ResearchHooks.CATEGORY_UNLOCK_LIST)) {
         	RecipeType<?> type=man.getRecipeType(rl).orElse(null);
         	if(type!=null) {
-	            if (!ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.CATEGORY_UNLOCK_LIST).has(rl)) {
+	            if (!categoryUnlockList.has(rl)) {
 	                man.hideRecipeCategory(type);
 	            } else
 	                man.unhideRecipeCategory(type);
@@ -187,7 +190,7 @@ public class JEICompat implements IModPlugin {
         research.clear();
         for(Research research:FHResearch.getAllResearch()) {
         	for(Effect effect:research.getEffects()) {
-	        	if(ClientResearchDataAPI.getData().get().isEffectGranted(research, effect)&&effect instanceof EffectCrafting) {
+	        	if((!ClientResearchDataAPI.getData().get().isEffectGranted(research, effect))&&effect instanceof EffectCrafting) {
 	        		Set<Item> item=new HashSet<>();
 	        		EffectCrafting crafting=(EffectCrafting) effect;
 	        		if(crafting.getIngredient()!=null)
@@ -210,17 +213,21 @@ public class JEICompat implements IModPlugin {
     public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
         man = jeiRuntime.getRecipeManager();
         jei = jeiRuntime;
+        generateRecipeType();
         syncJEI();
         // man.hideRecipeCategory(RecipeTypes.BLASTING);
         // man.hideRecipeCategory(RecipeTypes.SMOKING);
         // man.hideRecipeCategory(RecipeTypes.SMELTING);
+
+
+    }
+    public void generateRecipeType() {
         Function<? super Object, ? extends Set<RecipeType<?>>> creator=o->new HashSet<>();
         Function<? super Object,Set<RecipeType<?>>> getter=o->types.computeIfAbsent((Object)o, creator);
         man.createRecipeCategoryLookup().includeHidden().get().forEach(t->{
         	man.createRecipeLookup(t.getRecipeType()).includeHidden().get().map(getter).forEach(o->o.add(t.getRecipeType()));
         	
         });;
-
     }
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
