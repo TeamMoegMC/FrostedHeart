@@ -41,7 +41,12 @@ import com.teammoeg.frostedheart.content.climate.PhysicalState;
 import com.teammoeg.frostedheart.content.climate.data.*;
 import com.teammoeg.frostedresearch.FRContents;
 import com.yanny.age.stone.subscribers.ItemSubscriber;
+import net.mehvahdjukaar.supplementaries.Supplementaries;
+import net.mehvahdjukaar.supplementaries.reg.ModRegistry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
 import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.OfficeXmlFileException;
@@ -358,6 +363,53 @@ public class FHRecipeProvider extends RecipeProvider {
 		parfile.mkdirs();
 		return new File(parfile,name);
 	}
+
+	public static ItemStack createCagedEntityFromString(String nbtString) {
+		ItemStack cageStack = new ItemStack(ModRegistry.CAGE_ITEM.get());
+
+		try {
+			// Use TagParser to parse the NBT string
+			CompoundTag nbt = TagParser.parseTag(nbtString);
+			cageStack.setTag(nbt);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return cageStack;
+	}
+
+	// Alternative method using NBT parsing (simpler but requires the exact string)
+	public static ItemStack cagedRabbit() {
+		String s = "{BlockEntityTag:{MobHolder:{EntityData:{AbsorptionAmount:0.0f,Age:0,Air:300s,ArmorDropChances:[0.085f,0.085f,0.085f,0.085f],ArmorItems:[{},{},{},{}],Attributes:[{Base:0.0d,Name:\"forge:step_height_addition\"},{Base:0.08d,Name:\"forge:entity_gravity\"},{Base:0.30000001192092896d,Name:\"minecraft:generic.movement_speed\"},{Base:16.0d,Modifiers:[{Amount:-0.05702389017647923d,Name:\"Random spawn bonus\",Operation:1,UUID:[I;795285848,-850571614,-1612973660,805794482]}],Name:\"minecraft:generic.follow_range\"}],Brain:{memories:{}},CanPickUpLoot:0b,CanUpdate:1b,DeathTime:0s,FallDistance:0.0f,FallFlying:0b,Fire:0s,ForcedAge:0,ForgeCaps:{\"curios:inventory\":{Curios:[]}},ForgeData:{},HandDropChances:[0.085f,0.085f],HandItems:[{},{}],Health:3.0f,HurtByTimestamp:0,HurtTime:0s,InLove:0,Invulnerable:0b,LeftHanded:0b,MoreCarrotTicks:0,Motion:[0.0d,-0.0784000015258789d,0.0d],OnGround:1b,PersistenceRequired:0b,PortalCooldown:0,Pos:[0.5d,0.0626d,0.5d],RabbitType:5,Rotation:[0.0f,0.0f],\"forge:spawn_type\":\"SPAWN_EGG\",id:\"minecraft:rabbit\"},Name:\"Rabbit\",Scale:1.0f,UUID:[I;1022712411,-492944690,-1891121019,-1631982831]}}}";
+		return createCagedEntityFromString(s);
+	}
+
+	public static ItemStack cagedBoar() {
+		String s = "{BlockEntityTag:{MobHolder:{EntityData:{AbsorptionAmount:0.0f,Age:-23406,Air:300s,Anger:0s,ArmorDropChances:[0.085f,0.085f,0.085f,0.085f],ArmorItems:[{},{},{},{}],Attributes:[{Base:0.0d,Name:\"forge:step_height_addition\"},{Base:0.08d,Name:\"forge:entity_gravity\"},{Base:0.30000001192092896d,Name:\"minecraft:generic.movement_speed\"}],Brain:{memories:{}},CanPickUpLoot:0b,CanUpdate:1b,DeathTime:0s,FallDistance:0.0f,FallFlying:0b,Fire:0s,ForcedAge:0,ForgeCaps:{\"curios:inventory\":{Curios:[]}},ForgeData:{},Generation:1,HandDropChances:[0.085f,0.085f],HandItems:[{},{}],Health:15.0f,HurtBy:\"\",HurtByTimestamp:0,HurtTime:0s,InLove:0,Invulnerable:0b,LeftHanded:0b,Motion:[0.0d,-0.0784000015258789d,0.0d],OnGround:1b,PersistenceRequired:0b,PortalCooldown:0,Pos:[0.5d,0.0626d,0.5d],Rotation:[0.0f,0.0f],id:\"stone_age:boar\"},Name:\"Boar\",Scale:0.5833333f,UUID:[I;-1895757116,-1906228399,-2085885897,1184858982]}}}";
+		return createCagedEntityFromString(s);
+	}
+
+	public static ItemStack cagedFox() {
+		String s = "{BlockEntityTag:{MobHolder:{EntityData:{AbsorptionAmount:0.0f,Age:0,Air:300s,ArmorDropChances:[0.085f,0.085f,0.085f,0.085f],ArmorItems:[{},{},{},{}],Attributes:[{Base:32.0d,Modifiers:[{Amount:0.0607411310162985d,Name:\"Random spawn bonus\",Operation:1,UUID:[I;-1877090398,1958232654,-1936817837,-988659072]}],Name:\"minecraft:generic.follow_range\"},{Base:0.08d,Name:\"forge:entity_gravity\"},{Base:0.30000001192092896d,Name:\"minecraft:generic.movement_speed\"},{Base:0.0d,Name:\"forge:step_height_addition\"}],Brain:{memories:{}},CanPickUpLoot:1b,CanUpdate:1b,Crouching:0b,DeathTime:0s,FallDistance:0.0f,FallFlying:0b,Fire:0s,ForcedAge:0,ForgeCaps:{\"curios:inventory\":{Curios:[]}},ForgeData:{},HandDropChances:[0.085f,0.085f],HandItems:[{},{}],Health:10.0f,HurtByTimestamp:0,HurtTime:0s,InLove:0,Invulnerable:0b,LeftHanded:0b,Motion:[0.0d,-0.0784000015258789d,0.0d],OnGround:1b,PersistenceRequired:0b,PortalCooldown:0,Pos:[0.5d,0.0626d,0.5d],Rotation:[0.0f,0.0f],Sitting:0b,Sleeping:1b,Trusted:[],Type:\"snow\",\"forge:spawn_type\":\"SPAWN_EGG\",id:\"minecraft:fox\"},Name:\"狐狸\",Scale:0.78125f,UUID:[I;1000385981,-924824054,-1685937253,-1638237081]}}}";
+		return createCagedEntityFromString(s);
+	}
+
+	public static ItemStack cagedAuroch() {
+		String s = "{BlockEntityTag:{MobHolder:{EntityData:{AbsorptionAmount:0.0f,Age:-23930,Air:300s,Anger:0s,ArmorDropChances:[0.085f,0.085f,0.085f,0.085f],ArmorItems:[{},{},{},{}],Attributes:[{Base:0.08d,Name:\"forge:entity_gravity\"},{Base:0.30000001192092896d,Name:\"minecraft:generic.movement_speed\"},{Base:0.0d,Name:\"forge:step_height_addition\"}],Brain:{memories:{}},CanPickUpLoot:0b,CanUpdate:1b,DeathTime:0s,FallDistance:0.0f,FallFlying:0b,Fire:0s,ForcedAge:0,ForgeCaps:{\"curios:inventory\":{Curios:[]}},ForgeData:{},Generation:1,HandDropChances:[0.085f,0.085f],HandItems:[{},{}],Health:20.0f,HurtBy:\"\",HurtByTimestamp:0,HurtTime:0s,InLove:0,Invulnerable:0b,LeftHanded:0b,Motion:[0.0d,-0.0784000015258789d,0.0d],OnGround:1b,PersistenceRequired:0b,PortalCooldown:0,Pos:[0.5d,0.0626d,0.5d],Rotation:[0.0f,0.0f],id:\"stone_age:auroch\"},Name:\"野牛\",Scale:0.5833333f,UUID:[I;-967854644,1756646617,-1205931748,45898938]}}}";
+		return createCagedEntityFromString(s);
+	}
+
+	public static ItemStack cagedFowl() {
+		String s = "{BlockEntityTag:{MobHolder:{EntityData:{AbsorptionAmount:0.0f,Age:0,Air:300s,Anger:0s,ArmorDropChances:[0.085f,0.085f,0.085f,0.085f],ArmorItems:[{},{},{},{}],Attributes:[{Base:16.0d,Modifiers:[{Amount:0.031182960451612573d,Name:\"Random spawn bonus\",Operation:1,UUID:[I;-687819678,1971996645,-2002249144,-837993083]}],Name:\"minecraft:generic.follow_range\"},{Base:0.08d,Name:\"forge:entity_gravity\"},{Base:0.30000001192092896d,Name:\"minecraft:generic.movement_speed\"},{Base:0.0d,Name:\"forge:step_height_addition\"}],Brain:{memories:{}},CanPickUpLoot:0b,CanUpdate:1b,DeathTime:0s,FallDistance:0.0f,FallFlying:0b,Fire:0s,ForcedAge:0,ForgeCaps:{\"curios:inventory\":{Curios:[]}},ForgeData:{},Generation:0,HandDropChances:[0.085f,0.085f],HandItems:[{},{}],Health:6.0f,HurtBy:\"\",HurtByTimestamp:0,HurtTime:0s,InLove:0,Invulnerable:0b,LeftHanded:1b,Motion:[0.0d,-0.0784000015258789d,0.0d],OnGround:1b,PersistenceRequired:0b,PortalCooldown:0,Pos:[0.5d,0.0626d,0.5d],Rotation:[0.0f,0.0f],\"forge:spawn_type\":\"SPAWN_EGG\",id:\"stone_age:fowl\"},Name:\"野鸡\",Scale:0.89285713f,UUID:[I;123255624,343491862,-1805069578,-1463733712]}}}";
+		return createCagedEntityFromString(s);
+	}
+
+	public static ItemStack cagedMouflon() {
+		String s = "{BlockEntityTag:{MobHolder:{EntityData:{AbsorptionAmount:0.0f,Age:-23933,Air:300s,Anger:0s,ArmorDropChances:[0.085f,0.085f,0.085f,0.085f],ArmorItems:[{},{},{},{}],Attributes:[{Base:0.08d,Name:\"forge:entity_gravity\"},{Base:0.30000001192092896d,Name:\"minecraft:generic.movement_speed\"},{Base:0.0d,Name:\"forge:step_height_addition\"}],Brain:{memories:{}},CanPickUpLoot:0b,CanUpdate:1b,DeathTime:0s,FallDistance:0.0f,FallFlying:0b,Fire:0s,ForcedAge:0,ForgeCaps:{\"curios:inventory\":{Curios:[]}},ForgeData:{},Generation:1,HandDropChances:[0.085f,0.085f],HandItems:[{},{}],Health:20.0f,HurtBy:\"\",HurtByTimestamp:0,HurtTime:0s,InLove:0,Invulnerable:0b,LeftHanded:0b,Motion:[0.13874070260499188d,-0.0784000015258789d,0.0013633874297243307d],OnGround:1b,PersistenceRequired:0b,PortalCooldown:0,Pos:[0.5d,0.0626d,0.5d],Rotation:[0.0f,0.0f],id:\"stone_age:mouflon\"},Name:\"野羊\",Scale:0.5833333f,UUID:[I;62466033,-929150022,-1427858985,1970102500]}}}";
+		return createCagedEntityFromString(s);
+	}
+
 	private void buildTradePolicies(@Nonnull Consumer<FinishedRecipe> out) {
 
 		// test
@@ -402,7 +454,7 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(256, 32F, 1, FHItems.night_soil.asItem())
 				.sell(256, 16F, 1, FHItems.dung.asItem())
 				// sell intelligence, but slow
-				.sell(4, 0.1f, 200, FRContents.Items.intelligence.get())
+				.sell(1, 0.03f, 200, FRContents.Items.intelligence.get())
 				.basic()
 				.finish()
 				.profession(VillagerProfession.SHEPHERD)
@@ -449,8 +501,14 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(8, 5F, 20, Items.FEATHER)
 				.sell(16, 4F, 1, FHItems.night_soil.asItem())
 				.sell(16, 8F, 1, FHItems.dung.asItem())
+				.sell("caged_rabbit", 1, .1f, 100, cagedRabbit())
+				.sell("caged_boar", 1, .05f, 500, cagedBoar())
+				.sell("caged_boar", 1, .05f, 500, cagedAuroch())
+				.sell("caged_boar", 1, .05f, 500, cagedMouflon())
+				.sell("caged_boar", 1, .05f, 500, cagedFowl())
+				.sell("caged_boar", 1, .025f, 1000, cagedFox())
 				// sell intelligence, but slow
-				.sell(4, 0.1f, 200, FRContents.Items.intelligence.get())
+				.sell(2, 0.08f, 200, FRContents.Items.intelligence.get())
 				.basic()
 				.finish()
 				.profession(VillagerProfession.BUTCHER)
@@ -497,7 +555,7 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(16, 4F, 1, FHItems.night_soil.asItem())
 				.sell(16, 8F, 1, FHItems.dung.asItem())
 				// sell intelligence, but slow
-				.sell(4, 0.1f, 200, FRContents.Items.intelligence.get())
+				.sell(2, 0.05f, 200, FRContents.Items.intelligence.get())
 				.basic()
 				.finish()
 				.profession(VillagerProfession.FISHERMAN)
@@ -559,7 +617,7 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(32, 1, 200, Items.LAVA_BUCKET)
 				.sell(32, 1, 100, Items.MAGMA_BLOCK)
 				// sell intelligence, but slow
-				.sell(4, 0.1f, 200, FRContents.Items.intelligence.get())
+				.sell(2, 0.05f, 200, FRContents.Items.intelligence.get())
 				.basic()
 				.finish()
 				.profession(VillagerProfession.TOOLSMITH)

@@ -247,9 +247,9 @@
           "id": "frostedresearch:intelligence",
           "price": 200,
           "produce": "frostedresearch:intelligence",
-          "recover": 0.1,
+          "recover": 0.03,
           "restock_condition": [],
-          "store": 4,
+          "store": 1,
           "use_actions": []
         }
       ]
