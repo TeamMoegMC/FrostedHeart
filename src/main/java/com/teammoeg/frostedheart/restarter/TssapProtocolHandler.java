@@ -68,7 +68,7 @@ public class TssapProtocolHandler {
 				}
 			};
 			clientThread.setDaemon(true);
-			clientThread.start();
+			//clientThread.start();
 		}
 	}
 	static Thread serverThread;
