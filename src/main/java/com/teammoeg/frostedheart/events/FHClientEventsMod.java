@@ -224,8 +224,8 @@ public class FHClientEventsMod {
         ShaderCompatHelper.use(Blocks.FERN)
         .add(FHBlocks.RUBBER_DANDELION)
         .add(FHBlocks.WILD_RUBBER_DANDELION);
-        ShaderCompatHelper.use(Blocks.MAGMA_BLOCK)
-        .add(FHBlocks.COOLED_MAGMA_BLOCK);
+//        ShaderCompatHelper.use(Blocks.MAGMA_BLOCK)
+//        .add(FHBlocks.COOLED_MAGMA_BLOCK);
         ShaderCompatHelper.use(Blocks.FARMLAND)
         .addMapped(FHBlocks.FERTILIZED_FARMLAND, (van,add)->van.setValue(FarmBlock.MOISTURE,add.getValue(FarmBlock.MOISTURE)));
         ShaderCompatHelper.use(Blocks.DIRT)
