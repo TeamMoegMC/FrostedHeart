@@ -97,8 +97,7 @@
     "client.create.ClientEventsMixin",
     "create.MixinOpenConfigButtonHandler",
     "minecraft.water.LocalPlayerMixin",
-    "oculus.IrisRenderingPipelineAccess",
-    "oculus.IdMapMixin_AddModdedBlocksAutomatically"
+    "oculus.IrisRenderingPipelineAccess"
   ],
   "injectors": {
     "defaultRequire": 1

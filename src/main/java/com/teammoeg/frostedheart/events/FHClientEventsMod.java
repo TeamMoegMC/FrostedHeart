@@ -26,6 +26,7 @@ import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
+import com.teammoeg.chorda.util.ShaderCompatHelper;
 import com.teammoeg.frostedheart.compat.ie.FHManual;
 import com.teammoeg.frostedheart.compat.tetra.TetraClient;
 import com.teammoeg.frostedheart.content.climate.particle.SnowParticle;
@@ -57,11 +58,11 @@ import com.teammoeg.frostedheart.content.climate.particle.SteamParticle;
 import com.teammoeg.frostedheart.content.climate.particle.WetSteamParticle;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
-import com.teammoeg.frostedheart.util.mixin.ShaderCompatHelper;
 import com.teammoeg.frostedresearch.gui.InsightOverlay;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FarmBlock;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.EntityRenderersEvent.AddLayers;
@@ -115,8 +116,16 @@ public class FHClientEventsMod {
 				.andThen(TooltipModifier.mapNull(KineticStats.create(item)));
 		});
         ShaderCompatHelper.use(Blocks.SNOW)
-        .add(FHBlocks.BESNOWED_TWIGS)
-        .add(FHBlocks.BESNOWED_DEBRIS);
+        .addSameProperty(FHBlocks.BESNOWED_TWIGS)
+        .addSameProperty(FHBlocks.BESNOWED_DEBRIS);
+        ShaderCompatHelper.use(Blocks.FARMLAND)
+        .addMapped(FHBlocks.FERTILIZED_FARMLAND, (van,add)->van.setValue(FarmBlock.MOISTURE,add.getValue(FarmBlock.MOISTURE)));
+        ShaderCompatHelper.use(Blocks.DIRT)
+        .add(FHBlocks.FERTILIZED_DIRT);
+        ShaderCompatHelper.use(Blocks.COPPER_ORE)
+        .add(FHBlocks.TIN_ORE);
+        ShaderCompatHelper.use(Blocks.DEEPSLATE_COPPER_ORE)
+        .add(FHBlocks.DEEPSLATE_TIN_ORE);
 		// FHTooltips.registerTooltipModifiers();
         /*
          ItemBlockRenderTypes.setRenderLayer(FHBlocks.RYE_BLOCK.get(), RenderType.cutout());

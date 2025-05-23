@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.mixin.oculus;
+package com.teammoeg.chorda.mixin;
 
 import java.util.List;
 
@@ -8,9 +8,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import com.teammoeg.chorda.util.ShaderCompatHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.util.mixin.ShaderCompatHelper;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;

@@ -10,7 +10,7 @@
     "MinecraftServerMixin"
   ],
   "client": [
-
+    "IdMapMixin_AddModdedBlocksAutomatically"
   ],
   "injectors": {
     "defaultRequire": 1
