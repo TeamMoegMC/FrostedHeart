@@ -63,7 +63,7 @@ public class NutritionCapability implements NBTSerializable {
         	
     }
 
-    public static final ImmutableNutrition DEFAULT_VALUE = new ImmutableNutrition(5000);
+    public static final ImmutableNutrition DEFAULT_VALUE = new ImmutableNutrition(7000);
     private MutableNutrition nutrition = DEFAULT_VALUE.mutableCopy();
 
     public void addFat(Player player, float add) {
@@ -162,7 +162,6 @@ public class NutritionCapability implements NBTSerializable {
             this.nutrition.ensureValid();
             callOnChange(player);
         }
-
     }
     public void consume(Player player) {
     	FoodData fd=player.getFoodData();
@@ -193,13 +192,13 @@ public class NutritionCapability implements NBTSerializable {
         if (nutrition.fat > 9000) {
             count++;
         }
-        if (nutrition.carbohydrate < 2000) {
+        /*if (nutrition.carbohydrate < 2000) {
             count += 2;
 
         }
         if (nutrition.carbohydrate > 9000) {
             count++;
-        }
+        }*/
         if (nutrition.protein < 2000) {
             count += 2;
 
@@ -207,16 +206,11 @@ public class NutritionCapability implements NBTSerializable {
         if (nutrition.protein > 9000) {
             count++;
         }
-        /*if (nutrition.vegetable < 2000) {
+        if (nutrition.vegetable < 2000) {
             count += 2;
 
             //player.addEffect(new MobEffectInstance(FHMobEffects.SCURVY.get(), 300, count - 1));
         }
-        if (nutrition.vegetable > 9000) {
-            count++;
-
-        }*/
-        
         
         
         count /= 2;
@@ -227,12 +221,19 @@ public class NutritionCapability implements NBTSerializable {
 
         
     }
+    private float removeCenter(float percent) {
+    	if(percent<0.3f)
+    		return percent/0.3f*0.5f;
+    	if(percent>0.7f)
+    		return (percent-0.7f)/0.3f*0.5f+0.5f;
+    	return 0.5f;
+    }
     public void addAttributes(Player player) {
     	// 对生命值上限的修改
-    	float v1=Mth.clampedLerp(-5, 5, nutrition.getCarbohydrate()/10000f);
-    	float v2=Mth.clampedLerp(-5, 5, nutrition.getFat()/10000f);
-    	float v3=Mth.clampedLerp(-5, 5, nutrition.getProtein()/10000f);
-    	float v4=Mth.clampedLerp(-5, 5, nutrition.getVegetable()/10000f);
+    	float v1=Mth.clampedLerp(-5, 5, removeCenter(nutrition.getCarbohydrate()/10000f));
+    	float v2=Mth.clampedLerp(-5, 5, removeCenter(nutrition.getFat()/10000f));
+    	float v3=Mth.clampedLerp(-5, 5, removeCenter(nutrition.getProtein()/10000f));
+    	float v4=Mth.clampedLerp(-5, 5, removeCenter(nutrition.getVegetable()/10000f));
         AttributeInstance instance = player.getAttributes().getInstance(Attributes.MAX_HEALTH);
         AttributeModifier modifier = new AttributeModifier(NutritionUUID, "nutrition", Math.round(v1+v2+v3+v4), AttributeModifier.Operation.ADDITION);
         if (instance.hasModifier(modifier))
