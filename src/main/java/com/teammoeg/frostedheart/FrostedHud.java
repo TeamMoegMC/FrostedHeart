@@ -644,7 +644,7 @@ public class FrostedHud {
         // player.getAttribute(Attributes.MAX_HEALTH);
         float omax;
         float healthMax = omax = /* (float) attrMaxHealth.getValue() */player.getMaxHealth();
-
+        health=Math.min(health, healthMax);
         if (healthMax < 20)
             healthMax = 20;
         float absorb = player.getAbsorptionAmount(); // let's say max is 20
