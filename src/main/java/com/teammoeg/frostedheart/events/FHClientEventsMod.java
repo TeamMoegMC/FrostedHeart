@@ -61,6 +61,8 @@ import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
 import com.teammoeg.frostedresearch.gui.InsightOverlay;
 
+import blusunrize.immersiveengineering.api.EnumMetals;
+import blusunrize.immersiveengineering.common.register.IEBlocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FarmBlock;
@@ -192,6 +194,10 @@ public class FHClientEventsMod {
         .add(AllBlocks.DEEPSLATE_ZINC_ORE);
         ShaderCompatHelper.use(Blocks.DEEPSLATE_COPPER_ORE)
         .add(FHBlocks.DEEPSLATE_TIN_ORE);
+        ShaderCompatHelper.use(Blocks.DEEPSLATE_GOLD_ORE)
+        .add(IEBlocks.Metals.DEEPSLATE_ORES.get(EnumMetals.SILVER));
+        ShaderCompatHelper.use(Blocks.GOLD_ORE)
+        .add(IEBlocks.Metals.ORES.get(EnumMetals.SILVER));
         ShaderCompatHelper.use(Blocks.MUD)
         .add(FHBlocks.PEAT)
         .add(FHBlocks.ROTTEN_WOOD);
