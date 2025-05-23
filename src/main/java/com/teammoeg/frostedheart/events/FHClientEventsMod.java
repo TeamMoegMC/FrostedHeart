@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.events;
 
+import com.simibubi.create.AllBlocks;
 import com.simibubi.create.foundation.item.ItemDescription;
 import com.simibubi.create.foundation.item.KineticStats;
 import com.simibubi.create.foundation.item.TooltipHelper;
@@ -178,7 +179,8 @@ public class FHClientEventsMod {
         ShaderCompatHelper.use(Blocks.COPPER_ORE)
         .add(FHBlocks.TIN_ORE);
         ShaderCompatHelper.use(Blocks.IRON_ORE)
-        .add(FHBlocks.PYRITE_ORE);
+        .add(FHBlocks.PYRITE_ORE)
+        .add(AllBlocks.ZINC_ORE);
         ShaderCompatHelper.use(Blocks.DEEPSLATE_IRON_ORE)
         .add(FHBlocks.HALITE_ORE)
         .add(FHBlocks.SYLVITE_ORE)
@@ -186,7 +188,8 @@ public class FHClientEventsMod {
         .add(FHBlocks.DEEPSLATE_PYRITE_ORE)
         .add(FHBlocks.DEEPSLATE_HALITE_ORE)
         .add(FHBlocks.DEEPSLATE_SYLVITE_ORE)
-        .add(FHBlocks.DEEPSLATE_MAGNESITE_ORE);
+        .add(FHBlocks.DEEPSLATE_MAGNESITE_ORE)
+        .add(AllBlocks.DEEPSLATE_ZINC_ORE);
         ShaderCompatHelper.use(Blocks.DEEPSLATE_COPPER_ORE)
         .add(FHBlocks.DEEPSLATE_TIN_ORE);
         ShaderCompatHelper.use(Blocks.MUD)
@@ -199,20 +202,21 @@ public class FHClientEventsMod {
         .add(FHBlocks.BURIED_MYCELIUM);
         ShaderCompatHelper.use(Blocks.PODZOL)
         .add(FHBlocks.BURIED_PODZOL);
-//        ShaderCompatHelper.use(Blocks.SNOW_BLOCK)
-//        .add(FHBlocks.DIRT_PERMAFROST)
-//        .add(FHBlocks.MUD_PERMAFROST)
-//        .add(FHBlocks.GRAVEL_PERMAFROST)
-//        .add(FHBlocks.SAND_PERMAFROST)
-//        .add(FHBlocks.RED_SAND_PERMAFROST)
-//        .add(FHBlocks.CLAY_PERMAFROST)
-//        .add(FHBlocks.PEAT_PERMAFROST)
-//        .add(FHBlocks.BAUXITE_PERMAFROST)
-//        .add(FHBlocks.KAOLIN_PERMAFROST)
-//        .add(FHBlocks.MYCELIUM_PERMAFROST)
-//        .add(FHBlocks.PODZOL_PERMAFROST)
-//        .add(FHBlocks.ROOTED_DIRT_PERMAFROST)
-//        .add(FHBlocks.COARSE_DIRT_PERMAFROST);
+        //TODO: find a better category for permafrost
+        ShaderCompatHelper.use(Blocks.CLAY)
+        .add(FHBlocks.DIRT_PERMAFROST)
+        .add(FHBlocks.MUD_PERMAFROST)
+        .add(FHBlocks.GRAVEL_PERMAFROST)
+        .add(FHBlocks.SAND_PERMAFROST)
+        .add(FHBlocks.RED_SAND_PERMAFROST)
+        .add(FHBlocks.CLAY_PERMAFROST)
+        .add(FHBlocks.PEAT_PERMAFROST)
+        .add(FHBlocks.BAUXITE_PERMAFROST)
+        .add(FHBlocks.KAOLIN_PERMAFROST)
+        .add(FHBlocks.MYCELIUM_PERMAFROST)
+        .add(FHBlocks.PODZOL_PERMAFROST)
+        .add(FHBlocks.ROOTED_DIRT_PERMAFROST)
+        .add(FHBlocks.COARSE_DIRT_PERMAFROST);
         ShaderCompatHelper.use(Blocks.WET_SPONGE)
         .add(FHBlocks.WHALE_BLOCK)
         .add(FHBlocks.WHALE_BELLY_BLOCK);

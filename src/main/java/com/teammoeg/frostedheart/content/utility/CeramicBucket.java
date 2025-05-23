@@ -163,44 +163,42 @@ public class CeramicBucket extends FHBaseItem {
 	public boolean emptyContents(@Nullable Player pPlayer, Level pLevel, BlockPos pPos, @Nullable BlockHitResult pResult, @Nullable ItemStack container,Fluid content) {
 		if (!(content instanceof FlowingFluid)) {
 			return false;
-		} else {
-			BlockState blockstate = pLevel.getBlockState(pPos);
-			Block block = blockstate.getBlock();
-			boolean flag = blockstate.canBeReplaced(content);
-			boolean flag1 = blockstate.isAir() || flag || block instanceof LiquidBlockContainer && ((LiquidBlockContainer) block).canPlaceLiquid(pLevel, pPos, blockstate, content);
-			java.util.Optional<net.minecraftforge.fluids.FluidStack> containedFluidStack = java.util.Optional.ofNullable(container).flatMap(net.minecraftforge.fluids.FluidUtil::getFluidContained);
-			if (!flag1) {
-				return pResult != null && this.emptyContents(pPlayer, pLevel, pResult.getBlockPos().relative(pResult.getDirection()), (BlockHitResult) null, container,content);
-			} else if (containedFluidStack.isPresent() && content.getFluidType().isVaporizedOnPlacement(pLevel, pPos, containedFluidStack.get())) {
-				content.getFluidType().onVaporize(pPlayer, pLevel, pPos, containedFluidStack.get());
-				return true;
-			} else if (pLevel.dimensionType().ultraWarm() && content.is(FluidTags.WATER)) {
-				int i = pPos.getX();
-				int j = pPos.getY();
-				int k = pPos.getZ();
-				pLevel.playSound(pPlayer, pPos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 2.6F + (pLevel.random.nextFloat() - pLevel.random.nextFloat()) * 0.8F);
+		}
+		BlockState blockstate = pLevel.getBlockState(pPos);
+		Block block = blockstate.getBlock();
+		boolean flag = blockstate.canBeReplaced(content);
+		boolean flag1 = blockstate.isAir() || flag || block instanceof LiquidBlockContainer && ((LiquidBlockContainer) block).canPlaceLiquid(pLevel, pPos, blockstate, content);
+		java.util.Optional<net.minecraftforge.fluids.FluidStack> containedFluidStack = java.util.Optional.ofNullable(container).flatMap(net.minecraftforge.fluids.FluidUtil::getFluidContained);
+		if (!flag1) {
+			return pResult != null && this.emptyContents(pPlayer, pLevel, pResult.getBlockPos().relative(pResult.getDirection()), (BlockHitResult) null, container,content);
+		} else if (containedFluidStack.isPresent() && content.getFluidType().isVaporizedOnPlacement(pLevel, pPos, containedFluidStack.get())) {
+			content.getFluidType().onVaporize(pPlayer, pLevel, pPos, containedFluidStack.get());
+			return true;
+		} else if (pLevel.dimensionType().ultraWarm() && content.is(FluidTags.WATER)) {
+			int i = pPos.getX();
+			int j = pPos.getY();
+			int k = pPos.getZ();
+			pLevel.playSound(pPlayer, pPos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 2.6F + (pLevel.random.nextFloat() - pLevel.random.nextFloat()) * 0.8F);
 
-				for (int l = 0; l < 8; ++l) {
-					pLevel.addParticle(ParticleTypes.LARGE_SMOKE, (double) i + Math.random(), (double) j + Math.random(), (double) k + Math.random(), 0.0D, 0.0D, 0.0D);
-				}
-
-				return true;
-			} else if (block instanceof LiquidBlockContainer && ((LiquidBlockContainer) block).canPlaceLiquid(pLevel, pPos, blockstate, content)) {
-				((LiquidBlockContainer) block).placeLiquid(pLevel, pPos, blockstate, ((FlowingFluid) content).getSource(false));
-				this.playEmptySound(pPlayer, pLevel, pPos,content);
-				return true;
-			} else {
-				if (!pLevel.isClientSide && flag && !blockstate.liquid()) {
-					pLevel.destroyBlock(pPos, true);
-				}
-
-				if (!pLevel.setBlock(pPos, content.defaultFluidState().createLegacyBlock(), 11) && !blockstate.getFluidState().isSource()) {
-					return false;
-				} else {
-					this.playEmptySound(pPlayer, pLevel, pPos,content);
-					return true;
-				}
+			for (int l = 0; l < 8; ++l) {
+				pLevel.addParticle(ParticleTypes.LARGE_SMOKE, (double) i + Math.random(), (double) j + Math.random(), (double) k + Math.random(), 0.0D, 0.0D, 0.0D);
 			}
+
+			return true;
+		} else if (block instanceof LiquidBlockContainer && ((LiquidBlockContainer) block).canPlaceLiquid(pLevel, pPos, blockstate, content)) {
+			((LiquidBlockContainer) block).placeLiquid(pLevel, pPos, blockstate, ((FlowingFluid) content).getSource(false));
+			this.playEmptySound(pPlayer, pLevel, pPos,content);
+			return true;
+		} else {
+			if (!pLevel.isClientSide && flag && !blockstate.liquid()) {
+				pLevel.destroyBlock(pPos, true);
+			}
+
+			if (!pLevel.setBlock(pPos, content.defaultFluidState().createLegacyBlock(), 11) && !blockstate.getFluidState().isSource()) {
+				return false;
+			}
+			this.playEmptySound(pPlayer, pLevel, pPos,content);
+			return true;
 		}
 	}
 
