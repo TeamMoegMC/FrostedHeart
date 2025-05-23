@@ -115,18 +115,143 @@ public class FHClientEventsMod {
 				.andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))
 				.andThen(TooltipModifier.mapNull(KineticStats.create(item)));
 		});
+        
+        
+
+
+        
+        ShaderCompatHelper.use(Blocks.PACKED_ICE)
+        .add(FHBlocks.FIRM_ICE_BLOCK);
+        ShaderCompatHelper.use(Blocks.SNOW_BLOCK)
+        // twigs and debris
+        .add(FHBlocks.BESNOWED_TWIGS_BLOCK)
+        .add(FHBlocks.BESNOWED_DEBRIS_BLOCK)
+        // condensed ores
+        .add(FHBlocks.CONDENSED_IRON_ORE_BLOCK)
+        .add(FHBlocks.CONDENSED_COPPER_ORE_BLOCK)
+        .add(FHBlocks.CONDENSED_GOLD_ORE_BLOCK)
+        .add(FHBlocks.CONDENSED_ZINC_ORE_BLOCK)
+        .add(FHBlocks.CONDENSED_SILVER_ORE_BLOCK)
+        .add(FHBlocks.CONDENSED_TIN_ORE_BLOCK)
+        .add(FHBlocks.CONDENSED_PYRITE_ORE_BLOCK)
+        .add(FHBlocks.CONDENSED_NICKEL_ORE_BLOCK)
+        .add(FHBlocks.CONDENSED_LEAD_ORE_BLOCK)
+        // Sludge
+        .add(FHBlocks.IRON_SLUDGE_BLOCK)
+        .add(FHBlocks.COPPER_SLUDGE_BLOCK)
+        .add(FHBlocks.GOLD_SLUDGE_BLOCK)
+        .add(FHBlocks.ZINC_SLUDGE_BLOCK)
+        .add(FHBlocks.SILVER_SLUDGE_BLOCK)
+        .add(FHBlocks.TIN_SLUDGE_BLOCK)
+        .add(FHBlocks.PYRITE_SLUDGE_BLOCK)
+        .add(FHBlocks.NICKEL_SLUDGE_BLOCK)
+        .add(FHBlocks.LEAD_SLUDGE_BLOCK)
+        
+        .add(FHBlocks.PACKED_SNOW)
+        .add(FHBlocks.PACKED_SNOW_SLAB);
         ShaderCompatHelper.use(Blocks.SNOW)
+        .addSameProperty(FHBlocks.LAYERED_THIN_ICE)
+        // twigs and debris
         .addSameProperty(FHBlocks.BESNOWED_TWIGS)
-        .addSameProperty(FHBlocks.BESNOWED_DEBRIS);
+        .addSameProperty(FHBlocks.BESNOWED_DEBRIS)
+        // condensed ores
+        .addSameProperty(FHBlocks.CONDENSED_IRON_ORE)
+        .addSameProperty(FHBlocks.CONDENSED_COPPER_ORE)
+        .addSameProperty(FHBlocks.CONDENSED_GOLD_ORE)
+        .addSameProperty(FHBlocks.CONDENSED_ZINC_ORE)
+        .addSameProperty(FHBlocks.CONDENSED_SILVER_ORE)
+        .addSameProperty(FHBlocks.CONDENSED_TIN_ORE)
+        .addSameProperty(FHBlocks.CONDENSED_PYRITE_ORE)
+        .addSameProperty(FHBlocks.CONDENSED_NICKEL_ORE)
+        .addSameProperty(FHBlocks.CONDENSED_LEAD_ORE)
+        // Sludge
+        .addSameProperty(FHBlocks.IRON_SLUDGE)
+        .addSameProperty(FHBlocks.COPPER_SLUDGE)
+        .addSameProperty(FHBlocks.GOLD_SLUDGE)
+        .addSameProperty(FHBlocks.ZINC_SLUDGE)
+        .addSameProperty(FHBlocks.SILVER_SLUDGE)
+        .addSameProperty(FHBlocks.TIN_SLUDGE)
+        .addSameProperty(FHBlocks.PYRITE_SLUDGE)
+        .addSameProperty(FHBlocks.NICKEL_SLUDGE)
+        .addSameProperty(FHBlocks.LEAD_SLUDGE);
+        // Stone ores
+        ShaderCompatHelper.use(Blocks.COPPER_ORE)
+        .add(FHBlocks.TIN_ORE);
+        ShaderCompatHelper.use(Blocks.IRON_ORE)
+        .add(FHBlocks.PYRITE_ORE);
+        ShaderCompatHelper.use(Blocks.DEEPSLATE_IRON_ORE)
+        .add(FHBlocks.HALITE_ORE)
+        .add(FHBlocks.SYLVITE_ORE)
+        .add(FHBlocks.MAGNESITE_ORE)
+        .add(FHBlocks.DEEPSLATE_PYRITE_ORE)
+        .add(FHBlocks.DEEPSLATE_HALITE_ORE)
+        .add(FHBlocks.DEEPSLATE_SYLVITE_ORE)
+        .add(FHBlocks.DEEPSLATE_MAGNESITE_ORE);
+        ShaderCompatHelper.use(Blocks.DEEPSLATE_COPPER_ORE)
+        .add(FHBlocks.DEEPSLATE_TIN_ORE);
+        ShaderCompatHelper.use(Blocks.MUD)
+        .add(FHBlocks.PEAT)
+        .add(FHBlocks.ROTTEN_WOOD);
+        ShaderCompatHelper.use(Blocks.CLAY)
+        .add(FHBlocks.BAUXITE)
+        .add(FHBlocks.KAOLIN);
+        ShaderCompatHelper.use(Blocks.MYCELIUM)
+        .add(FHBlocks.BURIED_MYCELIUM);
+        ShaderCompatHelper.use(Blocks.PODZOL)
+        .add(FHBlocks.BURIED_PODZOL);
+        ShaderCompatHelper.use(Blocks.SNOW_BLOCK)
+        .add(FHBlocks.DIRT_PERMAFROST)
+        .add(FHBlocks.MUD_PERMAFROST)
+        .add(FHBlocks.GRAVEL_PERMAFROST)
+        .add(FHBlocks.SAND_PERMAFROST)
+        .add(FHBlocks.RED_SAND_PERMAFROST)
+        .add(FHBlocks.CLAY_PERMAFROST)
+        .add(FHBlocks.PEAT_PERMAFROST)
+        .add(FHBlocks.BAUXITE_PERMAFROST)
+        .add(FHBlocks.KAOLIN_PERMAFROST)
+        .add(FHBlocks.MYCELIUM_PERMAFROST)
+        .add(FHBlocks.PODZOL_PERMAFROST)
+        .add(FHBlocks.ROOTED_DIRT_PERMAFROST)
+        .add(FHBlocks.COARSE_DIRT_PERMAFROST);
+        ShaderCompatHelper.use(Blocks.WET_SPONGE)
+        .add(FHBlocks.WHALE_BLOCK)
+        .add(FHBlocks.WHALE_BELLY_BLOCK);
+        ShaderCompatHelper.use(Blocks.GRAVEL)
+        .add(FHBlocks.COPPER_GRAVEL);
+        ShaderCompatHelper.use(Blocks.WHEAT)
+        .add(FHBlocks.RYE_BLOCK)
+        .add(FHBlocks.WHITE_TURNIP_BLOCK);
+        ShaderCompatHelper.use(Blocks.FERN)
+        .add(FHBlocks.RUBBER_DANDELION)
+        .add(FHBlocks.WILD_RUBBER_DANDELION);
+        ShaderCompatHelper.use(Blocks.MAGMA_BLOCK)
+        .add(FHBlocks.COOLED_MAGMA_BLOCK);
         ShaderCompatHelper.use(Blocks.FARMLAND)
         .addMapped(FHBlocks.FERTILIZED_FARMLAND, (van,add)->van.setValue(FarmBlock.MOISTURE,add.getValue(FarmBlock.MOISTURE)));
         ShaderCompatHelper.use(Blocks.DIRT)
         .add(FHBlocks.FERTILIZED_DIRT);
-        ShaderCompatHelper.use(Blocks.COPPER_ORE)
-        .add(FHBlocks.TIN_ORE);
-        ShaderCompatHelper.use(Blocks.DEEPSLATE_COPPER_ORE)
-        .add(FHBlocks.DEEPSLATE_TIN_ORE);
-		// FHTooltips.registerTooltipModifiers();
+        ShaderCompatHelper.use(Blocks.ICE).add(FHBlocks.THIN_ICE_BLOCK);
+        ShaderCompatHelper.use(Blocks.IRON_BLOCK)
+        .add(FHBlocks.ALUMINUM_BLOCK)
+        .add(FHBlocks.STEEL_BLOCK)
+        .add(FHBlocks.DURALUMIN_BLOCK)
+        .add(FHBlocks.SILVER_BLOCK)
+        .add(FHBlocks.NICKEL_BLOCK)
+        .add(FHBlocks.TITANIUM_BLOCK)
+        .add(FHBlocks.INVAR_BLOCK)
+        .add(FHBlocks.TIN_BLOCK)
+        .add(FHBlocks.MAGNESIUM_BLOCK);
+        ShaderCompatHelper.use(Blocks.GOLD_BLOCK)
+        .add(FHBlocks.ELECTRUM_BLOCK);
+        ShaderCompatHelper.use(Blocks.COPPER_BLOCK)
+        .add(FHBlocks.CONSTANTAN_BLOCK)
+        .add(FHBlocks.BRONZE_BLOCK);
+        ShaderCompatHelper.use(Blocks.COAL_BLOCK)
+        .add(FHBlocks.CAST_IRON_BLOCK)
+        .add(FHBlocks.LEAD_BLOCK)
+        .add(FHBlocks.TUNGSTEN_STEEL_BLOCK)
+        .add(FHBlocks.TUNGSTEN_BLOCK);
+        // FHTooltips.registerTooltipModifiers();
         /*
          ItemBlockRenderTypes.setRenderLayer(FHBlocks.RYE_BLOCK.get(), RenderType.cutout());
 		ItemBlockRenderTypes.setRenderLayer(FHBlocks.WHITE_TURNIP_BLOCK.get(), RenderType.cutout());
