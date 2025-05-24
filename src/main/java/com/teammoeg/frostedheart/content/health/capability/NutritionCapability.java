@@ -189,7 +189,7 @@ public class NutritionCapability implements NBTSerializable {
             count += 2;
 
         }*/
-        if (nutrition.fat > 9000) {
+        if (nutrition.fat > 10000) {
             count++;
         }
         /*if (nutrition.carbohydrate < 2000) {
@@ -203,7 +203,7 @@ public class NutritionCapability implements NBTSerializable {
             count += 2;
 
         }
-        if (nutrition.protein > 9000) {
+        if (nutrition.protein > 10000) {
             count++;
         }
         if (nutrition.vegetable < 2000) {

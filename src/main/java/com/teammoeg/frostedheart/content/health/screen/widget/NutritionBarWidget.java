@@ -10,6 +10,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 import java.text.DecimalFormat;
 
@@ -24,7 +25,8 @@ public class NutritionBarWidget extends AbstractWidget {
     private final Component icon;
     private final Component desc;
     private final int color;
-
+    private final float min;
+    private final float max;
     private float value;
     private float hoverProgress = 0.0f;
 
@@ -32,11 +34,13 @@ public class NutritionBarWidget extends AbstractWidget {
         this.value = value;
     }
 
-    public NutritionBarWidget(int pX, int pY, Component icon,Component desc,int color) {
+    public NutritionBarWidget(int pX, int pY,float min,float max, Component icon,Component desc,int color) {
         super(pX-w/2, pY-h/2, w, h, Component.empty());
         this.icon = icon;
         this.desc = desc;
         this.color = color;
+        this.min=Mth.clamp(min, 0, 1.2f)/1.2f;
+        this.max=Mth.clamp(max, 0, 1.2f)/1.2f;
     }
 
     private static final float end = 160;
@@ -55,11 +59,13 @@ public class NutritionBarWidget extends AbstractWidget {
         guiGraphics.drawCenteredString(font, icon, x/2, y/2-font.lineHeight/2, 0xFFFFFF);
         pose.popPose();
         pose.translate(hoverProgress*5,0,0);
-        FGuis.drawRing(guiGraphics, x,  y, 9, 16, start,start+0.2f*(end-start) * progress, 0xB0d4a31c);
-        FGuis.drawRing(guiGraphics, x,  y, 9, 16, start+0.2f*(end-start) * progress,start+0.8f*(end-start) * progress, 0x40FFFFFF);
-        FGuis.drawRing(guiGraphics, x,  y, 9, 16, start+0.9f*(end-start) * progress,start+(end-start) * progress, 0xB0FF1111);
+        if(min>0)
+        	FGuis.drawRing(guiGraphics, x,  y, 9, 16, start,start+min*(end-start) * progress, 0xB0d4a31c);
+        FGuis.drawRing(guiGraphics, x,  y, 9, 16, start+min*(end-start) * progress,start+max*(end-start) * progress, 0x40FFFFFF);
+        if(max<1.2f)
+        	FGuis.drawRing(guiGraphics, x,  y, 9, 16, start+max*(end-start) * progress,start+(end-start) * progress, 0xB0FF1111);
         FGuis.drawRing(guiGraphics, x,  y, 10, 15, start,start+(end-start) * progress, 0x80FFFFFF);
-        FGuis.drawRing(guiGraphics, x,  y, 10.5f, 14.5f, start,start+value *(end-start) * progress, color);
+        FGuis.drawRing(guiGraphics, x,  y, 10.5f, 14.5f, start,start+Mth.clamp(value, 0, 1.2f)/1.2f *(end-start) * progress, color);
         if(hoverProgress>0) {
 
             RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, hoverProgress);

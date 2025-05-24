@@ -84,10 +84,10 @@ public class HealthStatScreen extends Screen implements MenuAccess<HealthStatMen
         AnimationUtil.remove("NutritionScreen");
         int centerX = this.width / 2;
         int centerY = this.height / 2;
-        fatBar = new NutritionBarWidget(centerX+40,centerY-45,fat_icon, Lang.gui("nutrition.fat").component(),FAT_COLOR);
-        proteinBar = new NutritionBarWidget(centerX+40,centerY-15,protein_icon,Lang.gui("nutrition.protein").component(),PROTEIN_COLOR);
-        carbohydrateBar = new NutritionBarWidget(centerX+40,centerY+15,carbohydrate_icon,Lang.gui("nutrition.carbohydrate").component(),CARBOHYDRATE_COLOR);
-        vegetableBar = new NutritionBarWidget(centerX+40,centerY+45,vegetable_icon,Lang.gui("nutrition.vegetable").component(),VEGETABLE_COLOR);
+        fatBar = new NutritionBarWidget(centerX+40,centerY-45,0,1f,fat_icon, Lang.gui("nutrition.fat").component(),FAT_COLOR);
+        proteinBar = new NutritionBarWidget(centerX+40,centerY-15,0.2f,1f,protein_icon,Lang.gui("nutrition.protein").component(),PROTEIN_COLOR);
+        carbohydrateBar = new NutritionBarWidget(centerX+40,centerY+15,0,1.2f,carbohydrate_icon,Lang.gui("nutrition.carbohydrate").component(),CARBOHYDRATE_COLOR);
+        vegetableBar = new NutritionBarWidget(centerX+40,centerY+45,0.2f,1.2f,vegetable_icon,Lang.gui("nutrition.vegetable").component(),VEGETABLE_COLOR);
 
         head = new ColoredCubeWidget(centerX-50,centerY-60,24,24,Lang.gui("temperature.head").component());
         body = new ColoredCubeWidget(centerX-50,centerY-32,24,30,Lang.gui("temperature.body").component());
