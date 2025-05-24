@@ -107,14 +107,13 @@ public class DrinkContainerItem extends ItemFluidContainer {
             	IFluidHandlerItem handler = itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
                 handler.drain(250, IFluidHandler.FluidAction.EXECUTE);
                 return handler.getContainer();
-            }else {
-            	ItemStack using=itemStack.split(1);
-            	IFluidHandlerItem handler = using.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
-                handler.drain(250, IFluidHandler.FluidAction.EXECUTE);
-                CUtils.giveItem(player, using);
-                
-                return itemStack;
             }
+			ItemStack using=itemStack.split(1);
+			IFluidHandlerItem handler = using.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
+			handler.drain(250, IFluidHandler.FluidAction.EXECUTE);
+			CUtils.giveItem(player, using);
+			
+			return itemStack;
         }
         return itemStack;
     }
@@ -124,7 +123,8 @@ public class DrinkContainerItem extends ItemFluidContainer {
     	if(!itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).isPresent())return ItemStack.EMPTY;
     	IFluidHandlerItem handler = itemStack.copy().getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
     	if(handler==null)return ItemStack.EMPTY;
-        handler.drain(250, IFluidHandler.FluidAction.EXECUTE);
+        if(handler.drain(250, IFluidHandler.FluidAction.EXECUTE).isEmpty())
+        	return ItemStack.EMPTY;
 		return handler.getContainer();
 	}
 
