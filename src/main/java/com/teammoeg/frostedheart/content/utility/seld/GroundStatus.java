@@ -7,6 +7,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.SnowLayerBlock;
+import net.minecraft.world.level.block.SnowyDirtBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.BooleanOp;
@@ -77,7 +78,7 @@ public enum GroundStatus {
                                     onSnow = true;
                                     cumulativeFriction += snowFriction;
                                     ++blockCount;
-                                } else if (blockstate.is(FHTags.Blocks.SLED_SAND.tag)) {
+                                } else if (blockstate.hasProperty(SnowyDirtBlock.SNOWY) && blockstate.getValue(SnowyDirtBlock.SNOWY)) {
                                     //sand friction
                                     cumulativeFriction += 0.97;
                                     ++blockCount;

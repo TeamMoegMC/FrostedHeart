@@ -167,10 +167,8 @@ public class FHRegistrateTags {
                 .addTag(FHTags.Blocks.PERMAFROST.tag);
 
         prov.tag(FHTags.Blocks.SLED_SNOW.tag)
+                .addTag(BlockTags.SAND)
                 .addTag(BlockTags.SNOW);
-
-        prov.tag(FHTags.Blocks.SLED_SAND.tag)
-                .addTag(BlockTags.SAND);
 
         prov.tag(AllTags.AllBlockTags.NON_MOVABLE.tag)
                 // multi parts
