@@ -319,6 +319,7 @@ public class TipWidget extends AbstractWidget {
         RenderContext(Tip tip) {
             this.tip = tip;
             originalImageSize = ClientUtils.getImgSize(tip.getImage());
+            hasImage = originalImageSize.height + originalImageSize.width > 0;
         }
 
         void update() {
