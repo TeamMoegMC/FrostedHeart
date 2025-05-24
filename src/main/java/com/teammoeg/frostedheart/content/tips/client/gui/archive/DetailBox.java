@@ -19,10 +19,11 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraftforge.common.util.Size2i;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 public class DetailBox extends Layer {
-    public List<Line> lines = new ArrayList<>();
     public final ScrollBar scrollBar;
 
     public DetailBox(UIWidget panel) {
@@ -31,6 +32,11 @@ public class DetailBox extends Layer {
     }
 
     public void fillContent(Line... lines) {
+        this.fillContent(Arrays.asList(lines));
+    }
+
+    public void fillContent(Collection<Line> lines) {
+        clearElement();
         for (Line line : lines) {
             add(line);
         }
@@ -42,7 +48,7 @@ public class DetailBox extends Layer {
         int h = (int)(ClientUtils.screenHeight() * 0.8F);
         int w = (int)(h * 1.3333F);
         setSize(w, h); // 4:3
-        setPos(0, 0);
+        setPos(120, 0);
 
 //        setScissorEnabled(false);
 
@@ -52,7 +58,7 @@ public class DetailBox extends Layer {
             element.refresh();
         }
         alignWidgets();
-        scrollBar.setPosAndSize(w+8, -7, 6, h+15);
+        scrollBar.setPosAndSize(getX() + w+8, -7, 6, h+15);
     }
 
     @Override
@@ -92,8 +98,44 @@ public class DetailBox extends Layer {
         align(false);
     }
 
+    public TextLine text(String text) {
+        return new TextLine(Alignment.LEFT, Component.literal(text));
+    }
 
-    public static class TextLine extends Line {
+    public TextLine text(Alignment alignment, String text) {
+        return new TextLine(alignment, Component.literal(text));
+    }
+
+    public TextLine text(Component text) {
+        return new TextLine(Alignment.LEFT, text);
+    }
+
+    public TextLine text(Alignment alignment, Component text) {
+        return new TextLine(alignment, text);
+    }
+
+    public ImageLine image(String imageLocation) {
+        return new ImageLine(Alignment.CENTER, ResourceLocation.tryParse(imageLocation));
+    }
+
+    public ImageLine image(Alignment alignment, String imageLocation) {
+        return new ImageLine(alignment, ResourceLocation.tryParse(imageLocation));
+    }
+
+    public ImageLine image(ResourceLocation imageLocation) {
+        return new ImageLine(Alignment.CENTER, imageLocation);
+    }
+
+    public ImageLine image(Alignment alignment, ResourceLocation imageLocation) {
+        return new ImageLine(alignment, imageLocation);
+    }
+
+    public EmptyLine emptyLine() {
+        return new EmptyLine();
+    }
+
+
+    public class TextLine extends Line {
         @Getter
         protected Component text;
         protected final List<FormattedCharSequence> splitText = new ArrayList<>();
@@ -104,25 +146,9 @@ public class DetailBox extends Layer {
         protected boolean shadow = false;
         protected int scale = 1;
 
-        public TextLine(UIWidget parent, Alignment alignment, Component text) {
-            super(parent, alignment);
+        private TextLine(Alignment alignment, Component text) {
+            super(alignment);
             this.text = text;
-        }
-
-        public static TextLine of(UIWidget parent, String text) {
-            return new TextLine(parent, Alignment.LEFT, Component.literal(text));
-        }
-
-        public static TextLine of(UIWidget parent, Alignment alignment, String text) {
-            return new TextLine(parent, alignment, Component.literal(text));
-        }
-
-        public static TextLine of(UIWidget parent, Component text) {
-            return new TextLine(parent, Alignment.LEFT, text);
-        }
-
-        public static TextLine of(UIWidget parent, Alignment alignment, Component text) {
-            return new TextLine(parent, alignment, text);
         }
 
         @Override
@@ -139,15 +165,33 @@ public class DetailBox extends Layer {
 
             if (isTitle) {
                 graphics.fill(x, y, x+w, y+h-2, -1, trimmingColor);
-                pose.translate(2, 2, 0);
+                int offset = switch (alignment) {
+                    case LEFT -> 2;
+                    case CENTER -> 0;
+                    case RIGHT -> -2;
+                };
+                pose.translate(offset, 2, 0);
 
             } else if (isQuote) {
-                graphics.fill(x, y, x+4, y+h-3, -1, trimmingColor);
-                pose.translate(8, 2, 0);
+                graphics.fill(x, y, x+4, y+h-4, -1, trimmingColor);
+                int offset = switch (alignment) {
+                    case LEFT -> 8;
+                    case CENTER -> 0;
+                    case RIGHT -> -2;
+                };
+                pose.translate(offset, 2, 0);
             }
 
+            if (shadow) {
+                pose.pushPose();
+                float offset = 1.0F/scale;
+                pose.translate(offset, offset, 0);
+                CGuiHelper.drawStringLinesInBound(graphics, getFont(), splitText, x, y, w, ColorHelper.makeDark(ColorHelper.setAlpha(baseColor, 0.25F), 0.75F), DEF_LINE_HEIGHT,
+                        false, backgroundColor, alignment);
+                pose.popPose();
+            }
             CGuiHelper.drawStringLinesInBound(graphics, getFont(), splitText, x, y, w, baseColor, DEF_LINE_HEIGHT,
-                    shadow, backgroundColor, alignment);
+                    false, backgroundColor, alignment);
 
             pose.popPose();
         }
@@ -169,22 +213,22 @@ public class DetailBox extends Layer {
             return this;
         }
 
-        public TextLine setTitle(boolean isTitle, int trimmingColor, int scale) {
-            this.isTitle = isTitle;
+        public TextLine setTitle(int trimmingColor, int scale) {
+            this.isTitle = true;
             this.trimmingColor = trimmingColor;
             setScale(scale);
             return this;
         }
 
-        public TextLine setQuote(boolean isQuote, int trimmingColor) {
-            this.isQuote = isQuote;
+        public TextLine setQuote(int trimmingColor) {
+            this.isQuote = true;
             this.baseColor = trimmingColor;
             this.trimmingColor = trimmingColor;
             return this;
         }
 
-        public TextLine setShadow(boolean shadow) {
-            this.shadow = shadow;
+        public TextLine addShadow() {
+            this.shadow = true;
             return this;
         }
 
@@ -194,43 +238,33 @@ public class DetailBox extends Layer {
             var pre = text.getString().split("\\n");
             splitText.clear();
             for (String s : pre) {
-                splitText.addAll(getFont().split(StringTextComponentParser.parse(s), (int)(getWidth() * (1.0F/scale))));
+                splitText.addAll(getFont().split(StringTextComponentParser.parse(s), (int)(getWidth() * (1.0F/scale) - ((isTitle||isQuote) ? 8 : 0))));
             }
 
             setHeight(splitText.size() * DEF_LINE_HEIGHT * scale + 4);
         }
     }
 
-    public static class ImageLine extends Line {
+    public class ImageLine extends Line {
         protected ResourceLocation imgLocation;
         protected Size2i imgSize;
         protected UV imgUV;
         protected int backgroundColor = 0;
 
-        public ImageLine(UIWidget parent, Alignment alignment, ResourceLocation imageLocation) {
-            super(parent, alignment);
+        private ImageLine(Alignment alignment, ResourceLocation imageLocation) {
+            super(alignment);
             setImage(imageLocation);
-        }
-
-        public static ImageLine of(UIWidget parent, String imageLocation) {
-            return new ImageLine(parent, Alignment.CENTER, ResourceLocation.tryParse(imageLocation));
-        }
-
-        public static ImageLine of(UIWidget parent, Alignment alignment, String imageLocation) {
-            return new ImageLine(parent, alignment, ResourceLocation.tryParse(imageLocation));
-        }
-
-        public static ImageLine of(UIWidget parent, ResourceLocation imageLocation) {
-            return new ImageLine(parent, Alignment.CENTER, imageLocation);
-        }
-
-        public static ImageLine of(UIWidget parent, Alignment alignment, ResourceLocation imageLocation) {
-            return new ImageLine(parent, alignment, imageLocation);
         }
 
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h) {
             y -= 2;
+            if (!isImgLocValid()) {
+                graphics.drawCenteredString(getFont(), Component.literal(imgLocation.toString()).withStyle(ChatFormatting.RED),
+                        x+w/2, y, baseColor);
+                return;
+            }
+
             if (backgroundColor != 0) {
                 int bgX = switch (alignment) {
                     case LEFT -> x-2;
@@ -238,12 +272,6 @@ public class DetailBox extends Layer {
                     case RIGHT -> x - w + imgSize.width + 2;
                 };
                 graphics.fill(bgX, y+1, bgX+w, y+h-1, -1, backgroundColor);
-            }
-
-            if (!isImgLocValid()) {
-                graphics.drawCenteredString(getFont(), Component.literal(imgLocation.toString()).withStyle(ChatFormatting.RED),
-                        x+w/2, y, baseColor);
-                return;
             }
             imgUV.blit(graphics, imgLocation, x, y + h/2 - imgSize.height/2);
         }
@@ -267,8 +295,9 @@ public class DetailBox extends Layer {
 
         @Override
         public void refresh() {
+            setWidth(parent.getWidth());
             if (isImgLocValid()) {
-                setSize(parent.getWidth(), imgSize.height+6);
+                setHeight(imgSize.height+6);
                 setX(switch (alignment) {
                     case CENTER -> getWidth() / 2 - imgSize.width / 2;
                     case RIGHT -> getWidth() - imgSize.width - 2;
@@ -280,15 +309,11 @@ public class DetailBox extends Layer {
         }
     }
 
-    public static class EmptyLine extends Line {
+    public class EmptyLine extends Line {
 
-        public EmptyLine(UIWidget parent) {
-            super(parent);
+        private EmptyLine() {
+            super();
             setHeight(DEF_LINE_HEIGHT);
-        }
-
-        public static EmptyLine create(UIWidget parent) {
-            return new EmptyLine(parent);
         }
 
         @Override
@@ -297,21 +322,21 @@ public class DetailBox extends Layer {
         }
     }
 
-    public static abstract class Line extends UIWidget {
+    public abstract class Line extends UIWidget {
         public static final int DEF_LINE_HEIGHT = 12;
         protected Alignment alignment;
         protected int baseColor;
 
-        public Line(UIWidget parent) {
-            this(parent, Alignment.LEFT);
+        public Line() {
+            this(Alignment.LEFT);
         }
 
-        public Line(UIWidget parent, Alignment alignment) {
-            this(parent, alignment, ColorHelper.WHITE);
+        public Line(Alignment alignment) {
+            this(alignment, ColorHelper.WHITE);
         }
 
-        public Line(UIWidget parent, Alignment alignment, int color) {
-            super(parent);
+        public Line(Alignment alignment, int color) {
+            super(DetailBox.this);
             this.alignment = alignment;
             this.baseColor = color;
         }

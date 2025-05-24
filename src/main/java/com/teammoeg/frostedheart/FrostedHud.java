@@ -19,13 +19,14 @@
 
 package com.teammoeg.frostedheart;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.cui.CUIScreen;
+import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.ui.AtlasUV;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.ColorHelper;
@@ -54,6 +55,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -68,6 +70,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.ItemStack;
+import org.lwjgl.glfw.GLFW;
 
 public class FrostedHud {
     static final class Atlases {
@@ -977,27 +980,94 @@ public class FrostedHud {
         lines.add("");
 
         lines.add(Component.literal("Current Screen: " + (screen == null ? "Null" : screen.getClass().getSimpleName())));
-        if (screen != null) {
-            screen.children().forEach(a -> {
+        if (screen instanceof CUIScreen cui) {
+            var pLayer = cui.getPrimaryLayer();
+            for (UIWidget element : pLayer.getElements()) {
+                lines.add("");
+
+                String className = element.getClass().getSimpleName().isBlank() ? element.getClass().getName() : element.getClass().getSimpleName();
+                if (element.isMouseOver()) {
+                    lines.add(Component.literal(className).withStyle(ChatFormatting.GOLD));
+                } else {
+                    lines.add(className);
+                }
+
+                if (element instanceof Layer layer) {
+                    if (element.isMouseOver()) {
+                        Deque<Map.Entry<Iterator<UIWidget>, Integer>> entries = new ArrayDeque<>();
+                        entries.push(new AbstractMap.SimpleEntry<>(layer.getElements().iterator(), 0));
+
+                        while (!entries.isEmpty()) {
+                            Map.Entry<Iterator<UIWidget>, Integer> topEntry = entries.peek();
+                            Iterator<UIWidget> iterator = topEntry.getKey();
+                            int indentLevel = topEntry.getValue();
+
+                            if (iterator.hasNext()) {
+                                UIWidget widget = iterator.next();
+                                className = widget.getClass().getSimpleName().isBlank() ? widget.getClass().getName() : widget.getClass().getSimpleName();
+                                String indent = "    ".repeat(indentLevel);
+                                var c = Component.literal(indent + (widget instanceof Layer && widget.isMouseOver() ? " ▼ " : " ▶ ") + className);
+                                if (widget.isMouseOver()) {
+                                    String bound = " | X=" + widget.getX() + ", Y=" + widget.getY() + ", W=" + widget.getWidth() + ", H=" + widget.getHeight();
+                                    c.append(bound).withStyle(ChatFormatting.GOLD);
+                                }
+                                lines.add(c);
+                                if (widget instanceof Layer childLayer && widget.isMouseOver()) {
+                                    entries.push(new AbstractMap.SimpleEntry<>(childLayer.getElements().iterator(), indentLevel + 1));
+                                }
+                            } else {
+                                entries.pop();
+                            }
+                        }
+                    } else {
+                        for (int i = 0; i < layer.getElements().size(); i++) {
+                            UIWidget layerElement = layer.getElements().get(i);
+                            if (i < 3) {
+                                className = layerElement.getClass().getSimpleName().isBlank() ? layerElement.getClass().getName() : layerElement.getClass().getSimpleName();
+                                lines.add(" ▶ " + className);
+                            }
+                        }
+                        if (layer.getElements().size() > 3) {
+                            lines.add(" ▶ ...and " + (layer.getElements().size() - 3) + " more");
+                        }
+                    }
+                }
+            }
+
+        } else if (screen != null) {
+            for (GuiEventListener a : screen.children()) {
                 var c = Component.empty();
                 if (a instanceof AbstractWidget w) {
                     String name = w.getMessage().getString();
                     if (name.isBlank()) {
-                        name = a.getClass().getSimpleName() + ".class";
+                        name = a.getClass().getSimpleName();
                     }
                     c.append(name);
+                }
+                if (ClientUtils.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT) && a instanceof AbstractWidget a1) {
+                    stack.fill(a1.getX(), a1.getY(), a1.getX() + a1.getWidth(), a1.getY() + a1.getHeight(), ColorHelper.setAlpha(ColorHelper.CYAN, 0.5F));
                 }
                 if (a.isFocused() || a.isMouseOver(MouseHelper.getScaledX(), MouseHelper.getScaledY())) {
                     String clazz = a.getClass().getSimpleName();
                     if (clazz.isBlank()) {
                         clazz = a.getClass().getName();
                     }
-                    c.append(" - [" + clazz + ".class]").withStyle(ChatFormatting.GOLD);
+                    c.append(" - [" + clazz + "]").withStyle(ChatFormatting.GOLD);
+                    if (!ClientUtils.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT) && a instanceof AbstractWidget a2) {
+                        if (a.isFocused() && !a.isMouseOver(MouseHelper.getScaledX(), MouseHelper.getScaledY())) {
+                            stack.fill(a2.getX(), a2.getY(), a2.getX() + a2.getWidth(), a2.getY() + a2.getHeight(), ColorHelper.setAlpha(ColorHelper.RED, 0.5F));
+                        } else {
+                            stack.fill(a2.getX(), a2.getY(), a2.getX() + a2.getWidth(), a2.getY() + a2.getHeight(), ColorHelper.setAlpha(ColorHelper.CYAN, 0.5F));
+                        }
+                    }
                 }
                 lines.add(c);
-            });
+            }
         }
 
-        CGuiHelper.drawStringLines(stack, font, lines, 1, 12, ColorHelper.CYAN, 10, true, true);
+        stack.pose().pushPose();
+        stack.pose().translate(0, 0, 100);
+        CGuiHelper.drawStringLines(stack, font, lines.subList(0, Math.min(lines.size(), 100)), 1, 12, ColorHelper.CYAN, 10, true, true);
+        stack.pose().popPose();
     }
 }

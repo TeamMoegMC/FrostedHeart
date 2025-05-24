@@ -291,8 +291,12 @@ public class TipManager {
                     return;
                 }
                 // 将对应的空TipState替换为文件中储存的TipState
-                tipStates.putAll(stateList.stream()
-                        .collect(Collectors.toMap(state -> getTip(state.id), s -> s)));
+                Map<Tip, State> toAdd = new HashMap<>();
+                for (State fromFile : stateList) {
+                    Tip tip = getTip(fromFile.getId());
+                    toAdd.put(tip, State.copyState(tip, fromFile));
+                }
+                tipStates.putAll(toAdd);
             } catch (IOException e) {
                 LOGGER.error("Unable to load file: '{}'", TIP_STATE_FILE, e);
                 displayException(Tip.ErrorType.LOAD, "tip_states.json", e);
@@ -393,6 +397,13 @@ public class TipManager {
                 this.tip = tip;
                 this.unlocked = false;
                 this.viewed = false;
+            }
+
+            protected static State copyState(Tip tip, State original) {
+                State newState = new State(tip);
+                newState.unlocked = original.unlocked;
+                newState.viewed = original.viewed;
+                return newState;
             }
         }
     }
