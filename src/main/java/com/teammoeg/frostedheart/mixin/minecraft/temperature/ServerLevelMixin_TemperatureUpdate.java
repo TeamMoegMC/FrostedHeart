@@ -79,7 +79,9 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
             //for (int l1 = 0; l1 < temperatureChecks; ++l1) {
                 BlockPos blockpos1 = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(i, 0, j, 15));
                 BlockPos blockpos2 = blockpos1.below();
-                Holder<Biome> biomeHolder = CUtils.fastGetBiome(level, blockpos2);
+                
+               // Holder<Biome> biomeHolder = CUtils.fastGetBiome(level, blockpos2);
+                Holder<Biome> biomeHolder=CUtils.fastGetBiome(pChunk,blockpos2);
                 Biome biome = biomeHolder.value();
                 // TODO: for ocean freezing, we need some special handling...
                 if (!biomeHolder.is(FHTags.Biomes.WATER_DO_NOT_FREEZE.tag) && level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
@@ -130,7 +132,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
                         level.getProfiler().push("randomTick");
                         BlockState blockstate2 = levelchunksection.getBlockState(blockpos3.getX() - i, blockpos3.getY() - k1, blockpos3.getZ() - j);
                         
-                        if(!frostedHeart$updateBlockBasedOnTemperature(level, blockpos3, blockstate2))
+                        if(!frostedHeart$updateBlockBasedOnTemperature(pChunk,level, blockpos3, blockstate2))
 	                    	//@khjxiaogu: omit randomtick from the original block if temperature modification occurred
 	                        if(!frostedHeart$updatePlantBasedOnTemperature(level,blockpos3,blockstate2)) {
 		                        if (blockstate2.isRandomlyTicking()) {
@@ -266,9 +268,9 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         
     }
     @Unique
-    private boolean frostedHeart$updateBlockBasedOnTemperature(ServerLevel level, BlockPos pos,final BlockState currentState) {
+    private boolean frostedHeart$updateBlockBasedOnTemperature(LevelChunk pChunk, ServerLevel level, BlockPos pos,final BlockState currentState) {
 
-        Holder<Biome> biome=CUtils.fastGetBiome(level, pos);
+        Holder<Biome> biome=CUtils.fastGetBiome(pChunk,pos);
 
         StateTransitionData std = StateTransitionData.getData(currentState);
         //if data file states that it should not transit

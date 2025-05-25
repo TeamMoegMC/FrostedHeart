@@ -97,6 +97,7 @@
     "client.create.ClientEventsMixin",
     "create.MixinOpenConfigButtonHandler",
     "minecraft.water.LocalPlayerMixin",
+    "minecraft.fix.ConnectionMixin_ShowReason",
     "oculus.IrisRenderingPipelineAccess"
   ],
   "injectors": {

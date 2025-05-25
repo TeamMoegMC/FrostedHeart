@@ -79,6 +79,7 @@ import net.minecraft.world.level.block.BucketPickup;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
@@ -418,5 +419,8 @@ public class CUtils {
 	}
 	public static Holder<Biome> fastGetBiome(Level level,BlockPos pos){
 		return level.getNoiseBiome(QuartPos.fromBlock(pos.getX()), QuartPos.fromBlock(pos.getY()), QuartPos.fromBlock(pos.getZ()));
+	}
+	public static Holder<Biome> fastGetBiome(LevelChunk pChunk,BlockPos pos){
+		return pChunk.getSection(pChunk.getSectionIndex(pos.getY())).getNoiseBiome(QuartPos.fromBlock(pos.getX())&3, QuartPos.fromBlock(pos.getY())&3, QuartPos.fromBlock(pos.getZ())&3);
 	}
 }

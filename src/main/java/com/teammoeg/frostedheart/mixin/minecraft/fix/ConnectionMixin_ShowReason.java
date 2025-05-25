@@ -6,6 +6,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.teammoeg.frostedheart.FHMain;
+
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import net.minecraft.network.Connection;
@@ -15,7 +17,7 @@ public abstract class ConnectionMixin_ShowReason extends SimpleChannelInboundHan
 
     @Inject(at = @At("HEAD"), method = "exceptionCaught",require=1)
     public void fh$exceptionCaught_showreason(ChannelHandlerContext pContext, Throwable pException, CallbackInfo cbi) {
-    	pException.printStackTrace();
+    	FHMain.LOGGER.debug("Caught exception in handling packet",pException);
     }
 
 }

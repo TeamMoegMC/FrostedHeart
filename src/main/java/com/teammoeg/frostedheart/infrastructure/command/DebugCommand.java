@@ -66,6 +66,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
@@ -223,6 +224,7 @@ public class DebugCommand {
 						palettedcontainerro = new PalettedContainer<>(registry.asHolderIdMap(),
 								registry.getHolderOrThrow(Biomes.PLAINS), PalettedContainer.Strategy.SECTION_BIOMES);
 					}
+					ServerGamePacketListenerImpl impl;
 					// 在这里放置你的读取代码
 					LevelChunkSection levelchunksection = new LevelChunkSection(palettedcontainer, palettedcontainerro);
 					boolean flag = chunk.getSections()[secIdx].hasOnlyAir();
