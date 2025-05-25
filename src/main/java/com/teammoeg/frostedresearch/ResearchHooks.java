@@ -77,6 +77,11 @@ public class ResearchHooks {
 	}
 	@SuppressWarnings("unchecked")
 	public static <T> UnlockList<T> getLockList(UnlockListType<T> name){
+		//may fix npe?
+		if(locklists.isEmpty()) {
+			locklists.clear();
+			MinecraftForge.EVENT_BUS.post(new PopulateUnlockListEvent(locklists));
+		}
 		return (UnlockList<T>) locklists.get(name);
 	}
 	@OnlyIn(Dist.CLIENT)
