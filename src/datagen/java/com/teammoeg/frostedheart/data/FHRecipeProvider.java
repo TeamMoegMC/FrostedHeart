@@ -421,29 +421,38 @@ public class FHRecipeProvider extends RecipeProvider {
 //		.basic()
 //		.finish()
 //		.weight(1).id("test").finish(out);
-
+		final String BASE_NEEDS_NAME="base_villager_needs";
 		// general:
 		// maxstore: storage capacity for that item
 		// recover: average daily recover of the need (for buying) and for saling.
 		// price: relative "value" of item
-
+		trade().group()
+		// buys food
+		.buy("vegetables", 30, 3, 8, Ingredient.of(CPTags.Items.VEGETABLES))
+		.buy("cereals", 30, 3, 5, Ingredient.of(CPTags.Items.CEREALS))
+		.buy("cereals_baked", 30, 3, 7, Ingredient.of(CPTags.Items.BAKED))
+		.buy("eggs", 30, 1, 10, Ingredient.of(CPTags.Items.EGGS))
+		.buy(30, 2, 10, ItemSubscriber.fat.asItem())
+		.buy("sugar", 30, 2, 10, Ingredient.of(CPTags.Items.SUGAR))
+		.buy("walnut", 30, 2, 10, Ingredient.of(CPTags.Items.WALNUT))
+		// buys clothes
+		.buy(5, 0.1f, 15, FHItems.straw_lining.get())
+		.buy(5, 0.1f, 30, FHItems.buff_coat.get())
+		.buy(5, 0.1f, 60, FHItems.gambeson.get())
+		// buys processed fuel
+		.buy(64, 5, 6, IEItems.Ingredients.COAL_COKE.asItem())
+		.basic()
+		.finish()
+		.id(BASE_NEEDS_NAME)
+		.finish(out);
+		
+		
 		// night soil collector
 		trade().group()
-				// buys food
+				
 				// .buy("refugee_needs", 30, 5, 3, Ingredient.of(FHTags.Items.REFUGEE_NEEDS.tag))
-				.buy("vegetables", 30, 3, 8, Ingredient.of(CPTags.Items.VEGETABLES))
-				.buy("cereals", 30, 3, 5, Ingredient.of(CPTags.Items.CEREALS))
-				.buy("cereals_baked", 30, 3, 7, Ingredient.of(CPTags.Items.BAKED))
-				.buy("eggs", 30, 1, 10, Ingredient.of(CPTags.Items.EGGS))
-				.buy(30, 2, 10, ItemSubscriber.fat.asItem())
-				.buy("sugar", 30, 2, 10, Ingredient.of(CPTags.Items.SUGAR))
-				.buy("walnut", 30, 2, 10, Ingredient.of(CPTags.Items.WALNUT))
-				// buys clothes
-				.buy(5, 0.1f, 15, FHItems.straw_lining.get())
-				.buy(5, 0.1f, 30, FHItems.buff_coat.get())
-				.buy(5, 0.1f, 60, FHItems.gambeson.get())
-				// buys processed fuel
-				.buy(64, 5, 6, IEItems.Ingredients.COAL_COKE.asItem())
+				//extends basic needs
+				.extend(BASE_NEEDS_NAME)
 				// buys job related tools
 				.buy(3, 1, 20, Items.IRON_SWORD.asItem())
 				.buy(3, 1, 15, FHItems.BRONZE_SHOVEL.get())
@@ -463,23 +472,10 @@ public class FHRecipeProvider extends RecipeProvider {
 				.id("night_soil_collector")
 				.finish(out);
 
-		// hunting
+		// hunting 0(large animal meat collector)
 		trade().group()
-				// buys food
-				// .buy("refugee_needs", 30, 5, 3, Ingredient.of(FHTags.Items.REFUGEE_NEEDS.tag))
-				.buy("vegetables", 30, 3, 8, Ingredient.of(CPTags.Items.VEGETABLES))
-				.buy("cereals", 30, 3, 5, Ingredient.of(CPTags.Items.CEREALS))
-				.buy("cereals_baked", 30, 3, 7, Ingredient.of(CPTags.Items.BAKED))
-				.buy("eggs", 30, 1, 10, Ingredient.of(CPTags.Items.EGGS))
-				.buy(30, 2, 10, ItemSubscriber.fat.asItem())
-				.buy("sugar", 30, 2, 10, Ingredient.of(CPTags.Items.SUGAR))
-				.buy("walnut", 30, 2, 10, Ingredient.of(CPTags.Items.WALNUT))
-				// buys clothes
-				.buy(5, 0.1f, 15, FHItems.straw_lining.get())
-				.buy(5, 0.1f, 30, FHItems.buff_coat.get())
-				.buy(5, 0.1f, 60, FHItems.gambeson.get())
-				// buys processed fuel
-				.buy(64, 5, 6, IEItems.Ingredients.COAL_COKE.asItem())
+				//extends basic needs
+				.extend(BASE_NEEDS_NAME)
 				// buys job related tools
 				.buy(64, 10, 1, Items.ARROW)
 				.buy(3, 1, 10, Items.BOW)
@@ -488,6 +484,123 @@ public class FHRecipeProvider extends RecipeProvider {
 				.buy(3, .5f, 40, IEItems.Tools.STEEL_SWORD.asItem())
 				.buy(1, .1f, 30, FHItems.SNOWSHOES.get())
 				.buy(1, .1f, 30, FHItems.ICE_SKATES.get())
+				// sells hunting results
+				.sell(4, 2f, 10, Items.RABBIT_HIDE)
+				.sell(12, 3f, 5, ItemSubscriber.venison)
+				.sell(12, 2f, 30, ItemSubscriber.fat)
+				.sell(16, 6F, 4, Items.RABBIT)
+				.sell(8, 5F, 20, Items.CHICKEN)
+				.sell(8, 5F, 20, Items.FEATHER)
+				//.sellsWhen().flagValue("cage").finish()
+				// sell intelligence, but slow
+				.sell(2, 0.08f, 200, FRContents.Items.intelligence.get())
+				.basic()
+				.finish()
+				.profession(VillagerProfession.BUTCHER)
+				.levelExp(1000, 2000, 3000, 4000, 5000)
+				.weight(2)
+				.id("hunter")
+				.finish(out);
+		// hunting 1(medium animal collector)
+		trade().group()
+				//extends basic needs
+				.extend(BASE_NEEDS_NAME)
+				// buys job related tools
+				.buy(64, 10, 1, Items.ARROW)
+				.buy(3, 1, 10, Items.BOW)
+				.buy(3, 1, 20, Items.IRON_SWORD)
+				.buy(3, 1, 15, FHItems.BRONZE_SWORD.get())
+				.buy(3, .5f, 40, IEItems.Tools.STEEL_SWORD.asItem())
+				.buy(1, .1f, 30, FHItems.SNOWSHOES.get())
+				.buy(1, .1f, 30, FHItems.ICE_SKATES.get())
+				// sells hunting results
+				.sell(4, 1f, 15, FHItems.wolf_hide.get())
+				.sell(4, 0.6f, 20, FHItems.fox_hide.get())
+				.sell(12, 6f, 5, FHItems.WOLF_MEAT.get())
+				.sell(12, 3f, 7, FHItems.FOX_MEAT.get())
+				.sell(12, 3f, 5, ItemSubscriber.venison)
+				.sell(12, 2f, 30, ItemSubscriber.fat)
+				//.sellsWhen().flagValue("cage").finish()
+				// sell intelligence, but slow
+				.sell(2, 0.08f, 200, FRContents.Items.intelligence.get())
+				.basic()
+				.finish()
+				.profession(VillagerProfession.BUTCHER)
+				.levelExp(1000, 2000, 3000, 4000, 5000)
+				.weight(2)
+				.id("hunter_medium_animal")
+				.finish(out);
+		// hunting caged 1
+		trade().group()
+				//extends basic needs
+				.extend(BASE_NEEDS_NAME)
+				// buys job related tools
+				.buy(64, 10, 1, Items.ARROW)
+				.buy(3, 1, 10, Items.BOW)
+				.buy(3, 1, 20, Items.IRON_SWORD)
+				.buy(3, 1, 15, FHItems.BRONZE_SWORD.get())
+				.buy(3, .5f, 40, IEItems.Tools.STEEL_SWORD.asItem())
+				.buy(1, .1f, 30, FHItems.SNOWSHOES.get())
+				.buy(1, .1f, 30, FHItems.ICE_SKATES.get())
+				.buy(2, .1f,200, ModRegistry.CAGE_ITEM.get())
+				// sells hunting results
+				.sell(16, 4F, 1, FHItems.night_soil.asItem())
+				.sell(16, 8F, 1, FHItems.dung.asItem())
+				.sell("caged_rabbit", 1, .1f, 500, cagedRabbit())
+				//.sellsWhen().flagValue("cage").finish()
+				.sell("caged_fowl", 1, .05f, 800, cagedFowl())
+				//.sellsWhen().flagValue("cage").finish()
+				// sell intelligence, but slow
+				.sell(2, 0.08f, 200, FRContents.Items.intelligence.get())
+				.basic()
+				.finish()
+				.profession(VillagerProfession.BUTCHER)
+				.levelExp(1000, 2000, 3000, 4000, 5000)
+				.weight(2)
+				.id("hunter_caged_1")
+				.finish(out);
+		// hunting caged 2
+		trade().group()
+				//extends basic needs
+				.extend(BASE_NEEDS_NAME)
+				// buys job related tools
+				.buy(64, 10, 1, Items.ARROW)
+				.buy(3, 1, 10, Items.BOW)
+				.buy(3, 1, 20, Items.IRON_SWORD)
+				.buy(3, 1, 15, FHItems.BRONZE_SWORD.get())
+				.buy(3, .5f, 40, IEItems.Tools.STEEL_SWORD.asItem())
+				.buy(1, .1f, 30, FHItems.SNOWSHOES.get())
+				.buy(1, .1f, 30, FHItems.ICE_SKATES.get())
+				.buy(2, .1f,200, ModRegistry.CAGE_ITEM.get())
+				// sells hunting results
+				.sell(16, 4F, 1, FHItems.night_soil.asItem())
+				.sell(16, 8F, 1, FHItems.dung.asItem())
+				.sell("caged_boar", 1, .05f, 800, cagedBoar())
+				//.sellsWhen().flagValue("cage").finish()
+				.sell("caged_fox", 1, .025f, 1000, cagedFox())
+				//.sellsWhen().flagValue("cage").finish()
+				// sell intelligence, but slow
+				.sell(2, 0.08f, 200, FRContents.Items.intelligence.get())
+				.basic()
+				.finish()
+				.profession(VillagerProfession.BUTCHER)
+				.levelExp(1000, 2000, 3000, 4000, 5000)
+				.weight(2)
+				.id("hunter_caged_2")
+				.finish(out);
+		// hunting caged 3
+		trade().group()
+				//extends basic needs
+				.extend(BASE_NEEDS_NAME)
+				// buys job related tools
+				.buy(64, 10, 1, Items.ARROW)
+				.buy(3, 1, 10, Items.BOW)
+				.buy(3, 1, 20, Items.IRON_SWORD)
+				.buy(3, 1, 15, FHItems.BRONZE_SWORD.get())
+				.buy(3, .5f, 40, IEItems.Tools.STEEL_SWORD.asItem())
+				.buy(1, .1f, 30, FHItems.SNOWSHOES.get())
+				.buy(1, .1f, 30, FHItems.ICE_SKATES.get())
+				.buy(2, .1f,200, ModRegistry.CAGE_ITEM.get())
 				// sells hunting results
 				.sell(4, 1f, 15, FHItems.wolf_hide.get())
 				.sell(4, 0.6f, 20, FHItems.fox_hide.get())
@@ -501,17 +614,10 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(8, 5F, 20, Items.FEATHER)
 				.sell(16, 4F, 1, FHItems.night_soil.asItem())
 				.sell(16, 8F, 1, FHItems.dung.asItem())
-				.sell("caged_rabbit", 1, .1f, 500, cagedRabbit())
-				//.sellsWhen().flagValue("cage").finish()
-				.sell("caged_boar", 1, .05f, 800, cagedBoar())
 				//.sellsWhen().flagValue("cage").finish()
 				.sell("caged_auroch", 1, .05f, 800, cagedAuroch())
 				//.sellsWhen().flagValue("cage").finish()
 				.sell("caged_mouflon", 1, .05f, 800, cagedMouflon())
-				//.sellsWhen().flagValue("cage").finish()
-				.sell("caged_fowl", 1, .05f, 800, cagedFowl())
-				//.sellsWhen().flagValue("cage").finish()
-				.sell("caged_fox", 1, .025f, 1000, cagedFox())
 				//.sellsWhen().flagValue("cage").finish()
 				// sell intelligence, but slow
 				.sell(2, 0.08f, 200, FRContents.Items.intelligence.get())
@@ -519,30 +625,16 @@ public class FHRecipeProvider extends RecipeProvider {
 				.finish()
 				.profession(VillagerProfession.BUTCHER)
 				.levelExp(1000, 2000, 3000, 4000, 5000)
-				.weight(10)
-				.id("hunter")
+				.weight(2)
+				.id("hunter_caged_3")
 				.finish(out);
-
 		// sea hunter
 		trade().group()
-				// buys food
-				.buy("vegetables", 30, 3, 8, Ingredient.of(CPTags.Items.VEGETABLES))
-				.buy("cereals", 30, 3, 5, Ingredient.of(CPTags.Items.CEREALS))
-				.buy("cereals_baked", 30, 3, 7, Ingredient.of(CPTags.Items.BAKED))
-				.buy("eggs", 30, 1, 10, Ingredient.of(CPTags.Items.EGGS))
-				.buy(30, 2, 10, ItemSubscriber.fat.asItem())
-				.buy("sugar", 30, 2, 10, Ingredient.of(CPTags.Items.SUGAR))
-				.buy("walnut", 30, 2, 10, Ingredient.of(CPTags.Items.WALNUT))
-				// buys clothes
-				.buy(5, 0.1f, 15, FHItems.straw_lining.get())
-				.buy(5, 0.1f, 30, FHItems.buff_coat.get())
-				.buy(5, 0.1f, 60, FHItems.gambeson.get())
-				// buys processed fuel
-				.buy(64, 5, 6, IEItems.Ingredients.COAL_COKE.asItem())
+				//extends basic needs
+				.extend(BASE_NEEDS_NAME)
 				// buys job related tools
 				.buy(64, 10, 1, Items.ARROW)
 				.buy(5, 1, 10, Items.BOW)
-				.buy(5, 1, 10, Items.FISHING_ROD)
 				.buy(1, .1f, 30, FHItems.SNOWSHOES.get())
 				.buy(1, .1f, 30, FHItems.ICE_SKATES.get())
 				.buy("boats", 1, .1f, 50, Ingredient.of(ItemTags.BOATS))
@@ -553,10 +645,6 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(8, 0.2f, 20, FHItems.polar_bear_hide.get())
 				.sell(16, 2f, 8, FHItems.POLAR_BEAR_MEAT.get())
 				.sell(16, 2f, 8, FHItems.RAW_WHALE_MEAT.get())
-				.sell(16, 8f, 5, Items.COD)
-				.sell(10, 2f, 50, Items.SEAGRASS)
-				.sell(10, 2f, 50, Items.SEA_PICKLE)
-				.sell(10, 2f, 50, Items.KELP)
 				.sell(8, 1f, 30, ItemSubscriber.fat)
 				.sell(16, 4F, 1, FHItems.night_soil.asItem())
 				.sell(16, 8F, 1, FHItems.dung.asItem())
@@ -569,23 +657,35 @@ public class FHRecipeProvider extends RecipeProvider {
 				.weight(2)
 				.id("ocean_hunter")
 				.finish(out);
-
-		// mining
+		// sea hunter plants
 		trade().group()
-				// buys food
-				.buy("vegetables", 30, 3, 8, Ingredient.of(CPTags.Items.VEGETABLES))
-				.buy("cereals", 30, 3, 5, Ingredient.of(CPTags.Items.CEREALS))
-				.buy("cereals_baked", 30, 3, 7, Ingredient.of(CPTags.Items.BAKED))
-				.buy("eggs", 30, 1, 10, Ingredient.of(CPTags.Items.EGGS))
-				.buy(30, 2, 10, ItemSubscriber.fat.asItem())
-				.buy("sugar", 30, 2, 10, Ingredient.of(CPTags.Items.SUGAR))
-				.buy("walnut", 30, 2, 10, Ingredient.of(CPTags.Items.WALNUT))
-				// buys clothes
-				.buy(5, 0.1f, 15, FHItems.straw_lining.get())
-				.buy(5, 0.1f, 30, FHItems.buff_coat.get())
-				.buy(5, 0.1f, 60, FHItems.gambeson.get())
-				// buys processed fuel
-				.buy(64, 5, 6, IEItems.Ingredients.COAL_COKE.asItem())
+				//extends basic needs
+				.extend(BASE_NEEDS_NAME)
+				// buys job related tools
+				.buy(5, 1, 10, Items.FISHING_ROD)
+				.buy(1, .1f, 30, FHItems.SNOWSHOES.get())
+				.buy(1, .1f, 30, FHItems.ICE_SKATES.get())
+				.buy("boats", 1, .1f, 50, Ingredient.of(ItemTags.BOATS))
+				// sells hunting results
+				.sell(16, 8f, 5, Items.COD)
+				.sell(10, 2f, 50, Items.SEAGRASS)
+				.sell(10, 2f, 50, Items.SEA_PICKLE)
+				.sell(10, 2f, 50, Items.KELP)
+				.sell(16, 4F, 1, FHItems.night_soil.asItem())
+				.sell(16, 8F, 1, FHItems.dung.asItem())
+				// sell intelligence, but slow
+				.sell(2, 0.05f, 200, FRContents.Items.intelligence.get())
+				.basic()
+				.finish()
+				.profession(VillagerProfession.FISHERMAN)
+				.levelExp(1000, 2000, 3000, 4000, 5000)
+				.weight(2)
+				.id("ocean_planter")
+				.finish(out);
+		//swallow mining
+		trade().group()
+				//extends basic needs
+				.extend(BASE_NEEDS_NAME)
 				// buys job related tools
 				.buy(1, .1f, 30, FHItems.SNOWSHOES.get())
 				.buy(1, .1f, 30, FHItems.ICE_SKATES.get())
@@ -603,51 +703,96 @@ public class FHRecipeProvider extends RecipeProvider {
 				.sell(64, 4, 5, Items.RAW_COPPER)
 				.sell(64, 16, 2, Items.RAW_IRON)
 				.sell(64, 16, 5, FHItems.RAW_TIN.asItem())
-				.sell(64, 4, 5, FHItems.RAW_MAGNESITE.asItem())
-				.sell(64, 4, 2, FHItems.RAW_HALITE.asItem())
-				.sell(64, 4, 5, FHItems.RAW_SYLVITE.asItem())
 				.sell(64, 8, 3, FHItems.RAW_PYRITE.asItem())
-				.sell(32, 8, 5, CRegistryHelper.getItem(ImmersiveEngineering.rl("raw_nickel")))
-				.sell(32, 8, 5, CRegistryHelper.getItem(ImmersiveEngineering.rl("raw_lead")))
-				.sell(16, 2, 30, CRegistryHelper.getItem(ImmersiveEngineering.rl("raw_silver")))
-				.sell(64, 16, 2, CRegistryHelper.getItem(Create.asResource("raw_zinc")))
 				.sell(64, 16, 5, FHItems.KAOLIN.asItem())
 				.sell(128, 16, 2, FHItems.BAUXITE.asItem())
 				.sell(64, 16, 1, FHItems.PEAT.asItem())
-				.sell(16, 2, 50, Items.RAW_GOLD)
-				.sell(16, .2f, 100, Items.DIAMOND)
-				.sell(32, 3, 10, Items.LAPIS_LAZULI)
-				.sell(32, 3, 10, Items.REDSTONE)
-				.sell(16, .1f, 500, Items.EMERALD)
-				.sell(32, 1, 30, Items.AMETHYST_SHARD)
-				.sell(32, 1, 200, Items.LAVA_BUCKET)
-				.sell(32, 1, 100, Items.MAGMA_BLOCK)
 				// sell intelligence, but slow
 				.sell(2, 0.05f, 200, FRContents.Items.intelligence.get())
 				.basic()
 				.finish()
 				.profession(VillagerProfession.TOOLSMITH)
 				.levelExp(1000, 2000, 3000, 4000, 5000)
-				.weight(5)
+				.weight(3)
 				.id("miner")
 				.finish(out);
-
+		//medium mining
+		trade().group()
+		//extends basic needs
+		.extend(BASE_NEEDS_NAME)
+		// buys job related tools
+		.buy(1, .1f, 30, FHItems.SNOWSHOES.get())
+		.buy(1, .1f, 30, FHItems.ICE_SKATES.get())
+		.buy(3, .5f, 40, IEItems.Tools.STEEL_PICK.asItem())
+		.buy(3, .5f, 40, IEItems.Tools.STEEL_SHOVEL.asItem())
+		.buy(3, 1, 20, Items.IRON_SHOVEL)
+		.buy(3, 1, 20, Items.IRON_PICKAXE)
+		.buy(3, 1, 20, Items.IRON_SHOVEL)
+		.buy(3, 1, 15, FHItems.BRONZE_PICKAXE.asItem())
+		.buy(3, 1, 15, FHItems.BRONZE_SHOVEL.asItem())
+		.buy(64, 10, 10, Items.TNT)
+		// sells mining results
+		.sell(16, 4F, 1, FHItems.night_soil.asItem())
+		.sell(128, 32, 3, Items.COAL)
+		.sell(64, 16, 2, Items.RAW_IRON)
+		.sell(64, 4, 5, FHItems.RAW_MAGNESITE.asItem())
+		.sell(64, 4, 2, FHItems.RAW_HALITE.asItem())
+		.sell(64, 4, 5, FHItems.RAW_SYLVITE.asItem())
+		.sell(64, 8, 3, FHItems.RAW_PYRITE.asItem())
+		.sell(32, 8, 5, CRegistryHelper.getItem(ImmersiveEngineering.rl("raw_nickel")))
+		.sell(32, 8, 5, CRegistryHelper.getItem(ImmersiveEngineering.rl("raw_lead")))
+		.sell(64, 16, 2, CRegistryHelper.getItem(Create.asResource("raw_zinc")))
+		.sell(32, 1, 200, Items.LAVA_BUCKET)
+		.sell(32, 1, 100, Items.MAGMA_BLOCK)
+		// sell intelligence, but slow
+		.sell(2, 0.05f, 200, FRContents.Items.intelligence.get())
+		.basic()
+		.finish()
+		.profession(VillagerProfession.TOOLSMITH)
+		.levelExp(1000, 2000, 3000, 4000, 5000)
+		.weight(2)
+		.id("miner_metal")
+		.finish(out);
+		
+		trade().group()
+		//extends basic needs
+		.extend(BASE_NEEDS_NAME)
+		// buys job related tools
+		.buy(1, .1f, 30, FHItems.SNOWSHOES.get())
+		.buy(1, .1f, 30, FHItems.ICE_SKATES.get())
+		.buy(3, .5f, 40, IEItems.Tools.STEEL_PICK.asItem())
+		.buy(3, .5f, 40, IEItems.Tools.STEEL_SHOVEL.asItem())
+		.buy(3, 1, 20, Items.IRON_SHOVEL)
+		.buy(3, 1, 20, Items.IRON_PICKAXE)
+		.buy(3, 1, 20, Items.IRON_SHOVEL)
+		.buy(3, 1, 15, FHItems.BRONZE_PICKAXE.asItem())
+		.buy(3, 1, 15, FHItems.BRONZE_SHOVEL.asItem())
+		.buy(64, 10, 10, Items.TNT)
+		// sells mining results
+		.sell(16, 4F, 1, FHItems.night_soil.asItem())
+		.sell(64, 4, 5, Items.RAW_COPPER)
+		.sell(16, 2, 30, CRegistryHelper.getItem(ImmersiveEngineering.rl("raw_silver")))
+		.sell(16, 2, 50, Items.RAW_GOLD)
+		.sell(16, .2f, 100, Items.DIAMOND)
+		.sell(32, 3, 10, Items.LAPIS_LAZULI)
+		.sell(32, 3, 10, Items.REDSTONE)
+		.sell(16, .1f, 500, Items.EMERALD)
+		.sell(32, 1, 30, Items.AMETHYST_SHARD)
+		.sell(32, 1, 200, Items.LAVA_BUCKET)
+		.sell(32, 1, 100, Items.MAGMA_BLOCK)
+		// sell intelligence, but slow
+		.sell(2, 0.05f, 200, FRContents.Items.intelligence.get())
+		.basic()
+		.finish()
+		.profession(VillagerProfession.TOOLSMITH)
+		.levelExp(1000, 2000, 3000, 4000, 5000)
+		.weight(1)
+		.id("miner_expensive")
+		.finish(out);
 		// explorer
 		trade().group()
-				// buys food
-				.buy("vegetables", 64, 3, 8, Ingredient.of(CPTags.Items.VEGETABLES))
-				.buy("cereals", 64, 3, 5, Ingredient.of(CPTags.Items.CEREALS))
-				.buy("cereals_baked", 64, 3, 7, Ingredient.of(CPTags.Items.BAKED))
-				.buy("eggs", 64, 1, 10, Ingredient.of(CPTags.Items.EGGS))
-				.buy(64, 2, 10, ItemSubscriber.fat.asItem())
-				.buy("sugar", 64, 2, 10, Ingredient.of(CPTags.Items.SUGAR))
-				.buy("walnut", 64, 2, 10, Ingredient.of(CPTags.Items.WALNUT))
-				// buys clothes
-				.buy(10, 0.2f, 15, FHItems.straw_lining.get())
-				.buy(10, 0.2f, 30, FHItems.buff_coat.get())
-				.buy(10, 0.2f, 60, FHItems.gambeson.get())
-				// buys processed fuel
-				.buy(128, 5, 6, IEItems.Ingredients.COAL_COKE.asItem())
+				//extends basic needs
+				.extend(BASE_NEEDS_NAME)
 				// buys job related tools
 				.buy(5, .1f, 30, FHItems.SNOWSHOES.get())
 				.buy(5, .1f, 30, FHItems.ICE_SKATES.get())

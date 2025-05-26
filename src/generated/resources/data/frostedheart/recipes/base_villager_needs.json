@@ -1,0 +1,164 @@
+{
+  "type": "frostedheart:trade",
+  "policies": [
+    {
+      "conditions": [],
+      "data": [
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:vegetables"
+          },
+          "hide_stockout": false,
+          "id": "vegetables",
+          "price": 8,
+          "recover": 3.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:cereals"
+          },
+          "hide_stockout": false,
+          "id": "cereals",
+          "price": 5,
+          "recover": 3.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:cereals/baked"
+          },
+          "hide_stockout": false,
+          "id": "cereals_baked",
+          "price": 7,
+          "recover": 3.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:eggs"
+          },
+          "hide_stockout": false,
+          "id": "eggs",
+          "price": 10,
+          "recover": 1.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "stone_age:fat"
+          },
+          "hide_stockout": false,
+          "id": "stone_age:fat",
+          "price": 10,
+          "recover": 2.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:sugar"
+          },
+          "hide_stockout": false,
+          "id": "sugar",
+          "price": 10,
+          "recover": 2.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "tag": "caupona:walnut"
+          },
+          "hide_stockout": false,
+          "id": "walnut",
+          "price": 10,
+          "recover": 2.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 30,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:straw_lining"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:straw_lining",
+          "price": 15,
+          "recover": 0.1,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:buff_coat"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:buff_coat",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:gambeson"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:gambeson",
+          "price": 60,
+          "recover": 0.1,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 5,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "immersiveengineering:coal_coke"
+          },
+          "hide_stockout": false,
+          "id": "immersiveengineering:coal_coke",
+          "price": 6,
+          "recover": 5.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 64,
+          "use_actions": []
+        }
+      ]
+    }
+  ]
+}

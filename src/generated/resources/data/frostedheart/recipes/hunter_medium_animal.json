@@ -116,13 +116,49 @@
         {
           "actions": [],
           "hide_stockout": false,
-          "id": "minecraft:rabbit_hide",
-          "price": 10,
-          "produce": "minecraft:rabbit_hide",
-          "recover": 2.0,
+          "id": "frostedheart:wolf_hide",
+          "price": 15,
+          "produce": "frostedheart:wolf_hide",
+          "recover": 1.0,
           "restock_condition": [],
           "sell_condition": [],
           "store": 4,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:fox_hide",
+          "price": 20,
+          "produce": "frostedheart:fox_hide",
+          "recover": 0.6,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 4,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:wolf_meat",
+          "price": 5,
+          "produce": "frostedheart:wolf_meat",
+          "recover": 6.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 12,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:fox_meat",
+          "price": 7,
+          "produce": "frostedheart:fox_meat",
+          "recover": 3.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 12,
           "use_actions": []
         },
         {
@@ -147,42 +183,6 @@
           "restock_condition": [],
           "sell_condition": [],
           "store": 12,
-          "use_actions": []
-        },
-        {
-          "actions": [],
-          "hide_stockout": false,
-          "id": "minecraft:rabbit",
-          "price": 4,
-          "produce": "minecraft:rabbit",
-          "recover": 6.0,
-          "restock_condition": [],
-          "sell_condition": [],
-          "store": 16,
-          "use_actions": []
-        },
-        {
-          "actions": [],
-          "hide_stockout": false,
-          "id": "minecraft:chicken",
-          "price": 20,
-          "produce": "minecraft:chicken",
-          "recover": 5.0,
-          "restock_condition": [],
-          "sell_condition": [],
-          "store": 8,
-          "use_actions": []
-        },
-        {
-          "actions": [],
-          "hide_stockout": false,
-          "id": "minecraft:feather",
-          "price": 20,
-          "produce": "minecraft:feather",
-          "recover": 5.0,
-          "restock_condition": [],
-          "sell_condition": [],
-          "store": 8,
           "use_actions": []
         },
         {

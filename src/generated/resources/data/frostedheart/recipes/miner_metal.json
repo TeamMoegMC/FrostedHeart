@@ -182,18 +182,6 @@
         {
           "actions": [],
           "hide_stockout": false,
-          "id": "minecraft:raw_copper",
-          "price": 5,
-          "produce": "minecraft:raw_copper",
-          "recover": 4.0,
-          "restock_condition": [],
-          "sell_condition": [],
-          "store": 64,
-          "use_actions": []
-        },
-        {
-          "actions": [],
-          "hide_stockout": false,
           "id": "minecraft:raw_iron",
           "price": 2,
           "produce": "minecraft:raw_iron",
@@ -206,10 +194,34 @@
         {
           "actions": [],
           "hide_stockout": false,
-          "id": "frostedheart:raw_tin",
+          "id": "frostedheart:raw_magnesite",
           "price": 5,
-          "produce": "frostedheart:raw_tin",
-          "recover": 16.0,
+          "produce": "frostedheart:raw_magnesite",
+          "recover": 4.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:raw_halite",
+          "price": 2,
+          "produce": "frostedheart:raw_halite",
+          "recover": 4.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:raw_sylvite",
+          "price": 5,
+          "produce": "frostedheart:raw_sylvite",
+          "recover": 4.0,
           "restock_condition": [],
           "sell_condition": [],
           "store": 64,
@@ -230,37 +242,61 @@
         {
           "actions": [],
           "hide_stockout": false,
-          "id": "frostedheart:kaolin",
+          "id": "immersiveengineering:raw_nickel",
           "price": 5,
-          "produce": "frostedheart:kaolin",
-          "recover": 16.0,
+          "produce": "immersiveengineering:raw_nickel",
+          "recover": 8.0,
           "restock_condition": [],
           "sell_condition": [],
-          "store": 64,
+          "store": 32,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
-          "id": "frostedheart:bauxite",
+          "id": "immersiveengineering:raw_lead",
+          "price": 5,
+          "produce": "immersiveengineering:raw_lead",
+          "recover": 8.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 32,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "create:raw_zinc",
           "price": 2,
-          "produce": "frostedheart:bauxite",
+          "produce": "create:raw_zinc",
           "recover": 16.0,
           "restock_condition": [],
           "sell_condition": [],
-          "store": 128,
+          "store": 64,
           "use_actions": []
         },
         {
           "actions": [],
           "hide_stockout": false,
-          "id": "frostedheart:peat",
-          "price": 1,
-          "produce": "frostedheart:peat",
-          "recover": 16.0,
+          "id": "minecraft:lava_bucket",
+          "price": 200,
+          "produce": "minecraft:lava_bucket",
+          "recover": 1.0,
           "restock_condition": [],
           "sell_condition": [],
-          "store": 64,
+          "store": 32,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:magma_block",
+          "price": 100,
+          "produce": "minecraft:magma_block",
+          "recover": 1.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 32,
           "use_actions": []
         },
         {
@@ -279,5 +315,5 @@
     }
   ],
   "profession": "minecraft:toolsmith",
-  "weight": 3
+  "weight": 2
 }

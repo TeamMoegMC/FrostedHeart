@@ -115,6 +115,44 @@
         },
         {
           "actions": [],
+          "demand": {
+            "item": "supplementaries:cage"
+          },
+          "hide_stockout": false,
+          "id": "supplementaries:cage",
+          "price": 200,
+          "recover": 0.1,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 2,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:wolf_hide",
+          "price": 15,
+          "produce": "frostedheart:wolf_hide",
+          "recover": 1.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 4,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:fox_hide",
+          "price": 20,
+          "produce": "frostedheart:fox_hide",
+          "recover": 0.6,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 4,
+          "use_actions": []
+        },
+        {
+          "actions": [],
           "hide_stockout": false,
           "id": "minecraft:rabbit_hide",
           "price": 10,
@@ -123,6 +161,30 @@
           "restock_condition": [],
           "sell_condition": [],
           "store": 4,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:wolf_meat",
+          "price": 5,
+          "produce": "frostedheart:wolf_meat",
+          "recover": 6.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 12,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:fox_meat",
+          "price": 7,
+          "produce": "frostedheart:fox_meat",
+          "recover": 3.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 12,
           "use_actions": []
         },
         {
@@ -183,6 +245,60 @@
           "restock_condition": [],
           "sell_condition": [],
           "store": 8,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:night_soil",
+          "price": 1,
+          "produce": "frostedheart:night_soil",
+          "recover": 4.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 16,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:dung",
+          "price": 1,
+          "produce": "frostedheart:dung",
+          "recover": 8.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 16,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "caged_auroch",
+          "price": 800,
+          "produce": {
+            "id": "supplementaries:cage",
+            "nbt": "{BlockEntityTag:{MobHolder:{EntityData:{AbsorptionAmount:0.0f,Age:-23930,Air:300s,Anger:0s,ArmorDropChances:[0.085f,0.085f,0.085f,0.085f],ArmorItems:[{},{},{},{}],Attributes:[{Base:0.08d,Name:\"forge:entity_gravity\"},{Base:0.30000001192092896d,Name:\"minecraft:generic.movement_speed\"},{Base:0.0d,Name:\"forge:step_height_addition\"}],Brain:{memories:{}},CanPickUpLoot:0b,CanUpdate:1b,DeathTime:0s,FallDistance:0.0f,FallFlying:0b,Fire:0s,ForcedAge:0,ForgeCaps:{\"curios:inventory\":{Curios:[]}},ForgeData:{},Generation:1,HandDropChances:[0.085f,0.085f],HandItems:[{},{}],Health:20.0f,HurtBy:\"\",HurtByTimestamp:0,HurtTime:0s,InLove:0,Invulnerable:0b,LeftHanded:0b,Motion:[0.0d,-0.0784000015258789d,0.0d],OnGround:1b,PersistenceRequired:0b,PortalCooldown:0,Pos:[0.5d,0.0626d,0.5d],Rotation:[0.0f,0.0f],id:\"stone_age:auroch\"},Name:\"Auroch 野牛\",Scale:0.5833333f,UUID:[I;-967854644,1756646617,-1205931748,45898938]}}}"
+          },
+          "recover": 0.05,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "caged_mouflon",
+          "price": 800,
+          "produce": {
+            "id": "supplementaries:cage",
+            "nbt": "{BlockEntityTag:{MobHolder:{EntityData:{AbsorptionAmount:0.0f,Age:-23933,Air:300s,Anger:0s,ArmorDropChances:[0.085f,0.085f,0.085f,0.085f],ArmorItems:[{},{},{},{}],Attributes:[{Base:0.08d,Name:\"forge:entity_gravity\"},{Base:0.30000001192092896d,Name:\"minecraft:generic.movement_speed\"},{Base:0.0d,Name:\"forge:step_height_addition\"}],Brain:{memories:{}},CanPickUpLoot:0b,CanUpdate:1b,DeathTime:0s,FallDistance:0.0f,FallFlying:0b,Fire:0s,ForcedAge:0,ForgeCaps:{\"curios:inventory\":{Curios:[]}},ForgeData:{},Generation:1,HandDropChances:[0.085f,0.085f],HandItems:[{},{}],Health:20.0f,HurtBy:\"\",HurtByTimestamp:0,HurtTime:0s,InLove:0,Invulnerable:0b,LeftHanded:0b,Motion:[0.13874070260499188d,-0.0784000015258789d,0.0013633874297243307d],OnGround:1b,PersistenceRequired:0b,PortalCooldown:0,Pos:[0.5d,0.0626d,0.5d],Rotation:[0.0f,0.0f],id:\"stone_age:mouflon\"},Name:\"Mouflon 野羊\",Scale:0.5833333f,UUID:[I;62466033,-929150022,-1427858985,1970102500]}}}"
+          },
+          "recover": 0.05,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 1,
           "use_actions": []
         },
         {

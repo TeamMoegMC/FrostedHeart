@@ -84,6 +84,7 @@ public class FHRecipeCachingReloadListener implements ResourceManagerReloadListe
        // SaunaRecipe.recipeList = filterRecipes(recipes, SaunaRecipe.class, SaunaRecipe.TYPE);
         //IncubateRecipe.recipeList = filterRecipes(recipes, IncubateRecipe.class, IncubateRecipe.TYPE);
         TradePolicy.policies = filterRecipes(recipes, TradePolicy.class, TradePolicy.TYPE).values().stream().collect(Collectors.toMap(TradePolicy::getName, t -> t));
+        System.out.println(TradePolicy.policies);
         //System.out.println(TradePolicy.policies.size());
         TradePolicy.items = TradePolicy.policies.values().stream().map(TradePolicy::asWeight).filter(Objects::nonNull).collect(Collectors.toList());
         //System.out.println(TradePolicy.items.size());
