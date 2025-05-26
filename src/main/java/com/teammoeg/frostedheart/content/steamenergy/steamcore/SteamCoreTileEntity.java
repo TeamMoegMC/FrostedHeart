@@ -66,28 +66,26 @@ public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
     @Override
     public void tick() {
         super.tick();
+        
         if (!level.isClientSide) {
             if (network.tryDrainHeat(FHConfig.COMMON.steamCorePowerIntake.get().floatValue())) {
-                
-                if (generatingSpeed == 0f) {
-                	generatingSpeed=FHConfig.COMMON.steamCoreGeneratedSpeed.get().floatValue();
+            	float targetSpeed=FHConfig.COMMON.steamCoreGeneratedSpeed.get().floatValue();
+                if (generatingSpeed !=targetSpeed) {
+                	generatingSpeed=targetSpeed;
                 	this.setActive(true);
+                	this.updateGeneratedRotation();
                 }
-                this.updateGeneratedRotation();
+                
                 setChanged();
             } else if(generatingSpeed!=0){
             	generatingSpeed=0;
             	this.updateGeneratedRotation();
             	this.setActive(false);
-                
+            	setChanged();
             }
         }
     }
 
-    public void lazyTick() {
-        super.lazyTick();
-
-    }
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {

@@ -21,6 +21,7 @@
           "price": 8,
           "recover": 3.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 64,
           "use_actions": []
         },
@@ -34,6 +35,7 @@
           "price": 5,
           "recover": 3.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 64,
           "use_actions": []
         },
@@ -47,6 +49,7 @@
           "price": 7,
           "recover": 3.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 64,
           "use_actions": []
         },
@@ -60,6 +63,7 @@
           "price": 10,
           "recover": 1.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 64,
           "use_actions": []
         },
@@ -73,6 +77,7 @@
           "price": 10,
           "recover": 2.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 64,
           "use_actions": []
         },
@@ -86,6 +91,7 @@
           "price": 10,
           "recover": 2.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 64,
           "use_actions": []
         },
@@ -99,6 +105,7 @@
           "price": 10,
           "recover": 2.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 64,
           "use_actions": []
         },
@@ -112,6 +119,7 @@
           "price": 15,
           "recover": 0.2,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 10,
           "use_actions": []
         },
@@ -125,6 +133,7 @@
           "price": 30,
           "recover": 0.2,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 10,
           "use_actions": []
         },
@@ -138,6 +147,7 @@
           "price": 60,
           "recover": 0.2,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 10,
           "use_actions": []
         },
@@ -151,6 +161,7 @@
           "price": 6,
           "recover": 5.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 128,
           "use_actions": []
         },
@@ -164,6 +175,7 @@
           "price": 30,
           "recover": 0.1,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 5,
           "use_actions": []
         },
@@ -177,6 +189,7 @@
           "price": 30,
           "recover": 0.1,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 5,
           "use_actions": []
         },
@@ -190,6 +203,7 @@
           "price": 1,
           "recover": 5.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 32,
           "use_actions": []
         },
@@ -203,6 +217,7 @@
           "price": 10,
           "recover": 0.1,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -216,6 +231,7 @@
           "price": 50,
           "recover": 0.1,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 5,
           "use_actions": []
         },
@@ -229,6 +245,7 @@
           "price": 100,
           "recover": 0.1,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 5,
           "use_actions": []
         },
@@ -242,6 +259,7 @@
           "price": 50,
           "recover": 0.1,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 5,
           "use_actions": []
         },
@@ -253,6 +271,7 @@
           "produce": "frostedheart:night_soil",
           "recover": 4.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 16,
           "use_actions": []
         },
@@ -264,6 +283,7 @@
           "produce": "caupona:walnut_sapling",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -275,6 +295,7 @@
           "produce": "caupona:fig_sapling",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -286,6 +307,7 @@
           "produce": "caupona:wolfberry_sapling",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -297,6 +319,7 @@
           "produce": "minecraft:oak_sapling",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -308,6 +331,7 @@
           "produce": "minecraft:birch_sapling",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 3,
           "use_actions": []
         },
@@ -319,6 +343,7 @@
           "produce": "minecraft:jungle_sapling",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -330,6 +355,7 @@
           "produce": "minecraft:acacia_sapling",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -341,6 +367,7 @@
           "produce": "minecraft:dark_oak_sapling",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -352,6 +379,7 @@
           "produce": "minecraft:mangrove_propagule",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -363,6 +391,7 @@
           "produce": "minecraft:cherry_sapling",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -374,6 +403,7 @@
           "produce": "minecraft:azalea",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -385,6 +415,7 @@
           "produce": "minecraft:flowering_azalea",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -396,6 +427,7 @@
           "produce": "minecraft:bamboo",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -407,6 +439,7 @@
           "produce": "minecraft:cocoa_beans",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -418,6 +451,7 @@
           "produce": "minecraft:sugar_cane",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 3,
           "use_actions": []
         },
@@ -429,6 +463,7 @@
           "produce": "minecraft:cactus",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 3,
           "use_actions": []
         },
@@ -440,6 +475,7 @@
           "produce": "minecraft:lily_pad",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 3,
           "use_actions": []
         },
@@ -451,6 +487,7 @@
           "produce": "minecraft:honeycomb_block",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -462,6 +499,7 @@
           "produce": "caupona:silphium",
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -473,6 +511,7 @@
           "produce": "minecraft:brown_mushroom",
           "recover": 1.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 12,
           "use_actions": []
         },
@@ -484,6 +523,7 @@
           "produce": "minecraft:red_mushroom",
           "recover": 1.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 12,
           "use_actions": []
         },
@@ -495,6 +535,7 @@
           "produce": "minecraft:dandelion",
           "recover": 1.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 8,
           "use_actions": []
         },
@@ -506,6 +547,7 @@
           "produce": "minecraft:glow_berries",
           "recover": 1.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 6,
           "use_actions": []
         },
@@ -517,6 +559,7 @@
           "produce": "minecraft:sweet_berries",
           "recover": 1.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 10,
           "use_actions": []
         },
@@ -528,6 +571,7 @@
           "produce": "frostedheart:rubber_dandelion",
           "recover": 1.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 6,
           "use_actions": []
         },
@@ -539,6 +583,7 @@
           "produce": "frostedresearch:intelligence",
           "recover": 0.2,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 4,
           "use_actions": []
         }

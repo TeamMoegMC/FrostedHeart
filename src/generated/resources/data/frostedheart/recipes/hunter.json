@@ -21,6 +21,7 @@
           "price": 8,
           "recover": 3.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 30,
           "use_actions": []
         },
@@ -34,6 +35,7 @@
           "price": 5,
           "recover": 3.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 30,
           "use_actions": []
         },
@@ -47,6 +49,7 @@
           "price": 7,
           "recover": 3.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 30,
           "use_actions": []
         },
@@ -60,6 +63,7 @@
           "price": 10,
           "recover": 1.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 30,
           "use_actions": []
         },
@@ -73,6 +77,7 @@
           "price": 10,
           "recover": 2.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 30,
           "use_actions": []
         },
@@ -86,6 +91,7 @@
           "price": 10,
           "recover": 2.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 30,
           "use_actions": []
         },
@@ -99,6 +105,7 @@
           "price": 10,
           "recover": 2.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 30,
           "use_actions": []
         },
@@ -112,6 +119,7 @@
           "price": 15,
           "recover": 0.1,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 5,
           "use_actions": []
         },
@@ -125,6 +133,7 @@
           "price": 30,
           "recover": 0.1,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 5,
           "use_actions": []
         },
@@ -138,6 +147,7 @@
           "price": 60,
           "recover": 0.1,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 5,
           "use_actions": []
         },
@@ -151,6 +161,7 @@
           "price": 6,
           "recover": 5.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 64,
           "use_actions": []
         },
@@ -164,6 +175,7 @@
           "price": 1,
           "recover": 10.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 64,
           "use_actions": []
         },
@@ -177,6 +189,7 @@
           "price": 10,
           "recover": 1.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 3,
           "use_actions": []
         },
@@ -190,6 +203,7 @@
           "price": 20,
           "recover": 1.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 3,
           "use_actions": []
         },
@@ -203,6 +217,7 @@
           "price": 15,
           "recover": 1.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 3,
           "use_actions": []
         },
@@ -216,6 +231,7 @@
           "price": 40,
           "recover": 0.5,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 3,
           "use_actions": []
         },
@@ -229,6 +245,7 @@
           "price": 30,
           "recover": 0.1,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -242,6 +259,7 @@
           "price": 30,
           "recover": 0.1,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -253,6 +271,7 @@
           "produce": "frostedheart:wolf_hide",
           "recover": 1.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 4,
           "use_actions": []
         },
@@ -264,6 +283,7 @@
           "produce": "frostedheart:fox_hide",
           "recover": 0.6,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 4,
           "use_actions": []
         },
@@ -275,6 +295,7 @@
           "produce": "minecraft:rabbit_hide",
           "recover": 2.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 4,
           "use_actions": []
         },
@@ -286,6 +307,7 @@
           "produce": "frostedheart:wolf_meat",
           "recover": 6.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 12,
           "use_actions": []
         },
@@ -297,6 +319,7 @@
           "produce": "frostedheart:fox_meat",
           "recover": 3.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 12,
           "use_actions": []
         },
@@ -308,6 +331,7 @@
           "produce": "stone_age:venison",
           "recover": 3.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 12,
           "use_actions": []
         },
@@ -319,6 +343,7 @@
           "produce": "stone_age:fat",
           "recover": 2.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 12,
           "use_actions": []
         },
@@ -330,6 +355,7 @@
           "produce": "minecraft:rabbit",
           "recover": 6.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 16,
           "use_actions": []
         },
@@ -341,6 +367,7 @@
           "produce": "minecraft:chicken",
           "recover": 5.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 8,
           "use_actions": []
         },
@@ -352,6 +379,7 @@
           "produce": "minecraft:feather",
           "recover": 5.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 8,
           "use_actions": []
         },
@@ -363,6 +391,7 @@
           "produce": "frostedheart:night_soil",
           "recover": 4.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 16,
           "use_actions": []
         },
@@ -374,6 +403,7 @@
           "produce": "frostedheart:dung",
           "recover": 8.0,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 16,
           "use_actions": []
         },
@@ -388,6 +418,7 @@
           },
           "recover": 0.1,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -402,6 +433,7 @@
           },
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -416,6 +448,7 @@
           },
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -430,6 +463,7 @@
           },
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -444,6 +478,7 @@
           },
           "recover": 0.05,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -458,6 +493,7 @@
           },
           "recover": 0.025,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 1,
           "use_actions": []
         },
@@ -469,6 +505,7 @@
           "produce": "frostedresearch:intelligence",
           "recover": 0.08,
           "restock_condition": [],
+          "sell_condition": [],
           "store": 2,
           "use_actions": []
         }
