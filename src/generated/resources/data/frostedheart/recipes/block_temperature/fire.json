@@ -1,5 +1,5 @@
 {
   "type": "frostedheart:block_temp",
   "block": "minecraft:fire",
-  "temperature": 500.0
+  "temperature": 100.0
 }
