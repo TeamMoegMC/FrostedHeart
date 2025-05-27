@@ -79,6 +79,7 @@
     "drawer.ControllerBlockEntityMixin"
   ],
   "client": [
+    "client.immersiveengineering.SawmillProcessMixin",
     "client.BossHealthOverlayAccess",
     "client.ChatScreenMixin",
     "client.ClientPacketListenerMixin",
