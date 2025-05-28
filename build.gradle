@@ -503,10 +503,6 @@ curseforge {
                 optionalDependency 'charcoal-pit-reloaded'
                 optionalDependency 'neolithic-world'
                 optionalDependency 'comforts'
-                optionalDependency 'crockpot'
-//                requiredDependency 'snow-real-magic'
-//                requiredDependency 'kiwi'
-//                requiredDependency 'primal-winter'
             }
         }
     }

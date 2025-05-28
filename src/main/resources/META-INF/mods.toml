@@ -74,13 +74,6 @@ Team and Contributors: www.teammoeg.com
     side="BOTH"
 
 [[dependencies.frostedheart]]
-    modId="crockpot"
-    mandatory=false
-    versionRange="[1.0.1,)"
-    ordering="BEFORE"
-    side="BOTH"
-
-[[dependencies.frostedheart]]
     modId="stone_age"
     mandatory=false
     versionRange="[1.4.8,)"
