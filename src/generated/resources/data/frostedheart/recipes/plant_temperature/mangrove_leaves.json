@@ -9,7 +9,7 @@
   "max_survive": 35.0,
   "min_fertilize": 20.0,
   "min_grow": 15.0,
-  "min_skylight": 14,
+  "min_skylight": 0,
   "min_survive": 0.0,
   "will_die": false
 }
