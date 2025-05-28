@@ -255,7 +255,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         // plant state transition
         float t = WorldTemperature.block(level, pos);
         var selfStatus = WorldTemperature.checkPlantStatus(level, pos, selfData, t);
-        if (selfStatus.willDie()) {
+        if (selfStatus.willDie() && level.getRandom().nextInt(selfData.heatCapacity()) == 0) {
             var dead = selfData.dead();
             var belowBlockState = level.getBlockState(pos.below());
             if (dead == Blocks.DEAD_BUSH && !belowBlockState.isAir() && !belowBlockState.is(BlockTags.DEAD_BUSH_MAY_PLACE_ON)) {
