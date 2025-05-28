@@ -12,7 +12,7 @@
   "gas": {
     "Name": "minecraft:coarse_dirt"
   },
-  "heat_capacity": 2,
+  "heat_capacity": 5,
   "liquid": {
     "Name": "minecraft:podzol",
     "Properties": {

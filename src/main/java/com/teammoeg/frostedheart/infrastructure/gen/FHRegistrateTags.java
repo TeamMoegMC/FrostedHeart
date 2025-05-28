@@ -163,6 +163,7 @@ public class FHRegistrateTags {
                 .add(FHMultiblocks.RADIATOR.getBlock());
 
         prov.tag(BlockTags.DEAD_BUSH_MAY_PLACE_ON)
+                .add(Blocks.FARMLAND)
                 .addTag(FHTags.Blocks.SOIL.tag)
                 .addTag(FHTags.Blocks.PERMAFROST.tag);
 
