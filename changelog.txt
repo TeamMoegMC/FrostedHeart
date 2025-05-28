@@ -1,1 +1,2 @@
-fix crash when using tag compat
+0.6.12
+- Release before the stable version.
