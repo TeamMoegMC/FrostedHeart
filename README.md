@@ -2,6 +2,10 @@
 - The Core Mod of The Winter Rescue
 - Issues should go to the [TWR Issue Tracker](https://github.com/TeamMoegMC/The-Winter-Rescue/issues)
 
+Development Branch: `1.20.1`
+
+Support Branch: `0.6.0`
+
 This Mod is where most of the contents of The Winter Rescue
 are implemented. It is a NeoForge mod for Minecraft 1.20.1.
 
