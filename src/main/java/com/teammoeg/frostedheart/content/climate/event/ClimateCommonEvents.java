@@ -617,7 +617,7 @@ public class ClimateCommonEvents {
             if (allow) {
                 if (farmlandBlockState.is(FHBlocks.FERTILIZED_DIRT.get())) {
                     int currentStorage = farmlandBlockState.getValue(FertilizedDirt.STORAGE);
-                    int newStorage = currentStorage - 4;
+                    int newStorage = currentStorage - 2;
                     if (newStorage <= 0) {
                         level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
                     } else {
