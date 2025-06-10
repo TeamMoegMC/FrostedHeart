@@ -18,7 +18,9 @@ import net.minecraft.network.chat.FormattedText;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CategoryBox extends Layer {
     public static final int DEF_ITEM_HEIGHT = 16;
@@ -30,6 +32,7 @@ public class CategoryBox extends Layer {
         super(panel);
         this.detailBox = detailBox;
         this.scrollBar = new LayerScrollBar(parent, true, this);
+        setSmoothScrollEnabled(true);
         addUIElements();
     }
 
@@ -59,14 +62,18 @@ public class CategoryBox extends Layer {
 
     public void addCategories() {
         Category tipCategory = new Category(this, Component.literal("Tips"));
-        List<TipEntry> unlockedTips = new ArrayList<>();
+        List<TipEntry> tipEntries = new ArrayList<>();
+        Set<String> childTipIds = new HashSet<>();
         for (Tip tip : TipManager.INSTANCE.state().getAllUnlockedTips()) {
-            if (!tip.isHide()) {
+            childTipIds.addAll(tip.getChildren());
+        }
+        for (Tip tip : TipManager.INSTANCE.state().getAllUnlockedTips()) {
+            if (!tip.isHide() && !childTipIds.contains(tip.getId())) {
                 TipEntry tipEntry = new TipEntry(tip, tipCategory);
-                unlockedTips.add(tipEntry);
+                tipEntries.add(tipEntry);
             }
         }
-        tipCategory.addAll(unlockedTips);
+        tipCategory.addAll(tipEntries);
         add(tipCategory);
     }
 
@@ -197,29 +204,65 @@ public class CategoryBox extends Layer {
 
     public class TipEntry extends Entry {
         final Tip tip;
+        final List<Tip> children;
 
         public TipEntry(Tip tip, UIWidget parent) {
             super(parent);
             this.tip = tip;
+            this.children = tip.getChildren().stream().filter(TipManager.INSTANCE.state()::isUnlocked).map(TipManager.INSTANCE::getTip).toList();
             this.title = tip.getContents().get(0);
+        }
+
+        @Override
+        public boolean isRead() {
+            boolean hasUnread = !TipManager.INSTANCE.state().isViewed(tip);
+            if (hasUnread) {
+                return false;
+            }
+            for (Tip child : children) {
+                hasUnread = !TipManager.INSTANCE.state().isViewed(child);
+                if (hasUnread) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public boolean read() {
+            TipManager.INSTANCE.state().setViewState(tip, true);
+            for (Tip tip : children) {
+                TipManager.INSTANCE.state().setViewState(tip, true);
+            }
+            return true;
         }
 
         @Override
         public List<DetailBox.Line> getContents() {
             List<DetailBox.Line> lines = new ArrayList<>();
-            var tipContents = tip.getContents();
-            for (int i = 0; i < tipContents.size(); i++) {
-                Component line = tipContents.get(i);
-                if (i == 0) {
-                    lines.add(box.text(line).setQuote(tip.getFontColor()));
+            List<Tip> tips = new ArrayList<>();
+            tips.add(tip);
+            tips.addAll(children);
+
+            for (int j = 0; j < tips.size(); j++) {
+                Tip tip = tips.get(j);
+                var tipContents = tip.getContents();
+                if (j == 0) {
+                    lines.add(box.text(tipContents.get(0)).setQuote(tip.getFontColor()));
                     lines.add(box.emptyLine());
-                } else {
-                    lines.add(box.text(line));
+                } else if (!TipManager.INSTANCE.state().isViewed(tip)) {
+                    lines.add(box.text(Component.translatable("gui.frostedheart.archive.new_tip")).setTitle(tip.getFontColor(), 1).setBaseColor(ColorHelper.getTextColor(tip.getFontColor())));
                 }
-            }
-            if (tip.getImage() != null) {
-                lines.add(box.emptyLine());
-                lines.add(box.image(tip.getImage()).setBackgroundColor(ColorHelper.L_BG_GRAY));
+                for (int i = 1; i < tipContents.size(); i++) {
+                    Component line = tipContents.get(i);
+                    if (!line.getString().isBlank()) {
+                        lines.add(box.text(line));
+                    }
+                }
+                if (tip.getImage() != null) {
+                    lines.add(box.image(tip.getImage()).setBackgroundColor(ColorHelper.L_BG_GRAY));
+                }
+                lines.add((box.br()));
             }
             return lines;
         }
@@ -230,6 +273,7 @@ public class CategoryBox extends Layer {
         public Component title = Component.empty();
         protected Component cachedTitle = Component.empty();
         public int baseColor = ColorHelper.WHITE;
+        protected boolean read;
 
         public Entry(UIWidget parent) {
             super(parent);
@@ -245,7 +289,16 @@ public class CategoryBox extends Layer {
             } else {
                 graphics.drawString(getFont(), cachedTitle, x+2, y+4, baseColor);
             }
+
+            if (!read) {
+                // TODO 优化小红点
+                graphics.fill(x+w-6, y+2, x+w-4, y+4, ColorHelper.RED);
+            }
         }
+
+        public abstract boolean isRead();
+
+        public abstract boolean read();
 
         public abstract Collection<DetailBox.Line> getContents();
 
@@ -254,6 +307,7 @@ public class CategoryBox extends Layer {
             cachedTitle = StringTextComponentParser.parse(title.getString());
             setWidth(parent.getWidth()-8);
             setHeight(DEF_ITEM_HEIGHT);
+            read = isRead();
         }
 
         @Override
@@ -261,6 +315,7 @@ public class CategoryBox extends Layer {
             if (isEnabled() && isVisible() && isMouseOver) {
                 if (button == MouseButton.LEFT) {
                     CategoryBox.this.detailBox.fillContent(getContents());
+                    read = read();
                 }
                 return true;
             }

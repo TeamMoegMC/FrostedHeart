@@ -419,7 +419,7 @@ public class CGuiHelper {
 				int bgX1 = drawX - 2;
 				int bgY1 = drawY - 1;
 				int bgX2 = drawX + textWidth + 2;
-				int bgY2 = bgY1 + lineSpace;
+				int bgY2 = bgY1 + (font.lineHeight + lineSpace);
 				graphics.fill(bgX1, bgY1, bgX2, bgY2, backgroundColor);
 			}
 
@@ -432,7 +432,7 @@ public class CGuiHelper {
 				graphics.drawString(font, text.toString(), drawX, drawY, color, shadow);
 			}
 
-			lineOffset += lineSpace;
+			lineOffset += (font.lineHeight + lineSpace);
 		}
 	}
 
@@ -468,13 +468,13 @@ public class CGuiHelper {
 				int bgX1 = drawX - 2;
 				int bgY1 = drawY - 1;
 				int bgX2 = drawX + textWidth + 2;
-				int bgY2 = bgY1 + lineSpace;
+				int bgY2 = bgY1 + (font.lineHeight + lineSpace);
 				graphics.fill(bgX1, bgY1, bgX2, bgY2, backgroundColor);
 			}
 			// 文本
 			graphics.drawString(font, line, drawX, drawY, color, shadow);
 
-			lineOffset += lineSpace;
+			lineOffset += (font.lineHeight + lineSpace);
 		}
 	}
 
@@ -517,7 +517,7 @@ public class CGuiHelper {
 				int bgX1 = drawX - 2;
 				int bgY1 = drawY - 2;
 				int bgX2 = drawX + textWidth + 2;
-				int bgY2 = bgY1 + lineSpace;
+				int bgY2 = bgY1 + (font.lineHeight + lineSpace);
 				graphics.fill(bgX1, bgY1, bgX2, bgY2, backgroundColor);
 			}
 			// 文本
@@ -529,7 +529,7 @@ public class CGuiHelper {
 				graphics.drawString(font, text.toString(), drawX, drawY, color, shadow);
 			}
 
-			lineOffset += lineSpace;
+			lineOffset += (font.lineHeight + lineSpace);
 		}
 	}
 

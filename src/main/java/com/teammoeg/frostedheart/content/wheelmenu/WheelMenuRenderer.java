@@ -180,7 +180,7 @@ public class WheelMenuRenderer {
 		var message = hoveredSelection != null ? hoveredSelection.getMessage() : Component.translatable("gui.frostedheart.wheel_menu.message",
 				FHKeyMappings.key_openWheelMenu.get().getKey().getDisplayName());
 		var lines = font.split(message, (int) (innerRadius * 2 - 16));
-		CGuiHelper.drawStringLines(graphics, font, lines, 0, -lines.size() * 5, ColorHelper.CYAN, 10, true, true, Alignment.CENTER);
+		CGuiHelper.drawStringLines(graphics, font, lines, 0, -lines.size() * 5, ColorHelper.CYAN, 1, true, true, Alignment.CENTER);
 		pose.popPose();
 	}
 

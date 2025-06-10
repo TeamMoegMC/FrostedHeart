@@ -29,6 +29,7 @@ public class DetailBox extends Layer {
     public DetailBox(UIWidget panel) {
         super(panel);
         this.scrollBar = new LayerScrollBar(parent, true, this);
+        setSmoothScrollEnabled(true);
     }
 
     public void fillContent(Line... lines) {
@@ -59,6 +60,7 @@ public class DetailBox extends Layer {
         }
         alignWidgets();
         scrollBar.setPosAndSize(getX() + w+8, -7, 6, h+15);
+        scrollBar.setValue(0);
     }
 
     @Override
@@ -95,7 +97,7 @@ public class DetailBox extends Layer {
 
     @Override
     public void alignWidgets() {
-        align(false);
+        align(4, false);
     }
 
     public TextLine text(String text) {
@@ -134,6 +136,14 @@ public class DetailBox extends Layer {
         return new EmptyLine();
     }
 
+    public BreakLine br() {
+        return new BreakLine();
+    }
+
+    public BreakLine br(int color) {
+        return (BreakLine) new BreakLine().setBaseColor(color);
+    }
+
 
     public class TextLine extends Line {
         @Getter
@@ -159,39 +169,36 @@ public class DetailBox extends Layer {
             if (scale > 1) {
                 pose.translate(-x, -y, 0);
                 pose.scale(scale, scale, 1);
-                w /= scale;
-                h /= scale;
+                w = Math.round((float) w / scale);
+                h = Math.round((float) h / scale);
             }
 
+            int textW = w;
             if (isTitle) {
-                graphics.fill(x, y, x+w, y+h-2, -1, trimmingColor);
+                graphics.fill(x, y, x+w, y+h, -1, trimmingColor);
                 int offset = switch (alignment) {
                     case LEFT -> 2;
                     case CENTER -> 0;
                     case RIGHT -> -2;
                 };
-                pose.translate(offset, 2, 0);
+                textW -= offset;
+                pose.translate(offset, 0, 0);
 
             } else if (isQuote) {
-                graphics.fill(x, y, x+4, y+h-4, -1, trimmingColor);
+                graphics.fill(x, y, x+4, y+h, -1, trimmingColor);
                 int offset = switch (alignment) {
                     case LEFT -> 8;
                     case CENTER -> 0;
                     case RIGHT -> -2;
                 };
-                pose.translate(offset, 2, 0);
+                textW -= offset;
+                pose.translate(offset, 0, 0);
             }
 
-            if (shadow) {
-                pose.pushPose();
-                float offset = 1.0F/scale;
-                pose.translate(offset, offset, 0);
-                CGuiHelper.drawStringLinesInBound(graphics, getFont(), splitText, x, y, w, ColorHelper.makeDark(ColorHelper.setAlpha(baseColor, 0.25F), 0.75F), DEF_LINE_HEIGHT,
-                        false, backgroundColor, alignment);
-                pose.popPose();
-            }
-            CGuiHelper.drawStringLinesInBound(graphics, getFont(), splitText, x, y, w, baseColor, DEF_LINE_HEIGHT,
-                    false, backgroundColor, alignment);
+            pose.translate(0, 1.5F, 0);
+
+            CGuiHelper.drawStringLinesInBound(graphics, getFont(), splitText, x, y, textW, baseColor, 3,
+                    shadow, backgroundColor, alignment);
 
             pose.popPose();
         }
@@ -234,14 +241,14 @@ public class DetailBox extends Layer {
 
         @Override
         public void refresh() {
-            setWidth(parent.getWidth());
+            super.refresh();
             var pre = text.getString().split("\\n");
             splitText.clear();
             for (String s : pre) {
                 splitText.addAll(getFont().split(StringTextComponentParser.parse(s), (int)(getWidth() * (1.0F/scale) - ((isTitle||isQuote) ? 8 : 0))));
             }
 
-            setHeight(splitText.size() * DEF_LINE_HEIGHT * scale + 4);
+            setHeight(splitText.size() * DEF_LINE_HEIGHT * scale);
         }
     }
 
@@ -258,7 +265,6 @@ public class DetailBox extends Layer {
 
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-            y -= 2;
             if (!isImgLocValid()) {
                 graphics.drawCenteredString(getFont(), Component.literal(imgLocation.toString()).withStyle(ChatFormatting.RED),
                         x+w/2, y, baseColor);
@@ -266,14 +272,15 @@ public class DetailBox extends Layer {
             }
 
             if (backgroundColor != 0) {
-                int bgX = switch (alignment) {
-                    case LEFT -> x-2;
-                    case CENTER -> x - w/2 + imgSize.width/2;
-                    case RIGHT -> x - w + imgSize.width + 2;
-                };
-                graphics.fill(bgX, y+1, bgX+w, y+h-1, -1, backgroundColor);
+                graphics.fill(x, y, x+w, y+h, -1, backgroundColor);
             }
-            imgUV.blit(graphics, imgLocation, x, y + h/2 - imgSize.height/2);
+
+            int imgX = switch (alignment) {
+                case CENTER -> x + getWidth() / 2 - imgSize.width / 2;
+                case RIGHT ->  x + getWidth() - imgSize.width - 2;
+                default -> x+2;
+            };
+            imgUV.blit(graphics, imgLocation, imgX, y + h/2 - imgSize.height/2);
         }
 
         public boolean isImgLocValid() {
@@ -295,26 +302,32 @@ public class DetailBox extends Layer {
 
         @Override
         public void refresh() {
-            setWidth(parent.getWidth());
+            super.refresh();
             if (isImgLocValid()) {
                 setHeight(imgSize.height+6);
-                setX(switch (alignment) {
-                    case CENTER -> getWidth() / 2 - imgSize.width / 2;
-                    case RIGHT -> getWidth() - imgSize.width - 2;
-                    default -> 2;
-                });
-                return;
             }
-            setHeight(DEF_LINE_HEIGHT);
+        }
+    }
+
+    public class BreakLine extends Line {
+        private BreakLine() {
+            setBaseColor(ColorHelper.L_BG_GRAY);
+        }
+
+        @Override
+        public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+            CGuiHelper.fillGradient(graphics.pose(), x, y+h/2, x+w/2, y+h/2+1, ColorHelper.setAlpha(baseColor, 0), baseColor);
+            CGuiHelper.fillGradient(graphics.pose(),x+w/2, y+h/2, x+w, y+h/2+1, baseColor, ColorHelper.setAlpha(baseColor, 0));
+        }
+
+        @Override
+        public void refresh() {
+            super.refresh();
+            setHeight((int) (DEF_LINE_HEIGHT * 1.5F));
         }
     }
 
     public class EmptyLine extends Line {
-
-        private EmptyLine() {
-            super();
-            setHeight(DEF_LINE_HEIGHT);
-        }
 
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h) {
@@ -351,6 +364,11 @@ public class DetailBox extends Layer {
             this.baseColor = color;
             refresh();
             return this;
+        }
+
+        @Override
+        public void refresh() {
+            setSize(parent.getWidth(), DEF_LINE_HEIGHT);
         }
 
         @Override

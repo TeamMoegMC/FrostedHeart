@@ -325,8 +325,10 @@ public class TipManager {
          */
         public void setViewState(Tip tip, boolean view) {
             getState(tip).ifPresent(state -> {
-                state.viewed = view;
-                saveToFile();
+                if (state.viewed != view) {
+                    state.viewed = view;
+                    saveToFile();
+                }
             });
         }
 
@@ -335,9 +337,27 @@ public class TipManager {
          */
         public void setLockState(Tip tip, boolean unlock) {
             getState(tip).ifPresent(state -> {
-                state.unlocked = unlock;
-                saveToFile();
+                if (state.unlocked != unlock) {
+                    state.unlocked = unlock;
+                    saveToFile();
+                }
             });
+        }
+
+        /**
+         * tip 是否已解锁
+         */
+        public boolean isUnlocked(String tip) {
+            var state = getState(getTip(tip));
+            return state.isPresent() && state.get().unlocked;
+        }
+
+        /**
+         * tip 是否已在条目列表中被玩家查看
+         */
+        public boolean isViewed(String tip) {
+            var state = getState(getTip(tip));
+            return state.isPresent() && state.get().viewed;
         }
 
         /**
@@ -354,6 +374,16 @@ public class TipManager {
         public boolean isViewed(Tip tip) {
             var state = getState(tip);
             return state.isPresent() && state.get().viewed;
+        }
+
+        public void unlockAll() {
+            tipStates.forEach((tip, state) -> state.setUnlocked(true));
+            saveToFile();
+        }
+
+        public void viewAll() {
+            tipStates.forEach((tip, state) -> state.setViewed(true));
+            saveToFile();
         }
 
         /**

@@ -1067,7 +1067,7 @@ public class FrostedHud {
 
         stack.pose().pushPose();
         stack.pose().translate(0, 0, 100);
-        CGuiHelper.drawStringLines(stack, font, lines.subList(0, Math.min(lines.size(), 100)), 1, 12, ColorHelper.CYAN, 10, true, true);
+        CGuiHelper.drawStringLines(stack, font, lines.subList(0, Math.min(lines.size(), 100)), 1, 12, ColorHelper.CYAN, 1, true, true);
         stack.pose().popPose();
     }
 }

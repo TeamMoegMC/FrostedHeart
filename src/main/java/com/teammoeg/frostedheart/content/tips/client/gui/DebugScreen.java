@@ -115,6 +115,9 @@ public class DebugScreen extends Screen {
         addButton(IconButton.Icon.LIST, ColorHelper.CYAN, "Create Pop-up message", (b) ->
             Popup.put(input.getValue())
         );
+        addButton(IconButton.Icon.LIST, ColorHelper.CYAN, "Unlock All Tips", (b) ->
+            TipManager.INSTANCE.state().unlockAll()
+        );
         addButton(IconButton.Icon.LEAVE, ColorHelper.CYAN, "Do Something", (b) -> {
             String message = debug();
             ClientUtils.getPlayer().sendSystemMessage(Components.str(message));

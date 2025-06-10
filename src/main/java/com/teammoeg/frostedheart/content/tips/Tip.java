@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+// TODO 再重写一遍… 至少加参数方便一点
 @Getter
 public class Tip {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -64,6 +65,10 @@ public class Tip {
      * 显示内容
      */
     private final List<Component> contents;
+    /**
+     * 该提示的子提示，子提示会在档案UI中合并显示
+     */
+    private final List<String> children;
     /**
      * 在条目列表中的分类
      */
@@ -122,6 +127,7 @@ public class Tip {
         this.contents = builder.contents;
         this.id = builder.id;
         this.category = builder.category;
+        this.children = builder.children;
         this.nextTip = builder.nextTip;
         this.image = builder.image;
         this.alwaysVisible = builder.alwaysVisible;
@@ -159,10 +165,7 @@ public class Tip {
         } else if (isTipIdInvalid(this.id)) {
             builder("exception").error(ErrorType.SAVE, Component.literal("ID: " + this.id), Component.translatable("tips.frostedheart.error.invalid_id")).build().forceDisplay();
             return false;
-        } /*else if (TipManager.INSTANCE.hasTip(this.id)) {
-            builder("exception").error(ErrorType.SAVE, Component.literal("ID: " + this.id), Component.translatable("tips.frostedheart.error.load.duplicate_id")).build().forceDisplay();
-            return false;
-        }*/
+        }
 
         File file = new File(TipManager.TIP_PATH, this.id + ".json");
         try (FileWriter writer = new FileWriter(file)) {
@@ -196,9 +199,14 @@ public class Tip {
         nbt.putInt("displayTime", displayTime);
         nbt.putInt("fontColor", fontColor);
         nbt.putInt("backgroundColor", backgroundColor);
+
         var toAddContents = new ListTag();
         this.contents.stream().map(content -> StringTag.valueOf(Components.getKeyOrElseStr(content))).forEach(toAddContents::add);
         nbt.put("contents", toAddContents);
+
+        var toAddChildren = new ListTag();
+        this.children.stream().map(StringTag::valueOf);
+        nbt.put("children", toAddChildren);
         return nbt;
     }
 
@@ -217,9 +225,14 @@ public class Tip {
         json.addProperty("displayTime", displayTime);
         json.addProperty("fontColor", Integer.toHexString(fontColor).toUpperCase());
         json.addProperty("backgroundColor", Integer.toHexString(backgroundColor).toUpperCase());
+
         var toAddContents = new JsonArray();
         this.contents.stream().map(Components::getKeyOrElseStr).forEach(toAddContents::add);
         json.add("contents", toAddContents);
+
+        var toAddChildren = new JsonArray();
+        this.children.forEach(toAddChildren::add);
+        json.add("children", toAddChildren);
         return json;
     }
 
@@ -257,6 +270,7 @@ public class Tip {
 
     public static class Builder {
         private final List<Component> contents = new ArrayList<>();
+        private final List<String> children = new ArrayList<>();
         private String id = "";
         private String category = "";
         private String nextTip = "";
@@ -304,7 +318,7 @@ public class Tip {
             return this;
         }
 
-        public Builder lines(Collection<Component> texts) {
+        public Builder lines(Collection<? extends Component> texts) {
             if (!editable) return this;
             this.contents.addAll(texts);
             return this;
@@ -312,6 +326,16 @@ public class Tip {
 
         public Builder lines(Component... texts) {
             return lines(List.of(texts));
+        }
+
+        public Builder children(Collection<String> texts) {
+            if (!editable) return this;
+            this.children.addAll(texts);
+            return this;
+        }
+
+        public Builder children(String... children) {
+            return children(List.of(children));
         }
 
         public Builder clearContents() {
@@ -391,7 +415,10 @@ public class Tip {
         public Builder copy(Tip source) {
             if (!editable) return this;
 
+            this.contents.clear();
             this.contents.addAll(source.contents);
+            this.children.clear();
+            this.children.addAll(source.children);
             this.category = source.category;
             this.nextTip = source.nextTip;
             this.image = source.image;
@@ -427,9 +454,13 @@ public class Tip {
 
                 var contents = nbt.getList("contents", Tag.TAG_STRING);
                 var list = contents.stream().map(tag -> Component.translatable(tag.getAsString())).toList();
-                this.contents.addAll(list);
+                lines(list);
+
+                var children = nbt.getList("children", Tag.TAG_STRING);
+                children(children.stream().map(Tag::getAsString).toList());
             }
             if (id.isBlank()) {
+                LOGGER.warn("NBT does not contain a tip: {}", nbt);
                 error(ErrorType.OTHER, Component.literal("NBT does not contain a tip"));
             }
             return this;
@@ -453,16 +484,21 @@ public class Tip {
 
             if (json.has("contents")) {
                 JsonArray jsonContents = json.getAsJsonArray("contents");
-                if (jsonContents != null) {
-                    for (int i = 0; i < jsonContents.size(); i++) {
-                        String s = jsonContents.get(i).getAsString();
-                        line(Component.translatable(s));
-                    }
+                for (int i = 0; i < jsonContents.size(); i++) {
+                    String s = jsonContents.get(i).getAsString();
+                    line(Component.translatable(s));
                 }
             }
             if (this.contents.isEmpty()) {
                 error(ErrorType.LOAD, Component.literal("ID: " + id), Component.translatable("tips.frostedheart.error.load.empty"));
                 return this;
+            }
+
+            if (json.has("children")) {
+                JsonArray children = json.getAsJsonArray("children");
+                for (JsonElement child : children) {
+                    this.children.add(child.getAsString());
+                }
             }
 
             if (json.has("image")) {

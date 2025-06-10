@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.util.Lang;
 
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -142,6 +143,7 @@ public class TipWidget extends AbstractWidget {
         graphics.setColor(1, 1, 1, alpha);
 
         int border = RenderContext.BG_BORDER;
+        Font font = ClientUtils.font();
         PoseStack pose = graphics.pose();
         pose.pushPose();
         pose.translate((context.pYaw - (int) context.pYaw), (context.pPitch - (int) context.pPitch), 800);
@@ -156,7 +158,7 @@ public class TipWidget extends AbstractWidget {
 
         // 进度条
         if (state != State.FADING_OUT) {
-            int y = getY() + (context.titleLines.size() * RenderContext.LINE_SPACE);
+            int y = getY() + (context.titleLines.size() * (RenderContext.LINE_SPACE + font.lineHeight));
             pose.pushPose();
             pose.translate(getX()- border, y, 0);
             if (state == State.PROGRESSING) {
@@ -173,7 +175,7 @@ public class TipWidget extends AbstractWidget {
             CGuiHelper.blitColored(
                     pose,
                     getX() + (super.getWidth() / 2) - (context.imageSize.width / 2),
-                    getY() + border + (context.totalLineSize * RenderContext.LINE_SPACE),
+                    getY() + border + (context.totalLineSize * (RenderContext.LINE_SPACE + font.lineHeight)),
                     context.imageSize.width, context.imageSize.height,
                     0, 0,
                     context.imageSize.width, context.imageSize.height,
@@ -207,8 +209,8 @@ public class TipWidget extends AbstractWidget {
         }
 
         // 标题和内容
-        CGuiHelper.drawStringLines(graphics, ClientUtils.font(), context.titleLines, getX(), getY(), context.fontColor, RenderContext.LINE_SPACE, false, false);
-        CGuiHelper.drawStringLines(graphics, ClientUtils.font(), context.contentLines, getX(), getY()+6 + (context.titleLines.size() * RenderContext.LINE_SPACE), context.fontColor, RenderContext.LINE_SPACE, false, false);
+        CGuiHelper.drawStringLines(graphics, font, context.titleLines, getX(), getY(), context.fontColor, RenderContext.LINE_SPACE, false, false);
+        CGuiHelper.drawStringLines(graphics, font, context.contentLines, getX(), getY()+6 + (context.titleLines.size() * (RenderContext.LINE_SPACE + font.lineHeight)), context.fontColor, RenderContext.LINE_SPACE, false, false);
 
         pose.popPose();
         graphics.setColor(1, 1, 1, 1);
@@ -297,7 +299,7 @@ public class TipWidget extends AbstractWidget {
         static final int FADE_ANIM_LENGTH = 400;
         static final int BG_BORDER = 4;
         static final int FADE_OFFSET = 16;
-        static final int LINE_SPACE = 12;
+        static final int LINE_SPACE = 3;
         static final int MIN_WIDTH = 160;
         static final int MAX_WIDTH = 360;
 
@@ -327,6 +329,7 @@ public class TipWidget extends AbstractWidget {
             fontColor = ColorHelper.setAlpha(tip.getFontColor(), 1.0F);
 
             // 跟随视角晃动
+            Font font = ClientUtils.font();
             Minecraft MC = ClientUtils.getMc();
             if (MC.player != null) {
                 if (MC.isPaused()) {
@@ -355,7 +358,7 @@ public class TipWidget extends AbstractWidget {
             // StringTextComponentParser 会吞掉换行符，所以得先把它分割一下
             var split = contents.get(0).getString().split("\\n");
             for (String s : split) {
-                titleLines.addAll(ClientUtils.font().split(StringTextComponentParser.parse(s), width));
+                titleLines.addAll(font.split(StringTextComponentParser.parse(s), width));
             }
 
             contentLines = new ArrayList<>();
@@ -363,13 +366,13 @@ public class TipWidget extends AbstractWidget {
                 for (int i = 1; i < contents.size(); i++) {
                     split = contents.get(i).getString().split("\\n");
                     for (String s : split) {
-                        contentLines.addAll(ClientUtils.font().split(StringTextComponentParser.parse(s), width));
+                        contentLines.addAll(font.split(StringTextComponentParser.parse(s), width));
                     }
                 }
             }
 
             totalLineSize = titleLines.size() + contentLines.size();
-            int height = totalLineSize * LINE_SPACE;
+            int height = totalLineSize * (RenderContext.LINE_SPACE + font.lineHeight);
 
             // 图片
             int imgW = 0;

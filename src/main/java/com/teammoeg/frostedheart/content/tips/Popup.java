@@ -98,7 +98,7 @@ public class Popup {
         float x = ClientUtils.screenWidth() * 0.5F;
         pose.pushPose();
         pose.translate(x, y-height, 0);
-        CGuiHelper.drawStringLines(graphic, font, lines, 0, 0, ColorHelper.CYAN, 10, true, true, Alignment.CENTER);
+        CGuiHelper.drawStringLines(graphic, font, lines, 0, 0, ColorHelper.CYAN, 1, true, true, Alignment.CENTER);
         pose.popPose();
     }
 
