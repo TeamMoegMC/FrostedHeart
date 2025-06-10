@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 
+import com.teammoeg.chorda.client.ClientUtils;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -20,6 +21,11 @@ public abstract class Layer extends UIWidget {
 	@Getter
 	@Setter
 	private int offsetX = 0, offsetY = 0;
+	@Getter
+	private float displayOffsetX = 0, displayOffsetY = 0;
+	@Getter
+	@Setter
+	private boolean smoothScrollEnabled = false;
 	private double scrollStep = 20;
 	private int contentWidth = -1, contentHeight = -1;
 	private RatedScrollbar attachedScrollbar = null;
@@ -86,6 +92,24 @@ public abstract class Layer extends UIWidget {
 		for(UIWidget elm:elements) {
 			elm.setY(contentHeight);
 			contentHeight+=elm.getHeight()+1;
+			contentWidth=Math.max(elm.getWidth(), contentWidth);
+		}
+		return contentHeight;
+	}
+
+	public final int align(int lineSpace, boolean isHorizontal) {
+		contentWidth = contentHeight = 0;
+		if(isHorizontal) {
+			for(UIWidget elm:elements) {
+				elm.setX(contentWidth);
+				contentWidth+=elm.getWidth()+lineSpace;
+				contentHeight=Math.max(elm.getHeight(), contentHeight);
+			}
+			return contentWidth;
+		}
+		for(UIWidget elm:elements) {
+			elm.setY(contentHeight);
+			contentHeight+=elm.getHeight()+lineSpace;
 			contentWidth=Math.max(elm.getWidth(), contentWidth);
 		}
 		return contentHeight;
@@ -192,15 +216,34 @@ public abstract class Layer extends UIWidget {
 		drawBackground(graphics, x, y, w, h);
 		if(scissorEnabled)
 			graphics.enableScissor(x, y, x+w, y+h);
-		int contentX=x+ offsetX;
-		int contentY=y+ offsetY;
-		//graphics.pose().pushPose();
-		//graphics.pose().translate(0, 0, 1);
-		for(UIWidget elm:elements) {
-			if(elm.isVisible())
-				drawElement(graphics, elm,x,y, contentX, contentY, w, h);
+
+		if (smoothScrollEnabled) {
+			int contentX= x + Math.round(displayOffsetX);
+			int contentY= y + Math.round(displayOffsetY);
+
+			var pose = graphics.pose();
+			pose.pushPose();
+			pose.translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
+			for(UIWidget elm:elements) {
+				if(elm.isVisible())
+					drawElement(graphics, elm,x,y, contentX, contentY, w, h);
+			}
+			pose.popPose();
+
+			float ratio = 24.75F / ClientUtils.getMc().getFps();
+			displayOffsetX = displayOffsetX + (offsetX - displayOffsetX) * ratio;
+			displayOffsetY = displayOffsetY + (offsetY - displayOffsetY) * ratio;
+
+		} else {
+			int contentX= x + offsetX;
+			int contentY= y + offsetY;
+
+			for(UIWidget elm:elements) {
+				if(elm.isVisible())
+					drawElement(graphics, elm,x,y, contentX, contentY, w, h);
+			}
 		}
-		
+
 		if(scissorEnabled)
 			graphics.disableScissor();
 		//if(isMouseOver)
