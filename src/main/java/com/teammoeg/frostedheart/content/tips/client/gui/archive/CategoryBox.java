@@ -246,12 +246,15 @@ public class CategoryBox extends Layer {
 
             for (int j = 0; j < tips.size(); j++) {
                 Tip tip = tips.get(j);
+                if (tip.isHide()) continue;
                 var tipContents = tip.getContents();
                 if (j == 0) {
                     lines.add(box.text(tipContents.get(0)).setQuote(tip.getFontColor()));
-                    lines.add(box.emptyLine());
+                    lines.add(box.br());
                 } else if (!TipManager.INSTANCE.state().isViewed(tip)) {
                     lines.add(box.text(Component.translatable("gui.frostedheart.archive.new_tip")).setTitle(tip.getFontColor(), 1).setBaseColor(ColorHelper.getTextColor(tip.getFontColor())));
+                } else {
+                    lines.add(box.br());
                 }
                 for (int i = 1; i < tipContents.size(); i++) {
                     Component line = tipContents.get(i);
@@ -262,7 +265,6 @@ public class CategoryBox extends Layer {
                 if (tip.getImage() != null) {
                     lines.add(box.image(tip.getImage()).setBackgroundColor(ColorHelper.L_BG_GRAY));
                 }
-                lines.add((box.br()));
             }
             return lines;
         }
