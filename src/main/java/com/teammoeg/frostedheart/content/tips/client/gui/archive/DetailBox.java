@@ -309,13 +309,15 @@ public class DetailBox extends Layer {
         public void refresh() {
             super.refresh();
             if (isImgValid()) {
-                System.out.println(imgSize.toString());
-                System.out.println(parent.getWidth());
                 int w = imgSize.width;
                 int h = imgSize.height;
-                if (imgSize.width > getWidth()) {
+                if (w > 32) {
+                    w /= 2;
+                    h /= 2;
+                }
+                if (w > getWidth()) {
                     w = getWidth();
-                    h = (int) (imgSize.height * ((float) w / imgSize.width));
+                    h = (int)(h * (w / (imgSize.width * 0.5F)));
                 }
                 setHeight(h+6);
                 imgUV = new UV(0, 0, w, h, w, h);

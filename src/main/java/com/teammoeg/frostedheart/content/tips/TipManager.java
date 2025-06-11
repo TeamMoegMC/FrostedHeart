@@ -294,6 +294,7 @@ public class TipManager {
                 Map<Tip, State> toAdd = new HashMap<>();
                 for (State fromFile : stateList) {
                     Tip tip = getTip(fromFile.getId());
+                    if (tip == null) continue;
                     toAdd.put(tip, State.copyState(tip, fromFile));
                 }
                 tipStates.putAll(toAdd);
