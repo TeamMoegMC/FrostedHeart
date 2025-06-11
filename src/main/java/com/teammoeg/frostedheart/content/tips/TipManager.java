@@ -409,6 +409,7 @@ public class TipManager {
         public void resetAll() {
             tipStates.clear();
             saveToFile();
+            loadFromFile();
         }
 
         @Getter

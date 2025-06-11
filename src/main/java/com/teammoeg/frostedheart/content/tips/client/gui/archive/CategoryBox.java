@@ -252,6 +252,7 @@ public class CategoryBox extends Layer {
                     lines.add(box.text(tipContents.get(0)).setQuote(tip.getFontColor()));
                     lines.add(box.br());
                 } else if (!TipManager.INSTANCE.state().isViewed(tip)) {
+                    lines.add(box.br());
                     lines.add(box.text(Component.translatable("gui.frostedheart.archive.new_tip")).setTitle(tip.getFontColor(), 1).setBaseColor(ColorHelper.getTextColor(tip.getFontColor())));
                 } else {
                     lines.add(box.br());
@@ -263,7 +264,11 @@ public class CategoryBox extends Layer {
                     }
                 }
                 if (tip.getImage() != null) {
-                    lines.add(box.image(tip.getImage()).setBackgroundColor(ColorHelper.L_BG_GRAY));
+                    var img = box.image(tip.getImage());
+                    if (img.imgSize.width < 64) {
+                        img.setBackgroundColor(ColorHelper.L_BG_GRAY);
+                    }
+                    lines.add(img);
                 }
             }
             return lines;

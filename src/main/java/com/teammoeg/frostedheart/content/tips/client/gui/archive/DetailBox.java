@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.tips.client.gui.archive;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.Layer;
@@ -10,6 +11,7 @@ import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.ui.UV;
+import com.teammoeg.frostedheart.FrostedHud;
 import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
@@ -30,6 +32,7 @@ public class DetailBox extends Layer {
         super(panel);
         this.scrollBar = new LayerScrollBar(parent, true, this);
         setSmoothScrollEnabled(true);
+        resize();
     }
 
     public void fillContent(Line... lines) {
@@ -46,21 +49,21 @@ public class DetailBox extends Layer {
 
     @Override
     public void refresh() {
-        int h = (int)(ClientUtils.screenHeight() * 0.8F);
-        int w = (int)(h * 1.3333F);
-        setSize(w, h); // 4:3
-        setPos(120, 0);
-
-//        setScissorEnabled(false);
-
+        resize();
         recalcContentSize();
         addUIElements();
         for (UIWidget element : elements) {
             element.refresh();
         }
         alignWidgets();
-        scrollBar.setPosAndSize(getX() + w+8, -7, 6, h+15);
         scrollBar.setValue(0);
+    }
+
+    private void resize() {
+        int h = (int)(ClientUtils.screenHeight() * 0.8F);
+        int w = (int)(h * 1.3333F); // 4:3
+        setPosAndSize(120, 0, w, h);
+        scrollBar.setPosAndSize(getX() + w+8, -7, 6, h+15);
     }
 
     @Override
@@ -163,6 +166,7 @@ public class DetailBox extends Layer {
 
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+            super.render(graphics, x, y, w, h);
             var pose = graphics.pose();
             pose.pushPose();
 
@@ -265,7 +269,8 @@ public class DetailBox extends Layer {
 
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-            if (!isImgLocValid()) {
+            super.render(graphics, x, y, w, h);
+            if (!isImgValid()) {
                 graphics.drawCenteredString(getFont(), Component.literal(imgLocation.toString()).withStyle(ChatFormatting.RED),
                         x+w/2, y, baseColor);
                 return;
@@ -276,21 +281,21 @@ public class DetailBox extends Layer {
             }
 
             int imgX = switch (alignment) {
-                case CENTER -> x + getWidth() / 2 - imgSize.width / 2;
-                case RIGHT ->  x + getWidth() - imgSize.width - 2;
+                case CENTER -> x + getWidth() / 2 - imgUV.getW() / 2;
+                case RIGHT ->  x + getWidth() - imgUV.getW() - 2;
                 default -> x+2;
             };
-            imgUV.blit(graphics, imgLocation, imgX, y + h/2 - imgSize.height/2);
+            imgUV.blit(graphics, imgLocation, imgX, y + h/2 - imgUV.getH()/2);
         }
 
-        public boolean isImgLocValid() {
-            return imgSize.height + imgSize.width > 0 && imgUV != null;
+        public boolean isImgValid() {
+            return imgUV != null && imgSize != null && imgSize.height + imgSize.width > 0;
         }
 
         public ImageLine setImage(ResourceLocation imageLocation) {
             this.imgLocation = imageLocation;
             imgSize = ClientUtils.getImgSize(imageLocation);
-            imgUV = new UV(0, 0, imgSize.width, imgSize.height, imgSize.width, imgSize.height);
+            imgUV = new UV(0, 0, 0, 0);
             refresh();
             return this;
         }
@@ -303,8 +308,17 @@ public class DetailBox extends Layer {
         @Override
         public void refresh() {
             super.refresh();
-            if (isImgLocValid()) {
-                setHeight(imgSize.height+6);
+            if (isImgValid()) {
+                System.out.println(imgSize.toString());
+                System.out.println(parent.getWidth());
+                int w = imgSize.width;
+                int h = imgSize.height;
+                if (imgSize.width > getWidth()) {
+                    w = getWidth();
+                    h = (int) (imgSize.height * ((float) w / imgSize.width));
+                }
+                setHeight(h+6);
+                imgUV = new UV(0, 0, w, h, w, h);
             }
         }
     }
@@ -316,6 +330,7 @@ public class DetailBox extends Layer {
 
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+            super.render(graphics, x, y, w, h);
             CGuiHelper.fillGradient(graphics.pose(), x, y+h/2, x+w/2, y+h/2+1, ColorHelper.setAlpha(baseColor, 0), baseColor);
             CGuiHelper.fillGradient(graphics.pose(),x+w/2, y+h/2, x+w, y+h/2+1, baseColor, ColorHelper.setAlpha(baseColor, 0));
         }
@@ -331,7 +346,7 @@ public class DetailBox extends Layer {
 
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-
+            super.render(graphics, x, y, w, h);
         }
     }
 
@@ -372,6 +387,10 @@ public class DetailBox extends Layer {
         }
 
         @Override
-        public abstract void render(GuiGraphics graphics, int x, int y, int w, int h);
+        public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+            if (FrostedHud.renderDebugOverlay && (isMouseOver() || CInputHelper.isShiftKeyDown())) {
+                graphics.fill(x, y, x+w, y+h, ColorHelper.setAlpha(ColorHelper.CYAN, 0.2F));
+            }
+        }
     }
 }
