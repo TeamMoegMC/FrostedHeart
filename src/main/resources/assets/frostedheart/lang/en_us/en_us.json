@@ -53,6 +53,7 @@
   "ftbquests.reward.frostedheart.temperature_difficulty.temperature_difficulty": "Temperature Difficulty",
   "gui.frostedheart.any_food": "Any food",
   "gui.frostedheart.archive.new_tip": "New Tip",
+  "gui.frostedheart.archive.category.tips": "Tips",
   "gui.frostedheart.debug.clear_cache": "Clear tip cache (Read from the file again)",
   "gui.frostedheart.debug.clear_queue": "Clear tip render queue",
   "gui.frostedheart.debug.entity_target": "Create a entity target waypoint",

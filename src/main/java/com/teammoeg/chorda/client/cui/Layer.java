@@ -114,6 +114,27 @@ public abstract class Layer extends UIWidget {
 		}
 		return contentHeight;
 	}
+
+	public final int align(int start, int lineSpace, boolean isHorizontal) {
+		contentWidth = contentHeight = 0;
+		if(isHorizontal) {
+			contentWidth += start;
+			for(UIWidget elm:elements) {
+				elm.setX(contentWidth);
+				contentWidth+=elm.getWidth()+lineSpace;
+				contentHeight=Math.max(elm.getHeight(), contentHeight);
+			}
+			return contentWidth;
+		}
+		contentHeight += start;
+		for(UIWidget elm:elements) {
+			elm.setY(contentHeight);
+			contentHeight+=elm.getHeight()+lineSpace;
+			contentWidth=Math.max(elm.getWidth(), contentWidth);
+		}
+		return contentHeight;
+	}
+
 	public final void flow(boolean isHorizontalFirst) {
 		contentWidth = contentHeight = 0;
 		int currentX=0,currentY=0;

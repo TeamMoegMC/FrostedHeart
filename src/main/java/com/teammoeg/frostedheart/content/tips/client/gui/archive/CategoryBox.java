@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.tips.client.gui.archive;
 
+import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.Layer;
@@ -7,6 +8,7 @@ import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import net.minecraft.ChatFormatting;
@@ -33,15 +35,20 @@ public class CategoryBox extends Layer {
     public CategoryBox(UIWidget panel, DetailBox detailBox) {
         super(panel);
         this.detailBox = detailBox;
-        this.scrollBar = new LayerScrollBar(parent, true, this);
+        this.scrollBar = new LayerScrollBar(parent, true, this) {
+            @Override
+            public boolean isVisible() {
+                return false;
+            }
+        };
         setSmoothScrollEnabled(true);
         addUIElements();
     }
 
     @Override
     public void refresh() {
-        setScissorEnabled(false);
         setPosAndSize(0, 0, 100, (int) (ClientUtils.screenHeight()*0.8F));
+        scrollBar.setValue(0);
 
         recalcContentSize();
         for (UIWidget element : elements) {
@@ -63,7 +70,7 @@ public class CategoryBox extends Layer {
     }
 
     public void addCategories() {
-        Category tipCategory = new Category(this, Component.translatable("Tips"));
+        Category tipCategory = new Category(this, Component.translatable("gui.frostedheart.archive.category.tips"));
         Set<String> childTipIds = new HashSet<>();
         Map<String, Category> subTipCategory = new HashMap<>();
         for (Tip tip : TipManager.INSTANCE.state().getAllUnlockedTips()) {
@@ -71,25 +78,23 @@ public class CategoryBox extends Layer {
             childTipIds.addAll(tip.getChildren());
             // 获取所有分类
             String categoryName = tip.getCategory();
-            if (!categoryName.isBlank()) {
-                // 创建子分类
-                if (!subTipCategory.containsKey(categoryName)) {
-                    System.out.println(categoryName);
-                    Category newCategory = new Category(tipCategory, Component.translatable(categoryName));
-                    newCategory.add(new TipEntry(tip, newCategory));
-                    subTipCategory.put(categoryName, newCategory);
-                    continue;
-                }
-                Category category = subTipCategory.get(categoryName);
-                category.add(new TipEntry(tip, category));
+            if (!categoryName.isBlank() && !subTipCategory.containsKey(categoryName)) {
+                subTipCategory.put(categoryName, new Category(tipCategory, Component.translatable(categoryName)));
             }
         }
-        // 在主提示分类添加所有非子提示且无分类的提示
         List<TipEntry> tipEntries = new ArrayList<>();
         for (Tip tip : TipManager.INSTANCE.state().getAllUnlockedTips()) {
-            if (tip.getCategory().isBlank() && !tip.isHide() && !childTipIds.contains(tip.getId())) {
-                TipEntry tipEntry = new TipEntry(tip, tipCategory);
-                tipEntries.add(tipEntry);
+            if (tip.isHide()) continue;
+            if (!childTipIds.contains(tip.getId())) {
+                if (!tip.getCategory().isBlank()) {
+                    // 在子分类添加提示
+                    Category category = subTipCategory.get(tip.getCategory());
+                    category.add(new TipEntry(tip, category));
+                } else {
+                    // 在主提示分类添加所有非子提示且无分类的提示
+                    TipEntry tipEntry = new TipEntry(tip, tipCategory);
+                    tipEntries.add(tipEntry);
+                }
             }
         }
         // 在主提示分类里添加所有子分类和无分类提示
@@ -104,7 +109,7 @@ public class CategoryBox extends Layer {
 
     @Override
     public void alignWidgets() {
-        align(false);
+        align(2, 2, false);
     }
 
     public class Category extends Layer {
@@ -131,10 +136,13 @@ public class CategoryBox extends Layer {
 
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-            graphics.fill(x, y, x+w, y+h, 0x80000000);
-            graphics.drawString(getFont(), title, x+2, y+4, ColorHelper.WHITE);
+            graphics.fill(x, y, x+w, y+DEF_ITEM_HEIGHT, ColorHelper.L_BG_GRAY);
+            graphics.drawString(getFont(), title, x+12, y+4, ColorHelper.WHITE);
             if (opened) {
+                IconButton.Icon.DOWN.render(graphics.pose(), x+1, y+3, ColorHelper.L_TEXT_GRAY);
                 super.render(graphics, x, y, w, h);
+            } else {
+                IconButton.Icon.RIGHT.render(graphics.pose(), x, y+4, ColorHelper.L_TEXT_GRAY);
             }
         }
 
@@ -146,7 +154,7 @@ public class CategoryBox extends Layer {
         @Override
         public void alignWidgets() {
             if (opened) {
-                align(false);
+                align(2, 2, false);
             } else {
                 recalcContentSize();
             }
@@ -159,7 +167,11 @@ public class CategoryBox extends Layer {
             } else {
                 refresh();
             }
-            CategoryBox.this.alignWidgets();
+            var grandpa = CategoryBox.this;
+            grandpa.alignWidgets();
+            if (!grandpa.scrollBar.isEnabled() && grandpa.getOffsetY() != 0) {
+                grandpa.scrollBar.setValue(0);
+            }
         }
 
         @Override
@@ -308,7 +320,10 @@ public class CategoryBox extends Layer {
 
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-            graphics.fill(x, y, x+w, y+h, 0x40000000);
+            if (CategoryBox.this.selected == this) {
+                graphics.fill(x-4, y, x-2, y+h, ColorHelper.L_BG_GREEN);
+            }
+            graphics.fill(x, y, x+w, y+h, ColorHelper.L_BG_GRAY);
 
             if (getFont().width(cachedTitle) > w-4) {
                 var t = FormattedText.composite(getFont().substrByWidth(cachedTitle, w-4), CommonComponents.ELLIPSIS);
@@ -316,10 +331,12 @@ public class CategoryBox extends Layer {
             } else {
                 graphics.drawString(getFont(), cachedTitle, x+2, y+4, baseColor);
             }
-
             if (!read) {
-                // TODO 优化小红点
-                graphics.fill(x+w-6, y+2, x+w-4, y+4, ColorHelper.RED);
+                float wait = AnimationUtil.progress(6000, "archive_unread_wait", true);
+                if (wait == 0) {
+                    AnimationUtil.remove("archive_unread");
+                }
+                graphics.fill(x, y, x+w, y+h, ColorHelper.setAlpha(ColorHelper.L_BG_GREEN, AnimationUtil.bounce(4000, "archive_unread", false)*0.25F));
             }
         }
 
@@ -342,6 +359,7 @@ public class CategoryBox extends Layer {
             if (isEnabled() && isVisible() && isMouseOver) {
                 if (button == MouseButton.LEFT) {
                     CategoryBox.this.detailBox.fillContent(getContents());
+                    CategoryBox.this.selected = this;
                     read = read();
                 }
                 return true;
