@@ -18,8 +18,10 @@ import net.minecraft.network.chat.FormattedText;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class CategoryBox extends Layer {
@@ -61,18 +63,36 @@ public class CategoryBox extends Layer {
     }
 
     public void addCategories() {
-        Category tipCategory = new Category(this, Component.literal("Tips"));
-        List<TipEntry> tipEntries = new ArrayList<>();
+        Category tipCategory = new Category(this, Component.translatable("Tips"));
         Set<String> childTipIds = new HashSet<>();
+        Map<String, Category> subTipCategory = new HashMap<>();
         for (Tip tip : TipManager.INSTANCE.state().getAllUnlockedTips()) {
+            // 获取所有子提示的ID
             childTipIds.addAll(tip.getChildren());
+            // 获取所有分类
+            String categoryName = tip.getCategory();
+            if (!categoryName.isBlank()) {
+                // 创建子分类
+                if (!subTipCategory.containsKey(categoryName)) {
+                    System.out.println(categoryName);
+                    Category newCategory = new Category(tipCategory, Component.translatable(categoryName));
+                    newCategory.add(new TipEntry(tip, newCategory));
+                    subTipCategory.put(categoryName, newCategory);
+                    continue;
+                }
+                Category category = subTipCategory.get(categoryName);
+                category.add(new TipEntry(tip, category));
+            }
         }
+        // 在主提示分类添加所有非子提示且无分类的提示
+        List<TipEntry> tipEntries = new ArrayList<>();
         for (Tip tip : TipManager.INSTANCE.state().getAllUnlockedTips()) {
-            if (!tip.isHide() && !childTipIds.contains(tip.getId())) {
+            if (tip.getCategory().isBlank() && !tip.isHide() && !childTipIds.contains(tip.getId())) {
                 TipEntry tipEntry = new TipEntry(tip, tipCategory);
                 tipEntries.add(tipEntry);
             }
         }
+        // 在主提示分类里添加所有子分类和无分类提示
         tipCategory.addAll(tipEntries);
         add(tipCategory);
     }
@@ -190,9 +210,9 @@ public class CategoryBox extends Layer {
             return consumed;
         }
 
-        public void addAll(Collection<? extends Entry> entries) {
-            for (Entry entry : entries) {
-                add(entry);
+        public void addAll(Collection<? extends UIWidget> widgets) {
+            for (UIWidget widget : widgets) {
+                add(widget);
             }
         }
 
