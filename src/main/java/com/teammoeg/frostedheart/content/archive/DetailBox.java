@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.tips.client.gui.archive;
+package com.teammoeg.frostedheart.content.archive;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.client.CInputHelper;

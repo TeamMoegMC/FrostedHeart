@@ -27,12 +27,12 @@ import com.teammoeg.chorda.client.CameraHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.PartialTickTracker;
 import com.teammoeg.chorda.client.icon.CIcons;
-import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.ui.GuiClickedEvent;
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.content.archive.ArchiveScreen;
 import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
@@ -43,7 +43,6 @@ import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.utility.seld.SledEntity;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
-import com.teammoeg.frostedheart.content.wheelmenu.Selection;
 import com.teammoeg.frostedheart.content.wheelmenu.SelectionBuilder;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuSelectionRegisterEvent;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
@@ -72,6 +71,7 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
@@ -183,6 +183,12 @@ public class FHClientEvents {
 		.icon(FHItems.gambeson)
 		.selected(s -> FHNetwork.INSTANCE.sendToServer(new C2SOpenClothesScreenMessage()))
 		.register(event,FHMain.rl("clothing"));
+
+        SelectionBuilder.create()
+        .message(Component.translatable("gui.frostedheart.wheel_menu.selection.archive"))
+        .icon(Items.BOOK)
+        .selected(s -> ArchiveScreen.open())
+        .register(event, FHMain.rl("archive"));
 
     }
 

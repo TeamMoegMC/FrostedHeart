@@ -1,5 +1,7 @@
-package com.teammoeg.frostedheart.content.tips.client.gui.archive;
+package com.teammoeg.frostedheart.content.archive;
 
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.CUIScreen;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 
 public final class ArchiveScreen extends PrimaryLayer {
@@ -27,5 +29,10 @@ public final class ArchiveScreen extends PrimaryLayer {
         add(categoryBox);
         add(detailBox.scrollBar);
         add(categoryBox.scrollBar);
+    }
+
+    public static void open() {
+        var config = new CUIScreen(new ArchiveScreen());
+        ClientUtils.getMc().setScreen(config);
     }
 }

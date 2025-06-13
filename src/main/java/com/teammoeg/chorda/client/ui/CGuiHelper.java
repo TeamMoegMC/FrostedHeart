@@ -32,7 +32,7 @@ import javax.imageio.ImageIO;
 
 import com.teammoeg.chorda.client.ClientUtils;
 
-import com.teammoeg.frostedheart.content.tips.client.gui.archive.Alignment;
+import com.teammoeg.frostedheart.content.archive.Alignment;
 import net.minecraft.client.gui.Font;
 import org.joml.Matrix4f;
 

@@ -40,7 +40,7 @@ import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.content.tips.TipRenderer;
-import com.teammoeg.frostedheart.content.tips.client.gui.archive.Alignment;
+import com.teammoeg.frostedheart.content.archive.Alignment;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FGuis;
 import lombok.Getter;

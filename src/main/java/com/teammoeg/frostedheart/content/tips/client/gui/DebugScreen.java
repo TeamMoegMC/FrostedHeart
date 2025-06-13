@@ -19,14 +19,11 @@
 
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
-import com.teammoeg.chorda.client.StringTextComponentParser;
-import com.teammoeg.chorda.client.cui.CUIScreen;
-import com.teammoeg.chorda.client.ui.CGuiHelper;
+import com.simibubi.create.foundation.config.ui.BaseConfigScreen;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.content.tips.Popup;
 import com.teammoeg.frostedheart.content.tips.TipManager;
-import com.teammoeg.frostedheart.content.tips.client.gui.archive.Alignment;
-import com.teammoeg.frostedheart.content.tips.client.gui.archive.ArchiveScreen;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.ColumbiatWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.SunStationWaypoint;
@@ -127,8 +124,7 @@ public class DebugScreen extends Screen {
     // 方便热重载debug
     private String debug() {
         if (this.minecraft != null) {
-//            var config = new BaseConfigScreen(this, FHMain.MODID);
-            var config = new CUIScreen(new ArchiveScreen());
+            var config = new BaseConfigScreen(this, FHMain.MODID);
             this.minecraft.setScreen(config);
         }
         Popup.clear();

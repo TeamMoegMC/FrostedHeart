@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.tips.client.gui.archive;
+package com.teammoeg.frostedheart.content.archive;
 
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.ClientUtils;
@@ -332,11 +332,9 @@ public class CategoryBox extends Layer {
                 graphics.drawString(getFont(), cachedTitle, x+2, y+4, baseColor);
             }
             if (!read) {
-                float wait = AnimationUtil.progress(6000, "archive_unread_wait", true);
-                if (wait == 0) {
-                    AnimationUtil.remove("archive_unread");
-                }
-                graphics.fill(x, y, x+w, y+h, ColorHelper.setAlpha(ColorHelper.L_BG_GREEN, AnimationUtil.bounce(4000, "archive_unread", false)*0.25F));
+                float anim = AnimationUtil.progress(3000, "archive_unread", true);
+                anim = ((float)Math.sin(anim*Math.PI*2)*0.5F+0.5F)*0.3F;
+                graphics.fill(x, y, x+w, y+h, ColorHelper.setAlpha(ColorHelper.L_BG_GREEN, anim));
             }
         }
 
