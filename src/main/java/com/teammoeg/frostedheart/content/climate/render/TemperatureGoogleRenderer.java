@@ -51,8 +51,6 @@ import com.simibubi.create.foundation.utility.Iterate;
 import com.simibubi.create.foundation.utility.Lang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.config.CClient;
-import com.teammoeg.chorda.multiblock.CMultiblockHelper;
-import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
@@ -92,9 +90,9 @@ import static net.minecraft.ChatFormatting.GRAY;
 
 /**
  * Adapted from @link{com.simibubi.create.content.equipment.goggles.GoggleOverlayRenderer}
- *
+ * <p>
  * Add temperature info to goggles overlay
- *
+ * <p>
  * TODO: Remove Create's Google Renderer
  */
 public class TemperatureGoogleRenderer {
@@ -105,6 +103,7 @@ public class TemperatureGoogleRenderer {
     public static int hoverTicks = 0;
     public static BlockPos lastHovered = null;
     public static BlockPos lastHeatNetworkPos = null;
+    public static float cachedTemperature = 0;
     private static ClientHeatNetworkData lastHeatNetworkData = null;
 
     public static boolean hasHeatNetworkData() {
@@ -147,6 +146,9 @@ public class TemperatureGoogleRenderer {
 
         int prevHoverTicks = hoverTicks;
         hoverTicks++;
+        if (lastHovered == null || !lastHovered.equals(pos)) {
+            cachedTemperature = 0; // TODO
+        }
         lastHovered = pos;
 
         pos = proxiedOverlayPosition(world, pos);
@@ -257,9 +259,9 @@ public class TemperatureGoogleRenderer {
         if (wearingSoilThermometer && hasPlantTempInfo) {
             List<Component> stats;
             if (belowState.is(FHBlocks.FERTILIZED_FARMLAND.get()) || belowState.is(FHBlocks.FERTILIZED_DIRT.get())) {
-                stats = PlantTempStats.getStats(block, null, mc.player, belowState);
+                stats = PlantTempStats.getStats(block, null, mc.player, belowState, pos, cachedTemperature);
             } else {
-                stats = PlantTempStats.getStats(block, null, mc.player, null);
+                stats = PlantTempStats.getStats(block, null, mc.player, null, pos, cachedTemperature);
             }
             if (!stats.isEmpty()) {
                 addedPlantTempInfo = true;
