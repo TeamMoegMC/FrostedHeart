@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.climate.tooltips;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.agriculture.FertilizedDirt;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer.FertilizerGrade;
@@ -183,7 +184,7 @@ public class PlantTempStats implements TooltipModifier {
         return builder;
     }
 
-    public static LangBuilder getSurvivability(boolean tempCanSurvive, boolean lightCanSurvive, boolean canGrowth, boolean fertilize) {
+    public static LangBuilder getSurvivability(boolean tempCanSurvive, boolean lightCanSurvive, boolean canGrowth, boolean fertilize, boolean withIcon) {
         Component desc;
         if (!tempCanSurvive)
             desc = Lang.tooltip("temp.plant.survivability.will_die").withStyle(ChatFormatting.RED).component();
@@ -192,10 +193,9 @@ public class PlantTempStats implements TooltipModifier {
         else
             desc = Lang.tooltip("temp.plant.survivability.survive").withStyle(ChatFormatting.YELLOW).component();
 
-        return Lang.builder()
-                .add(FHTextIcon.SOIL_THERMOMETER.getIcon())
-                .add(Lang.text(" "))
-                .add(desc);
+        return withIcon
+                ? Lang.builder().add(FHTextIcon.SOIL_THERMOMETER.getIcon()).add(Lang.text(" ")).add(desc)
+                : Lang.builder().add(desc);
     }
 
     public static List<Component> getStats(Block block, @Nullable ItemStack stack, @Nullable Player player, @Nullable BlockState farmland, @Nullable BlockPos cropPos, float soilTemp) {
@@ -216,31 +216,69 @@ public class PlantTempStats implements TooltipModifier {
                 canGrowth = soilTemp >= data.minGrow() && soilTemp <= data.maxGrow();
                 fertilize = soilTemp >= data.minFertilize() && soilTemp <= data.maxFertilize();
 
-                Lang.translate("tooltip", "temp.plant.pos").style(ChatFormatting.GRAY).addTo(list);
-                getSurvivability(tempCanSurvive, lightCanSurvive, canGrowth, fertilize).addTo(list);
+                Lang.translate("tooltip", "temp.plant.survivability.state")
+                        .style(ChatFormatting.GRAY)
+                        .add(getSurvivability(tempCanSurvive, lightCanSurvive, canGrowth, fertilize, false))
+                        .addTo(list);
+
+                if (!CInputHelper.isShiftKeyDown()) {
+                    if (!tempCanSurvive || !canGrowth) {
+                        boolean tooLow = soilTemp < data.minGrow() || soilTemp < data.minSkylight();
+                        Lang.builder()
+                                .add(FHTextIcon.SOIL_THERMOMETER.getIcon())
+                                .add(Lang.text(" "))
+                                .add(Lang.tooltip("temp.plant.survivability.temp" + (tooLow ? ".low" : ".high"), TemperatureDisplayHelper.toTemperatureFloatString(soilTemp)).withStyle(tooLow ? ChatFormatting.AQUA : ChatFormatting.GOLD))
+                                .addTo(list);
+                    }
+                    if (!lightCanSurvive) {
+                        boolean tooLow = light < data.minSkylight();
+                        Lang.builder()
+                                .add(FHTextIcon.LIGHT.getIcon())
+                                .add(Lang.text(" "))
+                                .add(Lang.tooltip("temp.plant.survivability.light" + (tooLow ? ".low" : ".high"), Math.round(6.667F * light)).withStyle(tooLow ? ChatFormatting.AQUA : ChatFormatting.GOLD))
+                                .addTo(list);
+                    }
+                    if (farmland != null && (farmland.is(FHBlocks.FERTILIZED_FARMLAND.get()) || farmland.is(FHBlocks.FERTILIZED_DIRT.get()))) {
+                        list.add(Component.empty());
+                        getFertilizerStorageBar(farmland).addTo(list);
+                    }
+                    if (!tempCanSurvive || !lightCanSurvive || !fertilize) {
+                        list.add(Component.empty());
+                        Lang.translate("tooltip", "temp.plant.shift").style(ChatFormatting.GRAY).addTo(list);
+                    }
+                    return list;
+                }
+                list.add(Component.empty());
             }
 
             if(data.shouldShowSurvive()) {
-                Lang.translate("tooltip", "temp.plant.survive").style(tempCanSurvive ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
-                getTempProgressBar(data.minSurvive(), data.maxSurvive()).addTo(list);
+                if (!inWorld || !tempCanSurvive) {
+                    Lang.translate("tooltip", "temp.plant.survive").style(tempCanSurvive ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
+                    getTempProgressBar(data.minSurvive(), data.maxSurvive()).addTo(list);
+                }
             }
 
-            Lang.translate("tooltip", "temp.plant.grow").style(canGrowth ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
-            getTempProgressBar(data.minGrow(), data.maxGrow()).addTo(list);
+            if (!inWorld || !canGrowth) {
+                Lang.translate("tooltip", "temp.plant.grow").style(canGrowth ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
+                getTempProgressBar(data.minGrow(), data.maxGrow()).addTo(list);
+            }
 
             if (data.shouldShowFertilize()) {
-                Lang.translate("tooltip", "temp.plant.fertilize").style(fertilize ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
-                getTempProgressBar(data.minFertilize(), data.maxFertilize()).addTo(list);
+                if (!inWorld || !fertilize) {
+                    Lang.translate("tooltip", "temp.plant.fertilize").style(fertilize ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
+                    getTempProgressBar(data.minFertilize(), data.maxFertilize()).addTo(list);
+                }
             }
 
-            Lang.translate("tooltip", "temp.plant.light").style(lightCanSurvive ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
-            getLightProgressBar(data.minSkylight(), data.maxSkylight()).addTo(list);
+            if (!inWorld || !lightCanSurvive) {
+                Lang.translate("tooltip", "temp.plant.light").style(lightCanSurvive ? ChatFormatting.GRAY : ChatFormatting.RED).addTo(list);
+                getLightProgressBar(data.minSkylight(), data.maxSkylight()).addTo(list);
+            }
 
             if (farmland != null && (farmland.is(FHBlocks.FERTILIZED_FARMLAND.get()) || farmland.is(FHBlocks.FERTILIZED_DIRT.get()))) {
                 Lang.translate("tooltip", "temp.plant.fertilizer").style(ChatFormatting.GRAY).addTo(list);
                 getFertilizerStorageBar(farmland).addTo(list);
             }
-
 
 
             boolean vulnerableSnow = data.snowVulnerable();
@@ -249,9 +287,11 @@ public class PlantTempStats implements TooltipModifier {
                         .style(ChatFormatting.RED)
                         .addTo(list);
             } else {
-                Lang.translate("tooltip", "temp.plant.snow_resistant")
-                        .style(ChatFormatting.GREEN)
-                        .addTo(list);
+                if (!inWorld) {
+                    Lang.translate("tooltip", "temp.plant.snow_resistant")
+                            .style(ChatFormatting.GREEN)
+                            .addTo(list);
+                }
             }
 
             boolean vulnerableBlizzard = data.blizzardVulnerable();
@@ -260,9 +300,11 @@ public class PlantTempStats implements TooltipModifier {
                         .style(ChatFormatting.RED)
                         .addTo(list);
             } else {
-                Lang.translate("tooltip", "temp.plant.blizzard_resistant")
-                        .style(ChatFormatting.GREEN)
-                        .addTo(list);
+                if (!inWorld) {
+                    Lang.translate("tooltip", "temp.plant.blizzard_resistant")
+                            .style(ChatFormatting.GREEN)
+                            .addTo(list);
+                }
             }
         }
 

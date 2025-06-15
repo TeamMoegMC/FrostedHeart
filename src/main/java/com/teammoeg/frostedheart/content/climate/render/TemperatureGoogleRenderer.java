@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.climate.render;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockBE;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
@@ -147,7 +148,7 @@ public class TemperatureGoogleRenderer {
         int prevHoverTicks = hoverTicks;
         hoverTicks++;
         if (lastHovered == null || !lastHovered.equals(pos)) {
-            cachedTemperature = 0; // TODO
+            cachedTemperature = new Random().nextFloat(-50, 50); // TODO
         }
         lastHovered = pos;
 
