@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseWorker;
+import lombok.Getter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.nbt.CompoundTag;
 
@@ -111,12 +112,18 @@ public enum TownWorkerType {
 
     /**
      * The worker.
+     * -- GETTER --
+     *  Gets the worker.
      */
+    @Getter
     private final TownWorker worker;
 
     /**
      * The priority.
+     * -- GETTER --
+     *  Gets the priority.
      */
+    @Getter
     private final int priority;
 
     /**
@@ -173,15 +180,6 @@ public enum TownWorkerType {
     }
 
     /**
-     * Gets the priority.
-     *
-     * @return the priority
-     */
-    public int getPriority() {
-        return priority;
-    }
-
-    /**
      * 为居民分配工作时，此优先级高者优先分配居民，以此分数判断居民质量
      */
     public double getResidentExtraScore(Resident resident) {
@@ -201,15 +199,6 @@ public enum TownWorkerType {
         return this.getResidentPriorityFunction().apply(integer, nbt);
     }
 
-
-    /**
-     * Gets the worker.
-     *
-     * @return the worker
-     */
-    public TownWorker getWorker() {
-        return worker;
-    }
 
     public boolean needsResident() {
         return needsResident;

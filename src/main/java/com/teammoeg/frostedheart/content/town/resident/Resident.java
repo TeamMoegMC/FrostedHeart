@@ -60,8 +60,8 @@ public class Resident {
             Codec.INT.optionalFieldOf("culture",50).forGetter(o->o.culture),
             Codec.INT.optionalFieldOf("educationLevel",0).forGetter(o->o.educationLevel),
             CodecUtil.mapCodec("type", TownWorkerType.CODEC, "proficiency", Codec.INT).optionalFieldOf("workProficiency",Map.of()).forGetter(o->o.workProficiency),
-            BlockPos.CODEC.optionalFieldOf("housePos").forGetter(o->Optional.ofNullable(o.housePos)),
-            BlockPos.CODEC.optionalFieldOf("workPos").forGetter(o->Optional.ofNullable(o.workPos))
+            BlockPos.CODEC.optionalFieldOf("housePos", null).forGetter(o->o.housePos),
+            BlockPos.CODEC.optionalFieldOf("workPos", null).forGetter(o->o.workPos)
 		).apply(t, Resident::new));
     private UUID uuid;
     @Setter
@@ -139,7 +139,7 @@ public class Resident {
         this(firstName,lastName,UUID.fromString(uuid));
     }
 
-    public Resident(String firstName, String lastName, UUID uuid, int health, int mental, int strength, int intelligence, int social, int wealth, int trust, int culture, int educationLevel, Map<TownWorkerType, Integer> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos) {
+    public Resident(String firstName, String lastName, UUID uuid, int health, int mental, int strength, int intelligence, int social, int wealth, int trust, int culture, int educationLevel, Map<TownWorkerType, Integer> workProficiency, BlockPos housePos, BlockPos workPos) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.uuid = uuid;
@@ -155,8 +155,8 @@ public class Resident {
         if(workProficiency!=null){
             this.workProficiency.putAll(workProficiency);
         }
-        this.housePos = housePos.orElse(null);
-        this.workPos = workPos.orElse(null);
+        this.housePos = housePos;
+        this.workPos = workPos;
     }
 
     public UUID getUUID(){
@@ -238,8 +238,7 @@ public class Resident {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof Resident) {
-            Resident other = (Resident) obj;
+        if (obj instanceof Resident other) {
             return other.uuid.equals(uuid);
         }
         return false;
