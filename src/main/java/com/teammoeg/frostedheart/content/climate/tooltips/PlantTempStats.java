@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.content.agriculture.Fertilizer.FertilizerGrade;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -212,6 +213,9 @@ public class PlantTempStats implements TooltipModifier {
             if (inWorld) {
                 tempCanSurvive = soilTemp >= data.minSurvive() && soilTemp <= data.maxSurvive();
                 int light = player.level().getBrightness(LightLayer.SKY, cropPos);
+                if (light == 0 && player.level().getBlockState(cropPos.above()).getBlock() == Blocks.AIR) {
+                    light = player.level().getBrightness(LightLayer.SKY, cropPos.above());
+                }
                 lightCanSurvive = light >= data.minSkylight() && light <= data.maxSkylight();
                 canGrowth = soilTemp >= data.minGrow() && soilTemp <= data.maxGrow();
                 fertilize = soilTemp >= data.minFertilize() && soilTemp <= data.maxFertilize();
