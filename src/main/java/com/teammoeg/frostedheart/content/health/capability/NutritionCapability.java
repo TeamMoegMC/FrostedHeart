@@ -65,7 +65,8 @@ public class NutritionCapability implements NBTSerializable {
 
     public static final ImmutableNutrition DEFAULT_VALUE = new ImmutableNutrition(7000);
     private MutableNutrition nutrition = DEFAULT_VALUE.mutableCopy();
-
+    //food level calculated within nutrition mechanic, resets every tick
+    public transient int calculatedFoodLevel;
     public void addFat(Player player, float add) {
         this.nutrition.fat += add;
         callOnChange(player);
@@ -137,11 +138,11 @@ public class NutritionCapability implements NBTSerializable {
             if (fp != null) {
                 int nutrition = fp.getNutrition();
                 if(nutrition>0) {
-	                FoodData fd=player.getFoodData();
-	                int filling=20-fd.getFoodLevel();
+	                int filling=20-calculatedFoodLevel;
 	                if(filling<nutrition) {//replace overfilled hunger to new food hunger
 	                	consume(nutrition-filling);
 	                }
+	                calculatedFoodLevel=player.getFoodData().getFoodLevel();
 	                this.nutrition.addScaled(wRecipe, (float) (nutrition * FHConfig.SERVER.nutritionGainRate.get()));
 	                this.nutrition.ensureValid();
 	                callOnChange(player);
@@ -154,10 +155,11 @@ public class NutritionCapability implements NBTSerializable {
         if (wRecipe == null) return;
         if(hungerOverride>0) {
             FoodData fd=player.getFoodData();
-            int filling=20-fd.getFoodLevel();
+            int filling=20-calculatedFoodLevel;
             if(filling<hungerOverride) {//replace overfilled hunger to new food hunger
             	consume(hungerOverride-filling);
             }
+            calculatedFoodLevel=player.getFoodData().getFoodLevel();
             this.nutrition.addScaled(wRecipe, (float) (hungerOverride * FHConfig.SERVER.nutritionGainRate.get()));
             this.nutrition.ensureValid();
             callOnChange(player);
