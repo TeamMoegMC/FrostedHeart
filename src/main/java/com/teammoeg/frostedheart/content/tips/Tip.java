@@ -70,6 +70,10 @@ public class Tip {
      */
     private final List<String> children;
     /**
+     * 该提示被解锁时一并解锁的提示
+     */
+    private final List<String> unlock;
+    /**
      * 在条目列表中的分类
      */
     private final String category;
@@ -128,6 +132,7 @@ public class Tip {
         this.id = builder.id;
         this.category = builder.category;
         this.children = builder.children;
+        this.unlock = builder.unlock;
         this.nextTip = builder.nextTip;
         this.image = builder.image;
         this.alwaysVisible = builder.alwaysVisible;
@@ -207,6 +212,10 @@ public class Tip {
         var toAddChildren = new ListTag();
         this.children.stream().map(StringTag::valueOf);
         nbt.put("children", toAddChildren);
+
+        var toAddUnlock = new ListTag();
+        this.unlock.stream().map(StringTag::valueOf);
+        nbt.put("children", toAddUnlock);
         return nbt;
     }
 
@@ -233,6 +242,11 @@ public class Tip {
         var toAddChildren = new JsonArray();
         this.children.forEach(toAddChildren::add);
         json.add("children", toAddChildren);
+
+
+        var toAddUnlock = new JsonArray();
+        this.unlock.stream().map(StringTag::valueOf);
+        json.add("children", toAddUnlock);
         return json;
     }
 
@@ -271,6 +285,7 @@ public class Tip {
     public static class Builder {
         private final List<Component> contents = new ArrayList<>();
         private final List<String> children = new ArrayList<>();
+        private final List<String> unlock = new ArrayList<>();
         private String id = "";
         private String category = "";
         private String nextTip = "";
@@ -328,14 +343,24 @@ public class Tip {
             return lines(List.of(texts));
         }
 
-        public Builder children(Collection<String> texts) {
+        public Builder children(Collection<String> children) {
             if (!editable) return this;
-            this.children.addAll(texts);
+            this.children.addAll(children);
             return this;
         }
 
         public Builder children(String... children) {
             return children(List.of(children));
+        }
+
+        public Builder unlock(Collection<String> unlock) {
+            if (!editable) return this;
+            this.unlock.addAll(unlock);
+            return this;
+        }
+
+        public Builder unlock(String... unlock) {
+            return unlock(List.of(unlock));
         }
 
         public Builder clearContents() {
@@ -419,6 +444,8 @@ public class Tip {
             this.contents.addAll(source.contents);
             this.children.clear();
             this.children.addAll(source.children);
+            this.unlock.clear();
+            this.unlock.addAll(source.unlock);
             this.category = source.category;
             this.nextTip = source.nextTip;
             this.image = source.image;
@@ -498,6 +525,13 @@ public class Tip {
                 JsonArray children = json.getAsJsonArray("children");
                 for (JsonElement child : children) {
                     this.children.add(child.getAsString());
+                }
+            }
+
+            if (json.has("unlock")) {
+                JsonArray unlock = json.getAsJsonArray("unlock");
+                for (JsonElement child : unlock) {
+                    this.unlock.add(child.getAsString());
                 }
             }
 

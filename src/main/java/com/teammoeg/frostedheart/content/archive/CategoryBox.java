@@ -262,9 +262,9 @@ public class CategoryBox extends Layer {
 
         @Override
         public boolean read() {
-            TipManager.INSTANCE.state().setViewState(tip, true);
+            TipManager.INSTANCE.state().view(tip, true);
             for (Tip tip : children) {
-                TipManager.INSTANCE.state().setViewState(tip, true);
+                TipManager.INSTANCE.state().view(tip, true);
             }
             return true;
         }

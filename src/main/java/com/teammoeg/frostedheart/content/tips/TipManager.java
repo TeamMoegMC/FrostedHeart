@@ -40,12 +40,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 管理 tip 的展示和状态
@@ -162,8 +162,10 @@ public class TipManager {
 
             // 更改非临时 tip 的状态
             if (!tip.isTemporary()) {
-                state.setLockState(tip, true);
+                state.unlock(tip, true);
             }
+
+            state.unlock(tip.getUnlock().stream().map(TipManager.this::getTip).toList(), true);
 
             if (tip.isPin() && !TipRenderer.TIP_QUEUE.isEmpty()) {
                 Tip last = TipRenderer.TIP_QUEUE.get(0);
@@ -194,7 +196,7 @@ public class TipManager {
          */
         public void force(Tip tip) {
             if (!tip.isTemporary()) {
-                state.setLockState(tip, true);
+                state.unlock(tip, true);
             }
 
             if (tip.isPin() && !TipRenderer.TIP_QUEUE.isEmpty()) {
@@ -324,7 +326,7 @@ public class TipManager {
         /**
          * 设置 tip 的查看状态
          */
-        public void setViewState(Tip tip, boolean view) {
+        public void view(Tip tip, boolean view) {
             getState(tip).ifPresent(state -> {
                 if (state.viewed != view) {
                     state.viewed = view;
@@ -333,16 +335,36 @@ public class TipManager {
             });
         }
 
+        public void view(Collection<Tip> tips, boolean view) {
+            tips.forEach(tip -> getState(tip).ifPresent(state -> state.viewed = view));
+            saveToFile();
+        }
+
+        public void viewAll() {
+            tipStates.forEach((tip, state) -> state.setViewed(true));
+            saveToFile();
+        }
+
         /**
          * 设置 tip 的解锁状态
          */
-        public void setLockState(Tip tip, boolean unlock) {
+        public void unlock(Tip tip, boolean unlock) {
             getState(tip).ifPresent(state -> {
                 if (state.unlocked != unlock) {
                     state.unlocked = unlock;
                     saveToFile();
                 }
             });
+        }
+
+        public void unlock(Collection<Tip> tips, boolean unlock) {
+            tips.forEach(tip -> getState(tip).ifPresent(state -> state.unlocked = unlock));
+            saveToFile();
+        }
+
+        public void unlockAll() {
+            tipStates.forEach((tip, state) -> state.setUnlocked(true));
+            saveToFile();
         }
 
         /**
@@ -375,16 +397,6 @@ public class TipManager {
         public boolean isViewed(Tip tip) {
             var state = getState(tip);
             return state.isPresent() && state.get().viewed;
-        }
-
-        public void unlockAll() {
-            tipStates.forEach((tip, state) -> state.setUnlocked(true));
-            saveToFile();
-        }
-
-        public void viewAll() {
-            tipStates.forEach((tip, state) -> state.setViewed(true));
-            saveToFile();
         }
 
         /**
