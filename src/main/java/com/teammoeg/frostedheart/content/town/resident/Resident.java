@@ -27,6 +27,8 @@ import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.math.CMath;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.core.BlockPos;
@@ -50,6 +52,8 @@ public class Resident {
             UUIDUtil.CODEC.fieldOf("uuid").forGetter(o->o.uuid),
             Codec.INT.optionalFieldOf("health",50).forGetter(o->o.health),
             Codec.INT.optionalFieldOf("mental",50).forGetter(o->o.mental),
+            Codec.INT.optionalFieldOf("strength",50).forGetter(o->o.strength),
+            Codec.INT.optionalFieldOf("intelligence",50).forGetter(o->o.intelligence),
             Codec.INT.optionalFieldOf("social",50).forGetter(o->o.social),
             Codec.INT.optionalFieldOf("wealth",50).forGetter(o->o.wealth),
             Codec.INT.optionalFieldOf("trust",50).forGetter(o->o.trust),
@@ -60,29 +64,53 @@ public class Resident {
             BlockPos.CODEC.optionalFieldOf("workPos").forGetter(o->Optional.ofNullable(o.workPos))
 		).apply(t, Resident::new));
     private UUID uuid;
+    @Setter
+    @Getter
     private String firstName = "Steve";
+    @Setter
+    @Getter
     private String lastName = "Alexander";
     /** Stats range from 0 to 100 */
     // physical
+    @Getter
     private int health = 50;
-    // psychological
+    // psychological, well-being, 幸福度
+    @Getter
     private int mental = 50;
+    //strength
+    @Getter
+    private int strength = 50;
+    // intelligence, decides max educationLevel and the studying speed(the growth speed of educational level)
+    @Getter
+    private int intelligence = 50;
     // social
+    @Getter
     private int social = 50;
     // economic
+    @Getter
     private int wealth = 50;
     // political
+    @Getter
     private int trust = 50;
     // cultural
+    @Getter
     private int culture = 50;
     // educational
+    // more than 0
+    @Getter
     private int educationLevel = 0;
-    //work proficiency.
-    // If the number is negative, this type is considered as unworkable type.
+    /**
+     *  work proficiency.
+     *  If the number is negative, this type is considered as unworkable type.
+     */
+    @Getter
     private final EnumMap<TownWorkerType, Integer> workProficiency = new EnumMap<>(TownWorkerType.class);
     //the pos of the HouseBlock that the resident is living in
+    @Getter
+    @Setter
     private BlockPos housePos;
     //the pos of the worker block that the resident is working in
+    @Getter
     private BlockPos workPos;
 
     public Resident(String firstName, String lastName) {
@@ -111,12 +139,14 @@ public class Resident {
         this(firstName,lastName,UUID.fromString(uuid));
     }
 
-    public Resident(String firstName, String lastName, UUID uuid, int health, int mental, int social, int wealth, int trust, int culture, int educationLevel, Map<TownWorkerType, Integer> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos) {
+    public Resident(String firstName, String lastName, UUID uuid, int health, int mental, int strength, int intelligence, int social, int wealth, int trust, int culture, int educationLevel, Map<TownWorkerType, Integer> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.uuid = uuid;
         this.health = health;
         this.mental = mental;
+        this.strength = strength;
+        this.intelligence = intelligence;
         this.wealth = wealth;
         this.social = social;
         this.trust = trust;
@@ -129,50 +159,8 @@ public class Resident {
         this.workPos = workPos.orElse(null);
     }
 
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
     public UUID getUUID(){
         return uuid;
-    }
-
-    public int getHealth() {
-        return health;
-    }
-    public int getMental() {
-        return mental;
-    }
-    public int getSocial() {
-        return social;
-    }
-    public int getWealth() {
-        return wealth;
-    }
-    public int getTrust() {
-        return trust;
-    }
-    public int getCulture() {
-        return culture;
-    }
-    public int getEducationLevel() {
-        return educationLevel;
-    }
-
-    public EnumMap<TownWorkerType, Integer> getWorkProficiency() {
-        return workProficiency;
     }
 
     public int getWorkProficiency(TownWorkerType type) {
@@ -206,6 +194,8 @@ public class Resident {
         data.putString("lastName", lastName);
         data.putInt("health", health);
         data.putInt("happiness", mental);
+        data.putInt("strength", strength);
+        data.putInt("intelligence", intelligence);
         data.putInt("social", social);
         data.putInt("wealth", wealth);
         data.putInt("trust", trust);
@@ -223,6 +213,8 @@ public class Resident {
         lastName = data.getString("lastName");
         health = data.getInt("health");
         mental = data.getInt("happiness");
+        strength = data.getInt("strength");
+        intelligence = data.getInt("intelligence");
         social = data.getInt("social");
         wealth = data.getInt("wealth");
         trust = data.getInt("trust");
@@ -237,18 +229,6 @@ public class Resident {
 
     public void setWorkPos(BlockPos pos){
         this.housePos = pos;
-    }
-
-    public void setHousePos(BlockPos pos){
-        this.housePos = pos;
-    }
-
-    public BlockPos getWorkPos(){
-        return workPos;
-    }
-
-    public BlockPos getHousePos(){
-        return housePos;
     }
 
     @Override
