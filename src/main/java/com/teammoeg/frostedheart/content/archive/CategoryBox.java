@@ -289,6 +289,9 @@ public class CategoryBox extends Layer {
                 } else {
                     lines.add(box.br());
                 }
+                if (j != 0 && !tipContents.get(0).equals(this.tip.getContents().get(0))) {
+                    lines.add(box.text(tipContents.get(0)).setQuote(tip.getFontColor()));
+                }
                 for (int i = 1; i < tipContents.size(); i++) {
                     Component line = tipContents.get(i);
                     if (!line.getString().isBlank()) {
