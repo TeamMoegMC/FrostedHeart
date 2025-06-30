@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.town;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.dataholders.SpecialData;
@@ -256,7 +255,7 @@ public class TeamTownData implements SpecialData{
         //移除house/worker里超过上限，或已不存在的的resident
         for(TownWorkerData data : blocks.values()){
             if(data.getType() == TownWorkerType.HOUSE || data.getType().needsResident()){
-                ListTag residentListNBT = data.getResidents();
+                ListTag residentListNBT = data.getResidentsByTag();
                 residentListNBT.removeIf(residentNBT -> !residents.containsKey(UUID.fromString(residentNBT.getAsString())));
                 int maxResident = data.getWorkData().getCompound("tileEntity").getInt("maxResident");
                 while(residentListNBT.size() > maxResident){
@@ -294,13 +293,13 @@ public class TeamTownData implements SpecialData{
     //distribute homeless residents to house
     private void allocateHouse() {
         ArrayList<TownWorkerData> availableHouses = blocks.values().stream()
-                .filter(data -> data.getType() == TownWorkerType.HOUSE && data.getMaxResident() > data.getResidents().size())
+                .filter(data -> data.getType() == TownWorkerType.HOUSE && data.getMaxResident() > data.getResidentsByTag().size())
                 .sorted(Comparator.comparingDouble(data -> -data.getWorkData().getCompound("tileEntity").getDouble("rating")))//优先分配评分最高的house。因此在rating前面加了负号。
                 .collect(Collectors.toCollection(ArrayList::new));
         if(availableHouses.isEmpty()) return;
         Iterator<TownWorkerData> houseIterator = availableHouses.iterator();
         TownWorkerData currentHouseData = houseIterator.next();
-        ListTag residentListNBT = currentHouseData.getResidents();
+        ListTag residentListNBT = currentHouseData.getResidentsByTag();
         int maxResident = currentHouseData.getMaxResident();
         Iterator<Resident> residentIterator = residents.values().iterator();
         while (true) {//遍历所有居民
@@ -313,7 +312,7 @@ public class TeamTownData implements SpecialData{
                 currentHouseData.setDataFromTown("residents", residentListNBT);
                 if (houseIterator.hasNext()) {
                     currentHouseData = houseIterator.next();
-                    residentListNBT = currentHouseData.getResidents();
+                    residentListNBT = currentHouseData.getResidentsByTag();
                     maxResident = currentHouseData.getMaxResident();
                 } else {
                     return;
@@ -340,7 +339,7 @@ public class TeamTownData implements SpecialData{
         }
         public void addResident(UUID uuid){
             if(residentListNBT == null){
-                residentListNBT = townWorkerData.getResidents();
+                residentListNBT = townWorkerData.getResidentsByTag();
             }
             residentListNBT.add(StringTag.valueOf(uuid.toString()));
             residents.get(uuid).setWorkPos(townWorkerData.getPos());
@@ -364,21 +363,23 @@ public class TeamTownData implements SpecialData{
             }
             UUID bestResident = null;
             TownWorkerType topPriorityWorkerType = topPriorityWorker.townWorkerData.getType();
-            Double bestResidentScore = Double.NEGATIVE_INFINITY;
+            double bestResidentScore = Double.NEGATIVE_INFINITY;
             for(int j = 0; j< availableResidents.size(); j++){
                 UUID uuid = availableResidents.get(j);
                 Resident resident = residents.get(uuid);
-                Double score = resident.getWorkScore(topPriorityWorkerType);
-                if(score == Double.NEGATIVE_INFINITY){//score为负无穷大时，代表这个居民本身存在问题，无法进行任何工作。
+                if(resident.getWorkPos() != null || resident.getHousePos() == null) {
+                    //当居民已经有工作，或没有房屋（不视为合法居民，无法进行工作），移除可分配工作的居民列表
                     availableResidents.remove(j);
                     j--;
+                    continue;
                 }
+                double score = topPriorityWorkerType.getResidentScore(resident);
                 if(score == 0.0){//score为0时，无法进行此类工作，但有可能进行其它工作。
                     continue;
                 }
-                if(bestResidentScore <= resident.getWorkScore(topPriorityWorkerType)){
+                if(bestResidentScore <= score){
                     bestResident = uuid;
-                    bestResidentScore = resident.getWorkScore(topPriorityWorkerType);
+                    bestResidentScore = score;
                 }
             }
             if(bestResident != null){

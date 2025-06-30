@@ -31,6 +31,8 @@ import net.minecraft.nbt.Tag;
 import java.util.*;
 
 public class MineWorker implements TownWorker {
+    public static final MineWorker INSTANCE=new MineWorker();
+    private MineWorker(){}
     @Override
     public boolean work(Town town, CompoundTag workData) {
         if(town instanceof TownWithResident){
@@ -53,7 +55,7 @@ public class MineWorker implements TownWorker {
                     .filter(Objects::nonNull)
                     .toList();
             for(Resident resident : residents){
-                double add = rating * resident.getWorkScore(TownWorkerType.MINE);
+                //double add = rating * resident.getWorkScore(TownWorkerType.MINE);
                 double randomDouble = CMath.RANDOM.nextDouble();
                 double counter = 0;
                 for(Map.Entry<ItemResourceType, Double> entry : resources.entrySet()){

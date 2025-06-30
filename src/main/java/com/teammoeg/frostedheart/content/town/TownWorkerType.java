@@ -21,14 +21,14 @@ package com.teammoeg.frostedheart.content.town;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseBlockEntity;
+import com.teammoeg.frostedheart.content.town.house.HouseWorker;
+import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseResidentHandler;
+import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseWorker;
+import com.teammoeg.frostedheart.content.town.mine.MineResidentHandler;
 import com.teammoeg.frostedheart.content.town.mine.MineWorker;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
@@ -36,9 +36,6 @@ import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseWorker;
 import lombok.Getter;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.nbt.CompoundTag;
-
-import static java.lang.Double.NEGATIVE_INFINITY;
 
 /**
  * The second-lowest level town processing function.
@@ -56,52 +53,12 @@ public enum TownWorkerType {
      * The dummy.
      */
     DUMMY(null, null, -1),
-    HOUSE(FHBlocks.HOUSE::get, (town, workData) -> {
-        double residentNum = workData.getCompound("tileEntity").getList("residents", 10).size();
-        ItemResourceType[] foodTypes = new ItemResourceType[]{ItemResourceType.FOOD_GRAINS, ItemResourceType.FOOD_FRUIT_AND_VEGETABLES, ItemResourceType.FOOD_PROTEIN, ItemResourceType.FOOD_EDIBLE_OIL};
-        Map<ItemResourceType, Double> foodAmounts = new HashMap<>();
-        double totalFoods = 0;
-        for(ItemResourceType foodType : foodTypes){
-            foodAmounts.put(foodType, town.getResourceManager().get(foodType));
-            totalFoods += (foodAmounts.get(foodType));
-        }
-        if(residentNum > totalFoods) return false;
-        double toCost = residentNum * 5;
-        foodAmounts.clear();//清空这个Map的内容，之后当做costedFoods来使用
-        //duck_egg: 未来或许会按照食物的质量(result.averageLevel)和均衡程度，影响房屋内居民的健康。但目前仅做一个基础的cost内容，以消除编译错误。
-        for(ItemResourceType foodType : foodTypes){
-            TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().costHighestLevelToEmpty(foodType, residentNum);
-            foodAmounts.put(foodType, result.actualAmount());
-            toCost -= result.actualAmount();
-        }
-        if(toCost <= 0){
-            return true;
-        }
-        for(ItemResourceType foodType : foodTypes){
-            TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().costHighestLevelToEmpty(foodType, toCost);
-            foodAmounts.merge(foodType, result.actualAmount(), Double::sum);
-            toCost -= result.actualAmount();
-        }
-        return true;
-
-    }, 0),
+    HOUSE(FHBlocks.HOUSE::get, HouseWorker.INSTANCE, 0),
     WAREHOUSE(FHBlocks.WAREHOUSE::get, new WarehouseWorker(), 0),
-    MINE(FHBlocks.MINE::get, new MineWorker(), 0, true,
-            (currentResidentNum, nbt) -> {
-        int maxResident = nbt.getCompound("tileEntity").getInt("maxResident");
-        double rating = TownWorkerData.getRating(nbt);
-        if(currentResidentNum < maxResident) return -currentResidentNum + 1.0 * currentResidentNum / maxResident + 0.4/*the base priority of workerRype*/ + rating;
-        return NEGATIVE_INFINITY;
-            },
-            (resident) -> resident.getTrust() * 0.01),
+    MINE(FHBlocks.MINE::get, MineWorker.INSTANCE, 0, MineResidentHandler.INSTANCE),
     MINE_BASE(FHBlocks.MINE_BASE::get, null, 0),
     HUNTING_CAMP(FHBlocks.HUNTING_CAMP::get, null, 0),
-    HUNTING_BASE(FHBlocks.HUNTING_BASE::get, new HuntingBaseBlockEntity.HuntingBaseWorker(), -1, true, (currentResidentNum, nbt) -> {
-        int maxResident = nbt.getCompound("tileEntity").getInt("maxResident");
-        if(currentResidentNum < maxResident) return -currentResidentNum + 1.0 * currentResidentNum / maxResident + 0.5 + TownWorkerData.getRating(nbt);
-        return Double.NEGATIVE_INFINITY;
-    }, (resident) -> resident.getTrust() * 0.01 * Resident.CalculatingFunction1(resident.getSocial()))
-    ;
+    HUNTING_BASE(FHBlocks.HUNTING_BASE::get, HuntingBaseWorker.INSTANCE, -1,  HuntingBaseResidentHandler.INSTANCE);
 
     public static final Codec<TownWorkerType> CODEC= Codec.STRING.xmap(TownWorkerType::from,TownWorkerType::getKey);
 
@@ -127,24 +84,11 @@ public enum TownWorkerType {
     private final int priority;
 
     /**
-     * Whether this worker needs resident to work.
+     * The resident handler.
+     * <br>
+     * 包括工作方块分配居民的优先级函数，以及对于某个工作方块居民的评分函数
      */
-    private final boolean needsResident;
-
-    /**
-     * The function used when assigning work for resident.
-     * 每有一个居民在此工作，优先级应减少1左右，这样可以使居民尽可能均匀地分配在所有工作方块中
-     * 当居民数量大于最大居民数时，应该返回Double.NEGATIVE_INFINITY
-     * input1 当前居民数量。
-     * input2 完整的workerData，包括town部分和tileEntity部分。详见TownWorkerData。
-     * output 分配居民时的优先级
-     */
-    private BiFunction<Integer, CompoundTag, Double> residentPriorityFunction;
-
-    /**
-     * Extra score besides proficiency and health
-     */
-    private Function<Resident, Double> residentExtraScoreFunction;
+    private final WorkerResidentHandler residentHandler;
 
     /**
      * Instantiates a new town worker type.
@@ -157,17 +101,15 @@ public enum TownWorkerType {
         this.block = workerBlock;
         this.worker = worker;
         this.priority = internalPriority;
-        this.needsResident = false;
+        this.residentHandler = WorkerResidentHandler.DUMMY;
     }
 
     //if needsResident is true, residentPriorityFunction must be set
-    TownWorkerType(Supplier<Block> workerBlock, TownWorker worker, int internalPriority, boolean needsResident, BiFunction<Integer, CompoundTag, Double> residentPriorityFunction, Function<Resident, Double> residentExtraScoreFunction) {
+    TownWorkerType(Supplier<Block> workerBlock, TownWorker worker, int internalPriority, WorkerResidentHandler residentHandler) {
         this.block = workerBlock;
         this.worker = worker;
         this.priority = internalPriority;
-        this.needsResident = needsResident;
-        this.residentPriorityFunction = residentPriorityFunction;
-        this.residentExtraScoreFunction = residentExtraScoreFunction;
+        this.residentHandler = residentHandler;
     }
 
     /**
@@ -180,37 +122,32 @@ public enum TownWorkerType {
     }
 
     /**
-     * 为居民分配工作时，此优先级高者优先分配居民，以此分数判断居民质量
-     */
-    public double getResidentExtraScore(Resident resident) {
-        return residentExtraScoreFunction.apply(resident);
-    }
-
-    /**
      * 为居民分配工作时，此优先级高者优先分配居民
      *
      * @param data TownWorkerData中的workData
      */
     public double getResidentPriority(TownWorkerData data) {
-        return this.getResidentPriorityFunction().apply(data.getResidents().size(), data.getWorkData());
+        return this.getResidentHandler().getResidentPriority(data);
     }
 
-    public double getResidentPriority(Integer integer, CompoundTag nbt){
-        return this.getResidentPriorityFunction().apply(integer, nbt);
+    public double getResidentPriority(int residentNum, TownWorkerData data){
+        return this.getResidentHandler().getResidentPriority(data, residentNum);
+    }
+
+    public double getResidentScore(Resident resident) {
+        return this.getResidentHandler().getResidentScore(resident);
     }
 
 
     public boolean needsResident() {
-        return needsResident;
+        return residentHandler != WorkerResidentHandler.DUMMY;
     }
 
-    public BiFunction<Integer, CompoundTag, Double> getResidentPriorityFunction() {
-        if(this.needsResident){
-            return residentPriorityFunction;
-        } else{
-            FHMain.LOGGER.error("This TownWorkerType don't need resident, but tried get residentPriorityFunction");
-            return ((useless1, useless2) -> NEGATIVE_INFINITY);
+    public WorkerResidentHandler getResidentHandler() {
+        if(residentHandler==WorkerResidentHandler.DUMMY){
+            throw new IllegalStateException("TownWorkerType " + this.name() + " does not have a resident handler!");
         }
+        return residentHandler;
     }
 
 

@@ -36,7 +36,6 @@ import net.minecraft.core.UUIDUtil;
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -54,10 +53,6 @@ public class Resident {
             Codec.INT.optionalFieldOf("mental",50).forGetter(o->o.mental),
             Codec.INT.optionalFieldOf("strength",50).forGetter(o->o.strength),
             Codec.INT.optionalFieldOf("intelligence",50).forGetter(o->o.intelligence),
-            Codec.INT.optionalFieldOf("social",50).forGetter(o->o.social),
-            Codec.INT.optionalFieldOf("wealth",50).forGetter(o->o.wealth),
-            Codec.INT.optionalFieldOf("trust",50).forGetter(o->o.trust),
-            Codec.INT.optionalFieldOf("culture",50).forGetter(o->o.culture),
             Codec.INT.optionalFieldOf("educationLevel",0).forGetter(o->o.educationLevel),
             CodecUtil.mapCodec("type", TownWorkerType.CODEC, "proficiency", Codec.INT).optionalFieldOf("workProficiency",Map.of()).forGetter(o->o.workProficiency),
             BlockPos.CODEC.optionalFieldOf("housePos", null).forGetter(o->o.housePos),
@@ -70,35 +65,24 @@ public class Resident {
     @Setter
     @Getter
     private String lastName = "Alexander";
-    /** Stats range from 0 to 100 */
+    /** Stats range from 0 to 100 start*/
     // physical
     @Getter
     private int health = 50;
     // psychological, well-being, 幸福度
     @Getter
     private int mental = 50;
+    /** Stats range from 0 to 100 end*/
+    // educational
+    // more than 0
+    @Getter
+    private int educationLevel = 0;
     //strength
     @Getter
     private int strength = 50;
     // intelligence, decides max educationLevel and the studying speed(the growth speed of educational level)
     @Getter
     private int intelligence = 50;
-    // social
-    @Getter
-    private int social = 50;
-    // economic
-    @Getter
-    private int wealth = 50;
-    // political
-    @Getter
-    private int trust = 50;
-    // cultural
-    @Getter
-    private int culture = 50;
-    // educational
-    // more than 0
-    @Getter
-    private int educationLevel = 0;
     /**
      *  work proficiency.
      *  If the number is negative, this type is considered as unworkable type.
@@ -118,8 +102,8 @@ public class Resident {
         this.lastName = lastName;
         this.uuid = UUID.randomUUID();
         workProficiency.forEach((k, v) -> {
-            if(k.needsResident()) workProficiency.put(k, CMath.RANDOM.nextInt(20)-2);
-        });//have 20% chance to be unworkable type
+            if(k.needsResident()) workProficiency.put(k, CMath.RANDOM.nextInt(20));
+        });
     }
 
     //public Resident() {
@@ -139,7 +123,7 @@ public class Resident {
         this(firstName,lastName,UUID.fromString(uuid));
     }
 
-    public Resident(String firstName, String lastName, UUID uuid, int health, int mental, int strength, int intelligence, int social, int wealth, int trust, int culture, int educationLevel, Map<TownWorkerType, Integer> workProficiency, BlockPos housePos, BlockPos workPos) {
+    public Resident(String firstName, String lastName, UUID uuid, int health, int mental, int strength, int intelligence, int educationLevel, Map<TownWorkerType, Integer> workProficiency, BlockPos housePos, BlockPos workPos) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.uuid = uuid;
@@ -147,10 +131,6 @@ public class Resident {
         this.mental = mental;
         this.strength = strength;
         this.intelligence = intelligence;
-        this.wealth = wealth;
-        this.social = social;
-        this.trust = trust;
-        this.culture = culture;
         this.educationLevel = educationLevel;
         if(workProficiency!=null){
             this.workProficiency.putAll(workProficiency);
@@ -164,26 +144,7 @@ public class Resident {
     }
 
     public int getWorkProficiency(TownWorkerType type) {
-        return workProficiency.getOrDefault(type, -1);
-    }
-
-    public Double getWorkScore(TownWorkerType type){
-        int proficiency = getWorkProficiency(type);
-        if(health < 20 || mental < 20 || housePos == null || workPos != null){
-            return Double.NEGATIVE_INFINITY;
-        }
-        if(proficiency <= 0) return 0.0;
-        return CalculatingFunction2(health) * Math.pow(CalculatingFunction1(proficiency), 0.5) * Math.pow(CalculatingFunction1(mental), 0.3) * Math.pow(type.getResidentExtraScore(this), 0.5);
-    }
-
-    /**
-     * Compute the productivity multiplier of the resident.
-     * A linear map from [0,100] to [0.0,2.0].
-     * The input is average of every stat.
-     * @return the productivity multiplier
-     */
-    public double getProductivityMultiplier() {
-        return (health + mental + social + wealth + trust + culture) / 300.0;
+        return workProficiency.getOrDefault(type, 0);
     }
 
     // serialization
@@ -196,10 +157,6 @@ public class Resident {
         data.putInt("happiness", mental);
         data.putInt("strength", strength);
         data.putInt("intelligence", intelligence);
-        data.putInt("social", social);
-        data.putInt("wealth", wealth);
-        data.putInt("trust", trust);
-        data.putInt("culture", culture);
         data.putInt("educationLevel", educationLevel);
         data.put("workProficiency", SerializeUtil.toNBTMap(workProficiency.entrySet(), (entry, compoundNBTBuilder) -> compoundNBTBuilder.putInt(entry.getKey().getKey(), entry.getValue())));
         data.putLong("workPos", workPos.asLong());
@@ -215,10 +172,6 @@ public class Resident {
         mental = data.getInt("happiness");
         strength = data.getInt("strength");
         intelligence = data.getInt("intelligence");
-        social = data.getInt("social");
-        wealth = data.getInt("wealth");
-        trust = data.getInt("trust");
-        culture = data.getInt("culture");
         educationLevel = data.getInt("educationLevel");
         CompoundTag workProficiencyNBT = data.getCompound("workProficiency");
         workProficiency.keySet().forEach(key/*TownWorkerType*/ -> workProficiency.put(key, workProficiencyNBT.getInt(key.getKey())));
@@ -249,16 +202,4 @@ public class Resident {
         return uuid.hashCode();
     }
 
-    //用于调整数据
-    //1-exp型，在x大概为20时，数值达到一半
-    public static double CalculatingFunction1(int num){
-        if(num <= 0){
-            return Double.NEGATIVE_INFINITY;
-        }
-        return 1-Math.exp(-num*0.04);
-    }
-    //S型曲线，关于点(50,0.5)对称
-    public static double CalculatingFunction2(int num){
-        return 1/(1+Math.exp(-num*0.1+5));
-    }
 }
