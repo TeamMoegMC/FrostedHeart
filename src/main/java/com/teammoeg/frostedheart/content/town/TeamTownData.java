@@ -90,10 +90,9 @@ public class TeamTownData implements SpecialData{
 	}
     public TeamTownData(SpecialDataHolder teamData) {
         super();
-        if(teamData instanceof TeamDataHolder) {
-        	TeamDataHolder data=(TeamDataHolder) teamData;
-	        
-	        this.name = data.getTeam().getName() + "'s Town";
+        if(teamData instanceof TeamDataHolder data) {
+
+            this.name = data.getTeam().getName() + "'s Town";
 	        
         }
     }
