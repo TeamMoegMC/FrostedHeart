@@ -25,13 +25,14 @@ import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
 
 public class ColumbiatWaypoint extends Waypoint {
     public ColumbiatWaypoint() {
         super(new Vec3(0, 0, 0), "Columbiat", 0xFFF6F1D5);
         this.displayName = Lang.waypoint("columbiat").component();
-        this.focus = true;
+        this.focused = true;
     }
 
     public ColumbiatWaypoint(CompoundTag nbt) {
@@ -57,9 +58,7 @@ public class ColumbiatWaypoint extends Waypoint {
     }
 
     @Override
-    public void updateInfos() {
-        addInfoLine(displayName, -1);
-    }
+    public void addAdvancedLines() {}
 
     @Override
     public double getDistance() {

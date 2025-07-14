@@ -21,25 +21,30 @@ package com.teammoeg.frostedheart.content.waypoint;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
 
+import com.teammoeg.frostedheart.content.waypoint.waypoints.Waypoint;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec2;
-import net.minecraftforge.network.PacketDistributor;
-import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-//TODO 路径点管理UI
+//TODO 路径点管理UI?
 public class ClientWaypointManager {
     /**
      * 客户端用于渲染的路径点列表
@@ -47,18 +52,14 @@ public class ClientWaypointManager {
     @Setter
     private static Map<String, AbstractWaypoint> waypoints = new HashMap<>();
     /**
-     * 玩家当前注视或鼠标悬停在的路径点
+     * 玩家当前选择路径点
      */
     @Nullable
-    private static AbstractWaypoint hoveredWaypoint;
+    private static AbstractWaypoint selectedWaypoint;
     /**
      * 是否更新路径点的悬停信息
      */
     private static boolean shouldUpdate;
-    /**
-     * 悬停时是否显示更详细的路径点信息
-     */
-    private static boolean shouldShowExtra;
 
     /**
      * 渲染全部路径点
@@ -69,10 +70,11 @@ public class ClientWaypointManager {
         // 每 tick 更新一次路径点悬停信息
         shouldUpdate = ClientUtils.isGameTimeUpdated() || ClientUtils.getMc().isPaused();
 
-        // Shift 键被按下或玩家潜行
-        shouldShowExtra = ClientUtils.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT) || ClientUtils.getPlayer().isShiftKeyDown();
-
         // 遍历所有路径点
+        if (!waypoints.containsValue(selectedWaypoint)) {
+            selectedWaypoint = null;
+        }
+        List<AbstractWaypoint> visible = new ArrayList<>();
         Iterator<Map.Entry<String, AbstractWaypoint>> iterator = waypoints.entrySet().iterator();
         while (iterator.hasNext()) {
             AbstractWaypoint waypoint = iterator.next().getValue();
@@ -80,56 +82,44 @@ public class ClientWaypointManager {
             if (!waypoint.isValid()) {
                 waypoint.onClientRemove();
                 iterator.remove();
-            // 路径点是否启用并且和当前维度相符
-            } else if (waypoint.enable && waypoint.dimension.equals(ClientUtils.getDimLocation())){
-                waypoint.render(graphics);
-                updateHovered(waypoint);
+            // 路径点是否启用并且和处于当前维度
+            } else if (waypoint.isEnabled() && waypoint.getDimension().equals(ClientUtils.getDimLocation())){
+                visible.add(waypoint);
+                updateSelected(waypoint);
             }
         }
+        // 置顶选中的路径点
+        getSelected().ifPresent(selected -> {
+            visible.remove(selected);
+            visible.add(selected);
+        });
+        visible.forEach(waypoint -> waypoint.render(graphics));
     }
 
-    private static void updateHovered(AbstractWaypoint waypoint) {
-        if (!waypoints.containsValue(hoveredWaypoint)) {
-            hoveredWaypoint = null;
-        }
-
-        // 检查该路径点是否靠近玩家鼠标或屏幕中心区域
+    private static void updateSelected(AbstractWaypoint waypoint) {
         Vec2 screenPos = waypoint.getScreenPos();
-        boolean flag = false;
-        if (!ClientUtils.getMc().mouseHandler.isMouseGrabbed()) {
-            // 鼠标
-            flag = MouseHelper.isMouseIn(MouseHelper.getScaledX(), MouseHelper.getScaledY(), (int)(screenPos.x-10), (int)(screenPos.y-10), 20, 20);
-        }
-        if (!flag) {
-            float x = screenPos.x / ClientUtils.screenWidth();
-            float y = screenPos.y / ClientUtils.screenHeight();
-            //屏幕中心区域
-            if (!(x >= 0.45 && x <= 0.55 && y >= 0.45 && y <= 0.55)) {
-                if (hoveredWaypoint == waypoint) {
-                    hoveredWaypoint = null;
-                }
-                return;
-            }
-        }
+        boolean inGame = ClientUtils.getMc().mouseHandler.isMouseGrabbed();
+        int mouseX = inGame ? ClientUtils.screenCenterX() : MouseHelper.getScaledX();
+        int mouseY = inGame ? ClientUtils.screenCenterY() : MouseHelper.getScaledY();
 
-        if (hoveredWaypoint == null) {
-            hoveredWaypoint = waypoint;
+        waypoint.setHovered(MouseHelper.isMouseIn(mouseX, mouseY, (int)(screenPos.x-20), (int)(screenPos.y-20), 40, 40));
+        if (!waypoint.isHovered()) {
+            if (selectedWaypoint == waypoint) {
+                selectedWaypoint = null;
+            }
             return;
         }
 
-        Vec2 pos;
-        if (!ClientUtils.getMc().mouseHandler.isMouseGrabbed()) {
-            // 鼠标坐标
-            pos = new Vec2(MouseHelper.getScaledX(), MouseHelper.getScaledY());
-        } else {
-            // 屏幕中心
-            pos = new Vec2(ClientUtils.screenWidth()*0.5F, ClientUtils.screenHeight()*0.5F);
+        if (selectedWaypoint == null) {
+            selectedWaypoint = waypoint;
+            return;
         }
 
         // 对比两个路径点和目标在屏幕中的距离
+        Vec2 pos = new Vec2(mouseX, mouseY);
         float current = screenPos.distanceToSqr(pos);
-        float hovered = hoveredWaypoint.getScreenPos().distanceToSqr(pos);
-        hoveredWaypoint = current < hovered ? waypoint : hoveredWaypoint;
+        float selected = selectedWaypoint.getScreenPos().distanceToSqr(pos);
+        selectedWaypoint = current < selected ? waypoint : selectedWaypoint;
     }
 
     public static void putWaypoint(AbstractWaypoint waypoint) {
@@ -167,8 +157,20 @@ public class ClientWaypointManager {
         return Collections.unmodifiableMap(waypoints);
     }
 
-    public static Optional<AbstractWaypoint> getHovered() {
-        return Optional.ofNullable(hoveredWaypoint);
+    public static Optional<AbstractWaypoint> getSelected() {
+        return Optional.ofNullable(selectedWaypoint);
+    }
+
+    public static boolean fromPickedBlock() {
+        HitResult block = ClientUtils.getPlayer().pick(128, ClientUtils.partialTicks(), false);
+        if (block.getType() == HitResult.Type.BLOCK) {
+            Waypoint waypoint = new Waypoint(((BlockHitResult)block).getBlockPos(), "picked_block", ColorHelper.CYAN);
+            waypoint.setFocused(true);
+            waypoint.setDisplayName(ClientUtils.getWorld().getBlockState(((BlockHitResult)block).getBlockPos()).getBlock().getName());
+            putWaypoint(waypoint);
+            return true;
+        }
+        return false;
     }
 
     public static boolean containsWaypoint(String id) {
@@ -183,8 +185,11 @@ public class ClientWaypointManager {
         return shouldUpdate;
     }
 
+    /**
+     * 悬停时是否显示更详细的路径点信息
+     */
     public static boolean shouldShowExtra() {
-        return shouldShowExtra;
+        return Screen.hasShiftDown();
     }
 
     /**

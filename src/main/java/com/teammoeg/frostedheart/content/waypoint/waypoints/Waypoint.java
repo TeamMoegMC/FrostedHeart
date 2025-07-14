@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.content.waypoint.waypoints;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.frostedheart.content.archive.Alignment;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 
 import com.teammoeg.chorda.client.AnimationUtil;
@@ -43,8 +45,6 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 public class Waypoint extends AbstractWaypoint {
@@ -53,13 +53,14 @@ public class Waypoint extends AbstractWaypoint {
      */
     public IconButton.Icon icon = IconButton.Icon.BOX;
     /**
-     * {@link #focus} 为 {@code true} 时使用的图标
+     * {@link #focused} 为 {@code true} 时使用的图标
      */
     public IconButton.Icon focusIcon = IconButton.Icon.BOX_ON;
     /**
      * 悬浮文本中最长文本的长度，用于显示背景
      */
-    protected int maxTextWidth;
+    protected int tooltipWidth;
+    protected List<FormattedCharSequence> cachedSplit = new ArrayList<>();
 
     public Waypoint(Vec3 target, String ID, int color) {
         super(target, ID, color);
@@ -82,14 +83,14 @@ public class Waypoint extends AbstractWaypoint {
         PoseStack pose = graphics.pose();
         pose.pushPose();
         pose.mulPose(new Quaternionf().rotateZ(Mth.PI/4));
-        if (focus) {
+        if (focused) {
             pose.scale(1.5F, 1.5F, 1.5F);
             focusIcon.render(pose, -5, -5, color);
             //focus的动画效果
-            float progress = AnimationUtil.fadeIn(750, "waypoints" + id, false);
-            if (progress == 1 && AnimationUtil.progress(750, "waypoint2" + id, false) == 1) {
-                AnimationUtil.remove("waypoints" + id);
-                AnimationUtil.remove("waypoint2" + id);
+            float progress = AnimationUtil.fadeIn(750, "waypoint_" + id, false);
+            if (progress == 1 && AnimationUtil.progress(750, "waypoint_cd_" + id, false) == 1) {
+                AnimationUtil.remove("waypoint_" + id);
+                AnimationUtil.remove("waypoint_cd_" + id);
             }
             int fadeColor = (int)((1-progress) * 255.0F) << 24 | color & 0x00FFFFFF;
             pose.scale(progress+0.25F, progress+0.25F, progress+0.25F);
@@ -101,87 +102,60 @@ public class Waypoint extends AbstractWaypoint {
     }
 
     @Override
-    public void renderHoverInfo(GuiGraphics graphics) {
-        boolean outScreen = maxTextWidth+20 + getScreenPos().x > ClientUtils.screenWidth();
-        int totalHeight = infoLines.size() * 10;
+    public void renderTooltip(GuiGraphics graphics) {
+        boolean outScreen = tooltipWidth +20 + getScreenPos().x > ClientUtils.screenWidth();
+        float offsetX = outScreen ? -tooltipWidth -15 : 15;
+        float offsetY = -3.5F;
+        int height = cachedSplit.size() * 10;
+        int backgroundColor = ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F);
 
         graphics.pose().pushPose();
-        graphics.pose().translate(outScreen ? -maxTextWidth-15 : 15, -3.5F, 0);
-        graphics.fill(outScreen ? maxTextWidth+3 : -3, -2, outScreen ? maxTextWidth+2 : -2, totalHeight, color);
-        graphics.fill(-2, -2, maxTextWidth+2, totalHeight, 0x80000000);
-        for (int i = 0; i < infoLines.size(); i++) {
-            Object line = infoLines.get(i);
-            if (line == null) continue;
-            if (line instanceof Component) {
-                graphics.drawString(ClientUtils.font(), (Component)line, 0, i*10, color, false);
-            } else if (line instanceof FormattedCharSequence) {
-                graphics.drawString(ClientUtils.font(), (FormattedCharSequence)line, 0, i*10, color, false);
-            } else {
-                graphics.drawString(ClientUtils.font(), line.toString(), 0, i*10, color, false);
-            }
-        }
+        graphics.pose().translate(offsetX, offsetY, 0);
+
+        graphics.fill(outScreen ? tooltipWidth +3 : -3, -2, outScreen ? tooltipWidth +2 : -2, height, color);
+        graphics.fill(-2, -2, tooltipWidth +2, height, backgroundColor);
+        CGuiHelper.drawStringLinesInBound(graphics, ClientUtils.font(), cachedSplit, 0, 0, tooltipWidth, color,
+                1, false, 0, Alignment.LEFT);
+
         graphics.pose().popPose();
     }
 
     @Override
-    public void updateInfos() {
-        maxTextWidth = 0;
+    public void updateTooltip() {
+        cachedSplit.clear();
+        tooltipWidth = 0;
 
-        //潜行时显示额外信息
+        addTooltipLine(this.displayName);
+        // 潜行时添加额外信息
         if (ClientWaypointManager.shouldShowExtra()) {
-            addInfoLine(null, -1);
-            addInfoLine(distanceTranslation(), -1);
-            if (ClientUtils.getPlayer().isCreative()) {
-                addInfoLine(posTranslation(), -1);
-            }
+            addAdvancedLines();
         }
 
-        List<FormattedCharSequence> lines;
-        if (infoLines.isEmpty()) {
-            //不显示额外信息时悬浮文本的最大宽度为96
-            lines = ClientUtils.font().split(displayName, 96);
-        } else {
-            //最大宽度为窗口的一半-24
-            lines = ClientUtils.font().split(displayName, Math.min(maxTextWidth, (int)(ClientUtils.screenWidth()*0.5F)-24));
+        for (Component line : tooltip) {
+            cachedSplit.addAll(ClientUtils.font().split(line, tooltipWidth));
         }
-        addInfoLine(lines, 0);
+    }
+
+    public void addAdvancedLines() {
+        addTooltipLine(Component.empty());
+        addTooltipLine(distanceTranslation());
+        if (ClientUtils.getPlayer().isCreative()) {
+            addTooltipLine(posTranslation());
+        }
     }
 
     @Override
-    public void addInfoLine(Object line, int index) {
-        if (line == null) {
-            infoLines.add(null);
-
-        } else if (line instanceof Collection<?> collection) {
-            if (!collection.isEmpty()) {
-                //防止添加时顺序乱掉
-                List<Object> linesToAdd = new ArrayList<>(collection);
-                Collections.reverse(linesToAdd);
-                for (Object o : linesToAdd) {
-                    addInfoLine(o, index);
-                }
-            }
-
-        } else {
-            if (index >= 0) {
-                infoLines.add(Math.min(infoLines.size(), index), line);
-            } else {
-                infoLines.add(line);
-            }
-
-            if (line instanceof Component c) {
-                maxTextWidth = Math.max(maxTextWidth, ClientUtils.font().width(c));
-            } else if (line instanceof FormattedCharSequence f) {
-                maxTextWidth = Math.max(maxTextWidth, ClientUtils.font().width(f));
-            } else {
-                maxTextWidth = Math.max(maxTextWidth, ClientUtils.font().width(line.toString()));
-            }
-        }
+    public void addTooltipLine(Component line, int index) {
+        super.addTooltipLine(line, index);
+        // 不显示详细信息时最大96，否则为窗口的一半-24
+        tooltipWidth = Math.min(ClientUtils.font().width(line),
+                ClientWaypointManager.shouldShowExtra() ? (int)(ClientUtils.screenWidth()*0.5F)-24 : 96);
     }
 
     @Override
     public void onClientRemove() {
-
+        AnimationUtil.remove("waypoint_" + id);
+        AnimationUtil.remove("waypoint_cd_" + id);
     }
 
     @Override
@@ -202,9 +176,8 @@ public class Waypoint extends AbstractWaypoint {
         json.addProperty("x", target.x);
         json.addProperty("y", target.y);
         json.addProperty("z", target.z);
-        json.addProperty("focus", focus);
-        json.addProperty("enable", enable);
-        json.addProperty("block_pos", blockPos);
+        json.addProperty("focus", focused);
+        json.addProperty("enable", enabled);
         json.addProperty("color", color);
         return json;
     }
@@ -227,9 +200,8 @@ public class Waypoint extends AbstractWaypoint {
         nbt.putDouble("x", target.x);
         nbt.putDouble("y", target.y);
         nbt.putDouble("z", target.z);
-        nbt.putBoolean("focus", focus);
-        nbt.putBoolean("enable", enable);
-        nbt.putBoolean("block_pos", blockPos);
+        nbt.putBoolean("focus", focused);
+        nbt.putBoolean("enable", enabled);
         nbt.putInt("color", color);
         return nbt;
     }
@@ -241,9 +213,8 @@ public class Waypoint extends AbstractWaypoint {
         this.displayName = Component.translatable(displayName);
         this.dimension = Level.RESOURCE_KEY_CODEC.parse(NbtOps.INSTANCE, nbt.get("dimension")).resultOrPartial(LOGGER::error).orElse(Level.OVERWORLD).location();
         this.target = new Vec3(nbt.getDouble("x"), nbt.getDouble("y"), nbt.getDouble("z"));
-        this.focus = nbt.getBoolean("focus");
-        this.enable = nbt.getBoolean("enable");
-        this.blockPos = nbt.getBoolean("block_pos");
+        this.focused = nbt.getBoolean("focus");
+        this.enabled = nbt.getBoolean("enable");
         this.color = nbt.getInt("color");
         this.valid = true;
     }

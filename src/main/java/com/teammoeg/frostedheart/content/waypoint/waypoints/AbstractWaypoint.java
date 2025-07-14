@@ -30,6 +30,7 @@ import com.teammoeg.chorda.io.Writeable;
 import com.teammoeg.chorda.lang.Components;
 
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -49,63 +50,58 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+@Getter
 public abstract class AbstractWaypoint implements Writeable, INBTSerializable<CompoundTag> {
     protected static final Logger LOGGER = LogUtils.getLogger();
     /**
      * 路径点的 ID
      */
-    @Getter
     protected String id;
     /**
      * 路径点的显示名称
      */
-    public Component displayName;
+    @Setter
+    protected Component displayName;
     /**
      * 路径点的目标坐标
      */
+    @Setter
     protected Vec3 target = Vec3.ZERO;
-    /**
-     * 路径点记录的是否为方块坐标
-     */
-    public boolean blockPos;
     /**
      * 路径点被聚焦/锁定
      */
-    public boolean focus;
+    @Setter
+    protected boolean focused;
     /**
      * 路径点是否启用，未启用的不会被渲染
      */
-    public boolean enable;
+    @Setter
+    protected boolean enabled;
+    @Setter
+    protected boolean hovered;
     /**
      * 路径点是否有效，如果为 false 会在下一次渲染前删除
      */
-    @Getter
     protected boolean valid;
     /**
      * 路径点的渲染颜色
      */
-    public int color;
+    @Setter
+    protected int color;
     /**
      * 路径点所处的维度
      */
-    public ResourceLocation dimension;
-    /**
-     * 路径点在屏幕中的坐标
-     */
-    @Getter
+    protected ResourceLocation dimension;
     protected Vec2 screenPos = Vec2.ZERO;
-    /**
-     * 路径点的悬停信息
-     */
-    protected final List<Object> infoLines = new ArrayList<>();
+    protected final List<Component> tooltip = new ArrayList<>();
 
     AbstractWaypoint(Vec3 target, String ID, int color) {
         this.id = ID;
         this.color = color;
         this.target = target;
         this.displayName = Components.str(ID);
-        this.focus = false;
-        this.enable = true;
+        this.focused = false;
+        this.enabled = true;
         this.valid = true;
 
         if (ClientUtils.getWorld() != null) {
@@ -116,8 +112,7 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     }
 
     AbstractWaypoint(BlockPos target, String ID, int color) {
-        this(new Vec3(target.getX(), target.getY(), target.getZ()), ID, color);
-        this.blockPos = true;
+        this(target.getCenter(), ID, color);
     }
 
     AbstractWaypoint(CompoundTag nbt) {
@@ -134,24 +129,29 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
 
         pose.pushPose();
         pose.translate(getScreenPos().x, getScreenPos().y, -1);
-        renderMain(graphics);
-        ClientWaypointManager.getHovered().ifPresent((hovered) -> {
-            if (hovered == this) {
+        if (ClientWaypointManager.getSelected().isPresent()) {
+            var selected = ClientWaypointManager.getSelected().get();
+            if (selected != this && this.hovered) {
+                graphics.setColor(1, 1, 1, 0.1F);
+            }
+            renderMain(graphics);
+            if (selected == this) {
                 if (ClientWaypointManager.shouldUpdate()) {
-                    infoLines.clear();
-                    updateInfos();
+                    tooltip.clear();
+                    updateTooltip();
                 }
-                if (!infoLines.isEmpty()) {
-                    //确保悬停信息始终显示在其他路径点上面 TODO 修复半透明背景剔除其他HUD元素
-                    pose.translate(0, 0, 1);
-                    renderHoverInfo(graphics);
-                    pose.translate(0, 0, -1);
+                if (!tooltip.isEmpty()) {
+                    // FIXME 半透明背景会剔除其他HUD元素
+                    renderTooltip(graphics);
                 }
             } else {
-                infoLines.clear();
+                tooltip.clear();
             }
-        });
+        } else {
+            renderMain(graphics);
+        }
         pose.popPose();
+        graphics.setColor(1, 1, 1, 1);
     }
 
     /**
@@ -160,41 +160,39 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     public abstract void renderMain(GuiGraphics graphics);
 
     /**
-     * 渲染悬停信息
+     * 渲染Tooltip
      */
-    public abstract void renderHoverInfo(GuiGraphics graphics);
+    public abstract void renderTooltip(GuiGraphics graphics);
 
     /**
-     * 更新悬停信息，每 tick 更新一次
+     * 更新Tooltip，每 tick 更新一次
      */
-    protected abstract void updateInfos();
+    protected abstract void updateTooltip();
 
     /**
-     * 向悬停信息添加文本行
-     * @param line 如果是 {@link Collection} 则添加其中的全部元素
+     * 向Tooltip添加文本行
      * @param index 行数索引，如果是 -1 添加到结尾
      */
-    protected void addInfoLine(Object line, int index) {
-        if (line == null) {
-            this.infoLines.add(null);
-
-        } else if (line instanceof Collection<?> collection) {
-            if (!collection.isEmpty()) {
-                //防止添加时顺序乱掉
-                List<Object> linesToAdd = new ArrayList<>(collection);
-                Collections.reverse(linesToAdd);
-                for (Object o : linesToAdd) {
-                    addInfoLine(o, index);
-                }
-            }
-
+    protected void addTooltipLine(Component line, int index) {
+        if (index >= 0) {
+            this.tooltip.add(Math.min(tooltip.size(), index), line);
         } else {
-            if (index >= 0) {
-                this.infoLines.add(Math.min(infoLines.size(), index), line);
-            } else {
-                this.infoLines.add(line);
-            }
+            this.tooltip.add(line);
         }
+    }
+
+    protected void addTooltipLine(Component line) {
+        addTooltipLine(line, -1);
+    }
+
+    protected void addTooltipLines(Collection<Component> lines, int index) {
+        if (index < 0) {
+            var reverse = new ArrayList<>(lines);
+            Collections.reverse(reverse);
+            reverse.forEach(line -> addTooltipLine(line, index));
+            return;
+        }
+        lines.forEach(this::addTooltipLine);
     }
 
     /**
@@ -207,7 +205,7 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
      */
     public abstract void onServerRemove();
 
-    private void updateScreenPos() {
+    protected void updateScreenPos() {
         Vec2 pos = CameraHelper.worldPosToScreenPos(getTarget());
         //限制区域避免覆盖其他HUD元素
         float x = Mth.clamp(pos.x, 10, ClientUtils.screenWidth() -10);
@@ -221,13 +219,9 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     public double getDistance() {
         return getTarget().distanceTo(ClientUtils.getPlayer().getEyePosition(ClientUtils.partialTicks()));
     }
-
-    public Vec3 getTarget() {
-        return blockPos ? target.add(0.5F, 0.5F, 0.5F) : target;
-    }
-
-    public Vec3 getRealTarget() {
-        return target;
+    
+    public void setBlockTarget(BlockPos newTarget) {
+        this.target = newTarget.getCenter();
     }
 
     public void invalidate() {
@@ -235,7 +229,8 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     }
 
     protected MutableComponent distanceTranslation() {
-        return Lang.waypoint("distance", (int)getDistance()).component();
+        String distance = getDistance() < 0 ? "???" : String.valueOf(Math.round(getDistance()));
+        return Lang.waypoint("distance", distance).component();
     }
 
     protected MutableComponent posTranslation() {
