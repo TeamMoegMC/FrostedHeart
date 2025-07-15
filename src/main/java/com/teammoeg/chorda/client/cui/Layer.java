@@ -105,6 +105,7 @@ public abstract class Layer extends UIWidget {
 				contentWidth+=elm.getWidth()+lineSpace;
 				contentHeight=Math.max(elm.getHeight(), contentHeight);
 			}
+			contentWidth -= lineSpace;
 			return contentWidth;
 		}
 		for(UIWidget elm:elements) {
@@ -112,6 +113,7 @@ public abstract class Layer extends UIWidget {
 			contentHeight+=elm.getHeight()+lineSpace;
 			contentWidth=Math.max(elm.getWidth(), contentWidth);
 		}
+		contentHeight -= lineSpace;
 		return contentHeight;
 	}
 
@@ -124,6 +126,7 @@ public abstract class Layer extends UIWidget {
 				contentWidth+=elm.getWidth()+lineSpace;
 				contentHeight=Math.max(elm.getHeight(), contentHeight);
 			}
+			contentWidth -= lineSpace;
 			return contentWidth;
 		}
 		contentHeight += start;
@@ -132,6 +135,7 @@ public abstract class Layer extends UIWidget {
 			contentHeight+=elm.getHeight()+lineSpace;
 			contentWidth=Math.max(elm.getWidth(), contentWidth);
 		}
+		contentHeight -= lineSpace;
 		return contentHeight;
 	}
 

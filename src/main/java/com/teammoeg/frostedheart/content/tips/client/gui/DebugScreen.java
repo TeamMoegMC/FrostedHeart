@@ -40,8 +40,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
+import net.minecraft.network.protocol.game.DebugEntityNameGenerator;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
@@ -51,6 +50,7 @@ import java.util.UUID;
 
 public class DebugScreen extends Screen {
     public List<IconButton> buttons = new ArrayList<>();
+    public static String message = "";
 
     public DebugScreen() {
         super(Component.literal(""));
@@ -83,9 +83,9 @@ public class DebugScreen extends Screen {
         );
         addButton(IconButton.Icon.BOX_ON, ColorHelper.CYAN, "Create a Random Waypoint", (b) -> {
             Random random = new Random();
-            String uuid = UUID.randomUUID().toString();
-            Waypoint waypoint = new Waypoint(new Vec3((random.nextFloat()-0.5F)*1280, Math.abs(random.nextFloat())*256, (random.nextFloat()-0.5F)*1280), uuid, ColorHelper.setAlpha(random.nextInt(), 1F));
-            waypoint.focus = random.nextBoolean();
+            String id = DebugEntityNameGenerator.getEntityName(UUID.randomUUID());
+            Waypoint waypoint = new Waypoint(new Vec3((random.nextFloat()-0.5F)*1280, Math.abs(random.nextFloat())*256, (random.nextFloat()-0.5F)*1280), id, ColorHelper.setAlpha(random.nextInt(), 1F));
+            waypoint.setFocused(random.nextBoolean());
             ClientWaypointManager.putWaypoint(waypoint);
         });
         addButton(IconButton.Icon.BOX_ON, 0xFFFFDA64, "Create Sun Station Waypoint", (b) ->
@@ -95,16 +95,10 @@ public class DebugScreen extends Screen {
             ClientWaypointManager.putWaypoint(new ColumbiatWaypoint())
         );
         addButton(IconButton.Icon.BOX, ColorHelper.RED, "Remove The Waypoint You Are Looking At", (b) ->
-            ClientWaypointManager.getHovered().ifPresent((hovered) -> ClientWaypointManager.removeWaypoint(hovered.getId()))
+            ClientWaypointManager.getSelected().ifPresent((hovered) -> ClientWaypointManager.removeWaypoint(hovered.getId()))
         );
         addButton(IconButton.Icon.SIGHT, ColorHelper.CYAN, "Create a Waypoint From The Block You Are Looking At", (b) -> {
-            HitResult block = ClientUtils.getPlayer().pick(128, ClientUtils.partialTicks(), false);
-            if (block.getType() == HitResult.Type.BLOCK) {
-                Waypoint waypoint = new Waypoint(((BlockHitResult)block).getBlockPos(), "picked_block", ColorHelper.CYAN);
-                waypoint.focus = true;
-                waypoint.displayName = ClientUtils.getWorld().getBlockState(((BlockHitResult)block).getBlockPos()).getBlock().getName();
-                ClientWaypointManager.putWaypoint(waypoint);
-            }
+            ClientWaypointManager.fromPickedBlock();
         });
         addButton(IconButton.Icon.TRADE, ColorHelper.CYAN, "Toggle Debug Overlay", (b) ->
             FrostedHud.renderDebugOverlay = !FrostedHud.renderDebugOverlay
@@ -147,7 +141,7 @@ public class DebugScreen extends Screen {
         for (int i = 0; i < size; i++) {
             IconButton button = this.buttons.get(i);
             if (i == 0) {
-                button.setPosition(centerX-5, centerY-30);
+                button.setPosition(centerX-4, centerY-30);
             } else if (i % 2 == 0) {
                 button.setPosition(centerX-5-(i*8), centerY-30);
             } else {

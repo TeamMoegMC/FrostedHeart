@@ -6,9 +6,13 @@ import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.Layer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
+import com.teammoeg.chorda.client.cui.ItemWidget;
+import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import net.minecraft.ChatFormatting;
@@ -17,14 +21,9 @@ import net.minecraft.locale.Language;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
+import net.minecraft.world.item.Items;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class CategoryBox extends Layer {
     public static final int DEF_ITEM_HEIGHT = 16;
@@ -32,7 +31,7 @@ public class CategoryBox extends Layer {
     protected final DetailBox detailBox;
     public Entry selected;
 
-    public CategoryBox(UIWidget panel, DetailBox detailBox) {
+    protected CategoryBox(UIWidget panel, DetailBox detailBox) {
         super(panel);
         this.detailBox = detailBox;
         this.scrollBar = new LayerScrollBar(parent, true, this) {
@@ -41,6 +40,7 @@ public class CategoryBox extends Layer {
                 return false;
             }
         };
+        scrollBar.setScrollStep((DEF_ITEM_HEIGHT+2)*2);
         setSmoothScrollEnabled(true);
         addUIElements();
     }
@@ -60,11 +60,12 @@ public class CategoryBox extends Layer {
     @Override
     public void render(GuiGraphics graphics, int x, int y, int w, int h) {
         int border = 8;
+        var pose = graphics.pose();
+        pose.pushPose();
+        pose.translate(0, 0, -1);
         graphics.fill(x-border, y-border, x+w+border, y+h+border, -2, 0xFF444651);
-        graphics.fill(x-border+1, y-border+1, x+w+border+1, y-border, -2, 0xFF585966);
-        graphics.fill(x-border+1, y-border, x-border, y+h+border, -2, 0xFF585966);
-        graphics.fill(x+w+border, y-border, x+w+border+1, y+h+border, -2, 0xFF585966);
-        graphics.fill(x-border+1, y+h+border, x+w+border+1, y+h+border+1, -2, 0xFF585966);
+        CGuiHelper.drawBox(graphics, x-border, y-border, w+border*2, h+border*2, ColorHelper.L_BG_GRAY, true);
+        pose.popPose();
 
         super.render(graphics, x, y, w, h);
     }
@@ -105,6 +106,7 @@ public class CategoryBox extends Layer {
     @Override
     public void addUIElements() {
         addCategories();
+        add(new ItemWidget(this, Items.STICK.getDefaultInstance()));
     }
 
     @Override
@@ -136,19 +138,39 @@ public class CategoryBox extends Layer {
 
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-            graphics.fill(x, y, x+w, y+DEF_ITEM_HEIGHT, ColorHelper.L_BG_GRAY);
+            drawBackground(graphics, x, y, w, h);
             graphics.drawString(getFont(), title, x+12, y+4, ColorHelper.WHITE);
             if (opened) {
-                IconButton.Icon.DOWN.render(graphics.pose(), x+1, y+3, ColorHelper.L_TEXT_GRAY);
                 super.render(graphics, x, y, w, h);
+            }
+        }
+
+        @Override
+        public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+            graphics.fill(x, y, x+w, y+DEF_ITEM_HEIGHT, ColorHelper.L_BG_GRAY);
+            if (opened) {
+                IconButton.Icon.DOWN.render(graphics.pose(), x+1, y+3, ColorHelper.L_TEXT_GRAY);
             } else {
                 IconButton.Icon.RIGHT.render(graphics.pose(), x, y+4, ColorHelper.L_TEXT_GRAY);
             }
         }
 
         @Override
-        public void addUIElements() {
+        public void refresh() {
+            setWidth(parent.getWidth() - (depth <= 1 ? 0 : 8));
+            setOffsetY(16);
+            setOffsetX(8);
 
+            recalcContentSize();
+            if (opened) {
+                for (UIWidget ele : elements) {
+                    ele.refresh();
+                }
+                alignWidgets();
+                setHeight(getContentHeight() + DEF_ITEM_HEIGHT);
+            } else {
+                setHeight(DEF_ITEM_HEIGHT);
+            }
         }
 
         @Override
@@ -171,24 +193,6 @@ public class CategoryBox extends Layer {
             grandpa.alignWidgets();
             if (!grandpa.scrollBar.isEnabled() && grandpa.getOffsetY() != 0) {
                 grandpa.scrollBar.setValue(0);
-            }
-        }
-
-        @Override
-        public void refresh() {
-            setWidth(parent.getWidth() - (depth <= 1 ? 0 : 8));
-            setOffsetY(16);
-            setOffsetX(8);
-
-            recalcContentSize();
-            if (opened) {
-                for (UIWidget ele : elements) {
-                    ele.refresh();
-                }
-                alignWidgets();
-                setHeight(getContentHeight() + DEF_ITEM_HEIGHT);
-            } else {
-                setHeight(DEF_ITEM_HEIGHT);
             }
         }
 
@@ -232,6 +236,11 @@ public class CategoryBox extends Layer {
         public Component getTitle() {
             return this.title;
         }
+
+        @Override
+        public void addUIElements() {
+
+        }
     }
 
     public class TipEntry extends Entry {
@@ -270,8 +279,8 @@ public class CategoryBox extends Layer {
         }
 
         @Override
-        public List<DetailBox.Line> getContents() {
-            List<DetailBox.Line> lines = new ArrayList<>();
+        public List<DetailBox.Line<?>> getContents() {
+            List<DetailBox.Line<?>> lines = new ArrayList<>();
             List<Tip> tips = new ArrayList<>();
             tips.add(tip);
             tips.addAll(children);
@@ -285,7 +294,7 @@ public class CategoryBox extends Layer {
                     lines.add(box.br());
                 } else if (!TipManager.INSTANCE.state().isViewed(tip)) {
                     lines.add(box.br());
-                    lines.add(box.text(Component.translatable("gui.frostedheart.archive.new_tip")).setTitle(tip.getFontColor(), 1).setBaseColor(ColorHelper.getTextColor(tip.getFontColor())));
+                    lines.add(box.text(Component.translatable("gui.frostedheart.archive.new_tip")).setTitle(tip.getFontColor(), 1).setBaseColor(ColorHelper.readableColor(tip.getFontColor())));
                 } else {
                     lines.add(box.br());
                 }
@@ -305,12 +314,15 @@ public class CategoryBox extends Layer {
                     }
                     lines.add(img);
                 }
+                if (FrostedHud.renderDebugOverlay) {
+                    lines.add(box.text("ID: " + tip.getId()).setBaseColor(ColorHelper.L_BG_GRAY).setAlignment(Alignment.RIGHT));
+                }
             }
             return lines;
         }
     }
 
-    public abstract class Entry extends UIWidget {
+    public abstract class Entry extends Layer {
         public final DetailBox box = CategoryBox.this.detailBox;
         public Component title = Component.empty();
         protected Component cachedTitle = Component.empty();
@@ -323,11 +335,7 @@ public class CategoryBox extends Layer {
 
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-            if (CategoryBox.this.selected == this) {
-                graphics.fill(x-4, y, x-2, y+h, ColorHelper.L_BG_GREEN);
-            }
-            graphics.fill(x, y, x+w, y+h, ColorHelper.L_BG_GRAY);
-
+            super.render(graphics, x, y, w, h);
             if (getFont().width(cachedTitle) > w-4) {
                 var t = FormattedText.composite(getFont().substrByWidth(cachedTitle, w-4), CommonComponents.ELLIPSIS);
                 graphics.drawString(getFont(), Language.getInstance().getVisualOrder(t), x+2, y+4, baseColor);
@@ -341,11 +349,19 @@ public class CategoryBox extends Layer {
             }
         }
 
+        @Override
+        public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+            if (CategoryBox.this.selected == this) {
+                graphics.fill(x-4, y, x-2, y+h, ColorHelper.L_BG_GREEN);
+            }
+            graphics.fill(x, y, x+w, y+h, ColorHelper.L_BG_GRAY);
+        }
+
         public abstract boolean isRead();
 
         public abstract boolean read();
 
-        public abstract Collection<DetailBox.Line> getContents();
+        public abstract Collection<DetailBox.Line<?>> getContents();
 
         @Override
         public void refresh() {
@@ -377,5 +393,11 @@ public class CategoryBox extends Layer {
         public boolean isEnabled() {
             return !(parent instanceof Category p) || p.opened;
         }
+
+        @Override
+        public void alignWidgets() {}
+
+        @Override
+        public void addUIElements() {}
     }
 }

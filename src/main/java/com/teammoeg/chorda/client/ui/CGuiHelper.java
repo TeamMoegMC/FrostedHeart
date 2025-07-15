@@ -32,6 +32,9 @@ import javax.imageio.ImageIO;
 
 import com.teammoeg.chorda.client.ClientUtils;
 
+import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import net.minecraft.client.gui.Font;
 import org.joml.Matrix4f;
@@ -231,6 +234,10 @@ public class CGuiHelper {
 
 	}
 
+	public static void drawRect(GuiGraphics graphics, Rect rect, int color) {
+		graphics.fill(rect.getX(), rect.getY(), rect.getX2(), rect.getY2(), color);
+	}
+
 	private static void drawRect(Matrix4f mat, BufferBuilder renderBuffer, int x, int y, int w, int h, int color) {
 		renderBuffer.vertex(mat, x, y, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color), FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color))
 			.endVertex();
@@ -398,6 +405,9 @@ public class CGuiHelper {
 
 		int lineOffset = 0;
 		for (Object text : texts) {
+			lineOffset += (font.lineHeight + lineSpace);
+			if (text == null) continue;
+
 			int textWidth;
 			if (text instanceof FormattedCharSequence formatted) {
 				textWidth = font.width(formatted);
@@ -406,6 +416,7 @@ public class CGuiHelper {
 			} else {
 				textWidth = font.width(text.toString());
 			}
+			if (textWidth <= 0) continue;
 
 			int drawX = switch (alignment) {
 				case LEFT -> x;
@@ -431,8 +442,6 @@ public class CGuiHelper {
 			} else {
 				graphics.drawString(font, text.toString(), drawX, drawY, color, shadow);
 			}
-
-			lineOffset += (font.lineHeight + lineSpace);
 		}
 	}
 
@@ -617,4 +626,47 @@ public class CGuiHelper {
            graphics.blitRepeating(pAtlasLocation, pTargetX + pTargetWidth - pEdgeWidth, pTargetY + pCornerHeight, pCornerWidth, pTargetHeight - pEdgeHeight - pCornerHeight, pSourceX + pSourceWidth - pEdgeWidth, pSourceY + pCornerHeight, pEdgeWidth, pSourceHeight - pEdgeHeight - pCornerHeight,textureWidth,textureHeight);
         }
      }
+
+	public static void drawBox(GuiGraphics graphics, int x, int y, int w, int h, int color, boolean inner) {
+		int x2 = x+w;
+		int y2 = y+h;
+		if (inner) {
+			graphics.fill(x, y, x2, y+1, color); 						// top
+			graphics.fill(x, y2-1, x2, y2, color); 						// bottom
+			graphics.fill(x, y, x+1, y2, color); 						// left
+			graphics.fill(x2-1, y, x2, y2, color); 						// right
+		} else {
+			graphics.fill(x-1, y-1, x2+1, y, color); 		// top
+			graphics.fill(x-1, y2, x2+1, y2+1, color); 	// bottom
+			graphics.fill(x-1, y, x, y2, color); 						// left
+			graphics.fill(x2, y, x2+1, y2, color); 						// right
+		}
+	}
+
+	public static void drawBox(GuiGraphics graphics, Rect box, int color, boolean inner) {
+		drawBox(graphics, box.getX(), box.getY(), box.getW(), box.getH(), color, inner);
+	}
+
+	public static Rect getWidgetRect(UIWidget widget, PrimaryLayer primaryLayer) {
+		int x = widget.getParent().getContentX() + widget.getX() + (ClientUtils.getMc().getWindow().getGuiScaledWidth() - primaryLayer.getWidth())/2;
+		int y = widget.getParent().getContentY() + widget.getY() + (ClientUtils.getMc().getWindow().getGuiScaledHeight() - primaryLayer.getHeight())/2;
+		int w = widget.getWidth();
+		int h = widget.getHeight();
+
+		var w1 = widget.getParent();
+		while (w1.getParent() != null) {
+			w1 = w1.getParent();
+			if (w1 instanceof Layer l) {
+				if (l.isSmoothScrollEnabled()) {
+					x += (int)l.getDisplayOffsetX();
+					y += (int)l.getDisplayOffsetY();
+				} else {
+					x += l.getOffsetX();
+					y += l.getOffsetY();
+				}
+			}
+		}
+
+		return new Rect(x, y, w, h);
+	}
 }

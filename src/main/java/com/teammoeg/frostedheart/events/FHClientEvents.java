@@ -246,7 +246,7 @@ public class FHClientEvents {
                     FrostedHud.renderHeatVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
                 if (FrostedHud.renderWaypoint)
                     ClientWaypointManager.renderAll(stack);
-                if (FrostedHud.renderDebugOverlay)
+                if (FrostedHud.renderDebugOverlay && mc.screen == null)
                     FrostedHud.renderDebugOverlay(stack, mc);
 
 

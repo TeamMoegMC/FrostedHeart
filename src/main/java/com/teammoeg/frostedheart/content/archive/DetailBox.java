@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.content.archive;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.Layer;
@@ -11,13 +10,14 @@ import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.ui.UV;
-import com.teammoeg.frostedheart.FrostedHud;
+import com.teammoeg.chorda.client.cui.ItemWidget;
 import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.Size2i;
 
 import java.util.ArrayList;
@@ -28,20 +28,20 @@ import java.util.List;
 public class DetailBox extends Layer {
     public final ScrollBar scrollBar;
 
-    public DetailBox(UIWidget panel) {
+    protected DetailBox(UIWidget panel) {
         super(panel);
         this.scrollBar = new LayerScrollBar(parent, true, this);
         setSmoothScrollEnabled(true);
         resize();
     }
 
-    public void fillContent(Line... lines) {
+    public void fillContent(Line<?>... lines) {
         this.fillContent(Arrays.asList(lines));
     }
 
-    public void fillContent(Collection<Line> lines) {
+    public void fillContent(Collection<Line<?>> lines) {
         clearElement();
-        for (Line line : lines) {
+        for (Line<?> line : lines) {
             add(line);
         }
         refresh();
@@ -63,7 +63,7 @@ public class DetailBox extends Layer {
         int h = (int)(ClientUtils.screenHeight() * 0.8F);
         int w = (int)(h * 1.3333F); // 4:3
         setPosAndSize(120, 0, w, h);
-        scrollBar.setPosAndSize(getX() + w+8, -7, 6, h+15);
+        scrollBar.setPosAndSize(getX() + w+9, -8, 6, h+15);
     }
 
     @Override
@@ -86,11 +86,8 @@ public class DetailBox extends Layer {
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
         int border = 8;
-        graphics.fill(x-border, y-border, x+w+border+6, y+h+border, -2, 0xFF444651);
-        graphics.fill(x-border+1, y-border+1, x+w+border+1+6, y-border, -2, 0xFF585966);
-        graphics.fill(x-border+1, y-border, x-border, y+h+border, -2, 0xFF585966);
-        graphics.fill(x+w+border+6, y-border, x+w+border+1+6, y+h+border, -2, 0xFF585966);
-        graphics.fill(x-border+1, y+h+border, x+w+border+1+6, y+h+border+1, -2, 0xFF585966);
+        graphics.fill(x-border, y-border, x+w+border*2, y+h+border, -2, 0xFF444651);
+        CGuiHelper.drawBox(graphics, x-border, y-border, w+border*3, h+border*2, ColorHelper.L_BG_GRAY, true);
     }
 
     @Override
@@ -104,35 +101,27 @@ public class DetailBox extends Layer {
     }
 
     public TextLine text(String text) {
-        return new TextLine(Alignment.LEFT, Component.literal(text));
-    }
-
-    public TextLine text(Alignment alignment, String text) {
-        return new TextLine(alignment, Component.literal(text));
+        return text(Component.literal(text));
     }
 
     public TextLine text(Component text) {
-        return new TextLine(Alignment.LEFT, text);
-    }
-
-    public TextLine text(Alignment alignment, Component text) {
-        return new TextLine(alignment, text);
+        return new TextLine(text, Alignment.LEFT);
     }
 
     public ImageLine image(String imageLocation) {
-        return new ImageLine(Alignment.CENTER, ResourceLocation.tryParse(imageLocation));
-    }
-
-    public ImageLine image(Alignment alignment, String imageLocation) {
-        return new ImageLine(alignment, ResourceLocation.tryParse(imageLocation));
+        return image(ResourceLocation.tryParse(imageLocation));
     }
 
     public ImageLine image(ResourceLocation imageLocation) {
-        return new ImageLine(Alignment.CENTER, imageLocation);
+        return new ImageLine(imageLocation, Alignment.CENTER);
     }
 
-    public ImageLine image(Alignment alignment, ResourceLocation imageLocation) {
-        return new ImageLine(alignment, imageLocation);
+    public ItemRow itemRow(ItemStack... items) {
+        return itemRow(List.of(items));
+    }
+
+    public ItemRow itemRow(Collection<ItemStack> items) {
+        return new ItemRow(items, Alignment.CENTER);
     }
 
     public EmptyLine emptyLine() {
@@ -144,11 +133,11 @@ public class DetailBox extends Layer {
     }
 
     public BreakLine br(int color) {
-        return (BreakLine) new BreakLine().setBaseColor(color);
+        return br().setBaseColor(color);
     }
 
 
-    public class TextLine extends Line {
+    public class TextLine extends Line<TextLine> {
         @Getter
         protected Component text;
         protected final List<FormattedCharSequence> splitText = new ArrayList<>();
@@ -159,7 +148,7 @@ public class DetailBox extends Layer {
         protected boolean shadow = false;
         protected int scale = 1;
 
-        private TextLine(Alignment alignment, Component text) {
+        private TextLine(Component text, Alignment alignment) {
             super(alignment);
             this.text = text;
         }
@@ -199,7 +188,7 @@ public class DetailBox extends Layer {
                 pose.translate(offset, 0, 0);
             }
 
-            pose.translate(0, 1.5F, 0);
+            pose.translate(0, isQuote ? 2 : 1.5F, 0);
 
             CGuiHelper.drawStringLinesInBound(graphics, getFont(), splitText, x, y, textW, baseColor, 3,
                     shadow, backgroundColor, alignment);
@@ -252,17 +241,17 @@ public class DetailBox extends Layer {
                 splitText.addAll(getFont().split(StringTextComponentParser.parse(s), (int)(getWidth() * (1.0F/scale) - ((isTitle||isQuote) ? 8 : 0))));
             }
 
-            setHeight(splitText.size() * DEF_LINE_HEIGHT * scale);
+            setHeight(splitText.size() * (DEF_LINE_HEIGHT + (isQuote ? 2 : 0)) * scale);
         }
     }
 
-    public class ImageLine extends Line {
+    public class ImageLine extends Line<ImageLine> {
         protected ResourceLocation imgLocation;
         protected Size2i imgSize;
         protected UV imgUV;
         protected int backgroundColor = 0;
 
-        private ImageLine(Alignment alignment, ResourceLocation imageLocation) {
+        private ImageLine(ResourceLocation imageLocation, Alignment alignment) {
             super(alignment);
             setImage(imageLocation);
         }
@@ -325,7 +314,75 @@ public class DetailBox extends Layer {
         }
     }
 
-    public class BreakLine extends Line {
+    public class ItemRow extends Line<ItemRow> {
+        protected final List<ItemStack> items = new ArrayList<>();
+        protected int rowSize = 1;
+        protected int backgroundColor = 0;
+
+        public ItemRow(Collection<ItemStack> items, Alignment alignment) {
+            super(alignment);
+            this.items.addAll(items);
+            addUIElements();
+        }
+
+        public void addItem(ItemStack item) {
+            items.add(item);
+            elements.add(new ItemWidget(this, item));
+        }
+
+        @Override
+        public void addUIElements() {
+            this.elements.addAll(items.stream().map(item -> new ItemWidget(this, item)).toList());
+        }
+
+        @Override
+        public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+            graphics.fill(x, y, x+w, y+h, backgroundColor);
+            super.render(graphics, x, y, w, h);
+        }
+
+        @Override
+        public void refresh() {
+            super.refresh();
+            rowSize = getWidth() / (ItemWidget.ITEM_WIDTH +4);
+            setHeight(Math.max((int)Math.ceil((double)items.size() / rowSize), 1) * (ItemWidget.ITEM_HEIGHT +4));
+            alignWidgets();
+            System.out.println("refresh");
+        }
+
+        @Override
+        public void alignWidgets() {
+            List<List<UIWidget>> rows = new ArrayList<>();
+            List<UIWidget> row = new ArrayList<>();
+            for (int i = 0; i < elements.size(); i++) {
+                if (i > 0 && i % rowSize == 0) {
+                    rows.add(row);
+                    row = new ArrayList<>();
+                }
+                row.add(elements.get(i));
+            }
+            rows.add(row);
+
+            for (int y = 0; y < rows.size(); y++) {
+                List<UIWidget> widgets = rows.get(y);
+                for (int x = 0; x < widgets.size(); x++) {
+                    UIWidget widget = widgets.get(x);
+                    switch (alignment) {
+                        case LEFT -> widget.setPos(x*(ItemWidget.ITEM_WIDTH +4)+2, y*(ItemWidget.ITEM_HEIGHT +4)+2);
+                        case CENTER -> widget.setPos((getWidth()/2 - widgets.size()*10) + x*(ItemWidget.ITEM_WIDTH +4) + 2, y*(ItemWidget.ITEM_HEIGHT +4)+2);
+                        case RIGHT -> widget.setPos(getWidth()-16-2 - x*(ItemWidget.ITEM_WIDTH +4), y*(ItemWidget.ITEM_HEIGHT +4)+2);
+                    }
+                }
+            }
+        }
+
+        public ItemRow setBackgroundColor(int color) {
+            this.backgroundColor = color;
+            return this;
+        }
+    }
+
+    public class BreakLine extends Line<BreakLine> {
         private BreakLine() {
             setBaseColor(ColorHelper.L_BG_GRAY);
         }
@@ -344,7 +401,7 @@ public class DetailBox extends Layer {
         }
     }
 
-    public class EmptyLine extends Line {
+    public class EmptyLine extends Line<EmptyLine> {
 
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h) {
@@ -352,7 +409,7 @@ public class DetailBox extends Layer {
         }
     }
 
-    public abstract class Line extends UIWidget {
+    public abstract class Line<T extends Line<T>> extends Layer {
         public static final int DEF_LINE_HEIGHT = 12;
         protected Alignment alignment;
         protected int baseColor;
@@ -371,16 +428,18 @@ public class DetailBox extends Layer {
             this.baseColor = color;
         }
 
-        public Line setAlignment(Alignment alignment) {
+        @SuppressWarnings("unchecked")
+        public T setAlignment(Alignment alignment) {
             this.alignment = alignment;
             refresh();
-            return this;
+            return (T) this;
         }
 
-        public Line setBaseColor(int color) {
+        @SuppressWarnings("unchecked")
+        public T setBaseColor(int color) {
             this.baseColor = color;
             refresh();
-            return this;
+            return (T) this;
         }
 
         @Override
@@ -389,10 +448,9 @@ public class DetailBox extends Layer {
         }
 
         @Override
-        public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-            if (FrostedHud.renderDebugOverlay && (isMouseOver() || CInputHelper.isShiftKeyDown())) {
-                graphics.fill(x, y, x+w, y+h, ColorHelper.setAlpha(ColorHelper.CYAN, 0.2F));
-            }
-        }
+        public void alignWidgets() {}
+
+        @Override
+        public void addUIElements() {}
     }
 }
