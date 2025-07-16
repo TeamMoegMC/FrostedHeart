@@ -10,7 +10,6 @@ import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.client.widget.IconButton;
-import com.teammoeg.chorda.client.cui.ItemWidget;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipManager;
@@ -20,7 +19,6 @@ import net.minecraft.locale.Language;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
-import net.minecraft.world.item.Items;
 
 import java.util.*;
 
@@ -40,7 +38,6 @@ public class CategoryBox extends Layer {
             }
         };
         scrollBar.setScrollStep((DEF_ITEM_HEIGHT+2)*2);
-        setSmoothScrollEnabled(true);
         addUIElements();
     }
 
@@ -105,7 +102,6 @@ public class CategoryBox extends Layer {
     @Override
     public void addUIElements() {
         addCategories();
-        add(new ItemWidget(this, Items.STICK.getDefaultInstance()));
     }
 
     @Override

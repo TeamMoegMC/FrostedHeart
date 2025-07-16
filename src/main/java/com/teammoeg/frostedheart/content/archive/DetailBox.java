@@ -31,7 +31,6 @@ public class DetailBox extends Layer {
     protected DetailBox(UIWidget panel) {
         super(panel);
         this.scrollBar = new LayerScrollBar(parent, true, this);
-        setSmoothScrollEnabled(true);
         resize();
     }
 

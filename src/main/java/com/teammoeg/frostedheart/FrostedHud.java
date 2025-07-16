@@ -1038,10 +1038,17 @@ public class FrostedHud {
 
                                 className = widget.getClass().getSimpleName().isBlank() ? widget.getClass().getName() : widget.getClass().getSimpleName();
                                 String indent = "  ".repeat(indentLevel);
-                                var c = Component.literal(indent + (widget instanceof Layer && (widget.isMouseOver() || shift) ? " ▼ " : " ▶ ") + className);
+                                var c = Component.literal(indent + (widget instanceof Layer && (widget.isMouseOver() || shift) ? " ▼ " : " ▶ "));
+                                boolean hasTitle = !widget.getTitle().getString().isBlank();
+                                var title = hasTitle ? widget.getTitle().copy() : Component.literal(className).withStyle(ChatFormatting.ITALIC);
                                 if ((widget.isMouseOver() || shift)) {
+                                    c.append(title.withStyle(ChatFormatting.GOLD));
+                                    if (hasTitle) c.append(" | " + className);
+                                    c.append(Component.literal("@" + Integer.toHexString(widget.hashCode())).withStyle(ChatFormatting.ITALIC));
                                     String bound = " | X=" + widget.getX() + ", Y=" + widget.getY() + ", W=" + widget.getWidth() + ", H=" + widget.getHeight();
-                                    c.append(bound).withStyle(ChatFormatting.GOLD);
+                                    c.append(bound).append(" | " + CGuiHelper.getWidgetRect(widget, pLayer)).withStyle(ChatFormatting.GRAY);
+                                } else {
+                                    c.append(title);
                                 }
                                 lines.add(c);
 

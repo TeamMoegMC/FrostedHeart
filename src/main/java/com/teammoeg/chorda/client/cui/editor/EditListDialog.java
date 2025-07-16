@@ -27,6 +27,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import com.teammoeg.chorda.client.ClientUtils;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import com.teammoeg.chorda.client.CInputHelper;
@@ -262,13 +263,24 @@ public class EditListDialog<T> extends EditDialog {
             }
         }
 
+        float displayY;
+        boolean fresh = true;
         @Override
         public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-        	super.drawBackground(matrixStack, x, y, w, h);
-        	if(this==moving) {
-        		matrixStack.pose().pushPose();
-        		matrixStack.pose().translate(0, 0, 10);
-        	}
+            if (fresh) {
+                fresh = false;
+                displayY = y;
+            }
+            float ratio = 24.75F / ClientUtils.getMc().getFps();
+            displayY = displayY + (y - displayY) * ratio;
+            matrixStack.pose().pushPose();
+            matrixStack.pose().translate(0, displayY-(int)displayY, 0);
+            if(this==moving) {
+                matrixStack.pose().translate(0, 0, 10);
+            }
+            y = (int) displayY;
+
+            super.drawBackground(matrixStack, x, y, w, h);
             boolean mouseOver = isMouseOver();
             int ioffset = 1;
             if (icon!=null&&icon!=CIcons.nop()) {
@@ -292,9 +304,7 @@ public class EditListDialog<T> extends EditDialog {
             	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+2, 0xFFFFFFFF);
             	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+h-getFont().lineHeight, 0xFFFFFFFF);
             //}
-          	if(this==moving) {
-        		matrixStack.pose().popPose();
-        	}
+            matrixStack.pose().popPose();
         }
 
         @Override
