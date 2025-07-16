@@ -20,7 +20,7 @@
 package com.teammoeg.chorda.client.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -46,10 +46,10 @@ public class ColorEditbox extends EditBox {
         setMaxLength(withAlpha ? 6 : 8);
         setResponder(s -> {
             try {
-                setTextColor(ColorHelper.WHITE);
+                setTextColor(Colors.WHITE);
                 Integer.parseUnsignedInt(s, 16);
             } catch (NumberFormatException e) {
-                setTextColor(ColorHelper.RED);
+                setTextColor(Colors.RED);
             }
         });
     }
@@ -62,7 +62,7 @@ public class ColorEditbox extends EditBox {
         PoseStack pose = graphics.pose();
         pose.pushPose();
         pose.translate(1, 1, 0);
-        graphics.fill(getX()+getWidth()+2, getY(), getX()+getWidth()+getHeight()+2, getY()+getHeight(), ColorHelper.makeDark(getColorValue(), 0.75F));
+        graphics.fill(getX()+getWidth()+2, getY(), getX()+getWidth()+getHeight()+2, getY()+getHeight(), Colors.makeDark(getColorValue(), 0.75F));
         pose.translate(-1, -1, 0);
         graphics.fill(getX()+getWidth()+2, getY(), getX()+getWidth()+getHeight()+2, getY()+getHeight(), getColorValue());
         pose.popPose();
@@ -70,17 +70,17 @@ public class ColorEditbox extends EditBox {
 
     public int getColorValue() {
         try {
-            return withAlpha ? ColorHelper.setAlpha(Integer.parseUnsignedInt(getValue(), 16), 1F) : Integer.parseUnsignedInt(getValue(), 16);
+            return withAlpha ? Colors.setAlpha(Integer.parseUnsignedInt(getValue(), 16), 1F) : Integer.parseUnsignedInt(getValue(), 16);
         } catch (NumberFormatException e) {
-            return ColorHelper.RED;
+            return Colors.RED;
         }
     }
 
     public void setValue(int value) {
         if (withAlpha) {
-            setValue(ColorHelper.toHexString(value).substring(2).toUpperCase());
+            setValue(Colors.toHexString(value).substring(2).toUpperCase());
         } else {
-            setValue(ColorHelper.toHexString(value).toUpperCase());
+            setValue(Colors.toHexString(value).toUpperCase());
         }
     }
 

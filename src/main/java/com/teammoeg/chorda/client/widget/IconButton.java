@@ -25,7 +25,7 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -66,10 +66,10 @@ public class IconButton extends Button {
     @Override
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         int color = isActive() ? this.color : 0xFF666666;
-        int backgroundColor = ColorHelper.makeDark(color, 0.3F);
+        int backgroundColor = Colors.makeDark(color, 0.3F);
         float alpha = 0.5F;
         if (isHoveredOrFocused()) {
-            graphics.fill(getX(), getY(), getX()+getWidth(), getY()+getHeight(), ColorHelper.setAlpha(backgroundColor, alpha));
+            graphics.fill(getX(), getY(), getX()+getWidth(), getY()+getHeight(), Colors.setAlpha(backgroundColor, alpha));
             if (!getMessage().getString().isBlank() && isHovered()) {
                 int textWidth = ClientUtils.font().width(getMessage());
                 int renderX = getX()-textWidth+8;
@@ -78,14 +78,14 @@ public class IconButton extends Button {
                             getY()-12,
                             getX()+2 + textWidth,
                             getY(),
-                            ColorHelper.setAlpha(backgroundColor, alpha));
+                            Colors.setAlpha(backgroundColor, alpha));
                     graphics.drawString(ClientUtils.font(), getMessage(), getX()+2, getY()-10, color);
                 } else {
                     graphics.fill(getX()-textWidth+getWidth()-1,
                             getY()-12,
                             getX()+getWidth(),
                             getY(),
-                            ColorHelper.setAlpha(backgroundColor, alpha));
+                            Colors.setAlpha(backgroundColor, alpha));
                     graphics.drawString(ClientUtils.font(), getMessage(), getX()-textWidth+getWidth(), getY()-10, color);
                 }
             }

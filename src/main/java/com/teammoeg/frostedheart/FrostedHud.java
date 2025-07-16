@@ -1029,10 +1029,10 @@ public class FrostedHud {
                                     hoveredEle = widget;
                                     il = indentLevel;
                                 }
-                                if (shift) {
+                                if (shift && !Screen.hasControlDown()) {
                                     Rect b = CGuiHelper.getWidgetRect(widget, pLayer);
                                     int color = Color.HSBtoRGB((indentLevel & 0xF) / 6F, 1, 1);
-                                    CGuiHelper.drawRect(stack, b, ColorHelper.setAlpha(color, 0.1F));
+                                    CGuiHelper.drawRect(stack, b, Colors.setAlpha(color, 0.1F));
                                     CGuiHelper.drawBox(stack, b, color, false);
                                 }
 
@@ -1053,19 +1053,19 @@ public class FrostedHud {
                             }
                         }
 
-                        if (hoveredEle != null && !shift) {
+                        if (hoveredEle != null && !shift && !Screen.hasControlDown()) {
                             if (hoveredEle instanceof Layer layer1) {
                                 for (int i = 0; i < layer1.getElements().size(); i++) {
                                     UIWidget le = layer1.getElements().get(i);
                                     Rect b = CGuiHelper.getWidgetRect(le, pLayer);
                                     int color = Color.HSBtoRGB((il+1 & 0xF) / 6F, 1, 1);
-                                    CGuiHelper.drawRect(stack, b, ColorHelper.setAlpha(color, 0.1F));
+                                    CGuiHelper.drawRect(stack, b, Colors.setAlpha(color, 0.1F));
                                     CGuiHelper.drawBox(stack, b, color, false);
                                 }
                             }
                             Rect b = CGuiHelper.getWidgetRect(hoveredEle, pLayer);
                             int color = Color.HSBtoRGB((il & 0xF) / 6F, 1, 1);
-                            CGuiHelper.drawRect(stack, b, ColorHelper.setAlpha(color, 0.1F));
+                            CGuiHelper.drawRect(stack, b, Colors.setAlpha(color, 0.1F));
                             CGuiHelper.drawBox(stack, b, color, false);
                         }
                     } else {
@@ -1093,8 +1093,8 @@ public class FrostedHud {
                     if (focused) {
                         lines.add("   ▶ " + l.children().size() + " entries");
                         if (shift) {
-                            stack.fill(l.getLeft(), l.getTop(), l.getRight(), l.getBottom(), ColorHelper.setAlpha(ColorHelper.RED, 0.1F));
-                            CGuiHelper.drawBox(stack, l.getLeft(), l.getTop(), l.getWidth(), l.getHeight(), ColorHelper.RED, false);
+                            stack.fill(l.getLeft(), l.getTop(), l.getRight(), l.getBottom(), Colors.setAlpha(Colors.RED, 0.1F));
+                            CGuiHelper.drawBox(stack, l.getLeft(), l.getTop(), l.getWidth(), l.getHeight(), Colors.RED, false);
                         } else {
                             box = new Rect(l.getLeft(), l.getTop(), l.getWidth(), l.getHeight());
                         }
@@ -1112,8 +1112,8 @@ public class FrostedHud {
                 if (a instanceof AbstractWidget a1 && (a1.isHoveredOrFocused() || shift)) {
                     c.withStyle(ChatFormatting.GOLD);
                     if (shift) {
-                        stack.fill(a1.getX(), a1.getY(), a1.getX()+a1.getWidth(), a1.getY()+a1.getHeight(), ColorHelper.setAlpha(ColorHelper.CYAN, 0.1F));
-                        CGuiHelper.drawBox(stack, a1.getX(), a1.getY(), a1.getWidth(), a1.getHeight(), ColorHelper.RED, false);
+                        stack.fill(a1.getX(), a1.getY(), a1.getX()+a1.getWidth(), a1.getY()+a1.getHeight(), Colors.setAlpha(Colors.CYAN, 0.1F));
+                        CGuiHelper.drawBox(stack, a1.getX(), a1.getY(), a1.getWidth(), a1.getHeight(), Colors.RED, false);
                     } else {
                         box = new Rect(a1.getX(), a1.getY(), a1.getWidth(), a1.getHeight());
                     }
@@ -1125,18 +1125,18 @@ public class FrostedHud {
         // 复制颜色
         int x = (int) (mc.mouseHandler.isMouseGrabbed() ? mc.getWindow().getWidth() *0.5F : mc.mouseHandler.xpos());
         int y = (int) (mc.mouseHandler.isMouseGrabbed() ? mc.getWindow().getHeight()*0.5F : mc.mouseHandler.ypos());
-        int color = ColorHelper.getColorAt(x, y);
+        int color = Colors.getColorAt(x, y);
         if (ClientUtils.isKeyDown(GLFW.GLFW_KEY_C)) {
-            mc.keyboardHandler.setClipboard(ColorHelper.toHexString(color));
+            mc.keyboardHandler.setClipboard(Colors.toHexString(color));
         }
         // 组件overlay
         if (!Screen.hasControlDown()) {
-            stack.fill(box.getX(), box.getY(), box.getX() + box.getW(), box.getY() + box.getH(), ColorHelper.setAlpha(ColorHelper.RED, 0.1F));
-            CGuiHelper.drawBox(stack, box.getX(), box.getY(), box.getW(), box.getH(), ColorHelper.RED, false);
+            stack.fill(box.getX(), box.getY(), box.getX() + box.getW(), box.getY() + box.getH(), Colors.setAlpha(Colors.RED, 0.1F));
+            CGuiHelper.drawBox(stack, box.getX(), box.getY(), box.getW(), box.getH(), Colors.RED, false);
         }
         // 文本
         if (!Screen.hasAltDown()) {
-            CGuiHelper.drawStringLines(stack, font, lines.subList(0, Math.min(lines.size(), 100)), 0, 0, ColorHelper.CYAN, 1, true, true);
+            CGuiHelper.drawStringLines(stack, font, lines.subList(0, Math.min(lines.size(), 100)), 0, 0, Colors.CYAN, 1, true, true);
         }
         stack.pose().popPose();
     }

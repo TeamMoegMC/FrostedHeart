@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.waypoint.waypoints;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 
@@ -107,7 +107,7 @@ public class Waypoint extends AbstractWaypoint {
         float offsetX = outScreen ? -tooltipWidth -15 : 15;
         float offsetY = -3.5F;
         int height = cachedSplit.size() * 10;
-        int backgroundColor = ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F);
+        int backgroundColor = Colors.setAlpha(Colors.BLACK, 0.5F);
 
         graphics.pose().pushPose();
         graphics.pose().translate(offsetX, offsetY, 0);

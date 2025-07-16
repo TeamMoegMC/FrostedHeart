@@ -401,7 +401,7 @@ public class CGuiHelper {
 									   int color, int lineSpace, boolean shadow, boolean background, Alignment alignment) {
 		if (texts.isEmpty()) return;
 
-		int backgroundColor = background ? ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F) : 0;
+		int backgroundColor = background ? Colors.setAlpha(Colors.BLACK, 0.5F) : 0;
 
 		int lineOffset = 0;
 		for (Object text : texts) {
@@ -459,7 +459,7 @@ public class CGuiHelper {
 	public static void drawStringInBound(GuiGraphics graphics, Font font, Component text, int x, int y, int width,
 										 int color, int lineSpace, boolean shadow, boolean background, Alignment alignment){
 
-		int backgroundColor = background ? ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F) : 0;
+		int backgroundColor = background ? Colors.setAlpha(Colors.BLACK, 0.5F) : 0;
 		var split = font.split(text, width);
 
 		int lineOffset = 0;

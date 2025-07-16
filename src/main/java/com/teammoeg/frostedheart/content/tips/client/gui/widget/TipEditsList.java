@@ -24,12 +24,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipClickActions;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.content.tips.TipRenderer;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.widget.ActionStateIconButton;
 import com.teammoeg.chorda.client.widget.ColorEditbox;
 import com.teammoeg.chorda.client.widget.IconButton;
@@ -64,14 +64,14 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         idEntry.input.setMaxLength(240);
         idEntry.input.setResponder(s -> {
             if (TipManager.INSTANCE.hasTip(s)) {
-                idEntry.input.setTextColor(ColorHelper.RED);
+                idEntry.input.setTextColor(Colors.RED);
                 updatePreview(Component.translatable("tips.frostedheart.error.save.duplicate_id_warn").withStyle(ChatFormatting.RED));
                 return;
             } else if (Tip.isTipIdInvalid(s)) {
-                idEntry.input.setTextColor(ColorHelper.RED);
+                idEntry.input.setTextColor(Colors.RED);
                 updatePreview(Component.translatable("tips.frostedheart.error.invalid_id").withStyle(ChatFormatting.RED));
             } else {
-                idEntry.input.setTextColor(ColorHelper.WHITE);
+                idEntry.input.setTextColor(Colors.WHITE);
             }
             updatePreview();
         });
@@ -82,13 +82,13 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         var nextTipEntry = new StringEntry("nextTip", Component.translatable("gui.frostedheart.tip_editor.next_tip"));
         nextTipEntry.input.setResponder(s -> {
             if (Tip.isTipIdInvalid(s)) {
-                nextTipEntry.input.setTextColor(ColorHelper.RED);
+                nextTipEntry.input.setTextColor(Colors.RED);
                 updatePreview(Component.translatable("tips.frostedheart.error.invalid_id").withStyle(ChatFormatting.RED));
             } else if (!TipManager.INSTANCE.hasTip(s)) {
                 nextTipEntry.input.setTextColor(0xFFFF9F00);
                 updatePreview(Component.translatable("tips.frostedheart.error.load.tip_not_exists", s).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
             } else {
-                nextTipEntry.input.setTextColor(ColorHelper.WHITE);
+                nextTipEntry.input.setTextColor(Colors.WHITE);
                 updatePreview();
             }
         });
@@ -98,7 +98,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
             if (!TipClickActions.hasAction(s)) {
                 nextTipEntry.input.setTextColor(0xFFFF9F00);
             } else {
-                nextTipEntry.input.setTextColor(ColorHelper.WHITE);
+                nextTipEntry.input.setTextColor(Colors.WHITE);
             }
             StringBuilder sb = new StringBuilder();
             for (String key : TipClickActions.getActionKeys()) {
@@ -115,8 +115,8 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         addEntry(new StringEntry("clickActionContent", Component.translatable("gui.frostedheart.tip_editor.click_action_content")));
         addEntry(nextTipEntry);
         addEntry(new StringEntry("category", Component.translatable("gui.frostedheart.tip_editor.category")));
-        addEntry(new ColorEntry("fontColor", Component.translatable("gui.frostedheart.tip_editor.font_color"), ColorHelper.CYAN));
-        addEntry(new ColorEntry("backgroundColor", Component.translatable("gui.frostedheart.tip_editor.background_color"), ColorHelper.BLACK));
+        addEntry(new ColorEntry("fontColor", Component.translatable("gui.frostedheart.tip_editor.font_color"), Colors.CYAN));
+        addEntry(new ColorEntry("backgroundColor", Component.translatable("gui.frostedheart.tip_editor.background_color"), Colors.BLACK));
         addEntry(new IntegerEntry("displayTime", Component.translatable("gui.frostedheart.tip_editor.display_time")));
         addEntry(new BooleanEntry("alwaysVisible", Component.translatable("gui.frostedheart.tip_editor.always_visible")));
         addEntry(new BooleanEntry("onceOnly", Component.translatable("gui.frostedheart.tip_editor.once_only")));
@@ -153,10 +153,10 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
             this.input = new ColorEditbox(font, 0, 0, 64, 12, message, true ,defValue);
             this.input.setResponder(s -> {
                 try {
-                    input.setTextColor(ColorHelper.WHITE);
+                    input.setTextColor(Colors.WHITE);
                     Integer.parseUnsignedInt(s, 16);
                 } catch (NumberFormatException e) {
-                    input.setTextColor(ColorHelper.RED);
+                    input.setTextColor(Colors.RED);
                 }
                 updatePreview();
             });
@@ -173,10 +173,10 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
             super(property, message);
             this.input.setResponder(s -> {
                 try {
-                    input.setTextColor(ColorHelper.WHITE);
+                    input.setTextColor(Colors.WHITE);
                     Integer.parseInt(s);
                 } catch (NumberFormatException e) {
-                    input.setTextColor(ColorHelper.RED);
+                    input.setTextColor(Colors.RED);
                 }
                 updatePreview();
             });
@@ -225,7 +225,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
             });
             this.input.setMaxLength(1024);
 
-            this.addButton = new IconButton(0, 0, IconButton.Icon.CHECK, ColorHelper.CYAN, Component.translatable("gui.frostedheart.tip_editor.add_line"), b -> {
+            this.addButton = new IconButton(0, 0, IconButton.Icon.CHECK, Colors.CYAN, Component.translatable("gui.frostedheart.tip_editor.add_line"), b -> {
                 if (cachedId.isBlank()) return;
 
                 contents.add(getValidInputValue());
@@ -241,7 +241,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
                 updatePreview(Component.translatable("gui.frostedheart.tip_editor.info.enter"));
             });
 
-            this.deleteButton = new IconButton(0, 0, IconButton.Icon.TRASH_CAN, ColorHelper.CYAN, Component.translatable("gui.frostedheart.tip_editor.delete_last_line"), b -> {
+            this.deleteButton = new IconButton(0, 0, IconButton.Icon.TRASH_CAN, Colors.CYAN, Component.translatable("gui.frostedheart.tip_editor.delete_last_line"), b -> {
                 if (!contents.isEmpty()) {
                     contents.remove(contents.size() - 1);
                     translationContents.remove(contents.size());
@@ -251,7 +251,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
                 }
             });
 
-            this.translationButton = new ActionStateIconButton(0, 0, IconButton.Icon.LIST, ColorHelper.CYAN, Component.translatable("gui.frostedheart.tip_editor.convert_and_copy"), Component.translatable("gui.frostedheart.copied"), b -> {
+            this.translationButton = new ActionStateIconButton(0, 0, IconButton.Icon.LIST, Colors.CYAN, Component.translatable("gui.frostedheart.tip_editor.convert_and_copy"), Component.translatable("gui.frostedheart.copied"), b -> {
                 if (!contents.isEmpty()) {
                     StringBuilder copy = new StringBuilder();
                     for (int i = 0; i < translationContents.size(); i++) {
@@ -324,7 +324,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
 
         @Override
         public void render(@NotNull GuiGraphics pGuiGraphics, int pIndex, int pTop, int pLeft, int pWidth, int pHeight, int pMouseX, int pMouseY, boolean p_93531_, float pPartialTick) {
-            pGuiGraphics.drawString(font, message, pLeft, pTop, ColorHelper.WHITE);
+            pGuiGraphics.drawString(font, message, pLeft, pTop, Colors.WHITE);
             input.setPosition(pLeft + 160, pTop);
             input.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
         }
@@ -361,7 +361,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
 
         @Override
         public void render(@NotNull GuiGraphics pGuiGraphics, int pIndex, int pTop, int pLeft, int pWidth, int pHeight, int pMouseX, int pMouseY, boolean p_93531_, float pPartialTick) {
-            pGuiGraphics.drawString(font, message, pLeft, pTop, ColorHelper.WHITE);
+            pGuiGraphics.drawString(font, message, pLeft, pTop, Colors.WHITE);
             checkbox.setX(pLeft + 160 + 64/2 - checkbox.getWidth()/2);
             checkbox.setY(pTop - 12/2);
             checkbox.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);

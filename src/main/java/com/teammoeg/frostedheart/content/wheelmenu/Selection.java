@@ -3,10 +3,8 @@ package com.teammoeg.frostedheart.content.wheelmenu;
 import java.util.function.Predicate;
 
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.client.widget.IconButton;
-import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.content.wheelmenu.useractions.KeyMappingTriggerAction;
 
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -43,7 +41,7 @@ public class Selection {
 	 * @param selectAction 选择后的行动 (选中 -> 松开Tab)
 	 */
 	Selection(Component message, CIcon icon, Action selectAction) {
-		this(ALWAYS_VISIBLE, selectAction, NO_ACTION,icon,message, true,ColorHelper.CYAN);
+		this(ALWAYS_VISIBLE, selectAction, NO_ACTION,icon,message, true, Colors.CYAN);
 	}
 
 	

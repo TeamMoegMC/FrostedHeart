@@ -28,7 +28,7 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseCaptureUtil;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.config.ConfigFileType;
@@ -128,10 +128,10 @@ public class WheelMenuRenderer {
 
 		// 背景圆环
 		FGuis.drawRing(graphics, 0, 0, innerRadius, wheelRadius, 0, 360,
-				ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
+				Colors.setAlpha(Colors.BLACK, 0.5F * p));
 		if (!mouseMoved)
 			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, 0, 360,
-					ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
+					Colors.setAlpha(Colors.BLACK, 0.5F * p));
 
 		float halfSliceSize = 360F / (size * 2);
 
@@ -150,17 +150,17 @@ public class WheelMenuRenderer {
 			pose.pushPose();
 			pose.rotateAround(new Quaternionf().rotateZ((float) radian), 0, 0, 0);
 			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, halfSliceSize/2,
-					360-halfSliceSize, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
+					360-halfSliceSize, Colors.setAlpha(Colors.BLACK, 0.5F * p));
 			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, -halfSliceSize, halfSliceSize,
-					ColorHelper.setAlpha(ColorHelper.CYAN, p));
+					Colors.setAlpha(Colors.CYAN, p));
 			pose.popPose();
 
 			// 当前选择的选项的圆环
 			pose.pushPose();
 			pose.rotateAround(new Quaternionf().rotateZ((float) Math.toRadians(degrees.get(selectedIndex))), 0, 0, 0);
 			FGuis.drawRing(graphics, 0, 0, innerRadius, wheelRadius, -halfSliceSize, halfSliceSize,
-					ColorHelper.setAlpha(ColorHelper.CYAN, 0.5F * p),
-					ColorHelper.setAlpha(ColorHelper.CYAN, p*0.15f));
+					Colors.setAlpha(Colors.CYAN, 0.5F * p),
+					Colors.setAlpha(Colors.CYAN, p*0.15f));
 			pose.popPose();
 		} else {
 			mouseMoved = !MouseHelper.isMouseIn(virtualScreen.getX(), virtualScreen.getY(), -50, -50, 100, 100);
@@ -174,13 +174,13 @@ public class WheelMenuRenderer {
 
 		// 渲染“鼠标”
 		FGuis.drawRing(graphics, (int) virtualScreen.getX()/2, (int) virtualScreen.getY()/2, 3, 6, 0, 360,
-				ColorHelper.setAlpha(ColorHelper.CYAN, p));
+				Colors.setAlpha(Colors.CYAN, p));
 
 		// 渲染选项标题
 		var message = hoveredSelection != null ? hoveredSelection.getMessage() : Component.translatable("gui.frostedheart.wheel_menu.message",
 				FHKeyMappings.key_openWheelMenu.get().getKey().getDisplayName());
 		var lines = font.split(message, (int) (innerRadius * 2 - 16));
-		CGuiHelper.drawStringLines(graphics, font, lines, 0, -lines.size() * 5, ColorHelper.CYAN, 1, true, true, Alignment.CENTER);
+		CGuiHelper.drawStringLines(graphics, font, lines, 0, -lines.size() * 5, Colors.CYAN, 1, true, true, Alignment.CENTER);
 		pose.popPose();
 	}
 

@@ -6,10 +6,9 @@ import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.Layer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.client.cui.ItemWidget;
 import com.teammoeg.frostedheart.FrostedHud;
@@ -64,7 +63,7 @@ public class CategoryBox extends Layer {
         pose.pushPose();
         pose.translate(0, 0, -1);
         graphics.fill(x-border, y-border, x+w+border, y+h+border, -2, 0xFF444651);
-        CGuiHelper.drawBox(graphics, x-border, y-border, w+border*2, h+border*2, ColorHelper.L_BG_GRAY, true);
+        CGuiHelper.drawBox(graphics, x-border, y-border, w+border*2, h+border*2, Colors.L_BG_GRAY, true);
         pose.popPose();
 
         super.render(graphics, x, y, w, h);
@@ -139,7 +138,7 @@ public class CategoryBox extends Layer {
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h) {
             drawBackground(graphics, x, y, w, h);
-            graphics.drawString(getFont(), title, x+12, y+4, ColorHelper.WHITE);
+            graphics.drawString(getFont(), title, x+12, y+4, Colors.WHITE);
             if (opened) {
                 super.render(graphics, x, y, w, h);
             }
@@ -147,11 +146,11 @@ public class CategoryBox extends Layer {
 
         @Override
         public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-            graphics.fill(x, y, x+w, y+DEF_ITEM_HEIGHT, ColorHelper.L_BG_GRAY);
+            graphics.fill(x, y, x+w, y+DEF_ITEM_HEIGHT, Colors.L_BG_GRAY);
             if (opened) {
-                IconButton.Icon.DOWN.render(graphics.pose(), x+1, y+3, ColorHelper.L_TEXT_GRAY);
+                IconButton.Icon.DOWN.render(graphics.pose(), x+1, y+3, Colors.L_TEXT_GRAY);
             } else {
-                IconButton.Icon.RIGHT.render(graphics.pose(), x, y+4, ColorHelper.L_TEXT_GRAY);
+                IconButton.Icon.RIGHT.render(graphics.pose(), x, y+4, Colors.L_TEXT_GRAY);
             }
         }
 
@@ -294,7 +293,7 @@ public class CategoryBox extends Layer {
                     lines.add(box.br());
                 } else if (!TipManager.INSTANCE.state().isViewed(tip)) {
                     lines.add(box.br());
-                    lines.add(box.text(Component.translatable("gui.frostedheart.archive.new_tip")).setTitle(tip.getFontColor(), 1).setBaseColor(ColorHelper.readableColor(tip.getFontColor())));
+                    lines.add(box.text(Component.translatable("gui.frostedheart.archive.new_tip")).setTitle(tip.getFontColor(), 1).setBaseColor(Colors.readableColor(tip.getFontColor())));
                 } else {
                     lines.add(box.br());
                 }
@@ -310,12 +309,12 @@ public class CategoryBox extends Layer {
                 if (tip.getImage() != null) {
                     var img = box.image(tip.getImage());
                     if (img.imgSize.width < 64) {
-                        img.setBackgroundColor(ColorHelper.L_BG_GRAY);
+                        img.setBackgroundColor(Colors.L_BG_GRAY);
                     }
                     lines.add(img);
                 }
                 if (FrostedHud.renderDebugOverlay) {
-                    lines.add(box.text("ID: " + tip.getId()).setBaseColor(ColorHelper.L_BG_GRAY).setAlignment(Alignment.RIGHT));
+                    lines.add(box.text("ID: " + tip.getId()).setBaseColor(Colors.L_BG_GRAY).setAlignment(Alignment.RIGHT));
                 }
             }
             return lines;
@@ -326,7 +325,7 @@ public class CategoryBox extends Layer {
         public final DetailBox box = CategoryBox.this.detailBox;
         public Component title = Component.empty();
         protected Component cachedTitle = Component.empty();
-        public int baseColor = ColorHelper.WHITE;
+        public int baseColor = Colors.WHITE;
         protected boolean read;
 
         public Entry(UIWidget parent) {
@@ -345,16 +344,16 @@ public class CategoryBox extends Layer {
             if (!read) {
                 float anim = AnimationUtil.progress(3000, "archive_unread", true);
                 anim = ((float)Math.sin(anim*Math.PI*2)*0.5F+0.5F)*0.3F;
-                graphics.fill(x, y, x+w, y+h, ColorHelper.setAlpha(ColorHelper.L_BG_GREEN, anim));
+                graphics.fill(x, y, x+w, y+h, Colors.setAlpha(Colors.L_BG_GREEN, anim));
             }
         }
 
         @Override
         public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
             if (CategoryBox.this.selected == this) {
-                graphics.fill(x-4, y, x-2, y+h, ColorHelper.L_BG_GREEN);
+                graphics.fill(x-4, y, x-2, y+h, Colors.L_BG_GREEN);
             }
-            graphics.fill(x, y, x+w, y+h, ColorHelper.L_BG_GRAY);
+            graphics.fill(x, y, x+w, y+h, Colors.L_BG_GRAY);
         }
 
         public abstract boolean isRead();

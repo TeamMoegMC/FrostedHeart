@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
 import com.simibubi.create.foundation.config.ui.BaseConfigScreen;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.content.tips.Popup;
@@ -29,7 +30,6 @@ import com.teammoeg.frostedheart.content.waypoint.waypoints.ColumbiatWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.SunStationWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.Waypoint;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.ui.ColorHelper;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.lang.Components;
 
@@ -69,22 +69,22 @@ public class DebugScreen extends Screen {
         var input = addRenderableWidget(new EditBox(ClientUtils.font(), ClientUtils.screenCenterX() - 60, ClientUtils.screenCenterY() + 20, 120, 12, Component.literal("input")));
         input.setMaxLength(1024);
 
-        addButton(IconButton.Icon.CROSS, ColorHelper.CYAN, "Clear Tip Render Queue", (b) ->
+        addButton(IconButton.Icon.CROSS, Colors.CYAN, "Clear Tip Render Queue", (b) ->
             TipManager.INSTANCE.display().clearRenderQueue()
         );
-        addButton(IconButton.Icon.HISTORY, ColorHelper.RED, "Reset State For All Tips", (b) ->
+        addButton(IconButton.Icon.HISTORY, Colors.RED, "Reset State For All Tips", (b) ->
             TipManager.INSTANCE.state().resetAll()
         );
-        addButton(IconButton.Icon.HISTORY, ColorHelper.CYAN, "Reload All Tips", (b) ->
+        addButton(IconButton.Icon.HISTORY, Colors.CYAN, "Reload All Tips", (b) ->
             TipManager.INSTANCE.loadFromFile()
         );
-        addButton(IconButton.Icon.WRENCH, ColorHelper.CYAN, "Open Tip Editor UI", (b) ->
+        addButton(IconButton.Icon.WRENCH, Colors.CYAN, "Open Tip Editor UI", (b) ->
             ClientUtils.getMc().setScreen(new TipEditorScreen())
         );
-        addButton(IconButton.Icon.BOX_ON, ColorHelper.CYAN, "Create a Random Waypoint", (b) -> {
+        addButton(IconButton.Icon.BOX_ON, Colors.CYAN, "Create a Random Waypoint", (b) -> {
             Random random = new Random();
             String id = DebugEntityNameGenerator.getEntityName(UUID.randomUUID());
-            Waypoint waypoint = new Waypoint(new Vec3((random.nextFloat()-0.5F)*1280, Math.abs(random.nextFloat())*256, (random.nextFloat()-0.5F)*1280), id, ColorHelper.setAlpha(random.nextInt(), 1F));
+            Waypoint waypoint = new Waypoint(new Vec3((random.nextFloat()-0.5F)*1280, Math.abs(random.nextFloat())*256, (random.nextFloat()-0.5F)*1280), id, Colors.setAlpha(random.nextInt(), 1F));
             waypoint.setFocused(random.nextBoolean());
             ClientWaypointManager.putWaypoint(waypoint);
         });
@@ -94,22 +94,22 @@ public class DebugScreen extends Screen {
         addButton(IconButton.Icon.BOX_ON, 0xFFF6F1D5, "Create Columbiat Waypoint", (b) ->
             ClientWaypointManager.putWaypoint(new ColumbiatWaypoint())
         );
-        addButton(IconButton.Icon.BOX, ColorHelper.RED, "Remove The Waypoint You Are Looking At", (b) ->
+        addButton(IconButton.Icon.BOX, Colors.RED, "Remove The Waypoint You Are Looking At", (b) ->
             ClientWaypointManager.getSelected().ifPresent((hovered) -> ClientWaypointManager.removeWaypoint(hovered.getId()))
         );
-        addButton(IconButton.Icon.SIGHT, ColorHelper.CYAN, "Create a Waypoint From The Block You Are Looking At", (b) -> {
+        addButton(IconButton.Icon.SIGHT, Colors.CYAN, "Create a Waypoint From The Block You Are Looking At", (b) -> {
             ClientWaypointManager.fromPickedBlock();
         });
-        addButton(IconButton.Icon.TRADE, ColorHelper.CYAN, "Toggle Debug Overlay", (b) ->
+        addButton(IconButton.Icon.TRADE, Colors.CYAN, "Toggle Debug Overlay", (b) ->
             FrostedHud.renderDebugOverlay = !FrostedHud.renderDebugOverlay
         );
-        addButton(IconButton.Icon.LIST, ColorHelper.CYAN, "Create Pop-up message", (b) ->
+        addButton(IconButton.Icon.LIST, Colors.CYAN, "Create Pop-up message", (b) ->
             Popup.put(input.getValue())
         );
-        addButton(IconButton.Icon.LIST, ColorHelper.CYAN, "Unlock All Tips", (b) ->
+        addButton(IconButton.Icon.LIST, Colors.CYAN, "Unlock All Tips", (b) ->
             TipManager.INSTANCE.state().unlockAll()
         );
-        addButton(IconButton.Icon.LEAVE, ColorHelper.CYAN, "Do Something", (b) -> {
+        addButton(IconButton.Icon.LEAVE, Colors.CYAN, "Do Something", (b) -> {
             String message = debug();
             ClientUtils.getPlayer().sendSystemMessage(Components.str(message));
         });

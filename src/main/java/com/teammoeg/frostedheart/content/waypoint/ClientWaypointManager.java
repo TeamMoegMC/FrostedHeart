@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.waypoint;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
@@ -164,7 +164,7 @@ public class ClientWaypointManager {
     public static boolean fromPickedBlock() {
         HitResult block = ClientUtils.getPlayer().pick(128, ClientUtils.partialTicks(), false);
         if (block.getType() == HitResult.Type.BLOCK) {
-            Waypoint waypoint = new Waypoint(((BlockHitResult)block).getBlockPos(), "picked_block", ColorHelper.CYAN);
+            Waypoint waypoint = new Waypoint(((BlockHitResult)block).getBlockPos(), "picked_block", Colors.CYAN);
             waypoint.setFocused(true);
             waypoint.setDisplayName(ClientUtils.getWorld().getBlockState(((BlockHitResult)block).getBlockPos()).getBlock().getName());
             putWaypoint(waypoint);

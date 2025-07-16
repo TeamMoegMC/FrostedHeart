@@ -28,7 +28,7 @@ import org.lwjgl.opengl.GL11;
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
-public class ColorHelper {
+public class Colors {
     public static final int WHITE = 0xFFFFFFFF;
     public static final int BLACK = 0xFF000000;
     public static final int CYAN = 0xFFC6FCFF;

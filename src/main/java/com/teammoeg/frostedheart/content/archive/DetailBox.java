@@ -8,7 +8,7 @@ import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.ScrollBar;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.client.ui.UV;
 import com.teammoeg.chorda.client.cui.ItemWidget;
 import lombok.Getter;
@@ -87,7 +87,7 @@ public class DetailBox extends Layer {
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
         int border = 8;
         graphics.fill(x-border, y-border, x+w+border*2, y+h+border, -2, 0xFF444651);
-        CGuiHelper.drawBox(graphics, x-border, y-border, w+border*3, h+border*2, ColorHelper.L_BG_GRAY, true);
+        CGuiHelper.drawBox(graphics, x-border, y-border, w+border*3, h+border*2, Colors.L_BG_GRAY, true);
     }
 
     @Override
@@ -384,14 +384,14 @@ public class DetailBox extends Layer {
 
     public class BreakLine extends Line<BreakLine> {
         private BreakLine() {
-            setBaseColor(ColorHelper.L_BG_GRAY);
+            setBaseColor(Colors.L_BG_GRAY);
         }
 
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h) {
             super.render(graphics, x, y, w, h);
-            CGuiHelper.fillGradient(graphics.pose(), x, y+h/2, x+w/2, y+h/2+1, ColorHelper.setAlpha(baseColor, 0), baseColor);
-            CGuiHelper.fillGradient(graphics.pose(),x+w/2, y+h/2, x+w, y+h/2+1, baseColor, ColorHelper.setAlpha(baseColor, 0));
+            CGuiHelper.fillGradient(graphics.pose(), x, y+h/2, x+w/2, y+h/2+1, Colors.setAlpha(baseColor, 0), baseColor);
+            CGuiHelper.fillGradient(graphics.pose(),x+w/2, y+h/2, x+w, y+h/2+1, baseColor, Colors.setAlpha(baseColor, 0));
         }
 
         @Override
@@ -419,7 +419,7 @@ public class DetailBox extends Layer {
         }
 
         public Line(Alignment alignment) {
-            this(alignment, ColorHelper.WHITE);
+            this(alignment, Colors.WHITE);
         }
 
         public Line(Alignment alignment, int color) {

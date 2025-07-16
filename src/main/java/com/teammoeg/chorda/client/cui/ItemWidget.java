@@ -1,7 +1,7 @@
 package com.teammoeg.chorda.client.cui;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import lombok.Getter;
 import lombok.Setter;
@@ -42,7 +42,7 @@ public class ItemWidget extends UIWidget {
         }
 
         if (isHoverOverlayEnabled() && isMouseOver()) {
-            graphics.fill(x, y, x+w, y+h, 151, ColorHelper.setAlpha(ColorHelper.WHITE, 0.25F));
+            graphics.fill(x, y, x+w, y+h, 151, Colors.setAlpha(Colors.WHITE, 0.25F));
         }
     }
 

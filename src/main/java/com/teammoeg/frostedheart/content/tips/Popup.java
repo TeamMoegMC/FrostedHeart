@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.tips;
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import net.minecraft.client.gui.GuiGraphics;
@@ -98,7 +98,7 @@ public class Popup {
         float x = ClientUtils.screenWidth() * 0.5F;
         pose.pushPose();
         pose.translate(x, y-height, 0);
-        CGuiHelper.drawStringLines(graphic, font, lines, 0, 0, ColorHelper.CYAN, 1, true, true, Alignment.CENTER);
+        CGuiHelper.drawStringLines(graphic, font, lines, 0, 0, Colors.CYAN, 1, true, true, Alignment.CENTER);
         pose.popPose();
     }
 
