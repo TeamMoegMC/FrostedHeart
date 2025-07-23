@@ -4,6 +4,7 @@ name: Java CI with Gradle
 on:
   pull_request:
     branches: [ "1.20" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -23,3 +24,13 @@ jobs:
       uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
     - name: Build with Gradle Wrapper and try to runData
       run: ./gradlew runData jar
+
+    - name: Find and Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          **/build/libs/*.jar
+          **/build/libs/*.war
+          **/build/distributions/*.zip
+        if-no-files-found: error
