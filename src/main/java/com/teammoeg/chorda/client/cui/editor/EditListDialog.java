@@ -28,6 +28,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import com.teammoeg.chorda.client.CInputHelper;
@@ -42,7 +43,6 @@ import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.lang.Components;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -118,12 +118,12 @@ public class EditListDialog<T> extends EditDialog {
         };
 
         scroll = new LayerScrollBar(this, configPanel);
-        buttonAccept =TextButton.create(this, Components.empty(), IconButton.Icon.CHECK.toCIcon(), (button) -> {
+        buttonAccept =TextButton.create(this, Components.empty(), FlatIcon.CHECK.toCIcon(), (button) -> {
             callback.accept(list);
             modified = false;
             close();
         });
-        buttonCancel = TextButton.create(this, Components.empty(), IconButton.Icon.CROSS.toCIcon(), (button) -> close());
+        buttonCancel = TextButton.create(this, Components.empty(), FlatIcon.CROSS.toCIcon(), (button) -> close());
     }
     int movingIndex;
     @Override
@@ -299,7 +299,7 @@ public class EditListDialog<T> extends EditDialog {
             matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+th, 0xFFFFFFFF);
 
             //if (mouseOver) {
-            	IconButton.Icon.CROSS.toCIcon().draw(matrixStack, x+w-18, y+1,height-2,height-2);
+            	FlatIcon.CROSS.toCIcon().draw(matrixStack, x+w-18, y+1,height-2,height-2);
             	//matrixStack.drawString(getFont(), "[-]", x+w-16, y+2, 0xFFFFFFFF);
             	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+2, 0xFFFFFFFF);
             	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+h-getFont().lineHeight, 0xFFFFFFFF);

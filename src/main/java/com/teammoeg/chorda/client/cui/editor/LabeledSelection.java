@@ -31,7 +31,7 @@ import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.teammoeg.chorda.client.widget.IconButton;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.advancements.Advancement;
@@ -98,7 +98,7 @@ public class LabeledSelection<R> extends LabeledPane<TextButton> {
     }
 
     public static LabeledSelection<Boolean> createBool(UIWidget p, Component lab, Boolean val) {
-        return new LabeledSelection<>(p, lab, val, Arrays.asList(true, false), null,t->t?IconButton.Icon.BOX_ON.toCIcon():IconButton.Icon.BOX.toCIcon()) {
+        return new LabeledSelection<>(p, lab, val, Arrays.asList(true, false), null,t->t? FlatIcon.BOX_ON.toCIcon(): FlatIcon.BOX.toCIcon()) {
             @Override
             public void addUIElements() {
                 if (obj != null)

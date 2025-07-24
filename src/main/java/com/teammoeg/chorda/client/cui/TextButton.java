@@ -3,14 +3,11 @@ package com.teammoeg.chorda.client.cui;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.teammoeg.chorda.client.widget.IconButton;
-import com.teammoeg.chorda.lang.Components;
 
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.FormattedCharSequence;
 
@@ -85,10 +82,10 @@ public abstract class TextButton extends Button {
 	}
 
 	public static TextButton accept(UIWidget panel, Consumer<MouseButton> callback, Component... tooltip) {
-		return create(panel, Component.translatable("gui.accept"), IconButton.Icon.CHECK.toCIcon(), callback, tooltip);
+		return create(panel, Component.translatable("gui.accept"), FlatIcon.CHECK.toCIcon(), callback, tooltip);
 	}
 
 	public static TextButton cancel(UIWidget panel, Consumer<MouseButton> callback, Component... tooltip) {
-		return create(panel, Component.translatable("gui.cancel"), IconButton.Icon.CROSS.toCIcon(), callback, tooltip);
+		return create(panel, Component.translatable("gui.cancel"), FlatIcon.CROSS.toCIcon(), callback, tooltip);
 	}
 }

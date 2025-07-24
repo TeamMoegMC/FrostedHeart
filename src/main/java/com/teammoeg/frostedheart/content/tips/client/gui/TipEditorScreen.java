@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.tips.Tip;
@@ -27,7 +28,6 @@ import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipEditsList;
 import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipRequestPacket;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.widget.ActionStateIconButton;
-import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.client.Minecraft;
@@ -65,7 +65,7 @@ public class TipEditorScreen extends Screen {
         super.init();
         addWidget(list);
         // 保存按钮
-        addRenderableWidget(new ActionStateIconButton(ClientUtils.screenWidth()/2 - 30, ClientUtils.screenHeight()-25, IconButton.Icon.FOLDER, Colors.CYAN, 2, Component.translatable("gui.frostedheart.save_as_file"), Component.translatable("gui.frostedheart.saved"), (b) -> {
+        addRenderableWidget(new ActionStateIconButton(ClientUtils.screenWidth()/2 - 30, ClientUtils.screenHeight()-25, FlatIcon.FOLDER, Colors.CYAN, 2, Component.translatable("gui.frostedheart.save_as_file"), Component.translatable("gui.frostedheart.saved"), (b) -> {
             var json = list.toJson();
             if (json != null) {
                 Tip.builder("").fromJson(json).build().saveAsFile();
@@ -73,7 +73,7 @@ public class TipEditorScreen extends Screen {
             }
         }));
         // 发送按钮
-        ActionStateIconButton sendButton = new ActionStateIconButton(ClientUtils.screenWidth()/2 + 5, ClientUtils.screenHeight()-25, IconButton.Icon.GIVE, Colors.CYAN, 2, Component.translatable("gui.frostedheart.tip_editor.send"), Component.translatable("gui.frostedheart.sent"), (b) -> {
+        ActionStateIconButton sendButton = new ActionStateIconButton(ClientUtils.screenWidth()/2 + 5, ClientUtils.screenHeight()-25, FlatIcon.GIVE, Colors.CYAN, 2, Component.translatable("gui.frostedheart.tip_editor.send"), Component.translatable("gui.frostedheart.sent"), (b) -> {
             var json = list.toJson();
             if (json != null) {
                 Tip tip = Tip.builder("").fromJson(json).build();

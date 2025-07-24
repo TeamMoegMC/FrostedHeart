@@ -24,9 +24,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.frostedheart.content.tips.TipClickActions;
+import com.teammoeg.frostedheart.content.tips.ClickActions;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.content.tips.TipRenderer;
 import com.teammoeg.chorda.client.ClientUtils;
@@ -43,13 +44,16 @@ import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.EditEntry> {
     private final Font font;
@@ -94,19 +98,67 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         });
 
         var clickActionEntry = new StringEntry("clickAction", Component.translatable("gui.frostedheart.tip_editor.click_action"));
-        clickActionEntry.input.setResponder(s -> {
-            if (!TipClickActions.hasAction(s)) {
-                nextTipEntry.input.setTextColor(0xFFFF9F00);
-            } else {
-                nextTipEntry.input.setTextColor(Colors.WHITE);
+        clickActionEntry.input = new EditBox(font, 0, 0, 64, 12, Component.translatable("gui.frostedheart.tip_editor.click_action")) {
+            String suggestion = "";
+            String match = "";
+
+            @Override
+            public void setResponder(Consumer<String> pResponder) {
+                super.setResponder(input -> {
+                    setTextColor(!ClickActions.hasAction(input) ? Colors.RED : Colors.WHITE);
+
+                    StringBuilder sb = new StringBuilder();
+                    for (String key : ClickActions.getAllNames()) {
+                        sb.append("\n ").append(key);
+                    }
+                    String actions = sb.isEmpty() ? "NONE" : sb.toString();
+
+                    if (!input.isBlank()) {
+                        for (String name : ClickActions.getAllNames()) {
+                            if (name.equals(input)) {
+                                suggestion = "";
+                                match = name;
+                                break;
+                            }
+                            if (name.toLowerCase().startsWith(input.toLowerCase())) {
+                                suggestion = name.substring(input.length());
+                                match = name;
+                                break;
+                            }
+                            if (name.toLowerCase().contains(input.toLowerCase())) {
+                                suggestion = name;
+                                match = name;
+                                break;
+                            }
+                            match = "";
+                            suggestion = "";
+                        }
+                        setSuggestion(suggestion);
+                    }
+                    updatePreview(Component.translatable("gui.frostedheart.tip_editor.available_click_actions", actions));
+                });
             }
-            StringBuilder sb = new StringBuilder();
-            for (String key : TipClickActions.getActionKeys()) {
-                sb.append("\n ").append(key);
+
+            @Override
+            public void setSuggestion(@Nullable String pSuggestion) {
+                super.setSuggestion(pSuggestion);
             }
-            String actions = sb.isEmpty() ? "NONE" : sb.toString();
-            updatePreview(Component.translatable("gui.frostedheart.tip_editor.available_click_actions", actions));
-        });
+
+            @Override
+            public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
+                return switch (pKeyCode) {
+                    case GLFW.GLFW_KEY_TAB, GLFW.GLFW_KEY_ENTER -> {
+                        if (!Screen.hasShiftDown() && !match.isBlank() && !getValue().equals(match)) {
+                            setValue(match);
+                            yield true;
+                        }
+                        yield super.keyPressed(pKeyCode, pScanCode, pModifiers);
+                    }
+                    default -> super.keyPressed(pKeyCode, pScanCode, pModifiers);
+                };
+            }
+        };
+        clickActionEntry.input.setResponder(null);
 
         addEntry(idEntry);
         addEntry(new MultiComponentEntry("contents", Component.translatable("gui.frostedheart.tip_editor.contents")));
@@ -225,7 +277,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
             });
             this.input.setMaxLength(1024);
 
-            this.addButton = new IconButton(0, 0, IconButton.Icon.CHECK, Colors.CYAN, Component.translatable("gui.frostedheart.tip_editor.add_line"), b -> {
+            this.addButton = new IconButton(0, 0, FlatIcon.CHECK, Colors.CYAN, Component.translatable("gui.frostedheart.tip_editor.add_line"), b -> {
                 if (cachedId.isBlank()) return;
 
                 contents.add(getValidInputValue());
@@ -241,7 +293,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
                 updatePreview(Component.translatable("gui.frostedheart.tip_editor.info.enter"));
             });
 
-            this.deleteButton = new IconButton(0, 0, IconButton.Icon.TRASH_CAN, Colors.CYAN, Component.translatable("gui.frostedheart.tip_editor.delete_last_line"), b -> {
+            this.deleteButton = new IconButton(0, 0, FlatIcon.TRASH_CAN, Colors.CYAN, Component.translatable("gui.frostedheart.tip_editor.delete_last_line"), b -> {
                 if (!contents.isEmpty()) {
                     contents.remove(contents.size() - 1);
                     translationContents.remove(contents.size());
@@ -251,7 +303,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
                 }
             });
 
-            this.translationButton = new ActionStateIconButton(0, 0, IconButton.Icon.LIST, Colors.CYAN, Component.translatable("gui.frostedheart.tip_editor.convert_and_copy"), Component.translatable("gui.frostedheart.copied"), b -> {
+            this.translationButton = new ActionStateIconButton(0, 0, FlatIcon.LIST, Colors.CYAN, Component.translatable("gui.frostedheart.tip_editor.convert_and_copy"), Component.translatable("gui.frostedheart.copied"), b -> {
                 if (!contents.isEmpty()) {
                     StringBuilder copy = new StringBuilder();
                     for (int i = 0; i < translationContents.size(); i++) {

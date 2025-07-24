@@ -27,10 +27,10 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseCaptureUtil;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.client.ui.Point;
-import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.config.ConfigFileType;
 import com.teammoeg.chorda.io.ConfigFileUtil;
 import com.teammoeg.chorda.io.FileUtil;
@@ -200,7 +200,7 @@ public class WheelMenuRenderer {
 		MinecraftForge.EVENT_BUS.post(new WheelMenuSelectionRegisterEvent(registeredSelections));
 		// 在此处添加轮盘选项
 
-		registeredSelections.put(new ResourceLocation("wheel_menu","edit"),new Selection(Component.translatable("gui.wheel_menu.editor.edit"), IconButton.Icon.LIST.toCIcon(), s->{
+		registeredSelections.put(new ResourceLocation("wheel_menu","edit"),new Selection(Component.translatable("gui.wheel_menu.editor.edit"), FlatIcon.LIST.toCIcon(), s->{
 			WheelMenuEditors.openConfigScreen();
 		}));
 		isInitialized=true;
@@ -260,7 +260,7 @@ public class WheelMenuRenderer {
 				}
 			}
 			
-			availableSelections.add(0,new Selection(Component.translatable("gui.close"), IconButton.Icon.CROSS.toCIcon(), Selection.NO_ACTION));
+			availableSelections.add(0,new Selection(Component.translatable("gui.close"), FlatIcon.CROSS.toCIcon(), Selection.NO_ACTION));
 		}
 		return rslt;
 	}

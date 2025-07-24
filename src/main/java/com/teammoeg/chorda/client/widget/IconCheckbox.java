@@ -20,6 +20,7 @@
 package com.teammoeg.chorda.client.widget;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
 
@@ -30,7 +31,7 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 
 public class IconCheckbox extends Checkbox {
-    private static final IconButton.Icon SELECTED_ICON = IconButton.Icon.CHECK;
+    private static final FlatIcon SELECTED_ICON = FlatIcon.CHECK;
     private int scale;
 
     public IconCheckbox(int pX, int pY, Component pMessage, boolean pSelected) {
@@ -54,7 +55,7 @@ public class IconCheckbox extends Checkbox {
 
     @Override
     public void renderWidget(@NotNull GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        IconButton.Icon icon = selected() ? SELECTED_ICON : IconButton.Icon.CROSS;
+        FlatIcon icon = selected() ? SELECTED_ICON : FlatIcon.CROSS;
         RenderSystem.enableDepthTest();
         pGuiGraphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();

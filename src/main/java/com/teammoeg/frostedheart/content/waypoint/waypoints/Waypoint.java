@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.waypoint.waypoints;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
@@ -29,7 +30,6 @@ import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.client.widget.IconButton;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
@@ -51,11 +51,11 @@ public class Waypoint extends AbstractWaypoint {
     /**
      * 路径点显示的图标
      */
-    public IconButton.Icon icon = IconButton.Icon.BOX;
+    public FlatIcon icon = FlatIcon.BOX;
     /**
      * {@link #focused} 为 {@code true} 时使用的图标
      */
-    public IconButton.Icon focusIcon = IconButton.Icon.BOX_ON;
+    public FlatIcon focusIcon = FlatIcon.BOX_ON;
     /**
      * 悬浮文本中最长文本的长度，用于显示背景
      */

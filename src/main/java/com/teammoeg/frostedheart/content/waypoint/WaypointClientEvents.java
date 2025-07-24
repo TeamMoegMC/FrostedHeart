@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.waypoint;
 
-import com.teammoeg.chorda.client.widget.IconButton;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.wheelmenu.SelectionBuilder;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuSelectionRegisterEvent;
@@ -18,12 +18,12 @@ public class WaypointClientEvents {
 	public static void registerSelection(WheelMenuSelectionRegisterEvent event) {
 		SelectionBuilder.create()
 			.message(Component.translatable("waypoint.frostedheart.quick_waypoint"))
-			.icon(IconButton.Icon.SIGHT.toCIcon())
+			.icon(FlatIcon.SIGHT.toCIcon())
 			.selected(s -> ClientWaypointManager.fromPickedBlock())
 			.register(event, FHMain.rl("waypoint/quick_waypoint"));
 		SelectionBuilder.create()
 			.message(Component.translatable("waypoint.frostedheart.del_quick_waypoint"))
-			.icon(IconButton.Icon.BOX.toCIcon())
+			.icon(FlatIcon.BOX.toCIcon())
 			.color(0xFFFFFF)
 			.visibleWhen(s -> ClientWaypointManager.containsWaypoint("picked_block"))
 			.selected(s -> ClientWaypointManager.removeWaypoint("picked_block"))
