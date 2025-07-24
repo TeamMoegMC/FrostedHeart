@@ -87,8 +87,6 @@ public class ItemWidget extends UIWidget {
 
     @Override
     public void getTooltip(Consumer<Component> tooltip) {
-        for (Component tooltipLine : item.getTooltipLines(ClientUtils.getPlayer(), TooltipFlag.NORMAL)) {
-            tooltip.accept(tooltipLine);
-        }
+        item.getTooltipLines(ClientUtils.getPlayer(), TooltipFlag.NORMAL).forEach(tooltip);
     }
 }

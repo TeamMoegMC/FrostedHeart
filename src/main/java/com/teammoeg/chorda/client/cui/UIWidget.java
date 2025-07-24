@@ -2,6 +2,7 @@ package com.teammoeg.chorda.client.cui;
 
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.ui.Rect;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.Font;
@@ -178,5 +179,7 @@ public class UIWidget{
 		return parent.getManager();
 	}
 
-
+	public Rect getBounding() {
+		return new Rect(getX(), getY(), getWidth(), getHeight());
+	}
 }

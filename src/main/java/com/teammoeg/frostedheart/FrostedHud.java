@@ -32,6 +32,7 @@ import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.ui.*;
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.ui.UV.Transition;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.ClientClimateData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.TemperatureFrame;
@@ -977,10 +978,24 @@ public class FrostedHud {
         int mouseY = MouseHelper.getScaledY();
         boolean shift = Screen.hasShiftDown();
         List<Object> lines = new ArrayList<>();
-        Rect box = new Rect(0, 0, 0, 0);
+        Rect hovered = new Rect(0, 0, 0, 0);
 
         stack.pose().pushPose();
-        stack.pose().translate(0, 0, 2000);
+        stack.pose().translate(0, 0, 1200);
+
+        // 复制颜色
+        int x = (int) (mc.mouseHandler.isMouseGrabbed() ? mc.getWindow().getWidth() *0.5F : mc.mouseHandler.xpos());
+        int y = (int) (mc.mouseHandler.isMouseGrabbed() ? mc.getWindow().getHeight()*0.5F : mc.mouseHandler.ypos());
+        int pick = Colors.getColorAt(x, y);
+        String hex = Colors.toHexString(pick);
+        if (ClientUtils.isKeyDown(GLFW.GLFW_KEY_C)) {
+            ClientUtils.copyToClipboard(hex);
+        }
+
+        lines.add(Component.empty()
+                .append(Components.withColor("█", pick))
+                .append(" | #" + hex)
+                .withStyle(ChatFormatting.GRAY));
         lines.add(DebugScreen.message);
         if (ClientWaypointManager.hasWaypoint()) {
             lines.add("All Waypoints:");
@@ -1003,11 +1018,11 @@ public class FrostedHud {
             var pLayer = cui.getPrimaryLayer();
             for (UIWidget element : pLayer.getElements()) {
                 // class name
-                String className = element.getClass().getSimpleName().isBlank() ? element.getClass().getName() : element.getClass().getSimpleName();
+                String name = element.getClass().getSimpleName().isBlank() ? element.getClass().getName() : element.getClass().getSimpleName();
                 if ((element.isMouseOver() || shift)) {
-                    lines.add(Component.literal(className).withStyle(ChatFormatting.GOLD));
+                    lines.add(Component.literal(name).withStyle(ChatFormatting.GOLD));
                 } else {
-                    lines.add(className);
+                    lines.add(name);
                 }
 
                 if (element instanceof Layer layer) {
@@ -1022,35 +1037,38 @@ public class FrostedHud {
                             Iterator<UIWidget> iterator = topEntry.getKey();
                             int indentLevel = topEntry.getValue();
 
+                            // 开盒widget
                             if (iterator.hasNext()) {
                                 UIWidget widget = iterator.next();
-                                // 开盒widget
                                 if (widget.isMouseOver()) {
                                     hoveredEle = widget;
                                     il = indentLevel;
                                 }
+
+                                // 文本
+                                int color = Color.HSBtoRGB(indentLevel / 6F, 1, 1);
+                                var title = widget.getTitle().copy();
+                                var mem = Component.literal("@" + Integer.toHexString(widget.hashCode())).withStyle(ChatFormatting.GRAY);
+                                var isMouseOver = widget.isMouseOver() || shift;
+                                name = widget.getClass().getSimpleName();
+                                name = name.isBlank() ? widget.getClass().getName() : name;
+                                if (title.getString().isBlank()) {
+                                    title = Component.literal(name);
+                                } else {
+                                    title.append(Component.literal(" | " + name).withStyle(ChatFormatting.GRAY));
+                                }
+                                var c = Component.literal("  ".repeat(indentLevel))
+                                        .append(isMouseOver ? " ▼ " : " ▶ ")
+                                        .append(isMouseOver ? title.append(mem) : title)
+                                        .withStyle(Components.colorStyle(hoveredEle == widget ? 0xFFAA00 : color));
+                                lines.add(c);
+
+                                // 渲染边框
+                                Rect b = CGuiHelper.getWidgetRect(widget, pLayer);
                                 if (shift && !Screen.hasControlDown()) {
-                                    Rect b = CGuiHelper.getWidgetRect(widget, pLayer);
-                                    int color = Color.HSBtoRGB((indentLevel & 0xF) / 6F, 1, 1);
                                     CGuiHelper.drawRect(stack, b, Colors.setAlpha(color, 0.1F));
                                     CGuiHelper.drawBox(stack, b, color, false);
                                 }
-
-                                className = widget.getClass().getSimpleName().isBlank() ? widget.getClass().getName() : widget.getClass().getSimpleName();
-                                String indent = "  ".repeat(indentLevel);
-                                var c = Component.literal(indent + (widget instanceof Layer && (widget.isMouseOver() || shift) ? " ▼ " : " ▶ "));
-                                boolean hasTitle = !widget.getTitle().getString().isBlank();
-                                var title = hasTitle ? widget.getTitle().copy() : Component.literal(className).withStyle(ChatFormatting.ITALIC);
-                                if ((widget.isMouseOver() || shift)) {
-                                    c.append(title.withStyle(ChatFormatting.GOLD));
-                                    if (hasTitle) c.append(" | " + className);
-                                    c.append(Component.literal("@" + Integer.toHexString(widget.hashCode())).withStyle(ChatFormatting.ITALIC));
-                                    String bound = " | X=" + widget.getX() + ", Y=" + widget.getY() + ", W=" + widget.getWidth() + ", H=" + widget.getHeight();
-                                    c.append(bound).append(" | " + CGuiHelper.getWidgetRect(widget, pLayer)).withStyle(ChatFormatting.GRAY);
-                                } else {
-                                    c.append(title);
-                                }
-                                lines.add(c);
 
                                 if (widget instanceof Layer childLayer && (widget.isMouseOver() || shift)) {
                                     entries.push(new AbstractMap.SimpleEntry<>(childLayer.getElements().iterator(), indentLevel + 1));
@@ -1060,27 +1078,34 @@ public class FrostedHud {
                             }
                         }
 
-                        if (hoveredEle != null && !shift && !Screen.hasControlDown()) {
-                            if (hoveredEle instanceof Layer layer1) {
-                                for (int i = 0; i < layer1.getElements().size(); i++) {
-                                    UIWidget le = layer1.getElements().get(i);
-                                    Rect b = CGuiHelper.getWidgetRect(le, pLayer);
-                                    int color = Color.HSBtoRGB((il+1 & 0xF) / 6F, 1, 1);
-                                    CGuiHelper.drawRect(stack, b, Colors.setAlpha(color, 0.1F));
-                                    CGuiHelper.drawBox(stack, b, color, false);
-                                }
-                            }
+                        // 渲染选中的组件和子组件的边框
+                        if (hoveredEle != null && !Screen.hasControlDown()) {
                             Rect b = CGuiHelper.getWidgetRect(hoveredEle, pLayer);
-                            int color = Color.HSBtoRGB((il & 0xF) / 6F, 1, 1);
-                            CGuiHelper.drawRect(stack, b, Colors.setAlpha(color, 0.1F));
-                            CGuiHelper.drawBox(stack, b, color, false);
+                            if (!shift) {
+                                if (hoveredEle instanceof Layer layer1) {
+                                    for (int i = 0; i < layer1.getElements().size(); i++) {
+                                        UIWidget le = layer1.getElements().get(i);
+                                        Rect b1 = CGuiHelper.getWidgetRect(le, pLayer);
+                                        int color = Color.HSBtoRGB((il+1) / 6F, 1, 1);
+                                        CGuiHelper.drawRect(stack, b1, Colors.setAlpha(color, 0.1F));
+                                        CGuiHelper.drawBox(stack, b1, color, false);
+                                    }
+                                }
+                                int color = Color.HSBtoRGB(il / 6F, 1, 1);
+                                CGuiHelper.drawRect(stack, b, Colors.setAlpha(color, 0.1F));
+                                CGuiHelper.drawBox(stack, b, color, false);
+                            }
+
+                            String ui = "x=" + hoveredEle.getX() + ", y=" + hoveredEle.getY();
+                            String real = "x=" + b.getX() + ", y=" + b.getY() + ", w=" + b.getW() + ", h=" + b.getH();
+                            CGuiHelper.drawStringLines(stack, font, List.of(ui, real), b.getX()+1, b.getY()-18, Colors.CYAN, 0, false, true);
                         }
                     } else {
                         for (int i = 0; i < layer.getElements().size(); i++) {
                             UIWidget layerElement = layer.getElements().get(i);
                             if (i < 3) {
-                                className = layerElement.getClass().getSimpleName().isBlank() ? layerElement.getClass().getName() : layerElement.getClass().getSimpleName();
-                                lines.add(" ▶ " + className);
+                                name = layerElement.getClass().getSimpleName().isBlank() ? layerElement.getClass().getName() : layerElement.getClass().getSimpleName();
+                                lines.add(" ▶ " + name);
                             }
                         }
                         if (layer.getElements().size() > 3) {
@@ -1095,19 +1120,20 @@ public class FrostedHud {
                 if (a instanceof ObjectSelectionList<?> l) {
                     boolean focused = l.isFocused() || l.isMouseOver(mouseX, mouseY) || shift;
                     lines.add(Component.empty()
-                                    .append(focused ? " ▼ " : " ▶ ").append(l.getClass().getSimpleName() + ".class")
-                                    .withStyle(focused ? ChatFormatting.GOLD : ChatFormatting.RESET));
+                            .append(focused ? " ▼ " : " ▶ ").append(l.getClass().getSimpleName() + ".class")
+                            .withStyle(focused ? ChatFormatting.GOLD : ChatFormatting.RESET));
                     if (focused) {
                         lines.add("   ▶ " + l.children().size() + " entries");
                         if (shift) {
                             stack.fill(l.getLeft(), l.getTop(), l.getRight(), l.getBottom(), Colors.setAlpha(Colors.RED, 0.1F));
                             CGuiHelper.drawBox(stack, l.getLeft(), l.getTop(), l.getWidth(), l.getHeight(), Colors.RED, false);
                         } else {
-                            box = new Rect(l.getLeft(), l.getTop(), l.getWidth(), l.getHeight());
+                            hovered = new Rect(l.getLeft(), l.getTop(), l.getWidth(), l.getHeight());
                         }
                     }
                     continue;
                 }
+
                 var c = Component.literal(" ▶ ");
                 if (a instanceof AbstractWidget w) {
                     String name = w.getMessage().getString();
@@ -1116,34 +1142,28 @@ public class FrostedHud {
                     }
                     c.append(name);
                 }
+
                 if (a instanceof AbstractWidget a1 && (a1.isHoveredOrFocused() || shift)) {
                     c.withStyle(ChatFormatting.GOLD);
                     if (shift) {
-                        stack.fill(a1.getX(), a1.getY(), a1.getX()+a1.getWidth(), a1.getY()+a1.getHeight(), Colors.setAlpha(Colors.CYAN, 0.1F));
+                        stack.fill(a1.getX(), a1.getY(), a1.getX()+a1.getWidth(), a1.getY()+a1.getHeight(), Colors.setAlpha(Colors.RED, 0.1F));
                         CGuiHelper.drawBox(stack, a1.getX(), a1.getY(), a1.getWidth(), a1.getHeight(), Colors.RED, false);
                     } else {
-                        box = new Rect(a1.getX(), a1.getY(), a1.getWidth(), a1.getHeight());
+                        hovered = new Rect(a1.getX(), a1.getY(), a1.getWidth(), a1.getHeight());
                     }
                 }
                 lines.add(c);
             }
         }
 
-        // 复制颜色
-        int x = (int) (mc.mouseHandler.isMouseGrabbed() ? mc.getWindow().getWidth() *0.5F : mc.mouseHandler.xpos());
-        int y = (int) (mc.mouseHandler.isMouseGrabbed() ? mc.getWindow().getHeight()*0.5F : mc.mouseHandler.ypos());
-        int color = Colors.getColorAt(x, y);
-        if (ClientUtils.isKeyDown(GLFW.GLFW_KEY_C)) {
-            mc.keyboardHandler.setClipboard(Colors.toHexString(color));
-        }
         // 组件overlay
         if (!Screen.hasControlDown()) {
-            stack.fill(box.getX(), box.getY(), box.getX() + box.getW(), box.getY() + box.getH(), Colors.setAlpha(Colors.RED, 0.1F));
-            CGuiHelper.drawBox(stack, box.getX(), box.getY(), box.getW(), box.getH(), Colors.RED, false);
+            stack.fill(hovered.getX(), hovered.getY(), hovered.getX() + hovered.getW(), hovered.getY() + hovered.getH(), Colors.setAlpha(Colors.RED, 0.1F));
+            CGuiHelper.drawBox(stack, hovered.getX(), hovered.getY(), hovered.getW(), hovered.getH(), Colors.RED, false);
         }
         // 文本
         if (!Screen.hasAltDown()) {
-            CGuiHelper.drawStringLines(stack, font, lines.subList(0, Math.min(lines.size(), 100)), 0, 0, Colors.CYAN, 1, true, true);
+            CGuiHelper.drawStringLines(stack, font, lines.subList(0, Math.min(lines.size(), 256)), 0, 0, Colors.CYAN, 1, true, true);
         }
         stack.pose().popPose();
     }

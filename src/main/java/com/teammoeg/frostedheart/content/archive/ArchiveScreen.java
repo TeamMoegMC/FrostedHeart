@@ -3,22 +3,23 @@ package com.teammoeg.frostedheart.content.archive;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.CUIScreen;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
 
 public final class ArchiveScreen extends PrimaryLayer {
     public static String path;
-    public final DetailBox detailBox;
+    public final ContentPanel contentPanel;
     public final CategoryBox categoryBox;
 
     public ArchiveScreen() {
-        this.detailBox = new DetailBox(this);
-        this.categoryBox = new CategoryBox(this, detailBox);
+        this.contentPanel = new ContentPanel(this);
+        this.categoryBox = new CategoryBox(this, contentPanel);
     }
 
     @Override
     public void addUIElements() {
-        add(detailBox);
+        add(contentPanel);
         add(categoryBox);
-        add(detailBox.scrollBar);
+        add(contentPanel.scrollBar);
         add(categoryBox.scrollBar);
     }
 

@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.ui;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -35,8 +36,10 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.Layer;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import net.minecraft.client.gui.Font;
+import net.minecraftforge.common.util.Size2i;
 import org.joml.Matrix4f;
 
 import com.mojang.blaze3d.platform.Lighting;
@@ -405,8 +408,10 @@ public class CGuiHelper {
 
 		int lineOffset = 0;
 		for (Object text : texts) {
-			lineOffset += (font.lineHeight + lineSpace);
-			if (text == null) continue;
+			if (text == null) {
+				lineOffset += (font.lineHeight + lineSpace);
+				continue;
+			}
 
 			int textWidth;
 			if (text instanceof FormattedCharSequence formatted) {
@@ -416,7 +421,10 @@ public class CGuiHelper {
 			} else {
 				textWidth = font.width(text.toString());
 			}
-			if (textWidth <= 0) continue;
+			if (textWidth <= 0) {
+				lineOffset += (font.lineHeight + lineSpace);
+				continue;
+			}
 
 			int drawX = switch (alignment) {
 				case LEFT -> x;
@@ -442,6 +450,8 @@ public class CGuiHelper {
 			} else {
 				graphics.drawString(font, text.toString(), drawX, drawY, color, shadow);
 			}
+
+			lineOffset += (font.lineHeight + lineSpace);
 		}
 	}
 
@@ -524,7 +534,7 @@ public class CGuiHelper {
 			// 背景
 			if (backgroundColor != 0) {
 				int bgX1 = drawX - 2;
-				int bgY1 = drawY - 2;
+				int bgY1 = drawY - 1;
 				int bgX2 = drawX + textWidth + 2;
 				int bgY2 = bgY1 + (font.lineHeight + lineSpace);
 				graphics.fill(bgX1, bgY1, bgX2, bgY2, backgroundColor);
@@ -668,5 +678,21 @@ public class CGuiHelper {
 		}
 
 		return new Rect(x, y, w, h);
+	}
+
+	@Nullable
+	public static Size2i getImgSize(ResourceLocation location) {
+		if (location != null) {
+			var resource = ClientUtils.getMc().getResourceManager().getResource(location);
+			if (resource.isPresent()) {
+				try (InputStream stream = resource.get().open()) {
+					BufferedImage image= ImageIO.read(stream);
+					return new Size2i(image.getWidth(), image.getHeight());
+				} catch (IOException e) {
+					FHMain.LOGGER.warn(e);
+				}
+			}
+		}
+		return null;
 	}
 }

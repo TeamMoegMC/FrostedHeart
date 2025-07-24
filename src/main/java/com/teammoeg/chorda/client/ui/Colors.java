@@ -46,7 +46,10 @@ public class Colors {
         return setAlpha(color, (int)(alpha*255));
     }
 
-    public static int blendColor(int color1, int color2, float ratio) {
+    /**
+     * @param ratio 第一个颜色的比例
+     */
+    public static int blend(int color1, int color2, float ratio) {
         if (color1 == color2) return color1;
         ratio = Mth.clamp(ratio, 0, 1);
 
