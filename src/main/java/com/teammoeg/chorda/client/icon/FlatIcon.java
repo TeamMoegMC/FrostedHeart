@@ -1,8 +1,14 @@
 package com.teammoeg.chorda.client.icon;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.client.widget.IconButton;
+import com.teammoeg.chorda.client.ui.Colors;
+import lombok.Getter;
+import lombok.Setter;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.util.Size2i;
 
 public enum FlatIcon {
@@ -35,6 +41,10 @@ public enum FlatIcon {
     RIGHT_SLIDE  (0 , 50),
     WRENCH       (0 , 70);
 
+    public static final ResourceLocation ICON_LOCATION = Chorda.rl("textures/gui/hud/flat_icon.png");
+    public static final int TEXTURE_HEIGHT = 80;
+    public static final int TEXTURE_WIDTH = 80;
+
     public final int x;
     public final int y;
     public final Size2i size;
@@ -52,18 +62,62 @@ public enum FlatIcon {
     }
 
     public void render(PoseStack pose, int x, int y, int color) {
-        CGuiHelper.bindTexture(IconButton.ICON_LOCATION);
-        CGuiHelper.blitColored(pose, x, y, this.size.width, this.size.height, this.x, this.y, this.size.width, this.size.height, IconButton.TEXTURE_WIDTH, IconButton.TEXTURE_HEIGHT, color);
+        CGuiHelper.bindTexture(ICON_LOCATION);
+        CGuiHelper.blitColored(pose, x, y, this.size.width, this.size.height, this.x, this.y, this.size.width, this.size.height, TEXTURE_WIDTH, TEXTURE_HEIGHT, color);
     }
 
     public static void render(FlatIcon icon, PoseStack pose, int x, int y, int color) {
         icon.render(pose, x, y, color);
     }
 
+    public FlatIconWidget toWidget(UIWidget parent) {
+        var widget = new FlatIconWidget(parent);
+        widget.setIcon(this);
+        return widget;
+    }
+
+    public FlatIconWidget toWidget(UIWidget parent, int color) {
+        var widget = new FlatIconWidget(parent, color);
+        widget.setIcon(this);
+        return widget;
+    }
+
+    @Getter
+    @Setter
+    public static class FlatIconWidget extends UIWidget {
+        protected FlatIcon icon;
+        protected int color;
+
+        public FlatIconWidget(UIWidget parent) {
+            this(parent, Colors.WHITE);
+        }
+
+        public FlatIconWidget(UIWidget parent, int color) {
+            super(parent);
+            this.color = color;
+        }
+
+        @Override
+        public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+            if (icon != null) {
+                icon.render(graphics.pose(), x, y, color);
+            }
+        }
+
+        @Override
+        public boolean isVisible() {
+            return hasIcon() && super.isVisible();
+        }
+
+        public boolean hasIcon() {
+            return this.icon != null;
+        }
+    }
+
     private CIcons.CIcon cache;
     public CIcons.CIcon toCIcon() {
         if (cache == null)
-            cache = CIcons.getIcon(IconButton.ICON_LOCATION, x, y, size.width, size.height, IconButton.TEXTURE_WIDTH, IconButton.TEXTURE_HEIGHT);
+            cache = CIcons.getIcon(ICON_LOCATION, x, y, size.width, size.height, TEXTURE_WIDTH, TEXTURE_HEIGHT);
         return cache;
     }
 }

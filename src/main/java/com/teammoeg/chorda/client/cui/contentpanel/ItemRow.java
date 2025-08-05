@@ -2,8 +2,10 @@ package com.teammoeg.chorda.client.cui.contentpanel;
 
 import com.teammoeg.chorda.client.cui.ItemWidget;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -13,7 +15,7 @@ import java.util.List;
 public class ItemRow extends Line<ItemRow> {
     protected final List<ItemStack> items = new ArrayList<>();
     protected int rowSize = 1;
-    protected int backgroundColor = 0;
+    protected int backgroundColor = Colors.L_BG_GRAY;
 
     public ItemRow(UIWidget parent, Collection<ItemStack> items, Alignment alignment) {
         super(parent, alignment);
@@ -39,10 +41,10 @@ public class ItemRow extends Line<ItemRow> {
 
     @Override
     public void refresh() {
-        rowSize = getWidth() / (ItemWidget.ITEM_WIDTH+4);
+        super.refresh();
+        rowSize = Math.max(getWidth() / (ItemWidget.ITEM_WIDTH+4), 1);
         setHeight(Math.max((int)Math.ceil((double)items.size() / rowSize), 1) * (ItemWidget.ITEM_HEIGHT+4));
         alignWidgets();
-        System.out.println("refresh");
     }
 
     @Override
@@ -74,5 +76,22 @@ public class ItemRow extends Line<ItemRow> {
     public ItemRow bgColor(int color) {
         this.backgroundColor = color;
         return this;
+    }
+
+    @Override
+    public Component getTitle() {
+        var title = Component.empty();
+        int max = Math.min(items.size(), 4);
+        for (int i = 0; i < max; i++) {
+            ItemStack item = items.get(i);
+            title.append(item.getDisplayName());
+            if (i < max-1) {
+                title.append(", ");
+            }
+        }
+        if (items.size() > 4) {
+            title.append("...");
+        }
+        return title;
     }
 }

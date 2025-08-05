@@ -39,7 +39,6 @@ import com.teammoeg.chorda.math.Dimension2D;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
-import com.teammoeg.frostedheart.content.tips.TipRenderer;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FGuis;
@@ -52,7 +51,6 @@ import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.loading.FMLPaths;
-
 import org.joml.Quaternionf;
 
 import java.io.File;
@@ -246,7 +244,7 @@ public class WheelMenuRenderer {
 		degrees.clear();
 		wheelRadius = FHConfig.CLIENT.wheelMenuRadius.get();
 		ringWidth = 30 * Math.max(1, wheelRadius / FHConfig.CLIENT.wheelMenuRadius.getDefault());
-		virtualScreen = TipRenderer.isTipRendering() ? new CircleDimension(ClientUtils.screenWidth()) : new CircleDimension(wheelRadius * 2);
+		virtualScreen = new CircleDimension(wheelRadius * 2);
 		openIfNewSelection();
 		ArrayList<ResourceLocation> loc=new ArrayList<>(displayedSelections);
 		

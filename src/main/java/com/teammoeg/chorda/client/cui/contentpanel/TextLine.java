@@ -1,8 +1,12 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
 import com.teammoeg.chorda.client.StringTextComponentParser;
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -11,6 +15,7 @@ import net.minecraft.util.FormattedCharSequence;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class TextLine extends Line<TextLine> {
     @Getter
@@ -22,6 +27,7 @@ public class TextLine extends Line<TextLine> {
     protected boolean isQuote = false;
     protected boolean hasShadow = false;
     protected int scale = 1;
+    protected Button button = null;
 
     public TextLine(UIWidget parent, Component text, Alignment alignment) {
         super(parent, alignment);
@@ -60,10 +66,10 @@ public class TextLine extends Line<TextLine> {
                 case RIGHT -> -2;
             };
             textW -= offset;
-            pose.translate(offset, 0, 0);
+            pose.translate(offset, 1F, 0);
         }
 
-        pose.translate(0, isQuote ? 2.5F : 1.5F, 0);
+        pose.translate(0, 2F, 0);
 
         CGuiHelper.drawStringLinesInBound(graphics, getFont(), splitText, x, y, textW, color, 3,
                 hasShadow, backgroundColor, alignment);
@@ -107,15 +113,70 @@ public class TextLine extends Line<TextLine> {
         return this;
     }
 
+    public TextLine button(Component title, Consumer<MouseButton> clickAction) {
+        return button(title, FlatIcon.JUMP, clickAction);
+    }
+
+    public TextLine button(Component title, FlatIcon icon, Consumer<MouseButton> clickAction) {
+        if (clickAction == null) return this;
+        button = new TLButton(title, icon, clickAction);
+        add(button);
+        refresh();
+        return this;
+    }
+
+    class TLButton extends Button {
+        Consumer<MouseButton> clickAction;
+        FlatIcon fIcon;
+
+        public TLButton(Component t, FlatIcon icon, Consumer<MouseButton> clickAction) {
+            super(TextLine.this, t, icon.toCIcon());
+            this.clickAction = clickAction;
+            this.fIcon = icon;
+            setSize(icon.size.width + 2, icon.size.height + 2);
+        }
+
+        @Override
+        public void onClicked(MouseButton button) {
+            clickAction.accept(button);
+        }
+
+        @Override
+        public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+            graphics.fill(x, y, x+w, y+h, Colors.L_BG_GRAY);
+            icon.draw(graphics, x+1, y+1, fIcon.size.width, fIcon.size.height);
+            if (isMouseOver()) {
+                CGuiHelper.drawBox(graphics, x, y, w, h, trimmingColor == 0 ? Colors.CYAN : trimmingColor, true);
+            }
+        }
+
+        @Override
+        public void getTooltip(Consumer<Component> tooltip) {
+            tooltip.accept(getTitle());
+        }
+    }
+
     @Override
     public void refresh() {
         super.refresh();
+        int width = (getWidth() - ((isTitle||isQuote) ? 8 : 0));
+        width -= button == null ? 0 : button.getWidth();
+        width = (int)(width * (1.0F/scale));
+
         var pre = text.getString().split("\\n");
         splitText.clear();
         for (String s : pre) {
-            int width = (int)(getWidth() * (1.0F/scale) - ((isTitle||isQuote) ? 8 : 0));
             splitText.addAll(getFont().split(StringTextComponentParser.parse(s), width));
         }
         setHeight(splitText.size() * (DEF_LINE_HEIGHT + (isQuote ? 2 : 0)) * scale);
+
+        if (button != null) {
+            button.setPos(getWidth() - button.getWidth(), (getHeight()-button.getHeight())/2);
+        }
+    }
+
+    @Override
+    public Component getTitle() {
+        return getText();
     }
 }

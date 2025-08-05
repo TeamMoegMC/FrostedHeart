@@ -121,11 +121,15 @@ public final class Components {
     }
 
     public static MutableComponent withColor(MutableComponent text, int color) {
-        return text.withStyle(colorStyle(color));
+        return text.withStyle(color(color));
     }
 
-    public static Style colorStyle(int color) {
-        return Style.EMPTY.withColor(color);
+    public static Style color(int color) {
+        return color(Style.EMPTY, color);
+    }
+
+    public static Style color(Style style, int color) {
+        return style.withColor(color);
     }
 }
 

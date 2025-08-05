@@ -22,22 +22,20 @@ package com.teammoeg.frostedheart.content.waypoint.waypoints;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.chorda.client.icon.FlatIcon;
-import com.teammoeg.chorda.client.ui.Colors;
-import com.teammoeg.frostedheart.content.archive.Alignment;
-import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
-
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-
+import com.teammoeg.chorda.client.ui.Colors;
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.frostedheart.content.archive.Alignment;
+import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
@@ -167,11 +165,7 @@ public class Waypoint extends AbstractWaypoint {
     public JsonElement serialize() {
         JsonObject json = new JsonObject();
         json.addProperty("id", id);
-        if (displayName instanceof TranslatableContents name) {
-            json.addProperty("display_name", name.getKey());
-        } else {
-            json.addProperty("display_name", displayName.getString());
-        }
+        json.addProperty("display_name", Components.getKeyOrElseStr(displayName));
         json.addProperty("dimension", dimension.toString());
         json.addProperty("x", target.x);
         json.addProperty("y", target.y);
@@ -191,11 +185,7 @@ public class Waypoint extends AbstractWaypoint {
     public CompoundTag serializeNBT() {
         CompoundTag nbt = new CompoundTag();
         nbt.putString("id", id);
-        if (displayName instanceof TranslatableContents name) {
-            nbt.putString("display_name", name.getKey());
-        } else {
-            nbt.putString("display_name", displayName.getString());
-        }
+        nbt.putString("display_name", Components.getKeyOrElseStr(displayName));
         nbt.putString("dimension", dimension.toString());
         nbt.putDouble("x", target.x);
         nbt.putDouble("y", target.y);

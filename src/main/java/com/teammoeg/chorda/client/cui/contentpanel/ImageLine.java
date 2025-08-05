@@ -8,6 +8,7 @@ import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.util.Size2i;
 
@@ -27,7 +28,7 @@ public class ImageLine extends Line<ImageLine> {
     public void render(GuiGraphics graphics, int x, int y, int w, int h) {
         super.render(graphics, x, y, w, h);
         if (!isImgValid()) {
-            graphics.drawCenteredString(getFont(), Component.literal(imgLocation.toString()).withStyle(ChatFormatting.RED),
+            graphics.drawCenteredString(getFont(), ((MutableComponent)getTitle()).withStyle(ChatFormatting.RED),
                     x+w/2, y+2, color);
             return;
         }
@@ -63,6 +64,7 @@ public class ImageLine extends Line<ImageLine> {
 
     @Override
     public void refresh() {
+        setSize(parent.getWidth(), DEF_LINE_HEIGHT);
         if (isImgValid()) {
             int w = imgSize.width;
             int h = imgSize.height;
@@ -76,8 +78,11 @@ public class ImageLine extends Line<ImageLine> {
             }
             setHeight(h+6);
             imgUV = new UV(0, 0, w, h, w, h);
-            return;
         }
-        setSize(parent.getWidth(), DEF_LINE_HEIGHT);
+    }
+
+    @Override
+    public Component getTitle() {
+        return Component.literal(imgLocation.toString());
     }
 }

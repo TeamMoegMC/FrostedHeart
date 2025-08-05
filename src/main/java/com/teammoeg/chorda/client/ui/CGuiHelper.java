@@ -19,29 +19,6 @@
 
 package com.teammoeg.chorda.client.ui;
 
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.OptionalDouble;
-import java.util.function.Supplier;
-
-import javax.annotation.Nullable;
-import javax.imageio.ImageIO;
-
-import com.teammoeg.chorda.client.ClientUtils;
-
-import com.teammoeg.chorda.client.cui.Layer;
-import com.teammoeg.chorda.client.cui.PrimaryLayer;
-import com.teammoeg.chorda.client.cui.UIWidget;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.archive.Alignment;
-import net.minecraft.client.gui.Font;
-import net.minecraftforge.common.util.Size2i;
-import org.joml.Matrix4f;
-
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -51,8 +28,16 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-
+import com.mojang.datafixers.util.Pair;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.CUIScreen;
+import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.archive.Alignment;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
@@ -71,7 +56,20 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.client.ForgeRenderTypes;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
+import net.minecraftforge.common.util.Size2i;
 import net.minecraftforge.fluids.FluidStack;
+import org.joml.Matrix4f;
+
+import javax.annotation.Nullable;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.OptionalDouble;
+import java.util.function.Supplier;
 
 /**
  * Convenience functions for gui rendering
@@ -375,6 +373,16 @@ public class CGuiHelper {
 
 	}
 
+	public record LineDrawingContext(int lineSize, int maxWidth) {}
+	public static Pair<List<FormattedCharSequence>, LineDrawingContext> split(Component text, Font font, int w) {
+		var lines = font.split(text, w);
+		int maxW = 0;
+		for (FormattedCharSequence line : lines) {
+			maxW = Math.max(font.width(line), maxW);
+		}
+		return new Pair<>(lines, new LineDrawingContext(lines.size(), maxW));
+	}
+
 	/**
 	 * 渲染列表中的所有文本
 	 *
@@ -657,15 +665,19 @@ public class CGuiHelper {
 		drawBox(graphics, box.getX(), box.getY(), box.getW(), box.getH(), color, inner);
 	}
 
-	public static Rect getWidgetRect(UIWidget widget, PrimaryLayer primaryLayer) {
-		int x = widget.getParent().getContentX() + widget.getX() + (ClientUtils.getMc().getWindow().getGuiScaledWidth() - primaryLayer.getWidth())/2;
-		int y = widget.getParent().getContentY() + widget.getY() + (ClientUtils.getMc().getWindow().getGuiScaledHeight() - primaryLayer.getHeight())/2;
-		int w = widget.getWidth();
-		int h = widget.getHeight();
+	public static Rect getWidgetBounds(UIWidget widget, PrimaryLayer primaryLayer) {
+		int x = widget.getScreenX();
+		int y = widget.getScreenY();
+		if (primaryLayer.getManager() instanceof CUIScreen) {
+			x += (ClientUtils.getMc().getWindow().getGuiScaledWidth() - primaryLayer.getWidth())/2;
+			y += (ClientUtils.getMc().getWindow().getGuiScaledHeight() - primaryLayer.getHeight())/2;
+		} else {
+			x += ClientUtils.screenCenterX();
+			y += ClientUtils.screenCenterY();
+		}
 
 		var w1 = widget.getParent();
 		while (w1.getParent() != null) {
-			w1 = w1.getParent();
 			if (w1 instanceof Layer l) {
 				if (l.isSmoothScrollEnabled()) {
 					x += (int)l.getDisplayOffsetX();
@@ -675,9 +687,10 @@ public class CGuiHelper {
 					y += l.getOffsetY();
 				}
 			}
+			w1 = w1.getParent();
 		}
 
-		return new Rect(x, y, w, h);
+		return new Rect(x, y, widget.getWidth(), widget.getHeight());
 	}
 
 	@Nullable

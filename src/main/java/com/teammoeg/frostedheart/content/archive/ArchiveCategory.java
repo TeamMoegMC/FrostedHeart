@@ -6,31 +6,30 @@ import com.teammoeg.chorda.client.cui.Layer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.category.Category;
+import com.teammoeg.chorda.client.cui.category.CategoryHelper;
+import com.teammoeg.chorda.client.cui.category.Entry;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
+import com.teammoeg.chorda.client.cui.contentpanel.LineHelper;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
-import com.teammoeg.chorda.client.cui.category.Category;
-import com.teammoeg.chorda.client.cui.category.Entry;
-import com.teammoeg.chorda.client.cui.contentpanel.Line;
-import com.teammoeg.chorda.client.cui.contentpanel.LineHelper;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-public class CategoryBox extends Layer {
+public class ArchiveCategory extends Layer {
     public final LayerScrollBar scrollBar;
     protected final ContentPanel panel;
+    private final Category root = new Category(this, Component.literal("root"));
 
-    protected CategoryBox(UIWidget panel, ContentPanel contentPanel) {
+    public static String currentPath = "";
+
+    protected ArchiveCategory(UIWidget panel, ContentPanel contentPanel) {
         super(panel);
         this.panel = contentPanel;
         this.scrollBar = new LayerScrollBar(parent, true, this) {
@@ -39,23 +38,10 @@ public class CategoryBox extends Layer {
                 return false;
             }
         };
-        scrollBar.setScrollStep((Entry.DEF_HEIGHT+2)*2);
+        this.scrollBar.setScrollStep((Entry.DEF_HEIGHT+2)*2);
+        this.root.clearElement();
         addUIElements();
-    }
-
-    @Override
-    public void refresh() {
-        setPosAndSize(0, 0, 100, (int) (ClientUtils.screenHeight()*0.8F));
-
-        recalcContentSize();
-        for (UIWidget element : elements) {
-            element.refresh();
-        }
-        alignWidgets();
-
-        if (getY()+getContentHeight() < getY()+getHeight() || -getOffsetY()>scrollBar.getMax()) {
-            scrollBar.setValue(scrollBar.getMax());
-        }
+        scrollTo(open(currentPath));
     }
 
     @Override
@@ -69,6 +55,51 @@ public class CategoryBox extends Layer {
         pose.popPose();
 
         super.render(graphics, x, y, w, h);
+    }
+
+    public UIWidget open(String path) {
+        var entry = root.open(path);
+        if (entry != null) {
+            currentPath = path;
+            if (entry instanceof ArchiveEntry ae) {
+                // 在内容面板显示内容
+                List<UIWidget> contents = new ArrayList<>(ae.getContents());
+                contents.addAll(ae.getExtraElements());
+                panel.fillContent(contents);
+                // 选中条目
+                ae.getParent().select(ae);
+                // 已读
+                ae.read = ae.read();
+            }
+        }
+        return entry;
+    }
+
+    public void scrollTo(UIWidget widget) {
+        if (widget != null) {
+            scrollBar.setValue(widget.getScreenY());
+        }
+    }
+
+    public UIWidget find(String path) {
+        return root.find(path);
+    }
+
+    @Override
+    public void refresh() {
+        setPosAndSize(0, 0, 100, (int) (ClientUtils.screenHeight()*0.8F));
+
+        recalcContentSize();
+        for (UIWidget element : elements) {
+            element.refresh();
+        }
+        alignWidgets();
+
+        System.out.println(getContentHeight());
+
+        if (getY()+getContentHeight() < getY()+getHeight() || -getOffsetY()>scrollBar.getMax()) {
+            scrollBar.setValue(scrollBar.getMax());
+        }
     }
 
     public void addCategory() {
@@ -100,11 +131,43 @@ public class CategoryBox extends Layer {
             }
         }
         // 在主提示分类里添加所有子分类和无分类提示
-        tipCategory.addEntries(tipEntries);
+        tipCategory.addAll(tipEntries);
+        root.getElements().add(tipCategory);
+    }
+
+    @Override
+    public boolean onKeyPressed(int keyCode, int scanCode, int modifier) {
+        Entry current = root.getSelected();
+        if (current == null) {
+            List<Entry> list = new ArrayList<>();
+            CategoryHelper.collectAllEntries(root, list);
+            if (list.isEmpty()) return super.onKeyPressed(keyCode, scanCode, modifier);
+            current = list.get(0);
+        } else {
+            switch (keyCode) {
+                case GLFW.GLFW_KEY_TAB -> {
+                    if (modifier == GLFW.GLFW_MOD_SHIFT) {
+                        current = CategoryHelper.prev(current);
+                    } else {
+                        current = CategoryHelper.next(current);
+                    }
+                }
+                case GLFW.GLFW_KEY_W, GLFW.GLFW_KEY_UP   -> current = CategoryHelper.prev(current);
+                case GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_DOWN -> current = CategoryHelper.next(current);
+            };
+        }
+
+
+        if (current == root.getSelected()) {
+            return super.onKeyPressed(keyCode, scanCode, modifier);
+        }
+        scrollTo(open(currentPath = CategoryHelper.path(current)));
+        return true;
     }
 
     @Override
     public void addUIElements() {
+        clearElement();
         addCategory();
     }
 
@@ -122,6 +185,7 @@ public class CategoryBox extends Layer {
             this.tip = tip;
             this.children = TipManager.INSTANCE.state().getChildren(tip);
             read = isRead();
+            setIcon(FlatIcon.LIST);
         }
 
         @Override
@@ -149,7 +213,7 @@ public class CategoryBox extends Layer {
         }
 
         @Override
-        public List<Line<?>> getContents() {
+        public Collection<? extends UIWidget> getContents() {
             return LineHelper.fromTip(tip, getPanel());
         }
     }
@@ -176,17 +240,19 @@ public class CategoryBox extends Layer {
 
         public abstract boolean isRead();
 
-        public abstract Collection<Line<?>> getContents();
+        public abstract Collection<? extends UIWidget> getContents();
+
+        public Collection<UIWidget> getExtraElements() {
+            return Collections.emptyList();
+        }
 
         @Override
         public boolean onMousePressed(MouseButton button) {
             if (!isMouseOver()) return false;
 
-            if (isEnabled() && isVisible()) {
-                if (button == MouseButton.LEFT) {
-                    getPanel().fillContent(getContents());
-                    getParent().select(this);
-                    read = read();
+            if (isEnabled() && isVisible() && button == MouseButton.LEFT) {
+                if (getParent().getRoot().getParent() instanceof ArchiveCategory category) {
+                    category.open(CategoryHelper.path(this));
                     return true;
                 }
             }

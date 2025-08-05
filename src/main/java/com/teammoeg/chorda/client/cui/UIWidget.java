@@ -8,6 +8,7 @@ import lombok.Setter;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+
 import java.util.function.Consumer;
 
 public class UIWidget{
@@ -66,11 +67,11 @@ public class UIWidget{
 	}
 
 	public int getScreenX() {
-		return parent.getX() + x;
+		return parent.getScreenX() + x;
 	}
 
 	public int getScreenY() {
-		return parent.getY() + y;
+		return parent.getScreenY() + y;
 	}
 
 
@@ -179,7 +180,7 @@ public class UIWidget{
 		return parent.getManager();
 	}
 
-	public Rect getBounding() {
+	public Rect getBounds() {
 		return new Rect(getX(), getY(), getWidth(), getHeight());
 	}
 }

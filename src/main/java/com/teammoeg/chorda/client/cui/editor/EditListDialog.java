@@ -19,18 +19,6 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
-import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.icon.FlatIcon;
-import org.apache.commons.lang3.mutable.MutableObject;
-
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.MouseHelper;
@@ -42,12 +30,23 @@ import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.lang.Components;
 import lombok.Getter;
+import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import org.apache.commons.lang3.mutable.MutableObject;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * @author  khjxiaogu
@@ -267,18 +266,22 @@ public class EditListDialog<T> extends EditDialog {
         boolean fresh = true;
         @Override
         public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-            if (fresh) {
-                fresh = false;
-                displayY = y;
-            }
-            float ratio = 24.75F / ClientUtils.getMc().getFps();
-            displayY = displayY + (y - displayY) * ratio;
             matrixStack.pose().pushPose();
-            matrixStack.pose().translate(0, displayY-(int)displayY, 0);
-            if(this==moving) {
-                matrixStack.pose().translate(0, 0, 10);
+            // 还是会不可避免的有点小卡顿因为每次刷新所有元素都会重新创建
+            if(moving!=null || Math.abs(displayY)-Math.abs(y) < 0.001F) {
+                if (fresh) {
+                    fresh = false;
+                    displayY = y;
+                } else {
+                    float delta = (Util.getNanos() - ((Layer)getParent()).getLastFrameTime()) / 1_000_000_000.0f;
+                    delta = Math.min(delta, 0.1F);
+                    float f = 1.0f - (float)Math.exp(-delta / 0.05F);
+                    displayY = displayY + (y - displayY) * f;
+                    matrixStack.pose().translate(0, displayY-(int)displayY, 0);
+                    matrixStack.pose().translate(0, 0, 10);
+                    y = (int) displayY;
+                }
             }
-            y = (int) displayY;
 
             super.drawBackground(matrixStack, x, y, w, h);
             boolean mouseOver = isMouseOver();

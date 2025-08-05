@@ -2,17 +2,16 @@ package com.teammoeg.chorda.client.cui.category;
 
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.LimitedTextField;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.Colors;
-import com.teammoeg.chorda.client.cui.LimitedTextField;
 import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
@@ -23,43 +22,39 @@ public class Category extends Layer {
     private final int depth;
     private final LimitedTextField title;
     @Getter
-    protected final Category rootCategory;
+    protected final Category root;
     @Getter
-    protected UIWidget selected;
+    protected Entry selected;
     @Getter
     protected boolean opened = false;
-    protected List<Entry> entries = new ArrayList<>();
     public int backgroundColor = Colors.L_BG_GRAY;
+    protected FlatIcon.FlatIconWidget icon;
 
     public Category(Layer panel, Component title) {
         super(panel);
         setSize(panel.getWidth(), Entry.DEF_HEIGHT);
+
         this.title = new LimitedTextField(this, title, getWidth());
+        this.icon = FlatIcon.RIGHT.toWidget(this, Colors.L_TEXT_GRAY);
+        this.icon.setSize(10, 10);
+        addUIElements();
 
         if (panel instanceof Category p) {
-            rootCategory = p.rootCategory;
+            root = p.root;
             if (p.depth >= MAX_DEPTH) {
                 depth = 1;
-                setParent(p.rootCategory);
-                rootCategory.add(this);
+                setParent(p.root);
+                root.add(this);
                 setTitle(Component.literal("Category depth cannot greater than %s!".formatted(MAX_DEPTH)).withStyle(ChatFormatting.RED));
                 return;
             }
             depth = p.depth + 1;
         } else {
             depth = 0;
-            rootCategory = this;
+            root = this;
         }
-        panel.add(this);
-    }
-
-    @Override
-    public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-        super.render(graphics, x, y, w, h);
-        if (opened) {
-            FlatIcon.DOWN.render(graphics.pose(), x+1, y+3, Colors.L_TEXT_GRAY);
-        } else {
-            FlatIcon.RIGHT.render(graphics.pose(), x, y+4, Colors.L_TEXT_GRAY);
+        if (!panel.getElements().contains(this)) {
+            panel.add(this);
         }
     }
 
@@ -73,11 +68,12 @@ public class Category extends Layer {
 
     @Override
     public void refresh() {
-        setWidth(parent.getWidth() - CHILDREN_OFFSET);
+        setWidth(parent.getWidth() - (parent instanceof Category ? CHILDREN_OFFSET : 0));
         setOffsetY(Entry.DEF_HEIGHT);
         setOffsetX(CHILDREN_OFFSET);
 
         elements.remove(title);
+        elements.remove(icon);
         recalcContentSize();
         if (opened) {
             for (UIWidget ele : elements) {
@@ -88,21 +84,23 @@ public class Category extends Layer {
         } else {
             setHeight(Entry.DEF_HEIGHT);
         }
+        elements.add(icon);
         elements.add(title);
 
+        icon.setPos(-CHILDREN_OFFSET, -Entry.DEF_HEIGHT + 3);
         int titleOffsetX = 4;
-        title.setX(getX() + titleOffsetX);
-        title.setY(-Entry.DEF_HEIGHT + 4);
+        title.setPos(titleOffsetX, -Entry.DEF_HEIGHT + 4);
         title.setWidth(getWidth() - titleOffsetX - CHILDREN_OFFSET);
     }
 
-    public void addEntries(Collection<? extends Entry> entries) {
-        entries.forEach(this::add);
+    public void addAll(Collection<? extends UIWidget> widgets) {
+        widgets.forEach(this::add);
     }
 
     @Override
     public void addUIElements() {
-        add(title);
+        add(this.title);
+        add(this.icon);
     }
 
     @Override
@@ -114,18 +112,81 @@ public class Category extends Layer {
         }
     }
 
+    /**
+     * @param path 获取路径的最后一个元素
+     * @return 路径的最后一个元素
+     */
+    public UIWidget find(String path) {
+        if (path == null || path.isBlank()) return null;
+
+        String[] segments = path.split("/");
+        Category currentCategory = root;
+
+        for (int i = 0; i < segments.length; i++) {
+            String segment = segments[i].trim();
+            if (segment.isEmpty()) continue;
+
+            List<UIWidget> elements = currentCategory.getElements();
+            UIWidget found = null;
+
+            for (UIWidget element : elements) {
+                if (segment.equals(CategoryHelper.getRawTitle(element))) {
+                    found = element;
+                    break;
+                }
+            }
+
+            if (found == null) return null;
+
+            if (i == segments.length - 1) {
+                return found;
+            } else if (found instanceof Category) {
+                currentCategory = (Category) found;
+            } else {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param path 打开路径中的所有Category
+     * @return 路径的最后一个元素
+     */
+    public UIWidget open(String path) {
+        UIWidget widget = find(path);
+        if (widget == null) {
+            return null;
+        } else if (widget instanceof Category category) {
+            category.setOpened(true);
+        }
+
+        UIWidget parent = widget.getParent();
+        while (parent instanceof Category category) {
+            category.setOpened(true);
+            parent = parent.getParent();
+        }
+
+        if (widget instanceof Entry entry) {
+            select(entry);
+        }
+        return widget;
+    }
+
     public void setOpened(boolean opened) {
         if (this.opened != opened) {
             this.opened = opened;
-            rootCategory.getParent().refresh();
+            icon.setIcon(opened ? FlatIcon.DOWN : FlatIcon.RIGHT);
+            root.parent.refresh();
         }
     }
 
-    public void select(UIWidget widget) {
-        rootCategory.setSelected(widget);
+    public void select(Entry widget) {
+        root.setSelected(widget);
     }
 
-    private void setSelected(UIWidget widget) {
+    private void setSelected(Entry widget) {
         selected = widget;
         for (UIWidget element : getElements()) {
             if (element instanceof Category sc) {
@@ -167,10 +228,15 @@ public class Category extends Layer {
 
     @Override
     public void getTooltip(Consumer<Component> list) {
-        if (isEnabled() && MouseHelper.isMouseIn(getMouseX(), getMouseY(), 0, 0, getWidth(), Entry.DEF_HEIGHT)) {
+        if (isEnabled() && isVisible() && MouseHelper.isMouseIn(getMouseX(), getMouseY(), 0, 0, getWidth(), Entry.DEF_HEIGHT)) {
             list.accept(getTitle());
         }
         super.getTooltip(list);
+    }
+
+    @Override
+    public boolean isVisible() {
+        return getParent() instanceof Category p ? p.isOpened() : super.isVisible();
     }
 
     public void setTitle(Component title) {

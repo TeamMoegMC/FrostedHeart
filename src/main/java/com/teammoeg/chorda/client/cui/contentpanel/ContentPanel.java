@@ -1,7 +1,5 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.Layer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.ScrollBar;
@@ -25,32 +23,20 @@ public class ContentPanel extends Layer {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-        PoseStack pose = graphics.pose();
-        pose.pushPose();
-//        float a = AnimationUtil.fadeIn(3000, "test", true);
-//        float px = x + (float) w / 2;
-//        float py = y + (float) h / 2;
-//        pose.rotateAround(new Quaternionf().rotateX(-0.2F), px, py, 0);
-//        pose.rotateAround(new Quaternionf().rotateY(0.2F), px, py, 0);
-//        pose.translate(0, 0, -a*10);
-//        RenderSystem.enableBlend();
-//        RenderSystem.setShaderColor(1, 1, 1, a);
-        super.render(graphics, x, y, w, h);
-//        RenderSystem.disableBlend();
-        pose.popPose();
-    }
-
-    @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
         int border = 8;
         graphics.fill(x-border, y-border, x+w+border*2, y+h+border, -2, 0xFF444651);
         CGuiHelper.drawBox(graphics, x-border, y-border, w+border*3, h+border*2, Colors.L_BG_GRAY, true);
     }
 
-    public void fillContent(Collection<Line<?>> lines) {
+    public void fillContent(Collection<? extends UIWidget> widgets) {
         clearElement();
-        lines.forEach(this::add);
+        for (UIWidget widget : widgets) {
+            if (widget instanceof Line<?> line) {
+                this.lines.add(line);
+            }
+            add(widget);
+        }
         refresh();
     }
 
@@ -70,7 +56,6 @@ public class ContentPanel extends Layer {
     public void refresh() {
         resize();
         recalcContentSize();
-        addUIElements();
         for (UIWidget element : elements) {
             element.refresh();
         }
@@ -78,11 +63,8 @@ public class ContentPanel extends Layer {
         scrollBar.setValue(0);
     }
 
-    private void resize() {
-        int h = (int)(ClientUtils.screenHeight() * 0.8F);
-        int w = (int)(h * 1.3333F); // 4:3
-        setPosAndSize(120, 0, w, h);
-        scrollBar.setPosAndSize(getX() + w+9, -8, 6, h+15);
+    public void resize() {
+        scrollBar.setPosAndSize(getX() + getWidth()+9, -8, 6, getHeight()+15);
     }
 
     @Override

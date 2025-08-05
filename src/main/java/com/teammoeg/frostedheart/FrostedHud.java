@@ -19,36 +19,38 @@
 
 package com.teammoeg.frostedheart;
 
-import java.awt.*;
-import java.util.*;
-import java.util.List;
-
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.CUIScreen;
 import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.category.CategoryHelper;
 import com.teammoeg.chorda.client.ui.*;
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.ui.UV.Transition;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.content.archive.ArchiveCategory;
 import com.teammoeg.frostedheart.content.climate.ClientClimateData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.TemperatureFrame.FrameType;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
+import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipRenderer;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
+import com.teammoeg.frostedheart.content.tips.client.gui.TipLayerHandler;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.client.BossHealthOverlayAccess;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.data.ResearchVariant;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
-
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.AttackIndicatorStatus;
 import net.minecraft.client.Minecraft;
@@ -59,7 +61,10 @@ import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
@@ -72,6 +77,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
+
+import java.awt.*;
+import java.util.*;
+import java.util.List;
 
 public class FrostedHud {
     static final class Atlases {
@@ -997,6 +1006,19 @@ public class FrostedHud {
                 .append(" | #" + hex)
                 .withStyle(ChatFormatting.GRAY));
         lines.add(DebugScreen.message);
+
+        if (!TipRenderer.TIP_QUEUE.isEmpty()) {
+            lines.add(Component.literal("Tip Queue: "));
+            for (Tip tip : TipRenderer.TIP_QUEUE) {
+                lines.add(Component.empty().append(shift ? " ▼ " : " ▶ ").append(tip.getContents().get(0)).append(" [%s]".formatted(tip.getId())));
+                if (shift) {
+                    for (int i = 1; i < tip.getContents().size(); i++) {
+                        lines.add(Component.literal("   ◆ ").append(tip.getContents().get(i)));
+                    }
+                }
+            }
+        }
+
         if (ClientWaypointManager.hasWaypoint()) {
             lines.add("All Waypoints:");
             int i1 = 0;
@@ -1012,110 +1034,154 @@ public class FrostedHud {
             }
         }
 
+        lines.add(Component.literal("Archive Path: ").append(CategoryHelper.translatePath(ArchiveCategory.currentPath)));
         lines.add(Component.literal("Current Screen: " + (screen == null ? "Null" : screen.getClass().getSimpleName())));
-        // CUI
+
+        PrimaryLayer pLayer = null;
         if (screen instanceof CUIScreen cui) {
-            var pLayer = cui.getPrimaryLayer();
-            for (UIWidget element : pLayer.getElements()) {
-                // class name
-                String name = element.getClass().getSimpleName().isBlank() ? element.getClass().getName() : element.getClass().getSimpleName();
-                if ((element.isMouseOver() || shift)) {
-                    lines.add(Component.literal(name).withStyle(ChatFormatting.GOLD));
-                } else {
-                    lines.add(name);
-                }
+            pLayer = cui.getPrimaryLayer();
+        } else {
+            pLayer = TipLayerHandler.get().getLayer();
+        }
+        // CUI
+        if (pLayer != null) {
+            Deque<Map.Entry<Iterator<UIWidget>, Integer>> entries = new ArrayDeque<>();
+            entries.push(new AbstractMap.SimpleEntry<>(pLayer.getElements().iterator(), 0));
+            if ((pLayer.isMouseOver() || shift)) {
+                int il = 0;
+                // 遍历所有widget
+                while (!entries.isEmpty()) {
+                    Map.Entry<Iterator<UIWidget>, Integer> topEntry = entries.peek();
+                    Iterator<UIWidget> iterator = topEntry.getKey();
+                    int indentLevel = topEntry.getValue();
 
-                if (element instanceof Layer layer) {
-                    if ((element.isMouseOver() || shift)) {
-                        Deque<Map.Entry<Iterator<UIWidget>, Integer>> entries = new ArrayDeque<>();
-                        entries.push(new AbstractMap.SimpleEntry<>(Collections.<UIWidget>singletonList(layer).iterator(), 0));
-
-                        int il = 0;
-                        // 遍历所有widget
-                        while (!entries.isEmpty()) {
-                            Map.Entry<Iterator<UIWidget>, Integer> topEntry = entries.peek();
-                            Iterator<UIWidget> iterator = topEntry.getKey();
-                            int indentLevel = topEntry.getValue();
-
-                            // 开盒widget
-                            if (iterator.hasNext()) {
-                                UIWidget widget = iterator.next();
-                                if (widget.isMouseOver()) {
-                                    hoveredEle = widget;
-                                    il = indentLevel;
-                                }
-
-                                // 文本
-                                int color = Color.HSBtoRGB(indentLevel / 6F, 1, 1);
-                                var title = widget.getTitle().copy();
-                                var mem = Component.literal("@" + Integer.toHexString(widget.hashCode())).withStyle(ChatFormatting.GRAY);
-                                var isMouseOver = widget.isMouseOver() || shift;
-                                name = widget.getClass().getSimpleName();
-                                name = name.isBlank() ? widget.getClass().getName() : name;
-                                if (title.getString().isBlank()) {
-                                    title = Component.literal(name);
-                                } else {
-                                    title.append(Component.literal(" | " + name).withStyle(ChatFormatting.GRAY));
-                                }
-                                var c = Component.literal("  ".repeat(indentLevel))
-                                        .append(isMouseOver ? " ▼ " : " ▶ ")
-                                        .append(isMouseOver ? title.append(mem) : title)
-                                        .withStyle(Components.colorStyle(hoveredEle == widget ? 0xFFAA00 : color));
-                                lines.add(c);
-
-                                // 渲染边框
-                                Rect b = CGuiHelper.getWidgetRect(widget, pLayer);
-                                if (shift && !Screen.hasControlDown()) {
-                                    CGuiHelper.drawRect(stack, b, Colors.setAlpha(color, 0.1F));
-                                    CGuiHelper.drawBox(stack, b, color, false);
-                                }
-
-                                if (widget instanceof Layer childLayer && (widget.isMouseOver() || shift)) {
-                                    entries.push(new AbstractMap.SimpleEntry<>(childLayer.getElements().iterator(), indentLevel + 1));
-                                }
-                            } else {
-                                entries.pop();
-                            }
+                    // 开盒widget
+                    if (iterator.hasNext()) {
+                        UIWidget widget = iterator.next();
+                        if (widget.isMouseOver()) {
+                            hoveredEle = widget;
+                            il = indentLevel;
                         }
 
-                        // 渲染选中的组件和子组件的边框
-                        if (hoveredEle != null && !Screen.hasControlDown()) {
-                            Rect b = CGuiHelper.getWidgetRect(hoveredEle, pLayer);
-                            if (!shift) {
-                                if (hoveredEle instanceof Layer layer1) {
-                                    for (int i = 0; i < layer1.getElements().size(); i++) {
-                                        UIWidget le = layer1.getElements().get(i);
-                                        Rect b1 = CGuiHelper.getWidgetRect(le, pLayer);
-                                        int color = Color.HSBtoRGB((il+1) / 6F, 1, 1);
-                                        CGuiHelper.drawRect(stack, b1, Colors.setAlpha(color, 0.1F));
-                                        CGuiHelper.drawBox(stack, b1, color, false);
-                                    }
-                                }
-                                int color = Color.HSBtoRGB(il / 6F, 1, 1);
-                                CGuiHelper.drawRect(stack, b, Colors.setAlpha(color, 0.1F));
-                                CGuiHelper.drawBox(stack, b, color, false);
-                            }
+                        // 文本
+                        var title = widget.getTitle().copy();
+                        var mem = Component.literal("@" + Integer.toHexString(widget.hashCode())).withStyle(ChatFormatting.GRAY);
+                        var isMouseOver = widget.isMouseOver() || shift;
+                        String name = widget.getClass().getSimpleName();
+                        name = name.isBlank() ? "extends " + widget.getClass().getSuperclass().getSimpleName() : name;
+                        if (title.getString().isBlank()) {
+                            title = Component.literal(name);
+                        } else {
+                            title.append(Component.literal(" | " + name).withStyle(ChatFormatting.GRAY));
+                        }
+                        var c = Component.literal("  ".repeat(indentLevel))
+                                .append(isMouseOver ? " ▼ " : " ▶ ")
+                                .append(isMouseOver ? title.append(mem) : title)
+                                .withStyle(Components.color(hoveredEle == widget ? 0xFFAA00 : Colors.CYAN));
+                        lines.add(c);
 
-                            String ui = "x=" + hoveredEle.getX() + ", y=" + hoveredEle.getY();
-                            String real = "x=" + b.getX() + ", y=" + b.getY() + ", w=" + b.getW() + ", h=" + b.getH();
-                            CGuiHelper.drawStringLines(stack, font, List.of(ui, real), b.getX()+1, b.getY()-18, Colors.CYAN, 0, false, true);
+                        // 渲染边框
+                        int color = Color.HSBtoRGB(indentLevel / 6F, 1, 1);
+                        Rect b = CGuiHelper.getWidgetBounds(widget, pLayer);
+                        if (shift && !Screen.hasControlDown() && widget.isVisible()) {
+                            CGuiHelper.drawRect(stack, b, Colors.setAlpha(color, 0.1F));
+                            CGuiHelper.drawBox(stack, b, color, false);
+                        }
+
+                        if (widget instanceof Layer childLayer && (widget.isMouseOver() || shift)) {
+                            entries.push(new AbstractMap.SimpleEntry<>(childLayer.getElements().iterator(), indentLevel + 1));
                         }
                     } else {
-                        for (int i = 0; i < layer.getElements().size(); i++) {
-                            UIWidget layerElement = layer.getElements().get(i);
-                            if (i < 3) {
-                                name = layerElement.getClass().getSimpleName().isBlank() ? layerElement.getClass().getName() : layerElement.getClass().getSimpleName();
-                                lines.add(" ▶ " + name);
-                            }
-                        }
-                        if (layer.getElements().size() > 3) {
-                            lines.add(" ▶ ...and " + (layer.getElements().size() - 3) + " more");
-                        }
+                        entries.pop();
                     }
                 }
+
+                // 渲染选中的组件和子组件的边框
+                if (hoveredEle != null && !Screen.hasControlDown()) {
+                    stack.pose().pushPose();
+                    stack.pose().translate(0, 0, 10);
+                    Rect b = CGuiHelper.getWidgetBounds(hoveredEle, pLayer);
+                    if (!shift) {
+                        if (hoveredEle instanceof Layer layer1) {
+                            for (int i = 0; i < layer1.getElements().size(); i++) {
+                                UIWidget le = layer1.getElements().get(i);
+                                Rect b1 = CGuiHelper.getWidgetBounds(le, pLayer);
+                                int color = Color.HSBtoRGB((il+1) / 6F, 1, 1);
+                                CGuiHelper.drawRect(stack, b1, Colors.setAlpha(color, 0.1F));
+                                CGuiHelper.drawBox(stack, b1, color, false);
+                            }
+                        }
+                        int color = Color.HSBtoRGB(il / 6F, 1, 1);
+                        CGuiHelper.drawRect(stack, b, Colors.setAlpha(color, 0.1F));
+                        CGuiHelper.drawBox(stack, b, color, false);
+                    }
+
+                    var color = ChatFormatting.GOLD;
+                    String clazz = hoveredEle.getClass().getSimpleName();
+                    clazz = clazz.isBlank() ? "extends " + hoveredEle.getClass().getSuperclass().getSimpleName() : clazz;
+                    MutableComponent title = Component.literal("C: ")
+                            .withStyle(ChatFormatting.GRAY)
+                            .append(Component.literal(clazz).withStyle(color));
+                    if (!hoveredEle.getTitle().getString().isBlank()) {
+                        title.append(" | T: ");
+                        if (font.width(hoveredEle.getTitle()) > 200) {
+                            var t = FormattedText.composite(font.substrByWidth(hoveredEle.getTitle(), 200), CommonComponents.ELLIPSIS).getString();
+                            title.append(Component.literal(t).withStyle(color));
+                        } else {
+                            title.append(Component.empty().append(hoveredEle.getTitle()).withStyle(color));
+                        }
+                    }
+                    Component ui = Lang.builder().style(ChatFormatting.GRAY)
+                            .text("L: x=")
+                            .add(Component.literal(String.valueOf(hoveredEle.getX())).withStyle(color))
+                            .text(", y=")
+                            .add(Component.literal(String.valueOf(hoveredEle.getY())).withStyle(color))
+                            .component();
+                    Component real = Lang.builder().style(ChatFormatting.GRAY)
+                            .text("S: x=")
+                            .add(Component.literal(String.valueOf(b.getX())).withStyle(color))
+                            .text(", y=")
+                            .add(Component.literal(String.valueOf(b.getY())).withStyle(color))
+                            .text(", w=")
+                            .add(Component.literal(String.valueOf(b.getW())).withStyle(color))
+                            .text(", h=")
+                            .add(Component.literal(String.valueOf(b.getH())).withStyle(color))
+                            .component();
+                    Component c = Component.empty()
+                            .append(Component.literal("Enable" ).withStyle(hoveredEle.isEnabled() ? ChatFormatting.GREEN : ChatFormatting.RED))
+                            .append(Component.literal(" | "))
+                            .append(Component.literal("Visible").withStyle(hoveredEle.isVisible() ? ChatFormatting.GREEN : ChatFormatting.RED));
+
+                    var list = List.of(title, ui, real, c);
+                    int x1 = b.getX();
+                    int y1 = b.getY()-1 - list.size()*9;
+                    if (y1 <= 1) {
+                        y1 = b.getY()+2 + b.getH();
+                        if (y1 + list.size()*9 > ClientUtils.screenHeight()) {
+                            y1 = ClientUtils.screenHeight() - list.size()*9;
+                        }
+                    }
+                    int maxW = 0;
+                    for (Component component : list)
+                        maxW = Math.max(font.width(component), maxW);
+                    int x2 = x1+1+maxW;
+                    int y2 = y1 + list.size()*9;
+                    if (x2 > ClientUtils.screenWidth()) {
+                        x1 -= x2 - ClientUtils.screenWidth();
+                        x2 = x1+1+maxW;
+                    }
+
+                    stack.fill(x1-1, y1-1, x2, y2, Colors.setAlpha(Colors.BLACK, 0.8F));
+                    CGuiHelper.drawStringLines(stack, font, list, x1, y1, Colors.L_TEXT_GRAY, 0, false, false);
+                    stack.pose().popPose();
+                }
             }
+            lines.add("---");
+        }
+        hoveredEle = null;
+
         // 原版UI
-        } else if (screen != null) {
+        if (screen != null) {
             for (GuiEventListener a : screen.children()) {
                 if (a instanceof ObjectSelectionList<?> l) {
                     boolean focused = l.isFocused() || l.isMouseOver(mouseX, mouseY) || shift;
@@ -1163,7 +1229,7 @@ public class FrostedHud {
         }
         // 文本
         if (!Screen.hasAltDown()) {
-            CGuiHelper.drawStringLines(stack, font, lines.subList(0, Math.min(lines.size(), 256)), 0, 0, Colors.CYAN, 1, true, true);
+            CGuiHelper.drawStringLines(stack, font, lines.subList(0, Math.min(lines.size(), 256)), 0, 0, Colors.CYAN, 1, false, true);
         }
         stack.pose().popPose();
     }

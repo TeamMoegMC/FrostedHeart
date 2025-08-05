@@ -19,25 +19,18 @@
 
 package com.teammoeg.chorda.client.widget;
 
-import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
-
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 
 public class IconButton extends Button {
-    public static final ResourceLocation ICON_LOCATION = Chorda.rl("textures/gui/hud/flat_icon.png");
-    public static final int TEXTURE_HEIGHT = 80;
-    public static final int TEXTURE_WIDTH = 80;
-
     @Setter
     private FlatIcon icon;
     public int color;
@@ -88,8 +81,8 @@ public class IconButton extends Button {
             }
         }
 
-        CGuiHelper.bindTexture(ICON_LOCATION);
-        CGuiHelper.blitColored(graphics.pose(), getX(), getY(), getWidth(), getHeight(), icon.x*scale, icon.y*scale, getWidth(), getHeight(), TEXTURE_WIDTH*scale, TEXTURE_HEIGHT*scale, color, this.alpha);
+        CGuiHelper.bindTexture(FlatIcon.ICON_LOCATION);
+        CGuiHelper.blitColored(graphics.pose(), getX(), getY(), getWidth(), getHeight(), icon.x*scale, icon.y*scale, getWidth(), getHeight(), FlatIcon.TEXTURE_WIDTH*scale, FlatIcon.TEXTURE_HEIGHT*scale, color, this.alpha);
     }
 
     public void setScale(int scale) {

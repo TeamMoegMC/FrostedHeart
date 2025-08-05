@@ -1,10 +1,11 @@
 package com.teammoeg.chorda.client.cui.category;
 
 import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.LimitedTextField;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.Colors;
-import com.teammoeg.chorda.client.cui.LimitedTextField;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -16,17 +17,16 @@ public abstract class Entry extends Layer {
     @Getter
     protected final Layer panel;
     protected LimitedTextField title;
+    protected FlatIcon.FlatIconWidget icon;
 
     public Entry(Category parent, Layer affectedPanel, Component title) {
         super(parent);
         this.panel = affectedPanel;
         this.title = new LimitedTextField(this, title, getWidth());
+        this.icon = new FlatIcon.FlatIconWidget(this);
+        this.icon.setSize(10, 10);
+        this.icon.setColor(Colors.L_TEXT_GRAY);
         addUIElements();
-    }
-
-    @Override
-    public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-        super.render(graphics, x, y, w, h);
     }
 
     @Override
@@ -47,8 +47,11 @@ public abstract class Entry extends Layer {
         int offsetX = 4;
         setOffsetX(offsetX);
         int y = Math.round((getHeight() - title.getHeight())*0.5F);
-        title.setPos(getX(), y);
-        title.setWidth(getWidth()-offsetX);
+
+        icon.setPos(-offsetX + 1, 3);
+        int titleOffsetX = icon.hasIcon() ? 9 : 0;
+        title.setPos(titleOffsetX, y);
+        title.setWidth(getWidth() - offsetX - titleOffsetX);
 
         recalcContentSize();
         for (UIWidget element : elements) {
@@ -68,7 +71,8 @@ public abstract class Entry extends Layer {
 
     @Override
     public void addUIElements() {
-        add(title);
+        add(this.title);
+        add(this.icon);
     }
 
     @Override
@@ -78,20 +82,32 @@ public abstract class Entry extends Layer {
 
     @Override
     public void getTooltip(Consumer<Component> list) {
-        if (!hasTooltip() || !isMouseOver()) {
+        if (!hasTooltip() || !isMouseOver() || !isVisible() || !isEnabled()) {
             return;
         }
         list.accept(getTitle());
         super.getTooltip(list);
     }
 
-    public void setTitle(Component title) {
+    public Entry setIcon(FlatIcon icon) {
+        this.icon.setIcon(icon);
+        refresh();
+        return this;
+    }
+
+    public Entry setTitle(Component title) {
         this.title.setTitle(title);
+        return this;
     }
 
     @Override
     public Component getTitle() {
         return this.title.getTitle();
+    }
+
+    @Override
+    public boolean isVisible() {
+        return getParent().isOpened() && super.isVisible();
     }
 
     @Override

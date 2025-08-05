@@ -29,7 +29,6 @@ import com.mojang.logging.LogUtils;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.lang.Components;
-
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -161,6 +160,10 @@ public class Tip {
 
     public boolean hasClickAction() {
         return !clickAction.isBlank() && !clickActionContent.isBlank();
+    }
+
+    public boolean runClickAction() {
+        return ClickActions.run(getClickAction(), getClickActionContent());
     }
 
     public boolean saveAsFile() {
