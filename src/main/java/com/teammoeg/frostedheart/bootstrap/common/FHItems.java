@@ -1129,6 +1129,7 @@ thinner.png
     public static ItemEntry<Item> raw_rye_bread = REGISTRATE
             .item("raw_rye_bread", Item::new)
             .model(AssetLookup.existingItemModel())
+            .lang("Rye Dough")
             .register();
     public static ItemEntry<Item> random_seeds = REGISTRATE
             .item("random_seeds", Item::new)

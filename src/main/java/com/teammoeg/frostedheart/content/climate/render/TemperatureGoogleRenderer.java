@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.content.climate.render;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockBE;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
@@ -57,6 +56,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
+import com.teammoeg.frostedheart.content.climate.network.SoilThermometerRequestPacket;
 import com.teammoeg.frostedheart.content.climate.tooltips.BlockTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.steamenergy.ClientHeatNetworkData;
@@ -148,7 +148,9 @@ public class TemperatureGoogleRenderer {
         int prevHoverTicks = hoverTicks;
         hoverTicks++;
         if (lastHovered == null || !lastHovered.equals(pos)) {
-            cachedTemperature = new Random().nextFloat(-50, 50); // TODO
+            if (SoilThermometer.isWearingSoilThermometer(mc.player)) {
+                FHNetwork.INSTANCE.sendToServer(new SoilThermometerRequestPacket(pos));
+            }
         }
         lastHovered = pos;
 

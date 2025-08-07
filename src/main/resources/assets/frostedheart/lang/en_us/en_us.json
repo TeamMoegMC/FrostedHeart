@@ -48,7 +48,7 @@
   "tooltip.frostedheart.temp.plant.snow_resistant": "Resistant to Snow",
   "tooltip.frostedheart.temp.plant.blizzard_vulnerable": "Vulnerable to Blizzard",
   "tooltip.frostedheart.temp.plant.blizzard_resistant": "Resistant to Blizzard",
-  "tooltip.frostedheart.temp.plant.shift": "Hold [Shift] to view details",
+  "tooltip.frostedheart.temp.plant.shift": "Hold [Shift] for Details",
   "tooltip.frostedheart.temp.plant.survivability.state": "Current Status: ",
   "tooltip.frostedheart.temp.plant.survivability.suitable": "Ideal",
   "tooltip.frostedheart.temp.plant.survivability.can_grow": "Can Grow",

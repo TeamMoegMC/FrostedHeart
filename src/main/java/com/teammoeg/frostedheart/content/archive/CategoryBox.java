@@ -262,9 +262,9 @@ public class CategoryBox extends Layer {
 
         @Override
         public boolean read() {
-            TipManager.INSTANCE.state().setViewState(tip, true);
+            TipManager.INSTANCE.state().view(tip, true);
             for (Tip tip : children) {
-                TipManager.INSTANCE.state().setViewState(tip, true);
+                TipManager.INSTANCE.state().view(tip, true);
             }
             return true;
         }
@@ -288,6 +288,9 @@ public class CategoryBox extends Layer {
                     lines.add(box.text(Component.translatable("gui.frostedheart.archive.new_tip")).setTitle(tip.getFontColor(), 1).setBaseColor(ColorHelper.getTextColor(tip.getFontColor())));
                 } else {
                     lines.add(box.br());
+                }
+                if (j != 0 && !tipContents.get(0).equals(this.tip.getContents().get(0))) {
+                    lines.add(box.text(tipContents.get(0)).setQuote(tip.getFontColor()));
                 }
                 for (int i = 1; i < tipContents.size(); i++) {
                     Component line = tipContents.get(i);

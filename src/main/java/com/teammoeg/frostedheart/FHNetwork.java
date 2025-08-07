@@ -22,13 +22,7 @@ package com.teammoeg.frostedheart;
 import com.teammoeg.chorda.network.CBaseNetwork;
 import com.teammoeg.frostedheart.clusterserver.network.S2CRedirectPacket;
 import com.teammoeg.frostedheart.clusterserver.network.S2CTokenPacket;
-import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
-import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
-import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
-import com.teammoeg.frostedheart.content.climate.network.FHNotifyChunkHeatUpdatePacket;
-import com.teammoeg.frostedheart.content.climate.network.FHRequestInfraredViewDataSyncPacket;
-import com.teammoeg.frostedheart.content.climate.network.FHResponseInfraredViewDataSyncPacket;
-import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
+import com.teammoeg.frostedheart.content.climate.network.*;
 import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
 import com.teammoeg.frostedheart.content.scenario.network.C2SLinkClickedPacket;
 import com.teammoeg.frostedheart.content.scenario.network.C2SRenderingStatusMessage;
@@ -147,5 +141,9 @@ public class FHNetwork extends CBaseNetwork {
         //Server Cluster
         registerMessage("sc_redirect_ip",S2CRedirectPacket.class);
         registerMessage("sc_token",S2CTokenPacket.class);
+
+        // Soil Thermometer
+        registerMessage("soil_thermometer_request", SoilThermometerRequestPacket.class);
+        registerMessage("soil_thermometer_update", SoilThermometerUpdatePacket.class);
     }
 }
