@@ -184,6 +184,81 @@ public class Resident {
         this.housePos = pos;
     }
 
+    public void setHealth(int health) {
+        if (health < 0 || health > 100) {
+            throw new IllegalArgumentException("Health must be between 0 and 100");
+        }
+        this.health = health;
+    }
+
+    public void costHealth(int amount) {
+        this.health = Math.max(0, this.health - amount);
+    }
+
+    public void addHealth(int amount) {
+        this.health = Math.min(100, this.health + amount);
+    }
+
+    public void setMental(int mental) {
+        if (mental < 0 || mental > 100) {
+            throw new IllegalArgumentException("Mental must be between 0 and 100");
+        }
+        this.mental = mental;
+    }
+
+    public void costMental(int amount) {
+        this.mental = Math.max(0, this.mental - amount);
+    }
+
+    public void addMental(int amount) {
+        this.mental = Math.min(100, this.mental + amount);
+    }
+
+    public void setStrength(int strength) {
+        if (strength < 0 || strength > 100) {
+            throw new IllegalArgumentException("Strength must be between 0 and 100");
+        }
+        this.strength = strength;
+    }
+
+    public void costStrength(int amount) {
+        this.strength = Math.max(0, this.strength - amount);
+    }
+
+    public void addStrength(int amount) {
+        this.strength = Math.min(100, this.strength + amount);
+    }
+
+    public void setIntelligence(int intelligence) {
+        if (intelligence < 0 || intelligence > 100) {
+            throw new IllegalArgumentException("Intelligence must be between 0 and 100");
+        }
+        this.intelligence = intelligence;
+    }
+
+    public void costIntelligence(int amount) {
+        this.intelligence = Math.max(0, this.intelligence - amount);
+    }
+
+    public void addIntelligence(int amount) {
+        this.intelligence = Math.min(100, this.intelligence + amount);
+    }
+
+    public void setEducationLevel(int educationLevel) {
+        if (educationLevel < 0) {
+            throw new IllegalArgumentException("Education level must be non-negative");
+        }
+        this.educationLevel = educationLevel;
+    }
+
+    public void costEducationLevel(int amount) {
+        this.educationLevel = Math.max(0, this.educationLevel - amount);
+    }
+
+    public void addEducationLevel(int amount) {
+        this.educationLevel = this.educationLevel + amount;
+    }
+
     @Override
     public String toString() {
         return firstName + " " + lastName;

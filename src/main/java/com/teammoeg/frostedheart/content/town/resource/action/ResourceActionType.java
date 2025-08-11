@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.town.resource.actionattributes;
+package com.teammoeg.frostedheart.content.town.resource.action;
 
 /**
  * 表示此次操作是添加还是消耗

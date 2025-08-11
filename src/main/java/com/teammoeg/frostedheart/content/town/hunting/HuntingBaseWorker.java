@@ -2,6 +2,9 @@ package com.teammoeg.frostedheart.content.town.hunting;
 
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
+import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
+import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
+import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -40,8 +43,10 @@ public class HuntingBaseWorker implements TownWorker {
                 Iterator<AbstractMap.SimpleEntry<TownWorkerData, Double>> iterator = camps.iterator();
                 while (iterator.hasNext() && residentsLeft > 0) {
                     double add = iterator.next().getValue();
-                    TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().addToMax(new ItemStack(Items.BEEF), add);
-                    if (result.actualAmount() != add) return false;
+                    TownResourceActions.ItemResourceActionResult result = (TownResourceActions.ItemResourceActionResult) town
+                            .getActionExecutorHandler()
+                            .execute(new TownResourceActions.ItemResourceAction(new ItemStack(Items.BEEF), ResourceActionType.ADD, add, ResourceActionMode.MAXIMIZE));
+                    if (!result.allModified()) return false;
                     residentsLeft--;
                 }
             }

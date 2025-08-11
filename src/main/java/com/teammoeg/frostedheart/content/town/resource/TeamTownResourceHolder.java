@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town.resource;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -42,13 +43,15 @@ import net.minecraft.world.item.ItemStack;
  * 为保证OccupiedCapacity本身不会被意外修改，它并非作为一个service resource储存在resources中，而是以private变量的形式存在这里。
  * 此类中提供的方法都有可能产生不应出现的数据(如负数的资源或超过上限的资源)，请使用TownResourceManager来修改资源数量。
  */
-public class TownResourceHolder {
+public class TeamTownResourceHolder {
     /**
      * The collection that saves all the resources of town.
      */
     //private Map<ItemStackResourceKey, Double> itemResources = new HashMap<>();
     //private Map<VirtualResourceAttribute, Double> virtualResources = new HashMap<>();
-    private Map<ITownResourceKey, Double> resources = new HashMap<>();
+    private final Map<ITownResourceKey, Double> resources = new HashMap<>();
+
+    public final TeamTownResourceActionExecutorHandler actionExecutor = new TeamTownResourceActionExecutorHandler(this);
 
     /**
      * 表示已占用的资源容量。
@@ -69,16 +72,16 @@ public class TownResourceHolder {
 
     public static final double DELTA = 1.0/8192;//一个非常小的值，当资源数量小于这个值时，认为资源为0，抵消误差。
 
-    public static final Codec<TownResourceHolder> CODEC = RecordCodecBuilder.create(t -> t.group(
+    public static final Codec<TeamTownResourceHolder> CODEC = RecordCodecBuilder.create(t -> t.group(
             //CodecUtil.mapCodec("itemStack", ItemStackResourceKey.CODEC, "amount", Codec.DOUBLE) .optionalFieldOf("itemResources",Map.of()).forGetter(o->o.itemResources),
             //CodecUtil.mapCodec("virtualKey", VirtualResourceAttribute.CODEC, "amount", Codec.DOUBLE).optionalFieldOf("virtualResources",Map.of()).forGetter(o->o.virtualResources),
             CodecUtil.mapCodec("resourceKey", ITownResourceKey.CODEC, "amount", Codec.DOUBLE).optionalFieldOf("resources",Map.of()).forGetter(o->o.resources),
             Codec.DOUBLE.optionalFieldOf("occupiedCapacity",0d).forGetter(o->o.occupiedCapacity)
-            ).apply(t, TownResourceHolder::new)
+            ).apply(t, TeamTownResourceHolder::new)
     );
 
-    public TownResourceHolder() {}
-    public TownResourceHolder(Map<ITownResourceKey, Double> resources, double occupiedCapacity) {
+    public TeamTownResourceHolder() {}
+    public TeamTownResourceHolder(Map<ITownResourceKey, Double> resources, double occupiedCapacity) {
         this.resources.putAll(resources);
         this.occupiedCapacity = occupiedCapacity;
         removeZeros();
@@ -86,7 +89,7 @@ public class TownResourceHolder {
     }
 
     //不输入已占用容量，自行计算。
-    public TownResourceHolder(Map<ITownResourceKey, Double> resources) {
+    public TeamTownResourceHolder(Map<ITownResourceKey, Double> resources) {
         double adder = 0.0;
         for(Map.Entry<ITownResourceKey, Double> entry : resources.entrySet()){
             ITownResourceKey key = entry.getKey();
@@ -294,8 +297,35 @@ public class TownResourceHolder {
         return Map.copyOf(resources);
     }
 
+    /**
+     * 获取城镇剩余(未被占用)的容量。
+     */
     public double getCapacityLeft(){
         return this.get(VirtualResourceType.MAX_CAPACITY.generateAttribute(0)) - this.occupiedCapacity;
+    }
+
+    /**
+     * 获取给定的level以上的，某ITownResourceType的资源数量之和。
+     */
+    public double getAllAboveLevel(ITownResourceType type, int minLevel){
+        if(!type.isLevelValid(minLevel)) return 0;
+        double sum = 0;
+        for(int i=minLevel;i<=type.getMaxLevel();i++){
+            sum += get(type.generateAttribute(i));
+        }
+        return sum;
+    }
+
+    /**
+     * 获取给定的level之间的，某ITownResourceType的资源数量之和。
+     */
+    public double getAllBetweenLevel(ITownResourceType type, int minLevel, int maxLevel){
+        if(!type.isLevelValid(minLevel) || !type.isLevelValid(maxLevel)) return 0;
+        double sum = 0;
+        for(int i=minLevel;i<=maxLevel;i++){
+            sum += get(type.generateAttribute(i));
+        }
+        return sum;
     }
 
     /**
@@ -440,6 +470,15 @@ private void addSigned(ITownResourceKey townResourceKey, double amount){
      */
     public void removeZeros(){
         resources.entrySet().removeIf((entry) -> entry.getValue() < DELTA);
+    }
+
+    /**
+     * 将所有服务资源设置为0
+     */
+    public void resetAllServices(){
+        Arrays.stream(VirtualResourceType.values())
+                .filter(type -> type.isService)
+                .forEach(type -> set(type.generateAttribute(0),0));
     }
 
 }

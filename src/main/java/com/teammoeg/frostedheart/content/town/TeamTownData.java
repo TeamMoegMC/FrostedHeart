@@ -28,7 +28,7 @@ import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.frostedheart.content.town.mine.MineBlockEntity;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.content.town.resource.TownResourceHolder;
+import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.nbt.ListTag;
@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
 public class TeamTownData implements SpecialData{
 	public static final Codec<TeamTownData> CODEC=RecordCodecBuilder.create(t->t.group(
             Codec.STRING.fieldOf("name").forGetter(o->o.name),
-			TownResourceHolder.CODEC.fieldOf("resources").forGetter(o->o.resources),
+			TeamTownResourceHolder.CODEC.fieldOf("resources").forGetter(o->o.resources),
 			CodecUtil.mapCodec("pos", BlockPos.CODEC, "data", TownWorkerData.CODEC).optionalFieldOf("blocks",Map.of()).forGetter(o->o.blocks),
 			CodecUtil.mapCodec("uuid",UUIDUtil.CODEC,"data",Resident.CODEC).optionalFieldOf("residents",Map.of()).forGetter(o->o.residents)
     ).apply(t, TeamTownData::new));
@@ -75,13 +75,13 @@ public class TeamTownData implements SpecialData{
      * Including resources gathered from town and resources gathered from player.
      * Must be changed by TownResourceManager.
      */
-    TownResourceHolder resources = new TownResourceHolder();
+    TeamTownResourceHolder resources = new TeamTownResourceHolder();
     /**
      * Town blocks and their worker data
      */
     Map<BlockPos, TownWorkerData> blocks = new LinkedHashMap<>();
     
-	public TeamTownData(String name, TownResourceHolder resources, Map<BlockPos, TownWorkerData> blocks, Map<UUID, Resident> residents) {
+	public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, TownWorkerData> blocks, Map<UUID, Resident> residents) {
 		super();
 		this.name = name;
 		this.resources = resources;
@@ -121,7 +121,7 @@ public class TeamTownData implements SpecialData{
         }
         //pq.addAll(blocks.values());
         TeamTown teamTown = new TeamTown(this);
-        teamTown.resources.resetAllServices();
+        resources.resetAllServices();
         for (TownWorkerData t : pq) {
             t.firstWork(teamTown);
         }

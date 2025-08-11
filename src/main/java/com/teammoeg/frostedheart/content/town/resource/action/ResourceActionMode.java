@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.town.resource.actionattributes;
+package com.teammoeg.frostedheart.content.town.resource.action;
 
 /**
  * 当无法全部完成操作时，执行的方案

@@ -22,13 +22,18 @@ package com.teammoeg.frostedheart.content.town.warehouse;
 import com.teammoeg.frostedheart.content.town.Town;
 import com.teammoeg.frostedheart.content.town.TownWorker;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
+import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
+import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
+import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 import net.minecraft.nbt.CompoundTag;
 
 public class WarehouseWorker implements TownWorker {
     @Override
     public boolean firstWork(Town town, CompoundTag workData) {
         double capacity = workData.getCompound("tileEntity").getDouble("capacity");
-        town.getResourceManager().addIfHaveCapacity(VirtualResourceType.MAX_CAPACITY.generateAttribute(0), capacity);
+        //town.getResourceManager().addIfHaveCapacity(VirtualResourceType.MAX_CAPACITY.generateAttribute(0), capacity);
+        TownResourceActions.VirtualResourceAttributeAction action = new TownResourceActions.VirtualResourceAttributeAction(VirtualResourceType.MAX_CAPACITY.generateAttribute(0), capacity, ResourceActionType.ADD, ResourceActionMode.ATTEMPT);
+        town.getActionExecutorHandler().execute(action);
         return true;
 
     }

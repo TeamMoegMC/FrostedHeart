@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.*;
+import com.teammoeg.frostedheart.content.town.resource.action.*;
 import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.commands.CommandSourceStack;
@@ -60,7 +61,7 @@ public class TownCommand {
                 Commands.literal("list_items")
                         .executes(ct -> {
                             TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                            ct.getSource().sendSuccess(()-> Components.str(town.getResourceManager().resourceHolder.getAllItems() ), true);
+                            ct.getSource().sendSuccess(()-> Components.str(town.getResourceHolder().getAllItems() ), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
@@ -69,7 +70,7 @@ public class TownCommand {
                         .executes(ct -> {
                             TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                             //System.out.println(town.getResourceManager().resourceHolder.getAllVirtualResources());
-                            ct.getSource().sendSuccess(()-> Components.str(town.getResourceManager().resourceHolder.getAllVirtualResources() ), true);
+                            ct.getSource().sendSuccess(()-> Components.str(town.getResourceHolder().getAllVirtualResources() ), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
@@ -78,12 +79,12 @@ public class TownCommand {
                         .executes(ct -> {
                             TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                             //System.out.println(town.getResourceManager().resourceHolder.getAllVirtualResources());
-                            ct.getSource().sendSuccess(()-> Components.str(town.getResourceManager().resourceHolder.getAllResources() ), true);
+                            ct.getSource().sendSuccess(()-> Components.str(town.getResourceHolder().getAllResources() ), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
-        LiteralArgumentBuilder<CommandSourceStack> addVirtualResources =
-                Commands.literal("addVirtual")
+        LiteralArgumentBuilder<CommandSourceStack> modifyVirtualResources =
+                Commands.literal("modifyVirtual")
                         .then(Commands.argument("type", StringArgumentType.string())
                                 .suggests((ct, s) -> {
                                     // Get all TownResourceType enum values
@@ -101,15 +102,28 @@ public class TownCommand {
                                                     double amount = DoubleArgumentType.getDouble(ct, "amount");
                                                     String type = StringArgumentType.getString(ct, "type");
                                                     int level = IntegerArgumentType.getInteger(ct, "level");
-                                                    if(amount < 0){
-                                                        ct.getSource().sendFailure(Components.str("Invalid amount: Amount must be positive."));
-                                                        return Command.SINGLE_SUCCESS;
+                                                    ResourceActionType actionType;
+                                                    if(amount > 0){
+                                                        actionType = ResourceActionType.ADD;
+                                                    } else{
+                                                        actionType = ResourceActionType.COST;
+                                                        amount = -amount;
                                                     }
+                                                    VirtualResourceAttribute attribute = VirtualResourceAttribute.of(VirtualResourceType.from(type), level);
                                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                                                    TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().addIfHaveCapacity(VirtualResourceType.from(type).generateAttribute(level), amount);
-                                                    if(result.allSuccess()){
-                                                        ct.getSource().sendSuccess(()-> Components.str("Resource added"), true);
-                                                    } else ct.getSource().sendSuccess(()-> Components.str("Resource added failed: No enough capacity."), true);
+                                                    IActionExecutorHandler executor = town.getActionExecutorHandler();
+                                                    TownResourceActions.VirtualResourceAttributeAction action = new TownResourceActions.VirtualResourceAttributeAction(attribute, amount, actionType, ResourceActionMode.ATTEMPT);
+                                                    TownResourceActions.VirtualResourceAttributeActionResult result = (TownResourceActions.VirtualResourceAttributeActionResult) executor.execute(action);
+                                                    //TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().addIfHaveCapacity(VirtualResourceType.from(type).generateAttribute(level), amount);
+                                                    if(result.allModified()){
+                                                        ct.getSource().sendSuccess(()-> Components.str("Resource modified."), true);
+                                                    } else {
+                                                        if(actionType == ResourceActionType.ADD){
+                                                            ct.getSource().sendSuccess(()-> Components.str("Resource added failed: No enough capacity."), true);
+                                                        } else{
+                                                            ct.getSource().sendSuccess(()-> Components.str("Resource cost failed: No enough resource."), true);
+                                                        }
+                                                    }
                                                     return Command.SINGLE_SUCCESS;
                                                 })
                                         )
@@ -148,9 +162,12 @@ public class TownCommand {
                                                         return Command.SINGLE_SUCCESS;
                                                     }
                                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                                                    TownResourceManager.SimpleResourceActionResult result = null;
-                                                    result = town.getResourceManager().costIfHaveEnough(type.generateAttribute(level), amount);
-                                                    if(result.allSuccess()){
+                                                    IActionExecutorHandler executor = town.getActionExecutorHandler();
+                                                    ITownResourceAction action = TownResourceActions.createAttributeCostAction(type.generateAttribute(level), amount, ResourceActionMode.ATTEMPT);
+                                                    ITownResourceAttributeActionResult result = (ITownResourceAttributeActionResult)executor.execute(action);
+                                                    //TownResourceManager.SimpleResourceActionResult result = null;
+                                                    //result = town.getResourceManager().costIfHaveEnough(type.generateAttribute(level), amount);
+                                                    if(result.allModified()){
                                                         ct.getSource().sendSuccess(()-> Components.str("Resource costed."), true);
                                                     } else ct.getSource().sendSuccess(()-> Components.str("Resource cost failed: No enough resource."), true);
                                                     return Command.SINGLE_SUCCESS;
@@ -167,8 +184,10 @@ public class TownCommand {
                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                     ItemStack itemStack = ct.getSource().getPlayerOrException().getMainHandItem();
                                     ct.getSource().sendSuccess(()-> Components.str("Adding ItemStack: " + itemStack), true);
-                                    TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().addIfHaveCapacity(itemStack, amount);
-                                    if(result.allSuccess()){
+                                    TownResourceActions.ItemResourceAction action = new TownResourceActions.ItemResourceAction(itemStack, ResourceActionType.ADD, amount, ResourceActionMode.ATTEMPT);
+                                    TownResourceActions.ItemResourceActionResult result = (TownResourceActions.ItemResourceActionResult)town.getActionExecutorHandler().execute(action);
+                                    //TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().addIfHaveCapacity(itemStack, amount);
+                                    if(result.allModified()){
                                         ct.getSource().sendSuccess(()-> Components.str("Resource added"), true);
                                         return Command.SINGLE_SUCCESS;
                                     } else ct.getSource().sendSuccess(()-> Components.str("Resource added failed: No enough capacity."), true);
@@ -216,7 +235,7 @@ public class TownCommand {
                             .then(Commands.literal("resources")
                                     .then(listItemStackResources)
                                 .then(listVirtualResources)
-                                .then(addVirtualResources)
+                                .then(modifyVirtualResources)
                                     .then(addItemOnHand)
                                 .then(costResource)
                                     .then(listAllResources)
@@ -239,7 +258,7 @@ public class TownCommand {
                 .then(Commands.literal("resources")
                         .then(listVirtualResources)
                         .then(listItemStackResources)
-                        .then(addVirtualResources)
+                        .then(modifyVirtualResources)
                         .then(addItemOnHand)
                         .then(costResource)
                 )

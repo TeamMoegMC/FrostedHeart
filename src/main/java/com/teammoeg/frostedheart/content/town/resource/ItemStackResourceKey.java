@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.content.town.resource;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import lombok.Getter;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Objects;
@@ -28,6 +29,10 @@ public class ItemStackResourceKey implements ITownResourceKey {
 
     public ItemStackResourceKey(ItemStack itemStack) {
         this.itemStack = itemStack.copyWithCount(1);
+    }
+
+    public ItemStackResourceKey(Item item) {
+        this.itemStack = new ItemStack(item, 1);
     }
 
     public boolean equals(Object o) {

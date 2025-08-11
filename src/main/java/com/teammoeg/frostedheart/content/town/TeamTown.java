@@ -26,7 +26,9 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
+import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
+import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
@@ -39,8 +41,7 @@ import net.minecraft.core.BlockPos;
  * You may use this to access or modify town data.
  */
 public class TeamTown implements Town, TownWithResident {
-    /** Used to manage town resource. */
-    TownResourceManager resources;
+
     /** The town data, actual data stored on disk. */
     TeamTownData data;
 
@@ -71,169 +72,9 @@ public class TeamTown implements Town, TownWithResident {
      */
     public TeamTown(TeamTownData td) {
         super();
-        this.resources = new TownResourceManager(td.resources);
         this.data = td;
     }
 
-    /*
-    @Override
-    public double add(TownResourceType name, double val, boolean simulate) {
-        int newVal = resources.getOrDefault(name, 0);
-        newVal += (int) (val * 1000);
-        int max = getIntMaxStorage(name) - backupStorage.getOrDefault(name, 0);
-        int remain = 0;
-        if (newVal > max) {
-            remain = newVal - max;
-            newVal = max;
-        }
-        if (!simulate)
-            resources.put(name, newVal);
-        return val - remain / 1000d;
-    }
-
-    @Override
-    public double addService(TownResourceType name, double val) {
-        resources.merge(name, (int) val * 1000, Integer::sum);
-        return val;
-    }
-
-    @Override
-    public double cost(TownResourceType name, double val, boolean simulate) {
-        int servVal = service.getOrDefault(name, 0);
-        int curVal = resources.getOrDefault(name, 0);
-        int buVal = backupStorage.getOrDefault(name, 0);
-        int remain = 0;
-        servVal -= (int) (val * 1000);
-        if (servVal < 0) {
-            curVal += servVal;
-            servVal = 0;
-        }
-        if (curVal < 0) {
-            buVal += curVal;
-            curVal = 0;
-        }
-        if (buVal < 0) {
-            remain = -buVal;
-            buVal = 0;
-        }
-        if (!simulate) {
-            if (servVal > 0) {
-                service.put(name, servVal);
-            } else {
-                service.remove(name);
-            }
-            if (curVal > 0) {
-                resources.put(name, curVal);
-            } else {
-                resources.remove(name);
-            }
-            if (buVal > 0) {
-                backupStorage.put(name, buVal);
-            } else {
-                backupStorage.remove(name);
-            }
-        }
-        return val - remain / 1000d;
-    }
-
-    @Override
-    public double costAsService(TownResourceType name, double val, boolean simulate) {
-        int toCost = (int) (val * 1000);
-        int curVal = resources.getOrDefault(name, 0);
-        //int buVal=backupStorage.getOrDefault(name, 0);
-        int servVal = service.getOrDefault(name, 0);
-        int remain = 0;
-        int costedRC = 0;
-        servVal -= toCost;
-        if (servVal < 0) {
-            costedRC = -servVal;
-            curVal += servVal;
-            servVal = 0;
-        }
-        if (curVal < 0) {
-            remain = -curVal;
-            curVal = 0;
-        }
-		
-		//if(buVal<0) {
-		//	remain=-buVal;
-		//	buVal=0;
-		//}
-        costedRC -= remain;
-        int costed = toCost - remain;
-        if (!simulate) {
-            if (servVal > 0) {
-                service.put(name, servVal);
-            } else {
-                service.remove(name);
-            }
-            if (curVal > 0) {
-                resources.put(name, curVal);
-            } else {
-                resources.remove(name);
-            }
-			//if(buVal>0) {
-			//	backupStorage.put(name, buVal);
-			//}else {
-			//	backupStorage.remove(name);
-			//}
-            if (costedRC > 0) {
-                costedRC += costedService.getOrDefault(name, 0);
-                costedService.put(name, costedRC);
-            }
-        }
-        return costed / 1000d;
-    }
-
-    @Override
-    public double costService(TownResourceType name, double val, boolean simulate) {
-        int servVal = service.getOrDefault(name, 0);
-        int remain = 0;
-        int ival = (int) (val * 1000);
-        if (servVal >= ival) {
-            servVal -= ival;
-        } else {
-            remain = ival - servVal;
-            servVal = 0;
-        }
-        if (!simulate) {
-            if (servVal > 0) {
-                service.put(name, servVal);
-            } else {
-                service.remove(name);
-            }
-        }
-        return val - remain / 1000d;
-    }
-
-    public void finishWork() {
-        resources.putAll(costedService);
-        for (Entry<TownResourceType, Integer> ent : resources.entrySet()) {
-            int max = getIntMaxStorage(ent.getKey());
-            if (ent.getValue() > max) {
-                ent.setValue(max);
-            }
-        }
-    }
-
-
-    public double get(TownResourceType name) {
-        int val = resources.getOrDefault(name, 0);
-        val += backupStorage.getOrDefault(name, 0);
-        val += service.getOrDefault(name, 0);
-
-        return val / 1000d;
-    }
-    */
-
-    /**
-     * Get the resource manager.
-     * Use methods in TownResourceManager to change resources in town.
-     * @return the town resource manager
-     */
-    public TownResourceManager getResourceManager() {
-        return resources;
-    }
 
 
     /**
@@ -330,6 +171,15 @@ public class TeamTown implements Town, TownWithResident {
      */
     public void setName(String name) {
         this.data.name = name;
+    }
+
+    @Override
+    public IActionExecutorHandler getActionExecutorHandler() {
+        return data.resources.actionExecutor;
+    }
+
+    public TeamTownResourceHolder getResourceHolder() {
+        return data.resources;
     }
 
     @Override

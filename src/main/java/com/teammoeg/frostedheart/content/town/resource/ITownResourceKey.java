@@ -8,7 +8,6 @@ import com.teammoeg.chorda.io.CodecUtil;
  */
 public interface ITownResourceKey extends IGettable{
 
-
     Codec<ITownResourceKey> CODEC = CodecUtil.dispatch(ITownResourceKey.class)
             .type("item", ItemStackResourceKey.class, ItemStackResourceKey.CODEC)
             .type("virtual", VirtualResourceAttribute.class, VirtualResourceAttribute.CODEC)

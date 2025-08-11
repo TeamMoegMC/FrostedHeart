@@ -26,7 +26,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import lombok.Getter;
 
 /**
- * <strong>THIS IS ALSO A VIRTUAL RESOURCE KEY THAT DIRECTLY STORED IN {@link TownResourceHolder}!</strong>
+ * <strong>THIS IS ALSO A VIRTUAL RESOURCE KEY THAT DIRECTLY STORED IN {@link TeamTownResourceHolder}!</strong>
  * <p>
  * Town resource attribute of virtual resources.
  * Holds the resource type and the level.

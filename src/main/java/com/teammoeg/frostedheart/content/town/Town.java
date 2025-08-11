@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.town;
 
 import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
+import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
 
 import java.util.Optional;
 
@@ -30,13 +31,22 @@ import java.util.Optional;
  */
 public interface Town {
 
-    /**
-     * Gets the resource manager.
-     * Resource manager is used to change resources in the town.
-     * Maybe there will be an interface super all resources managers, including town resource manager? I don't know.
-     * @return resource manager
+    /*
+      Gets the resource manager.
+      Resource manager is used to change resources in the town.
+      Maybe there will be an interface super all resources managers, including town resource manager? I don't know.
+      已弃用，请使用getActionExecutorHandler操作资源。
+      @return resource manager
      */
-    TownResourceManager getResourceManager();
+    //TownResourceManager getResourceManager();
+
+    /**
+     * Get the {@link IActionExecutorHandler} of this town, which is used to execute actions.
+     *
+     *
+     * @return the action executor handler
+     */
+    IActionExecutorHandler getActionExecutorHandler();
 
     /**
      * Gets the team town data, may be null if not a player team.

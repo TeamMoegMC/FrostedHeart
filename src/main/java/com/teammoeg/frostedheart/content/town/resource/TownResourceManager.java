@@ -26,16 +26,18 @@ import java.util.Map;
 
 /**
  * 提供了对城镇资源进行操作的一些方法。
+ * 已弃用，请使用{@link TeamTownResourceActionExecutorHandler}{@link com.teammoeg.frostedheart.content.town.resource.action.ITownResourceAction}{@link com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions}
  */
+@Deprecated
 public class TownResourceManager {
-    public final TownResourceHolder resourceHolder;
+    public final TeamTownResourceHolder resourceHolder;
 
-    public TownResourceManager(TownResourceHolder holder){
+    public TownResourceManager(TeamTownResourceHolder holder){
         this.resourceHolder = holder;
     }
 
     public TownResourceManager(){
-        this.resourceHolder = new TownResourceHolder();
+        this.resourceHolder = new TeamTownResourceHolder();
     }
 
     /**
@@ -223,10 +225,10 @@ public class TownResourceManager {
         Map<ItemStack, Double> items = resourceHolder.getAllItems(attribute);
         toCost = amount;
         for(ItemStack itemStack : items.keySet()){
-            double itemResourceAmount = TownResourceHolder.getResourceAmount(itemStack, attribute);
+            double itemResourceAmount = TeamTownResourceHolder.getResourceAmount(itemStack, attribute);
             SimpleResourceActionResult result = costToEmpty(itemStack, toCost / itemResourceAmount);
             toCost -= result.actualAmount() * itemResourceAmount;
-            if(toCost<=TownResourceHolder.DELTA) break;
+            if(toCost<= TeamTownResourceHolder.DELTA) break;
         }
         return new SimpleResourceActionResult(true, amount, attribute);
     }
@@ -269,10 +271,10 @@ public class TownResourceManager {
         Map<ItemStack, Double> items = resourceHolder.getAllItems(attribute);
         toCost = Math.min(resourceLeft, amount);
         for(ItemStack itemStack : items.keySet()){
-            double itemResourceAmount = TownResourceHolder.getResourceAmount(itemStack, attribute);
+            double itemResourceAmount = TeamTownResourceHolder.getResourceAmount(itemStack, attribute);
             SimpleResourceActionResult result = costToEmpty(itemStack, toCost / itemResourceAmount);
             toCost -= result.actualAmount() * itemResourceAmount;
-            if(toCost<=TownResourceHolder.DELTA) break;
+            if(toCost<= TeamTownResourceHolder.DELTA) break;
         }
         return new SimpleResourceActionResult(amount <= resourceLeft, Math.min(resourceLeft, amount), attribute);
     }
