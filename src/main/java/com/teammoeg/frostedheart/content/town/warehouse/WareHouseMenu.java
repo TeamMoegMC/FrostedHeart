@@ -30,7 +30,7 @@ public class WareHouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 	public WareHouseMenu(int id, Inventory inventoryPlayer, WarehouseBlockEntity tile) {
 		super(FHMenuTypes.WAREHOUSE.get(),tile,id, inventoryPlayer.player,32);
 
-//		super.addPlayerInventory(inventoryPlayer, 8, 84, 142);
+		super.addPlayerInventory(inventoryPlayer, 8, 84, 142);
 	}
 
 

@@ -36,7 +36,7 @@ import net.minecraft.world.entity.player.Inventory;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<? extends CBlockEntity>> extends IEContainerScreen<C>  {
+public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<? extends AbstractTownWorkerBlockEntity>> extends IEContainerScreen<C>  {
 
 
     private int activeTab = 0;
@@ -48,7 +48,7 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         super.imageWidth = 176;
         super.imageHeight = 166;
 
-        AbstractTownWorkerBlockEntity blockEntity = (AbstractTownWorkerBlockEntity) getMenu().getBlock();
+        AbstractTownWorkerBlockEntity blockEntity = getMenu().getBlock();
         tabContents.add((left,top)->{
             this.addRenderableWidget(new Label(left + 10, top + 20, Components.str(blockEntity.isWorkValid() ? "Valid working environment" : "Invalid working environment"), 0xFFFFFF));
             this.addRenderableWidget(new Label(left + 10, top + 40, Components.str(blockEntity.isStructureValid() ? "Valid structure" : "Invalid structure"), 0xFFFFFF));
@@ -106,11 +106,11 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
 
     }
     private void clearContentWidgets() {
-        // Remove all widgets except tab buttons
-        this.renderables.removeIf(widget -> !(widget instanceof AbstractButton) || !tabButtons.contains(widget));
+        // Remove widgets
+        this.renderables.removeIf(widget -> (widget instanceof TabContentComponent));
     }
 
-    public static class Label extends AbstractWidget {
+    public static class Label extends AbstractWidget implements TabContentComponent{
         private final Component text;
         private final int color;
 
@@ -147,5 +147,8 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
     public interface ITabContent {
         void renderTabContent(int guiLeft,int guiTop);
     }
+
+    public interface TabContentComponent {}
+
 }
 
