@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.LogisticChestScreen;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatScreen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
+import com.teammoeg.frostedheart.content.town.warehouse.WareHouseScreen;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
@@ -65,6 +66,7 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.SUPPLY_CHEST.get(), LogisticChestScreen::new);
         MenuScreens.register(FHMenuTypes.STORAGE_CHEST.get(), LogisticChestScreen::new);
         MenuScreens.register(FHMenuTypes.REQUEST_CHEST.get(), LogisticChestScreen::new);
+        MenuScreens.register(FHMenuTypes.WAREHOUSE.get(), WareHouseScreen::new);
     }
 
     public static <C extends AbstractContainerMenu, S extends BaseScreen> void

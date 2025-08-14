@@ -35,7 +35,7 @@ public class HuntingCampBlockEntity extends AbstractTownWorkerBlockEntity {
         super(FHBlockEntityTypes.HUNTING_CAMP.get(),pos,state);
     }
 
-    private boolean isStructureValid(){
+    public boolean isStructureValid(){
         ConfinedSpaceScanner confinedSpaceScanner = new ConfinedSpaceScanner(this.level, worldPosition.above());
         return !confinedSpaceScanner.scan(256);
     }
