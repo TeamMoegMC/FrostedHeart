@@ -115,9 +115,7 @@ public abstract class AbstractTownWorkerBlockEntity extends CBlockEntity impleme
     public boolean isOccupiedAreaOverlapped(){
         return this.workerState == TownWorkerState.OCCUPIED_AREA_OVERLAPPED;}
 
-    public boolean isStructureValid(){
-        return true;
-    }
+    public abstract boolean isStructureValid();
 
     protected CompoundTag getBasicWorkData(){
         CompoundTag nbt = new CompoundTag();

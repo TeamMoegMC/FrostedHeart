@@ -1,18 +1,14 @@
 package com.teammoeg.frostedheart.content.town.house;
 
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.Town;
 import com.teammoeg.frostedheart.content.town.TownWithResident;
 import com.teammoeg.frostedheart.content.town.TownWorker;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
-import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import net.minecraft.nbt.CompoundTag;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class HouseWorker implements TownWorker {
     private HouseWorker() {}
