@@ -24,20 +24,27 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeMenu;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity {
+public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity implements MenuProvider {
     private int volume;//有效体积
     private int area;//占地面积
     private double capacity;//最大容量
@@ -151,4 +158,14 @@ public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity {
         if(this.teamID != null) compoundNBT.putUUID("teamID", this.teamID);
     }
 
+    @Nullable
+    @Override
+    public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player player) {
+        return new WareHouseMenu(id, playerInventory, this);
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("container.warehouse");
+    }
 }

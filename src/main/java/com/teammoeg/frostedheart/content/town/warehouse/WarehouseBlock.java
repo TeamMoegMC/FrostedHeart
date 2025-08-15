@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatDat
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
@@ -38,6 +39,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
@@ -64,6 +66,7 @@ public class WarehouseBlock extends AbstractTownWorkerBlock implements CEntityBl
             player.displayClientMessage(Components.str("Area: " + (te.getArea())), false);
             player.displayClientMessage(Components.str("Capacity: " + BigDecimal.valueOf(te.getCapacity())
                     .setScale(2, RoundingMode.HALF_UP).doubleValue()), false);
+            NetworkHooks.openScreen((ServerPlayer) player, te, pos);
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

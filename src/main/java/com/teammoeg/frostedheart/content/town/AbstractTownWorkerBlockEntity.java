@@ -24,6 +24,7 @@ import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.scheduler.ScheduledTaskTileEntity;
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
 
+import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.core.BlockPos;
@@ -113,6 +114,10 @@ public abstract class AbstractTownWorkerBlockEntity extends CBlockEntity impleme
 
     public boolean isOccupiedAreaOverlapped(){
         return this.workerState == TownWorkerState.OCCUPIED_AREA_OVERLAPPED;}
+
+    public boolean isStructureValid(){
+        return true;
+    }
 
     protected CompoundTag getBasicWorkData(){
         CompoundTag nbt = new CompoundTag();
