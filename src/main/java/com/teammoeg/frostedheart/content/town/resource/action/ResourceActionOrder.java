@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.town.resource.action;
 
 /**
- * 表示消耗对应TownResourceType时，消耗的等级顺序
+ * 表示消耗对应TownResourceType时，优先消耗低级或高级资源。
  */
 public enum ResourceActionOrder {
     ASCENDING, DESCENDING

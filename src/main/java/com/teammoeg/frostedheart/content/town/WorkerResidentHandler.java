@@ -97,7 +97,7 @@ public abstract class WorkerResidentHandler {
      * <br>
      * 1-exp型，在x大概为20时，数值达到一半
      */
-    public static double CalculatingFunction1(int num){
+    public static double CalculatingFunction1(double num){
         if(num <= 0){
             return Double.NEGATIVE_INFINITY;
         }
@@ -112,7 +112,7 @@ public abstract class WorkerResidentHandler {
      * @param num x
      * @param parameter1 这个数值越大，曲线越陡峭。一般取0.1时可得到一个陡峭度适中的曲线。
      */
-    public static double CalculatingFunction2(int num, double parameter1){
+    public static double CalculatingFunction2(double num, double parameter1){
         return 1/(1+Math.exp(-num * parameter1 + 50 * parameter1));
     }
 

@@ -42,6 +42,10 @@ public abstract class AbstractTownWorkerBlockEntity extends CBlockEntity impleme
     public AbstractTownWorkerBlockEntity(BlockEntityType<? extends BlockEntity> type, BlockPos pos, BlockState state)  {
         super(type,pos,state);
     }
+
+    /**
+     * 重新进行结构的扫描、温度的检测等工作，并刷新方块的状态
+     */
     public abstract void refresh();
 
     public void refresh_safe(){
@@ -88,9 +92,7 @@ public abstract class AbstractTownWorkerBlockEntity extends CBlockEntity impleme
         return workerState.isValid();
     }
 
-    /**
-     * doesn't refresh the tile entity if didn't initialize
-     */
+
     public boolean isValid(){
         return this.workerState.isValid();
     }

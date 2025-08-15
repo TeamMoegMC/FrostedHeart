@@ -49,10 +49,10 @@ public class Resident {
             Codec.STRING.fieldOf("firstName").forGetter(o->o.firstName),
             Codec.STRING.fieldOf("lastName").forGetter(o->o.lastName),
             UUIDUtil.CODEC.fieldOf("uuid").forGetter(o->o.uuid),
-            Codec.INT.optionalFieldOf("health",50).forGetter(o->o.health),
-            Codec.INT.optionalFieldOf("mental",50).forGetter(o->o.mental),
-            Codec.INT.optionalFieldOf("strength",50).forGetter(o->o.strength),
-            Codec.INT.optionalFieldOf("intelligence",50).forGetter(o->o.intelligence),
+            Codec.DOUBLE.optionalFieldOf("health",50.0).forGetter(o->o.health),
+            Codec.DOUBLE.optionalFieldOf("mental",50.0).forGetter(o->o.mental),
+            Codec.DOUBLE.optionalFieldOf("strength",50.0).forGetter(o->o.strength),
+            Codec.DOUBLE.optionalFieldOf("intelligence",50.0).forGetter(o->o.intelligence),
             Codec.INT.optionalFieldOf("educationLevel",0).forGetter(o->o.educationLevel),
             CodecUtil.mapCodec("type", TownWorkerType.CODEC, "proficiency", Codec.INT).optionalFieldOf("workProficiency",Map.of()).forGetter(o->o.workProficiency),
             BlockPos.CODEC.optionalFieldOf("housePos", null).forGetter(o->o.housePos),
@@ -68,10 +68,10 @@ public class Resident {
     /** Stats range from 0 to 100 start*/
     // physical
     @Getter
-    private int health = 50;
+    private double health = 50.0;
     // psychological, well-being, 幸福度
     @Getter
-    private int mental = 50;
+    private double mental = 50.0;
     /** Stats range from 0 to 100 end*/
     // educational
     // more than 0
@@ -79,10 +79,10 @@ public class Resident {
     private int educationLevel = 0;
     //strength
     @Getter
-    private int strength = 50;
+    private double strength = 50.0;
     // intelligence, decides max educationLevel and the studying speed(the growth speed of educational level)
     @Getter
-    private int intelligence = 50;
+    private double intelligence = 50.0;
     /**
      *  work proficiency.
      *  If the number is negative, this type is considered as unworkable type.
@@ -123,7 +123,7 @@ public class Resident {
         this(firstName,lastName,UUID.fromString(uuid));
     }
 
-    public Resident(String firstName, String lastName, UUID uuid, int health, int mental, int strength, int intelligence, int educationLevel, Map<TownWorkerType, Integer> workProficiency, BlockPos housePos, BlockPos workPos) {
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<TownWorkerType, Integer> workProficiency, BlockPos housePos, BlockPos workPos) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.uuid = uuid;
@@ -153,10 +153,10 @@ public class Resident {
         data.putString("uuid", uuid.toString());
         data.putString("firstName", firstName);
         data.putString("lastName", lastName);
-        data.putInt("health", health);
-        data.putInt("happiness", mental);
-        data.putInt("strength", strength);
-        data.putInt("intelligence", intelligence);
+        data.putDouble("health", health);
+        data.putDouble("happiness", mental);
+        data.putDouble("strength", strength);
+        data.putDouble("intelligence", intelligence);
         data.putInt("educationLevel", educationLevel);
         data.put("workProficiency", SerializeUtil.toNBTMap(workProficiency.entrySet(), (entry, compoundNBTBuilder) -> compoundNBTBuilder.putInt(entry.getKey().getKey(), entry.getValue())));
         data.putLong("workPos", workPos.asLong());
@@ -168,10 +168,10 @@ public class Resident {
         uuid = UUID.fromString(data.getString("uuid"));
         firstName = data.getString("firstName");
         lastName = data.getString("lastName");
-        health = data.getInt("health");
-        mental = data.getInt("happiness");
-        strength = data.getInt("strength");
-        intelligence = data.getInt("intelligence");
+        health = data.getDouble("health");
+        mental = data.getDouble("happiness");
+        strength = data.getDouble("strength");
+        intelligence = data.getDouble("intelligence");
         educationLevel = data.getInt("educationLevel");
         CompoundTag workProficiencyNBT = data.getCompound("workProficiency");
         workProficiency.keySet().forEach(key/*TownWorkerType*/ -> workProficiency.put(key, workProficiencyNBT.getInt(key.getKey())));
@@ -184,63 +184,63 @@ public class Resident {
         this.housePos = pos;
     }
 
-    public void setHealth(int health) {
+    public void setHealth(double health) {
         if (health < 0 || health > 100) {
             throw new IllegalArgumentException("Health must be between 0 and 100");
         }
         this.health = health;
     }
 
-    public void costHealth(int amount) {
+    public void costHealth(double amount) {
         this.health = Math.max(0, this.health - amount);
     }
 
-    public void addHealth(int amount) {
+    public void addHealth(double amount) {
         this.health = Math.min(100, this.health + amount);
     }
 
-    public void setMental(int mental) {
+    public void setMental(double mental) {
         if (mental < 0 || mental > 100) {
             throw new IllegalArgumentException("Mental must be between 0 and 100");
         }
         this.mental = mental;
     }
 
-    public void costMental(int amount) {
+    public void costMental(double amount) {
         this.mental = Math.max(0, this.mental - amount);
     }
 
-    public void addMental(int amount) {
+    public void addMental(double amount) {
         this.mental = Math.min(100, this.mental + amount);
     }
 
-    public void setStrength(int strength) {
+    public void setStrength(double strength) {
         if (strength < 0 || strength > 100) {
             throw new IllegalArgumentException("Strength must be between 0 and 100");
         }
         this.strength = strength;
     }
 
-    public void costStrength(int amount) {
+    public void costStrength(double amount) {
         this.strength = Math.max(0, this.strength - amount);
     }
 
-    public void addStrength(int amount) {
+    public void addStrength(double amount) {
         this.strength = Math.min(100, this.strength + amount);
     }
 
-    public void setIntelligence(int intelligence) {
+    public void setIntelligence(double intelligence) {
         if (intelligence < 0 || intelligence > 100) {
             throw new IllegalArgumentException("Intelligence must be between 0 and 100");
         }
         this.intelligence = intelligence;
     }
 
-    public void costIntelligence(int amount) {
+    public void costIntelligence(double amount) {
         this.intelligence = Math.max(0, this.intelligence - amount);
     }
 
-    public void addIntelligence(int amount) {
+    public void addIntelligence(double amount) {
         this.intelligence = Math.min(100, this.intelligence + amount);
     }
 
