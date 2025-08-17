@@ -36,11 +36,11 @@ public class WareHouseScreen extends AbstractTownWorkerBlockScreen<WareHouseMenu
         super(inventorySlotsIn, inv, title, TEXTURE);
 
         WarehouseBlockEntity blockEntity = getMenu().getBlock();
-        super.tabContents.add((left,top)->{
+        addTabContent((left,top)->{
             this.addRenderableWidget(new Label(left + 10, top + 20, Components.str("Volume: " + (blockEntity.getVolume())), 0xFFFFFF));
             this.addRenderableWidget(new Label(left + 10, top + 40, Components.str("Area: " + (blockEntity.getArea())), 0xFFFFFF));
         });
-        super.tabContents.add((left,top)->{
+        addTabContent((left,top)->{
             this.addRenderableWidget(new Label(left + 10, top + 20, Components.str("Capacity: " + BigDecimal.valueOf(blockEntity.getCapacity())
                     .setScale(2, RoundingMode.HALF_UP).doubleValue()), 0xFFFFFF));
         });
