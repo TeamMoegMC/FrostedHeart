@@ -67,7 +67,7 @@ public abstract class AbstractTownWorkerBlock extends CBlock {
         if (te != null) {
             // register the house to the town
             if (entity instanceof ServerPlayer) {
-                if (ChunkHeatData.hasActiveAdjust(world, pos)) {
+                if (true/*ChunkHeatData.hasActiveAdjust(world, pos)*/) {//todo: 测试时不管这个条件，后续或许会开启
                     TeamTown.from((Player) entity).addTownBlock(pos, te);
                 }
             }

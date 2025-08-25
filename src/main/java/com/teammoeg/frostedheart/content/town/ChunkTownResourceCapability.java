@@ -23,19 +23,24 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.function.DoubleSupplier;
 
 import com.teammoeg.chorda.io.NBTSerializable;
-import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 
+import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 
 /**
  * 用于存储一个区块中含有的自然资源量。主要用于存储矿物等不可再生自然资源。
  */
 public class ChunkTownResourceCapability implements NBTSerializable {
-    //Integer: 表示某种资源在这个区块的相对丰富程度，石头为100。
-    public final Map<ChunkTownResourceType, Integer> resourceAbundance;
-    public static final HashMap<String, ChunkTownResourceType> CHUNK_RESOURCE_TYPE_KEY = new HashMap<>();
+    /**
+     * 区块中各种资源储量。
+     * 键为资源类型，值为该资源在区块中的储量。
+     * 值的范围在0-1之间
+     */
+    private final Map<ChunkTownResourceType, Double> resourceReserves;
+    private static final HashMap<String, ChunkTownResourceType> CHUNK_RESOURCE_TYPE_KEY = new HashMap<>();
     static{
         for(ChunkTownResourceType ChunkTownResourceType : ChunkTownResourceType.values()){
             CHUNK_RESOURCE_TYPE_KEY.put(ChunkTownResourceType.getKey(), ChunkTownResourceType);
@@ -43,17 +48,20 @@ public class ChunkTownResourceCapability implements NBTSerializable {
     }
 
     public ChunkTownResourceCapability(){
-        this.resourceAbundance = new EnumMap<>(ChunkTownResourceType.class);
-        resourceAbundance.put(ChunkTownResourceType.STONE, 100);
+        this.resourceReserves = new EnumMap<>(ChunkTownResourceType.class);
     }
 
-    public int getOrGenerateAbundance(ChunkTownResourceType resourceType){
-        if(resourceAbundance.get(resourceType) == null || resourceAbundance.get(resourceType) < 0){
-            resourceAbundance.put(resourceType, new Random().nextInt());
-        } else if(resourceAbundance.get(resourceType) > 100) {
-            resourceAbundance.put(resourceType, 100);
+    public double getOrGenerateReserves(ChunkTownResourceType resourceType){
+        if(resourceReserves.get(resourceType) == null){
+            resourceReserves.put(resourceType, resourceType.reservesGenerator.getAsDouble());
         }
-        return resourceAbundance.get(resourceType);
+        return resourceReserves.get(resourceType);
+    }
+
+    public void costReserves(ChunkTownResourceType resourceType, double amount){
+        if(amount <= this.getOrGenerateReserves(resourceType)) {
+            resourceReserves.put(resourceType, resourceReserves.get(resourceType) - amount);
+        }
     }
 
     public ChunkTownResourceType getChunkTownResourceType(String key){
@@ -62,9 +70,9 @@ public class ChunkTownResourceCapability implements NBTSerializable {
 
     @Override
     public void save(CompoundTag nbt, boolean isPacket) {
-        for(Map.Entry<ChunkTownResourceType, Integer> abundanceEntry : resourceAbundance.entrySet()){
+        for(Map.Entry<ChunkTownResourceType, Double> abundanceEntry : resourceReserves.entrySet()){
             if(abundanceEntry.getValue()!=null) {
-                nbt.putInt(abundanceEntry.getKey().getKey(), abundanceEntry.getValue());
+                nbt.putDouble(abundanceEntry.getKey().getKey(), abundanceEntry.getValue());
             }
         }
     }
@@ -72,41 +80,44 @@ public class ChunkTownResourceCapability implements NBTSerializable {
     @Override
     public void load(CompoundTag nbt, boolean isPacket) {
         for(String key : CHUNK_RESOURCE_TYPE_KEY.keySet()){
-            this.resourceAbundance.put(getChunkTownResourceType(key), nbt.getInt(key) >=0 ? null : nbt.getInt(key));
+            this.resourceReserves.put(getChunkTownResourceType(key), nbt.getDouble(key) >=0 ? null : nbt.getDouble(key));
         }
     }
 
+    /**
+     * 表示区块中，对应某种城镇工作的自然资源。
+     */
+    @Getter
     public enum ChunkTownResourceType {
-        STONE(ItemResourceType.STONE, 1.0, 100),
-        METAL(ItemResourceType.METAL, 0.25, 50),
-        FUEL(ItemResourceType.FUEL, 0.3, 500);
+        ORE( ()->{
+            Random random = new Random();
+            double randomNum = random.nextDouble();
+            if(randomNum > 0.5){
+                return 0;//有概率没有矿物
+            }
+            return Math.pow(randomNum * 2, 0.75);//随便填的
+        } ),//用于矿场
+        ANIMAL(),//用于猎场
+        TREE( () -> {
+            Random random = new Random();
+            return 0.5 + random.nextDouble() * 0.5;//群系正确的情况下始终不太低
+        });//用于伐木场（如果以后有的话）
 
-        final ItemResourceType type;
-        final int maxAbundance;
-        final double generatingChance;
+        /**
+         * 用于生成资源的初始相对储量，范围在0-1之间。
+         */
+        final java.util.function.DoubleSupplier reservesGenerator;
 
-        ChunkTownResourceType(ItemResourceType type){
-            this.type = type;
-            this.maxAbundance = 0;
-            this.generatingChance = 0;
+        ChunkTownResourceType(){
+            this.reservesGenerator = Math::random;
         }
-        ChunkTownResourceType(ItemResourceType type, double generatingChance, int maxAbundance){
-            this.type = type;
-            this.maxAbundance = maxAbundance;
-            this.generatingChance = generatingChance;
+        ChunkTownResourceType(DoubleSupplier reservesGenerator){
+            this.reservesGenerator = reservesGenerator;
         }
 
-        public ItemResourceType getType(){
-            return type;
-        }
-        public int getMaxAbundance(){
-            return maxAbundance;
-        }
-        public double getGeneratingChance(){
-            return generatingChance;
-        }
         public String getKey(){
-            return type.getKey();
+            return this.name().toLowerCase();
         }
+
     }
 }

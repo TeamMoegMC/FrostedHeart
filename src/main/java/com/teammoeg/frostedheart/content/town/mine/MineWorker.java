@@ -19,34 +19,72 @@
 
 package com.teammoeg.frostedheart.content.town.mine;
 
-import com.teammoeg.chorda.math.CMath;
+import com.teammoeg.chorda.util.CDistHelper;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 
+import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
+import com.teammoeg.frostedheart.content.town.resource.action.*;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
+
+import static com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity.isValid;
+import static com.teammoeg.frostedheart.content.town.WorkerResidentHandler.CalculatingFunction1;
 
 public class MineWorker implements TownWorker {
     public static final MineWorker INSTANCE=new MineWorker();
+
+    public static final Map<ResourceLocation, Map<Item,  Integer>> BIOME_RESOURCES = new HashMap<>();
+    public static final Map<Item, Integer> DEFAULT_RESOURCES = Map.of(Items.COBBLESTONE, 1);
+    /**
+     * 表示当前chunkResourceReservesCost来源于哪次工作。
+     * 用于在Worker和BlockEntity之间传输数据时，检查来自worker的chunkResourceReservesCost是否已经被BlockEntity同步到区块数据。
+     * 以及在Worker工作的时候，检查上次工作时产生的chunkResourceReservesCost是否已经被同步。
+     * <br>
+     * 当worker工作时，chunkResourceReservesCost发生变化，将一个新的workerID与chunkResourceReservesCost一并储存进workData。
+     * 随后，当城镇与BlockEntity进行数据交互时，新的workerID会BlockEntity读取和记录。
+     * BlockEntity会将记录到的chunkResourceReservesCost存进区块里，然后清空chunkResourceReservesCost，将lastSyncedWorkID更新为最新收到的workID。
+     * BlockEntity会将lastSyncedWorkID发送到城镇，城镇会记录该lastSyncedWorkID。
+     * <br>
+     * 当worker发现lasySyncedWorkID与latestWorkID一致，则说明数据已经同步到区块，就会重置chunkResourceReservesCost为0。
+     * 城镇与BlockEntity进行数据交互时，BlockEntity会自己检查该workerID是否与BlockEntity上次一致。如果一致，说明这次数据已经更新到区块，chunkResourceReservesCost保持为0不更新。
+     */
+    public static final LongAdder WORK_ID = new LongAdder();
+
     private MineWorker(){}
     @Override
     public boolean work(Town town, CompoundTag workData) {
+        if(!isValid(workData)){
+            return false;
+        }
         if(town instanceof TownWithResident){
             TeamTown teamTown = (TeamTown) town;
             CompoundTag dataTE = workData.getCompound("tileEntity");
+            CompoundTag dataTown = workData.getCompound("town");
             double rating = dataTE.getDouble("rating");
-            ListTag list = dataTE.getList("resources", Tag.TAG_COMPOUND);
-            EnumMap<ItemResourceType, Double> resources = new EnumMap<>(ItemResourceType.class);
-            list.forEach(nbt -> {
-                CompoundTag nbt_1 = (CompoundTag) nbt;
-                String key = nbt_1.getString("type");
-                double amount = nbt_1.getDouble("amount");
-                resources.put(ItemResourceType.from(key), amount);
-            });
+            long lastSyncedWorkID = dataTE.getLong("lastSyncedWorkID");
+            long latestWorkID = dataTown.getLong("latestWorkID");
+            double chunkResourceReservesCost = dataTown.getDouble("chunkResourceReservesCost");
+            double chunkResourceReserves = dataTE.getDouble("chunkResourceReserves");
+            if(lastSyncedWorkID == latestWorkID){
+                chunkResourceReservesCost = 0;
+            }
+            if(chunkResourceReservesCost > 0){
+                chunkResourceReserves = chunkResourceReserves - chunkResourceReservesCost;
+                if(chunkResourceReserves <= 0){
+                    return false;
+                }
+            }
+            ResourceLocation biomeLocation = ResourceLocation.tryParse(dataTE.getString("biome"));
             List<Resident> residents = workData.getCompound("town").getList("residents", Tag.TAG_STRING)
                     .stream()
                     .map(nbt -> UUID.fromString(nbt.getAsString()))
@@ -54,22 +92,49 @@ public class MineWorker implements TownWorker {
                     .map(optional -> optional.orElse(null))
                     .filter(Objects::nonNull)
                     .toList();
+
+            IActionExecutorHandler executorHandler = teamTown.getActionExecutorHandler();
+            ITownResourceActionExecutor<TownResourceActions.ItemResourceAction> itemResourceExecutor = executorHandler.getExecutor(TownResourceActions.ItemResourceAction.class);
+            Map<Item,  Integer> weights = getWeights(biomeLocation);
+            int totalWeight = weights.values().stream().mapToInt(weight -> weight).sum();
             for(Resident resident : residents){
-                //double add = rating * resident.getWorkScore(TownWorkerType.MINE);
-                double randomDouble = CMath.RANDOM.nextDouble();
-                double counter = 0;
-                for(Map.Entry<ItemResourceType, Double> entry : resources.entrySet()){
-                    counter += entry.getValue();
-                    if(counter >= randomDouble){
-                        //double actualAdd = town.add(entry.getKey(), add, false);
-                        //if(add != actualAdd) return false;
-                        return false;
-                        //todo: 重制ChunkResource之后再来搞这个
-                    }
-                }
+                double score = TownWorkerType.MINE.getResidentScore( resident );
+                double finalChunkResourceReserves = chunkResourceReserves;
+                List<TownResourceActions.ItemResourceActionResult> results = weights.entrySet().stream()
+                        .map(entry -> new TownResourceActions.ItemResourceAction
+                                (new ItemStack(entry.getKey()), ResourceActionType.ADD, Math.sqrt(finalChunkResourceReserves) * rating * score * entry.getValue() / totalWeight, ResourceActionMode.ATTEMPT))
+                        .map(itemResourceExecutor::execute)
+                        .map(result -> (TownResourceActions.ItemResourceActionResult) result)
+                        .toList();
+                resident.addStrength(20 / resident.getStrength());
+                chunkResourceReservesCost += 0.0005 * chunkResourceReserves * rating * score;//至少2000人*天会挖空？
             }
+            WORK_ID.add(1);
+            latestWorkID = WORK_ID.longValue();
+            dataTown.putLong("latestWorkID", latestWorkID);
+            dataTown.putDouble("chunkResourceReservesCost", chunkResourceReservesCost);
+            workData.put("town", dataTown);
             return true;
         }
         return false;
     }
+
+    private static void loadBiomeResources() {
+        for(BiomeMineResourceRecipe recipe : CUtils.filterRecipes(CDistHelper.getRecipeManager(), BiomeMineResourceRecipe.TYPE)){
+            ResourceLocation biomeID = recipe.biomeID;
+            Map<Item, Integer> weights = recipe.weights;
+            BIOME_RESOURCES.put(biomeID, weights);
+        }
+    }
+
+    public static Map<Item, Integer> getWeights(ResourceLocation biomeID){
+        if(BIOME_RESOURCES.isEmpty()){
+            loadBiomeResources();
+        }
+        if(BIOME_RESOURCES.containsKey(biomeID)){
+            return BIOME_RESOURCES.get(biomeID);
+        }
+        return DEFAULT_RESOURCES;
+    }
+
 }

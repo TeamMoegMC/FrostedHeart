@@ -50,7 +50,7 @@ public abstract class AbstractTownWorkerBlockEntity extends CBlockEntity impleme
     public abstract void refresh();
 
     public void refresh_safe(){
-        if(level != null && level.isAreaLoaded(worldPosition,15)){
+        if(level != null && level.isLoaded(worldPosition)){
             this.refresh();
         }
     }

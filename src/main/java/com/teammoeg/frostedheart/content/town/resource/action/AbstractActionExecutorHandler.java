@@ -22,10 +22,10 @@ public abstract class AbstractActionExecutorHandler implements IActionExecutorHa
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends ITownResourceAction> ITownResourceActionExecutor<T>  getExecutor(T action){
-        Class<? extends ITownResourceAction> actionClass = action.getClass();
+    @Override
+    public <T extends ITownResourceAction> ITownResourceActionExecutor<T> getExecutor(Class<T> actionClass) {
         if(executors.containsKey(actionClass)){
-            //这里没有检查类型转换，修改Map的时候注意点。
+            //这里没有检查类型转换，修改executors的那个Map的时候需要注意。
             return (ITownResourceActionExecutor<T>) executors.get(actionClass);
         }
         throw new IllegalArgumentException("Executor AbstractActionExecutorHandler can't execute action: "

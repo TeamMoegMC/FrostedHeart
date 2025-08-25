@@ -42,6 +42,10 @@ public abstract class CBlockEntity extends BlockEntity implements SyncableBlockE
 		this.readCustomNBT(nbtIn, false);
 	}
 
+	/**
+	 * @param nbt nbt to read
+	 * @param descPacket true if the packet is just for sync data from server? I'm not sure, ask khj for details.
+	 */
 	public abstract void readCustomNBT(CompoundTag nbt, boolean descPacket);
 
 	@Override
@@ -51,6 +55,10 @@ public abstract class CBlockEntity extends BlockEntity implements SyncableBlockE
 		this.writeCustomNBT(nbt, false);
 	}
 
+	/**
+	 * @param nbt nbt to write
+	 * @param descPacket true if the packet is just for sync data to client? I'm not sure, ask khj for details.
+	 */
 	public abstract void writeCustomNBT(CompoundTag nbt, boolean descPacket);
 
 	@Override

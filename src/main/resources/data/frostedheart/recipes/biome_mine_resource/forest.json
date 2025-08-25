@@ -1,0 +1,10 @@
+{
+  "type": "frostedheart:biome_mine_resource",
+  "biome": "minecraft:plains",
+  "weights": [
+    {
+      "minecraft:cobblestone": 1,
+      "minecraft:diorite": 1
+    }
+  ]
+}

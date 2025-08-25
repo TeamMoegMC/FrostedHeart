@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
+import com.teammoeg.frostedheart.content.town.mine.BiomeMineResourceRecipe;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceAmountRecipe;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
@@ -84,6 +85,7 @@ public class FHRecipes {
 		WaterLevelAndEffectRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("water_level_and_effect", WaterLevelAndEffectRecipe.Serializer::new);
 		NutritionRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("diet_override", NutritionRecipe.Serializer::new);
 		ItemResourceAmountRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("item_resource_amount", ItemResourceAmountRecipe.Serializer::new);
+		BiomeMineResourceRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("biome_mine_resource", BiomeMineResourceRecipe.Serializer::new);
 		GeneratorRecipe.TYPE = createRecipeType("generator");
 		GeneratorSteamRecipe.TYPE = createRecipeType("steam_generator");
 		ChargerRecipe.TYPE = createRecipeType("charger");
@@ -95,6 +97,7 @@ public class FHRecipes {
 		WaterLevelAndEffectRecipe.TYPE = createRecipeType("water_level_and_effect");
 		NutritionRecipe.TYPE = createRecipeType("diet_override");
 		ItemResourceAmountRecipe.TYPE = createRecipeType("item_resource_amount");
+		BiomeMineResourceRecipe.TYPE = createRecipeType("biome_mine_resource");
 		ArmorTempData.TYPE = createCodecRecipeType("armor_temp", ArmorTempData.CODEC);
 		BiomeTempData.TYPE = createCodecRecipeType("biome_temp", BiomeTempData.CODEC);
 		BlockTempData.TYPE = createCodecRecipeType("block_temp", BlockTempData.CODEC);
