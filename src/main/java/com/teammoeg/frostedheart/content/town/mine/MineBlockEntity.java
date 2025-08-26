@@ -178,7 +178,9 @@ public class MineBlockEntity extends AbstractTownWorkerBlockEntity {
 
     @Override
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
-        nbt.putString("biome", biome.toString());
+        if(this.biome != null){
+            nbt.putString("biome", biome.toString());
+        }
         nbt.putLong("lastSyncedWorkID", this.lastSyncedWorkID);
         nbt.putLong("latestWorkID", this.latestWorkID);
     }

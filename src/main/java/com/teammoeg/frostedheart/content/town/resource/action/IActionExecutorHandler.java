@@ -4,9 +4,11 @@ package com.teammoeg.frostedheart.content.town.resource.action;
  * 集中管理某种城镇的TownResourceActionExecutor，根据传入的action类型返回对应的executor或直接利用其执行action
  */
 public interface IActionExecutorHandler extends ITownResourceActionExecutor<ITownResourceAction>{
+
     default <T extends ITownResourceAction> ITownResourceActionExecutor<T>  getExecutor(T action){
-        Class<? extends ITownResourceAction> actionClass = action.getClass();
-        getExecutor(actionClass);
+        @SuppressWarnings("unchecked")
+        Class<T> actionClass = (Class<T>) action.getClass();
+        return this.getExecutor(actionClass);
     }
 
     <T extends ITownResourceAction> ITownResourceActionExecutor<T>  getExecutor(Class<T> clazz);

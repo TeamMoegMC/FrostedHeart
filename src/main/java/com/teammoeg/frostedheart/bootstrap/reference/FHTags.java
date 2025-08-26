@@ -231,7 +231,7 @@ public class FHTags {
 		 * 所有对应城镇资源的TagKey都在这里自动生成，每一个ItemResourceAttribute对应一个TagKey
 		 * 这些自动注册的TagKey都具有"frostedheaft:town_resource_XXX_YYY"的形式
 		 * 其中XXX为ItemResourceAttribute中，ItemResourceType名字的小写，YYY为ItemResourceAttribute的level
-		 * com.teammoeg.frostedheart.infrastructure.gen.FHRegistrateTag中注册了这些TagKIey。
+		 * {@link com.teammoeg.frostedheart.infrastructure.gen.FHRegistrateTags}中注册了这些TagKIey。
 		 * 同时，若需要在frostedheart环境中为物品添加城镇Tag，也应在FHRegistrateTag中进行。
 		 */
 		public static final Map<TagKey<Item>, ItemResourceAttribute> MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE = new HashMap<>();

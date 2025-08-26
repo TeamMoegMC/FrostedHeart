@@ -24,7 +24,6 @@ import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
-import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -34,11 +33,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 
 import static com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity.isValid;
-import static com.teammoeg.frostedheart.content.town.WorkerResidentHandler.CalculatingFunction1;
 
 public class MineWorker implements TownWorker {
     public static final MineWorker INSTANCE=new MineWorker();
