@@ -363,10 +363,9 @@ public class ClimateCommonEvents {
                                 trd.getData(FHSpecialDataTypes.TOWN_DATA).tick(serverWorld);
                             }
                         }
-                        if (serverWorld.getGameTime() % 24000 == i % 20 + 1000) {
+                        if (serverWorld.getDayTime() % 24000 == i % 20 + 1000) {
                             if (trd.getTeam().getOnlineMembers().size() > 0) {
-                                trd.getData(FHSpecialDataTypes.TOWN_DATA).tickMorning(serverWorld);// execute only once
-                                // a day
+                                trd.getData(FHSpecialDataTypes.TOWN_DATA).tickMorning(serverWorld);// execute only once a day
                             }
                         }
                     }
