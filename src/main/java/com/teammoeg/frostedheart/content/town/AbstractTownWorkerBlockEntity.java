@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.town;
 
 import com.teammoeg.chorda.block.CBlockInterfaces;
 import com.teammoeg.chorda.block.entity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.scheduler.ScheduledTaskTileEntity;
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
 
@@ -34,7 +35,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
 public abstract class AbstractTownWorkerBlockEntity extends CBlockEntity implements
-        TownBlockEntity, ScheduledTaskTileEntity, CBlockInterfaces.IActiveState {
+        TownBlockEntity, ScheduledTaskTileEntity, CBlockInterfaces.IActiveState, CTickableBlockEntity {
     @Getter
     @Setter
     public TownWorkerState workerState = TownWorkerState.NOT_INITIALIZED;

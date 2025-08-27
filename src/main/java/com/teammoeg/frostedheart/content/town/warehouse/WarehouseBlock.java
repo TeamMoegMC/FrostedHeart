@@ -77,17 +77,4 @@ public class WarehouseBlock extends AbstractTownWorkerBlock implements CEntityBl
 		return FHBlockEntityTypes.WAREHOUSE;
 	}
 
-    @Override
-    public void setPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
-        super.setPlacedBy(world, pos, state, entity, stack);
-        WarehouseBlockEntity warehouseBlockEntity = (WarehouseBlockEntity) Utils.getExistingTileEntity(world, pos);
-        if (warehouseBlockEntity != null) {
-            if (entity instanceof ServerPlayer) {
-                if (ChunkHeatData.hasActiveAdjust(world, pos)) {
-                    UUID teamFHID = CTeamDataManager.get((ServerPlayer)entity).getId();
-                    warehouseBlockEntity.setTeamID(teamFHID);
-                }
-            }
-        }
-    }
 }
