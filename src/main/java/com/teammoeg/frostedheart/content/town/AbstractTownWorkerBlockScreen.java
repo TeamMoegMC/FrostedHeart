@@ -40,7 +40,7 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
 
 
     private int activeTab = 0;
-    protected final List<ITabContent> tabContents = new ArrayList<>();
+    private final List<ITabContent> tabContents = new ArrayList<>();
     private final List<AbstractButton> tabButtons = new ArrayList<>();
 
     public AbstractTownWorkerBlockScreen(C inventorySlotsIn, Inventory inv, Component title,ResourceLocation background) {
@@ -49,7 +49,7 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         super.imageHeight = 166;
 
         AbstractTownWorkerBlockEntity blockEntity = getMenu().getBlock();
-        tabContents.add((left,top)->{
+        addTabContent((left,top)->{
             this.addRenderableWidget(new Label(left + 10, top + 20, Components.str(blockEntity.isWorkValid() ? "Valid working environment" : "Invalid working environment"), 0xFFFFFF));
             this.addRenderableWidget(new Label(left + 10, top + 40, Components.str(blockEntity.isStructureValid() ? "Valid structure" : "Invalid structure"), 0xFFFFFF));
         });
@@ -142,6 +142,10 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         } else {
             return new int[]{0, 0};
         }
+    }
+
+    protected void addTabContent(ITabContent content){
+        tabContents.add(content);
     }
 
     public interface ITabContent {
