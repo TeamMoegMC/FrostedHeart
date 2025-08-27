@@ -59,7 +59,7 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity {
     /** The temperature at which the house is comfortable. */
     public static final double COMFORTABLE_TEMP_HOUSE = 24;
     public static final int MAX_TEMP_HOUSE = 50;
-    public static final int MIN_TEMP_HOUSE = 0;
+    public static final int MIN_TEMP_HOUSE = -50;//todo: debug, 原为0
 
     /** Work data, stored in town. */
     private int maxResident = -1; // how many resident can live here

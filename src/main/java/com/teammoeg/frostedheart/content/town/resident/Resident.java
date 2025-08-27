@@ -36,6 +36,7 @@ import net.minecraft.core.UUIDUtil;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -55,9 +56,26 @@ public class Resident {
             Codec.DOUBLE.optionalFieldOf("intelligence",50.0).forGetter(o->o.intelligence),
             Codec.INT.optionalFieldOf("educationLevel",0).forGetter(o->o.educationLevel),
             CodecUtil.mapCodec("type", TownWorkerType.CODEC, "proficiency", Codec.INT).optionalFieldOf("workProficiency",Map.of()).forGetter(o->o.workProficiency),
-            BlockPos.CODEC.optionalFieldOf("housePos", null).forGetter(o->o.housePos),
-            BlockPos.CODEC.optionalFieldOf("workPos", null).forGetter(o->o.workPos)
+            BlockPos.CODEC.optionalFieldOf("housePos").forGetter(o-> Optional.ofNullable(o.housePos)),
+            BlockPos.CODEC.optionalFieldOf("workPos").forGetter(o-> Optional.ofNullable(o.workPos))
 		).apply(t, Resident::new));
+
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<TownWorkerType, Integer> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.uuid = uuid;
+        this.health = health;
+        this.mental = mental;
+        this.strength = strength;
+        this.intelligence = intelligence;
+        this.educationLevel = educationLevel;
+        if(workProficiency!=null){
+            this.workProficiency.putAll(workProficiency);
+        }
+        this.housePos = housePos.orElse(null);
+        this.workPos = workPos.orElse(null);
+    }
+
     private UUID uuid;
     @Setter
     @Getter
