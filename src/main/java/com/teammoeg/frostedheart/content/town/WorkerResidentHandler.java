@@ -99,7 +99,7 @@ public abstract class WorkerResidentHandler {
      */
     public static double CalculatingFunction1(double num){
         if(num <= 0){
-            return Double.NEGATIVE_INFINITY;
+            return 0;
         }
         return 1-Math.exp(-num*0.04);
     }

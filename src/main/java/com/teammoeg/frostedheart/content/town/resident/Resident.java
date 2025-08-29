@@ -103,7 +103,7 @@ public class Resident {
     private double intelligence = 50.0;
     /**
      *  work proficiency.
-     *  If the number is negative, this type is considered as unworkable type.
+     *  must be positive.
      */
     @Getter
     private final EnumMap<TownWorkerType, Integer> workProficiency = new EnumMap<>(TownWorkerType.class);
