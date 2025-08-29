@@ -140,6 +140,8 @@ public class MineBlockEntity extends AbstractTownWorkerBlockEntity {
     }
 
     public static void setLinkedBase(TownWorkerData mineData, BlockPos pos){
+        if(mineData == null) return;
+        if(pos == null) return;
         mineData.setDataFromTown("linkedBasePos", LongTag.valueOf(pos.asLong()));
     }
 

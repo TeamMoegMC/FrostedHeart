@@ -148,10 +148,10 @@ public class TeamTownData implements SpecialData{
         if(!FHConfig.SERVER.enableTownTickMorning.get()) return;
         this.updateAllBlocks(world);
         this.checkOccupiedAreaOverlap();
-        //this.connectMineAndBase();
-        //this.residentAllocatingCheck();
-        //this.allocateHouse();
-        //this.assignWork();
+        this.connectMineAndBase();
+        this.residentAllocatingCheck();
+        this.allocateHouse();
+        this.assignWork();
     }
 
     void removeNonTownBlocks(ServerLevel world) {
