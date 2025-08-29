@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.town.mine;
 
 import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 

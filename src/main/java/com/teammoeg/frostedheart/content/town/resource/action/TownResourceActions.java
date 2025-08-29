@@ -38,7 +38,7 @@ public class TownResourceActions {
      */
     public static record ItemResourceAttributeCostActionResult(ItemResourceAttributeCostAction action, boolean allModified, double totalModifiedAmount, double residualAmount, Map<ItemStackResourceKey, Double> details) implements ITownResourceAttributeActionResult {
         @Override
-        public ITownResourceAction getAction() {
+        public ItemResourceAttributeCostAction getAction() {
             return action;
         }
 
@@ -72,7 +72,7 @@ public class TownResourceActions {
             implements ITownResourceActionResult{
 
         @Override
-        public ITownResourceAction getAction() {
+        public ItemResourceAction getAction() {
             return action;
         }
     }
@@ -127,7 +127,7 @@ public class TownResourceActions {
     public record TownResourceTypeCostActionResult(TownResourceTypeCostAction action, boolean allCosted, double totalModifiedAmount, double residualAmount, List<ITownResourceAttributeActionResult> details) implements ITownResourceActionResult {
 
         @Override
-        public ITownResourceAction getAction() {
+        public TownResourceTypeCostAction getAction() {
             return action;
         }
 
@@ -159,7 +159,7 @@ public class TownResourceActions {
     public record VirtualResourceAttributeActionResult(VirtualResourceAttributeAction action, boolean allModified, double modifiedAmount, double residualAmount ) implements ITownResourceAttributeActionResult {
 
         @Override
-        public ITownResourceAction getAction() {
+        public VirtualResourceAttributeAction getAction() {
             return action;
         }
 

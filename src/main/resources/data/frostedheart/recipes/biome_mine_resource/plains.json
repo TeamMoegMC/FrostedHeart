@@ -1,9 +1,8 @@
 {
   "type": "frostedheart:biome_mine_resource",
   "biome": "minecraft:plains",
-  "weights": [
+  "weights":
     {
       "minecraft:stone": 1
     }
-  ]
 }
