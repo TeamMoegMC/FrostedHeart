@@ -81,10 +81,11 @@ public abstract class AbstractTownWorkerBlockEntity extends CBlockEntity impleme
         if(nbt.contains("tileEntity")){
             return getOccupiedArea(nbt.getCompound("tileEntity"));
         }
-        return null;
+        return OccupiedArea.EMPTY;
     }
 
     public static OccupiedArea getOccupiedArea(TownWorkerData data){
+
         return getOccupiedArea(data.getWorkData().getCompound("tileEntity"));
     }
 

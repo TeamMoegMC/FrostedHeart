@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town;
 
+import lombok.Getter;
 import net.minecraft.nbt.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ColumnPos;
@@ -28,10 +29,17 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+@Getter
 public class OccupiedArea {
+    /**
+     * -- GETTER --
+     *  DO NOT MODIFY THIS SET!
+     *  If you need to change occupied area, use setOccupiedArea/add/remove instead.
+     *
+     */
     private final Set<ColumnPos> occupiedArea;
     private int maxX, maxZ, minX, minZ;
-    public static final OccupiedArea EMPTY = new OccupiedArea(null);
+    public static final OccupiedArea EMPTY = new OccupiedArea(Set.of());
 
     public OccupiedArea(Set<ColumnPos> occupiedArea) {
         this.occupiedArea = occupiedArea;
@@ -46,28 +54,19 @@ public class OccupiedArea {
     }
     public OccupiedArea(){
         this.occupiedArea = new HashSet<>();
+        this.maxX = 0;
+        this.maxZ = 0;
+        this.minX = 0;
+        this.minZ = 0;
     }
 
     /**
-     * the max coordinates you input might be not true.
+     * <b>WARNING</b>! Make sure the max coordinates you input be correct.
      */
-    @Deprecated
     private OccupiedArea(Set<ColumnPos> occupiedArea, int maxX, int maxZ, int minX, int minZ){
         this.occupiedArea = occupiedArea;
     }
 
-    public int getMaxX() {
-        return maxX;
-    }
-    public int getMaxZ() {
-        return maxZ;
-    }
-    public int getMinX() {
-        return minX;
-    }
-    public int getMinZ() {
-        return minZ;
-    }
     public OccupiedArea getEmpty(){
         return EMPTY;
     }
@@ -77,7 +76,12 @@ public class OccupiedArea {
      * 计算结果会保存在maxX和maxZ字段中
      */
     public void calculateMaxXandZ(){
-        if(occupiedArea.isEmpty()) return;
+        if(occupiedArea.isEmpty()) {
+            this.maxX = 0;
+            this.maxZ = 0;
+            this.minX = 0;
+            this.minZ = 0;
+        }
         Iterator<ColumnPos> iterator = occupiedArea.iterator();
         ColumnPos pos = iterator.next();
         maxX = minX = pos.x();
@@ -115,19 +119,21 @@ public class OccupiedArea {
         calculateMaxXandZ();
     }
 
-    /**
-     * DO NOT MODIFY THIS SET!
-     * If you need to change occupied area, use setOccupiedArea/add/remove instead.
-     * @return occupied area
-     */
-    public Set<ColumnPos> getOccupiedArea() {
-        //return copyCollection(occupiedArea);
-        return occupiedArea;
+    public boolean boundingRectangleIntersect(OccupiedArea other){
+        if(this == EMPTY || other == EMPTY || other == null) return true;
+        return this.maxX >= other.minX && this.minX <= other.maxX && this.maxZ >= other.minZ && this.minZ <= other.maxZ;
     }
 
-    public boolean doRectanglesIntersect(OccupiedArea other){
-        if(other == EMPTY) return true;
-        return this.maxX >= other.minX && this.minX <= other.maxX && this.maxZ >= other.minZ && this.minZ <= other.maxZ;
+    public boolean overlapWith(OccupiedArea other){
+        if(!boundingRectangleIntersect(other)){
+            return false;
+        }
+        for (ColumnPos pos : this.occupiedArea) {
+            if(other.occupiedArea.contains(pos)){
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -163,6 +169,9 @@ public class OccupiedArea {
     public static OccupiedArea fromNBT(CompoundTag nbt){
         Set<ColumnPos> occupiedArea = new HashSet<>();
         ListTag list = nbt.getList("occupiedAreaList", Tag.TAG_LONG);
+        if(list.isEmpty()){
+            return EMPTY;
+        }
         list.forEach(nbt1 -> {
             occupiedArea.add(new ColumnPos(BlockPos.getX(((LongTag) nbt1).getAsLong()), BlockPos.getZ(((LongTag) nbt1).getAsLong())));
         });

@@ -147,7 +147,7 @@ public class TeamTownData implements SpecialData{
     public void tickMorning(ServerLevel world){
         if(!FHConfig.SERVER.enableTownTickMorning.get()) return;
         this.updateAllBlocks(world);
-        //this.checkOccupiedAreaOverlap();
+        this.checkOccupiedAreaOverlap();
         //this.connectMineAndBase();
         //this.residentAllocatingCheck();
         //this.allocateHouse();
@@ -208,30 +208,34 @@ public class TeamTownData implements SpecialData{
 
     private void checkOccupiedAreaOverlap(){
         //removeNonTownBlocks(world);
-        Collection<TownWorkerData> workerDataCollection =  new ArrayList<>(blocks.values());
-        List<TownWorkerData> workerDataList = new ArrayList<>(workerDataCollection);
+        Map<TownWorkerData, OccupiedArea> workersWithOccupiedAreas = blocks.values().stream()
+                .map(workerData -> new AbstractMap.SimpleEntry<>(workerData, AbstractTownWorkerBlockEntity.getOccupiedArea(workerData)))
+                .filter(entry -> entry.getValue() != null && entry.getValue() != OccupiedArea.EMPTY)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        ArrayList<TownWorkerData> workerDataList = new ArrayList<>(workersWithOccupiedAreas.keySet());
         Map<TownWorkerData, OccupiedArea> workersMightOverlap = new HashMap<>();
-        for (TownWorkerData workerData : workerDataList) {
-            Iterator<TownWorkerData> subIterator = workerDataList.iterator();
-            if (subIterator.hasNext()) {
-                subIterator.next();
-                subIterator.remove();
-            }
-            while (subIterator.hasNext()) {
-                TownWorkerData comparingWorkerData = subIterator.next();
-                OccupiedArea comparingWorkerOccupiedArea = AbstractTownWorkerBlockEntity.getOccupiedArea(comparingWorkerData);
-                OccupiedArea workerOccupiedArea = AbstractTownWorkerBlockEntity.getOccupiedArea(workerData);
-                if (workerOccupiedArea.doRectanglesIntersect(comparingWorkerOccupiedArea)) {
+
+        //两两比对，根据OccupiedArea的外接矩形是否重合初步筛选可能重叠的worker
+        for(int i = 0; i < workerDataList.size() - 1; i++){
+            TownWorkerData workerData = workerDataList.get(i);
+            OccupiedArea workerOccupiedArea = workersWithOccupiedAreas.get(workerData);
+            for(int j = i + 1; j < workerDataList.size(); j++){
+                TownWorkerData comparingWorkerData = workerDataList.get(j);
+                OccupiedArea comparingWorkerOccupiedArea = workersWithOccupiedAreas.get(comparingWorkerData);
+                if(workerOccupiedArea.boundingRectangleIntersect(comparingWorkerOccupiedArea)){
                     workersMightOverlap.put(workerData, workerOccupiedArea);
                     workersMightOverlap.put(comparingWorkerData, comparingWorkerOccupiedArea);
                 }
             }
         }
+
         Map<ColumnPos, TownWorkerData> occupiedAreaCollectingMap = new HashMap<>();
         Set<TownWorkerData> overlappedWorkers = new HashSet<>();
-
         //利用townTileEntity的OccupiedArea判断是否有重叠
+        //遍历所有可能重叠的worker
         for(Map.Entry<TownWorkerData, OccupiedArea> entry : workersMightOverlap.entrySet()){
+            //遍历该城镇方块所有占用的位置，并与方块本身一起存入occupiedAreaCollectingMap中。
+            //如果发现这个位置已经有过一个worker占用，则将那个worker与这个worker一起存入overlappedWorkers中。
             for(ColumnPos columnPos : entry.getValue().getOccupiedArea()){
                 if(occupiedAreaCollectingMap.containsKey(columnPos)){
                     overlappedWorkers.add(entry.getKey());
@@ -240,7 +244,7 @@ public class TeamTownData implements SpecialData{
                 occupiedAreaCollectingMap.put(columnPos, entry.getKey());
             }
         }
-        for(TownWorkerData data : workerDataCollection){
+        for(TownWorkerData data : workerDataList){
             data.setOverlappingState(overlappedWorkers.contains(data));
         }
     }
