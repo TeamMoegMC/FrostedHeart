@@ -27,9 +27,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
-import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
 import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
-import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
@@ -40,7 +38,7 @@ import net.minecraft.core.BlockPos;
  * The TeamTown is only an interface of the underlying TeamTownData.
  * You may use this to access or modify town data.
  */
-public class TeamTown implements Town, TownWithResident {
+public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
 
     /** The town data, actual data stored on disk. */
     TeamTownData data;

@@ -33,6 +33,12 @@ import net.minecraft.nbt.CompoundTag;
 public interface TownWorker {
 
     /**
+     * Empty work, don't do anything.
+     * Just used to avoid null pointer exception.
+     */
+    public static TownWorker EMPTY = (town, workData)->true;
+
+    /**
      * Work with highest priority
      * It's recommended that this work should add service from block data or constant but not from resources.
      * This work should NOT provide resource or cost resource.

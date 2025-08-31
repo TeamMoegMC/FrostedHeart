@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
 
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
@@ -43,13 +44,20 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
         super(world, startPos);
     }
     private final HashSet<BlockPos> rails = new HashSet<>();
+    @Getter
     private int area = 0;
+    @Getter
     private int volume;
+    @Getter
     private int chest = 0;
+    @Getter
     private int rack = 0;
+    @Getter
     private double temperature = 0;
     private int counter_for_temperature = 0;//used to calculate average temperature.
+    @Getter
     private final Set<BlockPos> linkedMines = new HashSet<>();
+    @Getter
     private final OccupiedArea occupiedArea = new OccupiedArea();
 
     @Override
@@ -86,32 +94,9 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
         } else return false;
     }
 
-    public double getTemperature(){
-        return temperature;
-    }
-    public int getArea() {
-        return area;
-    }
-    public int getVolume() {
-        return volume;
-    }
-    public int getChest() {
-        return chest;
-    }
-    public int getRack() {
-        return rack;
-    }
-    public Set<BlockPos> getLinkedMines() {
-        return linkedMines;
-    }
-    public OccupiedArea getOccupiedArea() {
-        return occupiedArea;
-    }
-
     public boolean scan(){
         this.scan(256, (blockPos) -> {
             area++;
-            //FHMain.LOGGER.info("Scanning pos: " + blockPos);
             occupiedArea.add(toColumnPos(blockPos));
             }, BlockScanner.PREDICATE_FALSE);
         temperature /= counter_for_temperature;

@@ -22,11 +22,10 @@ package com.teammoeg.frostedheart.content.town;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface TownWithResident{
+public interface ITownWithResidents extends Town{
     /**
      * get all residents in the town.
      * @return collection of all residents

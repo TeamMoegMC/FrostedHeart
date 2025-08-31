@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.town.house;
 
 import com.teammoeg.frostedheart.content.town.Town;
-import com.teammoeg.frostedheart.content.town.TownWithResident;
+import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.content.town.TownWorker;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
@@ -38,7 +38,7 @@ public class HouseWorker implements TownWorker {
         }
         //不供应食物会导致居民属性降低
         if (residentNum * 20 > totalFoods) {
-            if(town instanceof TownWithResident residentTown){
+            if(town instanceof ITownWithResidents residentTown){
                 for(UUID uuid : residentsUUID){
                     Optional<Resident> resident = residentTown.getResident(uuid);
                     if(resident.isPresent()){
@@ -74,7 +74,7 @@ public class HouseWorker implements TownWorker {
             availableFoodTypes.remove(toRemove);
         }
 
-        if(town instanceof TownWithResident residentTown){
+        if(town instanceof ITownWithResidents residentTown){
             avgLevel /= residentNum * 20;//计算平均食物等级
             for(UUID uuid : residentsUUID){
                 if(residentTown.getResident(uuid).isPresent()){

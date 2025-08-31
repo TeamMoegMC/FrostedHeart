@@ -112,7 +112,7 @@ public class TeamTownData implements SpecialData{
                 workerData.toTileEntity(world);
                 workerData.updateFromTileEntity(world);
             }
-            if(AbstractTownWorkerBlockEntity.isValid(workerData)){
+            if(AbstractTownWorkerBlockEntity.isValid(workerData) && workerData.getType().getWorker() != TownWorker.EMPTY){
                 //由于已经使用了自动刷新城镇方块的功能，已经不需要通过isWorkValid来在获取合法性信息时刷新。
                 //在抽象类AbstractTownWorkerTileEntity中已经定义了townWorkerState来确定和保存合法性，因此可以直接使用静态方法isValid判断是否是合法的数据
                 // 不再使用isWorkValid，从而减少获取TileEntity的次数

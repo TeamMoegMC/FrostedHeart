@@ -21,11 +21,11 @@ package com.teammoeg.frostedheart.content.town.mine;
 
 import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import com.teammoeg.frostedheart.content.town.resource.action.*;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
@@ -59,15 +59,37 @@ public class MineWorker implements TownWorker {
     public static final LongAdder WORK_ID = new LongAdder();
 
     private MineWorker(){}
+
+
     @Override
     public boolean work(Town town, CompoundTag workData) {
         if(!isValid(workData)){
             return false;
         }
-        if(town instanceof TownWithResident){
-            TeamTown teamTown = (TeamTown) town;
+        if(town instanceof ITownWithResidents townWithResidents){
             CompoundTag dataTE = workData.getCompound("tileEntity");
             CompoundTag dataTown = workData.getCompound("town");
+            if(!dataTown.contains("linkedBasePos")){//检查MineBase是否存在
+                System.out.println("MineWorker:没有链接的MineBase");
+                return false;
+            } else{
+                if(town instanceof ITownWithBlocks townWithBlocks){
+                    BlockPos linkedBasePos = BlockPos.of(dataTown.getLong("linkedBasePos"));
+                    Optional<TownWorkerData> mineBaseData = townWithBlocks.getTownBlock(linkedBasePos);
+                    if(mineBaseData.isEmpty()){
+                        System.out.println("MineWorker:MineBase不存在");
+                        return false;
+                    } else {
+                        if(mineBaseData.get().getType() != TownWorkerType.MINE_BASE){
+                            System.out.println("MineWorker:MineBase不是MineBase");
+                            return false;
+                        }
+                    }
+                } else {
+                    System.out.println("MineWorker:城镇没有ITownWithBlocks接口...你怎么可能看到这个？？？");
+                    return false;//一般来说这是不可能的，怎么会有城镇没有ITownWithBlocks接口，但是存了一个城镇矿场而且还在工作的？
+                }
+            }
             double rating = dataTE.getDouble("rating");
             long lastSyncedWorkID = dataTE.getLong("lastSyncedWorkID");
             long latestWorkID = dataTown.getLong("latestWorkID");
@@ -86,12 +108,12 @@ public class MineWorker implements TownWorker {
             List<Resident> residents = workData.getCompound("town").getList("residents", Tag.TAG_STRING)
                     .stream()
                     .map(nbt -> UUID.fromString(nbt.getAsString()))
-                    .map(teamTown::getResident)
+                    .map(townWithResidents::getResident)
                     .map(optional -> optional.orElse(null))
                     .filter(Objects::nonNull)
                     .toList();
 
-            IActionExecutorHandler executorHandler = teamTown.getActionExecutorHandler();
+            IActionExecutorHandler executorHandler = townWithResidents.getActionExecutorHandler();
             ITownResourceActionExecutor<TownResourceActions.ItemResourceAction> itemResourceExecutor = executorHandler.getExecutor(TownResourceActions.ItemResourceAction.class);
             Map<Item,  Integer> weights = getWeights(biomeLocation);
             int totalWeight = weights.values().stream().mapToInt(weight -> weight).sum();
