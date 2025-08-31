@@ -70,23 +70,19 @@ public class MineWorker implements TownWorker {
             CompoundTag dataTE = workData.getCompound("tileEntity");
             CompoundTag dataTown = workData.getCompound("town");
             if(!dataTown.contains("linkedBasePos")){//检查MineBase是否存在
-                System.out.println("MineWorker:没有链接的MineBase");
                 return false;
             } else{
                 if(town instanceof ITownWithBlocks townWithBlocks){
                     BlockPos linkedBasePos = BlockPos.of(dataTown.getLong("linkedBasePos"));
                     Optional<TownWorkerData> mineBaseData = townWithBlocks.getTownBlock(linkedBasePos);
                     if(mineBaseData.isEmpty()){
-                        System.out.println("MineWorker:MineBase不存在");
                         return false;
                     } else {
                         if(mineBaseData.get().getType() != TownWorkerType.MINE_BASE){
-                            System.out.println("MineWorker:MineBase不是MineBase");
                             return false;
                         }
                     }
                 } else {
-                    System.out.println("MineWorker:城镇没有ITownWithBlocks接口...你怎么可能看到这个？？？");
                     return false;//一般来说这是不可能的，怎么会有城镇没有ITownWithBlocks接口，但是存了一个城镇矿场而且还在工作的？
                 }
             }
