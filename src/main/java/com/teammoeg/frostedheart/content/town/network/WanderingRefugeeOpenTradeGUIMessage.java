@@ -3,11 +3,9 @@ package com.teammoeg.frostedheart.content.town.network;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
-import com.teammoeg.frostedheart.content.trade.TradeHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.NetworkHooks;
 
 import java.util.function.Supplier;
 

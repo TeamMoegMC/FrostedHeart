@@ -13,7 +13,7 @@ public class WanderingRefugeeScreen extends Screen {
     private final WanderingRefugee refugee;
 
     protected WanderingRefugeeScreen(WanderingRefugee refugee) {
-        super(Component.translatable("screen.frostedheart.wandering_refugee.title"));
+        super(Component.translatable("entity.frostedheart.wandering_refugee"));
         this.refugee = refugee;
     }
 

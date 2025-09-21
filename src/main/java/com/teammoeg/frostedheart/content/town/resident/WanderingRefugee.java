@@ -51,6 +51,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
@@ -145,7 +146,7 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
     }
     */
 
-    public InteractionResult mobInteract(Player playerIn, InteractionHand hand) {
+    public @NotNull InteractionResult mobInteract(Player playerIn, @NotNull InteractionHand hand) {
         // FHMain.LOGGER.info("Villager mobInteract side = {}", level().isClientSide ? "CLIENT" : "SERVER");
         ItemStack itemstack = playerIn.getItemInHand(hand);
         if (itemstack.getItem() == Items.VILLAGER_SPAWN_EGG || !this.isAlive() || this.isTrading() || this.isSleeping() || playerIn.isSecondaryUseActive()) {
