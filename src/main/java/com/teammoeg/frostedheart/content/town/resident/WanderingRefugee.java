@@ -23,10 +23,10 @@ import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.AttractedByGeneratorGoal;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.trade.*;
-import com.teammoeg.frostedheart.util.Lang;
 
+import lombok.Getter;
+import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -45,14 +45,12 @@ import net.minecraft.world.entity.ai.goal.target.ResetUniversalAngerTargetGoal;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.monster.*;
 import net.minecraft.world.entity.npc.AbstractVillager;
-import net.minecraft.world.entity.npc.Npc;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
@@ -94,9 +92,12 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
 
     private int remainingPersistentAngerTime;
     private UUID persistentAngerTarget;
+    //duck_egg: 我不知道这个hired是做什么的，暂且保留
     private boolean hired = false;
     private int amountNeeded = 3 + (int) (getRandom().nextFloat() * 5);
+    @Getter
     private String lastName = LAST_NAMES[(int) (Math.random() * LAST_NAMES.length)];
+    @Getter
     private String firstName = FIRST_NAMES[(int) (Math.random() * FIRST_NAMES.length)];
     FHVillagerData fh$data = new FHVillagerData(this);
 
@@ -147,42 +148,53 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
     public InteractionResult mobInteract(Player playerIn, InteractionHand hand) {
         // FHMain.LOGGER.info("Villager mobInteract side = {}", level().isClientSide ? "CLIENT" : "SERVER");
         ItemStack itemstack = playerIn.getItemInHand(hand);
-        if (itemstack.getItem() != Items.VILLAGER_SPAWN_EGG && this.isAlive() && !this.isTrading()
-                && !this.isSleeping() && !playerIn.isSecondaryUseActive()) {
-            if (this.isBaby()) {
-                // this.setUnhappy();
-                return InteractionResult.sidedSuccess(this.level().isClientSide);
-            } else {
-                if (!this.level().isClientSide) {
-                    fh$data.update((ServerLevel) super.level(), playerIn);
-                    RelationList list = fh$data.getRelationShip(playerIn);
-                    int unknownLanguage = list.get(RelationModifier.UNKNOWN_LANGUAGE);
-                    if (list.sum() < TradeConstants.RELATION_TO_TRADE) {
-                        //this.setUnhappy();
-                        if (unknownLanguage < 0) {
-                            playerIn.displayClientMessage(Lang.translateMessage("trade.language_barrier"), false);
-                        } else {
-                            playerIn.displayClientMessage(Lang.translateMessage("trade.bad_relation"), false);
-                        }
-                    } else if (list.sum() < TradeConstants.RELATION_TO_BARGAIN) {
-                        playerIn.displayClientMessage(Lang.translateMessage("trade.normal_relation"), false);
-                    } else {
-                        playerIn.displayClientMessage(Lang.translateMessage("trade.great_relation"), false);
-                    }
-                    float t = WorldTemperature.block(level(), blockPosition());
-                    if (t < 0) {
-                        playerIn.displayClientMessage(Lang.translateMessage("trade.low_temp"), false);
-                    }
-                    playerIn.awardStat(Stats.TALKED_TO_VILLAGER);
-                    setTradingPlayer(playerIn);
-                    TradeHandler.openTradeScreen((ServerPlayer) playerIn, fh$data);
-                }
-                return InteractionResult.sidedSuccess(this.level().isClientSide);
-            }
-        } else {
+        if (itemstack.getItem() == Items.VILLAGER_SPAWN_EGG || !this.isAlive() || this.isTrading() || this.isSleeping() || playerIn.isSecondaryUseActive()) {
             return super.mobInteract(playerIn, hand);
         }
+        if (this.isBaby()) {
+            // this.setUnhappy();
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
+        }
+        if(this.level().isClientSide){
+            Minecraft.getInstance().setScreen(new WanderingRefugeeScreen(this));
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
+        }
 
+        return InteractionResult.sidedSuccess(this.level().isClientSide);
+    }
+
+    /**
+     *  Trade with player.
+     *  maybe only run on server side?<br>
+     * need to check some precondition, you can see{@link #mobInteract(Player, InteractionHand)}<br>
+     * This method is different with {@link #openTradingScreen(Player, Component, int)} , just have same name.
+     * @return if trade successfully worked
+     */
+    public boolean openTradingScreen(ServerPlayer playerIn){
+        fh$data.update((ServerLevel) super.level(), playerIn);
+        RelationList list = fh$data.getRelationShip(playerIn);
+        int unknownLanguage = list.get(RelationModifier.UNKNOWN_LANGUAGE);
+        if (list.sum() < TradeConstants.RELATION_TO_TRADE) {
+            //this.setUnhappy();
+            if (unknownLanguage < 0) {
+                playerIn.displayClientMessage(Component.translatable("message.frostedheart.trade.language_barrier"), false);
+            } else {
+                playerIn.displayClientMessage(Component.translatable("message.frostedheart.trade.bad_relation"), false);
+            }
+            return false;
+        } else if (list.sum() < TradeConstants.RELATION_TO_BARGAIN) {
+            playerIn.displayClientMessage(Component.translatable("message.frostedheart.trade.normal_relation"), false);
+        } else {
+            playerIn.displayClientMessage(Component.translatable("message.frostedheart.trade.great_relation"), false);
+        }
+        float t = WorldTemperature.block(level(), blockPosition());
+        if (t < 0) {
+            playerIn.displayClientMessage(Component.translatable("message.frostedheart.trade.low_temp"), false);
+        }
+        playerIn.awardStat(Stats.TALKED_TO_VILLAGER);
+        setTradingPlayer(playerIn);
+        TradeHandler.openTradeScreen(playerIn, fh$data);
+        return true;
     }
 
 //    @Override

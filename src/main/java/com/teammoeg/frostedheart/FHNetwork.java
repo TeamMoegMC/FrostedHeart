@@ -44,6 +44,8 @@ import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipRequestPac
 import com.teammoeg.frostedheart.content.tips.network.DisplayPopupPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
 import com.teammoeg.frostedheart.content.town.TeamTownDataS2CPacket;
+import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeOpenTradeGUIMessage;
+import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeRecruitMessage;
 import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
@@ -108,6 +110,8 @@ public class FHNetwork extends CBaseNetwork {
 
         // Town Messages
         registerMessage("team_town_data_s2c", TeamTownDataS2CPacket.class);
+        registerMessage("wandering_refugee_open_trade_gui", WanderingRefugeeOpenTradeGUIMessage.class);
+        registerMessage("wandering_refugee_recruit", WanderingRefugeeRecruitMessage.class);
 
         // Generator Messages
         //registerMessage("generator_upgrade", GeneratorModifyPacket.class);
