@@ -29,12 +29,8 @@ import com.teammoeg.caupona.CPTags;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.utility.seld.SledItem;
-import com.teammoeg.frostedheart.item.DyedItemList;
+import com.teammoeg.frostedheart.item.*;
 import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
-import com.teammoeg.frostedheart.item.FHBaseArmorItem;
-import com.teammoeg.frostedheart.item.FHBaseItem;
-import com.teammoeg.frostedheart.item.FHToolMaterials;
-import com.teammoeg.frostedheart.item.HammerItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
@@ -65,6 +61,7 @@ import com.tterrag.registrate.util.entry.ItemEntry;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.food.FoodProperties;
@@ -1297,6 +1294,17 @@ thinner.png
     public static ItemEntry<SteamBottleItem> steam_bottle = REGISTRATE
             .item("steam_bottle", SteamBottleItem::new)
             .tag(FHTags.Items.CURIOS_CHARM.tag)
+            .properties(p -> p.stacksTo(1))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<SnowBreakerItem> snow_shovel = REGISTRATE
+            .item("snow_shovel", (properties) -> new SnowBreakerItem(true, properties))
+            .tag(FHTags.Items.CURIOS_CHARM.tag)
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<SnowBreakerItem> snow_broom = REGISTRATE
+            .item("snow_broom", (properties) -> new SnowBreakerItem(false, properties))
+            .tag(ItemTags.TOOLS)
             .properties(p -> p.stacksTo(1))
             .model(AssetLookup.existingItemModel())
             .register();
