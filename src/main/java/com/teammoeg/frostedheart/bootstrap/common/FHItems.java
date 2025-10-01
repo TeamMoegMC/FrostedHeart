@@ -1301,12 +1301,14 @@ thinner.png
             .item("snow_shovel", (properties) -> new SnowBreakerItem(true, properties))
             .tag(FHTags.Items.CURIOS_CHARM.tag)
             .model(AssetLookup.existingItemModel())
+            .lang("Snow Shovel")
             .register();
     public static ItemEntry<SnowBreakerItem> snow_broom = REGISTRATE
             .item("snow_broom", (properties) -> new SnowBreakerItem(false, properties))
             .tag(ItemTags.TOOLS)
             .properties(p -> p.stacksTo(1))
             .model(AssetLookup.existingItemModel())
+            .lang("Broom")
             .register();
 
 
