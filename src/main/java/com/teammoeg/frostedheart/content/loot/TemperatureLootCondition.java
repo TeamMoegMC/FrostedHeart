@@ -24,6 +24,7 @@ import java.util.function.BiPredicate;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 
 import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
@@ -88,7 +89,7 @@ public class TemperatureLootCondition implements LootItemCondition {
     public boolean test(LootContext t) {
         if (t.hasParam(LootContextParams.ORIGIN)) {
             Vec3 v = t.getParamOrNull(LootContextParams.ORIGIN);
-            BlockPos bp = new BlockPos((int)v.x,(int)v.y,(int)v.z);
+            BlockPos bp = CUtils.vec2Pos(v);
             Level w = t.getLevel();
             return comparator.test(WorldTemperature.block(w, bp), temp);
         }

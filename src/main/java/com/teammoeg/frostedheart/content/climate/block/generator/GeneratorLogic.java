@@ -158,8 +158,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
 			Vec3i size = CMultiblockHelper.getSize(ctx);
 			// Every 5 ticks, send explosion packet to nearby players
 			if (state.explodeTicks % 5 == 0) {
-				BlockPos pos = ctx.getLevel().toAbsolute(new BlockPos(level.random.nextInt(size.getX()),
-						level.random.nextInt(size.getY()), level.random.nextInt(size.getZ())));
+				BlockPos pos = ctx.getLevel().toAbsolute(CUtils.randomPos(level, size));
 				for (Player player : level.players()) {
 					if (player.blockPosition().distSqr(pos) < 4096.0D) {
 						((ServerPlayer) player).connection.send(new ClientboundExplodePacket(pos.getX(), pos.getY(),

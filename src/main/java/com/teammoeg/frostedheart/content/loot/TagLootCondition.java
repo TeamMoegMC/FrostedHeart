@@ -24,6 +24,7 @@ import javax.annotation.Nonnull;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
+import com.teammoeg.chorda.util.CUtils;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -73,7 +74,7 @@ public class TagLootCondition implements LootItemCondition {
     public boolean test(LootContext t) {
         if (t.hasParam(LootContextParams.ORIGIN)) {
             Vec3 v = t.getParamOrNull(LootContextParams.ORIGIN);
-            BlockPos bp = new BlockPos((int)v.x,(int)v.y,(int)v.z);
+            BlockPos bp = CUtils.vec2Pos(v);
             Level w = t.getLevel();
             BlockState bs = w.getBlockState(bp);
 

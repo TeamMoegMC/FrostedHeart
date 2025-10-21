@@ -37,6 +37,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector3f;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -49,6 +50,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.QuartPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -81,6 +83,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidActionResult;
@@ -108,7 +111,23 @@ public class CUtils {
 		BlockPos delt = from.subtract(to);
 		return Direction.fromDelta(Mth.clamp(delt.getX(), -1, 1), Mth.clamp(delt.getY(), -1, 1), Mth.clamp(delt.getZ(), -1, 1));
 	}
-
+	public static BlockPos vec2Pos(Vec3 vec) {
+		return new BlockPos((int)vec.x,(int)vec.y,(int)vec.z);
+	}
+	public static BlockPos vec2Pos(Vector3f vec) {
+		return new BlockPos((int)vec.x,(int)vec.y,(int)vec.z);
+	}
+	@Nullable
+	public static BlockPos randomPos(Level level,int sizeX,int sizeY,int sizeZ) {
+		return new BlockPos(level.random.nextInt(sizeX),level.random.nextInt(sizeY), level.random.nextInt(sizeZ));
+	}
+	@Nullable
+	public static BlockPos randomPos(Level level,Vec3i size) {
+		return randomPos(level,size.getX(),size.getY(),size.getZ());
+	}
+	public static Vec3 pos2Vec(BlockPos pos) {
+		return Vec3.atLowerCornerOf(pos);
+	}
 	@Nullable
 	public static BlockEntity getExistingTileEntity(Level world, BlockPos pos) {
 		if (world == null)
