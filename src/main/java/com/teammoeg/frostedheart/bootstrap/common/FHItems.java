@@ -16,7 +16,6 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 package com.teammoeg.frostedheart.bootstrap.common;
 
 import java.util.function.Function;
@@ -29,6 +28,7 @@ import com.teammoeg.caupona.CPTags;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.utility.seld.SledItem;
+import com.teammoeg.frostedheart.content.utility.snowsack.SnowSackItem;
 import com.teammoeg.frostedheart.item.*;
 import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
@@ -1309,6 +1309,34 @@ thinner.png
             .properties(p -> p.stacksTo(1))
             .model(AssetLookup.existingItemModel())
             .lang("Broom")
+            .register();
+    public static ItemEntry<SnowSackItem> snow_sack_small = REGISTRATE
+            .item("snow_sack_small", (properties) -> new SnowSackItem(1024, properties))
+            .tag(ItemTags.TOOLS)
+            .properties(p -> p.stacksTo(1))
+            .model(AssetLookup.existingItemModel())
+            .lang("Small Snow Sack")
+            .register();
+    public static ItemEntry<SnowSackItem> snow_sack_medium = REGISTRATE
+            .item("snow_sack_medium", (properties) -> new SnowSackItem(2048, properties))
+            .tag(ItemTags.TOOLS)
+            .properties(p -> p.stacksTo(1))
+            .model(AssetLookup.existingItemModel())
+            .lang("Medium Snow Sack")
+            .register();
+    public static ItemEntry<SnowSackItem> snow_sack_large = REGISTRATE
+            .item("snow_sack_large", (properties) -> new SnowSackItem(4096, properties))
+            .tag(ItemTags.TOOLS)
+            .properties(p -> p.stacksTo(1))
+            .model(AssetLookup.existingItemModel())
+            .lang("Large Snow Sack")
+            .register();
+    public static ItemEntry<SnowSackItem> snow_sack_huge = REGISTRATE
+            .item("snow_sack_huge", (properties) -> new SnowSackItem(8192, properties))
+            .tag(ItemTags.TOOLS)
+            .properties(p -> p.stacksTo(1))
+            .model(AssetLookup.existingItemModel())
+            .lang("Huge Snow Sack")
             .register();
 
 

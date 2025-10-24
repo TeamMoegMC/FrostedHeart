@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.teammoeg.frostedheart.content.town.warehouse.WareHouseMenu;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlockEntity;
+import com.teammoeg.frostedheart.content.utility.snowsack.SnowSackMenu;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
@@ -45,9 +46,6 @@ import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestMenu;
-import com.teammoeg.frostedheart.content.robotics.logistics.workers.RequesterTileEntity;
-import com.teammoeg.frostedheart.content.robotics.logistics.workers.StorageTileEntity;
-import com.teammoeg.frostedheart.content.robotics.logistics.workers.SupplierTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
@@ -86,6 +84,8 @@ public class FHMenuTypes {
 	public static final RegistryObject<MenuType<RequesterChestMenu>> REQUEST_CHEST = register(("reqeust_chest"), RequesterChestMenu::new);
 	public static final RegistryObject<MenuType<StorageChestMenu>> STORAGE_CHEST = register(("storage_chest"), StorageChestMenu::new);
 	public static final RegistryObject<MenuType<SupplierChestMenu>> SUPPLY_CHEST = register(("supply_chest"), SupplierChestMenu::new);
+
+	public static final RegistryObject<MenuType<SnowSackMenu>> SNOW_SACK = register("snow_sack", SnowSackMenu::new);
 
 	
 	public static final RegistryObject<MenuType<SaunaContainer>> SAUNA = register(SaunaTileEntity.class, ("sauna_vent"), SaunaContainer::new);

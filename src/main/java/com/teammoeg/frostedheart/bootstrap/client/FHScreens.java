@@ -42,6 +42,7 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.town.warehouse.WareHouseScreen;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
 
+import com.teammoeg.frostedheart.content.utility.snowsack.SnowSackScreen;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -67,6 +68,7 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.STORAGE_CHEST.get(), LogisticChestScreen::new);
         MenuScreens.register(FHMenuTypes.REQUEST_CHEST.get(), LogisticChestScreen::new);
         MenuScreens.register(FHMenuTypes.WAREHOUSE.get(), WareHouseScreen::new);
+        MenuScreens.register(FHMenuTypes.SNOW_SACK.get(), SnowSackScreen::new);
     }
 
     public static <C extends AbstractContainerMenu, S extends BaseScreen> void
