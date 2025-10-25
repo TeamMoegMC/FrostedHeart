@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.water.event;
 
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
@@ -40,7 +41,7 @@ public class WaterClientEvents {
         HitResult hitresult = Item.getPlayerPOVHitResult(level, player, ClipContext.Fluid.SOURCE_ONLY);
         if (player.getPose() == Pose.CROUCHING && hitresult.getType() == HitResult.Type.BLOCK) {
         
-        	BlockPos pos=new BlockPos((int)hitresult.getLocation().x,(int)hitresult.getLocation().y,(int)hitresult.getLocation().z);
+        	BlockPos pos=CUtils.vec2Pos(hitresult.getLocation());
         	if(!event.getLevel().getFluidState(pos).isEmpty())
         		FHNetwork.INSTANCE.sendToServer(new PlayerDrinkWaterMessage(pos));
         }

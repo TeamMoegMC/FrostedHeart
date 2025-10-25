@@ -28,6 +28,7 @@ import java.util.Random;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
@@ -272,7 +273,7 @@ public class SurroundingTemperatureSimulator {
                 Vec3 curspeed = speedVectors[vid[i]];
                 Vec3 svec = Qpos[i];
                 Vec3 dvec = svec.add(curspeed);
-                BlockPos bpos = new BlockPos(Mth.floor(dvec.x), Mth.floor(dvec.y), Mth.floor(dvec.z));
+                BlockPos bpos = CUtils.vec2Pos(dvec);
                 CachedBlockInfo info = getInfoCached(bpos);
 
                 VoxelShape shape = info.shape;
