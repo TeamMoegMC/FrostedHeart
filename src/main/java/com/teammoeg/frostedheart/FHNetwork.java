@@ -51,6 +51,7 @@ import com.teammoeg.frostedheart.content.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
 import com.teammoeg.frostedheart.content.utility.seld.FHServerBoundUpdateSledState;
+import com.teammoeg.frostedheart.content.utility.snowsack.ToggleAutoPickupMessage;
 import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
@@ -149,5 +150,8 @@ public class FHNetwork extends CBaseNetwork {
         // Soil Thermometer
         registerMessage("soil_thermometer_request", SoilThermometerRequestPacket.class);
         registerMessage("soil_thermometer_update", SoilThermometerUpdatePacket.class);
+
+        //Snow Sack
+        registerMessage("toggle_auto_pickup", ToggleAutoPickupMessage.class);
     }
 }

@@ -9,6 +9,8 @@ import net.minecraftforge.fml.common.Mod;
 
 import com.teammoeg.frostedheart.FHMain;
 
+import net.minecraft.world.entity.player.Player;
+
 @Mod.EventBusSubscriber(modid = FHMain.MODID)
 public class SnowSackEventHandler {
     
@@ -34,15 +36,32 @@ public class SnowSackEventHandler {
                             // 全部转换完成，取消拾取事件
                             event.setCanceled(true);
                             event.getItem().discard();
+                            syncSnowAmountToOpenMenus(event.getEntity());
                             return;
                         } else {
                             // 部分转换完成，更新物品数量
                             pickedItem.setCount(remaining);
                             event.getItem().setItem(pickedItem);
                         }
+                        syncSnowAmountToOpenMenus(event.getEntity());
                     }
                 }
             }
+        }
+    }
+    
+    /**
+     * 同步雪量到打开的雪袋菜单
+     */
+    private static void syncSnowAmountToOpenMenus(Player player) {
+        if (player.level().isClientSide) return;
+        // 只需要同步当前玩家的菜单
+        if (player.containerMenu instanceof SnowSackMenu snowSackMenu) {
+            // 更新雪量显示
+            snowSackMenu.updateSnowAmount();
+            // 广播变更到客户端
+            snowSackMenu.broadcastChanges();
+
         }
     }
 }

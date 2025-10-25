@@ -141,7 +141,7 @@
   "gui.frostedheart.update_recommended": "The Winter Rescue Update: ",
   "gui.frostedheart.wandering_refugee.trade_button": "Trade with refugee",
   "gui.frostedheart.wandering_refugee.recruit_button": "Recruit refugee to your town",
-  "gui.frostedheart.snow_sack.auto_pickup": "Auto pickup: ",
+  "gui.frostedheart.snow_sack.auto_pickup": "Auto pickup: %s",
   "gui.frostedheart.snow_sack.disabled": "Disabled",
   "gui.frostedheart.snow_sack.enabled": "Enabled",
   "gui.jei.category.frostedheart.charger": "Steam Processing",

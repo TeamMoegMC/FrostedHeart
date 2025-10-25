@@ -139,7 +139,7 @@
   "gui.frostedheart.update_recommended": "建议更新《冬季救援》： ",
   "gui.frostedheart.wandering_refugee.trade_button": "与难民交易",
   "gui.frostedheart.wandering_refugee.recruit_button": "将难民招募至你的城镇",
-  "gui.frostedheart.snow_sack.auto_pickup": "自动拾取",
+  "gui.frostedheart.snow_sack.auto_pickup": "自动拾取：%s",
   "gui.frostedheart.snow_sack.disabled": "已关闭",
   "gui.frostedheart.snow_sack.enabled": "已开启",
   "gui.jei.category.frostedheart.charger": "蒸汽加工",

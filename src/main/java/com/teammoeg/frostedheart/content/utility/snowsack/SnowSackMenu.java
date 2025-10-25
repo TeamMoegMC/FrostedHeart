@@ -8,6 +8,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraftforge.network.PacketDistributor;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -53,12 +55,12 @@ public class SnowSackMenu extends AbstractContainerMenu {
     }
 
     @Override
-    public boolean stillValid(Player player) {
+    public boolean stillValid(@NotNull Player player) {
         return true;
     }
 
     @Override
-    public ItemStack quickMoveStack(Player player, int index) {
+    public @NotNull ItemStack quickMoveStack(@NotNull Player player, int index) {
         System.out.println("quickMoveStack");
         ItemStack itemStack = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
@@ -150,16 +152,22 @@ public class SnowSackMenu extends AbstractContainerMenu {
     public boolean isAutoPickupEnabled() {
         return this.autoPickupEnabled.get() == 1;
     }
+
+    public int getMaxSnowAmount() {
+        return SnowSackItem.getMaxSnowAmount(snowSack);
+    }
     
     // 切换自动拾取设置
     public void toggleAutoPickup() {
         boolean newValue = !isAutoPickupEnabled();
         SnowSackItem.setAutoPickup(snowSack, newValue);
         this.autoPickupEnabled.set(newValue ? 1 : 0);
+        // 确保更改同步到客户端
+        this.broadcastChanges();
     }
 
     @Override
-    public void clicked(int pSlotId, int pButton, ClickType pClickType, Player pPlayer) {
+    public void clicked(int pSlotId, int pButton, @NotNull ClickType pClickType, @NotNull Player pPlayer) {
         if(pSlotId < 0 || pSlotId >= this.slots.size()){
             super.clicked(pSlotId, pButton, pClickType, pPlayer);
             return;
@@ -195,10 +203,10 @@ public class SnowSackMenu extends AbstractContainerMenu {
 
             if (!net.minecraftforge.common.ForgeHooks.onItemStackedOn(itemstack9, itemstack10, slot7, clickaction, pPlayer,
                     new SlotAccess() {//AbstractContainerMenu的createCarriedSlotAccess()是私有的！我只好把方法内容也复制来了
-                public ItemStack get() {
+                public @NotNull ItemStack get() {
                     return SnowSackMenu.this.getCarried();
                 }
-                public boolean set(ItemStack p_150452_) {
+                public boolean set(@NotNull ItemStack p_150452_) {
                     SnowSackMenu.this.setCarried(p_150452_);
                     return true;
                 }

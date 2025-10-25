@@ -1,15 +1,14 @@
 package com.teammoeg.frostedheart.content.utility.snowsack;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.NotNull;
 
 @OnlyIn(Dist.CLIENT)
 public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> {
@@ -18,15 +17,34 @@ public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> {
     // 雪量条背景位置: (176, 0) 尺寸: 12x52
     // 雪量条填充位置: (188, 0) 尺寸: 12x52 (从底部向上绘制)
     // 贴图还没有：private static final ResourceLocation SNOW_SACK_TEXTURE = new ResourceLocation(FHMain.MODID, "textures/gui/snow_sack.png");
+    
+    private Button autoPickupButton;
 
     public SnowSackScreen(SnowSackMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageWidth = 176;
         this.imageHeight = 166;
     }
+    
+    @Override
+    protected void init() {
+        super.init();
+        
+        // 添加自动拾取切换按钮，调整位置避免与物品栏重叠
+        this.autoPickupButton = this.addRenderableWidget(Button.builder(
+                this.getAutoPickupText(), 
+                (button) -> {
+                    this.menu.toggleAutoPickup();
+                    button.setMessage(this.getAutoPickupText());
+                    FHNetwork.INSTANCE.sendToServer(new ToggleAutoPickupMessage());
+                })
+                .pos(this.leftPos + 8, this.topPos + 70)
+                .size(80, 16)
+                .build());
+    }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(graphics);
         super.render(graphics, mouseX, mouseY, partialTicks);
         this.renderTooltip(graphics, mouseX, mouseY);
@@ -50,7 +68,7 @@ public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> {
         
         // 渲染雪的数量条
         int snowAmount = this.menu.getSnowAmount();
-        int maxSnowAmount = 1024; // 最大雪量
+        int maxSnowAmount = this.menu.getMaxSnowAmount(); // 最大雪量
         int filledHeight = (int) (((float) snowAmount / maxSnowAmount) * snowBarHeight);
         
         // 绘制雪量条填充（从底部向上绘制，使用蓝色表示雪量）
@@ -72,13 +90,26 @@ public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> {
         
         // 绘制雪的数量
         int snowAmount = this.menu.getSnowAmount();
-        Component snowText = Component.literal(snowAmount + "/1024");
+        Component snowText = Component.literal(snowAmount + "/" + this.menu.getMaxSnowAmount());
         graphics.drawString(this.font, snowText, (this.imageWidth - this.font.width(snowText)) / 2, 20, 0xFFFFFFFF, false);
         
-        // 绘制自动拾取状态
+        // 绘制自动拾取状态文本
+        //Component autoPickupText = this.getAutoPickupText();
+        //graphics.drawString(this.font, autoPickupText, 8, 60, 0xFFFFFFFF, false);
+    }
+    
+    private Component getAutoPickupText() {
         boolean autoPickup = this.menu.isAutoPickupEnabled();
-        Component autoPickupText = Component.translatable("gui.frostedheart.snow_sack.auto_pickup", 
+        return Component.translatable("gui.frostedheart.snow_sack.auto_pickup", 
             autoPickup ? Component.translatable("gui.frostedheart.snow_sack.enabled") : Component.translatable("gui.frostedheart.snow_sack.disabled"));
-        graphics.drawString(this.font, autoPickupText, (this.imageWidth - this.font.width(autoPickupText)) / 2, 70, 0xFFFFFFFF, false);
+    }
+    
+    @Override
+    public void containerTick() {
+        super.containerTick();
+        // 定期更新按钮文本以确保显示正确状态
+        if (this.autoPickupButton != null) {
+            this.autoPickupButton.setMessage(this.getAutoPickupText());
+        }
     }
 }

@@ -12,17 +12,17 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.NetworkHooks;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
+@Getter
 public class SnowSackItem extends FHBaseItem {
     private static final String SNOW_AMOUNT_KEY = "SnowAmount";
     private static final String AUTO_PICKUP_KEY = "AutoPickup";
-    @Getter
     public final int maxSnowAmount; // 雪的最大存储量
-    public static final int SNOW_PER_SNOWBALL = 1;  // 每个雪球转换为1个雪单位
-    public static final int SNOW_PER_SNOW_BLOCK = 4; // 每个雪块转换为4个雪单位
     private static final Map<Item, Integer> SNOW_PER_ITEM = Map.of(
             Items.SNOWBALL, 1,
             Items.SNOW_BLOCK, 4
@@ -37,7 +37,7 @@ public class SnowSackItem extends FHBaseItem {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+    public @NotNull InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         
         if (!level.isClientSide) {
@@ -116,18 +116,26 @@ public class SnowSackItem extends FHBaseItem {
     public static boolean isAutoPickupEnabled(ItemStack stack) {
         if (stack.getItem() instanceof SnowSackItem) {
             CompoundTag tag = stack.getOrCreateTag();
-            return !tag.contains(AUTO_PICKUP_KEY) || tag.getBoolean(AUTO_PICKUP_KEY); // 默认启用
+            System.out.println("tag: " + tag);
+            return tag.getByte(AUTO_PICKUP_KEY) != 0;
         }
-        return true;
+        return false;
     }
 
     /**
      * 设置自动拾取
      */
     public static void setAutoPickup(ItemStack stack, boolean enabled) {
+        if(FMLEnvironment.dist.isClient()){
+            System.out.println("SnowSackItem.setAutoPickup: Client Side");
+        } else {
+            System.out.println("SnowSackItem.setAutoPickup: Server Side");
+        }
         if (stack.getItem() instanceof SnowSackItem) {
+            System.out.println("SnowSackItem.setAutoPickup: " + enabled);
             CompoundTag tag = stack.getOrCreateTag();
-            tag.putBoolean(AUTO_PICKUP_KEY, enabled);
+            tag.putByte(AUTO_PICKUP_KEY, enabled? (byte)1:(byte)0);
+            System.out.println("tag: " + tag);
         }
     }
 
@@ -185,7 +193,7 @@ public class SnowSackItem extends FHBaseItem {
     }
 
     @Override
-    public Component getName(ItemStack stack) {
+    public @NotNull Component getName(@NotNull ItemStack stack) {
         int snowAmount = getSnowAmount(stack);
         return Component.translatable(this.getDescriptionId(stack), snowAmount, maxSnowAmount);
     }

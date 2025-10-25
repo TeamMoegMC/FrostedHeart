@@ -8,6 +8,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraftforge.items.ItemStackHandler;
+import org.jetbrains.annotations.NotNull;
 
 public class SnowSackSlot extends Slot {
     private final ItemStack snowSack;
@@ -84,12 +85,9 @@ public class SnowSackSlot extends Slot {
             int count = stack.getCount();
             int converted = SnowSackItem.convertItemToSnow(snowSack, stack.getItem(), count);
             int remaining = count - (converted / SnowSackItem.snowPerItem(stack.getItem()));
-            
-            if (remaining > 0) {
-                stack.setCount(remaining);
-            } else {
-                stack = ItemStack.EMPTY;
-            }
+
+            // 清空物品堆栈
+            stack.setCount(Math.max(remaining, 0));
             
             // 更新菜单中的雪数量显示
             if (menu != null) {
@@ -103,7 +101,7 @@ public class SnowSackSlot extends Slot {
     }
 
     @Override
-    public ItemStack remove(int amount) {
+    public @NotNull ItemStack remove(int amount) {
         // 从雪袋中取出雪并转换为物品
         ItemStack result = SnowSackItem.createSnowItems(snowSack, slotItem, amount);
         
@@ -117,7 +115,7 @@ public class SnowSackSlot extends Slot {
     
     // 重写onTake方法，确保取出物品时正确更新雪量
     @Override
-    public void onTake(Player player, ItemStack stack) {
+    public void onTake(@NotNull Player player, @NotNull ItemStack stack) {
         super.onTake(player, stack);
         // 更新菜单中的雪数量显示
         if (menu != null) {
@@ -135,7 +133,7 @@ public class SnowSackSlot extends Slot {
     }
 
     @Override
-    public ItemStack safeInsert(ItemStack pStack, int pIncrement) {
+    public @NotNull ItemStack safeInsert(ItemStack pStack, int pIncrement) {
         if (pStack.isEmpty() || !this.mayPlace(pStack)) {
             return pStack;
         }
