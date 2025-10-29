@@ -4,6 +4,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.MenuAccess;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.api.distmarker.Dist;
@@ -12,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 //不建议开发时参考此类
 @OnlyIn(Dist.CLIENT)
-public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> {
+public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> implements MenuAccess<SnowSackMenu> {
     // GUI贴图位置: textures/gui/snow_sack.png
     // 贴图尺寸: 176x166 (标准容器大小)
     // 雪量条背景位置: (176, 0) 尺寸: 12x52

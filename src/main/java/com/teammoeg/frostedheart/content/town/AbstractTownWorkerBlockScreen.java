@@ -45,7 +45,7 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
     public AbstractTownWorkerBlockScreen(C inventorySlotsIn, Inventory inv, Component title,ResourceLocation background) {
         super(inventorySlotsIn, inv, title, background);
         super.imageWidth = 176;
-        super.imageHeight = 166;
+        super.imageHeight = 222;
 
         AbstractTownWorkerBlockEntity blockEntity = getMenu().getBlock();
         addTabContent((left,top)->{

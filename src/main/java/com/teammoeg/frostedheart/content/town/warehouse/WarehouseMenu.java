@@ -14,7 +14,7 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 	public WarehouseMenu(int id, Inventory inventoryPlayer, WarehouseBlockEntity tile) {
 		super(FHMenuTypes.WAREHOUSE.get(),tile,id, inventoryPlayer.player,32);
 
-		super.addPlayerInventory(inventoryPlayer, 8, 84, 142);
+		super.addPlayerInventory(inventoryPlayer, 8, 139, 197);
 	}
 
 
