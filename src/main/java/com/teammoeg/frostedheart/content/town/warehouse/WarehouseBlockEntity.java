@@ -19,16 +19,11 @@
 
 package com.teammoeg.frostedheart.content.town.warehouse;
 
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeMenu;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
-import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.BlockTags;
@@ -42,7 +37,6 @@ import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
-import java.util.UUID;
 
 public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity implements MenuProvider {
     private int volume;//有效体积
@@ -136,7 +130,7 @@ public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity implemen
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player player) {
-        return new WareHouseMenu(id, playerInventory, this);
+        return new WarehouseMenu(id, playerInventory, this);
     }
 
     @Override

@@ -39,7 +39,7 @@ import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.LogisticChestScreen;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatScreen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
-import com.teammoeg.frostedheart.content.town.warehouse.WareHouseScreen;
+import com.teammoeg.frostedheart.content.town.warehouse.WarehouseScreen;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
 
 import com.teammoeg.frostedheart.content.utility.snowsack.SnowSackScreen;
@@ -67,7 +67,7 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.SUPPLY_CHEST.get(), LogisticChestScreen::new);
         MenuScreens.register(FHMenuTypes.STORAGE_CHEST.get(), LogisticChestScreen::new);
         MenuScreens.register(FHMenuTypes.REQUEST_CHEST.get(), LogisticChestScreen::new);
-        MenuScreens.register(FHMenuTypes.WAREHOUSE.get(), WareHouseScreen::new);
+        MenuScreens.register(FHMenuTypes.WAREHOUSE.get(), WarehouseScreen::new);
         MenuScreens.register(FHMenuTypes.SNOW_SACK.get(), SnowSackScreen::new);
     }
 

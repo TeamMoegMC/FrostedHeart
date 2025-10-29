@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
+//不建议开发时参考此类
 public class SnowSackMenu extends AbstractContainerMenu {
     private final ItemStack snowSack;
     private final DataSlot snowAmount;

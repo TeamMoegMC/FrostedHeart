@@ -10,6 +10,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 
+//不建议开发时参考此类
 @OnlyIn(Dist.CLIENT)
 public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> {
     // GUI贴图位置: textures/gui/snow_sack.png

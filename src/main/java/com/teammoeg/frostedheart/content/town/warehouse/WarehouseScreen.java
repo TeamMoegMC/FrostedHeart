@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.town.warehouse;
 
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.network.chat.Component;
@@ -30,9 +29,9 @@ import net.minecraft.world.entity.player.Inventory;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-public class WareHouseScreen extends AbstractTownWorkerBlockScreen<WareHouseMenu> {
+public class WarehouseScreen extends AbstractTownWorkerBlockScreen<WarehouseMenu> {
     private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("townworkerblock");
-    public WareHouseScreen(WareHouseMenu inventorySlotsIn, Inventory inv, Component title) {
+    public WarehouseScreen(WarehouseMenu inventorySlotsIn, Inventory inv, Component title) {
         super(inventorySlotsIn, inv, title, TEXTURE);
 
         WarehouseBlockEntity blockEntity = getMenu().getBlock();
