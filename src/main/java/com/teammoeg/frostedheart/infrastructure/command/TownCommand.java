@@ -111,9 +111,9 @@ public class TownCommand {
                                                     }
                                                     VirtualResourceAttribute attribute = VirtualResourceAttribute.of(VirtualResourceType.from(type), level);
                                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                                                    IActionExecutorHandler executor = town.getActionExecutorHandler();
+                                                    ITownResourceActionExecutorHandler executor = town.getActionExecutorHandler();
                                                     TownResourceActions.VirtualResourceAttributeAction action = new TownResourceActions.VirtualResourceAttributeAction(attribute, amount, actionType, ResourceActionMode.ATTEMPT);
-                                                    TownResourceActions.VirtualResourceAttributeActionResult result = (TownResourceActions.VirtualResourceAttributeActionResult) executor.execute(action);
+                                                    TownResourceActionResults.VirtualResourceAttributeActionResult result = (TownResourceActionResults.VirtualResourceAttributeActionResult) executor.execute(action);
                                                     //TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().addIfHaveCapacity(VirtualResourceType.from(type).generateAttribute(level), amount);
                                                     if(result.allModified()){
                                                         ct.getSource().sendSuccess(()-> Components.str("Resource modified."), true);
@@ -162,7 +162,7 @@ public class TownCommand {
                                                         return Command.SINGLE_SUCCESS;
                                                     }
                                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                                                    IActionExecutorHandler executor = town.getActionExecutorHandler();
+                                                    ITownResourceActionExecutorHandler executor = town.getActionExecutorHandler();
                                                     ITownResourceAction action = TownResourceActions.createAttributeCostAction(type.generateAttribute(level), amount, ResourceActionMode.ATTEMPT);
                                                     ITownResourceAttributeActionResult result = (ITownResourceAttributeActionResult)executor.execute(action);
                                                     //TownResourceManager.SimpleResourceActionResult result = null;
@@ -185,7 +185,7 @@ public class TownCommand {
                                     ItemStack itemStack = ct.getSource().getPlayerOrException().getMainHandItem();
                                     ct.getSource().sendSuccess(()-> Components.str("Adding ItemStack: " + itemStack), true);
                                     TownResourceActions.ItemResourceAction action = new TownResourceActions.ItemResourceAction(itemStack, ResourceActionType.ADD, amount, ResourceActionMode.ATTEMPT);
-                                    TownResourceActions.ItemResourceActionResult result = (TownResourceActions.ItemResourceActionResult)town.getActionExecutorHandler().execute(action);
+                                    TownResourceActionResults.ItemResourceActionResult result = (TownResourceActionResults.ItemResourceActionResult)town.getActionExecutorHandler().execute(action);
                                     //TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().addIfHaveCapacity(itemStack, amount);
                                     if(result.allModified()){
                                         ct.getSource().sendSuccess(()-> Components.str("Resource added"), true);

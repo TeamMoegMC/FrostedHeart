@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
-import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
+import com.teammoeg.frostedheart.content.town.resource.action.ITownResourceActionExecutorHandler;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
@@ -172,7 +172,7 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
     }
 
     @Override
-    public IActionExecutorHandler getActionExecutorHandler() {
+    public ITownResourceActionExecutorHandler getActionExecutorHandler() {
         return data.resources.actionExecutor;
     }
 

@@ -12,7 +12,7 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 	CDataSlot<Integer> page=CCustomMenuSlot.SLOT_INT.create(this);
 	IItemHandler wrap;
 	public WarehouseMenu(int id, Inventory inventoryPlayer, WarehouseBlockEntity tile) {
-		super(FHMenuTypes.WAREHOUSE.get(),tile,id, inventoryPlayer.player,32);
+		super(FHMenuTypes.WAREHOUSE.get(),tile,id, inventoryPlayer.player,54);
 
 		super.addPlayerInventory(inventoryPlayer, 8, 139, 197);
 	}

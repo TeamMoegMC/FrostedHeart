@@ -19,8 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
-import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
+import com.teammoeg.frostedheart.content.town.resource.action.ITownResourceActionExecutorHandler;
 
 import java.util.Optional;
 
@@ -41,12 +40,12 @@ public interface Town {
     //TownResourceManager getResourceManager();
 
     /**
-     * Get the {@link IActionExecutorHandler} of this town, which is used to execute actions.
+     * Get the {@link ITownResourceActionExecutorHandler} of this town, which is used to execute actions.
      *
      *
      * @return the action executor handler
      */
-    IActionExecutorHandler getActionExecutorHandler();
+    ITownResourceActionExecutorHandler getActionExecutorHandler();
 
     /**
      * Gets the team town data, may be null if not a player team.

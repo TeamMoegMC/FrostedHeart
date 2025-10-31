@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * 一个ActionExecutorHandler的模板，可以不用。
  */
-public abstract class AbstractActionExecutorHandler implements IActionExecutorHandler{
+public abstract class AbstractTownResourceActionExecutorHandler implements ITownResourceActionExecutorHandler {
     /**
      * 存储ActionExecutor。
      * <br>
@@ -28,9 +28,9 @@ public abstract class AbstractActionExecutorHandler implements IActionExecutorHa
             //这里没有检查类型转换，修改executors的那个Map的时候需要注意。
             return (ITownResourceActionExecutor<T>) executors.get(actionClass);
         }
-        throw new IllegalArgumentException("Executor AbstractActionExecutorHandler can't execute action: "
+        throw new IllegalArgumentException("Executor AbstractTownResourceActionExecutorHandler can't execute action: "
                 + actionClass.getName()
-                + "!\n Check AbstractActionExecutorHandler, add the sub_executor of this action, " +
+                + "!\n Check AbstractTownResourceActionExecutorHandler, add the sub_executor of this action, " +
                 "or don't execute this action in this executor.");
     }
 }

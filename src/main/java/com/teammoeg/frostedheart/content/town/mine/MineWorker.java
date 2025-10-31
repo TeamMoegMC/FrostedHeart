@@ -109,18 +109,18 @@ public class MineWorker implements TownWorker {
                     .filter(Objects::nonNull)
                     .toList();
 
-            IActionExecutorHandler executorHandler = townWithResidents.getActionExecutorHandler();
+            ITownResourceActionExecutorHandler executorHandler = townWithResidents.getActionExecutorHandler();
             ITownResourceActionExecutor<TownResourceActions.ItemResourceAction> itemResourceExecutor = executorHandler.getExecutor(TownResourceActions.ItemResourceAction.class);
             Map<Item,  Integer> weights = getWeights(biomeLocation);
             int totalWeight = weights.values().stream().mapToInt(weight -> weight).sum();
             for(Resident resident : residents){
                 double score = TownWorkerType.MINE.getResidentScore( resident );
                 double finalChunkResourceReserves = chunkResourceReserves;
-                List<TownResourceActions.ItemResourceActionResult> results = weights.entrySet().stream()
+                List<TownResourceActionResults.ItemResourceActionResult> results = weights.entrySet().stream()
                         .map(entry -> new TownResourceActions.ItemResourceAction
                                 (new ItemStack(entry.getKey()), ResourceActionType.ADD, Math.sqrt(finalChunkResourceReserves) * rating * score * entry.getValue() / totalWeight, ResourceActionMode.ATTEMPT))
                         .map(itemResourceExecutor::execute)
-                        .map(result -> (TownResourceActions.ItemResourceActionResult) result)
+                        .map(result -> (TownResourceActionResults.ItemResourceActionResult) result)
                         .toList();
                 resident.addStrength(20 / resident.getStrength());
                 chunkResourceReservesCost += 0.0005 * chunkResourceReserves * rating * score;//至少2000人*天会挖空？

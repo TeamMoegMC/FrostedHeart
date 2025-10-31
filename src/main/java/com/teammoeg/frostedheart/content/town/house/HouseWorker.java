@@ -30,7 +30,7 @@ public class HouseWorker implements TownWorker {
 
         Map<ItemResourceType, Double> foodAmounts = new HashMap<>();
         double totalFoods = 0;
-        IActionExecutorHandler executorHandler = town.getActionExecutorHandler();
+        ITownResourceActionExecutorHandler executorHandler = town.getActionExecutorHandler();
         //获取所有食物总量，食物总量不足的话不供应食物
         for (ItemResourceType foodType : foodTypes) {
             foodAmounts.put(foodType, TownResourceActions.get(executorHandler, foodType));
@@ -63,7 +63,7 @@ public class HouseWorker implements TownWorker {
             for (ItemResourceType foodType : availableFoodTypes) {
                 TownResourceActions.TownResourceTypeCostAction costTypeAction = new TownResourceActions.TownResourceTypeCostAction
                         (foodType, toCost / residentNum, 0, 100, ResourceActionMode.MAXIMIZE, ResourceActionOrder.ASCENDING);
-                TownResourceActions.TownResourceTypeCostActionResult result = (TownResourceActions.TownResourceTypeCostActionResult) executorHandler.execute(costTypeAction);
+                TownResourceActionResults.TownResourceTypeCostActionResult result = (TownResourceActionResults.TownResourceTypeCostActionResult) executorHandler.execute(costTypeAction);
                 toCost -= result.totalModifiedAmount();
                 foodAmounts.merge(foodType, result.totalModifiedAmount(), Double::sum);
                 avgLevel += result.getAverageLevel() * result.totalModifiedAmount();//先加等级乘数量，后面再除以数量
