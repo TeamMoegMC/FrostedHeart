@@ -17,9 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.town;
-
-import java.util.function.Supplier;
+package com.teammoeg.frostedheart.content.town.network;
 
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
@@ -28,43 +26,49 @@ import com.teammoeg.chorda.io.codec.ObjectWriter;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-
-import net.minecraft.world.entity.player.Player;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
+import com.teammoeg.frostedheart.content.town.TeamTownData;
+import com.teammoeg.frostedheart.content.town.warehouse.VirtualItemStack;
+import com.teammoeg.frostedheart.content.town.warehouse.WarehouseScreen;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
 
-public class TeamTownDataS2CPacket implements CMessage {
-	Object data;
+import java.util.List;
+import java.util.function.Supplier;
 
-    public TeamTownDataS2CPacket(Player player) {
-    	this(CTeamDataManager.get(player).getData(FHSpecialDataTypes.TOWN_DATA));
+public class WarehouseS2CPacket implements CMessage {
+	private final List<VirtualItemStack> resources;
+
+    public WarehouseS2CPacket(List<VirtualItemStack> resources) {
+		this.resources = resources;
     }
 
-	public TeamTownDataS2CPacket(FriendlyByteBuf buffer) {
-		data=ObjectWriter.readObject(buffer);
+	public WarehouseS2CPacket(FriendlyByteBuf buffer) {
+		this.resources = buffer.readList(buf -> {
+			ItemStack stack = buf.readItem();
+			long amount = buf.readLong();
+			return new VirtualItemStack(stack, amount);
+		});
 	}
 
-	public TeamTownDataS2CPacket(TeamTownData townData) {
-		try {
-			data= FHSpecialDataTypes.TOWN_DATA.saveData(DataOps.COMPRESSED, townData);
-		} catch (Exception e) {
-			FHMain.LOGGER.error("Failed to save town data when syncing town data", e);
-		}
-    }
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
-			try {
-				CClientTeamDataManager.INSTANCE.getInstance().setData(FHSpecialDataTypes.TOWN_DATA, FHSpecialDataTypes.TOWN_DATA.loadData(DataOps.COMPRESSED, data));
-			} catch (Exception e) {
-				FHMain.LOGGER.error("Failed to load data when syncing town data", e);
+		context.get().enqueueWork(() -> {
+			if (Minecraft.getInstance().screen instanceof WarehouseScreen screen) {
+				//更新屏幕
+				screen.updateResourceList(resources);
 			}
 		});
-        context.get().setPacketHandled(true);
-    }
-
+		context.get().setPacketHandled(true);
+	}
 	@Override
 	public void encode(FriendlyByteBuf buffer) {
-		ObjectWriter.writeObject(buffer, data);
+		buffer.writeCollection(this.resources, (buf, vStack) -> {
+			buf.writeItem(vStack.getStack());
+			buf.writeLong(vStack.getAmount());
+		});
 	}
 }

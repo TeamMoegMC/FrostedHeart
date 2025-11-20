@@ -66,7 +66,7 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         // Create tab button
         for (int i = 0; i < tabContents.size(); i++) {
             final int tabI = i;
-            if (i<3) {
+            /*if (i<3) {*/
                 // Left side
                 int x = guiLeft - 22;
                 int y = guiTop + tabI * (18 + 2) +2;
@@ -78,7 +78,7 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
                 }).bind(() -> activeTab );
                 tabButtons.add(tabButtonNew);
                 this.addRenderableWidget(tabButtonNew);
-            }else {
+            /*}else {
                 // Right side
                 int x = guiLeft + 175;
                 int y = guiTop + tabI * (18 + 2) +2;
@@ -90,7 +90,7 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
                 }).bind(() -> activeTab);
                 tabButtons.add(tabButtonnew);
                 this.addRenderableWidget(tabButtonnew);
-            }
+            }*/
         }
         // Initialize tab content
         updateTabContent();
@@ -136,11 +136,11 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         return background;
     }
     public int[] getTabButtonUV(int tabIndex) {
-        if (tabIndex < 3) {
+        /*if (tabIndex < 3) {*/
             return new int[]{180, 59};
-        } else {
+        /*} else {
             return new int[]{0, 0};
-        }
+        }*/
     }
 
     protected void addTabContent(ITabContent content){

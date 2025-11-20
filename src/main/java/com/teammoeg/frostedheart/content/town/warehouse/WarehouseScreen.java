@@ -20,16 +20,26 @@
 package com.teammoeg.frostedheart.content.town.warehouse;
 
 import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
+import com.teammoeg.frostedheart.content.town.network.WarehouseC2SRequestPacket;
+import com.teammoeg.frostedheart.content.town.network.WarehouseS2CPacket;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import mezz.jei.forge.network.NetworkHandler;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.network.NetworkHooks;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 
 public class WarehouseScreen extends AbstractTownWorkerBlockScreen<WarehouseMenu> {
+    private List<VirtualItemStack> ResourceClientCache = new ArrayList<>();
+
     private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("townworkerblock");
     public WarehouseScreen(WarehouseMenu inventorySlotsIn, Inventory inv, Component title) {
         super(inventorySlotsIn, inv, title, TEXTURE);
@@ -43,7 +53,15 @@ public class WarehouseScreen extends AbstractTownWorkerBlockScreen<WarehouseMenu
             this.addRenderableWidget(new Label(left + 10, top + 20, Components.str("Capacity: " + BigDecimal.valueOf(blockEntity.getCapacity())
                     .setScale(2, RoundingMode.HALF_UP).doubleValue()), 0xFFFFFF));
         });
-
+        addTabContent((left, top) -> {
+            VirtualItemGridWidget gridWidget = new VirtualItemGridWidget(left + 7, top + 18, ResourceClientCache);
+            FHNetwork.INSTANCE.sendToServer(new WarehouseC2SRequestPacket());
+            this.addRenderableWidget(gridWidget);
+        });
+    }
+    public void updateResourceList(List<VirtualItemStack> newResources) {
+        this.ResourceClientCache.clear();
+        this.ResourceClientCache.addAll(newResources);
     }
 }
 
