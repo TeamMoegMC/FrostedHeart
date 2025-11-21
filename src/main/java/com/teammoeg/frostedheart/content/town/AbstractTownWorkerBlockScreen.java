@@ -27,6 +27,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -106,7 +107,15 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
     }
     private void clearContentWidgets() {
         // Remove widgets
-        this.renderables.removeIf(widget -> (widget instanceof TabContentComponent));
+        List<GuiEventListener> toRemove = new ArrayList<>();
+        for (GuiEventListener child : this.children()) {
+            if (child instanceof TabContentComponent) {
+                toRemove.add(child);
+            }
+        }
+        for (GuiEventListener child : toRemove) {
+            this.removeWidget(child);
+        }
     }
 
     public static class Label extends AbstractWidget implements TabContentComponent{

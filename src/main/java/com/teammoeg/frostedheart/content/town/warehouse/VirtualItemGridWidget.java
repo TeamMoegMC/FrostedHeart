@@ -137,26 +137,33 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
         }
 
         // 检查是否点击物品
-        if (mouseX >= getX() && mouseX < getX() + cols * slotSize && mouseY >= getY() && mouseY < getY() + rows * slotSize) {
+
+        double relX = mouseX - getX();
+        double relY = mouseY - getY();
+        if (relX >= 0 && relY >= 0 && relX < cols * slotSize && relY < rows * slotSize) {
             int col = (int)((mouseX - getX()) / slotSize);
             int row = (int)((mouseY - getY()) / slotSize);
-
+            System.out.println("Mouse: " + mouseX + ", " + mouseY);
+            System.out.println("Widget: " + getX() + ", " + getY());
+            System.out.println("Rel: " + (mouseX - getX()) + ", " + (mouseY - getY()));
+            System.out.println("Col/Row: " + col + ", " + row);
                 ItemStack carried = Minecraft.getInstance().player.containerMenu.getCarried();
                 // 存入 (Insert)
                 if (!carried.isEmpty()) {
                     FHNetwork.INSTANCE.sendToServer(new WarehouseInteractPacket(WarehouseInteractPacket.Action.INSERT,hasShiftDown(),ItemStack.EMPTY));
+                    playClickSound();
                     return true;
                 }
                 else {
-                    //(EXTRACT)
+                    // 取出 (EXTRACT)
                     int index = getIndexAt(row, col);
                     if (index >= 0 && index < itemList.size()) {
                         VirtualItemStack clickedVStack = this.itemList.get(index);
                         FHNetwork.INSTANCE.sendToServer(new WarehouseInteractPacket(WarehouseInteractPacket.Action.EXTRACT,hasShiftDown(),clickedVStack.getStack()));
                     }
+                    playClickSound();
+                    return true;
                 }
-                playClickSound();
-                return true;
             }
         return false;
     }

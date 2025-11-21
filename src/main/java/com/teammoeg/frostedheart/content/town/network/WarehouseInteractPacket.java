@@ -43,9 +43,9 @@ public class WarehouseInteractPacket implements CMessage {
 		EXTRACT, // 取出 (左键/右键点击网格)
 		INSERT   // 放入 (拿着物品点击网格)
 	}
-	private final Action action;// 操作的是什么物品// 操作数量 (如果是 -1 代表全部/一整组);
+	private final Action action;//行为 (取出/放入);
 	private final boolean isShift; // 是否按住了 Shift
-	private final ItemStack targetItem;
+	private final ItemStack targetItem; //取出的目标物品
 
     public WarehouseInteractPacket(Action action, boolean isShift, ItemStack itemStack) {
 		this.action = action;
@@ -74,7 +74,7 @@ public class WarehouseInteractPacket implements CMessage {
 					TownResourceActions.ItemResourceAction action = new TownResourceActions.ItemResourceAction(carried, ResourceActionType.ADD, amountToAdd, ResourceActionMode.MAXIMIZE);
 					TownResourceActions.ItemResourceActionResult result = (TownResourceActions.ItemResourceActionResult)executor.execute(action);
 					int shouldStack = (int) result.modifiedAmount();
-					if (result.modifiedAmount()>0) {
+					if (result.modifiedAmount()>=1) {
 						ItemStack inserted = carried.copy();
 						inserted.shrink(shouldStack);
 						player.containerMenu.setCarried(inserted);
