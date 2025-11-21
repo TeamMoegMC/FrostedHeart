@@ -53,17 +53,12 @@ public class WarehouseC2SRequestPacket implements CMessage {
 			// 确认玩家打开的是仓库界面
 			if (player.containerMenu instanceof WarehouseMenu) {
 				// 获取数据
-				// 注意确认这里是用 player 还是 blockEntity 拿数据
 				Map<ItemStack, Double> itemMap = TeamTown.from(player).getResourceHolder().getAllItems();
 				List<VirtualItemStack> list = new ArrayList<>();
 
-				// 2. 遍历 Map，提取 Key(物品) 和 Value(数量)
-				for (Map.Entry<ItemStack, Double> entry : itemMap.entrySet()) {
-					ItemStack stack = entry.getKey();
-					Double amount = entry.getValue();
-					list.add(new VirtualItemStack(stack, amount.longValue()));
-				}
-				// 发回给客户端
+				// 遍历 Map，提取 Key(物品) 和 Value(数量)
+				VirtualItemStack.toClientVisualList(list,itemMap);
+				// 发回给客户端;
 				FHNetwork.INSTANCE.sendPlayer(player, new WarehouseS2CPacket(list));
 			}
 		});

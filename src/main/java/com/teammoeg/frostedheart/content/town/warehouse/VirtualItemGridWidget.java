@@ -1,14 +1,21 @@
 package com.teammoeg.frostedheart.content.town.warehouse;
 
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
+import com.teammoeg.frostedheart.content.town.network.WarehouseC2SRequestPacket;
+import com.teammoeg.frostedheart.content.town.network.WarehouseInteractPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
+
+import static com.teammoeg.chorda.client.CInputHelper.playClickSound;
+import static net.minecraft.client.gui.screens.Screen.hasShiftDown;
 
 public class VirtualItemGridWidget extends AbstractWidget implements AbstractTownWorkerBlockScreen.TabContentComponent {
 
@@ -133,18 +140,24 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
         if (mouseX >= getX() && mouseX < getX() + cols * slotSize && mouseY >= getY() && mouseY < getY() + rows * slotSize) {
             int col = (int)((mouseX - getX()) / slotSize);
             int row = (int)((mouseY - getY()) / slotSize);
-            int index = getIndexAt(row, col);
 
-            if (index >= 0 && index < itemList.size()) {
-                VirtualItemStack clicked = itemList.get(index);
-                // TODO: 这里发送网络包给服务器
-                System.out.println("Clicked item: " + clicked.getStack().getDisplayName().getString());
-                // NetworkHandler.sendToServer(new PacketClickVirtualItem(index, button));
-                // 播放点击音效
-                Minecraft.getInstance().getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                ItemStack carried = Minecraft.getInstance().player.containerMenu.getCarried();
+                // 存入 (Insert)
+                if (!carried.isEmpty()) {
+                    FHNetwork.INSTANCE.sendToServer(new WarehouseInteractPacket(WarehouseInteractPacket.Action.INSERT,hasShiftDown(),ItemStack.EMPTY));
+                    return true;
+                }
+                else {
+                    //(EXTRACT)
+                    int index = getIndexAt(row, col);
+                    if (index >= 0 && index < itemList.size()) {
+                        VirtualItemStack clickedVStack = this.itemList.get(index);
+                        FHNetwork.INSTANCE.sendToServer(new WarehouseInteractPacket(WarehouseInteractPacket.Action.EXTRACT,hasShiftDown(),clickedVStack.getStack()));
+                    }
+                }
+                playClickSound();
                 return true;
             }
-        }
         return false;
     }
 

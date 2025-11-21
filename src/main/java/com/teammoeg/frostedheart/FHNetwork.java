@@ -112,7 +112,8 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("wandering_refugee_open_trade_gui", WanderingRefugeeOpenTradeGUIMessage.class);
         registerMessage("wandering_refugee_recruit", WanderingRefugeeRecruitMessage.class);
         registerMessage("warehouse_s2c", WarehouseS2CPacket.class);
-        registerMessage("Warehouse_c2s_request_packet", WarehouseC2SRequestPacket.class);
+        registerMessage("warehouse_c2s_request_packet", WarehouseC2SRequestPacket.class);
+        registerMessage("warehouse_c2s_interact_packet", WarehouseInteractPacket.class);
 
         // Generator Messages
         //registerMessage("generator_upgrade", GeneratorModifyPacket.class);
