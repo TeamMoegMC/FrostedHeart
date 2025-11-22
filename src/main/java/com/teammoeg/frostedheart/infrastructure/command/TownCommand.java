@@ -185,7 +185,7 @@ public class TownCommand {
                                     ItemStack itemStack = ct.getSource().getPlayerOrException().getMainHandItem();
                                     ct.getSource().sendSuccess(()-> Components.str("Adding ItemStack: " + itemStack), true);
                                     TownResourceActions.ItemResourceAction action = new TownResourceActions.ItemResourceAction(itemStack, ResourceActionType.ADD, amount, ResourceActionMode.ATTEMPT);
-                                    TownResourceActions.ItemResourceActionResult result = (TownResourceActions.ItemResourceActionResult)town.getActionExecutorHandler().execute(action);
+                                    TownResourceActionResults.ItemResourceActionResult result = (TownResourceActionResults.ItemResourceActionResult)town.getActionExecutorHandler().execute(action);
                                     //TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().addIfHaveCapacity(itemStack, amount);
                                     if(result.allModified()){
                                         ct.getSource().sendSuccess(()-> Components.str("Resource added"), true);

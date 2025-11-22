@@ -63,7 +63,7 @@ public class HouseWorker implements TownWorker {
             for (ItemResourceType foodType : availableFoodTypes) {
                 TownResourceActions.TownResourceTypeCostAction costTypeAction = new TownResourceActions.TownResourceTypeCostAction
                         (foodType, toCost / residentNum, 0, 100, ResourceActionMode.MAXIMIZE, ResourceActionOrder.ASCENDING);
-                TownResourceActions.TownResourceTypeCostActionResult result = (TownResourceActions.TownResourceTypeCostActionResult) executorHandler.execute(costTypeAction);
+                TownResourceActionResults.TownResourceTypeCostActionResult result = (TownResourceActionResults.TownResourceTypeCostActionResult) executorHandler.execute(costTypeAction);
                 toCost -= result.totalModifiedAmount();
                 foodAmounts.merge(foodType, result.totalModifiedAmount(), Double::sum);
                 avgLevel += result.getAverageLevel() * result.totalModifiedAmount();//先加等级乘数量，后面再除以数量

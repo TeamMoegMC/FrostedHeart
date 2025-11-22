@@ -22,10 +22,7 @@ package com.teammoeg.frostedheart.content.town.network;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
-import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
-import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
-import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
+import com.teammoeg.frostedheart.content.town.resource.action.*;
 import com.teammoeg.frostedheart.content.town.warehouse.VirtualItemStack;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseMenu;
 import net.minecraft.network.FriendlyByteBuf;
@@ -72,7 +69,7 @@ public class WarehouseInteractPacket implements CMessage {
 				if (this.action == Action.INSERT) {
 					double amountToAdd = carried.getCount();
 					TownResourceActions.ItemResourceAction action = new TownResourceActions.ItemResourceAction(carried, ResourceActionType.ADD, amountToAdd, ResourceActionMode.MAXIMIZE);
-					TownResourceActions.ItemResourceActionResult result = (TownResourceActions.ItemResourceActionResult)executor.execute(action);
+					TownResourceActionResults.ItemResourceActionResult result = (TownResourceActionResults.ItemResourceActionResult)executor.execute(action);
 					int shouldStack = (int) result.modifiedAmount();
 					if (result.modifiedAmount()>=1) {
 						ItemStack inserted = carried.copy();
@@ -90,7 +87,7 @@ public class WarehouseInteractPacket implements CMessage {
                             maxStack,
 							ResourceActionMode.MAXIMIZE
 					);
-					TownResourceActions.ItemResourceActionResult result = (TownResourceActions.ItemResourceActionResult) executor.execute(action);
+					TownResourceActionResults.ItemResourceActionResult result = (TownResourceActionResults.ItemResourceActionResult) executor.execute(action);
 					int shouldStack = (int) result.modifiedAmount();
 					if (result.modifiedAmount()>0) {
 						ItemStack extracted = targetItem.copy();
