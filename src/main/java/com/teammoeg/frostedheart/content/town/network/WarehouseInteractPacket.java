@@ -88,11 +88,30 @@ public class WarehouseInteractPacket implements CMessage {
 							ResourceActionMode.MAXIMIZE
 					);
 					TownResourceActionResults.ItemResourceActionResult result = (TownResourceActionResults.ItemResourceActionResult) executor.execute(action);
+
 					int shouldStack = (int) result.modifiedAmount();
-					if (result.modifiedAmount()>0) {
+					if (shouldStack > 0) {
 						ItemStack extracted = targetItem.copy();
 						extracted.setCount(shouldStack);
-						player.containerMenu.setCarried(extracted);
+						// Shift取出
+						if (this.isShift) {
+							player.getInventory().add(extracted);
+							// 检查剩余
+							if (!extracted.isEmpty()) {
+								// 4. 退款：背包满了，把剩下的存回仓库
+								double refundAmount = extracted.getCount();
+								TownResourceActions.ItemResourceAction refundAction = new TownResourceActions.ItemResourceAction(
+										extracted,
+										ResourceActionType.ADD,
+										refundAmount,
+										ResourceActionMode.MAXIMIZE
+								);
+								executor.execute(refundAction);
+							}
+						}
+						else {
+							player.containerMenu.setCarried(extracted);
+						}
 						player.containerMenu.broadcastChanges();
 					}
 				}
