@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.town.resource;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IERecipeTypes;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import net.minecraft.core.RegistryAccess;
@@ -32,15 +33,18 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.common.crafting.conditions.ICondition;
 import net.minecraftforge.common.util.Lazy;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Function;
 
 import static net.minecraft.world.item.crafting.ShapedRecipe.itemStackFromJson;
 
@@ -54,24 +58,13 @@ public class ItemResourceAmountRecipe extends IESerializableRecipe {
     public static RegistryObject<IERecipeSerializer<ItemResourceAmountRecipe>> SERIALIZER;
     public static Lazy<IERecipeTypes.TypeWithClass<ItemResourceAmountRecipe>> IEType = Lazy.of(() -> new IERecipeTypes.TypeWithClass<>(TYPE, ItemResourceAmountRecipe.class));
     /**
-     * 物品
+     * 各个物品转换的资源信息
      */
-    public final ItemStack item;
-    /**
-     * 要转化为的ItemResourceKey对应的Tag
-     */
-    public final TagKey<Item> resourceTagKey;
-    /**
-     * 转化数量
-     * 可为小数，但不应为负数
-     */
-    public final float amount;
+    public final Map<ItemStack, Map<TagKey<Item>, Float>> data;
 
-    public ItemResourceAmountRecipe(ResourceLocation id, ItemStack item, TagKey<Item> resourceTagKey, float amount) {
+    public ItemResourceAmountRecipe(ResourceLocation id, Map<ItemStack, Map<TagKey<Item>, Float>> data) {
         super(Lazy.of(() -> ItemStack.EMPTY), IEType.get(), id);
-        this.item = item;
-        this.resourceTagKey = resourceTagKey;
-        this.amount = amount;
+        this.data = data;
     }
 
     @Override
@@ -93,28 +86,47 @@ public class ItemResourceAmountRecipe extends IESerializableRecipe {
         @Nullable
         @Override
         public ItemResourceAmountRecipe fromNetwork(@NotNull ResourceLocation recipeId, FriendlyByteBuf buffer) {
-            ItemStack item = buffer.readItem();
-            TagKey<Item> itemOfResourceKey = ItemTags.create(buffer.readResourceLocation());
-            float amount = buffer.readFloat();
-            return new ItemResourceAmountRecipe(recipeId, item, itemOfResourceKey, amount);
+            Map<ItemStack, Map<TagKey<Item>, Float>> data = buffer.readMap(FriendlyByteBuf::readItem, Serializer::readSingleData);
+            return new ItemResourceAmountRecipe(recipeId, data);
+        }
+        public static Map<TagKey<Item>, Float> readSingleData(FriendlyByteBuf buffer){
+            return buffer.readMap((buf) -> ItemTags.create(buf.readResourceLocation()), FriendlyByteBuf::readFloat);
         }
 
         @Override
         public void toNetwork(FriendlyByteBuf buffer, ItemResourceAmountRecipe recipe) {
-            buffer.writeItem(recipe.item);
-            buffer.writeResourceLocation(recipe.resourceTagKey.location());
-            buffer.writeFloat(recipe.amount);
+            buffer.writeMap(recipe.data, FriendlyByteBuf::writeItem, Serializer::writeSingleData);
+        }
+        public static void writeSingleData(FriendlyByteBuf buffer, Map<TagKey<Item>, Float> data){
+            buffer.writeMap(data, (buf, tag) -> buf.writeResourceLocation(tag.location()), FriendlyByteBuf::writeFloat);
         }
 
         @Override
         public ItemResourceAmountRecipe readFromJson(ResourceLocation recipeId, JsonObject json, ICondition.IContext ctx) {
-            ItemStack item = itemStackFromJson(json);//readOutput(json.get("item")).get();
-            //itemStackFromJson(outputObject.getAsJsonObject())
-            String resourceTagKeyString = GsonHelper.getAsString(json, "resourceTagKey");
-            String[] split = resourceTagKeyString.split(":");
-            TagKey<Item> resourceTagKey = ItemTags.create(Objects.requireNonNull(ResourceLocation.tryBuild(split[0], split[1])));
-            float amount = GsonHelper.getAsFloat(json, "amount");
-            return new ItemResourceAmountRecipe(recipeId, item, resourceTagKey, amount);
+            System.out.println("duck_egg debug: loading ItemResourceAmountRecipe");
+            JsonObject dataObject = json.getAsJsonObject("data");
+            Map<ItemStack, Map<TagKey<Item>, Float>> data = new HashMap<>();
+            for (Map.Entry<String, JsonElement> entry : dataObject.entrySet()) {
+                JsonObject itemJson = new JsonObject();
+                itemJson.addProperty("item", entry.getKey());
+                ItemStack itemStack = itemStackFromJson(itemJson);
+                JsonObject valueObject = entry.getValue().getAsJsonObject();
+                Map<TagKey<Item>, Float> singleData = new HashMap<>();
+                for (Map.Entry<String, JsonElement> entry1 : valueObject.entrySet()) {
+                    TagKey<Item> tag = ItemTags.create(new ResourceLocation(entry1.getKey()));
+                    singleData.put(tag, entry1.getValue().getAsFloat());
+                }
+                data.put(itemStack, singleData);
+            }
+            System.out.println("duck_egg debug: loaded ItemResourceAmountRecipe");
+            return new ItemResourceAmountRecipe(recipeId, data);
+            //下面的已废弃
+            //ItemStack item = itemStackFromJson(json);//readOutput(json.get("item")).get();
+            //String resourceTagKeyString = GsonHelper.getAsString(json, "resourceTagKey");
+            //String[] split = resourceTagKeyString.split(":");
+            //TagKey<Item> resourceTagKey = ItemTags.create(Objects.requireNonNull(ResourceLocation.tryBuild(split[0], split[1])));
+            //float amount = GsonHelper.getAsFloat(json, "amount");
+            //return new ItemResourceAmountRecipe(recipeId, item, resourceTagKey, amount);
         }
 
 

@@ -1,6 +1,0 @@
-{
-  "type": "frostedheart:item_resource_amount",
-  "item": "minecraft:bread",
-  "resourceTagKey": "frostedheart:food_grains_1",
-  "amount": 2
-}

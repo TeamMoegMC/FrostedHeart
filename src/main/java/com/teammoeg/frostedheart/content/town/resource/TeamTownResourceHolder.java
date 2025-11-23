@@ -25,6 +25,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableDouble;
 
@@ -459,10 +461,19 @@ private void addSigned(ITownResourceKey townResourceKey, double amount){
      */
     public static void loadItemResourceAmounts(){
         for(ItemResourceAmountRecipe recipe : CUtils.filterRecipes(CDistHelper.getRecipeManager(), ItemResourceAmountRecipe.TYPE)){
-            ItemStackResourceKey itemStackResourceKey = new ItemStackResourceKey(recipe.item);
-            if(!ITEM_RESOURCE_AMOUNTS.containsKey(itemStackResourceKey)) ITEM_RESOURCE_AMOUNTS.put(itemStackResourceKey, new HashMap<>());
-            ITEM_RESOURCE_AMOUNTS.computeIfAbsent(itemStackResourceKey, k -> new HashMap<>()).put(ItemResourceAttribute.fromTagKey(recipe.resourceTagKey), (double) recipe.amount);
+            for(Map.Entry<ItemStack, Map<TagKey<Item>, Float>> entry : recipe.data.entrySet()){
+                ItemStackResourceKey itemStackResourceKey = new ItemStackResourceKey(entry.getKey());
+                System.out.println("item: " + entry.getKey());
+                System.out.println("data: " + entry.getValue());
+                for(Map.Entry<TagKey<Item>, Float> entry2 : entry.getValue().entrySet()){
+                    TagKey< Item> resourceTagKey = entry2.getKey();
+                    float amount = entry2.getValue();
+                    if(!ITEM_RESOURCE_AMOUNTS.containsKey(itemStackResourceKey)) ITEM_RESOURCE_AMOUNTS.put(itemStackResourceKey, new HashMap<>());
+                    ITEM_RESOURCE_AMOUNTS.computeIfAbsent(itemStackResourceKey, k -> new HashMap<>()).put(ItemResourceAttribute.fromTagKey(resourceTagKey), (double)amount);
+                }
+            }
         }
+        System.out.println("ItemResourceAmounts: " + ITEM_RESOURCE_AMOUNTS);
     }
 
     /**
