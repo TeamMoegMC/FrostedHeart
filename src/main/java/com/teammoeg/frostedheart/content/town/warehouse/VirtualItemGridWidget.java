@@ -137,16 +137,11 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
         }
 
         // 检查是否点击物品
-
         double relX = mouseX - getX();
         double relY = mouseY - getY();
         if (relX >= 0 && relY >= 0 && relX < cols * slotSize && relY < rows * slotSize) {
             int col = (int)((mouseX - getX()) / slotSize);
             int row = (int)((mouseY - getY()) / slotSize);
-            System.out.println("Mouse: " + mouseX + ", " + mouseY);
-            System.out.println("Widget: " + getX() + ", " + getY());
-            System.out.println("Rel: " + (mouseX - getX()) + ", " + (mouseY - getY()));
-            System.out.println("Col/Row: " + col + ", " + row);
                 ItemStack carried = Minecraft.getInstance().player.containerMenu.getCarried();
                 // 存入 (Insert)
                 if (!carried.isEmpty()) {
