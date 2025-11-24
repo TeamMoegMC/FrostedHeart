@@ -67,13 +67,11 @@ public class WarehouseInteractPacket implements CMessage {
 				ItemStack carried = player.containerMenu.getCarried();
 				// 构建存入 Action
 				if (this.action == Action.INSERT) {
-					double amountToAdd = carried.getCount();
-					TownResourceActions.ItemResourceAction action = new TownResourceActions.ItemResourceAction(carried, ResourceActionType.ADD, amountToAdd, ResourceActionMode.MAXIMIZE);
-					TownResourceActionResults.ItemResourceActionResult result = (TownResourceActionResults.ItemResourceActionResult)executor.execute(action);
-					int shouldStack = (int) result.modifiedAmount();
-					if (result.modifiedAmount()>=1) {
-						ItemStack inserted = carried.copy();
-						inserted.shrink(shouldStack);
+					TownResourceActions.ItemStackAction action = new TownResourceActions.ItemStackAction(carried, ResourceActionType.ADD, ResourceActionMode.MAXIMIZE);
+					TownResourceActionResults.ItemStackActionResult result = (TownResourceActionResults.ItemStackActionResult)executor.execute(action);
+
+					if (!result.itemStackModified().isEmpty()) {
+						ItemStack inserted = result.itemStackLeft().copy();
 						player.containerMenu.setCarried(inserted);
 						player.containerMenu.broadcastChanges();
 					}
@@ -88,10 +86,15 @@ public class WarehouseInteractPacket implements CMessage {
 							ResourceActionMode.MAXIMIZE
 					);
 					TownResourceActionResults.ItemResourceActionResult result = (TownResourceActionResults.ItemResourceActionResult) executor.execute(action);
+					//尝试ItemStackAction
+//					TownResourceActions.ItemStackAction action = new TownResourceActions.ItemStackAction(targetItem, ResourceActionType.COST, ResourceActionMode.MAXIMIZE);
+//					TownResourceActionResults.ItemStackActionResult result = (TownResourceActionResults.ItemStackActionResult)executor.execute(action);
+
 
 					int shouldStack = (int) result.modifiedAmount();
-					if (shouldStack > 0) {
+					if (shouldStack > 0/*!result.itemStackModified().isEmpty()*/) {
 						ItemStack extracted = targetItem.copy();
+//						ItemStack extracted = result.itemStackModified();
 						extracted.setCount(shouldStack);
 						// Shift取出
 						if (this.isShift) {
@@ -99,14 +102,17 @@ public class WarehouseInteractPacket implements CMessage {
 							// 检查剩余
 							if (!extracted.isEmpty()) {
 								// 4. 退款：背包满了，把剩下的存回仓库
-								double refundAmount = extracted.getCount();
-								TownResourceActions.ItemResourceAction refundAction = new TownResourceActions.ItemResourceAction(
+//								double refundAmount = extracted.getCount();
+/*								TownResourceActions.ItemResourceAction refundAction = new TownResourceActions.ItemResourceAction(
 										extracted,
 										ResourceActionType.ADD,
 										refundAmount,
 										ResourceActionMode.MAXIMIZE
 								);
+								executor.execute(refundAction);*/
+								TownResourceActions.ItemStackAction refundAction = new TownResourceActions.ItemStackAction(extracted, ResourceActionType.ADD, ResourceActionMode.MAXIMIZE);
 								executor.execute(refundAction);
+
 							}
 						}
 						else {
