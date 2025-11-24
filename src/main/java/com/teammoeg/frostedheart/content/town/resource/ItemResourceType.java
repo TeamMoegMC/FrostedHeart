@@ -34,7 +34,7 @@ public enum ItemResourceType implements ITownResourceType {
     WOOD,
     STONE,
     ORE,
-    METAL(1),
+    METAL(10),
     FUEL,
     TOOL,
     FOOD_PROTEIN,

@@ -463,8 +463,6 @@ private void addSigned(ITownResourceKey townResourceKey, double amount){
         for(ItemResourceAmountRecipe recipe : CUtils.filterRecipes(CDistHelper.getRecipeManager(), ItemResourceAmountRecipe.TYPE)){
             for(Map.Entry<ItemStack, Map<TagKey<Item>, Float>> entry : recipe.data.entrySet()){
                 ItemStackResourceKey itemStackResourceKey = new ItemStackResourceKey(entry.getKey());
-                System.out.println("item: " + entry.getKey());
-                System.out.println("data: " + entry.getValue());
                 for(Map.Entry<TagKey<Item>, Float> entry2 : entry.getValue().entrySet()){
                     TagKey< Item> resourceTagKey = entry2.getKey();
                     float amount = entry2.getValue();
@@ -473,7 +471,6 @@ private void addSigned(ITownResourceKey townResourceKey, double amount){
                 }
             }
         }
-        System.out.println("ItemResourceAmounts: " + ITEM_RESOURCE_AMOUNTS);
     }
 
     /**

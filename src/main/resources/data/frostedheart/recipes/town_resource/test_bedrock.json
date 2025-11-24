@@ -2,7 +2,8 @@
   "type": "frostedheart:item_resource_amount",
   "data": {
     "minecraft:bedrock": {
-        "frostedheart:town_resource_stone_0": 1024
+      "frostedheart:town_resource_metal_10": 10,
+      "frostedheart:town_resource_stone_0": 1024
     },
     "minecraft:stone": {
       "frostedheart:town_resource_stone_0": 2

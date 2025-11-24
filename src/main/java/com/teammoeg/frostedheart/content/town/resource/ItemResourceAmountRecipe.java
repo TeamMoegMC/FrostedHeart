@@ -103,7 +103,6 @@ public class ItemResourceAmountRecipe extends IESerializableRecipe {
 
         @Override
         public ItemResourceAmountRecipe readFromJson(ResourceLocation recipeId, JsonObject json, ICondition.IContext ctx) {
-            System.out.println("duck_egg debug: loading ItemResourceAmountRecipe");
             JsonObject dataObject = json.getAsJsonObject("data");
             Map<ItemStack, Map<TagKey<Item>, Float>> data = new HashMap<>();
             for (Map.Entry<String, JsonElement> entry : dataObject.entrySet()) {
@@ -118,15 +117,7 @@ public class ItemResourceAmountRecipe extends IESerializableRecipe {
                 }
                 data.put(itemStack, singleData);
             }
-            System.out.println("duck_egg debug: loaded ItemResourceAmountRecipe");
             return new ItemResourceAmountRecipe(recipeId, data);
-            //下面的已废弃
-            //ItemStack item = itemStackFromJson(json);//readOutput(json.get("item")).get();
-            //String resourceTagKeyString = GsonHelper.getAsString(json, "resourceTagKey");
-            //String[] split = resourceTagKeyString.split(":");
-            //TagKey<Item> resourceTagKey = ItemTags.create(Objects.requireNonNull(ResourceLocation.tryBuild(split[0], split[1])));
-            //float amount = GsonHelper.getAsFloat(json, "amount");
-            //return new ItemResourceAmountRecipe(recipeId, item, resourceTagKey, amount);
         }
 
 

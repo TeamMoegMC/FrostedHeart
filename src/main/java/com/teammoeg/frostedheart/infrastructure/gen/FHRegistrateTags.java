@@ -278,6 +278,8 @@ public class FHRegistrateTags {
                 .add(Items.COPPER_INGOT);
         prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.METAL.generateAttribute(1)))
                 .add(Items.IRON_INGOT);
+        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.METAL.generateAttribute(10)))
+                .add(Items.BEDROCK);
         prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.FOOD_GRAINS.generateAttribute(1)))
                 .add(Items.BREAD);
         prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.FOOD_GRAINS.generateAttribute(0)))
