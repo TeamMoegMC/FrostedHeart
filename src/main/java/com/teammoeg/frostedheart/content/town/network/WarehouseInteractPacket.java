@@ -80,22 +80,22 @@ public class WarehouseInteractPacket implements CMessage {
 					int maxStack = targetItem.getMaxStackSize();
 
                     // 构建取出 Action
-					TownResourceActions.ItemResourceAction action = new TownResourceActions.ItemResourceAction(targetItem,
-							ResourceActionType.COST,
-                            maxStack,
-							ResourceActionMode.MAXIMIZE
-					);
-					TownResourceActionResults.ItemResourceActionResult result = (TownResourceActionResults.ItemResourceActionResult) executor.execute(action);
+					//TownResourceActions.ItemResourceAction action = new TownResourceActions.ItemResourceAction(targetItem,
+					//		ResourceActionType.COST,
+                    //        maxStack,
+					//		ResourceActionMode.MAXIMIZE
+					//);
+					//TownResourceActionResults.ItemResourceActionResult result = (TownResourceActionResults.ItemResourceActionResult) executor.execute(action);
 					//尝试ItemStackAction
-//					TownResourceActions.ItemStackAction action = new TownResourceActions.ItemStackAction(targetItem, ResourceActionType.COST, ResourceActionMode.MAXIMIZE);
-//					TownResourceActionResults.ItemStackActionResult result = (TownResourceActionResults.ItemStackActionResult)executor.execute(action);
+					TownResourceActions.ItemStackAction action = new TownResourceActions.ItemStackAction(targetItem.copyWithCount(maxStack), ResourceActionType.COST, ResourceActionMode.MAXIMIZE);
+					TownResourceActionResults.ItemStackActionResult result = (TownResourceActionResults.ItemStackActionResult)executor.execute(action);
 
 
-					int shouldStack = (int) result.modifiedAmount();
-					if (shouldStack > 0/*!result.itemStackModified().isEmpty()*/) {
-						ItemStack extracted = targetItem.copy();
-//						ItemStack extracted = result.itemStackModified();
-						extracted.setCount(shouldStack);
+					//int shouldStack = (int) result.modifiedAmount();
+					if (/*shouldStack > 0*/!result.itemStackModified().isEmpty()) {
+						//ItemStack extracted = targetItem.copy();
+						ItemStack extracted = result.itemStackModified();
+						//extracted.setCount(shouldStack);
 						// Shift取出
 						if (this.isShift) {
 							player.getInventory().add(extracted);
