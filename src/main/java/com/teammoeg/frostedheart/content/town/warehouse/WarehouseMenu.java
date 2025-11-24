@@ -42,28 +42,20 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 				TeamTown town = TeamTown.from(player);
                 IActionExecutorHandler executor = town.getActionExecutorHandler();
                 //构建存入 Action
-                double amountToAdd = slotStack.getCount();
-                TownResourceActions.ItemResourceAction action = new TownResourceActions.ItemResourceAction(
-                        slotStack,
-                        ResourceActionType.ADD,
-                        amountToAdd,
-                        ResourceActionMode.MAXIMIZE
-                );
+				TownResourceActions.ItemStackAction action = new TownResourceActions.ItemStackAction(
+						slotStack,
+						ResourceActionType.ADD,
+						ResourceActionMode.MAXIMIZE
+				);
 
-                var result = (TownResourceActionResults.ItemResourceActionResult) executor.execute(action);
-                int insertedCount = (int) result.modifiedAmount();
-                if (insertedCount > 0) {
-                    // 扣除 Slot 里的数量
-                    slotStack.shrink(insertedCount);
-
-                    if (slotStack.isEmpty()) {
-                        slot.set(ItemStack.EMPTY);
-                    } else {
-                        slot.setChanged();
-                    }
-                    List<VirtualItemStack> list = new ArrayList<>();
-                    VirtualItemStack.toClientVisualList(list, town.getResourceHolder().getAllItems());
-                    FHNetwork.INSTANCE.sendPlayer((ServerPlayer) player, new WarehouseS2CPacket(list));
+                var result = (TownResourceActionResults.ItemStackActionResult) executor.execute(action);
+				ItemStack itemLeft = result.itemStackLeft();
+				if(!itemLeft.isEmpty()){
+					slot.set(itemLeft);
+					slot.setChanged();
+					List<VirtualItemStack> list = new ArrayList<>();
+					VirtualItemStack.toClientVisualList(list, town.getResourceHolder().getAllItems());
+					FHNetwork.INSTANCE.sendPlayer((ServerPlayer) player, new WarehouseS2CPacket(list));
                 }
             }
 
