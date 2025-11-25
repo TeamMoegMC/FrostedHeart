@@ -50,7 +50,7 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 
                 var result = (TownResourceActionResults.ItemStackActionResult) executor.execute(action);
 				ItemStack itemLeft = result.itemStackLeft();
-				if(!itemLeft.isEmpty()){
+				if(!result.itemStackModified().isEmpty()){
 					slot.set(itemLeft);
 					slot.setChanged();
 					List<VirtualItemStack> list = new ArrayList<>();
