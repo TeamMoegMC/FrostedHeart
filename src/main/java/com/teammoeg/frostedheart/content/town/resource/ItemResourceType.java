@@ -38,7 +38,7 @@ public enum ItemResourceType implements ITownResourceType {
     FUEL,
     TOOL,
     FOOD_PROTEIN,
-    FOOD_FRUIT_AND_VEGETABLES,
+    FOOD_FRUIT_AND_VEGETABLES(1),
     FOOD_EDIBLE_OIL,
     FOOD_GRAINS;
 

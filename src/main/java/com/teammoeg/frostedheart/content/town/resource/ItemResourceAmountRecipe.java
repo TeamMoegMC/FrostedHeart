@@ -22,8 +22,10 @@ package com.teammoeg.frostedheart.content.town.resource;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IERecipeTypes;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
@@ -51,7 +53,7 @@ import static net.minecraft.world.item.crafting.ShapedRecipe.itemStackFromJson;
 /**
  * 表示物品能转换为多少某类型资源。
  * 若物品有某个ItemResourceAttribute的Tag，但是没有表示转换量的recipe，则默认为1.
- * 关于合成json的写法。可参考 src.main.resources.data.frostedneart.recipes.town_resource.test_bedrock.json
+ * 关于合成json的写法。可参考 src.main.resources.data.frostedneart.recipes.town_resource.example.json
  */
 public class ItemResourceAmountRecipe extends IESerializableRecipe {
     public static RegistryObject<RecipeType<ItemResourceAmountRecipe>> TYPE;
@@ -103,23 +105,90 @@ public class ItemResourceAmountRecipe extends IESerializableRecipe {
 
         @Override
         public ItemResourceAmountRecipe readFromJson(ResourceLocation recipeId, JsonObject json, ICondition.IContext ctx) {
-            JsonObject dataObject = json.getAsJsonObject("data");
             Map<ItemStack, Map<TagKey<Item>, Float>> data = new HashMap<>();
-            for (Map.Entry<String, JsonElement> entry : dataObject.entrySet()) {
-                JsonObject itemJson = new JsonObject();
-                itemJson.addProperty("item", entry.getKey());
-                ItemStack itemStack = itemStackFromJson(itemJson);
-                JsonObject valueObject = entry.getValue().getAsJsonObject();
-                Map<TagKey<Item>, Float> singleData = new HashMap<>();
-                for (Map.Entry<String, JsonElement> entry1 : valueObject.entrySet()) {
-                    TagKey<Item> tag = ItemTags.create(new ResourceLocation(entry1.getKey()));
-                    singleData.put(tag, entry1.getValue().getAsFloat());
+            //某个物品的转换到各个ItemResourceAttribute的值
+            JsonArray dataArray = json.getAsJsonArray("byItem");
+            if(dataArray != null){
+                for (JsonElement element : dataArray) {
+                    JsonObject elementObject = element.getAsJsonObject();
+                    //读取物品
+                    JsonObject itemJson;
+                    if (elementObject.has("itemStack")) {
+                        itemJson = elementObject.getAsJsonObject("itemStack");
+                    } else {
+                        // 当不存在"itemStack"key，但存在"item"key时，直接把entry本身输入进itemStackFromJson里
+                        itemJson = elementObject;
+                    }
+                    ItemStack itemStack = itemStackFromJson(itemJson);
+
+                    //读取物品转换的资源
+                    JsonArray valueArray = elementObject.getAsJsonArray("values");
+                    for (JsonElement element1 : valueArray) {
+                        JsonObject element1Object = element1.getAsJsonObject();
+                        //读取资源类型
+                        TagKey<Item> tag = ItemTags.create(new ResourceLocation(element1Object.get("tag").getAsString()));
+                        //读取转换数值
+                        float value = element1Object.get("amount").getAsFloat();
+                        //获取已读取的单个物品的数据并融合
+                        Map<TagKey<Item>, Float> dataOfItem = data.computeIfAbsent(itemStack, k -> new HashMap<>());
+                        if(dataOfItem.containsKey(tag)){
+                            FHMain.LOGGER.warn("ItemResourceAmountRecipe: Trying to add ItemResourceAmount data, but there is already another data existed!\n{\nItem: {}\nTag: {}\nOld Amount: {}\nNew Amount: {}\n}1", itemStack.getDisplayName().getString(), tag.location(), dataOfItem.get(tag), value);
+                        }
+                        dataOfItem.put(tag, value);
+
+                    }
                 }
-                data.put(itemStack, singleData);
+            }
+            //某个ItemResourceAttribute被各个物品转换的值。只是另一种写法，没有本质区别。
+            dataArray = json.getAsJsonArray("byTag");
+            if(dataArray != null){
+                for (JsonElement element : dataArray) {
+                    JsonObject elementObject = element.getAsJsonObject();
+                    //读取tag数据
+                    TagKey<Item> tag = ItemTags.create(new ResourceLocation(elementObject.get("tag").getAsString()));
+                    JsonArray valueArray = elementObject.getAsJsonArray("values");
+                    for (JsonElement element1: valueArray) {
+                        //读取物品
+                        JsonObject element1Object = element1.getAsJsonObject();
+                        JsonObject itemJson;
+                        if (element1Object.has("itemStack")) {
+                            itemJson = element1Object.getAsJsonObject("itemStack");
+                        } else {
+                            // 当不存在"itemStack"key，但存在"item"key时，直接把entry本身输入进itemStackFromJson里
+                            itemJson = element1Object;
+                        }
+                        ItemStack itemStack = itemStackFromJson(itemJson);
+                        
+                        //读取转换数值
+                        Float value = element1Object.get("amount").getAsFloat();
+                        //获取已读取的单个物品的数据并融合
+                        data.computeIfAbsent(itemStack, k -> new HashMap<>()).put(tag, value);
+                        if(data.get(itemStack).containsKey(tag)){
+                            FHMain.LOGGER.warn("ItemResourceAmountRecipe: Trying to add ItemResourceAmount data, but there is already another data existed!\n{\nItem: {}\nTag: {}\nOld Amount: {}\nNew Amount: {}\n}2", itemStack.getDisplayName().getString(), tag.location(), data.get(itemStack).get(tag), value);
+                        }
+                        data.get(itemStack).put(tag, value);
+
+                    }
+                }
+            }
+            JsonArray objectList = json.getAsJsonArray("commonList");
+            if(objectList != null){
+                for (JsonElement element : objectList){
+                    JsonObject object = element.getAsJsonObject();
+                    JsonObject itemJson;
+                    if (object.has("itemStack")) {
+                        itemJson = object.getAsJsonObject("itemStack");
+                    } else {
+                        // 当不存在"itemStack"key，但存在"item"key时，直接把object本身输入进itemStackFromJson里
+                        itemJson = object;
+                    }
+                    ItemStack itemStack = itemStackFromJson(itemJson);
+                    TagKey<Item> tag = ItemTags.create(new ResourceLocation(object.get("tag").getAsString()));
+                    float value = object.get("amount").getAsFloat();
+                    data.computeIfAbsent(itemStack, k -> new HashMap<>()).put(tag, value);
+                }
             }
             return new ItemResourceAmountRecipe(recipeId, data);
         }
-
-
     }
 }

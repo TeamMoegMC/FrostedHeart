@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
 
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.NetherVines;
@@ -36,29 +37,20 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
     private final int startX;
     private final int startY;
     private final int startZ;
+    @Getter
     private int validStone = 0;
+    @Getter
     private int light = 0;
+    @Getter
     private double temperature = 0;
     private int volume = 0;//used to calculate temperature
+    @Getter
     private final OccupiedArea occupiedArea = new OccupiedArea();
     public MineBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
         this.startX = startPos.getX();
         this.startY = startPos.getY();
         this.startZ = startPos.getZ();
-    }
-
-    public int getValidStone() {
-        return validStone;
-    }
-    public int getLight(){
-        return light;
-    }
-    public double getTemperature(){
-        return temperature;
-    }
-    public OccupiedArea getOccupiedArea() {
-        return occupiedArea;
     }
 
 

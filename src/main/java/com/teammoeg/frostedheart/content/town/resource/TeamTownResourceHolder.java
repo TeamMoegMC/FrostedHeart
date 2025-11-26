@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -463,12 +464,13 @@ private void addSigned(ITownResourceKey townResourceKey, double amount){
         for(ItemResourceAmountRecipe recipe : CUtils.filterRecipes(CDistHelper.getRecipeManager(), ItemResourceAmountRecipe.TYPE)){
             for(Map.Entry<ItemStack, Map<TagKey<Item>, Float>> entry : recipe.data.entrySet()){
                 ItemStackResourceKey itemStackResourceKey = new ItemStackResourceKey(entry.getKey());
-                for(Map.Entry<TagKey<Item>, Float> entry2 : entry.getValue().entrySet()){
-                    TagKey< Item> resourceTagKey = entry2.getKey();
-                    float amount = entry2.getValue();
-                    if(!ITEM_RESOURCE_AMOUNTS.containsKey(itemStackResourceKey)) ITEM_RESOURCE_AMOUNTS.put(itemStackResourceKey, new HashMap<>());
-                    ITEM_RESOURCE_AMOUNTS.computeIfAbsent(itemStackResourceKey, k -> new HashMap<>()).put(ItemResourceAttribute.fromTagKey(resourceTagKey), (double)amount);
-                }
+                Map<ItemResourceAttribute, Double> storedAmounts = ITEM_RESOURCE_AMOUNTS.computeIfAbsent(itemStackResourceKey, k -> new HashMap<>());
+                entry.getValue().forEach((tagKey, amount) -> {
+                    if(storedAmounts.containsKey(ItemResourceAttribute.fromTagKey(tagKey))){
+                        FHMain.LOGGER.warn("TeamTownResourceHolder: Trying to add ItemResourceAmount data, but there is already another data existed!\n{\nItem: {}\nTag: {}\nOld Amount: {}\nNew Amount: {}\n}1", entry.getKey().getDisplayName().getString(), tagKey.location(), storedAmounts.get(ItemResourceAttribute.fromTagKey(tagKey)), amount);
+                    }
+                    storedAmounts.put(ItemResourceAttribute.fromTagKey(tagKey), (double)amount);
+                });
             }
         }
     }

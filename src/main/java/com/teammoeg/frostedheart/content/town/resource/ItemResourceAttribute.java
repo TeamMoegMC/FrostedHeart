@@ -128,4 +128,12 @@ public class ItemResourceAttribute implements ITownResourceAttribute {
         return type.hashCode()*31+level;
     }
 
+    @Override
+    public String toString() {
+        return "ItemResourceAttribute{" +
+                "type=" + type +
+                ", level=" + level +
+                '}';
+    }
+
 }
