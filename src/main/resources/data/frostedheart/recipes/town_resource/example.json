@@ -1,70 +1,72 @@
 {
-  "type": "example of frostedheart:item_resource_amount",
-  "commonList": [
-    {
-      "item": "minecraft:iron_ingot",
-      "tag": "frostedheart:town_resource_metal_1",
-      "amount": 2
-    },
-    {
-      "itemStack": {
-        "item": "minecraft:copper_ingot"
+  "example": {
+    "type": "frostedheart:item_resource_amount",
+    "commonList": [
+      {
+        "item": "minecraft:iron_ingot",
+        "tag": "frostedheart:town_resource_metal_1",
+        "amount": 2
       },
-      "tag": "frostedheart:town_resource_metal_0",
-      "amount": 2
-    }
-  ],
-  "byItem": [
-    {
-      "item": "minecraft:bedrock",
-      "values":
-      [
-        {
-          "tag":"frostedheart:town_resource_metal_10",
-          "amount": 1024
+      {
+        "itemStack": {
+          "item": "minecraft:copper_ingot"
         },
-        {
-          "tag":"frostedheart:town_resource_stone_0",
-          "amount": 1024
-        }
-      ]
-    },
-    {
-      "itemStack": {
-        "item": "minecraft:bedrock"
-      },
-      "values":
-      [
-        {
-          "tag":"frostedheart:town_resource_metal_10",
-          "amount": 1024
-        },
-        {
-          "tag":"frostedheart:town_resource_stone_0",
-          "amount": 1024
-        }
-      ]
-    }
-  ],
-  "byTag": [
-    {
-      "tag": "frostedheart:town_resource_food_fruit_and_vegetables_1",
-      "values": [
-        {
-          "item": "minecraft:apple",
-          "amount": 2
-        },
-        {
-          "itemStack": {
-            "item": "minecraft:carrot"
+        "tag": "frostedheart:town_resource_metal_0",
+        "amount": 2
+      }
+    ],
+    "byItem": [
+      {
+        "item": "minecraft:bedrock",
+        "values":
+        [
+          {
+            "tag":"frostedheart:town_resource_metal_10",
+            "amount": 1024
           },
-          "amount": 2
+          {
+            "tag":"frostedheart:town_resource_stone_0",
+            "amount": 1024
+          }
+        ]
+      },
+      {
+        "itemStack": {
+          "item": "minecraft:bedrock"
         },
-        {
-          "item": "minecraft:sweet_berries",
-          "amount": 1.5
-        }
-      ]
-    }
-  ]
+        "values":
+        [
+          {
+            "tag":"frostedheart:town_resource_metal_10",
+            "amount": 1024
+          },
+          {
+            "tag":"frostedheart:town_resource_stone_0",
+            "amount": 1024
+          }
+        ]
+      }
+    ],
+    "byTag": [
+      {
+        "tag": "frostedheart:town_resource_food_fruit_and_vegetables_1",
+        "values": [
+          {
+            "item": "minecraft:apple",
+            "amount": 2
+          },
+          {
+            "itemStack": {
+              "item": "minecraft:carrot"
+            },
+            "amount": 2
+          },
+          {
+            "item": "minecraft:sweet_berries",
+            "amount": 1.5
+          }
+        ]
+      }
+    ]
+  }
 }
