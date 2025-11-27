@@ -149,6 +149,7 @@ public class TeamTownData implements SpecialData{
         this.updateAllBlocks(world);
         this.checkOccupiedAreaOverlap();
         this.connectMineAndBase();
+        this.tickResidentsMorning();
         this.residentAllocatingCheck();
         this.allocateHouse();
         this.assignWork();
@@ -249,6 +250,27 @@ public class TeamTownData implements SpecialData{
         }
     }
 
+    /**
+     * 处理村民死亡
+     */
+    private void tickResidentsMorning(){
+        if(Town.DEBUG_MODE){
+            return;//测试时村民不死
+        }
+        List<Resident> deadResidents = new ArrayList<>();
+        for(Resident resident : residents.values()){
+            if(resident.getHousePos() == null){
+                resident.costHealth(10);
+            }
+            if(resident.getHealth() <= 5 ||//似了
+                    resident.getMental() <= 5 ){//跑了
+                deadResidents.add(resident);
+            }
+        }
+        TeamTown town = TeamTown.create(this);
+        deadResidents.forEach(resident -> resident.setDeath(town));
+    }
+
     private void residentAllocatingCheck(){
         //清空residents里所有居民存储的的house和work位置，之后再加回来，以刷新居民的工作和房屋
         residents.values().forEach(resident -> {
@@ -267,6 +289,7 @@ public class TeamTownData implements SpecialData{
                 residentListNBT.stream()
                         .map(nbt -> UUID.fromString(nbt.getAsString()))
                         .forEach(resident -> {
+                            //把清空的居民的house/work位置设为加回来
                             if(data.getType() == TownWorkerType.HOUSE) residents.get(resident).setHousePos(data.getPos());
                             else residents.get(resident).setWorkPos(data.getPos());
                         });
@@ -294,7 +317,7 @@ public class TeamTownData implements SpecialData{
     }
 
     //distribute homeless residents to house
-    private void allocateHouse() {
+    void allocateHouse() {
         ArrayList<TownWorkerData> availableHouses = blocks.values().stream()
                 .filter(data -> data.getType() == TownWorkerType.HOUSE && data.getMaxResident() > data.getResidentsByTag().size())
                 .sorted(Comparator.comparingDouble(data -> -data.getWorkData().getCompound("tileEntity").getDouble("rating")))//优先分配评分最高的house。因此在rating前面加了负号。
@@ -350,7 +373,7 @@ public class TeamTownData implements SpecialData{
         }
     }
 
-    public void assignWork(){
+    void assignWork(){
         ArrayList<UUID> availableResidents = new ArrayList<>(residents.keySet());
 
         ArrayList<TempDataHolder> availableWorkers = (ArrayList<TempDataHolder>) blocks.values().stream()

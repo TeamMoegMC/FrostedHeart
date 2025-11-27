@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
 import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
 
 import java.util.Optional;
@@ -30,6 +29,12 @@ import java.util.Optional;
  * This is an abstract town, it may be a (player) team town, or a npc town.
  */
 public interface Town {
+
+    /**
+     * Debug mode.
+     * Should be deleted or turned to false when released.
+     */
+    public static final boolean DEBUG_MODE = true;//todo: 正式发布记得删掉
 
     /*
       Gets the resource manager.

@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.content.town.resident;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import com.teammoeg.frostedheart.content.town.ITownWithBlocks;
+import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.SerializeUtil;
@@ -33,8 +35,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -110,10 +111,12 @@ public class Resident {
     @Getter
     private final EnumMap<TownWorkerType, Double> workProficiency = new EnumMap<>(TownWorkerType.class);
     //the pos of the HouseBlock that the resident is living in
+    @Nullable
     @Getter
     @Setter
     private BlockPos housePos;
     //the pos of the worker block that the resident is working in
+    @Nullable
     @Getter
     private BlockPos workPos;
 
@@ -157,6 +160,22 @@ public class Resident {
         }
         this.housePos = housePos;
         this.workPos = workPos;
+    }
+
+    public void setDeath(ITownWithResidents town){
+        if(town instanceof ITownWithBlocks townWithBlocks){
+            townWithBlocks.getTownBlock(housePos).ifPresent(townWorkerData -> {
+                if(townWorkerData.getType() == TownWorkerType.HOUSE){
+                    townWorkerData.removeResident(this.uuid);
+                }
+            });
+            townWithBlocks.getTownBlock(workPos).ifPresent(townWorkerData -> {
+                if(townWorkerData.getType().needsResident()){
+                    townWorkerData.removeResident(this.uuid);
+            }
+            });
+        }
+        town.removeResident(this.uuid);
     }
 
     public UUID getUUID(){

@@ -127,16 +127,26 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
         return Optional.of(data.residents.get(id));
     }
 
-    public void addResident(Resident resident) {
+    public boolean addResident(Resident resident) {
         data.residents.put(resident.getUUID(), resident);
+        data.allocateHouse();
+        if(resident.getHousePos() == null){
+            removeResident(resident);
+            return false;
+        }
+        return true;
     }
 
     public void addResident(String firstName, String lastName) {
         addResident(new Resident(firstName, lastName));
     }
 
-    public void removeResident(UUID id) {
+    public boolean removeResident(UUID id) {
+        if(!data.residents.containsKey(id)){
+            return false;
+        }
         data.residents.remove(id);
+        return true;
     }
 
     /**

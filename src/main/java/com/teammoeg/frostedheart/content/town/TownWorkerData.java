@@ -245,6 +245,24 @@ public class TownWorkerData {
         workData.put("town", dataFromTown);
     }
 
+    /**
+     * Remove a resident from this worker.
+     * Should ONLY be used if the worker holds residents, like house, mine, etc.
+     */
+    public void removeResident(UUID uuid){
+        if(!WorkerResidentHandler.isResidentWorker(this)){
+            throw new IllegalArgumentException("Worker Type: " + this.type.name() + " does not hold residents!");
+        }
+        CompoundTag dataFromTown = workData.getCompound("town");
+        ListTag list = dataFromTown.getList("residents", Tag.TAG_STRING);
+        for(int i=0;i<list.size();i++){
+            if(list.getString(i).equals(uuid.toString())){
+                list.remove(i);
+                return;
+            }
+        }
+    }
+
     //下面俩方法在别的地方检查了type的合法性，不需要在这里检查
     /**
      * Get priority when assigning work

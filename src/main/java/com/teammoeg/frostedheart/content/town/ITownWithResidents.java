@@ -39,4 +39,27 @@ public interface ITownWithResidents extends Town{
      */
     Optional<Resident> getResident(UUID id);
 
+    /**
+     * add a resident to the town
+     * @param resident the resident to add
+     * @return true if the resident is added successfully.
+     */
+    boolean addResident(Resident resident);
+
+    /**
+     * remove a resident from the town
+     * @param uuid the uuid of the resident to remove
+     * @return true if the resident is removed successfully.
+     */
+    boolean removeResident(UUID uuid);
+
+    /**
+     * remove a resident from the town
+     * @param resident the resident to remove
+     * @return true if the resident is removed successfully.
+     */
+    default boolean removeResident(Resident resident){
+        return removeResident(resident.getUUID());
+    }
+
 }

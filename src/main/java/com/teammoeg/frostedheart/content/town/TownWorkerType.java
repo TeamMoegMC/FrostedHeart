@@ -138,7 +138,10 @@ public enum TownWorkerType {
         return this.getResidentHandler().getResidentScore(resident);
     }
 
-
+    /**
+     * 这种工作是否需要居民
+     * 特别的，对于房屋，它会返回false，因为尽管房屋也有居民居住，但它并不算一个工作，也不参与工作分配。
+     */
     public boolean needsResident() {
         return residentHandler != WorkerResidentHandler.DUMMY;
     }

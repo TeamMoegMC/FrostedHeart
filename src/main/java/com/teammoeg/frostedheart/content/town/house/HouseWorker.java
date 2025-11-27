@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.town.house;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.Town;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.content.town.TownWorker;
@@ -62,7 +63,7 @@ public class HouseWorker implements TownWorker {
             ItemResourceType toRemove = null;
             for (ItemResourceType foodType : availableFoodTypes) {
                 TownResourceActions.TownResourceTypeCostAction costTypeAction = new TownResourceActions.TownResourceTypeCostAction
-                        (foodType, toCost / residentNum, 0, 100, ResourceActionMode.MAXIMIZE, ResourceActionOrder.ASCENDING);
+                        (foodType, toCost / residentNum, 0, 100, ResourceActionMode.MAXIMIZE, ResourceActionOrder.DESCENDING);//优先消耗高质量食物
                 TownResourceActionResults.TownResourceTypeCostActionResult result = (TownResourceActionResults.TownResourceTypeCostActionResult) executorHandler.execute(costTypeAction);
                 toCost -= result.totalModifiedAmount();
                 foodAmounts.merge(foodType, result.totalModifiedAmount(), Double::sum);
@@ -75,6 +76,10 @@ public class HouseWorker implements TownWorker {
         }
 
         if(town instanceof ITownWithResidents residentTown){
+            double houseComprehensiveRating = workData.getCompound("tileEntity").getDouble("rating");
+            double temperatureRating = workData.getCompound("tileEntity").getDouble("temperatureRating");
+            double decorationRating = workData.getCompound("tileEntity").getDouble("decorationRating");
+            double spaceRating = workData.getCompound("tileEntity").getDouble("spaceRating");
             avgLevel /= residentNum * 20;//计算平均食物等级
             for(UUID uuid : residentsUUID){
                 if(residentTown.getResident(uuid).isPresent()){
@@ -86,13 +91,15 @@ public class HouseWorker implements TownWorker {
                             .average()
                             .orElse(0);
                     balanceScore = Math.exp( - 0.2 * balanceScore);
-                    r.addHealth( 2.5 * levelScore * balanceScore * (100 - r.getHealth())/ 100);
-                    r.addMental( Math.pow(levelScore, 2.0) * balanceScore * (100 - r.getMental())/ 100);
+                    r.addHealth( 2.5 * temperatureRating * levelScore * balanceScore * (100 - r.getHealth())/ 100);
+                    r.addMental( houseComprehensiveRating * Math.pow(levelScore, 2.0) * balanceScore * (100 - r.getMental())/ 100);
                     r.addStrength( 0.2 * balanceScore * Math.exp( - 0.1 * r.getStrength()));
                 }else {
                     throw new IllegalArgumentException("HouseWorker ERROR: Can't find resident in town :" + town + " \nResident uuid:" + uuid);
                 }
             }
+        } else {
+            FHMain.LOGGER.error("HouseWorker ERROR: Town is not a ITownWithResidents :{}", town);
         }
 
         return true;

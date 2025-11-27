@@ -114,9 +114,11 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity {
     public CompoundTag getWorkData() {
         CompoundTag data = getBasicWorkData();
         if(this.isValid()) {
-            ListTag residentList = new ListTag();
             data.putInt("maxResident", maxResident);
             data.putDouble("rating", rating);
+            data.putDouble("temperatureRating", calculateTemperatureRating(temperature));
+            data.putDouble("spaceRating", calculateSpaceRating(volume, area));
+            data.putDouble("decorateRating", calculateDecorationRating(decorations, area));
         }
         return data;
     }
