@@ -33,6 +33,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -55,12 +57,12 @@ public class Resident {
             Codec.DOUBLE.optionalFieldOf("strength",50.0).forGetter(o->o.strength),
             Codec.DOUBLE.optionalFieldOf("intelligence",50.0).forGetter(o->o.intelligence),
             Codec.INT.optionalFieldOf("educationLevel",0).forGetter(o->o.educationLevel),
-            CodecUtil.mapCodec("type", TownWorkerType.CODEC, "proficiency", Codec.INT).optionalFieldOf("workProficiency",Map.of()).forGetter(o->o.workProficiency),
+            CodecUtil.mapCodec("type", TownWorkerType.CODEC, "proficiency", Codec.DOUBLE).optionalFieldOf("workProficiency",Map.of()).forGetter(o->o.workProficiency),
             BlockPos.CODEC.optionalFieldOf("housePos").forGetter(o-> Optional.ofNullable(o.housePos)),
             BlockPos.CODEC.optionalFieldOf("workPos").forGetter(o-> Optional.ofNullable(o.workPos))
 		).apply(t, Resident::new));
 
-    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<TownWorkerType, Integer> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos) {
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<TownWorkerType, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.uuid = uuid;
@@ -106,7 +108,7 @@ public class Resident {
      *  must be positive.
      */
     @Getter
-    private final EnumMap<TownWorkerType, Integer> workProficiency = new EnumMap<>(TownWorkerType.class);
+    private final EnumMap<TownWorkerType, Double> workProficiency = new EnumMap<>(TownWorkerType.class);
     //the pos of the HouseBlock that the resident is living in
     @Getter
     @Setter
@@ -120,7 +122,7 @@ public class Resident {
         this.lastName = lastName;
         this.uuid = UUID.randomUUID();
         workProficiency.forEach((k, v) -> {
-            if(k.needsResident()) workProficiency.put(k, CMath.RANDOM.nextInt(20));
+            if(k.needsResident()) workProficiency.put(k, CMath.RANDOM.nextDouble() * 20);
         });
     }
 
@@ -141,7 +143,7 @@ public class Resident {
         this(firstName,lastName,UUID.fromString(uuid));
     }
 
-    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<TownWorkerType, Integer> workProficiency, BlockPos housePos, BlockPos workPos) {
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<TownWorkerType, Double> workProficiency, BlockPos housePos, BlockPos workPos) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.uuid = uuid;
@@ -161,8 +163,27 @@ public class Resident {
         return uuid;
     }
 
-    public int getWorkProficiency(TownWorkerType type) {
-        return workProficiency.getOrDefault(type, 0);
+    public double getWorkProficiency(TownWorkerType type) {
+        return workProficiency.getOrDefault(type, 0.0);
+    }
+
+    public double addWorkProficiency(TownWorkerType type, double amount){
+        return workProficiency.merge(type, amount, Double::sum);
+    }
+
+    public double setWorkProficiency(TownWorkerType type,double amount){
+        workProficiency.put(type, amount);
+        return amount;
+    }
+
+    /**
+     * 普通地增加工作熟练度，不需要输入数量，一般是工作时默认调用地增加工作熟练度的方法。
+     * 会随熟练度的提高衰减。
+     * @return 增加后的数量
+     */
+    public double addWorkProficiency(TownWorkerType type){
+        return addWorkProficiency(type, 1);
+
     }
 
     // serialization
@@ -176,7 +197,7 @@ public class Resident {
         data.putDouble("strength", strength);
         data.putDouble("intelligence", intelligence);
         data.putInt("educationLevel", educationLevel);
-        data.put("workProficiency", SerializeUtil.toNBTMap(workProficiency.entrySet(), (entry, compoundNBTBuilder) -> compoundNBTBuilder.putInt(entry.getKey().getKey(), entry.getValue())));
+        data.put("workProficiency", SerializeUtil.toNBTMap(workProficiency.entrySet(), (entry, compoundNBTBuilder) -> compoundNBTBuilder.putDouble(entry.getKey().getKey(), entry.getValue())));
         data.putLong("workPos", workPos.asLong());
         data.putLong("housePos", housePos.asLong());
         return data;
@@ -192,7 +213,7 @@ public class Resident {
         intelligence = data.getDouble("intelligence");
         educationLevel = data.getInt("educationLevel");
         CompoundTag workProficiencyNBT = data.getCompound("workProficiency");
-        workProficiency.keySet().forEach(key/*TownWorkerType*/ -> workProficiency.put(key, workProficiencyNBT.getInt(key.getKey())));
+        workProficiency.keySet().forEach(key/*TownWorkerType*/ -> workProficiency.put(key, workProficiencyNBT.getDouble(key.getKey())));
         workPos = BlockPos.of(data.getLong("workPos"));
         housePos = BlockPos.of(data.getLong("housePos"));
         return null;

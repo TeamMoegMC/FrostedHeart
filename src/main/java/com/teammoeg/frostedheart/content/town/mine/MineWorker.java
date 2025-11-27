@@ -139,8 +139,9 @@ public class MineWorker implements TownWorker {
                         .map(itemResourceExecutor::execute)
                         .map(result -> (TownResourceActionResults.ItemResourceActionResult) result)
                         .toList();
-                // 增加居民体力值
+                // 增加居民力量值
                 resident.addStrength(20 / resident.getStrength());
+                resident.addWorkProficiency(TownWorkerType.MINE);
                 // 累计资源消耗量
                 chunkResourceReservesCost += 0.0005 * chunkResourceReserves * rating * score;//至少2000人*天会挖空？
             }

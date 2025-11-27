@@ -41,7 +41,7 @@ public class HuntingBaseResidentHandler extends WorkerResidentHandler {
     @Override
     public double getResidentScore(Resident resident) {
         double healthPart =  1 / (1 + Math.exp(-resident.getHealth() * 0.09 + 5.5 )) + 0.028;
-        double mentalPart = 0.2 + 0.8 * Math.sqrt((double) resident.getMental() / 100);
+        double mentalPart = 0.2 + 0.8 * Math.sqrt(resident.getMental() / 100);
         double strengthPart = 0.3 + 0.7 * WorkerResidentHandler.CalculatingFunction1(resident.getStrength());
         double intelligencePart = 0.8 + 0.2 * WorkerResidentHandler.CalculatingFunction1(resident.getIntelligence());
         double workProficiencyPart = 0.1 + 0.9 * WorkerResidentHandler.CalculatingFunction1(resident.getWorkProficiency(this.type));
