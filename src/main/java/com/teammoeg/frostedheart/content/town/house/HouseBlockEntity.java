@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
+import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.tags.BlockTags;
@@ -71,6 +72,8 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity {
     private Map<String, Integer> decorations = new HashMap<>();
     private double rating = -1;
     private double temperatureModifier = 0;
+    @Getter
+    private List<BlockPos> beds;
 
     /** Tile data, stored in tile entity. */
     HeatEndpoint endpoint = HeatEndpoint.consumer(99, 1);
@@ -119,6 +122,7 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity {
             data.putDouble("temperatureRating", calculateTemperatureRating(temperature));
             data.putDouble("spaceRating", calculateSpaceRating(volume, area));
             data.putDouble("decorateRating", calculateDecorationRating(decorations, area));
+            data.putLongArray("beds", beds.stream().map(BlockPos::asLong).toList());
         }
         return data;
     }
@@ -196,6 +200,7 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity {
                     this.temperature = scanner.getTemperature();
                     this.occupiedArea = scanner.getOccupiedArea();
                     this.rating = computeRating();
+                    this.beds = scanner.getBeds();
                     return true;
                 }
             }
@@ -257,7 +262,9 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity {
     }
     private int calculateMaxResidents() {
         if(this.isValid()){
-            return (int) (calculateSpaceRating(this.volume, this.area) / 16 * this.area);
+            int maxResidentOfSpace = (int) (calculateSpaceRating(this.volume, this.area) / 16 * this.area);
+            int maxResidentOfBeds = this.beds.size();
+            return Math.min(maxResidentOfSpace, maxResidentOfBeds);
         }
         else return 0;
     }

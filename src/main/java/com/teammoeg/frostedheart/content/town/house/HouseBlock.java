@@ -73,6 +73,8 @@ public class HouseBlock extends AbstractTownWorkerBlock implements CEntityBlock<
                     CMath.round(te.getEffectiveTemperature(), 2)), false);
             player.displayClientMessage(Components.str("Volume: " + (te.getVolume())), false);
             player.displayClientMessage(Components.str("Area: " + (te.getArea())), false);
+            player.displayClientMessage(Components.str("Bed num: " + te.getBeds().size()), false);
+            player.displayClientMessage(Components.str("Max resident: " + (te.getMaxResident())), false);
             player.displayClientMessage(Components.str("Rating: " +
                     CMath.round(te.getRating(), 2)), false);
             return InteractionResult.SUCCESS;

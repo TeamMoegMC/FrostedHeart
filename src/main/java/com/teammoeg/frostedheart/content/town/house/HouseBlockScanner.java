@@ -26,17 +26,17 @@ import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
+import lombok.Getter;
+import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ColumnPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.properties.BedPart;
 
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 //严格来讲这不是一个正常的BlockScanner，而是一个用于将FloorBlockScanner和ConfinedSpaceScanner结合起来的类
 public class HouseBlockScanner extends BlockScanner {
@@ -44,31 +44,18 @@ public class HouseBlockScanner extends BlockScanner {
     public static final int MINIMUM_VOLUME = 6;
     public static final int MINIMUM_AREA = 3;
     public static final int MAX_SCANNING_TIMES_FLOOR = 512;
+    @Getter
     protected int area = 0;
+    @Getter
     protected int volume = 0;
+    @Getter
     protected final Map<String/*block.getName()*/, Integer> decorations = new HashMap<>();
+    @Getter
+    protected final List<BlockPos> beds = new ArrayList<>();
+    @Getter
     protected double temperature = 0;//average temperature
+    @Getter
     protected final OccupiedArea occupiedArea = new OccupiedArea();
-
-    public int getArea() {
-        return this.area;
-    }
-
-    public int getVolume() {
-        return this.volume;
-    }
-
-    public Map<String, Integer> getDecorations() {
-        return this.decorations;
-    }
-
-    public double getTemperature() {
-        return this.temperature;
-    }
-
-    public OccupiedArea getOccupiedArea() {
-        return this.occupiedArea;
-    }
 
     public HouseBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
@@ -96,6 +83,12 @@ public class HouseBlockScanner extends BlockScanner {
     protected void addDecoration(BlockPos pos) {
         BlockState blockState = getBlockState(pos);
         Block block = blockState.getBlock();
+        if(block instanceof BedBlock){
+            if(blockState.getValue(BedBlock.PART) == BedPart.HEAD){
+                beds.add(pos);
+            }
+            return;
+        }
         if (blockState.is(FHTags.Blocks.TOWN_DECORATIONS.tag) || Objects.requireNonNull(CRegistryHelper.getRegistryName(block)).getNamespace().equals("cfm")) {
             String name = block.toString();
             decorations.merge(name, 1, Integer::sum);
