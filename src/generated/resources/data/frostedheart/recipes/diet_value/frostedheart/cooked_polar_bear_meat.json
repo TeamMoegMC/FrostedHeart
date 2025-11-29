@@ -1,0 +1,10 @@
+{
+  "type": "frostedheart:diet_override",
+  "group": {
+    "carbohydrate": 0.0,
+    "fat": 6666.667,
+    "protein": 13333.334,
+    "vegetable": 0.0
+  },
+  "item": "frostedheart:cooked_polar_bear_meat"
+}

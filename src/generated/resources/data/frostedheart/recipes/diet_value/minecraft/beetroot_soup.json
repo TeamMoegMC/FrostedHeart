@@ -1,7 +1,10 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "vegetables": 0.03557208
+  "group": {
+    "carbohydrate": 4800.0,
+    "fat": 0.0,
+    "protein": 0.0,
+    "vegetable": 19200.0
   },
   "item": "minecraft:beetroot_soup"
 }

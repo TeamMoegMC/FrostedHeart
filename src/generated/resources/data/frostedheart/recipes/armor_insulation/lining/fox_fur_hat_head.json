@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:armor_temp",
+  "factor": 400.0,
+  "heat_proof": 0.2,
+  "item": "frostedheart:fox_fur_hat",
+  "slot": "head",
+  "wind_proof": 0.4
+}

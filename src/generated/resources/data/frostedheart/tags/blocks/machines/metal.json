@@ -1,0 +1,20 @@
+{
+  "values": [
+    "frostedheart:relic_chest",
+    "frostedheart:heat_incubator",
+    "frostedheart:debug_heater",
+    "frostedheart:creative_heater",
+    "frostedheart:charger",
+    "frostedheart:oil_burner",
+    "frostedheart:gas_vent",
+    "frostedheart:smoke_block_t1",
+    "frostedheart:sauna_vent",
+    "frostedheart:fountain_base",
+    "frostedheart:fountain_nozzle",
+    "frostedheart:steam_core",
+    "frostedheart:requester_chest",
+    "frostedheart:storage_chest",
+    "frostedheart:supplier_chest",
+    "frostedheart:test_logistic_core"
+  ]
+}

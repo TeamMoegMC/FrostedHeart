@@ -1,0 +1,21 @@
+{
+  "values": [
+    "frostedheart:peat_block",
+    "frostedheart:rotten_wood_block",
+    "frostedheart:bauxite_block",
+    "frostedheart:kaolin_block",
+    "frostedheart:buried_mycelium",
+    "frostedheart:buried_podzol",
+    "minecraft:dirt",
+    "minecraft:grass_block",
+    "minecraft:coarse_dirt",
+    "minecraft:podzol",
+    "minecraft:mycelium",
+    "minecraft:rooted_dirt",
+    "minecraft:mud",
+    "minecraft:gravel",
+    "minecraft:sand",
+    "minecraft:red_sand",
+    "minecraft:clay"
+  ]
+}

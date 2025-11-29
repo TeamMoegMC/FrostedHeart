@@ -1,69 +1,89 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.town.hunting;
 
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.math.CMath;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
-import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
-import com.teammoeg.frostedheart.content.town.mine.MineBaseTileEntity;
-import com.teammoeg.frostedheart.util.MathUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
 
-import javax.annotation.Nonnull;
-import java.util.Random;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.Level;
 
-public class HuntingBaseBlock extends AbstractTownWorkerBlock {
+import java.util.function.Supplier;
+
+public class HuntingBaseBlock extends AbstractTownWorkerBlock implements CEntityBlock<HuntingBaseBlockEntity> {
     public HuntingBaseBlock(Properties blockProps) {
         super(blockProps);
     }
 
-    @Override
-    public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
-        return FHTileTypes.HUNTING_BASE.get().create();
-    }
 
     @Override
-    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+    public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, RandomSource rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
-        if (stateIn.get(AbstractTownWorkerBlock.LIT)) {
-            ClientUtils.spawnSteamParticles(worldIn, pos);
+        if (stateIn.getValue(AbstractTownWorkerBlock.LIT)) {
+            FHClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }
 
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (!worldIn.isRemote && handIn == Hand.MAIN_HAND) {
-            HuntingBaseTileEntity te = (HuntingBaseTileEntity) worldIn.getTileEntity(pos);
+    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+        if (!worldIn.isClientSide && handIn == InteractionHand.MAIN_HAND) {
+            HuntingBaseBlockEntity te = (HuntingBaseBlockEntity) worldIn.getBlockEntity(pos);
             if (te == null) {
-                return ActionResultType.FAIL;
+                return InteractionResult.FAIL;
             }
-            player.sendStatusMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.sendStatusMessage(new StringTextComponent(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
-            player.sendStatusMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.sendStatusMessage(new StringTextComponent("Raw temperature: " +
-                    MathUtils.round(te.getTemperature(), 2)), false);
-            player.sendStatusMessage(new StringTextComponent("Temperature modifier: " +
-                    MathUtils.round(te.getTemperatureModifier(), 2)), false);
-            player.sendStatusMessage(new StringTextComponent("Effective temperature: " +
-                    MathUtils.round(te.getEffectiveTemperature(), 2)), false);
-            player.sendStatusMessage(new StringTextComponent("BedNum: " + te.getBedNum()), false);
-            player.sendStatusMessage(new StringTextComponent("MaxResident: " + te.getMaxResident()), false);
-            player.sendStatusMessage(new StringTextComponent("TanningRackNum: " + te.getTanningRackNum()), false);
-            player.sendStatusMessage(new StringTextComponent("chestNum: " + te.getChestNum()), false);
-            player.sendStatusMessage(new StringTextComponent("Volume: " + (te.getVolume())), false);
-            player.sendStatusMessage(new StringTextComponent("Area: " + (te.getArea())), false);
-            player.sendStatusMessage(new StringTextComponent("Rating: " +
-                    MathUtils.round(te.getRating(), 2)), false);
-            return ActionResultType.SUCCESS;
+            player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.displayClientMessage(Components.str(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
+            player.displayClientMessage(Components.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(Components.str("Raw temperature: " +
+                    CMath.round(te.getTemperature(), 2)), false);
+            player.displayClientMessage(Components.str("Temperature modifier: " +
+                    CMath.round(te.getTemperatureModifier(), 2)), false);
+            player.displayClientMessage(Components.str("Effective temperature: " +
+                    CMath.round(te.getEffectiveTemperature(), 2)), false);
+            player.displayClientMessage(Components.str("BedNum: " + te.getBedNum()), false);
+            player.displayClientMessage(Components.str("MaxResident: " + te.getMaxResident()), false);
+            player.displayClientMessage(Components.str("TanningRackNum: " + te.getTanningRackNum()), false);
+            player.displayClientMessage(Components.str("chestNum: " + te.getChestNum()), false);
+            player.displayClientMessage(Components.str("Volume: " + (te.getVolume())), false);
+            player.displayClientMessage(Components.str("Area: " + (te.getArea())), false);
+            player.displayClientMessage(Components.str("Rating: " +
+                    CMath.round(te.getRating(), 2)), false);
+            return InteractionResult.SUCCESS;
         }
-        return ActionResultType.PASS;
+        return InteractionResult.PASS;
     }
+
+
+	@Override
+	public Supplier<BlockEntityType<HuntingBaseBlockEntity>> getBlock() {
+		return FHBlockEntityTypes.HUNTING_BASE;
+	}
 }

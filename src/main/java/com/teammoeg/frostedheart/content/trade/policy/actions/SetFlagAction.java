@@ -23,7 +23,7 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.PolicyAction;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class SetFlagAction implements PolicyAction {
     String name;
@@ -32,8 +32,8 @@ public class SetFlagAction implements PolicyAction {
         name = jo.get("name").getAsString();
     }
 
-    public SetFlagAction(PacketBuffer buffer) {
-        name = buffer.readString();
+    public SetFlagAction(FriendlyByteBuf buffer) {
+        name = buffer.readUtf();
     }
 
     public SetFlagAction(String name) {
@@ -53,8 +53,8 @@ public class SetFlagAction implements PolicyAction {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
-        buffer.writeString(name);
+    public void write(FriendlyByteBuf buffer) {
+        buffer.writeUtf(name);
     }
 
 }

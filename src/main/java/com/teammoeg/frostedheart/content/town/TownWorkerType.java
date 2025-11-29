@@ -19,24 +19,23 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.FHBlocks;
-
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseTileEntity;
-import com.teammoeg.frostedheart.content.town.mine.MineTileEntity;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.content.town.house.HouseWorker;
+import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseResidentHandler;
+import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseWorker;
+import com.teammoeg.frostedheart.content.town.mine.MineResidentHandler;
+import com.teammoeg.frostedheart.content.town.mine.MineWorker;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import net.minecraft.block.Block;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraftforge.common.util.Constants;
-
-import static java.lang.Double.NEGATIVE_INFINITY;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
+import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
+import com.teammoeg.frostedheart.content.town.warehouse.WarehouseWorker;
+import lombok.Getter;
+import net.minecraft.world.level.block.Block;
 
 /**
  * The second-lowest level town processing function.
@@ -54,28 +53,12 @@ public enum TownWorkerType {
      * The dummy.
      */
     DUMMY(null, null, -1),
-    HOUSE(FHBlocks.house, (town, workData) -> {
-        double residentNum = workData.getCompound("tileEntity").getList("residents", 10).size();
-        double actualCost = town.cost(TownResourceType.PREP_FOOD, residentNum, false);
-        return Math.abs(residentNum - actualCost) < 0.001;
-    }, 0),
-    WAREHOUSE(FHBlocks.warehouse, null, 0),
-    MINE(FHBlocks.mine, new MineTileEntity.MineWorker(), 0, true,
-            (currentResidentNum, nbt) -> {
-        int maxResident = nbt.getCompound("tileEntity").getInt("maxResident");
-        double rating = TownWorkerData.getRating(nbt);
-        if(currentResidentNum < maxResident) return -currentResidentNum + 1.0 * currentResidentNum / maxResident + 0.4/*the base priority of workerRype*/ + rating;
-        return NEGATIVE_INFINITY;
-            },
-            (resident) -> resident.getTrust() * 0.01),
-    MINE_BASE(FHBlocks.mine_base, null, 0),
-    HUNTING_CAMP(FHBlocks.hunting_camp, null, 0),
-    HUNTING_BASE(FHBlocks.hunting_base, new HuntingBaseTileEntity.HuntingBaseWorker(), -1, true, (currentResidentNum, nbt) -> {
-        int maxResident = nbt.getCompound("tileEntity").getInt("maxResident");
-        if(currentResidentNum < maxResident) return -currentResidentNum + 1.0 * currentResidentNum / maxResident + 0.5 + TownWorkerData.getRating(nbt);
-        return Double.NEGATIVE_INFINITY;
-    }, (resident) -> resident.getTrust() * 0.01 * Resident.CalculatingFunction1(resident.getSocial()))
-    ;
+    HOUSE(FHBlocks.HOUSE::get, HouseWorker.INSTANCE, 0),
+    WAREHOUSE(FHBlocks.WAREHOUSE::get, new WarehouseWorker(), 0),
+    MINE(FHBlocks.MINE::get, MineWorker.INSTANCE, 0, MineResidentHandler.INSTANCE),
+    MINE_BASE(FHBlocks.MINE_BASE::get, TownWorker.EMPTY, 0),
+    HUNTING_CAMP(FHBlocks.HUNTING_CAMP::get, TownWorker.EMPTY, 0),
+    HUNTING_BASE(FHBlocks.HUNTING_BASE::get, HuntingBaseWorker.INSTANCE, -1,  HuntingBaseResidentHandler.INSTANCE);
 
     public static final Codec<TownWorkerType> CODEC= Codec.STRING.xmap(TownWorkerType::from,TownWorkerType::getKey);
 
@@ -86,33 +69,26 @@ public enum TownWorkerType {
 
     /**
      * The worker.
+     * -- GETTER --
+     *  Gets the worker.
      */
+    @Getter
     private final TownWorker worker;
 
     /**
      * The priority.
+     * -- GETTER --
+     *  Gets the priority.
      */
+    @Getter
     private final int priority;
 
     /**
-     * Whether this worker needs resident to work.
+     * The resident handler.
+     * <br>
+     * 包括工作方块分配居民的优先级函数，以及对于某个工作方块居民的评分函数
      */
-    private final boolean needsResident;
-
-    /**
-     * The function used when assigning work for resident.
-     * 每有一个居民在此工作，优先级应减少1左右，这样可以使居民尽可能均匀地分配在所有工作方块中
-     * 当居民数量大于最大居民数时，应该返回Double.NEGATIVE_INFINITY
-     * input1 当前居民数量。
-     * input2 完整的workerData，包括town部分和tileEntity部分。详见TownWorkerData。
-     * output 分配居民时的优先级
-     */
-    private BiFunction<Integer, CompoundNBT, Double> residentPriorityFunction;
-
-    /**
-     * Extra score besides proficiency and health
-     */
-    private Function<Resident, Double> residentExtraScoreFunction;
+    private final WorkerResidentHandler residentHandler;
 
     /**
      * Instantiates a new town worker type.
@@ -125,17 +101,15 @@ public enum TownWorkerType {
         this.block = workerBlock;
         this.worker = worker;
         this.priority = internalPriority;
-        this.needsResident = false;
+        this.residentHandler = WorkerResidentHandler.DUMMY;
     }
 
     //if needsResident is true, residentPriorityFunction must be set
-    TownWorkerType(Supplier<Block> workerBlock, TownWorker worker, int internalPriority, boolean needsResident, BiFunction<Integer, CompoundNBT, Double> residentPriorityFunction, Function<Resident, Double> residentExtraScoreFunction) {
+    TownWorkerType(Supplier<Block> workerBlock, TownWorker worker, int internalPriority, WorkerResidentHandler residentHandler) {
         this.block = workerBlock;
         this.worker = worker;
         this.priority = internalPriority;
-        this.needsResident = needsResident;
-        this.residentPriorityFunction = residentPriorityFunction;
-        this.residentExtraScoreFunction = residentExtraScoreFunction;
+        this.residentHandler = residentHandler;
     }
 
     /**
@@ -148,55 +122,35 @@ public enum TownWorkerType {
     }
 
     /**
-     * Gets the priority.
-     *
-     * @return the priority
-     */
-    public int getPriority() {
-        return priority;
-    }
-
-    /**
-     * 为居民分配工作时，此优先级高者优先分配居民，以此分数判断居民质量
-     */
-    public double getResidentExtraScore(Resident resident) {
-        return residentExtraScoreFunction.apply(resident);
-    }
-
-    /**
      * 为居民分配工作时，此优先级高者优先分配居民
      *
      * @param data TownWorkerData中的workData
      */
     public double getResidentPriority(TownWorkerData data) {
-        return this.getResidentPriorityFunction().apply(data.getResidents().size(), data.getWorkData());
+        return this.getResidentHandler().getResidentPriority(data);
     }
 
-    public double getResidentPriority(Integer integer, CompoundNBT nbt){
-        return this.getResidentPriorityFunction().apply(integer, nbt);
+    public double getResidentPriority(int residentNum, TownWorkerData data){
+        return this.getResidentHandler().getResidentPriority(data, residentNum);
     }
 
+    public double getResidentScore(Resident resident) {
+        return this.getResidentHandler().getResidentScore(resident);
+    }
 
     /**
-     * Gets the worker.
-     *
-     * @return the worker
+     * 这种工作是否需要居民
+     * 特别的，对于房屋，它会返回false，因为尽管房屋也有居民居住，但它并不算一个工作，也不参与工作分配。
      */
-    public TownWorker getWorker() {
-        return worker;
-    }
-
     public boolean needsResident() {
-        return needsResident;
+        return residentHandler != WorkerResidentHandler.DUMMY;
     }
 
-    public BiFunction<Integer, CompoundNBT, Double> getResidentPriorityFunction() {
-        if(this.needsResident){
-            return residentPriorityFunction;
-        } else{
-            FHMain.LOGGER.error("This TownWorkerType don't need resident, but tried get residentPriorityFunction");
-            return ((useless1, useless2) -> NEGATIVE_INFINITY);
+    public WorkerResidentHandler getResidentHandler() {
+        if(residentHandler==WorkerResidentHandler.DUMMY){
+            throw new IllegalStateException("TownWorkerType " + this.name() + " does not have a resident handler!");
         }
+        return residentHandler;
     }
 
 

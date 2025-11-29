@@ -1,0 +1,6 @@
+{
+    "type": "frostedheart:water_level_and_effect",
+	"fluid": "caupona:nail_soup",
+	"waterLevel": 4,
+	"waterSaturationLevel": 2
+}

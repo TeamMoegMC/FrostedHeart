@@ -19,12 +19,12 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.Level;
 
-public class ResidentEntity extends MobEntity {
-    protected ResidentEntity(EntityType<? extends MobEntity> entityType, World world) {
+public class ResidentEntity extends Mob {
+    protected ResidentEntity(EntityType<? extends Mob> entityType, Level world) {
         super(entityType, world);
     }
 }

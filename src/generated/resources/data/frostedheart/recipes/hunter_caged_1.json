@@ -1,0 +1,201 @@
+{
+  "type": "frostedheart:trade",
+  "exps": [
+    1000,
+    2000,
+    3000,
+    4000,
+    5000
+  ],
+  "policies": [
+    {
+      "parent": "frostedheart:base_villager_needs",
+      "conditions": []
+    },
+    {
+      "conditions": [],
+      "data": [
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:arrow"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:arrow",
+          "price": 1,
+          "recover": 10.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:bow"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:bow",
+          "price": 10,
+          "recover": 1.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:iron_sword"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:iron_sword",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:bronze_sword"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:bronze_sword",
+          "price": 15,
+          "recover": 1.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "immersiveengineering:sword_steel"
+          },
+          "hide_stockout": false,
+          "id": "immersiveengineering:sword_steel",
+          "price": 40,
+          "recover": 0.5,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:snowshoes"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:snowshoes",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:ice_skates"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:ice_skates",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "supplementaries:cage"
+          },
+          "hide_stockout": false,
+          "id": "supplementaries:cage",
+          "price": 200,
+          "recover": 0.1,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 2,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:night_soil",
+          "price": 1,
+          "produce": "frostedheart:night_soil",
+          "recover": 4.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 16,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:dung",
+          "price": 1,
+          "produce": "frostedheart:dung",
+          "recover": 8.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 16,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "caged_rabbit",
+          "price": 500,
+          "produce": {
+            "id": "supplementaries:cage",
+            "nbt": "{BlockEntityTag:{MobHolder:{EntityData:{AbsorptionAmount:0.0f,Age:0,Air:300s,ArmorDropChances:[0.085f,0.085f,0.085f,0.085f],ArmorItems:[{},{},{},{}],Attributes:[{Base:0.0d,Name:\"forge:step_height_addition\"},{Base:0.08d,Name:\"forge:entity_gravity\"},{Base:0.30000001192092896d,Name:\"minecraft:generic.movement_speed\"},{Base:16.0d,Modifiers:[{Amount:-0.05702389017647923d,Name:\"Random spawn bonus\",Operation:1,UUID:[I;795285848,-850571614,-1612973660,805794482]}],Name:\"minecraft:generic.follow_range\"}],Brain:{memories:{}},CanPickUpLoot:0b,CanUpdate:1b,DeathTime:0s,FallDistance:0.0f,FallFlying:0b,Fire:0s,ForcedAge:0,ForgeCaps:{\"curios:inventory\":{Curios:[]}},ForgeData:{},HandDropChances:[0.085f,0.085f],HandItems:[{},{}],Health:3.0f,HurtByTimestamp:0,HurtTime:0s,InLove:0,Invulnerable:0b,LeftHanded:0b,MoreCarrotTicks:0,Motion:[0.0d,-0.0784000015258789d,0.0d],OnGround:1b,PersistenceRequired:0b,PortalCooldown:0,Pos:[0.5d,0.0626d,0.5d],RabbitType:5,Rotation:[0.0f,0.0f],\"forge:spawn_type\":\"SPAWN_EGG\",id:\"minecraft:rabbit\"},Name:\"Rabbit 兔子\",Scale:1.0f,UUID:[I;1022712411,-492944690,-1891121019,-1631982831]}}}"
+          },
+          "recover": 0.1,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "caged_fowl",
+          "price": 800,
+          "produce": {
+            "id": "supplementaries:cage",
+            "nbt": "{BlockEntityTag:{MobHolder:{EntityData:{AbsorptionAmount:0.0f,Age:0,Air:300s,Anger:0s,ArmorDropChances:[0.085f,0.085f,0.085f,0.085f],ArmorItems:[{},{},{},{}],Attributes:[{Base:16.0d,Modifiers:[{Amount:0.031182960451612573d,Name:\"Random spawn bonus\",Operation:1,UUID:[I;-687819678,1971996645,-2002249144,-837993083]}],Name:\"minecraft:generic.follow_range\"},{Base:0.08d,Name:\"forge:entity_gravity\"},{Base:0.30000001192092896d,Name:\"minecraft:generic.movement_speed\"},{Base:0.0d,Name:\"forge:step_height_addition\"}],Brain:{memories:{}},CanPickUpLoot:0b,CanUpdate:1b,DeathTime:0s,FallDistance:0.0f,FallFlying:0b,Fire:0s,ForcedAge:0,ForgeCaps:{\"curios:inventory\":{Curios:[]}},ForgeData:{},Generation:0,HandDropChances:[0.085f,0.085f],HandItems:[{},{}],Health:6.0f,HurtBy:\"\",HurtByTimestamp:0,HurtTime:0s,InLove:0,Invulnerable:0b,LeftHanded:1b,Motion:[0.0d,-0.0784000015258789d,0.0d],OnGround:1b,PersistenceRequired:0b,PortalCooldown:0,Pos:[0.5d,0.0626d,0.5d],Rotation:[0.0f,0.0f],\"forge:spawn_type\":\"SPAWN_EGG\",id:\"stone_age:fowl\"},Name:\"Fowl 野鸡\",Scale:0.89285713f,UUID:[I;123255624,343491862,-1805069578,-1463733712]}}}"
+          },
+          "recover": 0.05,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedresearch:intelligence",
+          "price": 200,
+          "produce": "frostedresearch:intelligence",
+          "recover": 0.08,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 2,
+          "use_actions": []
+        }
+      ]
+    }
+  ],
+  "profession": "minecraft:butcher",
+  "weight": 2
+}

@@ -1,0 +1,24 @@
+{
+	"variants": {
+		"facing=east": {
+			"model": "frostedresearch:block/drawing_desk_split",
+			"y": 0,
+			"uvlock": true
+		},
+		"facing=south": {
+			"model": "frostedresearch:block/drawing_desk_split",
+			"y": 90,
+			"uvlock": true
+		},
+		"facing=west": {
+			"model": "frostedresearch:block/drawing_desk_split",
+			"y": 180,
+			"uvlock": true
+		},
+		"facing=north": {
+			"model": "frostedresearch:block/drawing_desk_split",
+			"y": 270,
+			"uvlock": true
+		}
+	}
+}

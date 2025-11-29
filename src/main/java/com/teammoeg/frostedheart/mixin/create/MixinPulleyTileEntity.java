@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -25,25 +25,28 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.content.contraptions.base.KineticTileEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.piston.LinearActuatorTileEntity;
-import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
+import com.simibubi.create.content.contraptions.piston.LinearActuatorBlockEntity;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import com.teammoeg.frostedheart.compat.create.ContraptionCostUtils;
 
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
-@Mixin({LinearActuatorTileEntity.class})
-public abstract class MixinPulleyTileEntity extends KineticTileEntity {
+@Mixin({LinearActuatorBlockEntity.class})
+public abstract class MixinPulleyTileEntity extends KineticBlockEntity {
 
-    @Shadow(remap = false)
+    public MixinPulleyTileEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
+		super(typeIn, pos, state);
+	}
+
+	@Shadow(remap = false)
     public AbstractContraptionEntity movedContraption;
 
     private int fh$cooldown;
 
-    public MixinPulleyTileEntity(TileEntityType<?> typeIn) {
-        super(typeIn);
-    }
 
     @Override
     public float calculateStressApplied() {
@@ -51,7 +54,7 @@ public abstract class MixinPulleyTileEntity extends KineticTileEntity {
         if (movedContraption != null && movedContraption.isAlive()) {
             fh$cooldown = 100;
             ContraptionCostUtils.setSpeedAndCollect(movedContraption, (int) speed);
-            if (getMotionVector().getY() < 0) {
+            if (getMotionVector().y() < 0) {
                 this.lastStressApplied = ContraptionCostUtils.getActorCost(movedContraption) + 0.5F;
                 return lastStressApplied;
             }
@@ -64,12 +67,12 @@ public abstract class MixinPulleyTileEntity extends KineticTileEntity {
         return lastStressApplied;
     }
 
-    @Inject(at = @At("TAIL"), method = "tick")
+    @Inject(at = @At("TAIL"), method = "tick",remap=false)
     public void FH_MICR_tick(CallbackInfo cbi) {
-        if ((!world.isRemote) && super.hasNetwork())
+        if ((!level.isClientSide) && super.hasNetwork())
             getOrCreateNetwork().updateStressFor(this, calculateStressApplied());
     }
 
     @Shadow(remap = false)
-    public abstract Vector3d getMotionVector();
+    public abstract Vec3 getMotionVector();
 }

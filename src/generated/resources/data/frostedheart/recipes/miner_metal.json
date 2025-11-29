@@ -1,0 +1,319 @@
+{
+  "type": "frostedheart:trade",
+  "exps": [
+    1000,
+    2000,
+    3000,
+    4000,
+    5000
+  ],
+  "policies": [
+    {
+      "parent": "frostedheart:base_villager_needs",
+      "conditions": []
+    },
+    {
+      "conditions": [],
+      "data": [
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:snowshoes"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:snowshoes",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:ice_skates"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:ice_skates",
+          "price": 30,
+          "recover": 0.1,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 1,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "immersiveengineering:pickaxe_steel"
+          },
+          "hide_stockout": false,
+          "id": "immersiveengineering:pickaxe_steel",
+          "price": 40,
+          "recover": 0.5,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "immersiveengineering:shovel_steel"
+          },
+          "hide_stockout": false,
+          "id": "immersiveengineering:shovel_steel",
+          "price": 40,
+          "recover": 0.5,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:iron_shovel"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:iron_shovel",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:iron_pickaxe"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:iron_pickaxe",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:iron_shovel"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:iron_shovel",
+          "price": 20,
+          "recover": 1.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:bronze_pickaxe"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:bronze_pickaxe",
+          "price": 15,
+          "recover": 1.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "frostedheart:bronze_shovel"
+          },
+          "hide_stockout": false,
+          "id": "frostedheart:bronze_shovel",
+          "price": 15,
+          "recover": 1.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 3,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "demand": {
+            "item": "minecraft:tnt"
+          },
+          "hide_stockout": false,
+          "id": "minecraft:tnt",
+          "price": 10,
+          "recover": 10.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:night_soil",
+          "price": 1,
+          "produce": "frostedheart:night_soil",
+          "recover": 4.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 16,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:coal",
+          "price": 3,
+          "produce": "minecraft:coal",
+          "recover": 32.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 128,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:raw_iron",
+          "price": 2,
+          "produce": "minecraft:raw_iron",
+          "recover": 16.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:raw_magnesite",
+          "price": 5,
+          "produce": "frostedheart:raw_magnesite",
+          "recover": 4.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:raw_halite",
+          "price": 2,
+          "produce": "frostedheart:raw_halite",
+          "recover": 4.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:raw_sylvite",
+          "price": 5,
+          "produce": "frostedheart:raw_sylvite",
+          "recover": 4.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedheart:raw_pyrite",
+          "price": 3,
+          "produce": "frostedheart:raw_pyrite",
+          "recover": 8.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "immersiveengineering:raw_nickel",
+          "price": 5,
+          "produce": "immersiveengineering:raw_nickel",
+          "recover": 8.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 32,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "immersiveengineering:raw_lead",
+          "price": 5,
+          "produce": "immersiveengineering:raw_lead",
+          "recover": 8.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 32,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "create:raw_zinc",
+          "price": 2,
+          "produce": "create:raw_zinc",
+          "recover": 16.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 64,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:lava_bucket",
+          "price": 200,
+          "produce": "minecraft:lava_bucket",
+          "recover": 1.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 32,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "minecraft:magma_block",
+          "price": 100,
+          "produce": "minecraft:magma_block",
+          "recover": 1.0,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 32,
+          "use_actions": []
+        },
+        {
+          "actions": [],
+          "hide_stockout": false,
+          "id": "frostedresearch:intelligence",
+          "price": 200,
+          "produce": "frostedresearch:intelligence",
+          "recover": 0.05,
+          "restock_condition": [],
+          "sell_condition": [],
+          "store": 2,
+          "use_actions": []
+        }
+      ]
+    }
+  ],
+  "profession": "minecraft:toolsmith",
+  "weight": 2
+}

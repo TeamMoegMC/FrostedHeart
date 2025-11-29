@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -20,10 +20,6 @@
 package com.teammoeg.frostedheart.mixin.client;
 
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
-
-import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.client.renderer.LightTexture;
 
@@ -33,10 +29,13 @@ public class MixinLightTexture {
     public MixinLightTexture() {
     }
 
-    @ModifyVariable(method = "updateLightmap", index = 16, at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/vector/Vector3f;apply(Lit/unimi/dsi/fastutil/floats/Float2FloatFunction;)V"))
+    // TODO: Fix this
+    /*
+    @ModifyVariable(method = "updateLightTexture", index = 16, at = @At(value = "INVOKE", target = "Lorg/joml/Vector3f;apply(Lit/unimi/dsi/fastutil/floats/Float2FloatFunction;)V"))
     public float modifygamma(float val) {
         if (ClientUtils.applyspg)
             return ClientUtils.spgamma;
         return val;
     }
+     */
 }

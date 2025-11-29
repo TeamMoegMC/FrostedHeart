@@ -1,0 +1,28 @@
+{
+  "variants": {
+    "layers=1": {
+      "model": "frostedheart:block/condensed_nickel_ore_height2"
+    },
+    "layers=2": {
+      "model": "frostedheart:block/condensed_nickel_ore_height4"
+    },
+    "layers=3": {
+      "model": "frostedheart:block/condensed_nickel_ore_height6"
+    },
+    "layers=4": {
+      "model": "frostedheart:block/condensed_nickel_ore_height8"
+    },
+    "layers=5": {
+      "model": "frostedheart:block/condensed_nickel_ore_height10"
+    },
+    "layers=6": {
+      "model": "frostedheart:block/condensed_nickel_ore_height12"
+    },
+    "layers=7": {
+      "model": "frostedheart:block/condensed_nickel_ore_height14"
+    },
+    "layers=8": {
+      "model": "frostedheart:block/condensed_nickel_ore_block"
+    }
+  }
+}

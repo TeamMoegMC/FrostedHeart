@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,45 +19,57 @@
 
 package com.teammoeg.frostedheart.content.utility;
 
+import com.teammoeg.frostedheart.item.FHBaseItem;
+import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.level.ClipContext.Fluid;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult.Type;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
-import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.UseAction;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceContext.FluidMode;
-import net.minecraft.util.math.RayTraceResult.Type;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
+import static com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper.toTemperatureFloatString;
 
 public class SoilThermometer extends FHBaseItem {
+    private static final List<Predicate<Player>> IS_WEARING_PREDICATES = new ArrayList<>();
+
+    static {
+        addIsWearingPredicate(player -> FHItems.soil_thermometer.isIn(player.getItemBySlot(EquipmentSlot.OFFHAND)) ||
+                FHItems.soil_thermometer.isIn(player.getItemBySlot(EquipmentSlot.MAINHAND)));
+    }
+
     public SoilThermometer(Properties properties) {
         super(properties);
     }
 
     @Override
-    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        tooltip.add(TranslateUtils.translateTooltip("thermometer.usage").mergeStyle(TextFormatting.GRAY));
+    public void appendHoverText(ItemStack stack, Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+        tooltip.add(Lang.translateTooltip("thermometer.usage").withStyle(ChatFormatting.GRAY));
     }
 
     /**
      * returns the action that specifies what animation to play when the items is being used
      */
     @Override
-    public UseAction getUseAction(ItemStack stack) {
-        return UseAction.SPEAR;
+    public UseAnim getUseAnimation(ItemStack stack) {
+        return UseAnim.SPEAR;
     }
 
     @Override
@@ -66,30 +78,42 @@ public class SoilThermometer extends FHBaseItem {
     }
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-        playerIn.sendStatusMessage(TranslateUtils.translateMessage("thermometer.testing"), true);
-        playerIn.setActiveHand(handIn);
-        if (playerIn instanceof ServerPlayerEntity && playerIn.abilities.isCreativeMode) {
-            BlockRayTraceResult brtr = rayTrace(worldIn, playerIn, FluidMode.ANY);
+    public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
+        playerIn.displayClientMessage(Lang.translateMessage("thermometer.testing"), true);
+        playerIn.startUsingItem(handIn);
+        if (playerIn instanceof ServerPlayer && playerIn.getAbilities().instabuild) {
+            BlockHitResult brtr = getPlayerPOVHitResult(worldIn, playerIn, Fluid.ANY);
             if (brtr.getType() != Type.MISS) {
 
-            	playerIn.sendMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(ChunkHeatData.getTemperature(playerIn.world, brtr.getPos()))), playerIn.getUniqueID());
+                playerIn.sendSystemMessage(Lang.translateMessage("info.soil_thermometerbody", toTemperatureFloatString(WorldTemperature.block(playerIn.level(), brtr.getBlockPos()))));
             }
 
         }
-        return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
+        return new InteractionResultHolder<>(InteractionResult.SUCCESS, playerIn.getItemInHand(handIn));
     }
 
     @Override
-    public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
-        if (worldIn.isRemote) return stack;
-        PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
-        if (entityplayer instanceof ServerPlayerEntity) {
-            BlockRayTraceResult brtr = rayTrace(worldIn, entityplayer, FluidMode.ANY);
+    public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
+        if (worldIn.isClientSide) return stack;
+        Player entityplayer = entityLiving instanceof Player ? (Player) entityLiving : null;
+        if (entityplayer instanceof ServerPlayer) {
+            BlockHitResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, Fluid.ANY);
             if (brtr.getType() == Type.MISS) return stack;
-            TemperatureDisplayHelper.sendTemperature((ServerPlayerEntity) entityLiving,
-                    "info.soil_thermometerbody", (int) (ChunkHeatData.getTemperature(entityLiving.world, brtr.getPos()) * 10) / 10f);
+            entityplayer.sendSystemMessage(Lang.translateMessage("info.soil_thermometerbody", toTemperatureFloatString(WorldTemperature.block(entityplayer.level(), brtr.getBlockPos()))));
         }
         return stack;
+    }
+
+    public static boolean isWearingSoilThermometer(Player player) {
+        for (Predicate<Player> predicate : IS_WEARING_PREDICATES) {
+            if (predicate.test(player)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void addIsWearingPredicate(Predicate<Player> predicate) {
+        IS_WEARING_PREDICATES.add(predicate);
     }
 }

@@ -1,11 +1,3 @@
 {
-  "replace": false,
-  "values": [
-    "minecraft:water",
-    "watersource:purified_water",
-    "watersource:coconut_milk",
-    "watersource:soul_water",
-	"frostedheart:wolfberry_tea",
-    "minecraft:lava"
-  ]
+  "values": ["#caupona:stews","#frostedheart:hidden_drink","#frostedheart:hot_drink","minecraft:water"]
 }

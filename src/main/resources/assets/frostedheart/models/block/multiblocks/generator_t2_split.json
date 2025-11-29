@@ -1,11 +1,21 @@
 {
 	"parent": "minecraft:block/block",
 	"textures": {
-		"particle": "frostedheart:block/multiblocks/crudegeneratorstone"
+		"particle": "frostedheart:block/multiblocks/generatoriibottom"
 	},
 	"loader": "immersiveengineering:basic_split",
 	"dynamic": false,
-	"base_model": "frostedheart:block/multiblocks/generator_t2",
+	"inner_model": {
+		"parent": "minecraft:block/block",
+		"automatic_culling": false,
+		"flip_v": true,
+		"loader": "forge:obj",
+		"render_type":"cutout_mipped",
+		"model": "frostedheart:models/block/multiblocks/generator_t2.obj",
+		"textures": {
+			"particle": "frostedheart:block/multiblocks/generatoriibottom"
+		}
+	},
 	"split_parts": [
 		[
 			-1,

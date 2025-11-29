@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.scenario.parser;
 
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVM;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 
 public class LiteralNode implements Node {
     String text;
@@ -31,7 +31,7 @@ public class LiteralNode implements Node {
 
 
     @Override
-    public String getLiteral(ScenarioVM runner) {
+    public String getLiteral(ScenarioCommandContext runner) {
         return text;
     }
 
@@ -48,7 +48,7 @@ public class LiteralNode implements Node {
 
 
     @Override
-    public void run(ScenarioVM runner) {
+    public void run(ScenarioCommandContext runner) {
     }
 
 

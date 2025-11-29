@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -25,128 +25,144 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.function.Function;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.frostedheart.FHDataManager;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.gen.Heightmap;
-import net.minecraft.world.gen.Heightmap.Type;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.PalettedContainer;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.Heightmap.Types;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
  * A simulator built on Alphagem618's heat conducting model
  * This simulates heat conduction in a small area around player
  * And would take the area out of minecraft logic to optimize calculations.
+ * 
+ * Note that the constructor must be called in game thread, while other method could run multithreaded
  *
  * @author khjxiaogu
  * @author Alphagem618
  */
 public class SurroundingTemperatureSimulator {
+	public static record SimulationResult(float blockTemp,float windStrengh){
+		
+	}
     /**
      * Extract block data into shape and temperature, other data are disposed.
      */
     private static class CachedBlockInfo {
         VoxelShape shape;
-        
+        List<AABB> aabbList;
         float temperature;
-        boolean exposeToAir;
         BlockState bs;
-        public CachedBlockInfo(VoxelShape shape, float temperature, boolean exposeToAir, BlockState bs) {
-			super();
-			this.shape = shape;
-			this.temperature = temperature;
-			this.exposeToAir = exposeToAir;
-			this.bs = bs;
-		}
 
-		public CachedBlockInfo(VoxelShape shape, boolean exposeToAir, BlockState bs) {
-			super();
-			this.shape = shape;
-			this.exposeToAir = exposeToAir;
-			this.bs = bs;
-		}
+        public CachedBlockInfo(VoxelShape shape, float temperature, BlockState bs) {
+            super();
+            this.shape = shape;
+            this.aabbList=shape.toAabbs();
+            this.temperature = temperature;
+
+            this.bs = bs;
+        }
+
+        public CachedBlockInfo(VoxelShape shape, BlockState bs) {
+            super();
+            this.shape = shape;
+            this.aabbList=shape.toAabbs();
+            this.bs = bs;
+        }
     }
-    public static final int range = 8;// through max range is 8, to avoid some rare issues, set it to 7 to keep count
-    private static final int n = 4168;//number of particles
-    private static final int rdiff = 10;//division of the unit square, changing this value would have no effect but improve precision
-    private static final float v0 = .4f;//initial particle speed
-    private static final VoxelShape EMPTY = VoxelShapes.empty();
-    private static final VoxelShape FULL = VoxelShapes.fullCube();
-    private static Vector3d[] speedVectors;// Vp, speed vector list, this list is constant and considered a distributed ball mesh.
-    private static final int num_rounds = 20;//propagate time-to-live for each particles
-    private static int[][] speedVectorByDirection=new int[6][];// index: ordinal value of outbounding facing
+
+    public static final int range = FHConfig.SERVER.simulationRange.get();// through max range is 8, to avoid some rare issues, set it to 7 to keep count
+    private static final int n; //number of particles
+    private static final int rdiff = FHConfig.SERVER.simulationDivision.get();//division of the unit square, changing this value would have no effect but improve precision
+    private static final double v0 = FHConfig.SERVER.simulationParticleInitialSpeed.get();//initial particle speed
+    private static final VoxelShape EMPTY = Shapes.empty();
+    private static final VoxelShape FULL = Shapes.block();
+    private static Vec3[] speedVectors;// Vp, speed vector list, this list is constant and considered a distributed ball mesh.
+    private static final int num_rounds = 20;//THIS VALUE MUST NOT BE CONFIGURABLE AS THIS WOULD AFFECT RESULT//FHConfig.SERVER.simulationParticleLife.get();//propagate time-to-live for each particles
+    private static int[][] speedVectorByDirection = new int[6][];// index: ordinal value of outbounding facing
+
     static {// generate speed vector list
-    	Map<Direction,List<Integer>> lis=new EnumMap<>(Direction.class);
-    	List<Vector3d> v3fs=new ArrayList<>();
-    	for(Direction dr:Direction.values()) {
-    		lis.put(dr, new ArrayList<>());
-    	}
-    	int o=0;
+        Map<Direction, List<Integer>> lis = new EnumMap<>(Direction.class);
+        List<Vec3> v3fs = new ArrayList<>();
+        for (Direction dr : Direction.values()) {
+            lis.put(dr, new ArrayList<>());
+        }
+        int o = 0;
         for (int i = -rdiff; i <= rdiff; ++i)
             for (int j = -rdiff; j <= rdiff; ++j)
                 for (int k = -rdiff; k <= rdiff; ++k) {
                     if (i == 0 && j == 0 && k == 0)
                         continue; // ignore zero vector
                     float x = i * 1f / rdiff, y = j * 1f / rdiff, z = k * 1f / rdiff;
-                    float r = MathHelper.sqrt(x * x + y * y + z * z);
+                    float r = Mth.sqrt(x * x + y * y + z * z);
                     if (r > 1)
                         continue; // ignore vectors out of the unit ball
-                    Vector3d v3 = new Vector3d(x / r * v0, y / r * v0, z / r * v0);
+                    Vec3 v3 = new Vec3(x / r * v0, y / r * v0, z / r * v0);
                     v3fs.add(v3);
-                    if(v3.x>+0) 
-                    	lis.get(Direction.EAST).add(o);
-                    if(v3.x<-0) 
-                    	lis.get(Direction.WEST).add(o);
-                    if(v3.y>+0) 
-                    	lis.get(Direction.UP).add(o);
-                    if(v3.y<-0) 
-                    	lis.get(Direction.DOWN).add(o);
-                    if(v3.z>+0) 
-                    	lis.get(Direction.SOUTH).add(o);
-                    if(v3.z<-0) 
-                    	lis.get(Direction.NORTH).add(o);
+                    if (v3.x > +0)
+                        lis.get(Direction.EAST).add(o);
+                    if (v3.x < -0)
+                        lis.get(Direction.WEST).add(o);
+                    if (v3.y > +0)
+                        lis.get(Direction.UP).add(o);
+                    if (v3.y < -0)
+                        lis.get(Direction.DOWN).add(o);
+                    if (v3.z > +0)
+                        lis.get(Direction.SOUTH).add(o);
+                    if (v3.z < -0)
+                        lis.get(Direction.NORTH).add(o);
                     o++;
                 }
-        speedVectors=v3fs.toArray(new Vector3d[o]);
-        for(Direction dr:Direction.values()) {
-        	speedVectorByDirection[dr.ordinal()]=lis.get(dr).stream().mapToInt(t->t).toArray();
+        n = o;
+        speedVectors = v3fs.toArray(new Vec3[o]);
+        for (Direction dr : Direction.values()) {
+            speedVectorByDirection[dr.ordinal()] = lis.get(dr).stream().mapToInt(t -> t).toArray();
         }
     }
-    public ChunkSection[] sections = new ChunkSection[8];// index: bitset of xzy(1 stands for +)
-    public Heightmap[] maps=new Heightmap[4]; // index: bitset of xz(1 stands for +)
+
+    @SuppressWarnings("unchecked")
+	public PalettedContainer<BlockState>[] sections = new PalettedContainer[8];// index: bitset of xzy(1 stands for +)
+    public Heightmap[] maps = new Heightmap[4]; // index: bitset of xz(1 stands for +)
     BlockPos origin;
-    ServerWorld world;
     Random rnd;
     //RandomSequence rrnd;
-    private Vector3d[] Qpos = new Vector3d[n];// Qpos, position of particle.
+    private Vec3[] Qpos = new Vec3[n];// Qpos, position of particle.
     private int[] vid = new int[n];// IDv, particle speed index in speed vector list, this lower random cost.
     //private double[] factor=
-    
+    private Level level;
+
 
     public Map<BlockState, CachedBlockInfo> info = new HashMap<>();// state to info cache
 
     public Map<BlockPos, CachedBlockInfo> posinfo = new HashMap<>();// position to info cache
+
     public static void init() {
-    	
+
     }
 
-    public SurroundingTemperatureSimulator(ServerPlayerEntity player) {
-        int sourceX = MathHelper.floor(player.getPosX()), sourceY = MathHelper.floor(player.getPosYEye()), sourceZ = MathHelper.floor( player.getPosZ());
+    public SurroundingTemperatureSimulator(ServerLevel world,double sx,double sy,double sz,boolean threadSafe) {
+        int sourceX = Mth.floor(sx), sourceY = Mth.floor(sy), sourceZ = Mth.floor(sz);
         // these are block position offset
         int offsetN = sourceZ - range;
         int offsetW = sourceX - range;
@@ -159,19 +175,34 @@ public class SurroundingTemperatureSimulator {
         origin = new BlockPos((chunkOffsetW + 1) << 4, (chunkOffsetD + 1) << 4, (chunkOffsetN + 1) << 4);
         // fetch all sections to lower calculation cost
         int i = 0;
-        world = player.getServerWorld();
+        
         for (int x = chunkOffsetW; x <= chunkOffsetW + 1; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetN + 1; z++) {
-            	Chunk cnk=world.getChunk(x, z);
-                ChunkSection[] css = cnk.getSections();
-                maps[i/2]=cnk.getHeightmap(Type.MOTION_BLOCKING_NO_LEAVES);
-                if(css.length>chunkOffsetD&&chunkOffsetD>=0)
-                	sections[i]=css[chunkOffsetD];
-                if(css.length>chunkOffsetD+1&&chunkOffsetD+1>=0)
-                	sections[i + 1]=css[chunkOffsetD + 1];
+                LevelChunk cnk = world.getChunk(x, z);
+                int maxIndex=cnk.getSectionsCount();
+                int index0=cnk.getSectionIndexFromSectionY(chunkOffsetD);
+                int index1=index0+1;
+                //cause chunk to prime heightmap
+                cnk.getHeight(Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
+                maps[i / 2] = cnk.getOrCreateHeightmapUnprimed(Types.MOTION_BLOCKING_NO_LEAVES);
+               
+                if(index0>=0&&index0<maxIndex)
+                	sections[i] = cnk.getSection(index0).getStates();
+                //System.out.println(sections[i].get(0, 0, 0));
+                if(index1>=0&&index1<maxIndex)
+                	sections[i + 1] = cnk.getSection(index1).getStates();
+                //System.out.println(sections[i+1].get(0, 0, 0));
                 i += 2;
             }
-        rnd = new Random(player.getPosition().toLong()^(world.getGameTime()>>6));
+        //copy to avoid threading issue
+        if(threadSafe) {
+        	for(int j=0;j<sections.length;j++)
+        		if(sections[j]!=null)
+        			sections[j]=sections[j].copy();
+        		
+        }
+        rnd = new Random(new BlockPos(sourceX,sourceY,sourceZ).asLong() ^ (world.getGameTime() >> 6));
+        level = world.getLevel();
     }
 
     /**
@@ -180,7 +211,7 @@ public class SurroundingTemperatureSimulator {
      */
     public BlockState getBlock(int x, int y, int z) {
         if (x >= 16 || y >= 16 || z >= 16 || x < -16 || y < -16 || z < -16) // out of bounds
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         int i = 0;
         if (x >= 0)
             i += 4;
@@ -188,38 +219,41 @@ public class SurroundingTemperatureSimulator {
             i += 2;
         if (y >= 0)
             i += 1;
-        ChunkSection current = sections[i];
+        PalettedContainer<BlockState> current = sections[i];
         if (current == null)
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         try {
-            return current.getBlockState(x&15, y&15, z&15);
+            return current.get(x & 15, y & 15, z & 15);
         } catch (Exception ex) {
             throw new RuntimeException("Failed to get block at" + x + "," + y + "," + z);
         }
     }
+
     public int getTopY(int x, int z) {
-        if (x >= 16 || z >= 16 || x < -16|| z < -16) // out of bounds
-            return 0;
+        if (x >= 16 || z >= 16 || x < -16 || z < -16) // out of bounds
+            return -32767;
         int i = 0;
-        if (x >= 0) 
+        if (x >= 0)
             i += 2;
-        if (z >= 0) 
+        if (z >= 0)
             i += 1;
-        return maps[i].getHeight(x&15, z&15);
+        return maps[i].getFirstAvailable(x & 15, z & 15);
     }
+
     public int getOutboundSpeedFrom(Direction dir) {
-    	if(dir==null)
-    		return rnd.nextInt(speedVectors.length);
-    	int[] iis=speedVectorByDirection[dir.ordinal()];
-    	return iis[rnd.nextInt(iis.length)];
+        if (dir == null)
+            return rnd.nextInt(speedVectors.length);
+        int[] iis = speedVectorByDirection[dir.ordinal()];
+        return iis[rnd.nextInt(iis.length)];
     }
-    public Pair<Float,Float> getBlockTemperatureAndWind(double qx0, double qy0, double qz0) {
-    	float wind=0;
-    	Vector3d q0=new Vector3d(qx0, qy0, qz0);
+
+    public SimulationResult getBlockTemperatureAndWind(double qx0, double qy0, double qz0) {
+        float wind = 0;
+        Vec3 q0 = new Vec3(qx0, qy0, qz0);
         for (int i = 0; i < n; ++i) // initialize position as the player's position and the speed (index)
         {
             Qpos[i] = q0;
-            vid[i] = i ;
+            vid[i] = i;
         }
         /*System.out.println("=========start=========");
         for(int i=-1;i<=1;i++) {
@@ -229,35 +263,49 @@ public class SurroundingTemperatureSimulator {
         	 System.out.println(sb.toString());
         }*/
         float heat = 0;
+        float minTemp=0;
+        float maxTemp=0;
         for (int round = 0; round < num_rounds; ++round) // time-to-live for each particle is `num_rounds`
         {
             for (int i = 0; i < n; ++i) // for all particles:
             {
-            	int nid=vid[i];
-            	Vector3d curspeed=speedVectors[vid[i]];
-            	Vector3d svec=Qpos[i];
-            	Vector3d dvec=svec.add(curspeed);
-            	BlockPos bpos=new BlockPos(dvec);
+                int nid = vid[i];
+                Vec3 curspeed = speedVectors[vid[i]];
+                Vec3 svec = Qpos[i];
+                Vec3 dvec = svec.add(curspeed);
+                BlockPos bpos = CUtils.vec2Pos(dvec);
                 CachedBlockInfo info = getInfoCached(bpos);
-                if (info.shape != EMPTY &&(info.shape == FULL||info.shape.contains(MathHelper.frac(dvec.x),MathHelper.frac(dvec.y),MathHelper.frac(dvec.z)))) {
-                	BlockRayTraceResult brtr=AxisAlignedBB.rayTrace(info.shape.toBoundingBoxList(), svec, dvec, bpos);
-                    if(brtr!=null) {
-                    	if(rnd.nextDouble()<0.33f) {
-                    		nid = rnd.nextInt(speedVectors.length);
-                    	} else {
-                    		nid = getOutboundSpeedFrom(brtr.getFace());
-                    	}
-                    }else {
-                    	nid = rnd.nextInt(speedVectors.length);
+
+                VoxelShape shape = info.shape;
+                BlockHitResult bhr = shape.clip(svec, dvec, bpos);
+                if (bhr != null && (shape == FULL || bhr.isInside())) {
+                    BlockHitResult brtr = AABB.clip(info.aabbList, svec, dvec, bpos);
+                    if (brtr != null) {
+                        if (rnd.nextDouble() < 0.33f) {
+                            nid = rnd.nextInt(speedVectors.length);
+                        } else {
+                            nid = getOutboundSpeedFrom(brtr.getDirection());
+                        }
+                    } else {
+                        nid = rnd.nextInt(speedVectors.length);
                     }
                 }
                 Qpos[i] = dvec;
                 vid[i] = nid;
-                heat += (float) (getHeat(bpos) * MathHelper.lerp(MathHelper.clamp(-curspeed.getY(), 0, 0.4) * 2.5, 1, 0.5)); // add heat
-                wind += getAir(bpos)? (float) MathHelper.lerp((MathHelper.clamp(Math.abs(curspeed.getY()), 0.2, 0.8) - 0.2) / 0.6, 2, 0.5) :0;
+                float curheat=getHeat(bpos);
+                if(curheat!=0) {
+                minTemp=Math.min(minTemp, curheat);
+                maxTemp=Math.max(maxTemp, curheat);
+                heat += (float) (curheat * Mth.lerp(Mth.clamp(-(Math.signum(curheat))*curspeed.y(), 0, 0.4) * 2.5, 1, 0.5)); // add heat, simulates hot air goes up and cold air goes down
+                }
+                if(getAir(bpos)) {//open to air, great wind
+                	wind +=  2;
+                }else if(bpos.distToCenterSqr(qx0, qy0, qz0)>=16&&getInfoCached(bpos).shape.isEmpty()) {//particle go further than 4 bl far and meets air
+                	wind+=.5;
+                }
             }
         }
-        return Pair.of(heat / n, wind/n);
+        return new SimulationResult(Mth.clamp(heat / n, minTemp, maxTemp), wind / n);
     }
 
     /**
@@ -266,19 +314,35 @@ public class SurroundingTemperatureSimulator {
     private float getHeat(BlockPos bp) {
         return getInfoCached(bp).temperature;
     }
-    private boolean getAir(BlockPos bp) {
-        return getInfoCached(bp).exposeToAir;
-    }
 
+    private boolean getAir(BlockPos pos) {
+    	int topY=getTopY(pos.getX()-origin.getX(), pos.getZ()-origin.getZ());
+    	//System.out.println("x:"+(pos.getX()-origin.getX())+"z:"+(pos.getZ()-origin.getZ())+"y:"+topY);
+    	
+        return topY <= pos.getY();
+    }
+    private class CachedBlockInfoGetter implements Function <BlockState,CachedBlockInfo>{
+    	BlockPos pos;
+		@Override
+		public CachedBlockInfo apply(BlockState t) {
+			CachedBlockInfo info= getInfo(pos, t);
+			//System.out.println(t+""+info.temperature);
+			return info;
+		}
+    	
+    }
+    // only one instance is generated each class to lower lambda overhead cost
+    CachedBlockInfoGetter generator=new CachedBlockInfoGetter();
     /***
      * fetch without position cache, but with blockstate cache, blocks with the same
      * state should have same collider and heat.
      *
      */
     private CachedBlockInfo getInfo(BlockPos pos) {
+    	generator.pos=pos;
         BlockPos ofregion = pos.subtract(origin);
         BlockState bs = getBlock(ofregion.getX(), ofregion.getY(), ofregion.getZ());
-        return info.computeIfAbsent(bs, s -> getInfo(pos, s));
+        return info.computeIfAbsent(bs, generator);
     }
 
     /**
@@ -286,29 +350,41 @@ public class SurroundingTemperatureSimulator {
      * Position is only for getCollisionShape method, to avoid some TE based shape.
      */
     private CachedBlockInfo getInfo(BlockPos pos, BlockState bs) {
-    	boolean isExpose=getTopY(pos.getX(),pos.getZ())<pos.getY();
-        BlockTempData b = FHDataManager.getBlockData(bs.getBlock());
+        //boolean isExpose = getTopY(pos.getX(), pos.getZ()) < pos.getY();
+        BlockTempData b = BlockTempData.getData(bs.getBlock());
+        VoxelShape shape;
+        
+        if(bs.getBlock().hasDynamicShape()) {
+        	shape=Shapes.block();
+        }else {
+        	try {//level is intended null as vanilla code would only query cache, cause a quickfail if some mod make wrong mixin
+        		shape=bs.getCollisionShape(null, pos);
+        	}catch(Exception ex) {
+        		ex.printStackTrace();
+        		shape=Shapes.block();
+        	}
+        }
         if (b == null)
-            return new CachedBlockInfo(bs.getCollisionShape(world, pos),isExpose,bs);
+            return new CachedBlockInfo(shape, bs);
         float cblocktemp = 0;
         if (b.isLit()) {
-            boolean litOrActive = bs.hasProperty(BlockStateProperties.LIT) && bs.get(BlockStateProperties.LIT);
+            boolean litOrActive = bs.hasProperty(BlockStateProperties.LIT) && bs.getValue(BlockStateProperties.LIT);
             if (litOrActive)
                 cblocktemp += b.getTemp();
         } else
             cblocktemp += b.getTemp();
         if (b.isLevel()) {
-            if (bs.hasProperty(BlockStateProperties.LEVEL_0_15)) {
-                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_0_15) + 1) / 16;
-            } else if (bs.hasProperty(BlockStateProperties.LEVEL_0_8)) {
-                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_0_8) + 1) / 9;
-            } else if (bs.hasProperty(BlockStateProperties.LEVEL_1_8)) {
-                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_1_8)) / 8;
-            } else if (bs.hasProperty(BlockStateProperties.LEVEL_0_3)) {
-                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_0_3) + 1) / 4;
+            if (bs.hasProperty(BlockStateProperties.LEVEL)) {
+                cblocktemp *= (float) (bs.getValue(BlockStateProperties.LEVEL) + 1) / 16;
+            } else if (bs.hasProperty(BlockStateProperties.LEVEL_COMPOSTER)) {
+                cblocktemp *= (float) (bs.getValue(BlockStateProperties.LEVEL_COMPOSTER) + 1) / 9;
+            } else if (bs.hasProperty(BlockStateProperties.LEVEL_FLOWING)) {
+                cblocktemp *= (float) (bs.getValue(BlockStateProperties.LEVEL_FLOWING)) / 8;
+            } else if (bs.hasProperty(BlockStateProperties.LEVEL_CAULDRON)) {
+                cblocktemp *= (float) (bs.getValue(BlockStateProperties.LEVEL_CAULDRON) + 1) / 4;
             }
         }
-        return new CachedBlockInfo(bs.getCollisionShape(world, pos), cblocktemp,isExpose,bs);
+        return new CachedBlockInfo(shape, cblocktemp, bs);
     }
 
     /***
@@ -322,25 +398,25 @@ public class SurroundingTemperatureSimulator {
     /**
      * Check if this location collides with block.
      */
-    private Direction getHitingFace(double sx, double sy, double sz,double vx,double vy,double vz) {
-    	BlockPos bpos=new BlockPos(sx+vx, sy+vy, sz+vz);
+    private Direction getHitingFace(double sx, double sy, double sz, double vx, double vy, double vz) {
+        BlockPos bpos = new BlockPos((int) (sx + vx), (int) (sy + vy), (int) (sz + vz));
         CachedBlockInfo info = getInfoCached(bpos);
         if (info.shape == EMPTY)
             return null;
-        Vector3d svec=new Vector3d(sx, sy, sz);
-        Vector3d vvec=new Vector3d(sx+vx, sy+vy, sz+vz);
-        BlockRayTraceResult brtr=AxisAlignedBB.rayTrace(info.shape.toBoundingBoxList(), svec, vvec, bpos);
-        if(brtr!=null)
-        	return brtr.getFace();
+        Vec3 svec = new Vec3(sx, sy, sz);
+        Vec3 vvec = new Vec3(sx + vx, sy + vy, sz + vz);
+        BlockHitResult brtr = AABB.clip(info.shape.toAabbs(), svec, vvec, bpos);
+        if (brtr != null)
+            return brtr.getDirection();
         return null;
     }
-    private boolean isBlockade(double x, double y, double z) {
-        CachedBlockInfo info = getInfoCached(new BlockPos(x, y, z));
+    /*private boolean isBlockade(double x, double y, double z) {
+        CachedBlockInfo info = getInfoCached(new BlockPos((int)x,(int) y, (int)z));
         if (info.shape == FULL)
             return true;
         if (info.shape == EMPTY)
             return false;
-        double nx=MathHelper.frac(x),ny=MathHelper.frac(y),nz=MathHelper.frac(z);
-        return info.shape.contains(nx,ny,nz);
-    }
+        double nx=Mth.frac(x),ny=Mth.frac(y),nz=Mth.frac(z);
+        return info.shape.isFullWide(nx,ny,nz);
+    }*/
 }

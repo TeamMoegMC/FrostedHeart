@@ -26,8 +26,8 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
 public class ExtendPolicyGroup extends PolicyGroup {
     ResourceLocation ref;
@@ -42,14 +42,14 @@ public class ExtendPolicyGroup extends PolicyGroup {
         this.ref = ref;
     }
 
-    public ExtendPolicyGroup(PacketBuffer pb) {
+    public ExtendPolicyGroup(FriendlyByteBuf pb) {
         super(pb);
         ref = pb.readResourceLocation();
     }
 
     @Override
-    public void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve) {
-        TradePolicy.policies.get(ref).CollectPolicies(policy, ve);
+    public void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve,int num) {
+        TradePolicy.policies.get(ref).CollectPolicies(policy, ve,num);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class ExtendPolicyGroup extends PolicyGroup {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
         buffer.writeBoolean(true);
         super.write(buffer);
         buffer.writeResourceLocation(ref);

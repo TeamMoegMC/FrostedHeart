@@ -1,0 +1,11 @@
+{
+  "parent": "minecraft:block/block",
+  "automatic_culling": false,
+  "flip_v": true,
+  "loader": "forge:obj",
+  "render_type":"cutout_mipped",
+  "model": "frostedresearch:models/block/mechanical_calculator.obj",
+  "textures": {
+    "particle": "frostedresearch:block/obj/mechanical_calculator"
+  }
+}

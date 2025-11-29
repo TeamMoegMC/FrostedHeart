@@ -19,21 +19,61 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import com.teammoeg.frostedheart.content.robotics.logistics.workers.INetworkCore;
-import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.chorda.io.CodecUtil;
+import com.teammoeg.chorda.io.NBTSerializable;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.common.util.LazyOptional;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-
-public class RobotChunk {
-    Map<ChunkSectionPos,BlockPos> networks = new HashMap<>();
-    public LogisticNetwork getNetworkFor(World world,BlockPos actual) {
-    	INetworkCore core = FHUtils.getExistingTileEntity(world, networks.get(new ChunkSectionPos(actual)), INetworkCore.class);
-    	if(core==null)
-    		return null;
-    	return core.getNetwork();
+public class RobotChunk implements NBTSerializable{
+	Set<BlockPos> networks = new HashSet<>();
+    public LazyOptional<LogisticNetwork> getNetworkFor(Level world,BlockPos actual) {
+    	var it=networks.iterator();
+    	while(it.hasNext()) {
+    		BlockPos pos=it.next();
+    		BlockEntity core = CUtils.getExistingTileEntity(world, pos);
+    		//System.out.println(core);
+    		if(core!=null)
+    			return FHCapabilities.LOGISTIC.getCapability(core);
+    		else
+    			it.remove();
+    	}
+    	return LazyOptional.empty();
     };
+    
+    public RobotChunk(List<BlockPos> networks) {
+		super();
+		this.networks.addAll(networks);
+	}
+
+	public void register(BlockPos pos) {
+    	networks.add(pos);
+    }
+    public void release(BlockPos pos) {
+    	networks.remove(pos);
+    }
+    
+	@Override
+	public void save(CompoundTag nbt, boolean isPacket) {
+		nbt.put("networks", CodecUtil.toNBTList(networks,BlockPos.CODEC));
+		
+	}
+	@Override
+	public void load(CompoundTag nbt, boolean isPacket) {
+		networks.addAll(CodecUtil.fromNBTList(nbt.getList("networks", Tag.TAG_COMPOUND), BlockPos.CODEC));
+	}
+
+	public RobotChunk() {
+		super();
+	}
 }

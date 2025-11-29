@@ -1,0 +1,15 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "minecraft:nether_wart",
+  "dead": "minecraft:dead_bush",
+  "grow_time_days": 7.0,
+  "heat_capacity": 10,
+  "max_fertilize": 50.0,
+  "max_grow": 50.0,
+  "max_skylight": 4,
+  "max_survive": 60.0,
+  "min_fertilize": 30.0,
+  "min_grow": 30.0,
+  "min_skylight": 0,
+  "min_survive": 20.0
+}

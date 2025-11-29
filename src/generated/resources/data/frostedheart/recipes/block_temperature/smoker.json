@@ -1,0 +1,6 @@
+{
+  "type": "frostedheart:block_temp",
+  "block": "minecraft:smoker",
+  "must_lit": true,
+  "temperature": 100.0
+}

@@ -1,9 +1,13 @@
 {
-  "type": "watersource:water_level_fluid",
+  "type": "frostedheart:water_level_and_effect",
   "ingredient": {
     "tag": "frostedheart:thermos"
   },
   "fluid": "minecraft:water",
   "waterLevel": 4,
-  "waterSaturationLevel": 2
+  "waterSaturationLevel": 2,
+  "duration": 1600,
+  "amplifier": 0,
+  "probability": 75,
+  "mob_effects": [{"name":"minecraft:hunger","duration":400,"amplifier":1}]
 }

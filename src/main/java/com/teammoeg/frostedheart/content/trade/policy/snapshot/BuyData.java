@@ -22,23 +22,24 @@ package com.teammoeg.frostedheart.content.trade.policy.snapshot;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.DemandData;
 
-import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Ingredient;
 
 public class BuyData {
 
     String id;
     int store;
     DemandData bd;
-
-    public BuyData(String id, int store, DemandData bd) {
+    int canRestock;
+    public BuyData(FHVillagerData vd,String id, int store, DemandData bd) {
         super();
         this.id = id;
         this.store = store;
         this.bd = bd;
+        canRestock=bd.canRestock(vd);
     }
 
-    public boolean canRestock(FHVillagerData data) {
-        return bd.canRestock(data);
+    public int canRestock(FHVillagerData data) {
+        return canRestock;
     }
 
     public Ingredient getItem() {
@@ -60,5 +61,6 @@ public class BuyData {
     public void reduceStock(FHVillagerData data, int count) {
         bd.soldactions.forEach(c -> c.deal(data, count));
         data.storage.computeIfPresent(id, (k, v) -> v - count);
+        store-=count;
     }
 }

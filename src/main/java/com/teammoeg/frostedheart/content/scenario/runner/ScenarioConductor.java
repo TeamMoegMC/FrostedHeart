@@ -20,30 +20,26 @@
 package com.teammoeg.frostedheart.content.scenario.runner;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHCapabilities;
+import com.teammoeg.chorda.io.CodecUtil;
+import com.teammoeg.chorda.io.NBTSerializable;
+import com.teammoeg.chorda.io.registry.IdRegistry;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHTeamDataManager;
-import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.content.scenario.runner.target.ActTarget;
-import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElement;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
-import com.teammoeg.frostedheart.content.scenario.runner.target.IScenarioTarget;
-import com.teammoeg.frostedheart.content.scenario.runner.target.TriggerTarget;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.content.scenario.runner.target.ScenarioTarget;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
 import net.minecraftforge.common.util.LazyOptional;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 
 /**
  * ScenarioConductor
@@ -51,153 +47,129 @@ import net.minecraftforge.common.util.LazyOptional;
  * You shouldn't opearte this class from any other code except from scenario trigger and commands.
  * You should define triggers in script file and activate triggers to make it execute.
  * */
-public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
+public class ScenarioConductor implements NBTSerializable{
+	Marker MARKER = MarkerManager.getMarker("Scenario Conductor");
     //Sence control
     private transient Act currentAct;
     public Map<ActNamespace,Act> acts=new HashMap<>();
+    public IdRegistry<ActNamespace> actids=new IdRegistry<>();
     private transient boolean isActsEnabled;
-    private transient ActNamespace lastQuest;
-    private static final ActNamespace global=new ActNamespace();
-
+    private ServerScene scene=new ServerScene();
+    //private transient ActNamespace lastQuest;
+    private ActScenarioContext context=new ActScenarioContext(this,scene);
+    
+    private ActNamespace lastCurrent;
 	private static final ActNamespace init=new ActNamespace(null,null);
-    boolean inited=false;
-
-
+	int actcounter=0;
     public void copy() {}
     public void enableActs() {
     	if(!isActsEnabled) {
     		isActsEnabled=true;
-       		if(lastQuest!=null) {
-    			acts.get(lastQuest).queue(acts.get(lastQuest).paragraph);
+       		if(lastCurrent!=null) {
+       			currentAct=acts.get(lastCurrent);
     		}
     		acts.values().forEach(t->{
+    			if(!t.name.isAct())return;
     			if(t.getStatus()==RunStatus.WAITTRIGGER) {
+    				t.scene().setSlient(true);
     				//t.getScene().setSlient(true);
     				t.setStatus(RunStatus.RUNNING);
-    				if(t.name.equals(lastQuest))lastQuest=null;
-    				t.queue(t.paragraph);
-    				//t.getScene().setSlient(false);
+    				//if(t.name.equals(lastQuest))lastQuest=null;
+    				
+    				t.restoreLocation(getContext());
+    				t.runCodeExecutionLoop(getContext());
+    				t.scene().setSlient(false);
+    			}else if(t.getStatus()==RunStatus.RUNNING) {
+    				t.prepareForRun(context);
     			}
     		});
  
     	}
     }
+    public void initContext(ServerPlayer player,String lang) {
+    	scene.setPlayer(player);
+    	context.setPlayerAndLang(player,lang);
+    }
     public ScenarioConductor() {
 		super();
-		setCurrentAct(new Act(this,init));
-		acts.put(init, getCurrentAct());
-		acts.put(global, new Act(this,global));
+		currentAct=new Act(0,init);
+		acts.put(init,currentAct);
+		actids.register(init);
 	}
 
-    public void init(ServerPlayerEntity player) {
-    	if(!isInited())inited=true;
-		this.player = player.getUniqueID();
+    public void init(ServerPlayer player,String lang) {
+    	initContext(player,lang);
 	}
-
-    public ScenarioConductor(ServerPlayerEntity player) {
-		super();
-		this.player = player.getUniqueID();
-		setCurrentAct(new Act(this,init));
-		acts.put(init, getCurrentAct());
-		acts.put(global, new Act(this,global));
-
-		
-	}
-
-
-
-	public Scene getScene() {
-    	return getCurrentAct().getScene();
-    }
-
-
-
-    public void paragraph(int pn) {
-		varData.takeSnapshot();
-    	getCurrentAct().newParagraph(getScenario(), pn);
-    	super.paragraph(pn);
-	}
-
-	public void notifyClientResponse(boolean isSkip,int status) {
-		this.isSkip=isSkip;
-		this.clientStatus=status;
-		if(this.getStatus()==RunStatus.WAITCLIENT) {
-			if(clearAfterClick)
-				doParagraph();
-			run();
-		}else if(this.getStatus()==RunStatus.WAITTIMER&&isSkip) {
-			this.stopWait();
-			run();
-		}
+	
+	public void notifyClientResponse(int id,boolean isSkip,int status) {
+		this.getById(id).notifyClientResponse(context, isSkip, status);
 		
     }
 
 	public void onLinkClicked(String link) {
-		ExecuteTarget jt=getScene().getLinks().get(link);
-		if(jt!=null) {
-			jump(jt);
+		for(Act act:this.acts.values()) {
+			ExecuteTarget target=act.scene().getLinks().get(link);
+			if(target!=null) {
+				act.jump(getContext(), target);
+				return;
+			}
 		}
+		
+		
 	}
 
 
-	public void addTrigger(IScenarioTrigger trig,IScenarioTarget targ) {
+	public void addTrigger(IScenarioTrigger trig,ScenarioTarget targ) {
 		//if(getCurrentAct().name.isAct()) {
 			getCurrentAct().addTrigger(trig,targ);
 		//}else super.addTrigger(trig,targ);
 	}
-    public void run(Scenario sp) {
-		if (sp == null) {
+    public void run(String scenario) {
+		if (scenario == null) {
 			FHMain.LOGGER.error("[Scenario Conductor] Scenario to run is null");
 		} else {
-			FHMain.LOGGER.info("[Scenario Conductor] Running scenario "+sp.name);
+			FHMain.LOGGER.info("[Scenario Conductor] Running scenario "+scenario);
 		}
-
-		this.setScenario(sp);
-		nodeNum=0;
-		varData.takeSnapshot();
-		getCurrentAct().newParagraph(sp, 0);
-
-		run();
+		getContext().takeSnapshot();
+		acts.get(init).jump(getContext(), scenario, null);
 	}
-
-	@Override
-	public LinkedList<ExecuteStackElement> getCallStack() {
-		return getCurrentAct().getCallStack();
-	}
-	@Override
-	public void jump(IScenarioTarget nxt) {
-		getCurrentAct().setActState();
-		super.jump(nxt);
-	}
-	public void tick() {
-		if(!isInited())return;
+	public void tick(ServerPlayer player) {
+		
+		init(player,null);
     	//detect triggers
-		if(getStatus()==RunStatus.RUNNING) {
-			run();
+		//System.out.println("start tick==============");
+		
+		
+		
+		
+		//start act scheduling after system started
+		if(isActsEnabled) {
+	    	for(Act act:acts.values()) {
+	    		//System.out.println(act.name+": "+act);
+	    		act.tickTrigger(context);
+	    	}
+	    	//System.out.println("current act: "+getCurrentAct());
+	    	if(currentAct!=null) {
+		    	currentAct.tickMain(context);
+		    	if(currentAct.getStatus().shouldPause) {
+		    		currentAct=null;
+		    	}
+	    	}
+	    	if(currentAct==null)
+		    	for(Act act:acts.values()) {
+		    		
+		    		act.runScheduled(context);
+		    		if(!act.getStatus().shouldPause) {
+		    			currentAct=act;
+		    		}
+		    	}
+		}else {//during bootstrap steps
+			Act initact=acts.get(init);
+			initact.tickTrigger(context);
+			initact.tickMain(context);
+			initact.runScheduled(context);
 		}
-    	for(TriggerTarget t:triggers) {
-    		if(t.test(this)) {
-    			if(t.use()) {
-    				if(t.isAsync())
-						addToQueue(t);
-					else
-						jump(t);
-    			}
-    		}
-    	}
-    	triggers.removeIf(t->!t.canUse());
-    	for(Act a:acts.values())
-	    	a.getScene().tickTriggers(this, getCurrentAct()==a);
     	
-    	if(getStatus()==RunStatus.WAITTIMER) {
-    		if(getScene().tickWait()) {
-    			
-    			run();
-    			return;
-    		}
-    	}
-    	//Execute Queued actions
-    	runScheduled();
     }
 
 
@@ -205,147 +177,164 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 		if(getCurrentAct().name.isAct()) {
 			ActNamespace old=getCurrentAct().name;
 			Act olddata=getCurrentAct();
-			varData.restoreSnapshot();//Protective against modify varibles without save
-			if(!status.shouldPause) {//Back to last savepoint unless it is waiting trigger
-				olddata.paragraph.apply(olddata);
-				olddata.setStatus(RunStatus.RUNNING);
-			}else {//Save current state if stopped or waiting trigger.
-				olddata.setActState();
+			getContext().restoreSnapshot();//Protective against modify varibles without save
+			if(!olddata.getStatus().shouldPause) {//Back to last savepoint unless it is waiting trigger
+				olddata.restoreLocation(getContext());
+			}else {
+				olddata.setStatus(RunStatus.PAUSED);//pause current act
 			}
-			olddata.getScene().clear(this);
+			olddata.scene().clear(getContext(),olddata,RunStatus.STOPPED);
+			
+			
 			acts.put(old, olddata);
 			globalScope();
 		}else {
-			varData.takeSnapshot();
+			getContext().takeSnapshot();
 		}	
 	}
 	public void continueAct(ActNamespace quest) {
 		if(quest.equals(getCurrentAct().name))return;
 		Act data=acts.get(quest);
+		Act old=currentAct;
 		if(data!=null) {
 			pauseAct();
-			this.setCurrentAct(data);
-			data.prepareForRun();
-			if(data.getScenario()!=null) {
-				this.sp=data.getScenario();
-				this.nodeNum=data.getNodeNum();
-				this.status=data.getStatus();
+			currentAct=data;
+			data.prepareForRun(getContext());
+			data.sendTitles(getContext(),data,true, true);
+			
+			if(data.getStatus().shouldRun) {
+				data.scene().forcedClear(getContext(),old,RunStatus.RUNNING);
+				data.run();
 			}
-			data.sendTitles(true, true);
-			if(getStatus().shouldRun) {
-				getScene().forcedClear(this);
-				run();
-			}
+			
 		}
 	}
 	private void globalScope() {
-		setCurrentAct(acts.get(global));
+		currentAct=(acts.get(init));
 	}
 	public void enterAct(ActNamespace quest) {
 		if(quest.equals(getCurrentAct().name))return;
 		Act old=getCurrentAct();
 		Act data=acts.get(quest);
-		pauseAct();
 		if(data!=null) {
-			this.setCurrentAct(data);
-			data.paragraph.setScenario(this.getScenario());
-			data.paragraph.setParagraphNum(old.paragraph.getParagraphNum());
 		}else {
-			data=new Act(this,quest);
+			data=new Act(++actcounter,quest);
 			acts.put(quest, data);
-			data.paragraph.setScenario(this.getScenario());
-			data.paragraph.setParagraphNum(old.paragraph.getParagraphNum());
-			this.setCurrentAct(data);
+			actids.register(quest);
 		}
+		if(old.currentLabel!=null)
+			data.currentLabel=old.currentLabel;
+		else
+			data.currentLabel=new ExecuteTarget(old.getScenario().name(),null);
+		currentAct=data;
+		copyExecuteInfo(currentAct,old);
+		FHMain.LOGGER.info(MARKER, "Entering new act: "+data);
+		FHMain.LOGGER.info(MARKER, "Quiting old act: "+old);
+		old.stop();
+		
 	}
-	public void queue(IScenarioTarget questExecuteTarget) {
-		getCurrentAct().queue(questExecuteTarget);
-		//toExecute.add(questExecuteTarget);
+	public void copyExecuteInfo(Act later,Act old) {
+		later.setExecutePos(old.getExecutePos());
+		later.setScenario(old.getScenario());
+		later.setStatus(old.getStatus());
+		later.setCallStack(old.getCallStack());
 	}
 	public void queueAct(ActNamespace quest,String scene,String label) {
 		Act data=getCurrentAct();
 		if(!quest.equals(getCurrentAct().name)) {
 			data=acts.get(quest);
 			if(data==null){
-				data=new Act(this,quest);
+				data=new Act(++actcounter,quest);
 				acts.put(quest, data);
+				actids.register(quest);
 			}
 		}
 		if(scene==null)
-			scene=getScenario().name;
+			scene=getCurrentAct().getScenario().name();
 		ExecuteTarget target;
 		if(label!=null) {
-			data.label=label;
-			target=new ExecuteTarget(this,scene,label);
+			target=new ExecuteTarget(scene,label);
 		}else {
-			target=new ExecuteTarget(this,scene,null);
+			target=new ExecuteTarget(scene,null);
 		}
-		target.apply(data);
-		data.paragraph.setScenario(target.getScenario());
-		data.paragraph.setParagraphNum(0);
-		addToQueue(new ActTarget(quest,target));
+		data.jump(getContext(), target);
 	}
 
 	public void endAct() {
-		if(getCurrentAct().name.isAct()) {
-			acts.remove(getCurrentAct().name);
+		Act old=getCurrentAct();
+		if(old.name.isAct()) {
+			
+			globalScope();
+			copyExecuteInfo(currentAct,old);
+			old.stop();
 		}
-		globalScope();
 	}
 
 
 	public Act getCurrentAct() {
-		return currentAct;
+		return currentAct==null?acts.get(init):currentAct;
 	}
-	private void setCurrentAct(Act currentAct) {
-		this.currentAct = currentAct;
-	}
-    public static LazyOptional<ScenarioConductor> getCapability(@Nullable PlayerEntity player) {
+    public static LazyOptional<ScenarioConductor> getCapability(@Nullable Player player) {
     	return FHCapabilities.SCENARIO.getCapability(player);
     }
 
-	public boolean isInited() {
-		return inited;
-	}
 	@Override
-	public void save(CompoundNBT data, boolean isPacket) {
-    	if(varData.snapshot==null)
-    		data.put("vars", varData.extraData);
-    	else
-    		data.put("vars", varData.snapshot);
-    	ListNBT lacts=new ListNBT();
+	public void save(CompoundTag data, boolean isPacket) {
+    	data.put("vars", getContext().varData.save());
+    	ListTag lacts=new ListTag();
     	for(Act v:acts.values()) {
     		if(v.name.isAct())
     			lacts.add(v.save());
     	}
+    	
     	data.put("acts", lacts);
-    	if(getCurrentAct().name.isAct()) {
-    		data.putString("chapter", getCurrentAct().name.chapter);
-    		data.putString("act", getCurrentAct().name.act);
+    	if(getCurrentAct()!=null&&getCurrentAct().name.isAct()) {
+    		CodecUtil.encodeNBT(ActNamespace.CODEC, data, "current",getCurrentAct().name);
     	}
 	}
 	@Override
-	public void load(CompoundNBT data, boolean isPacket) {
-		// TODO Auto-generated method stub
-		varData.extraData=data.getCompound("vars");
-    	varData.snapshot=varData.extraData;
-    	ListNBT lacts=data.getList("acts", Constants.NBT.TAG_COMPOUND);
-    	for(INBT v:lacts) {
-    		Act i=new Act(this,(CompoundNBT) v);
-    		acts.put(i.name, i);
+	public void load(CompoundTag data, boolean isPacket) {
+		getContext().varData.load(data.getCompound("vars"));
+    	getContext().takeSnapshot();
+    	FHMain.LOGGER.info(MARKER, data.getCompound("vars"));
+    	ListTag lacts=data.getList("acts", Tag.TAG_COMPOUND);
+    	//Act initact=acts.get(init);
+    	for(Tag v:lacts) {
+    		CompoundTag t=(CompoundTag) v;
+    		ActNamespace ns=new ActNamespace(t.getString("chapter"),t.getString("act"));
+    		if(acts.containsKey(ns)) {
+    			acts.get(ns).load(t);
+    		}else {
+    			Act i=new Act(++actcounter,t);
+        		acts.put(i.name, i);
+        		actids.register(i.name);
+    		}
+    		
     	}
-    	lastQuest=new ActNamespace(data.getString("chapter"),data.getString("act"));
+    	//acts.put(init, initact);
+    	if(data.contains("current")) {
+    		lastCurrent=CodecUtil.decodeNBT(ActNamespace.CODEC, data, "current");
+    	}
+    	//lastQuest=
+
     	//currentAct=acts.get();
     	//if(currentAct==null)
     	//currentAct=acts.get(empty);
 	}
-	public ServerPlayerEntity getPlayer() {
-        return FHTeamDataManager.getServer().getPlayerList().getPlayerByUUID(player);
-    }
-    public String getLang() {
-    	return getPlayer().getLanguage();
-    }
-	public void sendMessage(String s) {
-		getPlayer().sendStatusMessage(TranslateUtils.str(s), false);
+	public ScenarioContext getContext() {
+		return context;
+	}
+
+	public void jump(ExecuteTarget executeTarget) {
+		getCurrentAct().jump(context,executeTarget);
+	}
+	public void queue(ExecuteTarget executeTarget) {
+		getCurrentAct().queue(executeTarget);
+	}
+	public Act getById(int id) {
+		for(Act act:acts.values())
+			if(id==act.getRunId())
+				return act;
+		return null;
 	}
 }

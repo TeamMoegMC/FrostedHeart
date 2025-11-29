@@ -19,13 +19,14 @@
 
 package com.teammoeg.frostedheart.content.trade;
 
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.MutableComponent;
 
 public enum RelationModifier {
     KILLED_HISTORY("history_killed"),
     UNKNOWN_LANGUAGE("unknown_language"),
+    KNOWN_LANGUAGE("known_language"),
     CHARM("charm"),
     KILLED_SAW("saw_murder"),
     HURT("hurt"),
@@ -40,7 +41,7 @@ public enum RelationModifier {
         this.tkey = tkey;
     }
 
-    public TranslationTextComponent getDesc() {
-        return TranslateUtils.translateGui("trade.relation." + tkey);
+    public MutableComponent getDesc() {
+        return Lang.translateGui("trade.relation." + tkey);
     }
 }

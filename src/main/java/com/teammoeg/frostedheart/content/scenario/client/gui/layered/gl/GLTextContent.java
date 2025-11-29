@@ -1,18 +1,38 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 
 import java.util.List;
 
+import com.teammoeg.chorda.client.ui.Rect;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
 
-import net.minecraft.client.gui.RenderComponentsUtil;
-import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.components.ComponentRenderUtils;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.network.chat.Component;
 
 public class GLTextContent extends GLLayerContent{
 	
-	public GLTextContent(ITextComponent text, float x, float y, float w, float h, boolean b) {
+	public GLTextContent(Component text, float x, float y, float w, float h, boolean b) {
 		super(x, y, w, h);
 		this.shadow = b;
 		this.text = text;
@@ -22,7 +42,7 @@ public class GLTextContent extends GLLayerContent{
 	public RenderableContent copy() {
 		return new GLTextContent(text,x, y, width, height, z, shadow,resize);
 	}
-	public GLTextContent(ITextComponent text,float x, float y, float width, float height, int z, boolean shadow, float resize) {
+	public GLTextContent(Component text,float x, float y, float width, float height, int z, boolean shadow, float resize) {
 		super(x, y, width, height, z);
 		this.shadow = shadow;
 		this.resize = resize;
@@ -39,11 +59,11 @@ public class GLTextContent extends GLLayerContent{
 	public void setShadow(boolean shadow) {
 		this.shadow = shadow;
 	}
-	public ITextComponent text;
+	public Component text;
 	@Override
 	public void renderContents(RenderParams params) {
 		
-		List<IReorderingProcessor> li=RenderComponentsUtil.func_238505_a_(text,params.getContentWidth() ,params.getMinecraft().fontRenderer);
+		List<FormattedCharSequence> li=ComponentRenderUtils.wrapComponents(text,params.getContentWidth() ,params.getMinecraft().font);
 
 		int y=0;
 		int ty=params.getContentY();
@@ -51,23 +71,24 @@ public class GLTextContent extends GLLayerContent{
 			ty=Math.max((int) ((params.getContentHeight()-li.size()*9*resize)/2),0)+params.getContentY();
 		// RenderSystem.enableBlend();
 		 //RenderSystem.enableAlphaTest();
-		 params.getMatrixStack().push();
+		 params.getMatrixStack().pushPose();
 		 params.getMatrixStack().translate(params.getContentX(),ty, 0);
 		 params.getMatrixStack().scale(resize, resize, resize);
-		for(IReorderingProcessor i:li) {
-			int w=params.getMinecraft().fontRenderer.getStringWidth(ClientScene.toString(i));
+		for(FormattedCharSequence i:li) {
+			int w=params.getFont().width(ClientScene.toString(i));
 			int tx=0;
 			if(centerH) {
 				tx=(int) Math.max(0,(params.getContentWidth()/resize-w)/2);
 			}
 			if(shadow)
-				params.getMinecraft().fontRenderer.drawTextWithShadow(params.getMatrixStack(), i, tx, y, color|(((int)(0xFF*params.getOpacity()))<<24));
+				params.getGuiGraphics().drawString(params.getFont(), i, tx, y, color|(((int)(0xFF*params.getOpacity()))<<24));
+				//params.getMinecraft().font.drawShadow(params.getMatrixStack(), i, tx, y, color|(((int)(0xFF*params.getOpacity()))<<24));
 			else
-				params.getMinecraft().fontRenderer.func_238422_b_(params.getMatrixStack(), i,tx, y, color|(((int)(0xFF*params.getOpacity()))<<24));
+				params.getGuiGraphics().drawString(params.getFont(), i, tx, y, color|(((int)(0xFF*params.getOpacity()))<<24),false);
 			y+=9;
 			if(y>params.getContentHeight()+params.getContentY())break;
 		}
-		params.getMatrixStack().pop();
+		params.getMatrixStack().popPose();
 		 
 		//RenderSystem.disableBlend();
 	}

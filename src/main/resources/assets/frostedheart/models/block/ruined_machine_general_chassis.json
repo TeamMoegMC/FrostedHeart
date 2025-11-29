@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "frostedheart:block/ruined_machines/general_machine_top",
+    "east": "frostedheart:block/ruined_machines/general_machine_right",
+    "north": "frostedheart:block/ruined_machines/chassis",
+    "particle": "frostedheart:block/ruined_machines/general_machine_top",
+    "south": "frostedheart:block/ruined_machines/general_machine_back",
+    "up": "frostedheart:block/ruined_machines/general_machine_top",
+    "west": "frostedheart:block/ruined_machines/general_machine_left"
+  }
+}

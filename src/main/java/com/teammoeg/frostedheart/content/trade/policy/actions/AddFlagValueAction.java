@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.trade.policy.actions;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class AddFlagValueAction extends SetFlagValueAction {
 
@@ -30,7 +30,7 @@ public class AddFlagValueAction extends SetFlagValueAction {
         super(jo);
     }
 
-    public AddFlagValueAction(PacketBuffer buffer) {
+    public AddFlagValueAction(FriendlyByteBuf buffer) {
         super(buffer);
     }
 

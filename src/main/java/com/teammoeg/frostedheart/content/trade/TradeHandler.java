@@ -19,19 +19,19 @@
 
 package com.teammoeg.frostedheart.content.trade;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.NetworkHooks;
+import net.minecraft.nbt.CompoundTag;
 
 public class TradeHandler {
-    public static void openTradeScreen(ServerPlayerEntity spe, FHVillagerData vd) {
-        vd.update(spe.getServerWorld(), spe);
-        NetworkHooks.openGui(spe, vd, e -> {
-            e.writeVarInt(vd.parent.getEntityId());
-            CompoundNBT tag = new CompoundNBT();
-            e.writeCompoundTag(vd.serializeForSend(tag));
-            tag = new CompoundNBT();
-            e.writeCompoundTag(vd.getRelationDataForRead(spe).serialize(tag));
+    public static void openTradeScreen(ServerPlayer spe, FHVillagerData vd) {
+        vd.update(spe.serverLevel(), spe);
+        NetworkHooks.openScreen(spe, vd, e -> {
+            e.writeVarInt(vd.parent.getId());
+            CompoundTag tag = new CompoundTag();
+            e.writeNbt(vd.serializeForSend(tag));
+            tag = new CompoundTag();
+            e.writeNbt(vd.getRelationDataForRead(spe).serialize(tag));
             vd.getRelationShip(spe).write(e);
         });
     }

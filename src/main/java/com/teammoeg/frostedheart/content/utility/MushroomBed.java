@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -24,29 +24,36 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
+import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.frostedheart.item.FHBaseItem;
+import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceSlot;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.UseAction;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
-public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
-    public static final ResourceLocation ktag = new ResourceLocation(FHMain.MODID, "knife");
+public class MushroomBed extends FHBaseItem {
 
     Item resultType;
 
@@ -56,27 +63,27 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
     }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
-        if (stack.getDamage() > 0)
-            list.add(TranslateUtils.translateTooltip("meme.mushroom").mergeStyle(TextFormatting.GRAY));
+    public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> list, TooltipFlag flag) {
+        if (stack.getDamageValue() > 0)
+            list.add(Lang.translateTooltip("meme.mushroom").withStyle(ChatFormatting.GRAY));
         else
-            list.add(TranslateUtils.translateTooltip("mushroom").mergeStyle(TextFormatting.GRAY));
+            list.add(Lang.translateTooltip("mushroom").withStyle(ChatFormatting.GRAY));
     }
 
 
 
     @Override
-    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
-        if (this.isInGroup(group)) {
+    public void fillItemCategory(CreativeTabItemHelper helper) {
+        if (helper.isType(FHTabs.itemGroup)) {
             ItemStack is = new ItemStack(this);
-            items.add(is);
-            is.setDamage(is.getMaxDamage());
-            items.add(is);
+            helper.accept(is);
+            is.setDamageValue(is.getMaxDamage());
+            helper.accept(is);
         }
     }
     @Override
-    public UseAction getUseAction(ItemStack stack) {
-        return UseAction.EAT;
+    public UseAnim getUseAnimation(ItemStack stack) {
+        return UseAnim.EAT;
     }
 
     @Override
@@ -91,27 +98,27 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
 
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-        ItemStack stack = playerIn.getHeldItem(handIn);
-        ActionResult<ItemStack> FAIL = new ActionResult<>(ActionResultType.FAIL, stack);
-        if (stack.getDamage() > 0)
+    public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
+        ItemStack stack = playerIn.getItemInHand(handIn);
+        InteractionResultHolder<ItemStack> FAIL = new InteractionResultHolder<>(InteractionResult.FAIL, stack);
+        if (stack.getDamageValue() > 0)
             return FAIL;
 
 
-        Hand otherHand = handIn == Hand.MAIN_HAND ? Hand.OFF_HAND : Hand.MAIN_HAND;
-        if (playerIn.getHeldItem(otherHand).getItem().getTags().contains(ktag)) {
-            playerIn.setActiveHand(handIn);
-            return new ActionResult<>(ActionResultType.SUCCESS, stack);
+        InteractionHand otherHand = handIn == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
+        if (playerIn.getItemInHand(otherHand).is(FHTags.Items.KNIFE.tag)) {
+            playerIn.startUsingItem(handIn);
+            return new InteractionResultHolder<>(InteractionResult.SUCCESS, stack);
         }
         return FAIL;
     }
 
     @Override
-    public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
+    public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
 
-        if (stack.getDamage() == 0) {
-            Hand otherHand = entityLiving.getActiveHand() == Hand.MAIN_HAND ? Hand.OFF_HAND : Hand.MAIN_HAND;
-            entityLiving.getHeldItem(otherHand).damageItem(1, entityLiving, (player2) -> player2.sendBreakAnimation(otherHand));
+        if (stack.getDamageValue() == 0) {
+            InteractionHand otherHand = entityLiving.getUsedItemHand() == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
+            entityLiving.getItemInHand(otherHand).hurtAndBreak(1, entityLiving, (player2) -> player2.broadcastBreakEvent(otherHand));
             return new ItemStack(resultType, 10);
 
         }
@@ -119,16 +126,31 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
     }
 
 	@Override
-	public float getEffectiveTempAdded(EquipmentCuriosSlotType slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
-		if(slot==null)
-			return 0.5f;
-        if (stack.getDamage() > 0) {
-            if (bodyTemp > -1) {
-                this.setDamage(stack, this.getDamage(stack) - 1);
-                return 0.5f;
-            }
-        }
-		return 0;
+	public @org.jetbrains.annotations.Nullable ICapabilityProvider initCapabilities(ItemStack stack, @org.jetbrains.annotations.Nullable CompoundTag nbt) {
+		return FHCapabilities.EQUIPMENT_HEATING.provider(()->new BodyHeatingCapability(){
+
+			@Override
+			public void tickHeating(HeatingDeviceSlot slot, ItemStack stack,HeatingDeviceContext data) {
+				if (stack.getDamageValue() > 0) {
+		            if (data.getBodyTemperature(BodyPart.TORSO) > -1) {
+		            	stack.setDamageValue(stack.getDamageValue()-1);
+		            	data.addEffectiveTemperature(BodyPart.TORSO, 0.5f);
+		            }
+		        }
+			}
+
+			@Override
+			public float getMaxTempAddValue(ItemStack stack) {
+				return 0.5f;
+			}
+
+			@Override
+			public float getMinTempAddValue(ItemStack stack) {
+				return 0f;
+			}
+			
+		});
 	}
+
 
 }

@@ -1,0 +1,33 @@
+package com.teammoeg.frostedheart.content.utility.snowsack;
+
+import com.teammoeg.chorda.network.CMessage;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.Objects;
+import java.util.function.Supplier;
+
+/**
+ * 这个Message仅用于告知服务端玩家切换了SnowSack自动拾取设置，不包含任何其它信息
+ */
+public class ToggleAutoPickupMessage implements CMessage {
+    public ToggleAutoPickupMessage( FriendlyByteBuf buffer) {
+    }
+
+    public ToggleAutoPickupMessage() {
+    }
+
+    @Override
+    public void encode(FriendlyByteBuf buffer) {
+
+    }
+
+    @Override
+    public void handle(Supplier<NetworkEvent.Context> context) {
+        if(context.get().getSender() != null){
+            if(Objects.requireNonNull(context.get().getSender()).containerMenu instanceof SnowSackMenu snowSackMenu){
+                snowSackMenu.toggleAutoPickup();
+            }
+        }
+    }
+}

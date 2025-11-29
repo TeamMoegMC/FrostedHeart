@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,131 +19,151 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.charger;
 
+import static net.minecraft.ChatFormatting.GRAY;
+
 import java.util.Collection;
 import java.util.List;
 
-import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.recipes.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.content.steamenergy.IChargable;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
+import com.teammoeg.frostedheart.content.steamenergy.ClientHeatNetworkData;
+import org.jetbrains.annotations.Nullable;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import net.minecraft.entity.item.ExperienceOrbEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.item.crafting.SmokingRecipe;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
+import com.teammoeg.chorda.block.CBlockInterfaces;
+import com.teammoeg.chorda.block.entity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
+import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SmokingRecipe;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTileEntity, FHBlockInterfaces.IActiveState {
+public class ChargerTileEntity extends CBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState,
+        IHaveGoggleInformation, HeatNetworkProvider {
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(-10, 200,5);
+    HeatEndpoint network =HeatEndpoint.consumer(-10, 5);
     float power;
-    private static void splitAndSpawnExperience(World world, BlockPos pos, float experience) {
-        int i = MathHelper.floor(experience);
-        float f = MathHelper.frac(experience);
+    LazyOptional<HeatEndpoint> heatcap = LazyOptional.of(() -> network);
+
+
+    public ChargerTileEntity(BlockPos pos, BlockState state) {
+        super(FHBlockEntityTypes.CHARGER.get(), pos, state);
+    }
+
+    private static void splitAndSpawnExperience(Level world, BlockPos pos, float experience) {
+        int i = Mth.floor(experience);
+        float f = Mth.frac(experience);
         if (f != 0.0F && Math.random() < f) {
             ++i;
         }
 
         while (i > 0) {
-            int j = ExperienceOrbEntity.getXPSplit(i);
+            int j = ExperienceOrb.getExperienceValue(i);
             i -= j;
-            world.addEntity(new ExperienceOrbEntity(world, pos.getX(), pos.getY(), pos.getZ(), j));
+            world.addFreshEntity(new ExperienceOrb(world, pos.getX(), pos.getY(), pos.getZ(), j));
         }
 
     }
 
-
-    public ChargerTileEntity() {
-        super(FHTileTypes.CHARGER.get());
+    @Override
+    public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction dir) {
+        Direction bd = this.getBlockState().getValue(BlockStateProperties.FACING);
+        if (cap == FHCapabilities.HEAT_EP.capability() && (dir == bd || (bd != Direction.DOWN && dir == Direction.DOWN) || (bd == Direction.UP && dir == Direction.NORTH) || (bd == Direction.DOWN && dir == Direction.SOUTH))) {
+            return heatcap.cast();
+        }
+        return super.getCapability(cap, dir);
     }
 
-    LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
-    @Override
-	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction dir) {
-    	Direction bd = this.getBlockState().get(BlockStateProperties.FACING);
-		if(cap==FHCapabilities.HEAT_EP.capability()&&(dir == bd || (bd != Direction.DOWN && dir == Direction.DOWN) || (bd == Direction.UP && dir == Direction.NORTH) || (bd == Direction.DOWN && dir == Direction.SOUTH))) {
-			return heatcap.cast();
-		}
-		return super.getCapability(cap, dir);
-	}
     public void drawEffect() {
-        if (world != null && world.isRemote) {
-            ClientUtils.spawnSteamParticles(world, this.getPos());
+        if (level != null && level.isClientSide) {
+            FHClientUtils.spawnSteamParticles(level, this.getBlockPos());
         }
     }
 
     public Direction getDirection() {
-        return this.getBlockState().get(BlockStateProperties.FACING);
+        return this.getBlockState().getValue(BlockStateProperties.FACING);
     }
 
     public float getMaxPower() {
         return 20000F;
     }
+
     public ChargerRecipe findRecipe(ItemStack is) {
-    	for(ChargerRecipe cr:FHUtils.filterRecipes(this.getWorld().getRecipeManager(),ChargerRecipe.TYPE)) {
-    		if(cr.input.test(is)) {
-    			return cr;
-    		}
-    	}
-    	return null;
+        for (ChargerRecipe cr : CUtils.filterRecipes(this.getLevel().getRecipeManager(), ChargerRecipe.TYPE)) {
+            if (cr.input.test(is)) {
+                return cr;
+            }
+        }
+        return null;
     }
-    public ActionResultType onClick(PlayerEntity pe, ItemStack is) {
+
+    public InteractionResult onClick(Player pe, ItemStack is) {
         if (is != null) {
-            Item it = is.getItem();
-            if (it instanceof IChargable) {
-                power -= ((IChargable) it).charge(is, power);
-                drawEffect();
-                return ActionResultType.SUCCESS;
+            LazyOptional<HeatStorageCapability> cap=FHCapabilities.ITEM_HEAT.getCapability(is);
+            if (cap.isPresent()) {
+                float actual= cap.resolve().get().receiveEnergy(power, false);
+                power -=actual;
+                if(actual>0)
+                	drawEffect();
+                return InteractionResult.SUCCESS;
             }
             ChargerRecipe cr = findRecipe(is);
             if (cr != null) {
                 if (power >= cr.cost && is.getCount() >= cr.input.getCount()) {
-                    if (!world.isRemote) {
+                    if (!level.isClientSide) {
                         power -= cr.cost;
                         is.setCount(is.getCount() - cr.input.getCount());
                         ItemStack gain = cr.output.copy();
-                        FHUtils.giveItem(pe, gain);
-                        markDirty();
-                        this.markContainingBlockForUpdate(null);
+                        CUtils.giveItem(pe, gain);
+                        setChanged();
+                        this.syncData();
                     }
                     drawEffect();
-                    return ActionResultType.SUCCESS;
+                    return InteractionResult.SUCCESS;
                 }
             }
 
             if (power >= 100) {
-                List<SmokingRecipe> irs = this.world.getRecipeManager().getRecipesForType(IRecipeType.SMOKING);
+                List<SmokingRecipe> irs = this.level.getRecipeManager().getAllRecipesFor(RecipeType.SMOKING);
                 for (SmokingRecipe sr : irs) {
                     if (sr.getIngredients().iterator().next().test(is)) {
-                        if (!world.isRemote) {
-                            power -= (float) sr.getCookTime() / 20;
-                            splitAndSpawnExperience(pe.getEntityWorld(), pe.getPosition(), sr.getExperience());
+                        if (!level.isClientSide) {
+                            power -= (float) sr.getCookingTime() / 20;
+                            splitAndSpawnExperience(pe.getCommandSenderWorld(), pe.blockPosition(), sr.getExperience());
                             is.setCount(is.getCount() - 1);
-                            ItemStack gain = sr.getCraftingResult(null).copy();
-                            FHUtils.giveItem(pe, gain);
-                            markDirty();
-                            this.markContainingBlockForUpdate(null);
+                            ItemStack gain = sr.assemble(null, this.level.registryAccess()).copy();
+                            CUtils.giveItem(pe, gain);
+                            setChanged();
+                            this.syncData();
                         }
                         drawEffect();
-                        return ActionResultType.SUCCESS;
+                        return InteractionResult.SUCCESS;
                     }
                 }
             }
@@ -151,49 +171,161 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
                 Collection<CampfireDefrostRecipe> irs = CampfireDefrostRecipe.recipeList.values();
                 for (CampfireDefrostRecipe sr : irs) {
                     if (sr.getIngredient().test(is)) {
-                        if (!world.isRemote) {
-                            power -= (float) sr.getCookTime() / 80;
-                            splitAndSpawnExperience(pe.getEntityWorld(), pe.getPosition(), sr.getExperience());
+                        if (!level.isClientSide) {
+                            power -= (float) sr.getCookingTime() / 80;
+                            splitAndSpawnExperience(pe.getCommandSenderWorld(), pe.blockPosition(), sr.getExperience());
                             is.setCount(is.getCount() - 1);
-                            ItemStack gain = sr.getCraftingResult(null).copy();
-                            FHUtils.giveItem(pe, gain);
-                            markDirty();
-                            this.markContainingBlockForUpdate(null);
+                            ItemStack gain = sr.assemble(null, this.level.registryAccess()).copy();
+                            CUtils.giveItem(pe, gain);
+                            setChanged();
+                            this.syncData();
                         }
                         drawEffect();
-                        return ActionResultType.SUCCESS;
+                        return InteractionResult.SUCCESS;
                     }
                 }
             }
         }
-        return ActionResultType.PASS;
+        return InteractionResult.PASS;
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         power = nbt.getFloat("power");
-        network.load(nbt,descPacket);
+        network.load(nbt, descPacket);
     }
 
     @Override
     public void tick() {
-        if (!world.isRemote) {
-            float actual = network.drainHeat(Math.min(200, (getMaxPower() - power) / 0.8F));
+        if (level == null) {
+            return;
+        }
+        if (!level.isClientSide) {
+            float actual = 0;
+            if (power < getMaxPower()) {
+                actual = network.drainHeat(network.getMaxIntake());
+            }
             if (actual > 0) {
-                power += (float) (actual * 0.8);
+                power = Math.min(power + actual * 1000, getMaxPower());
                 this.setActive(true);
-                markDirty();
-                this.markContainingBlockForUpdate(null);
+                setChanged();
+                this.syncData();
             } else
                 this.setActive(false);
         } else if (getIsActive()) {
-            ClientUtils.spawnSteamParticles(this.getWorld(), pos);
+            if (level.random.nextFloat() < 0.01F) {
+                FHClientUtils.spawnSteamParticles(level, worldPosition);
+            }
         }
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         nbt.putFloat("power", power);
-        network.save(nbt,descPacket);
+        network.save(nbt, descPacket);
+    }
+	@Override
+	public void invalidateCaps() {
+		heatcap.invalidate();
+		super.invalidateCaps();
+	}
+
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        Lang.tooltip("heat_stats").forGoggles(tooltip);
+
+        if (TemperatureGoogleRenderer.hasHeatNetworkData()) {
+            ClientHeatNetworkData data = TemperatureGoogleRenderer.getHeatNetworkData();
+
+            Lang.translate("tooltip", "pressure.network")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+
+            Lang.number(data.totalEndpointIntake)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.intake")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            Lang.number(data.totalEndpointOutput)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.output")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            // show number of endpoints
+            Lang.number(data.endpoints.size())
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.endpoints")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            Lang.translate("tooltip", "pressure.endpoint")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+
+            // stream through endpoints, filter by pos
+            data.endpoints.stream()
+                    .filter(e -> e.getPos().equals(worldPosition))
+                    .forEach(e -> {
+                        float maxIntake = e.getMaxIntake();
+                        float maxOutput = e.getMaxOutput();
+                        float avgIntake = e.getAvgIntake();
+                        float avgOutput = e.getAvgOutput();
+
+                        if (maxIntake > 0)
+                            Lang.number(e.getMaxIntake())
+                                    .translate("generic", "unit.pressure")
+                                    .style(ChatFormatting.AQUA)
+                                    .space()
+                                    .add(Lang.translate("tooltip", "pressure.max_intake")
+                                            .style(ChatFormatting.DARK_GRAY))
+                                    .forGoggles(tooltip, 1);
+
+                        if (maxOutput > 0)
+                            Lang.number(e.getMaxOutput())
+                                    .translate("generic", "unit.pressure")
+                                    .style(ChatFormatting.AQUA)
+                                    .space()
+                                    .add(Lang.translate("tooltip", "pressure.max_output")
+                                            .style(ChatFormatting.DARK_GRAY))
+                                    .forGoggles(tooltip, 1);
+
+                        if (avgIntake > 0)
+                            Lang.number(e.getAvgIntake())
+                                    .translate("generic", "unit.pressure")
+                                    .style(ChatFormatting.AQUA)
+                                    .space()
+                                    .add(Lang.translate("tooltip", "pressure.average_intake")
+                                            .style(ChatFormatting.DARK_GRAY))
+                                    .forGoggles(tooltip, 1);
+
+                        if (avgOutput > 0)
+                            Lang.number(e.getAvgOutput())
+                                    .translate("generic", "unit.pressure")
+                                    .style(ChatFormatting.AQUA)
+                                    .space()
+                                    .add(Lang.translate("tooltip", "pressure.average_output")
+                                            .style(ChatFormatting.DARK_GRAY))
+                                    .forGoggles(tooltip, 1);
+                    });
+
+        } else {
+            Lang.translate("tooltip", "pressure.no_network")
+                    .style(ChatFormatting.RED)
+                    .forGoggles(tooltip);
+        }
+
+        return true;
+
+    }
+
+    @Override
+    public @Nullable HeatNetwork getNetwork() {
+        return network.getNetwork();
     }
 }

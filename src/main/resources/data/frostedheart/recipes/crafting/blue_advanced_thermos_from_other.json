@@ -1,0 +1,14 @@
+{
+  "type": "chorda:shapless_copy_data",
+  "ingredients": [
+    {
+      "tag": "frostedheart:colored_advanced_thermos"
+    },
+    {
+      "item": "minecraft:blue_dye"
+    }
+  ],
+  "result": {
+    "item": "frostedheart:blue_advanced_thermos"
+  }
+}

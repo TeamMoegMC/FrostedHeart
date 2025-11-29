@@ -24,12 +24,12 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.chorda.io.SerializeUtil;
+import com.teammoeg.chorda.io.Writeable;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
-import com.teammoeg.frostedheart.util.io.Writeable;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public abstract class PolicyGroup implements Writeable {
     List<PolicyCondition> conditions;
@@ -40,7 +40,7 @@ public abstract class PolicyGroup implements Writeable {
         return new BasicPolicyGroup(jo);
     }
 
-    public static PolicyGroup read(PacketBuffer pb) {
+    public static PolicyGroup read(FriendlyByteBuf pb) {
         if (pb.readBoolean())
             return new ExtendPolicyGroup(pb);
         return new BasicPolicyGroup(pb);
@@ -59,18 +59,17 @@ public abstract class PolicyGroup implements Writeable {
         this.conditions = conditions;
     }
 
-    public PolicyGroup(PacketBuffer pb) {
+    public PolicyGroup(FriendlyByteBuf pb) {
         super();
         conditions = SerializeUtil.readList(pb, Conditions::deserialize);
     }
 
-    public void CollectPolicies(PolicySnapshot policy, FHVillagerData ve) {
-        if (conditions.stream().allMatch(t -> t.test(ve)))
-            CollectPoliciesNoCheck(policy, ve);
+    public void CollectPolicies(PolicySnapshot policy, FHVillagerData ve,int num) {
+            CollectPoliciesNoCheck(policy, ve,Math.min(num, conditions.stream().mapToInt(t -> t.test(ve)).reduce(Integer.MAX_VALUE, Math::min)));
 
     }
 
-    public abstract void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve);
+    public abstract void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve,int num);
 
     @Override
     public JsonElement serialize() {
@@ -80,7 +79,7 @@ public abstract class PolicyGroup implements Writeable {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
         SerializeUtil.writeList(buffer, conditions, Conditions::write);
     }
 }

@@ -1,0 +1,25 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Name": "minecraft:clay"
+  },
+  "condense_temp": 90.0,
+  "evaporate_temp": 100.0,
+  "freeze_temp": -10.0,
+  "gas": {
+    "Name": "minecraft:dirt"
+  },
+  "heat_capacity": 5,
+  "liquid": {
+    "Name": "minecraft:clay"
+  },
+  "melt_temp": 9.0,
+  "solid": {
+    "Name": "frostedheart:clay_permafrost",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "state": "liquid",
+  "will_transit": true
+}

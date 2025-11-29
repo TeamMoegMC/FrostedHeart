@@ -1,0 +1,31 @@
+{
+	"parent": "minecraft:block/block",
+	"textures": {
+		"particle": "frostedresearch:block/escritoire_main"
+	},
+	"loader": "immersiveengineering:basic_split",
+	"dynamic": false,
+	"inner_model": {
+		"parent": "minecraft:block/block",
+		"textures": {
+			"particle": "frostedresearch:block/escritoire_main"
+		},
+		"loader": "forge:obj",
+		"model": "frostedresearch:models/block/escritoire.obj",
+		"automatic_culling": false,
+		"flip_v": true,
+		"render_type": "cutout"
+	},
+	"split_parts": [
+		[
+			0,
+			0,
+			0
+		],
+		[
+			1,
+			0,
+			0
+		]
+	]
+}

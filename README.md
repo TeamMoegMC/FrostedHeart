@@ -3,13 +3,25 @@
 - Issues should go to the [TWR Issue Tracker](https://github.com/TeamMoegMC/The-Winter-Rescue/issues)
 
 This Mod is where most of the contents of The Winter Rescue
-are implemented. It is a Forge mod for Minecraft 1.16.5.
-It is designed to be a bridge mod between various mods,
-most importantly *Create* and *Immersive Engineering*, 
-which we extensively use their APIs. Content-wise, we also
-rely on *Project Rankine* as a content provider mod, which
-provides extensive building blocks, materials, and basic
-world generation.
+are implemented. It is a NeoForge mod for Minecraft 1.20.1.
+
+Core APIs:
+- [Create](https://www.curseforge.com/minecraft/mc-mods/create)
+- [Immersive Engineering](https://www.curseforge.com/minecraft/mc-mods/immersive-engineering)
+- [FTB Teams](https://www.curseforge.com/minecraft/mc-mods/ftb-teams)
+
+Content integration:
+- [Tetra](https://www.curseforge.com/minecraft/mc-mods/tetra)
+- [Curios](https://www.curseforge.com/minecraft/mc-mods/curios)
+- [Just Enough Items](https://www.curseforge.com/minecraft/mc-mods/jei)
+- [FTB Chunks](https://www.curseforge.com/minecraft/mc-mods/ftb-chunks)
+- [FTB Quests](https://www.curseforge.com/minecraft/mc-mods/ftb-quests)
+
+Libraries:
+- [Flywheel](https://www.curseforge.com/minecraft/mc-mods/flywheel)
+- [MUtils](https://www.curseforge.com/minecraft/mc-mods/mutils)
+- [FTB Library](https://www.curseforge.com/minecraft/mc-mods/ftb-library)
+- [Architectury](https://www.curseforge.com/minecraft/mc-mods/architectury-forge)
 
 The following are written for anyone who wishes to join the
 development of this exciting project. 
@@ -22,7 +34,7 @@ and let any dev team member know. If you don't use Discord,
 send a PR or issue.
 
 To get started, you need to have a working Forge development
-environment. Install Java 8 JDK, and import the project into
+environment. Install Java 17 JDK, and import the project into
 your IDE. You can use IntelliJ IDEA, Eclipse, or any other
 IDE that supports Gradle. You should be familar with Forge before 
 contributing. There are extensive tutorials, below are some:
@@ -46,10 +58,7 @@ so here's an overview:
 
 ### Core packages
 
-- `base`: The base package contains system level abstractions 
-that are used throughout the project. 
-However, it does *not* contain any actual game content.
-It's just the base classes.
+- `bootstrap`: Contains all type of registry and startup operations. `client` package for client or rendering registry. `common` package for most common registy. `reference` package for registries that are not part of built in registry such as datapack reference.
 - `util`: The util package contains *utility* classes that are
   used throughout the project.
 - `content`: The content package contains the game *content*,
@@ -57,24 +66,11 @@ or more precisely game mechanics and systems. It is divided by
 subtopics, such as `agriculture`, `town`, `steamenergy`. If you
 want to add a new game mechanic, this is the place to put it.
   (maybe we should name as `mechanics` instead of `content`?)
-- `world`: The world package contains everything that
-already exist before the player starts interacting with the world.
-This includes the world generation, animals, plants, mobs, etc.
-
-### Functional packages
-
-The following packages are organized by functionality instead.
-You may feel sometimes they can indeed also be put into `content`. 
-Correct, but the reason we
-separate is that they are sometime hard to organize by topic,
-and they are more like a list of things, rather than a thing, and
-they are shared by multiple topics.
-- `client`: Client-side stuff, like rendering and models.
+- `infrastructure`: The infrastructure package contains the
+  infrastructure of the game, such as commands, data, gen, config.
 - `compat`: Compatibility for other mods.
-- `effects`: Game potion effects.
-- `loot`: Game loots.
 - `mixin`: Mixin classes.
-- `recipes`: Game recipes.
+- `events`: General events for initialization or compatibility, which does not belong to any content packs.
 
 ### Initializers
 The rest packages are what's normally called *initializer* classes,
@@ -106,7 +102,7 @@ to use either
 
 Now, you've know the basic structure, you can start contributing.
 Most of time, you will just be working with the `content` or
-`world` package. Know type of contribution you are making:
+`foundation` package. Know type of contribution you are making:
 - If it is part of a self-contained new game mechanic, system, or
 anything that can be organized as a topic, 
 you should put it in `content`.
@@ -118,18 +114,12 @@ Finally, use the entry points as needed. Examples:
   - Adding a new town building: `content.town`
   - Adding a new steam machine: `content.steamenergy`
   - Adding gun system: create `content.gun`
-- If it is anything about the world itself, not the player, put it
-in `world` and do registry and entry likewise. Examples:
-  - Adding a new hostile animal: `world.fauna`
-  - Adding a new forest biome: `world.flora`
-  - Adding a new tree: `world.flora.tree`
-  - Adding a new ancient ruin: `world.civilization.ancient`
-  - Adding a new underground cave: `world.geology`
 - If you create any utility classes during the process, put it in
 `util`.
 - If you create any functional classes, put it in the corresponding
 functional package.
 - Normally, you should not need to touch `base`.
+- Adding command? Put it in `infrastructure.commands`.
 But if you need to add such abstract and system level classes,
 you should put them there. But do not change existing classes
 without a good reason unless we discussed it.

@@ -1,11 +1,29 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.ui.Rect;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.OrderedRenderableContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 
 public abstract class GLLayerContent extends OrderedRenderableContent {
 
@@ -22,15 +40,14 @@ public abstract class GLLayerContent extends OrderedRenderableContent {
 		this.x = x;
 		this.y = y;
 		if(w<0) {
-			w=ClientUtils.mc().getMainWindow().getScaledWidth();
+			w=ClientUtils.getMc().getWindow().getGuiScaledWidth();
 		}
 		this.width = w;
 		if(h<0) {
-			h=ClientUtils.mc().getMainWindow().getScaledHeight();
+			h=ClientUtils.getMc().getWindow().getGuiScaledHeight();
 		}
 		this.height = h;
 	}
-
 
 	protected GLLayerContent(float x, float y, float width, float height, int z) {
 		super();
@@ -43,9 +60,9 @@ public abstract class GLLayerContent extends OrderedRenderableContent {
 	@Override
 	public void render(RenderParams params) {
 		params=params.copyWithCurrent(this);
-		GuiHelper.pushScissor(params.getMinecraft().getMainWindow(), params.getX(), params.getY(), params.getWidth(), params.getHeight());
+		params.getGuiGraphics().enableScissor( params.getX(), params.getY(), params.getX()+params.getWidth(), params.getY()+params.getHeight());
 		this.renderContents(params);
-		GuiHelper.popScissor(params.getMinecraft().getMainWindow());
+		params.getGuiGraphics().disableScissor();
 	}
 	public float getOpacity() {
 		return opacity;

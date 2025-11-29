@@ -1,0 +1,34 @@
+{
+	"variants": {
+		"facing=north": {
+			"model": "frostedheart:block/ruined_machine_general_screen_cracked",
+			"y": 0,
+			"uvlock": false
+		},
+		"facing=east": {
+			"model": "frostedheart:block/ruined_machine_general_screen_cracked",
+			"y": 90,
+			"uvlock": false
+		},
+		"facing=south": {
+			"model": "frostedheart:block/ruined_machine_general_screen_cracked",
+			"y": 180,
+			"uvlock": false
+		},
+		"facing=west": {
+			"model": "frostedheart:block/ruined_machine_general_screen_cracked",
+			"y": 270,
+			"uvlock": false
+		},
+		"facing=down": {
+			"model": "frostedheart:block/ruined_machine_general_screen_cracked",
+			"x": 90,
+			"uvlock": false
+		},
+		"facing=up": {
+			"model": "frostedheart:block/ruined_machine_general_screen_cracked",
+			"x": 270,
+			"uvlock": false
+		}
+	}
+}

@@ -1,7 +1,0 @@
-{
-  "id": "minecraft:soul_fire",
-  "temperature": 0.5,
-  "range": 2,
-  "level_divide": false,
-  "must_lit": false
-}

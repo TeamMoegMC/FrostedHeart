@@ -1,4 +1,4 @@
 {
   "parent": "frostedheart:block/relic_chest",
-  "flip-v": false
+  "flip_v": false
 }

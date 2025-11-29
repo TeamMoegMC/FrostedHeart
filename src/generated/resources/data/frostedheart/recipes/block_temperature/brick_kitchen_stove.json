@@ -1,0 +1,6 @@
+{
+  "type": "frostedheart:block_temp",
+  "block": "caupona:brick_kitchen_stove",
+  "must_lit": true,
+  "temperature": 500.0
+}

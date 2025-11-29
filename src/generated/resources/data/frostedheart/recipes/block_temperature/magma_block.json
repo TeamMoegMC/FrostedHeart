@@ -1,0 +1,5 @@
+{
+  "type": "frostedheart:block_temp",
+  "block": "minecraft:magma_block",
+  "temperature": 500.0
+}

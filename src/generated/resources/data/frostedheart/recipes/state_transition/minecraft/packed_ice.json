@@ -1,0 +1,22 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Name": "minecraft:packed_ice"
+  },
+  "condense_temp": -20.0,
+  "evaporate_temp": 9.0,
+  "freeze_temp": -100.0,
+  "gas": {
+    "Name": "frostedheart:firm_ice"
+  },
+  "heat_capacity": 10,
+  "liquid": {
+    "Name": "minecraft:packed_ice"
+  },
+  "melt_temp": 9.0,
+  "solid": {
+    "Name": "minecraft:blue_ice"
+  },
+  "state": "liquid",
+  "will_transit": true
+}

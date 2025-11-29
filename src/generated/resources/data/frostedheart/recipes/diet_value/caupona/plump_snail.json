@@ -1,0 +1,10 @@
+{
+  "type": "frostedheart:diet_override",
+  "group": {
+    "carbohydrate": 0.0,
+    "fat": 9333.333,
+    "protein": 18666.666,
+    "vegetable": 0.0
+  },
+  "item": "caupona:plump_snail"
+}

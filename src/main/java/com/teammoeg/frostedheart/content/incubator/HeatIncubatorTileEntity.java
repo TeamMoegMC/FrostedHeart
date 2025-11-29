@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -21,28 +21,47 @@ package com.teammoeg.frostedheart.content.incubator;
 
 import javax.annotation.Nonnull;
 
-import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.Direction;
+import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
+import com.teammoeg.frostedheart.content.steamenergy.ClientHeatNetworkData;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
+
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
+import com.teammoeg.frostedheart.util.Lang;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import org.jetbrains.annotations.Nullable;
 
-public class HeatIncubatorTileEntity extends IncubatorTileEntity{
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 80, 5);
+import java.util.List;
 
-    public HeatIncubatorTileEntity() {
-        super(FHTileTypes.INCUBATOR2.get());
+import static net.minecraft.ChatFormatting.GRAY;
+
+public class HeatIncubatorTileEntity extends IncubatorTileEntity implements HeatNetworkProvider, IHaveGoggleInformation {
+    HeatEndpoint network = HeatEndpoint.consumer(10, 5);
+
+    public HeatIncubatorTileEntity(BlockPos bp,BlockState bs) {
+        super(FHBlockEntityTypes.INCUBATOR2.get(),bp,bs);
     }
+    
 
-
-    LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
+    LazyOptional<HeatEndpoint> heatcap=LazyOptional.of(()->network);
     @Nonnull
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
-		if(capability==FHCapabilities.HEAT_EP.capability()&&facing == this.getBlockState().get(IncubatorBlock.HORIZONTAL_FACING)) {
+		if(FHCapabilities.HEAT_EP.isCapability(capability)&&facing == this.getBlockState().getValue(IncubatorBlock.HORIZONTAL_FACING)) {
 			return heatcap.cast();
 		}
 		return super.getCapability(capability, facing);
@@ -71,7 +90,7 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity{
 
 
     @Override
-    public void readCustomNBT(CompoundNBT compound, boolean client) {
+    public void readCustomNBT(CompoundTag compound, boolean client) {
         super.readCustomNBT(compound, client);
         network.load(compound,client);
     }
@@ -85,10 +104,27 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity{
 
 
     @Override
-    public void writeCustomNBT(CompoundNBT compound, boolean client) {
+    public void writeCustomNBT(CompoundTag compound, boolean client) {
         super.writeCustomNBT(compound, client);
         network.save(compound,client);
     }
+	@Override
+	public void invalidateCaps() {
+		heatcap.invalidate();
+		super.invalidateCaps();
+	}
+	@Override
+	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
+		return new IncubatorT2Container(pContainerId,pPlayerInventory,this,true);
+	}
 
+    @Override
+    public @Nullable HeatNetwork getNetwork() {
+        return network.getNetwork();
+    }
 
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        return TemperatureGoogleRenderer.addHeatNetworkInfoToTooltip(tooltip, isPlayerSneaking, worldPosition);
+    }
 }

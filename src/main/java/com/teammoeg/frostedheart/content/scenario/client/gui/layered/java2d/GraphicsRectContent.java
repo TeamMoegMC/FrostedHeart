@@ -1,13 +1,31 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
 
+import com.teammoeg.chorda.client.ui.Rect;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
-import com.teammoeg.frostedheart.util.client.Rect;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 
 public class GraphicsRectContent extends GraphicLayerContent {
 	public int color;
@@ -25,8 +43,8 @@ public class GraphicsRectContent extends GraphicLayerContent {
 	}
 
 
-	public GraphicsRectContent(Color4I color, Rect rect) {
-		this(color.rgba(),rect.getX(),rect.getY(),rect.getW(),rect.getH());
+	public GraphicsRectContent(int color, Rect rect) {
+		this(color,rect.getX(),rect.getY(),rect.getW(),rect.getH());
 	}
 
 	@Override

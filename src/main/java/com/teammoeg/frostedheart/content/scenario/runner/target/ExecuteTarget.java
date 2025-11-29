@@ -19,39 +19,36 @@
 
 package com.teammoeg.frostedheart.content.scenario.runner.target;
 
-import com.teammoeg.frostedheart.FHMain;
+import java.util.Optional;
+
+import javax.annotation.Nullable;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.content.scenario.ScenarioExecutionException;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.content.scenario.runner.IScenarioThread;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
 
-public class ExecuteTarget extends ScenarioTarget{
-
-	private final String label;
-	public ExecuteTarget(IScenarioThread par,String name, String label) {
-		super(par,name);
-
-		this.label = label;
+public record ExecuteTarget(@Nullable String file,@Nullable String label) implements ScenarioTarget{
+	public static final Codec<ExecuteTarget> CODEC=RecordCodecBuilder.create(t->t.group(
+			Codec.STRING.optionalFieldOf("name").forGetter(o->Optional.ofNullable(o.file())),
+			Codec.STRING.optionalFieldOf("label").forGetter(o->Optional.ofNullable(o.label()))
+			).apply(t, ExecuteTarget::new));
+	public ExecuteTarget(Optional<String> file,Optional<String> label) {
+		this(file.orElse(null),label.orElse(null));
+		
 	}
-	public ExecuteTarget(Scenario sc, String label) {
-		super(sc);
-
-		this.label = label;
-	}
-	@Override
-	public void apply(IScenarioThread runner) {
-		super.apply(runner);
-		if(label!=null) {
-			Integer ps=runner.getScenario().labels.get(label);
-			if(ps!=null) {
-				runner.setNodeNum(ps);
-			}else {
-				FHMain.LOGGER.error ("Invalid label "+label );
-			}
-		}
-	}
-
 	@Override
 	public String toString() {
-		return "ExecuteTarget [label=" + label + ", getName()=" + getName() + "]";
+		return "ExecuteTarget [label=" + label + ", file=" + file + "]";
+	}
+	@Override
+	public PreparedScenarioTarget prepare(ScenarioContext t, Scenario current) {
+		Scenario scenario=t.loadScenarioIfNeeded(file,current);
+		if(scenario==null) {
+			throw new ScenarioExecutionException("Invalid target");
+		}
+		return new PreparedScenarioTarget(scenario,scenario.labels().getOrDefault(label, 0));
 	}
 
 	

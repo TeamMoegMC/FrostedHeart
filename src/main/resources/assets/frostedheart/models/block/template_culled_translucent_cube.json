@@ -1,0 +1,4 @@
+{
+	"parent": "minecraft:block/cube_all",
+	"render_type": "translucent"
+}

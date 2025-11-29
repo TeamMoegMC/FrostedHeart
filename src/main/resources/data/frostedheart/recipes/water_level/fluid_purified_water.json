@@ -1,0 +1,6 @@
+{
+    "type": "frostedheart:water_level_and_effect",
+	"fluid": "frostedheart:purified_water",
+	"waterLevel": 5,
+	"waterSaturationLevel": 6
+}

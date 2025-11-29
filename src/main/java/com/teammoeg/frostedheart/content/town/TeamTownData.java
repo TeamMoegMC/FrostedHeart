@@ -20,25 +20,27 @@
 package com.teammoeg.frostedheart.content.town;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.base.team.SpecialData;
-import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
-import com.teammoeg.frostedheart.content.town.mine.MineTileEntity;
+import com.teammoeg.chorda.dataholders.SpecialData;
+import com.teammoeg.chorda.dataholders.SpecialDataHolder;
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
+import com.teammoeg.chorda.io.CodecUtil;
+import com.teammoeg.frostedheart.content.town.mine.MineBlockEntity;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.LongNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.UUIDCodec;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ColumnPos;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.util.Constants;
+import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
+
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.LongTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ColumnPos;
+import net.minecraft.server.level.ServerLevel;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -53,50 +55,45 @@ import java.util.stream.Collectors;
  */
 public class TeamTownData implements SpecialData{
 	public static final Codec<TeamTownData> CODEC=RecordCodecBuilder.create(t->t.group(
-            CodecUtil.defaultValue(Codec.STRING, "Default Town").fieldOf("name").forGetter(o->o.name),
-			CodecUtil.defaultValue(CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT), ImmutableMap.of()).fieldOf("resource").forGetter(o->o.resources),
-			CodecUtil.defaultValue(CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT), ImmutableMap.of()).fieldOf("backupResource").forGetter(o->o.backupResources),
-			CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "data", TownWorkerData.CODEC), ImmutableMap.of()).fieldOf("blocks").forGetter(o->o.blocks),
-			CodecUtil.defaultValue(CodecUtil.mapCodec("uuid",UUIDCodec.CODEC,"data",Resident.CODEC), ImmutableMap.of()).fieldOf("residents").forGetter(o->o.residents)
+            Codec.STRING.fieldOf("name").forGetter(o->o.name),
+			TeamTownResourceHolder.CODEC.fieldOf("resources").forGetter(o->o.resources),
+			CodecUtil.mapCodec("pos", BlockPos.CODEC, "data", TownWorkerData.CODEC).optionalFieldOf("blocks",Map.of()).forGetter(o->o.blocks),
+			CodecUtil.mapCodec("uuid",UUIDUtil.CODEC,"data",Resident.CODEC).optionalFieldOf("residents",Map.of()).forGetter(o->o.residents)
     ).apply(t, TeamTownData::new));
+//    public static final Codec<TeamTownData> CODEC = CodecUtil.debugCodec(CODEC_TOWN);
     /**
      * The town name.
      */
-	String name;
+	String name="Default Town";
     /**
      * The town residents.
      */
     Map<UUID, Resident> residents = new LinkedHashMap<>();
-	/**
-     * Resource generated from resident
-     */
-    Map<TownResourceType, Integer> resources = new EnumMap<>(TownResourceType.class);
     /**
-     * Resource provided by player
+     * Town resources.
+     * Including normal resources and town services.
+     * Including resources gathered from town and resources gathered from player.
+     * Must be changed by TownResourceManager.
      */
-    Map<TownResourceType, Integer> backupResources = new EnumMap<>(TownResourceType.class);
+    TeamTownResourceHolder resources = new TeamTownResourceHolder();
     /**
      * Town blocks and their worker data
      */
     Map<BlockPos, TownWorkerData> blocks = new LinkedHashMap<>();
     
-	public TeamTownData(String name, Map<TownResourceType, Integer> resources, Map<TownResourceType, Integer> backupResources, Map<BlockPos, TownWorkerData> blocks, Map<UUID, Resident> residents) {
+	public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, TownWorkerData> blocks, Map<UUID, Resident> residents) {
 		super();
 		this.name = name;
-		this.resources.putAll(resources);
-		this.backupResources.putAll(backupResources);
+		this.resources = resources;
 		this.blocks.putAll(blocks);
 		this.residents.putAll(residents);
 	}
     public TeamTownData(SpecialDataHolder teamData) {
         super();
-        if(teamData instanceof TeamDataHolder) {
-        	TeamDataHolder data=(TeamDataHolder) teamData;
-	        if (data.getTeam().isPresent()) {
-	            this.name = data.getTeam().get().getDisplayName() + "'s Town";
-	        } else {
-	            this.name = data.getOwnerName() + "'s Town";
-            }
+        if(teamData instanceof TeamDataHolder data) {
+
+            this.name = data.getTeam().getName() + "'s Town";
+	        
         }
     }
 
@@ -106,15 +103,16 @@ public class TeamTownData implements SpecialData{
      *
      * @param world server world instance
      */
-    public void tick(ServerWorld world) {
+    public void tick(ServerLevel world) {
+        if(!FHConfig.SERVER.enableTownTick.get()) return;
         removeNonTownBlocks(world);
         PriorityQueue<TownWorkerData> pq = new PriorityQueue<>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
         for(TownWorkerData workerData : blocks.values()){
-            if(world.isAreaLoaded(workerData.getPos(), 1)){
+            if(world.isLoaded(workerData.getPos())){
                 workerData.toTileEntity(world);
                 workerData.updateFromTileEntity(world);
             }
-            if(AbstractTownWorkerTileEntity.isValid(workerData)){
+            if(AbstractTownWorkerBlockEntity.isValid(workerData) && workerData.getType().getWorker() != TownWorker.EMPTY){
                 //由于已经使用了自动刷新城镇方块的功能，已经不需要通过isWorkValid来在获取合法性信息时刷新。
                 //在抽象类AbstractTownWorkerTileEntity中已经定义了townWorkerState来确定和保存合法性，因此可以直接使用静态方法isValid判断是否是合法的数据
                 // 不再使用isWorkValid，从而减少获取TileEntity的次数
@@ -122,68 +120,71 @@ public class TeamTownData implements SpecialData{
             }
         }
         //pq.addAll(blocks.values());
-        TeamTown itt = new TeamTown(this);
+        TeamTown teamTown = new TeamTown(this);
+        resources.resetAllServices();
         for (TownWorkerData t : pq) {
-            t.firstWork(itt);
+            t.firstWork(teamTown);
         }
         for (TownWorkerData t : pq) {
-            t.beforeWork(itt);
+            t.beforeWork(teamTown);
         }
         for (TownWorkerData t : pq) {
-            t.work(itt);
+            t.work(teamTown);
         }
         for (TownWorkerData t : pq) {
-            t.afterWork(itt);
+            t.afterWork(teamTown);
         }
         for (TownWorkerData t : pq) {
-            t.lastWork(itt);
+            t.lastWork(teamTown);
         }
         //for (TownWorkerData t : pq) {
         //    t.setData(world);
         //}
         //在目前的运行逻辑中，work方法不会改变任何应存储在TileEntity中的信息，因此暂时将此内容放在所有work之前。
-        itt.finishWork();
+        //teamTown.finishWork();此方法已随旧的TownResource一并弃用
     }
 
-    public void tickMorning(ServerWorld world){
+    public void tickMorning(ServerLevel world){
+        if(!FHConfig.SERVER.enableTownTickMorning.get()) return;
         this.updateAllBlocks(world);
-        this.checkOccupiedAreaOverlap(world);
+        this.checkOccupiedAreaOverlap();
         this.connectMineAndBase();
-        this.residentAllocatingCheck(world);
+        this.tickResidentsMorning();
+        this.residentAllocatingCheck();
         this.allocateHouse();
         this.assignWork();
     }
 
-    void removeNonTownBlocks(ServerWorld world) {
+    void removeNonTownBlocks(ServerLevel world) {
         blocks.values().removeIf(v -> {
             BlockPos pos = v.getPos();
             v.loaded = false;
-            if (world.isBlockLoaded(pos)) {
+            if (world.hasChunkAt(pos)) {
                 v.loaded = true;
                 BlockState bs = world.getBlockState(pos);
-                TileEntity te = Utils.getExistingTileEntity(world, pos);
+                BlockEntity te = Utils.getExistingTileEntity(world, pos);
                 TownWorkerType twt = v.getType();
-                return twt.getBlock() != bs.getBlock() || !(te instanceof TownTileEntity);
+                return twt.getBlock() != bs.getBlock() || !(te instanceof TownBlockEntity);
             }
             return false;
         });
     }
 
-    void updateAllBlocks(ServerWorld world){
+    void updateAllBlocks(ServerLevel world){
         Iterator<TownWorkerData> iterator = blocks.values().iterator();
         while(iterator.hasNext()){
             TownWorkerData data = iterator.next();
             BlockPos pos = data.getPos();
             data.loaded = false;
-            if (world.isBlockLoaded(pos)) {
+            if (world.isLoaded(pos)) {
                 data.loaded = true;
                 BlockState bs = world.getBlockState(pos);
-                TileEntity te = Utils.getExistingTileEntity(world, pos);
+                BlockEntity te = Utils.getExistingTileEntity(world, pos);
                 TownWorkerType type = data.getType();
-                if(type.getBlock() != bs.getBlock() || !(te instanceof TownTileEntity)){
+                if(type.getBlock() != bs.getBlock() || !(te instanceof TownBlockEntity)){
                     iterator.remove();
                 } else{
-                    data.updateFromTileEntity((TownTileEntity)te);
+                    data.updateFromTileEntity((TownBlockEntity)te);
                 }
             }
         }
@@ -191,52 +192,51 @@ public class TeamTownData implements SpecialData{
 
     //这个方法会直接将不能正常工作(包括结构不完整、温度不适合等情况)的worker直接踢出town，难以再找回
     @Deprecated
-    void removeAllInvalidTiles(ServerWorld world){
+    void removeAllInvalidTiles(ServerLevel world){
         blocks.values().removeIf(v -> {
             BlockPos pos = v.getPos();
             v.loaded = false;
-            if (world.isBlockLoaded(pos)) {
+            if (world.hasChunkAt(pos)) {
                 v.loaded = true;
                 BlockState bs = world.getBlockState(pos);
-                TileEntity te = Utils.getExistingTileEntity(world, pos);
+                BlockEntity te = Utils.getExistingTileEntity(world, pos);
                 TownWorkerType twt = v.getType();
-                return twt.getBlock() != bs.getBlock() || !(te instanceof TownTileEntity) || !(((TownTileEntity)te).isWorkValid());
+                return twt.getBlock() != bs.getBlock() || !(te instanceof TownBlockEntity) || !(((TownBlockEntity)te).isWorkValid());
             }
             return false;
         });
     }
 
-	@Override
-	public void setHolder(SpecialDataHolder holder) {
-
-	}
-
-    private void checkOccupiedAreaOverlap(ServerWorld world){
+    private void checkOccupiedAreaOverlap(){
         //removeNonTownBlocks(world);
-        Collection<TownWorkerData> workerDataCollection =  new ArrayList<>(blocks.values());
-        List<TownWorkerData> workerDataList = new ArrayList<>(workerDataCollection);
+        Map<TownWorkerData, OccupiedArea> workersWithOccupiedAreas = blocks.values().stream()
+                .map(workerData -> new AbstractMap.SimpleEntry<>(workerData, AbstractTownWorkerBlockEntity.getOccupiedArea(workerData)))
+                .filter(entry -> entry.getValue() != null && entry.getValue() != OccupiedArea.EMPTY)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        ArrayList<TownWorkerData> workerDataList = new ArrayList<>(workersWithOccupiedAreas.keySet());
         Map<TownWorkerData, OccupiedArea> workersMightOverlap = new HashMap<>();
-        for (TownWorkerData workerData : workerDataList) {
-            Iterator<TownWorkerData> subIterator = workerDataList.iterator();
-            if (subIterator.hasNext()) {
-                subIterator.next();
-                subIterator.remove();
-            }
-            while (subIterator.hasNext()) {
-                TownWorkerData comparingWorkerData = subIterator.next();
-                OccupiedArea comparingWorkerOccupiedArea = AbstractTownWorkerTileEntity.getOccupiedArea(comparingWorkerData);
-                OccupiedArea workerOccupiedArea = AbstractTownWorkerTileEntity.getOccupiedArea(workerData);
-                if (workerOccupiedArea.doRectanglesIntersect(comparingWorkerOccupiedArea)) {
+
+        //两两比对，根据OccupiedArea的外接矩形是否重合初步筛选可能重叠的worker
+        for(int i = 0; i < workerDataList.size() - 1; i++){
+            TownWorkerData workerData = workerDataList.get(i);
+            OccupiedArea workerOccupiedArea = workersWithOccupiedAreas.get(workerData);
+            for(int j = i + 1; j < workerDataList.size(); j++){
+                TownWorkerData comparingWorkerData = workerDataList.get(j);
+                OccupiedArea comparingWorkerOccupiedArea = workersWithOccupiedAreas.get(comparingWorkerData);
+                if(workerOccupiedArea.boundingRectangleIntersect(comparingWorkerOccupiedArea)){
                     workersMightOverlap.put(workerData, workerOccupiedArea);
                     workersMightOverlap.put(comparingWorkerData, comparingWorkerOccupiedArea);
                 }
             }
         }
+
         Map<ColumnPos, TownWorkerData> occupiedAreaCollectingMap = new HashMap<>();
         Set<TownWorkerData> overlappedWorkers = new HashSet<>();
-
         //利用townTileEntity的OccupiedArea判断是否有重叠
+        //遍历所有可能重叠的worker
         for(Map.Entry<TownWorkerData, OccupiedArea> entry : workersMightOverlap.entrySet()){
+            //遍历该城镇方块所有占用的位置，并与方块本身一起存入occupiedAreaCollectingMap中。
+            //如果发现这个位置已经有过一个worker占用，则将那个worker与这个worker一起存入overlappedWorkers中。
             for(ColumnPos columnPos : entry.getValue().getOccupiedArea()){
                 if(occupiedAreaCollectingMap.containsKey(columnPos)){
                     overlappedWorkers.add(entry.getKey());
@@ -245,12 +245,33 @@ public class TeamTownData implements SpecialData{
                 occupiedAreaCollectingMap.put(columnPos, entry.getKey());
             }
         }
-        for(TownWorkerData data : workerDataCollection){
+        for(TownWorkerData data : workerDataList){
             data.setOverlappingState(overlappedWorkers.contains(data));
         }
     }
 
-    private void residentAllocatingCheck(ServerWorld world){
+    /**
+     * 处理村民死亡
+     */
+    private void tickResidentsMorning(){
+        if(Town.DEBUG_MODE){
+            return;//测试时村民不死
+        }
+        List<Resident> deadResidents = new ArrayList<>();
+        for(Resident resident : residents.values()){
+            if(resident.getHousePos() == null){
+                resident.costHealth(10);
+            }
+            if(resident.getHealth() <= 5 ||//似了
+                    resident.getMental() <= 5 ){//跑了
+                deadResidents.add(resident);
+            }
+        }
+        TeamTown town = TeamTown.create(this);
+        deadResidents.forEach(resident -> resident.setDeath(town));
+    }
+
+    private void residentAllocatingCheck(){
         //清空residents里所有居民存储的的house和work位置，之后再加回来，以刷新居民的工作和房屋
         residents.values().forEach(resident -> {
             resident.setHousePos(null);
@@ -259,15 +280,16 @@ public class TeamTownData implements SpecialData{
         //移除house/worker里超过上限，或已不存在的的resident
         for(TownWorkerData data : blocks.values()){
             if(data.getType() == TownWorkerType.HOUSE || data.getType().needsResident()){
-                ListNBT residentListNBT = data.getResidents();
-                residentListNBT.removeIf(residentNBT -> !residents.containsKey(UUID.fromString(residentNBT.getString())));
+                ListTag residentListNBT = data.getResidentsByTag();
+                residentListNBT.removeIf(residentNBT -> !residents.containsKey(UUID.fromString(residentNBT.getAsString())));
                 int maxResident = data.getWorkData().getCompound("tileEntity").getInt("maxResident");
                 while(residentListNBT.size() > maxResident){
                     residentListNBT.remove(residentListNBT.size() - 1);
                 }
                 residentListNBT.stream()
-                        .map(nbt -> UUID.fromString(nbt.getString()))
+                        .map(nbt -> UUID.fromString(nbt.getAsString()))
                         .forEach(resident -> {
+                            //把清空的居民的house/work位置设为加回来
                             if(data.getType() == TownWorkerType.HOUSE) residents.get(resident).setHousePos(data.getPos());
                             else residents.get(resident).setWorkPos(data.getPos());
                         });
@@ -279,7 +301,7 @@ public class TeamTownData implements SpecialData{
         ArrayList<TownWorkerData> mineBases = new ArrayList<>();
         HashMap<TownWorkerData, BlockPos> mineMap = new HashMap<>();        //TownWorkerData: mine, BlockPos: basePos
         for(TownWorkerData data : blocks.values()){
-            if(data.getType() == TownWorkerType.MINE_BASE && AbstractTownWorkerTileEntity.isValid(data)){
+            if(data.getType() == TownWorkerType.MINE_BASE && AbstractTownWorkerBlockEntity.isValid(data)){
                 mineBases.add(data);
             }
             if(data.getType() == TownWorkerType.MINE){
@@ -287,36 +309,36 @@ public class TeamTownData implements SpecialData{
             }
         }
         for(TownWorkerData mineBase : mineBases){
-            mineBase.getWorkData().getCompound("tileEntity").getList("linkedMines", Constants.NBT.TAG_LONG).stream()
-                    .map(nbt -> BlockPos.fromLong(((LongNBT)nbt).getLong()))
+            mineBase.getWorkData().getCompound("tileEntity").getList("linkedMines", Tag.TAG_LONG).stream()
+                    .map(nbt -> BlockPos.of(((LongTag)nbt).getAsLong()))
                     .forEach(pos -> mineMap.put(blocks.get(pos), mineBase.getPos()));
         }
-        mineMap.forEach(MineTileEntity::setLinkedBase);
+        mineMap.forEach(MineBlockEntity::setLinkedBase);
     }
 
     //distribute homeless residents to house
-    private void allocateHouse() {
+    void allocateHouse() {
         ArrayList<TownWorkerData> availableHouses = blocks.values().stream()
-                .filter(data -> data.getType() == TownWorkerType.HOUSE && data.getMaxResident() > data.getResidents().size())
+                .filter(data -> data.getType() == TownWorkerType.HOUSE && data.getMaxResident() > data.getResidentsByTag().size())
                 .sorted(Comparator.comparingDouble(data -> -data.getWorkData().getCompound("tileEntity").getDouble("rating")))//优先分配评分最高的house。因此在rating前面加了负号。
                 .collect(Collectors.toCollection(ArrayList::new));
         if(availableHouses.isEmpty()) return;
         Iterator<TownWorkerData> houseIterator = availableHouses.iterator();
         TownWorkerData currentHouseData = houseIterator.next();
-        ListNBT residentListNBT = currentHouseData.getResidents();
+        ListTag residentListNBT = currentHouseData.getResidentsByTag();
         int maxResident = currentHouseData.getMaxResident();
         Iterator<Resident> residentIterator = residents.values().iterator();
         while (true) {//遍历所有居民
             Resident resident = residentIterator.next();
             if (resident.getHousePos() == null) {//为没有house的居民分配进当前的house(暂存在ListNBT中)
-                residentListNBT.add(StringNBT.valueOf(resident.getUUID().toString()));
+                residentListNBT.add(StringTag.valueOf(resident.getUUID().toString()));
                 resident.setHousePos(currentHouseData.getPos());
             }
             if (residentListNBT.size() >= maxResident) {//如果当前house满了，将暂存在ListNBT中的居民信息存入TownWorkerData，然后尝试进入下一个house
                 currentHouseData.setDataFromTown("residents", residentListNBT);
                 if (houseIterator.hasNext()) {
                     currentHouseData = houseIterator.next();
-                    residentListNBT = currentHouseData.getResidents();
+                    residentListNBT = currentHouseData.getResidentsByTag();
                     maxResident = currentHouseData.getMaxResident();
                 } else {
                     return;
@@ -337,21 +359,21 @@ public class TeamTownData implements SpecialData{
         }
         public TownWorkerData townWorkerData;
         public double residentPriority;
-        public ListNBT residentListNBT;
+        public ListTag residentListNBT;
         public void saveResidents(){
             if(residentListNBT != null) townWorkerData.setDataFromTown("residents", residentListNBT);
         }
         public void addResident(UUID uuid){
             if(residentListNBT == null){
-                residentListNBT = townWorkerData.getResidents();
+                residentListNBT = townWorkerData.getResidentsByTag();
             }
-            residentListNBT.add(StringNBT.valueOf(uuid.toString()));
+            residentListNBT.add(StringTag.valueOf(uuid.toString()));
             residents.get(uuid).setWorkPos(townWorkerData.getPos());
             residentPriority = townWorkerData.getResidentPriority(residentListNBT.size());
         }
     }
 
-    public void assignWork(){
+    void assignWork(){
         ArrayList<UUID> availableResidents = new ArrayList<>(residents.keySet());
 
         ArrayList<TempDataHolder> availableWorkers = (ArrayList<TempDataHolder>) blocks.values().stream()
@@ -359,7 +381,7 @@ public class TeamTownData implements SpecialData{
                 .map(TempDataHolder::new)
                 .sorted(Comparator.comparingDouble(o -> -o.residentPriority))//降序排列
                 .collect(Collectors.toList());
-        if(availableWorkers.size() == 0) return;
+        if(availableWorkers.isEmpty()) return;
         for(int i=0;i<1024;i++){//无意义，仅用于限制循环次数
             TempDataHolder topPriorityWorker = availableWorkers.get(0);//由于已经降序排列，取集合最靠前的为最高优先级
             if(topPriorityWorker.residentPriority == Double.NEGATIVE_INFINITY || availableResidents.isEmpty()){
@@ -367,21 +389,23 @@ public class TeamTownData implements SpecialData{
             }
             UUID bestResident = null;
             TownWorkerType topPriorityWorkerType = topPriorityWorker.townWorkerData.getType();
-            Double bestResidentScore = Double.NEGATIVE_INFINITY;
+            double bestResidentScore = Double.NEGATIVE_INFINITY;
             for(int j = 0; j< availableResidents.size(); j++){
                 UUID uuid = availableResidents.get(j);
                 Resident resident = residents.get(uuid);
-                Double score = resident.getWorkScore(topPriorityWorkerType);
-                if(score == Double.NEGATIVE_INFINITY){//score为负无穷大时，代表这个居民本身存在问题，无法进行任何工作。
+                if(resident.getWorkPos() != null || resident.getHousePos() == null) {
+                    //当居民已经有工作，或没有房屋（不视为合法居民，无法进行工作），移除可分配工作的居民列表
                     availableResidents.remove(j);
                     j--;
+                    continue;
                 }
+                double score = topPriorityWorkerType.getResidentScore(resident);
                 if(score == 0.0){//score为0时，无法进行此类工作，但有可能进行其它工作。
                     continue;
                 }
-                if(bestResidentScore <= resident.getWorkScore(topPriorityWorkerType)){
+                if(bestResidentScore <= score){
                     bestResident = uuid;
-                    bestResidentScore = resident.getWorkScore(topPriorityWorkerType);
+                    bestResidentScore = score;
                 }
             }
             if(bestResident != null){

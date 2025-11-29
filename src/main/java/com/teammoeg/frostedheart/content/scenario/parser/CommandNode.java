@@ -21,20 +21,22 @@ package com.teammoeg.frostedheart.content.scenario.parser;
 
 import java.util.Map;
 
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVM;
+import com.teammoeg.frostedheart.content.scenario.CommandNotFoundException;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 
 public class CommandNode implements Node {
     String command;
     Map<String, String> params;
-
-    public CommandNode(String command, Map<String, String> params) {
+    String origText;
+    public CommandNode(String command, Map<String, String> params,String origText) {
         super();
         this.command = command.toLowerCase();
         this.params = params;
+        this.origText=origText;
     }
 
     @Override
-    public String getLiteral(ScenarioVM runner) {
+    public String getLiteral(ScenarioCommandContext runner) {
         return "";
     }
 
@@ -49,8 +51,12 @@ public class CommandNode implements Node {
     }
 
     @Override
-    public void run(ScenarioVM runner) {
-        runner.callCommand(command, params);
+    public void run(ScenarioCommandContext runner) {
+    	try {
+    		runner.callCommand(command, params);
+    	}catch(CommandNotFoundException ex) {
+			runner.thread().appendLiteral(origText);
+		} 
     }
 
 }

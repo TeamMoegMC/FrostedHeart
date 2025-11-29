@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -21,27 +21,27 @@ package com.teammoeg.frostedheart.content.climate.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.io.SerializeUtil;
+import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
+import com.teammoeg.frostedheart.util.Lang;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
-public class FHTemperatureDisplayPacket implements FHMessage {
+public class FHTemperatureDisplayPacket implements CMessage {
     private final int[] temp;
     private final String langKey;
     private final boolean isStatus;
     private final boolean isAction;
 
-    public FHTemperatureDisplayPacket(PacketBuffer buffer) {
-        langKey = buffer.readString();
+    public FHTemperatureDisplayPacket(FriendlyByteBuf buffer) {
+        langKey = buffer.readUtf();
         temp = buffer.readVarIntArray();
         boolean[] bs = SerializeUtil.readBooleans(buffer);
         isStatus = bs[0];
@@ -84,25 +84,25 @@ public class FHTemperatureDisplayPacket implements FHMessage {
         isAction = false;
     }
 
-    public void encode(PacketBuffer buffer) {
-        buffer.writeString(langKey);
+    public void encode(FriendlyByteBuf buffer) {
+        buffer.writeUtf(langKey);
         buffer.writeVarIntArray(temp);
         SerializeUtil.writeBooleans(buffer, isStatus, isAction);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
+            Player player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
             Object[] ss = new Object[temp.length];
             for (int i = 0; i < ss.length; i++) {
                 ss[i] = TemperatureDisplayHelper.toTemperatureIntString(temp[i] / 10f);
             }
             
-            TranslationTextComponent tosend = TranslateUtils.translateMessage(langKey, ss);
+            MutableComponent tosend = Lang.translateMessage(langKey, ss);
             if (isStatus)
-                player.sendStatusMessage(tosend, false);
+                player.displayClientMessage(tosend, false);
             else
-                player.sendMessage(tosend, player.getUniqueID());
+                player.sendSystemMessage(tosend);
 
         });
         context.get().setPacketHandled(true);

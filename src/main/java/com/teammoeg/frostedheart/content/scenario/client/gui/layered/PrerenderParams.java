@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered;
 
 import java.awt.Graphics2D;
@@ -6,26 +25,29 @@ import java.awt.image.BufferedImage;
 
 import org.lwjgl.opengl.GL11;
 
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.Rect;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.TypedDynamicTexture;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.ui.Rect;
 
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.texture.NativeImage;
-import net.minecraft.client.renderer.texture.NativeImage.PixelFormat;
+import net.minecraft.util.FastColor;
+
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.platform.NativeImage.Format;
 
 public class PrerenderParams {
 	Graphics2D g2d;
 	BufferedImage image;
-	int width=2048;
-	int height=1152;
+	int width=1024*FHConfig.CLIENT.getScenarioScale();
+	int height=576*FHConfig.CLIENT.getScenarioScale();
 	double scale;
 	public PrerenderParams() {
-		image=new BufferedImage(width,width, BufferedImage.TYPE_INT_ARGB);
+		image=new BufferedImage(width,height, BufferedImage.TYPE_INT_ARGB);
 		g2d=image.createGraphics();
 
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_DEFAULT);
 		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-		scale=ClientUtils.mc().getMainWindow().getGuiScaleFactor()/2;
+		scale=ClientUtils.getMc().getWindow().getGuiScale()/2;
 	}
 	public Graphics2D getG2d() {
 		return g2d;
@@ -47,38 +69,38 @@ public class PrerenderParams {
 			return (int) (width-((width-x)*scale));
 		}
 		return (int) (x*scale);*/
-		return x;
+		return x*FHConfig.CLIENT.getScenarioScale()/2;
 	}
 	public int calculateScaledY(int y) {
 		/*if(y>height/2) {
 			return (int) (height-((height-y)*scale));
 		}
 		return (int) (y*scale);*/
-		return y;
+		return y*FHConfig.CLIENT.getScenarioScale()/2;
 	}
 	public Rect calculateRect(int x,int y,int w,int h) {
-		/*int nx=calculateScaledX(x);
-		int ny=calculateScaledY(y);
-		int nw=calculateScaledX(x+w)-nx;
-		int nh=calculateScaledY(y+h)-ny;*/
-		return new Rect(x,y,w,h);
+		int nx=x*FHConfig.CLIENT.getScenarioScale()/2;
+		int ny=y*FHConfig.CLIENT.getScenarioScale()/2;
+		int nw=w*FHConfig.CLIENT.getScenarioScale()/2;
+		int nh=h*FHConfig.CLIENT.getScenarioScale()/2;
+		return new Rect(nx,ny,nw,nh);
 	}
 	public int calculateScaledSize(int s) {
 		//return (int) (s*scale);
-		return s;
+		return s*FHConfig.CLIENT.getScenarioScale()/2;
 	}
-	public DynamicTexture loadTexture() {
+	public TypedDynamicTexture loadTexture() {
 		g2d.dispose();
 		image.flush();
 		BufferedImage cur=image;
-		NativeImage texture=new NativeImage(PixelFormat.RGBA, cur.getWidth(), cur.getHeight(), false);//No need to close because dynamicTexture would handle this properly
+		NativeImage texture=new NativeImage(Format.RGBA, cur.getWidth(), cur.getHeight(), false);//No need to close because dynamicTexture would handle this properly
 		int[] pixels = new int[cur.getWidth() * cur.getHeight()];
 		cur.getRGB(0, 0, cur.getWidth(), cur.getHeight(), pixels, 0, cur.getWidth());
-		
 		for (int y = 0; y < cur.getHeight(); y++) {
 			for (int x = 0; x < cur.getWidth(); x++) {
 				int pixel = pixels[y * cur.getWidth() + x];
-				texture.setPixelRGBA(x, y,NativeImage.getCombined((pixel >> 24) & 0xFF,pixel & 0xFF,(pixel >> 8) & 0xFF, (pixel >> 16) & 0xFF));
+				
+				texture.setPixelRGBA(x, y,FastColor.ABGR32.color((pixel >> 24) & 0xFF,pixel & 0xFF,(pixel >> 8) & 0xFF, (pixel >> 16) & 0xFF));
 			}
 		}
 		/*try {
@@ -86,7 +108,6 @@ public class PrerenderParams {
 				ImageIO.write(cur, "png", baos);
 				texture = NativeImage.read(bais);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				FHMain.LOGGER.error("Could not render scenario layer!");
 			}
@@ -95,7 +116,7 @@ public class PrerenderParams {
 			FHMain.LOGGER.error("Error rendering scenario layer!");
 		}*/
 		
-		return new DynamicTexture(texture);
+		return new TypedDynamicTexture(texture);
 		/*int[] pixels = new int[cur.getWidth() * cur.getHeight()];
 		cur.getRGB(0, 0, cur.getWidth(), cur.getHeight(), pixels, 0, cur.getWidth());
 

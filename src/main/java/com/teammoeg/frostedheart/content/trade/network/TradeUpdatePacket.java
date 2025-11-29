@@ -21,27 +21,27 @@ package com.teammoeg.frostedheart.content.trade.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.trade.RelationList;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
-public class TradeUpdatePacket implements FHMessage {
-    CompoundNBT data;
-    CompoundNBT player;
+public class TradeUpdatePacket implements CMessage {
+    CompoundTag data;
+    CompoundTag player;
     RelationList relations;
     boolean isReset;
 
 
-    public TradeUpdatePacket(CompoundNBT data, CompoundNBT player, RelationList relations, boolean isReset) {
+    public TradeUpdatePacket(CompoundTag data, CompoundTag player, RelationList relations, boolean isReset) {
         super();
         this.data = data;
         this.player = player;
@@ -49,25 +49,25 @@ public class TradeUpdatePacket implements FHMessage {
         this.isReset = isReset;
     }
 
-    public TradeUpdatePacket(PacketBuffer buffer) {
-        data = buffer.readCompoundTag();
-        player = buffer.readCompoundTag();
+    public TradeUpdatePacket(FriendlyByteBuf buffer) {
+        data = buffer.readNbt();
+        player = buffer.readNbt();
         relations = new RelationList();
         relations.read(buffer);
         isReset = buffer.readBoolean();
     }
 
-    public void encode(PacketBuffer buffer) {
-        buffer.writeCompoundTag(data);
-        buffer.writeCompoundTag(player);
+    public void encode(FriendlyByteBuf buffer) {
+        buffer.writeNbt(data);
+        buffer.writeNbt(player);
         relations.write(buffer);
         buffer.writeBoolean(isReset);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
-            Container cont = player.openContainer;
+            Player player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
+            AbstractContainerMenu cont = player.containerMenu;
             if (cont instanceof TradeContainer) {
                 TradeContainer trade = (TradeContainer) cont;
                 trade.update(data, this.player, relations, isReset);

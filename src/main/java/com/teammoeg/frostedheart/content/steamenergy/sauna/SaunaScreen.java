@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,91 +19,79 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.Point;
-import com.teammoeg.frostedheart.util.client.UV;
-
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
+
+import com.teammoeg.chorda.client.ui.Point;
+import com.teammoeg.chorda.client.ui.TexturedUV;
+import com.teammoeg.chorda.client.ui.UV.Transition;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Inventory;
 
 public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
-    private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("sauna_vent");
+    private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("sauna_vent");
 
-    private static final UV clock1 = new UV(176, 0, 38, 38);
-    private static final UV clock2 = new UV(214, 0, 38, 38);
-    private static final UV clock3 = new UV(176, 38, 38, 38);
-    private static final UV clock4 = new UV(214, 38, 38, 38);
+    private static final TexturedUV clock1 = new TexturedUV(TEXTURE, 176, 0, 38, 38);
+    private static final TexturedUV clock2 = new TexturedUV(TEXTURE, 214, 0, 38, 38);
+    private static final TexturedUV clock3 = new TexturedUV(TEXTURE, 176, 38, 38, 38);
+    private static final TexturedUV clock4 = new TexturedUV(TEXTURE, 214, 38, 38, 38);
 
-    private static final UV flame1 = new UV(176, 76, 16, 29);
-    private static final UV flame2 = new UV(192, 76, 16, 29);
-    private static final UV flame3 = new UV(208, 76, 16, 29);
-    private static final UV flame4 = new UV(224, 76, 16, 29);
-    private static final UV flame5 = new UV(240, 76, 16, 29);
+    private static final TexturedUV flame1 = new TexturedUV(TEXTURE, 176, 76, 16, 29);
+    private static final TexturedUV flame2 = new TexturedUV(TEXTURE, 192, 76, 16, 29);
+    private static final TexturedUV flame3 = new TexturedUV(TEXTURE, 208, 76, 16, 29);
+    private static final TexturedUV flame4 = new TexturedUV(TEXTURE, 224, 76, 16, 29);
+    private static final TexturedUV flame5 = new TexturedUV(TEXTURE, 240, 76, 16, 29);
 
     private static final Point clockPos = new Point(41, 15);
     private static final Point flamePos = new Point(122, 19);
 
-    public SaunaScreen(SaunaContainer inventorySlotsIn, PlayerInventory inv, ITextComponent title) {
-        super(inventorySlotsIn, inv, title);
+    public SaunaScreen(SaunaContainer inventorySlotsIn, Inventory inv, Component title) {
+        super(inventorySlotsIn, inv, title, TEXTURE);
     }
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int x, int y) {
+    public void drawContainerBackgroundPre(GuiGraphics matrixStack, float partialTicks, int x, int y) {
         Minecraft mc = Minecraft.getInstance();
-        ClientUtils.bindTexture(TEXTURE);
-        this.blit(matrixStack, guiLeft, guiTop, 0, 0, xSize, ySize);
 
-        SaunaTileEntity tile = this.container.tile;
+        SaunaTileEntity tile = this.menu.getBlock();
 
         // draw the steam clock
         float powerFraction = tile.getPowerFraction();
 
         if (powerFraction < 0.25) {
-            clock1.blitAt(matrixStack, guiLeft, guiTop, clockPos);
+            clock1.blitAt(matrixStack, leftPos, topPos, clockPos);
         } else if (powerFraction < 0.5) {
-            clock2.blitAt(matrixStack, guiLeft, guiTop, clockPos);
+            clock2.blitAt(matrixStack, leftPos, topPos, clockPos);
         } else if (powerFraction < 0.75) {
-            clock3.blitAt(matrixStack, guiLeft, guiTop, clockPos);
+            clock3.blitAt(matrixStack, leftPos, topPos, clockPos);
         } else {
-            clock4.blitAt(matrixStack, guiLeft, guiTop, clockPos);
+            clock4.blitAt(matrixStack, leftPos, topPos, clockPos);
         }
 
         // draw flame if the sauna is on
         if (tile.isWorking()) {
             // use effect to determine which flame to draw
-            EffectInstance effect = tile.getEffectInstance();
+            MobEffectInstance effect = tile.getEffectInstance();
             if (effect != null) {
                 float effectFrac = tile.getEffectTimeFraction();
-                int height = (int) (flame2.getH() * effectFrac);
-                int offset = flame2.getH() - height;
-                if (effect.getPotion() == Effects.HASTE) {
-                    mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
-                            flame2.getX(), flame2.getY() + offset, flame2.getW(), height);
-                } else if (effect.getPotion() == Effects.ABSORPTION) {
-                    mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
-                            flame3.getX(), flame3.getY() + offset, flame3.getW(), height);
-                } else if (effect.getPotion() == Effects.SPEED) {
-                    mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
-                            flame4.getX(), flame4.getY() + offset, flame4.getW(), height);
-                } else if (effect.getPotion() == Effects.JUMP_BOOST) {
-                    mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
-                            flame5.getX(), flame5.getY() + offset, flame5.getW(), height);
+                if (effect.getEffect() == MobEffects.DIG_SPEED) {
+                    flame2.blit(matrixStack, leftPos, topPos, flamePos, Transition.UP, effectFrac);
+                } else if (effect.getEffect() == MobEffects.ABSORPTION) {
+                    flame3.blit(matrixStack, leftPos, topPos, flamePos, Transition.UP, effectFrac);
+                } else if (effect.getEffect() == MobEffects.MOVEMENT_SPEED) {
+                    flame4.blit(matrixStack, leftPos, topPos, flamePos, Transition.UP, effectFrac);
+                } else if (effect.getEffect() == MobEffects.JUMP) {
+                    flame5.blit(matrixStack, leftPos, topPos, flamePos, Transition.UP, effectFrac);
                 }
             } else {
-                flame1.blitAt(matrixStack, guiLeft, guiTop, flamePos);
+                flame1.blitAt(matrixStack, leftPos, topPos, flamePos);
             }
         }
     }
 
-    @Override
-    protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int x, int y) {
-        super.drawGuiContainerForegroundLayer(matrixStack, x, y);
-    }
 }

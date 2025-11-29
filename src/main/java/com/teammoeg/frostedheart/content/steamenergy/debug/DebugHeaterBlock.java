@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,68 +19,79 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.debug;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 
-import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition.Builder;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.BlockHitResult;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.StateContainer.Builder;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
+import java.util.function.Supplier;
 
-public class DebugHeaterBlock extends FHBaseBlock {
+public class DebugHeaterBlock extends CBlock implements CEntityBlock<DebugHeaterTileEntity> {
     public DebugHeaterBlock(Properties blockProps) {
         super(blockProps);
     }
 
-
-
-
-    @Nullable
     @Override
-    public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
-        return FHTileTypes.DEBUGHEATER.get().create();
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
+        builder.add(BlockStateProperties.LEVEL_FLOWING);
     }
 
     @Override
-    protected void fillStateContainer(Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
-        builder.add(BlockStateProperties.LEVEL_1_8);
-    }
-
-
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
-    }
-
-
-    @Override
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player,
-                                             Hand hand, BlockRayTraceResult hit) {
-        ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
-        if (superResult.isSuccessOrConsume() || player.isSneaking())
+    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player,
+                                 InteractionHand hand, BlockHitResult hit) {
+        InteractionResult superResult = super.use(state, world, pos, player, hand, hit);
+        if (superResult.consumesAction() || player.isShiftKeyDown())
             return superResult;
-        ItemStack item = player.getHeldItem(hand);
-        if (item.getItem().equals(Item.getItemFromBlock(this))) {
-            state = state.cycleValue(BlockStateProperties.LEVEL_1_8);
-            world.setBlockState(pos, state);
-            player.sendStatusMessage(TranslateUtils.str(String.valueOf(state.get(BlockStateProperties.LEVEL_1_8))), true);
-            return ActionResultType.SUCCESS;
+        ItemStack item = player.getItemInHand(hand);
+        if (item.getItem().equals(Item.byBlock(this))) {
+            state = state.cycle(BlockStateProperties.LEVEL_FLOWING);
+            world.setBlockAndUpdate(pos, state);
+            player.displayClientMessage(Components.str(String.valueOf(state.getValue(BlockStateProperties.LEVEL_FLOWING))), true);
+            return InteractionResult.SUCCESS;
         }
         return superResult;
+    }
+
+    @Override
+    public Supplier<BlockEntityType<DebugHeaterTileEntity>> getBlock() {
+        return FHBlockEntityTypes.DEBUGHEATER;
+    }
+
+    @Override
+    public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
+                                boolean isMoving) {
+        super.neighborChanged(state, worldIn, pos, blockIn, fromPos, isMoving);
+        //Direction d = CUtils.dirBetween(fromPos, pos);
+        //System.out.println("changed")2
+        if(!worldIn.isClientSide)
+            worldIn.scheduleTick(pos, this, 10);
+
+    }
+
+    @Override
+    public void tick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource pRandom) {
+        //System.out.println("ticked "+pos);
+        super.tick(state, worldIn, pos, pRandom);
+        DebugHeaterTileEntity te= CUtils.getExistingTileEntity(worldIn, pos, DebugHeaterTileEntity.class);
+        if(te!=null)
+            te.getNetwork().startConnectionFromBlock(te);
     }
 }

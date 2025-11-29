@@ -22,19 +22,24 @@ package com.teammoeg.frostedheart.content.town.resident;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import com.teammoeg.frostedheart.content.town.ITownWithBlocks;
+import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
-import com.teammoeg.frostedheart.util.MathUtils;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
-import mezz.jei.util.MathUtil;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.util.UUIDCodec;
-import net.minecraft.util.math.BlockPos;
+import com.teammoeg.chorda.io.CodecUtil;
+import com.teammoeg.chorda.io.SerializeUtil;
+import com.teammoeg.chorda.math.CMath;
+
+import lombok.Getter;
+import lombok.Setter;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Random;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -47,43 +52,72 @@ public class Resident {
 	public static final Codec<Resident> CODEC=RecordCodecBuilder.create(t->t.group(
             Codec.STRING.fieldOf("firstName").forGetter(o->o.firstName),
             Codec.STRING.fieldOf("lastName").forGetter(o->o.lastName),
-            UUIDCodec.CODEC.fieldOf("uuid").forGetter(o->o.uuid),
-            CodecUtil.defaultValue(Codec.INT, 50).fieldOf("health").forGetter(o->o.health),
-            CodecUtil.defaultValue(Codec.INT, 50).fieldOf("mental").forGetter(o->o.mental),
-            CodecUtil.defaultValue(Codec.INT, 50).fieldOf("social").forGetter(o->o.social),
-            CodecUtil.defaultValue(Codec.INT, 50).fieldOf("wealth").forGetter(o->o.wealth),
-            CodecUtil.defaultValue(Codec.INT, 50).fieldOf("trust").forGetter(o->o.trust),
-            CodecUtil.defaultValue(Codec.INT, 50).fieldOf("culture").forGetter(o->o.culture),
-            CodecUtil.defaultValue(Codec.INT, 0).fieldOf("educationLevel").forGetter(o->o.educationLevel),
-            CodecUtil.defaultValue(CodecUtil.mapCodec("type", TownWorkerType.CODEC, "proficiency", Codec.INT), null).fieldOf("workProficiency").forGetter(o->o.workProficiency),
-            CodecUtil.defaultValue(BlockPos.CODEC, null).fieldOf("housePos").forGetter(o->o.housePos),
-            CodecUtil.defaultValue(BlockPos.CODEC, null).fieldOf("workPos").forGetter(o->o.workPos)
+            UUIDUtil.CODEC.fieldOf("uuid").forGetter(o->o.uuid),
+            Codec.DOUBLE.optionalFieldOf("health",50.0).forGetter(o->o.health),
+            Codec.DOUBLE.optionalFieldOf("mental",50.0).forGetter(o->o.mental),
+            Codec.DOUBLE.optionalFieldOf("strength",50.0).forGetter(o->o.strength),
+            Codec.DOUBLE.optionalFieldOf("intelligence",50.0).forGetter(o->o.intelligence),
+            Codec.INT.optionalFieldOf("educationLevel",0).forGetter(o->o.educationLevel),
+            CodecUtil.mapCodec("type", TownWorkerType.CODEC, "proficiency", Codec.DOUBLE).optionalFieldOf("workProficiency",Map.of()).forGetter(o->o.workProficiency),
+            BlockPos.CODEC.optionalFieldOf("housePos").forGetter(o-> Optional.ofNullable(o.housePos)),
+            BlockPos.CODEC.optionalFieldOf("workPos").forGetter(o-> Optional.ofNullable(o.workPos))
 		).apply(t, Resident::new));
 
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<TownWorkerType, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.uuid = uuid;
+        this.health = health;
+        this.mental = mental;
+        this.strength = strength;
+        this.intelligence = intelligence;
+        this.educationLevel = educationLevel;
+        if(workProficiency!=null){
+            this.workProficiency.putAll(workProficiency);
+        }
+        this.housePos = housePos.orElse(null);
+        this.workPos = workPos.orElse(null);
+    }
+
     private UUID uuid;
+    @Setter
+    @Getter
     private String firstName = "Steve";
+    @Setter
+    @Getter
     private String lastName = "Alexander";
-    /** Stats range from 0 to 100 */
+    /** Stats range from 0 to 100 start*/
     // physical
-    private int health = 50;
-    // psychological
-    private int mental = 50;
-    // social
-    private int social = 50;
-    // economic
-    private int wealth = 50;
-    // political
-    private int trust = 50;
-    // cultural
-    private int culture = 50;
+    @Getter
+    private double health = 50.0;
+    // psychological, well-being, 幸福度
+    @Getter
+    private double mental = 50.0;
+    /** Stats range from 0 to 100 end*/
     // educational
+    // more than 0
+    @Getter
     private int educationLevel = 0;
-    //work proficiency.
-    // If the number is negative, this type is considered as unworkable type.
-    private final EnumMap<TownWorkerType, Integer> workProficiency = new EnumMap<>(TownWorkerType.class);
+    //strength
+    @Getter
+    private double strength = 50.0;
+    // intelligence, decides max educationLevel and the studying speed(the growth speed of educational level)
+    @Getter
+    private double intelligence = 50.0;
+    /**
+     *  work proficiency.
+     *  must be positive.
+     */
+    @Getter
+    private final EnumMap<TownWorkerType, Double> workProficiency = new EnumMap<>(TownWorkerType.class);
     //the pos of the HouseBlock that the resident is living in
+    @Nullable
+    @Getter
+    @Setter
     private BlockPos housePos;
     //the pos of the worker block that the resident is working in
+    @Nullable
+    @Getter
     private BlockPos workPos;
 
     public Resident(String firstName, String lastName) {
@@ -91,15 +125,15 @@ public class Resident {
         this.lastName = lastName;
         this.uuid = UUID.randomUUID();
         workProficiency.forEach((k, v) -> {
-            if(k.needsResident()) workProficiency.put(k, MathUtils.RANDOM.nextInt(20)-2);
-        });//have 20% chance to be unworkable type
+            if(k.needsResident()) workProficiency.put(k, CMath.RANDOM.nextDouble() * 20);
+        });
     }
 
     //public Resident() {
     //}
 
-    public Resident(INBT inbt){
-        this.deserialize((CompoundNBT)inbt);
+    public Resident(Tag inbt){
+        this.deserialize((CompoundTag)inbt);
     }
 
     public Resident(String firstName, String lastName, UUID uuid){
@@ -112,16 +146,14 @@ public class Resident {
         this(firstName,lastName,UUID.fromString(uuid));
     }
 
-    public Resident(String firstName, String lastName, UUID uuid, int health, int mental, int social, int wealth, int trust, int culture, int educationLevel, Map<TownWorkerType, Integer> workProficiency, BlockPos housePos, BlockPos workPos) {
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<TownWorkerType, Double> workProficiency, BlockPos housePos, BlockPos workPos) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.uuid = uuid;
         this.health = health;
         this.mental = mental;
-        this.wealth = wealth;
-        this.social = social;
-        this.trust = trust;
-        this.culture = culture;
+        this.strength = strength;
+        this.intelligence = intelligence;
         this.educationLevel = educationLevel;
         if(workProficiency!=null){
             this.workProficiency.putAll(workProficiency);
@@ -130,109 +162,79 @@ public class Resident {
         this.workPos = workPos;
     }
 
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public void setDeath(ITownWithResidents town){
+        if(town instanceof ITownWithBlocks townWithBlocks){
+            townWithBlocks.getTownBlock(housePos).ifPresent(townWorkerData -> {
+                if(townWorkerData.getType() == TownWorkerType.HOUSE){
+                    townWorkerData.removeResident(this.uuid);
+                }
+            });
+            townWithBlocks.getTownBlock(workPos).ifPresent(townWorkerData -> {
+                if(townWorkerData.getType().needsResident()){
+                    townWorkerData.removeResident(this.uuid);
+            }
+            });
+        }
+        town.removeResident(this.uuid);
     }
 
     public UUID getUUID(){
         return uuid;
     }
 
-    public int getHealth() {
-        return health;
-    }
-    public int getMental() {
-        return mental;
-    }
-    public int getSocial() {
-        return social;
-    }
-    public int getWealth() {
-        return wealth;
-    }
-    public int getTrust() {
-        return trust;
-    }
-    public int getCulture() {
-        return culture;
-    }
-    public int getEducationLevel() {
-        return educationLevel;
+    public double getWorkProficiency(TownWorkerType type) {
+        return workProficiency.getOrDefault(type, 0.0);
     }
 
-    public EnumMap<TownWorkerType, Integer> getWorkProficiency() {
-        return workProficiency;
+    public double addWorkProficiency(TownWorkerType type, double amount){
+        return workProficiency.merge(type, amount, Double::sum);
     }
 
-    public int getWorkProficiency(TownWorkerType type) {
-        return workProficiency.getOrDefault(type, -1);
-    }
-
-    public Double getWorkScore(TownWorkerType type){
-        int proficiency = getWorkProficiency(type);
-        if(health < 20 || mental < 20 || housePos == null || workPos != null){
-            return Double.NEGATIVE_INFINITY;
-        }
-        if(proficiency <= 0) return 0.0;
-        return CalculatingFunction2(health) * Math.pow(CalculatingFunction1(proficiency), 0.5) * Math.pow(CalculatingFunction1(mental), 0.3) * Math.pow(type.getResidentExtraScore(this), 0.5);
+    public double setWorkProficiency(TownWorkerType type,double amount){
+        workProficiency.put(type, amount);
+        return amount;
     }
 
     /**
-     * Compute the productivity multiplier of the resident.
-     * A linear map from [0,100] to [0.0,2.0].
-     * The input is average of every stat.
-     * @return the productivity multiplier
+     * 普通地增加工作熟练度，不需要输入数量，一般是工作时默认调用地增加工作熟练度的方法。
+     * 会随熟练度的提高衰减。
+     * @return 增加后的数量
      */
-    public double getProductivityMultiplier() {
-        return (health + mental + social + wealth + trust + culture) / 300.0;
+    public double addWorkProficiency(TownWorkerType type){
+        return addWorkProficiency(type, 1);
+
     }
 
     // serialization
-    public CompoundNBT serialize() {
-        CompoundNBT data = new CompoundNBT();
+    public CompoundTag serialize() {
+        CompoundTag data = new CompoundTag();
         data.putString("uuid", uuid.toString());
         data.putString("firstName", firstName);
         data.putString("lastName", lastName);
-        data.putInt("health", health);
-        data.putInt("happiness", mental);
-        data.putInt("social", social);
-        data.putInt("wealth", wealth);
-        data.putInt("trust", trust);
-        data.putInt("culture", culture);
+        data.putDouble("health", health);
+        data.putDouble("happiness", mental);
+        data.putDouble("strength", strength);
+        data.putDouble("intelligence", intelligence);
         data.putInt("educationLevel", educationLevel);
-        data.put("workProficiency", SerializeUtil.toNBTMap(workProficiency.entrySet(), (entry, compoundNBTBuilder) -> compoundNBTBuilder.putInt(entry.getKey().getKey(), entry.getValue())));
-        data.putLong("workPos", workPos.toLong());
-        data.putLong("housePos", housePos.toLong());
+        data.put("workProficiency", SerializeUtil.toNBTMap(workProficiency.entrySet(), (entry, compoundNBTBuilder) -> compoundNBTBuilder.putDouble(entry.getKey().getKey(), entry.getValue())));
+        data.putLong("workPos", workPos.asLong());
+        data.putLong("housePos", housePos.asLong());
         return data;
     }
 
-    public Resident deserialize(CompoundNBT data) {
+    public Resident deserialize(CompoundTag data) {
         uuid = UUID.fromString(data.getString("uuid"));
         firstName = data.getString("firstName");
         lastName = data.getString("lastName");
-        health = data.getInt("health");
-        mental = data.getInt("happiness");
-        social = data.getInt("social");
-        wealth = data.getInt("wealth");
-        trust = data.getInt("trust");
-        culture = data.getInt("culture");
+        health = data.getDouble("health");
+        mental = data.getDouble("happiness");
+        strength = data.getDouble("strength");
+        intelligence = data.getDouble("intelligence");
         educationLevel = data.getInt("educationLevel");
-        CompoundNBT workProficiencyNBT = data.getCompound("workProficiency");
-        workProficiency.keySet().forEach(key/*TownWorkerType*/ -> workProficiency.put(key, workProficiencyNBT.getInt(key.getKey())));
-        workPos = BlockPos.fromLong(data.getLong("workPos"));
-        housePos = BlockPos.fromLong(data.getLong("housePos"));
+        CompoundTag workProficiencyNBT = data.getCompound("workProficiency");
+        workProficiency.keySet().forEach(key/*TownWorkerType*/ -> workProficiency.put(key, workProficiencyNBT.getDouble(key.getKey())));
+        workPos = BlockPos.of(data.getLong("workPos"));
+        housePos = BlockPos.of(data.getLong("housePos"));
         return null;
     }
 
@@ -240,16 +242,79 @@ public class Resident {
         this.housePos = pos;
     }
 
-    public void setHousePos(BlockPos pos){
-        this.housePos = pos;
+    public void setHealth(double health) {
+        if (health < 0 || health > 100) {
+            throw new IllegalArgumentException("Health must be between 0 and 100");
+        }
+        this.health = health;
     }
 
-    public BlockPos getWorkPos(){
-        return workPos;
+    public void costHealth(double amount) {
+        this.health = Math.max(0, this.health - amount);
     }
 
-    public BlockPos getHousePos(){
-        return housePos;
+    public void addHealth(double amount) {
+        this.health = Math.min(100, this.health + amount);
+    }
+
+    public void setMental(double mental) {
+        if (mental < 0 || mental > 100) {
+            throw new IllegalArgumentException("Mental must be between 0 and 100");
+        }
+        this.mental = mental;
+    }
+
+    public void costMental(double amount) {
+        this.mental = Math.max(0, this.mental - amount);
+    }
+
+    public void addMental(double amount) {
+        this.mental = Math.min(100, this.mental + amount);
+    }
+
+    public void setStrength(double strength) {
+        if (strength < 0 || strength > 100) {
+            throw new IllegalArgumentException("Strength must be between 0 and 100");
+        }
+        this.strength = strength;
+    }
+
+    public void costStrength(double amount) {
+        this.strength = Math.max(0, this.strength - amount);
+    }
+
+    public void addStrength(double amount) {
+        this.strength = Math.min(100, this.strength + amount);
+    }
+
+    public void setIntelligence(double intelligence) {
+        if (intelligence < 0 || intelligence > 100) {
+            throw new IllegalArgumentException("Intelligence must be between 0 and 100");
+        }
+        this.intelligence = intelligence;
+    }
+
+    public void costIntelligence(double amount) {
+        this.intelligence = Math.max(0, this.intelligence - amount);
+    }
+
+    public void addIntelligence(double amount) {
+        this.intelligence = Math.min(100, this.intelligence + amount);
+    }
+
+    public void setEducationLevel(int educationLevel) {
+        if (educationLevel < 0) {
+            throw new IllegalArgumentException("Education level must be non-negative");
+        }
+        this.educationLevel = educationLevel;
+    }
+
+    public void costEducationLevel(int amount) {
+        this.educationLevel = Math.max(0, this.educationLevel - amount);
+    }
+
+    public void addEducationLevel(int amount) {
+        this.educationLevel = this.educationLevel + amount;
     }
 
     @Override
@@ -259,8 +324,7 @@ public class Resident {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof Resident) {
-            Resident other = (Resident) obj;
+        if (obj instanceof Resident other) {
             return other.uuid.equals(uuid);
         }
         return false;
@@ -271,16 +335,4 @@ public class Resident {
         return uuid.hashCode();
     }
 
-    //用于调整数据
-    //1-exp型，在x大概为20时，数值达到一半
-    public static double CalculatingFunction1(int num){
-        if(num <= 0){
-            return Double.NEGATIVE_INFINITY;
-        }
-        return 1-Math.exp(-num*0.04);
-    }
-    //S型曲线，关于点(50,0.5)对称
-    public static double CalculatingFunction2(int num){
-        return 1/(1+Math.exp(-num*0.1+5));
-    }
 }

@@ -21,7 +21,16 @@ package com.teammoeg.frostedheart.content.scenario.commands.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.MultipleItemHoverEvent;
+import com.teammoeg.chorda.client.StringTextComponentParser;
+import com.teammoeg.chorda.client.ui.Point;
+import com.teammoeg.chorda.client.ui.Rect;
+import com.teammoeg.chorda.io.nbtbuilder.CompoundNBTBuilder;
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.FHScenarioClient;
@@ -30,57 +39,94 @@ import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.ImageScreenDialog;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.Transition;
+import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLTextContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsImageContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsLineContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsRectContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsTextContent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.Point;
-import com.teammoeg.frostedheart.util.client.Rect;
+import com.teammoeg.frostedheart.util.Lang;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
-import dev.ftb.mods.ftbquests.FTBQuests;
+import dev.ftb.mods.ftbquests.api.FTBQuestsAPI;
+import dev.ftb.mods.ftbquests.client.FTBQuestsClient;
+import dev.ftb.mods.ftbquests.quest.BaseQuestFile;
 import dev.ftb.mods.ftbquests.quest.Quest;
-import dev.ftb.mods.ftbquests.quest.QuestFile;
 import dev.ftb.mods.ftbquests.quest.task.ItemTask;
 import dev.ftb.mods.ftbquests.quest.task.KillTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
-import net.minecraft.client.audio.BackgroundMusicSelector;
-import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.ISound.AttenuationType;
-import net.minecraft.client.audio.SimpleSound;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.event.ClickEvent;
+import dev.latvian.mods.itemfilters.api.ItemFiltersAPI;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance.Attenuation;
+import net.minecraft.core.Holder.Reference;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.Music;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.util.Lazy;
 
 public class ClientControl implements IClientControlCommand {
 	public void link(IClientScene runner,@Param("lid")String linkId) {
-		runner.setPreset(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"fh$scenario$link:"+linkId)).setUnderlined(true));
+		runner.setPreset(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,FHScenarioClient.LINK_SYMBOL+linkId)).withUnderlined(true));
 	}
 	public void endlink(IClientScene runner) {
 		runner.setPreset(null);
 	}
 	@Override
 	public void showTask(IClientScene runner,@Param("q")String q,@Param("t")int t) {
-		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
-		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
-		Task tsk=quest.tasks.get(t);
-		ITextComponent itt;
-		if(tsk instanceof ItemTask) {
-			itt=TranslateUtils.translateMessage("item_task",tsk.getTitle());
+		
+		BaseQuestFile qf=FTBQuestsClient.getClientQuestFile();
+		Quest quest=qf.getQuest(BaseQuestFile.parseCodeString(q));
+		Task tsk=quest.getTasksAsList().get(t);
+		Component itt;
+		if(tsk instanceof ItemTask itmtask) {
+			ItemStack stack=itmtask.getItemStack();
+			HoverEvent.ItemStackInfo ev;
+			if(ItemFiltersAPI.isFilter(stack)) {
+				List<ItemStack> toshow=new ArrayList<>();
+				ItemFiltersAPI.getDisplayItemStacks(stack, toshow);
+				Lazy<CompoundTag> tagBuilder=Lazy.of(()->{
+					CompoundNBTBuilder<Void> disp=CompoundNBTBuilder.create();
+					var b=disp.array("Lore");
+					b.addString(Component.Serializer.toJson(Lang.translateTooltip("suitable_items")));
+					
+					for(ItemStack is:toshow) {
+						b.addString(Component.Serializer.toJson(Lang.builder().text("- ").add(is.getDisplayName()).component()));
+					}
+					return disp.build();
+				});
+				List<Lazy<ItemStack>> tolazy=new ArrayList<>();
+				for(ItemStack is:toshow) {
+					tolazy.add(Lazy.of(()->{
+						
+						is.addTagElement("display", tagBuilder.get());
+						return is;
+					}));
+				}
+				ev=new MultipleItemHoverEvent(tolazy);
+			}else {
+				ev=new HoverEvent.ItemStackInfo(itmtask.getItemStack());
+			}
+			
+			MutableComponent cmp=tsk.getTitle().copy().withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM,ev)));
+			itt= Lang.translateMessage("item_task",cmp);
 			
 		}else if(tsk instanceof KillTask) {
-			itt=TranslateUtils.translateMessage("kill_task",tsk.getTitle());
+			itt= Lang.translateMessage("kill_task",tsk.getTitle().copy().withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)));
 		}else {
-			itt=TranslateUtils.translateMessage("other_task",tsk.getTitle());
+			itt= Lang.translateMessage("other_task",tsk.getTitle().copy().withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)));
 		}
 		runner.cls();
-		runner.processClient(ClientTextComponentUtils.parse(itt.getString()), true, false);
+		runner.processClient(itt, true, false);
 		runner.setActHud(null, tsk.getTitle().getString());
 	}
 	@Override
@@ -90,14 +136,14 @@ public class ClientControl implements IClientControlCommand {
 	}
 	@Override
 	public void showTitle(IClientScene runner,@Param("t")String t,@Param("st")String st,@Param("in")Integer i1,@Param("show")Integer i2,@Param("out")Integer i3) {
-		ITextComponent t1=null,t2=null;
+		Component t1=null,t2=null;
 		if(t!=null) {
-			t1=ClientTextComponentUtils.parse(t);
-			ClientUtils.mc().ingameGUI.renderTitles(t1,null,i1==null?-1:i1,i2==null?-1:i2, i3==null?-1:i3);
+			t1=StringTextComponentParser.parse(t);
+			ClientUtils.getMc().gui.setTitle(t1);
 		}
 		if(st!=null) {
-			t2=ClientTextComponentUtils.parse(st);
-			ClientUtils.mc().ingameGUI.renderTitles(null,t2,i1==null?-1:i1,i2==null?-1:i2, i3==null?-1:i3);
+			t2=StringTextComponentParser.parse(st);
+			ClientUtils.getMc().gui.setSubtitle(t2);
 		}
 		
 	}
@@ -124,11 +170,11 @@ public class ClientControl implements IClientControlCommand {
 		if(show!=null) {
 			if(show>0) {
 				if(!(ClientScene.INSTANCE.dialog instanceof ImageScreenDialog)) {
-					id=new ImageScreenDialog(TranslateUtils.str(""));
+					id=new ImageScreenDialog(Components.str(""));
 					if(ClientScene.INSTANCE.dialog!=null)
 						ClientScene.INSTANCE.dialog.closeDialog();
 					ClientScene.INSTANCE.dialog=id;
-					ClientUtils.mc().displayGuiScreen(id);
+					ClientUtils.getMc().setScreen(id);
 				}else {
 					id=(ImageScreenDialog) ClientScene.INSTANCE.dialog;
 				}
@@ -171,7 +217,7 @@ public class ClientControl implements IClientControlCommand {
 		ClientScene.INSTANCE.layers.add(lm);
 	}
 	@Override
-	public void showLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("trans")String transition,@Param("t")int time,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h) {
+	public void showLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("trans")String transition,@Param("t")int time,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("nowait")boolean nowait) {
 		if(ClientScene.INSTANCE.dialog==null)
 			return;
 		LayerManager lm=ClientScene.INSTANCE.layers.pollLast();
@@ -185,12 +231,15 @@ public class ClientControl implements IClientControlCommand {
 		lm.setY((y));
 		lm.setWidth((w));
 		lm.setHeight((h));
+
 		lm.commitChanges(transition!=null?Transition.valueOf(transition.toLowerCase()):null,time);
+
 		if(ClientScene.INSTANCE.layers.isEmpty()) {
 			ClientScene.INSTANCE.dialog.setPrimary(lm);
 		}else {
 			ClientScene.INSTANCE.layers.peekLast().addLayer(name, lm);
 		}
+		
 	}
 	@Override
 	public void ImageLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")String path,@Param("")Rect drect,@Param("s")Rect srect,@Param("z")int z,@Param("opacity")Float opacity) {
@@ -212,14 +261,27 @@ public class ClientControl implements IClientControlCommand {
 			opacity=1f;
 		if(resize==0)
 			resize=9;
-		GraphicsTextContent tc=new GraphicsTextContent(ClientTextComponentUtils.parse(text),rect,resize,shadow>0);
+		GraphicsTextContent tc=new GraphicsTextContent(StringTextComponentParser.parse(text),rect,resize,shadow>0);
 		tc.setOpacity(opacity);
 		tc.setZ(z);
 		ClientScene.INSTANCE.layers.peekLast().addLayer(name,tc);
 		
 	}
 	@Override
-	public void FillRect(IClientScene runner,@Param("n")@Param("name")String name,@Param("")Rect rect,@Param("z")int z,@Param("clr")Color4I color) {
+	public void textElement(IClientScene runner,@Param("n")@Param("name")String name,@Param("text")String text,@Param("x")float x,@Param("y")float y,@Param("w")float w,@Param("h")float h,@Param("z")int z,@Param("opacity")Float opacity,@Param("shadow")int shadow,@Param("resize")int resize) {
+		if(ClientScene.INSTANCE.dialog==null)
+			return;
+		if(opacity==null)
+			opacity=1f;
+		if(resize==0)
+			resize=9;
+		GLTextContent tc=new GLTextContent(StringTextComponentParser.parse(text),x,y,w,h,z,shadow>0,resize);
+		tc.setOpacity(opacity);
+		ClientScene.INSTANCE.layers.peekLast().addLayer(name,tc);
+		
+	}
+	@Override
+	public void FillRect(IClientScene runner,@Param("n")@Param("name")String name,@Param("")Rect rect,@Param("z")int z,@Param("clr")int color) {
 		if(ClientScene.INSTANCE.dialog==null)
 			return;
 		GraphicsRectContent tc=new GraphicsRectContent(color,rect);
@@ -228,7 +290,7 @@ public class ClientControl implements IClientControlCommand {
 		
 	}
 	@Override
-	public void DrawLine(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")Point start,@Param("d")Point end,@Param("w")int w,@Param("z")int z,@Param("clr")Color4I color) {
+	public void DrawLine(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")Point start,@Param("d")Point end,@Param("w")int w,@Param("z")int z,@Param("clr")int color) {
 		if(ClientScene.INSTANCE.dialog==null)
 			return;
 		if(w<=0)
@@ -250,26 +312,37 @@ public class ClientControl implements IClientControlCommand {
 	@Override
 	public void bgm(IClientScene runner,@Param("n")@Param("name")String name) {
 		//ISound sound=SimpleSound.music();
-		ClientUtils.mc().getMusicTicker().stop();
-		ClientUtils.mc().getMusicTicker().selectRandomBackgroundMusic(new BackgroundMusicSelector(new SoundEvent(FHScenarioClient.getPathOf(new ResourceLocation(name),"")), 0, 0, true));
+		ClientUtils.getMc().getMusicManager().stopPlaying();
+		//ForgeRegistries.SOUND_EVENTS.getKeys().forEach(System.out::println);
+		/*FHScenarioClient.getPathFrom(ForgeRegistries.SOUND_EVENTS,new ResourceLocation(name),"")
+		.ifPresentOrElse(t->ClientUtils.mc().getMusicManager().startPlaying(new Music(t, 0, 0, true)), ()->{
+			FHMain.LOGGER.error("[FHScenario] Music "+name+" Not found");
+		});*/
+		Optional<Reference<SoundEvent>> sound=ClientUtils.getWorld().registryAccess().lookup(Registries.SOUND_EVENT).get().get(ResourceKey.create(Registries.SOUND_EVENT, new ResourceLocation(name)));
+		//ClientUtils.mc().getSoundManager().play(SimpleSoundInstance.forMusic(SoundEvent.createVariableRangeEvent(new ResourceLocation(name))));
+		sound.ifPresentOrElse(t->ClientUtils.getMc().getMusicManager().startPlaying(new Music(t, 0, 0, true)), ()->{
+			FHMain.LOGGER.error("[FHScenario] Music "+name+" Not found");
+		});
+		
 	
 	}
 	@Override
 	public void stopbgm(IClientScene runner) {
 		//ISound sound=SimpleSound.music();
-		ClientUtils.mc().getMusicTicker().stop();
+		ClientUtils.getMc().getMusicManager().stopPlaying();
 	}
-	List<ISound> current=new ArrayList<>();
+	List<SoundInstance> current=new ArrayList<>();
 	@Override
 	public void sound(IClientScene runner,@Param("n")@Param("name")String name,@Param("repeat")int rep) {
 		//ISound sound=SimpleSound.music();
-		ISound sound=new SimpleSound(FHScenarioClient.getPathOf(new ResourceLocation(name),""), SoundCategory.MASTER,1, 1, rep>0, 0, AttenuationType.LINEAR, 0, 0, 0, true);
-		ClientUtils.mc().getSoundHandler().play(sound);
+		
+		SoundInstance sound=new SimpleSoundInstance(FHScenarioClient.getPathOf(new ResourceLocation(name),""), SoundSource.MASTER,1, 1, ClientUtils.getWorld().getRandom(), rep>0, 0, Attenuation.LINEAR, 0, 0, 0, true);
+		ClientUtils.getMc().getSoundManager().play(sound);
 		current.add(sound);
 	}
 	@Override
 	public void stopAllsounds(IClientScene runner) {
-		current.forEach(ClientUtils.mc().getSoundHandler()::stop);
+		current.forEach(ClientUtils.getMc().getSoundManager()::stop);
 		current.clear();
 		
 	}

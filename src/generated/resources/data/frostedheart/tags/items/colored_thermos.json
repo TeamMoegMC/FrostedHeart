@@ -1,21 +1,20 @@
 {
-  "replace": false,
   "values": [
-    "frostedheart:black_thermos",
+    "frostedheart:white_thermos",
+    "frostedheart:orange_thermos",
+    "frostedheart:magenta_thermos",
+    "frostedheart:light_blue_thermos",
+    "frostedheart:yellow_thermos",
+    "frostedheart:lime_thermos",
+    "frostedheart:pink_thermos",
+    "frostedheart:gray_thermos",
+    "frostedheart:light_gray_thermos",
+    "frostedheart:cyan_thermos",
+    "frostedheart:purple_thermos",
     "frostedheart:blue_thermos",
     "frostedheart:brown_thermos",
-    "frostedheart:cyan_thermos",
-    "frostedheart:gray_thermos",
     "frostedheart:green_thermos",
-    "frostedheart:light_blue_thermos",
-    "frostedheart:light_gray_thermos",
-    "frostedheart:lime_thermos",
-    "frostedheart:magenta_thermos",
-    "frostedheart:orange_thermos",
-    "frostedheart:pink_thermos",
-    "frostedheart:purple_thermos",
     "frostedheart:red_thermos",
-    "frostedheart:white_thermos",
-    "frostedheart:yellow_thermos"
+    "frostedheart:black_thermos"
   ]
 }

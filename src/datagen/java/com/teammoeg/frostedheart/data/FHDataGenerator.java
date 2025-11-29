@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,18 +14,40 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.data;
 
-import blusunrize.immersiveengineering.common.blocks.multiblocks.StaticTemplateManager;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.simibubi.create.foundation.utility.FilesHelper;
 import com.teammoeg.frostedheart.FHMain;
-import net.minecraft.data.BlockTagsProvider;
+import com.teammoeg.frostedheart.content.world.FHBiomeModifiers;
+import com.teammoeg.frostedheart.content.world.FHFeatures;
+import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrateTags;
+import net.minecraft.Util;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.RegistrySetBuilder;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.DataGenerator;
+import net.minecraft.data.DataProvider;
+import net.minecraft.data.PackOutput;
+import net.minecraft.data.registries.VanillaRegistries;
+import net.minecraftforge.common.data.DatapackBuiltinEntriesProvider;
 import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.GatherDataEvent;
+import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class FHDataGenerator {
@@ -33,16 +55,64 @@ public class FHDataGenerator {
     public static void gatherData(GatherDataEvent event) {
         DataGenerator gen = event.getGenerator();
         ExistingFileHelper exHelper = event.getExistingFileHelper();
-        StaticTemplateManager.EXISTING_HELPER = exHelper;
-        if (event.includeServer()) {
-            FHMain.LOGGER.info("running FHDataGenerator.gatherData");//test
-            BlockTagsProvider blockTagsProvider = new FHBlockTagProvider(gen, exHelper);
-            gen.addProvider(blockTagsProvider);
-            gen.addProvider(new FHRecipeProvider(gen));
-            gen.addProvider(new FHMultiblockStatesProvider(gen, exHelper));
-            gen.addProvider(new FHItemModelProvider(gen,exHelper));
-            gen.addProvider(new FHItemTagProvider(gen, blockTagsProvider,exHelper));
+        CompletableFuture<HolderLookup.Provider> lookup = CompletableFuture.supplyAsync(VanillaRegistries::createLookup, Util.backgroundExecutor());
+        PackOutput output = gen.getPackOutput();
+//        gen.addProvider(event.includeServer(), new FHBlockTagProvider(gen, FHMain.MODID, exHelper, event.getLookupProvider()));
+        gen.addProvider(event.includeServer(), new FHRecipeProvider(gen));
+        gen.addProvider(event.includeServer(), new FHMultiblockStatesProvider(gen, FHMain.MODID, exHelper));
+        gen.addProvider(event.includeClient(), new FHItemModelProvider(gen, FHMain.MODID, exHelper));
+        gen.addProvider(event.includeClient(), new FHBlockModelProvider(gen, FHMain.MODID, exHelper));
+        gen.addProvider(event.includeServer(), new FHItemTagProvider(gen, FHMain.MODID, exHelper, lookup));
+        gen.addProvider(event.includeServer(), new FHLootTableProvider(output));
+        gen.addProvider(event.includeServer(), new FHLangProvider(output, FHMain.MODID, "en_us"));
+        gen.addProvider(event.includeClient(), new FHBlockStateProvider(output,FHMain.MODID,exHelper));
+        for (final DataProvider provider : makeProviders(output, lookup, exHelper))
+            gen.addProvider(event.includeServer(), provider);
 
+        addExtraRegistrateData();
+    }
+
+    public static List<DataProvider> makeProviders(PackOutput output, CompletableFuture<HolderLookup.Provider> vanillaRegistries, ExistingFileHelper exFiles) {
+        final RegistrySetBuilder registryBuilder = new RegistrySetBuilder();
+//        registryBuilder.add(Registries.CONFIGURED_FEATURE, ctx -> bootstrapConfiguredFeatures(ctx, registrations));
+//        registryBuilder.add(Registries.PLACED_FEATURE, ctx -> bootstrapPlacedFeatures(ctx, registrations));
+//        registryBuilder.add(ForgeRegistries.Keys.BIOME_MODIFIERS, ctx -> bootstrapBiomeModifiers(ctx, registrations));
+        registryBuilder.add(Registries.DAMAGE_TYPE, FHDamageTypeProvider::bootstrap);
+        registryBuilder.add(Registries.CONFIGURED_FEATURE, FHFeatures.FHConfiguredFeatures::bootstrap);
+        registryBuilder.add(Registries.PLACED_FEATURE, FHFeatures.FHPlacedFeatures::bootstrap);
+        registryBuilder.add(ForgeRegistries.Keys.BIOME_MODIFIERS, FHBiomeModifiers::bootstrap);
+        return List.of(
+                new DatapackBuiltinEntriesProvider(output, vanillaRegistries, registryBuilder, Set.of(FHMain.MODID)),
+                new FHDamageTypeTagProvider(output, vanillaRegistries.thenApply(r -> append(r, registryBuilder)), exFiles)
+        );
+    }
+
+    private static HolderLookup.Provider append(HolderLookup.Provider original, RegistrySetBuilder builder)
+    {
+        return builder.buildPatch(RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY), original);
+    }
+
+    private static void addExtraRegistrateData() {
+        FHRegistrateTags.addGenerators();
+        /*FHMain.REGISTRATE.addDataGenerator(ProviderType.LANG, provider -> {
+//            provider.add("itemGroup.frostedheart", "Frosted Heart");
+            BiConsumer<String, String> langConsumer = provider::add;
+            provideDefaultLang("en_us", langConsumer);
+            provideDefaultLang("tooltips", langConsumer); // tooltips using the create tooltip system
+        });*/
+    }
+
+    private static void provideDefaultLang(String fileName, BiConsumer<String, String> consumer) {
+        String path = "assets/frostedheart/lang/default/" + fileName + ".json";
+        JsonElement jsonElement = FilesHelper.loadJsonResource(path);
+        if (jsonElement == null) {
+            throw new IllegalStateException(String.format("Could not find default lang file: %s", path));
+        }
+        JsonObject jsonObject = jsonElement.getAsJsonObject();
+        for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue().getAsString();
+            consumer.accept(key, value);
         }
     }
 }

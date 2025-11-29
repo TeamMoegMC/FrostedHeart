@@ -29,13 +29,15 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
+import com.teammoeg.chorda.util.parsereader.CodeLineSource;
+import com.teammoeg.chorda.util.parsereader.ParseReader;
+import com.teammoeg.chorda.util.parsereader.ParseReader.ParserState;
+import com.teammoeg.chorda.util.parsereader.source.ReaderLineSource;
+import com.teammoeg.chorda.util.parsereader.source.StringLineSource;
+import com.teammoeg.chorda.util.parsereader.source.StringListStringSource;
 import com.teammoeg.frostedheart.content.scenario.ScenarioExecutionException;
-import com.teammoeg.frostedheart.content.scenario.parser.reader.CodeLineSource;
-import com.teammoeg.frostedheart.content.scenario.parser.reader.ReaderLineSource;
-import com.teammoeg.frostedheart.content.scenario.parser.reader.StringLineSource;
-import com.teammoeg.frostedheart.content.scenario.parser.reader.StringListStringSource;
-import com.teammoeg.frostedheart.content.scenario.parser.reader.StringParseReader;
 
 public class ScenarioParser {
     private static class CommandStack {
@@ -63,33 +65,33 @@ public class ScenarioParser {
         	elses.forEach(t->t.target=idx);
         }
     }
-
-    private Node createCommand(String command, Map<String, String> params) {
-        switch (command) {
-            case "eval":
-                return new AssignNode(command, params);
-            case "if":
-            	return new IfNode(command, params);
-            case "elsif":
-            	return new ElsifNode(command, params);
-            case "else":
-            	return new ElseNode(command, params);
-            case "endif":
-                return new EndIfNode(command, params);
-            case "emb":
-                return new EmbNode(command, params);
-            case "label":
-                return new LabelNode(command, params);
-            case "p":
-                return new ParagraphNode(command, params);
-            case "save":
-            	return new SavepointNode(command, params);
-            case "sharp":
-            	return new ShpNode(command,params);
-            case "include":
-            	return new IncludeNode(command,params);
-        }
-        return new CommandNode(command, params);
+    private static record ParseResult(List<NodeInfo> node,ParserState state) {
+    	
+    	
+    }
+    private NodeInfo createCommand(String command, Map<String, String> params,ParserState state,String text) {
+        return new NodeInfo(createCommandNode(command,params,text),state);
+    }
+    public static final Map<String,BiFunction<String,Map<String, String>,Node>> nodeFactory=new HashMap<>();
+    static {
+	    nodeFactory.put("eval",AssignNode::new);
+	    nodeFactory.put("if",IfNode::new);
+	    nodeFactory.put("elsif",ElsifNode::new);
+	    nodeFactory.put("else",ElseNode::new);
+	    nodeFactory.put("endif",EndIfNode::new);
+	    nodeFactory.put("emb",EmbNode::new);
+	    nodeFactory.put("label",LabelNode::new);
+	    //nodeFactory.put("p",ParagraphNode::new);
+	    //nodeFactory.put("save",SavepointNode::new);
+	    nodeFactory.put("sharp",ShpNode::new);
+	    nodeFactory.put("include",IncludeNode::new);
+	    nodeFactory.put("call",CallNode::new);
+    }
+    private Node createCommandNode(String command, Map<String, String> params,String text) {
+        BiFunction<String, Map<String, String>, Node> factory=nodeFactory.get(command);
+        if(factory!=null)
+        	return factory.apply(command, params);
+        return new CommandNode(command, params,text);
 
     }
     public Scenario parseString(String name,List<String> code) {
@@ -107,65 +109,67 @@ public class ScenarioParser {
         return new Scenario(name);
         
     }
-    private Scenario process(String name,List<Node> nodes) {
-    	List<Integer> paragraphs = new ArrayList<>();
+    private Scenario process(String name,ParseResult result) {
         LinkedList<CommandStack> ifstack = new LinkedList<>();
         Map<String,Integer> labels=new HashMap<>();
+        List<NodeInfo> nodes=result.node();
         int macro=0;
         for (int i = 0; i < nodes.size(); i++) {
-            Node n = nodes.get(i);
-            if (n instanceof ParagraphNode) {
-                paragraphs.add(i);
-                ((ParagraphNode) n).nodeNum=paragraphs.size();
-            }else if(n instanceof LabelNode) {
-            	labels.put(((LabelNode)n).name, i);
-            }else if (n instanceof IfNode) {
-                IfNode ifn = (IfNode) n;
+        	NodeInfo ni = nodes.get(i);
+        	Node n=ni.node();
+            if(n instanceof LabelNode ln) {
+            	labels.put(ln.name, i);
+            }else if (n instanceof IfNode ifn) {
                 ifstack.add(new CommandStack(ifn));
-            }else if (n instanceof ElsifNode) {
-            	ElsifNode ifn = (ElsifNode) n;
+            }else if (n instanceof ElsifNode ifn) {
             	if(ifstack.isEmpty())
-            		throw new ScenarioExecutionException("At file "+name+" Unexpected Elsif!");
+            		throw ni.state().generateException("Unexpected Elsif!");
                 ifstack.peekLast().add(i, ifn);
             } else if (n instanceof ElseNode) {
                 ElseNode els = (ElseNode) n;
                 if(ifstack.isEmpty())
-            		throw new ScenarioExecutionException("At file "+name+" Unexpected Else!");
+                	throw ni.state().generateException("Unexpected Else!");
                 ifstack.peekLast().setElse(i,els);
             } else if (n instanceof EndIfNode) {
             	if(ifstack.isEmpty())
-            		throw new ScenarioExecutionException("At file "+name+" Unexpected Endif!");
+            		throw ni.state().generateException("Unexpected EndIf!");
                 ifstack.pollLast().setEndif(i);
-            }else if(n instanceof CommandNode) {
-            	CommandNode cmd=(CommandNode) n;
+            }else if(n instanceof CommandNode cmd) {
             	if("macro".equals(cmd.command)){
             		macro++;
             	}
             	if("endmacro".equals(cmd.command)){
+            		if(macro==0)
+            			throw ni.state().generateException("Unexpected EndMacro!");
             		macro--;
             	}
             }else if(n instanceof IncludeNode) {
             	//IncludeNode in=(IncludeNode) n;
+            }else if(n instanceof CallNode cn) {
+            	//IncludeNode in=(IncludeNode) n;
+            	if(cn.name!=null)
+            		labels.put(cn.name, i);
             }
         }
         if(!ifstack.isEmpty()) {
-        	throw new ScenarioExecutionException("At file "+name+" could not find endif for if!");
+        	result.state().generateException("Unclosed if");
         }
         if(macro!=0) {
-        	throw new ScenarioExecutionException("At file "+name+" macro and endmacro not match! "+Math.abs(macro)+" more "+(macro>0?"macro(s)":"endmacro(s)"));
+        	result.state().generateException("Unclosed Macro");
         }
-        return new Scenario(name, nodes,paragraphs.stream().mapToInt(t->t).toArray(),labels);
+        List<Node> retlist=new ArrayList<>(nodes);
+        return new Scenario(name,retlist,labels);
     }
     
 
 
-    private Node parseAtCommand(StringParseReader reader) {
+    private NodeInfo parseAtCommand(ParseReader reader) {
         Map<String, String> params = new HashMap<>();
-        
+        ParserState state=reader.getCurrentState();
         String command = parseLiteralOrString(reader, -1);
         reader.skipWhitespace();
         //System.out.println("cmd:"+command);
-        if(!reader.has()) return createCommand(command, params);
+        if(!reader.has()) return createCommand(command, params,state,reader.fromStart());
         while (reader.has()) {
             String name = parseLiteralOrString(reader, '=');
             reader.skipWhitespace();
@@ -178,18 +182,19 @@ public class ScenarioParser {
             params.put(name, val);
             reader.skipWhitespace();
             
-            if (!reader.has()||reader.eat('#')) return createCommand(command, params);
+            if (!reader.has()||reader.eat('#')) return createCommand(command, params,state,reader.fromStart());
         }
-        return new LiteralNode(reader.fromStart());
+        return new NodeInfo(new LiteralNode(reader.fromStart()),state);
 
     }
 
-    private Node parseBarackCommand(StringParseReader reader) {
+    private NodeInfo parseBarackCommand(ParseReader reader) {
         Map<String, String> params = new HashMap<>();
+        ParserState state=reader.getCurrentState();
         String command = parseLiteralOrString(reader, ']');
         reader.skipWhitespace();
         
-        if(reader.eat(']')) return createCommand(command, params);
+        if(reader.eat(']')) return createCommand(command, params,state,reader.fromStart());
         while (reader.has()) {
             String name = parseLiteralOrString(reader, '=');
             reader.skipWhitespace();
@@ -200,14 +205,14 @@ public class ScenarioParser {
             String val = parseLiteralOrString(reader, ']');
             params.put(name, val);
             reader.skipWhitespace();
-            if(reader.eat(']'))return createCommand(command, params);
+            if(reader.eat(']'))return createCommand(command, params,state,reader.fromStart());
         }
-        return new LiteralNode(reader.fromStart());
+        return new NodeInfo(new LiteralNode(reader.fromStart()),state);
     }
 
-    private List<Node> parseLine(CodeLineSource source) {
-        StringParseReader reader = new StringParseReader(source);
-        List<Node> nodes = new ArrayList<>();
+    private ParseResult parseLine(CodeLineSource source) {
+        ParseReader reader = new ParseReader(source);
+        List<NodeInfo> nodes = new ArrayList<>();
         while(reader.nextLine()) {
         	try {
 		        while (reader.has()) {
@@ -219,23 +224,24 @@ public class ScenarioParser {
 		            } else if (reader.eat('[')) {
 		                nodes.add(parseBarackCommand(reader));
 		            }else{
+		            	ParserState state=reader.getCurrentState();
 		            	String lit=parseLiteral(reader);
 		            	if(lit!=null&&!lit.isEmpty()) {
 		            		if(lit.startsWith("*")) {
-		            			nodes.add(new LabelNode(lit));
+		            			nodes.add(new NodeInfo(new LabelNode(lit),state));
 		                	}else
-		            		nodes.add(new LiteralNode(lit));
+		            		nodes.add(new NodeInfo(new LiteralNode(lit),state));
 		            	}
 		            }
 		        }
         	}catch(Exception ex) {
-        		throw reader.generateException(ex);
+        		throw reader.getCurrentState().generateException(ex);
         	}
         }
-        return nodes;
+        return new ParseResult(nodes,reader.getCurrentState());
     }
 
-    private String parseLiteral(StringParseReader reader) {
+    private String parseLiteral(ParseReader reader) {
         StringBuilder all = new StringBuilder();
         boolean isEscaping = false;
         while (reader.has()) {
@@ -260,7 +266,7 @@ public class ScenarioParser {
         return all.toString();
     }
 
-    private String parseLiteralOrString(StringParseReader reader, int ch) {
+    private String parseLiteralOrString(ParseReader reader, int ch) {
         StringBuilder all = new StringBuilder();
         boolean isEscaping = false;
         boolean hasQuote = false;

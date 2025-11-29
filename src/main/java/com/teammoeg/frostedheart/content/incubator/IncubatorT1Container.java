@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,44 +19,63 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
+import com.teammoeg.chorda.menu.CBlockEntityMenu;
+import com.teammoeg.chorda.menu.CCustomMenuSlot;
+import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
+import com.teammoeg.chorda.menu.slots.UIFluidTank;
+import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
+
 import blusunrize.immersiveengineering.common.gui.IESlot;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 
-public class IncubatorT1Container extends IEBaseContainer<IncubatorTileEntity> {
+public class IncubatorT1Container extends CBlockEntityMenu<IncubatorTileEntity> {
+	UIFluidTank tankin=new UIFluidTank(this,6000);
+	UIFluidTank tankout=new UIFluidTank(this,6000);
+	CDataSlot<Float> process=CCustomMenuSlot.SLOT_FIXED.create(this);
+	CDataSlot<Float> fuel=CCustomMenuSlot.SLOT_FIXED.create(this);
+	CDataSlot<Float> efficiency=CCustomMenuSlot.SLOT_FIXED.create(this);
+	CDataSlot<Boolean> isFoodRecipe=CCustomMenuSlot.SLOT_BOOL.create(this);
+    public IncubatorT1Container(int id, Inventory inventoryPlayer, IncubatorTileEntity tile) {
+    	this(id,inventoryPlayer,tile,false);
+    	
+    }
+    public IncubatorT1Container(int id, Inventory inventoryPlayer, IncubatorTileEntity tile,boolean isServer) {
+        super(FHMenuTypes.INCUBATOR_T1.get(), tile, id,inventoryPlayer.player, 4);
+        if(isServer) {
+        	//System.out.println("binded in side "+inventoryPlayer.player.level().isClientSide);
+        	tankin.bind(tile.fluid[0]);
+        	tankout.bind(tile.fluid[1]);
+        	process.bind(()->tile.process*1f/tile.processMax);
+        	fuel.bind(()->tile.fuel*1f/tile.fuelMax);
+        	efficiency.bind(()->tile.efficiency);
+        }
+        addSlot(inventoryPlayer,tile);
 
-    public IncubatorT1Container(int id, PlayerInventory inventoryPlayer, IncubatorTileEntity tile) {
-        super(tile, id);
-
+    }
+    public void addSlot(Inventory inventoryPlayer,IncubatorTileEntity tile) {
         this.addSlot(new IESlot(this, this.inv, 0, 34, 52) {
             @Override
-            public boolean isItemValid(ItemStack itemStack) {
+            public boolean mayPlace(ItemStack itemStack) {
                 return tile.isStackValid(0, itemStack);
             }
         });
         this.addSlot(new IESlot(this, this.inv, 1, 16, 17) {
             @Override
-            public boolean isItemValid(ItemStack itemStack) {
+            public boolean mayPlace(ItemStack itemStack) {
                 return tile.isStackValid(1, itemStack);
             }
         });
         this.addSlot(new IESlot(this, this.inv, 2, 34, 17) {
             @Override
-            public boolean isItemValid(ItemStack itemStack) {
+            public boolean mayPlace(ItemStack itemStack) {
                 return tile.isStackValid(2, itemStack);
             }
         });
         this.addSlot(new IESlot.Output(this, this.inv, 3, 143, 36));
 
-        slotCount = 4;
-
-        for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 9; j++)
-                addSlot(new Slot(inventoryPlayer, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
-        for (int i = 0; i < 9; i++)
-            addSlot(new Slot(inventoryPlayer, i, 8 + i * 18, 142));
+        this.addPlayerInventory(inventoryPlayer,8,84,142);
     }
+    
 }
 

@@ -1,8 +1,0 @@
-{
-  "type": "frostedheart:diet_override",
-  "groups": {
-    "proteins": 0.0059286803,
-    "vitamin": 0.005423655
-  },
-  "item": "minecraft:milk_bucket"
-}

@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:instance",
+  "surface_structures": [
+
+  ],
+  "top_layer_modification": [
+    "frostedheart:freeze_top_layer"
+  ]
+}

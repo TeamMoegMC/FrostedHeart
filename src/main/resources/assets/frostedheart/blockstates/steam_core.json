@@ -1,26 +1,26 @@
 {
   "variants": {
     "facing=north": {
-      "model": "frostedheart:block/steamcore/steam_core_horizontal",
+      "model": "frostedheart:block/steam_core/horizontal",
       "y": 0
     },
     "facing=south": {
-      "model": "frostedheart:block/steamcore/steam_core_horizontal",
+      "model": "frostedheart:block/steam_core/horizontal",
       "y": 180
     },
     "facing=west": {
-      "model": "frostedheart:block/steamcore/steam_core_horizontal",
+      "model": "frostedheart:block/steam_core/horizontal",
       "y": 270
     },
     "facing=east": {
-      "model": "frostedheart:block/steamcore/steam_core_horizontal",
+      "model": "frostedheart:block/steam_core/horizontal",
       "y": 90
     },
     "facing=up": {
-      "model": "frostedheart:block/steamcore/steam_core"
+      "model": "frostedheart:block/steam_core/vertical"
     },
     "facing=down": {
-      "model": "frostedheart:block/steamcore/steam_core",
+      "model": "frostedheart:block/steam_core/vertical",
       "x": 180
     }
   }

@@ -1,0 +1,77 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.frostedresearch.network;
+
+import java.util.function.Supplier;
+
+import com.teammoeg.chorda.io.CodecUtil;
+import com.teammoeg.chorda.io.codec.DataOps;
+import com.teammoeg.chorda.io.codec.ObjectWriter;
+import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedresearch.FHResearch;
+import com.teammoeg.frostedresearch.ResearchUtils;
+import com.teammoeg.frostedresearch.data.ResearchData;
+import com.teammoeg.frostedresearch.data.ResearchData.ResearchDataPacket;
+import com.teammoeg.frostedresearch.events.ClientResearchStatusEvent;
+import com.teammoeg.frostedresearch.research.Research;
+
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.network.NetworkEvent;
+
+// send when data update
+public record FHResearchDataUpdatePacket(Object rd, int id) implements CMessage {
+
+
+    public FHResearchDataUpdatePacket(FriendlyByteBuf buffer) {
+        this(ObjectWriter.readObject(buffer), buffer.readVarInt());
+    }
+
+    public FHResearchDataUpdatePacket(Research rs, ResearchData rd) {
+        this(CodecUtil.encodeOrThrow(ResearchData.NETWORK_CODEC.encodeStart(DataOps.COMPRESSED, rd.write(rs))), FHResearch.researches.getIntId(rs));
+                                                 
+    }
+
+    public void encode(FriendlyByteBuf buffer) {
+        ObjectWriter.writeObject(buffer, rd);
+        buffer.writeVarInt(id);
+    }
+
+    public void handle(Supplier<NetworkEvent.Context> context) {
+        context.get().enqueueWork(() -> {
+            Research rs = FHResearch.researches.get(id);
+            //System.out.println(FHResearch.researches);
+            //System.out.println(id);
+            //System.out.println(rd);
+            //System.out.println(rs);
+            ResearchData old = rs.getData();
+            ResearchDataPacket datax = CodecUtil.decodeOrThrow(ResearchData.NETWORK_CODEC.decode(DataOps.COMPRESSED, rd));
+            boolean status = old.isCompleted();
+            //System.out.println(old);
+            old.read(rs, datax);
+            //System.out.println(old);
+            ResearchUtils.refreshResearchGui();
+            MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, old.isCompleted(), status != old.isCompleted()));
+
+
+        });
+        context.get().setPacketHandled(true);
+    }
+}

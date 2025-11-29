@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,63 +19,60 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import javax.annotation.Nullable;
+import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.block.FHGuiBlock;
+import com.teammoeg.chorda.block.CGuiBlock;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.DirectionProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.registries.RegistryObject;
 
-public class IncubatorBlock extends FHGuiBlock {
+public class IncubatorBlock extends CGuiBlock {
     static DirectionProperty HORIZONTAL_FACING = BlockStateProperties.HORIZONTAL_FACING;
     static BooleanProperty LIT = BlockStateProperties.LIT;
-    private RegistryObject<TileEntityType<?>> type;
+    private RegistryObject<BlockEntityType<?>> type;
 
-    public IncubatorBlock(Properties p, RegistryObject<TileEntityType<?>> type) {
+    public IncubatorBlock(Properties p, RegistryObject<BlockEntityType<?>> type) {
         super(p);
         this.type = type;
     }
 
-    @Nullable
     @Override
-    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-        return type.get().create();
-    }
-
-    @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(HORIZONTAL_FACING, LIT);
     }
 
     @Override
-    public BlockState getStateForPlacement(BlockItemUseContext context) {
-        return this.getDefaultState().with(HORIZONTAL_FACING, context.getPlacementHorizontalFacing()).with(LIT, false);
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return this.defaultBlockState().setValue(HORIZONTAL_FACING, context.getHorizontalDirection()).setValue(LIT, false);
     }
 
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player,
-                                             Hand hand, BlockRayTraceResult hit) {
+    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player,
+                                             InteractionHand hand, BlockHitResult hit) {
 
-        if (FluidUtil.interactWithFluidHandler(player, hand, world, pos, hit.getFace()))
-            return ActionResultType.SUCCESS;
-        return super.onBlockActivated(state, world, pos, player, hand, hit);
+        if (FluidUtil.interactWithFluidHandler(player, hand, world, pos, hit.getDirection()))
+            return InteractionResult.SUCCESS;
+        return super.use(state, world, pos, player, hand, hit);
     }
+
+	@Override
+	public Supplier getBlock() {
+		return type;
+	}
 
 
 }

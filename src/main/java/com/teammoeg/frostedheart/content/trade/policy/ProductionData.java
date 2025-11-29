@@ -23,12 +23,13 @@ import java.util.Map;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.chorda.io.SerializeUtil;
+import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class ProductionData extends BaseData {
     public ItemStack item;
@@ -38,9 +39,9 @@ public class ProductionData extends BaseData {
         item = SerializeUtil.fromJson(jo.get("produce"));
     }
 
-    public ProductionData(PacketBuffer pb) {
+    public ProductionData(FriendlyByteBuf pb) {
         super(pb);
-        item = pb.readItemStack();
+        item = pb.readItem();
     }
 
     public ProductionData(String id, int maxstore, float recover, int price, ItemStack item) {
@@ -50,11 +51,11 @@ public class ProductionData extends BaseData {
     }
 
     @Override
-    public void fetch(PolicySnapshot ps, Map<String, Float> data) {
+    public void fetch(PolicySnapshot ps,FHVillagerData vd, Map<String, Float> data) {
 
-        int num = (int) (float) data.getOrDefault(getId(), 0f);
+        int num = Math.min((int) (float) data.getOrDefault(getId(), 0f), this.sellconditions.stream().mapToInt(c->c.test(vd)).reduce(Integer.MAX_VALUE,Math::min));
         if (!hideStockout || num > 0)
-            ps.registerSell(new SellData(getId(), num, this));
+            ps.registerSell(new SellData(vd,getId(), num, this));
     }
 
     @Override
@@ -70,9 +71,9 @@ public class ProductionData extends BaseData {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
         buffer.writeVarInt(1);
         super.write(buffer);
-        buffer.writeItemStack(item);
+        buffer.writeItem(item);
     }
 }

@@ -1,8 +1,10 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "sugars": 0.012277095,
-    "grains": 0.0296434
+  "group": {
+    "carbohydrate": 20000.0,
+    "fat": 0.0,
+    "protein": 0.0,
+    "vegetable": 0.0
   },
   "item": "frostedheart:black_bread"
 }

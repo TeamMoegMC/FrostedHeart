@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,6 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.data;
@@ -23,49 +24,51 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import blusunrize.immersiveengineering.data.models.NongeneratedModels;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.chorda.util.CRegistryHelper;
 
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import blusunrize.immersiveengineering.data.DataGenUtils;
 import blusunrize.immersiveengineering.data.models.IEOBJBuilder;
 import blusunrize.immersiveengineering.data.models.SplitModelBuilder;
-import net.minecraft.block.Block;
-import net.minecraft.block.SlabBlock;
-import net.minecraft.block.StairsBlock;
-import net.minecraft.client.renderer.RenderState;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
+import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.resources.ResourcePackType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.model.generators.BlockModelBuilder;
 import net.minecraftforge.client.model.generators.BlockStateProvider;
 import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelFile;
-import net.minecraftforge.client.model.generators.loaders.OBJLoaderBuilder;
+import net.minecraftforge.client.model.generators.loaders.ObjModelBuilder;
 import net.minecraftforge.common.data.ExistingFileHelper;
 
 public abstract class FHExtendedStatesProvider extends BlockStateProvider {
-    protected static final List<Vector3i> COLUMN_THREE = ImmutableList.of(BlockPos.ZERO, BlockPos.ZERO.up(), BlockPos.ZERO.up(2));
-
+    protected static final List<Vec3i> COLUMN_THREE = ImmutableList.of(BlockPos.ZERO, BlockPos.ZERO.above(), BlockPos.ZERO.above(2));
+    protected static final ExistingFileHelper.ResourceType MODEL = new ExistingFileHelper.ResourceType(PackType.CLIENT_RESOURCES, ".json", "models");
     protected static final Map<ResourceLocation, String> generatedParticleTextures = new HashMap<>();
     protected final ExistingFileHelper existingFileHelper;
 
-    public FHExtendedStatesProvider(DataGenerator gen, ExistingFileHelper exFileHelper)
-    {
-        super(gen, FHMain.MODID, exFileHelper);
+    String modid;
+
+    public FHExtendedStatesProvider(DataGenerator gen, String modid, ExistingFileHelper exFileHelper) {
+        super(gen.getPackOutput(), modid, exFileHelper);
+        this.modid = modid;
         this.existingFileHelper = exFileHelper;
     }
 
 
     protected String name(Block b)
     {
-        return RegistryUtils.getRegistryName(b).getPath();
+        return CRegistryHelper.getRegistryName(b).getPath();
     }
 
     public void simpleBlockItem(Block b, ModelFile model)
@@ -89,6 +92,74 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
         simpleBlockItem(b, models().cubeAll(name(b), texture));
     }
 
+    public void layeredBlock(SnowLayerBlock block, ModelFile... models) {
+        getVariantBuilder(block)
+                .partialState().with(SnowLayerBlock.LAYERS, 1)
+                .modelForState().modelFile(models[0]).addModel()
+                .partialState().with(SnowLayerBlock.LAYERS, 2)
+                .modelForState().modelFile(models[1]).addModel()
+                .partialState().with(SnowLayerBlock.LAYERS, 3)
+                .modelForState().modelFile(models[2]).addModel()
+                .partialState().with(SnowLayerBlock.LAYERS, 4)
+                .modelForState().modelFile(models[3]).addModel()
+                .partialState().with(SnowLayerBlock.LAYERS, 5)
+                .modelForState().modelFile(models[4]).addModel()
+                .partialState().with(SnowLayerBlock.LAYERS, 6)
+                .modelForState().modelFile(models[5]).addModel()
+                .partialState().with(SnowLayerBlock.LAYERS, 7)
+                .modelForState().modelFile(models[6]).addModel()
+                .partialState().with(SnowLayerBlock.LAYERS, 8)
+                .modelForState().modelFile(models[7]).addModel();
+    }
+
+    protected void layered(SnowLayerBlock layer, Block block, ResourceLocation texture)
+    {
+        layeredBlock(
+                layer,
+                models().withExistingParent(name(layer) + "_height2", mcLoc("block/snow_height2"))
+                        .texture("particle", texture)
+                        .texture("texture", texture),
+                models().withExistingParent(name(layer) + "_height4", mcLoc("block/snow_height4"))
+                        .texture("particle", texture)
+                        .texture("texture", texture),
+                models().withExistingParent(name(layer) + "_height6", mcLoc("block/snow_height6"))
+                        .texture("particle", texture)
+                        .texture("texture", texture),
+                models().withExistingParent(name(layer) + "_height8", mcLoc("block/snow_height8"))
+                        .texture("particle", texture)
+                        .texture("texture", texture),
+                models().withExistingParent(name(layer) + "_height10", mcLoc("block/snow_height10"))
+                        .texture("particle", texture)
+                        .texture("texture", texture),
+                models().withExistingParent(name(layer) + "_height12", mcLoc("block/snow_height12"))
+                        .texture("particle", texture)
+                        .texture("texture", texture),
+                models().withExistingParent(name(layer) + "_height14", mcLoc("block/snow_height14"))
+                        .texture("particle", texture)
+                        .texture("texture", texture),
+                models().withExistingParent(name(block), mcLoc("block/cube_all"))
+                        .texture("all", texture)
+        );
+
+        // one layer item model
+        itemModel(
+                layer,
+                models().withExistingParent(name(layer) + "_height2", mcLoc("block/snow_height2"))
+                        .texture("particle", texture)
+                        .texture("texture", texture)
+        );
+
+        // block item model
+        simpleBlockItem(block, models().cubeAll(name(block), texture));
+    }
+//
+//    protected void snowCovered(Block b, ResourceLocation top, ResourceLocation side, ResourceLocation bottom)
+//    {
+//        ModelFile model = models().grassBlock(name(b), top, side, bottom);
+//
+//        simpleBlockItem(b, model);
+//    }
+
     protected void scaffold(Block b, ResourceLocation others, ResourceLocation top)
     {
         simpleBlockItem(
@@ -99,15 +170,9 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
                         .texture("top", top)
         );
     }
-
-    protected void slabFor(Block b, ResourceLocation texture)
+    protected void slab(SlabBlock b, ResourceLocation texture)
     {
-        slabFor(b, texture, texture, texture);
-    }
-
-    protected void slabFor(Block b, ResourceLocation side, ResourceLocation top, ResourceLocation bottom)
-    {
-        slab(IEBlocks.toSlab.get(b), side, top, bottom);
+        slab(b, texture, texture, texture);
     }
 
     protected void slab(SlabBlock b, ResourceLocation side, ResourceLocation top, ResourceLocation bottom)
@@ -121,18 +186,19 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
         itemModel(b, mainModel);
     }
 
-    protected void stairs(StairsBlock b, ResourceLocation texture)
+    protected void stairs(StairBlock b, ResourceLocation texture)
     {
         stairs(b, texture, texture, texture);
     }
 
-    protected void stairs(StairsBlock b, ResourceLocation side, ResourceLocation top, ResourceLocation bottom)
+    protected void stairs(StairBlock b, ResourceLocation side, ResourceLocation top, ResourceLocation bottom)
     {
         String baseName = name(b);
         ModelFile stairs = models().stairs(baseName, side, bottom, top);
         ModelFile stairsInner = models().stairsInner(baseName+"_inner", side, bottom, top);
         ModelFile stairsOuter = models().stairsOuter(baseName+"_outer", side, bottom, top);
-        stairsBlock(b, stairs, stairsInner, stairsOuter);
+        // TODO: ?
+        //        StairBlock(b, stairs, stairsInner, stairsOuter);
         itemModel(b, stairs);
     }
 
@@ -166,8 +232,8 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
     {
         assertModelExists(model);
         BlockModelBuilder ret = models().withExistingParent(name, mcLoc("block"))
-                .customLoader(OBJLoaderBuilder::begin)
-                .detectCullableFaces(false)
+                .customLoader(ObjModelBuilder::begin)
+                .automaticCulling(false)
                 .modelLocation(addModelsPrefix(model))
                 .flipV(true)
                 .end();
@@ -181,11 +247,11 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
         return ret;
     }
 
-    protected BlockModelBuilder splitModel(String name, ModelFile model, List<Vector3i> parts, boolean dynamic)
+    protected BlockModelBuilder splitModel(String name, ModelFile model, List<Vec3i> parts, boolean dynamic)
     {
         BlockModelBuilder result = models().withExistingParent(name, mcLoc("block"))
                 .customLoader(SplitModelBuilder::begin)
-                .innerModel(model)
+                .innerModel((NongeneratedModels.NongeneratedModel) model)
                 .parts(parts)
                 .dynamic(dynamic)
                 .end();
@@ -193,17 +259,17 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
         return result;
     }
 
-    protected ModelFile split(ModelFile baseModel, List<Vector3i> parts, boolean dynamic)
+    protected ModelFile split(ModelFile baseModel, List<Vec3i> parts, boolean dynamic)
     {
         return splitModel(baseModel.getLocation().getPath()+"_split", baseModel, parts, dynamic);
     }
 
-    protected ModelFile split(ModelFile baseModel, List<Vector3i> parts)
+    protected ModelFile split(ModelFile baseModel, List<Vec3i> parts)
     {
         return split(baseModel, parts, false);
     }
 
-    protected ModelFile splitDynamic(ModelFile baseModel, List<Vector3i> parts)
+    protected ModelFile splitDynamic(ModelFile baseModel, List<Vec3i> parts)
     {
         return split(baseModel, parts, true);
     }
@@ -230,7 +296,7 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
     {
         String suffix = name.getPath().contains(".")?"": ".json";
         Preconditions.checkState(
-                existingFileHelper.exists(name, ResourcePackType.CLIENT_RESOURCES, suffix, "models"),
+                existingFileHelper.exists(name, PackType.CLIENT_RESOURCES, suffix, "models"),
                 "Model \""+name+"\" does not exist");
     }
 
@@ -247,29 +313,29 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
         return models().withExistingParent(name, mcLoc("block"))
                 .customLoader(IEOBJBuilder::begin)
                 .modelLocation(addModelsPrefix(model))
-                .flipV(true)
+                .dynamic(true) // TODO: Was flipV, is this correct?
                 .end()
                 .texture("particle", particle);
     }
 
     protected int getAngle(Direction dir, int offset)
     {
-        return (int)((dir.getHorizontalAngle()+offset)%360);
+        return (int)((dir.toYRot()+offset)%360);
     }
 
-    protected static String getName(RenderState state)
+    protected static String getName(RenderStateShard state)
     {
         //TODO clean up/speed up
         try
         {
             // Datagen should only ever run in a deobf environment, so no need to use unreadable SRG names here
             // This is a workaround for the fact that client-side Mixins are not applied in datagen
-            Field f = RenderState.class.getDeclaredField("name");
+            Field f = RenderStateShard.class.getDeclaredField("name");
             f.setAccessible(true);
             return (String)f.get(state);
         } catch(Exception e)
         {
-            throw new RuntimeException("Failed to get name of RenderState instance", e);
+            throw new RuntimeException("Failed to get name of RenderStateShard instance", e);
         }
     }
 }

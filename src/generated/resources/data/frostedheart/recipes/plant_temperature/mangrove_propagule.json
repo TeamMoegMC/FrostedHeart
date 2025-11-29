@@ -1,0 +1,14 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "minecraft:mangrove_propagule",
+  "dead": "minecraft:dead_bush",
+  "grow_time_days": 13.0,
+  "heat_capacity": 10,
+  "max_fertilize": 34.0,
+  "max_grow": 42.0,
+  "max_survive": 45.0,
+  "min_fertilize": 27.0,
+  "min_grow": 17.0,
+  "min_skylight": 14,
+  "min_survive": 15.0
+}

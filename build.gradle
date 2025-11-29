@@ -1,39 +1,43 @@
-buildscript {
-    repositories {
-        maven { url = 'https://maven.minecraftforge.net' }
-        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: "${forgegradle_version}", changing: true
-        classpath group: 'org.spongepowered', name: 'mixingradle', version: "${mixingradle_version}"
-    }
-}
+
 
 plugins {
-    id 'com.matthewprenger.cursegradle' version '1.4.0'
-    id 'net.minecrell.licenser' version '0.4.1'
+//    id "architectury-plugin" version "3.4-SNAPSHOT"
+//    id "dev.architectury.loom" version "1.2-SNAPSHOT"
+	id "com.diffplug.eclipse.apt" version "4.2.0"
+	id 'com.matthewprenger.cursegradle' version '1.4.0'
+    id 'net.minecraftforge.gradle' version "${forgegradle_version}"
+    id 'org.spongepowered.mixin' version "${mixingradle_version}"
+    id 'org.parchmentmc.librarian.forgegradle' version "${librarian_version}"
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.1.6'
+    id 'org.cadixdev.licenser' version '0.6.1'
+    id 'maven-publish'
+    id 'eclipse'
+    
     id 'idea'
 }
-
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'org.spongepowered.mixin'
-apply plugin: 'maven-publish'
+//apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
+//apply from: 'https://raw.githubusercontent.com/SizableShrimp/ForgeUpdatesRemapper/main/remapper.gradle'
 
 group = 'com.teammoeg'
 version = "${minecraft_version}-${mod_version}"
 archivesBaseName = 'frostedheart'
 compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
 sourceSets {
+	client{java{srcDirs=[]} resources{srcDirs=[]}}
+	server{java{srcDirs=[]} resources{srcDirs=[]}}
     main {
         resources {
             srcDirs = [
                     "$rootDir/src/main/resources",
             ]
+            exclude 'assets/frostedheart/lang/**/'
+            exclude 'assets/frostedheart/font/unifont/*'
         }
     }
+    noDatagen{java{srcDirs=[]} resources{srcDirs=[]}}
 	datagen {
         compileClasspath += main.compileClasspath
         runtimeClasspath += main.runtimeClasspath
@@ -43,11 +47,13 @@ sourceSets {
             srcDirs = [
                     "$rootDir/src/datagen/resources",
             ]
+            exclude 'assets/frostedheart/lang/**/'
         }
     }
 }
+
 minecraft {
-    mappings channel: 'snapshot', version: '20210309-1.16.5'
+    mappings channel: 'parchment', version: "${parchment_version}-${minecraft_version}"
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     runs {
@@ -75,11 +81,16 @@ minecraft {
             if (System.env.LIBGLFW_PATH != null) {
                 jvmArgs "-Dorg.lwjgl.glfw.libname=${System.env.LIBGLFW_PATH}/lib/libglfw.so"
             }
-
+			jvmArgs "-DFile.Encoding=UTF-8"
             arg "-mixin.config=" + "frostedheart.mixins.json"
+            arg "-mixin.config=" + "frostedresearch.mixins.json"
+            arg "-mixin.config=" + "chorda.mixins.json"
+            arg "-uuid 87fb189d-1840-4b18-9b3f-84a4f427294e"
             mods {
                 frostedheart {
+                	source sourceSets.noDatagen
                     source sourceSets.main
+                    source sourceSets.client
                 }
             }
         }
@@ -91,9 +102,13 @@ minecraft {
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             arg "-mixin.config=" + "frostedheart.mixins.json"
+            arg "-mixin.config=" + "chorda.mixins.json"
+            arg "-mixin.config=" + "frostedresearch.mixins.json"
             mods {
                 frostedheart {
+                	source sourceSets.noDatagen
                     source sourceSets.main
+                    source sourceSets.server
                 }
             }
         }
@@ -103,8 +118,10 @@ minecraft {
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
             property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            args '--mod', 'frostedheart','--all','--output', file('src/generated/resources/'), 'validate', '--existing', file('src/main/resources/'), '--existing-mod', 'immersiveengineering', '--existing-mod','rankine'
+            property 'forge.logging.console.level', 'info'
+            args "-mixin.config=" + "frostedheart.mixins.json",'--mod', 'frostedheart','--all','--output', file('src/generated/resources/'), 'validate', '--existing', file('src/main/resources/')
+            arg "-mixin.config=" + "frostedresearch.mixins.json"
+            arg "-mixin.config=" + "chorda.mixins.json"
             mods {
                 frostedheart {
 					source sourceSets.main
@@ -120,136 +137,249 @@ sourceSets.main.resources {
 }
 
 mixin {
-    add sourceSets.main, "frostedheart.refmap.json"
+    add sourceSets.main, "chorda.refmap.json"
 }
 
 repositories {
+	maven { url 'https://maven.aliyun.com/repository/public/' }
+    mavenCentral()
     mavenLocal()
     maven {
-        url "https://cursemaven.com"
-        content {
-            includeGroup "curse.maven"
-        }
-    }
-    // IE & CT Files
-    maven {
-        name = "BlameJared"
+        // location of the maven that hosts JEI files since January 2023
+        name = "Jared's maven"
         url = "https://maven.blamejared.com/"
         content {
-			excludeGroup "curse.maven"
-		}
-    }
-    // JEI and TC Files
-    maven {
-        name = "DVS1 Maven FS"
-        url = "https://dvs1.progwml6.com/files/maven"
-        content {
-			excludeGroup "curse.maven"
-		}
-    }
-    // Needed for JEI
-    maven {
-        name = "latvian maven"
-        url = "https://maven.latmod.com/"
-        content {
             includeGroup "mezz.jei"
-            excludeGroup "curse.maven"
+            includeGroup "blusunrize.immersiveengineering"
+            includeGroup "org.embeddedt"
         }
     }
-	// Location of the maven for Flywheel
     maven {
+        // location of a maven mirror for JEI files, as a fallback
+        name = "ModMaven"
+        url = "https://modmaven.dev"
+        content {
+            includeGroup "mezz.jei"
+        }
+    }
+    maven {
+        //location of the maven for mixed mappings, create, registrate, and flywheel
         name = "tterrag maven"
         url = "https://maven.tterrag.com/"
         content {
-			excludeGroup "curse.maven"
-		}
+            includeGroup "com.jozufozu.flywheel"
+            includeGroup "com.tterrag.registrate"
+            includeGroup "com.simibubi.create"
+        }
     }
     // Needed for Curios API
     maven {
         name = "theillusivec4 maven"
         url = "https://maven.theillusivec4.top/"
         content {
-			excludeGroup "curse.maven"
-		}
-    }
-    maven {
-        url "https://maven.architectury.dev/"
-        content {
-        	includeGroup "me.shedaniel"
-        	excludeGroup "curse.maven"
+            includeGroup "top.theillusivec4.curios"
         }
     }
     maven {
-        url "https://maven.saps.dev/minecraft"
+        name = "architectury maven"
+        url = "https://maven.architectury.dev/"
+        content {
+            includeGroup "dev.architectury"
+        }
+    }
+    maven {
+        name = "saps maven"
+        url = "https://maven.ftb.dev/releases"
         content {
             includeGroup "dev.ftb.mods"
-            includeGroup "dev.latvian.mods"
-            excludeGroup "curse.maven"
         }
     }
 //    maven {
-//        name = "teammoeg maven"
-//        url = "http://server.teammoeg.com:8888/releases"
+//        name = "TeamMoeg COS Maven"
+//        url = "https://maven-1301510336.cos.ap-guangzhou.myqcloud.com"
+////        content {
+////            includeGroup "gloridifice.watersource"
+////            includeGroup "com.alcatrazescapee.primalwinter"
+////            includeGroup "java.moze_intel"
+////            excludeGroup "curse.maven"
+////        }
+//    }
+//    maven {
+//        name = "ftbMavenReleases"
+//        url = "https://maven.ftb.dev/releases"
 //        content {
-//            includeGroup "gloridifice.watersource"
-//            includeGroup "com.alcatrazescapee.primalwinter"
-//            includeGroup "java.moze_intel"
+//            includeGroup "dev.ftb.mods"
 //        }
 //    }
     maven {
-        name = "TeamMoeg COS Maven"
-        url = "https://maven-1301510336.cos.ap-guangzhou.myqcloud.com"
+        name "firstdarkdev"
+        url "https://maven.firstdarkdev.xyz/snapshots"
         content {
-            includeGroup "gloridifice.watersource"
-            includeGroup "com.alcatrazescapee.primalwinter"
-            includeGroup "java.moze_intel"
-            excludeGroup "curse.maven"
+            includeGroup "com.lowdragmc.ldlib"
+        }
+    }
+    maven {
+        name "modrinth"
+        url "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
+    maven {
+        name = "Curse Maven"
+        url = "https://www.cursemaven.com"
+        content {
+            includeGroup "curse.maven"
         }
     }
 }
-
 dependencies {
+    compileOnly 'org.projectlombok:lombok:1.18.36'
+    annotationProcessor 'org.projectlombok:lombok:1.18.36'
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.36'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.36'
+
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 //    implementation fileTree(include: ['*.jar'], dir: 'libs')
 
-    implementation fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
-    implementation fg.deobf("me.shedaniel:architectury-forge:${rootProject.architectury_version}")
-    implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}")
-    implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}")
-    implementation fg.deobf("dev.ftb.mods:ftb-chunks-forge:1605.3.2-build.115")
-    implementation fg.deobf("dev.latvian.mods:item-filters-forge:1605.2.5-build.9")
-    implementation fg.deobf("curse.maven:diet-443570:3756693")
-    implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
-    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.7-143")
-    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.7-143:datagen")
-    implementation fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
-    implementation fg.deobf("curse.maven:create-328085:3499718")
-    implementation fg.deobf("curse.maven:flywheel-486392:3459739")
-    implementation fg.deobf('curse.maven:Project-Rankine-400704:4086553')
-    implementation fg.deobf("curse.maven:thermopolium-594107:4005647")
+    // IE
+    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}")
+    datagenImplementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}:datagen")
 
-    compileOnly fg.deobf("curse.maven:chisel-235279:3376782")
-    compileOnly fg.deobf("curse.maven:ctm-267602:3137659")
-    implementation fg.deobf("curse.maven:kiwi-303657:3377053")
-    compileOnly fg.deobf("curse.maven:snowrealmagic-308663:3295579")
-    implementation fg.deobf("curse.maven:tetra-289712:3585032")
-    implementation fg.deobf("curse.maven:mgui-351914:3456505")
-    compileOnly fg.deobf("curse.maven:selene-499980:3517008")
-    compileOnly fg.deobf("curse.maven:age-api-353992:3176394")
-    compileOnly fg.deobf("curse.maven:neolithic-world-534605:3937806")
-    compileOnly fg.deobf("curse.maven:supplementaries-412082:3650035")
-    compileOnly fg.deobf("curse.maven:engineers-decor-313866:3566177")
-    compileOnly fg.deobf("curse.maven:projecte-226410:3223221")
-    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2:api")
-    compileOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:1605.3.6-build.98")
+    // Create
+    implementation fg.deobf("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }
+    implementation fg.deobf("com.jozufozu.flywheel:flywheel-forge-${minecraft_version}:${flywheel_version}")
+    implementation fg.deobf("com.tterrag.registrate:Registrate:${registrate_version}")
+    // SP
+    implementation fg.deobf("curse.maven:steam-powered-create-534610:5778650")
+    // II
 
-    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2")
+    // create maven is no up to date
+//    implementation fg.deobf("curse.maven:create-328085:5838779")
+	// Storage Drawer
+	compileOnly fg.deobf("curse.maven:storage-drawers-223852:5981672")
+	
+    // JEI
+    compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"))
+    compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}"))
+    implementation(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
 
+    // Curios
+    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
+    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")
+
+    // FTB mods
+    implementation fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
+    implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${ftb_library_version}")
+    implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftb_teams_version}")
+    implementation fg.deobf("dev.ftb.mods:ftb-chunks-forge:${ftb_chunks_version}")
+    compileOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
+    noDatagenRuntimeOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
+    //ItemFilters
+    implementation fg.deobf("curse.maven:item-filters-309674:4838266")
+
+    // Tetra
+    compileOnly fg.deobf("curse.maven:tetra-289712:5957838")
+    noDatagenRuntimeOnly fg.deobf("curse.maven:tetra-289712:5957838")
+//
+    compileOnly fg.deobf("curse.maven:mutil-351914:4824501")
+	noDatagenRuntimeOnly fg.deobf("curse.maven:mutil-351914:4824501")
+    // Caupona
+    implementation fg.deobf("curse.maven:caupona-656147:6406685") 
+    //datagenImplementation fg.deobf("curse.maven:caupona-656147:6354879")
+    // SA
+    compileOnly fg.deobf("curse.maven:neolithic-world-534605:6342604")
+	datagenImplementation fg.deobf("curse.maven:neolithic-world-534605:6342604")
+
+    // LDLib
+    compileOnly fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
+	 implementation fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
+    // oculus
+    compileOnly fg.deobf("maven.modrinth:oculus:${oculus_version}")
+    clientRuntimeOnly fg.deobf("maven.modrinth:oculus:${oculus_version}")
+
+    // embeddium
+    implementation fg.deobf("org.embeddedt:embeddium-${minecraft_version}:${embeddium_version}")
+
+    // Comforts
+//    implementation fg.deobf("curse.maven:comforts-276951:5503516")
+
+    // Terralith
+//    implementation "curse.maven:terralith-513688:5512076"
+
+    // Primal Winter
+//    implementation fg.deobf("curse.maven:primal-winter-393321:4575861")
+
+
+
+    // Datagen only
+    datagenImplementation fg.deobf("curse.maven:steampowered-534610:5778650")
+    
+    datagenImplementation fg.deobf("curse.maven:supplementaries-412082:5676069")
+//    datagenImplementation fg.deobf("curse.maven:crock-pot-404523:5458905")
+//    datagenImplementation fg.deobf("curse.maven:charcoal-pit-reloaded-534602:5861935")
+    datagenImplementation fg.deobf("curse.maven:selene-499980:5854670") // supp api
+	//Excel reader for datagen
+	minecraftLibrary 'org.apache.poi:poi:4.0.0'
+	minecraftLibrary 'org.apache.poi:poi-ooxml:4.0.0'
+	
     // FG5 requires 0.8.3
-    annotationProcessor "org.spongepowered:mixin:0.8.2:processor"
-    testAnnotationProcessor "org.spongepowered:mixin:0.8.2:processor"
+    annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
+    testAnnotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
+	//gradle data processing
+	implementation 'org.codehaus.groovy:groovy-json:3.0.9'
+
+}
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+tasks.register('joinLang') {
+	ext {
+        buildDir=new File(project.buildDir,"jointLang");
+    }
+	inputs.dir "$rootDir/src/main/resources/assets/$mod_id/lang" 
+	if(new File("$rootDir/src/generated/resources/assets/$mod_id/lang").exists())
+		inputs.dir "$rootDir/src/generated/resources/assets/$mod_id/lang"
+	outputs.dir buildDir
+	
+    doLast{
+        def langList=new File("$rootDir/src/main/resources/assets/$mod_id/lang").listFiles({ f -> f.isDirectory() } as FileFilter)
+        langList.each{fn->
+        	
+        	def langFile=new TreeMap<String, String>();
+        	def generatedLang=new File("$rootDir/src/generated/resources/assets/$mod_id/lang/"+fn.name+".json")
+        	if(generatedLang.exists())
+        		new JsonSlurper().parse(generatedLang).each{key,value->langFile.put(key,value)}
+        	//files in alphabetical order
+        	fileTree(fn).files.sort().each { childFile -> 
+			    new JsonSlurper().parse(childFile).each{key,value->langFile.put(key,value)}
+			}
+			//write to output
+			buildDir.mkdirs()
+			new File(buildDir,fn.name+".json").text=JsonOutput.prettyPrint(JsonOutput.toJson(langFile))
+        
+        }
+    }
+}
+tasks.register('zipUnifont', Zip) {
+	ext {
+        buildDir=new File(project.buildDir,"zipUnifont");
+    }
+    inputs.dir "$rootDir/src/main/resources/assets/frostedheart/font/unifont" 
+	outputs.dir buildDir
+    archiveFileName = "default.zip"
+    destinationDirectory = buildDir
+
+    from new File("$rootDir/src/main/resources/assets/frostedheart/font/unifont")
 }
 
+processResources.dependsOn(joinLang)
+processResources.dependsOn(zipUnifont)
+tasks.processResources {
+    duplicatesStrategy = DuplicatesStrategy.WARN
+    from( tasks.joinLang.buildDir){ into 'assets/frostedheart/lang/'}
+    from( tasks.zipUnifont.buildDir){ into 'assets/frostedheart/font/'}
+}
 jar {
     manifest {
         attributes([
@@ -260,12 +390,11 @@ jar {
                 "Implementation-Version"  : project.version,
                 "Implementation-Vendor"   : "TeamMoeg",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                "MixinConfigs": "frostedheart.mixins.json"
+                "MixinConfigs": "frostedheart.mixins.json,frostedresearch.mixins.json,chorda.mixins.json"
         ])
     }
+    finalizedBy('reobfJar')
 }
-
-jar.finalizedBy('reobfJar')
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
@@ -277,16 +406,19 @@ task deobfJar(type: Jar) {
     archiveClassifier.set('deobf')
 }
 
+tasks.sourcesJar {
+    duplicatesStrategy = DuplicatesStrategy.WARN
+}
+
+tasks.deobfJar {
+    duplicatesStrategy = DuplicatesStrategy.WARN
+}
+
 artifacts {
     archives sourcesJar
     archives deobfJar
 }
-jar {
-   with copySpec {
-      from 'src/main/resources/frostedheart.mixins.json' 
-      filter{l -> l.replaceAll('"create.MixinSmartTileEntity",','')}; 
-   }
-} 
+
 String getChangelogText() {
     def changelogFile = file('changelog.txt')
     String str = ''
@@ -354,18 +486,22 @@ curseforge {
         mainArtifact (jar) {
             relations {
                 requiredDependency 'create'
-                requiredDependency 'flywheel'
                 requiredDependency 'immersive-engineering'
-                requiredDependency 'thermopolium'
-//                requiredDependency 'snow-real-magic'
-//                requiredDependency 'kiwi'
-//                requiredDependency 'primal-winter'
+                requiredDependency 'caupona'
+                requiredDependency 'tetra'
+                requiredDependency 'mutil'
+                requiredDependency 'curios'
+                optionalDependency 'patchouli'
+                optionalDependency 'steam-powered-create'
+                optionalDependency 'immersive-industry'
+                optionalDependency 'charcoal-pit-reloaded'
+                optionalDependency 'neolithic-world'
+                optionalDependency 'comforts'
             }
         }
     }
 }
 
-// Automatically apply a license header when running checkLicense / updateLicense
 license {
     header = project.file('HEADER.txt')
     ignoreFailures = true

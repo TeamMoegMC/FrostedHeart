@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 /**
  * Lowest level town processing function.
@@ -33,6 +33,12 @@ import net.minecraft.nbt.CompoundNBT;
 public interface TownWorker {
 
     /**
+     * Empty work, don't do anything.
+     * Just used to avoid null pointer exception.
+     */
+    public static TownWorker EMPTY = (town, workData)->true;
+
+    /**
      * Work with highest priority
      * It's recommended that this work should add service from block data or constant but not from resources.
      * This work should NOT provide resource or cost resource.
@@ -41,7 +47,7 @@ public interface TownWorker {
      * @param workData workData provided by work type
      * @return true, if work done successfully
      */
-    default boolean firstWork(Town town, CompoundNBT workData) {
+    default boolean firstWork(Town town, CompoundTag workData) {
         return true;
     }
 
@@ -53,7 +59,7 @@ public interface TownWorker {
      * @param workData workData provided by work type
      * @return true, if work done successfully
      */
-    default boolean beforeWork(Town town, CompoundNBT workData) {
+    default boolean beforeWork(Town town, CompoundTag workData) {
         return true;
     }
 
@@ -65,7 +71,7 @@ public interface TownWorker {
      * @param workData workData provided by work type
      * @return true, if work done successfully
      */
-    boolean work(Town town, CompoundNBT workData);
+    boolean work(Town town, CompoundTag workData);
 
     /**
      * Work with lower priority;
@@ -75,7 +81,7 @@ public interface TownWorker {
      * @param workData workData provided by work type
      * @return true, if work done successfully
      */
-    default boolean afterWork(Town town, CompoundNBT workData) {
+    default boolean afterWork(Town town, CompoundTag workData) {
         return true;
     }
 
@@ -87,7 +93,7 @@ public interface TownWorker {
      * @param workData workData provided by work type
      * @return true, if work done successfully
      */
-    default boolean lastWork(Town town, CompoundNBT workData) {
+    default boolean lastWork(Town town, CompoundTag workData) {
         return true;
     }
 

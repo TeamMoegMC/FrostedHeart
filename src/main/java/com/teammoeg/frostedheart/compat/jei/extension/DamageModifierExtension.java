@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -20,15 +20,14 @@
 package com.teammoeg.frostedheart.compat.jei.extension;
 
 import java.util.Arrays;
-import java.util.Collections;
+import com.teammoeg.frostedheart.content.utility.recipe.ModifyDamageRecipe;
 
-import com.teammoeg.frostedheart.recipes.ModifyDamageRecipe;
-
-import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
+import mezz.jei.api.gui.ingredient.ICraftingGridHelper;
+import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategoryExtension;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
 
 public class DamageModifierExtension implements ICraftingCategoryExtension {
     ModifyDamageRecipe fuel;
@@ -42,24 +41,27 @@ public class DamageModifierExtension implements ICraftingCategoryExtension {
         return fuel.getId();
     }
 
-    @Override
-    public void setIngredients(IIngredients ingredients) {
-        ItemStack[] orig = fuel.tool.getMatchingStacks();
+
+	@Override
+	public void setRecipe(IRecipeLayoutBuilder builder, ICraftingGridHelper craftingGridHelper, IFocusGroup focuses) {
+		builder.setShapeless();
+        ItemStack[] orig = fuel.tool.getItems();
         ItemStack[] copy = new ItemStack[orig.length];
         ItemStack[] out = new ItemStack[orig.length];
         for (int i = 0; i < orig.length; i++) {
             copy[i] = orig[i].copy();
             out[i] = orig[i].copy();
             if (fuel.modify > 0) {
-                copy[i].setDamage(fuel.modify);
-                out[i].setDamage(0);
+                copy[i].setDamageValue(fuel.modify);
+                out[i].setDamageValue(0);
             } else {
-                copy[i].setDamage(0);
-                out[i].setDamage(fuel.modify);
+                copy[i].setDamageValue(0);
+                out[i].setDamageValue(fuel.modify);
             }
         }
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(copy), Arrays.asList(fuel.repair.getMatchingStacks())));
-        ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(out)));
-    }
+		craftingGridHelper.createAndSetInputs(builder, Arrays.asList(Arrays.asList(copy), Arrays.asList(fuel.repair.getItems())), 0, 0);
+		craftingGridHelper.createAndSetOutputs(builder, Arrays.asList(out));
+		
+	}
 
 }

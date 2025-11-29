@@ -1,0 +1,13 @@
+{
+    "providers": [
+        {
+            "type": "bitmap",
+            "file": "frostedheart:font/fruits_and_vegs.png",
+            "height":8,
+            "ascent":7,
+            "chars":[
+            "\uF503"
+            ]
+        }
+    ]
+}

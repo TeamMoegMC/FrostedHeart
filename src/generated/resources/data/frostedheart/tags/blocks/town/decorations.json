@@ -1,0 +1,18 @@
+{
+  "values": [
+    "minecraft:flower_pot",
+    "minecraft:lantern",
+    "minecraft:soul_lantern",
+    "minecraft:campfire",
+    "minecraft:soul_campfire",
+    "minecraft:enchanting_table",
+    "minecraft:anvil",
+    "minecraft:chipped_anvil",
+    "minecraft:damaged_anvil",
+    "minecraft:stonecutter",
+    "minecraft:grindstone",
+    "minecraft:bell",
+    "minecraft:loom",
+    "minecraft:smithing_table"
+  ]
+}

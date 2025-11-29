@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:armor_temp",
+  "factor": 500.0,
+  "heat_proof": 0.2,
+  "item": "frostedheart:gambeson",
+  "slot": "torso",
+  "wind_proof": 0.2
+}

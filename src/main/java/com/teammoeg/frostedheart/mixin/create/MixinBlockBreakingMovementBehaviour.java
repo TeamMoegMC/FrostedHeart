@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -23,26 +23,26 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import com.simibubi.create.content.contraptions.components.actors.BlockBreakingMovementBehaviour;
-import com.simibubi.create.content.contraptions.components.structureMovement.MovementBehaviour;
-import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
+import com.simibubi.create.content.contraptions.behaviour.MovementBehaviour;
+import com.simibubi.create.content.contraptions.behaviour.MovementContext;
+import com.simibubi.create.content.kinetics.base.BlockBreakingMovementBehaviour;
 import com.simibubi.create.foundation.utility.BlockHelper;
-import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
+import com.teammoeg.frostedheart.compat.create.ISpeedContraption;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.FallingBlock;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.FallingBlock;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
 
 @Mixin(BlockBreakingMovementBehaviour.class)
-public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehaviour {
+public abstract class MixinBlockBreakingMovementBehaviour implements MovementBehaviour {
     @Shadow(remap = false)
-    public abstract boolean canBreak(World world, BlockPos breakingPos, BlockState state);
+    public abstract boolean canBreak(Level world, BlockPos breakingPos, BlockState state);
 
     @Shadow(remap = false)
     protected abstract void onBlockBroken(MovementContext context, BlockPos pos, BlockState brokenState);
@@ -56,12 +56,12 @@ public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehavi
      */
     @Overwrite(remap = false)
     public void tickBreaker(MovementContext context) {
-        CompoundNBT data = context.data;
-        if (context.world.isRemote)
+        CompoundTag data = context.data;
+        if (context.world.isClientSide)
             return;
         if (!data.contains("BreakingPos"))
             return;
-        if (context.relativeMotion.equals(Vector3d.ZERO)) {
+        if (context.relativeMotion.equals(Vec3.ZERO)) {
             context.stall = false;
             return;
         }
@@ -72,12 +72,12 @@ public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehavi
             return;
         }
 
-        World world = context.world;
-        BlockPos breakingPos = NBTUtil.readBlockPos(data.getCompound("BreakingPos"));
+        Level world = context.world;
+        BlockPos breakingPos = NbtUtils.readBlockPos(data.getCompound("BreakingPos"));
         int destroyProgress = data.getInt("Progress");
         int id = data.getInt("BreakerId");
         BlockState stateToBreak = world.getBlockState(breakingPos);
-        float blockHardness = stateToBreak.getBlockHardness(world, breakingPos);
+        float blockHardness = stateToBreak.getDestroySpeed(world, breakingPos);
 
         if (!canBreak(world, breakingPos, stateToBreak)) {
             if (destroyProgress != 0) {
@@ -85,28 +85,28 @@ public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehavi
                 data.remove("Progress");
                 data.remove("TicksUntilNextProgress");
                 data.remove("BreakingPos");
-                world.sendBlockBreakProgress(id, breakingPos, -1);
+                world.destroyBlockProgress(id, breakingPos, -1);
             }
             context.stall = false;
             return;
         }
         float breakSpeed;
         if (context.contraption instanceof ISpeedContraption)
-            breakSpeed = MathHelper.clamp(Math.abs(((ISpeedContraption) context.contraption).getSpeed()) * 10, 2, 16000f);
+            breakSpeed = Mth.clamp(Math.abs(((ISpeedContraption) context.contraption).getSpeed()) * 10, 2, 16000f);
         else
-            breakSpeed = MathHelper.clamp(Math.abs(context.getAnimationSpeed()) / 500f, 1 / 128f, 16f);
-        destroyProgress += MathHelper.clamp((int) (breakSpeed / blockHardness), 1, 10000 - destroyProgress);
-        world.playSound(null, breakingPos, stateToBreak.getSoundType().getHitSound(), SoundCategory.NEUTRAL, .25f, 1);
+            breakSpeed = Mth.clamp(Math.abs(context.getAnimationSpeed()) / 500f, 1 / 128f, 16f);
+        destroyProgress += Mth.clamp((int) (breakSpeed / blockHardness), 1, 10000 - destroyProgress);
+        world.playSound(null, breakingPos, stateToBreak.getSoundType().getHitSound(), SoundSource.NEUTRAL, .25f, 1);
 
         if (destroyProgress >= 10000) {
-            world.sendBlockBreakProgress(id, breakingPos, -1);
+            world.destroyBlockProgress(id, breakingPos, -1);
 
             // break falling blocks from top to bottom
             BlockPos ogPos = breakingPos;
-            BlockState stateAbove = world.getBlockState(breakingPos.up());
+            BlockState stateAbove = world.getBlockState(breakingPos.above());
             while (stateAbove.getBlock() instanceof FallingBlock) {
-                breakingPos = breakingPos.up();
-                stateAbove = world.getBlockState(breakingPos.up());
+                breakingPos = breakingPos.above();
+                stateAbove = world.getBlockState(breakingPos.above());
             }
             stateToBreak = world.getBlockState(breakingPos);
 
@@ -122,7 +122,7 @@ public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehavi
         }
 
         ticksUntilNextProgress = (int) (blockHardness / breakSpeed);
-        world.sendBlockBreakProgress(id, breakingPos, MathHelper.clamp(destroyProgress / 1000, 1, 10));
+        world.destroyBlockProgress(id, breakingPos, Mth.clamp(destroyProgress / 1000, 1, 10));
         data.putInt("TicksUntilNextProgress", ticksUntilNextProgress);
         data.putInt("Progress", destroyProgress);
     }

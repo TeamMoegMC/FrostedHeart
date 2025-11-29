@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -25,15 +25,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
-import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
-import com.teammoeg.frostedheart.util.mixin.IStressContraption;
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
+import com.simibubi.create.content.contraptions.Contraption;
+import com.teammoeg.frostedheart.compat.create.ContraptionCostUtils;
+import com.teammoeg.frostedheart.compat.create.IStressContraption;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 
 @Mixin(AbstractContraptionEntity.class)
 public abstract class MixinAbstractContraption extends Entity implements IStressContraption {
@@ -44,7 +44,7 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
     float calculatedRotationCost = -1;
     @Shadow(remap = false)
     protected Contraption contraption;
-    public MixinAbstractContraption(EntityType<?> p_i48580_1_, World p_i48580_2_) {
+    public MixinAbstractContraption(EntityType<?> p_i48580_1_, Level p_i48580_2_) {
         super(p_i48580_1_, p_i48580_2_);
     }
 
@@ -83,9 +83,9 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      * @author khjxiaogu
      * @reason force reset contraptions for mod propose
      */
-    @Inject(at = @At("TAIL"), method = "readAdditional(Lnet/minecraft/nbt/CompoundNBT;Z)V", remap = false)
-    protected void readAdditional(CompoundNBT compound, boolean spawnPacket, CallbackInfo cbi) {
-        if (!world.isRemote)
+    @Inject(at = @At("TAIL"), method = "readAdditional", remap = false)
+    protected void readAdditional(CompoundTag compound, boolean spawnPacket, CallbackInfo cbi) {
+        if (!level().isClientSide)
             if (compound.getInt("spinst") != 2) {
                 shoulddisb = true;
             }
@@ -97,7 +97,7 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      */
     @Inject(at = @At("TAIL"), method = "tick")
     protected void tick(CallbackInfo cbi) {
-        if (!world.isRemote)
+        if (!level().isClientSide)
             if (this.shoulddisb)
                 this.disassemble();
     }
@@ -106,9 +106,9 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      * @author khjxiaogu
      * @reason force reset contraptions for mod propose
      */
-    @Inject(at = @At("TAIL"), method = "writeAdditional(Lnet/minecraft/nbt/CompoundNBT;Z)V", remap = false)
-    protected void writeAdditional(CompoundNBT compound, boolean spawnPacket, CallbackInfo cbi) {
-        if (!world.isRemote)
+    @Inject(at = @At("TAIL"), method = "writeAdditional", remap = false)
+    protected void writeAdditional(CompoundTag compound, boolean spawnPacket, CallbackInfo cbi) {
+        if (!level().isClientSide)
             compound.putInt("spinst", 2);
     }
 }

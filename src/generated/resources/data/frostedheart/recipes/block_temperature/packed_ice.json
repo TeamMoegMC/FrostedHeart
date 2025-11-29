@@ -1,0 +1,5 @@
+{
+  "type": "frostedheart:block_temp",
+  "block": "minecraft:packed_ice",
+  "temperature": -20.0
+}

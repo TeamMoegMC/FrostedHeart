@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,31 +19,29 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
+import com.teammoeg.chorda.io.SerializeUtil;
+import com.teammoeg.chorda.network.CMessage;
+
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
+
 import java.util.Collection;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.content.trade.ClientHeatHandler;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+public class EndPointDataPacket implements CMessage {
+    private final Collection<HeatEndpoint> data;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+    public EndPointDataPacket(HeatNetwork network) {
 
-// send when player join
-public class EndPointDataPacket implements FHMessage {
-    private final Collection<EndPointData> data;
-
-    public EndPointDataPacket(HeatEnergyNetwork ewn) {
-        this.data = ewn.data.values();
-
+        this.data = network.getEndpoints();
     }
 
-    public EndPointDataPacket(PacketBuffer buffer) {
-        data = SerializeUtil.readList(buffer, EndPointData::readNetwork);
+    public EndPointDataPacket(FriendlyByteBuf buffer) {
+        data = SerializeUtil.readList(buffer, HeatEndpoint::readNetwork);
     }
 
-    public void encode(PacketBuffer buffer) {
-        SerializeUtil.writeList(buffer, data, EndPointData::writeNetwork);
+    public void encode(FriendlyByteBuf buffer) {
+        SerializeUtil.writeList(buffer, data, HeatEndpoint::writeNetwork);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {

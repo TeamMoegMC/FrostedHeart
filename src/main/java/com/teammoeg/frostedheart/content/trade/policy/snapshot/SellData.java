@@ -22,24 +22,25 @@ package com.teammoeg.frostedheart.content.trade.policy.snapshot;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.ProductionData;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 public class SellData {
     String id;
     int store;
-
+    int canRestock;
     ProductionData data;
 
-    public SellData(String id, int store, ProductionData data) {
+    public SellData(FHVillagerData vd,String id, int store, ProductionData data) {
         super();
         this.id = id;
         this.store = store;
         this.data = data;
+        this.canRestock=this.data.canRestock(vd);
     }
 
-    public boolean canRestock(FHVillagerData data) {
+    public int canRestock(FHVillagerData data) {
 
-        return this.data.canRestock(data);
+        return canRestock;
     }
 
     public String getId() {

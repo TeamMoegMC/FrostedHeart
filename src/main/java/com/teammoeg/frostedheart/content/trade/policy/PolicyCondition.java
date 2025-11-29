@@ -20,11 +20,11 @@
 package com.teammoeg.frostedheart.content.trade.policy;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.chorda.io.Writeable;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
-import com.teammoeg.frostedheart.util.io.Writeable;
 
 public interface PolicyCondition extends Writeable{
-    boolean test(FHVillagerData ve);
+    int test(FHVillagerData ve);
 
 	@Override
 	default JsonObject serialize() {

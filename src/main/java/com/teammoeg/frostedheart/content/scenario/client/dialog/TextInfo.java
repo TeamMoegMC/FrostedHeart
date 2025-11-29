@@ -1,20 +1,41 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.scenario.client.dialog;
 
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.utility.ReferenceValue;
 
-import net.minecraft.util.ICharacterConsumer;
-import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.text.ITextComponent;
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.commons.lang3.mutable.MutableObject;
+
+import com.teammoeg.chorda.client.ClientUtils;
+import net.minecraft.util.FormattedCharSink;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.network.chat.Component;
 
 public class TextInfo {
-	public static class SizedReorderingProcessor implements IReorderingProcessor {
-		IReorderingProcessor origin;
+	public static class SizedReorderingProcessor implements FormattedCharSequence {
+		FormattedCharSequence origin;
 		int limit = 0;
 		boolean isFinished = false;
 
-		public SizedReorderingProcessor(IReorderingProcessor origin) {
+		public SizedReorderingProcessor(FormattedCharSequence origin) {
 			super();
 			this.origin = origin;
 		}
@@ -23,39 +44,40 @@ public class TextInfo {
 			return limit > 0;
 		}
 
-		public IReorderingProcessor asFinished() {
+		public FormattedCharSequence asFinished() {
 			if (isFinished) return origin;
 			return this;
 		}
 		public int nextSpace() {
-			ReferenceValue<Integer> renderTracker = new ReferenceValue<>(0);
-			ReferenceValue<Integer> retTracker = new ReferenceValue<>();
+			MutableInt renderTracker = new MutableInt(0);
+			MutableObject<Integer> retTracker = new MutableObject<>(-1);
 			origin.accept((i, s, c) -> {
 				if (c != 65533) {
-					renderTracker.setVal(renderTracker.getVal() + 1);
+					renderTracker.increment();
 				}
-				if (renderTracker.getVal() < limit) return true;
+				if (renderTracker.getValue() < limit) return true;
 				if(Character.isWhitespace(c)) {
-					retTracker.setVal(renderTracker.getVal());
+					retTracker.setValue(renderTracker.getValue());
 				}
 				return false;
 			});
-			retTracker.setIfAbsent(renderTracker::getVal);
-			return retTracker.getVal();
+			if(retTracker.getValue()==null)
+				return renderTracker.getValue();
+			return retTracker.getValue();
 		}
 		@Override
-		public boolean accept(ICharacterConsumer p_accept_1_) {
-			ReferenceValue<Integer> renderTracker = new ReferenceValue<>(0);
+		public boolean accept(FormattedCharSink p_accept_1_) {
+			MutableInt renderTracker = new MutableInt(0);
 			return origin.accept((i, s, c) -> {
 				isFinished = true;
-				if (renderTracker.getVal() < limit) {
+				if (renderTracker.getValue() < limit) {
 					p_accept_1_.accept(i, s, c);
 				} else {
 					isFinished = false;
 					return false;
 				}
 				if (c != 65533) {
-					renderTracker.setVal(renderTracker.getVal() + 1);
+					renderTracker.increment();
 				}
 				return true;
 			});
@@ -77,9 +99,9 @@ public class TextInfo {
 		}
 
 	}
-	public ITextComponent parent;
+	public Component parent;
 	public int line;
-	public IReorderingProcessor text;
+	public FormattedCharSequence text;
 	public boolean addLimit(int amount,boolean toSpace) {
 		if (text instanceof SizedReorderingProcessor) {
 			SizedReorderingProcessor t = (SizedReorderingProcessor) text;
@@ -94,7 +116,7 @@ public class TextInfo {
 		return false;
 	}
 
-	public TextInfo(ITextComponent parent, int line, IReorderingProcessor text) {
+	public TextInfo(Component parent, int line, FormattedCharSequence text) {
 		super();
 		this.parent = parent;
 		this.line = line;
@@ -103,12 +125,12 @@ public class TextInfo {
 	}
 
 	public int getMaxLen() {
-		return ClientUtils.mc().fontRenderer.getStringWidth(ClientScene.toString(getFinished()))+30;
+		return ClientUtils.getMc().font.width(ClientScene.toString(getFinished()))+30;
 	}
 	public int getCurLen() {
-		return ClientUtils.mc().fontRenderer.getStringWidth(ClientScene.toString(text))+30;
+		return ClientUtils.getMc().font.width(ClientScene.toString(text))+30;
 	}
-	public IReorderingProcessor asFinished() {
+	public FormattedCharSequence asFinished() {
 		return (text instanceof SizedReorderingProcessor) ? ((SizedReorderingProcessor) text).asFinished() : text;
 
 	}
@@ -120,8 +142,7 @@ public class TextInfo {
 		return !(text instanceof SizedReorderingProcessor) || ((SizedReorderingProcessor) text).hasText();
 	}
 
-	public IReorderingProcessor getFinished() {
-		// TODO Auto-generated method stub
+	public FormattedCharSequence getFinished() {
 		return (text instanceof SizedReorderingProcessor) ? ((SizedReorderingProcessor) text).origin : text;
 	}
 }

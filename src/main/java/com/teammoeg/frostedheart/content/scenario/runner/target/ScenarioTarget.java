@@ -21,47 +21,11 @@ package com.teammoeg.frostedheart.content.scenario.runner.target;
 
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.content.scenario.runner.IScenarioThread;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioThread;
 
-public abstract class ScenarioTarget implements IScenarioTarget{
-	private final String name;
-	private transient Scenario sp;
-	private transient IScenarioThread cd;
-	public ScenarioTarget(IScenarioThread cdr,String name) {
-		super();
-		this.name=name;
-		cd=cdr;
-		if(name==null) {
-			sp=cdr.getScenario();
-			if(sp!=null)
-				name=sp.name;
-		}
-	}
-	public ScenarioTarget(Scenario sc) {
-		super();
-		this.sp=sc;
-		this.name=sc.name;
-	}
-	public Scenario getScenario() {
-		if(name==null)
-			return null;
-		if(sp==null)
-			sp=FHScenario.loadScenario(cd,name);
-		return sp;
-	}
-	@Override
-	public void apply(IScenarioThread conductor) {
-		if(name!=null&&!getScenario().equals(conductor.getScenario())) {
-			conductor.setScenario(getScenario());
-			conductor.setNodeNum(0);
-		}
-	}
-	protected String getName() {
-		return name;
-	}
-	@Override
-	public String toString() {
-		return "[name=" + name + "]";
-	}
+public interface ScenarioTarget{
+	PreparedScenarioTarget prepare(ScenarioContext t,Scenario current);
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,66 +19,60 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.debug;
 
-import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
-import com.teammoeg.frostedheart.content.steamenergy.HeatHandler;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.UseAction;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.world.World;
+
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
+import com.teammoeg.frostedheart.content.steamenergy.HeatHandler;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 
 public class HeatDebugItem extends Item {
     public HeatDebugItem() {
-        super(new Properties().maxStackSize(1).setNoRepair().group(FHMain.itemGroup));
+        super(new Properties().stacksTo(1).setNoRepair());
     }
 
-    //Dont add to creative tag
-    @Override
-    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
-    }
 
-    public UseAction getUseAction(ItemStack stack) {
-        return UseAction.NONE;
+    public UseAnim getUseAnimation(ItemStack stack) {
+        return UseAnim.NONE;
     }
 
     public int getUseDuration(ItemStack stack) {
         return 1;
     }
 
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
+    public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
 
-        BlockRayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
-        ItemStack itemstack = playerIn.getHeldItem(handIn);
-        if (worldIn.isRemote) return ActionResult.resultSuccess(itemstack);
-        if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
-        	if(playerIn instanceof ServerPlayerEntity) {
-	            BlockPos blockpos = raytraceresult.getPos();
-	            TileEntity te = Utils.getExistingTileEntity(worldIn, blockpos);
-	            if (te instanceof EnergyNetworkProvider) {
-	            	if(((EnergyNetworkProvider) te).getNetwork()!=null)
-	            		HeatHandler.openHeatScreen((ServerPlayerEntity) playerIn, ((EnergyNetworkProvider) te).getNetwork());
-	            	else playerIn.sendMessage(TranslateUtils.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
-	            }else if(te!=null) {
-	            	playerIn.sendMessage(TranslateUtils.str("EnergyEndpoint "+te.getCapability(FHCapabilities.HEAT_EP.capability(), raytraceresult.getFace()).orElse(null)), playerIn.getUniqueID());
-	            }
+        BlockHitResult raytraceresult = getPlayerPOVHitResult(worldIn, playerIn, ClipContext.Fluid.SOURCE_ONLY);
+        ItemStack itemstack = playerIn.getItemInHand(handIn);
+        if (worldIn.isClientSide) return InteractionResultHolder.success(itemstack);
+        if (raytraceresult.getType() == HitResult.Type.BLOCK) {
+            if (playerIn instanceof ServerPlayer) {
+                BlockPos blockpos = raytraceresult.getBlockPos();
+                BlockEntity te = Utils.getExistingTileEntity(worldIn, blockpos);
+                if (te instanceof HeatNetworkProvider) {
+                    if (((HeatNetworkProvider) te).getNetwork() != null)
+                        HeatHandler.openHeatScreen((ServerPlayer) playerIn, ((HeatNetworkProvider) te).getNetwork());
+                    else
+                        playerIn.sendSystemMessage(Components.str("EnergyNetwork " + ((HeatNetworkProvider) te).getNetwork()));
+                } else if (te != null) {
+                    playerIn.sendSystemMessage(Components.str("EnergyEndpoint " + te.getCapability(FHCapabilities.HEAT_EP.capability(), raytraceresult.getDirection()).orElse(null)));
+                }
             }
-            return ActionResult.resultSuccess(itemstack);
+            return InteractionResultHolder.success(itemstack);
         }
-        return ActionResult.resultFail(itemstack);
+        return InteractionResultHolder.fail(itemstack);
     }
 }

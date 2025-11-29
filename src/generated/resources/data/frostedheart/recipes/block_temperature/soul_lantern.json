@@ -1,0 +1,6 @@
+{
+  "type": "frostedheart:block_temp",
+  "block": "minecraft:soul_lantern",
+  "must_lit": true,
+  "temperature": -10.0
+}

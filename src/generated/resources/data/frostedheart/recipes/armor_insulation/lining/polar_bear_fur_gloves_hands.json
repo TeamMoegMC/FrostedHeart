@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:armor_temp",
+  "factor": 900.0,
+  "heat_proof": 0.2,
+  "item": "frostedheart:polar_bear_fur_gloves",
+  "slot": "hands",
+  "wind_proof": 0.85
+}

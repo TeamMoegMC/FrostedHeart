@@ -30,21 +30,21 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
+import org.joml.Vector3f;
 
+import com.teammoeg.chorda.client.ui.Point;
+import com.teammoeg.chorda.client.ui.Rect;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.util.client.Point;
-import com.teammoeg.frostedheart.util.client.Rect;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.core.Vec3i;
 
 public class ScenarioExecutor<T> {
+    static Marker MARKER = MarkerManager.getMarker("Scenario Executor");
     private static class MethodInfo<T> implements ScenarioMethod<T> {
         private static class ParamInfo {
             String[] paramName;
@@ -103,6 +103,10 @@ public class ScenarioExecutor<T> {
                     converter = fnumber;
                     if(partype.isPrimitive())
                     	def=()->0f;
+                } else if (partype.isAssignableFrom(Boolean.class)|| partype==boolean.class) {
+                	converter=bo;
+                	if(partype.isPrimitive())
+                    	def=()->false;
                 } else if(parent.types.containsKey(partype)){
                 	converter=parent.types.get(partype);
                 }else {
@@ -157,7 +161,6 @@ public class ScenarioExecutor<T> {
     public interface ScenarioMethod<T> {
         void execute(T scenarioVM, Map<String, String> param);
     }
-    static Logger LOGGER = LogManager.getLogger("ScenarioExecutor");
     Class<T> objcls;
     public ScenarioExecutor(Class<T> objcls) {
 		super();
@@ -174,6 +177,12 @@ public class ScenarioExecutor<T> {
     	if(s==null||s.isEmpty())return s;
     	if(s.toLowerCase().startsWith("0x"))return (int)(Long.parseLong(s.substring(2),16));
     	return ((Double) Double.parseDouble(s)).intValue();
+    	};
+	private static TypeAdapter<?, Object> bo = (r,n,p) ->{ 
+    	String s=getFirstExists(p,n);
+    	if(s==null||s.isEmpty())return s;
+    	if(s.toLowerCase().startsWith("0x"))return (int)(Long.parseLong(s.substring(2),16));
+    	return ((Double) Double.parseDouble(s)).intValue()>0;
     	};
 
     private static TypeAdapter<?,Object> fnumber = (r,n,p) ->{
@@ -192,7 +201,7 @@ public class ScenarioExecutor<T> {
     		castParamType(r,p,int.class,s->s+"y",0,n),
     		castParamType(r,p,int.class,s->s+"z",0,n)
     		));
-    	addTypeAdapter(Vector3i.class,(r,n,p)->new Vector3i(
+    	addTypeAdapter(Vec3i.class,(r,n,p)->new Vec3i(
     		castParamType(r,p,int.class,s->s+"x",0,n),
     		castParamType(r,p,int.class,s->s+"y",0,n),
     		castParamType(r,p,int.class,s->s+"z",0,n)
@@ -202,7 +211,7 @@ public class ScenarioExecutor<T> {
     		castParamType(r,p,float.class,s->s+"y",0f,n),
     		castParamType(r,p,float.class,s->s+"z",0f,n)
     		));
-    	addTypeAdapter(Vector3d.class,(r,n,p)->new Vector3d(
+    	addTypeAdapter(Vec3.class,(r,n,p)->new Vec3(
     		castParamType(r,p,double.class,s->s+"x",0d,n),
     		castParamType(r,p,double.class,s->s+"y",0d,n),
     		castParamType(r,p,double.class,s->s+"z",0d,n)
@@ -217,16 +226,13 @@ public class ScenarioExecutor<T> {
     		castParamType(r,p,int.class,s->s+"x",0,n),
     		castParamType(r,p,int.class,s->s+"y",0,n)
     		));
-    	addTypeAdapter(Color4I.class,(r,n,p)->Color4I.rgba(
-    		castParamType(r,p,int.class,0xFF000000,n)
-    		));
     }
 
     Map<String, ScenarioMethod<T>> commands = new HashMap<>();
     public void callCommand(String name, T scenarioVM, Map<String, String> params) {
         ScenarioMethod<T> command = commands.get(name);
         if (command == null) {
-            throw new ScenarioExecutionException("Can not find command " + name);
+            throw new CommandNotFoundException("Can not find command " + name);
         }
         command.execute(scenarioVM, params);
     }
@@ -282,10 +288,11 @@ public class ScenarioExecutor<T> {
     public void register(Class<?> clazz) {
         try {
             Constructor<?> ctor = clazz.getConstructor();
+            ctor.setAccessible(true);
             registerInst(ctor.newInstance());
         } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException |
                  IllegalArgumentException e) {
-            FHMain.LOGGER.error("Error registering scenario class",e);
+            FHMain.LOGGER.error(MARKER, "Error registering scenario class",e);
         } catch (InvocationTargetException e) {
             throw new RuntimeException("Error registering scenario class" + e.getTargetException());
         }
@@ -304,7 +311,7 @@ public class ScenarioExecutor<T> {
                 		registerCommand(met.getName(), new MethodInfo<>(Modifier.isStatic(met.getModifiers()) ? null : clazz, met, this));
                 } catch (ScenarioExecutionException ex) {
                     ex.printStackTrace();
-                    LOGGER.warn(ex.getMessage());
+                    FHMain.LOGGER.warn(MARKER, ex.getMessage());
                 }
             }
         }
@@ -318,15 +325,14 @@ public class ScenarioExecutor<T> {
                 } catch (ScenarioExecutionException ex) {
 
                     ex.printStackTrace();
-                    LOGGER.warn(ex.getMessage());
+                    FHMain.LOGGER.warn(MARKER, ex.getMessage());
                 }
             }
         }
     }
     static class Test{
     	public void test(ScenarioConductor sr,@Param("s")String s,@Param("s")Rect r,@Param("")Rect r1) {
-    		System.out.println(s+":"+r+":"+r1);
-
+    		FHMain.LOGGER.error(s+":"+r+":"+r1);
     	}
     }
     public static void main(String[] args) throws SecurityException {

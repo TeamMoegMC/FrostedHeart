@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,46 +19,43 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.frostedheart.content.steamenergy.pipe.CPipeBlock;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.state.StateContainer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
+import java.util.function.Supplier;
 
-public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock>{
+public class HeatPipeBlock extends CPipeBlock<HeatPipeBlock> implements CEntityBlock<HeatPipeTileEntity> {
 
     public HeatPipeBlock(Properties blockProps) {
-        super(HeatPipeBlock.class,  blockProps);
+        super(HeatPipeBlock.class, blockProps);
         this.lightOpacity = 0;
     }
 
 
     @Override
-	public boolean canConnectTo(IWorld world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
-		return HeatCapabilities.canConnectAt(world, neighbourPos, direction.getOpposite());
-	}
-
-
-    @Nullable
-    @Override
-    public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
-        return FHTileTypes.HEATPIPE.get().create();
+    public boolean canConnectTo(LevelAccessor world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
+        return HeatCapabilities.canConnectAt(world, neighbourPos, direction.getOpposite());
     }
 
 
     @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
+    }
+
+
+    @Override
+    public Supplier<BlockEntityType<HeatPipeTileEntity>> getBlock() {
+        return FHBlockEntityTypes.HEATPIPE;
     }
 
 

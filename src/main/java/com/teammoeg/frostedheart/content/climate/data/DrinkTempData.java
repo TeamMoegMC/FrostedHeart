@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,21 +19,37 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
+import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 
-public class DrinkTempData {
-	public static final MapCodec<DrinkTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("heat").forGetter(o->o.heat)).apply(t, DrinkTempData::new));
-	float heat;
-	public DrinkTempData(float heat) {
-		super();
-		this.heat = heat;
-	}
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
+public record DrinkTempData(Fluid fluid,float heat) {
+	public static final Codec<DrinkTempData> CODEC=RecordCodecBuilder.create(t->t.group(
+		ForgeRegistries.FLUIDS.getCodec().fieldOf("fluid").forGetter(o->o.fluid),
+		Codec.FLOAT.optionalFieldOf("heat",0f).forGetter(o->o.heat)).apply(t, DrinkTempData::new));
+	public static RegistryObject<CodecRecipeSerializer<DrinkTempData>> TYPE;
+	public static Map<Fluid,DrinkTempData> cacheList=ImmutableMap.of();
     public float getHeat() {
         return heat;
     }
+	public static float getDrinkHeat(FluidStack f) {
+		DrinkTempData dtd = cacheList.get(f.getFluid());
+		if (dtd != null)
+			return dtd.getHeat();
+		return -0.3f;
+	}
+
+	public FinishedRecipe toFinished(ResourceLocation name) {
+		return TYPE.get().toFinished(name, this);
+	}
 }

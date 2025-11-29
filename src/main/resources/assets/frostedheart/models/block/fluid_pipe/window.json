@@ -1,5 +1,5 @@
 {
-	"credit": "Made with Blockbench",
+	
 	"parent": "block/block",
 	"textures": {
 		"0": "frostedheart:block/glass_heat_pipe",

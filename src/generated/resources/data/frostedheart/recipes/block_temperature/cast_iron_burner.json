@@ -1,0 +1,6 @@
+{
+  "type": "frostedheart:block_temp",
+  "block": "steampowered:cast_iron_burner",
+  "must_lit": true,
+  "temperature": 500.0
+}

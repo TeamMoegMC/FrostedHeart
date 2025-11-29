@@ -1,9 +1,0 @@
-{
-  "type": "frostedheart:diet_override",
-  "groups": {
-    "sugars": 0.002455425,
-    "plant_oil": 0.0029643402,
-    "grains": 0.0029643402
-  },
-  "item": "rankine:corn_ear"
-}

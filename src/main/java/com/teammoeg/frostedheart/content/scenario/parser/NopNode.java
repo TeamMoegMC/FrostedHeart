@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.scenario.parser;
 
 import java.util.Map;
 
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVM;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 
 public class NopNode implements Node {
     String command;
@@ -31,7 +31,7 @@ public class NopNode implements Node {
     }
 
     @Override
-    public String getLiteral(ScenarioVM runner) {
+    public String getLiteral(ScenarioCommandContext runner) {
         return "";
     }
 
@@ -46,7 +46,7 @@ public class NopNode implements Node {
     }
 
     @Override
-    public void run(ScenarioVM runner) {
+    public void run(ScenarioCommandContext runner) {
     }
 
 }

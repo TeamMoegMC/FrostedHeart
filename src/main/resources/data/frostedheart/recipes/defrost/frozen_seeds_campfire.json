@@ -1,8 +1,12 @@
 {
 	"type": "frostedheart:defrost_campfire",
 	"results": [
-		"frostedheart:rye_block",
-		"minecraft:wheat_seeds"
+		{
+			"item":"frostedheart:rye_block"
+		},
+		{
+			"item":"minecraft:wheat_seeds"
+		}
 	],
 	"ingredient": {
 		"item": "frostedheart:frozen_seeds"

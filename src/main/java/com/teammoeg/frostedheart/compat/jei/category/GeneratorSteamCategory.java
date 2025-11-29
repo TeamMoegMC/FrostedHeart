@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -21,35 +21,34 @@ package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHMultiblocks;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.util.Lang;
 
-import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.gui.IRecipeLayout;
+import mezz.jei.api.forge.ForgeTypes;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableAnimated;
 import mezz.jei.api.gui.drawable.IDrawableStatic;
-import mezz.jei.api.gui.ingredient.IGuiFluidStackGroup;
-import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
-import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.recipe.IFocusGroup;
+import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 
 public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRecipe> {
-    public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "generator_steam");
+    public static RecipeType<GeneratorSteamRecipe> UID = RecipeType.create(FHMain.MODID, "generator_steam",GeneratorSteamRecipe.class);
     private IDrawable BACKGROUND;
     private IDrawable SWITCH;
     private IDrawable ICON;
@@ -61,7 +60,7 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
 
     public GeneratorSteamCategory(IGuiHelper guiHelper) {
         ResourceLocation guiMain = new ResourceLocation(FHMain.MODID, "textures/gui/generator_t2.png");
-        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHMultiblocks.generator_t2));
+        this.ICON = guiHelper.createDrawableItemStack(new ItemStack(FHMultiblocks.Registration.GENERATOR_T2.blockItem().get()));
         this.TANK = guiHelper.createDrawable(guiMain, 178, 87, 16, 47);
         this.BACKGROUND = guiHelper.createDrawable(guiMain, 4, 4, 164, 72);
         IDrawableStatic tfire = guiHelper.createDrawable(guiMain, 179, 0, 9, 13);
@@ -71,7 +70,7 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
     }
 
     @Override
-    public void draw(GeneratorSteamRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
+    public void draw(GeneratorSteamRecipe recipe, IRecipeSlotsView view , GuiGraphics transform, double mouseX, double mouseY) {
         FIRE.draw(transform, 80, 28);
         SWITCH.draw(transform, 52, 31);
         int offset1 = (int) ((4 - recipe.level) * 14);
@@ -92,56 +91,42 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
         return ICON;
     }
 
-    @Override
-    public Class<? extends GeneratorSteamRecipe> getRecipeClass() {
-        return GeneratorSteamRecipe.class;
-    }
-
-    public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".generator_steam").getString());
+    public Component getTitle() {
+        return (Lang.translateKey("gui.jei.category." + FHMain.MODID + ".generator_steam"));
     }
 
     @Override
-    public List<ITextComponent> getTooltipStrings(GeneratorSteamRecipe recipe, double mouseX, double mouseY) {
-        List<ITextComponent> tooltip = new ArrayList<>();
+    public List<Component> getTooltipStrings(GeneratorSteamRecipe recipe,IRecipeSlotsView view, double mouseX, double mouseY) {
+        List<Component> tooltip = new ArrayList<>();
 
         if (isMouseIn(mouseX, mouseY, 8, 9, 2, 54)) {
-            tooltip.add(TranslateUtils.translateGui("generator.temperature.level").appendString(String.valueOf(recipe.level)));
+            tooltip.add(Lang.translateGui("generator.temperature_level").append(String.valueOf(recipe.level)));
         }
 
 
         if (isMouseIn(mouseX, mouseY, 142, 9, 2, 54)) {
-            tooltip.add(TranslateUtils.translateGui("generator.power.level").appendString(String.valueOf(recipe.power)));
+            tooltip.add(Lang.translateGui("generator.pressure").append(String.valueOf(recipe.power)));
         }
         return tooltip;
     }
 
-    @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
 
     public boolean isMouseIn(double mouseX, double mouseY, int x, int y, int w, int h) {
         return mouseX >= x && mouseY >= y
                 && mouseX < x + w && mouseY < y + h;
     }
 
-    @Override
-    public void setIngredients(GeneratorSteamRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.FLUID, Collections.singletonList(recipe.input.getMatchingFluidStacks()));
-    }
 
+	@Override
+	public RecipeType<GeneratorSteamRecipe> getRecipeType() {
+		return UID;
+	}
 
-    @Override
-    public void setRecipe(IRecipeLayout recipeLayout, GeneratorSteamRecipe recipe, IIngredients ingredients) {
-        IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
-        IGuiFluidStackGroup guiFluidStacks = recipeLayout.getFluidStacks();
-        guiFluidStacks.init(0, true, 26, 12, 16, 47, recipe.input.getAmount() * 5, false, TANK);
-        guiFluidStacks.set(ingredients);
-        guiItemStacks.init(0, true, 75, 7);
-        guiItemStacks.init(1, false, 75, 46);
-        List<GeneratorRecipe> recipes=FHUtils.filterRecipes(null, GeneratorRecipe.TYPE);
-        guiItemStacks.set(0, recipes.stream().flatMap(t->Arrays.stream(t.input.getMatchingStacks())).collect(Collectors.toList()));
-        guiItemStacks.set(1, recipes.stream().map(t->t.output).collect(Collectors.toList()));
-    }
+	@Override
+	public void setRecipe(IRecipeLayoutBuilder builder, GeneratorSteamRecipe recipe, IFocusGroup focuses) {
+		builder.addSlot(RecipeIngredientRole.INPUT, 26, 12).addIngredients(ForgeTypes.FLUID_STACK, recipe.input.getMatchingFluidStacks()).setFluidRenderer(recipe.input.getAmount()*5, false, 16, 47).setOverlay(TANK, 0, 0);
+		List<GeneratorRecipe> recipes= CUtils.filterRecipes(null, GeneratorRecipe.TYPE);
+		builder.addSlot(RecipeIngredientRole.INPUT, 76, 8).addItemStacks(recipes.stream().flatMap(t->Arrays.stream(t.input.getMatchingStacks())).collect(Collectors.toList()));
+		builder.addSlot(RecipeIngredientRole.OUTPUT, 76, 47).addItemStacks(recipes.stream().map(t->t.output).collect(Collectors.toList()));
+	}
 }

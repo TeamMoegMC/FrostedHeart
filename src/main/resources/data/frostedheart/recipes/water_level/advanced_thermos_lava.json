@@ -1,0 +1,12 @@
+{
+    "type": "frostedheart:water_level_and_effect",
+    "ingredient": {
+        "tag": "frostedheart:thermos"
+    },
+	"fluid": "minecraft:lava",
+    "waterLevel": 0,
+    "waterSaturationLevel": 0,
+	"duration": 1600,
+	"amplifier": 3,
+	"probability": 100
+}

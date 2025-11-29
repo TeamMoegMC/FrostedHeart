@@ -1,10 +1,12 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
+    "texture0": "frostedheart:block/sauna_vent",
     "particle": "frostedheart:block/sauna_vent"
   },
   "loader": "forge:obj",
   "model": "frostedheart:models/block/sauna_vent.obj",
-  "detectCullableFaces": false,
-  "flip-v": true
+  "automatic_culling": false,
+  "flip_v": true,
+  "render_type": "cutout"
 }

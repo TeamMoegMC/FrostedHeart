@@ -28,54 +28,63 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
+import com.teammoeg.frostedheart.content.scenario.commands.client.TipCommand;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
+import org.objectweb.asm.Type;
+
+import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.content.scenario.commands.ActCommand;
 import com.teammoeg.frostedheart.content.scenario.commands.ControlCommands;
+import com.teammoeg.frostedheart.content.scenario.commands.CookieCommand;
 import com.teammoeg.frostedheart.content.scenario.commands.FTBQCommands;
 import com.teammoeg.frostedheart.content.scenario.commands.MCCommands;
 import com.teammoeg.frostedheart.content.scenario.commands.TextualCommands;
 import com.teammoeg.frostedheart.content.scenario.commands.VariableCommand;
 import com.teammoeg.frostedheart.content.scenario.commands.client.IClientControlCommand;
-import com.teammoeg.frostedheart.content.scenario.network.ServerScenarioCommandPacket;
+import com.teammoeg.frostedheart.content.scenario.network.S2CScenarioCommandPacket;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.content.scenario.parser.ScenarioParser;
 import com.teammoeg.frostedheart.content.scenario.parser.providers.FTBQProvider;
 import com.teammoeg.frostedheart.content.scenario.parser.providers.ScenarioProvider;
-import com.teammoeg.frostedheart.content.scenario.runner.IScenarioThread;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVM;
-import com.teammoeg.frostedheart.content.scenario.runner.target.IVarTrigger;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
+import com.teammoeg.frostedheart.content.scenario.runner.trigger.IVarTrigger;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.world.storage.FolderName;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.ModLoader;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.forgespi.language.ModFileScanData;
+import net.minecraftforge.forgespi.language.ModFileScanData.AnnotationData;
+import net.minecraftforge.network.PacketDistributor;
 
 public class FHScenario {
-	public static ScenarioExecutor<ScenarioVM> server = new ScenarioExecutor<>(ScenarioVM.class);
+	static Marker MARKER = MarkerManager.getMarker("Scenario Conductor");
+	public static ScenarioExecutor<ScenarioCommandContext> server = new ScenarioExecutor<>(ScenarioCommandContext.class);
 	private static final List<ScenarioProvider> scenarioProviders = new ArrayList<>();
-	public static Map<PlayerEntity,Map<EventTriggerType,List<IVarTrigger>>> triggers=new HashMap<>();
+	public static Map<Player,Map<EventTriggerType,List<IVarTrigger>>> triggers=new HashMap<>();
 	//private static Map<ServerPlayerEntity,ScenarioConductor> runners=new HashMap<>();
-	public static void startFor(ServerPlayerEntity pe) {
+	public static void startFor(ServerPlayer pe,String lang) {
 		ScenarioConductor sr = get(pe);
-		sr.init(pe);
-		Scenario scenario = loadScenario(sr,"init");
-		if (scenario == null) {
-			FHMain.LOGGER.error("[FHScenario] Loaded scenario is null");
-		} else {
-			FHMain.LOGGER.info("[FHScenario] Loaded scenario "+scenario.name);
-		}
-		sr.run(scenario);
+		FHMain.LOGGER.debug(MARKER, "From saved: "+pe.getLanguage()+" From packet: "+lang);
+		sr.init(pe,lang);
+		
+
+		sr.run("init");
 	}
-	public static void addVarTrigger(PlayerEntity pe,EventTriggerType type,IVarTrigger trig) {
+	public static void addVarTrigger(Player pe,EventTriggerType type,IVarTrigger trig) {
 		triggers.computeIfAbsent(pe,k->new HashMap<>()).computeIfAbsent(type, k->new ArrayList<>()).add(trig);
 	}
-	public static void trigVar(PlayerEntity pe,EventTriggerType type) {
+	public static void trigVar(Player pe,EventTriggerType type) {
 		Map<EventTriggerType,List<IVarTrigger>> me=triggers.get(pe);
 		if(me!=null) {
 			List<IVarTrigger> le=me.get(type);
@@ -92,7 +101,9 @@ public class FHScenario {
 		scenarioProviders.add(p);
 	}
 
-	public static Scenario loadScenario(IScenarioThread caller,String name) {
+	public static Scenario loadScenario(ScenarioContext ctx,String name) {
+		if("empty".equals(name))
+			return Scenario.EMPTY;
 		String[] paths=name.split("\\?");
 		String[] args=new String[0];
 		if(paths.length>1&&!paths[1].isEmpty())
@@ -111,8 +122,9 @@ public class FHScenario {
 			for (ScenarioProvider i : scenarioProviders) {
 				try {
 					Scenario s = i.apply(paths[0],params,name);
+					
 					if (s != null) {
-						FHMain.LOGGER.info("Loading scenario from provider "+i.getName());
+						FHMain.LOGGER.info("Loaded scenario from provider "+i.getName());
 						return s;
 					}
 				}catch(Exception e) {
@@ -120,7 +132,7 @@ public class FHScenario {
 				}
 				
 			}
-			File f=new File(scenarioPath, caller.getLang()+"/"+paths[0] + ".ks");
+			File f=new File(scenarioPath, ctx.getLang()+"/"+paths[0] + ".ks");
 			if(!f.exists()) {
 				f=new File(scenarioPath, paths[0] + ".ks");
             }
@@ -129,15 +141,15 @@ public class FHScenario {
 				return parser.parseFile(name, f);
 			}
 		} catch (Exception e) {
-			caller.sendMessage("Exception loading scenario: "+e.getMessage()+" see log for more detail");
+			ctx.sendMessage("Exception loading scenario "+name+": "+e.getMessage()+" see log for more detail");
 			e.printStackTrace();
 			
 		}
-		FHMain.LOGGER.error("Scenario not found, falling back to empty scenario");
+		FHMain.LOGGER.error("Scenario "+name+" not found, falling back to empty scenario");
 		return new Scenario(name);
 	}
 
-	public static void callCommand(String name, ScenarioVM scenarioVM, Map<String, String> params) {
+	public static void callCommand(String name, ScenarioCommandContext scenarioVM, Map<String, String> params) {
 		server.callCommand(name, scenarioVM, params);
 	}
 
@@ -145,19 +157,19 @@ public class FHScenario {
 		server.register(clazz);
 	}
 
-	public static void callClientCommand(String name, ScenarioVM runner, Map<String, String> params) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
-				new ServerScenarioCommandPacket(name.toLowerCase(), params));
+	public static void callClientCommand(String name, ScenarioCommandContext runner, Map<String, String> params) {
+		FHNetwork.INSTANCE.sendPlayer((ServerPlayer) runner.context().player(),
+				new S2CScenarioCommandPacket(runner.thread().getRunId(),name.toLowerCase(), params));
 	}
 
-	public static void callClientCommand(String name, ScenarioVM runner, String... params) {
+	public static void callClientCommand(String name, ScenarioCommandContext runner, String... params) {
 		Map<String, String> data = new HashMap<>();
 		for (int i = 0; i < params.length / 2; i++) {
 			data.put(params[i * 2], params[i * 2 + 1]);
 		}
 
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
-				new ServerScenarioCommandPacket(name.toLowerCase(), data));
+		FHNetwork.INSTANCE.sendPlayer((ServerPlayer) runner.context().player(),
+				new S2CScenarioCommandPacket(runner.thread().getRunId(),name.toLowerCase(), data));
 	}
 
 	public static void registerClientDelegate(Class<?> cls) {
@@ -169,26 +181,38 @@ public class FHScenario {
 		}
 	}
 
-	public static void registerCommand(String cmdName, ScenarioMethod<ScenarioVM> method) {
+	public static void registerCommand(String cmdName, ScenarioMethod<ScenarioCommandContext> method) {
 		server.registerCommand(cmdName, method);
 	}
 
 	static {
+		/*Type anno=Type.getType(ScenarioCommandProvider.class);
+		for(ModFileScanData data:ModList.get().getAllScanData()) {
+			AnnotationData dat=null;
+			for(AnnotationData an:data.getAnnotations()) {
+				if(Objects.equals(an.annotationType(), anno)) {
+					dat=an;
+					break;
+				}
+			}
+		}*/
 		register(TextualCommands.class);
 		register(ControlCommands.class);
-		if(ModList.get().isLoaded("ftbquests"))
+		if(CompatModule.isFTBQLoaded())
 			register(FTBQCommands.class);
 		register(ActCommand.class);
 		register(VariableCommand.class);
 		registerClientDelegate(IClientControlCommand.class);
 		registerScenarioProvider(new FTBQProvider());
 		register(MCCommands.class);
+		register(CookieCommand.class);
+		register(TipCommand.class);
 	}
 	static Path local;
-	static final FolderName dataFolder = new FolderName("fhscenario");
+	static final LevelResource dataFolder = new LevelResource("fhscenario");
 /*
 	public static ScenarioConductor load(ServerPlayerEntity player) {
-		local = FHResearchDataManager.server.func_240776_a_(dataFolder);
+		local = FHResearchDataManager.server.getWorldPath(dataFolder);
 		local.toFile().mkdirs();
 		File pfile = new File(local.toFile(), player.getUniqueID() + ".nbt");
 		if (pfile.exists())
@@ -225,11 +249,11 @@ public class FHScenario {
 		runners.values().removeIf(t -> t.isOfflined());
 
 	}*/
-	public static ScenarioConductor getNullable(PlayerEntity playerEntity) {
+	public static ScenarioConductor getNullable(Player playerEntity) {
 		//return runners.computeIfAbsent((ServerPlayerEntity) playerEntity, FHScenario::load);
 		return ScenarioConductor.getCapability(playerEntity).orElse(null);
 	}
-	public static ScenarioConductor get(PlayerEntity playerEntity) {
+	public static ScenarioConductor get(Player playerEntity) {
 		//return runners.computeIfAbsent((ServerPlayerEntity) playerEntity, FHScenario::load);
 		return ScenarioConductor.getCapability(playerEntity).orElseThrow(()->new NoSuchElementException("conductor not present"));
 	}

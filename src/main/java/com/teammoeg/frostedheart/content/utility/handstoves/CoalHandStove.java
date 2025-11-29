@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,36 +19,48 @@
 
 package com.teammoeg.frostedheart.content.utility.handstoves;
 
+import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
+import com.mojang.datafixers.util.Either;
+import com.teammoeg.frostedheart.item.FHBaseItem;
+import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
+import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceSlot;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.UseAction;
-import net.minecraft.tags.ITag;
-import net.minecraft.tags.TagCollectionManager;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.registries.ForgeRegistries;
+import top.theillusivec4.curios.api.type.ISlotType;
 
-public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
+public class CoalHandStove extends FHBaseItem {
     public final static int max_fuel = 800;
-
-    ResourceLocation ashitem = new ResourceLocation("frostedheart", "ash");
+    public static final int HEAT_ADJUST = 20;
 
     public static int getAshAmount(ItemStack is) {
         return is.getOrCreateTag().getInt("ash");
@@ -58,7 +70,8 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
         return is.getOrCreateTag().getInt("fuel");
     }
 
-    public static void setAshAmount(ItemStack is, int v) {
+
+	public static void setAshAmount(ItemStack is, int v) {
         is.getOrCreateTag().putInt("ash", v);
         if (v >= max_fuel)
             is.getTag().putInt("CustomModelData", 2);
@@ -77,23 +90,23 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
     }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
-        list.add(TranslateUtils.translateTooltip("handstove.add_fuel").mergeStyle(TextFormatting.GRAY));
+    public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> list, TooltipFlag flag) {
+//        list.add(Lang.translateTooltip("handstove.add_fuel").withStyle(ChatFormatting.GRAY));
         if (getAshAmount(stack) >= 800)
-            list.add(TranslateUtils.translateTooltip("handstove.trash_ash").mergeStyle(TextFormatting.RED));
-        list.add(TranslateUtils.translateTooltip("handstove.fuel", getFuelAmount(stack) / 2).mergeStyle(TextFormatting.GRAY));
+            list.add(Lang.translateTooltip("handstove.trash_ash").withStyle(ChatFormatting.RED));
+        list.add(Lang.translateTooltip("handstove.fuel", getFuelAmount(stack)).withStyle(ChatFormatting.GRAY));
     }
 
 
     @Override
-    public double getDurabilityForDisplay(ItemStack stack) {
-        return getFuelAmount(stack) * 1.0D / max_fuel;
+    public int getBarWidth(ItemStack stack) {
+        return (int) (getFuelAmount(stack) * 13.0D / max_fuel);
     }
 
 
     @Override
-    public UseAction getUseAction(ItemStack stack) {
-        return UseAction.EAT;
+    public UseAnim getUseAnimation(ItemStack stack) {
+        return UseAnim.EAT;
     }
 
     @Override
@@ -108,52 +121,76 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
     }
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-        ItemStack stack = playerIn.getHeldItem(handIn);
-        ActionResult<ItemStack> FAIL = new ActionResult<>(ActionResultType.FAIL, stack);
-        if (getAshAmount(playerIn.getHeldItem(handIn)) >= 800) {
-            playerIn.setActiveHand(handIn);
-            return new ActionResult<>(ActionResultType.SUCCESS, stack);
+    public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
+        ItemStack stack = playerIn.getItemInHand(handIn);
+        InteractionResultHolder<ItemStack> FAIL = new InteractionResultHolder<>(InteractionResult.FAIL, stack);
+        if (getAshAmount(playerIn.getItemInHand(handIn)) >= 800) {
+            playerIn.startUsingItem(handIn);
+            return new InteractionResultHolder<>(InteractionResult.SUCCESS, stack);
         }
         return FAIL;
     }
 
     @Override
-    public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
+    public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
         int ash = getAshAmount(stack);
         if (ash >= 800) {
-            ITag<Item> item = TagCollectionManager.getManager().getItemTags().get(ashitem);
+            Iterator<Item> item=ForgeRegistries.ITEMS.tags().getTag(FHTags.Items.ASH.tag).iterator();
             setAshAmount(stack, ash - 800);
             if (getFuelAmount(stack) < 2)
                 stack.getTag().putInt("CustomModelData", 0);
             else
                 stack.getTag().putInt("CustomModelData", 1);
-            if (item != null && entityLiving instanceof PlayerEntity && !item.getAllElements().isEmpty()) {
-                ItemStack ret = new ItemStack(item.getAllElements().get(0));
-                FHUtils.giveItem((PlayerEntity) entityLiving, ret);
+            if (item.hasNext() && entityLiving instanceof Player ) {
+                ItemStack ret = new ItemStack(item.next());
+                CUtils.giveItem((Player) entityLiving, ret);
             }
         }
         return stack;
     }
 
-	@Override
-	public float getEffectiveTempAdded(EquipmentCuriosSlotType slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
-		if(slot==null) {
-			return getFuelAmount(stack) > 0 ? 7 : 0;
-		}else if(slot.isHand()) {
-	        int fuel = getFuelAmount(stack);
-	        if (fuel >= 2) {
-	            int ash = getAshAmount(stack);
-	            if (ash <= 800) {
-	                fuel--;
-	                ash++;
-	                setFuelAmount(stack, fuel);
-	                setAshAmount(stack, ash);
-	                return 7;
-	            }
-	        }
-	        return 0;
-		}
+	public float tickHeat(ItemStack stack) {
+
+        int fuel = getFuelAmount(stack);
+        if (fuel >= 2) {
+            int ash = getAshAmount(stack);
+            if (ash <= 800) {
+                fuel--;
+                ash++;
+                setFuelAmount(stack, fuel);
+                setAshAmount(stack, ash);
+                return HEAT_ADJUST;
+            }
+        }
 		return 0;
 	}
+    @Override
+	public ICapabilityProvider initCapabilities(ItemStack stack,CompoundTag nbt) {
+		return FHCapabilities.EQUIPMENT_HEATING.provider(()->new BodyHeatingCapability() {
+
+			@Override
+			public void tickHeating(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext data) {
+				if(slot.isHand()) {
+					float added=tickHeat(stack);
+					if(slot.is(EquipmentSlot.MAINHAND)) {//When in mainHand, only heatup mainhand
+						data.addEffectiveTemperature(BodyPart.HANDS, added);
+					}else {//In offhand, heatup body
+						data.addEffectiveTemperature(BodyPart.TORSO, added);
+					}
+				}
+			}
+
+			@Override
+			public float getMaxTempAddValue(ItemStack stack) {
+				return getFuelAmount(stack) > 0 ? HEAT_ADJUST : 0;
+			}
+
+			@Override
+			public float getMinTempAddValue(ItemStack stack) {
+				return getFuelAmount(stack) > 0 ? HEAT_ADJUST : 0;
+			}
+			
+		});
+	}
+
 }

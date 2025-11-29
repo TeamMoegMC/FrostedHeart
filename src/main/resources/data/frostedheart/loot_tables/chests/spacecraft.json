@@ -25,15 +25,6 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "watersource:coconut_milk_bottle"
-        }
-      ]
-    },
-    {
-      "rolls":1,
-      "entries": [
-        {
-          "type": "minecraft:item",
           "name": "frostedheart:weather_radar"
         },
         {
@@ -66,7 +57,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "rankine:bandage",
+          "name": "minecraft:apple",
           "functions": [
             {
               "function": "minecraft:set_count",

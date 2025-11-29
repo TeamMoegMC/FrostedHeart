@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,27 +19,30 @@
 
 package com.teammoeg.frostedheart.content.utility.incinerator;
 
-import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
+import com.teammoeg.chorda.block.CBlockInterfaces.IActiveState;
+import com.teammoeg.chorda.block.entity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.Direction;
+import blusunrize.immersiveengineering.common.fluids.ArrayFluidHandler;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState, ITickableTileEntity {
-    FluidTank input = new FluidTank(10000, s -> s.getFluid().getAttributes().isGaseous());
+public class GasVentTileEntity extends CBlockEntity implements IActiveState, CTickableBlockEntity {
+    FluidTank input = new FluidTank(10000, s -> s.getFluid().getFluidType().isLighterThanAir());
     private LazyOptional<IFluidHandler> holder = LazyOptional.empty();
 
-    public GasVentTileEntity() {
-        super(FHTileTypes.GAS_VENT.get());
+    public GasVentTileEntity(BlockPos bp,BlockState bs) {
+        super(FHBlockEntityTypes.GAS_VENT.get(),bp,bs);
     }
 
     @Override
@@ -47,68 +50,30 @@ public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState,
         if (!this.holder.isPresent()) {
             this.refreshCapability();
         }
-        return cap == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY ? holder.cast() : super.getCapability(cap, side);
+        return cap == ForgeCapabilities.FLUID_HANDLER ? holder.cast() : super.getCapability(cap, side);
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean dp) {
+    public void readCustomNBT(CompoundTag nbt, boolean dp) {
         input.readFromNBT(nbt.getCompound("in"));
     }
 
 
     private void refreshCapability() {
         LazyOptional<IFluidHandler> oldCap = this.holder;
-        this.holder = LazyOptional.of(() -> new IFluidHandler() {
-                    @Override
-                    public FluidStack drain(FluidStack resource, FluidAction action) {
-                        return FluidStack.EMPTY;
-                    }
-
-                    @Override
-                    public FluidStack drain(int maxDrain, FluidAction action) {
-                        return FluidStack.EMPTY;
-                    }
-
-                    @Override
-                    public int fill(FluidStack resource, FluidAction action) {
-                        return input.fill(resource, action);
-                    }
-
-                    @Override
-                    public FluidStack getFluidInTank(int tank) {
-                        return input.getFluidInTank(tank);
-                    }
-
-                    @Override
-                    public int getTankCapacity(int tank) {
-                        return input.getCapacity();
-                    }
-
-                    @Override
-                    public int getTanks() {
-                        return input.getTanks();
-                    }
-
-                    @Override
-                    public boolean isFluidValid(int tank, FluidStack stack) {
-                        return input.isFluidValid(tank, stack);
-                    }
-
-                }
-
-        );
+        this.holder = LazyOptional.of(()->ArrayFluidHandler.fillOnly(input, ()->this.setChanged()));
         oldCap.invalidate();
     }
 
     @Override
     public void tick() {
-        if (this.world != null && !this.world.isRemote) {
+        if (this.level != null && !this.level.isClientSide) {
             int val = input.drain(1000, FluidAction.EXECUTE).getAmount();
             if (val > 0) {
                 if (!this.getIsActive()) {
                     this.setActive(true);
                 }
-                this.markDirty();
+                this.setChanged();
             } else if (this.getIsActive())
                 this.setActive(false);
 
@@ -116,7 +81,7 @@ public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState,
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean dp) {
-        nbt.put("in", input.writeToNBT(new CompoundNBT()));
+    public void writeCustomNBT(CompoundTag nbt, boolean dp) {
+        nbt.put("in", input.writeToNBT(new CompoundTag()));
     }
 }

@@ -1,0 +1,10 @@
+{
+  "parent": "minecraft:block/block",
+  "automatic_culling": false,
+  "flip_v": true,
+  "loader": "forge:obj",
+  "model": "frostedheart:models/block/multiblocks/generator_fuel.obj",
+  "textures": {
+    "particle": "frostedheart:block/multiblocks/crudegeneratorstone"
+  }
+}

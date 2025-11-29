@@ -1,0 +1,16 @@
+{
+  "type": "frostedheart:plant_temp",
+  "blizzard_vulnerable": false,
+  "block": "minecraft:brown_mushroom",
+  "dead": "minecraft:air",
+  "grow_time_days": 8.0,
+  "heat_capacity": 10,
+  "max_fertilize": 20.0,
+  "max_grow": 24.0,
+  "max_skylight": 4,
+  "max_survive": 30.0,
+  "min_grow": 2.0,
+  "min_skylight": 0,
+  "min_survive": -50.0,
+  "snow_vulnerable": false
+}

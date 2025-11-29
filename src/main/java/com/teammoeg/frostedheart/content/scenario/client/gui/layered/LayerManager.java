@@ -1,28 +1,82 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered;
 
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLImageContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLLayerContent;
-
-import net.minecraft.client.renderer.texture.DynamicTexture;
+import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.TypedDynamicTexture;
 
 public class LayerManager extends GLLayerContent {
-	Map<String, OrderedRenderableContent> names = new LinkedHashMap<>();
-	PriorityQueue<OrderedRenderableContent> pq;
-	PriorityQueue<OrderedRenderableContent> opq;
-	GLImageContent oglc=new GLImageContent(null,0,0, 1, 1, 0, 0, 2048, 1152, 2048, 2048);
-	GLImageContent nglc=new GLImageContent(null,0,0, 1, 1, 0, 0, 2048, 1152, 2048, 2048);
-	int transTicks;
-	int maxTransTicks;
-	TransitionFunction trans;
+	private static record RerenderRequest(TransitionFunction trans,int ticks){}
+	private static record LayerContext(PriorityQueue<OrderedRenderableContent> pq,GLImageContent glc) {
+		public void render(RenderParams params) {
+			glc.render(params);
+			if (pq != null)
+				for(OrderedRenderableContent i:pq) {
+					i.render(params);
+				}
+		}
 
+		public void close() {
+			glc.texture.release();
+		}
+		
+	}
+	private static class TransitionInfo{
+		int transTicks=0;
+		int maxTransTicks;
+		TransitionFunction trans;
+		public TransitionInfo(int maxTransTicks, TransitionFunction trans) {
+			super();
+			this.maxTransTicks = maxTransTicks;
+			this.trans = trans;
+		}
+	}
+	Map<String, OrderedRenderableContent> names = new LinkedHashMap<>();
+	volatile LayerContext nextlayer;
+	volatile LayerContext current;
+	volatile TransitionInfo trans;
+
+	static ExecutorService renderThread=Executors.newFixedThreadPool(FHConfig.CLIENT.scenarioRenderThread.get(),CUtils.makeThreadFactory("scenario-render-pool", true));
+	RerenderRequest rrq;
+	
 	public LayerManager() {
 	}
-
+	public LayerContext createContext() {
+		return new LayerContext(new PriorityQueue<>(Comparator.comparingInt(OrderedRenderableContent::getZ).thenComparing(OrderedRenderableContent::getOrder)),new GLImageContent(null,0,0, 1f, 1f, 0, 0, 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale(), 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale()));
+	}
 	public LayerManager(Map<String, OrderedRenderableContent> names) {
 		super();
 		this.names = names;
@@ -38,13 +92,18 @@ public class LayerManager extends GLLayerContent {
 
 	@Override
 	public void tick() {
-		if(maxTransTicks>0) {
-			transTicks++;
+		if(trans!=null&&trans.maxTransTicks>0) {
+			trans.transTicks++;
 
-			if (transTicks >= maxTransTicks) {
-				maxTransTicks = transTicks = 0;
+			if (trans.transTicks >= trans.maxTransTicks) {
+				LayerContext ol=current;
+				current=nextlayer;
 				trans = null;
-				opq = null;
+				nextlayer=null;
+				if(ol!=null)
+				ol.close();
+				ClientScene.INSTANCE.onTransitionComplete.setFinished();
+				
 			}
 		}
 		for (RenderableContent i : names.values()) {
@@ -70,84 +129,103 @@ public class LayerManager extends GLLayerContent {
 		return new LayerManager();
 	}
 	public void close() {
-		if(oglc.texture!=null){
-			oglc.texture.close();
-			oglc.texture=null;
-			
+		if(nextlayer!=null){
+			nextlayer.close();
+			nextlayer=null;
 		}
-		if(nglc.texture!=null) {
-			nglc.texture.close();
-			nglc.texture=null;
+		if(current!=null) {
+			current.close();
+			current=null;
 		}
+		if(trans!=null)
+			ClientScene.INSTANCE.onTransitionComplete.setFinished();
 		for(OrderedRenderableContent ctx:names.values())
 			if(ctx instanceof LayerManager) {
 				((LayerManager) ctx).close();
 			}
 	}
-	public synchronized void commitChanges(TransitionFunction t, int ticks) {
-
-		if (t != null) {
-			this.trans = t;
-			this.transTicks = 0;
-			this.maxTransTicks = ticks;
-			opq = pq;
-			
-			if(oglc.texture!=null) {
-				oglc.texture.close();
-				oglc.texture=null;
-			}
-			oglc.texture=nglc.texture;
-			nglc.texture=null;
-		}else close();
-		pq=null;
+	boolean prerenderRequested;
+	public void commitChanges(TransitionFunction t, int ticks) {
+		//rrq=new RerenderRequest(t,ticks);
+		ClientScene.INSTANCE.onRenderComplete.resetFinished();
+		ClientScene.INSTANCE.onTransitionComplete.resetFinished();
+		LayerContext inext=this.createContext();
+		List<CompletableFuture> futures=new LinkedList<>();
 		if (!names.isEmpty()) {
-			pq = new PriorityQueue<>(Comparator.comparingInt(OrderedRenderableContent::getZ).thenComparing(OrderedRenderableContent::getOrder));
 			int i = 0;
+			
 			for (OrderedRenderableContent r : names.values()) {
 				r.setOrder(i);
-				pq.add(r);
+				inext.pq.add(r);
+				CompletableFuture<Void> future=r.prepare(renderThread);
+				if(future!=null)
+					futures.add(future);
 				i++;
 			}
-			PrerenderParams prerender=new PrerenderParams();
-			pq.forEach(s->s.prerender(prerender));
-			DynamicTexture tex=prerender.loadTexture();
-			//System.out.println("Loading tex");
-			if(nglc.texture!=null) {
-				nglc.texture.close();
-				nglc.texture=null;
+		}
+		CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
+		.whenCompleteAsync((r,ex)->{renderPrerendered(inext,t,ticks);},renderThread);
+		
+		
+	}
+	public void renderPrerendered(LayerContext inext,TransitionFunction t, int ticks) {
+		try {
+			if (!names.isEmpty()) {
+				final PrerenderParams prerender=new PrerenderParams();
+				inext.pq.forEach(s->s.prerender(prerender));				
+				inext.glc.texture=prerender.loadTexture();
+	
 			}
-			nglc.texture=tex;
+			if (t != null) {
+				this.nextlayer=inext;
+				this.trans = new TransitionInfo(ticks,t);
+			}else {
+				try {
+					LayerContext otex=current;
+					current=inext;
+					if(otex!=null)
+						otex.close();
+				}finally {
+					ClientScene.INSTANCE.onTransitionComplete.setFinished();
+				}
+			}
+		}finally {
+			ClientScene.INSTANCE.onRenderComplete.setFinished();
 		}
 	}
 
 	@Override
-	public synchronized void renderContents(RenderParams params) {
+	public void renderContents(RenderParams params) {
+		/*if(rrq!=null)
+			synchronized(this) {
+				if(rrq!=null) {
+					RerenderRequest trrq=rrq;
+					rrq=null;
+					renderPrerendered(trrq.trans(),trrq.ticks());
+				}
+			}
+		*/
 		if (trans != null) {
 			RenderParams prev = params.copyWithCurrent(this);
 			RenderParams next = params.copyWithCurrent(this);
-			float val = (transTicks + params.partialTicks) / maxTransTicks;
+			float val = (trans.transTicks+params.partialTicks)*1f / trans.maxTransTicks;
 			// System.out.println(val);
-			trans.compute(prev, next, val);
+			trans.trans.compute(prev, next, val);
 
 			if (prev.forceFirst) {
-				nglc.render(next);
-				if (pq != null)
-					pq.forEach(t -> t.render(next));
-				oglc.render(prev);
-				if (opq != null)
-					opq.forEach(t -> t.render(prev));
+				if(nextlayer!=null)
+					nextlayer.render(next);
+				if(current!=null)
+					current.render(prev);
 			} else {
-				oglc.render(prev);
-				if (opq != null)
-					opq.forEach(t -> t.render(prev));
-				nglc.render(next);
-				if (pq != null)
-					pq.forEach(t -> t.render(next));
+				if(current!=null)
+					current.render(prev);
+				if(nextlayer!=null)
+					nextlayer.render(next);
 			}
 		} else {
-			nglc.render(params);
-			if (pq != null)
-				pq.forEach(t -> t.render(params));
+			if(current!=null)
+				current.render(params);
 		}
 	}
 }

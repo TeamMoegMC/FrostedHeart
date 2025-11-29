@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,19 +19,23 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
+import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 
-public class CupData{
-	public static final MapCodec<CupData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+import net.minecraft.world.item.Item;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+
+public record CupData(Item item,float efficiency){
+	public static final Codec<CupData> CODEC=RecordCodecBuilder.create(t->t.group(
+		ForgeRegistries.ITEMS.getCodec().fieldOf("item").forGetter(o->o.item),
 		Codec.FLOAT.fieldOf("efficiency").forGetter(o->o.efficiency)).apply(t, CupData::new));
-	float efficiency;
-	public CupData(float efficiency) {
-		super();
-		this.efficiency = efficiency;
-	}
-
+	public static RegistryObject<CodecRecipeSerializer<CupData>> TYPE;
+	public static Map<Item,CupData> cacheList=ImmutableMap.of();
     public Float getEfficiency() {
         return efficiency;
     }

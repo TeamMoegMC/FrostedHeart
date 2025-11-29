@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -20,32 +20,34 @@
 package com.teammoeg.frostedheart.content.utility.incinerator;
 
 import com.simibubi.create.foundation.fluid.FluidHelper;
-import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
+import com.teammoeg.chorda.block.CBlockInterfaces.IActiveState;
+import com.teammoeg.chorda.block.entity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 
+import blusunrize.immersiveengineering.common.fluids.ArrayFluidHandler;
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveState, ITickableTileEntity {
-    ResourceLocation burnable = new ResourceLocation("frostedheart", "flammable_fluid");
-    FluidTank input = new FluidTank(10000, s -> s.getFluid().getTags().contains(burnable));
+public class OilBurnerTileEntity extends CBlockEntity implements IActiveState, CTickableBlockEntity {
+    FluidTank input = new FluidTank(10000, s -> s.getFluid().is(FHTags.Fluids.FLAMMABLE_FLUID.tag));
     int vals;
     private LazyOptional<IFluidHandler> holder = LazyOptional.empty();
 
-    public OilBurnerTileEntity() {
-        super(FHTileTypes.OIL_BURNER.get());
+    public OilBurnerTileEntity(BlockPos bp,BlockState bs) {
+        super(FHBlockEntityTypes.OIL_BURNER.get(),bp,bs);
     }
 
     @Override
@@ -53,11 +55,12 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
         if (!this.holder.isPresent()) {
             this.refreshCapability();
         }
-        return cap == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY ? holder.cast() : super.getCapability(cap, side);
+        return cap == ForgeCapabilities.FLUID_HANDLER ? holder.cast() : super.getCapability(cap, side);
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean dp) {
+    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
+    	if(!descPacket)
         input.readFromNBT(nbt.getCompound("in"));
         vals = nbt.getInt("burntick");
     }
@@ -65,54 +68,16 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
 
     private void refreshCapability() {
         LazyOptional<IFluidHandler> oldCap = this.holder;
-        this.holder = LazyOptional.of(() -> new IFluidHandler() {
-                    @Override
-                    public FluidStack drain(FluidStack resource, FluidAction action) {
-                        return FluidStack.EMPTY;
-                    }
-
-                    @Override
-                    public FluidStack drain(int maxDrain, FluidAction action) {
-                        return FluidStack.EMPTY;
-                    }
-
-                    @Override
-                    public int fill(FluidStack resource, FluidAction action) {
-                        return input.fill(resource, action);
-                    }
-
-                    @Override
-                    public FluidStack getFluidInTank(int tank) {
-                        return input.getFluidInTank(tank);
-                    }
-
-                    @Override
-                    public int getTankCapacity(int tank) {
-                        return input.getCapacity();
-                    }
-
-                    @Override
-                    public int getTanks() {
-                        return input.getTanks();
-                    }
-
-                    @Override
-                    public boolean isFluidValid(int tank, FluidStack stack) {
-                        return input.isFluidValid(tank, stack);
-                    }
-
-                }
-
-        );
+        this.holder = LazyOptional.of(()->ArrayFluidHandler.fillOnly(input, ()->this.setChanged()));
         oldCap.invalidate();
     }
 
     @Override
     public void tick() {
-        if (this.world != null && !this.world.isRemote) {
-            TileEntity down = Utils.getExistingTileEntity(world, pos.offset(Direction.DOWN));
+        if (this.level != null && !this.level.isClientSide) {
+            BlockEntity down = Utils.getExistingTileEntity(level, worldPosition.relative(Direction.DOWN));
             if (down != null) {
-                LazyOptional<IFluidHandler> cap = down.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, Direction.UP);
+                LazyOptional<IFluidHandler> cap = down.getCapability(ForgeCapabilities.FLUID_HANDLER, Direction.UP);
                 if (cap.isPresent()) {
                     IFluidHandler ifh = cap.resolve().orElse(null);
                     if (ifh != null) {
@@ -137,8 +102,10 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
             if (drained >= 5) {
                 vals = Math.min(vals + drained / 5, 100);
             }
-            if(vals>0)
-            	this.markDirty();
+            if(vals>0) {
+            	this.setChanged();
+            	//this.syncData();
+            }
             if (this.getIsActive()) {
                 vals--;
             } else if (vals > 20) {
@@ -151,8 +118,9 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean dp) {
-        nbt.put("in", input.writeToNBT(new CompoundNBT()));
+    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
+    	if(!descPacket)
+        nbt.put("in", input.writeToNBT(new CompoundTag()));
         nbt.putInt("burntick", vals);
     }
 }

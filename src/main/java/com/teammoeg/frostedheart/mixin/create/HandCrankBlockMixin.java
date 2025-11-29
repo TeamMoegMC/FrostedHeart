@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -24,16 +24,16 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.simibubi.create.content.contraptions.components.crank.HandCrankBlock;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.simibubi.create.content.kinetics.crank.HandCrankBlock;
+import com.teammoeg.frostedheart.util.Lang;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.common.util.FakePlayer;
 
 @Mixin(HandCrankBlock.class)
@@ -42,15 +42,16 @@ public class HandCrankBlockMixin {
      * @author khjxiaogu
      * @reason Disable fake player from making energy
      */
-    @Inject(at = @At("INVOKE"), method = "onBlockActivated", cancellable = true)
-    public void onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit, CallbackInfoReturnable<ActionResultType> ci) {
+    @Inject(at = @At("INVOKE"), method = "use", cancellable = true)
+    public void use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn,
+		BlockHitResult hit,CallbackInfoReturnable<InteractionResult> ci) {
         if (player instanceof FakePlayer) {
             worldIn.destroyBlock(pos, true);
-            ci.setReturnValue(ActionResultType.FAIL);
-        } else if (player.getFoodStats().getFoodLevel() < 4) {
-            if (player.getEntityWorld().isRemote)
-                player.sendStatusMessage(TranslateUtils.translateMessage("crank.feel_hunger"), true);
-            ci.setReturnValue(ActionResultType.FAIL);
+            ci.setReturnValue(InteractionResult.FAIL);
+        } else if (player.getFoodData().getFoodLevel() < 4) {
+            if (player.getCommandSenderWorld().isClientSide)
+                player.displayClientMessage(Lang.translateMessage("crank.feel_hunger"), true);
+            ci.setReturnValue(InteractionResult.FAIL);
         }
     }
 }
