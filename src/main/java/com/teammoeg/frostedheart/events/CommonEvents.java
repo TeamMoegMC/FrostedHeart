@@ -275,7 +275,6 @@ public class CommonEvents {
         FHUtils.clonePlayerCapability(FHCapabilities.WANTED_FOOD.capability(),ev.getOriginal(),ev.getPlayer());
         FHUtils.clonePlayerCapability(FHCapabilities.ENERGY,ev.getOriginal(),ev.getPlayer());
         FHUtils.clonePlayerCapability(FHCapabilities.SCENARIO,ev.getOriginal(),ev.getPlayer());
-        FHUtils.clonePlayerCapability(FHCapabilities.WAYPOINT,ev.getOriginal(),ev.getPlayer());
         //FHUtils.clonePlayerCapability(PlayerTemperatureData.CAPABILITY,ev.getOriginal(),ev.getPlayer());
         //FHMain.LOGGER.info("clone");
         if (!ev.getPlayer().world.isRemote) {

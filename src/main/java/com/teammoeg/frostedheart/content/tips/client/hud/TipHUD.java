@@ -5,7 +5,9 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.gui.EmptyScreen;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
-import com.teammoeg.frostedheart.util.client.*;
+import com.teammoeg.frostedheart.content.tips.client.util.AnimationUtil;
+import com.teammoeg.frostedheart.content.tips.client.util.GuiUtil;
+import com.teammoeg.frostedheart.util.client.Point;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.resources.I18n;
@@ -46,7 +48,7 @@ public class TipHUD extends AbstractGui {
         float BGAlpha = defaultBGAlpha;
         float fontAlpha = 1.0F;
 
-        Point mainWindow = new Point(ClientUtils.screenWidth(), ClientUtils.screenHeight());
+        Point mainWindow = new Point(mc.getMainWindow().getScaledWidth(), mc.getMainWindow().getScaledHeight());
         int x = (int)(mainWindow.getX() * 0.7)-extendedWidth;
         int y = (int)(mainWindow.getY() * 0.3)-extendedHeight;
         Point renderPos2 = new Point((int)(mainWindow.getX() * 0.99F), lineSpace);
@@ -67,14 +69,14 @@ public class TipHUD extends AbstractGui {
                 if (descLines >= element.contents.size() && x > mainWindow.getX() * 0.5) {
                     extendedWidth += 24;
                 } else {
-                    FHGuiHelper.wrapAndDraw(I18n.format("tips." + FHMain.MODID + ".too_long"), ms,
+                    GuiUtil.drawWrapString(I18n.format("tips." + FHMain.MODID + ".too_long"), ms,
                             8, 8, (int)(mainWindow.getX()*0.5F), element.fontColor, lineSpace, true);
                 }
             }
         }
 
         if (fadeOut) {
-            float progress = 1- AnimationUtil.fadeIn(400, "TipFadeOut", false);
+            float progress = 1- AnimationUtil.calcFadeIn(400, "TipFadeOut", false);
             fadeProgress = progress;
 
             if (progress == 0) {
@@ -85,7 +87,7 @@ public class TipHUD extends AbstractGui {
                 fontAlpha = Math.max(progress, 0.02F);
             }
         } else if (fadeIn) {
-            float progress = AnimationUtil.fadeIn(400, "TipFadeIn", false);
+            float progress = AnimationUtil.calcFadeIn(400, "TipFadeIn", false);
             fadeProgress = progress;
 
             if (progress == 1.0F) {
@@ -98,12 +100,10 @@ public class TipHUD extends AbstractGui {
 
         int BGColor = (int)(BGAlpha * 255.0F) << 24 | element.BGColor & 0x00FFFFFF;
         int fontColor = (int)(fontAlpha * 255.0F) << 24 | element.fontColor & 0x00FFFFFF;
-        //移动视角时的"惯性"效果
         float yaw = 0;
         float pitch = 0;
         if (mc.player != null) {
             if (mc.isGamePaused()) {
-                //防止暂停时鬼畜
                 yaw   = mc.player.getYaw(mc.getRenderPartialTicks()) - mc.player.renderArmYaw;
                 pitch = mc.player.getPitch(mc.getRenderPartialTicks()) - mc.player.renderArmPitch;
             } else {
@@ -123,7 +123,7 @@ public class TipHUD extends AbstractGui {
 
         if (!isAlwaysVisible() && fadeProgress == 1.0F) {
             //进度条
-            float lineProgress = 1-AnimationUtil.progress(element.visibleTime, "TipVisibleTime", false);
+            float lineProgress = 1-AnimationUtil.calcProgress(element.visibleTime, "TipVisibleTime", false);
             int lx = x-4;
             int ly = y + (titleLines+1)*lineSpace;
             int x2 = renderPos2.getX() - lx;
@@ -153,12 +153,12 @@ public class TipHUD extends AbstractGui {
             descLines = 0;
             //标题
             int t = -1;
-            t += FHGuiHelper.formatAndDraw(texts.get(0), ms, x, y, width-16, fontColor, lineSpace, false);
+            t += GuiUtil.formatAndDraw(texts.get(0), ms, x, y, width-16, fontColor, lineSpace, false);
             descLines += t;
             titleLines = t;
             //内容
             for (int dt = 1; dt < texts.size(); dt++) {
-                descLines += FHGuiHelper.formatAndDraw(texts.get(dt), ms,
+                descLines += GuiUtil.formatAndDraw(texts.get(dt), ms,
                         x, descLines*lineSpace + y+17, width-8, fontColor, lineSpace, false);
             }
         } else {//只有标题
@@ -167,7 +167,7 @@ public class TipHUD extends AbstractGui {
             descLines = 0;
 
             int t = -1;
-            t += FHGuiHelper.formatAndDraw(texts.get(0), ms, x, y, width-16, fontColor, lineSpace, false);
+            t += GuiUtil.formatAndDraw(texts.get(0), ms, x, y, width-16, fontColor, lineSpace, false);
             descLines += t;
             titleLines = t;
         }
@@ -177,21 +177,21 @@ public class TipHUD extends AbstractGui {
         if (!isFading() && (mc.currentScreen != null || InputMappings.isKeyDown(mc.getMainWindow().getHandle(), 258))) {
             if (mc.currentScreen == null) mc.displayGuiScreen(new EmptyScreen());
 
-            if (FHGuiHelper.renderIconButton(ms, IconButton.ICON_CROSS, RawMouseHelper.getScaledMouseX(), RawMouseHelper.getScaledMouseY(), x, y, color, 0)) {
+            if (GuiUtil.renderIconButton(ms, IconButton.ICON_CROSS, GuiUtil.getMouseX(), GuiUtil.getMouseY(), x, y, color, 0)) {
                 if (!isFading()) {
                     fadeOut = true;
                 }
             }
             //标题超过 1 行时把锁定按钮从左边移动到下面
             if (titleLines > 1){
-                if (!isAlwaysVisible() && FHGuiHelper.renderIconButton(ms, IconButton.ICON_LOCK, RawMouseHelper.getScaledMouseX(), RawMouseHelper.getScaledMouseY(), x, y+10, color, 0))
+                if (!isAlwaysVisible() && GuiUtil.renderIconButton(ms, IconButton.ICON_LOCK, GuiUtil.getMouseX(), GuiUtil.getMouseY(), x, y+10, color, 0))
                     alwaysVisibleOverride = true;
             } else {
-                if (!isAlwaysVisible() && FHGuiHelper.renderIconButton(ms, IconButton.ICON_LOCK, RawMouseHelper.getScaledMouseX(), RawMouseHelper.getScaledMouseY(), x-15, y, color, 0))
+                if (!isAlwaysVisible() && GuiUtil.renderIconButton(ms, IconButton.ICON_LOCK, GuiUtil.getMouseX(), GuiUtil.getMouseY(), x-15, y, color, 0))
                     alwaysVisibleOverride = true;
             }
         } else {
-            FHGuiHelper.renderIcon(ms, IconButton.ICON_CROSS, x, y, color);
+            GuiUtil.renderIcon(ms, IconButton.ICON_CROSS, x, y, color);
         }
     }
 

@@ -1,15 +1,16 @@
-package com.teammoeg.frostedheart.content.tips;
+package com.teammoeg.frostedheart.content.tips.client.util;
 
+import com.teammoeg.frostedheart.content.tips.client.RenderHUD;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
+import com.teammoeg.frostedheart.content.tips.client.UnlockedTipManager;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
-import com.teammoeg.frostedheart.util.client.AnimationUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.text.StringTextComponent;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class TipDisplayManager {
+public class TipDisplayUtil {
     private static final Map<String, TipElement> CACHE = new HashMap<>();
 
     /**
@@ -23,9 +24,9 @@ public class TipDisplayManager {
 
     public static void displayTip(TipElement element, boolean first) {
         if (element.ID.isEmpty()) return;
-        if (element.onceOnly && TipLockManager.manager.isUnlocked(element.ID)) return;
+        if (element.onceOnly && UnlockedTipManager.manager.isUnlocked(element.ID)) return;
 
-        for (TipElement ele : TipRenderer.renderQueue) {
+        for (TipElement ele : RenderHUD.renderQueue) {
             if (ele.ID.equals(element.ID)) {
                 return;
             }
@@ -33,32 +34,32 @@ public class TipDisplayManager {
 
         if (element.history) {
             if (element.ID.startsWith("*custom*")) {
-                TipLockManager.manager.unlockCustom(element);
+                UnlockedTipManager.manager.unlockCustom(element);
             } else {
-                TipLockManager.manager.unlock(element.ID, element.hide);
+                UnlockedTipManager.manager.unlock(element.ID, element.hide);
             }
         }
 
         if (first) {
-            TipRenderer.renderQueue.add(0, element);
+            RenderHUD.renderQueue.add(0, element);
         } else {
-            TipRenderer.renderQueue.add(element);
+            RenderHUD.renderQueue.add(element);
         }
     }
 
     /**
      * 在渲染列表中添加一个自定义提示
      * @param title 标题
-     * @param content 内容，使用 "$$" 换行
+     * @param content 内容，使用 "$" 换行
      * @param visibleTime 显示时间，单位为 ms
-     * @param history 是否保存在已解锁列表中
+     * @param history {@code true}保存在已解锁列表中
      */
     public static void displayCustomTip(String title, String content, int visibleTime, boolean history) {
         TipElement ele = new TipElement();
         ele.ID = "*custom*" + title;
         ele.history = history;
         ele.contents.add(new StringTextComponent(title));
-        String[] contents = content.split("\\$\\$");
+        String[] contents = content.split("\\$");
         for (String s : contents) {
             ele.contents.add(new StringTextComponent(s));
         }
@@ -80,16 +81,16 @@ public class TipDisplayManager {
     }
 
     public static void forceAdd(TipElement ele, boolean first) {
-        for (TipElement q : TipRenderer.renderQueue) {
+        for (TipElement q : RenderHUD.renderQueue) {
             if (q.ID.equals(ele.ID)) {
                 return;
             }
         }
 
         if (first) {
-            TipRenderer.renderQueue.add(0, ele);
+            RenderHUD.renderQueue.add(0, ele);
         } else {
-            TipRenderer.renderQueue.add(ele);
+            RenderHUD.renderQueue.add(ele);
         }
     }
 
@@ -109,22 +110,22 @@ public class TipDisplayManager {
      * 移除当前显示的提示
      */
     public static void removeCurrent() {
-        TipRenderer.renderQueue.remove(0);
+        RenderHUD.renderQueue.remove(0);
         resetTipAnimation();
-        TipRenderer.currentTip = null;
+        RenderHUD.currentTip = null;
     }
 
     /**
      * 固定列表中的某个提示，即 {@code alwaysVisible = true}
      */
     public static void pinTip(String ID) {
-        for (int i = 0; i < TipRenderer.renderQueue.size(); i++) {
-            TipElement ele = TipRenderer.renderQueue.get(i);
+        for (int i = 0; i < RenderHUD.renderQueue.size(); i++) {
+            TipElement ele = RenderHUD.renderQueue.get(i);
             if (ele.ID.equals(ID)) {
                 try {
                     TipElement clone = (TipElement)ele.clone();
                     clone.alwaysVisible = true;
-                    TipRenderer.renderQueue.set(i, clone);
+                    RenderHUD.renderQueue.set(i, clone);
                     break;
                 } catch (CloneNotSupportedException e) {
                     e.printStackTrace();
@@ -138,15 +139,15 @@ public class TipDisplayManager {
      * 置顶列表中的某个提示
      */
     public static void moveToFirst(String ID) {
-        if (TipRenderer.renderQueue.size() <= 1 || TipRenderer.renderQueue.get(0).ID.equals(ID)) {
+        if (RenderHUD.renderQueue.size() <= 1 || RenderHUD.renderQueue.get(0).ID.equals(ID)) {
             return;
         }
-        for (int i = 0; i < TipRenderer.renderQueue.size(); i++) {
-            TipElement ele = TipRenderer.renderQueue.get(i);
+        for (int i = 0; i < RenderHUD.renderQueue.size(); i++) {
+            TipElement ele = RenderHUD.renderQueue.get(i);
             if (ele.ID.equals(ID)) {
-                TipRenderer.renderQueue.remove(i);
-                TipRenderer.renderQueue.add(0, ele);
-                TipRenderer.currentTip = null;
+                RenderHUD.renderQueue.remove(i);
+                RenderHUD.renderQueue.add(0, ele);
+                RenderHUD.currentTip = null;
                 resetTipAnimation();
                 return;
             }
@@ -160,9 +161,9 @@ public class TipDisplayManager {
     }
 
     public static void clearRenderQueue() {
-        TipRenderer.renderQueue.clear();
+        RenderHUD.renderQueue.clear();
         resetTipAnimation();
-        TipRenderer.currentTip = null;
+        RenderHUD.currentTip = null;
     }
 
     public static void clearCache() {

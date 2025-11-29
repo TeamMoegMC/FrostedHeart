@@ -1,8 +1,7 @@
-package com.teammoeg.frostedheart.content.tips;
+package com.teammoeg.frostedheart.content.tips.client;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,7 +15,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TipLockManager {
+public class UnlockedTipManager {
     public static final File CONFIG_PATH = new File(FMLPaths.CONFIGDIR.get().toFile(), "fhtips");
     public static final File TIPS = new File(CONFIG_PATH, "tips");
     public static final File UNLOCKED_FILE = new File(CONFIG_PATH, "unlocked_tips.json");
@@ -27,8 +26,8 @@ public class TipLockManager {
     private List<String> hide = new ArrayList<>();
     private List<List<String>> custom = new ArrayList<>();
 
-    public static final TipLockManager manager = new TipLockManager();
-    public static String errorType = "";
+    public static final UnlockedTipManager manager = new UnlockedTipManager();
+    public static String error = "";
 
     static {
         if (TIPS.mkdir()) {
@@ -37,7 +36,7 @@ public class TipLockManager {
         manager.loadFromFile();
     }
 
-    private TipLockManager() {
+    private UnlockedTipManager() {
     }
 
     public void loadFromFile() {
@@ -48,14 +47,14 @@ public class TipLockManager {
 
         LOGGER.debug("Loading unlocked tips");
         try (FileReader reader = new FileReader(UNLOCKED_FILE)) {
-            TipLockManager fileManager = GSON.fromJson(reader, TipLockManager.class);
+            UnlockedTipManager fileManager = GSON.fromJson(reader, UnlockedTipManager.class);
             this.visible = fileManager.visible;
             this.hide = fileManager.hide;
             this.custom = fileManager.custom;
 
         } catch (IOException | JsonSyntaxException e) {
             e.printStackTrace();
-            errorType = "load";
+            error = "load";
             LOGGER.error("Unable to load file: '{}'", UNLOCKED_FILE);
             createFile();
         }
@@ -66,7 +65,7 @@ public class TipLockManager {
             GSON.toJson(this, writer);
         } catch (IOException e) {
             e.printStackTrace();
-            errorType = "save";
+            error = "save";
             LOGGER.error("Unable to save file: '{}'", UNLOCKED_FILE);
         }
     }

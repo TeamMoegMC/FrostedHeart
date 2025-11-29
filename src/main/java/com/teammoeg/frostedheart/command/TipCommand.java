@@ -4,12 +4,9 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipPacket;
-import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.content.tips.network.CustomTipPacket;
+import com.teammoeg.frostedheart.content.tips.network.SingleTipPacket;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.command.arguments.EntityArgument;
@@ -18,20 +15,20 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 public class TipCommand {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
-        LiteralArgumentBuilder<CommandSource> run = Commands.literal("tips").then(
+        dispatcher.register(
+            Commands.literal("tips").requires((p_198820_0_) -> {return p_198820_0_.hasPermissionLevel(2);}).then(
             Commands.literal("add").then(
             Commands.argument("targets", EntityArgument.players()).then(
             Commands.argument("ID", StringArgumentType.string())
-                .executes((c) -> {
-                    String ID = c.getArgument("ID", String.class);
+                .executes((a) -> {
+                    String ID = a.getArgument("ID", String.class);
                     int i = 0;
 
-                    for(ServerPlayerEntity sp : EntityArgument.getPlayers(c, "targets")) {
-                        FHNetwork.send(PacketDistributor.PLAYER.with(() -> sp), new DisplayTipPacket(ID));
+                    for(ServerPlayerEntity sp : EntityArgument.getPlayers(a, "targets")) {
+                        FHNetwork.send(PacketDistributor.PLAYER.with(() -> sp), new SingleTipPacket(ID));
                         i++;
                     }
 
-                    c.getSource().sendFeedback(TranslateUtils.translate("tips.frostedheart.command", i, ID), true);
                     return i;
                 }
                 ))).then(
@@ -49,14 +46,12 @@ public class TipCommand {
 
                         int i = 0;
                         for(ServerPlayerEntity sp : EntityArgument.getPlayers(c, "targets")) {
-                            FHNetwork.send(PacketDistributor.PLAYER.with(() -> sp), new DisplayCustomTipPacket(title, content, visibleTime, history));
+                            FHNetwork.send(PacketDistributor.PLAYER.with(() -> sp), new CustomTipPacket(title, content, visibleTime, history));
                             i++;
                         }
 
-                        c.getSource().sendFeedback(TranslateUtils.translate("tips.frostedheart.command", i, title), true);
                         return i;
                     }
-        ))))))));
-        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermissionLevel(2)).then(run));
+        )))))))));
     }
 }
