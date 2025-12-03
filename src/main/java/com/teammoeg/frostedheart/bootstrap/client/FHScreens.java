@@ -42,7 +42,7 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseScreen;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
 
-import com.teammoeg.frostedheart.content.utility.snowsack.SnowSackScreen;
+import com.teammoeg.frostedheart.item.snowsack.SnowSackScreen;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.gui.screens.MenuScreens;

@@ -49,7 +49,7 @@ import com.teammoeg.frostedheart.content.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
 import com.teammoeg.frostedheart.content.utility.seld.FHServerBoundUpdateSledState;
-import com.teammoeg.frostedheart.content.utility.snowsack.ToggleAutoPickupMessage;
+import com.teammoeg.frostedheart.item.snowsack.ToggleAutoPickupMessage;
 import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;

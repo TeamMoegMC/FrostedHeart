@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.utility.snowsack;
+package com.teammoeg.frostedheart.item.snowsack;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;

@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.utility.snowsack;
+package com.teammoeg.frostedheart.item.snowsack;
 
 import com.teammoeg.chorda.network.CMessage;
 import net.minecraft.network.FriendlyByteBuf;

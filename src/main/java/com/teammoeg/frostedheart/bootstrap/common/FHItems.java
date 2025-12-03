@@ -28,7 +28,7 @@ import com.teammoeg.caupona.CPTags;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.utility.seld.SledItem;
-import com.teammoeg.frostedheart.content.utility.snowsack.SnowSackItem;
+import com.teammoeg.frostedheart.item.snowsack.SnowSackItem;
 import com.teammoeg.frostedheart.item.*;
 import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
@@ -61,7 +61,6 @@ import com.tterrag.registrate.util.entry.ItemEntry;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.food.FoodProperties;

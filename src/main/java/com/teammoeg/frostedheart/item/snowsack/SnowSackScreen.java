@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.utility.snowsack;
+package com.teammoeg.frostedheart.item.snowsack;
 
 import com.teammoeg.frostedheart.FHNetwork;
 import net.minecraft.client.gui.GuiGraphics;
