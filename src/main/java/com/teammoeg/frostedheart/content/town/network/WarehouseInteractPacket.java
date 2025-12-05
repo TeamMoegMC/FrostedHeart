@@ -41,18 +41,21 @@ public class WarehouseInteractPacket implements CMessage {
 		INSERT   // 放入 (拿着物品点击网格)
 	}
 	private final Action action;//行为 (取出/放入);
-	private final boolean isShift; // 是否按住了 Shift
+	private final boolean isShift;
+	private final int button;// 是否按住了 Shift
 	private final ItemStack targetItem; //取出的目标物品
 
-    public WarehouseInteractPacket(Action action, boolean isShift, ItemStack itemStack) {
+    public WarehouseInteractPacket(Action action, boolean isShift, int button,ItemStack itemStack) {
 		this.action = action;
 		this.isShift = isShift;
+		this.button = button;
 		this.targetItem = itemStack;
     }
 
 	public WarehouseInteractPacket(FriendlyByteBuf buffer) {
 		this.action = buffer.readEnum(Action.class);
 		this.isShift = buffer.readBoolean();
+        this.button = buffer.readInt();
 		this.targetItem = buffer.readItem();
     }
 
@@ -67,18 +70,24 @@ public class WarehouseInteractPacket implements CMessage {
 				ItemStack carried = player.containerMenu.getCarried();
 				// 构建存入 Action
 				if (this.action == Action.INSERT) {
-					TownResourceActions.ItemStackAction action = new TownResourceActions.ItemStackAction(carried, ResourceActionType.ADD, ResourceActionMode.MAXIMIZE);
+					ItemStack copyItem = carried.copy();
+					if (button==1){
+						copyItem.setCount(1);
+					}
+					TownResourceActions.ItemStackAction action = new TownResourceActions.ItemStackAction(copyItem, ResourceActionType.ADD, ResourceActionMode.MAXIMIZE);
 					TownResourceActionResults.ItemStackActionResult result = (TownResourceActionResults.ItemStackActionResult)executor.execute(action);
-
 					if (!result.itemStackModified().isEmpty()) {
-						ItemStack inserted = result.itemStackLeft().copy();
-						player.containerMenu.setCarried(inserted);
+						carried.shrink(result.itemStackModified().getCount());
 						player.containerMenu.broadcastChanges();
 					}
 				} else if (this.action == Action.EXTRACT) {
 					if (targetItem.isEmpty()) return;
-					int maxStack = targetItem.getMaxStackSize();
-
+					int amountToTake  = targetItem.getMaxStackSize();
+					if (button==1) {
+						int halfToTake = (int) Math.ceil(TeamTown.from(player).getResourceHolder().get(targetItem) / 2);
+						amountToTake  = (amountToTake  + 1) / 2;
+						amountToTake = Math.min(amountToTake, halfToTake);
+					}
                     // 构建取出 Action
 					//TownResourceActions.ItemResourceAction action = new TownResourceActions.ItemResourceAction(targetItem,
 					//		ResourceActionType.COST,
@@ -87,7 +96,7 @@ public class WarehouseInteractPacket implements CMessage {
 					//);
 					//TownResourceActionResults.ItemResourceActionResult result = (TownResourceActionResults.ItemResourceActionResult) executor.execute(action);
 					//尝试ItemStackAction
-					TownResourceActions.ItemStackAction action = new TownResourceActions.ItemStackAction(targetItem.copyWithCount(maxStack), ResourceActionType.COST, ResourceActionMode.MAXIMIZE);
+					TownResourceActions.ItemStackAction action = new TownResourceActions.ItemStackAction(targetItem.copyWithCount(amountToTake), ResourceActionType.COST, ResourceActionMode.MAXIMIZE);
 					TownResourceActionResults.ItemStackActionResult result = (TownResourceActionResults.ItemStackActionResult)executor.execute(action);
 
 
@@ -135,6 +144,7 @@ public class WarehouseInteractPacket implements CMessage {
 	public void encode(FriendlyByteBuf buffer) {
 		buffer.writeEnum(this.action);
 		buffer.writeBoolean(this.isShift);
+		buffer.writeInt(this.button);
 		buffer.writeItem(this.targetItem);
 	}
 }
