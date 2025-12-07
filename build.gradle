@@ -333,6 +333,16 @@ dependencies {
 }
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+tasks.withType(GroovyCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+tasks.withType(ProcessResources).configureEach {
+    encoding = 'UTF-8'
+    duplicatesStrategy = DuplicatesStrategy.WARN
+}
 tasks.register('joinLang') {
 	ext {
         buildDir=new File(project.buildDir,"jointLang");
