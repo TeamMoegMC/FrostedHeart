@@ -128,7 +128,7 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
     //交互逻辑
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (!this.visible || !this.isValidClickButton(button)) return false;
+        if (!this.visible) return false;
 
         // 检查是否点击滚动条
         if (mouseX >= scrollBarX && mouseX <= scrollBarX + scrollBarWidth && mouseY >= getY() && mouseY <= getY() + scrollBarHeight) {
@@ -145,7 +145,7 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
                 ItemStack carried = Minecraft.getInstance().player.containerMenu.getCarried();
                 // 存入 (Insert)
                 if (!carried.isEmpty()) {
-                    FHNetwork.INSTANCE.sendToServer(new WarehouseInteractPacket(WarehouseInteractPacket.Action.INSERT,hasShiftDown(),ItemStack.EMPTY));
+                    FHNetwork.INSTANCE.sendToServer(new WarehouseInteractPacket(WarehouseInteractPacket.Action.INSERT,hasShiftDown(),button,ItemStack.EMPTY));
                     playClickSound();
                     return true;
                 }
@@ -154,7 +154,7 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
                     int index = getIndexAt(row, col);
                     if (index >= 0 && index < itemList.size()) {
                         VirtualItemStack clickedVStack = this.itemList.get(index);
-                        FHNetwork.INSTANCE.sendToServer(new WarehouseInteractPacket(WarehouseInteractPacket.Action.EXTRACT,hasShiftDown(),clickedVStack.getStack()));
+                        FHNetwork.INSTANCE.sendToServer(new WarehouseInteractPacket(WarehouseInteractPacket.Action.EXTRACT,hasShiftDown(),button,clickedVStack.getStack()));
                     }
                     playClickSound();
                     return true;
