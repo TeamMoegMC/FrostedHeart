@@ -22,15 +22,19 @@ package com.teammoeg.frostedheart.content.town;
 import java.util.*;
 import java.util.Map.Entry;
 
+import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
+import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * The town for a player team.
@@ -60,6 +64,17 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
      */
     public static TeamTown from(Player player) {
         TeamTownData data = CTeamDataManager.get(player).getData(FHSpecialDataTypes.TOWN_DATA);
+        return new TeamTown(data);
+    }
+
+    /**
+     * get town from local storage
+     * should ONLY be used in CLIENT
+     * @return the team town of client player
+     */
+    @OnlyIn(Dist.CLIENT)
+    public static TeamTown fromLocal(){
+        TeamTownData data = CClientTeamDataManager.INSTANCE.getInstance().getData(FHSpecialDataTypes.TOWN_DATA);
         return new TeamTown(data);
     }
 
