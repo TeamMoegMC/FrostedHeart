@@ -19,8 +19,8 @@ import java.util.function.Consumer;
  * 仅作为标识，尽可能保留原widget的性质
  * @param <T> Widget Type
  */
-public class TabElementWidget<T extends AbstractWidget> extends AbstractWidget {
-    public TabElementWidget(T widget) {
+public class TabWidget<T extends AbstractWidget> extends AbstractWidget {
+    public TabWidget(T widget) {
         super(widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), widget.getMessage());
         this.widget = widget;
     }

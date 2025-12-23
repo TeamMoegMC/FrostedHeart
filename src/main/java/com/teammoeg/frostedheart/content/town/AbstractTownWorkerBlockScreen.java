@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.town;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
-import com.teammoeg.chorda.client.widget.ITabContent;
 import com.teammoeg.chorda.client.widget.TabImageButton;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
@@ -103,7 +102,7 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
 
         if (activeTab > tabButtons.size()) return;
 
-        tabContents.get(activeTab).addRenderableWidgets(leftPos,topPos);
+        tabContents.get(activeTab).renderTabContent(leftPos,topPos);
 
     }
     private void clearContentWidgets() {
@@ -145,7 +144,7 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
     public ResourceLocation getButtonTexture(int tabIndex) {
         return background;
     }
-    public static int[] getTabButtonUV(int tabIndex) {
+    public int[] getTabButtonUV(int tabIndex) {
         /*if (tabIndex < 3) {*/
             return new int[]{180, 59};
         /*} else {
@@ -155,6 +154,10 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
 
     protected void addTabContent(ITabContent content){
         tabContents.add(content);
+    }
+
+    public interface ITabContent {
+        void renderTabContent(int guiLeft,int guiTop);
     }
 
     public interface TabContentComponent {}
