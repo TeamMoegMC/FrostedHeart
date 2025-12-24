@@ -1337,6 +1337,13 @@ thinner.png
             .model(AssetLookup.existingItemModel())
             .lang("Huge Snow Sack")
             .register();
+    public static ItemEntry<Item> town_manager = REGISTRATE
+            .item("mayors_seal", Item::new)
+            .tag(ItemTags.TOOLS)
+            .properties(p -> p.stacksTo(1))
+            .model(AssetLookup.existingItemModel())
+            .lang("Mayor's Seal")
+            .register();
 
 
     public static ItemEntry<FHBaseItem> buff_coat = REGISTRATE
