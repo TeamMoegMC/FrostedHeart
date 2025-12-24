@@ -9,11 +9,19 @@ import net.minecraft.resources.ResourceLocation;
 public class TownManagerScreen extends Screen {
     public static ResourceLocation BACKGROUND_TEXTURE = FHClientUtils.makeGuiTextureLocation("town_manage_screen");
 
-    public int imageWidth = 176, imageHeight = 222;
-    public int leftPos = (this.width - this.imageWidth) / 2, topPos = (this.height - this.imageHeight) / 2;
+    public int imageWidth, imageHeight, leftPos, topPos;
 
     protected TownManagerScreen(Component pTitle) {
         super(pTitle);
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        this.imageWidth = 176;
+        this.imageHeight = 222;
+        this.leftPos = (this.width - this.imageWidth) / 2;
+        this.topPos = (this.height - this.imageHeight) / 2;
     }
 
     @Override
