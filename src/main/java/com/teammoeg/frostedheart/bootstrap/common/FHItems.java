@@ -56,6 +56,7 @@ import com.teammoeg.frostedheart.content.water.item.FluidBottleItem;
 import com.teammoeg.frostedheart.content.water.item.IronBottleItem;
 import com.teammoeg.frostedheart.content.water.item.LeatherWaterBagItem;
 import com.teammoeg.frostedheart.content.water.item.WoodenCupItem;
+import com.teammoeg.frostedheart.item.townmanager.TownManagerItem;
 import com.teammoeg.frostedheart.util.FHAssetsUtils;
 import com.tterrag.registrate.util.entry.ItemEntry;
 
@@ -1337,8 +1338,8 @@ thinner.png
             .model(AssetLookup.existingItemModel())
             .lang("Huge Snow Sack")
             .register();
-    public static ItemEntry<Item> town_manager = REGISTRATE
-            .item("mayors_seal", Item::new)
+    public static ItemEntry<TownManagerItem> town_manager = REGISTRATE
+            .item("mayors_seal", TownManagerItem::new)
             .tag(ItemTags.TOOLS)
             .properties(p -> p.stacksTo(1))
             .model(AssetLookup.existingItemModel())

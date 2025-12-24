@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.item.townmanager;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.item.snowsack.SnowSackMenuProvider;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -23,7 +24,8 @@ public class TownManagerItem extends FHBaseItem {
 
         if (level.isClientSide) {
             // 打开GUI
-            //todo:Minecraft.getInstance().setScreen(Screen名称);
+            System.out.println("duck_egg debug: Opening GUI");
+            Minecraft.getInstance().setScreen(new TownManagerScreen(Component.translatable("gui.frostedheart.town_manager")));
         }
 
         return InteractionResultHolder.success(stack);
