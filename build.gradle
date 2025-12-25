@@ -172,6 +172,9 @@ repositories {
             includeGroup "com.simibubi.create"
         }
     }
+    maven {
+        url = "https://modmaven.dev"
+    }
     // Needed for Curios API
     maven {
         name = "theillusivec4 maven"
@@ -231,6 +234,9 @@ repositories {
         content {
             includeGroup "curse.maven"
         }
+    }
+    maven {
+        url = "https://modmaven.dev"
     }
 }
 dependencies {
@@ -331,8 +337,10 @@ dependencies {
 	implementation 'org.codehaus.groovy:groovy-json:3.0.9'
 
 }
-import groovy.json.JsonSlurper
+
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
 tasks.register('joinLang') {
 	ext {
         buildDir=new File(project.buildDir,"jointLang");

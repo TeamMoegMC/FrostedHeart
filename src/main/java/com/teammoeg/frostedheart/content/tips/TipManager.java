@@ -25,7 +25,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.mojang.logging.LogUtils;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedheart.content.tips.client.gui.TipLayerHandler;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
 import lombok.Getter;
 import lombok.Setter;
@@ -122,7 +121,7 @@ public class TipManager {
             for (File tipFile : files) {
                 Tip tip = Tip.fromJsonFile(tipFile);
                 if (loadedTips.containsKey(tip.getId())) {
-                    // 重复id
+                    // 重复 id
                     Tip d = Tip.builder("duplicate").error(Tip.ErrorType.LOAD, Components.str(tip.getId()), Component.translatable("tips.frostedheart.error.load.duplicate_id")).build();
                     display.force(d);
                 } else {
@@ -177,7 +176,7 @@ public class TipManager {
                 TipRenderer.TIP_QUEUE.add(tip);
             }
 
-            // 添加下一个tip
+            // 添加下一个 tip
             if (tip.hasNext()) {
                 general(tip.getNextTip());
             } else if (!tip.getNextTip().isBlank()) {
@@ -257,7 +256,6 @@ public class TipManager {
         public void clearRenderQueue() {
             TipRenderer.TIP_QUEUE.clear();
             TipRenderer.removeCurrent();
-            TipLayerHandler.get().getLayer().getTipLayer().removeTip();
         }
     }
 
@@ -270,7 +268,7 @@ public class TipManager {
          */
         protected void loadFromFile() {
             tipStates.clear();
-            // 为所有已加载的tip创建空的TipState
+            // 为所有已加载的 tip 创建空的 TipState
             loadedTips.forEach((id, tip) -> tipStates.put(tip, new State(tip)));
 
             if (!TIP_STATE_FILE.exists()) {
@@ -294,7 +292,7 @@ public class TipManager {
                     }
                     return;
                 }
-                // 将对应的空TipState替换为文件中储存的TipState
+                // 将对应的空 TipState 替换为文件中储存的 TipState
                 Map<Tip, State> toAdd = new HashMap<>();
                 for (State fromFile : stateList) {
                     Tip tip = getTip(fromFile.getId());

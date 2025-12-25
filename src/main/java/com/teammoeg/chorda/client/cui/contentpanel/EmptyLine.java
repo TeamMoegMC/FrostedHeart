@@ -5,7 +5,12 @@ import net.minecraft.client.gui.GuiGraphics;
 
 public class EmptyLine extends Line<EmptyLine> {
     public EmptyLine(UIWidget parent) {
+        this(parent, 8);
+    }
+
+    public EmptyLine(UIWidget parent, int height) {
         super(parent);
+        setHeight(height);
     }
 
     @Override

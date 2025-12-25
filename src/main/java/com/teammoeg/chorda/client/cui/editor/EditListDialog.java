@@ -275,10 +275,12 @@ public class EditListDialog<T> extends EditDialog {
                 } else {
                     float delta = (Util.getNanos() - ((Layer)getParent()).getLastFrameTime()) / 1_000_000_000.0f;
                     delta = Math.min(delta, 0.1F);
-                    float f = 1.0f - (float)Math.exp(-delta / 0.05F);
-                    displayY = displayY + (y - displayY) * f;
+                    float f = 1.0f - (float)Math.exp(-delta / 0.025F);
+                    displayY += (y - displayY) * f;
                     matrixStack.pose().translate(0, displayY-(int)displayY, 0);
-                    matrixStack.pose().translate(0, 0, 10);
+                    if (moving == this) {
+                        matrixStack.pose().translate(0, 0, 10);
+                    }
                     y = (int) displayY;
                 }
             }

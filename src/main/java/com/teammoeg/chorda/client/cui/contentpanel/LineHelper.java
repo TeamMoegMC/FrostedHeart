@@ -45,7 +45,11 @@ public class LineHelper {
     }
 
     public static EmptyLine space(UIWidget parent) {
-        return new EmptyLine(parent);
+        return space(parent, 8);
+    }
+
+    public static EmptyLine space(UIWidget parent, int height) {
+        return new EmptyLine(parent, height);
     }
 
     public static BreakLine br(UIWidget parent) {
@@ -56,7 +60,7 @@ public class LineHelper {
         return br(parent).color(color);
     }
 
-    public static List<Line<?>> fromTipWithoutChildren(Tip tip, ContentPanel affectedPanel) {
+    public static List<Line<?>> fromTipWithoutChildren(Tip tip, ContentPanel parent) {
         List<Line<?>> lines = new ArrayList<>();
 
         List<Component> contents = tip.getContents();
@@ -73,25 +77,25 @@ public class LineHelper {
             clickAction = b -> tip.runClickAction();
             btnDesc = ClickActions.getDesc(tip.getClickAction(), tip.getClickActionContent());
         }
-        lines.add(text(affectedPanel, title).button(btnDesc, clickAction));
+        lines.add(text(parent, title).button(btnDesc, clickAction));
         // contents
         for (int i = 1; i < contents.size(); i++) {
-            lines.add(text(affectedPanel, contents.get(i)));
+            lines.add(text(parent, contents.get(i)));
         }
         // image
         if (tip.getImage() != null) {
-            lines.add(space(affectedPanel));
-            var img = LineHelper.img(affectedPanel, tip.getImage());
+            lines.add(space(parent));
+            var img = img(parent, tip.getImage());
             if (img.getImgSize() != null && img.getImgSize().width < 64) {
                 img.bgColor(Colors.L_BG_GRAY);
             }
             lines.add(img);
         }
-        lines.add(items(affectedPanel, FHItems.ICE_SKATES.asStack(), FHItems.SNOWSHOES.asStack()));
+        lines.add(items(parent, FHItems.ICE_SKATES.asStack(), FHItems.SNOWSHOES.asStack()));
         return lines;
     }
 
-    public static List<Line<?>> fromTip(Tip tip, ContentPanel affectedPanel) {
+    public static List<Line<?>> fromTip(Tip tip, ContentPanel parent) {
         List<Line<?>> lines = new ArrayList<>();
         List<Tip> tips = new ArrayList<>();
         tips.add(tip);
@@ -110,29 +114,30 @@ public class LineHelper {
 
             // title
             if (j == 0) {
-                lines.add(LineHelper.text(affectedPanel, tipContents.get(0)).quote(t1.getFontColor()).button(btnDesc, clickAction));
-                lines.add(LineHelper.br(affectedPanel));
+                lines.add(text(parent, tipContents.get(0)).quote(t1.getFontColor()).button(btnDesc, clickAction));
+                lines.add(br(parent));
             // new tip notification
             } else if (!TipManager.INSTANCE.state().isViewed(t1)) {
-                lines.add(LineHelper.br(affectedPanel));
-                lines.add(LineHelper.text(affectedPanel, Component.translatable("gui.frostedheart.archive.new_tip")).title(t1.getFontColor(), 1).color(Colors.readableColor(t1.getFontColor())));
+                lines.add(br(parent));
+                lines.add(text(parent, Component.translatable("gui.frostedheart.archive.new_tip")).title(t1.getFontColor(), 1).color(Colors.readableColor(t1.getFontColor())));
             } else {
-                lines.add(LineHelper.br(affectedPanel));
+                lines.add(space(parent));
             }
-            // child tip with different title
+            // if child tip has different title or click action
             if (j != 0 && (!tipContents.get(0).equals(tip.getContents().get(0)) || tip.hasClickAction())) {
-                lines.add(LineHelper.text(affectedPanel, tipContents.get(0)).quote(t1.getFontColor()).button(btnDesc, clickAction));
+                lines.add(br(parent));
+                lines.add(text(parent, tipContents.get(0)).quote(t1.getFontColor()).button(btnDesc, clickAction));
             }
             // lines
             for (int i = 1; i < tipContents.size(); i++) {
                 Component line = tipContents.get(i);
                 if (!line.getString().isBlank()) {
-                    lines.add(LineHelper.text(affectedPanel, line));
+                    lines.add(text(parent, line));
                 }
             }
             // image
             if (t1.getImage() != null) {
-                var img = LineHelper.img(affectedPanel, t1.getImage());
+                var img = img(parent, t1.getImage());
                 if (img.getImgSize() != null && img.getImgSize().width < 64) {
                     img.bgColor(Colors.L_BG_GRAY);
                 }
@@ -140,7 +145,7 @@ public class LineHelper {
             }
             // debug
             if (FrostedHud.renderDebugOverlay) {
-                lines.add(LineHelper.text(affectedPanel, "ID: " + t1.getId()).color(Colors.L_BG_GRAY).alignment(Alignment.RIGHT));
+                lines.add(text(parent, "ID: " + t1.getId()).color(Colors.L_BG_GRAY).alignment(Alignment.RIGHT));
             }
         }
         return lines;

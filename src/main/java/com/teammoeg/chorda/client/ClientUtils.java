@@ -19,16 +19,7 @@
 
 package com.teammoeg.chorda.client;
 
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.function.Function;
-
-import net.minecraftforge.common.util.Size2i;
-import org.joml.Quaternionf;
-
 import com.mojang.blaze3d.platform.InputConstants;
-
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -41,8 +32,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import org.joml.Quaternionf;
 
-import javax.imageio.ImageIO;
+import java.util.function.Function;
 
 /**
  * Rendering not related client functions, used for get/set client data, spawning particles
@@ -161,17 +153,7 @@ public class ClientUtils {
 	    return getMc().font;
 	}
 
-    public static Size2i getImgSize(ResourceLocation location) {
-        if (location != null) {
-            var resource = ClientUtils.getMc().getResourceManager().getResource(location);
-            if (resource.isPresent()) {
-                try (InputStream stream = resource.get().open()) {
-                    BufferedImage image= ImageIO.read(stream);
-                    return new Size2i(image.getWidth(), image.getHeight());
-                } catch (IOException ignored) {
-                }
-            }
-        }
-        return new Size2i(0, 0);
+    public static void copyToClipboard(String content) {
+        getMc().keyboardHandler.setClipboard(content);
     }
 }

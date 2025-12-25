@@ -95,8 +95,6 @@ public class ArchiveCategory extends Layer {
         }
         alignWidgets();
 
-        System.out.println(getContentHeight());
-
         if (getY()+getContentHeight() < getY()+getHeight() || -getOffsetY()>scrollBar.getMax()) {
             scrollBar.setValue(scrollBar.getMax());
         }
@@ -154,9 +152,8 @@ public class ArchiveCategory extends Layer {
                 }
                 case GLFW.GLFW_KEY_W, GLFW.GLFW_KEY_UP   -> current = CategoryHelper.prev(current);
                 case GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_DOWN -> current = CategoryHelper.next(current);
-            };
+            }
         }
-
 
         if (current == root.getSelected()) {
             return super.onKeyPressed(keyCode, scanCode, modifier);

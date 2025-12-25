@@ -41,7 +41,6 @@ import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipRenderer;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
-import com.teammoeg.frostedheart.content.tips.client.gui.TipLayerHandler;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
@@ -1040,8 +1039,6 @@ public class FrostedHud {
         PrimaryLayer pLayer = null;
         if (screen instanceof CUIScreen cui) {
             pLayer = cui.getPrimaryLayer();
-        } else {
-            pLayer = TipLayerHandler.get().getLayer();
         }
         // CUI
         if (pLayer != null) {
