@@ -158,9 +158,6 @@ repositories {
         // location of a maven mirror for JEI files, as a fallback
         name = "ModMaven"
         url = "https://modmaven.dev"
-        content {
-            includeGroup "mezz.jei"
-        }
     }
     maven {
         //location of the maven for mixed mappings, create, registrate, and flywheel
@@ -171,9 +168,6 @@ repositories {
             includeGroup "com.tterrag.registrate"
             includeGroup "com.simibubi.create"
         }
-    }
-    maven {
-        url = "https://modmaven.dev"
     }
     // Needed for Curios API
     maven {
@@ -234,9 +228,6 @@ repositories {
         content {
             includeGroup "curse.maven"
         }
-    }
-    maven {
-        url = "https://modmaven.dev"
     }
 }
 dependencies {
