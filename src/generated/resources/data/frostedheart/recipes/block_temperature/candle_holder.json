@@ -1,0 +1,6 @@
+{
+  "type": "frostedheart:block_temp",
+  "block": "supplementaries:candle_holder",
+  "must_lit": true,
+  "temperature": 5.0
+}

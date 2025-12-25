@@ -1,0 +1,11 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "frostedheart:block/ruined_machines/ruined_machine_a"
+  },
+  "loader": "forge:obj",
+  "model": "frostedheart:models/block/ruined_machine_screen_cracked.obj",
+  "automatic_culling": false,
+  "flip_v": true,
+  "render_type": "cutout"
+}

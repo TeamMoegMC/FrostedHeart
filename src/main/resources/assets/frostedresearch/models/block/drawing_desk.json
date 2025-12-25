@@ -1,0 +1,11 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "frostedresearch:block/escritoire_main"
+  },
+  "loader": "forge:obj",
+  "model": "frostedresearch:models/block/escritoire.obj",
+  "automatic_culling": false,
+  "flip_v": true,
+  "render_type": "cutout"
+}

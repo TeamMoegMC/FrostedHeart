@@ -5,84 +5,202 @@ issueTrackerURL = "https://github.com/TeamMoegMC/FrostedHeart/issues"
 [[mods]] #mandatory
 modId = "frostedheart" #mandatory
 version = "${file.jarVersion}" #mandatory
-displayName = "TWR Frosted Heart" #mandatory
-authors = "Developed by TeamMoegMC, with the help of many contributors. See description below."
+displayName = "The Winter Rescue: Frosted Heart" #mandatory
+itemIcon="frostedheart:energy_core"
+displayURL="https://www.curseforge.com/minecraft/mc-mods/frosted-heart"
+logoFile="logo.png"
+authors = "Developed by TeamMoeg, with the help of many contributors. See description below."
 description = '''
 The Core Mod for The Winter Rescue Modpack.
 
- (In the order of first joining, not contribution size)
+Discord: https://discord.gg/BWn6E94
 
-Development Team:
-- Technical: YueSha, duck_egg, dashuaibia, khjxiaogu
-- Art: Lyuuke, gomou_g, Fu_Yang, OEIIO(03110), Dsanilin
-- Design: alphaGem, Jacky_Wang,
-- QA: asdfghjkl, shidi
-- Operation: Evan
-
-Contributors:
-LetterN, collin-marando, sayyidyofa, Whitealbum0, alyashour, AGmouse, Jerzerak,
-nekocrane, Huaji_Qinmi, Heitao, ceary741, Gugusb, Winged-Hussars,
-IBlessus, GuardianWorld(Mixxs), Keisari, ewoudjie, ZXCZST
+Team and Contributors: www.teammoeg.com
 '''
 [[dependencies.frostedheart]]
     modId = "forge"
     mandatory = true
-    versionRange = "[36,)"
+    versionRange = "[37,)"
     ordering = "NONE"
     side = "BOTH"
 
 [[dependencies.frostedheart]]
     modId = "minecraft"
     mandatory = true
-    versionRange = "[1.16.5,1.17)"
+    versionRange = "[1.20.1,1.20.4)"
     ordering = "NONE"
     side = "BOTH"
 
 [[dependencies.frostedheart]]
+    modId="chorda"
+    mandatory=true
+    versionRange="[0.1.0,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
     modId="immersiveengineering"
     mandatory=true
-    versionRange="[1.16.5-5.0.0,)"
-    ordering="BEFORE"
-    side="BOTH"
-
-[[dependencies.frostedheart]]
-    modId="primalwinter"
-    mandatory=true
-    versionRange="[1.16.4-2.0.5,)"
-    ordering="BEFORE"
-    side="BOTH"
-
-[[dependencies.frostedheart]]
-    modId="watersource"
-    mandatory=true
-    versionRange="[1.1.33-beta-1.16.5,)"
-    ordering="BEFORE"
-    side="BOTH"
-    
-[[dependencies.frostedheart]]
-    modId="thermopolium"
-    mandatory=true
-    versionRange="[0.2.12,)"
+    versionRange="[1.20.1-10.1.0,)"
     ordering="BEFORE"
     side="BOTH"
 
 [[dependencies.frostedheart]]
     modId="create"
     mandatory=true
-    versionRange="[v0.3.2d,)"
-    ordering="AFTER"
+    versionRange="[0.5.1.j,)"
+    ordering="BEFORE"
     side="BOTH"
 
 [[dependencies.frostedheart]]
     modId="flywheel"
     mandatory=true
-    versionRange="[1.16-0.2.3,1.16-0.3)"
-    ordering="AFTER"
+    versionRange="[0.6.10-7,)"
+    ordering="BEFORE"
     side="BOTH"
 
 [[dependencies.frostedheart]]
-    modId="rankine"
+    modId="terralith"
+    mandatory=false
+    versionRange="[2.5.4,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="caupona"
+    mandatory=false
+    versionRange="[1.20.1-0.4.9,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="stone_age"
+    mandatory=false
+    versionRange="[1.4.8,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="charcoal_pit"
+    mandatory=false
+    versionRange="[3.10,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="curios"
     mandatory=true
-    versionRange="[1.2,1.4)"
-    ordering="AFTER"
+    versionRange="[5.9.1+1.20.1,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="tetra"
+    mandatory=false
+    versionRange="[6.6.0,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+
+[[mods]] #mandatory
+modId = "chorda" #mandatory
+version = "0.1.0" #mandatory
+displayName = "Chorda" #mandatory
+displayURL="https://www.curseforge.com/minecraft/mc-mods/chorda"
+logoFile="logo.png"
+authors = "Developed by TeamMoeg, with the help of many contributors. See description below."
+description = '''
+The Library Mod for TeamMoeg Projects.
+'''
+[[dependencies.chorda]]
+    modId = "forge"
+    mandatory = true
+    versionRange = "[37,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.chorda]]
+    modId = "minecraft"
+    mandatory = true
+    versionRange = "[1.20.1,1.20.4)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.chorda]]
+    modId="immersiveengineering"
+    mandatory=false
+    versionRange="[1.20.1-10.1.0,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.chorda]]
+    modId="create"
+    mandatory=false
+    versionRange="[0.5.1.j,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.chorda]]
+    modId="flywheel"
+    mandatory=false
+    versionRange="[0.6.10-7,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.chorda]]
+    modId="curios"
+    mandatory=false
+    versionRange="[5.9.1+1.20.1,)"
+    ordering="BEFORE"
+    side="BOTH"
+[[mods]] #mandatory
+modId = "frostedresearch" #mandatory
+version = "0.1.0" #mandatory
+displayName = "Frosted Research" #mandatory
+displayURL="https://www.curseforge.com/minecraft/mc-mods/frostedresearch"
+logoFile="logo.png"
+authors = "Developed by TeamMoeg, with the help of many contributors."
+description = '''
+The research mod originally created for The Winter Rescue.
+'''
+[[dependencies.frostedresearch]]
+    modId = "forge"
+    mandatory = true
+    versionRange = "[37,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.frostedresearch]]
+    modId = "minecraft"
+    mandatory = true
+    versionRange = "[1.20.1,1.20.4)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.frostedresearch]]
+    modId="immersiveengineering"
+    mandatory=false
+    versionRange="[1.20.1-10.1.0,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedresearch]]
+    modId="create"
+    mandatory=false
+    versionRange="[0.5.1.j,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedresearch]]
+    modId="flywheel"
+    mandatory=false
+    versionRange="[0.6.10-7,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedresearch]]
+    modId="chorda"
+    mandatory=true
+    versionRange="[0.1,0.2)"
+    ordering="BEFORE"
     side="BOTH"

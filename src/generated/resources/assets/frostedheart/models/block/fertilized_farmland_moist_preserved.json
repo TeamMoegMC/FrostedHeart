@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/farmland_moist",
+  "textures": {
+    "dirt": "frostedheart:block/fertilized/fertilized_dirt_preserved",
+    "top": "frostedheart:block/fertilized/fertilized_farmland_moist_preserved"
+  }
+}

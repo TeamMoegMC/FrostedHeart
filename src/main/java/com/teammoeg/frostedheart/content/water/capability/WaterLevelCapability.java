@@ -1,0 +1,212 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.frostedheart.content.water.capability;
+
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.chorda.io.NBTSerializable;
+import com.teammoeg.chorda.util.CDamageSourceHelper;
+import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
+import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
+
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Difficulty;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodData;
+import net.minecraft.world.level.GameRules;
+import net.minecraftforge.common.util.LazyOptional;
+import javax.annotation.Nullable;
+
+public class WaterLevelCapability implements NBTSerializable {
+
+    @Override
+    public void save(CompoundTag nbt, boolean isPacket) {
+        nbt.putInt("PlayerWaterLevel", this.getWaterLevel());
+        nbt.putInt("PlayerWaterSaturationLevel", this.getWaterSaturationLevel());
+        nbt.putFloat("PlayerWaterExhaustionLevel", this.getWaterExhaustionLevel());
+    }
+
+    @Override
+    public void load(CompoundTag nbt, boolean isPacket) {
+        this.setWaterLevel(nbt.getInt("PlayerWaterLevel"));
+        this.setWaterSaturationLevel(nbt.getInt("PlayerWaterSaturationLevel"));
+        this.setWaterExhaustionLevel(nbt.getFloat("PlayerWaterExhaustionLevel"));
+    }
+
+    private int waterLevel = 20;
+    private int waterSaturationLevel = 6;
+    private float waterExhaustionLevel = 0;
+
+    public void addWaterLevel(Player player, int add) {
+        this.waterLevel = Math.min(this.waterLevel + add, 20);
+        syncToClientOnRestore(player);
+    }
+
+    public void addWaterSaturationLevel(Player player, int add) {
+        this.waterSaturationLevel = Math.min(this.waterSaturationLevel + add, 20);
+        syncToClientOnRestore(player);
+    }
+
+    protected void addExhaustion(float add) {
+        reduceLevel((int) ((this.waterExhaustionLevel + add) / 4.0f));
+        this.waterExhaustionLevel = (this.waterExhaustionLevel + add) % 4.0f;
+    }
+
+    public void addExhaustion(Player player, float add) {
+        float finalValue = (float) (add * FHConfig.SERVER.waterReducingRate.get());
+
+        MobEffectInstance effect = player.getEffect(FHMobEffects.THIRST.get());
+        // around 2 times faster at level zero thirst, 0.5 more each level
+        if (effect != null) {
+            addExhaustion(finalValue * (4 + effect.getAmplifier()) / 2);
+        } else {
+            addExhaustion(finalValue);
+        }
+
+        if (player instanceof ServerPlayer serverPlayer) {
+            syncToClient(serverPlayer);
+        }
+    }
+
+    public void setWaterLevel(int temp) {
+        this.waterLevel = temp;
+    }
+
+    public void setWaterExhaustionLevel(float waterExhaustionLevel) {
+        this.waterExhaustionLevel = waterExhaustionLevel;
+    }
+
+    public int getWaterLevel() {
+        return waterLevel;
+    }
+
+    public void setWaterSaturationLevel(int waterSaturationLevel) {
+        this.waterSaturationLevel = waterSaturationLevel;
+    }
+
+    public int getWaterSaturationLevel() {
+        return waterSaturationLevel;
+    }
+
+    public float getWaterExhaustionLevel() {
+        return waterExhaustionLevel;
+    }
+
+    public void reduceLevel(int reduce) {
+        if (this.waterSaturationLevel - reduce >= 0) {
+            waterSaturationLevel -= reduce;
+        } else {
+            if (waterLevel - (reduce - waterSaturationLevel) >= 0) {
+                waterLevel -= reduce;
+                waterSaturationLevel = 0;
+            } else {
+                waterLevel = 0;
+                waterSaturationLevel = 0;
+            }
+        }
+    }
+
+    public void restoreWater(Player player, int restore) {
+        this.waterLevel = Math.min(waterLevel + restore, 20);
+        if (this.waterLevel == 20) this.waterSaturationLevel = Math.min(waterLevel + restore, 20);
+        syncToClientOnRestore(player);
+    }
+
+    public static void syncToClient(ServerPlayer player) {
+        WaterLevelCapability.getCapability(player).ifPresent(t -> FHNetwork.INSTANCE.sendPlayer(player, new PlayerWaterLevelSyncPacket(t.getWaterLevel(), t.getWaterSaturationLevel(), t.getWaterExhaustionLevel())));
+    }
+
+    public static void syncToClientOnRestore(Player player) {
+        if (!player.level().isClientSide()) {
+            ServerPlayer serverPlayer = (ServerPlayer) player;
+            //CriteriaTriggerRegistry.WATER_LEVEL_RESTORED_TRIGGER.trigger(serverPlayer);
+            syncToClient(serverPlayer);
+        }
+    }
+
+    public void award(Player player) {
+        FoodData foodData = player.getFoodData();
+        if (player.level().getGameRules().getBoolean(GameRules.RULE_NATURAL_REGENERATION) && getWaterLevel() > 17 && player.getFoodData().getFoodLevel() > 10 && player.getHealth() < player.getMaxHealth()) {
+            player.heal(1);
+            switch (player.level().getDifficulty()) {
+                case PEACEFUL:
+                    break;
+                case EASY:
+                    addExhaustion(5.0f);
+                    foodData.addExhaustion(0.6F);
+                    break;
+                case NORMAL:
+                    addExhaustion(6.0f);
+                    foodData.addExhaustion(0.8F);
+                    break;
+                case HARD:
+                    addExhaustion(7.0f);
+                    foodData.addExhaustion(1.0F);
+                    break;
+            }
+        }
+    }
+
+    public void punishment(Player player) {
+
+        if (getWaterLevel() <= 6) {
+        	
+            int base = 2 / Math.max(getWaterLevel(), 1);
+            switch (player.level().getDifficulty()) {
+                case PEACEFUL:
+                    break;
+                case EASY:
+                    mobEffectPunishment(player, base,base);
+                    break;
+                default:
+                    mobEffectPunishment(player, base+1,base);
+                    break;
+            }
+        }
+        int i = 0;
+        if (player.level().getDifficulty() != Difficulty.HARD) i = 1;
+        if (getWaterLevel() == 0 && player.getHealth() > i) {
+            if (!player.level().isClientSide()) {
+                player.hurt(CDamageSourceHelper.source(player.level(), FHDamageTypes.THIRST), 1.0f);
+            }
+        }
+    }
+
+
+    protected static void mobEffectPunishment(Player player, int wlevel,int slevel) {
+        int Amp = FHConfig.SERVER.weaknessEffectAmplifier.get();
+        MobEffectInstance weaknessEffect = player.getEffect(MobEffects.WEAKNESS);
+        MobEffectInstance movementSlowDownEffect = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
+        if (Amp > -1 && (weaknessEffect == null || weaknessEffect.getDuration() <= 100))
+            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 400, Amp + wlevel, false, false));
+        if (Amp > -1 && movementSlowDownEffect == null || movementSlowDownEffect.getDuration() <= 100)
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 400, Amp + slevel, false, false));
+
+    }
+
+    public static LazyOptional<WaterLevelCapability> getCapability(@Nullable Player player) {
+        return FHCapabilities.PLAYER_WATER_LEVEL.getCapability(player);
+    }
+}

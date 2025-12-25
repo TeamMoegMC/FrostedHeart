@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,75 +19,66 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
-import java.util.Random;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.phys.BlockHitResult;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-
-import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
-
-public class FountainBlock extends FHBaseBlock {
+public class FountainBlock extends CBlock implements CEntityBlock<FountainTileEntity> {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public FountainBlock(Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
+        this.registerDefaultState(this.stateDefinition.any().setValue(LIT, Boolean.FALSE));
     }
 
     @Override
-    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+    public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, RandomSource rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
-        if (stateIn.get(LIT)) {
-            ClientUtils.spawnSteamParticles(worldIn, pos);
+        if (stateIn.getValue(LIT)) {
+            FHClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }
 
-    @Nullable
-    @Override
-    public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
-        return FHTileTypes.FOUNTAIN.get().create();
-    }
 
     @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
         builder.add(LIT);
-    }
-
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
     }
 
     // Refill on click, (refilling reevaluates the height etc)
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult ctx) {
-        if (state.get(LIT).booleanValue()) return ActionResultType.PASS;
+    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult ctx) {
+        if (state.getValue(LIT).booleanValue()) return InteractionResult.PASS;
 
-        TileEntity te = world.getTileEntity(pos);
+        BlockEntity te = world.getBlockEntity(pos);
         if (te instanceof FountainTileEntity) {
             FountainTileEntity fte = (FountainTileEntity) te;
             fte.refill();
         }
 
-        return ActionResultType.SUCCESS;
+        return InteractionResult.SUCCESS;
+    }
+
+    @Override
+    public Supplier<BlockEntityType<FountainTileEntity>> getBlock() {
+        return FHBlockEntityTypes.FOUNTAIN;
     }
 }

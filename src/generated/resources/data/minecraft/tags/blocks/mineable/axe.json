@@ -1,0 +1,20 @@
+{
+  "values": [
+    "frostedheart:whale_block",
+    "frostedheart:whale_belly_block",
+    "frostedheart:blood_block",
+    "frostedheart:bone_block",
+    "frostedheart:small_garage",
+    "frostedheart:package_block",
+    "frostedheart:pebble_block",
+    "frostedheart:odd_mark",
+    "frostedheart:wooden_box",
+    "frostedheart:warehouse",
+    "frostedheart:mine",
+    "frostedheart:mine_base",
+    "frostedheart:hunting_camp",
+    "frostedheart:hunting_base",
+    "#frostedheart:town/blocks",
+    "#frostedheart:machines/wooden"
+  ]
+}

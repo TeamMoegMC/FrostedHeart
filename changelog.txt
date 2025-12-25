@@ -1,3 +1,2 @@
-
-Fix steam network
-Fix inventory drops
+0.6.12
+- Release before the stable version.

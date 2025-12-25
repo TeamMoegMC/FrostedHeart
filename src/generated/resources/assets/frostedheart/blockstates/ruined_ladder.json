@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "frostedheart:block/ruined_ladder_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "frostedheart:block/ruined_ladder"
+    },
+    "axis=z": {
+      "model": "frostedheart:block/ruined_ladder_horizontal",
+      "x": 90
+    }
+  }
+}

@@ -1,43 +1,70 @@
-package com.teammoeg.frostedheart.content.town.mine;
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 
-import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.content.town.OccupiedArea;
-import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
-import net.minecraft.block.BlockState;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.common.Tags;
-import se.mickelus.tetra.blocks.rack.RackBlock;
+package com.teammoeg.frostedheart.content.town.mine;
 
 import java.util.AbstractMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import static net.minecraft.block.PlantBlockHelper.isAir;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.town.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
+
+import lombok.Getter;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.NetherVines;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.Tags;
+import se.mickelus.tetra.blocks.rack.RackBlock;
 
 //矿场基地需要有铁轨连通到矿场，因此不做任何的密封性要求，有个顶就行。
 public class MineBaseBlockScanner extends FloorBlockScanner {
-    public MineBaseBlockScanner(World world, BlockPos startPos) {
+    public MineBaseBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
     }
     private final HashSet<BlockPos> rails = new HashSet<>();
+    @Getter
     private int area = 0;
+    @Getter
     private int volume;
+    @Getter
     private int chest = 0;
+    @Getter
     private int rack = 0;
+    @Getter
     private double temperature = 0;
     private int counter_for_temperature = 0;//used to calculate average temperature.
+    @Getter
     private final Set<BlockPos> linkedMines = new HashSet<>();
+    @Getter
     private final OccupiedArea occupiedArea = new OccupiedArea();
 
     @Override
     public boolean isValidFloor(BlockPos pos){
         BlockState state = world.getBlockState(pos);
         if(scanningBlocksNew.contains(pos)) return false;
-        if(state.isIn(BlockTags.RAILS)){
+        if(state.is(BlockTags.RAILS)){
             rails.add(pos);
             return false;
         }
@@ -46,7 +73,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
         }
         AbstractMap.SimpleEntry<Integer, Boolean> floorInformation = countBlocksAbove(pos,(pos1)->{
             if(isFloorBlock(pos1)) return true;
-            if(world.getBlockState(pos1).isIn(Tags.Blocks.CHESTS)){
+            if(world.getBlockState(pos1).is(Tags.Blocks.CHESTS)){
                 chest++;
                 return false;
             }
@@ -54,8 +81,8 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
                 rack++;
                 return false;
             }
-            if(isAir(world.getBlockState(pos1))){
-                temperature += ChunkHeatData.getTemperature(world, pos1);
+            if(NetherVines.isValidGrowthState(world.getBlockState(pos1))){
+                temperature += WorldTemperature.block(world, pos1);
                 counter_for_temperature++;
                 return false;
             }
@@ -67,32 +94,9 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
         } else return false;
     }
 
-    public double getTemperature(){
-        return temperature;
-    }
-    public int getArea() {
-        return area;
-    }
-    public int getVolume() {
-        return volume;
-    }
-    public int getChest() {
-        return chest;
-    }
-    public int getRack() {
-        return rack;
-    }
-    public Set<BlockPos> getLinkedMines() {
-        return linkedMines;
-    }
-    public OccupiedArea getOccupiedArea() {
-        return occupiedArea;
-    }
-
     public boolean scan(){
         this.scan(256, (blockPos) -> {
             area++;
-            //FHMain.LOGGER.info("Scanning pos: " + blockPos);
             occupiedArea.add(toColumnPos(blockPos));
             }, BlockScanner.PREDICATE_FALSE);
         temperature /= counter_for_temperature;
@@ -111,9 +115,9 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
 
         @Override
         public boolean isValidFloor(BlockPos pos){
-            if(world.getBlockState(pos).isIn(BlockTags.RAILS)){
-                return isAir(world.getBlockState(pos.up()));
-            } else if(world.getBlockState(pos).getBlock().equals(FHBlocks.mine.get())){
+            if(world.getBlockState(pos).is(BlockTags.RAILS)){
+                return NetherVines.isValidGrowthState(world.getBlockState(pos.above()));
+            } else if(world.getBlockState(pos).getBlock().equals(FHBlocks.MINE.get())){
                 linkedMines.add(pos);
             }
             return false;

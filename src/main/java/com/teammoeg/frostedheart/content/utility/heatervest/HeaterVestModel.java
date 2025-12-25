@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,67 +19,48 @@
 
 package com.teammoeg.frostedheart.content.utility.heatervest;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
-import com.teammoeg.frostedheart.client.model.FHArmorBaseModel;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.teammoeg.chorda.client.model.CArmorModel;
+import com.teammoeg.frostedheart.FHMain;
 
-import blusunrize.immersiveengineering.mixin.accessors.client.ModelAccess;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.world.entity.LivingEntity;
 
-public class HeaterVestModel<T extends LivingEntity> extends FHArmorBaseModel<T> {
-    static HeaterVestModel modelInstance;
-    private final ModelRenderer front;
-    private final ModelRenderer deco;
-
-    private final ModelRenderer back;
-
-    public static HeaterVestModel getModel() {
-        if (modelInstance == null)
-            modelInstance = new HeaterVestModel(.0625f, 0, 32, 32);
-        return modelInstance;
+public class HeaterVestModel<T extends LivingEntity> extends CArmorModel<T> {
+	public static final ModelLayerLocation HEATER_VEST_LAYER=new ModelLayerLocation(FHMain.rl("heater_vest"), "main");
+    public static LayerDefinition createLayer() {
+        MeshDefinition mesh = HumanoidModel.createMesh(CubeDeformation.NONE, 0.0F);
+    	PartDefinition root=mesh.getRoot();
+    	PartDefinition body=root.getChild("body");
+    	body.addOrReplaceChild("front", CubeListBuilder.create().texOffs(0, 16).addBox(-2.5F, -9.75F, -4.5F, 5.0F, 6.0F, 2.0F, false), PartPose.offset(0, 12f, 0));
+    	body.addOrReplaceChild("deco", CubeListBuilder.create().texOffs(14, 16).addBox(-3.0F, -3.0F, -5.25F, 6.0F, 3.0F, 2.0F, false), PartPose.offsetAndRotation(0, -1f, 0,-0.3927F, 0, 0));
+    	body.addOrReplaceChild("back", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0F, -12.0F, -3.0F, 8.0F, 12.0F, 4.0F, false), PartPose.offset(0, 12f, 0));
+    	return LayerDefinition.create(mesh, 32, 32);
     }
+    public HeaterVestModel(ModelPart root) {
+        super(root, RenderType::entityTranslucent);
 
-    public HeaterVestModel(float modelSize, float yOffsetIn, int textureWidthIn, int textureHeightIn) {
-        super(modelSize, yOffsetIn, textureWidthIn, textureHeightIn);
-        ((ModelAccess) this).setRenderType(RenderType::getEntityTranslucent);
-
-        textureWidth = 32;
-        textureHeight = 32;
-
-        front = new ModelRenderer(this);
-        front.setRotationPoint(0.0F, 12.0F, 0.0F);
-        front.setTextureOffset(0, 16).addBox(-2.5F, -9.75F, -4.5F, 5.0F, 6.0F, 2.0F, 0.0F, false);
-        bipedBody.addChild(front);
-
-        deco = new ModelRenderer(this);
-        deco.setRotationPoint(0.0F, -1.0F, 0.0F);
-        front.addChild(deco);
-        setRotationAngle(deco, -0.3927F, 0.0F, 0.0F);
-        deco.setTextureOffset(14, 16).addBox(-3.0F, -3.0F, -5.25F, 6.0F, 3.0F, 2.0F, 0.0F, false);
-
-        back = new ModelRenderer(this);
-        back.setRotationPoint(0.0F, 12.0F, 0.0F);
-        back.setTextureOffset(0, 0).addBox(-4.0F, -12.0F, -3.0F, 8.0F, 12.0F, 4.0F, 0.0F, false);
-        bipedBody.addChild(back);
-
-        this.bipedHead.showModel = false;
-        this.bipedHeadwear.showModel = false;
-        this.bipedLeftArm.showModel = false;
-        this.bipedRightArm.showModel = false;
-        this.bipedLeftLeg.showModel = false;
-        this.bipedRightLeg.showModel = false;
+        this.head.visible = false;
+        this.hat.visible = false;
+        this.leftArm.visible = false;
+        this.rightArm.visible = false;
+        this.leftLeg.visible = false;
+        this.rightLeg.visible = false;
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        super.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+    public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+        super.renderToBuffer(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
     }
 
-    public void setRotationAngle(ModelRenderer modelRenderer, float x, float y, float z) {
-        modelRenderer.rotateAngleX = x;
-        modelRenderer.rotateAngleY = y;
-        modelRenderer.rotateAngleZ = z;
-    }
 }

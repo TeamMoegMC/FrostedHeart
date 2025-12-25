@@ -1,0 +1,11 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "frostedheart:block/rubber_dandelion"
+  },
+  "loader": "forge:obj",
+  "model": "frostedheart:models/block/rubber_dandelion_3.obj",
+  "automatic_culling": false,
+  "flip_v": true,
+  "render_type": "cutout"
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,25 +19,28 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Slot;
+import com.teammoeg.chorda.menu.CBlockEntityMenu;
+import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 
-public class RelicChestContainer extends IEBaseContainer<RelicChestTileEntity> {
-    public RelicChestContainer(int id, PlayerInventory inventoryPlayer, RelicChestTileEntity tile) {
-        super(tile, id);
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+
+public class RelicChestContainer extends CBlockEntityMenu<RelicChestTileEntity> {
+    public RelicChestContainer(int id, Inventory inventoryPlayer, RelicChestTileEntity tile) {
+        super(FHMenuTypes.RELIC_CHEST.get(), tile, id,inventoryPlayer.player, 15);
 
         for (int j = 0; j < 3; ++j) {
             for (int k = 0; k < 5; ++k) {
-                this.addSlot(new Slot(this.inv, k + j * 5, 44 + k * 18, 19 + j * 18));
+                this.addSlot(new Slot(tile, k + j * 5, 44 + k * 18, 19 + j * 18));
             }
         }
+//        super.addPlayerInventory(inventoryPlayer, 9, id, id);
+        
         for (int i = 0; i < 3; i++)
             for (int j = 0; j < 9; j++)
                 addSlot(new Slot(inventoryPlayer, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
         for (int i = 0; i < 9; i++)
             addSlot(new Slot(inventoryPlayer, i, 8 + i * 18, 142));
-        this.slotCount = 15;
-        this.tile = tile;
     }
+
 }

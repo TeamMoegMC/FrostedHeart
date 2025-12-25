@@ -1,0 +1,52 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.frostedresearch.mixin.create;
+
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import com.simibubi.create.content.kinetics.crafter.MechanicalCraftingRecipe;
+import com.teammoeg.frostedresearch.ResearchHooks;
+
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.ShapedRecipe;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+
+@Mixin(MechanicalCraftingRecipe.class)
+public class MixinMechanicalCraftingRecipe extends ShapedRecipe {
+
+
+
+    public MixinMechanicalCraftingRecipe(ResourceLocation pId, String pGroup, CraftingBookCategory pCategory, int pWidth, int pHeight, NonNullList<Ingredient> pRecipeItems, ItemStack pResult) {
+		super(pId, pGroup, pCategory, pWidth, pHeight, pRecipeItems, pResult);
+	}
+
+	@Inject(at = @At("HEAD"), method = "matches", cancellable = true)
+    public void fh$matches(CraftingContainer inv, Level worldIn, CallbackInfoReturnable<Boolean> cbi) {
+        if (!ResearchHooks.canUseRecipe(ResearchHooks.te, this)) cbi.setReturnValue(false);
+    }
+}

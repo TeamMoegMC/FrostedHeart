@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -21,28 +21,30 @@ package com.teammoeg.frostedheart.mixin.create;
 
 import org.spongepowered.asm.mixin.Mixin;
 
-import com.simibubi.create.content.contraptions.base.KineticTileEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraption;
-import com.simibubi.create.content.contraptions.relays.advanced.GantryShaftTileEntity;
-import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
-import com.teammoeg.frostedheart.util.mixin.IGantryShaft;
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
+import com.simibubi.create.content.contraptions.gantry.GantryContraption;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import com.simibubi.create.content.kinetics.gantry.GantryShaftBlockEntity;
+import com.teammoeg.frostedheart.compat.create.ContraptionCostUtils;
+import com.teammoeg.frostedheart.compat.create.IGantryShaft;
 
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 
-@Mixin(GantryShaftTileEntity.class)
-public abstract class MixinGantryShaftTileEntity extends KineticTileEntity implements ITickableTileEntity, IGantryShaft {
-    private int fh$cooldown;
+@Mixin(GantryShaftBlockEntity.class)
+public abstract class MixinGantryShaftTileEntity extends KineticBlockEntity implements IGantryShaft {
+    public MixinGantryShaftTileEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
+		super(typeIn, pos, state);
+	}
+
+	private int fh$cooldown;
 
     public AbstractContraptionEntity currentComp;
 
-    public MixinGantryShaftTileEntity(TileEntityType<?> typeIn) {
-        super(typeIn);
-    }
+
     @Override
     public float calculateStressApplied() {
         if (currentComp != null) {
@@ -50,9 +52,9 @@ public abstract class MixinGantryShaftTileEntity extends KineticTileEntity imple
                 fh$cooldown = 100;
                 //float impact = currentComp.getContraption().getBlocks().size()*4;
                 Direction facing = ((GantryContraption) currentComp.getContraption()).getFacing();
-                Vector3d currentPosition = currentComp.getAnchorVec().add(.5, .5, .5);
-                BlockPos gantryShaftPos = new BlockPos(currentPosition).offset(facing.getOpposite());
-                if (gantryShaftPos.equals(this.pos)) {
+                Vec3 currentPosition = currentComp.getAnchorVec().add(.5, .5, .5);
+                BlockPos gantryShaftPos = BlockPos.containing(currentPosition).relative(facing.getOpposite());
+                if (gantryShaftPos.equals(this.worldPosition)) {
                     ContraptionCostUtils.setSpeedAndCollect(currentComp, (int) speed);
                     this.lastStressApplied = ContraptionCostUtils.getCost(currentComp) + 0.5F;
                     return lastStressApplied;
@@ -77,7 +79,7 @@ public abstract class MixinGantryShaftTileEntity extends KineticTileEntity imple
     @Override
     public void tick() {
         super.tick();
-        if (!world.isRemote && super.hasNetwork() && currentComp != null) {
+        if (!level.isClientSide && super.hasNetwork() && currentComp != null) {
             this.getOrCreateNetwork().updateStressFor(this, calculateStressApplied());
         }
     }

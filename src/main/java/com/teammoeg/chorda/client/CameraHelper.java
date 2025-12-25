@@ -1,0 +1,105 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.chorda.client;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
+
+import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
+
+public class CameraHelper {
+    public static Matrix4f projectionMatrix;
+    public static PoseStack poseStack;
+    public static Frustum frustum;
+    public static Camera camera;
+
+    /**
+     * 获取一个世界坐标显示在屏幕中的坐标
+     * @param worldPos 世界坐标
+     */
+    public static Vec2 worldPosToScreenPos(Vec3 worldPos) {
+        if (projectionMatrix == null) return Vec2.ZERO;
+        int screenWidth = ClientUtils.screenWidth();
+        int screenHeight = ClientUtils.screenHeight();
+        // 调整摄像机旋转以用于计算
+        Quaternionf cameraRotation = getCameraRotation().conjugate(new Quaternionf()).rotateLocalY(Mth.PI);
+        Vector4f result;
+
+        // 当路径点不在摄像机范围时将屏幕坐标映射到屏幕边缘
+        if (!isPosInFrustum(worldPos)) {
+            Vector3f cameraPos = getCameraPos().subtract(worldPos).toVector3f();
+            result = new Vector4f(cameraPos, 1F).rotate(cameraRotation);
+
+            float x = -result.x;
+            float y = -result.y;
+            float screenX = (screenWidth * 0.5F) + (x / y) * (screenHeight * 0.5F) * (y > 0 ? 1 : -1);
+            float screenY = (screenHeight * 0.5F) + (y / x) * (screenWidth * 0.5F) * (x < 0 ? 1 : -1);
+            return new Vec2(screenX, screenY);
+        }
+
+        // 视图矩阵
+        // 下面的代码参考自 (https://github.com/LouisQuepierts/TaaaaaaaaahatSkyInteractions/blob/teacon-jiachen/src/main/java/net/quepierts/thatskyinteractions/client/gui/layer/World2ScreenWidgetLayer.java)
+        Matrix4f viewMatrix = new Matrix4f()
+                .rotation(cameraRotation)
+                .translate(getCameraPos().subtract(worldPos).reverse().toVector3f());
+        result = new Vector4f().mul(projectionMatrix.mul(viewMatrix, new Matrix4f()));
+
+        float screenX = (result.x / result.z * 0.5F + 0.5F) * screenWidth;
+        float screenY = (1.0F - (result.y / result.z * 0.5F + 0.5F)) * screenHeight;
+        return new Vec2(screenX, screenY);
+    }
+
+    /**
+     * 检查一个坐标是否在视野中
+     * @param pos 世界坐标
+     */
+    public static boolean isPosInFrustum(Vec3 pos) {
+        if (frustum == null) return false;
+        Vec3 cameraPos = getCameraPos();
+
+        double distance = cameraPos.distanceTo(pos);
+        double x = (pos.x() - cameraPos.x) / distance;
+        double y = (pos.y() - cameraPos.y) / distance;
+        double z = (pos.z() - cameraPos.z) / distance;
+        AABB pointAABB = new AABB(x, y, z, x, y, z);
+
+        frustum.prepare(0,0, 0);
+        return frustum.isVisible(pointAABB);
+    }
+
+    public static Quaternionf getCameraRotation() {
+        if (camera == null) return new Quaternionf();
+        return camera.rotation();
+    }
+
+    public static Vec3 getCameraPos() {
+        if (camera == null) return Vec3.ZERO;
+        return camera.getPosition();
+    }
+}

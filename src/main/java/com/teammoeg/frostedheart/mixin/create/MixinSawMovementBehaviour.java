@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -24,24 +24,28 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.content.contraptions.components.actors.BlockBreakingMovementBehaviour;
-import com.simibubi.create.content.contraptions.components.actors.SawMovementBehaviour;
-import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
+import com.simibubi.create.content.contraptions.behaviour.MovementContext;
+import com.simibubi.create.content.kinetics.base.BlockBreakingMovementBehaviour;
+import com.simibubi.create.content.kinetics.saw.SawMovementBehaviour;
 import com.simibubi.create.foundation.utility.TreeCutter;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
 
 @Mixin(SawMovementBehaviour.class)
 public abstract class MixinSawMovementBehaviour extends BlockBreakingMovementBehaviour {
+
+    /**
+     * @reason TODO: Add reason
+     */
     @Inject(at = @At(value = "INVOKE",
-            target = "Lcom/simibubi/create/foundation/utility/TreeCutter;findTree(Lnet/minecraft/world/IBlockReader;Lnet/minecraft/util/math/BlockPos;)Lcom/simibubi/create/foundation/utility/TreeCutter$Tree;",
+            target = "Lcom/simibubi/create/foundation/utility/TreeCutter;findTree(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Lcom/simibubi/create/foundation/utility/TreeCutter$Tree;",
             ordinal = 0, remap = false),
             method = "onBlockBroken", cancellable = true, remap = false)
     private void FH$onBroken(MovementContext context, BlockPos pos, BlockState brokenState, CallbackInfo cbi) {
         if (context.world == null)
             return;
-        BlockState up = context.world.getBlockState(pos.up());
+        BlockState up = context.world.getBlockState(pos.above());
         if (TreeCutter.isVerticalPlant(brokenState) && !TreeCutter.isVerticalPlant(up))
             cbi.cancel();
         if (TreeCutter.isChorus(brokenState) && !TreeCutter.isChorus(up))

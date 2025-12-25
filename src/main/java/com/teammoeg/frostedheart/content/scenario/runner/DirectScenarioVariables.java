@@ -21,23 +21,25 @@ package com.teammoeg.frostedheart.content.scenario.runner;
 
 import java.util.Arrays;
 
-import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-
-public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles  {
-    CompoundNBT extraData;
+public class DirectScenarioVariables implements  IScenarioVaribles  {
+    CompoundTag extraData;
     
     public DirectScenarioVariables() {
         super();
     }
     @Override
-	public CompoundNBT save() {
-    	return extraData;
+	public CompoundTag save() {
+    	if(extraData==null)
+    		extraData=new CompoundTag();
+    	CompoundTag tosave=extraData.copy();
+    	tosave.remove("client");
+    	return tosave;
     }
     @Override
-	public void load(CompoundNBT data) {
+	public void load(CompoundTag data) {
     	extraData=data;
     }
     @Override
@@ -46,7 +48,7 @@ public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles 
     @Override
 	public boolean containsPath(String path) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (!nbt.contains(paths[i], 10))
                 return false;
@@ -56,9 +58,9 @@ public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles 
     }
 
     @Override
-	public INBT evalPath(String path) {
+	public Tag evalPath(String path) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             nbt = nbt.getCompound(paths[i]);
         }
@@ -68,7 +70,7 @@ public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles 
     @Override
 	public Double evalPathDouble(String path) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             nbt = nbt.getCompound(paths[i]);
         }
@@ -77,25 +79,25 @@ public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles 
 
     @Override
 	public String evalPathString(String path) {
-        return evalPath(path).getString();
+        return evalPath(path).getAsString();
     }
 
     @Override
-	public CompoundNBT getExecutionData() {
+	public CompoundTag getExecutionData() {
     	if(extraData==null) {
-    		extraData=new CompoundNBT();
+    		extraData=new CompoundTag();
     	}
         return extraData;
     }
     @Override
-	public void setPath(String path, INBT val) {
+	public void setPath(String path, Tag val) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (nbt.contains(paths[i], 10)) {
                 nbt = nbt.getCompound(paths[i]);
             } else if (!nbt.contains(paths[i])) {
-                CompoundNBT cnbt = new CompoundNBT();
+                CompoundTag cnbt = new CompoundTag();
                 nbt.put(paths[i], cnbt);
                 nbt = cnbt;
             } else
@@ -107,12 +109,12 @@ public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles 
     @Override
 	public void setPathNumber(String path, Number val) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (nbt.contains(paths[i], 10)) {
                 nbt = nbt.getCompound(paths[i]);
             } else if (!nbt.contains(paths[i])) {
-                CompoundNBT cnbt = new CompoundNBT();
+                CompoundTag cnbt = new CompoundTag();
                 nbt.put(paths[i], cnbt);
                 nbt = cnbt;
             } else
@@ -124,12 +126,12 @@ public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles 
     @Override
 	public void setPathString(String path, String val) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (nbt.contains(paths[i], 10)) {
                 nbt = nbt.getCompound(paths[i]);
             } else if (!nbt.contains(paths[i])) {
-                CompoundNBT cnbt = new CompoundNBT();
+                CompoundTag cnbt = new CompoundTag();
                 nbt.put(paths[i], cnbt);
                 nbt = cnbt;
             } else
@@ -158,4 +160,24 @@ public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles 
     public void set(String key, double v) {
     	setPathNumber(key, v);
     }
+	@Override
+	public CompoundTag getExtraData() {
+		return extraData;
+	}
+	@Override
+	public void remove(String path) {
+        String[] paths = path.split("\\.");
+        CompoundTag nbt = getExecutionData();
+        for (int i = 0; i < paths.length - 1; i++) {
+            if (nbt.contains(paths[i], 10)) {
+                nbt = nbt.getCompound(paths[i]);
+            } else if (!nbt.contains(paths[i])) {
+                CompoundTag cnbt = new CompoundTag();
+                nbt.put(paths[i], cnbt);
+                nbt = cnbt;
+            } else
+                throw new IllegalArgumentException(String.join(".", Arrays.copyOfRange(paths, 0, i + 1)) + " is not an object");
+        }
+        nbt.remove(paths[paths.length - 1]);
+	}
 }

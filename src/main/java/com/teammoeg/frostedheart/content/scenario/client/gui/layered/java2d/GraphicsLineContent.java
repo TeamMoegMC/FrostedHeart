@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d;
 
 import java.awt.AlphaComposite;
@@ -5,11 +24,10 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.RenderingHints;
 
+import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
-import com.teammoeg.frostedheart.util.client.Point;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 
 public class GraphicsLineContent extends GraphicLayerContent {
 	public int color;
@@ -27,9 +45,9 @@ public class GraphicsLineContent extends GraphicLayerContent {
 		this.opacity=opacity;
 	}
 
-	public GraphicsLineContent(Color4I color,Point start,Point end) {
+	public GraphicsLineContent(int color,Point start,Point end) {
 		super(start.getX(), start.getY(), end.getX(), end.getY());
-		this.color=color.rgba();
+		this.color=color;
 	}
 	@Override
 	public void tick() {

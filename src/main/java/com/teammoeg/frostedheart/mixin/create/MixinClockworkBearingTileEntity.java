@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -25,25 +25,29 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.content.contraptions.base.KineticTileEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.ControlledContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.bearing.ClockworkBearingTileEntity;
-import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
+import com.simibubi.create.content.contraptions.ControlledContraptionEntity;
+import com.simibubi.create.content.contraptions.bearing.ClockworkBearingBlockEntity;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import com.teammoeg.frostedheart.compat.create.ContraptionCostUtils;
 
-import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 
-@Mixin(ClockworkBearingTileEntity.class)
-public abstract class MixinClockworkBearingTileEntity extends KineticTileEntity {
+@Mixin(ClockworkBearingBlockEntity.class)
+public abstract class MixinClockworkBearingTileEntity extends KineticBlockEntity {
 
-    @Shadow(remap = false)
+    public MixinClockworkBearingTileEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
+		super(typeIn, pos, state);
+	}
+
+	@Shadow(remap = false)
     protected ControlledContraptionEntity hourHand;
 
     @Shadow(remap = false)
     protected ControlledContraptionEntity minuteHand;
     private int fh$cooldown;
-    public MixinClockworkBearingTileEntity(TileEntityType<?> typeIn) {
-        super(typeIn);
-    }
+
 
     @Override
     public float calculateStressApplied() {
@@ -67,9 +71,9 @@ public abstract class MixinClockworkBearingTileEntity extends KineticTileEntity 
         return lastStressApplied;
     }
 
-    @Inject(at = @At("TAIL"), method = "tick")
+    @Inject(at = @At("TAIL"), method = "tick", remap=false)
     public void FH_MICR_tick(CallbackInfo cbi) {
-        if ((!world.isRemote) && super.hasNetwork())
+        if ((!level.isClientSide) && super.hasNetwork())
             getOrCreateNetwork().updateStressFor(this, calculateStressApplied());
     }
 }

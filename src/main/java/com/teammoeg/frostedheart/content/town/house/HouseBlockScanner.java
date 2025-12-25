@@ -19,23 +19,24 @@
 
 package com.teammoeg.frostedheart.content.town.house;
 
-import com.teammoeg.frostedheart.FHTags;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
-import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
-import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
+import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
+import lombok.Getter;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ColumnPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ColumnPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.properties.BedPart;
 
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 //严格来讲这不是一个正常的BlockScanner，而是一个用于将FloorBlockScanner和ConfinedSpaceScanner结合起来的类
 public class HouseBlockScanner extends BlockScanner {
@@ -43,40 +44,27 @@ public class HouseBlockScanner extends BlockScanner {
     public static final int MINIMUM_VOLUME = 6;
     public static final int MINIMUM_AREA = 3;
     public static final int MAX_SCANNING_TIMES_FLOOR = 512;
+    @Getter
     protected int area = 0;
+    @Getter
     protected int volume = 0;
+    @Getter
     protected final Map<String/*block.getName()*/, Integer> decorations = new HashMap<>();
+    @Getter
+    protected final List<BlockPos> beds = new ArrayList<>();
+    @Getter
     protected double temperature = 0;//average temperature
+    @Getter
     protected final OccupiedArea occupiedArea = new OccupiedArea();
 
-    public int getArea() {
-        return this.area;
-    }
-
-    public int getVolume() {
-        return this.volume;
-    }
-
-    public Map<String, Integer> getDecorations() {
-        return this.decorations;
-    }
-
-    public double getTemperature() {
-        return this.temperature;
-    }
-
-    public OccupiedArea getOccupiedArea() {
-        return this.occupiedArea;
-    }
-
-    public HouseBlockScanner(World world, BlockPos startPos) {
+    public HouseBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
     }
 
 
-    public static boolean isValidFloorOrLadder(World world, BlockPos pos) {
+    public static boolean isValidFloorOrLadder(Level world, BlockPos pos) {
         // Determine whether the block satisfies type requirements
-        if (!FloorBlockScanner.isFloorBlock(world, pos) && !world.getBlockState(pos).isIn(BlockTags.CLIMBABLE)) return false;
+        if (!FloorBlockScanner.isFloorBlock(world, pos) && !world.getBlockState(pos).is(BlockTags.CLIMBABLE)) return false;
         AbstractMap.SimpleEntry<Integer, Boolean> information = countBlocksAbove(pos, (pos1)->FloorBlockScanner.isHouseBlock(world, pos1));
         // Determine whether the block has open air above it
         if (!information.getValue()) {
@@ -95,7 +83,13 @@ public class HouseBlockScanner extends BlockScanner {
     protected void addDecoration(BlockPos pos) {
         BlockState blockState = getBlockState(pos);
         Block block = blockState.getBlock();
-        if (blockState.isIn(FHTags.Blocks.DECORATIONS) || Objects.requireNonNull(block.getRegistryName()).getNamespace().equals("cfm")) {
+        if(block instanceof BedBlock){
+            if(blockState.getValue(BedBlock.PART) == BedPart.HEAD){
+                beds.add(pos);
+            }
+            return;
+        }
+        if (blockState.is(FHTags.Blocks.TOWN_DECORATIONS.tag) || Objects.requireNonNull(CRegistryHelper.getRegistryName(block)).getNamespace().equals("cfm")) {
             String name = block.toString();
             decorations.merge(name, 1, Integer::sum);
         }
@@ -121,9 +115,9 @@ public class HouseBlockScanner extends BlockScanner {
         //FHMain.LOGGER.debug("HouseScanner: first scan completed");
 
         //第二次扫描，判断房间是否密闭
-        ConfinedSpaceScanner airScanner = new ConfinedSpaceScanner(world, startPos.up());
+        ConfinedSpaceScanner airScanner = new ConfinedSpaceScanner(world, startPos.above());
         airScanner.scan(MAX_SCANNING_TIMES_VOLUME, (pos) -> {//对每一个空气方块执行的操作：统计温度、统计体积、统计温度
-                    this.temperature += ChunkHeatData.getTemperature(world, pos);
+                    this.temperature += WorldTemperature.block(world, pos);
                     this.volume++;
                     this.occupiedArea.add(new ColumnPos(pos.getX(), pos.getZ()));
                     //FHMain.LOGGER.debug("scanning air pos:" + pos);

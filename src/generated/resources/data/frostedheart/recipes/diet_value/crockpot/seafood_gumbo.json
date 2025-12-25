@@ -1,9 +1,0 @@
-{
-  "type": "frostedheart:diet_override",
-  "groups": {
-    "proteins": 0.028037459,
-    "vegetables": 0.028037459,
-    "vitamin": 0.02209878
-  },
-  "item": "crockpot:seafood_gumbo"
-}

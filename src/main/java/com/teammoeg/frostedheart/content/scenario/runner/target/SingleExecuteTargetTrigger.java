@@ -21,20 +21,21 @@ package com.teammoeg.frostedheart.content.scenario.runner.target;
 
 import java.util.function.Predicate;
 
-import com.teammoeg.frostedheart.content.scenario.runner.IScenarioThread;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioThread;
 import com.teammoeg.frostedheart.content.scenario.runner.IScenarioTrigger;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
 
 public class SingleExecuteTargetTrigger implements IScenarioTrigger {
 	protected boolean canStillTrigger=true;
-	protected Predicate<IScenarioThread> test;
+	protected Predicate<ScenarioContext> test;
 	protected boolean async=true;
 
-	public SingleExecuteTargetTrigger(Predicate<IScenarioThread> test) {
+	public SingleExecuteTargetTrigger(Predicate<ScenarioContext> test) {
 		super();
 		this.test = test;
 	}
 	@Override
-	public boolean test(IScenarioThread t) {
+	public boolean test(ScenarioContext t) {
 
 		return test.test(t);
 	}

@@ -1,0 +1,10 @@
+{
+  "type": "frostedheart:diet_override",
+  "group": {
+    "carbohydrate": 0.0,
+    "fat": 0.0,
+    "protein": 16000.0,
+    "vegetable": 0.0
+  },
+  "item": "frostedheart:cooked_squid_tentacles"
+}

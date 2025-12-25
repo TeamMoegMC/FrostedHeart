@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -22,41 +22,42 @@ package com.teammoeg.frostedheart.content.decoration;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHTileTypes;
-
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.ItemStackHelper;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.LockableLootTileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.network.chat.Component;
+
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.util.Lang;
+
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-public class RelicChestTileEntity extends LockableLootTileEntity implements IIEInventory {
+public class RelicChestTileEntity extends RandomizableContainerBlockEntity implements IIEInventory {
     protected NonNullList<ItemStack> inventory;
     private LazyOptional<IItemHandler> insertionCap;
 
-    public RelicChestTileEntity() {
-        super(FHTileTypes.RELIC_CHEST.get());
+    public RelicChestTileEntity(BlockPos bp,BlockState bs) {
+        super(FHBlockEntityTypes.RELIC_CHEST.get(),bp,bs);
         this.inventory = NonNullList.withSize(15, ItemStack.EMPTY);
         this.insertionCap = LazyOptional.of(() -> new IEInventoryHandler(15, this));
 
     }
 
     @Override
-    protected Container createMenu(int id, PlayerInventory player) {
-        return GuiHandler.createContainer(player, this, id);
+    protected AbstractContainerMenu createMenu(int id, Inventory player) {
+        return new RelicChestContainer(id, player, this);
     }
 
     @Override
@@ -66,12 +67,12 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
 
     @Nonnull
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
-        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY ? this.insertionCap.cast() : super.getCapability(capability, facing);
+        return capability == ForgeCapabilities.ITEM_HANDLER ? this.insertionCap.cast() : super.getCapability(capability, facing);
     }
 
     @Override
-    protected ITextComponent getDefaultName() {
-        return new TranslationTextComponent("container.relic_chest");
+    protected Component getDefaultName() {
+        return Lang.translateKey("container.relic_chest");
     }
 
     @Nullable
@@ -86,7 +87,7 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
     }
 
     @Override
-    public int getSizeInventory() {
+    public int getContainerSize() {
         return 15;
     }
 
@@ -101,22 +102,22 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
     }
 
     @Override
-    public void read(BlockState state, CompoundNBT nbt) {
-        super.read(state, nbt);
-        this.inventory = NonNullList.withSize(this.getSizeInventory(), ItemStack.EMPTY);
-        if (!this.checkLootAndRead(nbt)) {
-            ItemStackHelper.loadAllItems(nbt, this.inventory);
+    public void load(CompoundTag nbt) {
+        super.load(nbt);
+        this.inventory = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
+        if (!this.tryLoadLootTable(nbt)) {
+            ContainerHelper.loadAllItems(nbt, this.inventory);
         }
 
     }
 
-    public boolean receiveClientEvent(int id, int type) {
+    public boolean triggerEvent(int id, int type) {
         if (id == 1) {
-            BlockState state = this.world.getBlockState(this.pos);
-            this.world.notifyBlockUpdate(this.pos, state, state, 3);
+            BlockState state = this.level.getBlockState(this.worldPosition);
+            this.level.sendBlockUpdated(this.worldPosition, state, state, 3);
             return true;
         }
-        return super.receiveClientEvent(id, type);
+        return super.triggerEvent(id, type);
     }
 
     @Override
@@ -125,12 +126,10 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
     }
 
     @Override
-    public CompoundNBT write(CompoundNBT compound) {
-        super.write(compound);
-        if (!this.checkLootAndWrite(compound)) {
-            ItemStackHelper.saveAllItems(compound, this.inventory);
+    public void saveAdditional(CompoundTag compound) {
+        super.saveAdditional(compound);
+        if (!this.trySaveLootTable(compound)) {
+            ContainerHelper.saveAllItems(compound, this.inventory);
         }
-
-        return compound;
     }
 }

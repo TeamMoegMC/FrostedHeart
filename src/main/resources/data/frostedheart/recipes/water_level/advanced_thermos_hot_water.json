@@ -1,9 +1,9 @@
 {
-  "type": "watersource:water_level_fluid",
+  "type": "frostedheart:water_level_and_effect",
   "ingredient": {
     "tag": "frostedheart:thermos"
   },
-  "fluid": "thermopolium:nail_soup",
+  "fluid": "caupona:nail_soup",
   "waterLevel": 5,
   "waterSaturationLevel": 6
 }

@@ -1,0 +1,6 @@
+{
+  "type": "frostedheart:block_temp",
+  "block": "minecraft:soul_campfire",
+  "must_lit": true,
+  "temperature": -300.0
+}

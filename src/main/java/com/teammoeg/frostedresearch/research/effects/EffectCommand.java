@@ -1,0 +1,128 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.frostedresearch.research.effects;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
+import com.teammoeg.chorda.util.CDistHelper;
+import com.teammoeg.frostedresearch.Lang;
+import com.teammoeg.frostedresearch.data.TeamResearchData;
+
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Blocks;
+
+import java.util.*;
+
+/**
+ * Reward the research team executes command
+ */
+public class EffectCommand extends Effect {
+    public static final MapCodec<EffectCommand> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+                    Codec.list(Codec.STRING).fieldOf("rewards").forGetter(o -> o.rewards))
+            .apply(t, EffectCommand::new));
+
+    List<String> rewards;
+
+    public EffectCommand(BaseData data, List<String> rewards) {
+        super(data);
+        this.rewards = new ArrayList<>(rewards);
+    }
+
+    public EffectCommand(String... cmds) {
+        super();
+        rewards = new ArrayList<>();
+
+        rewards.addAll(Arrays.asList(cmds));
+    }
+
+    @Override
+    public String getBrief() {
+        if (rewards.isEmpty())
+            return "No Command";
+
+        return "Command " + rewards.get(0) + (rewards.size() > 1 ? " ..." : "");
+    }
+
+    @Override
+    public CIcon getDefaultIcon() {
+        return CIcons.getIcon(Blocks.COMMAND_BLOCK);
+    }
+
+    @Override
+    public MutableComponent getDefaultName() {
+        return Lang.translateGui("effect.command");
+    }
+
+    @Override
+    public List<Component> getDefaultTooltip() {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public boolean grant(TeamDataHolder team, TeamResearchData trd, Player triggerPlayer, boolean isload) {
+        if (triggerPlayer == null || isload)
+            return false;
+
+        Map<String, Object> overrides = new HashMap<>();
+        overrides.put("p", triggerPlayer.getGameProfile().getName());
+
+        BlockPos pos = triggerPlayer.blockPosition();
+        overrides.put("x", pos.getX());
+        overrides.put("y", pos.getY());
+        overrides.put("z", pos.getZ());
+        overrides.put("t", team.getTeam().getId());
+        Commands cmds = CDistHelper.getServer().getCommands();
+        CommandSourceStack source = CDistHelper.getServer().createCommandSourceStack();
+        for (String s : rewards) {
+
+            for (Map.Entry<String, Object> entry : overrides.entrySet()) {
+                if (entry.getValue() != null) {
+                    s = s.replace("@" + entry.getKey(), entry.getValue().toString());
+                }
+            }
+
+            cmds.performPrefixedCommand(source, s);
+        }
+
+        return true;
+    }
+
+    @Override
+    public void init() {
+
+    }
+
+    // We dont redo command, it's not possible
+    @Override
+    public void revoke(TeamResearchData team) {
+
+    }
+
+}

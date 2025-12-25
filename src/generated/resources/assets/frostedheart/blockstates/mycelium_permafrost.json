@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "snowy=false": {
+      "model": "frostedheart:block/mycelium_permafrost"
+    },
+    "snowy=true": {
+      "model": "frostedheart:block/mycelium_permafrost_snow"
+    }
+  }
+}

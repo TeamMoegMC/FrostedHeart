@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,37 +19,34 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.stream.Collectors;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.compat.jei.CuttingRecipe;
+import com.teammoeg.frostedheart.util.Lang;
 
-import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.gui.IRecipeLayout;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
-import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
-import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.recipe.IFocusGroup;
+import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraftforge.registries.tags.ITag;
 
 public class CuttingCategory implements IRecipeCategory<CuttingRecipe> {
-    public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "knife_cutting");
-    public static List<Item> matching;
-    public static final ResourceLocation ktag = new ResourceLocation(FHMain.MODID, "knife");
+    public static RecipeType<CuttingRecipe> UID =  RecipeType.create(FHMain.MODID, "knife_cutting",CuttingRecipe.class);
+    public static ITag<Item> matching;
     private IDrawable BACKGROUND;
     private IDrawable ICON;
 
@@ -59,12 +56,12 @@ public class CuttingCategory implements IRecipeCategory<CuttingRecipe> {
     }
 
     @Override
-    public void draw(CuttingRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
-        AllGuiTextures.JEI_SLOT.draw(transform, 8, 4);
-        AllGuiTextures.JEI_DOWN_ARROW.draw(transform, 29, 7);
-        AllGuiTextures.JEI_SLOT.draw(transform, 34, 24);
-        AllGuiTextures.JEI_ARROW.draw(transform, 54, 28);
-        AllGuiTextures.JEI_SLOT.draw(transform, 96, 24);
+    public void draw(CuttingRecipe recipe,IRecipeSlotsView view , GuiGraphics transform, double mouseX, double mouseY) {
+        AllGuiTextures.JEI_SLOT.render(transform, 8, 4);
+        AllGuiTextures.JEI_DOWN_ARROW.render(transform, 29, 7);
+        AllGuiTextures.JEI_SLOT.render(transform, 34, 24);
+        AllGuiTextures.JEI_ARROW.render(transform, 54, 28);
+        AllGuiTextures.JEI_SLOT.render(transform, 96, 24);
     }
 
     @Override
@@ -78,37 +75,21 @@ public class CuttingCategory implements IRecipeCategory<CuttingRecipe> {
         return ICON;
     }
 
-    @Override
-    public Class<? extends CuttingRecipe> getRecipeClass() {
-        return CuttingRecipe.class;
+
+    public Component getTitle() {
+        return (Lang.translateKey("gui.jei.category." + FHMain.MODID + ".knife_cutting"));
     }
 
-    public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".knife_cutting").getString());
-    }
+	@Override
+	public RecipeType<CuttingRecipe> getRecipeType() {
+		return UID;
+	}
 
-    @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public void setIngredients(CuttingRecipe recipe, IIngredients ingredients) {
-        ArrayList<List<ItemStack>> als = new ArrayList<>(2);
-        als.add(Collections.singletonList(recipe.in));
-        if (matching != null)
-            als.add(matching.stream().map(ItemStack::new).collect(Collectors.toList()));
-        ingredients.setInputLists(VanillaTypes.ITEM, als);
-        ingredients.setOutput(VanillaTypes.ITEM, recipe.out);
-    }
-
-
-    @Override
-    public void setRecipe(IRecipeLayout recipeLayout, CuttingRecipe recipe, IIngredients ingredients) {
-        IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
-        itemStacks.init(0, true, 34, 24);
-        itemStacks.init(1, true, 8, 4);
-        itemStacks.init(2, false, 96, 24);
-        itemStacks.set(ingredients);
-    }
+	@Override
+	public void setRecipe(IRecipeLayoutBuilder builder, CuttingRecipe recipe, IFocusGroup focuses) {
+		builder.addSlot(RecipeIngredientRole.INPUT, 35, 25).addItemStack(recipe.in);
+		builder.addSlot(RecipeIngredientRole.INPUT, 9, 5).addItemStacks(matching.stream().map(ItemStack::new).collect(Collectors.toList()));
+		builder.addSlot(RecipeIngredientRole.OUTPUT, 97, 25).addItemStack(recipe.out);
+		
+	}
 }

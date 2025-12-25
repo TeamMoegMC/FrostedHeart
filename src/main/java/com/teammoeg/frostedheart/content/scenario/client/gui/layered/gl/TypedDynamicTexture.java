@@ -1,0 +1,85 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import com.mojang.blaze3d.platform.NativeImage;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
+
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.resources.ResourceLocation;
+
+public class TypedDynamicTexture {
+	RenderType type;
+	DynamicTexture texture;
+	RenderType renderType;
+	ResourceLocation resourceLocation;
+	boolean isClosed = false;
+	AtomicInteger refCount=new AtomicInteger(1);
+	public TypedDynamicTexture(NativeImage texture) {
+		this.texture = new DynamicTexture(texture);
+		resourceLocation = FHMain.rl("fhscenario/generated_" + this.hashCode());
+		ClientUtils.getMc().textureManager.register(resourceLocation, this.texture);
+		this.renderType = CGuiHelper.RenderStateAccess.createTempType(resourceLocation);
+	}
+
+	public synchronized void close() {
+		if(!isClosed) {
+			isClosed = true;
+			texture.close();
+			ClientUtils.getMc().textureManager.release(resourceLocation);
+		}
+	}
+	public void addRef() {
+		refCount.incrementAndGet();
+	}
+	public void release() {
+		int ncount=refCount.decrementAndGet();
+		if(ncount<=0)
+			close();
+	}
+	public void draw(GuiGraphics graphics,int x,int y,int w,int h,int uOffset,int vOffset,int uWidth,int vHeight,float alpha) {
+        /*Matrix4f matrix4f = graphics.pose().last().pose();
+        int textureWidth=texture.getPixels().getWidth();
+        int textureHeight=texture.getPixels().getHeight();
+        float u1= (uOffset + 0.0F) / textureWidth;
+        float u2=(uOffset + uWidth) / textureWidth;
+		float v1=(vOffset + 0.0F) / textureHeight;
+		float v2=(vOffset + vHeight) / textureHeight;
+		texture.bind();
+        VertexConsumer vertexconsumer = graphics.bufferSource().getBuffer(renderType);
+        vertexconsumer.vertex(matrix4f, x, y+h, 0F).color(1, 1, 1, alpha).uv(u1, v2).endVertex();
+        vertexconsumer.vertex(matrix4f, x+w, y+h, 0F).color(1, 1, 1, alpha).uv(u2, v2).endVertex();
+        vertexconsumer.vertex(matrix4f, x+w, y, 0F).color(1, 1, 1, alpha).uv(u2,v1).endVertex();
+        vertexconsumer.vertex(matrix4f, x, y, 0F).color(1, 1, 1, alpha).uv(u1, v1).endVertex();*/
+        if(!isClosed){
+        	addRef();
+        	CGuiHelper.bindTexture(resourceLocation);
+			CGuiHelper.blit(graphics.pose(), x, y, w, h, uOffset, vOffset, uWidth, vHeight, texture.getPixels().getWidth(), texture.getPixels().getHeight(), alpha);
+			release();
+        }
+     }
+
+}

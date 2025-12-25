@@ -1,16 +1,37 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.IScenarioDialog;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLLayerContent;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class RenderParams {
 	IScenarioDialog screen;
-	MatrixStack matrixStack;
+	GuiGraphics matrixStack;
 	int mouseX;
 	int mouseY;
 	float partialTicks;
@@ -19,7 +40,7 @@ public class RenderParams {
 	int x,y,width,height,offsetX,offsetY;
 	boolean forceFirst;
 	int contentWidth,contentHeight;
-	public RenderParams(IScenarioDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+	public RenderParams(IScenarioDialog screen, GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks) {
 		super();
 		this.screen = screen;
 		this.matrixStack = matrixStack;
@@ -34,7 +55,7 @@ public class RenderParams {
 	}
 
 
-	public RenderParams(IScenarioDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks,
+	public RenderParams(IScenarioDialog screen, GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks,
 			float opacity, int x, int y, int width, int height, float xzoom, float yzoom, int offsetX,
 			int offsetY,int contentWidth,int contentHeight) {
 		super();
@@ -55,7 +76,7 @@ public class RenderParams {
 		this.contentWidth=contentWidth;
 		this.contentHeight=contentHeight;
 	}
-	public RenderParams(IScenarioDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks,
+	public RenderParams(IScenarioDialog screen, GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks,
 			float opacity, int x, int y, int width, int height, float xzoom, float yzoom) {
 		super();
 		this.screen = screen;
@@ -74,13 +95,16 @@ public class RenderParams {
 		this.offsetY = 0;
 	}
 	public int getScreenWidth() {
-		return ClientUtils.mc().getMainWindow().getScaledWidth();
+		return ClientUtils.getMc().getWindow().getGuiScaledWidth();
 	}
 	public int getScreenHeight() {
-		return ClientUtils.mc().getMainWindow().getScaledHeight();
+		return ClientUtils.getMc().getWindow().getGuiScaledHeight();
 	}
 	public RenderParams copy() {
 		return new RenderParams(screen, matrixStack, mouseX, mouseY, partialTicks, opacity, x, y, width, height,xzoom,yzoom,offsetX,offsetY,contentWidth,contentHeight);
+	}
+	public Font getFont() {
+		return ClientUtils.getMc().font;
 	}
 	public RenderParams copyWithCurrent(GLLayerContent layer) {
 		return new RenderParams(screen, matrixStack, mouseX-ClientScene.fromRelativeXW(layer.getX()), mouseY-ClientScene.fromRelativeYH(layer.getY()), partialTicks,
@@ -92,11 +116,14 @@ public class RenderParams {
 	public IScenarioDialog getScreen() {
 		return screen;
 	}
-	public MatrixStack getMatrixStack() {
-		return matrixStack;
+	public PoseStack getMatrixStack() {
+		return matrixStack.pose();
 	}
-	public void setMatrixStack(MatrixStack matrixStack) {
+	public void setGuiGraphics(GuiGraphics matrixStack) {
 		this.matrixStack = matrixStack;
+	}
+	public GuiGraphics getGuiGraphics() {
+		return this.matrixStack;
 	}
 	public int getMouseX() {
 		return mouseX;
@@ -160,7 +187,7 @@ public class RenderParams {
 	}
 
 	public Minecraft getMinecraft() {
-		return ClientUtils.mc();
+		return ClientUtils.getMc();
 	}
 	public int getContentWidth() {
 		return (int) (xzoom*this.contentWidth);

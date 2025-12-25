@@ -1,0 +1,35 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:wolf",
+    "minecraft:fox",
+    {
+      "id" :"quark:shiba",
+      "required": false
+    },
+    {
+      "id" :"quark:foxhound",
+      "required": false
+    },
+    {
+      "id" :"alexsmobs:grizzly_bear",
+      "required": false
+    },
+    {
+      "id" :"doggytalents:dog",
+      "required": false
+    },
+    {
+      "id" :"doggomodoverhauled:doggo",
+      "required": false
+    },
+    {
+      "id" :"environmental:reindeer",
+      "required": false
+    },
+    {
+      "id" :"frozenup:reindeer",
+      "required": false
+    }
+  ]
+}

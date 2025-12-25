@@ -1,12 +1,32 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.thermopolium.data.recipes.SerializeUtil;
+import com.teammoeg.chorda.io.SerializeUtil;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.NetworkHooks;
 
 public class HeatHandler {
-    public static void openHeatScreen(ServerPlayerEntity spe, HeatEnergyNetwork vd) {
-        NetworkHooks.openGui(spe, vd, e -> SerializeUtil.writeList(e, vd.data.values(), EndPointData::writeNetwork));
+    public static void openHeatScreen(ServerPlayer spe, HeatNetwork network) {
+        NetworkHooks.openScreen(spe, network, e -> SerializeUtil.writeList(e, network.getEndpoints(),
+                HeatEndpoint::writeNetwork));
     }
 }

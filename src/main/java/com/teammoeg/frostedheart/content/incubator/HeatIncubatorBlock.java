@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,12 +19,12 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraftforge.fml.RegistryObject;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraftforge.registries.RegistryObject;
 
 public class HeatIncubatorBlock extends IncubatorBlock {
 
-    public HeatIncubatorBlock(Properties p, RegistryObject<TileEntityType<?>> incubator2) {
+    public HeatIncubatorBlock(Properties p, RegistryObject<BlockEntityType<?>> incubator2) {
         super(p, incubator2);
     }
 

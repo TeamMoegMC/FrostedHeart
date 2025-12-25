@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "frostedresearch:block/mechanical_calculator_base",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "frostedresearch:block/mechanical_calculator_base"
+    },
+    "facing=south": {
+      "model": "frostedresearch:block/mechanical_calculator_base",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "frostedresearch:block/mechanical_calculator_base",
+      "y": 270
+    }
+  }
+}

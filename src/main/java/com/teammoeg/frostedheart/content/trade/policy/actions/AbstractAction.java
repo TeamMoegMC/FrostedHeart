@@ -22,12 +22,12 @@ package com.teammoeg.frostedheart.content.trade.policy.actions;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.content.trade.policy.PolicyAction;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public abstract class AbstractAction implements PolicyAction {
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
     }
 
 

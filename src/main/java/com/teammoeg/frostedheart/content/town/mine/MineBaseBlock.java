@@ -1,47 +1,69 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.town.mine;
 
-import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
+import java.util.function.Supplier;
 
-import javax.annotation.Nonnull;
-//矿场基地方块，不是矿场的BaseBlock
-public class MineBaseBlock extends AbstractTownWorkerBlock {
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+
+public class MineBaseBlock extends AbstractTownWorkerBlock implements CEntityBlock<MineBaseBlockEntity> {
 
     public MineBaseBlock(Properties blockProps) {
         super(blockProps);
     }
 
-    @Override
-    public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
-        return FHTileTypes.MINE_BASE.get().create();
-    }
 
     //test
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (!worldIn.isRemote && handIn == Hand.MAIN_HAND) {
-            MineBaseTileEntity te = (MineBaseTileEntity) worldIn.getTileEntity(pos);
+    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+        if (!worldIn.isClientSide && handIn == InteractionHand.MAIN_HAND) {
+            MineBaseBlockEntity te = (MineBaseBlockEntity) worldIn.getBlockEntity(pos);
             if (te == null) {
-                return ActionResultType.FAIL;
+                return InteractionResult.FAIL;
             }
-            player.sendStatusMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.sendStatusMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.sendStatusMessage(new StringTextComponent("Area: " + (te.getArea())), false);
-            player.sendStatusMessage(new StringTextComponent("Volume: " + (te.getVolume())), false);
-            player.sendStatusMessage(new StringTextComponent("Chest: " + (te.getChest())), false);
-            player.sendStatusMessage(new StringTextComponent("Rack: " + (te.getRack())), false);
-            player.sendStatusMessage(new StringTextComponent("Linked mines: " + (te.linkedMines)), false);
-            return ActionResultType.SUCCESS;
+            player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.displayClientMessage(Components.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(Components.str("Area: " + (te.getArea())), false);
+            player.displayClientMessage(Components.str("Volume: " + (te.getVolume())), false);
+            player.displayClientMessage(Components.str("Chest: " + (te.getChest())), false);
+            player.displayClientMessage(Components.str("Rack: " + (te.getRack())), false);
+            player.displayClientMessage(Components.str("Linked mines: " + (te.linkedMines)), false);
+            return InteractionResult.SUCCESS;
         }
-        return ActionResultType.PASS;
+        return InteractionResult.PASS;
     }
+
+
+	@Override
+	public Supplier<BlockEntityType<MineBaseBlockEntity>> getBlock() {
+		return FHBlockEntityTypes.MINE_BASE;
+	}
 }

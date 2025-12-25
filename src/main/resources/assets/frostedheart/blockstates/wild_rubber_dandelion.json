@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "variant=0": {
+      "model": "frostedheart:block/rubber_dandelion_1"
+    },
+    "variant=1": {
+      "model": "frostedheart:block/rubber_dandelion_2"
+    },
+    "variant=2": {
+      "model": "frostedheart:block/rubber_dandelion_3"
+    }
+  }
+}

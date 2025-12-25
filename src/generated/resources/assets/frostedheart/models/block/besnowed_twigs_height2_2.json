@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/snow_height2",
+  "textures": {
+    "particle": "frostedheart:block/besnowed_twigs_2",
+    "texture": "frostedheart:block/besnowed_twigs_2"
+  }
+}

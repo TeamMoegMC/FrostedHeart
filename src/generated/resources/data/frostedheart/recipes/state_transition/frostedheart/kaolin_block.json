@@ -1,0 +1,21 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Name": "frostedheart:kaolin_block"
+  },
+  "condense_temp": 90.0,
+  "evaporate_temp": 100.0,
+  "freeze_temp": -10.0,
+  "heat_capacity": 5,
+  "liquid": {
+    "Name": "frostedheart:kaolin_block"
+  },
+  "melt_temp": 9.0,
+  "solid": {
+    "Name": "frostedheart:kaolin_permafrost",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "state": "liquid"
+}

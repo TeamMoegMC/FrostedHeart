@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,51 +19,64 @@
 
 package com.teammoeg.frostedheart.data;
 
-import com.cannolicatfish.rankine.init.RankineTags;
-import com.teammoeg.frostedheart.FHItems;
+import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-
-import net.minecraft.data.BlockTagsProvider;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.tterrag.registrate.util.entry.ItemEntry;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.ItemTagsProvider;
-import net.minecraft.item.Item;
+import net.minecraft.data.tags.TagsProvider;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.Tags.IOptionalNamedTag;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraftforge.common.data.ExistingFileHelper;
-import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
-import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
 
-public class FHItemTagProvider extends ItemTagsProvider {
+public class FHItemTagProvider extends TagsProvider<Item> {
 
-	public FHItemTagProvider(DataGenerator dataGenerator, BlockTagsProvider blockTagsProvider, ExistingFileHelper existingFileHelper) {
-		super(dataGenerator, blockTagsProvider, FHMain.MODID, existingFileHelper);
+	public FHItemTagProvider(DataGenerator dataGenerator, String modId, ExistingFileHelper existingFileHelper, CompletableFuture<HolderLookup.Provider> provider) {
+		super(dataGenerator.getPackOutput(), Registries.ITEM, provider, modId, existingFileHelper);
 	}
 
 
 	@Override
-	protected void registerTags() {
-		tag("colored_thermos").add((Item[]) FHItems.allthermos.stream().map(t->t.get()).toArray(n->new Item[n]));
-		
-		tag("colored_advanced_thermos").add((Item[]) FHItems.alladvthermos.stream().map(t->t.get()).toArray(n->new Item[n]));
-		tag("thermos")
-		.addTag(ItemTags.createOptional(mrl("colored_thermos")))
-		.add(FHItems.thermos.get())
-		.addTag(ItemTags.createOptional(mrl("colored_advanced_thermos")))
-		.add(FHItems.advanced_thermos.get());
-		tag("chicken_feed").addTag(RankineTags.Items.BREEDABLES_CHICKEN).addTag(ftag("seeds"));
-		tag("cow_feed").addTag(RankineTags.Items.BREEDABLES_COW);
+	protected void addTags(HolderLookup.Provider pProvider) {
+
+
 	}
 
 
-	private Builder<Item> tag(String s) {
-		return this.getOrCreateBuilder(ItemTags.createOptional(mrl(s)));
+	@SafeVarargs
+	private void adds(TagAppender<Item> ta,Item... keys) {
+
+		ResourceKey[] rks=new ResourceKey[keys.length];
+		for(int i=0;i<rks.length;i++)
+			rks[i]=rk(keys[i]);
+		ta.add(rks);
+	}
+	private TagAppender<Item> tag(String s) {
+		return this.tag(ItemTags.create(mrl(s)));
 	}
 
-	private Builder<Item> tag(ResourceLocation s) {
-		return this.getOrCreateBuilder(ItemTags.createOptional(s));
+	private TagAppender<Item> tag(ResourceLocation s) {
+		return this.tag(ItemTags.create(s));
+	}
+	private ResourceKey<Item> rk(Item b) {
+
+		return ForgeRegistries.ITEMS.getResourceKey(b).orElseGet(()->b.builtInRegistryHolder().key());
+	}
+	private ResourceKey<Item> rk(RegistryObject<Item> b) {
+		return rk(b.get());
+	}
+
+	private ResourceKey<? extends Item> rk(ItemEntry<? extends Item> b) {
+		return rk(b.get());
 	}
 
 	private ResourceLocation rl(RegistryObject<Item> it) {
@@ -74,6 +87,14 @@ public class FHItemTagProvider extends ItemTagsProvider {
 		return new ResourceLocation(r);
 	}
 
+	private TagKey<Item> otag(String s) {
+		return ItemTags.create(mrl(s));
+	}
+
+	private TagKey<Item> atag(ResourceLocation s) {
+		return ItemTags.create(s);
+	}
+
 	private ResourceLocation mrl(String s) {
 		return new ResourceLocation(FHMain.MODID, s);
 	}
@@ -82,8 +103,9 @@ public class FHItemTagProvider extends ItemTagsProvider {
 		return new ResourceLocation("forge", s);
 	}
 
-	private IOptionalNamedTag<Item> ftag(String s) {
-		IOptionalNamedTag<Item> tag = ItemTags.createOptional(new ResourceLocation("forge", s));
+	private TagKey<Item> ftag(String s) {
+		TagKey<Item> tag = ItemTags.create(new ResourceLocation("forge", s));
+		this.tag(tag);
 		return tag;
 	}
 
@@ -96,17 +118,7 @@ public class FHItemTagProvider extends ItemTagsProvider {
 		return FHMain.MODID + " item tags";
 	}
 
-	private Item item(String s) {
-		Item i = RegistryUtils.getItem(mrl(s));
-		return i.asItem();// just going to cause trouble if not exists
-	}
-
-
-
-
-	@Override
-	protected Path makePath(ResourceLocation id) {
-		return this.generator.getOutputFolder()
-				.resolve("data/" + id.getNamespace() + "/tags/items/" + id.getPath() + ".json");
+	private ResourceKey<Item> cp(String s) {
+		return ResourceKey.create(Registries.ITEM,mrl(s));
 	}
 }

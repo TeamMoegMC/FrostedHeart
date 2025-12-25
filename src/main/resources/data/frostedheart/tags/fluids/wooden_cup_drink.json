@@ -1,0 +1,15 @@
+{
+  "values": [
+  		{
+			"id": "caupona:nail_soup",
+			"required": false
+		},
+		{
+			"id": "caupona:hot_milk",
+			"required": false
+		},
+		"minecraft:water",
+		"minecraft:milk",
+		"frostedheart:purified_water"
+		]
+}

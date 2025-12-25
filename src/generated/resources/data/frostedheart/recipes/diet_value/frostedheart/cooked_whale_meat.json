@@ -1,0 +1,10 @@
+{
+  "type": "frostedheart:diet_override",
+  "group": {
+    "carbohydrate": 0.0,
+    "fat": 5333.3335,
+    "protein": 10666.667,
+    "vegetable": 0.0
+  },
+  "item": "frostedheart:cooked_whale_meat"
+}

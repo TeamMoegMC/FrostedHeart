@@ -1,58 +1,67 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.town.mine;
 
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.content.town.OccupiedArea;
-import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ColumnPos;
-import net.minecraft.world.World;
-import net.minecraftforge.common.Tags;
-
 import java.util.HashSet;
-import java.util.Set;
 import java.util.function.Consumer;
 
-import static net.minecraft.block.PlantBlockHelper.isAir;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.town.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
+
+import lombok.Getter;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.NetherVines;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.Tags;
 
 public class MineBlockScanner extends ConfinedSpaceScanner {
     private final int startX;
     private final int startY;
     private final int startZ;
+    @Getter
     private int validStone = 0;
+    @Getter
     private int light = 0;
+    @Getter
     private double temperature = 0;
     private int volume = 0;//used to calculate temperature
+    @Getter
     private final OccupiedArea occupiedArea = new OccupiedArea();
-    public MineBlockScanner(World world, BlockPos startPos) {
+    public MineBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
         this.startX = startPos.getX();
         this.startY = startPos.getY();
         this.startZ = startPos.getZ();
     }
 
-    public int getValidStone() {
-        return validStone;
-    }
-    public int getLight(){
-        return light;
-    }
-    public double getTemperature(){
-        return temperature;
-    }
-    public OccupiedArea getOccupiedArea() {
-        return occupiedArea;
-    }
 
-
-    public static boolean isStoneOrOre(World world, BlockPos pos){
+    public static boolean isStoneOrOre(Level world, BlockPos pos){
         BlockState state = world.getBlockState(pos);
-        return state.isIn(Tags.Blocks.ORES) || state.isIn(Tags.Blocks.STONE);
+        return state.is(Tags.Blocks.ORES) || state.is(Tags.Blocks.STONE);
     }
 
     @Override
     protected boolean isValidAir(BlockPos pos){
-        return Math.abs(pos.getZ()-startZ) < 6 && Math.abs(pos.getX()-startX) < 6 && Math.abs(pos.getY()-startY) < 5 && isAir(world.getBlockState(pos));
+        return Math.abs(pos.getZ()-startZ) < 6 && Math.abs(pos.getX()-startX) < 6 && Math.abs(pos.getY()-startY) < 5 && NetherVines.isValidGrowthState(world.getBlockState(pos));
     }
 
     @Override
@@ -73,13 +82,13 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
     public boolean scan(){
         this.scan(512, (pos)->{
             this.volume++;
-            this.temperature += ChunkHeatData.getTemperature(world, pos);
+            this.temperature += WorldTemperature.block(world, pos);
         }, (pos)->{
             if(isStoneOrOre(world, pos)){
                 validStone++;
                 occupiedArea.add(toColumnPos(pos));
             }
-            light += world.getBlockState(pos).getLightValue(world, pos);
+            light += world.getBlockState(pos).getLightEmission(world, pos);
         }, PREDICATE_FALSE);
         if(validStone <= 0){
             this.isValid = false;

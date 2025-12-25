@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.scenario.parser;
 
 import java.util.Map;
 
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVM;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 
 public class EmbNode implements Node {
     String exp;
@@ -36,12 +36,12 @@ public class EmbNode implements Node {
     }
 
     @Override
-    public String getLiteral(ScenarioVM runner) {
+    public String getLiteral(ScenarioCommandContext runner) {
         Object dat = "";
         if (exp != null)
             dat = runner.eval(exp);
         else if (pat != null)
-            dat = runner.getVaribles().evalPathString(pat);
+            dat = runner.context().getVarData().evalPathString(pat);
         return String.format(format, dat);
     }
 
@@ -56,7 +56,7 @@ public class EmbNode implements Node {
     }
 
     @Override
-    public void run(ScenarioVM runner) {
+    public void run(ScenarioCommandContext runner) {
 
     }
 

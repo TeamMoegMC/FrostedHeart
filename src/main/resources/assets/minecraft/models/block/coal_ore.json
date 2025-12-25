@@ -1,0 +1,7 @@
+{
+	"parent": "minecraft:block/cube_column",
+	"textures": {
+		"end": "frostedheart:block/ore/coal_ore_top",
+		"side": "frostedheart:block/ore/coal_ore_side"
+	}
+}

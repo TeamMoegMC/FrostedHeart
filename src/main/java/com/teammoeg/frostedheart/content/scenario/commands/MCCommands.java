@@ -1,75 +1,104 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.scenario.commands;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.teammoeg.frostedheart.FHTeamDataManager;
-import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.content.scenario.Param;
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVM;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
-import com.teammoeg.frostedheart.content.scenario.runner.target.OrTrigger;
-import com.teammoeg.frostedheart.content.scenario.runner.target.VariantTargetTrigger;
-import com.teammoeg.frostedheart.content.scenario.runner.target.trigger.MovementTrigger;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.content.scenario.runner.trigger.MovementTrigger;
+import com.teammoeg.frostedheart.content.scenario.runner.trigger.OrTrigger;
+import com.teammoeg.frostedheart.content.scenario.runner.trigger.VariantTrigger;
+import com.teammoeg.frostedresearch.api.ResearchDataAPI;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.CDistHelper;
 
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.JsonToNBT;
-import net.minecraft.server.management.OpEntry;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.TagParser;
+import net.minecraft.server.players.ServerOpListEntry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
 
 public class MCCommands {
-	public void giveItem(ScenarioVM runner, @Param("i") String item, @Param("n") String nbt, @Param("c") int count) throws CommandSyntaxException {
-		Item i = RegistryUtils.getItem(new ResourceLocation(item));
+	public void giveItem(ScenarioCommandContext runner, @Param("i") String item, @Param("n") String nbt, @Param("c") int count) throws CommandSyntaxException {
+		Item i = CRegistryHelper.getItem(new ResourceLocation(item));
 		if (count == 0) count = 1;
 		ItemStack is = new ItemStack(i, count);
 		if (nbt != null)
-			is.setTag(JsonToNBT.getTagFromJson(nbt));
-		FHUtils.giveItem(runner.getPlayer(), is);
+			is.setTag(TagParser.parseTag(nbt));
+		CUtils.giveItem(runner.context().player(), is);
+	}
+	public void mobEffect(ScenarioCommandContext runner, @Param("e") String effect, @Param("a") int amplifier, @Param("t") int time,@Param("hide")boolean hide,@Param("hideIcon")boolean hideIcon) throws CommandSyntaxException {
+		MobEffect i = CRegistryHelper.getEffect(new ResourceLocation(effect));
+		runner.context().player().addEffect(new MobEffectInstance(i,time,amplifier,false,!hide,!hideIcon));
 	}
 
-	public void setResearchAttribute(ScenarioVM runner, @Param("k") String key, @Param("v") double value) {
-		ResearchDataAPI.putVariantDouble(runner.getPlayer(), key, value);
+	public void setResearchAttribute(ScenarioCommandContext runner, @Param("k") String key, @Param("v") double value) {
+		ResearchDataAPI.putVariantDouble(runner.context().player(), key, value);
 	}
 
-	public void waitPlayerStart(ScenarioVM runner, @Param("s") String s, @Param("l") String l) {
-		runner.addTrigger(new OrTrigger(new MovementTrigger(runner.getPlayer()), new VariantTargetTrigger().register(runner.getPlayer(), EventTriggerType.PLAYER_INTERACT)).setSync(),
-			new ExecuteTarget(runner, s, l));
+	public void waitPlayerStart(ScenarioCommandContext runner, @Param("s") String s, @Param("l") String l) {
+		runner.thread().addTrigger(new OrTrigger(new MovementTrigger(runner.context().player()), new VariantTrigger().register(runner.context().player(), EventTriggerType.PLAYER_INTERACT)).setSync(),
+			new ExecuteTarget( s, l));
 	}
 
-	public void gameCommand(ScenarioVM runner,@Param("op")int op,@Param("asPlayer")int asp, @Param("cmd") @Param("command") String s) {
+	public void gameCommand(ScenarioCommandContext runner,@Param("op")boolean op,@Param("asPlayer")boolean asp, @Param("cmd") @Param("command") String s) {
 		Map<String, Object> overrides = new HashMap<>();
-		ServerPlayerEntity triggerPlayer = (ServerPlayerEntity) runner.getPlayer();
+		ServerPlayer triggerPlayer = (ServerPlayer) runner.context().player();
 		overrides.put("p", triggerPlayer.getGameProfile().getName());
 
-		BlockPos pos = triggerPlayer.getPosition();
+		BlockPos pos = triggerPlayer.blockPosition();
 		overrides.put("x", pos.getX());
 		overrides.put("y", pos.getY());
 		overrides.put("z", pos.getZ());
-		OpEntry opent= FHTeamDataManager.getServer().getPlayerList().getOppedPlayers().getEntry(triggerPlayer.getGameProfile());
-		if(op>0)
+		ServerOpListEntry opent= CDistHelper.getServer().getPlayerList().getOps().get(triggerPlayer.getGameProfile());
+		if(op)
 			if(opent==null){
-				FHTeamDataManager.getServer().getPlayerList().addOp(triggerPlayer.getGameProfile());
+				CDistHelper.getServer().getPlayerList().op(triggerPlayer.getGameProfile());
 			}
-		Commands cmds = FHTeamDataManager.getServer().getCommandManager();
-		CommandSource source = asp>0?triggerPlayer.getCommandSource(): FHTeamDataManager.getServer().getCommandSource();
-		for (Map.Entry<String, Object> entry : overrides.entrySet()) {
-			if (entry.getValue() != null) {
-				s = s.replace("@" + entry.getKey(), entry.getValue().toString());
+		try {
+			Commands cmds = CDistHelper.getServer().getCommands();
+			CommandSourceStack source = asp?triggerPlayer.createCommandSourceStack(): CDistHelper.getServer().createCommandSourceStack();
+			for (Map.Entry<String, Object> entry : overrides.entrySet()) {
+				if (entry.getValue() != null) {
+					s = s.replace("@" + entry.getKey(), entry.getValue().toString());
+				}
 			}
+			cmds.performPrefixedCommand(source, s);
+		}finally {
+			if(op)
+				if(opent==null){
+					CDistHelper.getServer().getPlayerList().deop(triggerPlayer.getGameProfile());
+				}
 		}
-		cmds.handleCommand(source, s);
-		if(op>0)
-			if(opent==null){
-				FHTeamDataManager.getServer().getPlayerList().removeOp(triggerPlayer.getGameProfile());
-			}
 	}
 }

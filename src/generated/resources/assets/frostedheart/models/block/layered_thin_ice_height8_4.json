@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/snow_height8",
+  "render_type": "minecraft:translucent",
+  "textures": {
+    "particle": "frostedheart:block/thin_ice_4",
+    "texture": "frostedheart:block/thin_ice_4"
+  }
+}

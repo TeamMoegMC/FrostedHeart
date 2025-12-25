@@ -1,0 +1,57 @@
+{
+  "variants": {
+    "face=ceiling,facing=east": {
+      "model": "frostedheart:block/ruined_machine_screen",
+      "x": 180,
+      "y": 270
+    },
+    "face=ceiling,facing=north": {
+      "model": "frostedheart:block/ruined_machine_screen",
+      "x": 180,
+      "y": 180
+    },
+    "face=ceiling,facing=south": {
+      "model": "frostedheart:block/ruined_machine_screen",
+      "x": 180
+    },
+    "face=ceiling,facing=west": {
+      "model": "frostedheart:block/ruined_machine_screen",
+      "x": 180,
+      "y": 90
+    },
+    "face=floor,facing=east": {
+      "model": "frostedheart:block/ruined_machine_screen",
+      "y": 90
+    },
+    "face=floor,facing=north": {
+      "model": "frostedheart:block/ruined_machine_screen"
+    },
+    "face=floor,facing=south": {
+      "model": "frostedheart:block/ruined_machine_screen",
+      "y": 180
+    },
+    "face=floor,facing=west": {
+      "model": "frostedheart:block/ruined_machine_screen",
+      "y": 270
+    },
+    "face=wall,facing=east": {
+      "model": "frostedheart:block/ruined_machine_screen",
+      "x": 90,
+      "y": 90
+    },
+    "face=wall,facing=north": {
+      "model": "frostedheart:block/ruined_machine_screen",
+      "x": 90
+    },
+    "face=wall,facing=south": {
+      "model": "frostedheart:block/ruined_machine_screen",
+      "x": 90,
+      "y": 180
+    },
+    "face=wall,facing=west": {
+      "model": "frostedheart:block/ruined_machine_screen",
+      "x": 90,
+      "y": 270
+    }
+  }
+}

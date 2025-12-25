@@ -1,96 +1,112 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.steamenergy.steamcore;
 
-import java.util.Random;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import com.simibubi.create.content.contraptions.base.DirectionalKineticBlock;
+import com.simibubi.create.content.kinetics.base.DirectionalKineticBlock;
 import com.simibubi.create.foundation.utility.VoxelShaper;
-import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
+import java.util.function.Supplier;
 
-public class SteamCoreBlock extends DirectionalKineticBlock {
+public class SteamCoreBlock extends DirectionalKineticBlock implements CEntityBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
-    static final VoxelShaper shape = VoxelShaper.forDirectional(VoxelShapes.or(Block.makeCuboidShape(0, 0, 0, 16, 16, 16)), Direction.SOUTH);
+    static final VoxelShaper shape = VoxelShaper.forDirectional(Shapes.or(Block.box(0, 0, 0, 16, 16, 16)), Direction.SOUTH);
 
 
-    public SteamCoreBlock( Properties blockProps) {
+    public SteamCoreBlock(Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
-    }
-
-
-    @Nullable
-    @Override
-    public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
-        return FHTileTypes.STEAM_CORE.get().create();
+        this.registerDefaultState(super.defaultBlockState().setValue(LIT, Boolean.FALSE));
     }
 
     @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return super.getStateForPlacement(context).setValue(LIT, Boolean.FALSE);
     }
 
     @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(LIT);
+        super.createBlockStateDefinition(builder);
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-        return shape.get(state.get(BlockStateProperties.FACING));
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
+        return shape.get(state.getValue(BlockStateProperties.FACING));
     }
 
     @Override
     public Direction.Axis getRotationAxis(BlockState blockState) {
-        return blockState.get(BlockStateProperties.FACING).getAxis();
+        return blockState.getValue(BlockStateProperties.FACING).getAxis();
     }
 
     @Override
-    public boolean hasShaftTowards(IWorldReader arg0, BlockPos arg1, BlockState state, Direction dir) {
-        return dir == state.get(BlockStateProperties.FACING);
+    public boolean hasShaftTowards(LevelReader arg0, BlockPos arg1, BlockState state, Direction dir) {
+        return dir == state.getValue(BlockStateProperties.FACING);
     }
 
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
-        return super.onBlockActivated(state, world, pos, player, hand, hit);
+    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        return super.use(state, world, pos, player, hand, hit);
     }
 
-	@Override
-	public Direction getPreferredFacing(BlockItemUseContext arg0) {
-		Direction dir= super.getPreferredFacing(arg0);
-				
-		if(dir!=null)dir=dir.getOpposite();
-		return dir;
-	}
+    @Override
+    public Direction getPreferredFacing(BlockPlaceContext arg0) {
+        Direction dir = super.getPreferredFacing(arg0);
+
+        if (dir != null) dir = dir.getOpposite();
+        return dir;
+    }
 
 
-	@Override
-	public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
-		super.animateTick(stateIn, worldIn, pos, rand);
-		if(stateIn.get(LIT)&&rand.nextBoolean())
-			ClientUtils.spawnSteamParticles(worldIn, pos);
-	}
+    @Override
+    public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, RandomSource rand) {
+        super.animateTick(stateIn, worldIn, pos, rand);
+        if (stateIn.getValue(LIT) && rand.nextBoolean())
+            FHClientUtils.spawnSteamParticles(worldIn, pos);
+    }
+
+
+    @Override
+    public Supplier<BlockEntityType<?>> getBlock() {
+        return FHBlockEntityTypes.STEAM_CORE::get;
+    }
 }

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/block",
+  "automatic_culling": false,
+  "flip_v": true,
+  "loader": "forge:obj",
+  "model": "frostedheart:models/block/bot_dispatcher.obj",
+  "render_type": "minecraft:cutout"
+}

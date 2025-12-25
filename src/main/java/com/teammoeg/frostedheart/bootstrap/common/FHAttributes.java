@@ -1,0 +1,50 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.frostedheart.bootstrap.common;
+
+import java.util.UUID;
+import java.util.function.Function;
+
+import com.teammoeg.frostedheart.FHMain;
+
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.RangedAttribute;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+
+public class FHAttributes {
+	public static final DeferredRegister<Attribute> REGISTER=DeferredRegister.create(ForgeRegistries.ATTRIBUTES, FHMain.MODID);
+	public static final RegistryObject<Attribute> ENV_TEMPERATURE=register("env_temp", s->new RangedAttribute(s, 0, -1000, 10000000));
+	public static final RegistryObject<Attribute> EFFECTIVE_TEMPERATURE=register("eff_temp", s->new RangedAttribute(s, 0, -1000, 10000000));
+	public static final RegistryObject<Attribute> INSULATION=register("insulation", s->new RangedAttribute(s, 0, -1000, 10000000));
+	public static final RegistryObject<Attribute> WIND_PROOF=register("windproof", s->new RangedAttribute(s, 0, -1000, 10000000));//This attribute must be multiply-total
+	public static final RegistryObject<Attribute> HEAT_PROOF=register("heatproof", s->new RangedAttribute(s, 0, -1000, 10000000));//This attribute must be multiply-total
+
+	public static final AttributeModifier SNOW_DRIFTER = new AttributeModifier(UUID.fromString("3c4a1c57-ed5a-482e-946e-eb0b00fe5fb0"), "frostedheart:snowshoes", 0.05, AttributeModifier.Operation.ADDITION);
+	public static final AttributeModifier SPEED_SKATER = new AttributeModifier(UUID.fromString("3c4a1c57-ed5a-482e-946e-eb0b00fe5fb1"), "frostedheart:speed_skater", 0.1, AttributeModifier.Operation.ADDITION);
+	public static final AttributeModifier HOT_FOOD = new AttributeModifier(UUID.fromString("3c4a1c57-ed5a-482e-946e-eb0b00fe5fb2"), "frostedheart:hot_food", 20F, AttributeModifier.Operation.ADDITION);
+	public static final AttributeModifier COLD_FOOD = new AttributeModifier(UUID.fromString("3c4a1c57-ed5a-482e-946e-eb0b00fe5fb3"), "frostedheart:cold_food", -5F, AttributeModifier.Operation.ADDITION);
+	public static RegistryObject<Attribute> register(String name,Function<String,Attribute> provider){
+		return REGISTER.register(name, ()->provider.apply("attribute."+FHMain.MODID+"."+name));
+		
+	}
+}

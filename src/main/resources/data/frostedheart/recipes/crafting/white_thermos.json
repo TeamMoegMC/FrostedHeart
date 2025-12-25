@@ -1,0 +1,20 @@
+{
+  "type": "chorda:shapless_copy_data",
+  "ingredients": [
+    {
+      "item": "frostedheart:thermos"
+    },
+    {
+      "item": "minecraft:string"
+    },
+    {
+      "item": "minecraft:string"
+    },
+    {
+      "item": "minecraft:white_dye"
+    }
+  ],
+  "result": {
+    "item": "frostedheart:white_thermos"
+  }
+}

@@ -1,19 +1,38 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.scenario.client.dialog;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.chorda.client.PartialTickTracker;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	public float dialogX=0.1f;
@@ -31,13 +50,8 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		ticksSinceLastSpace=20;
 		return escapes<=0;
 	}
-	public ImageScreenDialog(ITextComponent titleIn) {
+	public ImageScreenDialog(Component titleIn) {
 		super(titleIn);
-	}
-	@Override
-	public void init(Minecraft minecraft, int width, int height) {
-		// TODO Auto-generated method stub
-		super.init(minecraft, width, height);
 		dialogW=0.8f;
 		dialogY=0.85f;
 	}
@@ -57,47 +71,35 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 
 	}
 
-	public void renderBackground(MatrixStack matrixStack) {
+	public void renderBackground(PoseStack matrixStack) {
 		
 		
 	}
-	public float handlePt(float partialTicks) {
-		float delta=partialTicks-lpartialTicks;
-		if(delta<0){
-			delta=1-lpartialTicks+partialTicks;
-		}
-		cpartialTicks+=delta;
-		if(cpartialTicks>1)
-			cpartialTicks=1;
-		lpartialTicks=partialTicks;
-		return cpartialTicks;
-	}
-	float lpartialTicks;
-	float cpartialTicks;
-	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+	public void render(GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks) {
 		//AbstractGui.fill(matrixStack, 0, 0, width, height, 0xffffffff);
-		partialTicks=handlePt(partialTicks);
+		partialTicks=PartialTickTracker.getTickAlignedPartialTicks();
 		this.width=ClientScene.fromRelativeXW(1);
 		this.height=ClientScene.fromRelativeYH(1);
-		matrixStack.push();
+		matrixStack.pose().pushPose();
 		getPrimary().render(new RenderParams(this,matrixStack,mouseX,mouseY,partialTicks));
 		int y=ClientScene.fromRelativeYH(dialogY);
 		int h=9*chatlist.size()+4;
 		
-		RenderSystem.enableAlphaTest();
+		//RenderSystem.enableAlphaTest();
+		
 		RenderSystem.enableBlend();
 		if(!chatlist.isEmpty())
-			AbstractGui.fill(matrixStack, ClientScene.fromRelativeXW(dialogX)-2,ClientScene.fromRelativeYH(dialogY)-2, ClientScene.fromRelativeXW(dialogW)+2+ClientScene.fromRelativeXW(dialogX), h+ClientScene.fromRelativeYH(dialogY)-2, 0xC0000000);
+			matrixStack.fill(ClientScene.fromRelativeXW(dialogX)-2,ClientScene.fromRelativeYH(dialogY)-2, ClientScene.fromRelativeXW(dialogW)+2+ClientScene.fromRelativeXW(dialogX), h+ClientScene.fromRelativeYH(dialogY)-2, 0xC0000000);
 		//this.fillGradient(matrixStack, ClientScene.fromRelativeXW(dialogX)-2, ClientScene.fromRelativeYH(dialogY)-2, ClientScene.fromRelativeXW(dialogW)+4, h, 0xC0101010, 0xD0101010);
 		for(TextInfo i:chatlist) {
 			int x=(ClientScene.fromRelativeXW(dialogW)-i.getCurLen())/2+ClientScene.fromRelativeXW(dialogX)+12;
-			this.minecraft.fontRenderer.drawTextWithShadow(matrixStack, i.asFinished(), x, y, 0xffffffff);
+			matrixStack.drawString(this.minecraft.font, i.asFinished(), x, y, 0xffffffff);
 			y+=9;
 		}
 		RenderSystem.disableBlend();
-		matrixStack.pop();
+		matrixStack.pose().popPose();
 		if(escapes!=MAX_ESCAPE) {
-			this.minecraft.fontRenderer.drawTextWithShadow(matrixStack, TranslateUtils.translateMessage("escape_count",escapes), 10, 10, 0xFFAAAAAA);
+			matrixStack.drawString(this.minecraft.font, Lang.translateMessage("escape_count",escapes), 10, 10, 0xFFAAAAAA);
 		}
 	}
 
@@ -108,13 +110,13 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		int h=9*chatlist.size();
 		int dy=(int) (mouseY-y);
 		if(dy>0&&dy<h) {
-			int iline=dy/font.FONT_HEIGHT;
+			int iline=dy/font.lineHeight;
 			 TextInfo line = chatlist.get(iline);
 			 int crlen=line.getCurLen();
 			 int x=(ClientScene.fromRelativeXW(dialogW)-crlen)/2+ClientScene.fromRelativeXW(dialogX)+12;
 			 int dx=(int) (mouseX-x);
 			 if(dx>0&&dx<crlen) {
-				 return this.handleComponentClicked(font.getCharacterManager().func_243239_a(line.asFinished(), dx));
+				 return this.handleComponentClicked(font.getSplitter().componentStyleAtWidth(line.asFinished(), dx));
 
 			 }
 		}
@@ -127,7 +129,6 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	}
 	@Override
 	public void tickDialog() {
-		cpartialTicks=0;
 		getPrimary().tick();
 		if(escapes!=MAX_ESCAPE) {
 			ticksSinceLastSpace--;
@@ -136,20 +137,19 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		}
 	}
 	@Override
-	public void closeScreen() {
+	public void onClose() {
 		ClientScene.INSTANCE.dialog=null;
 		getPrimary().close();
-		super.closeScreen();
+		super.onClose();
 	}
 	@Override
 	public void closeDialog() {
-		closeScreen();
+		onClose();
 	}
 	public LayerManager getPrimary() {
 		return primary;
 	}
 	public void setPrimary(LayerManager primary) {
-		cpartialTicks=0;
 		this.primary = primary;
 	}
 	@Override

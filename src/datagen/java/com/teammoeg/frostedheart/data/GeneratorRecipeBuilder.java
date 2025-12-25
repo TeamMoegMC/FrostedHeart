@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,17 +14,18 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.data;
 
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorRecipe;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.api.crafting.builders.IEFinishedRecipe;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tags.ITag;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class GeneratorRecipeBuilder extends IEFinishedRecipe<GeneratorRecipeBuilder> {
     private GeneratorRecipeBuilder() {
@@ -39,7 +40,7 @@ public class GeneratorRecipeBuilder extends IEFinishedRecipe<GeneratorRecipeBuil
         return new GeneratorRecipeBuilder().addResult(result);
     }
 
-    public static GeneratorRecipeBuilder builder(ITag<Item> result, int count) {
+    public static GeneratorRecipeBuilder builder(TagKey<Item> result, int count) {
         return new GeneratorRecipeBuilder().addResult(new IngredientWithSize(result, count));
     }
 }

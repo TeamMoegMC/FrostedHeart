@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,16 +19,16 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.chorda.block.CBlock;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.MapColor;
 
-public class AccessControlBlock extends FHBaseBlock {
+public class AccessControlBlock extends CBlock {
     public AccessControlBlock() {
-        super(Block.Properties.create(Material.IRON).sound(SoundType.STONE).setRequiresTool()
-                .hardnessAndResistance(0, 2000).notSolid());
+        super(Block.Properties.of().mapColor(MapColor.METAL).sound(SoundType.STONE).requiresCorrectToolForDrops()
+                .strength(0, 2000).noOcclusion());
 
     }
 }

@@ -1,0 +1,6 @@
+{
+  "type": "frostedheart:block_temp",
+  "block": "caupona:mud_kitchen_stove",
+  "must_lit": true,
+  "temperature": 400.0
+}

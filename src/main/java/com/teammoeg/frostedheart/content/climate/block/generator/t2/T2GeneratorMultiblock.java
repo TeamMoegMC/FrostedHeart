@@ -1,0 +1,61 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.frostedheart.content.climate.block.generator.t2;
+
+import com.teammoeg.chorda.multiblock.CMultiblockHelper;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks.Registration;
+import com.teammoeg.frostedheart.content.climate.block.generator.HeatingMultiblock;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+
+public class T2GeneratorMultiblock extends HeatingMultiblock {
+
+    public T2GeneratorMultiblock() {
+
+        super(new ResourceLocation(FHMain.MODID, "multiblocks/generator_t2"),
+                new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 7, 3), Registration.GENERATOR_T2);
+    }
+
+
+    @Override
+    public float getManualScale() {
+        return 14;
+    }
+
+    @Override
+    public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
+        BlockPos master = this.getMasterFromOriginOffset();
+        //FHMain.LOGGER.info("Running");
+        CMultiblockHelper.getBEHelperOptional(world, origin).ifPresent(te -> {
+            T2GeneratorState state = (T2GeneratorState) te.getState();
+            if (state != null) {
+            	if(state.manager!=null) {
+            		//FHMain.LOGGER.info("invalidated network T2GeneratorMultiblock.");
+            		state.manager.invalidate(world);
+            	}//else FHMain.LOGGER.error("manager is null when disassembling T2GeneratorMultiblock.");
+            }else FHMain.LOGGER.error("T2GeneratorState is null when disassembling T2GeneratorMultiblock.");
+        });
+        super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
+    }
+
+}

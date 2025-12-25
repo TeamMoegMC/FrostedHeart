@@ -1,7 +1,0 @@
-{
-  "id": "minecraft:ice",
-  "temperature": -4,
-  "range": 5,
-  "level_divide": false,
-  "must_lit": false
-}

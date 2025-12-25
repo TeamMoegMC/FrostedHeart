@@ -1,0 +1,128 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.frostedheart.content.climate.block.radiator;
+
+import blusunrize.immersiveengineering.api.multiblocks.blocks.util.StoredCapability;
+
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
+import com.teammoeg.frostedheart.content.climate.block.generator.HeatingState;
+import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
+import com.teammoeg.frostedheart.content.steamenergy.ClientHeatNetworkData;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
+import com.teammoeg.frostedheart.util.Lang;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+
+import static net.minecraft.ChatFormatting.GRAY;
+
+public class RadiatorState extends HeatingState implements HeatNetworkProvider, IHaveGoggleInformation {
+
+    HeatEndpoint network = HeatEndpoint.consumer(100, 4);
+    StoredCapability<HeatEndpoint> heatCap=new StoredCapability<>(network);
+    @Override
+    public void readSaveNBT(CompoundTag nbt) {
+        super.readSaveNBT(nbt);
+        network.deserializeNBT(nbt.getCompound("network"));
+    }
+
+    @Override
+    public void writeSaveNBT(CompoundTag nbt) {
+        super.writeSaveNBT(nbt);
+        nbt.put("network", network.serializeNBT());
+    }
+
+    @Override
+	public void writeSyncNBT(CompoundTag nbt) {
+		super.writeSyncNBT(nbt);
+		nbt.putBoolean("_", true);
+	}
+
+	@Override
+    public int getDownwardRange() {
+        return 1;
+    }
+
+    @Override
+    public int getUpwardRange() {
+        return 4;
+    }
+
+    @Override
+    public int getRadius() {
+        float rlevel = getRangeLevel();
+        if (rlevel <= 1)
+            return (int) (8 * rlevel);
+        return (int) (8 + (rlevel - 1) * 8);
+    }
+
+    @Override
+    public @Nullable HeatNetwork getNetwork() {
+        return network.getNetwork();
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        Lang.tooltip("heat_stats").forGoggles(tooltip);
+
+        if (TemperatureGoogleRenderer.hasHeatNetworkData()) {
+            ClientHeatNetworkData data = TemperatureGoogleRenderer.getHeatNetworkData();
+
+            Lang.translate("tooltip", "pressure.network")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+
+            Lang.number(data.totalEndpointIntake)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.intake")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            Lang.number(data.totalEndpointOutput)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.output")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            // show number of endpoints
+            Lang.number(data.endpoints.size())
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.endpoints")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            Lang.translate("tooltip", "pressure.endpoint")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+        }
+
+        return true;
+    }
+}

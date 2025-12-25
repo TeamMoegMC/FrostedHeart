@@ -1,22 +1,41 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.tips;
 
-import com.teammoeg.frostedheart.content.tips.client.TipElement;
-import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
-import com.teammoeg.frostedheart.content.tips.client.gui.EmptyScreen;
-import com.teammoeg.frostedheart.content.tips.client.gui.TipListScreen;
-import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
-import com.teammoeg.frostedheart.content.tips.client.hud.TipHUD;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
-import com.teammoeg.frostedheart.util.client.RawMouseHelper;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.frostedheart.FrostedHud;
+import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
+import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.client.gui.screen.IngameMenuScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.InputMappings;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.CommandBlockEditScreen;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.GuiScreenEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -25,71 +44,118 @@ import java.util.List;
 
 @Mod.EventBusSubscriber(value = Dist.CLIENT)
 public class TipRenderer {
-    private static final Minecraft mc = Minecraft.getInstance();
-    public static final List<TipElement> renderQueue = new ArrayList<>();
-    public static TipHUD currentTip = null;
 
-    @SubscribeEvent
-    public static void renderOnHUD(RenderGameOverlayEvent.Post event) {
-        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) {
+    /**
+     * tip渲染队列
+     */
+    public static final List<Tip> TIP_QUEUE = new ArrayList<>();
+    /**
+     * screen黑名单
+     */
+    public static final List<Class<? extends Screen>> SCREEN_BLACKLIST = new ArrayList<>();
+    static {
+        SCREEN_BLACKLIST.add(CommandBlockEditScreen.class);
+    }
+
+    /**
+     * @return 是否正在渲染tip
+     */
+    public static boolean isTipRendering() {
+        return TipWidget.INSTANCE.getState() != TipWidget.State.IDLE;
+    }
+
+    /**
+     * 移除当前显示的tip
+     */
+    public static void removeCurrent() {
+        TipWidget.INSTANCE.close();
+    }
+
+    public static void forceClose() {
+        TipWidget.INSTANCE.resetState();
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onGuiInit(ScreenEvent.Init.Post event) {
+        if (!FHConfig.CLIENT.enableTip.get())
             return;
-        }
-
-        if (renderQueue.isEmpty()) return;
-        Screen current = mc.currentScreen;
-        if (current != null) {
-            if (!(current instanceof ChatScreen) && !(current instanceof EmptyScreen) && !(current instanceof DebugScreen)) {
-
-                return;
-            }
-        }
-
-        if (currentTip == null) {
-            currentTip = new TipHUD(event.getMatrixStack(), renderQueue.get(0));
-        }
-
-        if (!currentTip.visible) {
-            if (renderQueue.size() <= 1 && current instanceof EmptyScreen) {
-                mc.popGuiLayer();
-            }
-            TipDisplayManager.removeCurrent();
+        if (SCREEN_BLACKLIST.contains(event.getScreen().getClass()))
             return;
 
-        } else if (!InputMappings.isKeyDown(mc.getMainWindow().getHandle(), 258) && current instanceof EmptyScreen) {
-            mc.popGuiLayer();
-        }
+        // 将TipWidget添加到当前screen中
+        if (!event.getListenersList().contains(TipWidget.INSTANCE)) {
+            event.addListener(TipWidget.INSTANCE.closeButton);
+            event.addListener(TipWidget.INSTANCE.pinButton);
+            event.addListener(TipWidget.INSTANCE.linkButton);
+            event.addListener(TipWidget.INSTANCE);
 
-        currentTip.render(false);
+            // 将tipWidget和按钮从screen的渲染列表中移除
+            event.getScreen().renderables.remove(TipWidget.INSTANCE.closeButton);
+            event.getScreen().renderables.remove(TipWidget.INSTANCE.pinButton);
+            event.getScreen().renderables.remove(TipWidget.INSTANCE.linkButton);
+            event.getScreen().renderables.remove(TipWidget.INSTANCE);
+        }
     }
 
     @SubscribeEvent
-    public static void renderOnGUI(GuiScreenEvent.DrawScreenEvent.Post event) {
-        Screen gui = event.getGui();
-        if (gui instanceof IngameMenuScreen || gui instanceof ChatScreen || gui instanceof EmptyScreen) {
-            int x = ClientUtils.screenWidth()-12;
-            int y = ClientUtils.screenHeight()-26;
-            if (FHGuiHelper.renderIconButton(event.getMatrixStack(), IconButton.ICON_HISTORY, RawMouseHelper.getScaledMouseX(), RawMouseHelper.getScaledMouseY(), x, y, 0xFFFFFFFF, 0x80000000)) {
-                mc.displayGuiScreen(new TipListScreen(gui instanceof IngameMenuScreen));
+    public static void onHudRender(RenderGuiEvent.Post event) {
+        if (!FHConfig.CLIENT.enableTip.get() || (TIP_QUEUE.isEmpty() && !isTipRendering()))
+            return;
+        Minecraft MC = ClientUtils.getMc();
+        if (MC.screen != null && !SCREEN_BLACKLIST.contains(MC.screen.getClass()))
+            return;
+
+        if (WheelMenuRenderer.isOpened()) {
+            var pos = WheelMenuRenderer.getMousePos();
+            int x = pos.getX()/2 + ClientUtils.screenWidth()/2;
+            int y = pos.getY()/2 + ClientUtils.screenHeight()/2;
+            TipWidget.INSTANCE.renderWidget(event.getGuiGraphics(), x, y, MC.getPartialTick());
+            if (MouseHelper.isLeftClicked()) {
+                if (TipWidget.INSTANCE.closeButton.isHoveredOrFocused()) {
+                    TipWidget.INSTANCE.closeButton.onClick(x, y);
+                } else if (TipWidget.INSTANCE.linkButton.isHoveredOrFocused()) {
+                    TipWidget.INSTANCE.linkButton.onClick(x, y);
+                } else if (TipWidget.INSTANCE.pinButton.isHoveredOrFocused()) {
+                    TipWidget.INSTANCE.pinButton.onClick(x, y);
+                }
+            }
+        } else {
+            TipWidget.INSTANCE.renderWidget(event.getGuiGraphics(), -1, -1, MC.getPartialTick());
+        }
+        update();
+    }
+
+    @SubscribeEvent
+    public static void onGuiRender(ScreenEvent.Render.Post event) {
+        if (FrostedHud.renderDebugOverlay) {
+            FrostedHud.renderDebugOverlay(event.getGuiGraphics(), ClientUtils.getMc());
+        }
+        if (!FHConfig.CLIENT.enableTip.get() || (TIP_QUEUE.isEmpty() && !isTipRendering()))
+            return;
+        if (!event.getScreen().children().contains(TipWidget.INSTANCE))
+            return;
+
+        // 避免点击tip后聊天栏无法编辑
+        if (event.getScreen() instanceof ChatScreen) {
+            for (GuiEventListener child : event.getScreen().children()) {
+                if (child instanceof EditBox e) {
+                    event.getScreen().setFocused(e);
+                }
             }
         }
 
-        if (renderQueue.isEmpty() ||
-                gui instanceof ChatScreen ||
-                gui instanceof EmptyScreen ||
-                gui instanceof TipListScreen ||
-                gui instanceof DebugScreen) {
-            return;
-        }
+        TipWidget.INSTANCE.renderWidget(event.getGuiGraphics(), event.getMouseX(), event.getMouseY(), event.getPartialTick());
+        update();
+    }
 
-        if (currentTip == null) {
-            currentTip = new TipHUD(event.getMatrixStack(), renderQueue.get(0));
+    private static void update() {
+        if (!isTipRendering()) {
+            TIP_QUEUE.remove(TipWidget.INSTANCE.lastTip);
+            TipWidget.INSTANCE.lastTip = null;
+            // 切换下一个
+            if (!TIP_QUEUE.isEmpty()) {
+                TipWidget.INSTANCE.tip = TIP_QUEUE.get(0);
+            }
         }
-
-        if (!currentTip.visible) {
-            TipDisplayManager.removeCurrent();
-            return;
-        }
-
-        currentTip.render(true);
     }
 }

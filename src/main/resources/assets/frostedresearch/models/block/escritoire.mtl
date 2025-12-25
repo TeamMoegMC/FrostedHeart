@@ -1,0 +1,7 @@
+newmtl m_0
+map_Kd frostedresearch:block/escritoire_decorations
+newmtl m_1
+map_Kd frostedresearch:block/escritoire_main
+newmtl m_2
+map_Kd frostedresearch:block/escritoire_drawers
+newmtl none

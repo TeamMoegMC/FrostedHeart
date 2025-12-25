@@ -1,0 +1,14 @@
+{
+  "type": "chorda:shapless_copy_data",
+  "ingredients": [
+    {
+      "tag": "frostedheart:colored_thermos"
+    },
+    {
+      "item": "minecraft:yellow_dye"
+    }
+  ],
+  "result": {
+    "item": "frostedheart:yellow_thermos"
+  }
+}

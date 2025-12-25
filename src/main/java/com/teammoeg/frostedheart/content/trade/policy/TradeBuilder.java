@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.teammoeg.chorda.io.SerializeUtil;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.trade.policy.actions.AddFlagValueAction;
 import com.teammoeg.frostedheart.content.trade.policy.actions.SetFlagAction;
@@ -38,16 +40,14 @@ import com.teammoeg.frostedheart.content.trade.policy.conditions.LevelCondition;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.NotCondition;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.TotalTradeCondition;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.WithFlagCondition;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.entity.merchant.villager.VillagerProfession;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Class TradeBuilder.
@@ -55,7 +55,7 @@ import net.minecraft.util.ResourceLocation;
  *
  * @author khjxiaogu
  */
-public class TradeBuilder implements IFinishedRecipe {
+public class TradeBuilder implements FinishedRecipe {
     /**
      * Class ActionBuilder.
      * Builder class to build action list
@@ -216,8 +216,8 @@ public class TradeBuilder implements IFinishedRecipe {
          * @param val  the value
          * @return returns self
          */
-        public ConditionBuilder<T> hasFlag(String flag, int val) {
-            return condition(new FlagValueCondition(flag, val));
+        public ConditionBuilder<T> flagValue(String flag) {
+            return condition(new FlagValueCondition(flag));
         }
 
         /**
@@ -228,17 +228,6 @@ public class TradeBuilder implements IFinishedRecipe {
          */
         public ConditionBuilder<T> hasNoFlag(String flag) {
             return not(new WithFlagCondition(flag));
-        }
-
-        /**
-         * Require flag value not equal.<br>
-         *
-         * @param flag flag name
-         * @param val  the value
-         * @return returns self
-         */
-        public ConditionBuilder<T> hasNoFlag(String flag, int val) {
-            return not(new FlagValueCondition(flag, val));
         }
 
         /**
@@ -339,7 +328,7 @@ public class TradeBuilder implements IFinishedRecipe {
          * @return returns buy
          */
         public GroupBuilder buy(int maxstore, float recover, int price, Item item) {
-            return this.buy(RegistryUtils.getRegistryName(item).toString(), maxstore, recover, price, Ingredient.fromItems(item));
+            return this.buy(CRegistryHelper.getRegistryName(item).toString(), maxstore, recover, price, Ingredient.of(item));
         }
 
         /**
@@ -352,7 +341,7 @@ public class TradeBuilder implements IFinishedRecipe {
          * @return returns buy
          */
         public GroupBuilder buy(int maxstore, float recover, int price, ItemStack item) {
-            return this.buy(RegistryUtils.getRegistryName(item.getItem()).toString(), maxstore, recover, price, Ingredient.fromStacks(item));
+            return this.buy(CRegistryHelper.getRegistryName(item.getItem()).toString(), maxstore, recover, price, Ingredient.of(item));
         }
 
         /**
@@ -487,6 +476,9 @@ public class TradeBuilder implements IFinishedRecipe {
         public ConditionBuilder<GroupBuilder> restocksBy() {
             return new ConditionBuilder<>(lastAction.restockconditions::add, this);
         }
+        public ConditionBuilder<GroupBuilder> sellsWhen() {
+            return new ConditionBuilder<>(lastAction.sellconditions::add, this);
+        }
 
         /**
          * Sell.<br>
@@ -498,7 +490,7 @@ public class TradeBuilder implements IFinishedRecipe {
          * @return returns sell
          */
         public GroupBuilder sell(int maxstore, float recover, int price, Item item) {
-            return this.sell(RegistryUtils.getRegistryName(item).toString(), maxstore, recover, price, new ItemStack(item));
+            return this.sell(CRegistryHelper.getRegistryName(item).toString(), maxstore, recover, price, new ItemStack(item));
         }
 
         /**
@@ -512,7 +504,7 @@ public class TradeBuilder implements IFinishedRecipe {
          * @return returns sell
          */
         public GroupBuilder sell(int maxstore, float recover, int price, Item item, int count) {
-            return this.sell(RegistryUtils.getRegistryName(item).toString(), maxstore, recover, price, new ItemStack(item, count));
+            return this.sell(CRegistryHelper.getRegistryName(item).toString(), maxstore, recover, price, new ItemStack(item, count));
         }
 
         /**
@@ -525,7 +517,7 @@ public class TradeBuilder implements IFinishedRecipe {
          * @return returns sell
          */
         public GroupBuilder sell(int maxstore, float recover, int price, ItemStack item) {
-            return this.sell(RegistryUtils.getRegistryName(item.getItem()).toString(), maxstore, recover, price, item);
+            return this.sell(CRegistryHelper.getRegistryName(item.getItem()).toString(), maxstore, recover, price, item);
         }
 
         /**
@@ -568,27 +560,27 @@ public class TradeBuilder implements IFinishedRecipe {
      *
      * @param out the out<br>
      */
-    public void finish(Consumer<IFinishedRecipe> out) {
+    public void finish(Consumer<FinishedRecipe> out) {
         out.accept(this);
     }
 
     @Override
-    public ResourceLocation getAdvancementID() {
+    public ResourceLocation getAdvancementId() {
         return null;
     }
 
     @Override
-    public JsonObject getAdvancementJson() {
+    public JsonObject serializeAdvancement() {
         return null;
     }
 
     @Override
-    public ResourceLocation getID() {
+    public ResourceLocation getId() {
         return id;
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getType() {
         return TradePolicy.SERIALIZER.get();
     }
 
@@ -662,14 +654,14 @@ public class TradeBuilder implements IFinishedRecipe {
     }
 
     @Override
-    public void serialize(JsonObject arg0) {
+    public void serializeRecipeData(JsonObject arg0) {
         if (name != null)
             arg0.addProperty("name", name.toString());
         arg0.add("policies", SerializeUtil.toJsonList(groups, PolicyGroup::serialize));
         if (weight > 0)
             arg0.addProperty("weight", weight);
         if (prof != null && prof != VillagerProfession.NONE)
-            arg0.addProperty("profession", RegistryUtils.getRegistryName(prof).toString());
+            arg0.addProperty("profession", CRegistryHelper.getRegistryName(prof).toString());
         if (exp != null)
             arg0.add("exps", SerializeUtil.toJsonList(Arrays.stream(exp).boxed().collect(Collectors.toList()), JsonPrimitive::new));
     }

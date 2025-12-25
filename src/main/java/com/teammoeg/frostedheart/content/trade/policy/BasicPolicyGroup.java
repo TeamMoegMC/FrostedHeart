@@ -23,11 +23,11 @@ import java.util.List;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class BasicPolicyGroup extends PolicyGroup {
     List<BaseData> bdata;
@@ -42,13 +42,13 @@ public class BasicPolicyGroup extends PolicyGroup {
         this.bdata = bdata;
     }
 
-    public BasicPolicyGroup(PacketBuffer pb) {
+    public BasicPolicyGroup(FriendlyByteBuf pb) {
         super(pb);
         bdata = SerializeUtil.readList(pb, BaseData::read);
     }
 
     @Override
-    public void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve) {
+    public void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve,int max_num) {
         bdata.forEach(policy::register);
     }
 
@@ -60,7 +60,7 @@ public class BasicPolicyGroup extends PolicyGroup {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
         buffer.writeBoolean(false);
         super.write(buffer);
         SerializeUtil.writeList(buffer, bdata, BaseData::write);

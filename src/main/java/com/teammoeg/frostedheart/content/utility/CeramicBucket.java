@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -22,193 +22,197 @@ package com.teammoeg.frostedheart.content.utility;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.item.FHBaseItem;
 
 import net.minecraft.advancements.CriteriaTriggers;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.IBucketPickupHandler;
-import net.minecraft.block.ILiquidContainer;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.fluid.FlowingFluid;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particles.ParticleTypes;
+import net.minecraft.world.item.BucketItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.block.BucketPickup;
+import net.minecraft.world.level.block.LiquidBlockContainer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.material.FlowingFluid;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemUtils;
+import net.minecraft.world.item.Items;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.stats.Stats;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.HitResult.Type;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.fluids.FluidActionResult;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
+import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStackSimple;
 
 public class CeramicBucket extends FHBaseItem {
-    public CeramicBucket(Properties properties) {
-        super(properties);
-    }
+	public CeramicBucket(Properties properties) {
+		super(properties);
+	}
 
+	private ItemStack emptyBucket(ItemStack stack,@Nullable Player playerIn) {
+		if (playerIn!=null&&playerIn.getAbilities().instabuild) {
+			return stack;
+		}
+		return emptyBucket(stack);
+	}
+	private ItemStack emptyBucket(ItemStack stack) {
+		ItemStack emptyStack = stack.copy();
+		emptyStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(handler -> handler.drain(Integer.MAX_VALUE, IFluidHandler.FluidAction.EXECUTE));
+		return emptyStack;
+	}
 
-    private boolean canBlockContainFluid(World worldIn, BlockPos posIn, BlockState blockstate, Fluid fluid) {
-        return blockstate.getBlock() instanceof ILiquidContainer && ((ILiquidContainer) blockstate.getBlock()).canContainFluid(worldIn, posIn, blockstate, fluid);
-    }
+	private Fluid getFluid(ItemStack stack) {
+		return stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).map(handler -> handler.getFluidInTank(0).getFluid()).orElse(Fluids.EMPTY);
+	}
 
-    private ItemStack emptyBucket(ItemStack stack, PlayerEntity playerIn) {
-        if (playerIn.abilities.isCreativeMode) {
-            return stack;
-        }
-        ItemStack emptyStack = stack.copy();
-        emptyStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(handler -> handler.drain(Integer.MAX_VALUE, IFluidHandler.FluidAction.EXECUTE));
-        return emptyStack;
-    }
+	@Override
+	public int getMaxStackSize(ItemStack stack) {
+		return this.getFluid(stack) == Fluids.EMPTY ? 16 : 1;
+	}
 
-    private ItemStack fillBucket(ItemStack emptyBuckets, PlayerEntity player, Fluid fillFluid) {
-        if (player.abilities.isCreativeMode) {
-            return emptyBuckets;
-        }
-        ItemStack filledStack = emptyBuckets.split(1);
-        filledStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(handler -> handler.fill(new FluidStack(fillFluid, 1000), IFluidHandler.FluidAction.EXECUTE));
-        if (emptyBuckets.isEmpty()) {
-            return filledStack;
-        }
-        if (!player.inventory.addItemStackToInventory(filledStack)) {
-            player.dropItem(filledStack, false);
-        }
-        return emptyBuckets;
-    }
+	@Override
+	public ItemStack getCraftingRemainingItem(ItemStack itemStack) {
+		return this.getFluid(itemStack) == Fluids.EMPTY?ItemStack.EMPTY:emptyBucket(itemStack);
+	}
 
-    private Fluid getFluid(ItemStack stack) {
-        return stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).map(handler -> handler.getFluidInTank(0).getFluid()).orElse(Fluids.EMPTY);
-    }
+	@Override
+	public net.minecraftforge.common.capabilities.ICapabilityProvider initCapabilities(ItemStack stack, @Nullable net.minecraft.nbt.CompoundTag nbt) {
+		return new FluidHandlerItemStackSimple(stack, 1000) {
+			@Override
+			public boolean canFillFluidType(FluidStack fluid) {
+				return isFluidValid(0, fluid);
+			}
 
-    @Override
-    public int getItemStackLimit(ItemStack stack) {
-        return this.getFluid(stack) == Fluids.EMPTY ? 16 : 1;
-    }
+			@Override
+			public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
+				return !stack.getFluid().getFluidType().isLighterThanAir();
+			}
 
-    @Override
-    public net.minecraftforge.common.capabilities.ICapabilityProvider initCapabilities(ItemStack stack, @Nullable net.minecraft.nbt.CompoundNBT nbt) {
-        return new FluidHandlerItemStackSimple(stack, 1000) {
-            @Override
-            public boolean canFillFluidType(FluidStack fluid) {
-                return isFluidValid(0, fluid);
-            }
+		};
+	}
 
-            @Override
-            public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
-                return !stack.getFluid().getAttributes().isGaseous();
-            }
+	@Override
+	public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pHand) {
+		ItemStack itemstack = pPlayer.getItemInHand(pHand);
+		Fluid content = itemstack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM)
+				.map(t -> t.getFluidInTank(0).getFluid())
+				.orElse(Fluids.EMPTY);
+		BlockHitResult blockhitresult = getPlayerPOVHitResult(pLevel, pPlayer,
+				content == Fluids.EMPTY ? ClipContext.Fluid.SOURCE_ONLY : ClipContext.Fluid.NONE);
 
-        };
-    }
+		InteractionResultHolder<ItemStack> ret = net.minecraftforge.event.ForgeEventFactory.onBucketUse(pPlayer, pLevel, itemstack, blockhitresult);
+		if (ret != null) return ret;
 
-    @Override
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-        ItemStack itemstack = playerIn.getHeldItem(handIn);
-        Fluid containedFluid = getFluid(itemstack);
-        BlockRayTraceResult raytraceresult = rayTrace(worldIn, playerIn, containedFluid == Fluids.EMPTY ? RayTraceContext.FluidMode.SOURCE_ONLY : RayTraceContext.FluidMode.NONE);
-        ActionResult<ItemStack> ret = net.minecraftforge.event.ForgeEventFactory.onBucketUse(playerIn, worldIn, itemstack, raytraceresult);
+		if (blockhitresult.getType() == HitResult.Type.BLOCK) {
+			BlockPos blockpos = blockhitresult.getBlockPos();
+			Direction direction = blockhitresult.getDirection();
+			BlockPos blockpos1 = blockpos.relative(direction);
 
-        if (ret != null) return ret;
-        if (raytraceresult.getType() == RayTraceResult.Type.MISS) {
-            return ActionResult.resultPass(itemstack);
-        } else if (raytraceresult.getType() != RayTraceResult.Type.BLOCK) {
-            return ActionResult.resultPass(itemstack);
-        } else {
-            BlockPos blockpos = raytraceresult.getPos();
-            Direction direction = raytraceresult.getFace();
-            BlockPos blockpos1 = blockpos.offset(direction);
-            if (worldIn.isBlockModifiable(playerIn, blockpos) && playerIn.canPlayerEdit(blockpos1, direction, itemstack)) {
-                if (containedFluid == Fluids.EMPTY) {
-                    BlockState blockstate1 = worldIn.getBlockState(blockpos);
-                    if (blockstate1.getBlock() instanceof IBucketPickupHandler) {
-                        Fluid fluid1 = ((IBucketPickupHandler) blockstate1.getBlock()).pickupFluid(worldIn, blockpos, blockstate1);
-                        if (fluid1 != Fluids.EMPTY) {
-                            SoundEvent soundevent = containedFluid.getAttributes().getFillSound();
-                            if (soundevent == null)
-                                soundevent = fluid1.isIn(FluidTags.LAVA) ? SoundEvents.ITEM_BUCKET_FILL_LAVA : SoundEvents.ITEM_BUCKET_FILL;
-                            playerIn.playSound(soundevent, 1.0F, 1.0F);
-                            ItemStack itemstack1 = this.fillBucket(itemstack, playerIn, fluid1);
-                            if (!worldIn.isRemote) {
-                                CriteriaTriggers.FILLED_BUCKET.trigger((ServerPlayerEntity) playerIn, new ItemStack(fluid1.getFilledBucket()));
-                            }
+			if (pLevel.mayInteract(pPlayer, blockpos) && pPlayer.mayUseItemAt(blockpos1, direction, itemstack)) {
+				if (content == Fluids.EMPTY) {
+					FluidActionResult res=CUtils.pickupFluidFromWorld(itemstack, pPlayer, pLevel, blockpos,direction,true);
+					if(res.isSuccess()) {
+						ItemStack result=res.getResult();
+						//player.setItemInHand(hand, result);
+						return InteractionResultHolder.sidedSuccess(result,pLevel.isClientSide);
+					}
+					return InteractionResultHolder.fail(itemstack);
+				}
+				//FluidUtil.tryPlaceFluid(pPlayer, pLevel, pHand, blockpos1, itemstack, null)
+				// Existing fluid placement logic
+				BlockState blockstate = pLevel.getBlockState(blockpos);
+				BlockPos targetPos = canBlockContainFluid(pLevel, blockpos, blockstate, content) ?
+						blockpos : blockpos1;
 
-                            return ActionResult.func_233538_a_(itemstack1, worldIn.isRemote());
-                        }
-                    }
+				if (this.emptyContents(pPlayer, pLevel, targetPos, blockhitresult, itemstack, content)) {
+					this.checkExtraContent(pPlayer, pLevel, itemstack, targetPos);
+					if (pPlayer instanceof ServerPlayer) {
+						CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayer) pPlayer, targetPos, itemstack);
+					}
+					pPlayer.awardStat(Stats.ITEM_USED.get(this));
+					return InteractionResultHolder.sidedSuccess(emptyBucket(itemstack, pPlayer), pLevel.isClientSide());
+				}
+				return InteractionResultHolder.fail(itemstack);
+			}
+		}
+		return InteractionResultHolder.pass(itemstack);
+	}
 
-                    return ActionResult.resultFail(itemstack);
-                }
-                if (itemstack.getCount() > 1)
-                    return ActionResult.resultFail(itemstack);
-                BlockState blockstate = worldIn.getBlockState(blockpos);
-                BlockPos blockpos2 = canBlockContainFluid(worldIn, blockpos, blockstate, containedFluid) ? blockpos : blockpos1;
-                if (this.tryPlaceContainedLiquid(playerIn, worldIn, blockpos2, raytraceresult, containedFluid)) {
-                    if (playerIn instanceof ServerPlayerEntity) {
-                        CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayerEntity) playerIn, blockpos2, itemstack);
-                    }
-                    return ActionResult.func_233538_a_(this.emptyBucket(itemstack, playerIn), worldIn.isRemote());
-                }
-            }
-            return ActionResult.resultFail(itemstack);
-        }
-    }
+	public boolean emptyContents(@Nullable Player pPlayer, Level pLevel, BlockPos pPos, @Nullable BlockHitResult pResult, @Nullable ItemStack container,Fluid content) {
+		if (!(content instanceof FlowingFluid)) {
+			return false;
+		}
+		BlockState blockstate = pLevel.getBlockState(pPos);
+		Block block = blockstate.getBlock();
+		boolean flag = blockstate.canBeReplaced(content);
+		boolean flag1 = blockstate.isAir() || flag || block instanceof LiquidBlockContainer && ((LiquidBlockContainer) block).canPlaceLiquid(pLevel, pPos, blockstate, content);
+		java.util.Optional<net.minecraftforge.fluids.FluidStack> containedFluidStack = java.util.Optional.ofNullable(container).flatMap(net.minecraftforge.fluids.FluidUtil::getFluidContained);
+		if (!flag1) {
+			return pResult != null && this.emptyContents(pPlayer, pLevel, pResult.getBlockPos().relative(pResult.getDirection()), (BlockHitResult) null, container,content);
+		} else if (containedFluidStack.isPresent() && content.getFluidType().isVaporizedOnPlacement(pLevel, pPos, containedFluidStack.get())) {
+			content.getFluidType().onVaporize(pPlayer, pLevel, pPos, containedFluidStack.get());
+			return true;
+		} else if (pLevel.dimensionType().ultraWarm() && content.is(FluidTags.WATER)) {
+			int i = pPos.getX();
+			int j = pPos.getY();
+			int k = pPos.getZ();
+			pLevel.playSound(pPlayer, pPos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 2.6F + (pLevel.random.nextFloat() - pLevel.random.nextFloat()) * 0.8F);
 
-    protected void playEmptySound(@Nullable PlayerEntity player, IWorld worldIn, BlockPos pos, Fluid fluid) {
-        SoundEvent soundevent = fluid.getAttributes().getEmptySound();
-        if (soundevent == null)
-            soundevent = fluid.isIn(FluidTags.LAVA) ? SoundEvents.ITEM_BUCKET_EMPTY_LAVA : SoundEvents.ITEM_BUCKET_EMPTY;
-        worldIn.playSound(player, pos, soundevent, SoundCategory.BLOCKS, 1.0F, 1.0F);
-    }
+			for (int l = 0; l < 8; ++l) {
+				pLevel.addParticle(ParticleTypes.LARGE_SMOKE, (double) i + Math.random(), (double) j + Math.random(), (double) k + Math.random(), 0.0D, 0.0D, 0.0D);
+			}
 
-    public boolean tryPlaceContainedLiquid(@Nullable PlayerEntity player, World worldIn, BlockPos posIn, @Nullable BlockRayTraceResult rayTrace, Fluid fluid) {
-        if (!(fluid instanceof FlowingFluid)) {
-            return false;
-        }
-        BlockState blockstate = worldIn.getBlockState(posIn);
-        Block block = blockstate.getBlock();
-        Material material = blockstate.getMaterial();
-        boolean flag = blockstate.isReplaceable(fluid);
-        boolean flag1 = blockstate.isAir() || flag || block instanceof ILiquidContainer && ((ILiquidContainer) block).canContainFluid(worldIn, posIn, blockstate, fluid);
-        if (!flag1) {
-            return rayTrace != null && this.tryPlaceContainedLiquid(player, worldIn, rayTrace.getPos().offset(rayTrace.getFace()), null, fluid);
-        } else if (worldIn.getDimensionType().isUltrawarm() && fluid.isIn(FluidTags.WATER)) {
-            int i = posIn.getX();
-            int j = posIn.getY();
-            int k = posIn.getZ();
-            worldIn.playSound(player, posIn, SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.5F, 2.6F + (worldIn.rand.nextFloat() - worldIn.rand.nextFloat()) * 0.8F);
+			return true;
+		} else if (block instanceof LiquidBlockContainer && ((LiquidBlockContainer) block).canPlaceLiquid(pLevel, pPos, blockstate, content)) {
+			((LiquidBlockContainer) block).placeLiquid(pLevel, pPos, blockstate, ((FlowingFluid) content).getSource(false));
+			this.playEmptySound(pPlayer, pLevel, pPos,content);
+			return true;
+		} else {
+			if (!pLevel.isClientSide && flag && !blockstate.liquid()) {
+				pLevel.destroyBlock(pPos, true);
+			}
 
-            for (int l = 0; l < 8; ++l) {
-                worldIn.addParticle(ParticleTypes.LARGE_SMOKE, (double) i + Math.random(), (double) j + Math.random(), (double) k + Math.random(), 0.0D, 0.0D, 0.0D);
-            }
+			if (!pLevel.setBlock(pPos, content.defaultFluidState().createLegacyBlock(), 11) && !blockstate.getFluidState().isSource()) {
+				return false;
+			}
+			this.playEmptySound(pPlayer, pLevel, pPos,content);
+			return true;
+		}
+	}
 
-            return true;
-        } else if (block instanceof ILiquidContainer && ((ILiquidContainer) block).canContainFluid(worldIn, posIn, blockstate, fluid)) {
-            ((ILiquidContainer) block).receiveFluid(worldIn, posIn, blockstate, ((FlowingFluid) fluid).getStillFluidState(false));
-            this.playEmptySound(player, worldIn, posIn, fluid);
-            return true;
-        } else {
-            if (!worldIn.isRemote && flag && !material.isLiquid()) {
-                worldIn.destroyBlock(posIn, true);
-            }
+	protected void playEmptySound(@Nullable Player pPlayer, LevelAccessor pLevel, BlockPos pPos, Fluid content) {
+		SoundEvent soundevent = content.getFluidType().getSound(pPlayer, pLevel, pPos, net.minecraftforge.common.SoundActions.BUCKET_EMPTY);
+		if (soundevent == null) soundevent = content.is(FluidTags.LAVA) ? SoundEvents.BUCKET_EMPTY_LAVA : SoundEvents.BUCKET_EMPTY;
+		pLevel.playSound(pPlayer, pPos, soundevent, SoundSource.BLOCKS, 1.0F, 1.0F);
+		pLevel.gameEvent(pPlayer, GameEvent.FLUID_PLACE, pPos);
+	}
 
-            if (!worldIn.setBlockState(posIn, fluid.getDefaultState().getBlockState(), 11) && !blockstate.getFluidState().isSource()) {
-                return false;
-            }
-            this.playEmptySound(player, worldIn, posIn, fluid);
-            return true;
-        }
-    }
+	protected boolean canBlockContainFluid(Level worldIn, BlockPos posIn, BlockState blockstate,Fluid content) {
+		return blockstate.getBlock() instanceof LiquidBlockContainer && ((LiquidBlockContainer) blockstate.getBlock()).canPlaceLiquid(worldIn, posIn, blockstate, content);
+	}
+
+	public void checkExtraContent(@Nullable Player pPlayer, Level pLevel, ItemStack pContainerStack, BlockPos pPos) {
+	}
 }

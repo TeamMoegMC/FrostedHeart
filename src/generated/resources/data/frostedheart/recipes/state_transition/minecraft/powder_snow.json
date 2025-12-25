@@ -1,0 +1,21 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Name": "minecraft:powder_snow"
+  },
+  "condense_temp": 90.0,
+  "evaporate_temp": 100.0,
+  "freeze_temp": -10.0,
+  "gas": {
+    "Name": "minecraft:air"
+  },
+  "liquid": {
+    "Name": "minecraft:air"
+  },
+  "melt_temp": 9.0,
+  "solid": {
+    "Name": "minecraft:powder_snow"
+  },
+  "state": "solid",
+  "will_transit": true
+}

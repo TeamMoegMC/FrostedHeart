@@ -1,18 +1,37 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.waypoint.waypoints;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHColorHelper;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.vector.Vector2f;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.math.vector.Vector3f;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.frostedheart.util.Lang;
+
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.FastColor;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -45,27 +64,27 @@ public class EntityWaypoint extends Waypoint {
     public UUID targetUUID;
 
     public EntityWaypoint(Entity target, int color, int approachColor) {
-        super(new Vector3f(0, 0, 0), "entity_" + target.getCachedUniqueIdString(), color);
+        super(new Vec3(0, 0, 0), "entity_" + target.getStringUUID(), color);
         readEntity(target);
 
         this.originalColor = color;
         this.approachColor = approachColor;
     }
 
-    public EntityWaypoint(CompoundNBT nbt) {
+    public EntityWaypoint(CompoundTag nbt) {
         super(nbt);
     }
 
-    public EntityWaypoint(PacketBuffer buffer) {
+    public EntityWaypoint(FriendlyByteBuf buffer) {
         super(buffer);
     }
 
     public void readEntity(Entity target) {
         this.entityTarget = target;
         this.displayName = target.getDisplayName();
-        this.dimension = target.world.getDimensionKey().getLocation();
-        this.targetUUID = entityTarget.getUniqueID();
-        entityUUIDs.add(entityTarget.getUniqueID());
+        this.dimension = target.level().dimension().location();
+        this.targetUUID = entityTarget.getUUID();
+        entityUUIDs.add(entityTarget.getUUID());
     }
 
     public void getEntityByUUID(UUID uuid) {
@@ -73,10 +92,10 @@ public class EntityWaypoint extends Waypoint {
     }
 
     @Override
-    public void render(MatrixStack ms) {
-        super.render(ms);
+    public void render(GuiGraphics graphics) {
+        super.render(graphics);
         focus = getDistance() <= 32;
-        color = FHColorHelper.blendColor(originalColor, approachColor, (float)(getDistance()-8)/24F);
+        color = FastColor.ARGB32.lerp((float)(getDistance()-8)/24F, originalColor, approachColor);
         if (entityTarget != null) {
             displayName = entityTarget.getDisplayName();
             //实体死亡时无效化路径点
@@ -86,10 +105,10 @@ public class EntityWaypoint extends Waypoint {
     }
 
     @Override
-    public Vector2f getScreenPos() {
+    public Vec2 getScreenPos() {
         if (entityTarget != null && entityTarget.isAlive()) {
-            Vector3d entityPos = entityTarget.getClientEyePosition(ClientUtils.mc().getRenderPartialTicks());
-            target = new Vector3f((float)entityPos.x, (float)entityPos.y, (float)entityPos.z);
+            Vec3 entityPos = entityTarget.getEyePosition(ClientUtils.getMc().getPartialTick());
+            target = new Vec3((float)entityPos.x, (float)entityPos.y, (float)entityPos.z);
         }
         return super.getScreenPos();
     }
@@ -99,15 +118,15 @@ public class EntityWaypoint extends Waypoint {
         super.updateInfos();
 
         if (entityTarget != null && entityTarget instanceof LivingEntity) {
-            addInfoLine(TranslateUtils.translateWaypoint("entity_health",
+            addInfoLine(Lang.waypoint("entity_health",
                     String.format("%.2f", ((LivingEntity)entityTarget).getHealth()),
-                    String.format("%.2f", ((LivingEntity)entityTarget).getMaxHealth())),
+                    String.format("%.2f", ((LivingEntity)entityTarget).getMaxHealth())).component(),
             1);
         }
 
         if (entityTarget != null && !entityTarget.isAlive()) {
             addInfoLine(null, -1);
-            addInfoLine(TranslateUtils.translateWaypoint("lost_target"), -1);
+            addInfoLine(Lang.waypoint("lost_target").component(), -1);
         }
     }
 
@@ -139,23 +158,23 @@ public class EntityWaypoint extends Waypoint {
     public JsonElement serialize() {
         JsonObject json = (JsonObject) super.serialize();
         json.addProperty("approachColor", approachColor);
-        json.addProperty("target_uuid", entityTarget != null ? entityTarget.getUniqueID().toString() : EMPTY_UUID.toString());
+        json.addProperty("target_uuid", entityTarget != null ? entityTarget.getUUID().toString() : EMPTY_UUID.toString());
         return json;
     }
 
     @Override
-    public CompoundNBT serializeNBT() {
-        CompoundNBT nbt = super.serializeNBT();
+    public CompoundTag serializeNBT() {
+        CompoundTag nbt = super.serializeNBT();
         nbt.putInt("approachColor", approachColor);
-        nbt.putUniqueId("target_uuid", entityTarget != null ? entityTarget.getUniqueID() : EMPTY_UUID);
+        nbt.putUUID("target_uuid", entityTarget != null ? entityTarget.getUUID() : EMPTY_UUID);
         return nbt;
     }
 
     @Override
-    public void deserializeNBT(CompoundNBT nbt) {
+    public void deserializeNBT(CompoundTag nbt) {
         super.deserializeNBT(nbt);
-        if (nbt.hasUniqueId("target_uuid")) {
-            UUID uuid = nbt.getUniqueId("target_uuid");
+        if (nbt.hasUUID("target_uuid")) {
+            UUID uuid = nbt.getUUID("target_uuid");
             if (!uuid.equals(EMPTY_UUID)) {
                 entityUUIDs.add(uuid);
                 targetUUID = uuid;

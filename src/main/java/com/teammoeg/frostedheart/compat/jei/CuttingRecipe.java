@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,18 +19,14 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.RegistryUtils;
 
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceLocation;
 
-public class CuttingRecipe implements IRecipe<IInventory> {
+public class CuttingRecipe{
     public final ItemStack in;
     public final ItemStack out;
 
@@ -38,40 +34,13 @@ public class CuttingRecipe implements IRecipe<IInventory> {
         this.in = in;
         this.out = out;
     }
-
-    @Override
-    public boolean canFit(int width, int height) {
-        return false;
-    }
-
-    @Override
-    public ItemStack getCraftingResult(IInventory inv) {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
     public ResourceLocation getId() {
-        return new ResourceLocation(FHMain.MODID, "cutting/" + RegistryUtils.getRegistryName(out.getItem()).getPath());
+        return new ResourceLocation(FHMain.MODID, "cutting/" + CRegistryHelper.getRegistryName(out.getItem()).getPath());
     }
 
-    @Override
-    public ItemStack getRecipeOutput() {
+    public ItemStack getResultItem(RegistryAccess pRegistryAccess) {
         return out;
     }
 
-    @Override
-    public IRecipeSerializer<?> getSerializer() {
-        return null;
-    }
-
-    @Override
-    public IRecipeType<?> getType() {
-        return IRecipeType.CRAFTING;
-    }
-
-    @Override
-    public boolean matches(IInventory inv, World worldIn) {
-        return false;
-    }
 
 }

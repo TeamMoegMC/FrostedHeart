@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -24,35 +24,36 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraption;
-import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraptionEntity;
-import com.simibubi.create.content.contraptions.relays.advanced.GantryShaftTileEntity;
-import com.teammoeg.frostedheart.util.mixin.IGantryShaft;
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
+import com.simibubi.create.content.contraptions.gantry.GantryContraption;
+import com.simibubi.create.content.contraptions.gantry.GantryContraptionEntity;
+import com.simibubi.create.content.kinetics.gantry.GantryShaftBlockEntity;
+import com.teammoeg.frostedheart.compat.create.IGantryShaft;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
 
 @Mixin(GantryContraptionEntity.class)
 public abstract class MixinGantryContraptionEntity extends AbstractContraptionEntity {
 
-    public MixinGantryContraptionEntity(EntityType<?> entityTypeIn, World worldIn) {
+    public MixinGantryContraptionEntity(EntityType<?> entityTypeIn, Level worldIn) {
         super(entityTypeIn, worldIn);
     }
 
     @Inject(at = @At("HEAD"), method = "checkPinionShaft", remap = false)
     protected void checkPinionShaft(CallbackInfo cbi) {
         Direction facing = ((GantryContraption) contraption).getFacing();
-        Vector3d currentPosition = getAnchorVec().add(.5, .5, .5);
-        BlockPos gantryShaftPos = new BlockPos(currentPosition).offset(facing.getOpposite());
+        Vec3 currentPosition = getAnchorVec().add(.5, .5, .5);
 
-        TileEntity te = world.getTileEntity(gantryShaftPos);
+        BlockPos gantryShaftPos = BlockPos.containing(currentPosition).relative(facing.getOpposite());
+
+        BlockEntity te = level().getBlockEntity(gantryShaftPos);
         if (te instanceof IGantryShaft) {
-            GantryShaftTileEntity gte = (GantryShaftTileEntity) te;
+            GantryShaftBlockEntity gte = (GantryShaftBlockEntity) te;
             ((IGantryShaft) gte).setEntity(this);
             gte.networkDirty = true;
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,234 +19,324 @@
 
 package com.teammoeg.frostedheart;
 
-import java.io.File;
+import com.teammoeg.caupona.CPItems;
+import com.teammoeg.caupona.CPMain;
+import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.chorda.ChordaMetaEvents;
+import com.teammoeg.chorda.CompatModule;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHLoot;
+import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHPredicates;
+import com.teammoeg.frostedheart.bootstrap.common.FHRecipes;
+import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
+import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
+import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.compat.caupona.NutritionEvents;
+import com.teammoeg.frostedheart.compat.create.CreateCompat;
+import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
+import com.teammoeg.frostedheart.compat.ftbq.FHRewardTypes;
+import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
+import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.content.world.FHBiomeModifiers;
+import com.teammoeg.frostedheart.content.world.FHBiomes;
+import com.teammoeg.frostedheart.content.world.FHFeatures;
+import com.teammoeg.frostedheart.util.FHRemote;
+import com.teammoeg.frostedheart.util.FHVersion;
 
-import javax.annotation.Nonnull;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.google.gson.JsonParser;
-import com.simibubi.create.foundation.data.CreateRegistrate;
-import com.simibubi.create.repack.registrate.util.NonNullLazyValue;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.compat.CreateCompat;
-import com.teammoeg.frostedheart.compat.CuriosCompat;
-import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
-import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
-import com.teammoeg.frostedheart.content.research.FHResearch;
-import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
-import com.teammoeg.frostedheart.events.FHRecipeReloadListener;
-import com.teammoeg.frostedheart.events.FTBTeamsEvents;
-import com.teammoeg.frostedheart.events.PlayerEvents;
-import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.constants.FHProps;
-import com.teammoeg.frostedheart.util.constants.VersionRemap;
-import com.teammoeg.frostedheart.util.utility.BlackListPredicate;
-import com.teammoeg.frostedheart.util.version.FHRemote;
-import com.teammoeg.frostedheart.util.version.FHVersion;
-import com.teammoeg.frostedheart.world.FHBiomes;
-import com.teammoeg.frostedheart.world.FHFeatures;
-import com.teammoeg.frostedheart.world.FHStructures;
-
-import dev.ftb.mods.ftbteams.event.TeamEvent;
-import net.minecraft.advancements.criterion.ItemPredicate;
-import net.minecraft.block.Block;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.GameRules.IntegerValue;
+import com.yanny.age.stone.subscribers.ItemSubscriber;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.GameRules.IntegerValue;
+import net.minecraft.world.level.block.ComposterBlock;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent.MissingMappings;
-import net.minecraftforge.event.RegistryEvent.MissingMappings.Mapping;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.DeferredWorkQueue;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
-import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
-import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
+
+import java.io.File;
 
 @Mod(FHMain.MODID)
 public class FHMain {
-   
 
-    public static final String MODID = "frostedheart";
-    public static final String MODNAME = "Frosted Heart";
-    public static final Logger LOGGER = LogManager.getLogger(MODNAME);
-    public static FHRemote remote;
-    public static FHRemote local;
-    public static FHRemote pre;
-    public static File lastbkf;
-    public static File lastServerConfig;
-    public static boolean saveNeedUpdate;
-    public static final NonNullLazyValue<CreateRegistrate> registrate = CreateRegistrate.lazy(MODID);
-    public static final ItemGroup itemGroup = new ItemGroup(MODID) {
-        @Override
-        @Nonnull
-        public ItemStack createIcon() {
-            return new ItemStack(FHBlocks.generator_core_t1.get().asItem());
-        }
-    };
+	// CConstants
+	public static final String MODID = "frostedheart";
+	public static final String ALIAS = "fh";
+	public static final String TWRID = "twr";
+	public static final String MODNAME = "Frosted Heart";
+	public static final String MODPACK = "The Winter Rescue";
 
-    public static ResourceLocation rl(String path) {
-        return new ResourceLocation(MODID, path);
-    }
+	// Logger
+	public static final Logger LOGGER = LogManager.getLogger(MODNAME + " (" + MODPACK + ")");
+	public static final Marker VERSION_CHECK = MarkerManager.getMarker("Version Check");
+	public static final Marker INIT = MarkerManager.getMarker("Init");
+	public static final Marker SETUP = MarkerManager.getMarker("Setup");
+	public static final Marker COMMON_INIT = MarkerManager.getMarker("Common").addParents(INIT);
+	public static final Marker CLIENT_INIT = MarkerManager.getMarker("Client").addParents(INIT);
+	public static final Marker COMMON_SETUP = MarkerManager.getMarker("Common").addParents(SETUP);
+	public static final Marker CLIENT_SETUP = MarkerManager.getMarker("Client").addParents(SETUP);
 
-    public FHMain() {
-        local = new FHRemote.FHLocal();
-        remote = new FHRemote();
-        if (local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal().contains("pre"))
-            pre = new FHRemote.FHPreRemote();
-        FHMain.LOGGER.info("TWR Version: " + local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
-        CreateCompat.init();
+	// Remote
+	public static FHRemote remote;
+	public static FHRemote local;
 
-        IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
 
-        mod.addListener(this::setup);
-        mod.addListener(this::processIMC);
-        mod.addListener(this::enqueueIMC);
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> DynamicModelSetup::setup);
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> KGlyphProvider::addListener);
-        mod.addListener(this::modification);
-        FHConfig.register();
-        TetraCompat.init();
-        FHProps.init();
-        SpecialDataTypes.init();
-        FHItems.registry.register(mod);
-        FHBlocks.registry.register(mod);
-        FHBlocks.init();
-        FHMultiblocks.init();
-        FHContainer.registerContainers();
-        FHTileTypes.REGISTER.register(mod);
-        FHFluids.FLUIDS.register(mod);
-        FHSounds.SOUNDS.register(mod);
-        FHContainer.CONTAINERS.register(mod);
-        FHRecipes.RECIPE_SERIALIZERS.register(mod);
-        FHParticleTypes.REGISTER.register(mod);
-        FHBiomes.BIOME_REGISTER.register(mod);
-        FHAttributes.REGISTER.register(mod);
-        FHEffects.EFFECTS.register(mod);
-        FHStructures.register(mod);
-        TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
-        TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
-        TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
-        TeamEvent.OWNERSHIP_TRANSFERRED.register(FTBTeamsEvents::syncDataWhenTeamTransfer);
-//        FHStructures.STRUCTURE_DEFERRED_REGISTER.register(mod);
-        ItemPredicate.register(new ResourceLocation(MODID, "blacklist"), BlackListPredicate::new);
-        DeferredWorkQueue.runLater(FHRecipes::registerRecipeTypes);
-        JsonParser gs = new JsonParser();
-        // remove primal winter blocks not to temper rankine world
-        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
-        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
-        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.PODZOL);
-    }
+	// Update
+	public static File lastbkf;
+	public static File lastServerConfig;
+	public static boolean saveNeedUpdate;
 
-    @SuppressWarnings("unused")
-    private void enqueueIMC(final InterModEnqueueEvent event) {
-        CuriosCompat.sendIMCS();
-    }
+	// Registrate
+	public static final FHRegistrate REGISTRATE = FHRegistrate.create(MODID);
+	static {
+	/*	REGISTRATE.setTooltipModifierFactory(item -> {
+			return new ItemDescription.Modifier(item, TooltipHelper.Palette.STANDARD_CREATE)
+				.andThen(new FoodTempStats(item))
+				.andThen(TooltipModifier.mapNull(FoodNutritionStats.create(item)))
+				.andThen(TooltipModifier.mapNull(PlantTempStats.create(item)))
+				.andThen(TooltipModifier.mapNull(BlockTempStats.create(item)))
+				.andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))
+				.andThen(TooltipModifier.mapNull(KineticStats.create(item)));
+		});
+		FHTooltips.registerTooltipModifiers();*/
+	}
 
-    private void missingMapping(MissingMappings<Fluid> miss) {
-        ResourceLocation hw = new ResourceLocation(MODID, "hot_water");
-        for (Mapping<Fluid> i : miss.getAllMappings()) {
-            if (i.key.equals(hw))
-                i.remap(RegistryUtils.getFluid(new ResourceLocation("thermopolium", "nail_soup")));
-        }
-    }
+	public static ResourceLocation rl(String path) {
+		return new ResourceLocation(MODID, path);
+	}
 
-    private void missingMappingB(MissingMappings<Block> miss) {
-        for (Mapping<Block> i : miss.getAllMappings()) {
-            ResourceLocation rl = VersionRemap.remaps.get(i.key);
-            if (rl != null)
-                i.remap(RegistryUtils.getBlock(rl));
-        }
-    }
+	/**
+	 * Do all initialization that does not require deferred registers to be filled.
+	 */
+	public FHMain() {
+		IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
+		IEventBus forge = MinecraftForge.EVENT_BUS;
+		CompatModule.enableCompatModule();
 
-    private void missingMappingR(MissingMappings<Item> miss) {
-        for (Mapping<Item> i : miss.getAllMappings()) {
-            ResourceLocation rl = VersionRemap.remaps.get(i.key);
-            if (rl != null)
-                i.remap(RegistryUtils.getItem(rl));
-        }
-    }
+		// Config
+		LOGGER.info(COMMON_INIT, "Loading Config");
+		FHConfig.register();
 
-    public void modification(FMLLoadCompleteEvent event) {
-        for (Item i : RegistryUtils.getItems()) {
-            if (i.isFood()) {
-                if (RegistryUtils.getRegistryName(i).getNamespace().equals("crockpot")) {
-                    ((FoodAccess) i.getFood()).getEffectsSuppliers().removeIf(t -> t.getFirst().get().getPotion().isBeneficial());
-                }
-            }
-        }
-    }
+		// FH Remote Version Check
+		LOGGER.info(VERSION_CHECK, "Checking for updates");
+		TssapProtocolHandler.init();
+		local = new FHRemote.FHLocal();
+		remote = new FHRemote();
+		
+		LOGGER.info(VERSION_CHECK, "Check completes. Running on version " + local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
 
-    @SuppressWarnings("unused")
-    private void processIMC(final InterModProcessEvent event) {
+		// Registrate
+		LOGGER.info(COMMON_INIT, "Registering Registrate");
+		REGISTRATE.registerEventListeners(mod);
 
-    }
+		// Init
+		LOGGER.info(COMMON_INIT, "Initializing " + MODNAME);
+		FHTags.init();
+		FHItems.init();
+		FHProps.init();
+		FHBlocks.init();
+		FHBlockEntityTypes.init();
+		FHBiomes.init();
+		FHPredicates.init();
+		ChordaMetaEvents.IE_REGISTRY.addListener(() -> FHMultiblocks::registerMultiblocks);
+		// Compat init
+		LOGGER.info(COMMON_INIT, "Initializing Mod Compatibilities");
 
-    @SuppressWarnings("unused")
-    private void serverSave(final WorldEvent.Save event) {
-        if (FHTeamDataManager.INSTANCE != null) {
-        	FHResearch.save();
-            FHTeamDataManager.INSTANCE.save();
-            //FHScenario.save();
-        }
-    }
+		FHSpecialDataTypes.init();
+		if (CompatModule.isCreateLoaded())
+			CreateCompat.init();
+		//if (CompatModule.isTetraLoaded())
+		//	TetraCompat.init();
+		if (CompatModule.isFTBQLoaded())
+			FHRewardTypes.init();
+		//if (CompatModule.isFTBTLoaded())
+		//	FTBTeamsEvents.init();
+		if (CompatModule.isCauponaLoaded())
+			forge.addListener(NutritionEvents::gatherNutritionFromSoup);
+		// Deferred Registration
+		// Order doesn't matter here, as that's why we use deferred registers
+		// See ForgeRegistries for more info
+		LOGGER.info(COMMON_INIT, "Registering Deferred Registers");
+		FHEntityTypes.ENTITY_TYPES.register(mod);
+		FHFluids.FLUIDS.register(mod);
+		FHFluids.FLUID_TYPES.register(mod);
+		FHMobEffects.EFFECTS.register(mod);
+		FHParticleTypes.REGISTER.register(mod);
+		FHBlockEntityTypes.REGISTER.register(mod);
+		FHMenuTypes.CONTAINERS.register(mod);
+		FHTabs.TABS.register(mod);
+		FHItems.ITEMS.register(mod);
+		FHBlocks.BLOCKS.register(mod);
+		FHSoundEvents.SOUNDS.register(mod);
+		FHRecipes.RECIPE_SERIALIZERS.register(mod);
+		FHRecipes.RECIPE_TYPES.register(mod);
+		FHRecipes.CRECIPE_SERIALIZERS.register(mod);
+		FHRecipes.CRECIPE_TYPES.register(mod);
+		FHFeatures.FEATURES.register(mod);
+		FHBiomes.BIOME_REGISTER.register(mod);
+		FHBiomeModifiers.BIOME_MODIFIERS.register(mod);
+		FHAttributes.REGISTER.register(mod);
+		FHLoot.LC_REGISTRY.register(mod);
+		FHLoot.LM_REGISTRY.register(mod);
+		FHCapabilities.setup();
+		// Forge bus
+		LOGGER.info(COMMON_INIT, "Registering Forge Event Listeners");
+		// forge.register(new FHRecipeReloadListener(null));
 
-    private void serverStart(final FMLServerAboutToStartEvent event) {
-        new FHTeamDataManager(event.getServer());
-        FHResearch.load();
-        FHTeamDataManager.INSTANCE.load();
+		// Mod bus
+		LOGGER.info(COMMON_INIT, "Registering Mod Event Listeners");
+		mod.addListener(this::setup);
+		mod.addListener(this::processIMC);
+		mod.addListener(this::enqueueIMC);
+		mod.addListener(this::loadComplete);
 
-    }
+		// Client setup
+		LOGGER.info(COMMON_INIT, "Proceeding to Client Initialization");
+		if (FMLEnvironment.dist == Dist.CLIENT) {
+			FHClient.init();
+		}
+	}
 
-    @SuppressWarnings("unused")
-    private void serverStop(final FMLServerStoppedEvent event) {
-        FHTeamDataManager.INSTANCE = null;
-    }
+	/**
+	 * Setup stuff that requires deferred registers to be filled.
+	 * 
+	 * @param event The event
+	 */
+	private void setup(final FMLCommonSetupEvent event) {
 
-    @SuppressWarnings("unused")
-    public void setup(final FMLCommonSetupEvent event) {
+		FHNetwork.INSTANCE.register();
+		
+		// modify default value
+		GameRules.GAME_RULE_TYPES.put(GameRules.RULE_SPAWN_RADIUS, IntegerValue.create(0));
 
-        MinecraftForge.EVENT_BUS.addListener(this::serverStart);
-        MinecraftForge.EVENT_BUS.addListener(this::serverSave);
-        MinecraftForge.EVENT_BUS.addListener(this::serverStop);
-        MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
+		// stupid vanilla
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHBlocks.RYE_BLOCK.asItem(), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHBlocks.WHITE_TURNIP_BLOCK.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.dried_wolfberries.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.rye.asItem(), 0.5f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.INULIN.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.frozen_seeds.asItem(), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.rye_flour.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.raw_rye_bread.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.random_seeds.asItem(), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.rye_bread.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.black_bread.asItem(), 0.1f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.vegetable_sawdust_soup.asItem(), 0.1f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.rye_sawdust_porridge.asItem(), 0.1f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.rye_porridge.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.vegetable_soup.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.military_rations.asItem(), 0.5f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.compressed_biscuits_pack.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.compressed_biscuits.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.packed_nuts.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.dried_vegetables.asItem(), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.chocolate.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.RAW_WHALE_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.COOKED_WHALE_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.SQUID_TENTACLES.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.COOKED_SQUID_TENTACLES.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.FOX_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.COOKED_FOX_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.WOLF_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.COOKED_WOLF_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.POLAR_BEAR_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.COOKED_POLAR_BEAR_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(FHItems.COOKED_POLAR_BEAR_MEAT.asItem(), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.BEEF, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.PORKCHOP, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.CHICKEN, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COD, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.MUTTON, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.RABBIT, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.SALMON, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COOKED_BEEF, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COOKED_PORKCHOP, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COOKED_CHICKEN, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COOKED_COD, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COOKED_MUTTON, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COOKED_RABBIT, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.COOKED_SALMON, 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(Items.ROTTEN_FLESH, 0.6f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("walnut_sapling")), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("fig_sapling")), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("wolfberry_sapling")), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("walnut_leaves")), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("fig_leaves")), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("wolfberry_leaves")), 0.3f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("snail")), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("plump_snail")), 0.8f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("fig")), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("walnut")), 0.65f);
+		ComposterBlock.COMPOSTABLES.putIfAbsent(CRegistryHelper.getItem(CPMain.rl("wolfberries")), 0.65f);
+		if(CompatModule.isStoneAgeLoaded()) {
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_auroch_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_fat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_boar_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_fowl_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_mammoth_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_mouflon_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_rhino_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_tiger_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.cooked_venison, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.auroch_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.fat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.boar_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.fowl_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.mammoth_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.mouflon_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.rhino_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.tiger_meat, 0.8f);
+			ComposterBlock.COMPOSTABLES.putIfAbsent(ItemSubscriber.venison, 0.8f);
+		}
+	}
 
-        MinecraftForge.EVENT_BUS.addGenericListener(Fluid.class, this::missingMapping);
-        MinecraftForge.EVENT_BUS.addGenericListener(Item.class, this::missingMappingR);
-        MinecraftForge.EVENT_BUS.addGenericListener(Block.class, this::missingMappingB);
-        if (ModList.get().isLoaded("projecte")) {
-            MinecraftForge.EVENT_BUS.addListener(PlayerEvents::onRC);
-        } else
-            try {
-                Class.forName("moze_intel.projecte.PECore");
-                MinecraftForge.EVENT_BUS.addListener(PlayerEvents::onRC);
-            } catch (Throwable ignored) {
-            }
-        //CrashReportExtender.registerCrashCallable(new ClimateCrash());
-        FHNetwork.register();
-        FHCapabilities.setup();
-        FHBiomes.biomes();
-        FHStructures.registerStructureGenerate();
-        FHStructures.setupStructures();
-        FHFeatures.initFeatures();
-        SurroundingTemperatureSimulator.init();
-        // modify default value
-        GameRules.GAME_RULES.put(GameRules.SPAWN_RADIUS, IntegerValue.create(0));
+	/**
+	 * Enqueue Inter-Mod Communication
+	 * 
+	 * @param event The event
+	 */
+	private void enqueueIMC(final InterModEnqueueEvent event) {
+		CuriosCompat.sendIMCS();
+	}
 
-    }
+	/**
+	 * Process Inter-Mod Communication
+	 * 
+	 * @param event The event
+	 */
+	private void processIMC(final InterModProcessEvent event) {
+
+	}
+
+	/**
+	 * Stuff that needs to be done after everything is loaded. In general, not used.
+	 * 
+	 * @param event The event
+	 */
+	private void loadComplete(FMLLoadCompleteEvent event) {
+
+	}
 }

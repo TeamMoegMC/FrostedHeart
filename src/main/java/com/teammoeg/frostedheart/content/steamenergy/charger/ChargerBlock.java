@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,92 +19,84 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.charger;
 
-import java.util.Random;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.StateContainer.Builder;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition.Builder;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.phys.BlockHitResult;
 
-public class ChargerBlock extends FHBaseBlock{
+import java.util.function.Supplier;
+
+public class ChargerBlock extends CBlock implements CEntityBlock<ChargerTileEntity> {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public ChargerBlock(Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
+        this.registerDefaultState(this.stateDefinition.any().setValue(LIT, Boolean.FALSE).setValue(BlockStateProperties.FACING, Direction.SOUTH));
     }
 
 
     @Override
-    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+    public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, RandomSource rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
-        if (stateIn.get(LIT)) {
-            ClientUtils.spawnSteamParticles(worldIn, pos);
+        if (stateIn.getValue(LIT)) {
+            FHClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }
 
-    @Nullable
-    @Override
-    public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
-        return FHTileTypes.CHARGER.get().create();
-    }
-
 
     @Override
-    protected void fillStateContainer(Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
         builder.add(BlockStateProperties.FACING);
         builder.add(LIT);
     }
 
 
     @Override
-    public BlockState getStateForPlacement(BlockItemUseContext context) {
-        if (context.getFace() == Direction.UP || context.getPlayer().isSneaking()) {
-            return this.getDefaultState().with(BlockStateProperties.FACING, context.getNearestLookingDirection());
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        if (context.getClickedFace() == Direction.UP || context.getPlayer().isShiftKeyDown()) {
+            return this.defaultBlockState().setValue(BlockStateProperties.FACING, context.getNearestLookingDirection());
         }
-        return this.getDefaultState().with(BlockStateProperties.FACING, context.getFace().getOpposite());
+        return this.defaultBlockState().setValue(BlockStateProperties.FACING, context.getClickedFace().getOpposite());
     }
 
 
     @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
-    }
-
-
-    @Override
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
-        ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
-        if (superResult.isSuccessOrConsume() || player.isSneaking())
+    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        InteractionResult superResult = super.use(state, world, pos, player, hand, hit);
+        if (superResult.consumesAction() || player.isShiftKeyDown())
             return superResult;
-        ItemStack item = player.getHeldItem(hand);
+        ItemStack item = player.getItemInHand(hand);
 
-        TileEntity te = Utils.getExistingTileEntity(world, pos);
+        BlockEntity te = Utils.getExistingTileEntity(world, pos);
         if (te instanceof ChargerTileEntity) {
             return ((ChargerTileEntity) te).onClick(player, item);
         }
         return superResult;
+    }
+
+
+    @Override
+    public Supplier<BlockEntityType<ChargerTileEntity>> getBlock() {
+        return FHBlockEntityTypes.CHARGER;
     }
 
 

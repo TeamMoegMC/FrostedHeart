@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,46 +19,49 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
-import com.teammoeg.frostedheart.FHAttributes;
-import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
-
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
+import com.teammoeg.chorda.block.CBlockInterfaces;
+import com.teammoeg.chorda.block.entity.CBlockEntity;
+import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
+import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.CapabilityItemHandler;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 import java.util.UUID;
 
-public class FountainTileEntity extends IEBaseTileEntity implements
-        INetworkConsumer, ITickableTileEntity, FHBlockInterfaces.IActiveState {
+public class FountainTileEntity extends CBlockEntity implements CTickableBlockEntity,
+        CBlockInterfaces.IActiveState, HeatNetworkProvider, IHaveGoggleInformation {
 
+    public static final int RANGE_PER_NOZZLE = 1;
+    public static final int MAX_HEIGHT = 5;
     private static final UUID WARMTH_EFFECT_UUID = UUID.fromString("95c1f024-8f3a-4828-aaa7-a86733cffbf2");
     private static final float POWER_CAP = 400;
     private static final float REFILL_THRESHOLD = 200;
-    public static final int RANGE_PER_NOZZLE = 1;
-    public static final int MAX_HEIGHT = 5;
-
+    HeatEndpoint network = HeatEndpoint.consumer(10, 1);;
+    LazyOptional<HeatEndpoint> heatcap = LazyOptional.of(() -> network);
     private float power = 0;
     private boolean refilling = false;
     private int height = 0;
@@ -66,29 +69,16 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     private boolean heatAdjusted = false;
     private float lastTemp;
 
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 10, 1);
-
-    public FountainTileEntity() {
-        super(FHTileTypes.FOUNTAIN.get());
+    public FountainTileEntity(BlockPos pos, BlockState state) {
+        super(FHBlockEntityTypes.FOUNTAIN.get(), pos, state);
     }
 
-    LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
     @Nonnull
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
-        if(capability== FHCapabilities.HEAT_EP.capability()&&facing==Direction.DOWN) {
+        if (capability == FHCapabilities.HEAT_EP.capability() && facing == Direction.DOWN) {
             return heatcap.cast();
         }
         return super.getCapability(capability, facing);
-    }
-
-    @Override
-    public boolean canConnectAt(Direction to) {
-        return to == Direction.DOWN;
-    }
-
-    @Override
-    public boolean connect(HeatEnergyNetwork network, Direction d, int distance) {
-        return false;
     }
 
     public boolean isWorking() {
@@ -96,7 +86,7 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         power = nbt.getFloat("power");
         refilling = nbt.getBoolean("refilling");
         height = nbt.getInt("height");
@@ -104,17 +94,12 @@ public class FountainTileEntity extends IEBaseTileEntity implements
         lastTemp = nbt.getFloat("lastTemp");
     }
 
-    @Override
-    public void receiveMessageFromServer(CompoundNBT message) {
-        super.receiveMessageFromServer(message);
-    }
 
     @Override
     public void tick() {
         // server side logic
-        if (!world.isRemote) {
+        if (!level.isClientSide) {
             // power logic
-            if (network.hasValidNetwork()) {
                 // start refill if power is below REFILL_THRESHOLD
                 // keep refill until network is full
                 if (refilling || power < REFILL_THRESHOLD) {
@@ -133,11 +118,11 @@ public class FountainTileEntity extends IEBaseTileEntity implements
 
                             // Configure blockstates for nozzles
                             for (int i = 0; i < height; i++) {
-                                BlockPos nozzle = pos.offset(Direction.UP, i + 1);
-                                world.setBlockState(nozzle,
-                                        FHBlocks.fountain_nozzle.get().getDefaultState()
-                                                .with(FountainNozzleBlock.HEIGHT, i + 1),
-                                        Constants.BlockFlags.DEFAULT_AND_RERENDER
+                                BlockPos nozzle = worldPosition.relative(Direction.UP, i + 1);
+                                level.setBlock(nozzle,
+                                        FHBlocks.FOUNTAIN_NOZZLE.get().defaultBlockState()
+                                                .setValue(FountainNozzleBlock.HEIGHT, i + 1),
+                                        Block.UPDATE_ALL_IMMEDIATE
                                 );
                             }
 
@@ -146,43 +131,50 @@ public class FountainTileEntity extends IEBaseTileEntity implements
                             this.setActive(false);
                         }
                     }
-                } else {
-                    // if not refilling, consume power
-                    power--;
                 }
-                markDirty();
-                this.markContainingBlockForUpdate(null);
-            } else this.setActive(false);
+                setChanged();
+                //this.syncData();
 
             // grant player effect if structure is valid
             if (height > 0 && power > 0) {
-                markDirty();
-                this.markContainingBlockForUpdate(null);
+            	power--;
+                setChanged();
                 adjustHeat(getRange());
 
-                for (PlayerEntity p : this.getWorld().getPlayers()) {
-                    removeWarmth((ServerPlayerEntity) p);
+                for (Player p : this.getLevel().players()) {
+                    removeWarmth((ServerPlayer) p);
 
-                    if (p.getDistanceSq(
-                            this.getPos().getX() + 0.5,
-                            this.getPos().getY() + 0.5,
-                            this.getPos().getZ() + 0.5) < (getRange() * getRange()) &&
+                    if (p.distanceToSqr(
+                            this.getBlockPos().getX() + 0.5,
+                            this.getBlockPos().getY() + 0.5,
+                            this.getBlockPos().getZ() + 0.5) < (getRange() * getRange()) &&
                             p.isInWater() &&
-                            p.getPosY() > this.getPos().getY() - 0.5 &&
-                            p.getPosY() < this.getPos().getY() + height + 0.5
+                            p.getY() > this.getBlockPos().getY() - 0.5 &&
+                            p.getY() < this.getBlockPos().getY() + height + 0.5
                     ) {
-                        grantWarmth((ServerPlayerEntity) p);
+                        grantWarmth((ServerPlayer) p);
                     }
                 }
             } else {
+            	if(height>0) {
+            		for (int i = 0; i < height; i++) {
+                        BlockPos nozzle = worldPosition.relative(Direction.UP, i + 1);
+                        level.setBlock(nozzle,
+                                FHBlocks.FOUNTAIN_NOZZLE.get().defaultBlockState()
+                                        .setValue(FountainNozzleBlock.HEIGHT, 0),
+                                Block.UPDATE_ALL_IMMEDIATE
+                        );
+                    }
+            		height=0;
+            	}
                 removeHeat();
             }
         } else {
             // make water steamy
-            if (world.rand.nextInt(4) == 0) {
+            if (level.random.nextInt(10) == 0) {
                 BlockPos water = findWater();
                 if (water != null) {
-                    ClientUtils.spawnSteamParticles(world, water);
+                    FHClientUtils.spawnSteamParticles(level, water);
                 }
             }
         }
@@ -191,18 +183,18 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     private BlockPos findWater() {
         if (getRange() == 0) return null;
 
-        BlockState state = getState();
+        BlockState state = getBlock();
         BlockPos pos = null;
         int tries = 0;
 
-        while (!state.getFluidState().isTagged(FluidTags.WATER)) {
+        while (!state.getFluidState().is(FluidTags.WATER)) {
             if (tries > 2) return null;
 
             tries++;
-            state = world.getBlockState(
-                    pos = getPos()
-                            .north(world.rand.nextInt(getRange() * 2) - getRange())
-                            .east(world.rand.nextInt(getRange() * 2) - getRange())
+            state = level.getBlockState(
+                    pos = getBlockPos()
+                            .north(level.random.nextInt(getRange() * 2) - getRange())
+                            .east(level.random.nextInt(getRange() * 2) - getRange())
             );
         }
 
@@ -213,23 +205,23 @@ public class FountainTileEntity extends IEBaseTileEntity implements
         return height * RANGE_PER_NOZZLE + 1; // +1 for the edge
     }
 
-    private void grantWarmth(ServerPlayerEntity player) {
-        player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).applyNonPersistentModifier(
+    private void grantWarmth(ServerPlayer player) {
+        player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).addTransientModifier(
                 new AttributeModifier(WARMTH_EFFECT_UUID, "fountain warmth", lastTemp * 25, AttributeModifier.Operation.ADDITION)
         );
     }
 
-    private void removeWarmth(ServerPlayerEntity player) {
+    private void removeWarmth(ServerPlayer player) {
         player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).removeModifier(WARMTH_EFFECT_UUID);
     }
 
 
     private int findNozzleHeight() {
-        assert world != null;
+        assert level != null;
 
         for (int i = 0; i < MAX_HEIGHT; i++) {
-            BlockPos nozzle = pos.offset(Direction.UP, i + 1);
-            if (world.getBlockState(nozzle).getBlock() != FHBlocks.fountain_nozzle.get())
+            BlockPos nozzle = worldPosition.relative(Direction.UP, i + 1);
+            if (level.getBlockState(nozzle).getBlock() != FHBlocks.FOUNTAIN_NOZZLE.get())
                 return i;
         }
 
@@ -237,7 +229,7 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         nbt.putFloat("power", power);
         nbt.putBoolean("refilling", refilling);
         nbt.putInt("height", height);
@@ -245,13 +237,13 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     }
 
     private void adjustHeat(int range) {
-        float networkTemp = network.getTemperatureLevel();
+        float networkTemp = network.getTempLevel();
         if (lastTemp == networkTemp && heatAdjusted && range == heatRange) return;
 
         lastTemp = networkTemp;
 
         removeHeat();
-        ChunkHeatData.addPillarTempAdjust(world, pos, (heatRange = range), height + 1,1, (int) lastTemp * 15);
+        ChunkHeatData.addPillarTempAdjust(level, worldPosition, (heatRange = range), height + 1, 1, (int) lastTemp * 15);
         heatAdjusted = true;
     }
 
@@ -259,27 +251,42 @@ public class FountainTileEntity extends IEBaseTileEntity implements
         refilling = true;
     }
 
+
     @Override
-    public void remove() {
-        super.remove();
+    public void onRemoved() {
+        super.onRemoved();
         removeHeat();
 
         for (int i = 0; i < MAX_HEIGHT; i++) {
-            BlockPos nozzle = pos.offset(Direction.UP, i + 1);
-            if (world.getBlockState(nozzle).getBlock() == FHBlocks.fountain_nozzle.get()) {
-                world.setBlockState(nozzle,
-                        FHBlocks.fountain_nozzle.get().getDefaultState()
-                                .with(FountainNozzleBlock.HEIGHT, 0),
-                        Constants.BlockFlags.DEFAULT_AND_RERENDER
+            BlockPos nozzle = worldPosition.relative(Direction.UP, i + 1);
+            if (level.getBlockState(nozzle).getBlock() == FHBlocks.FOUNTAIN_NOZZLE.get()) {
+                level.setBlock(nozzle,
+                        FHBlocks.FOUNTAIN_NOZZLE.get().defaultBlockState()
+                                .setValue(FountainNozzleBlock.HEIGHT, 0),
+                        Block.UPDATE_ALL_IMMEDIATE
                 );
             }
         }
     }
 
     private void removeHeat() {
-        if (!heatAdjusted) return;
-
-        ChunkHeatData.removeTempAdjust(world, pos);
+    	if(heatAdjusted)
+    		ChunkHeatData.removeTempAdjust(level, worldPosition);
         heatAdjusted = false;
+    }
+	@Override
+	public void invalidateCaps() {
+		heatcap.invalidate();
+		super.invalidateCaps();
+	}
+
+    @Override
+    public @Nullable HeatNetwork getNetwork() {
+        return network.getNetwork();
+    }
+
+    @Override
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        return TemperatureGoogleRenderer.addHeatNetworkInfoToTooltip(tooltip, isPlayerSneaking, worldPosition);
     }
 }

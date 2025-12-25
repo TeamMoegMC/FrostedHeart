@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -32,38 +32,47 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.teammoeg.chorda.io.FileUtil;
+import com.teammoeg.chorda.io.ZipFile;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.io.FileUtil;
-import com.teammoeg.frostedheart.util.io.ZipFile;
-import com.teammoeg.frostedheart.util.version.FHVersion;
+import com.teammoeg.frostedheart.util.FHVersion;
 
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.storage.FolderName;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 @Mixin(ServerLifecycleHooks.class)
 public class ServerLifecycleHooksMixin {
     @Shadow(remap = false)
-    private static FolderName SERVERCONFIG;
-    private static FolderName bkfconfig = new FolderName("serverconfigbackup");
+    private static LevelResource SERVERCONFIG;
+    private static LevelResource bkfconfig = new LevelResource("serverconfigbackup");
     @Shadow(remap = false)
     private static Logger LOGGER;
 
     //automatically update serverconfig
-    @Inject(at = @At("HEAD"), method = "handleServerAboutToStart", remap = false)
+    @Inject(at = @At("HEAD"), method = "handleServerAboutToStart", remap = false,require=1,allow=1)
     private static void fh$updateConfig(MinecraftServer server, CallbackInfoReturnable cir) {
-        Path config = server.func_240776_a_(SERVERCONFIG);
-        Path configbkf = server.func_240776_a_(bkfconfig);
+        Path config = server.getWorldPath(SERVERCONFIG);
+        Path configbkf = server.getWorldPath(bkfconfig);
         FHMain.lastbkf = null;
         FHMain.saveNeedUpdate = false;
         File fconfig = config.toFile();
         File saveVersion = new File(fconfig, ".twrsaveversion");
+        
         FHMain.lastServerConfig = config.toFile();
         FHVersion local = FHMain.local.fetchVersion().orElse(FHVersion.empty);
         String localVersion = local.getOriginal();
-        if(!saveVersion.exists())
+        if(!saveVersion.exists()) {
+        	try {
+        		saveVersion.getParentFile().mkdirs();
+				FileUtil.transfer(localVersion, saveVersion);
+			} catch (IOException e) {
+
+				e.printStackTrace();
+			}
         	return;
+        }
         if (saveVersion.exists() && !localVersion.isEmpty()) {
             try {
                 String lw = FileUtil.readString(saveVersion);
@@ -86,7 +95,7 @@ public class ServerLifecycleHooksMixin {
             zf.close();
             fconfig.mkdirs();
 
-            LOGGER.info("Trying to copy new files...");
+           /* LOGGER.info("Trying to copy new files...");
             File defau = FMLPaths.GAMEDIR.get().resolve("defaultconfigs").toFile();
             for (File f : defau.listFiles(f -> f.getName().endsWith(".toml"))) {
                 File nf = new File(fconfig, f.getName());
@@ -94,7 +103,7 @@ public class ServerLifecycleHooksMixin {
                 FileUtil.transfer(f, nf);
                 LOGGER.info("Copied " + f.getName());
 
-            }
+            }*/
 
             LOGGER.info("Finishing update...");
             FileUtil.transfer(localVersion, saveVersion);

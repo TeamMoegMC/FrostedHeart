@@ -1,0 +1,7 @@
+{
+	"parent": "minecraft:block/crop",
+	"textures": {
+		"crop": "frostedheart:block/rubber_dandelion_stage0"
+	},
+	"render_type": "cutout"
+}

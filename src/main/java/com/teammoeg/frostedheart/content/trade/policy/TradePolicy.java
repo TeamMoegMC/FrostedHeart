@@ -19,29 +19,38 @@
 
 package com.teammoeg.frostedheart.content.trade.policy;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.chorda.io.SerializeUtil;
+import com.teammoeg.chorda.util.CRegistryHelper;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
-import net.minecraft.entity.merchant.villager.VillagerProfession;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.WeightedRandom;
-import net.minecraftforge.fml.RegistryObject;
+import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
+import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.random.Weight;
+import net.minecraft.util.random.WeightedEntry;
+import net.minecraft.util.random.WeightedRandom;
+import net.minecraftforge.registries.RegistryObject;
+import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
+import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class TradePolicy extends IESerializableRecipe {
@@ -53,16 +62,16 @@ public class TradePolicy extends IESerializableRecipe {
 
         @Nullable
         @Override
-        public TradePolicy read(ResourceLocation recipeId, PacketBuffer buffer) {
-            ResourceLocation name = SerializeUtil.readOptional(buffer, PacketBuffer::readResourceLocation).orElse(null);
+        public TradePolicy fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
+            ResourceLocation name = SerializeUtil.readOptional(buffer, FriendlyByteBuf::readResourceLocation).orElse(null);
             List<PolicyGroup> groups = SerializeUtil.readList(buffer, PolicyGroup::read);
             int root = buffer.readVarInt();
-            VillagerProfession vp = buffer.readRegistryIdUnsafe(ForgeRegistries.PROFESSIONS);
+            VillagerProfession vp = buffer.readRegistryIdUnsafe(ForgeRegistries.VILLAGER_PROFESSIONS);
             return new TradePolicy(recipeId, name, groups, root, vp, buffer.readVarIntArray());
         }
 
         @Override
-        public TradePolicy readFromJson(ResourceLocation recipeId, JsonObject json) {
+        public TradePolicy readFromJson(ResourceLocation recipeId, JsonObject json,IContext ctx) {
             ResourceLocation name = json.has("name") ? new ResourceLocation(json.get("name").getAsString()) : null;
             List<PolicyGroup> groups = SerializeUtil.parseJsonList(json.get("policies"), PolicyGroup::read);
             int root = json.has("weight") ? json.get("weight").getAsInt() : 0;
@@ -70,7 +79,7 @@ public class TradePolicy extends IESerializableRecipe {
             VillagerProfession vp = VillagerProfession.NONE;
             
             if (json.has("profession"))
-                vp = RegistryUtils.getProfess(new ResourceLocation(json.get("profession").getAsString()));
+                vp = CRegistryHelper.getProfess(new ResourceLocation(json.get("profession").getAsString()));
             if (json.has("exps"))
                 expBar = SerializeUtil.parseJsonElmList(json.get("exps"), JsonElement::getAsInt).stream().mapToInt(t -> t).toArray();
             else
@@ -79,24 +88,29 @@ public class TradePolicy extends IESerializableRecipe {
         }
 
         @Override
-        public void write(PacketBuffer buffer, TradePolicy recipe) {
-            SerializeUtil.writeOptional2(buffer, recipe.name, PacketBuffer::writeResourceLocation);
+        public void toNetwork(FriendlyByteBuf buffer, TradePolicy recipe) {
+            SerializeUtil.writeOptional2(buffer, recipe.name, FriendlyByteBuf::writeResourceLocation);
             SerializeUtil.writeList(buffer, recipe.groups, PolicyGroup::write);
             buffer.writeVarInt(recipe.weight);
-            buffer.writeRegistryIdUnsafe(ForgeRegistries.PROFESSIONS, recipe.vp);
+            buffer.writeRegistryIdUnsafe(ForgeRegistries.VILLAGER_PROFESSIONS, recipe.vp);
             buffer.writeVarIntArray(recipe.expBar);
         }
     }
-    public static class Weighted extends WeightedRandom.Item {
+    public static class Weighted implements WeightedEntry {
         TradePolicy policy;
-
+        Weight weight;
         public Weighted(int itemWeightIn, TradePolicy policy) {
-            super(itemWeightIn);
+        	this.weight=Weight.of(itemWeightIn);
             this.policy = policy;
         }
-    }
-    public static IRecipeType<TradePolicy> TYPE;
+		@Override
+		public Weight getWeight() {
 
+			return weight;
+		}
+    }
+    public static RegistryObject<RecipeType<TradePolicy>> TYPE;
+    public static Lazy<TypeWithClass<TradePolicy>> IEType=Lazy.of(()->new TypeWithClass<>(TYPE, TradePolicy.class));
     public static RegistryObject<IERecipeSerializer<TradePolicy>> SERIALIZER;
 
     public static Map<ResourceLocation, TradePolicy> policies;
@@ -109,12 +123,21 @@ public class TradePolicy extends IESerializableRecipe {
 
     int weight = 0;
 
-    public static TradePolicy random(Random rnd) {
-        return WeightedRandom.getRandomItem(rnd, items, totalW).policy;
+    @Nullable
+    public static TradePolicy random(RandomSource rnd) {
+        return WeightedRandom.getRandomItem(rnd, items, totalW).map(t->t.policy).orElse(null);
+    }
+
+    @Nonnull
+    public static TradePolicy dummy() {
+        FHMain.LOGGER.info("A dummy trade policy is used. Check your data packs because polices don't exist.");
+        int[] expLevels = {1, 2, 3, 4, 5};
+        List<PolicyGroup> groups = new ArrayList<>();
+        return new TradePolicy(FHMain.rl("dummy"), FHMain.rl("dummy"), groups, 1, VillagerProfession.NONE, expLevels);
     }
 
     public TradePolicy(ResourceLocation id, ResourceLocation name, List<PolicyGroup> groups, int weight, VillagerProfession vp, int[] expBar) {
-        super(ItemStack.EMPTY, TYPE, id);
+        super(Lazy.of(()->ItemStack.EMPTY), IEType.get(), id);
         this.name = name;
         this.groups = groups;
         this.weight = weight;
@@ -128,14 +151,14 @@ public class TradePolicy extends IESerializableRecipe {
         return null;
     }
 
-    public void CollectPolicies(PolicySnapshot policy, FHVillagerData ve) {
-        groups.forEach(t -> t.CollectPolicies(policy, ve));
+    public void CollectPolicies(PolicySnapshot policy, FHVillagerData ve,int maxnum) {
+        groups.forEach(t -> t.CollectPolicies(policy, ve,maxnum));
     }
 
     public PolicySnapshot get(FHVillagerData ve) {
         PolicySnapshot ps = new PolicySnapshot();
         ps.maxExp = this.getExp(ve.getTradeLevel());
-        this.CollectPolicies(ps, ve);
+        this.CollectPolicies(ps, ve,Integer.MAX_VALUE);
         return ps;
     }
 
@@ -160,7 +183,7 @@ public class TradePolicy extends IESerializableRecipe {
     }
 
     @Override
-    public ItemStack getRecipeOutput() {
+    public ItemStack getResultItem(RegistryAccess ra) {
         return ItemStack.EMPTY;
     }
 }

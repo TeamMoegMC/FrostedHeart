@@ -1,8 +1,10 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "sugars": 0.0073662605,
-    "grains": 0.01778604
+  "group": {
+    "carbohydrate": 24000.0,
+    "fat": 0.0,
+    "protein": 0.0,
+    "vegetable": 0.0
   },
   "item": "minecraft:wheat"
 }

@@ -23,23 +23,24 @@ import java.util.Map;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class DemandData extends BaseData {
     public Ingredient item;
 
     public DemandData(JsonObject jo) {
         super(jo);
-        item = Ingredient.deserialize(jo.get("demand"));
+        item = Ingredient.fromJson(jo.get("demand"));
     }
 
-    public DemandData(PacketBuffer pb) {
+    public DemandData(FriendlyByteBuf pb) {
         super(pb);
-        item = Ingredient.read(pb);
+        item = Ingredient.fromNetwork(pb);
     }
 
     public DemandData(String id, int maxstore, float recover, int price, Ingredient item) {
@@ -48,10 +49,10 @@ public class DemandData extends BaseData {
     }
 
     @Override
-    public void fetch(PolicySnapshot ps, Map<String, Float> data) {
-        int num = (int) (float) data.getOrDefault(getId(), 0f);
+    public void fetch(PolicySnapshot ps,FHVillagerData vd, Map<String, Float> data) {
+        int num = Math.min((int) (float) data.getOrDefault(getId(), 0f), this.sellconditions.stream().mapToInt(c->c.test(vd)).reduce(Integer.MAX_VALUE,Math::min));
         if (!hideStockout || num > 0)
-            ps.registerBuy(new BuyData(getId(), num, this));
+            ps.registerBuy(new BuyData(vd,getId(), num, this));
     }
 
     @Override
@@ -62,15 +63,15 @@ public class DemandData extends BaseData {
     @Override
     public JsonElement serialize() {
         JsonObject jo = super.serialize().getAsJsonObject();
-        jo.add("demand", item.serialize());
+        jo.add("demand", item.toJson());
         return jo;
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
         buffer.writeVarInt(2);
         super.write(buffer);
-        item.write(buffer);
+        item.toNetwork(buffer);
     }
 
 }

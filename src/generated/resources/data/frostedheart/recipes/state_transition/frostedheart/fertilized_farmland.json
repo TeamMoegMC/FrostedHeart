@@ -1,0 +1,37 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Name": "frostedheart:fertilized_farmland",
+    "Properties": {
+      "fertilizer": "accelerated",
+      "grade": "basic",
+      "moisture": "0",
+      "storage": "1"
+    }
+  },
+  "condense_temp": 90.0,
+  "evaporate_temp": 100.0,
+  "freeze_temp": -10.0,
+  "gas": {
+    "Name": "minecraft:coarse_dirt"
+  },
+  "heat_capacity": 10,
+  "liquid": {
+    "Name": "frostedheart:fertilized_farmland",
+    "Properties": {
+      "fertilizer": "accelerated",
+      "grade": "basic",
+      "moisture": "0",
+      "storage": "1"
+    }
+  },
+  "melt_temp": 9.0,
+  "solid": {
+    "Name": "frostedheart:dirt_permafrost",
+    "Properties": {
+      "snowy": "false"
+    }
+  },
+  "state": "liquid",
+  "will_transit": true
+}

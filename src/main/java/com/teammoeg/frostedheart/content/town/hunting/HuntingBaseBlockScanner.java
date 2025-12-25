@@ -1,15 +1,35 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.town.hunting;
 
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockScanner;
-import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
-import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.CommandBlockBlock;
+import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.CommandBlock;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ColumnPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ColumnPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.Tags;
 
 import java.util.Objects;
@@ -20,7 +40,7 @@ public class HuntingBaseBlockScanner extends HouseBlockScanner {
     private int tanningRackNum = 0;
 
 
-    public HuntingBaseBlockScanner(World world, BlockPos startPos) {
+    public HuntingBaseBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
     }
 
@@ -39,9 +59,9 @@ public class HuntingBaseBlockScanner extends HouseBlockScanner {
     protected void addSpecialBlock(BlockPos pos){
         BlockState blockState = world.getBlockState(pos);
         addDecoration(pos);
-        if(blockState.isIn(BlockTags.BEDS)) bedNum++;
-        if(blockState.isIn(Tags.Blocks.CHESTS)) chestNum++;
-        if(Objects.requireNonNull(blockState.getBlock().getRegistryName()).getPath().equals("tanning_rack") || blockState.getBlock() instanceof CommandBlockBlock) tanningRackNum++;
+        if(blockState.is(BlockTags.BEDS)) bedNum++;
+        if(blockState.is(Tags.Blocks.CHESTS)) chestNum++;
+        if(Objects.requireNonNull(CRegistryHelper.getRegistryName(blockState.getBlock())).getPath().equals("tanning_rack") || blockState.getBlock() instanceof CommandBlock) tanningRackNum++;
     }
 
     @Override
@@ -59,9 +79,9 @@ public class HuntingBaseBlockScanner extends HouseBlockScanner {
         //FHMain.LOGGER.debug("HouseScanner: first scan completed");
 
         //第二次扫描，判断房间是否密闭
-        ConfinedSpaceScanner airScanner = new ConfinedSpaceScanner(world, startPos.up());
+        ConfinedSpaceScanner airScanner = new ConfinedSpaceScanner(world, startPos.above());
         airScanner.scan(MAX_SCANNING_TIMES_VOLUME, (pos) -> {//对每一个空气方块执行的操作：统计温度、统计体积、统计温度
-                    this.temperature += ChunkHeatData.getTemperature(world, pos);
+                    this.temperature += WorldTemperature.block(world, pos);
                     this.volume++;
                     this.occupiedArea.add(new ColumnPos(pos.getX(), pos.getZ()));
                     //FHMain.LOGGER.debug("scanning air pos:" + pos);

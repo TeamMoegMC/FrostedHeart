@@ -19,51 +19,59 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
+import com.teammoeg.chorda.io.SerializeUtil;
+import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
+
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.network.PacketDistributor;
+
 import java.util.Collection;
 
-import com.teammoeg.frostedheart.FHContainer;
-import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.thermopolium.data.recipes.SerializeUtil;
-
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.PacketDistributor;
-
-public class HeatStatContainer extends Container {
-    public static final int RELATION_TO_TRADE = -30;
-    public Collection<EndPointData> data;
-    HeatEnergyNetwork network;
+public class HeatStatContainer extends AbstractContainerMenu {
+    public Collection<HeatEndpoint> data;
+    HeatNetwork network;
     int counter;
-    ServerPlayerEntity openedPlayer;
-    public HeatStatContainer(int id, PlayerInventory inventoryPlayer, PacketBuffer pb) {
+    ServerPlayer openedPlayer;
+
+    public HeatStatContainer(int id, Inventory inventoryPlayer, FriendlyByteBuf pb) {
         this(id);
-        data=SerializeUtil.readList(pb, EndPointData::readNetwork);
+        data = SerializeUtil.readList(pb, HeatEndpoint::readNetwork);
     }
 
     public HeatStatContainer(int id) {
-        super(FHContainer.HEAT_STAT.get(), id);
+        super(FHMenuTypes.HEAT_STAT.get(), id);
     }
-    public HeatStatContainer(int id,PlayerEntity opener,HeatEnergyNetwork mng) {
-        super(FHContainer.HEAT_STAT.get(), id);
-        network=mng;
-        if(opener instanceof ServerPlayerEntity)
-        	openedPlayer=(ServerPlayerEntity) opener;
-    }
-    
 
-    public boolean canInteractWith(PlayerEntity playerIn) {
+    public HeatStatContainer(int id, Player opener, HeatNetwork mng) {
+        super(FHMenuTypes.HEAT_STAT.get(), id);
+        network = mng;
+        if (opener instanceof ServerPlayer)
+            openedPlayer = (ServerPlayer) opener;
+    }
+
+
+    public boolean stillValid(Player playerIn) {
         return true;
     }
 
     public void tick() {
-    	counter++;
-    	if(counter>=20) {
-    		counter=0;
-    		EndPointDataPacket epp=new EndPointDataPacket(network);
-    		FHNetwork.send(PacketDistributor.PLAYER.with(()->openedPlayer), epp);
-    	}
+        counter++;
+        if (counter >= 20) {
+            counter = 0;
+            EndPointDataPacket epp = new EndPointDataPacket(network);
+            FHNetwork.INSTANCE.sendPlayer(openedPlayer, epp);
+        }
+    }
+
+    @Override
+    public ItemStack quickMoveStack(Player pPlayer, int pIndex) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

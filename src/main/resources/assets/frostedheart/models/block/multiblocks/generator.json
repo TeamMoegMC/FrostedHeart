@@ -1,10 +1,11 @@
 {
   "parent": "minecraft:block/block",
+  "automatic_culling": false,
+  "flip_v": true,
+  "loader": "forge:obj",
+  "render_type":"cutout_mipped",
+  "model": "frostedheart:models/block/multiblocks/generator.obj",
   "textures": {
     "particle": "frostedheart:block/multiblocks/crudegeneratorstone"
-  },
-  "loader": "forge:obj",
-  "model": "frostedheart:models/block/multiblocks/generator.obj",
-  "detectCullableFaces": false,
-  "flip-v": true
+  }
 }

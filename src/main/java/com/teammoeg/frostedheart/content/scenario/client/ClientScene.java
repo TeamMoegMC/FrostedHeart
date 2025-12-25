@@ -1,48 +1,75 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.scenario.client;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import com.teammoeg.frostedheart.FHConfig;
+import org.apache.commons.lang3.mutable.MutableInt;
+
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.StringTextComponentParser;
+import com.teammoeg.chorda.util.struct.BitObserverList;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.IScenarioDialog;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.TextInfo;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.TextInfo.SizedReorderingProcessor;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.LayerManager;
-import com.teammoeg.frostedheart.content.scenario.network.ClientScenarioResponsePacket;
-import com.teammoeg.frostedheart.content.scenario.network.FHClientReadyPacket;
-import com.teammoeg.frostedheart.content.scenario.network.FHClientSettingsPacket;
+import com.teammoeg.frostedheart.content.scenario.network.C2SClientReadyPacket;
+import com.teammoeg.frostedheart.content.scenario.network.C2SScenarioResponsePacket;
+import com.teammoeg.frostedheart.content.scenario.network.C2SSettingsPacket;
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
-import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.utility.ReferenceValue;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.mixin.minecraft.accessors.NewChatGuiAccessor;
+import com.teammoeg.frostedheart.util.Lang;
 
-import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
+import net.minecraft.client.GuiMessage;
+import net.minecraft.client.GuiMessageTag;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ChatLine;
-import net.minecraft.client.gui.RenderComponentsUtil;
-import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraft.client.gui.components.ComponentRenderUtils;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.Mth;
+import net.minecraftforge.network.PacketDistributor;
 
 public class ClientScene implements IClientScene {
+	private static GuiMessageTag SCENARIO=new GuiMessageTag(13684944, (GuiMessageTag.Icon)null, Lang.translateKey("chat.tag.frostedheart.scenario"), "Scenario");
 	public static ClientScene INSTANCE;
+	public int curRunId;
+	public int curTextId;
 	public IScenarioDialog dialog;
 	public LinkedList<LayerManager> layers=new LinkedList<>();
 	public ClientScene() {
 		super();
+		w=Mth.floor((double) Minecraft.getInstance().gui.getChat().getWidth() / Minecraft.getInstance().gui.getChat().getScale());
 		this.setSpeed(1);
 	}
 	public static int fromRelativeXW(float val) {
-		return (int) (val*ClientUtils.mc().getMainWindow().getScaledWidth());
+		return (int) (val*ClientUtils.getMc().getWindow().getGuiScaledWidth());
 	}
 	public static int fromRelativeYH(float val) {
-		return (int) (val*ClientUtils.mc().getMainWindow().getScaledHeight());
+		return (int) (val*ClientUtils.getMc().getWindow().getGuiScaledHeight());
 	}
-	LinkedList<ITextComponent> origmsgQueue=new LinkedList<>();
+	LinkedList<Component> origmsgQueue=new LinkedList<>();
 	LinkedList<TextInfo> msgQueue = new LinkedList<>();
 	int ticks;
 	int page = 0;
@@ -54,15 +81,17 @@ public class ClientScene implements IClientScene {
 	boolean hasText = false;
 	boolean canSkip = false;
 	public boolean sendImmediately=false;
-	ITextComponent currentActTitle;
+	public BitObserverList onRenderComplete=new BitObserverList();
+	public BitObserverList onTransitionComplete=new BitObserverList();
+	Component currentActTitle;
 
 
-	ITextComponent currentActSubtitle;
-	public ITextComponent getCurrentActTitle() {
+	Component currentActSubtitle;
+	public Component getCurrentActTitle() {
 		return currentActTitle;
 	}
 
-	public ITextComponent getCurrentActSubtitle() {
+	public Component getCurrentActSubtitle() {
 		return currentActSubtitle;
 	}
 	public void setSpeed(double value) {
@@ -113,7 +142,7 @@ public class ClientScene implements IClientScene {
 	@Override
 	public void sendContinuePacket(boolean isSkip) {
 		// if(canSkip)
-		FHNetwork.send(PacketDistributor.SERVER.noArg(), new ClientScenarioResponsePacket(isSkip, 0));
+		FHNetwork.INSTANCE.send(PacketDistributor.SERVER.noArg(), new C2SScenarioResponsePacket(curTextId,isSkip, 0));
 		status=RunStatus.RUNNING;
 		canSkip=false;
 	}
@@ -159,15 +188,16 @@ public class ClientScene implements IClientScene {
 
 	@Override
 	public void cls() {
-		Minecraft mc = ClientUtils.mc();
-		List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.ingameGUI.getChatGUI()).getDrawnChatLines();
-		i.removeIf(l -> l.getChatLineID() == fhchatid);
-		for(ITextComponent ic:origmsgQueue) {
-			for(IReorderingProcessor j:RenderComponentsUtil.func_238505_a_(ic,w, ClientUtils.mc().fontRenderer))
-				i.add(0, new ChatLine<>(mc.ingameGUI.getTicks(), j, 0));
+		Minecraft mc = ClientUtils.getMc();
+		List<GuiMessage.Line> i = ((NewChatGuiAccessor) mc.gui.getChat()).getTrimmedMessages();
+		i.removeIf(l -> l.tag()==SCENARIO);
+		msgQueue.clear();
+		for(Component ic:origmsgQueue) {
+			for(FormattedCharSequence j:ComponentRenderUtils.wrapComponents(ic,w, ClientUtils.getMc().font))
+				i.add(0, new GuiMessage.Line(mc.gui.getGuiTicks(), j, GuiMessageTag.system(),true));
 		}
 		origmsgQueue.clear();
-		msgQueue.clear();
+		
 		if(dialog!=null&&dialog.hasDialog()) {
 			dialog.updateTextLines(msgQueue);
 		}
@@ -178,19 +208,19 @@ public class ClientScene implements IClientScene {
 	@Override
 	public void setText(String txt) {
 		cls();
-		process(txt, true, false, true,RunStatus.WAITCLIENT);
+		process(curTextId,txt, true, false, true,RunStatus.WAITCLIENT);
 	}
 
-	private int countCh(IReorderingProcessor p) {
-		ReferenceValue<Integer> count = new ReferenceValue<>(0);
+	private int countCh(FormattedCharSequence p) {
+		MutableInt count = new MutableInt(0);
 		// if(p instanceof SizedReorderingProcessor)
 		// p=((SizedReorderingProcessor) p).origin;
 		p.accept((i, s, c) -> {
 			if (c != 65533)
-				count.setVal(count.getVal() + 1);
+				count.increment();
 			return true;
 		});
-		return count.getVal();
+		return count.getValue();
 	}
 
 	// fh$scenario$link:
@@ -198,20 +228,20 @@ public class ClientScene implements IClientScene {
 	public boolean shouldWrap;
 
 	@Override
-	public void processClient(ITextComponent item, boolean isReline, boolean isNowait) {
+	public void processClient(Component item, boolean isReline, boolean isNowait) {
 		if (getPreset() != null)
-			item = item.deepCopy().mergeStyle(getPreset());
-		List<IReorderingProcessor> lines;
+			item = item.copy().withStyle(getPreset());
+		List<FormattedCharSequence> lines;
 		if (!msgQueue.isEmpty() && !shouldWrap) {
 			TextInfo ti = msgQueue.remove(msgQueue.size() - 1);
 			int lastline = ti.line;
 			int lastLimit = countCh(ti.text);
-			IFormattableTextComponent ntext = ti.parent.deepCopy().appendSibling(item);
+			MutableComponent ntext = ti.parent.copy().append(item);
 			origmsgQueue.pollLast();
 			origmsgQueue.add(ntext);
-			lines = RenderComponentsUtil.func_238505_a_(ntext, getDialogWidth(), ClientUtils.mc().fontRenderer);
+			lines = ComponentRenderUtils.wrapComponents(ntext, getDialogWidth(), ClientUtils.getMc().font);
 			for (int i = lastline; i < lines.size(); i++) {
-				IReorderingProcessor line = lines.get(i);
+				FormattedCharSequence line = lines.get(i);
 				if (!isNowait) {
 					SizedReorderingProcessor sized = new SizedReorderingProcessor(line);
 					if (i == lastline)
@@ -223,15 +253,16 @@ public class ClientScene implements IClientScene {
 			}
 		} else {
 			origmsgQueue.add(item);
-			lines = RenderComponentsUtil.func_238505_a_(item, getDialogWidth(), ClientUtils.mc().fontRenderer);
+			lines = ComponentRenderUtils.wrapComponents(item, getDialogWidth(), ClientUtils.getMc().font);
 			int i = 0;
-			for (IReorderingProcessor line : lines) {
+			for (FormattedCharSequence line : lines) {
 				msgQueue.add(new TextInfo(item, i++, isNowait ? line : new SizedReorderingProcessor(line)));
 			}
 		}
 		needUpdate = true;
 		shouldWrap = isReline;
 		unFinished=true;
+		curTextId=curRunId;
 	}
 
 	boolean needUpdate = false;
@@ -239,22 +270,23 @@ public class ClientScene implements IClientScene {
 	RunStatus status;
 
 	@Override
-	public void process(String text, boolean isReline, boolean isNowait, boolean resetScene, RunStatus status) {
+	public void process(int curTextId,String text, boolean isReline, boolean isNowait, boolean resetScene, RunStatus status) {
 		if (resetScene) {
 			cls();
 		}
 		//System.out.println("Received " + isReline + " " + text + " " + resetScene);
 		if (!text.isEmpty()) {
 			hasText = true;
-			ITextComponent item = ClientTextComponentUtils.parse(text);
+			Component item = StringTextComponentParser.parse(text);
 			processClient(item, isReline, isNowait);
 		}
 		shouldWrap = isReline;
 		this.status = status;
+		this.curTextId=curTextId;
 
 	}
 
-	public static String toString(IReorderingProcessor ipp) {
+	public static String toString(FormattedCharSequence ipp) {
 		StringBuilder sb = new StringBuilder();
 		ipp.accept((i, s, c) -> {
 			sb.appendCodePoint(c);
@@ -263,7 +295,7 @@ public class ClientScene implements IClientScene {
 		return sb.toString();
 
 	}
-	public static String toCurrentString(IReorderingProcessor ipp) {
+	public static String toCurrentString(FormattedCharSequence ipp) {
 		StringBuilder sb = new StringBuilder();
 		ipp.accept((i, s, c) -> {
 			sb.appendCodePoint(c);
@@ -274,18 +306,21 @@ public class ClientScene implements IClientScene {
 	}
 	int w;
 	double lastScale=0;
+	int lastW=0,lastH=0;
 	public void tick(Minecraft mc) {
-		w=MathHelper.floor((double) mc.ingameGUI.getChatGUI().getChatWidth() / mc.ingameGUI.getChatGUI().getScale());
-		if (!mc.isGamePaused()) {
-			if(lastScale!=mc.getMainWindow().getGuiScaleFactor()) {
-				lastScale=mc.getMainWindow().getGuiScaleFactor();
+		w=Mth.floor((double) mc.gui.getChat().getWidth() / mc.gui.getChat().getScale());
+		if (!mc.isPaused()) {
+			if(lastScale!=mc.getWindow().getGuiScale()||lastW!=mc.getWindow().getGuiScaledWidth()||lastH!=mc.getWindow().getGuiScaledHeight()) {
+				lastScale=mc.getWindow().getGuiScale();
+				lastW=mc.getWindow().getGuiScaledWidth();
+				lastH=mc.getWindow().getGuiScaledHeight();
 				this.sendClientUpdate();
 			}
 			if(ticksActUpdate>0)
 				ticksActUpdate--;
 			if(ticksActStUpdate>0)
 				ticksActStUpdate--;
-			List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.ingameGUI.getChatGUI()).getDrawnChatLines();
+			List<GuiMessage.Line> i = ((NewChatGuiAccessor) mc.gui.getChat()).getTrimmedMessages();
 			if(dialog!=null) {
 				dialog.tickDialog();
 				
@@ -294,14 +329,14 @@ public class ClientScene implements IClientScene {
 				if (isTick())
 					showOneChar();
 
-				if(needUpdate||mc.ingameGUI.getTicks() % 20 == 0) {
+				if(needUpdate||mc.gui.getGuiTicks() % 20 == 0) {
 					needUpdate = false;
 					if (dialog==null||!dialog.hasDialog()) {
-						i.removeIf(l -> l.getChatLineID() == fhchatid);
+						i.removeIf(l -> l.tag() == SCENARIO);
 						for (TextInfo t : msgQueue) {
 							if (t.hasText()) {
 								// if(hasText) {
-								i.add(0, new ChatLine<>(mc.ingameGUI.getTicks(), t.asFinished(), fhchatid));
+								i.add(0, new GuiMessage.Line(mc.gui.getGuiTicks(), t.asFinished(), SCENARIO,false));
 								// }
 							}
 						}
@@ -313,23 +348,23 @@ public class ClientScene implements IClientScene {
 		}
 	}
 	public void sendClientReady() {
-		FHNetwork.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getCurrentLanguage().getCode()));
+		FHNetwork.INSTANCE.sendToServer(new C2SClientReadyPacket(ClientUtils.getMc().getLanguageManager().getSelected()));
 	}
 	public void sendClientUpdate() {
-		FHNetwork.sendToServer(new FHClientSettingsPacket());
+		FHNetwork.INSTANCE.sendToServer(new C2SSettingsPacket());
 	}
 	@Override
 	public void setActHud(String title, String subtitle) {
 		if(title!=null) {
 			if(!title.isEmpty()) 
-				this.currentActTitle=ClientTextComponentUtils.parse(title);//.deepCopy().mergeStyle(Style.EMPTY.applyFormatting(TextFormatting.YELLOW).applyFormatting(TextFormatting.BOLD));
+				this.currentActTitle=StringTextComponentParser.parse(title);//.deepCopy().mergeStyle(Style.EMPTY.applyFormatting(TextFormatting.YELLOW).applyFormatting(TextFormatting.BOLD));
 			else
 				this.currentActTitle=null;
 			ticksActUpdate=20;
 		}
 		if(subtitle!=null) {
 			if(!subtitle.isEmpty()) {
-				this.currentActSubtitle=ClientTextComponentUtils.parse(subtitle);
+				this.currentActSubtitle=StringTextComponentParser.parse(subtitle);
 			}else 
 				this.currentActSubtitle=null;
 			ticksActStUpdate=20;
@@ -376,5 +411,9 @@ public class ClientScene implements IClientScene {
 			return dialog.getDialogWidth();
 		}
 		return w;
+	}
+	@Override
+	public int getRunId() {
+		return curRunId;
 	}
 }

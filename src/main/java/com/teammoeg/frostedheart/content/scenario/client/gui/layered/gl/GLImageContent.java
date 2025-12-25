@@ -1,25 +1,33 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 
-import org.lwjgl.opengl.GL11C;
-
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldVertexBufferUploader;
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.resources.ResourceLocation;
 
 public class GLImageContent extends GLLayerContent {
 	public ResourceLocation showingImage;
-	public DynamicTexture texture;
+	public TypedDynamicTexture texture;
 	int u, v, uw, uh, tw, th;
 
 	public GLImageContent(float x, float y, float width, float height, int z, ResourceLocation showingImage, int u, int v, int uw, int uh, int tw, int th) {
@@ -44,39 +52,17 @@ public class GLImageContent extends GLLayerContent {
 		if(texture==null) {
 			if(showingImage!=null) {
 				
-				ClientUtils.bindTexture(showingImage);
-				blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
+				CGuiHelper.bindTexture(showingImage);
+				CGuiHelper.blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
 			}
 		}else {
-			texture.bindTexture();
-			blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
+			texture.draw(params.getGuiGraphics(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, params.getOpacity());
+
+			//texture.bind();
+			//CGuis.blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
 		}
 	}
 
-	public static void blit(MatrixStack matrixStack, int x, int y, int width, int height, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight,float opacity) {
-		innerBlit(matrixStack, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth, textureHeight,opacity);
-	}
-
-	public static void innerBlit(MatrixStack matrixStack, int x1, int x2, int y1, int y2, int blitOffset, int uWidth, int vHeight, float uOffset, float vOffset, int textureWidth, int textureHeight,
-		float opacity) {
-		innerBlit(matrixStack.getLast().getMatrix(), x1, x2, y1, y2, blitOffset, (uOffset + 0.0F) / textureWidth, (uOffset + uWidth) / textureWidth,
-			(vOffset + 0.0F) / textureHeight, (vOffset + vHeight) / textureHeight, opacity);
-	}
-
-	public static void innerBlit(Matrix4f matrix, int x1, int x2, int y1, int y2, int blitOffset, float minU, float maxU, float minV, float maxV, float opacity) {
-		//RenderSystem.enableAlphaTest();
-		BufferBuilder bufferbuilder = Tessellator.getInstance().getBuffer();
-		bufferbuilder.begin(GL11C.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-		bufferbuilder.pos(matrix, x1, y2, blitOffset).color(1, 1, 1, opacity).tex(minU, maxV).endVertex();
-		bufferbuilder.pos(matrix, x2, y2, blitOffset).color(1, 1, 1, opacity).tex(maxU, maxV).endVertex();
-		bufferbuilder.pos(matrix, x2, y1, blitOffset).color(1, 1, 1, opacity).tex(maxU, minV).endVertex();
-		bufferbuilder.pos(matrix, x1, y1, blitOffset).color(1, 1, 1, opacity).tex(minU, minV).endVertex();
-		bufferbuilder.finishDrawing();
-		RenderSystem.enableBlend();
-		RenderSystem.enableAlphaTest();
-		WorldVertexBufferUploader.draw(bufferbuilder);
-		RenderSystem.disableBlend();
-	}
 
 	public GLImageContent(ResourceLocation showingImage, float x, float y, float w, float h, int u, int v, int uw, int uh, int tw, int th) {
 		super(x, y, w, h);
@@ -106,8 +92,7 @@ public class GLImageContent extends GLLayerContent {
 
 	@Override
 	public void prerender(PrerenderParams params) {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 }

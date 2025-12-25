@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -24,13 +24,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.chorda.util.CRegistryHelper;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.gen.feature.template.Template;
-import net.minecraft.world.gen.feature.template.Template.BlockInfo;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 
 public class StructureUtils {
     static List<Block> baned = new ArrayList<>();
@@ -47,20 +47,20 @@ public class StructureUtils {
     }
 
     public static Block getChest() {
-        Block b = RegistryUtils.getBlock(new ResourceLocation("stone_age", "stone_chest"));
+        Block b = CRegistryHelper.getBlock(new ResourceLocation("stone_age", "stone_chest"));
         if (b == null || b == Blocks.AIR)
             return Blocks.TRAPPED_CHEST;
         return b;
     }
 
-    public static void handlePalette(List<Template.Palette> p) {
+    public static void handlePalette(List<StructureTemplate.Palette> p) {
 
-        p.forEach(q -> q.func_237157_a_().replaceAll(r -> {
-
-            if (baned.contains(r.state.getBlock())) {
-                return new BlockInfo(r.pos, Blocks.AIR.getDefaultState(), null);
-            } else if (remap.containsKey(r.state.getBlock())) {
-                return new BlockInfo(r.pos, remap.get(r.state.getBlock()).getDefaultState(), r.nbt);
+        p.forEach(q -> q.blocks().replaceAll(r -> {
+        	
+            if (baned.contains(r.state().getBlock())) {
+                return new StructureBlockInfo(r.pos(), Blocks.AIR.defaultBlockState(), null);
+            } else if (remap.containsKey(r.state().getBlock())) {
+                return new StructureBlockInfo(r.pos(), remap.get(r.state().getBlock()).defaultBlockState(), r.nbt());
             }
             return r;
         }));
@@ -71,6 +71,6 @@ public class StructureUtils {
     }
 
     public static void RemapRL(Block org, ResourceLocation dest) {
-        remap.put(org, RegistryUtils.getBlock(dest));
+        remap.put(org, CRegistryHelper.getBlock(dest));
     }
 }

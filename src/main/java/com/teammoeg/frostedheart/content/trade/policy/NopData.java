@@ -22,9 +22,10 @@ package com.teammoeg.frostedheart.content.trade.policy;
 import java.util.Map;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class NopData extends BaseData {
 
@@ -32,7 +33,7 @@ public class NopData extends BaseData {
         super(jo);
     }
 
-    public NopData(PacketBuffer pb) {
+    public NopData(FriendlyByteBuf pb) {
         super(pb);
     }
 
@@ -41,7 +42,7 @@ public class NopData extends BaseData {
     }
 
     @Override
-    public void fetch(PolicySnapshot shot, Map<String, Float> data) {
+    public void fetch(PolicySnapshot shot,FHVillagerData vd, Map<String, Float> data) {
     }
 
     @Override
@@ -50,7 +51,7 @@ public class NopData extends BaseData {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
         buffer.writeVarInt(3);
         super.write(buffer);
     }

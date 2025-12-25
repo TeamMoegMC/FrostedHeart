@@ -1,0 +1,6 @@
+{
+  "type": "frostedheart:block_temp",
+  "block": "minecraft:furnace",
+  "must_lit": true,
+  "temperature": 200.0
+}

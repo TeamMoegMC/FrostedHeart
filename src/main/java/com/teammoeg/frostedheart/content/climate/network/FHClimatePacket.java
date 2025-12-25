@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -21,31 +21,37 @@ package com.teammoeg.frostedheart.content.climate.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.client.ClientClimateData;
-import com.teammoeg.frostedheart.content.climate.ClimateType;
-import com.teammoeg.frostedheart.content.climate.TemperatureFrame;
-import com.teammoeg.frostedheart.content.climate.WorldClimate;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.chorda.io.SerializeUtil;
+import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedheart.content.climate.ClientClimateData;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.TemperatureFrame;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
 
-public class FHClimatePacket implements FHMessage {
+public class FHClimatePacket implements CMessage {
     private final short[] data;
     private final long sec;
     private final ClimateType climate;
+    private final int wind;
+    private final float humidity;
 
     public FHClimatePacket() {
         data = new short[0];
         sec = 0;
         climate = ClimateType.NONE;
+        wind = 0;
+        humidity = 0;
     }
 
-    public FHClimatePacket(PacketBuffer buffer) {
+    private FHClimatePacket(FriendlyByteBuf buffer) {
         data = SerializeUtil.readShortArray(buffer);
         sec = buffer.readVarLong();
         climate = ClimateType.values()[buffer.readByte() & 0xff];
+        wind = buffer.readVarInt();
+        humidity = buffer.readFloat();
     }
 
     public FHClimatePacket(WorldClimate climateData) {
@@ -53,17 +59,23 @@ public class FHClimatePacket implements FHMessage {
     		data = new short[0];
             sec = 0;
             climate = ClimateType.NONE;
+            wind = 0;
+            humidity = 0;
     	}else {
 	        data = climateData.getFrames();
 	        sec = climateData.getSec();
 	        climate = climateData.getClimate();
+            wind = climateData.getWind();
+            humidity = climateData.getHumidity();
     	}
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         SerializeUtil.writeShortArray(buffer, data);
         buffer.writeVarLong(sec);
         buffer.writeByte((byte) climate.ordinal());
+        buffer.writeVarInt(wind);
+        buffer.writeFloat(humidity);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
@@ -84,6 +96,8 @@ public class FHClimatePacket implements FHMessage {
             ClientClimateData.climate = climate;
 
             ClientClimateData.secs = sec;
+            ClientClimateData.wind = wind;
+            ClientClimateData.humidity = humidity;
         });
         context.get().setPacketHandled(true);
     }

@@ -1,42 +1,46 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.content.tips.network;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipManager;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class DisplayCustomTipPacket implements FHMessage {
-    private final String title;
-    private final String content;
-    private final int visibleTime;
-    private final boolean history;
+public record DisplayCustomTipPacket(Tip tip) implements CMessage {
 
-    public DisplayCustomTipPacket(PacketBuffer buffer) {
-        title = buffer.readString();
-        content = buffer.readString();
-        visibleTime = buffer.readInt();
-        history = buffer.readBoolean();
+    public DisplayCustomTipPacket(FriendlyByteBuf buffer) {
+        this(Tip.builder("").fromNBT(buffer.readNbt()).build());
     }
 
-    public DisplayCustomTipPacket(String title, String content, int visibleTime, boolean history) {
-        this.title = title;
-        this.content = content;
-        this.visibleTime = visibleTime;
-        this.history = history;
-    }
-
-    public void encode(PacketBuffer buffer) {
-        buffer.writeString(this.title);
-        buffer.writeString(this.content);
-        buffer.writeInt(this.visibleTime);
-        buffer.writeBoolean(this.history);
+    @Override
+    public void encode(FriendlyByteBuf buffer) {
+        tip.write(buffer);
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> TipDisplayManager.displayCustomTip(title, content, visibleTime, history));
+        ctx.get().enqueueWork(() -> TipManager.INSTANCE.display().general(tip));
         ctx.get().setPacketHandled(true);
     }
 }

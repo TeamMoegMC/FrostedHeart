@@ -1,0 +1,140 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.frostedheart.util.client;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
+import com.teammoeg.frostedheart.FHShaders;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.resources.ResourceLocation;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
+
+public class FGuis {
+    /**
+     * 圆角矩形
+     * @param guiGraphics The GuiGraphics object.
+     * @param x1 The x coordinate of the top left corner of the rectangle.
+     * @param y1 The y coordinate of the top left corner of the rectangle.
+     * @param width The width of the rectangle.
+     * @param height The height of the rectangle.
+     * @param radius 圆角大小，范围0-1
+     * @param color The color of the rectangle.
+     */
+    public static void fillRoundRect(GuiGraphics guiGraphics, int x1, int y1, int width, int height, float radius, int color) {
+        int x2 = x1 + width;
+        int y2 = y1 + height;
+
+        final float ratio = (float) height / (float) width;
+
+        RenderSystem.setShader(FHShaders::getRoundRectShader);
+        ShaderInstance shader = FHShaders.getRoundRectShader();
+        shader.safeGetUniform("Ratio").set(ratio);
+        shader.safeGetUniform("Radius").set(radius * ratio);
+
+        Matrix4f matrix4f = guiGraphics.pose().last().pose();
+        BufferBuilder builder = Tesselator.getInstance().getBuilder();
+        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        builder.vertex(matrix4f, x1, y1, 0).uv(0, 0).color(color).endVertex();
+        builder.vertex(matrix4f, x1, y2, 0).uv(0, 1).color(color).endVertex();
+        builder.vertex(matrix4f, x2, y2, 0).uv(1, 1).color(color).endVertex();
+        builder.vertex(matrix4f, x2, y1, 0).uv(1, 0).color(color).endVertex();
+        BufferUploader.drawWithShader(builder.end());
+    }
+
+    /**
+     * 绘制圆环
+     * @param guiGraphics The GuiGraphics object.
+     * @param x 圆环中心x坐标
+     * @param y 圆环中心y坐标
+     * @param innerRadius 内半径
+     * @param outerRadius 外半径
+     * @param startAngle 起始角度
+     * @param endAngle 结束角度
+     * @param color 颜色
+     */
+    public static void drawRing(GuiGraphics guiGraphics, int x, int y, float innerRadius, float outerRadius,float startAngle,float endAngle, int color) {
+        drawRing(guiGraphics, x, y, innerRadius, outerRadius, startAngle, endAngle, color, color);
+    }
+    public static void drawRing(GuiGraphics guiGraphics, int x, int y, float innerRadius, float outerRadius,float startAngle,float endAngle, int color,float smooth) {
+        drawRing(guiGraphics, x, y, innerRadius, outerRadius, startAngle, endAngle, color, color,smooth);
+    }
+    /**
+     * @param innerColor 内圆环颜色
+     * @param outerColor 外圆环颜色
+     */
+    public static void drawRing(GuiGraphics guiGraphics, int x, int y, float innerRadius, float outerRadius,float startAngle,float endAngle, int innerColor,int outerColor) {
+        drawRing(guiGraphics, x, y, innerRadius, outerRadius, startAngle, endAngle, innerColor, outerColor, 0.5f/outerRadius);
+    }
+    /**
+     * @param smooth 平滑度(抗锯齿)(范围0-1f)(不要给太大的数值)
+     */
+    public static void drawRing(GuiGraphics guiGraphics, int x, int y, float innerRadius, float outerRadius,float startAngle,float endAngle, int innerColor,int outerColor,float smooth) {
+        float x2 =  (x + outerRadius);
+        float y2 =  (y + outerRadius);
+        float x1 =  (x - outerRadius);
+        float y1 =  (y - outerRadius);
+
+
+        RenderSystem.setShader(FHShaders::getRingShader);
+        ShaderInstance shader = FHShaders.getRingShader();
+        shader.safeGetUniform("innerRadius").set(innerRadius/outerRadius/2);
+        shader.safeGetUniform("outerRadius").set(0.5f);
+
+        shader.safeGetUniform("innerColor").set(int2vec4(innerColor));
+        shader.safeGetUniform("outerColor").set(int2vec4(outerColor));
+
+        shader.safeGetUniform("startAngle").set(startAngle);
+        shader.safeGetUniform("endAngle").set(endAngle);
+
+        shader.safeGetUniform("Smooth").set(smooth);
+
+        RenderSystem.enableBlend();
+        Matrix4f matrix4f = guiGraphics.pose().last().pose();
+        BufferBuilder builder = Tesselator.getInstance().getBuilder();
+        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        builder.vertex(matrix4f, x1, y1, 0).uv(0, 0).endVertex();
+        builder.vertex(matrix4f, x1, y2, 0).uv(0, 1).endVertex();
+        builder.vertex(matrix4f, x2, y2, 0).uv(1, 1).endVertex();
+        builder.vertex(matrix4f, x2, y1, 0).uv(1, 0).endVertex();
+        BufferUploader.drawWithShader(builder.end());
+    }
+
+    public static void blitRound(GuiGraphics guiGraphics, ResourceLocation atlasLocation, int x, int y, int width, int height) {
+        int x2 = x + width;
+        int y2 = y + height;
+
+        RenderSystem.setShaderTexture(0, atlasLocation);
+        RenderSystem.setShader(FHShaders::getRoundShader);
+        Matrix4f matrix4f = guiGraphics.pose().last().pose();
+        BufferBuilder builder = Tesselator.getInstance().getBuilder();
+        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        builder.vertex(matrix4f, (float)x, (float)y, 0).uv(0, 0);
+        builder.vertex(matrix4f, (float)x, (float)y2, 0).uv(0, 1);
+        builder.vertex(matrix4f, (float)x2, (float)y2, 0).uv(1, 1);
+        builder.vertex(matrix4f, (float)x2, (float)y, 0).uv(1, 0);
+        BufferUploader.drawWithShader(builder.end());
+    }
+
+    private static Vector4f int2vec4(int color) {
+        return new Vector4f((color >> 16 & 255) / 255.0F, (color >> 8 & 255) / 255.0F, (color & 255) / 255.0F, (color >> 24 & 255) / 255.0F);
+    }
+}

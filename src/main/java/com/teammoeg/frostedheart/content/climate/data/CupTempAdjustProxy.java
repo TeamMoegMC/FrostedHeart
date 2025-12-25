@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,10 +19,9 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
-import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
@@ -44,7 +43,7 @@ public class CupTempAdjustProxy implements ITempAdjustFood {
             IFluidHandlerItem f = ih.resolve().get();
             FluidStack fs = f.getFluidInTank(0);
             if (!fs.isEmpty()) {
-                float dh = FHDataManager.getDrinkHeat(fs);
+                float dh = DrinkTempData.getDrinkHeat(fs);
                 if ((env > 37 && dh < 0) || (env < 37 && dh > 0))
                     return dh * efficiency;
                 if (env == 37)

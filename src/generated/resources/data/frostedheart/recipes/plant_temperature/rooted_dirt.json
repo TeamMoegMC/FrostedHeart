@@ -1,0 +1,14 @@
+{
+  "type": "frostedheart:plant_temp",
+  "blizzard_vulnerable": false,
+  "block": "minecraft:rooted_dirt",
+  "dead": "frostedheart:rooted_dirt_permafrost",
+  "grow_time_days": 1.0,
+  "heat_capacity": 10,
+  "max_survive": 50.0,
+  "min_fertilize": 20.0,
+  "min_grow": 10.0,
+  "min_skylight": 0,
+  "min_survive": 0.0,
+  "snow_vulnerable": false
+}

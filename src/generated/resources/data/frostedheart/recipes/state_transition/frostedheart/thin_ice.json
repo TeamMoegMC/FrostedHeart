@@ -1,0 +1,25 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Name": "frostedheart:thin_ice"
+  },
+  "condense_temp": -5.0,
+  "evaporate_temp": 9.0,
+  "freeze_temp": -20.0,
+  "gas": {
+    "Name": "minecraft:water",
+    "Properties": {
+      "level": "0"
+    }
+  },
+  "heat_capacity": 10,
+  "liquid": {
+    "Name": "frostedheart:thin_ice"
+  },
+  "melt_temp": 9.0,
+  "solid": {
+    "Name": "minecraft:ice"
+  },
+  "state": "liquid",
+  "will_transit": true
+}

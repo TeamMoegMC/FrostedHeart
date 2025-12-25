@@ -23,7 +23,7 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.PolicyCondition;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class TotalTradeCondition implements PolicyCondition {
     int level;
@@ -37,7 +37,7 @@ public class TotalTradeCondition implements PolicyCondition {
         this(jo.get("point").getAsInt());
     }
 
-    public TotalTradeCondition(PacketBuffer buffer) {
+    public TotalTradeCondition(FriendlyByteBuf buffer) {
         this(buffer.readVarInt());
     }
 
@@ -49,12 +49,12 @@ public class TotalTradeCondition implements PolicyCondition {
     }
 
     @Override
-    public boolean test(FHVillagerData ve) {
-        return ve.getTotaltraded() >= level;
+    public int test(FHVillagerData ve) {
+        return ve.getTotaltraded() >= level?Integer.MAX_VALUE:0;
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
         buffer.writeVarInt(level);
     }
 

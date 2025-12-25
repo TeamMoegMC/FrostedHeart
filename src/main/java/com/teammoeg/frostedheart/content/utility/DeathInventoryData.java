@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -21,82 +21,122 @@ package com.teammoeg.frostedheart.content.utility;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.chorda.io.NBTSerializable;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.ItemStackHelper;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.NonNullList;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.NonNullList;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 
 public class DeathInventoryData implements NBTSerializable {
     private static class CopyInventory {
         NonNullList<ItemStack> inv = NonNullList.withSize(9, ItemStack.EMPTY);
+        NonNullList<ItemStack> invex = NonNullList.withSize(27, ItemStack.EMPTY);
         NonNullList<ItemStack> armor = NonNullList.withSize(4, ItemStack.EMPTY);
         ItemStack offhand = ItemStack.EMPTY;
 
-        public static CopyInventory deserializeNBT(CompoundNBT nbt) {
+        public static CopyInventory deserializeNBT(CompoundTag nbt) {
 
             return new CopyInventory(nbt);
         }
 
-        private CopyInventory(CompoundNBT nbt) {
+        private CopyInventory(CompoundTag nbt) {
             super();
-            ItemStackHelper.loadAllItems(nbt.getCompound("main"), inv);
-            ItemStackHelper.loadAllItems(nbt.getCompound("armor"), armor);
-            this.offhand = ItemStack.read(nbt.getCompound("off"));
+            ContainerHelper.loadAllItems(nbt.getCompound("main"), inv);
+            ContainerHelper.loadAllItems(nbt.getCompound("back"), invex);
+            ContainerHelper.loadAllItems(nbt.getCompound("armor"), armor);
+            this.offhand = ItemStack.of(nbt.getCompound("off"));
 
         }
 
-        public CopyInventory(PlayerInventory othis) {
+        public CopyInventory(Inventory othis) {
             for (int i = 0; i < 9; i++) {
-                ItemStack itemstack = othis.mainInventory.get(i);
+                ItemStack itemstack = othis.items.get(i);
                 if (!itemstack.isEmpty()) {
-                    if (itemstack.isDamageable() || !itemstack.getToolTypes().isEmpty()) {
+                    if (itemstack.isDamageableItem() || itemstack.getMaxStackSize()==1||itemstack.is(FHTags.Items.IMPORTANT_ITEM.tag)) {
                         inv.set(i, itemstack);
-                        othis.setInventorySlotContents(i, ItemStack.EMPTY);
+                        othis.setItem(i, ItemStack.EMPTY);
                     }
                 }
             }
-            ItemStack offhand = othis.offHandInventory.get(0);
-            if (offhand.isDamageable() || !offhand.getToolTypes().isEmpty()) {
+            for(int i=0;i<27;i++) {
+            	ItemStack itemstack=othis.items.get(i+9);
+            	if (!itemstack.isEmpty()) {
+                    if (itemstack.is(FHTags.Items.IMPORTANT_ITEM.tag)) {
+                        inv.set(i+9, itemstack);
+                        othis.setItem(i+9, ItemStack.EMPTY);
+                    }
+                }
+            }
+            ItemStack offhand = othis.offhand.get(0);
+            if (offhand.isDamageableItem() || offhand.getMaxStackSize()==1) {
                 this.offhand = offhand;
-                othis.offHandInventory.set(0, ItemStack.EMPTY);
+                othis.offhand.set(0, ItemStack.EMPTY);
             }
             for (int i = 0; i < 4; i++) {
-                armor.set(i, othis.armorInventory.get(i));
-                othis.armorInventory.set(i, ItemStack.EMPTY);
+            	if(othis.armor.get(i).getEnchantmentLevel(Enchantments.BINDING_CURSE)<=0||othis.armor.get(i).getEnchantmentLevel(Enchantments.VANISHING_CURSE)<=0) {
+	                armor.set(i, othis.armor.get(i));
+	                othis.armor.set(i, ItemStack.EMPTY);
+            	}
             }
         }
 
-        public void restoreInventory(PlayerInventory othis) {
+        public void restoreInventory(Inventory othis) {
             for (int i = 0; i < 9; i++) {
                 ItemStack ret = inv.get(i);
-                if (!ret.isEmpty())
-                    othis.setInventorySlotContents(i, ret);
+                if (!ret.isEmpty()) {
+                	ItemStack ois=othis.getItem(i);
+                	if(!ois.isEmpty())
+                		CUtils.giveItem(othis.player, ois);
+                    othis.setItem(i, ret);
+                    
+                }
+            }
+            for(int i=0;i<27;i++) {
+            	ItemStack ret=invex.get(i);
+            	if(!ret.isEmpty())
+            		CUtils.giveItem(othis.player, ret);
             }
             for (int i = 0; i < 4; i++) {
                 ItemStack ret = armor.get(i);
-                if (!ret.isEmpty())
-                    othis.armorInventory.set(i, ret);
+
+                if (!ret.isEmpty()) {
+                	ItemStack ois=othis.armor.get(i);
+                	if(!ois.isEmpty())
+                		CUtils.giveItem(othis.player, ois);
+                    othis.armor.set(i, ret);
+                }
             }
             if (offhand != null && !offhand.isEmpty()) {
-                othis.offHandInventory.set(0, offhand);
+            	ItemStack ois=othis.offhand.get(0);
+            	if(!ois.isEmpty())
+            		CUtils.giveItem(othis.player, ois);
+                othis.offhand.set(0, offhand);
             }
         }
 
-        public CompoundNBT serializeNBT() {
-            CompoundNBT cnbto = new CompoundNBT();
+        @Override
+		public String toString() {
+			return "CopyInventory [inv=" + inv + ", armor=" + armor + ", offhand=" + offhand + "]";
+		}
+
+		public CompoundTag serializeNBT() {
+            CompoundTag cnbto = new CompoundTag();
 
 
-            cnbto.put("main", ItemStackHelper.saveAllItems(new CompoundNBT(), inv));
-            cnbto.put("armor", ItemStackHelper.saveAllItems(new CompoundNBT(), armor));
+            cnbto.put("main", ContainerHelper.saveAllItems(new CompoundTag(), inv));
+            cnbto.put("back", ContainerHelper.saveAllItems(new CompoundTag(), invex));
+            cnbto.put("armor", ContainerHelper.saveAllItems(new CompoundTag(), armor));
             cnbto.put("off", offhand.serializeNBT());
             return cnbto;
         }
@@ -111,7 +151,7 @@ public class DeathInventoryData implements NBTSerializable {
      * @param world server or client
      * @return An instance of ClimateData exists on the world, otherwise return a new ClimateData instance.
      */
-    public static DeathInventoryData get(PlayerEntity world) {
+    public static DeathInventoryData get(Player world) {
 
         return getCapability(world).resolve().orElse(null);
     }
@@ -122,14 +162,14 @@ public class DeathInventoryData implements NBTSerializable {
      * @param player server or client
      * @return An instance of ClimateData if data exists on the world, otherwise return empty.
      */
-    private static LazyOptional<DeathInventoryData> getCapability(@Nullable PlayerEntity player) {
+    private static LazyOptional<DeathInventoryData> getCapability(@Nullable Player player) {
     	return FHCapabilities.DEATH_INV.getCapability(player);
     }
 
     public DeathInventoryData() {
     }
 
-    public void alive(PlayerInventory inv) {
+    public void alive(Inventory inv) {
         if (this.inv != null) {
             this.inv.restoreInventory(inv);
             this.inv = null;
@@ -145,20 +185,15 @@ public class DeathInventoryData implements NBTSerializable {
         this.inv = data.inv;
     }
 
-    public void death(PlayerInventory inv) {
+    public void death(Inventory inv) {
         this.inv = new CopyInventory(inv);
-    }
-
-    @Override
-    public void deserializeNBT(CompoundNBT nbt) {
-
     }
 
     public void startClone() {
         calledClone = false;
     }
 
-    public void tryCallClone(PlayerEntity pe) {
+    public void tryCallClone(Player pe) {
         //System.out.println("Detecting clone event");
         if (!calledClone) {
             //System.out.println("calling clone event");
@@ -167,21 +202,24 @@ public class DeathInventoryData implements NBTSerializable {
     }
 
 	@Override
-	public void save(CompoundNBT cnbt, boolean isPacket) {
+	public void save(CompoundTag cnbt, boolean isPacket) {
         if (inv != null)
             cnbt.put("inv", inv.serializeNBT());
         cnbt.putBoolean("cloned", calledClone);
 	}
 
 	@Override
-	public void load(CompoundNBT nbt, boolean isPacket) {
+	public void load(CompoundTag nbt, boolean isPacket) {
         inv = null;
         calledClone = nbt.getBoolean("cloned");
-        if (nbt.contains("data")) {
-            nbt.getList("data", Constants.NBT.TAG_COMPOUND).stream().map(t -> (CompoundNBT) t).findFirst().ifPresent(e-> inv = CopyInventory.deserializeNBT(e.getCompound("inv")));
-        } else if (nbt.contains("inv")) {
+        if (nbt.contains("inv")) {
             inv = CopyInventory.deserializeNBT(nbt.getCompound("inv"));
         }
+	}
+
+	@Override
+	public String toString() {
+		return "DeathInventoryData [inv=" + inv + "]";
 	}
 
 }

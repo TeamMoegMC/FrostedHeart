@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,27 +19,26 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import java.util.Random;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.client.ClientUtils;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.Level;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-
-public class SmokeBlockT1 extends FHBaseBlock {
+public class SmokeBlockT1 extends CBlock {
 
     public SmokeBlockT1(Properties blockProps) {
         super(blockProps);
     }
 
     @Override
-    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+    public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, RandomSource rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
         for (int i = 0; i < rand.nextInt(2) + 2; ++i) {
-            ClientUtils.spawnSmokeParticles(worldIn, pos.up());
-            ClientUtils.spawnFireParticles(worldIn, pos.up());
+            ClientUtils.spawnSmokeParticles(worldIn, pos.above());
+            ClientUtils.spawnFireParticles2(worldIn, pos.above());
         }
     }
 }

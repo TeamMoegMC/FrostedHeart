@@ -23,7 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVM;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 
 public class IfNode implements Node {
     String cmd;
@@ -43,7 +43,7 @@ public class IfNode implements Node {
     }
 
     @Override
-    public String getLiteral(ScenarioVM runner) {
+    public String getLiteral(ScenarioCommandContext runner) {
         return "";
     }
 
@@ -58,18 +58,18 @@ public class IfNode implements Node {
     }
 
     @Override
-    public void run(ScenarioVM runner) {
+    public void run(ScenarioCommandContext runner) {
     	double val=runner.eval(exp);
     	//System.out.println(val+"/"+elseBlock);
         if (val <= 0) {
         	//System.out.println("else");
         	for(Entry<String, Integer> ent:elsifs.entrySet()) {
         		if(runner.eval(ent.getKey())>0) {
-        			runner.setNodeNum(ent.getValue());
+        			runner.thread().setExecutePos(ent.getValue());
         			return;
         		}
         	}
-            runner.setNodeNum(elseBlock);
+            runner.thread().setExecutePos(elseBlock);
         }
     }
 

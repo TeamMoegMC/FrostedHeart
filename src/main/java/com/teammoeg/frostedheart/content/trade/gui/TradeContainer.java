@@ -25,63 +25,66 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.teammoeg.frostedheart.FHContainer;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
+
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.content.trade.ClientTradeHandler;
-import com.teammoeg.frostedheart.content.trade.FHVillagerData;
-import com.teammoeg.frostedheart.content.trade.PlayerRelationData;
-import com.teammoeg.frostedheart.content.trade.RelationList;
+import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.trade.*;
 import com.teammoeg.frostedheart.content.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
-import com.teammoeg.frostedheart.util.FHUtils;
 
-import net.minecraft.entity.merchant.villager.VillagerEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.MathHelper;
+import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
+import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
-public class TradeContainer extends Container {
+public class TradeContainer extends AbstractContainerMenu {
+
     public class DetectionSlot extends Slot {
         boolean isSaleable = false;
 
-        public DetectionSlot(IInventory inventoryIn, int index, int xPosition, int yPosition) {
+        public DetectionSlot(Container inventoryIn, int index, int xPosition, int yPosition) {
             super(inventoryIn, index, xPosition, yPosition);
             slots.add(this);
         }
 
         @Override
-        public void onSlotChange(ItemStack oldStackIn, ItemStack newStackIn) {
-            super.onSlotChange(oldStackIn, newStackIn);
+        public void onQuickCraft(ItemStack oldStackIn, ItemStack newStackIn) {
+            super.onQuickCraft(oldStackIn, newStackIn);
             redetect();
 
         }
 
         @Override
-        public void onSlotChanged() {
-            super.onSlotChanged();
+        public void setChanged() {
+            super.setChanged();
             redetect();
         }
 
         private void redetect() {
             isSaleable = false;
             for (BuyData bd : policy.getBuys()) {
-                if (bd.getItem().test(this.getStack())) {
+                if (bd.getItem().test(this.getItem())) {
                     if (bd.getStore() != 0) {
                         isSaleable = true;
                         break;
@@ -91,13 +94,13 @@ public class TradeContainer extends Container {
         }
 
     }
-    public static final int RELATION_TO_TRADE = -30;
+
     public FHVillagerData data;
     public PlayerRelationData pld;
     public RelationList relations;
     public PolicySnapshot policy;
 
-    public VillagerEntity ve;
+    public AbstractVillager ve;
 
     ItemStackHandler inv = new ItemStackHandler(12) {
 
@@ -114,6 +117,7 @@ public class TradeContainer extends Container {
         }
 
     };
+    private static final Marker TRADE=MarkerManager.getMarker("TRADE");
 
     // client side memory
     LinkedHashMap<String, Integer> order = new LinkedHashMap<>();
@@ -127,25 +131,28 @@ public class TradeContainer extends Container {
 
     int voffer, poffer, originalVOffer;
 
-    public TradeContainer(int id, PlayerInventory inventoryPlayer, PacketBuffer pb) {
+    public TradeContainer(int id, Inventory inventoryPlayer, FriendlyByteBuf pb) {
         this(id, inventoryPlayer,
-                (VillagerEntity) inventoryPlayer.player.getEntityWorld().getEntityByID(pb.readVarInt()));
+                (AbstractVillager) inventoryPlayer.player.getCommandSenderWorld().getEntity(pb.readVarInt()));
 
         data = new FHVillagerData(ve);
-        CompoundNBT d = pb.readCompoundTag();
+        CompoundTag d = pb.readNbt();
         // System.out.println(d);
         data.deserializeFromRecv(d);
-        pld = new PlayerRelationData();
-        pld.deserialize(pb.readCompoundTag());
+        pld = new PlayerRelationData(0);
+        pld.deserialize(pb.readNbt());
         relations = new RelationList();
         relations.read(pb);
         policy = data.getPolicy();
-        policy.fetchTrades(data.storage);
+        policy.fetchTrades(data,data.storage);
+        if(relations.sum()<=TradeConstants.RELATION_TO_TRADE) {//Not selling anything if bad relations
+        	policy.getSells().clear();
+        }
     }
 
-    public TradeContainer(int id, PlayerInventory inventoryPlayer,
-                          VillagerEntity ve /* ,PlayerRelationData prd,RelationList rel */) {
-        super(FHContainer.TRADE_GUI.get(), id);
+    public TradeContainer(int id, Inventory inventoryPlayer,
+                          AbstractVillager ve /* ,PlayerRelationData prd,RelationList rel */) {
+        super(FHMenuTypes.TRADE_GUI.get(), id);
         // Server does not need such data as server always have access to all data.
         /*
          * this.pld=prd;
@@ -158,16 +165,16 @@ public class TradeContainer extends Container {
         //ve.setCustomer(inventoryPlayer.player);
         for (int i = 0; i < 3; i++)
             for (int j = 0; j < 4; j++)
-                addSlot(new SlotItemHandler(inv, j + i * 4, 62 + j * 16, 18 + i * 16) {
+                addSlot(new SlotItemHandler(inv, j + i * 4, 62 + j * 16, 4 + i * 16) {
 
                     @Override
-                    public void onSlotChange(ItemStack oldStackIn, ItemStack newStackIn) {
-                        super.onSlotChange(oldStackIn, newStackIn);
+                    public void onQuickCraft(ItemStack oldStackIn, ItemStack newStackIn) {
+                        super.onQuickCraft(oldStackIn, newStackIn);
                     }
 
                     @Override
-                    public void onSlotChanged() {
-                        super.onSlotChanged();
+                    public void setChanged() {
+                        super.setChanged();
                         recalc();
                         fireClientUpdateTrade();
                     }
@@ -182,12 +189,13 @@ public class TradeContainer extends Container {
 
     }
 
-    public boolean canInteractWith(PlayerEntity playerIn) {
-        return ve.getCustomer() == playerIn;
+    public boolean stillValid(Player playerIn) {
+        return ve.getTradingPlayer() == playerIn;
     }
 
-    public void commitTrade(ServerPlayerEntity pe) {
+    public void commitTrade(ServerPlayer pe) {
         recalc();
+        FHMain.LOGGER.debug(TRADE,"===trade initialed by "+pe.getName().getString()+"started===");
         int poffer = 0;
         if (balance >= 0) {
 
@@ -197,35 +205,49 @@ public class TradeContainer extends Container {
                 for (BuyData bd : policy.getBuys()) {
                     if (bd.getItem().test(is)) {
                         int cnt = Math.min(is.getCount(), bd.getStore());
-                        if (ve.func_230293_i_(is)) {
-                            ve.getVillagerInventory().addItem(ItemHandlerHelper.copyStackWithSize(is, cnt));
+                        if (ve.wantsToPickUp(is)) {
+                            ve.getInventory().addItem(ItemHandlerHelper.copyStackWithSize(is, cnt));
                         }
+                        FHMain.LOGGER.debug(TRADE,"Provided: "+is+" actual:"+cnt+" stock:"+bd.getStore()+" per:"+bd.getPrice());
                         if (cnt == is.getCount())
                             inv.setStackInSlot(i, ItemStack.EMPTY);
                         else
                             is.shrink(cnt);
 
                         bd.reduceStock(data, cnt);
+                        
                         poffer += cnt * bd.getPrice();
                         continue outer;
                     }
                 }
             }
             int benefits = this.poffer - this.originalVOffer;
-            System.out.println(benefits);
+            FHMain.LOGGER.debug(TRADE,"===Trade statistics===");
+            FHMain.LOGGER.debug(TRADE,"original Offer:"+originalVOffer+",pre calculated offer:"+this.poffer+",actual offer:"+poffer+",discount:"+discountAmount+",punish:"+relationMinus);
             if (benefits > 10) {
-                PlayerRelationData prd = this.data.getRelationDataForWrite(pe);
+                PlayerRelationData prd = this.data.getRelationDataForWrite(pe,WorldClimate.getWorldDay(pe.level()));
                 prd.totalbenefit += benefits / 10;
             }
             poffer += discountAmount;
-            if (relations.sum() > RELATION_TO_TRADE) {
+            poffer -= relationMinus;
+            FHMain.LOGGER.debug(TRADE,"===Villager offer===");
+            if (relations.sum() > TradeConstants.RELATION_TO_TRADE) {
                 for (Entry<String, Integer> entry : order.entrySet()) {
                     SellData sd = policy.getSells().get(entry.getKey());
                     int cnt = Math.min(sd.getStore(), entry.getValue());
                     int price = cnt * sd.getPrice();
+                    
+                    if (poffer < price){
+                    	FHMain.LOGGER.warn("Revalidation failed for trade: item "+sd.getItem()+" price "+sd.getPrice()+" player offered "+poffer+", reducing amount");
+                    	if(poffer>sd.getPrice()) {
+                    		cnt=Math.min(poffer/sd.getPrice(), cnt);
+                    		price = cnt * sd.getPrice();
+                    	}
+                    }
+                    FHMain.LOGGER.debug(TRADE,"Provided: "+sd.getItem()+" required:"+entry.getValue()+" stock:"+sd.getStore()+" actual:"+cnt+" per:"+sd.getPrice());
                     if (poffer >= price) {
                         poffer -= price;
-                        FHUtils.giveItem(pe, ItemHandlerHelper.copyStackWithSize(sd.getItem(), cnt));
+                        CUtils.giveItem(pe, ItemHandlerHelper.copyStackWithSize(sd.getItem(), cnt));
                         sd.reduceStock(data, cnt);
                         data.totaltraded += price;
                     }
@@ -234,9 +256,10 @@ public class TradeContainer extends Container {
                 data.updateLevel();
                 order.clear();
             }
+            FHMain.LOGGER.debug(TRADE,"===End trade===");
             this.setData(data, pe);
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> pe), new TradeUpdatePacket(
-                    data.serializeForSend(new CompoundNBT()), pld.serialize(new CompoundNBT()), relations, true));
+            FHNetwork.INSTANCE.sendPlayer(pe, new TradeUpdatePacket(
+                    data.serializeForSend(new CompoundTag()), pld.serialize(new CompoundTag()), relations, true));
         }
     }
 
@@ -244,15 +267,21 @@ public class TradeContainer extends Container {
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ClientTradeHandler::updateTrade);
     }
 
-    public void handleBargain(ServerPlayerEntity pe) {
-        if (relations.sum() < 40)
+    public void handleBargain(ServerPlayer pe) {
+        if (relations.sum() < TradeConstants.RELATION_TO_BARGAIN)
             return;
         recalc();
         if (order.isEmpty())
             return;
 
         boolean succeed = false;
-        if (true) {// TODO:simulates bargain success
+
+        // bargain based on relation
+        int playerRelation = Math.min(relations.sum(), TradeConstants.RELATION_MAX);
+        int relationSurplus = playerRelation - TradeConstants.RELATION_TO_BARGAIN;
+        float probability = (float) relationSurplus / (TradeConstants.RELATION_MAX - TradeConstants.RELATION_TO_BARGAIN);
+
+        if (pe.getRandom().nextFloat() < probability) {
             discountRatio = maxdiscount / ((float) voffer);
             discountRatio = Math.min(0.4f, discountRatio + 0.1f);
             maxdiscount = (int) (voffer * discountRatio);
@@ -261,22 +290,22 @@ public class TradeContainer extends Container {
             relations = data.getRelationShip(pe);
             succeed = true;
         }
-        FHNetwork.send(PacketDistributor.PLAYER.with(() -> pe), new BargainResponse(this, succeed));
+        FHNetwork.INSTANCE.sendPlayer(pe, new BargainResponse(this, succeed));
     }
 
     @Override
-    public void onContainerClosed(PlayerEntity pPlayer) {
-        this.ve.setCustomer(null);
+    public void removed(Player pPlayer) {
+        this.ve.setTradingPlayer(null);
         if (!pPlayer.isAlive()
-                || pPlayer instanceof ServerPlayerEntity && ((ServerPlayerEntity) pPlayer).hasDisconnected()) {
+                || pPlayer instanceof ServerPlayer && ((ServerPlayer) pPlayer).hasDisconnected()) {
             for (int j = 0; j < inv.getSlots(); ++j) {
-                pPlayer.dropItem(inv.getStackInSlot(j), false);
+                pPlayer.drop(inv.getStackInSlot(j), false);
             }
         } else {
-            PlayerInventory inventory = pPlayer.inventory;
-            if (inventory.player instanceof ServerPlayerEntity) {
+            Inventory inventory = pPlayer.getInventory();
+            if (inventory.player instanceof ServerPlayer) {
                 for (int i = 0; i < inv.getSlots(); ++i) {
-                    inventory.placeItemBackInInventory(pPlayer.world, inv.getStackInSlot(i));
+                    inventory.placeItemBackInInventory(inv.getStackInSlot(i));
                 }
             }
         }
@@ -285,13 +314,19 @@ public class TradeContainer extends Container {
 
     public void recalc() {
         poffer = 0;
+        Reference2IntOpenHashMap<BuyData> stock=new Reference2IntOpenHashMap<>(policy.getBuys().size());
         outer:
         for (int i = 0; i < inv.getSlots(); i++) {
             ItemStack is = inv.getStackInSlot(i);
+            int cnt=is.getCount();
             for (BuyData bd : policy.getBuys()) {
                 if (bd.getItem().test(is)) {
-                    int cnt = Math.min(is.getCount(), bd.getStore());
-                    poffer += cnt * bd.getPrice();
+                	int curstock=bd.getStore()-stock.getInt(bd);
+                	
+                    int consume = Math.min(cnt, curstock);
+                    poffer += consume * bd.getPrice();
+                    cnt-=consume;
+                    stock.addTo(bd, consume);
                     continue outer;
                 }
             }
@@ -305,10 +340,10 @@ public class TradeContainer extends Container {
         discountAmount = 0;
         int relation = relations.sum();
         if (!order.isEmpty()) {
-            if (relation < RELATION_TO_TRADE) {
+            if (relation < TradeConstants.RELATION_TO_TRADE) {
                 relationMinus = 10000000;
             } else if (relation < 0 && voffer > 0) {
-                relationMinus = (int) (MathHelper.lerp(MathHelper.clamp(-relation / 30f, 0, 1), 0, 0.2) * voffer);
+                relationMinus = (int) (Mth.lerp(Mth.clamp(-relation / 30f, 0, 1), 0, 0.2) * voffer);
             }
             voffer += relationMinus;
             if (discountRatio > 0) {
@@ -333,12 +368,17 @@ public class TradeContainer extends Container {
             balance = 0;
     }
 
-    public void setData(FHVillagerData dat, PlayerEntity pe) {
+    public void setData(FHVillagerData dat, Player pe) {
         data = dat;
         pld = data.getRelationDataForRead(pe);
         relations = data.getRelationShip(pe);
-        policy = data.getPolicy();
-        policy.fetchTrades(data.storage);
+        
+        	policy = data.getPolicy();
+        	policy.fetchTrades(data,data.storage);
+        if(relations.sum()<=TradeConstants.RELATION_TO_TRADE) {//Not selling anything if bad relations
+        	policy.getSells().clear();
+        }
+        
     }
 
     public void setOrder(Map<String, Integer> order) {
@@ -348,15 +388,15 @@ public class TradeContainer extends Container {
     }
 
     @Override
-    public ItemStack transferStackInSlot(PlayerEntity player, int slot) {
+    public ItemStack quickMoveStack(Player player, int slot) {
         ItemStack itemstack = ItemStack.EMPTY;
-        Slot slotObject = super.inventorySlots.get(slot);
+        Slot slotObject = super.slots.get(slot);
         final int slotCount = 12;
-        if (slotObject != null && slotObject.getHasStack()) {
-            ItemStack itemstack1 = slotObject.getStack();
+        if (slotObject != null && slotObject.hasItem()) {
+            ItemStack itemstack1 = slotObject.getItem();
             itemstack = itemstack1.copy();
             if (slot < slotCount) {
-                if (!this.mergeItemStack(itemstack1, slotCount, this.inventorySlots.size(), true)) {
+                if (!this.moveItemStackTo(itemstack1, slotCount, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
             } else if (!this.tryMergeStack(itemstack1, 0, slotCount)) {
@@ -364,9 +404,9 @@ public class TradeContainer extends Container {
             }
 
             if (itemstack1.isEmpty()) {
-                slotObject.putStack(ItemStack.EMPTY);
+                slotObject.set(ItemStack.EMPTY);
             } else {
-                slotObject.onSlotChanged();
+                slotObject.setChanged();
             }
         }
 
@@ -377,9 +417,9 @@ public class TradeContainer extends Container {
         boolean inAllowedRange = true;
         int allowedStart = pStartIndex;
         for (int i = pStartIndex; i < pEndIndex; i++) {
-            boolean mayplace = this.inventorySlots.get(i).isItemValid(pStack);
+            boolean mayplace = this.slots.get(i).mayPlace(pStack);
             if (inAllowedRange && (!mayplace || i == pEndIndex - 1)) {
-                if (this.mergeItemStack(pStack, allowedStart, i, false))
+                if (this.moveItemStackTo(pStack, allowedStart, i, false))
                     return true;
                 inAllowedRange = false;
             } else if (!inAllowedRange && mayplace) {
@@ -390,12 +430,16 @@ public class TradeContainer extends Container {
         return false;
     }
 
-    public void update(CompoundNBT sdata, CompoundNBT splayer, RelationList rels, boolean isReset) {
+    public void update(CompoundTag sdata, CompoundTag splayer, RelationList rels, boolean isReset) {
         this.data.deserializeFromRecv(sdata);
         this.pld.deserialize(splayer);
         policy = data.getPolicy();
-        policy.fetchTrades(data.storage);
+        policy.fetchTrades(data,data.storage);
         relations.copy(rels);
+        if(relations.sum()<=TradeConstants.RELATION_TO_TRADE) {//Not selling anything if bad relations
+        	policy.getSells().clear();
+        }
+        
         if (isReset) {
             order.clear();
             balance = 0;

@@ -1,0 +1,14 @@
+{
+  "type": "frostedheart:plant_temp",
+  "block": "minecraft:melon",
+  "dead": "minecraft:dead_bush",
+  "grow_time_days": 8.0,
+  "heat_capacity": 10,
+  "max_fertilize": 30.0,
+  "max_grow": 34.0,
+  "max_survive": 38.0,
+  "min_fertilize": 22.0,
+  "min_grow": 16.0,
+  "min_skylight": 12,
+  "min_survive": -40.0
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,13 +19,18 @@
 
 package com.teammoeg.frostedheart.compat.jei.extension;
 
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.recipes.ShapelessCopyDataRecipe;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
-import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.ingredients.IIngredients;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.utility.recipe.ShapelessCopyDataRecipe;
+
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
+import mezz.jei.api.gui.ingredient.ICraftingGridHelper;
+import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategoryExtension;
-import net.minecraft.util.ResourceLocation;
+import mezz.jei.library.util.RecipeUtil;
+import net.minecraft.resources.ResourceLocation;
 
 public class ShapelessCopyDataExtension implements ICraftingCategoryExtension {
     ShapelessCopyDataRecipe recipe;
@@ -41,9 +46,9 @@ public class ShapelessCopyDataExtension implements ICraftingCategoryExtension {
     }
 
     @Override
-    public void setIngredients(IIngredients ingredients) {
-        ingredients.setInputIngredients(recipe.getIngredients());
-        ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
+    public void setRecipe(IRecipeLayoutBuilder builder, ICraftingGridHelper craftingGridHelper, IFocusGroup focuses) {
+    	craftingGridHelper.createAndSetInputs(builder, recipe.getIngredients().stream().map(t->Arrays.asList(t.getItems())).collect(Collectors.toList()), 0, 0);
+    	craftingGridHelper.createAndSetOutputs(builder, Arrays.asList(RecipeUtil.getResultItem(recipe)));
     }
 
 }

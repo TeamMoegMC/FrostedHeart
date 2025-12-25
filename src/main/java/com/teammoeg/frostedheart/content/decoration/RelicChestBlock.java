@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,98 +19,86 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import javax.annotation.Nullable;
+import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.InventoryHelper;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.state.EnumProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Rotation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
-import net.minecraftforge.common.ToolType;
-import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.Containers;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.network.NetworkHooks;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 
-public class RelicChestBlock extends FHBaseBlock {
-    protected static final VoxelShape X_SHAPE = Block.makeCuboidShape(0D, 0D, 2D, 16D, 13D, 14D);
-    protected static final VoxelShape Z_SHAPE = Block.makeCuboidShape(2D, 0D, 0D, 14D, 13D, 16D);
+public class RelicChestBlock extends CBlock implements CEntityBlock<RelicChestTileEntity> {
+    protected static final VoxelShape X_SHAPE = Block.box(0D, 0D, 2D, 16D, 13D, 14D);
+    protected static final VoxelShape Z_SHAPE = Block.box(2D, 0D, 0D, 14D, 13D, 16D);
     public static final EnumProperty<Direction.Axis> HORIZONTAL_AXIS = BlockStateProperties.HORIZONTAL_AXIS;
 
-    public RelicChestBlock() {
-        super(Block.Properties.create(Material.IRON).sound(SoundType.STONE).setRequiresTool()
-                .harvestTool(ToolType.PICKAXE).hardnessAndResistance(35, 600).notSolid());
+    public RelicChestBlock(Properties prop) {
+        super(prop);
     }
 
-    @Nullable
-    @Override
-    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-        return FHTileTypes.RELIC_CHEST.get().create();
-    }
 
     @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(HORIZONTAL_AXIS);
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-        if (state.get(HORIZONTAL_AXIS) == Direction.Axis.X)
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
+        if (state.getValue(HORIZONTAL_AXIS) == Direction.Axis.X)
             return X_SHAPE;
         return Z_SHAPE;
     }
 
     @Override
-    public BlockState getStateForPlacement(BlockItemUseContext context) {
-        return this.getDefaultState().with(HORIZONTAL_AXIS, context.getPlacementHorizontalFacing().rotateY().getAxis());
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return this.defaultBlockState().setValue(HORIZONTAL_AXIS, context.getHorizontalDirection().getClockWise().getAxis());
     }
 
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
-    }
-
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (!worldIn.isRemote) {
-            RelicChestTileEntity tile = (RelicChestTileEntity) worldIn.getTileEntity(pos);
+    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+        if (!worldIn.isClientSide) {
+            RelicChestTileEntity tile = (RelicChestTileEntity) worldIn.getBlockEntity(pos);
             if (tile != null) {
-                NetworkHooks.openGui((ServerPlayerEntity) player, tile, tile.getPos());
-                worldIn.playSound(null, pos, SoundEvents.BLOCK_LAVA_EXTINGUISH, SoundCategory.BLOCKS, 0.3F, 1.5F);
+            	NetworkHooks.openScreen((ServerPlayer) player, tile, pos);
+                worldIn.playSound(null, pos, SoundEvents.LAVA_EXTINGUISH, SoundSource.BLOCKS, 0.3F, 1.5F);
             }
         }
-        return ActionResultType.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public void onReplaced(BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (!state.matchesBlock(newState.getBlock())) {
-            TileEntity tileentity = worldIn.getTileEntity(pos);
+    public void onRemove(BlockState state, Level worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            BlockEntity tileentity = worldIn.getBlockEntity(pos);
             if (tileentity instanceof IIEInventory) {
-                InventoryHelper.dropInventoryItems(worldIn, pos, (IInventory) tileentity);
+                Containers.dropContents(worldIn, pos, (Container) tileentity);
             }
 
-            super.onReplaced(state, worldIn, pos, newState, isMoving);
+            super.onRemove(state, worldIn, pos, newState, isMoving);
         }
     }
 
@@ -118,11 +106,11 @@ public class RelicChestBlock extends FHBaseBlock {
         switch (rot) {
             case COUNTERCLOCKWISE_90:
             case CLOCKWISE_90:
-                switch (state.get(HORIZONTAL_AXIS)) {
+                switch (state.getValue(HORIZONTAL_AXIS)) {
                     case Z:
-                        return state.with(HORIZONTAL_AXIS, Direction.Axis.X);
+                        return state.setValue(HORIZONTAL_AXIS, Direction.Axis.X);
                     case X:
-                        return state.with(HORIZONTAL_AXIS, Direction.Axis.Z);
+                        return state.setValue(HORIZONTAL_AXIS, Direction.Axis.Z);
                     default:
                         return state;
                 }
@@ -130,4 +118,11 @@ public class RelicChestBlock extends FHBaseBlock {
                 return state;
         }
     }
+
+
+	@Override
+	public Supplier<BlockEntityType<RelicChestTileEntity>> getBlock() {
+		return FHBlockEntityTypes.RELIC_CHEST;
+	}
+
 }
