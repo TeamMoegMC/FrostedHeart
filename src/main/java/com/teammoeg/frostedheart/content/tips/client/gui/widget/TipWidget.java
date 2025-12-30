@@ -23,14 +23,13 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.StringTextComponentParser;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.frostedheart.content.tips.TipClickActions;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedheart.util.Lang;
-
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -38,7 +37,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
@@ -70,20 +68,20 @@ public class TipWidget extends AbstractWidget {
 
     private TipWidget() {
         super(0, 0, 0, 0, Component.literal("tip"));
-        this.closeButton = new IconButton(0, 0, IconButton.Icon.CROSS, ColorHelper.CYAN, Lang.gui("close").component(),
+        this.closeButton = new IconButton(0, 0, FlatIcon.CROSS, Colors.CYAN, Lang.gui("close").component(),
                 b -> {
                     close();
                     b.setFocused(false);
                 });
-        this.pinButton = new IconButton(0, 0, IconButton.Icon.LOCK, ColorHelper.CYAN, Lang.gui("pin").component(),
+        this.pinButton = new IconButton(0, 0, FlatIcon.LOCK, Colors.CYAN, Lang.gui("pin").component(),
                 b -> {
                     this.alwaysVisibleOverride = true;
                     b.setFocused(false);
                 });
-        this.linkButton = new IconButton(0, 0, IconButton.Icon.JUMP, ColorHelper.CYAN, Lang.gui("link").component(),
+        this.linkButton = new IconButton(0, 0, FlatIcon.JUMP, Colors.CYAN, Lang.gui("link").component(),
                 b -> {
-                    if (tip != null && tip.hasClickAction()) {
-                        TipClickActions.run(tip.getClickAction(), I18n.get(tip.getClickActionContent()));
+                    if (tip != null) {
+                        tip.runClickAction();
                     }
                 });
         this.visible = false;
@@ -146,7 +144,7 @@ public class TipWidget extends AbstractWidget {
         Font font = ClientUtils.font();
         PoseStack pose = graphics.pose();
         pose.pushPose();
-        pose.translate((context.pYaw - (int) context.pYaw), (context.pPitch - (int) context.pPitch), 800);
+        pose.translate((context.pYaw - (int) context.pYaw), (context.pPitch - (int) context.pPitch), 0);
 
         // 背景
         graphics.fill(
@@ -184,7 +182,7 @@ public class TipWidget extends AbstractWidget {
         }
 
         // 按钮
-        pose.translate(0, 0, 100);
+        pose.translate(0, 0, 10);
         closeButton.color = context.fontColor;
         closeButton.visible = true;
         closeButton.setPosition(getX() + super.getWidth() - 10, getY());
@@ -320,13 +318,13 @@ public class TipWidget extends AbstractWidget {
 
         RenderContext(Tip tip) {
             this.tip = tip;
-            originalImageSize = ClientUtils.getImgSize(tip.getImage());
-            hasImage = originalImageSize.height + originalImageSize.width > 0;
+            originalImageSize = CGuiHelper.getImgSize(tip.getImage());
+            hasImage = originalImageSize != null && originalImageSize.height + originalImageSize.width > 0;
         }
 
         void update() {
-            BGColor = ColorHelper.setAlpha(tip.getBackgroundColor(), (isGuiOpened() ? 0.8F : 0.5F));
-            fontColor = ColorHelper.setAlpha(tip.getFontColor(), 1.0F);
+            BGColor = Colors.setAlpha(tip.getBackgroundColor(), (isGuiOpened() ? 0.8F : 0.5F));
+            fontColor = Colors.setAlpha(tip.getFontColor(), 1.0F);
 
             // 跟随视角晃动
             Font font = ClientUtils.font();

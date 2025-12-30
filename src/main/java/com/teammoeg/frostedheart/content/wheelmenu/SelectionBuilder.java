@@ -5,7 +5,7 @@ import java.util.function.Predicate;
 import com.simibubi.create.foundation.utility.Components;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.content.wheelmenu.useractions.KeyMappingTriggerAction;
 
 import net.minecraft.network.chat.Component;
@@ -21,7 +21,7 @@ public class SelectionBuilder {
 	private CIcon icon=CIcons.nop();
 	private Component message=Components.immutableEmpty();
 	private boolean autoAdded=true;
-	public int color=ColorHelper.CYAN;
+	public int color= Colors.CYAN;
 	protected SelectionBuilder() {
 	}
 	public static SelectionBuilder create() {

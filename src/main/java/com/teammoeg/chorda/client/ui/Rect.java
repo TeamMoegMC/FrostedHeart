@@ -19,8 +19,11 @@
 
 package com.teammoeg.chorda.client.ui;
 
+import lombok.Getter;
+
 import java.util.Objects;
 
+@Getter
 public class Rect extends Point {
     protected final int w, h;
 
@@ -38,15 +41,15 @@ public class Rect extends Point {
         this(r.x, r.y, r.w, r.h);
     }
 
-    public int getH() {
-        return h;
-    }
+	public int getX2() {
+		return x + w;
+	}
 
-    public int getW() {
-        return w;
-    }
+	public int getY2() {
+		return y + h;
+	}
 
-	@Override
+    @Override
 	public String toString() {
 		return "Rect [w=" + w + ", h=" + h + ", x=" + x + ", y=" + y + "]";
 	}

@@ -1,11 +1,8 @@
 package com.teammoeg.frostedresearch.gui;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.PartialTickTracker;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.teammoeg.chorda.client.ui.ColorHelper;
-import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.frostedheart.util.client.FGuis;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;

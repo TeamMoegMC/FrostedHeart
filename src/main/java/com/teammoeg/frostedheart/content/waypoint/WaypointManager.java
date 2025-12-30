@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.waypoint;
 
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.io.registry.NBTSerializerRegistry;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
@@ -27,9 +28,9 @@ import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.*;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Map;
 import java.util.Optional;
@@ -57,6 +58,12 @@ public class WaypointManager {
 
     public static WaypointManager getManager(ServerPlayer player) {
         return new WaypointManager(player);
+    }
+
+    public Waypoint fromBlock(BlockPos pos, String id) {
+        Waypoint waypoint = new Waypoint(pos, id, Colors.CYAN);
+        waypoint.setDisplayName(player.level().getBlockState(pos).getBlock().getName());
+        return waypoint;
     }
 
     /**

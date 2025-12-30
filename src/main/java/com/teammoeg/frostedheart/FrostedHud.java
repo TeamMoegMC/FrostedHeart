@@ -19,46 +19,51 @@
 
 package com.teammoeg.frostedheart;
 
-import java.util.*;
-
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.CUIScreen;
 import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.UIWidget;
-import com.teammoeg.chorda.client.ui.AtlasUV;
-import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.cui.category.CategoryHelper;
+import com.teammoeg.chorda.client.ui.*;
 import com.teammoeg.chorda.client.ui.Point;
-import com.teammoeg.chorda.client.ui.PointSet;
-import com.teammoeg.chorda.client.ui.TextPosition;
-import com.teammoeg.chorda.client.ui.TexturedUV;
-import com.teammoeg.chorda.client.ui.UV;
 import com.teammoeg.chorda.client.ui.UV.Transition;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.content.archive.ArchiveCategory;
 import com.teammoeg.frostedheart.content.climate.ClientClimateData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.TemperatureFrame.FrameType;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
+import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipRenderer;
+import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
+import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
+import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.client.BossHealthOverlayAccess;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.data.ResearchVariant;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
-
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.AttackIndicatorStatus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
@@ -71,6 +76,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
+
+import java.awt.*;
+import java.util.*;
+import java.util.List;
 
 public class FrostedHud {
     static final class Atlases {
@@ -969,74 +978,226 @@ public class FrostedHud {
         mc.getProfiler().pop();
     }
 
+    static UIWidget hoveredEle = null;
     public static void renderDebugOverlay(GuiGraphics stack, Minecraft mc) {
         Screen screen = mc.screen;
-        LocalPlayer player = mc.player;
         Font font = mc.font;
+        int mouseX = MouseHelper.getScaledX();
+        int mouseY = MouseHelper.getScaledY();
+        boolean shift = Screen.hasShiftDown();
         List<Object> lines = new ArrayList<>();
-        if (player == null) return;
+        Rect hovered = new Rect(0, 0, 0, 0);
 
-        lines.add("Under water: " + player.isUnderWater());
-        lines.add("");
+        stack.pose().pushPose();
+        stack.pose().translate(0, 0, 1200);
 
-        lines.add(Component.literal("Current Screen: " + (screen == null ? "Null" : screen.getClass().getSimpleName())));
-        if (screen instanceof CUIScreen cui) {
-            var pLayer = cui.getPrimaryLayer();
-            for (UIWidget element : pLayer.getElements()) {
-                lines.add("");
+        // 复制颜色
+        int x = (int) (mc.mouseHandler.isMouseGrabbed() ? mc.getWindow().getWidth() *0.5F : mc.mouseHandler.xpos());
+        int y = (int) (mc.mouseHandler.isMouseGrabbed() ? mc.getWindow().getHeight()*0.5F : mc.mouseHandler.ypos());
+        int pick = Colors.getColorAt(x, y);
+        String hex = Colors.toHexString(pick);
+        if (ClientUtils.isKeyDown(GLFW.GLFW_KEY_C)) {
+            ClientUtils.copyToClipboard(hex);
+        }
 
-                String className = element.getClass().getSimpleName().isBlank() ? element.getClass().getName() : element.getClass().getSimpleName();
-                if (element.isMouseOver()) {
-                    lines.add(Component.literal(className).withStyle(ChatFormatting.GOLD));
-                } else {
-                    lines.add(className);
-                }
+        lines.add(Component.empty()
+                .append(Components.withColor("█", pick))
+                .append(" | #" + hex)
+                .withStyle(ChatFormatting.GRAY));
+        lines.add(DebugScreen.message);
 
-                if (element instanceof Layer layer) {
-                    if (element.isMouseOver()) {
-                        Deque<Map.Entry<Iterator<UIWidget>, Integer>> entries = new ArrayDeque<>();
-                        entries.push(new AbstractMap.SimpleEntry<>(layer.getElements().iterator(), 0));
-
-                        while (!entries.isEmpty()) {
-                            Map.Entry<Iterator<UIWidget>, Integer> topEntry = entries.peek();
-                            Iterator<UIWidget> iterator = topEntry.getKey();
-                            int indentLevel = topEntry.getValue();
-
-                            if (iterator.hasNext()) {
-                                UIWidget widget = iterator.next();
-                                className = widget.getClass().getSimpleName().isBlank() ? widget.getClass().getName() : widget.getClass().getSimpleName();
-                                String indent = "    ".repeat(indentLevel);
-                                var c = Component.literal(indent + (widget instanceof Layer && widget.isMouseOver() ? " ▼ " : " ▶ ") + className);
-                                if (widget.isMouseOver()) {
-                                    String bound = " | X=" + widget.getX() + ", Y=" + widget.getY() + ", W=" + widget.getWidth() + ", H=" + widget.getHeight();
-                                    c.append(bound).withStyle(ChatFormatting.GOLD);
-                                }
-                                lines.add(c);
-                                if (widget instanceof Layer childLayer && widget.isMouseOver()) {
-                                    entries.push(new AbstractMap.SimpleEntry<>(childLayer.getElements().iterator(), indentLevel + 1));
-                                }
-                            } else {
-                                entries.pop();
-                            }
-                        }
-                    } else {
-                        for (int i = 0; i < layer.getElements().size(); i++) {
-                            UIWidget layerElement = layer.getElements().get(i);
-                            if (i < 3) {
-                                className = layerElement.getClass().getSimpleName().isBlank() ? layerElement.getClass().getName() : layerElement.getClass().getSimpleName();
-                                lines.add(" ▶ " + className);
-                            }
-                        }
-                        if (layer.getElements().size() > 3) {
-                            lines.add(" ▶ ...and " + (layer.getElements().size() - 3) + " more");
-                        }
+        if (!TipRenderer.TIP_QUEUE.isEmpty()) {
+            lines.add(Component.literal("Tip Queue: "));
+            for (Tip tip : TipRenderer.TIP_QUEUE) {
+                lines.add(Component.empty().append(shift ? " ▼ " : " ▶ ").append(tip.getContents().get(0)).append(" [%s]".formatted(tip.getId())));
+                if (shift) {
+                    for (int i = 1; i < tip.getContents().size(); i++) {
+                        lines.add(Component.literal("   ◆ ").append(tip.getContents().get(i)));
                     }
                 }
             }
+        }
 
-        } else if (screen != null) {
+        if (ClientWaypointManager.hasWaypoint()) {
+            lines.add("All Waypoints:");
+            int i1 = 0;
+            for (AbstractWaypoint waypoint : ClientWaypointManager.getAllWaypoints().values()) {
+                if (!shift && i1 >= 3) {
+                    lines.add(Component.literal("...and " + (ClientWaypointManager.getAllWaypoints().size()-i1) + " more"));
+                    break;
+                }
+                var w = Component.literal((waypoint.isFocused() ? " ◆ " : " ◇ ") + waypoint.getDisplayName().getString() + " [" + waypoint.getId() + "]");
+                ClientWaypointManager.getSelected().ifPresent(selected -> {if (selected == waypoint) w.withStyle(ChatFormatting.GOLD);});
+                lines.add(w);
+                i1++;
+            }
+        }
+
+        lines.add(Component.literal("Archive Path: ").append(CategoryHelper.translatePath(ArchiveCategory.currentPath)));
+        lines.add(Component.literal("Current Screen: " + (screen == null ? "Null" : screen.getClass().getSimpleName())));
+
+        PrimaryLayer pLayer = null;
+        if (screen instanceof CUIScreen cui) {
+            pLayer = cui.getPrimaryLayer();
+        }
+        // CUI
+        if (pLayer != null) {
+            Deque<Map.Entry<Iterator<UIWidget>, Integer>> entries = new ArrayDeque<>();
+            entries.push(new AbstractMap.SimpleEntry<>(pLayer.getElements().iterator(), 0));
+            if ((pLayer.isMouseOver() || shift)) {
+                int il = 0;
+                // 遍历所有widget
+                while (!entries.isEmpty()) {
+                    Map.Entry<Iterator<UIWidget>, Integer> topEntry = entries.peek();
+                    Iterator<UIWidget> iterator = topEntry.getKey();
+                    int indentLevel = topEntry.getValue();
+
+                    // 开盒widget
+                    if (iterator.hasNext()) {
+                        UIWidget widget = iterator.next();
+                        if (widget.isMouseOver()) {
+                            hoveredEle = widget;
+                            il = indentLevel;
+                        }
+
+                        // 文本
+                        var title = widget.getTitle().copy();
+                        var mem = Component.literal("@" + Integer.toHexString(widget.hashCode())).withStyle(ChatFormatting.GRAY);
+                        var isMouseOver = widget.isMouseOver() || shift;
+                        String name = widget.getClass().getSimpleName();
+                        name = name.isBlank() ? "extends " + widget.getClass().getSuperclass().getSimpleName() : name;
+                        if (title.getString().isBlank()) {
+                            title = Component.literal(name);
+                        } else {
+                            title.append(Component.literal(" | " + name).withStyle(ChatFormatting.GRAY));
+                        }
+                        var c = Component.literal("  ".repeat(indentLevel))
+                                .append(isMouseOver ? " ▼ " : " ▶ ")
+                                .append(isMouseOver ? title.append(mem) : title)
+                                .withStyle(Components.color(hoveredEle == widget ? 0xFFAA00 : Colors.CYAN));
+                        lines.add(c);
+
+                        // 渲染边框
+                        int color = Color.HSBtoRGB(indentLevel / 6F, 1, 1);
+                        Rect b = CGuiHelper.getWidgetBounds(widget, pLayer);
+                        if (shift && !Screen.hasControlDown() && widget.isVisible()) {
+                            CGuiHelper.drawRect(stack, b, Colors.setAlpha(color, 0.1F));
+                            CGuiHelper.drawBox(stack, b, color, false);
+                        }
+
+                        if (widget instanceof Layer childLayer && (widget.isMouseOver() || shift)) {
+                            entries.push(new AbstractMap.SimpleEntry<>(childLayer.getElements().iterator(), indentLevel + 1));
+                        }
+                    } else {
+                        entries.pop();
+                    }
+                }
+
+                // 渲染选中的组件和子组件的边框
+                if (hoveredEle != null && !Screen.hasControlDown()) {
+                    stack.pose().pushPose();
+                    stack.pose().translate(0, 0, 10);
+                    Rect b = CGuiHelper.getWidgetBounds(hoveredEle, pLayer);
+                    if (!shift) {
+                        if (hoveredEle instanceof Layer layer1) {
+                            for (int i = 0; i < layer1.getElements().size(); i++) {
+                                UIWidget le = layer1.getElements().get(i);
+                                Rect b1 = CGuiHelper.getWidgetBounds(le, pLayer);
+                                int color = Color.HSBtoRGB((il+1) / 6F, 1, 1);
+                                CGuiHelper.drawRect(stack, b1, Colors.setAlpha(color, 0.1F));
+                                CGuiHelper.drawBox(stack, b1, color, false);
+                            }
+                        }
+                        int color = Color.HSBtoRGB(il / 6F, 1, 1);
+                        CGuiHelper.drawRect(stack, b, Colors.setAlpha(color, 0.1F));
+                        CGuiHelper.drawBox(stack, b, color, false);
+                    }
+
+                    var color = ChatFormatting.GOLD;
+                    String clazz = hoveredEle.getClass().getSimpleName();
+                    clazz = clazz.isBlank() ? "extends " + hoveredEle.getClass().getSuperclass().getSimpleName() : clazz;
+                    MutableComponent title = Component.literal("C: ")
+                            .withStyle(ChatFormatting.GRAY)
+                            .append(Component.literal(clazz).withStyle(color));
+                    if (!hoveredEle.getTitle().getString().isBlank()) {
+                        title.append(" | T: ");
+                        if (font.width(hoveredEle.getTitle()) > 200) {
+                            var t = FormattedText.composite(font.substrByWidth(hoveredEle.getTitle(), 200), CommonComponents.ELLIPSIS).getString();
+                            title.append(Component.literal(t).withStyle(color));
+                        } else {
+                            title.append(Component.empty().append(hoveredEle.getTitle()).withStyle(color));
+                        }
+                    }
+                    Component ui = Lang.builder().style(ChatFormatting.GRAY)
+                            .text("L: x=")
+                            .add(Component.literal(String.valueOf(hoveredEle.getX())).withStyle(color))
+                            .text(", y=")
+                            .add(Component.literal(String.valueOf(hoveredEle.getY())).withStyle(color))
+                            .component();
+                    Component real = Lang.builder().style(ChatFormatting.GRAY)
+                            .text("S: x=")
+                            .add(Component.literal(String.valueOf(b.getX())).withStyle(color))
+                            .text(", y=")
+                            .add(Component.literal(String.valueOf(b.getY())).withStyle(color))
+                            .text(", w=")
+                            .add(Component.literal(String.valueOf(b.getW())).withStyle(color))
+                            .text(", h=")
+                            .add(Component.literal(String.valueOf(b.getH())).withStyle(color))
+                            .component();
+                    Component c = Component.empty()
+                            .append(Component.literal("Enable" ).withStyle(hoveredEle.isEnabled() ? ChatFormatting.GREEN : ChatFormatting.RED))
+                            .append(Component.literal(" | "))
+                            .append(Component.literal("Visible").withStyle(hoveredEle.isVisible() ? ChatFormatting.GREEN : ChatFormatting.RED));
+
+                    var list = List.of(title, ui, real, c);
+                    int x1 = b.getX();
+                    int y1 = b.getY()-1 - list.size()*9;
+                    if (y1 <= 1) {
+                        y1 = b.getY()+2 + b.getH();
+                        if (y1 + list.size()*9 > ClientUtils.screenHeight()) {
+                            y1 = ClientUtils.screenHeight() - list.size()*9;
+                        }
+                    }
+                    int maxW = 0;
+                    for (Component component : list)
+                        maxW = Math.max(font.width(component), maxW);
+                    int x2 = x1+1+maxW;
+                    int y2 = y1 + list.size()*9;
+                    if (x2 > ClientUtils.screenWidth()) {
+                        x1 -= x2 - ClientUtils.screenWidth();
+                        x2 = x1+1+maxW;
+                    }
+
+                    stack.fill(x1-1, y1-1, x2, y2, Colors.setAlpha(Colors.BLACK, 0.8F));
+                    CGuiHelper.drawStringLines(stack, font, list, x1, y1, Colors.L_TEXT_GRAY, 0, false, false);
+                    stack.pose().popPose();
+                }
+            }
+            lines.add("---");
+        }
+        hoveredEle = null;
+
+        // 原版UI
+        if (screen != null) {
             for (GuiEventListener a : screen.children()) {
-                var c = Component.empty();
+                if (a instanceof ObjectSelectionList<?> l) {
+                    boolean focused = l.isFocused() || l.isMouseOver(mouseX, mouseY) || shift;
+                    lines.add(Component.empty()
+                            .append(focused ? " ▼ " : " ▶ ").append(l.getClass().getSimpleName() + ".class")
+                            .withStyle(focused ? ChatFormatting.GOLD : ChatFormatting.RESET));
+                    if (focused) {
+                        lines.add("   ▶ " + l.children().size() + " entries");
+                        if (shift) {
+                            stack.fill(l.getLeft(), l.getTop(), l.getRight(), l.getBottom(), Colors.setAlpha(Colors.RED, 0.1F));
+                            CGuiHelper.drawBox(stack, l.getLeft(), l.getTop(), l.getWidth(), l.getHeight(), Colors.RED, false);
+                        } else {
+                            hovered = new Rect(l.getLeft(), l.getTop(), l.getWidth(), l.getHeight());
+                        }
+                    }
+                    continue;
+                }
+
+                var c = Component.literal(" ▶ ");
                 if (a instanceof AbstractWidget w) {
                     String name = w.getMessage().getString();
                     if (name.isBlank()) {
@@ -1044,30 +1205,29 @@ public class FrostedHud {
                     }
                     c.append(name);
                 }
-                if (ClientUtils.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT) && a instanceof AbstractWidget a1) {
-                    stack.fill(a1.getX(), a1.getY(), a1.getX() + a1.getWidth(), a1.getY() + a1.getHeight(), ColorHelper.setAlpha(ColorHelper.CYAN, 0.5F));
-                }
-                if (a.isFocused() || a.isMouseOver(MouseHelper.getScaledX(), MouseHelper.getScaledY())) {
-                    String clazz = a.getClass().getSimpleName();
-                    if (clazz.isBlank()) {
-                        clazz = a.getClass().getName();
-                    }
-                    c.append(" - [" + clazz + "]").withStyle(ChatFormatting.GOLD);
-                    if (!ClientUtils.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT) && a instanceof AbstractWidget a2) {
-                        if (a.isFocused() && !a.isMouseOver(MouseHelper.getScaledX(), MouseHelper.getScaledY())) {
-                            stack.fill(a2.getX(), a2.getY(), a2.getX() + a2.getWidth(), a2.getY() + a2.getHeight(), ColorHelper.setAlpha(ColorHelper.RED, 0.5F));
-                        } else {
-                            stack.fill(a2.getX(), a2.getY(), a2.getX() + a2.getWidth(), a2.getY() + a2.getHeight(), ColorHelper.setAlpha(ColorHelper.CYAN, 0.5F));
-                        }
+
+                if (a instanceof AbstractWidget a1 && (a1.isHoveredOrFocused() || shift)) {
+                    c.withStyle(ChatFormatting.GOLD);
+                    if (shift) {
+                        stack.fill(a1.getX(), a1.getY(), a1.getX()+a1.getWidth(), a1.getY()+a1.getHeight(), Colors.setAlpha(Colors.RED, 0.1F));
+                        CGuiHelper.drawBox(stack, a1.getX(), a1.getY(), a1.getWidth(), a1.getHeight(), Colors.RED, false);
+                    } else {
+                        hovered = new Rect(a1.getX(), a1.getY(), a1.getWidth(), a1.getHeight());
                     }
                 }
                 lines.add(c);
             }
         }
 
-        stack.pose().pushPose();
-        stack.pose().translate(0, 0, 100);
-        CGuiHelper.drawStringLines(stack, font, lines.subList(0, Math.min(lines.size(), 100)), 1, 12, ColorHelper.CYAN, 1, true, true);
+        // 组件overlay
+        if (!Screen.hasControlDown()) {
+            stack.fill(hovered.getX(), hovered.getY(), hovered.getX() + hovered.getW(), hovered.getY() + hovered.getH(), Colors.setAlpha(Colors.RED, 0.1F));
+            CGuiHelper.drawBox(stack, hovered.getX(), hovered.getY(), hovered.getW(), hovered.getH(), Colors.RED, false);
+        }
+        // 文本
+        if (!Screen.hasAltDown()) {
+            CGuiHelper.drawStringLines(stack, font, lines.subList(0, Math.min(lines.size(), 256)), 0, 0, Colors.CYAN, 1, false, true);
+        }
         stack.pose().popPose();
     }
 }

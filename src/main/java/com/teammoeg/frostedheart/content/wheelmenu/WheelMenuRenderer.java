@@ -27,10 +27,10 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseCaptureUtil;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.client.ui.Point;
-import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.config.ConfigFileType;
 import com.teammoeg.chorda.io.ConfigFileUtil;
 import com.teammoeg.chorda.io.FileUtil;
@@ -39,7 +39,6 @@ import com.teammoeg.chorda.math.Dimension2D;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
-import com.teammoeg.frostedheart.content.tips.TipRenderer;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FGuis;
@@ -52,7 +51,6 @@ import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.loading.FMLPaths;
-
 import org.joml.Quaternionf;
 
 import java.io.File;
@@ -128,10 +126,10 @@ public class WheelMenuRenderer {
 
 		// 背景圆环
 		FGuis.drawRing(graphics, 0, 0, innerRadius, wheelRadius, 0, 360,
-				ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
+				Colors.setAlpha(Colors.BLACK, 0.5F * p));
 		if (!mouseMoved)
 			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, 0, 360,
-					ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
+					Colors.setAlpha(Colors.BLACK, 0.5F * p));
 
 		float halfSliceSize = 360F / (size * 2);
 
@@ -150,17 +148,17 @@ public class WheelMenuRenderer {
 			pose.pushPose();
 			pose.rotateAround(new Quaternionf().rotateZ((float) radian), 0, 0, 0);
 			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, halfSliceSize/2,
-					360-halfSliceSize, ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F * p));
+					360-halfSliceSize, Colors.setAlpha(Colors.BLACK, 0.5F * p));
 			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, -halfSliceSize, halfSliceSize,
-					ColorHelper.setAlpha(ColorHelper.CYAN, p));
+					Colors.setAlpha(Colors.CYAN, p));
 			pose.popPose();
 
 			// 当前选择的选项的圆环
 			pose.pushPose();
 			pose.rotateAround(new Quaternionf().rotateZ((float) Math.toRadians(degrees.get(selectedIndex))), 0, 0, 0);
 			FGuis.drawRing(graphics, 0, 0, innerRadius, wheelRadius, -halfSliceSize, halfSliceSize,
-					ColorHelper.setAlpha(ColorHelper.CYAN, 0.5F * p),
-					ColorHelper.setAlpha(ColorHelper.CYAN, p*0.15f));
+					Colors.setAlpha(Colors.CYAN, 0.5F * p),
+					Colors.setAlpha(Colors.CYAN, p*0.15f));
 			pose.popPose();
 		} else {
 			mouseMoved = !MouseHelper.isMouseIn(virtualScreen.getX(), virtualScreen.getY(), -50, -50, 100, 100);
@@ -174,13 +172,13 @@ public class WheelMenuRenderer {
 
 		// 渲染“鼠标”
 		FGuis.drawRing(graphics, (int) virtualScreen.getX()/2, (int) virtualScreen.getY()/2, 3, 6, 0, 360,
-				ColorHelper.setAlpha(ColorHelper.CYAN, p));
+				Colors.setAlpha(Colors.CYAN, p));
 
 		// 渲染选项标题
 		var message = hoveredSelection != null ? hoveredSelection.getMessage() : Component.translatable("gui.frostedheart.wheel_menu.message",
 				FHKeyMappings.key_openWheelMenu.get().getKey().getDisplayName());
 		var lines = font.split(message, (int) (innerRadius * 2 - 16));
-		CGuiHelper.drawStringLines(graphics, font, lines, 0, -lines.size() * 5, ColorHelper.CYAN, 1, true, true, Alignment.CENTER);
+		CGuiHelper.drawStringLines(graphics, font, lines, 0, -lines.size() * 5, Colors.CYAN, 1, true, true, Alignment.CENTER);
 		pose.popPose();
 	}
 
@@ -200,7 +198,7 @@ public class WheelMenuRenderer {
 		MinecraftForge.EVENT_BUS.post(new WheelMenuSelectionRegisterEvent(registeredSelections));
 		// 在此处添加轮盘选项
 
-		registeredSelections.put(new ResourceLocation("wheel_menu","edit"),new Selection(Component.translatable("gui.wheel_menu.editor.edit"), IconButton.Icon.LIST.toCIcon(), s->{
+		registeredSelections.put(new ResourceLocation("wheel_menu","edit"),new Selection(Component.translatable("gui.wheel_menu.editor.edit"), FlatIcon.LIST.toCIcon(), s->{
 			WheelMenuEditors.openConfigScreen();
 		}));
 		isInitialized=true;
@@ -246,7 +244,7 @@ public class WheelMenuRenderer {
 		degrees.clear();
 		wheelRadius = FHConfig.CLIENT.wheelMenuRadius.get();
 		ringWidth = 30 * Math.max(1, wheelRadius / FHConfig.CLIENT.wheelMenuRadius.getDefault());
-		virtualScreen = TipRenderer.isTipRendering() ? new CircleDimension(ClientUtils.screenWidth()) : new CircleDimension(wheelRadius * 2);
+		virtualScreen = new CircleDimension(wheelRadius * 2);
 		openIfNewSelection();
 		ArrayList<ResourceLocation> loc=new ArrayList<>(displayedSelections);
 		
@@ -260,7 +258,7 @@ public class WheelMenuRenderer {
 				}
 			}
 			
-			availableSelections.add(0,new Selection(Component.translatable("gui.close"), IconButton.Icon.CROSS.toCIcon(), Selection.NO_ACTION));
+			availableSelections.add(0,new Selection(Component.translatable("gui.close"), FlatIcon.CROSS.toCIcon(), Selection.NO_ACTION));
 		}
 		return rslt;
 	}

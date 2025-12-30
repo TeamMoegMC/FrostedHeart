@@ -26,10 +26,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.logging.LogUtils;
-import com.teammoeg.chorda.client.ui.ColorHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.lang.Components;
-
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -161,6 +160,10 @@ public class Tip {
 
     public boolean hasClickAction() {
         return !clickAction.isBlank() && !clickActionContent.isBlank();
+    }
+
+    public boolean runClickAction() {
+        return ClickActions.run(getClickAction(), getClickActionContent());
     }
 
     public boolean saveAsFile() {
@@ -298,8 +301,8 @@ public class Tip {
         private boolean pin;
         private boolean temporary;
         private int displayTime = 30000;
-        private int fontColor = ColorHelper.CYAN;
-        private int BGColor = ColorHelper.BLACK;
+        private int fontColor = Colors.CYAN;
+        private int BGColor = Colors.BLACK;
 
         private boolean editable = true;
 
@@ -556,8 +559,8 @@ public class Tip {
             if (json.has("hide"           )) hide         (json.get("hide").getAsBoolean());
             if (json.has("pin"            )) pin          (json.get("pin").getAsBoolean());
             if (json.has("displayTime"    )) displayTime  (Math.max(json.get("displayTime").getAsInt(), 0));
-            if (json.has("fontColor"      )) fontColor    (getColorOrElse(json, "fontColor", ColorHelper.CYAN));
-            if (json.has("backgroundColor")) BGColor      (getColorOrElse(json, "backgroundColor", ColorHelper.BLACK));
+            if (json.has("fontColor"      )) fontColor    (getColorOrElse(json, "fontColor", Colors.CYAN));
+            if (json.has("backgroundColor")) BGColor      (getColorOrElse(json, "backgroundColor", Colors.BLACK));
 
             temporary = false;
             return this;
@@ -567,7 +570,7 @@ public class Tip {
             clearContents()
                     .line(Component.translatable("tips.frostedheart.error." + type.key))
                     .lines(descriptions)
-                    .color(ColorHelper.RED, ColorHelper.BLACK)
+                    .color(Colors.RED, Colors.BLACK)
                     .alwaysVisible(true)
                     .setTemporary()
                     .pin(true)

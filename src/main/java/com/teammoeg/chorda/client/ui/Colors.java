@@ -19,11 +19,16 @@
 
 package com.teammoeg.chorda.client.ui;
 
+import com.teammoeg.chorda.client.ClientUtils;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+
+import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
-public class ColorHelper {
+public class Colors {
     public static final int WHITE = 0xFFFFFFFF;
     public static final int BLACK = 0xFF000000;
     public static final int CYAN = 0xFFC6FCFF;
@@ -41,7 +46,10 @@ public class ColorHelper {
         return setAlpha(color, (int)(alpha*255));
     }
 
-    public static int blendColor(int color1, int color2, float ratio) {
+    /**
+     * @param ratio 第一个颜色的比例
+     */
+    public static int blend(int color1, int color2, float ratio) {
         if (color1 == color2) return color1;
         ratio = Mth.clamp(ratio, 0, 1);
 
@@ -64,15 +72,55 @@ public class ColorHelper {
         return pack(a, r, g, b);
     }
 
-    public static int getTextColor(int backgroundColor) {
-        int r = red  (backgroundColor);
-        int g = green(backgroundColor);
-        int b = blue (backgroundColor);
+    /**
+     * @param x Window X
+     * @param y Window Y
+     */
+    public static int getColorAt(int x, int y) {
+        int windowHeight = ClientUtils.getMc().getWindow().getHeight();
+        y = windowHeight - y - 1;
 
-        float y = (0.2126F * r + 0.7152F * g + 0.0722F * b) / 255;
-        float contrastWhite = 1.05F / (y + 0.05F);
-        float contrastBlack = (y + 0.05F) / 0.05F;
-        return contrastBlack > contrastWhite ? BLACK : WHITE;
+        ByteBuffer buffer = BufferUtils.createByteBuffer(4);
+        GL11.glReadPixels(x, y, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+        int r = buffer.get(0) & 0xFF;
+        int g = buffer.get(1) & 0xFF;
+        int b = buffer.get(2) & 0xFF;
+        int a = buffer.get(3) & 0xFF;
+
+        return pack(a, r, g, b);
+    }
+
+    public static int readableColor(int color) {
+        return readableColor(color, 180);
+    }
+
+    public static int readableColor(int color, float threshold) {
+        return readableColor(color, denormalize(threshold));
+    }
+
+    public static int readableColor(int color, int threshold) {
+        int r = red  (color);
+        int g = green(color);
+        int b = blue (color);
+
+        float y = 0.2126F * r + 0.7152F * g + 0.0722F * b;
+        return y > threshold ? BLACK : WHITE;
+    }
+
+    /**
+     * @param value 0 ~ 255
+     * @return 0.0 ~ 1.0
+     */
+    public static float normalize(int value) {
+        return Mth.clamp(value, 0, 255) / 255F;
+    }
+
+    /**
+     * @param value 0.0 ~ 1.0
+     * @return 0 ~ 255
+     */
+    public static int denormalize(float value) {
+        return Math.round(Mth.clamp(value, 0, 1) * 255F);
     }
 
     public static int alpha(int color) {

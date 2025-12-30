@@ -60,7 +60,7 @@ hs_err_pid*
 /flake.nix
 
 # Icon must end with two \r
-Icon
+#Icon   <- No idea what this is for, commented because it ignores everything under com.teammoeg.chorda.client.icon
 
 # Thumbnails
 ._*

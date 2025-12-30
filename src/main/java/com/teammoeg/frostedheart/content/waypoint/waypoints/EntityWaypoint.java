@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -94,7 +95,7 @@ public class EntityWaypoint extends Waypoint {
     @Override
     public void render(GuiGraphics graphics) {
         super.render(graphics);
-        focus = getDistance() <= 32;
+        focused = getDistance() <= 32;
         color = FastColor.ARGB32.lerp((float)(getDistance()-8)/24F, originalColor, approachColor);
         if (entityTarget != null) {
             displayName = entityTarget.getDisplayName();
@@ -114,19 +115,19 @@ public class EntityWaypoint extends Waypoint {
     }
 
     @Override
-    public void updateInfos() {
-        super.updateInfos();
+    public void updateTooltip() {
+        super.updateTooltip();
 
         if (entityTarget != null && entityTarget instanceof LivingEntity) {
-            addInfoLine(Lang.waypoint("entity_health",
+            addTooltipLine(Lang.waypoint("entity_health",
                     String.format("%.2f", ((LivingEntity)entityTarget).getHealth()),
                     String.format("%.2f", ((LivingEntity)entityTarget).getMaxHealth())).component(),
             1);
         }
 
         if (entityTarget != null && !entityTarget.isAlive()) {
-            addInfoLine(null, -1);
-            addInfoLine(Lang.waypoint("lost_target").component(), -1);
+            addTooltipLine(Component.empty(), -1);
+            addTooltipLine(Lang.waypoint("lost_target").component(), -1);
         }
     }
 

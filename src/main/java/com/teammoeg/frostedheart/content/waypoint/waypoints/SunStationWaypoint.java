@@ -25,13 +25,14 @@ import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
 
 public class SunStationWaypoint extends Waypoint {
     public SunStationWaypoint() {
         super(new Vec3(0, 0, 0), "Sun Station", 0xFFFFDA64);
         this.displayName = Lang.waypoint("sun_station").component();
-        this.focus = true;
+        this.focused = true;
     }
 
     public SunStationWaypoint(CompoundTag nbt) {
@@ -56,9 +57,7 @@ public class SunStationWaypoint extends Waypoint {
     }
 
     @Override
-    public void updateInfos() {
-        addInfoLine(displayName, -1);
-    }
+    public void addAdvancedLines() {}
 
     @Override
     public double getDistance() {

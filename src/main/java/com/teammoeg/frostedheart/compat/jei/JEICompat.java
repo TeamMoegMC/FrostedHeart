@@ -116,6 +116,10 @@ public class JEICompat implements IModPlugin {
         jei.getRecipesGui().show(jei.getJeiHelpers().getFocusFactory().createFocus(RecipeIngredientRole.OUTPUT,VanillaTypes.ITEM_STACK,stack));
     }
 
+    public static void showJEIUsageFor(ItemStack stack) {
+        jei.getRecipesGui().show(jei.getJeiHelpers().getFocusFactory().createFocus(RecipeIngredientRole.INPUT,VanillaTypes.ITEM_STACK,stack));
+    }
+
     @Override
     public ResourceLocation getPluginUid() {
         return new ResourceLocation(FHMain.MODID, "jei_plugin");

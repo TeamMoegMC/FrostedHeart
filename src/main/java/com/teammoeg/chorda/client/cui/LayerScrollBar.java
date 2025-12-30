@@ -7,6 +7,7 @@ public class LayerScrollBar extends ScrollBar {
 	public LayerScrollBar(UIWidget parent, boolean isVertical, Layer affected) {
 		super(parent, isVertical, 0);
 		layer = affected;
+		affected.setSmoothScrollEnabled(true);
 	}
 
 	public LayerScrollBar(Layer parent, Layer affected) {

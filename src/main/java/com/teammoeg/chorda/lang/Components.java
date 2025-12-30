@@ -21,6 +21,7 @@ package com.teammoeg.chorda.lang;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.contents.LiteralContents;
 import net.minecraft.network.chat.contents.TranslatableContents;
 
@@ -109,6 +110,26 @@ public final class Components {
         } else {
             return component.getString();
         }
+    }
+
+    public static MutableComponent withColor(String text, int color) {
+        return withColor(Component.literal(text), color);
+    }
+
+    public static MutableComponent withColor(Component text, int color) {
+        return withColor(Component.empty().append(text), color);
+    }
+
+    public static MutableComponent withColor(MutableComponent text, int color) {
+        return text.withStyle(color(color));
+    }
+
+    public static Style color(int color) {
+        return color(Style.EMPTY, color);
+    }
+
+    public static Style color(Style style, int color) {
+        return style.withColor(color);
     }
 }
 

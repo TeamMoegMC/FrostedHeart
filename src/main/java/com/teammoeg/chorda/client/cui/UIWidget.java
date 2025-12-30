@@ -2,11 +2,13 @@ package com.teammoeg.chorda.client.cui;
 
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.ui.Rect;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+
 import java.util.function.Consumer;
 
 public class UIWidget{
@@ -65,11 +67,11 @@ public class UIWidget{
 	}
 
 	public int getScreenX() {
-		return parent.getX() + x;
+		return parent.getScreenX() + x;
 	}
 
 	public int getScreenY() {
-		return parent.getY() + y;
+		return parent.getScreenY() + y;
 	}
 
 
@@ -178,5 +180,7 @@ public class UIWidget{
 		return parent.getManager();
 	}
 
-
+	public Rect getBounds() {
+		return new Rect(getX(), getY(), getWidth(), getHeight());
+	}
 }

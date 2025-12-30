@@ -19,23 +19,6 @@
 
 package com.teammoeg.chorda.client.ui;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.OptionalDouble;
-import java.util.function.Supplier;
-
-import javax.annotation.Nullable;
-import javax.imageio.ImageIO;
-
-import com.teammoeg.chorda.client.ClientUtils;
-
-import com.teammoeg.frostedheart.content.archive.Alignment;
-import net.minecraft.client.gui.Font;
-import org.joml.Matrix4f;
-
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -45,8 +28,16 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-
+import com.mojang.datafixers.util.Pair;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.CUIScreen;
+import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.archive.Alignment;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
@@ -65,7 +56,20 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.client.ForgeRenderTypes;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
+import net.minecraftforge.common.util.Size2i;
 import net.minecraftforge.fluids.FluidStack;
+import org.joml.Matrix4f;
+
+import javax.annotation.Nullable;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.OptionalDouble;
+import java.util.function.Supplier;
 
 /**
  * Convenience functions for gui rendering
@@ -231,6 +235,10 @@ public class CGuiHelper {
 
 	}
 
+	public static void drawRect(GuiGraphics graphics, Rect rect, int color) {
+		graphics.fill(rect.getX(), rect.getY(), rect.getX2(), rect.getY2(), color);
+	}
+
 	private static void drawRect(Matrix4f mat, BufferBuilder renderBuffer, int x, int y, int w, int h, int color) {
 		renderBuffer.vertex(mat, x, y, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color), FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color))
 			.endVertex();
@@ -365,6 +373,16 @@ public class CGuiHelper {
 
 	}
 
+	public record LineDrawingContext(int lineSize, int maxWidth) {}
+	public static Pair<List<FormattedCharSequence>, LineDrawingContext> split(Component text, Font font, int w) {
+		var lines = font.split(text, w);
+		int maxW = 0;
+		for (FormattedCharSequence line : lines) {
+			maxW = Math.max(font.width(line), maxW);
+		}
+		return new Pair<>(lines, new LineDrawingContext(lines.size(), maxW));
+	}
+
 	/**
 	 * 渲染列表中的所有文本
 	 *
@@ -394,10 +412,15 @@ public class CGuiHelper {
 									   int color, int lineSpace, boolean shadow, boolean background, Alignment alignment) {
 		if (texts.isEmpty()) return;
 
-		int backgroundColor = background ? ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F) : 0;
+		int backgroundColor = background ? Colors.setAlpha(Colors.BLACK, 0.5F) : 0;
 
 		int lineOffset = 0;
 		for (Object text : texts) {
+			if (text == null) {
+				lineOffset += (font.lineHeight + lineSpace);
+				continue;
+			}
+
 			int textWidth;
 			if (text instanceof FormattedCharSequence formatted) {
 				textWidth = font.width(formatted);
@@ -405,6 +428,10 @@ public class CGuiHelper {
 				textWidth = font.width(component);
 			} else {
 				textWidth = font.width(text.toString());
+			}
+			if (textWidth <= 0) {
+				lineOffset += (font.lineHeight + lineSpace);
+				continue;
 			}
 
 			int drawX = switch (alignment) {
@@ -450,7 +477,7 @@ public class CGuiHelper {
 	public static void drawStringInBound(GuiGraphics graphics, Font font, Component text, int x, int y, int width,
 										 int color, int lineSpace, boolean shadow, boolean background, Alignment alignment){
 
-		int backgroundColor = background ? ColorHelper.setAlpha(ColorHelper.BLACK, 0.5F) : 0;
+		int backgroundColor = background ? Colors.setAlpha(Colors.BLACK, 0.5F) : 0;
 		var split = font.split(text, width);
 
 		int lineOffset = 0;
@@ -515,7 +542,7 @@ public class CGuiHelper {
 			// 背景
 			if (backgroundColor != 0) {
 				int bgX1 = drawX - 2;
-				int bgY1 = drawY - 2;
+				int bgY1 = drawY - 1;
 				int bgX2 = drawX + textWidth + 2;
 				int bgY2 = bgY1 + (font.lineHeight + lineSpace);
 				graphics.fill(bgX1, bgY1, bgX2, bgY2, backgroundColor);
@@ -617,4 +644,68 @@ public class CGuiHelper {
            graphics.blitRepeating(pAtlasLocation, pTargetX + pTargetWidth - pEdgeWidth, pTargetY + pCornerHeight, pCornerWidth, pTargetHeight - pEdgeHeight - pCornerHeight, pSourceX + pSourceWidth - pEdgeWidth, pSourceY + pCornerHeight, pEdgeWidth, pSourceHeight - pEdgeHeight - pCornerHeight,textureWidth,textureHeight);
         }
      }
+
+	public static void drawBox(GuiGraphics graphics, int x, int y, int w, int h, int color, boolean inner) {
+		int x2 = x+w;
+		int y2 = y+h;
+		if (inner) {
+			graphics.fill(x, y, x2, y+1, color); 						// top
+			graphics.fill(x, y2-1, x2, y2, color); 						// bottom
+			graphics.fill(x, y, x+1, y2, color); 						// left
+			graphics.fill(x2-1, y, x2, y2, color); 						// right
+		} else {
+			graphics.fill(x-1, y-1, x2+1, y, color); 		// top
+			graphics.fill(x-1, y2, x2+1, y2+1, color); 	// bottom
+			graphics.fill(x-1, y, x, y2, color); 						// left
+			graphics.fill(x2, y, x2+1, y2, color); 						// right
+		}
+	}
+
+	public static void drawBox(GuiGraphics graphics, Rect box, int color, boolean inner) {
+		drawBox(graphics, box.getX(), box.getY(), box.getW(), box.getH(), color, inner);
+	}
+
+	public static Rect getWidgetBounds(UIWidget widget, PrimaryLayer primaryLayer) {
+		int x = widget.getScreenX();
+		int y = widget.getScreenY();
+		if (primaryLayer.getManager() instanceof CUIScreen) {
+			x += (ClientUtils.getMc().getWindow().getGuiScaledWidth() - primaryLayer.getWidth())/2;
+			y += (ClientUtils.getMc().getWindow().getGuiScaledHeight() - primaryLayer.getHeight())/2;
+		} else {
+			x += ClientUtils.screenCenterX();
+			y += ClientUtils.screenCenterY();
+		}
+
+		var w1 = widget.getParent();
+		while (w1.getParent() != null) {
+			if (w1 instanceof Layer l) {
+				if (l.isSmoothScrollEnabled()) {
+					x += (int)l.getDisplayOffsetX();
+					y += (int)l.getDisplayOffsetY();
+				} else {
+					x += l.getOffsetX();
+					y += l.getOffsetY();
+				}
+			}
+			w1 = w1.getParent();
+		}
+
+		return new Rect(x, y, widget.getWidth(), widget.getHeight());
+	}
+
+	@Nullable
+	public static Size2i getImgSize(ResourceLocation location) {
+		if (location != null) {
+			var resource = ClientUtils.getMc().getResourceManager().getResource(location);
+			if (resource.isPresent()) {
+				try (InputStream stream = resource.get().open()) {
+					BufferedImage image= ImageIO.read(stream);
+					return new Size2i(image.getWidth(), image.getHeight());
+				} catch (IOException e) {
+					FHMain.LOGGER.warn(e);
+				}
+			}
+		}
+		return null;
+	}
 }
