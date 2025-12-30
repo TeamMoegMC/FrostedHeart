@@ -98,6 +98,14 @@ public class TeamTownData implements SpecialData{
     }
 
     /**
+     * 获取以本实例为data的TeamTown。
+     * @return 以本实例为data的TeamTown。
+     */
+    public TeamTown createTeamTown() {
+        return TeamTown.create(this);
+    }
+
+    /**
      * Town logic update (every 20 ticks).
      * This method first validates the town blocks, then sorts them by priority and calls the work methods.
      *
