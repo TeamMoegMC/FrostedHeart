@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.item.townmanager;
 
 import com.teammoeg.chorda.client.widget.ScrollBar;
+import com.teammoeg.chorda.client.widget.TabImageButton;
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
@@ -19,8 +20,8 @@ import java.util.List;
 
 public class TownManagerScreen extends Screen {
     public static ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("town_manage_screen");
-    public static int RESIDENT_TAB = 0;
-    public static int BLOCK_TAB = 1;
+    public static final int RESIDENT_TAB = 0;
+    public static final int BLOCK_TAB = 1;
 
     public int imageWidth, imageHeight, leftPos, topPos;
     private ScreenMode activeScreenMode;
@@ -29,7 +30,6 @@ public class TownManagerScreen extends Screen {
     protected TownManagerScreen(Component pTitle) {
         super(pTitle);
         this.town = CClientTeamDataManager.INSTANCE.getInstance().getData(FHSpecialDataTypes.TOWN_DATA).createTeamTown();
-
     }
 
     @Override
@@ -44,16 +44,36 @@ public class TownManagerScreen extends Screen {
                 setScreenMode(getResidentListScreenMode());
             } else{
                 //这里应该调用所有会存在Screen里的Mode的初始化方法，但是现在只有这一个的init方法需要调用，所以只调用这个。
-                blockListScreenMode.init();
-                blockInfoScreenMode.init();
-                residentInfoScreenMode.init();
-                residentListScreenMode.init();
-                activeScreenMode.init();
+                if(blockListScreenMode != null) blockListScreenMode.init();
+                if(blockInfoScreenMode != null) blockInfoScreenMode.init();
+                if(residentInfoScreenMode != null) residentInfoScreenMode.init();
+                if(residentListScreenMode != null) residentListScreenMode.init();
+                if(activeScreenMode != null) activeScreenMode.init();
 
                 activeScreenMode.onEnter();
             }
         } else {
             setScreenMode(getNoTownScreenMode());
+        }
+        for(int tabIndex = 0; tabIndex < 2; tabIndex++){
+            int x = leftPos - 22;
+            int y = topPos + tabIndex * (18 + 2) +2;
+            TabImageButton tabImageButton;
+            switch(tabIndex){
+                case RESIDENT_TAB:{
+                    tabImageButton = new TabImageButton(TEXTURE, x, y, 22, 18, 180, 59, tabIndex, pButton ->  setScreenMode(getResidentListScreenMode())).bind(() -> activeScreenMode.getTabBelongTo());
+                    System.out.println("duck_egg debug: adding tabImageButton of resident tab");
+                    break;
+                }
+                case BLOCK_TAB:{
+                    tabImageButton = new TabImageButton(TEXTURE, x, y, 22, 18, 180, 59, tabIndex, pButton ->  setScreenMode(getBlockListScreenMode())).bind(() -> activeScreenMode.getTabBelongTo());
+                    System.out.println("duck_egg debug: adding tabImageButton of block tab");
+                    break;
+                }
+                default :
+                    throw new IllegalArgumentException("Unexpected value: " + tabIndex);
+            }
+            this.addRenderableWidget(tabImageButton);
         }
     }
 
