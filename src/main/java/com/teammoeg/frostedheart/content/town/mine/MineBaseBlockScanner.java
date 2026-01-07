@@ -33,7 +33,6 @@ import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.NetherVines;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.Tags;
 import se.mickelus.tetra.blocks.rack.RackBlock;
@@ -73,15 +72,16 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
         }
         AbstractMap.SimpleEntry<Integer, Boolean> floorInformation = countBlocksAbove(pos,(pos1)->{
             if(isFloorBlock(pos1)) return true;
-            if(world.getBlockState(pos1).is(Tags.Blocks.CHESTS)){
+            BlockState state1 = world.getBlockState(pos1);
+            if(state1.is(Tags.Blocks.CHESTS)){
                 chest++;
                 return false;
             }
-            if(world.getBlockState(pos1).getBlock().equals(RackBlock.instance)){
+            if(state1.getBlock().equals(RackBlock.instance)){
                 rack++;
                 return false;
             }
-            if(NetherVines.isValidGrowthState(world.getBlockState(pos1))){
+            if(state1.isAir()){
                 temperature += WorldTemperature.block(world, pos1);
                 counter_for_temperature++;
                 return false;
@@ -116,7 +116,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
         @Override
         public boolean isValidFloor(BlockPos pos){
             if(world.getBlockState(pos).is(BlockTags.RAILS)){
-                return NetherVines.isValidGrowthState(world.getBlockState(pos.above()));
+                return world.getBlockState(pos.above()).isAir();
             } else if(world.getBlockState(pos).getBlock().equals(FHBlocks.MINE.get())){
                 linkedMines.add(pos);
             }

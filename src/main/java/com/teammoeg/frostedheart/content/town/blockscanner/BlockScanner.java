@@ -30,7 +30,6 @@ import java.util.function.Predicate;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.NetherVines;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
@@ -292,11 +291,11 @@ public class BlockScanner {
      * 默认本身为完整方块，且上方两格为均空气的方块为合法的地板。若有不同需求请用上面那个方法
      */
     public ArrayList<BlockPos> getFloorAdjacent(BlockPos pos){
-        return getFloorAdjacent(pos, (BlockPos)-> world.getBlockState(pos).isRedstoneConductor(world, pos) && NetherVines.isValidGrowthState(world.getBlockState(pos.above())) && NetherVines.isValidGrowthState(world.getBlockState(pos.above(2))));
+        return getFloorAdjacent(pos, (BlockPos)-> world.getBlockState(pos).isRedstoneConductor(world, pos) && world.getBlockState(pos.above()).isAir() && world.getBlockState(pos.above(2)).isAir());
     }
 
     public boolean isOpenAir(BlockPos pos){
-        return countBlocksAbove(pos, blockPos -> !NetherVines.isValidGrowthState(world.getBlockState(blockPos))).getValue();
+        return countBlocksAbove(pos, blockPos -> !world.getBlockState(blockPos).isAir()).getValue();
     }
 
     /**
@@ -304,7 +303,7 @@ public class BlockScanner {
      */
     public static boolean isAirOrLadder(Level world, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
-        return NetherVines.isValidGrowthState(state) || state.is(BlockTags.CLIMBABLE) || state.getBlockSupportShape(world, pos).isEmpty();
+        return state.isAir() || state.is(BlockTags.CLIMBABLE) || state.getBlockSupportShape(world, pos).isEmpty();
     }
 
     /**

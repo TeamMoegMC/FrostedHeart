@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.town.warehouse;
 
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
-import net.minecraft.world.level.block.NetherVines;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
@@ -50,7 +49,7 @@ public class WarehouseBlockScanner extends FloorBlockScanner {
     public boolean scan(){
         return scan(MAX_SCANNING_TIMES, (pos1)->{
             this.area++;
-            AbstractMap.SimpleEntry<Integer, Boolean> floorInformation = countBlocksAbove(pos1, (pos2)->!NetherVines.isValidGrowthState(world.getBlockState(pos2)));
+            AbstractMap.SimpleEntry<Integer, Boolean> floorInformation = countBlocksAbove(pos1, (pos2)->!world.getBlockState(pos2).isAir());
             if(!floorInformation.getValue()) this.isValid=false;
             this.volume += floorInformation.getKey();
             occupiedArea.add(toColumnPos(pos1));

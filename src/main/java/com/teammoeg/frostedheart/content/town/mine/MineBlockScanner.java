@@ -29,7 +29,6 @@ import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.NetherVines;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.Tags;
 
@@ -61,7 +60,7 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
 
     @Override
     protected boolean isValidAir(BlockPos pos){
-        return Math.abs(pos.getZ()-startZ) < 6 && Math.abs(pos.getX()-startX) < 6 && Math.abs(pos.getY()-startY) < 5 && NetherVines.isValidGrowthState(world.getBlockState(pos));
+        return Math.abs(pos.getZ()-startZ) < 6 && Math.abs(pos.getX()-startX) < 6 && Math.abs(pos.getY()-startY) < 5 && world.getBlockState(pos).isAir();
     }
 
     @Override
