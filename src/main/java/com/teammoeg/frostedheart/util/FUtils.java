@@ -19,9 +19,8 @@
 
 package com.teammoeg.frostedheart.util;
 
-import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.frostedheart.FHMain;
-import net.minecraft.world.item.ItemStack;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import net.minecraft.world.level.block.Block;
 
 public class FUtils {
     /*public static ItemStack ArmorLiningNBT(ItemStack stack) {
@@ -29,4 +28,8 @@ public class FUtils {
         stack.getTag().putBoolean("inner_bounded", true);//bound lining to arm or
         return CUtils.ArmorNBT(stack, 107, 6);
     }*/
+
+    public static boolean isBeSnowed(Block block) {
+        return block == FHBlocks.BESNOWED_DEBRIS.get() || block == FHBlocks.BESNOWED_TWIGS.get();
+    }
 }

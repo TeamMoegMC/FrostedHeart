@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.events;
 
-import com.google.common.collect.Sets;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
@@ -40,9 +39,9 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.util.CConstants;
+import com.teammoeg.frostedheart.util.FUtils;
 import com.teammoeg.frostedheart.util.IgnitionHandler;
 import com.teammoeg.frostedheart.util.Lang;
-
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -65,19 +64,12 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Entity.RemovalReason;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseFireBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.CampfireBlock;
-import net.minecraft.world.level.block.CandleBlock;
-import net.minecraft.world.level.block.CandleCakeBlock;
-import net.minecraft.world.level.block.SnowLayerBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -109,12 +101,10 @@ import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 
 import javax.annotation.Nonnull;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Miscellaneous common events that are not specific to any particular module.
@@ -486,7 +476,7 @@ public class FHCommonEvents {
 
 	@SubscribeEvent
 	public static void shovelSnow(BlockEvent.BlockToolModificationEvent event) {
-		if (!event.getLevel().isClientSide() && event.getToolAction() == ToolActions.SHOVEL_FLATTEN) {
+		if (!event.getLevel().isClientSide() && event.getPlayer() instanceof ServerPlayer player && event.getToolAction() == ToolActions.SHOVEL_FLATTEN) {
 			var state = event.getState();
 			if (state.getBlock() instanceof SnowLayerBlock) {
 				var pos = event.getPos();
@@ -501,8 +491,7 @@ public class FHCommonEvents {
 				peelSnowLayer(level, state, pos);
 
 				// 生成掉落物
-				var player = (ServerPlayer)event.getPlayer();
-				if (player != null && !player.isCreative()) {
+				if (!player.isCreative()) {
 					var drops = Block.getDrops(state.getBlock().defaultBlockState().setValue(SnowLayerBlock.LAYERS, 1),
 							level, pos, null, player, event.getHeldItemStack());
 					for (ItemStack drop : drops) {
@@ -524,13 +513,24 @@ public class FHCommonEvents {
 		int layers = snowState.getValue(SnowLayerBlock.LAYERS);
 		BlockState newState;
 		if (layers > 1) {
-			newState = snowState.setValue(SnowLayerBlock.LAYERS, layers - 1);
-			level.setBlockAndUpdate(snowPos, newState);
+            if (FUtils.isBeSnowed(snowState.getBlock())) {
+				newState = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, layers - 1);
+			} else {
+				newState = snowState.setValue(SnowLayerBlock.LAYERS, layers - 1);
+			}
+            level.setBlockAndUpdate(snowPos, newState);
 		} else {
 			newState = Blocks.AIR.defaultBlockState();
 			level.destroyBlock(snowPos, false);
+			var below = level.getBlockState(snowPos.below());
+			if (below.hasProperty(SnowyDirtBlock.SNOWY)) {
+				var newBelowState = below.setValue(SnowyDirtBlock.SNOWY, Boolean.FALSE);
+				level.setBlockAndUpdate(snowPos.below(), newBelowState);
+				level.sendBlockUpdated(snowPos.below(), below, newBelowState, 3);
+			}
 		}
-		level.sendBlockUpdated(snowPos, snowState, newState, 11);
+		// FIXME 不知道哪里写错了要更新
+		level.sendBlockUpdated(snowPos, snowState, newState, 3);
 		return layers <= 1;
 	}
 
