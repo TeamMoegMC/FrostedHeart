@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.town.resident;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.ITownWithBlocks;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
@@ -187,10 +188,18 @@ public class Resident {
     }
 
     public double addWorkProficiency(TownWorkerType type, double amount){
+        if(amount < 0){
+            amount = Math.max(0, amount);
+            FHMain.LOGGER.error("Resident.addWorkProficiency:Trying to add work proficiency with negative amount!");
+        }
         return workProficiency.merge(type, amount, Double::sum);
     }
 
     public double setWorkProficiency(TownWorkerType type,double amount){
+        if(amount < 0){
+            amount = Math.max(0, amount);
+            FHMain.LOGGER.error("Resident.setWorkProficiency:Trying to set work proficiency to negative amount!");
+        }
         workProficiency.put(type, amount);
         return amount;
     }
