@@ -78,7 +78,10 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         if (pRandomTickSpeed > 0 && updateTempBlock) {
             //for (int l1 = 0; l1 < temperatureChecks; ++l1) {
                 BlockPos blockpos1 = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(i, 0, j, 15));
-                BlockPos blockpos2 = blockpos1.below();
+                BlockPos blockpos2;
+                if(blockpos1.getY() > - 64){
+                    blockpos2 = blockpos1.below();
+                } else blockpos2 = blockpos1;
                 
                // Holder<Biome> biomeHolder = CUtils.fastGetBiome(level, blockpos2);
                 Holder<Biome> biomeHolder=CUtils.fastGetBiome(pChunk,blockpos2);
