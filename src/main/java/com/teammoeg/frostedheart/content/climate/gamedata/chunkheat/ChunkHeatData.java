@@ -329,11 +329,14 @@ public class ChunkHeatData {
      * @param heatPos the position of the heating block, at the center of the area
      */
     public static void removeTempAdjust(LevelAccessor world, BlockPos heatPos) {
+    	//System.out.println("removing temp adjust at "+heatPos);
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
         ChunkHeatData cd = get(world, heatPos,true);//Fix: force load chunk when adding/removing heat area, protects data integrity
         if (cd == null) return;
+       // System.out.println("chuck found");
         IHeatArea oadj = cd.getAdjustAt(heatPos);
         if (oadj == null) return;
+        //System.out.println("adjust found "+oadj);
         int range = oadj.getRadius()+8;//workaround: search more chunks
 
         // these are block position offset
