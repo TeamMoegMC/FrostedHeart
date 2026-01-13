@@ -109,4 +109,13 @@ public abstract class TristateCheckBox extends UIElement {
         this.tooltips = null;
     }
 
+	@Override
+	public boolean onMousePressed(MouseButton button) {
+		if(!isMouseOver())return false;
+		
+		return onClicked(button);
+	}
+	public boolean onClicked(MouseButton button) {
+		return false;
+	}
 }

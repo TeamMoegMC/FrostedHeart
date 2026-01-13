@@ -79,6 +79,7 @@ public class ItemSlot extends UIElement {
     @Override
     public boolean onMousePressed(MouseButton button) {
         if (!isMouseOver()) return false;
+        if(onClicked(button)) return true;
         if(item.length>0)
 	        switch (button) {
 	            case LEFT -> JEICompat.showJEIFor(item[order]);
@@ -89,7 +90,9 @@ public class ItemSlot extends UIElement {
 	        }
         return true;
     }
-
+    public boolean onClicked(MouseButton button) {
+    	return false;
+    }
     @Override
     public boolean onKeyPressed(int keyCode, int scanCode, int modifier) {
         if (!isMouseOver()) return false;

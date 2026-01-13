@@ -1,5 +1,6 @@
 package com.teammoeg.chorda.client.cui;
 
+import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import lombok.Getter;
@@ -337,6 +338,7 @@ public abstract class UILayer extends UIElement {
 			UIElement element = elements.get(i);
 
             if (element.isEnabled() && element.isVisible() && element.onMousePressed(button)) {
+            	Chorda.LOGGER.debug(Chorda.UI, "consumed mousePressed: "+button+" "+element);
                 return true;
             }
 		}
@@ -353,6 +355,7 @@ public abstract class UILayer extends UIElement {
 			UIElement element = elements.get(i);
 
 			if (element.isEnabled() && element.onMouseDoubleClicked(button)) {
+				Chorda.LOGGER.debug(Chorda.UI, "consumed mouseDoubleClicked: "+button+" "+element);
 				return true;
 			}
 		}
@@ -378,6 +381,7 @@ public abstract class UILayer extends UIElement {
 			UIElement element = elements.get(i);
 
 			if (element.isEnabled() && element.onMouseScrolled(scroll)) {
+				Chorda.LOGGER.debug(Chorda.UI, "consumed mouseScrolled: "+scroll+" "+element);
 				return true;
 			}
 		}
@@ -391,6 +395,7 @@ public abstract class UILayer extends UIElement {
 			UIElement element = elements.get(i);
 
 			if (element.isEnabled() && element.onMouseDragged(button, dragX, dragY)) {
+				Chorda.LOGGER.debug(Chorda.UI, "consumed mouseDragged: "+button+","+dragX+","+dragY+" "+element);
 				return true;
 			}
 		}
@@ -459,6 +464,7 @@ public abstract class UILayer extends UIElement {
 			UIElement element = elements.get(i);
 
 			if (element.isEnabled() && element.onKeyPressed(keyCode,scanCode,modifier)) {
+				Chorda.LOGGER.debug(Chorda.UI, "consumed keyPressed: "+keyCode+","+scanCode+","+modifier+" "+element);
 				return true;
 			}
 		}
@@ -472,6 +478,7 @@ public abstract class UILayer extends UIElement {
 			UIElement element = elements.get(i);
 
 			if (element.isEnabled()&&element.onKeyRelease(keyCode,scanCode,modifier)) {
+				Chorda.LOGGER.debug(Chorda.UI, "consumed keyReleased: "+keyCode+","+scanCode+","+modifier+" "+element);
 				return true;
 			}
 		}
@@ -489,6 +496,7 @@ public abstract class UILayer extends UIElement {
 			UIElement element = elements.get(i);
 
 			if (element.isEnabled() && element.onIMEInput(c, modifiers)) {
+				Chorda.LOGGER.debug(Chorda.UI, "consumed IMEInput: "+c+"(0x"+Integer.toHexString(c)+")"+","+modifiers+" "+element);
 				return true;
 			}
 		}

@@ -46,8 +46,9 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
             primaryLayer.back();
             return true;
         } else {
-        	
-            return (primaryLayer.onMousePressed(MouseButton.of(button))) || super.mouseClicked(x, y, button);
+        	boolean accepted=(primaryLayer.onMousePressed(MouseButton.of(button)));
+        	System.out.println(accepted);
+            return accepted || super.mouseClicked(x, y, button);
         }
     }
 
@@ -121,6 +122,7 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 
 		 if (!display.isEmpty()){
 			 graphics.pose().translate(0, 0, 600);
+			 graphics.pose().translate(-leftPos, -topPos, 0);
 	            graphics.setColor(1f, 1f, 1f, 0.8f);
 	            graphics.renderTooltip(ClientUtils.getMc().font, display, Optional.empty(), mouseX, Math.max(mouseY, 18));
 	            graphics.setColor(1f, 1f, 1f, 1f);

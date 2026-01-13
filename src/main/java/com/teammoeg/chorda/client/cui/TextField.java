@@ -143,11 +143,12 @@ public class TextField extends UIElement {
 			boolean centeredV = this.isCenteredV();
 			int col = textColor;
 
-			int tx = x + (centered ? w / 2 : 0);
+			;
 			int ty = y + (centeredV ? (h - getFont().lineHeight) / 2 : 0);
 			int i=-1;
 			if (scale == 1.0F) {
 				for (FormattedText text:formattedText) {
+					int tx = x + (centered ? (w-(int) ((float) getFont().width(text) )) / 2 : 0);
 					graphics.drawString(getFont(),Language.getInstance().getVisualOrder(text), tx, ty + (++i) * textSpacing, col, isShadow());
 					if(i+1>=maxLines) {
 						break;
@@ -155,11 +156,19 @@ public class TextField extends UIElement {
 				}
 			} else {
 				graphics.pose().pushPose();
-				graphics.pose().translate(tx, ty, 0.0D);
+				graphics.pose().translate(0, ty, 0.0D);
 				graphics.pose().scale(scale, scale, 1.0F);
 
 				for (FormattedText text:formattedText) {
+					if(centered) {
+						graphics.pose().pushPose();
+						int tx = x + (centered ? (w-(int) ((float) getFont().width(text) * scale)) / 2 : 0);
+						graphics.pose().translate(tx, 0, 0.0D);
+					}
 					graphics.drawString(getFont(), Language.getInstance().getVisualOrder(text), 0, (++i) * textSpacing, col, isShadow());
+					if(centered) {
+						graphics.pose().popPose();
+					}
 					if(i+1>=maxLines) {
 						break;
 					}
