@@ -21,23 +21,41 @@ import java.util.function.Consumer;
 public class ItemSlot extends UIElement {
     public static final int ITEM_WIDTH = 16;
     public static final int ITEM_HEIGHT = 16;
+    private static final ItemStack[] EMPTY=new ItemStack[0];
     protected ItemStack[] item;
     protected float scale;
     protected boolean hoverOverlayEnabled = true;
     private int order=0;
+ 
     private int countOverride=0;
+    public ItemSlot(UIElement parent) {
+        this(parent,EMPTY);
+        setScale(1);
+    }
+    
     public ItemSlot(UIElement parent, ItemStack item) {
-        this(parent,new ItemStack[] {item});
+        this(parent);
+        this.setItem(item);
         
     }
 
     public ItemSlot(UIElement parent, Ingredient item) {
-        this(parent,item.getItems());
+        this(parent);
+        this.setItem(item);
     }
     public ItemSlot(UIElement parent, ItemStack[] item) {
         super(parent);
-        this.item=item;
-        setScale(1);
+        this.setItem(item);
+        
+    }
+    public void setItem(Ingredient item) {
+    	this.setItem(item.getItems());
+    }
+    public void setItem(ItemStack item) {
+    	this.setItem(new ItemStack[] {item});
+    }
+    public void setItem(ItemStack[] item) {
+    	this.item=item;
     }
     @Override
     public void render(GuiGraphics graphics, int x, int y, int w, int h) {
@@ -48,9 +66,6 @@ public class ItemSlot extends UIElement {
     		order=0;
     	if(item.length>0) {
 	        if (scale != 1) {
-	            var pose = graphics.pose();
-
-
 	            CGuiHelper.drawItem(graphics, item[order], x, y, 100, scale, scale, true, countOverride == 0 ? null : String.valueOf(countOverride));
 	        } else {
 	        	CGuiHelper.drawItem(graphics, item[order], x, y, 100, true, countOverride == 0 ? null : String.valueOf(countOverride));
@@ -104,5 +119,8 @@ public class ItemSlot extends UIElement {
     public void getTooltip(Consumer<Component> tooltip) {
     	if(item.length>0)
     		item[order].getTooltipLines(ClientUtils.getPlayer(), TooltipFlag.NORMAL).forEach(tooltip);
+    }
+    public void clear() {
+    	this.setItem(EMPTY);
     }
 }

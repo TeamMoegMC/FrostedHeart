@@ -12,6 +12,7 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -170,5 +171,10 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 	@Override
 	public PrimaryLayer getPrimaryLayer() {
 		return primaryLayer;
+	}
+
+	@Override
+	public Screen getScreen() {
+		return this;
 	}
 }

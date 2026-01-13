@@ -5,6 +5,10 @@ import org.lwjgl.glfw.GLFW;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.cui.editor.EditDialog;
 import com.teammoeg.chorda.client.cui.editor.EditorManager;
+
+import lombok.Getter;
+import lombok.Setter;
+
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
 import net.minecraft.client.Minecraft;
@@ -19,7 +23,9 @@ import net.minecraft.client.gui.screens.Screen;
 public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	UIElement lastFocused;
 	Screen prevScreen;
-	CUIScreen screen;
+	@Getter
+	@Setter
+	private CUIScreen screen;
 	public PrimaryLayer() {
 		super(null);
 		width = 176;
@@ -27,18 +33,10 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 		prevScreen = Minecraft.getInstance().screen;
 		this.setScissorEnabled(false);
 	}
-	public void setScreen(CUIScreen screen) {
-		this.screen=screen;
-	}
 	int mouseX;
 	int mouseY;
 	boolean hasBackGradient;
 	boolean refreshRequested;
-
-	@Override
-	public CUIScreen getManager() {
-		return screen;
-	}
 
 	public final void initGui() {
 

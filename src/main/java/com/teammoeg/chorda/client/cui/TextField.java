@@ -21,6 +21,8 @@ public class TextField extends UIElement {
 	public int textFlags = 0;
 	public int minWidth = 0;
 	public int maxWidth = 5000;
+	public int maxLines=Integer.MAX_VALUE;
+	public int minLines=1;
 	public int textSpacing = 10;
 	public float scale = 1.0F;
 	public int textColor = 0xFFFFFFFF;
@@ -53,7 +55,15 @@ public class TextField extends UIElement {
 		maxWidth = width;
 		return this;
 	}
+	public TextField setMinLines(int lines) {
+		minLines = lines;
+		return this;
+	}
 
+	public TextField setMaxLines(int lines) {
+		maxLines = lines;
+		return this;
+	}
 	public TextField setColor(int color) {
 		textColor = color;
 		return this;
@@ -109,7 +119,7 @@ public class TextField extends UIElement {
 		}
 
 		setWidth(Mth.clamp(getWidth(), minWidth, maxWidth));
-		setHeight((int) ((float) (Math.max(1, formattedText.size()) * textSpacing - (textSpacing - getFont().lineHeight + 1)) * scale));
+		setHeight((int) ((float) (Math.max(minLines, Math.min(formattedText.size(), maxLines)) * textSpacing - (textSpacing - getFont().lineHeight + 1)) * scale));
 		//System.out.println("dims="+this.getX()+","+this.getY()+":"+this.getWidth()+","+this.getHeight());
 		return this;
 	}
@@ -139,6 +149,9 @@ public class TextField extends UIElement {
 			if (scale == 1.0F) {
 				for (FormattedText text:formattedText) {
 					graphics.drawString(getFont(),Language.getInstance().getVisualOrder(text), tx, ty + (++i) * textSpacing, col, isShadow());
+					if(i+1>=maxLines) {
+						break;
+					}
 				}
 			} else {
 				graphics.pose().pushPose();
@@ -147,6 +160,9 @@ public class TextField extends UIElement {
 
 				for (FormattedText text:formattedText) {
 					graphics.drawString(getFont(), Language.getInstance().getVisualOrder(text), 0, (++i) * textSpacing, col, isShadow());
+					if(i+1>=maxLines) {
+						break;
+					}
 				}
 
 				graphics.pose().popPose();
@@ -156,7 +172,7 @@ public class TextField extends UIElement {
 	
 	public Optional<Style> getStyle(int mouseX, int mouseY) {
 		int line = (mouseY - getY()) / getFont().lineHeight;
-		if (line >= 0 && line < formattedText.size()) {
+		if (line >= 0 && line < formattedText.size() && line<maxLines) {
 			boolean centered = this.isCentered();
 			int textWidth = getFont().width(formattedText.get(line));
 			int xStart = centered ? getX() + (getWidth() - textWidth) / 2: getX();

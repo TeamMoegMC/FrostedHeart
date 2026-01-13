@@ -20,17 +20,17 @@
 package com.teammoeg.frostedheart.content.trade;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.CUIMenuScreenWrapper;
+import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
 
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.gui.screens.Screen;
 
 public class ClientTradeHandler {
     public static void updateAll() {
         Screen scr = ClientUtils.getMc().screen;
-        if (scr instanceof MenuScreenWrapper) {
-            BaseScreen scr2 = ((MenuScreenWrapper<?>) scr).getGui();
+        if (scr instanceof CUIMenuScreenWrapper) {
+            PrimaryLayer scr2 = ((CUIMenuScreenWrapper<?>) scr).getPrimaryLayer();
             if (scr2 instanceof TradeScreen) {
                 TradeScreen ts = (TradeScreen) scr2;
                 ts.updateOffers();
@@ -41,8 +41,8 @@ public class ClientTradeHandler {
 
     public static void updateBargain() {
         Screen scr = ClientUtils.getMc().screen;
-        if (scr instanceof MenuScreenWrapper) {
-            BaseScreen scr2 = ((MenuScreenWrapper<?>) scr).getGui();
+        if (scr instanceof CUIMenuScreenWrapper) {
+            PrimaryLayer scr2 = ((CUIMenuScreenWrapper<?>) scr).getPrimaryLayer();
             if (scr2 instanceof TradeScreen) {
                 TradeScreen ts = (TradeScreen) scr2;
                 ts.updateTrade();
@@ -52,8 +52,8 @@ public class ClientTradeHandler {
 
     public static void updateTrade() {
         Screen scr = ClientUtils.getMc().screen;
-        if (scr instanceof MenuScreenWrapper) {
-            BaseScreen scr2 = ((MenuScreenWrapper<?>) scr).getGui();
+        if (scr instanceof CUIMenuScreenWrapper) {
+            PrimaryLayer scr2 = ((CUIMenuScreenWrapper<?>) scr).getPrimaryLayer();
             if (scr2 instanceof TradeScreen) {
                 TradeScreen ts = (TradeScreen) scr2;
                 ts.updateTrade();

@@ -168,5 +168,8 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 	public boolean shouldCloseOnEsc() {
 		return primaryLayer.onCloseQuery();
 	}
-
+	@Override
+	public Screen getScreen() {
+		return this;
+	}
 }

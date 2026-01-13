@@ -22,14 +22,19 @@ package com.teammoeg.frostedheart.content.trade.gui;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 
+import org.jetbrains.annotations.Nullable;
+
+import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.FakeSlot;
-import com.teammoeg.chorda.client.cui.RTextField;
-import com.teammoeg.chorda.client.cui.SwitchButton;
-import com.teammoeg.chorda.client.cui.ToolTipWidget;
-import com.teammoeg.chorda.client.cui.TristateButton;
-import com.teammoeg.chorda.client.ui.ScreenAcceptor;
+import com.teammoeg.chorda.client.cui.OverlayItemSlot;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.TextField;
+import com.teammoeg.chorda.client.cui.CheckBox;
+import com.teammoeg.chorda.client.cui.ToolTipElement;
+import com.teammoeg.chorda.client.cui.TristateCheckBox;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.trade.RelationModifier;
@@ -41,34 +46,29 @@ import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
 import com.teammoeg.frostedheart.util.Lang;
 
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
-import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.util.Mth;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.ChatFormatting;
 
-public class TradeScreen extends BaseScreen implements ScreenAcceptor {
+public class TradeScreen extends PrimaryLayer{
     TradeContainer cx;
-    SwitchButton tab;
-    FakeSlot[] slots = new FakeSlot[27];
+    CheckBox tab;
+    OverlayItemSlot[] slots = new OverlayItemSlot[27];
     SellData[] sds = new SellData[27];
-    FakeSlot[] orders = new FakeSlot[11];
-    TristateButton trade;
-    TristateButton bargain;
+    OverlayItemSlot[] orders = new OverlayItemSlot[11];
+    TristateCheckBox trade;
+    TristateCheckBox bargain;
     RelationSlot rels;
-    @Setter
-    AbstractContainerScreen screen;
+
     public TradeScreen(TradeContainer cx) {
+    	super();
         this.cx = cx;
-        tab = new SwitchButton(this, TradeIcons.PTABSELL, TradeIcons.PTABBUY, false) {
+        tab = new CheckBox(this, TradeIcons.PTABSELL, TradeIcons.PTABBUY, false) {
 
             @Override
             public void onSwitched() {
@@ -77,34 +77,34 @@ public class TradeScreen extends BaseScreen implements ScreenAcceptor {
             }
 
             @Override
-            public void addMouseOverText(TooltipList list) {
-                super.addMouseOverText(list);
-                // buy
-                if (getState()) {
-                    list.add(Lang.gui("trade.buying").component());
-                }
-                // sell
-                else {
-                    list.add(Lang.gui("trade.selling").component());
-                }
-            }
+			public void getTooltip(Consumer<Component> tooltip) {
+            	 if (isChecked()) {
+            		 tooltip.accept(Lang.gui("trade.buying").component());
+                 }
+                 else {
+                	 tooltip.accept(Lang.gui("trade.selling").component());
+                 }
+			}
+
+
         };
         tab.setPosAndSize(182, 157, 54, 31);
         for (int i = 0; i < 3; i++)
             for (int j = 0; j < 9; j++) {
                 final int no = i + j * 3;
 
-                FakeSlot fs = new FakeSlot(this) {
+                OverlayItemSlot fs = new OverlayItemSlot(this) {
                     @Override
-                    public void onClick(MouseButton btn) {
-                        super.onClick(btn);
+                    public boolean onMousePressed(MouseButton btn) {
+                        //super.onMousePressed(btn);
                         onSlotClick(no, btn);
+                        return true;
                     }
                     @Override
-					public void addMouseOverText(TooltipList list) {
-						if(tab.getState()||cx.relations.sum()>TradeConstants.RELATION_TO_TRADE) {
-				    		super.addMouseOverText(list);
-						}else list.add(Component.translatable("gui.frostedheart.trade.no_trade_will"));
+                    public void getTooltip(Consumer<Component> tooltip) {
+						if(tab.isChecked()||cx.relations.sum()>TradeConstants.RELATION_TO_TRADE) {
+				    		super.getTooltip(tooltip);
+						}else tooltip.accept(Component.translatable("gui.frostedheart.trade.no_trade_will"));
 					}
                 };
                 slots[no] = fs;
@@ -116,18 +116,19 @@ public class TradeScreen extends BaseScreen implements ScreenAcceptor {
                 final int no = i + j * 4;
                 if (no == 11)
                     continue;
-                FakeSlot fs = new FakeSlot(this) {
+                OverlayItemSlot fs = new OverlayItemSlot(this) {
                     @Override
-                    public void onClick(MouseButton btn) {
-                        super.onClick(btn);
+                    public boolean onMousePressed(MouseButton btn) {
+                        //super.onClick(btn);
                         onOrderSlotClick(no, btn);
+                        return true;
                     }
 
 					@Override
-					public void addMouseOverText(TooltipList list) {
+					public void getTooltip(Consumer<Component> tooltip){
 						if(cx.relations.sum()>TradeConstants.RELATION_TO_TRADE) {
-				    		super.addMouseOverText(list);
-						}else list.add(Component.translatable("gui.frostedheart.trade.no_trade_will"));
+				    		super.getTooltip(tooltip);
+						}else tooltip.accept(Component.translatable("gui.frostedheart.trade.no_trade_will"));
 					}
                     
                 };
@@ -138,35 +139,39 @@ public class TradeScreen extends BaseScreen implements ScreenAcceptor {
         rels.setTooltip(c -> {
             int relation = cx.relations.sum();
             if (relation < TradeConstants.RELATION_TO_TRADE && !cx.order.isEmpty()) {
-                c.add(Lang.translateGui("trade.unwilling").withStyle(ChatFormatting.DARK_RED));
+                c.accept(Lang.translateGui("trade.unwilling").withStyle(ChatFormatting.DARK_RED));
                 return;
             }
             if (cx.discountAmount != 0)
-                c.add(Lang.translateGui("trade.discount").append(Components
+                c.accept(Lang.translateGui("trade.discount").append(Components
                         .str(" -" + (int) Math.ceil(cx.discountAmount / 10f)).withStyle(ChatFormatting.GREEN)));
             if (cx.relationMinus > 0)
-                c.add(Lang.translateGui("trade.bad_relation").append(
+                c.accept(Lang.translateGui("trade.bad_relation").append(
                         Components.str(" " + (int) Math.ceil(cx.relationMinus / 10f)).withStyle(ChatFormatting.RED)));
 
         });
         rels.setPos(110, 108);
-        bargain = new TristateButton(this, TradeIcons.BARGAINN, TradeIcons.BARGAINO, TradeIcons.BARGAIND) {
+        bargain = new TristateCheckBox(this, TradeIcons.BARGAINN, TradeIcons.BARGAINO, TradeIcons.BARGAIND) {
 
             @Override
-            public void onClicked(MouseButton arg0) {
+            public boolean onMousePressed(MouseButton arg0) {
                 if (bargain.isEnabled()) {
                     FHNetwork.INSTANCE.sendToServer(new BargainRequestPacket(cx.order));
+                    return true;
                 }
+                return true;
             }
 
         };
-        trade = new TristateButton(this, TradeIcons.DEALN, TradeIcons.DEALO, TradeIcons.DEALD) {
+        trade = new TristateCheckBox(this, TradeIcons.DEALN, TradeIcons.DEALO, TradeIcons.DEALD) {
 
             @Override
-            public void onClicked(MouseButton arg0) {
+            public boolean onMousePressed(MouseButton arg0) {
                 if (trade.isEnabled()) {
                     FHNetwork.INSTANCE.sendToServer(new TradeCommitPacket(cx.order));
+                    return true;
                 }
+                return true;
             }
 
         };
@@ -174,63 +179,69 @@ public class TradeScreen extends BaseScreen implements ScreenAcceptor {
         bargain.setPosAndSize(95, 57, 20, 14);
         updateOffers();
     }
+    
 	@Override
-	public void addMouseOverText(TooltipList list) {
-		if (this.cx.getCarried().isEmpty() && screen.getSlotUnderMouse() != null && screen.getSlotUnderMouse().hasItem()) {
-			AbstractContainerScreen.getTooltipFromItem(ClientUtils.getMc(), screen.getSlotUnderMouse().getItem()).forEach(list::add);
+	public void getTooltip(Consumer<Component> list) {
+		@Nullable Slot slotUnderMouse=((AbstractContainerScreen)this.getScreen().getScreen()).getSlotUnderMouse();
+		if (this.cx.getCarried().isEmpty() &&  slotUnderMouse!= null && slotUnderMouse.hasItem()) {
+			AbstractContainerScreen.getTooltipFromItem(ClientUtils.getMc(), slotUnderMouse.getItem()).forEach(list::accept);
 		}
-		super.addMouseOverText(list);
+		super.getTooltip(list);
 	}
-    @Override
-    public void addWidgets() {
 
-        RTextField ptf = new RTextField(this).addFlags(Theme.CENTERED | Theme.SHADOW).setMaxWidth(56).setMinWidth(56)
-                .setMaxLine(1).setText(Lang.translateGui("trade.me"));
-        ptf.setPos(0, 119);
-        super.add(ptf);
-        RTextField vptf = new RTextField(this).addFlags(Theme.CENTERED | Theme.SHADOW).setMaxWidth(56).setMinWidth(56)
-                .setMaxLine(1).setText(Lang.translateGui("trade.profession." + cx.data.policytype));
-        vptf.setPos(132, 119);
-        super.add(vptf);
-
-        RTextField vltf = new RTextField(this).addFlags(Theme.CENTERED | Theme.SHADOW).setMaxWidth(56).setMinWidth(56)
-                .setMaxLine(1).setText(Lang.translateKey("merchant.level." + (cx.data.getTradeLevel() + 1)));
-        vltf.setPos(132, 34);
-        super.add(vltf);
-
-        super.add(trade);
-
-        super.add(bargain);
-
-        super.add(tab);
-        ToolTipWidget ttw = new ToolTipWidget(this, list -> {
-            int tot = cx.relations.sum();
-            list.add(Lang.translateGui("trade.relation").append(Components.str(tot > 0 ? " +" + tot : "" + tot)
-                    .withStyle(tot > 0 ? ChatFormatting.GREEN : ChatFormatting.RED)));
-            if(tot<=TradeConstants.RELATION_TO_TRADE) {
-            	list.add(Component.translatable("gui.frostedheart.trade.no_trade_will"));
-            }
-            for (RelationModifier m : RelationModifier.values()) {
-                int rel = cx.relations.get(m);
-                if (rel == 0)
-                    continue;
-                MutableComponent tx = Components.str(rel > 0 ? " +" + rel : " " + rel)
-                        .withStyle(rel > 0 ? ChatFormatting.GREEN : ChatFormatting.RED);
-                list.add(m.getDesc().append(tx));
-
-            }
-        });
-        ttw.setPosAndSize(133, 18, 54, 5);
-        super.add(ttw);
-        for (FakeSlot fs : slots)
-            super.add(fs);
-        for (FakeSlot fs : orders)
-            super.add(fs);
-        super.add(rels);
-    }
 
     @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+	public void addUIElements() {
+		super.addUIElements();
+		TextField ptf = new TextField(this).centerV().shadow().setMaxWidth(56).setMinWidth(56)
+            .setMaxLines(1).setText(Lang.translateGui("trade.me"));
+    ptf.setPos(0, 119);
+    super.add(ptf);
+    TextField vptf = new TextField(this).centerV().shadow().setMaxWidth(56).setMinWidth(56)
+            .setMaxLines(1).setText(Lang.translateGui("trade.profession." + cx.data.policytype));
+    vptf.setPos(132, 119);
+    super.add(vptf);
+
+    TextField vltf = new TextField(this).centerV().shadow().setMaxWidth(56).setMinWidth(56)
+            .setMaxLines(1).setText(Lang.translateKey("merchant.level." + (cx.data.getTradeLevel() + 1)));
+    vltf.setPos(132, 34);
+    super.add(vltf);
+
+    super.add(trade);
+
+    super.add(bargain);
+
+    super.add(tab);
+    ToolTipElement ttw = new ToolTipElement(this, list -> {
+        int tot = cx.relations.sum();
+        list.accept(Lang.translateGui("trade.relation").append(Components.str(tot > 0 ? " +" + tot : "" + tot)
+                .withStyle(tot > 0 ? ChatFormatting.GREEN : ChatFormatting.RED)));
+        if(tot<=TradeConstants.RELATION_TO_TRADE) {
+        	list.accept(Component.translatable("gui.frostedheart.trade.no_trade_will"));
+        }
+        for (RelationModifier m : RelationModifier.values()) {
+            int rel = cx.relations.get(m);
+            if (rel == 0)
+                continue;
+            MutableComponent tx = Components.str(rel > 0 ? " +" + rel : " " + rel)
+                    .withStyle(rel > 0 ? ChatFormatting.GREEN : ChatFormatting.RED);
+            list.accept(m.getDesc().append(tx));
+
+        }
+    });
+    ttw.setPosAndSize(133, 18, 54, 5);
+    super.add(ttw);
+    for (OverlayItemSlot fs : slots)
+        super.add(fs);
+    for (OverlayItemSlot fs : orders)
+        super.add(fs);
+    super.add(rels);
+	}
+
+
+
+    @Override
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         TradeIcons.MAIN.draw(matrixStack, x, y, w, h);
         TradeIcons.REL.draw(matrixStack, x + 133, y + 18, 54, 5);
         int repos = cx.relations.sum();
@@ -243,7 +254,7 @@ public class TradeScreen extends BaseScreen implements ScreenAcceptor {
             TradeIcons.POFFER_EMP.draw(matrixStack, x + 54, y, 76, 60);
         if (!cx.order.isEmpty())
             TradeIcons.VOFFER_EMP.draw(matrixStack, x + 57, y + 73, 74, 60);
-        if (tab.getState())
+        if (tab.isChecked())
             TradeIcons.OVLBUY.draw(matrixStack, x + 189, y + 56, 48, 48);
         else
             TradeIcons.OVLSELL.draw(matrixStack, x + 189, y + 56, 48, 48);
@@ -255,15 +266,15 @@ public class TradeScreen extends BaseScreen implements ScreenAcceptor {
         } else {
             TradeIcons.EXP.draw(matrixStack, 133 + x, 25 + y, 54, 5);
         }
-        InventoryScreen.renderEntityInInventoryFollowsMouse(matrixStack, x + 28, y + 115, 30, (float) (x + 8) - this.getMouseX(),
-                (float) (y + 75 - 50) - this.getMouseY(), ClientUtils.getPlayer());
-        InventoryScreen.renderEntityInInventoryFollowsMouse(matrixStack, x + 160, y + 115, 30, (float) (x + 140) - this.getMouseX(),
-                (float) (y + 75 - 50) - this.getMouseY(), cx.data.parent);
+        InventoryScreen.renderEntityInInventoryFollowsMouse(matrixStack, x + 28, y + 115, 30, (float)( (x + 8) - this.getMouseX()),
+                (float) ((y + 75 - 50) - this.getMouseY()), ClientUtils.getPlayer());
+        InventoryScreen.renderEntityInInventoryFollowsMouse(matrixStack, x + 160, y + 115, 30, (float)( (x + 140) - this.getMouseX()),
+                (float) ((y + 75 - 50) - this.getMouseY()), cx.data.parent);
     }
 
     @Override
-    public void drawForeground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        super.drawForeground(matrixStack, theme, x, y, w, h);
+    public void drawForeground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        super.drawForeground(matrixStack, x, y, w, h);
         for (DetectionSlot ds : cx.slots) {
             if (ds.isSaleable) {
                 TradeIcons.SALEABLE.draw(matrixStack, ds.x + x, ds.y + y, 7, 6);
@@ -281,7 +292,7 @@ public class TradeScreen extends BaseScreen implements ScreenAcceptor {
 
     public void onOrderSlotClick(int sno, MouseButton btn) {
 
-        boolean shift = Widget.isShiftKeyDown();
+        boolean shift = CInputHelper.isShiftKeyDown();
         String sd = cx.order.keySet().stream().skip(sno).findFirst().orElse(null);
         if (sd == null)
             return;
@@ -300,12 +311,12 @@ public class TradeScreen extends BaseScreen implements ScreenAcceptor {
     }
 
     public void onSlotClick(int sno, MouseButton btn) {
-        if (!tab.getState()) {
+        if (!tab.isChecked()) {
         	if(cx.relations.sum()<=TradeConstants.RELATION_TO_TRADE) {
         		return;
         	}
             SellData sd = sds[sno];
-            boolean shift = Widget.isShiftKeyDown();
+            boolean shift = CInputHelper.isShiftKeyDown();
             if (cx.order.size() >= 11 && !cx.order.containsKey(sd.getId()))
                 return;
             if (sd == null)
@@ -334,26 +345,26 @@ public class TradeScreen extends BaseScreen implements ScreenAcceptor {
     }
 
     public void updateOffers() {
-        for (FakeSlot fs : slots)
+        for (OverlayItemSlot fs : slots)
             fs.clear();
         Arrays.fill(sds, null);
-        if (tab.getState()) {
+        if (tab.isChecked()) {
             int start = 0;
             int end = Math.min(cx.policy.getBuys().size(), start + 27);
             int j = 0;
             if (start < end)
                 for (int i = start; i < end; i++) {
                     BuyData cur = cx.policy.getBuys().get(i);
-                    FakeSlot slot = slots[j++];
+                    OverlayItemSlot slot = slots[j++];
                     if (cur.getStore() == 0) {
                         slot.setOverlay(TradeIcons.NOBUY, 7, 6);
-                        slot.setTooltip(c -> c.add(Lang.translateGui("trade.not_needed_now").withStyle(ChatFormatting.RED)));
+                        slot.setTooltips(c -> c.accept(Lang.translateGui("trade.not_needed_now").withStyle(ChatFormatting.RED)));
                     } else {
                         slot.resetOverlay();
-                        slot.setTooltip(null);
+                        slot.setTooltips(null);
                     }
-                    slot.setSlot(cur.getItem());
-                    slot.setCount(cur.getStore());
+                    slot.setItem(cur.getItem());
+                    slot.setCountOverride(cur.getStore());
                 }
         } else {
             int start = 0;
@@ -365,29 +376,29 @@ public class TradeScreen extends BaseScreen implements ScreenAcceptor {
                 while (it.hasNext()) {
                     SellData sd = it.next();
                     sds[j] = sd;
-                    FakeSlot slot = slots[j++];
+                    OverlayItemSlot slot = slots[j++];
                     if (sd.getStore() == 0) {
                         if (sd.canRestock(cx.data)>0) {
                             slot.setOverlay(TradeIcons.STOCKOUT, 7, 6);
-                            slot.setTooltip(c -> c.add(Lang.translateGui("trade.no_stock").withStyle(ChatFormatting.RED)));
+                            slot.setTooltips(c -> c.accept(Lang.translateGui("trade.no_stock").withStyle(ChatFormatting.RED)));
                         } else {
                             slot.setOverlay(TradeIcons.NORESTOCK, 7, 6);
-                            slot.setTooltip(c -> c.add(Lang.translateGui("trade.not_restocking").withStyle(ChatFormatting.RED)));
+                            slot.setTooltips(c -> c.accept(Lang.translateGui("trade.not_restocking").withStyle(ChatFormatting.RED)));
                         }
                     } else {
                         if (sd.isFullStock()) {
                             slot.setOverlay(TradeIcons.FULL, 7, 6);
-                            slot.setTooltip(c -> c.add(Lang.translateGui("trade.full_stock").withStyle(ChatFormatting.GREEN)));
+                            slot.setTooltips(c -> c.accept(Lang.translateGui("trade.full_stock").withStyle(ChatFormatting.GREEN)));
                         } else if (sd.canRestock(cx.data)>0) {
                             slot.setOverlay(TradeIcons.RESTOCKS, 7, 6);
-                            slot.setTooltip(c -> c.add(Lang.translateGui("trade.restocking").withStyle(ChatFormatting.YELLOW)));
+                            slot.setTooltips(c -> c.accept(Lang.translateGui("trade.restocking").withStyle(ChatFormatting.YELLOW)));
                         } else {
                             slot.resetOverlay();
-                            slot.setTooltip(c -> c.add(Lang.translateGui("trade.not_restocking")));
+                            slot.setTooltips(c -> c.accept(Lang.translateGui("trade.not_restocking")));
                         }
                     }
-                    slot.setSlot(sd.getItem());
-                    slot.setCount(sd.getStore());
+                    slot.setItem(sd.getItem());
+                    slot.setCountOverride(sd.getStore());
                 }
             }
         }
@@ -395,15 +406,15 @@ public class TradeScreen extends BaseScreen implements ScreenAcceptor {
     }
 
     public void updateOrders() {
-        for (FakeSlot fs : orders)
+        for (OverlayItemSlot fs : orders)
             fs.clear();
         Iterator<Entry<String, Integer>> it = cx.order.entrySet().iterator();
         int j = 0;
         while (it.hasNext()) {
             Entry<String, Integer> cur = it.next();
-            FakeSlot curs = orders[j++];
-            curs.setSlot(cx.policy.getSells().get(cur.getKey()).getItem());
-            curs.setCount(cur.getValue());
+            OverlayItemSlot curs = orders[j++];
+            curs.setItem(cx.policy.getSells().get(cur.getKey()).getItem());
+            curs.setCountOverride(cur.getValue());
         }
         updateTrade();
     }
@@ -417,36 +428,36 @@ public class TradeScreen extends BaseScreen implements ScreenAcceptor {
             if (cx.originalVOffer > cx.poffer) {
                 trade.setNormal(TradeIcons.DEALGRN);
                 trade.setOver(TradeIcons.DEALGRNO);
-                trade.setTooltips(c -> c.add(Lang.translateGui("trade.discounted_offering")));
+                trade.setTooltips(c -> c.accept(Lang.translateGui("trade.discounted_offering")));
             } else if (cx.poffer - cx.originalVOffer > 10) {
                 trade.setNormal(TradeIcons.DEALYEL);
                 trade.setOver(TradeIcons.DEALYELO);
-                trade.setTooltips(c -> c.add(Lang.translateGui("trade.too_much_offering")));
+                trade.setTooltips(c -> c.accept(Lang.translateGui("trade.too_much_offering")));
             } else {
                 trade.setNormal(TradeIcons.DEALN);
                 trade.setOver(TradeIcons.DEALO);
-                trade.setTooltips(c -> c.add(Lang.translateGui("trade.deal")));
+                trade.setTooltips(c -> c.accept(Lang.translateGui("trade.deal")));
             }
         } else {
-            trade.setTooltips(c -> c.add(Lang.translateGui("trade.not_enough_offering")));
+            trade.setTooltips(c -> c.accept(Lang.translateGui("trade.not_enough_offering")));
             trade.setEnabled(false);
         }
         if (cx.relations.sum() >= 40) {
             if (cx.order.isEmpty()) {
-                bargain.setTooltips(c -> c.add(Lang.translateGui("trade.trade_to_bargain")));
+                bargain.setTooltips(c -> c.accept(Lang.translateGui("trade.trade_to_bargain")));
                 bargain.setEnabled(false);
             } else {
                 if (cx.discountRatio > 0.4) {
-                    bargain.setTooltips(c -> c.add(Lang.translateGui("trade.maxed_bargain")));
+                    bargain.setTooltips(c -> c.accept(Lang.translateGui("trade.maxed_bargain")));
                     bargain.setEnabled(false);
                 } else {
-                    bargain.setTooltips(c -> c.add(Lang.translateGui("trade.bargain")));
+                    bargain.setTooltips(c -> c.accept(Lang.translateGui("trade.bargain")));
                     bargain.setEnabled(true);
                 }
             }
 
         } else {
-            bargain.setTooltips(c -> c.add(Lang.translateGui("trade.no_bargain")));
+            bargain.setTooltips(c -> c.accept(Lang.translateGui("trade.no_bargain")));
             bargain.setEnabled(false);
         }
     }

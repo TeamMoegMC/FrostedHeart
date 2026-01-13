@@ -19,22 +19,25 @@
 
 package com.teammoeg.chorda.client.cui;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.CursorType;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
 
-public abstract class TristateButton extends Button {
-    boolean enabled;
-    Icon normal, over, locked;
-    Consumer<TooltipList> tooltips;
+import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 
-    public TristateButton(Panel panel, Icon normal, Icon over, Icon locked) {
+import lombok.Getter;
+import lombok.Setter;
+
+public abstract class TristateCheckBox extends UIElement {
+    boolean enabled;
+    CIcon normal, over, locked;
+    @Getter
+    @Setter
+    Consumer<Consumer<Component>> tooltips;
+
+    public TristateCheckBox(UIElement panel, CIcon normal, CIcon over, CIcon locked) {
         super(panel);
         this.normal = normal;
         this.over = over;
@@ -42,29 +45,32 @@ public abstract class TristateButton extends Button {
     }
 
     @Override
-    public void addMouseOverText(TooltipList list) {
-        super.addMouseOverText(list);
-        if (tooltips != null)
-            tooltips.accept(list);
-    }
+	public void getTooltip(Consumer<Component> tooltip) {
+		super.getTooltip(tooltip);
+		if (tooltips != null)
+            tooltips.accept(tooltip);
+	}
+
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
         if (getEnabled()) {
             if (super.isMouseOver())
-                over.draw(matrixStack, x, y, w, h);
+                over.draw(graphics, x, y, w, h);
             else
-                normal.draw(matrixStack, x, y, w, h);
+                normal.draw(graphics, x, y, w, h);
         } else
-            locked.draw(matrixStack, x, y, w, h);
-    }
+            locked.draw(graphics, x, y, w, h);
+	}
+
 
     @Override
-    public CursorType getCursor() {
+	public Cursor getCursor() {
         if (enabled)
-            return CursorType.HAND;
-        return CursorType.ARROW;
-    }
+            return Cursor.HAND;
+		return super.getCursor();
+	}
+
 
     public boolean getEnabled() {
         return enabled;
@@ -74,37 +80,30 @@ public abstract class TristateButton extends Button {
         this.enabled = enabled;
     }
 
-    public Icon getLocked() {
+    public CIcon getLocked() {
         return locked;
     }
 
-    public void setLocked(Icon locked) {
+    public void setLocked(CIcon locked) {
         this.locked = locked;
     }
 
-    public Icon getNormal() {
+    public CIcon getNormal() {
         return normal;
     }
 
-    public void setNormal(Icon normal) {
+    public void setNormal(CIcon normal) {
         this.normal = normal;
     }
 
-    public Icon getOver() {
+    public CIcon getOver() {
         return over;
     }
 
-    public void setOver(Icon over) {
+    public void setOver(CIcon over) {
         this.over = over;
     }
 
-    public Consumer<TooltipList> getTooltips() {
-        return tooltips;
-    }
-
-    public void setTooltips(Consumer<TooltipList> tooltips) {
-        this.tooltips = tooltips;
-    }
 
     public void resetTooltips() {
         this.tooltips = null;

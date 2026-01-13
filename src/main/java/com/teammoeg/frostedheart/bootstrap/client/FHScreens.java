@@ -56,7 +56,7 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.GENERATOR_T2.getType(), GeneratorScreen<T2GeneratorState, T2GeneratorLogic>::new);
         MenuScreens.register(FHMenuTypes.RELIC_CHEST.get(), RelicChestScreen::new);
         
-        registerFTBScreen(FHMenuTypes.TRADE_GUI.get(), TradeScreen::new);
+        registerCUIScreen(FHMenuTypes.TRADE_GUI.get(), TradeScreen::new);
         registerCUIScreen(FHMenuTypes.HEAT_STAT.get(), HeatStatScreen::new);
         MenuScreens.register(FHMenuTypes.SAUNA.get(), SaunaScreen::new);
         MenuScreens.register(FHMenuTypes.INCUBATOR_T1.get(), IncubatorT1Screen::new);

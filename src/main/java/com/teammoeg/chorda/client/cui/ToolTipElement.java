@@ -19,24 +19,24 @@
 
 package com.teammoeg.chorda.client.cui;
 
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 
 import java.util.function.Consumer;
 
-public class ToolTipWidget extends Widget {
-    Consumer<TooltipList> csm;
+import net.minecraft.network.chat.Component;
 
-    public ToolTipWidget(Panel p, Consumer<TooltipList> csm) {
+public class ToolTipElement extends UIElement {
+    Consumer<Consumer<Component>> csm;
+
+    public ToolTipElement(UIElement p, Consumer<Consumer<Component>> csm) {
         super(p);
         this.csm = csm;
     }
 
     @Override
-    public void addMouseOverText(TooltipList list) {
-        super.addMouseOverText(list);
-        csm.accept(list);
+    public void getTooltip(Consumer<Component> list) {
+        super.getTooltip(list);
+        if(csm!=null)
+        	csm.accept(list);
     }
 
 
