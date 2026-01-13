@@ -22,10 +22,10 @@ package com.teammoeg.chorda.client.cui.editor;
 import java.util.function.Consumer;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.CUIScreen;
+import com.teammoeg.chorda.client.cui.CUIScreenWrapper;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.TextField;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 
 import net.minecraft.network.chat.Component;
 
@@ -38,17 +38,17 @@ public class EditUtils {
     	editor.open(openEditorScreen(), title, oldVlaue, onChange);
         //new ResearchEditorDialog(EditUtils.openEditorScreen(), r, r.getCategory()).open();
     }
-    public static UIWidget openEditorScreen() {
-    	CUIScreen wrapper=new CUIScreen(new PrimaryLayer());
+    public static UIElement openEditorScreen() {
+    	CUIScreenWrapper wrapper=new CUIScreenWrapper(new PrimaryLayer());
     	
     	ClientUtils.getMc().setScreen(wrapper);
     	return wrapper.getPrimaryLayer();
     }
-    public static TextField getTitle(UIWidget p, String title) {
+    public static TextField getTitle(UIElement p, String title) {
 
         return new TextField(p).setMaxWidth(200).setText(title).setColor(0xFF000000);
     }
-    public static TextField getTitle(UIWidget p, Component title) {
+    public static TextField getTitle(UIElement p, Component title) {
 
         return new TextField(p).setMaxWidth(200).setText(title).setColor(0xFF000000);
     }

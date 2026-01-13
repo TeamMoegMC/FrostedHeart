@@ -30,10 +30,10 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.CUIScreen;
-import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.CUIScreenWrapper;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import net.minecraft.client.Minecraft;
@@ -153,7 +153,40 @@ public class CGuiHelper {
 			guiGraphics.renderItemDecorations(ClientUtils.getMc().font, stack, 0, 0, countReplacement);
 		guiGraphics.pose().popPose();
 	}
+	public static void drawItem(GuiGraphics guiGraphics, ItemStack stack, int x, int y, int zindex, boolean drawDecorations, @Nullable String countReplacement) {
+		guiGraphics.pose().pushPose();
+		guiGraphics.pose().translate(x, y, zindex + 150);
+		if (!stack.isEmpty()) {
+			BakedModel bakedmodel = ClientUtils.getMc().getItemRenderer().getModel(stack, ClientUtils.getMc().level,
+				ClientUtils.getMc().player, 0);
+			
+			boolean flag = !bakedmodel.usesBlockLight();
+			Matrix4f matrix4f = null;
+			if (!flag) {
+				matrix4f = new Matrix4f(guiGraphics.pose().last().pose()).rotationYXZ(1.0821041F, 3.2375858F, 0.0F).rotateYXZ((-(float) Math.PI / 8F), 2.3561945F, 0.0F);
+			}
+			guiGraphics.pose().pushPose();
+			guiGraphics.pose().translate(8f, 8f, 0f);
 
+			guiGraphics.pose().mulPoseMatrix((new Matrix4f()).scaling(1.0F, -1.0F, 1.0F));
+			guiGraphics.pose().scale(16.0F, 16.0F, 16.0F);
+
+			if (flag) {
+				Lighting.setupForFlatItems();
+			} else {
+				Lighting.setupLevel(matrix4f);
+			}
+
+			ClientUtils.getMc().getItemRenderer().render(stack, ItemDisplayContext.GUI, false, guiGraphics.pose(),
+				guiGraphics.bufferSource(), 15728880, OverlayTexture.NO_OVERLAY, bakedmodel);
+			guiGraphics.flush();
+			Lighting.setupFor3DItems();
+			guiGraphics.pose().popPose();
+		}
+		if (drawDecorations)
+			guiGraphics.renderItemDecorations(ClientUtils.getMc().font, stack, 0, 0, countReplacement);
+		guiGraphics.pose().popPose();
+	}
 	public static void drawTextShadow(GuiGraphics guiGraphics, Component text, Point point, int color) {
 		guiGraphics.drawString(Minecraft.getInstance().font, text, point.getX(), point.getY(), color);
 	}
@@ -665,10 +698,10 @@ public class CGuiHelper {
 		drawBox(graphics, box.getX(), box.getY(), box.getW(), box.getH(), color, inner);
 	}
 
-	public static Rect getWidgetBounds(UIWidget widget, PrimaryLayer primaryLayer) {
+	public static Rect getWidgetBounds(UIElement widget, PrimaryLayer primaryLayer) {
 		int x = widget.getScreenX();
 		int y = widget.getScreenY();
-		if (primaryLayer.getManager() instanceof CUIScreen) {
+		if (primaryLayer.getManager() instanceof CUIScreenWrapper) {
 			x += (ClientUtils.getMc().getWindow().getGuiScaledWidth() - primaryLayer.getWidth())/2;
 			y += (ClientUtils.getMc().getWindow().getGuiScaledHeight() - primaryLayer.getHeight())/2;
 		} else {
@@ -678,7 +711,7 @@ public class CGuiHelper {
 
 		var w1 = widget.getParent();
 		while (w1.getParent() != null) {
-			if (w1 instanceof Layer l) {
+			if (w1 instanceof UILayer l) {
 				if (l.isSmoothScrollEnabled()) {
 					x += (int)l.getDisplayOffsetX();
 					y += (int)l.getDisplayOffsetY();

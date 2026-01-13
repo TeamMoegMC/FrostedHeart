@@ -26,7 +26,7 @@ import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 import net.minecraft.network.chat.Component;
@@ -35,7 +35,7 @@ public class EditPrompt extends BaseEditDialog {
     LabeledTextBox box;
     Button ok;
     Button cancel;
-    public EditPrompt(UIWidget panel, Component label, String val, Consumer<String> onFinished,Verifier<String> verifier) {
+    public EditPrompt(UIElement panel, Component label, String val, Consumer<String> onFinished,Verifier<String> verifier) {
         super(panel);
         box = new LabeledTextBox(this, label, val,verifier);
         ok = new TextButton(this, Components.translatable("gui.accept"), CIcons.nop()) {
@@ -63,10 +63,10 @@ public class EditPrompt extends BaseEditDialog {
         ok.setSize(300, 20);
     }
 
-    public static void open(UIWidget p, Component l, String v, Consumer<String> f) {
+    public static void open(UIElement p, Component l, String v, Consumer<String> f) {
         new EditPrompt(p, l, v, f,null).open();
     }
-    public static void open(UIWidget p, Component l, String v, Consumer<String> f,Verifier<String> verif) {
+    public static void open(UIElement p, Component l, String v, Consumer<String> f,Verifier<String> verif) {
         new EditPrompt(p, l, v, f,verif).open();
     }
     @Override

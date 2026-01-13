@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 
 
 
-public class TextField extends UIWidget {
+public class TextField extends UIElement {
 	public static final int H_CENTER = 4;
 	public static final int V_CENTER = 32;
 	public static final int SHADOW = 2;
@@ -27,7 +27,7 @@ public class TextField extends UIWidget {
 	public boolean trim = false;
 	private boolean tooltip = false;
 
-	public TextField(UIWidget parent) {
+	public TextField(UIElement parent) {
 		super(parent);
 	}
 

@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.bootstrap.client;
 
 import java.util.function.Function;
 
-import com.teammoeg.chorda.client.cui.CUIMenuScreen;
+import com.teammoeg.chorda.client.cui.CUIMenuScreenWrapper;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.ui.ScreenAcceptor;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
@@ -90,8 +90,8 @@ public class FHScreens {
         	return msw;
         };
     }
-    public static <C extends AbstractContainerMenu, S extends PrimaryLayer> MenuScreens.ScreenConstructor<C, CUIMenuScreen<C>>
+    public static <C extends AbstractContainerMenu, S extends PrimaryLayer> MenuScreens.ScreenConstructor<C, CUIMenuScreenWrapper<C>>
     CUIScreenFactory(Function<C, S> factory) {
-        return (c, i, t) -> new CUIMenuScreen<>(factory.apply(c), c, i, t);
+        return (c, i, t) -> new CUIMenuScreenWrapper<>(factory.apply(c), c, i, t);
     }
 }

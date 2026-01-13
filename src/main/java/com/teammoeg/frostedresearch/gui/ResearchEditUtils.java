@@ -20,10 +20,10 @@
 package com.teammoeg.frostedresearch.gui;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.CUIScreen;
+import com.teammoeg.chorda.client.cui.CUIScreenWrapper;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.TextField;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedresearch.FHResearch;

@@ -2,19 +2,19 @@ package com.teammoeg.chorda.client.cui;
 
 
 public class LayerScrollBar extends ScrollBar {
-	private final Layer layer;
+	private final UILayer layer;
 
-	public LayerScrollBar(UIWidget parent, boolean isVertical, Layer affected) {
+	public LayerScrollBar(UIElement parent, boolean isVertical, UILayer affected) {
 		super(parent, isVertical, 0);
 		layer = affected;
 		affected.setSmoothScrollEnabled(true);
 	}
 
-	public LayerScrollBar(Layer parent, Layer affected) {
+	public LayerScrollBar(UILayer parent, UILayer affected) {
 		this(parent, true, affected);
 	}
 
-	public Layer getAffectedLayer() {
+	public UILayer getAffectedLayer() {
 		return layer;
 	}
 

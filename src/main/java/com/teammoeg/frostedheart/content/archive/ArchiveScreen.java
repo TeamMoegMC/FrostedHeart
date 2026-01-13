@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.archive;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.CUIScreen;
+import com.teammoeg.chorda.client.cui.CUIScreenWrapper;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
 
@@ -42,6 +42,6 @@ public final class ArchiveScreen extends PrimaryLayer {
 
     public static void open(@Nullable String path) {
         var layer = new ArchiveScreen(path);
-        ClientUtils.getMc().setScreen(new CUIScreen(layer));
+        ClientUtils.getMc().setScreen(new CUIScreenWrapper(layer));
     }
 }

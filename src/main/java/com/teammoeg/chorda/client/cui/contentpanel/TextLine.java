@@ -3,7 +3,7 @@ package com.teammoeg.chorda.client.cui.contentpanel;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
@@ -29,7 +29,7 @@ public class TextLine extends Line<TextLine> {
     protected int scale = 1;
     protected Button button = null;
 
-    public TextLine(UIWidget parent, Component text, Alignment alignment) {
+    public TextLine(UIElement parent, Component text, Alignment alignment) {
         super(parent, alignment);
         this.text = text;
     }

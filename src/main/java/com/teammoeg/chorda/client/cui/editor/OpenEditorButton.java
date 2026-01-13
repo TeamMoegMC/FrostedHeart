@@ -25,7 +25,7 @@ import java.util.function.Function;
 
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.lang.Components;
@@ -41,11 +41,11 @@ public class OpenEditorButton<T> extends TextButton {
     private final Function<T,Component> getText;
     private final Component txt;
     private final Consumer<T> onset;
-    public OpenEditorButton(UIWidget panel, Component txt, Editor<T> edi, T val,Consumer<T> onset) {
+    public OpenEditorButton(UIElement panel, Component txt, Editor<T> edi, T val,Consumer<T> onset) {
 		this(panel,txt,edi,val,CIcons.nop(),onset);
 	}
 
-    public OpenEditorButton(UIWidget panel, Component txt, Editor<T> edi, T val,CIcon icon,Consumer<T> onset) {
+    public OpenEditorButton(UIElement panel, Component txt, Editor<T> edi, T val,CIcon icon,Consumer<T> onset) {
 		super(panel,txt,icon);
 		this.edi = edi;
 		this.val = val;
@@ -56,7 +56,7 @@ public class OpenEditorButton<T> extends TextButton {
 		refreshValue();
 	}
 
-    public OpenEditorButton(UIWidget panel, Component txt, Editor<T> edi, T val, Function<T, CIcon> getIcon, Function<T, Component> getText) {
+    public OpenEditorButton(UIElement panel, Component txt, Editor<T> edi, T val, Function<T, CIcon> getIcon, Function<T, Component> getText) {
 		super(panel,Components.empty(),CIcons.nop());
 		this.edi = edi;
 		this.val = val;

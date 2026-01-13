@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.network.chat.Component;
@@ -114,7 +114,7 @@ public class EditorSelector<T> extends BaseEditDialog {
 	private final Consumer<T> callback;
 	private final List<EditorDefinition<T>> type;
 	
-	private EditorSelector(UIWidget panel, List<EditorDefinition<T>> type, Component label, T val, Consumer<T> callback) {
+	private EditorSelector(UIElement panel, List<EditorDefinition<T>> type, Component label, T val, Consumer<T> callback) {
 		super(panel);
 		this.label = label;
 		this.val = val;

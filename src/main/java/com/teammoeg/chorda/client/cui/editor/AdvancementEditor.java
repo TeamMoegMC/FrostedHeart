@@ -1,8 +1,8 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.chorda.client.cui.Layer;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.lang.Components;
@@ -11,10 +11,10 @@ import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.network.chat.Component;
 
-public class AdvancementEditor extends Layer {
+public class AdvancementEditor extends UILayer {
 	Advancement advancement;
 	String criterion;
-    public AdvancementEditor(UIWidget panel, Component lbl, Pair<Advancement,String> e) {
+    public AdvancementEditor(UIElement panel, Component lbl, Pair<Advancement,String> e) {
         super(panel);
         if(e!=null) {
         	advancement=e.getFirst();

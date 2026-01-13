@@ -7,16 +7,16 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 
-public class LimitedTextField extends UIWidget {
+public class LimitedTextField extends UIElement {
     private Component title;
     private Component displayTitle = Component.empty();
     public int color;
 
-    public LimitedTextField(UIWidget parent, Component title, int w) {
+    public LimitedTextField(UIElement parent, Component title, int w) {
         this(parent, title, w, Colors.WHITE);
     }
 
-    public LimitedTextField(UIWidget parent, Component title, int w, int textColor) {
+    public LimitedTextField(UIElement parent, Component title, int w, int textColor) {
         super(parent);
         this.title = title;
         this.color = textColor;

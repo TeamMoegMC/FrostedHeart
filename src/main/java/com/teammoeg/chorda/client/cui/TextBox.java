@@ -25,7 +25,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public class TextBox extends UIWidget implements Focusable {
+public class TextBox extends UIElement implements Focusable {
 	private boolean isFocused = false;
 	public int charLimit = 2000;
 	public int textColor;
@@ -39,7 +39,7 @@ public class TextBox extends UIWidget implements Focusable {
 	private int maxLength = 1024;
 	private Verifier<String> filter;
 	private String lastValidText="";
-	public TextBox(Layer panel) {
+	public TextBox(UILayer panel) {
 		super(panel);
 		filter=Verifier.nonNull();
 		validText=filter.test("");

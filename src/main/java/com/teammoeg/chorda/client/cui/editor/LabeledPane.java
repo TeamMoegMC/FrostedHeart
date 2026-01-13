@@ -19,20 +19,20 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.TextField;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 
-public class LabeledPane<T extends UIWidget> extends Layer {
+public class LabeledPane<T extends UIElement> extends UILayer {
 
     protected TextField label;
     protected T obj;
 
-    public LabeledPane(UIWidget panel, Component lab) {
+    public LabeledPane(UIElement panel, Component lab) {
         super(panel);
         label = new TextField(this).setMaxWidth(200).setTrim().setText(lab).setColor(0xFF000000);
 

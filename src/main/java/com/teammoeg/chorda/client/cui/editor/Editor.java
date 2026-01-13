@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 
 import net.minecraft.network.chat.Component;
 /**
@@ -53,7 +53,7 @@ public interface Editor<T> {
      * @param onCommit if user closes the editor and request any save, this would be called to provide new values
      * 
      * */
-    void open(UIWidget parent, Component label,@Nullable final T previousValue, Consumer<T> onCommit);
+    void open(UIElement parent, Component label,@Nullable final T previousValue, Consumer<T> onCommit);
     /** Map the editor with convertions */
     default <A> Editor<A> xmap(Function<T,A> to,Function<A,T> from){
     	return (p,l,v,c)->{

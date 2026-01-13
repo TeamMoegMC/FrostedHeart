@@ -11,9 +11,13 @@ import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
 
-public class UIWidget{
+/**
+ * Abstract ui element, for any basic ui element
+ * 
+ * */
+public class UIElement{
 	@Getter
-	protected UIWidget parent;
+	protected UIElement parent;
 	@Getter
 	@Setter
 	private int x, y;
@@ -27,10 +31,10 @@ public class UIWidget{
 	private double mouseX,mouseY;
 	@Getter
 	private float partialTick;
-	public UIWidget(UIWidget parent) {
+	public UIElement(UIElement parent) {
 			this.parent = parent;
 	}
-	protected void setParent(UIWidget parent) {
+	protected void setParent(UIElement parent) {
 		this.parent = parent;
 	}
 	public LayerHolder getLayerHolder() {
@@ -58,7 +62,7 @@ public class UIWidget{
 		setHeight(h);
 	}
 
-	public UIWidget setPosAndSize(int x, int y, int w, int h) {
+	public UIElement setPosAndSize(int x, int y, int w, int h) {
 		setX(x);
 		setY(y);
 		setWidth(w);
@@ -176,7 +180,7 @@ public class UIWidget{
 	public void refresh() {
 		
 	}
-	public CUIScreenManager getManager() {
+	public CUIScreen getManager() {
 		return parent.getManager();
 	}
 

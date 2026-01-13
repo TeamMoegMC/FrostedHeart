@@ -23,11 +23,11 @@ import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.Button;
-import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.FlatIcon;
@@ -55,7 +55,7 @@ public class EditListDialog<T> extends EditDialog {
     public static final Editor<Collection<String>> STRING_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, "", Editors.TEXT_PROMPT,Components::str, c).open();
     private final Consumer<Collection<T>> callback;
     private final Component title;
-    private final Layer configPanel;
+    private final UILayer configPanel;
     private final Button buttonAccept, buttonCancel;
     @Getter
     protected final List<T> list;
@@ -75,14 +75,14 @@ public class EditListDialog<T> extends EditDialog {
     		dialog.getValue().open();
     	};
     }
-    public EditListDialog(UIWidget p, Component label, Collection<T> vx, Editor<T> editor, Function<T, Component> toread, Consumer<Collection<T>> li) {
+    public EditListDialog(UIElement p, Component label, Collection<T> vx, Editor<T> editor, Function<T, Component> toread, Consumer<Collection<T>> li) {
         this(p, label, vx, null, editor, toread, o->CIcons.nop(), li);
     }
-    public EditListDialog(UIWidget p, Component label, Collection<T> vx, T def, Editor<T> editor, Function<T, Component> toread, Consumer<Collection<T>> li) {
+    public EditListDialog(UIElement p, Component label, Collection<T> vx, T def, Editor<T> editor, Function<T, Component> toread, Consumer<Collection<T>> li) {
         this(p, label, vx, def, editor, toread, o->CIcons.nop(), li);
     }
 
-    public EditListDialog(UIWidget p, Component label, Collection<T> vx, T def, Editor<T> editor, Function<T, Component> toread, Function<T, CIcon> icon, Consumer<Collection<T>> li) {
+    public EditListDialog(UIElement p, Component label, Collection<T> vx, T def, Editor<T> editor, Function<T, Component> toread, Function<T, CIcon> icon, Consumer<Collection<T>> li) {
         super(p);
         callback = li;
         if (vx != null)
@@ -97,7 +97,7 @@ public class EditListDialog<T> extends EditDialog {
         int sw = 387;
         int sh = 203;
         this.setSize(sw, sh);
-        configPanel = new Layer(this) {
+        configPanel = new UILayer(this) {
             @Override
             public void addUIElements() {
                 for (int i = 0; i < list.size(); i++) {
@@ -108,7 +108,7 @@ public class EditListDialog<T> extends EditDialog {
 
             @Override
             public void alignWidgets() {
-                for (UIWidget w : super.elements) {
+                for (UIElement w : super.elements) {
                     w.setWidth(super.getWidth() - 16);
                 }
                 align(false);
@@ -193,7 +193,7 @@ public class EditListDialog<T> extends EditDialog {
     }
 
     public class ButtonAddValue extends Button {
-        public ButtonAddValue(Layer panel) {
+        public ButtonAddValue(UILayer panel) {
             super(panel);
             setHeight(18);
             setTitle(Components.str("+ ").append(Components.translatable("gui.add")));
@@ -215,7 +215,7 @@ public class EditListDialog<T> extends EditDialog {
                 if (s != null) {
                     modified = true;
                     list.add(s);
-                    ((Layer)parent).refresh();
+                    ((UILayer)parent).refresh();
                     onChange();
                 }
             });
@@ -226,7 +226,7 @@ public class EditListDialog<T> extends EditDialog {
     public class ButtonConfigValue extends Button {
         public final int index;
         public CIcon icon;
-        public ButtonConfigValue(Layer panel, int i) {
+        public ButtonConfigValue(UILayer panel, int i) {
             super(panel);
             index = i;
             
@@ -273,7 +273,7 @@ public class EditListDialog<T> extends EditDialog {
                     fresh = false;
                     displayY = y;
                 } else {
-                    float delta = (Util.getNanos() - ((Layer)getParent()).getLastFrameTime()) / 1_000_000_000.0f;
+                    float delta = (Util.getNanos() - ((UILayer)getParent()).getLastFrameTime()) / 1_000_000_000.0f;
                     delta = Math.min(delta, 0.1F);
                     float f = 1.0f - (float)Math.exp(-delta / 0.025F);
                     displayY += (y - displayY) * f;
@@ -326,7 +326,7 @@ public class EditListDialog<T> extends EditDialog {
             if (getMouseX() >=width - 16) {
                 list.remove(index);
                 modified = true;
-                ((Layer)parent).refresh();
+                ((UILayer)parent).refresh();
 
             }else if (getMouseX() >=width - 36) {
                setMoving(this);
@@ -335,7 +335,7 @@ public class EditListDialog<T> extends EditDialog {
                 editor.open(this, Components.translatable("gui.chorda.editor.edit"),list.get(index), s -> {
                     modified = true;
                     list.set(index, s);
-                    ((Layer)parent).refresh();
+                    ((UILayer)parent).refresh();
                     onChange();
                 });
             }

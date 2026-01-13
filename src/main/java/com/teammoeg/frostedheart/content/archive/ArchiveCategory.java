@@ -2,10 +2,10 @@ package com.teammoeg.frostedheart.content.archive;
 
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.cui.category.Category;
 import com.teammoeg.chorda.client.cui.category.CategoryHelper;
 import com.teammoeg.chorda.client.cui.category.Entry;
@@ -22,14 +22,14 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 
-public class ArchiveCategory extends Layer {
+public class ArchiveCategory extends UILayer {
     public final LayerScrollBar scrollBar;
     protected final ContentPanel panel;
     private final Category root = new Category(this, Component.literal("root"));
 
     public static String currentPath = "";
 
-    protected ArchiveCategory(UIWidget panel, ContentPanel contentPanel) {
+    protected ArchiveCategory(UIElement panel, ContentPanel contentPanel) {
         super(panel);
         this.panel = contentPanel;
         this.scrollBar = new LayerScrollBar(parent, true, this) {
@@ -57,13 +57,13 @@ public class ArchiveCategory extends Layer {
         super.render(graphics, x, y, w, h);
     }
 
-    public UIWidget open(String path) {
+    public UIElement open(String path) {
         var entry = root.open(path);
         if (entry != null) {
             currentPath = path;
             if (entry instanceof ArchiveEntry ae) {
                 // 在内容面板显示内容
-                List<UIWidget> contents = new ArrayList<>(ae.getContents());
+                List<UIElement> contents = new ArrayList<>(ae.getContents());
                 contents.addAll(ae.getExtraElements());
                 panel.fillContent(contents);
                 // 选中条目
@@ -75,13 +75,13 @@ public class ArchiveCategory extends Layer {
         return entry;
     }
 
-    public void scrollTo(UIWidget widget) {
+    public void scrollTo(UIElement widget) {
         if (widget != null) {
             scrollBar.setValue(widget.getScreenY());
         }
     }
 
-    public UIWidget find(String path) {
+    public UIElement find(String path) {
         return root.find(path);
     }
 
@@ -90,7 +90,7 @@ public class ArchiveCategory extends Layer {
         setPosAndSize(0, 0, 100, (int) (ClientUtils.screenHeight()*0.8F));
 
         recalcContentSize();
-        for (UIWidget element : elements) {
+        for (UIElement element : elements) {
             element.refresh();
         }
         alignWidgets();
@@ -210,7 +210,7 @@ public class ArchiveCategory extends Layer {
         }
 
         @Override
-        public Collection<? extends UIWidget> getContents() {
+        public Collection<? extends UIElement> getContents() {
             return LineHelper.fromTip(tip, getPanel());
         }
     }
@@ -237,9 +237,9 @@ public class ArchiveCategory extends Layer {
 
         public abstract boolean isRead();
 
-        public abstract Collection<? extends UIWidget> getContents();
+        public abstract Collection<? extends UIElement> getContents();
 
-        public Collection<UIWidget> getExtraElements() {
+        public Collection<UIElement> getExtraElements() {
             return Collections.emptyList();
         }
 
@@ -255,7 +255,7 @@ public class ArchiveCategory extends Layer {
             }
 
             for (int i = elements.size() - 1; i >= 0; i--) {
-                UIWidget element = elements.get(i);
+                UIElement element = elements.get(i);
                 if (element.isEnabled() && element.isVisible() && element.onMousePressed(button)) {
                     return true;
                 }

@@ -10,18 +10,18 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;
 
-public abstract class Button extends UIWidget {
+public abstract class Button extends UIElement {
 	protected Component title;
 	protected CIcon icon;
 
-	public Button(UIWidget panel, Component t, CIcon i) {
+	public Button(UIElement panel, Component t, CIcon i) {
 		super(panel);
 		setSize(16, 16);
 		icon = i;
 		title = t;
 	}
 
-	public Button(UIWidget panel) {
+	public Button(UIElement panel) {
 		this(panel, Component.empty(), CIcons.nop());
 	}
 

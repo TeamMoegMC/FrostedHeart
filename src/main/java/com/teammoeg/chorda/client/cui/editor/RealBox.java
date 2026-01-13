@@ -20,13 +20,13 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 
 import net.minecraft.network.chat.Component;
 
 public class RealBox extends LabeledTextBox {
 
-    public RealBox(UIWidget panel, Component lab, Double val) {
+    public RealBox(UIElement panel, Component lab, Double val) {
         super(panel, lab, val==null?"0":String.valueOf(val));
     }
 

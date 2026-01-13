@@ -2,7 +2,7 @@ package com.teammoeg.chorda.client.icon;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
 import lombok.Getter;
@@ -70,13 +70,13 @@ public enum FlatIcon {
         icon.render(pose, x, y, color);
     }
 
-    public FlatIconWidget toWidget(UIWidget parent) {
+    public FlatIconWidget toWidget(UIElement parent) {
         var widget = new FlatIconWidget(parent);
         widget.setIcon(this);
         return widget;
     }
 
-    public FlatIconWidget toWidget(UIWidget parent, int color) {
+    public FlatIconWidget toWidget(UIElement parent, int color) {
         var widget = new FlatIconWidget(parent, color);
         widget.setIcon(this);
         return widget;
@@ -84,15 +84,15 @@ public enum FlatIcon {
 
     @Getter
     @Setter
-    public static class FlatIconWidget extends UIWidget {
+    public static class FlatIconWidget extends UIElement {
         protected FlatIcon icon;
         protected int color;
 
-        public FlatIconWidget(UIWidget parent) {
+        public FlatIconWidget(UIElement parent) {
             this(parent, Colors.WHITE);
         }
 
-        public FlatIconWidget(UIWidget parent, int color) {
+        public FlatIconWidget(UIElement parent, int color) {
             super(parent);
             this.color = color;
         }

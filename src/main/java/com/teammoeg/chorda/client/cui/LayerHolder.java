@@ -2,9 +2,12 @@ package com.teammoeg.chorda.client.cui;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
-
+/**
+ * Modifies vanilla color palette
+ * Interface method for minecraft screen
+ * */
 public interface LayerHolder {
-	void focusOn(UIWidget elm);
+	void focusOn(UIElement elm);
 	Font getFont();
 	int getErrorColor();
 	int getHighlightColor();

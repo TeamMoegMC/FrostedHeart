@@ -1,6 +1,6 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
 import lombok.Getter;
@@ -10,12 +10,12 @@ import net.minecraft.client.gui.GuiGraphics;
 public class BreakLine extends Line<BreakLine> {
     protected boolean solid = false;
 
-    public BreakLine(UIWidget parent) {
+    public BreakLine(UIElement parent) {
         this(parent, (int)(DEF_LINE_HEIGHT * 1.5F));
         color(Colors.L_BG_GRAY);
     }
 
-    public BreakLine(UIWidget parent, int height) {
+    public BreakLine(UIElement parent, int height) {
         super(parent);
         setHeight(height);
         color(Colors.L_BG_GRAY);

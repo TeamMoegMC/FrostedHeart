@@ -17,10 +17,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 
-public class CUIMenuScreen<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> implements CUIScreenManager {
+public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> implements CUIScreen {
 	private final PrimaryLayer primaryLayer;
 
-	public CUIMenuScreen(PrimaryLayer g, T menu, Inventory playerInventory, Component title) {
+	public CUIMenuScreenWrapper(PrimaryLayer g, T menu, Inventory playerInventory, Component title) {
 		super(menu, playerInventory, title);
 		primaryLayer = g;
 		primaryLayer.setScreen(this);

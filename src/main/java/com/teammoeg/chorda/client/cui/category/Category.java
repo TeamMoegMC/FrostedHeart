@@ -1,10 +1,10 @@
 package com.teammoeg.chorda.client.cui.category;
 
 import com.teammoeg.chorda.client.MouseHelper;
-import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LimitedTextField;
 import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.Colors;
 import lombok.Getter;
@@ -16,7 +16,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class Category extends Layer {
+public class Category extends UILayer {
     public static final int MAX_DEPTH = 16;
     public static final int CHILDREN_OFFSET = 8;
     private final int depth;
@@ -30,7 +30,7 @@ public class Category extends Layer {
     public int backgroundColor = Colors.L_BG_GRAY;
     protected FlatIcon.FlatIconWidget icon;
 
-    public Category(Layer panel, Component title) {
+    public Category(UILayer panel, Component title) {
         super(panel);
         setSize(panel.getWidth(), Entry.DEF_HEIGHT);
 
@@ -76,7 +76,7 @@ public class Category extends Layer {
         elements.remove(icon);
         recalcContentSize();
         if (opened) {
-            for (UIWidget ele : elements) {
+            for (UIElement ele : elements) {
                 ele.refresh();
             }
             alignWidgets();
@@ -93,7 +93,7 @@ public class Category extends Layer {
         title.setWidth(getWidth() - titleOffsetX - CHILDREN_OFFSET);
     }
 
-    public void addAll(Collection<? extends UIWidget> widgets) {
+    public void addAll(Collection<? extends UIElement> widgets) {
         widgets.forEach(this::add);
     }
 
@@ -116,7 +116,7 @@ public class Category extends Layer {
      * @param path 获取路径的最后一个元素
      * @return 路径的最后一个元素
      */
-    public UIWidget find(String path) {
+    public UIElement find(String path) {
         if (path == null || path.isBlank()) return null;
 
         String[] segments = path.split("/");
@@ -126,10 +126,10 @@ public class Category extends Layer {
             String segment = segments[i].trim();
             if (segment.isEmpty()) continue;
 
-            List<UIWidget> elements = currentCategory.getElements();
-            UIWidget found = null;
+            List<UIElement> elements = currentCategory.getElements();
+            UIElement found = null;
 
-            for (UIWidget element : elements) {
+            for (UIElement element : elements) {
                 if (segment.equals(CategoryHelper.getRawTitle(element))) {
                     found = element;
                     break;
@@ -154,15 +154,15 @@ public class Category extends Layer {
      * @param path 打开路径中的所有Category
      * @return 路径的最后一个元素
      */
-    public UIWidget open(String path) {
-        UIWidget widget = find(path);
+    public UIElement open(String path) {
+        UIElement widget = find(path);
         if (widget == null) {
             return null;
         } else if (widget instanceof Category category) {
             category.setOpened(true);
         }
 
-        UIWidget parent = widget.getParent();
+        UIElement parent = widget.getParent();
         while (parent instanceof Category category) {
             category.setOpened(true);
             parent = parent.getParent();
@@ -188,7 +188,7 @@ public class Category extends Layer {
 
     private void setSelected(Entry widget) {
         selected = widget;
-        for (UIWidget element : getElements()) {
+        for (UIElement element : getElements()) {
             if (element instanceof Category sc) {
                 sc.setSelected(widget);
             }
@@ -213,7 +213,7 @@ public class Category extends Layer {
         }
 
         for (int i = elements.size() - 1; i >= 0; i--) {
-            UIWidget element = elements.get(i);
+            UIElement element = elements.get(i);
             if (element.isEnabled() && element.isVisible() && element.onMousePressed(button)) {
                 return true;
             }
