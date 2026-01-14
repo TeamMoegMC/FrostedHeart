@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.cui.editor.EditorSelector.EditorSelectorBuilder;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
@@ -157,7 +157,7 @@ public class IngredientEditor extends BaseEditDialog {
     Ingredient orig;
     NumberBox count;
 
-    public IngredientEditor(UIWidget panel, Component label, Pair<Ingredient,Integer> i, Consumer<Pair<Ingredient,Integer>> callback) {
+    public IngredientEditor(UIElement panel, Component label, Pair<Ingredient,Integer> i, Consumer<Pair<Ingredient,Integer>> callback) {
         super(panel);
         this.label = label;
         if (i != null) {

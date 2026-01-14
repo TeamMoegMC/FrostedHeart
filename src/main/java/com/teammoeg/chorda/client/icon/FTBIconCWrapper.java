@@ -21,4 +21,9 @@ public class FTBIconCWrapper extends CIcon {
 		}
 	}
 
+	@Override
+	public boolean isEmpty() {
+		return icon.isEmpty();
+	}
+
 }

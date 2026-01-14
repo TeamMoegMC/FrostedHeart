@@ -25,11 +25,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.client.cui.Button;
-import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextBox;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
@@ -51,21 +52,21 @@ public class SelectDialog<T> extends EditDialog {
 	Function<T, String[]> tosearch;
 	Function<T, CIcon> toicon;
 
-	public SelectDialog(UIWidget panel, Component lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
+	public SelectDialog(UIElement panel, Component lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
 		this(panel, lbl, val, cb, fetcher, e -> Components.str(e.toString()), null, e -> CIcons.nop());
 	}
 
-	public SelectDialog(UIWidget panel, Component lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+	public SelectDialog(UIElement panel, Component lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
 		Function<T, Component> tostr) {
 		this(panel, lbl, val, cb, fetcher, tostr, null, e -> CIcons.nop());
 	}
 
-	public SelectDialog(UIWidget panel, Component lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+	public SelectDialog(UIElement panel, Component lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
 		Function<T, Component> tostr, Function<T, String[]> tosearch) {
 		this(panel, lbl, val, cb, fetcher, tostr, tosearch, e -> CIcons.nop());
 	}
 
-	public SelectDialog(UIWidget panel, Component lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+	public SelectDialog(UIElement panel, Component lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
 		Function<T, Component> tostr, Function<T, String[]> tosearch, Function<T, CIcon> toicon) {
 		super(panel);
 		this.lbl = lbl;
@@ -138,7 +139,7 @@ public class SelectDialog<T> extends EditDialog {
 		}
 
 		@Override
-		public void getTooltip(Consumer<Component> list) {
+		public void getTooltip(TooltipBuilder list) {
 			list.accept(t);
 		}
 
@@ -170,8 +171,8 @@ public class SelectDialog<T> extends EditDialog {
 		}
 	}
 
-	public class SelectorList extends Layer {
-		public SelectorList(UIWidget panel) {
+	public class SelectorList extends UILayer {
+		public SelectorList(UIElement panel) {
 			super(panel);
 			this.setWidth(200);
 

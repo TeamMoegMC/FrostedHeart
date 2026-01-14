@@ -19,11 +19,18 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.frostedresearch.Lang;
-import com.teammoeg.chorda.client.cui.RTextField;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextField;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRNetwork;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.data.ResearchData;
 import com.teammoeg.frostedresearch.gui.FramedPanel;
 import com.teammoeg.frostedresearch.gui.TechIcons;
@@ -35,32 +42,21 @@ import com.teammoeg.frostedresearch.research.clues.Clue;
 import com.teammoeg.frostedresearch.research.effects.Effect;
 import com.teammoeg.frostedresearch.research.effects.EffectBuilding;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.crafting.Ingredient;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class ResearchInfoPanel extends Panel {
+public class ResearchInfoPanel extends UILayer {
 
     ResearchDetailPanel detailPanel;
-    List<Widget> panels = new ArrayList<>();
+    List<UIElement> panels = new ArrayList<>();
 
     public ResearchInfoPanel(ResearchDetailPanel panel) {
         super(panel);
-        this.setOnlyInteractWithWidgetsInside(true);
-        this.setOnlyRenderWidgetsInside(true);
         detailPanel = panel;
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         panels.clear();
 
         ResearchData researchData = detailPanel.research.getData();
@@ -99,8 +95,8 @@ public class ResearchInfoPanel extends Panel {
         if (!researchData.canResearch()) {
             if (detailPanel.research.isUnlocked()) {
                 // commit items button
-                Button commitItems = new TechTextButton(this, Lang.translateGui("research.commit_material_and_start"),
-                        Icon.empty()) {
+            	TechTextButton commitItems = new TechTextButton(this, Lang.translateGui("research.commit_material_and_start"),
+                        CIcons.nop()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                     	FRNetwork.INSTANCE.sendToServer(new FHResearchControlPacket(Operator.COMMIT_ITEM, detailPanel.research));
@@ -112,7 +108,7 @@ public class ResearchInfoPanel extends Panel {
             }
         } else if (detailPanel.research.isInProgress()) {
             // commit items button
-            Button commitItems = new TechTextButton(this, Lang.translateGui("research.stop"), Icon.empty()) {
+        	TechTextButton commitItems = new TechTextButton(this, Lang.translateGui("research.stop"), CIcons.nop()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
                 	FRNetwork.INSTANCE.sendToServer(new FHResearchControlPacket(Operator.PAUSE, detailPanel.research));
@@ -122,7 +118,7 @@ public class ResearchInfoPanel extends Panel {
             add(commitItems);
         } else if (!researchData.isCompleted() && !detailPanel.research.isInCompletable()) {
             // commit items button
-            Button commitItems = new TechTextButton(this, Lang.translateGui("research.start"), Icon.empty()) {
+            TechTextButton commitItems = new TechTextButton(this, Lang.translateGui("research.start"), CIcons.nop()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
                 	FRNetwork.INSTANCE.sendToServer(new FHResearchControlPacket(Operator.START, detailPanel.research));
@@ -180,8 +176,7 @@ public class ResearchInfoPanel extends Panel {
                     if (hasB)
                         offset += 24;
                     if (detailPanel.research.isCompleted() && hasUnclaimed) {
-                        Button claimRewards = new TechTextButton(fp, Lang.translateGui("research.claim_rewards"),
-                                Icon.empty()) {
+                    	TechTextButton claimRewards = new TechTextButton(fp, Lang.translateGui("research.claim_rewards"),CIcons.nop()) {
                             @Override
                             public void onClicked(MouseButton mouseButton) {
                             	FRNetwork.INSTANCE.sendToServer(new FHEffectTriggerPacket(detailPanel.research));
@@ -189,12 +184,12 @@ public class ResearchInfoPanel extends Panel {
                         };
                         claimRewards.setPos(0, offset);
                         fp.add(claimRewards);
-                        offset += claimRewards.height + 1;
+                        offset += claimRewards.getHeight() + 1;
                     }
                 } else {
-                    RTextField rt = new RTextField(fp).setColor(TechIcons.text).setMaxWidth(width - 5).setText(Lang.translateGui("effect_unknown"));
+                    TextField rt = new TextField(fp).setColor(TechIcons.text).setMaxWidth(width - 5).setText(Lang.translateGui("effect_unknown"));
                     rt.setPos(xoffset, offset);
-                    offset += rt.height;
+                    offset += rt.getHeight();
                     fp.add(rt);
                 }
                 fp.setWidth(width);
@@ -221,7 +216,7 @@ public class ResearchInfoPanel extends Panel {
                     cl.setWidth(width - 5);
                     cl.initWidgets();
                     fp.add(cl);
-                    offset += cl.height + 1;
+                    offset += cl.getHeight() + 1;
 
                 }
                 fp.setWidth(width);
@@ -242,14 +237,14 @@ public class ResearchInfoPanel extends Panel {
     @Override
     public void alignWidgets() {
         int offset = 0;
-        for (Widget p : panels) {
+        for (UIElement p : panels) {
             p.setPos(3, offset);
-            offset += p.height + 2;
+            offset += p.getHeight() + 2;
         }
         //detailPanel.scrollInfo.setMaxValue(offset);
     }
 
     @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
     }
 }

@@ -25,7 +25,7 @@ import java.util.function.Consumer;
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 
 import net.minecraft.network.chat.Component;
@@ -33,7 +33,7 @@ import net.minecraft.network.chat.Component;
 public class LabeledTextBoxAndBtn extends LabeledTextBox {
     Button btn;
 
-    public LabeledTextBoxAndBtn(UIWidget panel, Component lab, String txt, Component btn, Consumer<Consumer<String>> onbtn) {
+    public LabeledTextBoxAndBtn(UIElement panel, Component lab, String txt, Component btn, Consumer<Consumer<String>> onbtn) {
         super(panel, lab, txt);
         this.btn = new TextButton(this, btn, CIcons.nop()) {
 

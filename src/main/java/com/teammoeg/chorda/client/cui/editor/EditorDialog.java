@@ -9,10 +9,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.TextField;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder.SetterAndGetter;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuildResult;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuiltParams;
@@ -21,10 +21,10 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.network.chat.Component;
 
 public class EditorDialog<O> extends BaseEditDialog {
-	Layer mainPane;
+	UILayer mainPane;
 	LayerScrollBar scroll;
 	public static record EditorPair<O,A>(EditorItemFactory<A> factory,Function<O,A> getter,int index) {
-		public Pair<Integer, EditItem<Object>> create(EditorDialog<O> dialog,Layer parent,O o,Object[] params){
+		public Pair<Integer, EditItem<Object>> create(EditorDialog<O> dialog,UILayer parent,O o,Object[] params){
 			A val=null;
 			if(o!=null)
 				val=getter.apply(o);
@@ -43,7 +43,7 @@ public class EditorDialog<O> extends BaseEditDialog {
 			this.paramSize=dialog.parcount();
 			this.consumer=dialog.consumer();
 		}
-		public EditorDialog<O> create(UIWidget panel,Component title,O origin,Consumer<O> consumer){
+		public EditorDialog<O> create(UIElement panel,Component title,O origin,Consumer<O> consumer){
 			return new EditorDialog<>(panel,title,this,origin,li->consumer.accept(this.consumer.apply(li)));
 		}
 		
@@ -64,23 +64,23 @@ public class EditorDialog<O> extends BaseEditDialog {
 	}
 	List<Pair<Integer,EditItem<Object>>> values=new ArrayList<>();
 	Int2ObjectOpenHashMap<EditItem<Object>> map=new Int2ObjectOpenHashMap<>();
-	Map<UIWidget,Integer> widgetNum=new IdentityHashMap<>();
+	Map<UIElement,Integer> widgetNum=new IdentityHashMap<>();
 	Consumer<EditorResult> consumer;
 	Object[] params;
 	TextField title;
-	private EditorDialog(UIWidget panel,Component title,EditorDialogPrototype<O> prototype,O origin,Consumer<EditorResult> consumer) {
+	private EditorDialog(UIElement panel,Component title,EditorDialogPrototype<O> prototype,O origin,Consumer<EditorResult> consumer) {
 		super(panel);
 		this.title=EditUtils.getTitle(this, title);
 		this.params=new Object[prototype.widgets.size()];
 		
 		this.consumer=consumer;
-        mainPane=new Layer(this) {
+        mainPane=new UILayer(this) {
 
 			@Override
 			public void addUIElements() {
 				widgetNum.clear();
 				for(Pair<Integer, EditItem<Object>> i:values) {
-					UIWidget widget=i.getSecond().getWidget();
+					UIElement widget=i.getSecond().getWidget();
 					if(widget!=null) {
 						this.add(widget);
 						widgetNum.put(widget, i.getFirst());
@@ -116,7 +116,7 @@ public class EditorDialog<O> extends BaseEditDialog {
 	public void setNoSave() {
 		noSave=true;
 	}
-	public int getCurrentIndex(UIWidget wg) {
+	public int getCurrentIndex(UIElement wg) {
 		return widgetNum.getOrDefault(wg, -1);
 	}
 	public <T> T getValue(int idx) {

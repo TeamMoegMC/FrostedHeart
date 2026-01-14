@@ -19,29 +19,28 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
+import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.Card;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardPos;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.ClientResearchGame;
 
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.CursorType;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class CardButton extends Button {
     CardPos card;
     ClientResearchGame game;
 
-    public CardButton(Panel panel, ClientResearchGame game, int x, int y) {
+    public CardButton(UIElement panel, ClientResearchGame game, int x, int y) {
         super(panel);
         this.game = game;
         card = CardPos.valueOf(x, y);
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
         Card c = game.get(card);
         if (c.isShow()) {
             if (game.isTouchable(card)) {
@@ -55,10 +54,10 @@ public class CardButton extends Button {
     }
 
     @Override
-    public CursorType getCursor() {
+    public Cursor getCursor() {
         if (game.isTouchable(card))
-            return CursorType.HAND;
-        return CursorType.ARROW;
+            return Cursor.HAND;
+        return super.getCursor();
     }
 
     @Override

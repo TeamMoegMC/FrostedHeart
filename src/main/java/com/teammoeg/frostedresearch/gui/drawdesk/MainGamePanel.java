@@ -19,6 +19,10 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextField;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
@@ -28,15 +32,10 @@ import com.teammoeg.frostedresearch.gui.drawdesk.game.CardStat;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardType;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.ClientResearchGame;
 
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.TextField;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
-class MainGamePanel extends Panel {
+class MainGamePanel extends UILayer {
     ClientResearchGame rg;
     DrawDeskPanel ot;
     TechButton reset;
@@ -59,25 +58,25 @@ class MainGamePanel extends Panel {
         reset = new TechButton(this, DrawDeskIcons.RESET) {
 
             @Override
-            public void addMouseOverText(TooltipList list) {
-                super.addMouseOverText(list);
-                list.add(Lang.translateGui("draw_desk.reset"));
+            public void getTooltip(TooltipBuilder list) {
+                super.getTooltip(list);
+                list.accept(Lang.translateGui("draw_desk.reset"));
             }
 
             @Override
             public void onClicked(MouseButton arg0) {
                 rg.init();
-                refreshWidgets();
+                refreshElements();
             }
         };
         reset.setPosAndSize(157, 136, 27, 16);
-        status = new TextField(this).addFlags(Theme.CENTERED).addFlags(Theme.CENTERED_V).setMaxWidth(108).setColor(TechIcons.text);
+        status = new TextField(this).centerH().centerV().setMaxWidth(108).setColor(TechIcons.text);
 
         status.setPosAndSize(22, 54, 108, 50);
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         rg.attach();
         for (int i = 0; i < 9; i++)
             for (int j = 0; j < 9; j++) {
@@ -85,10 +84,10 @@ class MainGamePanel extends Panel {
             }
         int cntcs = 0;
 
-        Panel states = new Panel(this) {
+        UILayer states = new UILayer(this) {
 
             @Override
-            public void addWidgets() {
+            public void addUIElements() {
                 int cntad = 0;
                 int cntall = 0;
                 for (CardStat cs : rg.getStats().values())
@@ -146,9 +145,9 @@ class MainGamePanel extends Panel {
         TechButton help = new TechButton(this, TechIcons.Question) {
 
             @Override
-            public void addMouseOverText(TooltipList list) {
-                super.addMouseOverText(list);
-                list.add(Lang.translateGui("draw_desk.help"));
+            public void getTooltip(TooltipBuilder list) {
+                super.getTooltip(list);
+                list.accept(Lang.translateGui("draw_desk.help"));
             }
 
             @Override
@@ -167,12 +166,12 @@ class MainGamePanel extends Panel {
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 
-        super.draw(matrixStack, theme, x, y, w, h);
+        super.render(matrixStack, x, y, w, h);
         if (lstatus != 0) {
             DrawDeskIcons.DIALOG_FRAME.draw(matrixStack, x + 7, y + 54, 137, 52);
-            status.draw(matrixStack, theme, status.getX(), status.getY(), status.width, status.height);
+            status.render(matrixStack, status.getX(), status.getY(), status.getWidth(), status.getHeight());
         }
         if (ResearchHooks.fetchGameLevel() == -1) {
             if (lstatus != 4) {

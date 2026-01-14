@@ -62,4 +62,10 @@ public class LineIcon extends CIcon {
         s1 = full.asPart(this.w - side2, 0, side2, h);
     }
 
+
+	@Override
+	public boolean isEmpty() {
+		return true;
+	}
+
 }

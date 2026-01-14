@@ -19,8 +19,13 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
-import com.teammoeg.frostedresearch.Lang;
+import com.teammoeg.chorda.client.CInputHelper;
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.frostedresearch.FRNetwork;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
@@ -31,15 +36,9 @@ import com.teammoeg.frostedresearch.network.FHResearchControlPacket;
 import com.teammoeg.frostedresearch.network.FHResearchControlPacket.Operator;
 import com.teammoeg.frostedresearch.research.Research;
 
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.input.Key;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
 
-public class DrawDeskPanel extends Panel {
+public class DrawDeskPanel extends UILayer {
     DrawDeskScreen dd;
     MainGamePanel mgp;
 
@@ -55,7 +54,7 @@ public class DrawDeskPanel extends Panel {
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
 
         add(mgp);
         HelpPanel hp = new HelpPanel(this);
@@ -92,16 +91,16 @@ public class DrawDeskPanel extends Panel {
         Button itemSubmit = new Button(this) {
 
             @Override
-            public void addMouseOverText(TooltipList list) {
-                super.addMouseOverText(list);
+            public void getTooltip(TooltipBuilder list) {
+                super.getTooltip(list);
                 if (!ResearchHooks.canExamine(dd.getTile().getInventory().getStackInSlot(DrawingDeskTileEntity.EXAMINE_SLOT)))
-                    list.add(Lang.translateGui("draw_desk.unable_examine"));
+                    list.accept(Lang.translateGui("draw_desk.unable_examine"));
                 else
-                    list.add(Lang.translateGui("draw_desk.examine"));
+                    list.accept(Lang.translateGui("draw_desk.examine"));
             }
 
             @Override
-            public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+            public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
                 if (isMouseOver() || !ResearchHooks.canExamine(dd.getTile().getInventory().getStackInSlot(DrawingDeskTileEntity.EXAMINE_SLOT)))
                     DrawDeskIcons.EXAMINE.draw(matrixStack, x, y, w, h);
             }
@@ -129,7 +128,7 @@ public class DrawDeskPanel extends Panel {
     }
 
     @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         DrawDeskIcons.Background.draw(matrixStack, x, y, w, h);
     }
 
@@ -143,13 +142,15 @@ public class DrawDeskPanel extends Panel {
     }
 
     @Override
-    public boolean keyPressed(Key k) {
-        if (showHelp && k.esc()) {
+	public boolean onKeyPressed(int keyCode, int scanCode, int modifier) {
+    	if (showHelp && CInputHelper.isEsc(keyCode)) {
             closeHelp();
             return true;
         }
-        return super.keyPressed(k);
-    }
+		return super.onKeyPressed(keyCode, scanCode, modifier);
+	}
+
+
 
     public void openHelp() {
         showHelp = true;

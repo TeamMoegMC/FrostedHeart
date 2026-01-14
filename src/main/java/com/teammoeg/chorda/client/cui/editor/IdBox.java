@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 
@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
 
 public class IdBox extends LabeledTextBoxAndBtn {
 	String oldVal;
-	public IdBox(UIWidget panel, Component lab, String txt) {
+	public IdBox(UIElement panel, Component lab, String txt) {
 		super(panel, lab, txt, Components.str("Random"), s->s.accept(Long.toHexString(UUID.randomUUID().getMostSignificantBits())));
 		oldVal=txt;
 		if(txt==null||txt.isEmpty())

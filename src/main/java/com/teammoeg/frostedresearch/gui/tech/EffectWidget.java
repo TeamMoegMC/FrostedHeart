@@ -19,28 +19,29 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import java.util.List;
+
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.effects.Effect;
 
-import dev.ftb.mods.ftblibrary.ui.*;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
-import java.util.List;
-
-public class EffectWidget extends Widget {
+public class EffectWidget extends UIElement {
     List<Component> tooltips;
     Component title;
     CIcon icon;
     Effect e;
     Research r;
 
-    public EffectWidget(Panel panel, Effect e, Research r) {
+    public EffectWidget(UIElement panel, Effect e, Research r) {
         super(panel);
         tooltips = e.getTooltip(r);
         title = e.getName(r);
@@ -51,29 +52,29 @@ public class EffectWidget extends Widget {
     }
 
     @Override
-    public void addMouseOverText(TooltipList list) {
-        list.add(title);
-        tooltips.forEach(list::add);
+    public void getTooltip(TooltipBuilder list) {
+        list.accept(title);
+        tooltips.forEach(list::accept);
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        GuiHelper.setupDrawing();
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        CGuiHelper.resetGuiDrawing();
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
         icon.draw(matrixStack, x, y, w, h);
         if (ClientResearchDataAPI.getData().get().isEffectGranted(r, e)) {
             matrixStack.pose().pushPose();
             matrixStack.pose().translate(0, 0, 300);
-            GuiHelper.setupDrawing();
+            CGuiHelper.resetGuiDrawing();
             TechIcons.FIN.draw(matrixStack, x, y, w, h);
             matrixStack.pose().popPose();
         }
     }
 
     @Override
-    public boolean mousePressed(MouseButton button) {
+    public boolean onMousePressed(MouseButton button) {
         if (isMouseOver()) {
-            if (getWidgetType() != WidgetType.DISABLED) {
+            if (this.isEnabled()) {
                 //TODO edit effect
                 e.onClick(r.getData());
             }

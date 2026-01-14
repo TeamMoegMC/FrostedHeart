@@ -19,15 +19,15 @@
 
 package com.teammoeg.frostedresearch.gui;
 
+import java.util.List;
+
+import com.teammoeg.frostedresearch.Lang;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
-
-import java.util.List;
-
-import com.teammoeg.frostedresearch.Lang;
 
 public class InspireToast implements Toast {
     int level;

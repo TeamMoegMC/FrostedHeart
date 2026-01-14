@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -72,8 +72,8 @@ public class HeatStatScreen extends PrimaryLayer {
         return super.onInit();
     }
 
-    public static class EndPointFakeSlot extends UIWidget {
-        public EndPointFakeSlot(UIWidget panel) {
+    public static class EndPointFakeSlot extends UIElement {
+        public EndPointFakeSlot(UIElement panel) {
             super(panel);
             this.setSize(33, 39);
         }
@@ -85,13 +85,13 @@ public class HeatStatScreen extends PrimaryLayer {
 
     }
 
-    public static class EndPointSlot extends UIWidget {
+    public static class EndPointSlot extends UIElement {
         HeatEndpoint epd;
         Icon ic;
         String val;
         boolean isIntake;
 
-        public EndPointSlot(UIWidget panel, HeatEndpoint epd, boolean isIntake) {
+        public EndPointSlot(UIElement panel, HeatEndpoint epd, boolean isIntake) {
             super(panel);
             this.epd = epd;
             ic = ItemIcon.getItemIcon(epd.blk.asItem());
@@ -116,7 +116,7 @@ public class HeatStatScreen extends PrimaryLayer {
 
     }
 
-    public static class EndPointList extends Layer {
+    public static class EndPointList extends UILayer {
         public HeatStatScreen screen;
         public LayerScrollBar scroll;
         boolean isIntake;

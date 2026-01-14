@@ -11,7 +11,6 @@ import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.creativeTab.TabType;
 import com.teammoeg.chorda.item.CBlockItem;
 import com.teammoeg.chorda.util.CFunctionUtils;
-import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskBlock;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedresearch.blocks.FHBasePen;
@@ -23,6 +22,7 @@ import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedresearch.item.FRBaseItem;
 import com.teammoeg.frostedresearch.recipe.InspireRecipe;
 import com.teammoeg.frostedresearch.recipe.ResearchPaperRecipe;
+
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;

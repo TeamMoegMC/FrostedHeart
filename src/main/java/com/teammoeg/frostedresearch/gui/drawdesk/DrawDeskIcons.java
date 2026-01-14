@@ -19,30 +19,30 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CTextureIcon;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardType;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import net.minecraft.resources.ResourceLocation;
 
 public class DrawDeskIcons {
-    public static final ImageIcon ALL = (ImageIcon) Icon
+    public static final CTextureIcon ALL = CIcons
             .getIcon(new ResourceLocation(FRMain.MODID, "textures/gui/draw_desk.png"));
-    public static final Icon Background = ALL.withUV(0, 0, 387, 203, 512, 512);
-    public static final Icon HELP = ALL.withUV(0, 267, 243, 170, 512, 512);
-    public static final Icon[] icons = new Icon[16];
-    public static final Icon[] icons_grey = new Icon[16];
-    public static final Icon SELECTED = ALL.withUV(16 * 16, 203, 16, 16, 512, 512);
-    public static final Icon TECH = ALL.withUV(17 * 16, 203, 16, 16, 512, 512);
-    public static final Icon RESET = ALL.withUV(16 * 16, 219, 16, 16, 512, 512);
-    public static final Icon STOP = ALL.withUV(17 * 16, 219, 16, 16, 512, 512);
+    public static final CTextureIcon Background = ALL.withUV(0, 0, 387, 203, 512, 512);
+    public static final CTextureIcon HELP = ALL.withUV(0, 267, 243, 170, 512, 512);
+    public static final CTextureIcon[] icons = new CTextureIcon[16];
+    public static final CTextureIcon[] icons_grey = new CTextureIcon[16];
+    public static final CTextureIcon SELECTED = ALL.withUV(16 * 16, 203, 16, 16, 512, 512);
+    public static final CTextureIcon TECH = ALL.withUV(17 * 16, 203, 16, 16, 512, 512);
+    public static final CTextureIcon RESET = ALL.withUV(16 * 16, 219, 16, 16, 512, 512);
+    public static final CTextureIcon STOP = ALL.withUV(17 * 16, 219, 16, 16, 512, 512);
 
-    //public static final Icon STAT_FRAME=ALL.withUV(0,235,15,28,512,512);
-    public static final Icon DIALOG_FRAME = ALL.withUV(243, 267, 137, 52, 512, 512);
-    public static final Icon ORDER_FRAME = ALL.withUV(16, 235, 16, 16, 512, 512);
-    public static final Icon ORDER_ARROW = ALL.withUV(16, 235 + 16, 16, 12, 512, 512);
-    public static final Icon EXAMINE = ALL.withUV(32, 235, 18, 18, 512, 512);
+    //public static final CTextureIcon STAT_FRAME=ALL.withUV(0,235,15,28,512,512);
+    public static final CTextureIcon DIALOG_FRAME = ALL.withUV(243, 267, 137, 52, 512, 512);
+    public static final CTextureIcon ORDER_FRAME = ALL.withUV(16, 235, 16, 16, 512, 512);
+    public static final CTextureIcon ORDER_ARROW = ALL.withUV(16, 235 + 16, 16, 12, 512, 512);
+    public static final CTextureIcon EXAMINE = ALL.withUV(32, 235, 18, 18, 512, 512);
 
     static {
         for (int i = 0; i < 16; i++) {
@@ -54,7 +54,7 @@ public class DrawDeskIcons {
     private DrawDeskIcons() {
     }
 
-    public static Icon getIcon(CardType ct, int card, boolean active) {
+    public static CTextureIcon getIcon(CardType ct, int card, boolean active) {
         if (active)
             return icons[getIconIndex(ct, card)];
         return icons_grey[getIconIndex(ct, card)];

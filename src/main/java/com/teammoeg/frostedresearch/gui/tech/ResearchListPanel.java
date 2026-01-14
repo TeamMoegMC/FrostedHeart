@@ -19,28 +19,24 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
-import com.teammoeg.chorda.client.cui.RTextField;
-import com.teammoeg.chorda.client.icon.CIconFTBWrapper;
-import com.teammoeg.frostedresearch.Lang;
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextField;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.frostedresearch.FHResearch;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.TechScrollBar;
 import com.teammoeg.frostedresearch.research.Research;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.client.gui.GuiGraphics;
 
-public class ResearchListPanel extends Panel {
+public class ResearchListPanel extends UILayer {
 
     public static final int RESEARCH_HEIGHT = 18;
     public static final int RES_PANEL_WIDTH = 80;
     public ResearchPanel researchScreen;
-    public PanelScrollBar scroll;
+    public TechScrollBar scroll;
     public ResearchList rl;
 
     public ResearchListPanel(ResearchPanel panel) {
@@ -49,7 +45,7 @@ public class ResearchListPanel extends Panel {
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         rl = new ResearchList(this);
         scroll = new TechScrollBar(this, rl);
         add(rl);
@@ -65,12 +61,7 @@ public class ResearchListPanel extends Panel {
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        super.draw(matrixStack, theme, x, y, w, h);
-    }
-
-    @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         //theme.drawPanelBackground(matrixStack, x, y, w, h);
     }
 
@@ -83,20 +74,20 @@ public class ResearchListPanel extends Panel {
 
         Research research;
         ResearchList listPanel;
-        RTextField tf;
+        TextField tf;
 
         long lastupdate;
 
         public ResearchButton(ResearchList panel, Research research) {
-            super(panel, research.getName(), new CIconFTBWrapper(research.getIcon()));
+            super(panel, research.getName(), research.getIcon());
             this.research = research;
             this.listPanel = panel;
             setSize(101, RESEARCH_HEIGHT);
-            tf = new RTextField(panel).setMaxLine(1).setMaxWidth(86).setText(research.getName());
+            tf = new TextField(panel).setMaxLines(1).setMaxWidth(86).setText(research.getName());
             if (research.hasUnclaimedReward())
-                tf.setColor(Color4I.rgb(0x5555ff));
+                tf.setColor(0x5555ff);
             else if (research.isCompleted()) {
-                tf.setColor(Color4I.rgb(0x229000));
+                tf.setColor(0x229000);
             } else if (!research.isUnlocked()) {
                 tf.setColor(TechIcons.text_red);
             } else
@@ -105,9 +96,9 @@ public class ResearchListPanel extends Panel {
         }
 
         @Override
-        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
             //CGuis.setupDrawing();
-            this.drawIcon(matrixStack, theme, x + 1, y + 1, 16, 16);
+            this.drawIcon(matrixStack, x + 1, y + 1, 16, 16);
             long secs = System.currentTimeMillis() / 1000;
             if (lastupdate != secs) {
                 lastupdate = secs;
@@ -116,15 +107,15 @@ public class ResearchListPanel extends Panel {
                         tf.setText(Lang.translateGui("research.unclaimed"));
                     } else
                         tf.setText(research.getName());
-                    tf.setColor(Color4I.rgb(0x5555ff));
+                    tf.setColor(0x5555ff);
                 } else if (research.isCompleted()) {
-                    tf.setColor(Color4I.rgb(0x229000));
+                    tf.setColor(0x229000);
                 } else if (!research.isUnlocked()) {
                     tf.setColor(TechIcons.text_red);
                 } else
                     tf.setColor(TechIcons.text);
             }
-            tf.draw(matrixStack, theme, x + 18, y + 6, 81, tf.height);
+            tf.render(matrixStack, x + 18, y + 6, 81, tf.getHeight());
             if (listPanel.researchScreen.selectedResearch == this.research)
                 TechIcons.SELECTED.draw(matrixStack, x - 4, y + 7, 4, 4);
             TechIcons.HLINE.draw(matrixStack, x, y + 17, 99, 1);
@@ -137,7 +128,7 @@ public class ResearchListPanel extends Panel {
         }
     }
 
-    public static class ResearchList extends Panel {
+    public static class ResearchList extends UILayer {
         public ResearchPanel researchScreen;
 
         public ResearchList(ResearchListPanel panel) {
@@ -148,7 +139,7 @@ public class ResearchListPanel extends Panel {
         }
 
         @Override
-        public void addWidgets() {
+        public void addUIElements() {
             int offset = 0;
 
             for (Research r : FHResearch.getResearchesForRender(this.researchScreen.selectedCategory, FHResearch.editor)) {

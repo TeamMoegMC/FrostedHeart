@@ -1,7 +1,7 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
 import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FrostedHud;
@@ -20,43 +20,43 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class LineHelper {
-    public static TextLine text(UIWidget parent, String text) {
+    public static TextLine text(UIElement parent, String text) {
         return text(parent, Component.literal(text));
     }
 
-    public static TextLine text(UIWidget parent, Component text) {
+    public static TextLine text(UIElement parent, Component text) {
         return new TextLine(parent, text, Alignment.LEFT);
     }
 
-    public static ImageLine img(UIWidget parent, String imageLocation) {
+    public static ImageLine img(UIElement parent, String imageLocation) {
         return img(parent, ResourceLocation.tryParse(imageLocation));
     }
 
-    public static ImageLine img(UIWidget parent, ResourceLocation imageLocation) {
+    public static ImageLine img(UIElement parent, ResourceLocation imageLocation) {
         return new ImageLine(parent, imageLocation, Alignment.CENTER);
     }
 
-    public static ItemRow items(UIWidget parent, ItemStack... items) {
+    public static ItemRow items(UIElement parent, ItemStack... items) {
         return items(parent, List.of(items));
     }
 
-    public static ItemRow items(UIWidget parent, Collection<ItemStack> items) {
+    public static ItemRow items(UIElement parent, Collection<ItemStack> items) {
         return new ItemRow(parent, items, Alignment.CENTER);
     }
 
-    public static EmptyLine space(UIWidget parent) {
+    public static EmptyLine space(UIElement parent) {
         return space(parent, 8);
     }
 
-    public static EmptyLine space(UIWidget parent, int height) {
+    public static EmptyLine space(UIElement parent, int height) {
         return new EmptyLine(parent, height);
     }
 
-    public static BreakLine br(UIWidget parent) {
+    public static BreakLine br(UIElement parent) {
         return new BreakLine(parent);
     }
 
-    public static BreakLine br(UIWidget parent, int color) {
+    public static BreakLine br(UIElement parent, int color) {
         return br(parent).color(color);
     }
 

@@ -20,7 +20,7 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 import com.teammoeg.chorda.client.cui.TextBox;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.cui.editor.Verifier.VerifyResult;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -31,10 +31,10 @@ import net.minecraft.network.chat.Component;
 public class LabeledTextBox extends LabeledPane<TextBox> {
     String orig;
     VerifyResult result;
-    public LabeledTextBox(UIWidget panel, Component lab, String txt) {
+    public LabeledTextBox(UIElement panel, Component lab, String txt) {
     	this(panel,lab,txt,null);
     }
-    public LabeledTextBox(UIWidget panel, Component lab, String txt,Verifier<String> verif) {
+    public LabeledTextBox(UIElement panel, Component lab, String txt,Verifier<String> verif) {
         super(panel, lab);
         obj = new TextBox(this);
         obj.allowInput();

@@ -12,7 +12,7 @@ import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.FormattedCharSequence;
 
 public abstract class TextButton extends Button {
-	public TextButton(UIWidget panel, Component txt, CIcon icon) {
+	public TextButton(UIElement panel, Component txt, CIcon icon) {
 		super(panel, txt, icon);
 		fitSize();
 	}
@@ -24,7 +24,7 @@ public abstract class TextButton extends Button {
 
 
 	@Override
-	public void getTooltip(Consumer<Component> list) {
+	public void getTooltip(TooltipBuilder list) {
 		if (getFont().width(getTitle()) + (hasIcon() ? 28 : 8) > super.getWidth()) {
 			list.accept(getTitle());
 		}
@@ -65,7 +65,7 @@ public abstract class TextButton extends Button {
 		}
 	}
 
-	public static TextButton create(UIWidget panel, Component txt, CIcon icon, Consumer<MouseButton> callback, Component... tooltip) {
+	public static TextButton create(UIElement panel, Component txt, CIcon icon, Consumer<MouseButton> callback, Component... tooltip) {
 		return new TextButton(panel, txt, icon) {
 			@Override
 			public void onClicked(MouseButton button) {
@@ -73,7 +73,7 @@ public abstract class TextButton extends Button {
 			}
 
 			@Override
-			public void getTooltip(Consumer<Component> list) {
+			public void getTooltip(TooltipBuilder list) {
 				for (Component c : tooltip) {
 					list.accept(c);
 				}
@@ -81,11 +81,11 @@ public abstract class TextButton extends Button {
 		};
 	}
 
-	public static TextButton accept(UIWidget panel, Consumer<MouseButton> callback, Component... tooltip) {
+	public static TextButton accept(UIElement panel, Consumer<MouseButton> callback, Component... tooltip) {
 		return create(panel, Component.translatable("gui.accept"), FlatIcon.CHECK.toCIcon(), callback, tooltip);
 	}
 
-	public static TextButton cancel(UIWidget panel, Consumer<MouseButton> callback, Component... tooltip) {
+	public static TextButton cancel(UIElement panel, Consumer<MouseButton> callback, Component... tooltip) {
 		return create(panel, Component.translatable("gui.cancel"), FlatIcon.CROSS.toCIcon(), callback, tooltip);
 	}
 }

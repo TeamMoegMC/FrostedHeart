@@ -49,7 +49,9 @@ public class ExtendPolicyGroup extends PolicyGroup {
 
     @Override
     public void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve,int num) {
-        TradePolicy.policies.get(ref).CollectPolicies(policy, ve,num);
+    	TradePolicy tp=TradePolicy.policies.get(ref);
+        if(tp!=null)
+        	tp.CollectPolicies(policy, ve,num);
     }
 
     @Override

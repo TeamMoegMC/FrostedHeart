@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.cui.editor.BaseEditDialog;
 import com.teammoeg.chorda.client.cui.editor.EditListDialog;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;
@@ -53,7 +53,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
     public static final Editor<TextureUVIcon> UV_EDITOR = (p, l, v, c) -> new UV(p, l, v, c).open();
     public static final Editor<CIcon> NOP_CHANGE_EDITOR = (p, l, v, c) -> getEditor().open(p, l, null, c);
     T v;
-    public IconEditor(UIWidget panel, T v) {
+    public IconEditor(UIElement panel, T v) {
         super(panel);
         this.v = v;
     }        
@@ -83,7 +83,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
     private static class Combined extends IconEditor<CombinedIcon> {
         Component label;
         Consumer<CombinedIcon> i;
-        public Combined(UIWidget panel, Component label, CombinedIcon v, Consumer<CombinedIcon> i) {
+        public Combined(UIElement panel, Component label, CombinedIcon v, Consumer<CombinedIcon> i) {
             super(panel, v == null ? new CombinedIcon(null, null) : v);
             this.label = label;
             this.i = i;
@@ -115,7 +115,7 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
         NumberBox tw;
         NumberBox th;
 
-        public UV(UIWidget panel, Component label, TextureUVIcon v, Consumer<TextureUVIcon> i) {
+        public UV(UIElement panel, Component label, TextureUVIcon v, Consumer<TextureUVIcon> i) {
             super(panel, v == null ? new TextureUVIcon() : v);
             this.label = label;
             this.i = i;

@@ -62,4 +62,9 @@ public class VLineIcon extends CIcon {
         s1 = full.asPart(0, h - side2, w, side2);
     }
 
+	@Override
+	public boolean isEmpty() {
+		return true;
+	}
+
 }

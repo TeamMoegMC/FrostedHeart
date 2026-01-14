@@ -1,9 +1,9 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
-import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.ScrollBar;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
 import net.minecraft.client.gui.GuiGraphics;
@@ -12,11 +12,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ContentPanel extends Layer {
+public class ContentPanel extends UILayer {
     public final ScrollBar scrollBar;
     protected List<Line<?>> lines = new ArrayList<>();
 
-    public ContentPanel(UIWidget parent) {
+    public ContentPanel(UIElement parent) {
         super(parent);
         this.scrollBar = new LayerScrollBar(parent, true, this);
         resize();
@@ -29,9 +29,9 @@ public class ContentPanel extends Layer {
         CGuiHelper.drawBox(graphics, x-border, y-border, w+border*3, h+border*2, Colors.L_BG_GRAY, true);
     }
 
-    public void fillContent(Collection<? extends UIWidget> widgets) {
+    public void fillContent(Collection<? extends UIElement> widgets) {
         clearElement();
-        for (UIWidget widget : widgets) {
+        for (UIElement widget : widgets) {
             if (widget instanceof Line<?> line) {
                 this.lines.add(line);
             }
@@ -56,7 +56,7 @@ public class ContentPanel extends Layer {
     public void refresh() {
         resize();
         recalcContentSize();
-        for (UIWidget element : elements) {
+        for (UIElement element : elements) {
             element.refresh();
         }
         alignWidgets();

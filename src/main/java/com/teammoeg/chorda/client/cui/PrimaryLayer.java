@@ -2,27 +2,30 @@ package com.teammoeg.chorda.client.cui;
 
 import org.lwjgl.glfw.GLFW;
 
-import com.mojang.blaze3d.platform.Window;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.cui.editor.EditDialog;
 import com.teammoeg.chorda.client.cui.editor.EditorManager;
-import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.MouseHelper;
-import com.teammoeg.chorda.client.ui.CGuiHelper;
 
 import lombok.Getter;
+import lombok.Setter;
+
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.MouseHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
 
-public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
-	UIWidget lastFocused;
+/**
+ * Primary layer for bridging between screen and layer infrastructure
+ * */
+public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
+	UIElement lastFocused;
 	Screen prevScreen;
-	CUIScreenManager screen;
+	@Getter
+	@Setter
+	private CUIScreen screen;
 	public PrimaryLayer() {
 		super(null);
 		width = 176;
@@ -30,18 +33,10 @@ public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
 		prevScreen = Minecraft.getInstance().screen;
 		this.setScissorEnabled(false);
 	}
-	public void setScreen(CUIScreenManager screen) {
-		this.screen=screen;
-	}
 	int mouseX;
 	int mouseY;
-	boolean hasBackGradient;
+	boolean hasBackGradient=true;
 	boolean refreshRequested;
-
-	@Override
-	public CUIScreenManager getManager() {
-		return screen;
-	}
 
 	public final void initGui() {
 
@@ -52,7 +47,7 @@ public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
 	}
 
 	@Override
-	public void focusOn(UIWidget elm) {
+	public void focusOn(UIElement elm) {
 		if(lastFocused==elm)return;
 		if (lastFocused != null) {
 			((Focusable) lastFocused).setFocused(false);
@@ -162,7 +157,7 @@ public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
 	}
 
 	@Override
-	public final void refreshWidgets() {
+	public final void refreshElements() {
 		refreshRequested = true;
 	}
 
@@ -243,7 +238,7 @@ public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
 		return super.onIMEInput(c, modifiers);
 	}
 
-	public boolean isMouseOver(UIWidget widget) {
+	public boolean isMouseOver(UIElement widget) {
 		return MouseHelper.isMouseIn(mouseX, mouseY, widget.getScreenX(), widget.getScreenY(), width, height);
 
 	}
@@ -299,7 +294,7 @@ public class PrimaryLayer extends Layer implements LayerHolder,EditorManager {
     public void openDialog(EditDialog dialog, boolean refresh) {
         this.dialog = dialog;
         if (refresh)
-            this.refreshWidgets();
+            this.refreshElements();
     }
 
 	@Override

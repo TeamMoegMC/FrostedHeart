@@ -7,20 +7,20 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.mojang.serialization.DataResult;
-import com.teammoeg.chorda.client.cui.Layer;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.network.chat.Component;
 
-public interface EditorWidgetFactory<T,W extends UIWidget> {
-	interface WidgetConstructor<T,W extends UIWidget>{
-		W create(Layer parent,Component prompt,T origin);
+public interface EditorWidgetFactory<T,W extends UIElement> {
+	interface WidgetConstructor<T,W extends UIElement>{
+		W create(UILayer parent,Component prompt,T origin);
 	}
-	interface ActionWidgetConstructor<T,W extends UIWidget>{
-		W create(EditorDialog dialog,Layer parent,Component prompt,T origin);
+	interface ActionWidgetConstructor<T,W extends UIElement>{
+		W create(EditorDialog dialog,UILayer parent,Component prompt,T origin);
 	}
-	W create(Layer parent,Component prompt,T origin,EditorDialog dialog);
+	W create(UILayer parent,Component prompt,T origin,EditorDialog dialog);
 	DataResult<Optional<T>> getValue(W widget);
 	W setValue(W widget,T value);
 	default EditorItemFactory<T> withName(String prompt){
@@ -30,7 +30,7 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 	default EditorItemFactory<T> withName(Component prompt){
 		return new EditorItemFactory<T>() {
 			@Override
-			public EditItem<T> create(Layer layer,EditorDialog dialog,T val) {
+			public EditItem<T> create(UILayer layer,EditorDialog dialog,T val) {
 				return new EditItem<>() {
 					W widget=EditorWidgetFactory.this.create(layer,prompt,val,dialog);
 					@Override
@@ -38,7 +38,7 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 						return EditorWidgetFactory.this.getValue(widget);
 					}
 					@Override
-					public UIWidget getWidget() {
+					public UIElement getWidget() {
 						return widget;
 					}
 					@Override
@@ -55,7 +55,7 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 		EditorWidgetFactory<T,W> objthis=this;
 		return new EditorWidgetFactory<>() {
 			@Override
-			public W create(Layer parent, Component prompt, X origin,EditorDialog dialog) {
+			public W create(UILayer parent, Component prompt, X origin,EditorDialog dialog) {
 				return objthis.create(parent, prompt, origin==null?null:to.apply(origin),dialog);
 			}
 
@@ -75,7 +75,7 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 		EditorWidgetFactory<T,W> objthis=this;
 		return new EditorWidgetFactory<>() {
 			@Override
-			public W create(Layer parent, Component prompt, X origin,EditorDialog dialog) {
+			public W create(UILayer parent, Component prompt, X origin,EditorDialog dialog) {
 				return objthis.create(parent, prompt, to.apply(origin),dialog);
 			}
 
@@ -95,7 +95,7 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 		EditorWidgetFactory<T,W> objthis=this;
 		return new EditorWidgetFactory<>() {
 			@Override
-			public W create(Layer parent, Component prompt, T origin,EditorDialog dialog) {
+			public W create(UILayer parent, Component prompt, T origin,EditorDialog dialog) {
 				return objthis.create(parent, prompt, origin==null?def.get():origin,dialog);
 			}
 
@@ -111,10 +111,10 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 		};
 		
 	}
-	public static <T,W extends UIWidget> EditorWidgetFactory<T,W> create(WidgetConstructor<T,W> constr,Function<W,T> func,BiFunction<W,T,W> setValue){
+	public static <T,W extends UIElement> EditorWidgetFactory<T,W> create(WidgetConstructor<T,W> constr,Function<W,T> func,BiFunction<W,T,W> setValue){
 		return new EditorWidgetFactory<>() {
 			@Override
-			public W create(Layer parent, Component prompt, T origin,EditorDialog dialog) {
+			public W create(UILayer parent, Component prompt, T origin,EditorDialog dialog) {
 				return constr.create(parent, prompt, origin);
 			}
 
@@ -130,10 +130,10 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 		};
 		
 	}
-	public static <T,W extends UIWidget> EditorWidgetFactory<T,W> create(WidgetConstructor<T,W> constr,Function<W,T> func,BiConsumer<W,T> setValue){
+	public static <T,W extends UIElement> EditorWidgetFactory<T,W> create(WidgetConstructor<T,W> constr,Function<W,T> func,BiConsumer<W,T> setValue){
 		return new EditorWidgetFactory<>() {
 			@Override
-			public W create(Layer parent, Component prompt, T origin,EditorDialog dialog) {
+			public W create(UILayer parent, Component prompt, T origin,EditorDialog dialog) {
 				return constr.create(parent, prompt, origin);
 			}
 
@@ -150,10 +150,10 @@ public interface EditorWidgetFactory<T,W extends UIWidget> {
 		};
 		
 	}
-	public static <T,W extends UIWidget> EditorWidgetFactory<T,W> create(ActionWidgetConstructor<T,W> constr){
+	public static <T,W extends UIElement> EditorWidgetFactory<T,W> create(ActionWidgetConstructor<T,W> constr){
 		return new EditorWidgetFactory<>() {
 			@Override
-			public W create(Layer parent, Component prompt, T origin,EditorDialog dialog) {
+			public W create(UILayer parent, Component prompt, T origin,EditorDialog dialog) {
 				return constr.create(dialog,parent, prompt, origin);
 			}
 

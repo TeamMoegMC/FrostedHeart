@@ -21,26 +21,23 @@ package com.teammoeg.frostedresearch.gui.tech;
 
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedresearch.compat.JEICompat;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.WidgetType;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.crafting.Ingredient;
 
-public class RequirementSlot extends Widget {
+public class RequirementSlot extends UIElement {
     ItemStack[] i;
     int cnt;
 
-    public RequirementSlot(Panel panel, Pair<Ingredient,Integer> iws) {
+    public RequirementSlot(UIElement panel, Pair<Ingredient,Integer> iws) {
         super(panel);
         this.i = iws.getFirst().getItems();
         this.cnt = iws.getSecond();
@@ -48,14 +45,14 @@ public class RequirementSlot extends Widget {
     }
 
     @Override
-    public void addMouseOverText(TooltipList list) {
+    public void getTooltip(TooltipBuilder list) {
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         //list.add(cur.getDisplayName());
-        cur.getTooltipLines(ClientUtils.getPlayer(), TooltipFlag.Default.NORMAL).forEach(list::add);
+        cur.getTooltipLines(ClientUtils.getPlayer(), TooltipFlag.Default.NORMAL).forEach(list::accept);
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
@@ -63,9 +60,9 @@ public class RequirementSlot extends Widget {
     }
 
     @Override
-    public boolean mousePressed(MouseButton button) {
+    public boolean onMousePressed(MouseButton button) {
         if (isMouseOver()) {
-            if (getWidgetType() != WidgetType.DISABLED) {
+            if (isEnabled()) {
                 //TODO edit ingredient
                 JEICompat.showJEIFor(i[(int) ((System.currentTimeMillis() / 1000) % i.length)]);
             }

@@ -1,8 +1,8 @@
 package com.teammoeg.chorda.client.cui;
 
-public class SimpleLayer extends Layer {
+public class SimpleLayer extends UILayer {
 
-	public SimpleLayer(UIWidget panel) {
+	public SimpleLayer(UIElement panel) {
 		super(panel);
 	}
 

@@ -19,27 +19,25 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardStat;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.ClientResearchGame;
 
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.Widget;
 import net.minecraft.client.gui.GuiGraphics;
 
-public class OrderWidget extends Widget {
+public class OrderWidget extends UIElement {
     ClientResearchGame rg;
     int cardstate;
 
-    public OrderWidget(Panel p, ClientResearchGame rg, int cardstate) {
+    public OrderWidget(UIElement p, ClientResearchGame rg, int cardstate) {
         super(p);
         this.rg = rg;
         this.cardstate = cardstate;
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 
         DrawDeskIcons.ORDER_FRAME.draw(matrixStack, x, y, 16, 16);
         if (cardstate != 0) {

@@ -1,7 +1,5 @@
 package com.teammoeg.frostedresearch;
 
-import com.teammoeg.chorda.lang.LangBuilder;
-
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 

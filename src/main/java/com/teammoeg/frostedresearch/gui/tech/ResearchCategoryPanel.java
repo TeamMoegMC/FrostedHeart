@@ -19,19 +19,18 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.ResearchCategory;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 
-public class ResearchCategoryPanel extends Panel {
+public class ResearchCategoryPanel extends UILayer {
     public static final int CAT_PANEL_HEIGHT = 40;
     public ResearchPanel researchScreen;
 
@@ -41,7 +40,7 @@ public class ResearchCategoryPanel extends Panel {
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         int k = 0;
         for (ResearchCategory r : ResearchCategory.values()) {
             CategoryButton button = new CategoryButton(this, r);
@@ -57,8 +56,8 @@ public class ResearchCategoryPanel extends Panel {
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        super.draw(matrixStack, theme, x, y, w, h);
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        super.render(matrixStack, x, y, w, h);
         //drawBackground(matrixStack, theme, x, y, w, h);
     }
 
@@ -73,27 +72,27 @@ public class ResearchCategoryPanel extends Panel {
         ResearchCategoryPanel categoryPanel;
 
         public CategoryButton(ResearchCategoryPanel panel, ResearchCategory category) {
-            super(panel, category.getName(), Icon.getIcon(category.getIcon()));
+            super(panel, category.getName(), CIcons.getIcon(category.getIcon()));
             this.category = category;
             this.categoryPanel = panel;
         }
 
         @Override
-        public void addMouseOverText(TooltipList list) {
-            list.add(category.getName());
-            list.add(category.getDesc().copy().withStyle(ChatFormatting.GRAY));
+        public void getTooltip(TooltipBuilder list) {
+            list.accept(category.getName());
+            list.accept(category.getDesc().copy().withStyle(ChatFormatting.GRAY));
         }
 
         @Override
-        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 
             //theme.drawHorizontalTab(matrixStack, x, y, w, h,categoryPanel.researchScreen.selectedCategory==category);
 
             if (categoryPanel.researchScreen.selectedCategory == category) {
                 TechIcons.TAB_HL.draw(matrixStack, x, y, w, 7);
-                this.drawIcon(matrixStack, theme, x + 7, y + 2, 16, 16);
+                this.drawIcon(matrixStack, x + 7, y + 2, 16, 16);
             } else
-                this.drawIcon(matrixStack, theme, x + 7, y + 5, 16, 16);
+                this.drawIcon(matrixStack, x + 7, y + 5, 16, 16);
             //super.drawBackground(matrixStack, theme, x, y, w, h);
 
             //theme.drawString(matrixStack, category.getName(), x + (w - theme.getStringWidth(category.getName())) / 2, y + 24);

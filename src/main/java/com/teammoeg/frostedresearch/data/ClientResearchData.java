@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedresearch.data;
 
-import com.teammoeg.frostedresearch.research.Research;
-
 public class ClientResearchData {
     public static String last;
 

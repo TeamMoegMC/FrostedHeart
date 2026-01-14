@@ -1,14 +1,14 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class EmptyLine extends Line<EmptyLine> {
-    public EmptyLine(UIWidget parent) {
+    public EmptyLine(UIElement parent) {
         this(parent, 8);
     }
 
-    public EmptyLine(UIWidget parent, int height) {
+    public EmptyLine(UIElement parent, int height) {
         super(parent);
         setHeight(height);
     }
