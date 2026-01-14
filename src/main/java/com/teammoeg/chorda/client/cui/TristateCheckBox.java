@@ -35,7 +35,7 @@ public abstract class TristateCheckBox extends UIElement {
     CIcon normal, over, locked;
     @Getter
     @Setter
-    Consumer<Consumer<Component>> tooltips;
+    Consumer<TooltipBuilder> tooltips;
 
     public TristateCheckBox(UIElement panel, CIcon normal, CIcon over, CIcon locked) {
         super(panel);
@@ -45,7 +45,7 @@ public abstract class TristateCheckBox extends UIElement {
     }
 
     @Override
-	public void getTooltip(Consumer<Component> tooltip) {
+	public void getTooltip(TooltipBuilder tooltip) {
 		super.getTooltip(tooltip);
 		if (tooltips != null)
             tooltips.accept(tooltip);

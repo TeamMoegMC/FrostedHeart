@@ -54,6 +54,9 @@ public abstract class UILayer extends UIElement {
 		contentWidth = contentHeight = -1;
 	}
 	public void refresh() {
+		refreshElements();
+	}
+	public void refreshElements() {
 		recalcContentSize();
 
 		clearElement();
@@ -306,7 +309,7 @@ public abstract class UILayer extends UIElement {
 	}
 
 	@Override
-	public void getTooltip(Consumer<Component> list) {
+	public void getTooltip(TooltipBuilder list) {
 		if (!hasTooltip() || !isMouseOver()) {
 			return;
 		}

@@ -4,6 +4,7 @@ import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LimitedTextField;
 import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.Colors;
@@ -227,7 +228,7 @@ public class Category extends UILayer {
     }
 
     @Override
-    public void getTooltip(Consumer<Component> list) {
+    public void getTooltip(TooltipBuilder list) {
         if (isEnabled() && isVisible() && MouseHelper.isMouseIn(getMouseX(), getMouseY(), 0, 0, getWidth(), Entry.DEF_HEIGHT)) {
             list.accept(getTitle());
         }

@@ -75,10 +75,6 @@ public class FHScreens {
     registerFTBScreen(MenuType<C> type, Function<C, S> factory) {
         MenuScreens.register(type, FTBScreenFactory(factory));
     }
-    public static <C extends AbstractContainerMenu, S extends PrimaryLayer> void
-    registerCUIScreen(MenuType<C> type, Function<C, S> factory) {
-        MenuScreens.register(type, CUIScreenFactory(factory));
-    }
     public static <C extends AbstractContainerMenu, S extends BaseScreen> MenuScreens.ScreenConstructor<C, MenuScreenWrapper<C>>
     FTBScreenFactory(Function<C, S> factory) {
         return (c, i, t) ->{
@@ -90,6 +86,11 @@ public class FHScreens {
         	return msw;
         };
     }
+    public static <C extends AbstractContainerMenu, S extends PrimaryLayer> void
+    registerCUIScreen(MenuType<C> type, Function<C, S> factory) {
+        MenuScreens.register(type, CUIScreenFactory(factory));
+    }
+
     public static <C extends AbstractContainerMenu, S extends PrimaryLayer> MenuScreens.ScreenConstructor<C, CUIMenuScreenWrapper<C>>
     CUIScreenFactory(Function<C, S> factory) {
         return (c, i, t) -> new CUIMenuScreenWrapper<>(factory.apply(c), c, i, t);

@@ -119,7 +119,7 @@ public class ItemSlot extends UIElement {
     }
 
     @Override
-    public void getTooltip(Consumer<Component> tooltip) {
+    public void getTooltip(TooltipBuilder tooltip) {
     	if(item.length>0)
     		item[order].getTooltipLines(ClientUtils.getPlayer(), TooltipFlag.NORMAL).forEach(tooltip);
     }

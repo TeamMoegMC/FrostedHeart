@@ -24,7 +24,7 @@ public abstract class TextButton extends Button {
 
 
 	@Override
-	public void getTooltip(Consumer<Component> list) {
+	public void getTooltip(TooltipBuilder list) {
 		if (getFont().width(getTitle()) + (hasIcon() ? 28 : 8) > super.getWidth()) {
 			list.accept(getTitle());
 		}
@@ -73,7 +73,7 @@ public abstract class TextButton extends Button {
 			}
 
 			@Override
-			public void getTooltip(Consumer<Component> list) {
+			public void getTooltip(TooltipBuilder list) {
 				for (Component c : tooltip) {
 					list.accept(c);
 				}

@@ -19,29 +19,29 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
+import com.teammoeg.chorda.client.cui.TextField;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardStat;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.ClientResearchGame;
 
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.TextField;
-import dev.ftb.mods.ftblibrary.ui.Theme;
 import net.minecraft.client.gui.GuiGraphics;
 
-public class CardStatPanel extends Panel {
+public class CardStatPanel extends UILayer {
     ClientResearchGame rg;
     int cardstate;
     TextField tf;
 
 
-    public CardStatPanel(Panel panel, ClientResearchGame rg, int cardstate) {
+    public CardStatPanel(UIElement panel, ClientResearchGame rg, int cardstate) {
         super(panel);
         this.rg = rg;
         this.cardstate = cardstate;
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         tf = new TextField(this);
         tf.addFlags(4).setColor(TechIcons.text).setMaxWidth(15).setTrim();
         tf.setWidth(15);
@@ -54,14 +54,14 @@ public class CardStatPanel extends Panel {
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
         CardStat cs = rg.getStats().get(cardstate);
         tf.setColor(cs.isGood() ? TechIcons.text : TechIcons.text_red);
         tf.setText("" + cs.num);
 
 
         DrawDeskIcons.getIcon(cs.type, cs.card, true).draw(matrixStack, x, y - 1, 16, 16);
-        super.draw(matrixStack, theme, x, y, w, h);
+        super.render(matrixStack, x, y, w, h);
     }
 
 }

@@ -43,6 +43,7 @@ import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextBox;
 import com.teammoeg.chorda.client.cui.TextButton;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
@@ -81,7 +82,7 @@ public class SelectStackDialog<T> extends EditDialog {
 		T getDefaultValue();
 		boolean isEmpty(T t);
 		Component getTitle(T t);
-		void appendTooltip(T t,Consumer<Component> tooltip);
+		void appendTooltip(T t,TooltipBuilder tooltip);
 		String getModid(T t);
 		boolean isSame(T t1,T t2);
 		CompoundTag getTag(T t);
@@ -113,7 +114,7 @@ public class SelectStackDialog<T> extends EditDialog {
 		}
 
 		@Override
-		public void appendTooltip(ItemStack t, Consumer<Component> tooltip) {
+		public void appendTooltip(ItemStack t, TooltipBuilder tooltip) {
 			for(Component i:t.getTooltipLines(ClientUtils.getPlayer(), TooltipFlag.NORMAL))
 				tooltip.accept(i);
 		}
@@ -477,7 +478,7 @@ public class SelectStackDialog<T> extends EditDialog {
         }
 
         @Override
-		public void getTooltip(Consumer<Component> tooltip) {
+		public void getTooltip(TooltipBuilder tooltip) {
 			type.appendTooltip(current, tooltip);
 		}
 
@@ -542,7 +543,7 @@ public class SelectStackDialog<T> extends EditDialog {
         }
 
         @Override
-        public void getTooltip(Consumer<Component> list) {
+        public void getTooltip(TooltipBuilder list) {
             super.getTooltip(list);
             list.accept(activeMode.getDisplayName().withStyle(ChatFormatting.GRAY).append(Components.str(" [" + panelStacks.getElements().size() + "]").withStyle(ChatFormatting.DARK_GRAY)));
         }
@@ -576,7 +577,7 @@ public class SelectStackDialog<T> extends EditDialog {
         }
 
         @Override
-        public void getTooltip(Consumer<Component> list) {
+        public void getTooltip(TooltipBuilder list) {
         	type.appendTooltip(stack, list);
         }
 

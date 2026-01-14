@@ -3,6 +3,7 @@ package com.teammoeg.chorda.client.cui.contentpanel;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
@@ -151,7 +152,7 @@ public class TextLine extends Line<TextLine> {
         }
 
         @Override
-        public void getTooltip(Consumer<Component> tooltip) {
+        public void getTooltip(TooltipBuilder tooltip) {
             tooltip.accept(getTitle());
         }
     }

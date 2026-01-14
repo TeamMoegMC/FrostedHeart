@@ -29,6 +29,7 @@ import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextBox;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
@@ -138,7 +139,7 @@ public class SelectDialog<T> extends EditDialog {
 		}
 
 		@Override
-		public void getTooltip(Consumer<Component> list) {
+		public void getTooltip(TooltipBuilder list) {
 			list.accept(t);
 		}
 

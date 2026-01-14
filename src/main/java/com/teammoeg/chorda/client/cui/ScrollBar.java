@@ -91,7 +91,7 @@ public class ScrollBar extends UIElement {
 	}
 
 	@Override
-	public void getTooltip(Consumer<Component> list) {
+	public void getTooltip(TooltipBuilder list) {
 		if (showValueTooltip()) {
 			Component t = getTitle();
 			list.accept(Components.str(t == Component.empty() ? (Double.toString(getValue())) : (t + ": " + getValue())));

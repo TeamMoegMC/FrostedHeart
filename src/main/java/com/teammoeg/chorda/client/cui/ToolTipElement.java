@@ -25,15 +25,15 @@ import java.util.function.Consumer;
 import net.minecraft.network.chat.Component;
 
 public class ToolTipElement extends UIElement {
-    Consumer<Consumer<Component>> csm;
+    Consumer<TooltipBuilder> csm;
 
-    public ToolTipElement(UIElement p, Consumer<Consumer<Component>> csm) {
+    public ToolTipElement(UIElement p, Consumer<TooltipBuilder> csm) {
         super(p);
         this.csm = csm;
     }
 
     @Override
-    public void getTooltip(Consumer<Component> list) {
+    public void getTooltip(TooltipBuilder list) {
         super.getTooltip(list);
         if(csm!=null)
         	csm.accept(list);

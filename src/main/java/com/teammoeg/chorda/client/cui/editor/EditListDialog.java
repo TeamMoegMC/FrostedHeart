@@ -27,6 +27,7 @@ import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
@@ -252,7 +253,7 @@ public class EditListDialog<T> extends EditDialog {
 		}
 
 		@Override
-        public void getTooltip(Consumer<Component> l) {
+        public void getTooltip(TooltipBuilder l) {
             if (getMouseX() >=  width - 19) {
                 l.accept(Components.translatable("selectServer.delete"));
             }else if (getMouseX() >=width - 36) {

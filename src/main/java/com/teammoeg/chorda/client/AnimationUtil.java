@@ -19,10 +19,10 @@
 
 package com.teammoeg.chorda.client;
 
-import net.minecraft.Util;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import net.minecraft.Util;
 
 
 public class AnimationUtil {

@@ -19,6 +19,9 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.editor.Verifier;
 import com.teammoeg.chorda.client.cui.editor.Verifier.VerifyResult;
 import com.teammoeg.chorda.lang.Components;
+
+import lombok.Getter;
+
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 
 import java.util.Objects;
@@ -38,7 +41,8 @@ public class TextBox extends UIElement implements Focusable {
 	private VerifyResult validText;
 	private int maxLength = 1024;
 	private Verifier<String> filter;
-	private String lastValidText="";
+	@Getter
+	protected String lastValidText="";
 	public TextBox(UILayer panel) {
 		super(panel);
 		filter=Verifier.nonNull();
@@ -409,7 +413,7 @@ public class TextBox extends UIElement implements Focusable {
 	}
 
 	@Override
-	public void getTooltip(Consumer<Component> tooltip) {
+	public void getTooltip(TooltipBuilder tooltip) {
 		super.getTooltip(tooltip);
 		if(validText.hint()!=null)
 		tooltip.accept(validText.hint());

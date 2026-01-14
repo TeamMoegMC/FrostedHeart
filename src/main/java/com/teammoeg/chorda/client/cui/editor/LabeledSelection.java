@@ -28,6 +28,7 @@ import java.util.function.Function;
 
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
@@ -57,7 +58,7 @@ public class LabeledSelection<R> extends LabeledPane<TextButton> {
         obj = new TextButton(this,atostr!=null?atostr.apply(val):Components.empty(), atoicon==null?CIcons.nop():atoicon.apply(val)) {
 
             @Override
-            public void getTooltip(Consumer<Component> list) {
+            public void getTooltip(TooltipBuilder list) {
             	if(atostr!=null) {
 	                int i = 0;
 	                for (R elm : objs) {

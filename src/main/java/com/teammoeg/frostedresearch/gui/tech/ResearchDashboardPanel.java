@@ -19,27 +19,26 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import java.text.DecimalFormat;
+
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.RTextField;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextField;
+import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FHResearch;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.data.ResearchData;
 import com.teammoeg.frostedresearch.gui.ResearchEditUtils;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.TechTextButton;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.client.gui.GuiGraphics;
-import java.text.DecimalFormat;
 
-public class ResearchDashboardPanel extends Panel {
+public class ResearchDashboardPanel extends UILayer {
 
     final static String read = "kmgtpezyh";
     final static DecimalFormat df1 = new DecimalFormat("#.#");
@@ -49,19 +48,17 @@ public class ResearchDashboardPanel extends Panel {
     final static DecimalFormat df3 = new DecimalFormat("#.##");
 
     ResearchDetailPanel detailPanel;
-    RTextField techpoint;
-    RTextField availableInsightLevel;
+    TextField techpoint;
+    TextField availableInsightLevel;
     boolean isClueNotCompleted=false;
     public ResearchDashboardPanel(ResearchDetailPanel panel) {
         super(panel);
-        this.setOnlyInteractWithWidgetsInside(true);
-        this.setOnlyRenderWidgetsInside(true);
         detailPanel = panel;
-        techpoint = new RTextField(this).setMaxWidth(100).setMaxLine(1).setColor(TechIcons.text);
+        techpoint = new TextField(this).setMaxWidth(100).setMaxLines(1).setColor(TechIcons.text);
         techpoint.setPos(40, 20+ClientUtils.font().lineHeight);
-        availableInsightLevel = new RTextField(this).setMaxWidth(100).setMaxLine(1).setColor(TechIcons.text);
+        availableInsightLevel = new TextField(this).setMaxWidth(100).setMaxLines(1).setColor(TechIcons.text);
         availableInsightLevel.setPos(40, 20+ClientUtils.font().lineHeight*2);
-        availableInsightLevel.setMaxLine(1);
+        availableInsightLevel.setMaxLines(1);
     }
 
     public static synchronized String toReadable(long num) {
@@ -85,7 +82,7 @@ public class ResearchDashboardPanel extends Panel {
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         // close panel button
        /* Button closePanel = new SimpleTextButton(this, new StringTextComponent("Close"), Icon.EMPTY) {
             @Override
@@ -96,23 +93,23 @@ public class ResearchDashboardPanel extends Panel {
         };
         closePanel.setPosAndSize(width-PADDING, 0, PADDING, PADDING);
         add(closePanel);*/
-        RTextField tf = new RTextField(this);
+        TextField tf = new TextField(this);
         tf.setPos(0, 0);
         add(tf);
-        tf.setMaxWidth(140).setMinWidth(140).setMaxLine(2).setColor(TechIcons.text).addFlags(4);
+        tf.setMaxWidth(140).setMinWidth(140).setMaxLines(2).setColor(TechIcons.text).addFlags(4);
         tf.setText(detailPanel.research.getName());
         
         
         
-        RTextField tp = new RTextField(this).setMaxWidth(140).setMaxLine(1).setColor(TechIcons.text);
+        TextField tp = new TextField(this).setMaxWidth(140).setMaxLines(1).setColor(TechIcons.text);
         tp.setPos(40, 20);
         add(tp);
         tp.setText(Lang.translateGui("research.points"));
-        tp.setX(140 - tp.width);
+        tp.setX(140 - tp.getWidth());
         
         if (FHResearch.editor) {
-            Button create = new TechTextButton(this, Components.str("edit"),
-                    Icon.empty()) {
+            TechTextButton create = new TechTextButton(this, Components.str("edit"),
+                    CIcons.nop()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
                 	if(detailPanel.research!=null)
@@ -133,7 +130,7 @@ public class ResearchDashboardPanel extends Panel {
             }
             techpoint.setText(toReadable(rd.getTotalCommitted(detailPanel.research)) + "/" + toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
         }
-        techpoint.setX(140 - techpoint.width);
+        techpoint.setX(140 - techpoint.getWidth());
         if (!rd.canResearch()) {
 	        int insightNeeded=detailPanel.research.getInsight();
 	        int insightAvailable=ClientResearchDataAPI.getData().get().getAvailableInsightLevel();
@@ -142,14 +139,14 @@ public class ResearchDashboardPanel extends Panel {
 	            availableInsightLevel.setColor(TechIcons.text_red);
 	        }
 	        add(availableInsightLevel);
-	        availableInsightLevel.setX(140 - availableInsightLevel.width);
+	        availableInsightLevel.setX(140 - availableInsightLevel.getWidth());
 	    }
         if (rd.canResearch() && !rd.canComplete(detailPanel.research)) {
-            RTextField rq = new RTextField(this).setMaxWidth(140).setMaxLine(1).setColor(TechIcons.text_red);
+            TextField rq = new TextField(this).setMaxWidth(140).setMaxLines(1).setColor(TechIcons.text_red);
             rq.setPos(40, 20+ClientUtils.font().lineHeight*3);
             add(rq);
             rq.setText(Lang.translateGui("research.required_clue"));
-            rq.setX(140 - rq.width);
+            rq.setX(140 - rq.getWidth());
         }
     }
 
@@ -158,19 +155,19 @@ public class ResearchDashboardPanel extends Panel {
 
     }
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
         
 
         
 
-        super.draw(matrixStack, theme, x, y, w, h);
+        super.render(matrixStack, x, y, w, h);
 
         // name
         //theme.drawString(matrixStack, detailPanel.research.getName(), x+7, y+8);
         // icon
         TechIcons.SHADOW.draw(matrixStack, x + 1, y + 36, 36, 9);
         detailPanel.icon.draw(matrixStack, x + 3, y + 10, 32, 32);
-        GuiHelper.setupDrawing();
+        CGuiHelper.resetGuiDrawing();
         TechIcons.HLINE_L.draw(matrixStack, x, y + 55, 140, 3);
 
         // TODO: research progress

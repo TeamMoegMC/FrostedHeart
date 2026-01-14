@@ -1,14 +1,9 @@
 package com.teammoeg.chorda.client.cui;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.platform.Window;
 import com.teammoeg.chorda.client.CInputHelper;
-import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -109,7 +104,6 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 		CGuiHelper.resetGuiDrawing();
 		primaryLayer.render(graphics, leftPos, topPos, imageWidth, imageHeight);
 	}
-	 List<Component> display=new ArrayList<>();
 	@Override
 	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
 		graphics.pose().pushPose();
@@ -117,19 +111,12 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 		CGuiHelper.resetGuiDrawing();
 
 		primaryLayer.drawForeground(graphics, 0, 0, imageWidth, imageHeight);
+		TooltipBuilder builder=new TooltipBuilder(600);
+		primaryLayer.getTooltip(builder);
 
-		primaryLayer.getTooltip(display::add);
-
-		 if (!display.isEmpty()){
-			 graphics.pose().translate(0, 0, 600);
-			 graphics.pose().translate(-leftPos, -topPos, 0);
-	            graphics.setColor(1f, 1f, 1f, 0.8f);
-	            graphics.renderTooltip(ClientUtils.getMc().font, display, Optional.empty(), mouseX, Math.max(mouseY, 18));
-	            graphics.setColor(1f, 1f, 1f, 1f);
-		}
-
+		graphics.pose().translate(-leftPos, -topPos, 0);
+		builder.draw(graphics, mouseX, mouseY);
 		graphics.pose().popPose();
-		display.clear();
 	}
 
 	@Override

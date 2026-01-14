@@ -19,7 +19,12 @@
 
 package com.teammoeg.chorda.client;
 
+import java.util.function.Function;
+
+import org.joml.Quaternionf;
+
 import com.mojang.blaze3d.platform.InputConstants;
+
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -32,9 +37,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import org.joml.Quaternionf;
-
-import java.util.function.Function;
 
 /**
  * Rendering not related client functions, used for get/set client data, spawning particles

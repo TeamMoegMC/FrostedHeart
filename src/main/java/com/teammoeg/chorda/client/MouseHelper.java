@@ -19,8 +19,9 @@
 
 package com.teammoeg.chorda.client;
 
-import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
+
+import net.minecraft.client.Minecraft;
 
 public class MouseHelper {
     private static final Minecraft MC = Minecraft.getInstance();

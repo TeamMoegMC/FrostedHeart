@@ -23,7 +23,7 @@ public class OverlayItemSlot extends ItemSlot {
 	protected int overlayHeight;
 	@Getter
 	@Setter
-	Consumer<Consumer<Component>> tooltips;
+	Consumer<TooltipBuilder> tooltips;
 	public OverlayItemSlot(UIElement parent) {
 		super(parent);
 	}
@@ -63,7 +63,7 @@ public class OverlayItemSlot extends ItemSlot {
     }
 
 	@Override
-	public void getTooltip(Consumer<Component> tooltip) {
+	public void getTooltip(TooltipBuilder tooltip) {
 		super.getTooltip(tooltip);
 		if(tooltips!=null)
 			tooltips.accept(tooltip);

@@ -19,10 +19,6 @@
 
 package com.teammoeg.frostedresearch.gui;
 
-import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.CUIScreenWrapper;
-import com.teammoeg.chorda.client.cui.PrimaryLayer;
-import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;
 import com.teammoeg.chorda.lang.Components;
@@ -31,17 +27,14 @@ import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.ResearchCategory;
 import com.teammoeg.frostedresearch.research.ResearchEditors;
 
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import net.minecraft.network.chat.Component;
-
 public class ResearchEditUtils {
 
     private ResearchEditUtils() {
     }
-    public static void editResearch(Widget techTextButton, Research r) {
+    public static void editResearch(UIElement techTextButton, Research r) {
     	editResearch(techTextButton,r,null);
     }
-    public static void editResearch(Widget techTextButton, Research r,ResearchCategory categoryPeferred) {
+    public static void editResearch(UIElement techTextButton, Research r,ResearchCategory categoryPeferred) {
         if (r != null) {
             r=FHResearch.load(r);
         }else {

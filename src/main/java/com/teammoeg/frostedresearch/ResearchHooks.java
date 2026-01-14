@@ -19,18 +19,23 @@
 
 package com.teammoeg.frostedresearch;
 
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
+import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.chorda.util.CDistHelper;
-import com.teammoeg.chorda.util.struct.OptionalLazy;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 import com.teammoeg.frostedresearch.blocks.RubbingTool;
@@ -39,8 +44,16 @@ import com.teammoeg.frostedresearch.data.UnlockListType;
 import com.teammoeg.frostedresearch.events.PopulateUnlockListEvent;
 import com.teammoeg.frostedresearch.recipe.InspireRecipe;
 import com.teammoeg.frostedresearch.research.Research;
-import com.teammoeg.frostedresearch.research.clues.*;
+import com.teammoeg.frostedresearch.research.clues.Clue;
+import com.teammoeg.frostedresearch.research.clues.ClueClosure;
+import com.teammoeg.frostedresearch.research.clues.ItemClue;
+import com.teammoeg.frostedresearch.research.clues.KillClue;
+import com.teammoeg.frostedresearch.research.clues.MinigameClue;
+import com.teammoeg.frostedresearch.research.clues.TickListenerClue;
 
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
@@ -55,15 +68,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.network.PacketDistributor;
-
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 public class ResearchHooks {
 	public final static Map<UnlockListType<?>,UnlockList<?>> locklists=new IdentityHashMap<>(10);

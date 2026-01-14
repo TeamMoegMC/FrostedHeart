@@ -22,14 +22,14 @@ package com.teammoeg.frostedheart.content.trade.gui;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UIElement;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
 
 public class RelationSlot extends UIElement {
     Supplier<Integer> toshow;
-    Consumer<Consumer<Component>> tooltip;
+    Consumer<TooltipBuilder> tooltip;
 
     public RelationSlot(UIElement panel) {
         super(panel);
@@ -44,7 +44,7 @@ public class RelationSlot extends UIElement {
 
 
     @Override
-	public void getTooltip(Consumer<Component> tooltip) {
+	public void getTooltip(TooltipBuilder tooltip) {
 		super.getTooltip(tooltip);
 		this.tooltip.accept(tooltip);
 	}
@@ -87,7 +87,7 @@ public class RelationSlot extends UIElement {
 
     }
 
-    public void setTooltip(Consumer<Consumer<Component>> tooltip) {
+    public void setTooltip(Consumer<TooltipBuilder> tooltip) {
         this.tooltip = tooltip;
     }
 

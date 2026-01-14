@@ -104,7 +104,6 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 		return super.charTyped(keyChar, keyChar);
 	}
 
-	List<Component> display = new ArrayList<>();
 	int x,y;
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
@@ -126,22 +125,16 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 		primaryLayer.drawForeground(graphics, x, y, w, h);
 		this.width = w;
 		this.height = h;
-
-		primaryLayer.getTooltip(display::add);
+		TooltipBuilder builder=new TooltipBuilder(100);
+		primaryLayer.getTooltip(builder);
 		graphics.pose().pushPose();
-		if (!display.isEmpty()) {
-			graphics.pose().translate(0, 0, 100);
-			graphics.setColor(1f, 1f, 1f, 0.8f);
-			graphics.renderTooltip(ClientUtils.getMc().font, display, Optional.empty(), mouseX, Math.max(mouseY, 18));
-			graphics.setColor(1f, 1f, 1f, 1f);
-		}
+		builder.draw(graphics, mouseX, mouseY);
 		graphics.pose().popPose();
 		Cursor cs=primaryLayer.getCursor();
 		if(cs==null)
 			Cursor.reset();
 		else
 			cs.use();
-		display.clear();
 	}
 
 	@Override

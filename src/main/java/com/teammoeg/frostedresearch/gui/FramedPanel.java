@@ -19,30 +19,30 @@
 
 package com.teammoeg.frostedresearch.gui;
 
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.Widget;
+import java.util.function.Consumer;
+
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UILayer;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
-import java.util.function.Consumer;
-
-public class FramedPanel extends Panel {
+public class FramedPanel extends UILayer {
     Component title;
-    Consumer<Panel> addWidgets;
+    Consumer<UILayer> addWidgets;
 
-    public FramedPanel(Panel panel, Consumer<Panel> addWidgets) {
+    public FramedPanel(UIElement panel, Consumer<UILayer> addWidgets) {
         super(panel);
         this.addWidgets = addWidgets;
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         if (addWidgets != null)
             addWidgets.accept(this);
-        for (Widget w : widgets) {
-            w.setPos(w.posX + 5, w.posY + 12);
-            w.setWidth(Math.min(w.width, width - 12));
+        for (UIElement w : super.elements) {
+            w.setPos(w.getX() + 5, w.getY() + 12);
+            w.setWidth(Math.min(w.getWidth(), width - 12));
         }
     }
 
@@ -53,15 +53,15 @@ public class FramedPanel extends Panel {
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        theme.drawString(matrixStack, title, x, y, TechIcons.text, 0);
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+    	matrixStack.drawString(getFont(), title, x, y, TechIcons.text, false);
         TechIcons.HLINE_L.draw(matrixStack, x, y + 8, 80, 3);
         TechIcons.VLINE.draw(matrixStack, x + 2, y + 9, 1, this.height - 16);
-        super.draw(matrixStack, theme, x + 5, y + 12, w - 5, h - 12);
+        super.render(matrixStack, x + 5, y + 12, w - 5, h - 12);
     }
 
     @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
 
     }
 

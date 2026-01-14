@@ -91,10 +91,10 @@ public class UIElement{
 		return Component.empty();
 	}
 
-	public void getTooltip(Consumer<Component> tooltip) {
+	public void getTooltip(TooltipBuilder tooltip) {
 		Component title = getTitle();
 
-		if (title == Component.empty()) {
+		if (title != Component.empty()) {
 			tooltip.accept(title);
 		}
 	}

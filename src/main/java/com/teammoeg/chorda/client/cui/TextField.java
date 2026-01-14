@@ -37,9 +37,11 @@ public class TextField extends UIElement {
 		textFlags |= flags;
 		return this;
 	}
+	//Horizontal centered(center in width)
 	public TextField centerH() {
 		return addFlags(H_CENTER);
 	}
+	//Vertically centered(center in height)
 	public TextField centerV() {
 		return addFlags(V_CENTER);
 	}
@@ -125,7 +127,7 @@ public class TextField extends UIElement {
 	}
 
 	@Override
-	public void getTooltip(Consumer<Component> list) {
+	public void getTooltip(TooltipBuilder list) {
 		if (tooltip && formattedText.size() > 1) {
 			list.accept(component);
 		}

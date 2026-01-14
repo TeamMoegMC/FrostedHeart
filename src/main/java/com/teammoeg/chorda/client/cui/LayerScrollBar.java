@@ -10,7 +10,7 @@ public class LayerScrollBar extends ScrollBar {
 		affected.setSmoothScrollEnabled(true);
 	}
 
-	public LayerScrollBar(UILayer parent, UILayer affected) {
+	public LayerScrollBar(UIElement parent, UILayer affected) {
 		this(parent, true, affected);
 	}
 

@@ -20,29 +20,28 @@
 package com.teammoeg.frostedresearch.gui.tech;
 
 import com.ibm.icu.text.NumberFormat;
-import com.teammoeg.chorda.client.cui.RTextField;
+import com.teammoeg.chorda.client.cui.TextField;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.Research;
 
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
 
-public class ResearchProgressPanel extends Panel {
+public class ResearchProgressPanel extends UILayer {
 
-    public ResearchProgressPanel(Panel panel) {
+    public ResearchProgressPanel(UIElement panel) {
         super(panel);
-        this.getOnlyRenderWidgetsInside();
     }
 
     @Override
-    public void addWidgets() {
-        RTextField tf = new RTextField(this);
-        tf.setMaxWidth(71).setMaxLine(2).setColor(TechIcons.text).setPos(40, 15);
+    public void addUIElements() {
+        TextField tf = new TextField(this);
+        tf.setMaxWidth(71).setMaxLines(2).setColor(TechIcons.text).setPos(40, 15);
         Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
         if (inprog != null)
             tf.setText(inprog.getName());
@@ -57,11 +56,11 @@ public class ResearchProgressPanel extends Panel {
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        super.draw(matrixStack, theme, x, y, w, h);
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        super.render(matrixStack, x, y, w, h);
         // title
 
-        theme.drawString(matrixStack, Lang.translateGui("research_progress"), x + 3, y, TechIcons.text, 0);
+        matrixStack.drawString(getFont(), Lang.translateGui("research_progress"), x + 3, y, TechIcons.text, false);
         // progress bar
         // TODO: this cause crash when root clue is added
         // float progress = researchScreen.getInProgressResearch().getProgressFraction();
@@ -75,16 +74,16 @@ public class ResearchProgressPanel extends Panel {
             if (progressWidth > 1)
                 TechIcons.drawTexturedRect(matrixStack, x + 41, y + 33, progressWidth, 6, true);
             if (inprog.getData().canComplete(inprog))
-                theme.drawString(matrixStack, NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, TechIcons.text, 0);
+            	matrixStack.drawString(getFont(), NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, TechIcons.text, false);
             else
-                theme.drawString(matrixStack, Lang.translateGui("research.required_clue"), x + 40, y + 40, TechIcons.text_red, 0);
+            	matrixStack.drawString(getFont(), Lang.translateGui("research.required_clue"), x + 40, y + 40, TechIcons.text_red, false);
             // research icon
 
             TechIcons.SHADOW.draw(matrixStack, x + 1, y + 38, 36, 9);
 
             inprog.getIcon().draw(matrixStack, x + 3, y + 12, 32, 32);
             //theme.drawString(matrixStack, inprog.getName(), x + 40, y + 15,TechIcons.text,0);
-            GuiHelper.setupDrawing();
+            CGuiHelper.resetGuiDrawing();
             TechIcons.HLINE_LR.draw(matrixStack, x + 1, y + 48, w - 1, 3);
         }/*else {
         	theme.drawString(matrixStack,, x + 40, y + 15,TechIcons.text,0);
@@ -94,7 +93,7 @@ public class ResearchProgressPanel extends Panel {
     }
 
     @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         //theme.drawPanelBackground(matrixStack, x, y, w, h);
     }
 	/*@Override

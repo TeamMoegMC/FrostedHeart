@@ -23,7 +23,6 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CTextureIcon;
 import com.teammoeg.frostedheart.FHMain;
 
-
 import net.minecraft.resources.ResourceLocation;
 
 public class TradeIcons {

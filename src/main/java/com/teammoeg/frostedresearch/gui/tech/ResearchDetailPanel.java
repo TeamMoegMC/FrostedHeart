@@ -19,21 +19,23 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import java.util.List;
+
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextField;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.TechScrollBar;
 import com.teammoeg.frostedresearch.research.Research;
 
-import dev.ftb.mods.ftblibrary.ui.*;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
-import java.util.List;
-
-public class ResearchDetailPanel extends Panel {
-    public PanelScrollBar scrollInfo;
+public class ResearchDetailPanel extends UILayer {
+    public TechScrollBar scrollInfo;
     public TechScrollBar scrolldetail;
     Research research;
     CIcon icon;
@@ -44,8 +46,6 @@ public class ResearchDetailPanel extends Panel {
 
     public ResearchDetailPanel(ResearchPanel panel) {
         super(panel);
-        this.setOnlyInteractWithWidgetsInside(true);
-        this.setOnlyRenderWidgetsInside(true);
         descPanel = new DescPanel(this);
         infoPanel = new ResearchInfoPanel(this);
         scrollInfo = new TechScrollBar(this, infoPanel);
@@ -56,14 +56,13 @@ public class ResearchDetailPanel extends Panel {
     }
 
     @Override
-    public void addMouseOverText(TooltipList list) {
-        list.zOffset = 950;
-        list.zOffsetItemTooltip = 500;
-        super.addMouseOverText(list);
+    public void getTooltip(TooltipBuilder list) {
+        list.translateZ(300);
+        super.getTooltip(list);
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         if (research == null)
             return;
         icon = research.getIcon();
@@ -80,7 +79,7 @@ public class ResearchDetailPanel extends Panel {
         infoPanel.setPosAndSize(150, 15, 135, 151);
         Button closePanel = new Button(this) {
             @Override
-            public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+            public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
             }
 
             @Override
@@ -117,24 +116,24 @@ public class ResearchDetailPanel extends Panel {
 
     public void close() {
         this.research = null;
-        this.refreshWidgets();
+        this.refreshElements();
         researchScreen.closeModal(this);
         //researchScreen.refreshWidgets();
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
         if (research == null) {
             return;
         }
         matrixStack.pose().pushPose();
         matrixStack.pose().translate(0, 0, 600);
-        super.draw(matrixStack, theme, x, y, w, h);
+        super.render(matrixStack, x, y, w, h);
         matrixStack.pose().popPose();
     }
 
     @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         // drawBackground(matrixStack, theme, x, y, w, h);
         // theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
         TechIcons.DIALOG.draw(matrixStack, x, y, w, h);
@@ -147,14 +146,14 @@ public class ResearchDetailPanel extends Panel {
 
     public void open(Research r) {
         this.research = r;
-        this.refreshWidgets();
+        this.refreshElements();
         scrollInfo.setValue(0);
         researchScreen.setModal(this);
         //researchScreen.refreshWidgets();
 
     }
 
-    public static class DescPanel extends Panel {
+    public static class DescPanel extends UILayer {
         ResearchDetailPanel detailPanel;
 
         public DescPanel(ResearchDetailPanel panel) {
@@ -163,7 +162,7 @@ public class ResearchDetailPanel extends Panel {
         }
 
         @Override
-        public void addWidgets() {
+        public void addUIElements() {
             List<Component> itxs = detailPanel.research.getDesc();
             int offset = 0;
             for (Component itx : itxs) {
@@ -173,7 +172,7 @@ public class ResearchDetailPanel extends Panel {
                 desc.setPosAndSize(0, offset, width, height);
                 desc.setText(itx);
                 desc.setColor(TechIcons.text);
-                offset += desc.height + 2;
+                offset += desc.getHeight() + 2;
             }
             if (offset + 3 > height) {
                 detailPanel.scrolldetail.unhide();

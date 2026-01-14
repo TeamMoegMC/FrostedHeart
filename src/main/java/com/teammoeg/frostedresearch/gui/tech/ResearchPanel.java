@@ -19,6 +19,11 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import com.teammoeg.chorda.client.CInputHelper;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.data.ClientResearchData;
@@ -27,16 +32,9 @@ import com.teammoeg.frostedresearch.gui.TechScrollBar;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.ResearchCategory;
 
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.ScrollBar.Plane;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.input.Key;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
 
-public abstract class ResearchPanel extends Panel {
+public abstract class ResearchPanel extends UILayer {
 
     public static final int PADDING = 2;
     public static final int IN_PROGRESS_HEIGHT = 80;
@@ -49,22 +47,22 @@ public abstract class ResearchPanel extends Panel {
     public Research selectedResearch;
     public ResearchDetailPanel detailframe;
 
-    public Panel modalPanel = null;
+    public UIElement modalPanel = null;
 
     public TechScrollBar hierarchyBar;
 
 
     boolean enabled;
 
-    public ResearchPanel(Panel p) {
+    public ResearchPanel(UIElement p) {
         super(p);
         researchCategoryPanel = new ResearchCategoryPanel(this);
         researchListPanel = new ResearchListPanel(this);
         researchHierarchyPanel = new ResearchHierarchyPanel(this);
         progressPanel = new ResearchProgressPanel(this) {
             @Override
-            public boolean mousePressed(MouseButton arg0) {
-                if (super.mousePressed(arg0))
+            public boolean onMousePressed(MouseButton arg0) {
+                if (super.onMousePressed(arg0))
                     return true;
                 if (isMouseOver()) {
                     Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
@@ -76,7 +74,7 @@ public abstract class ResearchPanel extends Panel {
                 return false;
             }
         };
-        hierarchyBar = new TechScrollBar(this, Plane.HORIZONTAL, researchHierarchyPanel);
+        hierarchyBar = new TechScrollBar(this, false, researchHierarchyPanel);
         detailframe = new ResearchDetailPanel(this);
         selectedCategory=ResearchCategory.RESCUE;
         selectedResearch=null;
@@ -84,14 +82,13 @@ public abstract class ResearchPanel extends Panel {
 
 
     @Override
-    public void addMouseOverText(TooltipList list) {
-        list.zOffset = 950;
-        list.zOffsetItemTooltip = 500;
-        super.addMouseOverText(list);
+    public void getTooltip(TooltipBuilder list) {
+        list.translateZ(350);
+        super.getTooltip(list);
     }
     boolean isFirstPassed=true;
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         int sw = 387;
         int sh = 203;
         this.setSize(sw, sh);
@@ -126,31 +123,24 @@ public abstract class ResearchPanel extends Panel {
     public void alignWidgets() {
     }
 
-    public boolean canEnable(Panel p) {
+    public boolean canEnable(UIElement p) {
         return modalPanel == null || modalPanel == p;
     }
 
-    public void closeModal(Panel p) {
+    public void closeModal(UIElement p) {
         if (p == modalPanel)
             modalPanel = null;
     }
 
     @Override
-    public void draw(GuiGraphics arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
+    public void render(GuiGraphics arg0, int arg2, int arg3, int arg4, int arg5) {
         if (enabled)
-            super.draw(arg0, arg1, arg2, arg3, arg4, arg5);
+            super.render(arg0, arg2, arg3, arg4, arg5);
     }
 
     @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         TechIcons.Background.draw(matrixStack, x, y, w, h);
-    }
-
-    @Override
-    public void drawWidget(GuiGraphics arg0, Theme arg1, Widget arg2, int arg3, int arg4, int arg5, int arg6) {
-        //CGuis.setupDrawing();
-
-        super.drawWidget(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
     }
 
 
@@ -164,8 +154,8 @@ public abstract class ResearchPanel extends Panel {
     }
 
     @Override
-    public boolean keyPressed(Key key) {
-        if (key.esc()) {
+    public boolean onKeyPressed(int keyCode,int scanCode,int modifier) {
+        if (CInputHelper.isEsc(keyCode)) {
             if (modalPanel != null) {
                 detailframe.close();
                 return true;
@@ -174,7 +164,7 @@ public abstract class ResearchPanel extends Panel {
             //this.closeGui(true);
             return true;
         }
-        return super.keyPressed(key);
+        return super.onKeyPressed(keyCode,scanCode,modifier);
     }
 
     public abstract void onDisabled();
@@ -184,7 +174,7 @@ public abstract class ResearchPanel extends Panel {
             selectedCategory = category;
             /*if (FHResearch.getFirstResearchInCategory(category) != null)
 				selectResearch(FHResearch.getFirstResearchInCategory(category));*/
-            this.refreshWidgets();
+            this.refreshElements();
         }
     }
 
@@ -194,13 +184,13 @@ public abstract class ResearchPanel extends Panel {
             selectedResearch = research;
             if (selectedResearch != null)
                 selectCategory(selectedResearch.getCategory());
-            researchHierarchyPanel.refreshWidgets();
+            researchHierarchyPanel.refreshElements();
         } else if (FHResearch.isEditor() || (research.isUnlocked() && !research.isHidden())) {
             detailframe.open(research);
         }
     }
 
-    public void setModal(Panel p) {
+    public void setModal(UIElement p) {
         modalPanel = p;
     }
 

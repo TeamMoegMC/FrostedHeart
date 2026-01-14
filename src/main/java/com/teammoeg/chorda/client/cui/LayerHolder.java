@@ -16,7 +16,7 @@ public interface LayerHolder {
 	int getFrameColor();
 	int getButtonFaceColor();
 	int getButtonShadowColor();
-	void refreshWidgets();
+	void refreshElements();
 	/**
 	 * @return if the GUI should render a blur effect behind it
 	 */

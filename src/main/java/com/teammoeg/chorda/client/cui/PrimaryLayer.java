@@ -35,7 +35,7 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	}
 	int mouseX;
 	int mouseY;
-	boolean hasBackGradient;
+	boolean hasBackGradient=true;
 	boolean refreshRequested;
 
 	public final void initGui() {
@@ -157,7 +157,7 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	}
 
 	@Override
-	public final void refreshWidgets() {
+	public final void refreshElements() {
 		refreshRequested = true;
 	}
 
@@ -294,7 +294,7 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
     public void openDialog(EditDialog dialog, boolean refresh) {
         this.dialog = dialog;
         if (refresh)
-            this.refreshWidgets();
+            this.refreshElements();
     }
 
 	@Override
