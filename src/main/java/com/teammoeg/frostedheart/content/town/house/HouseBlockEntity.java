@@ -262,7 +262,7 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity {
     }
     private int calculateMaxResidents() {
         if(this.isValid()){
-            int maxResidentOfSpace = (int) (calculateSpaceRating(this.volume, this.area) / 16 * this.area);
+            int maxResidentOfSpace = (int) (calculateSpaceRating(this.volume, this.area) / 4 * this.area);
             int maxResidentOfBeds = this.beds.size();
             return Math.min(maxResidentOfSpace, maxResidentOfBeds);
         }
