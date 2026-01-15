@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.compat.jei.category.*;
+import com.teammoeg.frostedheart.content.town.mine.BiomeMineResourceRecipe;
 import org.jetbrains.annotations.NotNull;
 
 import com.teammoeg.chorda.client.ui.Point;
@@ -37,16 +39,6 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.compat.jei.category.CampfireDefrostCategory;
-import com.teammoeg.frostedheart.compat.jei.category.ChargerCategory;
-import com.teammoeg.frostedheart.compat.jei.category.ChargerCookingCategory;
-import com.teammoeg.frostedheart.compat.jei.category.ChargerDefrostCategory;
-import com.teammoeg.frostedheart.compat.jei.category.CuttingCategory;
-import com.teammoeg.frostedheart.compat.jei.category.GeneratorFuelCategory;
-import com.teammoeg.frostedheart.compat.jei.category.GeneratorSteamCategory;
-import com.teammoeg.frostedheart.compat.jei.category.IncubatorCategory;
-import com.teammoeg.frostedheart.compat.jei.category.SaunaCategory;
-import com.teammoeg.frostedheart.compat.jei.category.SmokingDefrostCategory;
 import com.teammoeg.frostedheart.compat.jei.extension.DamageModifierExtension;
 import com.teammoeg.frostedheart.compat.jei.extension.FuelingExtension;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorContainer;
@@ -139,7 +131,8 @@ public class JEICompat implements IModPlugin {
         registration.addRecipeCategories(new GeneratorFuelCategory(guiHelper), new GeneratorSteamCategory(guiHelper),
                 new ChargerCategory(guiHelper), new ChargerCookingCategory(guiHelper), new CuttingCategory(guiHelper),
                 new CampfireDefrostCategory(guiHelper), new SmokingDefrostCategory(guiHelper),
-                new ChargerDefrostCategory(guiHelper), new SaunaCategory(guiHelper), new IncubatorCategory(guiHelper));
+                new ChargerDefrostCategory(guiHelper), new SaunaCategory(guiHelper), new IncubatorCategory(guiHelper),
+                new BiomeMineResourceCategory(guiHelper));
     }
 
     @Override
@@ -188,7 +181,7 @@ public class JEICompat implements IModPlugin {
         registration.addRecipeCatalyst(new ItemStack(FHBlocks.SAUNA_VENT.get()), SaunaCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHBlocks.INCUBATOR.get()), IncubatorCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHBlocks.HEAT_INCUBATOR.get()), IncubatorCategory.UID);
- 
+        registration.addRecipeCatalyst(new ItemStack(FHBlocks.MINE.get()), BiomeMineResourceCategory.UID);
     }
 
     @Override
@@ -217,6 +210,7 @@ public class JEICompat implements IModPlugin {
         List<IncubateRecipe> rcps = new ArrayList<>(CUtils.filterRecipes(recipeManager,IncubateRecipe.TYPE));
         rcps.add(new IncubateRecipe());
         registration.addRecipes(IncubatorCategory.UID,rcps);
+        registration.addRecipes(BiomeMineResourceCategory.UID, CUtils.filterRecipes(recipeManager, BiomeMineResourceRecipe.TYPE));
         //todo: add JEI for ItemResourceAmountRecipe
     }
 
