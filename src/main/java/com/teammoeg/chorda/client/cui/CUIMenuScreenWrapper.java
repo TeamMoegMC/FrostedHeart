@@ -4,6 +4,7 @@ import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.platform.Window;
 import com.teammoeg.chorda.client.CInputHelper;
+import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -25,7 +26,7 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 	@Override
 	public void init() {
 		super.init();
-		primaryLayer.refresh();
+		primaryLayer.initGui();
 
 	}
 
@@ -42,7 +43,7 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
             return true;
         } else {
         	boolean accepted=(primaryLayer.onMousePressed(MouseButton.of(button)));
-        	System.out.println(accepted);
+        	
             return accepted || super.mouseClicked(x, y, button);
         }
     }
@@ -109,7 +110,7 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 		graphics.pose().pushPose();
 		//graphics.pose().translate(-leftPos, -topPos, 0);
 		CGuiHelper.resetGuiDrawing();
-
+		
 		primaryLayer.drawForeground(graphics, 0, 0, imageWidth, imageHeight);
 		TooltipBuilder builder=new TooltipBuilder(600);
 		primaryLayer.getTooltip(builder);
@@ -117,6 +118,11 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 		graphics.pose().translate(-leftPos, -topPos, 0);
 		builder.draw(graphics, mouseX, mouseY);
 		graphics.pose().popPose();
+		Cursor cs=primaryLayer.getCursor();
+		if(cs==null)
+			Cursor.reset();
+		else
+			cs.use();
 	}
 
 	@Override
@@ -128,12 +134,14 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-		renderBackground(graphics);
 		Window win=super.minecraft.getWindow();
+		primaryLayer.onBeforeRender();
         leftPos=(win.getGuiScaledWidth() - primaryLayer.width) / 2;
         topPos=(win.getGuiScaledHeight() - primaryLayer.height) / 2;
 		imageWidth = primaryLayer.width;
 		imageHeight = primaryLayer.height;
+		renderBackground(graphics);
+		CGuiHelper.resetGuiDrawing();
 		
 		
 		primaryLayer.updateGui(mouseX-leftPos, mouseY-topPos, partialTicks);
@@ -150,6 +158,7 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 	@Override
 	public void removed() {
 		primaryLayer.onClosed();
+		Cursor.reset();
 		super.removed();
 	}
 

@@ -39,7 +39,6 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	boolean refreshRequested;
 
 	public final void initGui() {
-
 		if (onInit()) {
 			this.refresh();
 			finishInit();
@@ -176,7 +175,6 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	}
 	@Override
 	public final void render(GuiGraphics graphics, int x, int y, int w, int h) {
-		
 		super.render(graphics, x, y, w, h);
 	}
 
@@ -268,11 +266,14 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	public void refresh() {
 		
 		super.refresh();
-		this.width=this.getContentWidth();
-		this.height=this.getContentHeight();
+		setSizeToContentSize();
 		
 	}
 
+	public void setSizeToContentSize() {
+		this.width=this.getContentWidth();
+		this.height=this.getContentHeight();
+	}
 	public boolean onInit() {
 		return true;
 	}

@@ -2,10 +2,10 @@ package com.teammoeg.chorda.capability;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.teammoeg.chorda.capability.types.CapabilityType;
 import com.teammoeg.chorda.capability.types.nonpresistent.TransientCapability;
 
 import net.minecraft.core.Direction;

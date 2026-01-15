@@ -174,7 +174,7 @@ public abstract class ResearchPanel extends UILayer {
             selectedCategory = category;
             /*if (FHResearch.getFirstResearchInCategory(category) != null)
 				selectResearch(FHResearch.getFirstResearchInCategory(category));*/
-            this.refreshElements();
+            this.refresh();
         }
     }
 
@@ -184,7 +184,7 @@ public abstract class ResearchPanel extends UILayer {
             selectedResearch = research;
             if (selectedResearch != null)
                 selectCategory(selectedResearch.getCategory());
-            researchHierarchyPanel.refreshElements();
+            researchHierarchyPanel.refresh();
         } else if (FHResearch.isEditor() || (research.isUnlocked() && !research.isHidden())) {
             detailframe.open(research);
         }

@@ -1,7 +1,5 @@
 package com.teammoeg.chorda.block;
 
-import org.jetbrains.annotations.NotNull;
-
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -35,12 +33,12 @@ public class CDirectionalRotatableBlock extends Block {
 	}
 
 	@Override
-	public @NotNull BlockState rotate(BlockState pState, Rotation pRot) {
+	public BlockState rotate(BlockState pState, Rotation pRot) {
 		return pState.setValue(FACING, pRot.rotate(pState.getValue(FACING)));
 	}
 
 	@Override
-	public @NotNull BlockState mirror(BlockState pState, Mirror pMirror) {
+	public BlockState mirror(BlockState pState, Mirror pMirror) {
 		return pState.setValue(FACING, pMirror.mirror(pState.getValue(FACING)));
 	}
 

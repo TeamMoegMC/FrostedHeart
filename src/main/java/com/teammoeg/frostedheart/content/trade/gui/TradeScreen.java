@@ -23,8 +23,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import org.jetbrains.annotations.Nullable;
-
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.CheckBox;
@@ -48,12 +46,10 @@ import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
-import net.minecraft.world.inventory.Slot;
 
 public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 
@@ -276,6 +272,11 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 		this.setSize(sw, sh);
 		return super.onInit();
 	}
+
+	@Override
+	public void setSizeToContentSize() {
+	}
+
 
 	public void onOrderSlotClick(int sno, MouseButton btn) {
 

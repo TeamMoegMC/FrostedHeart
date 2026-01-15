@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.town.warehouse;
 
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
 import com.teammoeg.frostedheart.content.town.network.WarehouseC2SRequestPacket;
@@ -63,7 +64,7 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0, 0, 100); // 提升物品层级
 
-        Minecraft mc = Minecraft.getInstance();
+        Minecraft mc=ClientUtils.getMc();
         VirtualItemStack tooltipStack = null;
 
         for (int i = 0; i < rows * cols; i++) {
@@ -142,7 +143,8 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
         if (relX >= 0 && relY >= 0 && relX < cols * slotSize && relY < rows * slotSize) {
             int col = (int)((mouseX - getX()) / slotSize);
             int row = (int)((mouseY - getY()) / slotSize);
-                ItemStack carried = Minecraft.getInstance().player.containerMenu.getCarried();
+            
+                ItemStack carried = ClientUtils.getPlayer().containerMenu.getCarried();
                 // 存入 (Insert)
                 if (!carried.isEmpty()) {
                     FHNetwork.INSTANCE.sendToServer(new WarehouseInteractPacket(WarehouseInteractPacket.Action.INSERT,hasShiftDown(),button,ItemStack.EMPTY));

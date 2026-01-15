@@ -6,9 +6,10 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.function.BiConsumer;
+
+import javax.annotation.Nullable;
 
 /**
  * 可拖拽、可滚轮控制的垂直滚动条组件

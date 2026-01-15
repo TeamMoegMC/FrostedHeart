@@ -66,7 +66,7 @@ class MainGamePanel extends UILayer {
             @Override
             public void onClicked(MouseButton arg0) {
                 rg.init();
-                refreshElements();
+                MainGamePanel.this.refresh();
             }
         };
         reset.setPosAndSize(157, 136, 27, 16);

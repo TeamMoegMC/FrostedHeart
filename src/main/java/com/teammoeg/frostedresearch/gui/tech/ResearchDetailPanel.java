@@ -116,7 +116,7 @@ public class ResearchDetailPanel extends UILayer {
 
     public void close() {
         this.research = null;
-        this.refreshElements();
+        this.refresh();
         researchScreen.closeModal(this);
         //researchScreen.refreshWidgets();
     }
@@ -146,7 +146,7 @@ public class ResearchDetailPanel extends UILayer {
 
     public void open(Research r) {
         this.research = r;
-        this.refreshElements();
+        this.refresh();
         scrollInfo.setValue(0);
         researchScreen.setModal(this);
         //researchScreen.refreshWidgets();

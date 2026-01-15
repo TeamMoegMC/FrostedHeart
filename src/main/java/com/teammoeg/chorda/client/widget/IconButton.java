@@ -28,7 +28,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import org.jetbrains.annotations.NotNull;
 
 public class IconButton extends Button {
     @Setter
@@ -54,7 +53,7 @@ public class IconButton extends Button {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         int color = isActive() ? this.color : 0xFF666666;
         int backgroundColor = Colors.makeDark(color, 0.3F);
         float alpha = 0.5F;

@@ -28,6 +28,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -66,6 +67,9 @@ public class ClientUtils {
 
     public static Minecraft getMc() {
         return Minecraft.getInstance();
+    }
+    public static Gui getGui() {
+    	return getMc().gui;
     }
     public static LocalPlayer getLocalPlayer() {
         return getMc().player;

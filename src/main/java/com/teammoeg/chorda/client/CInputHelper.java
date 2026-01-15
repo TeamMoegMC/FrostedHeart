@@ -28,7 +28,6 @@ public class CInputHelper {
 	}
 
 	public static boolean shouldCloseMenu(int keyCode,int scanCode) {
-		
 		return isEsc(keyCode) || ClientUtils.getMc().options.keyInventory.matches(keyCode, scanCode);
 	}
 

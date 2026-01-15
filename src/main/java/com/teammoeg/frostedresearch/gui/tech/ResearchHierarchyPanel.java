@@ -125,7 +125,7 @@ public class ResearchHierarchyPanel extends UILayer {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         researchPanel.selectedResearch.delete();
-                        researchPanel.refreshElements();
+                        researchPanel.refresh();
                     }
                 };
                 rem.setPos(offset, 130);

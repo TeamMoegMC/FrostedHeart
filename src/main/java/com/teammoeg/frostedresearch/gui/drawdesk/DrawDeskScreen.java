@@ -39,16 +39,21 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
 	@Override
     public void addUIElements() {
-        if (p != null && p.isEnabled())
+		System.out.println("add main panel "+p.isEnabled());
+        if (p != null && p.isEnabled()) {
             add(p);
+            System.out.println("added main panel");
+        }
         if (r != null && r.isEnabled())
             add(r);
-        //if (getDialog() != null)
-        //    add(getDialog());
+        if (getDialog() != null)
+            add(getDialog());
     }
 
 
-
+	@Override
+	public void setSizeToContentSize() {
+	}
 
     public DrawingDeskTileEntity getTile() {
         return container.getBlock();

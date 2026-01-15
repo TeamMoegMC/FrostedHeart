@@ -31,7 +31,7 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 	@Override
 	public void init() {
 		super.init();
-		primaryLayer.refresh();
+		primaryLayer.initGui();
 	}
 
 	@Override
@@ -108,20 +108,23 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 
-		renderBackground(graphics);
-		CGuiHelper.resetGuiDrawing();
+		
 		Window win = super.minecraft.getWindow();
 		primaryLayer.onBeforeRender();
 		int w = primaryLayer.width;
 		int h = primaryLayer.height;
 		x = (win.getGuiScaledWidth() - w) / 2;
 		y = (win.getGuiScaledHeight() - h) / 2;
-		
+		//backgound
+		renderBackground(graphics);
+		CGuiHelper.resetGuiDrawing();
+		//update mouse
 		//System.out.println("x="+x+"y="+y+"w="+w+"h="+h);
 		primaryLayer.updateGui(mouseX - x, mouseY - y, partialTicks);
 		primaryLayer.updateMouseOver();
-
+		//ui background
 		primaryLayer.render(graphics, x, y, w, h);
+		//ui foreground/overlay
 		primaryLayer.drawForeground(graphics, x, y, w, h);
 		this.width = w;
 		this.height = h;

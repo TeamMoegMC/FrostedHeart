@@ -54,9 +54,6 @@ public abstract class UILayer extends UIElement {
 		contentWidth = contentHeight = -1;
 	}
 	public void refresh() {
-		refreshElements();
-	}
-	public void refreshElements() {
 		recalcContentSize();
 
 		clearElement();
@@ -75,8 +72,10 @@ public abstract class UILayer extends UIElement {
 		alignWidgets();
 	}
 
+
 	public void add(UIElement element) {
 		if (element.getParent() != this) {
+			Chorda.LOGGER.warn(Chorda.UI, element+" Could not be added because parent mismatch");
 			return;
 		}
 		if (element instanceof RatedScrollbar psb) {
@@ -271,8 +270,9 @@ public abstract class UILayer extends UIElement {
 		graphics.pose().pushPose();
 		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
 		for(UIElement elm:elements) {
-			if(elm.isVisible())
+			if(elm.isVisible()) {
 				drawElement(graphics, elm,x,y, contentX, contentY, w, h);
+			}
 		}
 		graphics.pose().popPose();
 
@@ -305,7 +305,12 @@ public abstract class UILayer extends UIElement {
 				return;
 			}
 		}
+
 		element.render(graphics, childX, childY, childW, childH);
+		graphics.hLine(childX, childX+childW, childY, 0xFF00FF00);
+		graphics.vLine(childX, childY, childY+childH, 0xFF00FF00);
+		graphics.hLine(childX, childX+childW, childY+childH, 0xFF00FF00);
+		graphics.vLine(childX+childW, childY, childY+childH, 0xFF00FF00);
 	}
 
 	@Override

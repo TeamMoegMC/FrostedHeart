@@ -1,6 +1,7 @@
 package com.teammoeg.chorda.client.cui;
 
-import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.client.ClientUtils;
 

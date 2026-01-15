@@ -886,7 +886,7 @@ public class FrostedHud {
         boolean forceEnables = FHConfig.COMMON.forceEnableTemperatureForecast.get();
         renderForecast = (forceEnables
                 || (configAllows && ClientResearchDataAPI.getData().get().getVariantDouble(ResearchVariant.HAS_FORECAST)>0))
-        && ((BossHealthOverlayAccess) Minecraft.getInstance().gui.getBossOverlay()).getEvents().isEmpty(); // check if not boss fight
+        && ((BossHealthOverlayAccess) ClientUtils.getGui().getBossOverlay()).getEvents().isEmpty(); // check if not boss fight
     }
 
     private static void renderTemp(GuiGraphics stack, Minecraft mc, float temp, int tlevel, int offsetX, int offsetY,

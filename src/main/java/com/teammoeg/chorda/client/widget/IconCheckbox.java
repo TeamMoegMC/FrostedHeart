@@ -27,7 +27,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import org.jetbrains.annotations.NotNull;
 
 public class IconCheckbox extends Checkbox {
     private static final FlatIcon SELECTED_ICON = FlatIcon.CHECK;
@@ -53,7 +52,7 @@ public class IconCheckbox extends Checkbox {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
+    public void renderWidget(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
         FlatIcon icon = selected() ? SELECTED_ICON : FlatIcon.CROSS;
         RenderSystem.enableDepthTest();
         pGuiGraphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
