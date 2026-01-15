@@ -3,10 +3,8 @@ package com.teammoeg.frostedheart.content.world.features;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -46,7 +44,7 @@ public class FallenLogFeature extends Feature<FallenLogConfig> {
         for (int i = 1; i < length; i++) {
             BlockPos currentPos = origin.relative(mainDir, i);
 
-            if (i >3 && level.getBlockState(currentPos.below()).canBeReplaced()){
+            if (i >2 && level.getBlockState(currentPos.below()).canBeReplaced()){
                 currentPos = currentPos.below();
             }
 
