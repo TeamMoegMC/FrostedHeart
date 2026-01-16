@@ -7,12 +7,10 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * UI Layer, contains elements as well as manage them
@@ -24,7 +22,7 @@ public abstract class UILayer extends UIElement {
 	protected final List<UIElement> elements;
 	@Getter
 	@Setter
-	private int offsetX = 0, offsetY = 0;
+	private int offsetX = 0, offsetY = 0, zIndex=0;
 	@Getter
 	private float displayOffsetX = 0, displayOffsetY = 0;
 	@Getter
@@ -268,7 +266,7 @@ public abstract class UILayer extends UIElement {
 		}
 
 		graphics.pose().pushPose();
-		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
+		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, zIndex);
 		for(UIElement elm:elements) {
 			if(elm.isVisible()) {
 				drawElement(graphics, elm,x,y, contentX, contentY, w, h);

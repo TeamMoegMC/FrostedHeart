@@ -11,8 +11,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
-import java.util.function.Consumer;
-
 /**
  * Abstract ui element, for any basic ui element
  * 

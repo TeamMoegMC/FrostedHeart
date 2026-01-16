@@ -52,7 +52,7 @@ public class ResearchDetailPanel extends UILayer {
         scrolldetail = new TechScrollBar(this, descPanel);
         dashboardPanel = new ResearchDashboardPanel(this);
         researchScreen = panel;
-
+        this.setZIndex(600);
     }
 
     @Override
@@ -116,23 +116,23 @@ public class ResearchDetailPanel extends UILayer {
 
     public void close() {
         this.research = null;
-        this.refresh();
+        //this.refresh();
         researchScreen.closeModal(this);
         //researchScreen.refreshWidgets();
     }
 
     @Override
     public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-        if (research == null) {
-            return;
-        }
-        matrixStack.pose().pushPose();
-        matrixStack.pose().translate(0, 0, 600);
         super.render(matrixStack, x, y, w, h);
-        matrixStack.pose().popPose();
     }
 
     @Override
+	public boolean isVisible() {
+		return research != null;
+	}
+    
+
+	@Override
     public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         // drawBackground(matrixStack, theme, x, y, w, h);
         // theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
