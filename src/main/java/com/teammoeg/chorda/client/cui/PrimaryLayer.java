@@ -212,10 +212,14 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 
 	@Override
 	public boolean onKeyPressed(int keyCode, int scanCode, int modifiers) {
+		
 		if (lastFocused != null && lastFocused.onKeyPressed(keyCode, scanCode, modifiers)) {
 			return true;
 		} else if (super.onKeyPressed(keyCode, scanCode, modifiers)) {
 			return true;
+		}
+		if(keyCode==GLFW.GLFW_KEY_F12) {
+			CUIDebugHelper.toggleDebug();
 		}
 		return false;
 	}

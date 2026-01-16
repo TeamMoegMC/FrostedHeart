@@ -305,10 +305,12 @@ public abstract class UILayer extends UIElement {
 		}
 
 		element.render(graphics, childX, childY, childW, childH);
-		graphics.hLine(childX, childX+childW, childY, 0xFF00FF00);
-		graphics.vLine(childX, childY, childY+childH, 0xFF00FF00);
-		graphics.hLine(childX, childX+childW, childY+childH, 0xFF00FF00);
-		graphics.vLine(childX+childW, childY, childY+childH, 0xFF00FF00);
+		if(CUIDebugHelper.isDebugEnabled()) {
+			graphics.hLine(childX, childX+childW, childY, 0xFF00FF00);
+			graphics.vLine(childX, childY, childY+childH, 0xFF00FF00);
+			graphics.hLine(childX, childX+childW, childY+childH, 0xFF00FF00);
+			graphics.vLine(childX+childW, childY, childY+childH, 0xFF00FF00);
+		}
 	}
 
 	@Override
@@ -344,7 +346,8 @@ public abstract class UILayer extends UIElement {
 			UIElement element = elements.get(i);
 
             if (element.isEnabled() && element.isVisible() && element.onMousePressed(button)) {
-            	Chorda.LOGGER.debug(Chorda.UI, "consumed mousePressed: "+button+" "+element);
+            	if(CUIDebugHelper.isDebugEnabled())
+            		Chorda.LOGGER.debug(Chorda.UI, "consumed mousePressed: "+button+" "+element);
                 return true;
             }
 		}
@@ -360,8 +363,9 @@ public abstract class UILayer extends UIElement {
 		for (int i = elements.size() - 1; i >= 0; i--) {
 			UIElement element = elements.get(i);
 
-			if (element.isEnabled() && element.onMouseDoubleClicked(button)) {
-				Chorda.LOGGER.debug(Chorda.UI, "consumed mouseDoubleClicked: "+button+" "+element);
+			if (element.isEnabled() && element.isVisible() && element.onMouseDoubleClicked(button)) {
+				if(CUIDebugHelper.isDebugEnabled())
+					Chorda.LOGGER.debug(Chorda.UI, "consumed mouseDoubleClicked: "+button+" "+element);
 				return true;
 			}
 		}
@@ -374,7 +378,7 @@ public abstract class UILayer extends UIElement {
 		for (int i = elements.size() - 1; i >= 0; i--) {
 			UIElement element = elements.get(i);
 
-			if (element.isEnabled()) {
+			if (element.isEnabled() && element.isVisible()) {
 				element.onMouseReleased(button);
 			}
 		}
@@ -386,8 +390,9 @@ public abstract class UILayer extends UIElement {
 		for (int i = elements.size() - 1; i >= 0; i--) {
 			UIElement element = elements.get(i);
 
-			if (element.isEnabled() && element.onMouseScrolled(scroll)) {
-				Chorda.LOGGER.debug(Chorda.UI, "consumed mouseScrolled: "+scroll+" "+element);
+			if (element.isEnabled() && element.isVisible() && element.onMouseScrolled(scroll)) {
+				if(CUIDebugHelper.isDebugEnabled())
+					Chorda.LOGGER.debug(Chorda.UI, "consumed mouseScrolled: "+scroll+" "+element);
 				return true;
 			}
 		}
@@ -400,8 +405,9 @@ public abstract class UILayer extends UIElement {
 		for (int i = elements.size() - 1; i >= 0; i--) {
 			UIElement element = elements.get(i);
 
-			if (element.isEnabled() && element.onMouseDragged(button, dragX, dragY)) {
-				Chorda.LOGGER.debug(Chorda.UI, "consumed mouseDragged: "+button+","+dragX+","+dragY+" "+element);
+			if (element.isEnabled() && element.isVisible() && element.onMouseDragged(button, dragX, dragY)) {
+				if(CUIDebugHelper.isDebugEnabled())
+					Chorda.LOGGER.debug(Chorda.UI, "consumed mouseDragged: "+button+","+dragX+","+dragY+" "+element);
 				return true;
 			}
 		}
@@ -469,8 +475,9 @@ public abstract class UILayer extends UIElement {
 		for (int i = elements.size() - 1; i >= 0; i--) {
 			UIElement element = elements.get(i);
 
-			if (element.isEnabled() && element.onKeyPressed(keyCode,scanCode,modifier)) {
-				Chorda.LOGGER.debug(Chorda.UI, "consumed keyPressed: "+keyCode+","+scanCode+","+modifier+" "+element);
+			if (element.isEnabled() && element.isVisible() && element.onKeyPressed(keyCode,scanCode,modifier)) {
+				if(CUIDebugHelper.isDebugEnabled())
+					Chorda.LOGGER.debug(Chorda.UI, "consumed keyPressed: "+keyCode+","+scanCode+","+modifier+" "+element);
 				return true;
 			}
 		}
@@ -483,8 +490,9 @@ public abstract class UILayer extends UIElement {
 		for (int i = elements.size() - 1; i >= 0; i--) {
 			UIElement element = elements.get(i);
 
-			if (element.isEnabled()&&element.onKeyRelease(keyCode,scanCode,modifier)) {
-				Chorda.LOGGER.debug(Chorda.UI, "consumed keyReleased: "+keyCode+","+scanCode+","+modifier+" "+element);
+			if (element.isEnabled() && element.isVisible() && element.onKeyRelease(keyCode,scanCode,modifier)) {
+				if(CUIDebugHelper.isDebugEnabled())
+					Chorda.LOGGER.debug(Chorda.UI, "consumed keyReleased: "+keyCode+","+scanCode+","+modifier+" "+element);
 				return true;
 			}
 		}
@@ -501,8 +509,9 @@ public abstract class UILayer extends UIElement {
 		for (int i = elements.size() - 1; i >= 0; i--) {
 			UIElement element = elements.get(i);
 
-			if (element.isEnabled() && element.onIMEInput(c, modifiers)) {
-				Chorda.LOGGER.debug(Chorda.UI, "consumed IMEInput: "+c+"(0x"+Integer.toHexString(c)+")"+","+modifiers+" "+element);
+			if (element.isEnabled() && element.isVisible() && element.onIMEInput(c, modifiers)) {
+				if(CUIDebugHelper.isDebugEnabled())
+					Chorda.LOGGER.debug(Chorda.UI, "consumed IMEInput: "+c+"(0x"+Integer.toHexString(c)+")"+","+modifiers+" "+element);
 				return true;
 			}
 		}
@@ -541,7 +550,7 @@ public abstract class UILayer extends UIElement {
 
 		for (var i = elements.size() - 1; i >= 0; i--) {
 			UIElement widget = elements.get(i);
-			if (widget.isEnabled() && widget.isMouseOver()) {
+			if (widget.isEnabled() && widget.isVisible() && widget.isMouseOver()) {
 				var cursor = widget.getCursor();
 				if (cursor != null) {
 					return cursor;

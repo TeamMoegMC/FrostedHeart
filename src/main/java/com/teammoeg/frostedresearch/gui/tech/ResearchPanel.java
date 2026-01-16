@@ -53,8 +53,17 @@ public abstract class ResearchPanel extends UILayer {
 
 
     boolean enabled;
+    
+    boolean visible;
 
-    public ResearchPanel(UIElement p) {
+    @Override
+	public boolean isVisible() {
+		return visible;
+	}
+    public void setVisible(boolean visible) {
+    	this.visible=visible;
+    }
+	public ResearchPanel(UIElement p) {
         super(p);
         researchCategoryPanel = new ResearchCategoryPanel(this);
         researchListPanel = new ResearchListPanel(this);

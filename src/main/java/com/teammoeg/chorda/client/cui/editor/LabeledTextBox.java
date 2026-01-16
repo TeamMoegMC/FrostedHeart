@@ -46,11 +46,6 @@ public class LabeledTextBox extends LabeledPane<TextBox> {
         orig = txt;
     }
 
-    @Override
-	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-		// TODO Auto-generated method stub
-		super.render(graphics, x, y, w, h);
-	}
 
 	public String getText() {
 		if(obj.isTextValid())

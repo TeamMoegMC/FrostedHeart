@@ -46,7 +46,16 @@ public class DrawDeskPanel extends UILayer {
 
     boolean enabled;
 
-    public DrawDeskPanel(DrawDeskScreen p) {
+    boolean visible;
+    @Override
+	public boolean isVisible() {
+		return visible;
+	}
+    public void setVisible(boolean visible) {
+    	this.visible=visible;
+    }
+
+	public DrawDeskPanel(DrawDeskScreen p) {
         super(p);
         dd = p;
         mgp = new MainGamePanel(this, dd);

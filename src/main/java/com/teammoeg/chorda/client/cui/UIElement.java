@@ -32,7 +32,8 @@ public class UIElement{
 	@Getter
 	private float partialTick;
 	public UIElement(UIElement parent) {
-			this.parent = parent;
+		this.parent = parent;
+		//CUIDebugHelper.registerUIObject(this);
 	}
 	protected void setParent(UIElement parent) {
 		this.parent = parent;

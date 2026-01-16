@@ -32,19 +32,15 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
     public DrawDeskScreen(DrawDeskContainer cx) {
         super(cx);
         p = new DrawDeskPanel(this);
-        p.setEnabled(true);
+        p.setVisible(true);
     }
 
 
 
 	@Override
     public void addUIElements() {
-		System.out.println("add main panel "+p.isEnabled());
-        if (p != null && p.isEnabled()) {
-            add(p);
-            System.out.println("added main panel");
-        }
-        if (r != null && r.isEnabled())
+        add(p);
+        if (r != null)
             add(r);
         if (getDialog() != null)
             add(getDialog());
@@ -60,10 +56,9 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
     }
 
     public void hideTechTree() {
-        p.setEnabled(true);
-        r.setEnabled(false);
+        p.setVisible(true);
+        r.setVisible(false);
         container.setEnabled(true);
-        this.refreshElements();
     }
 
     @Override
@@ -85,7 +80,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
     }
     public void openDialog(EditDialog dialog, boolean refresh) {
         this.dialog = dialog;
-        r.setEnabled(false);
+        r.setVisible(false);
         if (refresh)
             this.refreshElements();
     }
@@ -99,11 +94,12 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
                 }
             };
             r.setPos(0, 0);
+            add(r);
+            this.refreshElements();
         }
-        r.setEnabled(true);
-        p.setEnabled(false);
+        r.setVisible(true);
+        p.setVisible(false);
         container.setEnabled(false);
-        this.refreshElements();
 
     }
 
