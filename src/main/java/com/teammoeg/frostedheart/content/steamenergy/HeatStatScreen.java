@@ -20,13 +20,13 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class HeatStatScreen extends PrimaryLayer {
@@ -87,14 +87,14 @@ public class HeatStatScreen extends PrimaryLayer {
 
     public static class EndPointSlot extends UIElement {
         HeatEndpoint epd;
-        Icon ic;
+        CIcon ic;
         String val;
         boolean isIntake;
 
         public EndPointSlot(UIElement panel, HeatEndpoint epd, boolean isIntake) {
             super(panel);
             this.epd = epd;
-            ic = ItemIcon.getItemIcon(epd.blk.asItem());
+            ic = CIcons.getIcon(epd.blk.asItem());
             if (isIntake) {
                 val = String.format("%.1f", epd.avgIntake);
             } else {

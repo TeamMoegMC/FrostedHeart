@@ -20,19 +20,18 @@
 package com.teammoeg.frostedresearch;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.CUIScreen;
 import com.teammoeg.frostedresearch.gui.ResearchGui;
 
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.IScreenWrapper;
 import net.minecraft.client.gui.screens.Screen;
 
 public class ResearchUtils {
     public static void refreshResearchGui() {
         Screen cur = ClientUtils.getMc().screen;
-        if (cur instanceof IScreenWrapper) {
-            BaseScreen bs = ((IScreenWrapper) cur).getGui();
-            if (bs instanceof ResearchGui) {
-                bs.refreshWidgets();
+        if (cur instanceof CUIScreen cs) {
+        	
+            if (cs.getPrimaryLayer() instanceof ResearchGui gui) {
+            	cs.getPrimaryLayer().refreshElements();
             }
         }
     }

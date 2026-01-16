@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedresearch.api;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
@@ -27,13 +30,9 @@ import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.data.ResearchVariant;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 
-import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-
-import java.util.Optional;
-import java.util.UUID;
 
 public class ResearchDataAPI {
 

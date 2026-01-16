@@ -54,7 +54,7 @@ public class RequirementSlot extends UIElement {
     @Override
     public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
-        dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
+        CGuiHelper.resetGuiDrawing();
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
         CGuiHelper.drawItem(matrixStack, cur, x, y, 0, w / 16F, h / 16F, true, cnt != 0 ? String.valueOf(cnt) : null);
     }

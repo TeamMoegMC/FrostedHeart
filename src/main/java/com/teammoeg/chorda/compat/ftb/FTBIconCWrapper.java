@@ -1,14 +1,15 @@
-package com.teammoeg.chorda.client.icon;
+package com.teammoeg.chorda.compat.ftb;
 
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import net.minecraft.client.gui.GuiGraphics;
 
-public class CIconFTBWrapper extends Icon {
-	private final CIcon icon;
+public class FTBIconCWrapper extends CIcon {
+	private final Icon icon;
 
-	public CIconFTBWrapper(CIcon icon) {
+	public FTBIconCWrapper(Icon icon) {
 		this.icon = icon;
 	}
 
@@ -19,6 +20,11 @@ public class CIconFTBWrapper extends Icon {
 		}catch(Throwable t) {
 			t.printStackTrace();
 		}
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return icon.isEmpty();
 	}
 
 }

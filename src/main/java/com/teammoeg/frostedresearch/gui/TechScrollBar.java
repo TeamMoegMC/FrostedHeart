@@ -22,8 +22,8 @@ package com.teammoeg.frostedresearch.gui;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class TechScrollBar extends LayerScrollBar {
@@ -46,7 +46,7 @@ public class TechScrollBar extends LayerScrollBar {
     @Override
     public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         if (!isHidden) {
-            GuiHelper.setupDrawing();
+            CGuiHelper.resetGuiDrawing();
             TechIcons.SLIDER_FRAME.draw(matrixStack, x, y, w, h);
         }
     }

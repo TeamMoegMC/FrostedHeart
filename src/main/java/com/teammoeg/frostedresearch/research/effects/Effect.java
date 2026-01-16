@@ -19,6 +19,14 @@
 
 package com.teammoeg.frostedresearch.research.effects;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -31,7 +39,6 @@ import com.teammoeg.frostedresearch.data.TeamResearchData;
 import com.teammoeg.frostedresearch.gui.FHTextUtil;
 import com.teammoeg.frostedresearch.research.Research;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
@@ -39,9 +46,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-
-import javax.annotation.Nullable;
-import java.util.*;
 
 
 /**

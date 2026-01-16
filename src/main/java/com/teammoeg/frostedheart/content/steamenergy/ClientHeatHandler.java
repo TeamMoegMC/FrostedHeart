@@ -19,21 +19,21 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 
 import java.util.Collection;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.CUIMenuScreenWrapper;
 
 public class ClientHeatHandler {
 	public static void loadEndPoint(Collection<HeatEndpoint> data) {
 		AbstractContainerMenu c=ClientUtils.getMc().player.containerMenu;
 		if(c instanceof HeatStatContainer) {
 			((HeatStatContainer)c).data=data;
-			if(ClientUtils.getMc().screen instanceof MenuScreenWrapper) {
-				MenuScreenWrapper<?> msw=(MenuScreenWrapper<?>) ClientUtils.getMc().screen;
-				msw.getGui().refreshWidgets();
+			if(ClientUtils.getMc().screen instanceof CUIMenuScreenWrapper) {
+				CUIMenuScreenWrapper<?> msw=(CUIMenuScreenWrapper<?>) ClientUtils.getMc().screen;
+				msw.getPrimaryLayer().refreshElements();
 			}
 		}
 	}

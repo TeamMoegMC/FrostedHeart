@@ -43,8 +43,7 @@ import com.teammoeg.frostedheart.content.town.warehouse.WarehouseScreen;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
 
 import com.teammoeg.frostedheart.item.snowsack.SnowSackScreen;
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
+
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
@@ -71,7 +70,7 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.SNOW_SACK.get(), SnowSackScreen::new);
     }
 
-    public static <C extends AbstractContainerMenu, S extends BaseScreen> void
+    /*public static <C extends AbstractContainerMenu, S extends BaseScreen> void
     registerFTBScreen(MenuType<C> type, Function<C, S> factory) {
         MenuScreens.register(type, FTBScreenFactory(factory));
     }
@@ -85,7 +84,7 @@ public class FHScreens {
         	}
         	return msw;
         };
-    }
+    }*/
     public static <C extends AbstractContainerMenu, S extends PrimaryLayer> void
     registerCUIScreen(MenuType<C> type, Function<C, S> factory) {
         MenuScreens.register(type, CUIScreenFactory(factory));

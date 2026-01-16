@@ -1,12 +1,8 @@
 package com.teammoeg.frostedheart.clusterserver;
 
 import java.util.LinkedList;
-import java.util.concurrent.CompletableFuture;
-
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.mixin.client.ConnectScreenAccess;
-
 import dev.ftb.mods.ftbchunks.client.map.MapManager;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
@@ -16,7 +12,6 @@ import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 
 public class ClientConnectionHelper {

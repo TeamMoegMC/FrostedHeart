@@ -1,13 +1,9 @@
 package com.teammoeg.chorda.client.cui;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.platform.Window;
 import com.teammoeg.chorda.client.CInputHelper;
-import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.lang.Components;
@@ -15,7 +11,6 @@ import com.teammoeg.chorda.lang.Components;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
 
 public class CUIScreenWrapper extends Screen implements CUIScreen {
 	@Getter
