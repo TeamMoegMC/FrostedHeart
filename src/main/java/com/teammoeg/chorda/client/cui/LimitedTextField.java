@@ -2,6 +2,8 @@ package com.teammoeg.chorda.client.cui;
 
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.ui.Colors;
+import com.teammoeg.chorda.lang.Components;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -9,7 +11,7 @@ import net.minecraft.network.chat.FormattedText;
 
 public class LimitedTextField extends UIElement {
     private Component title;
-    private Component displayTitle = Component.empty();
+    private Component displayTitle = Components.immutableEmpty();
     public int color;
 
     public LimitedTextField(UIElement parent, Component title, int w) {

@@ -20,6 +20,7 @@
 package com.teammoeg.chorda.lang;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.contents.LiteralContents;
@@ -39,7 +40,14 @@ public final class Components {
     public static MutableComponent empty() {
         return Component.empty();
     }
-
+    /**Check component is EMPTY content*/
+    public static boolean isEmpty(Component title) {
+    	return title.getContents()==ComponentContents.EMPTY&&title.getSiblings().isEmpty();
+    }
+    /**Check component is String empty.*/
+    public static boolean isContentEmpty(MutableComponent component) {
+    	return component.getString(1).isEmpty();
+    }
     public static MutableComponent literal(String str) {
         return Component.literal(str);
     }

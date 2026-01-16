@@ -59,6 +59,8 @@ public class CheckBox extends UIElement {
 
     @Override
 	public boolean onMousePressed(MouseButton button) {
+    	if(!isMouseOver())return false;
+    	if(!isEnabled())return false;
     	checked = !checked;
         onSwitched();
 		return true;

@@ -94,7 +94,7 @@ public class ScrollBar extends UIElement {
 	public void getTooltip(TooltipBuilder list) {
 		if (showValueTooltip()) {
 			Component t = getTitle();
-			list.accept(Components.str(t == Component.empty() ? (Double.toString(getValue())) : (t + ": " + getValue())));
+			list.accept(Components.str(Components.isEmpty(t) ? (Double.toString(getValue())) : (t + ": " + getValue())));
 		}
 	}
 

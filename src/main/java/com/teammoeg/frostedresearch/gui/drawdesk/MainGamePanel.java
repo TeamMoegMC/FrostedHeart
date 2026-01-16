@@ -23,6 +23,7 @@ import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
@@ -33,7 +34,6 @@ import com.teammoeg.frostedresearch.gui.drawdesk.game.CardType;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.ClientResearchGame;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
 
 class MainGamePanel extends UILayer {
     ClientResearchGame rg;
@@ -171,7 +171,7 @@ class MainGamePanel extends UILayer {
         super.render(matrixStack, x, y, w, h);
         if (lstatus != 0) {
             DrawDeskIcons.DIALOG_FRAME.draw(matrixStack, x + 7, y + 54, 137, 52);
-            status.render(matrixStack, status.getX(), status.getY(), status.getWidth(), status.getHeight());
+            status.render(matrixStack, x+status.getX(), y+status.getY(), status.getWidth(), status.getHeight());
         }
         if (ResearchHooks.fetchGameLevel() == -1) {
             if (lstatus != 4) {
@@ -216,7 +216,7 @@ class MainGamePanel extends UILayer {
             return;
         }
         if (lstatus != 0) {
-            status.setText(Component.empty());
+            status.setText(Components.immutableEmpty());
             lstatus = 0;
         }
 

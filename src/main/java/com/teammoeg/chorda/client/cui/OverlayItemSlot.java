@@ -68,5 +68,11 @@ public class OverlayItemSlot extends ItemSlot {
 		if(tooltips!=null)
 			tooltips.accept(tooltip);
 	}
+
+	@Override
+	public void clear() {
+		resetOverlay();
+		super.clear();
+	}
     
 }

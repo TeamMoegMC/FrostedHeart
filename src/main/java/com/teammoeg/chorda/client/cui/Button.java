@@ -4,6 +4,7 @@ import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
+import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -22,7 +23,7 @@ public abstract class Button extends UIElement {
 	}
 
 	public Button(UIElement panel) {
-		this(panel, Component.empty(), CIcons.nop());
+		this(panel, Components.immutableEmpty(), CIcons.nop());
 	}
 
 	@Override

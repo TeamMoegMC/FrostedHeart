@@ -3,6 +3,8 @@ package com.teammoeg.chorda.client.cui;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.ui.Rect;
+import com.teammoeg.chorda.lang.Components;
+
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.Font;
@@ -88,13 +90,13 @@ public class UIElement{
 	}
 
 	public Component getTitle() {
-		return Component.empty();
+		return Components.immutableEmpty();
 	}
 
 	public void getTooltip(TooltipBuilder tooltip) {
 		Component title = getTitle();
 
-		if (title != Component.empty()) {
+		if (!Components.isEmpty(title)) {
 			tooltip.accept(title);
 		}
 	}

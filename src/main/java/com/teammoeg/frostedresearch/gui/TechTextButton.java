@@ -24,6 +24,7 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
@@ -40,8 +41,9 @@ public abstract class TechTextButton extends TechButton {
 
     @Override
     public void getTooltip(TooltipBuilder list) {
-        if (getFont().width(getTitle()) + (hasIcon() ? 28 : 8) > width) {
-            list.accept(getTitle());
+    	Component component=getTitle();
+        if ((!Components.isEmpty(component))&&getFont().width(component) + (hasIcon() ? 28 : 8) > width) {
+            list.accept(component);
         }
     }
 

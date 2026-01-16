@@ -468,7 +468,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
     private class ButtonEditData extends Button {
         public ButtonEditData(UIElement panel) {
-            super(panel, Component.empty(), CIcons.getIcon(Items.BARRIER));
+            super(panel, Components.immutableEmpty(), CIcons.getIcon(Items.BARRIER));
         }
 
         @Override
@@ -569,7 +569,7 @@ public class SelectStackDialog<T> extends EditDialog {
     private class ItemStackButton extends Button {
         private final T stack;
         private ItemStackButton(UIElement panel, T is) {
-            super(panel, Component.empty(), CIcons.getIcon(Items.BARRIER));
+            super(panel, Components.immutableEmpty(), CIcons.getIcon(Items.BARRIER));
             setSize(18, 18);
             stack = is;
             title = null;

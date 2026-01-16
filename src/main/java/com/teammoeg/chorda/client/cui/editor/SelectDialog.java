@@ -131,7 +131,7 @@ public class SelectDialog<T> extends EditDialog {
 		Component t;
 
 		public SelectorButton(SelectorList panel, T obj, Component title) {
-			super(panel, Component.empty(), toicon.apply(obj));
+			super(panel, Components.immutableEmpty(), toicon.apply(obj));
 			this.obj = obj;
 			this.listPanel = panel;
 			t = title;

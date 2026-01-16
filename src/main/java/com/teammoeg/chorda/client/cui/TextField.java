@@ -1,14 +1,15 @@
 package com.teammoeg.chorda.client.cui;
+import java.util.List;
+import java.util.Optional;
+
+import com.teammoeg.chorda.lang.Components;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
 
 
 
@@ -17,7 +18,7 @@ public class TextField extends UIElement {
 	public static final int V_CENTER = 32;
 	public static final int SHADOW = 2;
 	private List<FormattedText> formattedText = List.of();
-	private Component component = Component.empty();
+	private Component component = Components.immutableEmpty();
 	public int textFlags = 0;
 	public int minWidth = 0;
 	public int maxWidth = 5000;
