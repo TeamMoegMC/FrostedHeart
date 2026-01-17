@@ -3,17 +3,21 @@ package com.teammoeg.chorda.client.cui;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.ui.Rect;
+import com.teammoeg.chorda.lang.Components;
+
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
-import java.util.function.Consumer;
-
-public class UIWidget{
+/**
+ * Abstract ui element, for any basic ui element
+ * 
+ * */
+public class UIElement{
 	@Getter
-	protected UIWidget parent;
+	protected UIElement parent;
 	@Getter
 	@Setter
 	private int x, y;
@@ -27,10 +31,11 @@ public class UIWidget{
 	private double mouseX,mouseY;
 	@Getter
 	private float partialTick;
-	public UIWidget(UIWidget parent) {
-			this.parent = parent;
+	public UIElement(UIElement parent) {
+		this.parent = parent;
+		//CUIDebugHelper.registerUIObject(this);
 	}
-	protected void setParent(UIWidget parent) {
+	protected void setParent(UIElement parent) {
 		this.parent = parent;
 	}
 	public LayerHolder getLayerHolder() {
@@ -58,7 +63,7 @@ public class UIWidget{
 		setHeight(h);
 	}
 
-	public UIWidget setPosAndSize(int x, int y, int w, int h) {
+	public UIElement setPosAndSize(int x, int y, int w, int h) {
 		setX(x);
 		setY(y);
 		setWidth(w);
@@ -84,13 +89,13 @@ public class UIWidget{
 	}
 
 	public Component getTitle() {
-		return Component.empty();
+		return Components.immutableEmpty();
 	}
 
-	public void getTooltip(Consumer<Component> tooltip) {
+	public void getTooltip(TooltipBuilder tooltip) {
 		Component title = getTitle();
 
-		if (title == Component.empty()) {
+		if (!Components.isEmpty(title)) {
 			tooltip.accept(title);
 		}
 	}
@@ -176,7 +181,7 @@ public class UIWidget{
 	public void refresh() {
 		
 	}
-	public CUIScreenManager getManager() {
+	public CUIScreen getManager() {
 		return parent.getManager();
 	}
 

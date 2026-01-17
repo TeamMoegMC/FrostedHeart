@@ -52,6 +52,7 @@ public class Chorda {
     public static final Marker CLIENT_INIT = MarkerManager.getMarker("Client").addParents(INIT);
     public static final Marker COMMON_SETUP = MarkerManager.getMarker("Common").addParents(SETUP);
     public static final Marker CLIENT_SETUP = MarkerManager.getMarker("Client").addParents(SETUP);
+    public static final Marker UI = MarkerManager.getMarker("UI");
 
     public static ResourceLocation rl(String path) {
         return new ResourceLocation(MODID, path);

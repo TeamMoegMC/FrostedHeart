@@ -212,7 +212,10 @@ public class CIcons {
 				CMath.selectElementByTime(icons).draw(ms, x, y, w, h);
 			}
 		}
-
+		@Override
+		public boolean isEmpty() {
+			return icons.isEmpty()&&icons.stream().allMatch(CIcon::isEmpty);
+		}
 	}
 
 	static class CombinedIcon extends CIcon {
@@ -236,6 +239,10 @@ public class CIcons {
 			if (small != null)
 				small.draw(ms, x + w / 2, y + h / 2, w / 2, h / 2);
 			ms.pose().popPose();
+		}
+		@Override
+		public boolean isEmpty() {
+			return large.isEmpty()&&small.isEmpty();
 		}
 	}
 
@@ -261,6 +268,10 @@ public class CIcons {
 			}
 		}
 
+		@Override
+		public boolean isEmpty() {
+			return internals.get(name)==null;
+		}
 	}
 
 	public static abstract class CIcon implements Cloneable {
@@ -280,6 +291,7 @@ public class CIcons {
 		}
 
 		public abstract void draw(GuiGraphics ms, int x, int y, int w, int h);
+		public abstract boolean isEmpty();
 	}
 
 	public static abstract class CTextureIcon extends CIcon {
@@ -288,6 +300,12 @@ public class CIcons {
 		public abstract CTextureIcon toNineSlice(int c);
 
 		public abstract CTextureIcon asPart(int x, int y, int w, int h);
+
+		@Override
+		public boolean isEmpty() {
+			return false;
+		}
+		
 	}
 
 	static class IngredientIcon extends AnimatedIcon {
@@ -316,6 +334,10 @@ public class CIcons {
 
 		public IngredientIcon(JsonElement elm) {
 			this(Ingredient.fromJson(elm.getAsJsonObject().get("ingredient")));
+		}
+		@Override
+		public boolean isEmpty() {
+			return igd.isEmpty();
 		}
 	}
 
@@ -354,6 +376,10 @@ public class CIcons {
 			 * matrixStack.pop(); }
 			 */
 		}
+		@Override
+		public boolean isEmpty() {
+			return stack.isEmpty();
+		}
 	}
 
 	static class NopIcon extends CIcon {
@@ -367,7 +393,10 @@ public class CIcons {
 		@Override
 		public void draw(GuiGraphics ms, int x, int y, int w, int h) {
 		}
-
+		@Override
+		public boolean isEmpty() {
+			return true;
+		}
 	}
 
 	static class TextIcon extends CIcon {
@@ -395,7 +424,10 @@ public class CIcons {
 			ms.pose().popPose();
 			CGuiHelper.resetGuiDrawing();
 		}
-
+		@Override
+		public boolean isEmpty() {
+			return false;
+		}
 	}
 
 	static class TextureIcon extends CTextureIcon {

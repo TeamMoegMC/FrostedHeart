@@ -19,47 +19,43 @@
 
 package com.teammoeg.frostedresearch.gui;
 
-import dev.ftb.mods.ftblibrary.ui.*;
+import com.teammoeg.chorda.client.cui.LayerScrollBar;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
+
 import net.minecraft.client.gui.GuiGraphics;
 
-public class TechScrollBar extends PanelScrollBar {
-    // Have to do this hack since FTBL fields are private.
-    private static final Theme dtheme = new Theme() {
-        @Override
-        public void drawScrollBar(GuiGraphics matrixStack, int x, int y, int w, int h, WidgetType type,
-                                  boolean vertical) {
-            GuiHelper.setupDrawing();
-            TechIcons.drawTexturedRect(matrixStack, x, y, w, h, type != WidgetType.MOUSE_OVER);
-        }
-    };
+public class TechScrollBar extends LayerScrollBar {
 
     boolean isHidden = false;
 
-    public TechScrollBar(Panel parent, Panel panel) {
+    public TechScrollBar(UIElement parent, UILayer panel) {
         super(parent, panel);
     }
 
-    public TechScrollBar(Panel parent, Plane plane, Panel p) {
-        super(parent, plane, p);
+    public TechScrollBar(UIElement parent,  boolean isVertical, UILayer p) {
+        super(parent, isVertical, p);
     }
 
     @Override
-    public boolean canMouseScroll() {
-        return super.canMouseScroll() && getPanel().isEnabled() && !isHidden;
+    public boolean isScrollFocused() {
+        return super.isScrollFocused() && getAffectedLayer().isEnabled() && !isHidden;
     }
 
     @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         if (!isHidden) {
-            GuiHelper.setupDrawing();
+            CGuiHelper.resetGuiDrawing();
             TechIcons.SLIDER_FRAME.draw(matrixStack, x, y, w, h);
         }
     }
 
     @Override
-    public void drawScrollBar(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawScrollBar(GuiGraphics matrixStack, int x, int y, int w, int h) {
         if (!isHidden)
-            super.drawScrollBar(matrixStack, dtheme, x + 1, y + 1, w - 2, h - 2);
+        	TechIcons.drawTexturedRect(matrixStack, x, y, w, h, !isMouseOver());
+            //super.drawScrollBar(matrixStack, x + 1, y + 1, w - 2, h - 2);
     }
 
     public void hide() {

@@ -1,25 +1,28 @@
 package com.teammoeg.chorda.client.cui;
 
+import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
-public abstract class Layer extends UIWidget {
+/**
+ * UI Layer, contains elements as well as manage them
+ * 
+ * */
+public abstract class UILayer extends UIElement {
 	
 	@Getter
-	protected final List<UIWidget> elements;
+	protected final List<UIElement> elements;
 	@Getter
 	@Setter
-	private int offsetX = 0, offsetY = 0;
+	private int offsetX = 0, offsetY = 0, zIndex=0;
 	@Getter
 	private float displayOffsetX = 0, displayOffsetY = 0;
 	@Getter
@@ -33,7 +36,7 @@ public abstract class Layer extends UIWidget {
 	@Getter
 	@Setter
 	private boolean scissorEnabled=true;
-	public Layer(UIWidget panel) {
+	public UILayer(UIElement panel) {
 		super(panel);
 		elements = new ArrayList<>();
 	}
@@ -60,15 +63,17 @@ public abstract class Layer extends UIWidget {
 
 		//elements.sort(null);
 
-		for (UIWidget element : elements) {
+		for (UIElement element : elements) {
 			element.refresh();
 		}
 
 		alignWidgets();
 	}
 
-	public void add(UIWidget element) {
+
+	public void add(UIElement element) {
 		if (element.getParent() != this) {
+			Chorda.LOGGER.warn(Chorda.UI, element+" Could not be added because parent mismatch");
 			return;
 		}
 		if (element instanceof RatedScrollbar psb) {
@@ -83,14 +88,14 @@ public abstract class Layer extends UIWidget {
 	public final int align(boolean isHorizontal) {
 		contentWidth = contentHeight = 0;
 		if(isHorizontal) {
-			for(UIWidget elm:elements) {
+			for(UIElement elm:elements) {
 				elm.setX(contentWidth);
 				contentWidth+=elm.getWidth()+1;
 				contentHeight=Math.max(elm.getHeight(), contentHeight);
 			}
 			return contentWidth;
 		}
-		for(UIWidget elm:elements) {
+		for(UIElement elm:elements) {
 			elm.setY(contentHeight);
 			contentHeight+=elm.getHeight()+1;
 			contentWidth=Math.max(elm.getWidth(), contentWidth);
@@ -101,7 +106,7 @@ public abstract class Layer extends UIWidget {
 	public final int align(int lineSpace, boolean isHorizontal) {
 		contentWidth = contentHeight = 0;
 		if(isHorizontal) {
-			for(UIWidget elm:elements) {
+			for(UIElement elm:elements) {
 				elm.setX(contentWidth);
 				contentWidth+=elm.getWidth()+lineSpace;
 				contentHeight=Math.max(elm.getHeight(), contentHeight);
@@ -109,7 +114,7 @@ public abstract class Layer extends UIWidget {
 			contentWidth -= lineSpace;
 			return contentWidth;
 		}
-		for(UIWidget elm:elements) {
+		for(UIElement elm:elements) {
 			elm.setY(contentHeight);
 			contentHeight+=elm.getHeight()+lineSpace;
 			contentWidth=Math.max(elm.getWidth(), contentWidth);
@@ -122,7 +127,7 @@ public abstract class Layer extends UIWidget {
 		contentWidth = contentHeight = 0;
 		if(isHorizontal) {
 			contentWidth += start;
-			for(UIWidget elm:elements) {
+			for(UIElement elm:elements) {
 				elm.setX(contentWidth);
 				contentWidth+=elm.getWidth()+lineSpace;
 				contentHeight=Math.max(elm.getHeight(), contentHeight);
@@ -131,7 +136,7 @@ public abstract class Layer extends UIWidget {
 			return contentWidth;
 		}
 		contentHeight += start;
-		for(UIWidget elm:elements) {
+		for(UIElement elm:elements) {
 			elm.setY(contentHeight);
 			contentHeight+=elm.getHeight()+lineSpace;
 			contentWidth=Math.max(elm.getWidth(), contentWidth);
@@ -145,7 +150,7 @@ public abstract class Layer extends UIWidget {
 		int currentX=0,currentY=0;
 		int currentH=0,currentW=0;;
 		if(isHorizontalFirst) {
-			for(UIWidget elm:elements) {
+			for(UIElement elm:elements) {
 				if(currentX+elm.getWidth()>width) {
 					contentWidth=Math.max(contentWidth, currentX);
 					currentY+=currentH+1;
@@ -159,7 +164,7 @@ public abstract class Layer extends UIWidget {
 			contentHeight=currentY+currentH;
 			return;
 		}
-		for(UIWidget elm:elements) {
+		for(UIElement elm:elements) {
 			if(currentY+elm.getHeight()>height) {
 				contentHeight=Math.max(contentHeight, currentY);
 				currentX+=currentW+1;
@@ -190,7 +195,7 @@ public abstract class Layer extends UIWidget {
 				int x1 = Integer.MAX_VALUE;
 				int x2 = Integer.MIN_VALUE;
 	
-				for (UIWidget element : elements) {
+				for (UIElement element : elements) {
 					if (element.getX() < x1) {
 						x1 = element.getX();
 					}
@@ -215,7 +220,7 @@ public abstract class Layer extends UIWidget {
 				int y1 = Integer.MAX_VALUE;
 				int y2 = Integer.MIN_VALUE;
 	
-				for (UIWidget element : elements) {
+				for (UIElement element : elements) {
 					if (element.getY() < y1) {
 						y1 = element.getY();
 					}
@@ -261,10 +266,11 @@ public abstract class Layer extends UIWidget {
 		}
 
 		graphics.pose().pushPose();
-		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
-		for(UIWidget elm:elements) {
-			if(elm.isVisible())
+		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, zIndex);
+		for(UIElement elm:elements) {
+			if(elm.isVisible()) {
 				drawElement(graphics, elm,x,y, contentX, contentY, w, h);
+			}
 		}
 		graphics.pose().popPose();
 
@@ -279,14 +285,14 @@ public abstract class Layer extends UIWidget {
 	@Override
 	public void updateRenderInfo(double mx, double my, float pt) {
 		super.updateRenderInfo(mx, my, pt);
-		for(UIWidget elm:elements) {
+		for(UIElement elm:elements) {
 			elm.updateRenderInfo(getMouseX()-offsetX, getMouseY()-offsetY, pt);
 		}
 	}
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
 	}
 
-	public void drawElement(GuiGraphics graphics, UIWidget element,int parX,int parY, int x, int y, int w, int h) {
+	public void drawElement(GuiGraphics graphics, UIElement element,int parX,int parY, int x, int y, int w, int h) {
 		int childX=element.getX()+x;
 		int childY=element.getY()+y;
 		int childW=element.getWidth();
@@ -297,17 +303,24 @@ public abstract class Layer extends UIWidget {
 				return;
 			}
 		}
+
 		element.render(graphics, childX, childY, childW, childH);
+		if(CUIDebugHelper.isDebugEnabled()) {
+			graphics.hLine(childX, childX+childW, childY, 0xFF00FF00);
+			graphics.vLine(childX, childY, childY+childH, 0xFF00FF00);
+			graphics.hLine(childX, childX+childW, childY+childH, 0xFF00FF00);
+			graphics.vLine(childX+childW, childY, childY+childH, 0xFF00FF00);
+		}
 	}
 
 	@Override
-	public void getTooltip(Consumer<Component> list) {
+	public void getTooltip(TooltipBuilder list) {
 		if (!hasTooltip() || !isMouseOver()) {
 			return;
 		}
 
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIWidget element = elements.get(i);
+			UIElement element = elements.get(i);
 
 			if (element.hasTooltip()) {
 				element.getTooltip(list);
@@ -318,7 +331,7 @@ public abstract class Layer extends UIWidget {
 	@Override
 	public void updateMouseOver() {
 		super.updateMouseOver();
-		for (UIWidget element : elements) {
+		for (UIElement element : elements) {
 			element.updateMouseOver();
 		}
 	}
@@ -330,9 +343,11 @@ public abstract class Layer extends UIWidget {
 		}
 
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIWidget element = elements.get(i);
+			UIElement element = elements.get(i);
 
             if (element.isEnabled() && element.isVisible() && element.onMousePressed(button)) {
+            	if(CUIDebugHelper.isDebugEnabled())
+            		Chorda.LOGGER.debug(Chorda.UI, "consumed mousePressed: "+button+" "+element);
                 return true;
             }
 		}
@@ -346,9 +361,11 @@ public abstract class Layer extends UIWidget {
 		}
 
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIWidget element = elements.get(i);
+			UIElement element = elements.get(i);
 
-			if (element.isEnabled() && element.onMouseDoubleClicked(button)) {
+			if (element.isEnabled() && element.isVisible() && element.onMouseDoubleClicked(button)) {
+				if(CUIDebugHelper.isDebugEnabled())
+					Chorda.LOGGER.debug(Chorda.UI, "consumed mouseDoubleClicked: "+button+" "+element);
 				return true;
 			}
 		}
@@ -359,9 +376,9 @@ public abstract class Layer extends UIWidget {
 	@Override
 	public void onMouseReleased(MouseButton button) {
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIWidget element = elements.get(i);
+			UIElement element = elements.get(i);
 
-			if (element.isEnabled()) {
+			if (element.isEnabled() && element.isVisible()) {
 				element.onMouseReleased(button);
 			}
 		}
@@ -371,9 +388,11 @@ public abstract class Layer extends UIWidget {
 	@Override
 	public boolean onMouseScrolled(double scroll) {
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIWidget element = elements.get(i);
+			UIElement element = elements.get(i);
 
-			if (element.isEnabled() && element.onMouseScrolled(scroll)) {
+			if (element.isEnabled() && element.isVisible() && element.onMouseScrolled(scroll)) {
+				if(CUIDebugHelper.isDebugEnabled())
+					Chorda.LOGGER.debug(Chorda.UI, "consumed mouseScrolled: "+scroll+" "+element);
 				return true;
 			}
 		}
@@ -384,9 +403,11 @@ public abstract class Layer extends UIWidget {
 	@Override
 	public boolean onMouseDragged(MouseButton button, double dragX, double dragY) {
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIWidget element = elements.get(i);
+			UIElement element = elements.get(i);
 
-			if (element.isEnabled() && element.onMouseDragged(button, dragX, dragY)) {
+			if (element.isEnabled() && element.isVisible() && element.onMouseDragged(button, dragX, dragY)) {
+				if(CUIDebugHelper.isDebugEnabled())
+					Chorda.LOGGER.debug(Chorda.UI, "consumed mouseDragged: "+button+","+dragX+","+dragY+" "+element);
 				return true;
 			}
 		}
@@ -452,9 +473,11 @@ public abstract class Layer extends UIWidget {
 
 
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIWidget element = elements.get(i);
+			UIElement element = elements.get(i);
 
-			if (element.isEnabled() && element.onKeyPressed(keyCode,scanCode,modifier)) {
+			if (element.isEnabled() && element.isVisible() && element.onKeyPressed(keyCode,scanCode,modifier)) {
+				if(CUIDebugHelper.isDebugEnabled())
+					Chorda.LOGGER.debug(Chorda.UI, "consumed keyPressed: "+keyCode+","+scanCode+","+modifier+" "+element);
 				return true;
 			}
 		}
@@ -465,9 +488,11 @@ public abstract class Layer extends UIWidget {
 	public boolean onKeyRelease(int keyCode,int scanCode,int modifier) {
 
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIWidget element = elements.get(i);
+			UIElement element = elements.get(i);
 
-			if (element.isEnabled()&&element.onKeyRelease(keyCode,scanCode,modifier)) {
+			if (element.isEnabled() && element.isVisible() && element.onKeyRelease(keyCode,scanCode,modifier)) {
+				if(CUIDebugHelper.isDebugEnabled())
+					Chorda.LOGGER.debug(Chorda.UI, "consumed keyReleased: "+keyCode+","+scanCode+","+modifier+" "+element);
 				return true;
 			}
 		}
@@ -482,9 +507,11 @@ public abstract class Layer extends UIWidget {
 
 
 		for (int i = elements.size() - 1; i >= 0; i--) {
-			UIWidget element = elements.get(i);
+			UIElement element = elements.get(i);
 
-			if (element.isEnabled() && element.onIMEInput(c, modifiers)) {
+			if (element.isEnabled() && element.isVisible() && element.onIMEInput(c, modifiers)) {
+				if(CUIDebugHelper.isDebugEnabled())
+					Chorda.LOGGER.debug(Chorda.UI, "consumed IMEInput: "+c+"(0x"+Integer.toHexString(c)+")"+","+modifiers+" "+element);
 				return true;
 			}
 		}
@@ -494,7 +521,7 @@ public abstract class Layer extends UIWidget {
 
 	@Override
 	public void onClosed() {
-		for (UIWidget element : elements) {
+		for (UIElement element : elements) {
 			element.onClosed();
 		}
 	}
@@ -502,7 +529,7 @@ public abstract class Layer extends UIWidget {
 	@Override
 	public void tick() {
 
-		for (UIWidget element : elements) {
+		for (UIElement element : elements) {
 			if (element.isEnabled()) {
 				element.tick();
 			}
@@ -510,7 +537,7 @@ public abstract class Layer extends UIWidget {
 	}
 
 	public boolean isMouseOverAnyWidget() {
-		for (UIWidget element : elements) {
+		for (UIElement element : elements) {
 			if (element.isMouseOver()) {
 				return true;
 			}
@@ -522,8 +549,8 @@ public abstract class Layer extends UIWidget {
 	public Cursor getCursor() {
 
 		for (var i = elements.size() - 1; i >= 0; i--) {
-			UIWidget widget = elements.get(i);
-			if (widget.isEnabled() && widget.isMouseOver()) {
+			UIElement widget = elements.get(i);
+			if (widget.isEnabled() && widget.isVisible() && widget.isMouseOver()) {
 				var cursor = widget.getCursor();
 				if (cursor != null) {
 					return cursor;

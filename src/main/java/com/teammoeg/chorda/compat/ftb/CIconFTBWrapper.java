@@ -1,5 +1,6 @@
-package com.teammoeg.chorda.client.icon;
+package com.teammoeg.chorda.compat.ftb;
 
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;

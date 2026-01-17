@@ -22,38 +22,36 @@ package com.teammoeg.frostedheart.content.trade.gui;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.UIElement;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
 
-public class RelationSlot extends Widget {
+public class RelationSlot extends UIElement {
     Supplier<Integer> toshow;
-    Consumer<TooltipList> tooltip;
+    Consumer<TooltipBuilder> tooltip;
 
-    public RelationSlot(Panel panel) {
+    public RelationSlot(UIElement panel) {
         super(panel);
         this.setSize(16, 16);
     }
 
-    public RelationSlot(Panel panel, Supplier<Integer> is) {
+    public RelationSlot(UIElement panel, Supplier<Integer> is) {
         super(panel);
         this.toshow = is;
         this.setSize(16, 16);
     }
 
-    @Override
-    public void addMouseOverText(TooltipList list) {
-        if (tooltip != null)
-            tooltip.accept(list);
-    }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+	public void getTooltip(TooltipBuilder tooltip) {
+		super.getTooltip(tooltip);
+		this.tooltip.accept(tooltip);
+	}
+
+	@Override
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+
         if (toshow == null)
             return;
         int val = toshow.get();
@@ -84,12 +82,12 @@ public class RelationSlot extends Widget {
                 dx = 0;
                 break;
         }
-
-        theme.drawString(matrixStack, str, x + dx - 2, y + 10, val < 0 ? Color4I.LIGHT_GREEN : Color4I.LIGHT_RED, Theme.SHADOW);
+        matrixStack.drawString(getFont(), str, x + dx - 2, y + 10, val<0?0x55ff55:0xff5555);
+        
 
     }
 
-    public void setTooltip(Consumer<TooltipList> tooltip) {
+    public void setTooltip(Consumer<TooltipBuilder> tooltip) {
         this.tooltip = tooltip;
     }
 

@@ -19,73 +19,46 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
-import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.MenuPrimaryLayer;
 import com.teammoeg.chorda.client.cui.editor.EditDialog;
-import com.teammoeg.chorda.client.ui.ScreenAcceptor;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedresearch.gui.ResearchGui;
 import com.teammoeg.frostedresearch.gui.tech.ResearchPanel;
 
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
-import lombok.Setter;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-
-public class DrawDeskScreen extends BaseScreen implements ResearchGui, ScreenAcceptor {
-    DrawDeskContainer cx;
+public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implements ResearchGui {
     DrawDeskPanel p;
     ResearchPanel r;
     EditDialog dialog;
-    @Setter
-    AbstractContainerScreen screen;
     public DrawDeskScreen(DrawDeskContainer cx) {
-        super();
-        this.cx = cx;
+        super(cx);
         p = new DrawDeskPanel(this);
-        p.setEnabled(true);
-        this.screen=screen;
+        p.setVisible(true);
     }
 
-    @Override
-	public boolean shouldAddMouseOverText() {
-		return true;
-	}
+
 
 	@Override
-	public void addMouseOverText(TooltipList list) {
-		if (this.cx.getCarried().isEmpty() && screen.getSlotUnderMouse() != null && screen.getSlotUnderMouse().hasItem()) {
-			AbstractContainerScreen.getTooltipFromItem(ClientUtils.getMc(), screen.getSlotUnderMouse().getItem()).forEach(list::add);
-		}
-		super.addMouseOverText(list);
-	}
-
-	@Override
-    public void addWidgets() {
-        if (p != null && p.isEnabled())
-            add(p);
-        if (r != null && r.isEnabled())
+    public void addUIElements() {
+        add(p);
+        if (r != null)
             add(r);
-        //if (getDialog() != null)
-        //    add(getDialog());
+        if (getDialog() != null)
+            add(getDialog());
     }
 
 
-    @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-    }
-
+	@Override
+	public void setSizeToContentSize() {
+	}
 
     public DrawingDeskTileEntity getTile() {
-        return cx.getBlock();
+        return container.getBlock();
     }
 
     public void hideTechTree() {
-        p.setEnabled(true);
-        r.setEnabled(false);
-        cx.setEnabled(true);
-        this.refreshWidgets();
+        p.setVisible(true);
+        r.setVisible(false);
+        container.setEnabled(true);
     }
 
     @Override
@@ -99,7 +72,7 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui, ScreenAcc
         this.dialog = null;
         r.setEnabled(true);
         if (refresh)
-            this.refreshWidgets();
+            this.refreshElements();
     }
 
     public EditDialog getDialog() {
@@ -107,9 +80,9 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui, ScreenAcc
     }
     public void openDialog(EditDialog dialog, boolean refresh) {
         this.dialog = dialog;
-        r.setEnabled(false);
+        r.setVisible(false);
         if (refresh)
-            this.refreshWidgets();
+            this.refreshElements();
     }
 
     public void showTechTree() {
@@ -121,11 +94,12 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui, ScreenAcc
                 }
             };
             r.setPos(0, 0);
+            add(r);
+            this.refreshElements();
         }
-        r.setEnabled(true);
-        p.setEnabled(false);
-        cx.setEnabled(false);
-        this.refreshWidgets();
+        r.setVisible(true);
+        p.setVisible(false);
+        container.setEnabled(false);
 
     }
 

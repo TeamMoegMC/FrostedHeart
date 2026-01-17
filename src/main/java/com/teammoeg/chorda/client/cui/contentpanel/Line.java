@@ -1,28 +1,28 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
-import com.teammoeg.chorda.client.cui.Layer;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import lombok.Getter;
 import net.minecraft.network.chat.Style;
 
 @Getter
-public abstract class Line<T extends Line<T>> extends Layer {
+public abstract class Line<T extends Line<T>> extends UILayer {
     public static final int DEF_LINE_HEIGHT = 12;
     protected static Style hoveredStyle;
     protected Alignment alignment;
     protected int color;
 
-    public Line(UIWidget parent) {
+    public Line(UIElement parent) {
         this(parent, Alignment.LEFT);
     }
 
-    public Line(UIWidget parent, Alignment alignment) {
+    public Line(UIElement parent, Alignment alignment) {
         this(parent,alignment, Colors.WHITE);
     }
 
-    public Line(UIWidget parent, Alignment alignment, int color) {
+    public Line(UIElement parent, Alignment alignment, int color) {
         super(parent);
         this.alignment = alignment;
         this.color = color;

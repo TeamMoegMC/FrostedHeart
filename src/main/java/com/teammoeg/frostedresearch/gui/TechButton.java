@@ -19,47 +19,36 @@
 
 package com.teammoeg.frostedresearch.gui;
 
-import com.teammoeg.chorda.client.icon.CIconFTBWrapper;
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 public abstract class TechButton extends Button {
 
-    public TechButton(Panel panel) {
+    public TechButton(UIElement panel) {
         super(panel);
     }
 
-    public TechButton(Panel panel, CIcon i) {
-        super(panel);
-        super.setIcon(new CIconFTBWrapper(i));
-    }
-
-    public TechButton(Panel panel, Component t, CIcon i) {
-        super(panel, t, new CIconFTBWrapper(i));
-    }
-    public TechButton(Panel panel, Icon i) {
+    public TechButton(UIElement panel, CIcon i) {
         super(panel);
         super.setIcon(i);
     }
 
-    public TechButton(Panel panel, Component t, Icon i) {
+    public TechButton(UIElement panel, Component t, CIcon i) {
         super(panel, t, i);
     }
     @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        GuiHelper.setupDrawing();
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        CGuiHelper.resetGuiDrawing();;
 
         TechIcons.drawTexturedRect(matrixStack, x, y, w, h, isMouseOver());
 
         if (hasIcon()) {
-            drawIcon(matrixStack, theme, x + (w - 16) / 2, y + (h - 16) / 2, 16, 16);
+            drawIcon(matrixStack, x + (w - 16) / 2, y + (h - 16) / 2, 16, 16);
         }
     }
 

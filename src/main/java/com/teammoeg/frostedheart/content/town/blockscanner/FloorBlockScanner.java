@@ -48,17 +48,17 @@ public class FloorBlockScanner extends BlockScanner{
 
     protected boolean isFloorBlock(BlockPos pos) {
         BlockState blockState = getBlockState(pos);
-        return (blockState.isRedstoneConductor(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
+        return (blockState.isCollisionShapeFullBlock(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
     }
 
     public static boolean isFloorBlock(Level world, BlockPos pos) {
         BlockState blockState = world.getBlockState(pos);
-        return (blockState.isRedstoneConductor(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
+        return (blockState.isCollisionShapeFullBlock(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
     }
 
     public static boolean isWallBlock(Level world, BlockPos pos) {
         BlockState blockState = world.getBlockState(pos);
-        return (blockState.isRedstoneConductor(world, pos) || blockState.is(FHTags.Blocks.TOWN_WALLS.tag) || blockState.is(BlockTags.DOORS) || blockState.is(BlockTags.WALLS) || blockState.is(Tags.Blocks.GLASS_PANES) || blockState.is(Tags.Blocks.FENCE_GATES) || blockState.is(Tags.Blocks.FENCES));
+        return (blockState.isCollisionShapeFullBlock(world, pos) || blockState.is(FHTags.Blocks.TOWN_WALLS.tag) || blockState.is(BlockTags.DOORS) || blockState.is(BlockTags.WALLS) || blockState.is(Tags.Blocks.GLASS_PANES) || blockState.is(Tags.Blocks.FENCE_GATES) || blockState.is(Tags.Blocks.FENCES));
     }
     protected boolean isWallBlock(BlockPos pos) {
         return isWallBlock(this.world, pos);

@@ -291,7 +291,7 @@ public class BlockScanner {
      * 默认本身为完整方块，且上方两格为均空气的方块为合法的地板。若有不同需求请用上面那个方法
      */
     public ArrayList<BlockPos> getFloorAdjacent(BlockPos pos){
-        return getFloorAdjacent(pos, (BlockPos)-> world.getBlockState(pos).isRedstoneConductor(world, pos) && world.getBlockState(pos.above()).isAir() && world.getBlockState(pos.above(2)).isAir());
+        return getFloorAdjacent(pos, (BlockPos)-> world.getBlockState(pos).isCollisionShapeFullBlock(world, pos) && world.getBlockState(pos.above()).isAir() && world.getBlockState(pos.above(2)).isAir());
     }
 
     public boolean isOpenAir(BlockPos pos){

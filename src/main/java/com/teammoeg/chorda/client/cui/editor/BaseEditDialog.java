@@ -19,14 +19,14 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 
 import net.minecraft.client.gui.GuiGraphics;
 
 public abstract class BaseEditDialog extends EditDialog {
 
-    public BaseEditDialog(UIWidget panel) {
+    public BaseEditDialog(UIElement panel) {
         super(panel);
         setWidth(400);
         setHeight(250);

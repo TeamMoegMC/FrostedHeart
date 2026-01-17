@@ -30,7 +30,7 @@ import java.util.stream.Stream;
  * Note: In some sense, some entries can be omitted bse on "state".
  *
  * @param block the block to consider
- * @param state the current state of the block. For example, Water would be "liquid", and Ice would be "solid".
+ * @param checked the current state of the block. For example, Water would be "liquid", and Ice would be "solid".
  *              This avoid certain updates when the block is already in certain state to save performance.
  * @param solid the solid state for the block
  * @param liquid the liquid state for the block

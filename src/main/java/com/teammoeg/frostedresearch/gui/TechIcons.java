@@ -25,12 +25,8 @@ import com.teammoeg.chorda.client.icon.CIcons.CTextureIcon;
 import com.teammoeg.chorda.util.IterateUtils;
 import com.teammoeg.frostedresearch.FRMain;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class TechIcons {
     public static final CTextureIcon ALL =  CIcons
@@ -61,8 +57,8 @@ public class TechIcons {
     public static final VLineIcon VLINE = new VLineIcon(ALL, 342, 203, 1, 21, 10, 10, 512, 512);
     public static final CTextureIcon TAB_HL = ALL.withUV(241, 250, 30, 7, 512, 512);
     public static final CTextureIcon Background = ALL.withUV(0, 0, 387, 203, 512, 512);
-    public static final Color4I text = Color4I.rgb(0x474139);
-    public static final Color4I text_red = Color4I.rgb(0xa92b0d);
+    public static final int text = 0x474139;
+    public static final int text_red = 0xa92b0d;
     
 
     static {
@@ -125,6 +121,6 @@ public class TechIcons {
         if(w>1&&h>1)
         	BUTTON_FRAME.draw(matrixStack, x, y, w, h);
         else
-        	text.draw(matrixStack, x, y, w, h);
+        	matrixStack.fill(x, y, w, h, text);
     }
 }

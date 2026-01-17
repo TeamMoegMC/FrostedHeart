@@ -25,7 +25,7 @@ import java.util.function.Function;
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.lang.Components;
 
@@ -36,7 +36,7 @@ public class EditPromptWithSelect extends BaseEditDialog {
     Button ok;
     Button cancel;
 
-    public EditPromptWithSelect(UIWidget panel, Component label, String val, Component sel, Consumer<String> onFinished, Editor<String> onbtn) {
+    public EditPromptWithSelect(UIElement panel, Component label, String val, Component sel, Consumer<String> onFinished, Editor<String> onbtn) {
         super(panel);
         box = new LabeledTextBoxAndBtn(this, label, val, sel, e -> onbtn.open(panel, sel, box.getText(), e));
         ok = new TextButton(this, Components.str("OK"), CIcons.nop()) {
@@ -64,7 +64,7 @@ public class EditPromptWithSelect extends BaseEditDialog {
         ok.setSize(300, 20);
     }
 
-    public EditPromptWithSelect(UIWidget panel, Component label, String val, Component sel, Consumer<String> onFinished, Function<String, String> onbtn) {
+    public EditPromptWithSelect(UIElement panel, Component label, String val, Component sel, Consumer<String> onFinished, Function<String, String> onbtn) {
         this(panel, label, val, sel, onFinished, (p, l, v, c) -> c.accept(onbtn.apply(v)));
 
     }

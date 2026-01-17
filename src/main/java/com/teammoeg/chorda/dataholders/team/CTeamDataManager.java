@@ -39,21 +39,14 @@ import javax.annotation.Nullable;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataType;
-import com.teammoeg.chorda.events.PlayerTeamChangedEvent;
 import com.teammoeg.chorda.events.TeamCreatedEvent;
-import com.teammoeg.chorda.events.TeamLoadedEvent;
 import com.teammoeg.chorda.util.CDistHelper;
-import com.teammoeg.chorda.util.struct.OptionalLazy;
-
 import com.mojang.authlib.GameProfile;
 
-import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.players.GameProfileCache;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.common.MinecraftForge;

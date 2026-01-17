@@ -20,13 +20,13 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 
 import net.minecraft.network.chat.Component;
 
 public class NumberBox extends LabeledTextBox {
 
-    public NumberBox(UIWidget panel, Component lab, long val) {
+    public NumberBox(UIElement panel, Component lab, long val) {
         super(panel, lab, String.valueOf(val),Verifiers.NUMBER_STR);
     }
 

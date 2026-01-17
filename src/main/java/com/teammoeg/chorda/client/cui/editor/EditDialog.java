@@ -22,17 +22,17 @@ package com.teammoeg.chorda.client.cui.editor;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.Layer;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.ChatFormatting;
 
-public abstract class EditDialog extends Layer {
+public abstract class EditDialog extends UILayer {
     EditDialog previous;
     EditorManager sc;
 
-    public EditDialog(UIWidget panel) {
+    public EditDialog(UIElement panel) {
         super(panel.getManager().getPrimaryLayer());
         if (panel.getLayerHolder() instanceof EditorManager)
             sc = (EditorManager)panel.getLayerHolder();

@@ -1,9 +1,10 @@
 package com.teammoeg.chorda.client.cui.category;
 
-import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LimitedTextField;
 import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.Colors;
 import lombok.Getter;
@@ -12,14 +13,14 @@ import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
 
-public abstract class Entry extends Layer {
+public abstract class Entry extends UILayer {
     public static final int DEF_HEIGHT = 16;
     @Getter
-    protected final Layer panel;
+    protected final UILayer panel;
     protected LimitedTextField title;
     protected FlatIcon.FlatIconWidget icon;
 
-    public Entry(Category parent, Layer affectedPanel, Component title) {
+    public Entry(Category parent, UILayer affectedPanel, Component title) {
         super(parent);
         this.panel = affectedPanel;
         this.title = new LimitedTextField(this, title, getWidth());
@@ -54,7 +55,7 @@ public abstract class Entry extends Layer {
         title.setWidth(getWidth() - offsetX - titleOffsetX);
 
         recalcContentSize();
-        for (UIWidget element : elements) {
+        for (UIElement element : elements) {
             element.refresh();
         }
         alignWidgets();
@@ -81,7 +82,7 @@ public abstract class Entry extends Layer {
     }
 
     @Override
-    public void getTooltip(Consumer<Component> list) {
+    public void getTooltip(TooltipBuilder list) {
         if (!hasTooltip() || !isMouseOver() || !isVisible() || !isEnabled()) {
             return;
         }

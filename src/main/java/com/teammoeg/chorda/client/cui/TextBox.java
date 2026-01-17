@@ -19,13 +19,16 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.editor.Verifier;
 import com.teammoeg.chorda.client.cui.editor.Verifier.VerifyResult;
 import com.teammoeg.chorda.lang.Components;
+
+import lombok.Getter;
+
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public class TextBox extends UIWidget implements Focusable {
+public class TextBox extends UIElement implements Focusable {
 	private boolean isFocused = false;
 	public int charLimit = 2000;
 	public int textColor;
@@ -38,8 +41,9 @@ public class TextBox extends UIWidget implements Focusable {
 	private VerifyResult validText;
 	private int maxLength = 1024;
 	private Verifier<String> filter;
-	private String lastValidText="";
-	public TextBox(Layer panel) {
+	@Getter
+	protected String lastValidText="";
+	public TextBox(UILayer panel) {
 		super(panel);
 		filter=Verifier.nonNull();
 		validText=filter.test("");
@@ -409,7 +413,7 @@ public class TextBox extends UIWidget implements Focusable {
 	}
 
 	@Override
-	public void getTooltip(Consumer<Component> tooltip) {
+	public void getTooltip(TooltipBuilder tooltip) {
 		super.getTooltip(tooltip);
 		if(validText.hint()!=null)
 		tooltip.accept(validText.hint());

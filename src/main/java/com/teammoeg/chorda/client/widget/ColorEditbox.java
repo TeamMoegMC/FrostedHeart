@@ -26,7 +26,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.NotNull;
 
 public class ColorEditbox extends EditBox {
     private static final String PREFIX = "0x";
@@ -55,7 +54,7 @@ public class ColorEditbox extends EditBox {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.renderWidget(graphics, mouseX, mouseY, partialTick);
         graphics.drawString(font, getPrefix(), getX()-2-font.width(getPrefix()), getY()+(getHeight()/2)-4, 0xFFFFFFFF);
 
@@ -89,7 +88,7 @@ public class ColorEditbox extends EditBox {
     }
 
     @Override
-    public @NotNull String getValue() {
+    public String getValue() {
         return (withAlpha ? "FF" : "") + super.getValue();
     }
 }

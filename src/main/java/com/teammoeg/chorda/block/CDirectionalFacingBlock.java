@@ -27,7 +27,6 @@ import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import org.jetbrains.annotations.NotNull;
 
 public class CDirectionalFacingBlock extends DirectionalBlock {
     public CDirectionalFacingBlock(Properties p_52591_) {
@@ -43,11 +42,11 @@ public class CDirectionalFacingBlock extends DirectionalBlock {
         pBuilder.add(FACING);
     }
 
-    public @NotNull BlockState rotate(BlockState pState, Rotation pRot) {
+    public BlockState rotate(BlockState pState, Rotation pRot) {
         return pState.setValue(FACING, pRot.rotate(pState.getValue(FACING)));
     }
 
-    public @NotNull BlockState mirror(BlockState pState, Mirror pMirror) {
+    public BlockState mirror(BlockState pState, Mirror pMirror) {
         return pState.rotate(pMirror.getRotation(pState.getValue(FACING)));
     }
 }

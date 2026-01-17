@@ -19,6 +19,16 @@
 
 package com.teammoeg.frostedresearch.data;
 
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
+
+import javax.annotation.Nullable;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.dataholders.SpecialData;
@@ -26,19 +36,20 @@ import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.util.RecipeUtils;
-import com.teammoeg.chorda.util.struct.OptionalLazy;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.FRNetwork;
-import com.teammoeg.frostedresearch.ResearchHooks.BlockUnlockList;
-import com.teammoeg.frostedresearch.ResearchHooks.CategoryUnlockList;
-import com.teammoeg.frostedresearch.ResearchHooks.MultiblockUnlockList;
-import com.teammoeg.frostedresearch.ResearchHooks.RecipeUnlockList;
 import com.teammoeg.frostedresearch.UnlockList;
 import com.teammoeg.frostedresearch.events.PopulateUnlockListEvent;
 import com.teammoeg.frostedresearch.events.ResearchDataLoadedEvent;
 import com.teammoeg.frostedresearch.events.ResearchStatusEvent;
-import com.teammoeg.frostedresearch.network.*;
+import com.teammoeg.frostedresearch.network.FHChangeActiveResearchPacket;
+import com.teammoeg.frostedresearch.network.FHEffectProgressSyncPacket;
+import com.teammoeg.frostedresearch.network.FHInsightSyncPacket;
+import com.teammoeg.frostedresearch.network.FHResearchAttributeSyncPacket;
+import com.teammoeg.frostedresearch.network.FHResearchDataSyncPacket;
+import com.teammoeg.frostedresearch.network.FHResearchDataUpdatePacket;
+import com.teammoeg.frostedresearch.network.FHS2CClueProgressSyncPacket;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.clues.Clue;
 import com.teammoeg.frostedresearch.research.effects.Effect;
@@ -49,16 +60,6 @@ import net.minecraft.util.ExtraCodecs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
-
-import javax.annotation.Nullable;
-
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Supplier;
 
 /**
  * Class TeamResearchData.

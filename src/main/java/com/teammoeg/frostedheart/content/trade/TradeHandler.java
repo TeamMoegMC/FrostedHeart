@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.content.trade;
 
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkHooks;
-import net.minecraft.nbt.CompoundTag;
 
 public class TradeHandler {
     public static void openTradeScreen(ServerPlayer spe, FHVillagerData vd) {

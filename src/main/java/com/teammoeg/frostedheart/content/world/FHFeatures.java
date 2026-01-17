@@ -63,6 +63,8 @@ public class FHFeatures {
     public static final RegistryObject<LayeredDiskFeature> LAYERED_DISK = register("layered_disk", LayeredDiskFeature::new, LayeredDiskConfiguration.CODEC);
     public static final RegistryObject<SpacecraftFeature> SPACECRAFT = register("spacecraft", SpacecraftFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<FHFossilFeature> FH_FOSSIL = register("fossil", FHFossilFeature::new, FossilFeatureConfiguration.CODEC);
+    public static final RegistryObject<FallenLogFeature> FALLEN_LOG = register("fallen_log", FallenLogFeature::new, FallenLogConfig.CODEC);
+    public static final RegistryObject<ShrubTreeFeature> SHRUB_TREE = register("shrub_tree", ShrubTreeFeature::new, ShrubTreeConfig.CODEC);
 
     private static <C extends FeatureConfiguration, F extends Feature<C>> RegistryObject<F> register(String name, Function<Codec<C>, F> feature, Codec<C> codec)
     {

@@ -19,12 +19,18 @@
 
 package com.teammoeg.frostedresearch;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.function.Consumer;
+
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-
-import java.util.*;
-import java.util.function.Consumer;
 
 public abstract class UnlockList<T> implements Iterable<T> {
     Set<T> s = new HashSet<>();

@@ -1,4 +1,9 @@
 package com.teammoeg.chorda.client.cui;
+import java.util.List;
+import java.util.Optional;
+
+import com.teammoeg.chorda.lang.Components;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
@@ -6,28 +11,26 @@ import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
 
 
-
-public class TextField extends UIWidget {
+public class TextField extends UIElement {
 	public static final int H_CENTER = 4;
 	public static final int V_CENTER = 32;
 	public static final int SHADOW = 2;
 	private List<FormattedText> formattedText = List.of();
-	private Component component = Component.empty();
+	private Component component = Components.immutableEmpty();
 	public int textFlags = 0;
 	public int minWidth = 0;
 	public int maxWidth = 5000;
+	public int maxLines=Integer.MAX_VALUE;
+	public int minLines=1;
 	public int textSpacing = 10;
 	public float scale = 1.0F;
 	public int textColor = 0xFFFFFFFF;
 	public boolean trim = false;
 	private boolean tooltip = false;
 
-	public TextField(UIWidget parent) {
+	public TextField(UIElement parent) {
 		super(parent);
 	}
 
@@ -35,9 +38,11 @@ public class TextField extends UIWidget {
 		textFlags |= flags;
 		return this;
 	}
+	//Horizontal centered(center in width)
 	public TextField centerH() {
 		return addFlags(H_CENTER);
 	}
+	//Vertically centered(center in height)
 	public TextField centerV() {
 		return addFlags(V_CENTER);
 	}
@@ -53,7 +58,15 @@ public class TextField extends UIWidget {
 		maxWidth = width;
 		return this;
 	}
+	public TextField setMinLines(int lines) {
+		minLines = lines;
+		return this;
+	}
 
+	public TextField setMaxLines(int lines) {
+		maxLines = lines;
+		return this;
+	}
 	public TextField setColor(int color) {
 		textColor = color;
 		return this;
@@ -109,13 +122,13 @@ public class TextField extends UIWidget {
 		}
 
 		setWidth(Mth.clamp(getWidth(), minWidth, maxWidth));
-		setHeight((int) ((float) (Math.max(1, formattedText.size()) * textSpacing - (textSpacing - getFont().lineHeight + 1)) * scale));
+		setHeight((int) ((float) (Math.max(minLines, Math.min(formattedText.size(), maxLines)) * textSpacing - (textSpacing - getFont().lineHeight + 1)) * scale));
 		//System.out.println("dims="+this.getX()+","+this.getY()+":"+this.getWidth()+","+this.getHeight());
 		return this;
 	}
 
 	@Override
-	public void getTooltip(Consumer<Component> list) {
+	public void getTooltip(TooltipBuilder list) {
 		if (tooltip && formattedText.size() > 1) {
 			list.accept(component);
 		}
@@ -133,20 +146,35 @@ public class TextField extends UIWidget {
 			boolean centeredV = this.isCenteredV();
 			int col = textColor;
 
-			int tx = x + (centered ? w / 2 : 0);
+			;
 			int ty = y + (centeredV ? (h - getFont().lineHeight) / 2 : 0);
 			int i=-1;
 			if (scale == 1.0F) {
 				for (FormattedText text:formattedText) {
+					int tx = x + (centered ? (w-(int) ((float) getFont().width(text) )) / 2 : 0);
 					graphics.drawString(getFont(),Language.getInstance().getVisualOrder(text), tx, ty + (++i) * textSpacing, col, isShadow());
+					if(i+1>=maxLines) {
+						break;
+					}
 				}
 			} else {
 				graphics.pose().pushPose();
-				graphics.pose().translate(tx, ty, 0.0D);
+				graphics.pose().translate(0, ty, 0.0D);
 				graphics.pose().scale(scale, scale, 1.0F);
 
 				for (FormattedText text:formattedText) {
+					if(centered) {
+						graphics.pose().pushPose();
+						int tx = x + (centered ? (w-(int) ((float) getFont().width(text) * scale)) / 2 : 0);
+						graphics.pose().translate(tx, 0, 0.0D);
+					}
 					graphics.drawString(getFont(), Language.getInstance().getVisualOrder(text), 0, (++i) * textSpacing, col, isShadow());
+					if(centered) {
+						graphics.pose().popPose();
+					}
+					if(i+1>=maxLines) {
+						break;
+					}
 				}
 
 				graphics.pose().popPose();
@@ -156,7 +184,7 @@ public class TextField extends UIWidget {
 	
 	public Optional<Style> getStyle(int mouseX, int mouseY) {
 		int line = (mouseY - getY()) / getFont().lineHeight;
-		if (line >= 0 && line < formattedText.size()) {
+		if (line >= 0 && line < formattedText.size() && line<maxLines) {
 			boolean centered = this.isCentered();
 			int textWidth = getFont().width(formattedText.get(line));
 			int xStart = centered ? getX() + (getWidth() - textWidth) / 2: getX();

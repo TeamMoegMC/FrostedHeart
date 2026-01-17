@@ -166,6 +166,7 @@
   "gui.jei.category.frostedheart.incubator": "Інкубатор",
   "gui.jei.category.frostedheart.knife_cutting": "Розрізання ножем",
   "gui.jei.category.frostedheart.sauna": "Терапія сауною",
+  "gui.jei.category.frostedheart.biome_mine_resource": "Ресурс шахти біома",
   "gui.jei.info.require_research": "Для відображення деяких рецептів може знадобитися додатковий пошук. Якщо ви закінчили відповідне дослідження, перейдіть на іншу сторінку, щоб переглянути рецепти.",
   "itemGroup.frostedheart.misc": "Frosted Heart: Різне",
   "itemGroup.frostedheart.ingredients": "Frosted Heart: Інгредієнти",

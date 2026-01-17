@@ -19,19 +19,18 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.effects.Effect;
 
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class LargeEffectWidget extends EffectWidget {
 
-    public LargeEffectWidget(Panel panel, Effect e, Research r) {
+    public LargeEffectWidget(UIElement panel, Effect e, Research r) {
         super(panel, e, r);
         super.setSize(36, 36);
     }
@@ -49,14 +48,14 @@ public class LargeEffectWidget extends EffectWidget {
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        GuiHelper.setupDrawing();
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        CGuiHelper.resetGuiDrawing();
         TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
         icon.draw(matrixStack, x + 2, y + 2, w - 4, h - 4);
         if (ClientResearchDataAPI.getData().get().isEffectGranted(r, e)) {
             matrixStack.pose().pushPose();
             matrixStack.pose().translate(0, 0, 300);
-            GuiHelper.setupDrawing();
+            CGuiHelper.resetGuiDrawing();
             TechIcons.FIN.draw(matrixStack, x + 2, y + 2, 32, 32);
             matrixStack.pose().popPose();
         }

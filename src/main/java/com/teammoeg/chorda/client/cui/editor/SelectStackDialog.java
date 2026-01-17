@@ -38,12 +38,13 @@ import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.Button;
-import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextBox;
 import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
@@ -81,7 +82,7 @@ public class SelectStackDialog<T> extends EditDialog {
 		T getDefaultValue();
 		boolean isEmpty(T t);
 		Component getTitle(T t);
-		void appendTooltip(T t,Consumer<Component> tooltip);
+		void appendTooltip(T t,TooltipBuilder tooltip);
 		String getModid(T t);
 		boolean isSame(T t1,T t2);
 		CompoundTag getTag(T t);
@@ -113,7 +114,7 @@ public class SelectStackDialog<T> extends EditDialog {
 		}
 
 		@Override
-		public void appendTooltip(ItemStack t, Consumer<Component> tooltip) {
+		public void appendTooltip(ItemStack t, TooltipBuilder tooltip) {
 			for(Component i:t.getTooltipLines(ClientUtils.getPlayer(), TooltipFlag.NORMAL))
 				tooltip.accept(i);
 		}
@@ -224,15 +225,15 @@ public class SelectStackDialog<T> extends EditDialog {
     public ResourceMode<T> type;
     private final Consumer<T> callback;
     private final TextButton buttonCancel, buttonAccept;
-    private final Layer panelStacks;
+    private final UILayer panelStacks;
     private final LayerScrollBar scrollBar;
     private final TextBox searchBox;
-    private final Layer tabs;
+    private final UILayer tabs;
     public long update = Long.MAX_VALUE;
     private T current;
     private boolean isAdvanced;
     @SafeVarargs
-	public SelectStackDialog(UIWidget p, Component label, T orig, Consumer<T> cb,ResourceMode<T> mode,boolean isAdvanced,ResourceLister<T>...listers) {
+	public SelectStackDialog(UIElement p, Component label, T orig, Consumer<T> cb,ResourceMode<T> mode,boolean isAdvanced,ResourceLister<T>...listers) {
         super(p);
         setSize(222, 150);
         callback = cb;
@@ -274,7 +275,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
         buttonAccept.setPosAndSize(width - bsize -29, height - 24, bsize, 16);
 
-        panelStacks = new Layer(this) {
+        panelStacks = new UILayer(this) {
             @Override
             public void addUIElements() {
                 update = System.currentTimeMillis() + 100L;
@@ -307,7 +308,7 @@ public class SelectStackDialog<T> extends EditDialog {
         searchBox.ghostText = I18n.get("gui.search_box");
         searchBox.setFocused(true);
 
-        tabs = new Layer(this) {
+        tabs = new UILayer(this) {
             @Override
             public void addUIElements() {
                 add(new ButtonSwitchMode(tabs));
@@ -324,7 +325,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
             @Override
             public void alignWidgets() {
-                for (UIWidget widget : super.elements) {
+                for (UIElement widget : super.elements) {
                     widget.setSize(20, 20);
                 }
                 setWidth(20);
@@ -375,14 +376,14 @@ public class SelectStackDialog<T> extends EditDialog {
         }
     }
 
-    public List<UIWidget> getItems(String search, Layer panel) {
+    public List<UIElement> getItems(String search, UILayer panel) {
 
         if (activeMode == null) {
             return Collections.emptyList();
         }
 
         Collection<T> items = activeMode.getResources();
-        List<UIWidget> widgets = new ArrayList<>(search.isEmpty() ? items.size() + 1 : 64);
+        List<UIElement> widgets = new ArrayList<>(search.isEmpty() ? items.size() + 1 : 64);
 
         String mod = "";
         if (search.startsWith("@")) {
@@ -414,10 +415,10 @@ public class SelectStackDialog<T> extends EditDialog {
     public void onClose() {
     }
 
-    private void updateItemWidgets(List<UIWidget> items) {
+    private void updateItemWidgets(List<UIElement> items) {
         panelStacks.getElements().clear();
-        for(UIWidget elm:items)
-        	panelStacks.add((UIWidget)elm);
+        for(UIElement elm:items)
+        	panelStacks.add((UIElement)elm);
         scrollBar.setPosAndSize(panelStacks.getX() + panelStacks.getWidth() +3, panelStacks.getY() - 1, 10, panelStacks.getHeight() + 2);
         scrollBar.setValue(0);
         
@@ -425,7 +426,7 @@ public class SelectStackDialog<T> extends EditDialog {
     }
 
     private class ButtonCaps extends ButtonStackConfig {
-        public ButtonCaps(UIWidget panel) {
+        public ButtonCaps(UIElement panel) {
             super(panel, Components.str("Caps"), CIcons.getIcon(Items.ANVIL));
         }
 
@@ -454,7 +455,7 @@ public class SelectStackDialog<T> extends EditDialog {
     }
 
     private class ButtonCount extends ButtonStackConfig {
-        public ButtonCount(UIWidget panel) {
+        public ButtonCount(UIElement panel) {
             super(panel, Components.str("Count"), CIcons.getIcon(Items.PAPER));
         }
 
@@ -466,8 +467,8 @@ public class SelectStackDialog<T> extends EditDialog {
     }
 
     private class ButtonEditData extends Button {
-        public ButtonEditData(UIWidget panel) {
-            super(panel, Component.empty(), CIcons.getIcon(Items.BARRIER));
+        public ButtonEditData(UIElement panel) {
+            super(panel, Components.immutableEmpty(), CIcons.getIcon(Items.BARRIER));
         }
 
         @Override
@@ -477,7 +478,7 @@ public class SelectStackDialog<T> extends EditDialog {
         }
 
         @Override
-		public void getTooltip(Consumer<Component> tooltip) {
+		public void getTooltip(TooltipBuilder tooltip) {
 			type.appendTooltip(current, tooltip);
 		}
 
@@ -504,7 +505,7 @@ public class SelectStackDialog<T> extends EditDialog {
     }
 
     private class ButtonNBT extends ButtonStackConfig {
-        public ButtonNBT(UIWidget panel) {
+        public ButtonNBT(UIElement panel) {
             super(panel, Components.str("nbt"), CIcons.getIcon(Items.NAME_TAG));
         }
 
@@ -523,7 +524,7 @@ public class SelectStackDialog<T> extends EditDialog {
     }
 
     private abstract class ButtonStackConfig extends Button {
-        public ButtonStackConfig(UIWidget panel, Component title, CIcon icon) {
+        public ButtonStackConfig(UIElement panel, Component title, CIcon icon) {
             super(panel, title, icon);
         }
 
@@ -536,13 +537,13 @@ public class SelectStackDialog<T> extends EditDialog {
     private class ButtonSwitchMode extends Button {
         private final Iterator<ResourceLister<T>> modeIterator = Iterators.cycle(modes);
 
-        public ButtonSwitchMode(UIWidget panel) {
+        public ButtonSwitchMode(UIElement panel) {
             super(panel);
             activeMode = modeIterator.next();
         }
 
         @Override
-        public void getTooltip(Consumer<Component> list) {
+        public void getTooltip(TooltipBuilder list) {
             super.getTooltip(list);
             list.accept(activeMode.getDisplayName().withStyle(ChatFormatting.GRAY).append(Components.str(" [" + panelStacks.getElements().size() + "]").withStyle(ChatFormatting.DARK_GRAY)));
         }
@@ -567,8 +568,8 @@ public class SelectStackDialog<T> extends EditDialog {
 
     private class ItemStackButton extends Button {
         private final T stack;
-        private ItemStackButton(UIWidget panel, T is) {
-            super(panel, Component.empty(), CIcons.getIcon(Items.BARRIER));
+        private ItemStackButton(UIElement panel, T is) {
+            super(panel, Components.immutableEmpty(), CIcons.getIcon(Items.BARRIER));
             setSize(18, 18);
             stack = is;
             title = null;
@@ -576,7 +577,7 @@ public class SelectStackDialog<T> extends EditDialog {
         }
 
         @Override
-        public void getTooltip(Consumer<Component> list) {
+        public void getTooltip(TooltipBuilder list) {
         	type.appendTooltip(stack, list);
         }
 

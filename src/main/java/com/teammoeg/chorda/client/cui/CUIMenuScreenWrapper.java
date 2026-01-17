@@ -1,26 +1,23 @@
 package com.teammoeg.chorda.client.cui;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.platform.Window;
 import com.teammoeg.chorda.client.CInputHelper;
-import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 
-public class CUIMenuScreen<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> implements CUIScreenManager {
+public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> implements CUIScreen {
 	private final PrimaryLayer primaryLayer;
 
-	public CUIMenuScreen(PrimaryLayer g, T menu, Inventory playerInventory, Component title) {
+	public CUIMenuScreenWrapper(PrimaryLayer g, T menu, Inventory playerInventory, Component title) {
 		super(menu, playerInventory, title);
 		primaryLayer = g;
 		primaryLayer.setScreen(this);
@@ -29,7 +26,7 @@ public class CUIMenuScreen<T extends AbstractContainerMenu> extends AbstractCont
 	@Override
 	public void init() {
 		super.init();
-		primaryLayer.refresh();
+		primaryLayer.initGui();
 
 	}
 
@@ -45,8 +42,9 @@ public class CUIMenuScreen<T extends AbstractContainerMenu> extends AbstractCont
             primaryLayer.back();
             return true;
         } else {
+        	boolean accepted=(primaryLayer.onMousePressed(MouseButton.of(button)));
         	
-            return (primaryLayer.onMousePressed(MouseButton.of(button))) || super.mouseClicked(x, y, button);
+            return accepted || super.mouseClicked(x, y, button);
         }
     }
 
@@ -107,26 +105,24 @@ public class CUIMenuScreen<T extends AbstractContainerMenu> extends AbstractCont
 		CGuiHelper.resetGuiDrawing();
 		primaryLayer.render(graphics, leftPos, topPos, imageWidth, imageHeight);
 	}
-	 List<Component> display=new ArrayList<>();
 	@Override
 	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
 		graphics.pose().pushPose();
 		//graphics.pose().translate(-leftPos, -topPos, 0);
 		CGuiHelper.resetGuiDrawing();
-
+		
 		primaryLayer.drawForeground(graphics, 0, 0, imageWidth, imageHeight);
+		TooltipBuilder builder=new TooltipBuilder(600);
+		primaryLayer.getTooltip(builder);
 
-		primaryLayer.getTooltip(display::add);
-
-		 if (!display.isEmpty()){
-			 graphics.pose().translate(0, 0, 600);
-	            graphics.setColor(1f, 1f, 1f, 0.8f);
-	            graphics.renderTooltip(ClientUtils.getMc().font, display, Optional.empty(), mouseX, Math.max(mouseY, 18));
-	            graphics.setColor(1f, 1f, 1f, 1f);
-		}
-
+		graphics.pose().translate(-leftPos, -topPos, 0);
+		builder.draw(graphics, mouseX, mouseY);
 		graphics.pose().popPose();
-		display.clear();
+		Cursor cs=primaryLayer.getCursor();
+		if(cs==null)
+			Cursor.reset();
+		else
+			cs.use();
 	}
 
 	@Override
@@ -138,12 +134,14 @@ public class CUIMenuScreen<T extends AbstractContainerMenu> extends AbstractCont
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-		renderBackground(graphics);
 		Window win=super.minecraft.getWindow();
+		primaryLayer.onBeforeRender();
         leftPos=(win.getGuiScaledWidth() - primaryLayer.width) / 2;
         topPos=(win.getGuiScaledHeight() - primaryLayer.height) / 2;
 		imageWidth = primaryLayer.width;
 		imageHeight = primaryLayer.height;
+		renderBackground(graphics);
+		CGuiHelper.resetGuiDrawing();
 		
 		
 		primaryLayer.updateGui(mouseX-leftPos, mouseY-topPos, partialTicks);
@@ -160,6 +158,7 @@ public class CUIMenuScreen<T extends AbstractContainerMenu> extends AbstractCont
 	@Override
 	public void removed() {
 		primaryLayer.onClosed();
+		Cursor.reset();
 		super.removed();
 	}
 
@@ -170,5 +169,10 @@ public class CUIMenuScreen<T extends AbstractContainerMenu> extends AbstractCont
 	@Override
 	public PrimaryLayer getPrimaryLayer() {
 		return primaryLayer;
+	}
+
+	@Override
+	public Screen getScreen() {
+		return this;
 	}
 }

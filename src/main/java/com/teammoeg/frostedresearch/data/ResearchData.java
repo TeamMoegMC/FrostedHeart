@@ -19,6 +19,12 @@
 
 package com.teammoeg.frostedresearch.data;
 
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.io.CodecUtil;
@@ -28,8 +34,6 @@ import com.teammoeg.frostedresearch.research.clues.Clue;
 import com.teammoeg.frostedresearch.research.effects.Effect;
 
 import lombok.Getter;
-
-import java.util.*;
 
 public class ResearchData implements IEnvironment {
 

@@ -24,7 +24,6 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * 按下后显示另一条信息的 IconButton
@@ -56,7 +55,7 @@ public class ActionStateIconButton extends IconButton {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         super.renderWidget(graphics, mouseX, mouseY, partialTicks);
         if (!isHovered()) {
             setMessage(originalMessage);

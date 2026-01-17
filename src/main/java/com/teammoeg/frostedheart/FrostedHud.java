@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
-import com.teammoeg.chorda.client.cui.CUIScreen;
-import com.teammoeg.chorda.client.cui.Layer;
+import com.teammoeg.chorda.client.cui.CUIScreenWrapper;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.cui.category.CategoryHelper;
 import com.teammoeg.chorda.client.ui.*;
 import com.teammoeg.chorda.client.ui.Point;
@@ -886,7 +886,7 @@ public class FrostedHud {
         boolean forceEnables = FHConfig.COMMON.forceEnableTemperatureForecast.get();
         renderForecast = (forceEnables
                 || (configAllows && ClientResearchDataAPI.getData().get().getVariantDouble(ResearchVariant.HAS_FORECAST)>0))
-        && ((BossHealthOverlayAccess) Minecraft.getInstance().gui.getBossOverlay()).getEvents().isEmpty(); // check if not boss fight
+        && ((BossHealthOverlayAccess) ClientUtils.getGui().getBossOverlay()).getEvents().isEmpty(); // check if not boss fight
     }
 
     private static void renderTemp(GuiGraphics stack, Minecraft mc, float temp, int tlevel, int offsetX, int offsetY,
@@ -978,7 +978,7 @@ public class FrostedHud {
         mc.getProfiler().pop();
     }
 
-    static UIWidget hoveredEle = null;
+    static UIElement hoveredEle = null;
     public static void renderDebugOverlay(GuiGraphics stack, Minecraft mc) {
         Screen screen = mc.screen;
         Font font = mc.font;
@@ -1037,24 +1037,24 @@ public class FrostedHud {
         lines.add(Component.literal("Current Screen: " + (screen == null ? "Null" : screen.getClass().getSimpleName())));
 
         PrimaryLayer pLayer = null;
-        if (screen instanceof CUIScreen cui) {
+        if (screen instanceof CUIScreenWrapper cui) {
             pLayer = cui.getPrimaryLayer();
         }
         // CUI
         if (pLayer != null) {
-            Deque<Map.Entry<Iterator<UIWidget>, Integer>> entries = new ArrayDeque<>();
+            Deque<Map.Entry<Iterator<UIElement>, Integer>> entries = new ArrayDeque<>();
             entries.push(new AbstractMap.SimpleEntry<>(pLayer.getElements().iterator(), 0));
             if ((pLayer.isMouseOver() || shift)) {
                 int il = 0;
                 // 遍历所有widget
                 while (!entries.isEmpty()) {
-                    Map.Entry<Iterator<UIWidget>, Integer> topEntry = entries.peek();
-                    Iterator<UIWidget> iterator = topEntry.getKey();
+                    Map.Entry<Iterator<UIElement>, Integer> topEntry = entries.peek();
+                    Iterator<UIElement> iterator = topEntry.getKey();
                     int indentLevel = topEntry.getValue();
 
                     // 开盒widget
                     if (iterator.hasNext()) {
-                        UIWidget widget = iterator.next();
+                        UIElement widget = iterator.next();
                         if (widget.isMouseOver()) {
                             hoveredEle = widget;
                             il = indentLevel;
@@ -1085,7 +1085,7 @@ public class FrostedHud {
                             CGuiHelper.drawBox(stack, b, color, false);
                         }
 
-                        if (widget instanceof Layer childLayer && (widget.isMouseOver() || shift)) {
+                        if (widget instanceof UILayer childLayer && (widget.isMouseOver() || shift)) {
                             entries.push(new AbstractMap.SimpleEntry<>(childLayer.getElements().iterator(), indentLevel + 1));
                         }
                     } else {
@@ -1099,9 +1099,9 @@ public class FrostedHud {
                     stack.pose().translate(0, 0, 10);
                     Rect b = CGuiHelper.getWidgetBounds(hoveredEle, pLayer);
                     if (!shift) {
-                        if (hoveredEle instanceof Layer layer1) {
+                        if (hoveredEle instanceof UILayer layer1) {
                             for (int i = 0; i < layer1.getElements().size(); i++) {
-                                UIWidget le = layer1.getElements().get(i);
+                                UIElement le = layer1.getElements().get(i);
                                 Rect b1 = CGuiHelper.getWidgetBounds(le, pLayer);
                                 int color = Color.HSBtoRGB((il+1) / 6F, 1, 1);
                                 CGuiHelper.drawRect(stack, b1, Colors.setAlpha(color, 0.1F));

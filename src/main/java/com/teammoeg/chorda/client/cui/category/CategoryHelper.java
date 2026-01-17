@@ -1,6 +1,6 @@
 package com.teammoeg.chorda.client.cui.category;
 
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.content.archive.ArchiveCategory;
 import net.minecraft.client.resources.language.I18n;
@@ -46,7 +46,7 @@ public class CategoryHelper {
 
     public static void collectAllEntries(Category root, List<Entry> entries) {
         if (root == null || entries == null) return;
-        for (UIWidget element : root.getElements()) {
+        for (UIElement element : root.getElements()) {
             if (element instanceof Entry entry) {
                 entries.add(entry);
             } else if (element instanceof Category category) {
@@ -55,14 +55,14 @@ public class CategoryHelper {
         }
     }
 
-    public static String getRawTitle(UIWidget widget) {
+    public static String getRawTitle(UIElement widget) {
         return widget == null ? "" : Components.getKeyOrElseStr(widget.getTitle());
     }
 
     public static String path(Entry entry) {
         if (entry == null) return "/";
         StringBuilder path = new StringBuilder(getRawTitle(entry)).append("/");
-        UIWidget parent = entry.getParent();
+        UIElement parent = entry.getParent();
         while (!(parent instanceof ArchiveCategory)) {
             path.insert(0, getRawTitle(parent) + "/");
             parent = parent.getParent();

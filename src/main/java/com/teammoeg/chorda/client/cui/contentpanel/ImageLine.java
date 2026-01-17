@@ -1,6 +1,6 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
-import com.teammoeg.chorda.client.cui.UIWidget;
+import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.UV;
 import com.teammoeg.frostedheart.content.archive.Alignment;
@@ -19,7 +19,7 @@ public class ImageLine extends Line<ImageLine> {
     protected UV imgUV;
     protected int backgroundColor = 0;
 
-    public ImageLine(UIWidget parent, ResourceLocation imageLocation, Alignment alignment) {
+    public ImageLine(UIElement parent, ResourceLocation imageLocation, Alignment alignment) {
         super(parent, alignment);
         setImage(imageLocation);
     }

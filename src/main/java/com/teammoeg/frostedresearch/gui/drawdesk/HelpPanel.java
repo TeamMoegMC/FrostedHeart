@@ -19,17 +19,16 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
-import com.teammoeg.chorda.client.cui.RTextField;
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TextField;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.client.gui.GuiGraphics;
 
-class HelpPanel extends Panel {
+class HelpPanel extends UILayer {
     DrawDeskPanel ot;
 
     public HelpPanel(DrawDeskPanel panel) {
@@ -38,22 +37,22 @@ class HelpPanel extends Panel {
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         float scale = Float.parseFloat(Lang.translateGui("minigame.scale").getString());
-        RTextField t1 = new RTextField(this).setColor(TechIcons.text).addFlags(0).setScale(scale)
-                .setMaxWidth(112).setMaxLine(2).setText(Lang.translateGui("minigame.t1"));
+        TextField t1 = new TextField(this).setColor(TechIcons.text).setScale(scale)
+                .setMaxWidth(112).setMaxLines(2).setText(Lang.translateGui("minigame.t1"));
         t1.setPos(8, 70);
-        RTextField t2 = new RTextField(this).setColor(TechIcons.text).addFlags(0).setScale(scale)
-                .setMaxWidth(114).setMaxLine(2).setText(Lang.translateGui("minigame.t2"));
+        TextField t2 = new TextField(this).setColor(TechIcons.text).setScale(scale)
+                .setMaxWidth(114).setMaxLines(2).setText(Lang.translateGui("minigame.t2"));
         t2.setPos(124, 70);
-        RTextField t3 = new RTextField(this).setColor(TechIcons.text).addFlags(0).setScale(scale)
-                .setMaxWidth(90).setMaxLine(3).setText(Lang.translateGui("minigame.t3"));
+        TextField t3 = new TextField(this).setColor(TechIcons.text).setScale(scale)
+                .setMaxWidth(90).setMaxLines(3).setText(Lang.translateGui("minigame.t3"));
         t3.setPos(5, 137);
-        RTextField t4 = new RTextField(this).setColor(TechIcons.text).addFlags(0).setScale(scale)
-                .setMaxWidth(68).setMaxLine(3).setText(Lang.translateGui("minigame.t4"));
+        TextField t4 = new TextField(this).setColor(TechIcons.text).setScale(scale)
+                .setMaxWidth(68).setMaxLines(3).setText(Lang.translateGui("minigame.t4"));
         t4.setPos(95, 137);
-        RTextField t5 = new RTextField(this).setColor(TechIcons.text).addFlags(0).setScale(scale)
-                .setMaxWidth(74).setMaxLine(3).setText(Lang.translateGui("minigame.t5"));
+        TextField t5 = new TextField(this).setColor(TechIcons.text).setScale(scale)
+                .setMaxWidth(74).setMaxLines(3).setText(Lang.translateGui("minigame.t5"));
         t5.setPos(165, 137);
         add(t1);
         add(t2);
@@ -62,7 +61,7 @@ class HelpPanel extends Panel {
         add(t5);
         Button closePanel = new Button(this) {
             @Override
-            public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+            public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
             }
 
             @Override
@@ -79,17 +78,17 @@ class HelpPanel extends Panel {
     }
 
     @Override
-    public void draw(GuiGraphics arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
+    public void render(GuiGraphics guiGraphics, int x, int y, int w, int h) {
         if (ot.showHelp) {
 
-            super.draw(arg0, arg1, arg2, arg3, arg4, arg5);
-            arg1.drawString(arg0, Lang.translateGui("minigame.match"), arg2 + 8, arg3 + 90, TechIcons.text, 0);
-            arg1.drawString(arg0, Lang.translateGui("minigame.display"), arg2 + 8, arg3 + 2, TechIcons.text, 0);
+            super.render(guiGraphics, x, y, w, h);
+            guiGraphics.drawString(getFont(), Lang.translateGui("minigame.match"), x + 8, y + 90, TechIcons.text, false);
+            guiGraphics.drawString(getFont(), Lang.translateGui("minigame.display"), x + 8, y + 2, TechIcons.text, false);
         }
     }
 
     @Override
-    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         DrawDeskIcons.HELP.draw(matrixStack, x, y, w, h);
     }
 

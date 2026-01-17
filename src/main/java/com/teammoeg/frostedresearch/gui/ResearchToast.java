@@ -19,7 +19,8 @@
 
 package com.teammoeg.frostedresearch.gui;
 
-import com.teammoeg.frostedheart.FHMain;
+import java.util.List;
+
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.research.Research;
 
@@ -28,8 +29,6 @@ import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
-
-import java.util.List;
 
 public class ResearchToast implements Toast {
     private final Research r;

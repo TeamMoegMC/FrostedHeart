@@ -11,7 +11,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
-public class ScrollBar extends UIWidget {
+public class ScrollBar extends UIElement {
 	@Getter
 	final boolean isVertical;
 	@Getter
@@ -30,7 +30,7 @@ public class ScrollBar extends UIWidget {
 	@Setter
 	private boolean ignoreDirection = true;
 
-	public ScrollBar(UIWidget parent, boolean isVertical, int size) {
+	public ScrollBar(UIElement parent, boolean isVertical, int size) {
 		super(parent);
 		this.isVertical = isVertical;
 		scrollBarSize = Math.max(size, 0);
@@ -91,10 +91,10 @@ public class ScrollBar extends UIWidget {
 	}
 
 	@Override
-	public void getTooltip(Consumer<Component> list) {
+	public void getTooltip(TooltipBuilder list) {
 		if (showValueTooltip()) {
 			Component t = getTitle();
-			list.accept(Components.str(t == Component.empty() ? (Double.toString(getValue())) : (t + ": " + getValue())));
+			list.accept(Components.str(Components.isEmpty(t) ? (Double.toString(getValue())) : (t + ": " + getValue())));
 		}
 	}
 

@@ -19,16 +19,17 @@
 
 package com.teammoeg.frostedresearch.gui;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.frostedresearch.FRMain;
 
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
 
 public class FHTextUtil {
 

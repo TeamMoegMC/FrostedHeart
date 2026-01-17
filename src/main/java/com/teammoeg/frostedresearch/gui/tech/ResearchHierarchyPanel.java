@@ -19,11 +19,22 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.teammoeg.chorda.client.cui.Button;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;
-import com.teammoeg.chorda.client.icon.CIconFTBWrapper;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FHResearch;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.gui.ResearchEditUtils;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.TechTextButton;
@@ -31,41 +42,25 @@ import com.teammoeg.frostedresearch.gui.ThickLine;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.ResearchEditors;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-public class ResearchHierarchyPanel extends Panel {
+public class ResearchHierarchyPanel extends UILayer {
     private static int[] ButtonPos = new int[]{76, 44, 108, 12, 140};
     public ResearchPanel researchPanel;
     List<ThickLine> lines = new ArrayList<>();
 
     public ResearchHierarchyPanel(ResearchPanel panel) {
         super(panel);
-        this.setOnlyInteractWithWidgetsInside(true);
-        this.setOnlyRenderWidgetsInside(true);
         researchPanel = panel;
     }
 
     @Override
-    public void addWidgets() {
+    public void addUIElements() {
         if (FHResearch.editor) {
             int offset = 5;
             if (researchPanel.selectedResearch != null) {
-                Button par = new TechTextButton(this, Components.str("parents"), Icon.empty()) {
+            	TechTextButton par = new TechTextButton(this, Components.str("parents"), CIcons.nop()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add parent
@@ -84,8 +79,8 @@ public class ResearchHierarchyPanel extends Panel {
                 };
                 par.setPos(offset, 130);
                 add(par);
-                offset += par.width + 3;
-                Button chd = new TechTextButton(this, Components.str("children"), Icon.empty()) {
+                offset += par.getWidth() + 3;
+                TechTextButton chd = new TechTextButton(this, Components.str("children"), CIcons.nop()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add children
@@ -103,10 +98,10 @@ public class ResearchHierarchyPanel extends Panel {
                 };
                 chd.setPos(offset, 130);
                 add(chd);
-                offset += chd.width + 3;
+                offset += chd.getWidth() + 3;
             }
             {
-                Button create = new TechTextButton(this, Components.str("new"), Icon.empty()) {
+            	TechTextButton create = new TechTextButton(this, Components.str("new"), CIcons.nop()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                     	ResearchEditUtils.editResearch(this,null,researchPanel.selectedCategory);
@@ -114,10 +109,10 @@ public class ResearchHierarchyPanel extends Panel {
                 };
                 create.setPos(offset, 130);
                 add(create);
-                offset += create.width + 3;
+                offset += create.getWidth() + 3;
             }
             if (researchPanel.selectedResearch != null) {
-                Button create = new TechTextButton(this, Components.str("edit"), Icon.empty()) {
+            	TechTextButton create = new TechTextButton(this, Components.str("edit"), CIcons.nop()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         ResearchEditUtils.editResearch(this, researchPanel.selectedResearch);
@@ -125,17 +120,17 @@ public class ResearchHierarchyPanel extends Panel {
                 };
                 create.setPos(offset, 130);
                 add(create);
-                offset += create.width + 3;
-                Button rem = new TechTextButton(this, Components.str("delete"), Icon.empty()) {
+                offset += create.getWidth() + 3;
+                TechTextButton rem = new TechTextButton(this, Components.str("delete"), CIcons.nop()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         researchPanel.selectedResearch.delete();
-                        researchPanel.refreshWidgets();
+                        researchPanel.refresh();
                     }
                 };
                 rem.setPos(offset, 130);
                 add(rem);
-                offset += rem.width + 3;
+                offset += rem.getWidth() + 3;
             }
         }
         if (researchPanel.selectedResearch == null)
@@ -252,22 +247,21 @@ public class ResearchHierarchyPanel extends Panel {
     }
 
     @Override
-    public void clearWidgets() {
-        super.clearWidgets();
+    public void clearElement() {
+        super.clearElement();
         lines.clear();
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        super.draw(matrixStack, theme, x, y, w, h);
-        theme.drawString(matrixStack, Lang.translateGui("research_hierarchy"), x + 3, y + 3, TechIcons.text, 0);
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        super.render(matrixStack, x, y, w, h);
+        matrixStack.drawString(getFont(), Lang.translateGui("research_hierarchy"), x + 3, y + 3, TechIcons.text, false);
         TechIcons.HLINE_L.draw(matrixStack, x + 1, y + 13, 80, 3);
     }
 
     @Override
-    public void drawOffsetBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        // theme.drawPanelBackground(matrixStack, x, y, w, h);
-        GuiHelper.setupDrawing();
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+    	CGuiHelper.resetGuiDrawing();
         for (ThickLine l : lines)
             l.draw(matrixStack, x, y);
     }
@@ -293,7 +287,7 @@ public class ResearchHierarchyPanel extends Panel {
             if (doShow())
                 color = TechIcons.text;
             else
-                color = Color4I.rgb(0xADA691);
+                color = 0xADA691;
             super.draw(matrixStack, x, y);
         }
     }
@@ -316,14 +310,14 @@ public class ResearchHierarchyPanel extends Panel {
         Research research;
 
         public ResearchDetailButton(ResearchHierarchyPanel panel, Research research) {
-            super(panel, research.getName(), new CIconFTBWrapper(research.getIcon()));
+            super(panel, research.getName(), research.getIcon());
             this.research = research;
             this.researchScreen = panel.researchPanel;
             setSize(36, 36);
         }
 
         @Override
-        public void addMouseOverText(TooltipList list) {
+        public void getTooltip(TooltipBuilder list) {
             list.add(research.getName().copy().withStyle(ChatFormatting.BOLD));
             if (!research.isUnlocked()) {
                 list.add(Lang.translateTooltip("research_is_locked").withStyle(ChatFormatting.RED));
@@ -336,16 +330,16 @@ public class ResearchHierarchyPanel extends Panel {
         }
 
         @Override
-        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
             // this.drawBackground(matrixStack, theme, x, y, w, h);
-            GuiHelper.setupDrawing();
+            CGuiHelper.resetGuiDrawing();
             TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
             if (FHResearch.editor || research.isShowable()) {
-                this.drawIcon(matrixStack, theme, x + 2, y + 2, 32, 32);
+                this.drawIcon(matrixStack, x + 2, y + 2, 32, 32);
                 if (research.isCompleted()) {
                     matrixStack.pose().pushPose();
                     matrixStack.pose().translate(0, 0, 300);
-                    GuiHelper.setupDrawing();
+                    CGuiHelper.resetGuiDrawing();
                     TechIcons.FIN.draw(matrixStack, x + 2, y + 2, 32, 32);
                     matrixStack.pose().popPose();
                 }
@@ -377,7 +371,7 @@ public class ResearchHierarchyPanel extends Panel {
             if (doShow())
                 color = TechIcons.text;
             else
-                color = Color4I.rgb(0xADA691);
+                color = 0xADA691;
             super.draw(matrixStack, x, y);
         }
     }
@@ -389,7 +383,7 @@ public class ResearchHierarchyPanel extends Panel {
         Research parent;
 
         public ResearchSimpleButton(ResearchHierarchyPanel panel, Research research) {
-            super(panel, research.getName(), new CIconFTBWrapper(research.getIcon()));
+            super(panel, research.getName(), research.getIcon());
             this.research = research;
             this.researchScreen = panel.researchPanel;
             setSize(24, 24);
@@ -397,7 +391,7 @@ public class ResearchHierarchyPanel extends Panel {
         }
 
         @Override
-        public void addMouseOverText(TooltipList list) {
+        public void getTooltip(TooltipBuilder list) {
             list.add(research.getName().copy().withStyle(ChatFormatting.BOLD));
             if ((parent == null && !research.isUnlocked()) || (parent != null && !parent.isUnlocked())) {
                 list.add(Lang.translateTooltip("research_is_locked").withStyle(ChatFormatting.RED));
@@ -410,15 +404,15 @@ public class ResearchHierarchyPanel extends Panel {
         }
 
         @Override
-        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-            GuiHelper.setupDrawing();
+        public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        	CGuiHelper.resetGuiDrawing();
             TechIcons.SLOT.draw(matrixStack, x, y, w, h);
             if (FHResearch.editor || research.isShowable()) {
-                this.drawIcon(matrixStack, theme, x + 4, y + 4, 16, 16);
+                this.drawIcon(matrixStack, x + 4, y + 4, 16, 16);
                 if (research.isCompleted()) {
                     matrixStack.pose().pushPose();
                     matrixStack.pose().translate(0, 0, 300);
-                    GuiHelper.setupDrawing();
+                    CGuiHelper.resetGuiDrawing();
                     TechIcons.FIN.draw(matrixStack, x + 4, y + 4, 16, 16);
                     matrixStack.pose().popPose();
                 }

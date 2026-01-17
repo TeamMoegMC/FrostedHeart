@@ -21,43 +21,41 @@ package com.teammoeg.frostedresearch.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+import com.teammoeg.chorda.lang.Components;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
-import dev.ftb.mods.ftblibrary.util.client.PositionedIngredient;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 
-import java.util.Optional;
-
 public abstract class TechTextButton extends TechButton {
 
-    public TechTextButton(Panel panel, Component txt, Icon icon) {
+    public TechTextButton(UIElement panel, Component txt, CIcon icon) {
         super(panel, txt, icon);
-        setWidth(panel.getGui().getTheme().getStringWidth(txt) + (hasIcon() ? 28 : 8));
+        setWidth(getFont().width(txt) + (hasIcon() ? 28 : 8));
         setHeight(20);
     }
 
     @Override
-    public void addMouseOverText(TooltipList list) {
-        if (getGui().getTheme().getStringWidth(getTitle()) + (hasIcon() ? 28 : 8) > width) {
-            list.add(getTitle());
+    public void getTooltip(TooltipBuilder list) {
+    	Component component=getTitle();
+        if ((!Components.isEmpty(component))&&getFont().width(component) + (hasIcon() ? 28 : 8) > width) {
+            list.accept(component);
         }
     }
 
     @Override
-    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
         //drawBackground(matrixStack, theme, x, y, w, h);
         TechIcons.drawTexturedRect(matrixStack, x, y, w, h, isMouseOver());
         int s = h >= 16 ? 16 : 8;
         int off = (h - s) / 2;
         FormattedText title = getTitle();
         int textX = x;
-        int textY = y + (h - theme.getFontHeight() + 1) / 2;
+        int textY = y + (h - getFont().lineHeight + 1) / 2;
         int sw = ClientUtils.getMc().font.width(title);
         int mw = w - (hasIcon() ? off + s : 0) - 6;
 
@@ -72,21 +70,21 @@ public abstract class TechTextButton extends TechButton {
         }
 
         if (hasIcon()) {
-            drawIcon(matrixStack, theme, x + off, y + off, s, s);
+            drawIcon(matrixStack, x + off, y + off, s, s);
             textX += off + s;
         }
         //RenderSystem.setShaderColor(textY, sw, mw, h);
         RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
 
         //System.out.println(RenderSystem.getShader());
-        matrixStack.drawWordWrap(ClientUtils.font(), title, textX, textY, mw, TechIcons.text.rgba());
+        matrixStack.drawWordWrap(ClientUtils.font(), title, textX, textY, mw, TechIcons.text);
     }
 
-    @Override
+    /*@Override
     public Optional<PositionedIngredient> getIngredientUnderMouse() {
         Object igd = icon.getIngredient();
         return igd instanceof PositionedIngredient ? Optional.of((PositionedIngredient) igd) : Optional.empty();
-    }
+    }*/
 
 
     public boolean renderTitleInCenter() {
@@ -96,7 +94,7 @@ public abstract class TechTextButton extends TechButton {
     @Override
     public TechTextButton setTitle(Component txt) {
         super.setTitle(txt);
-        setWidth(getGui().getTheme().getStringWidth(getTitle()) + (hasIcon() ? 28 : 8));
+        setWidth(getFont().width(getTitle()) + (hasIcon() ? 28 : 8));
         return this;
     }
 
