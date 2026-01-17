@@ -144,7 +144,7 @@ public class TipWidget extends AbstractWidget {
         Font font = ClientUtils.font();
         PoseStack pose = graphics.pose();
         pose.pushPose();
-        pose.translate((context.pYaw - (int) context.pYaw), (context.pPitch - (int) context.pPitch), 0);
+        pose.translate((context.pYaw - (int) context.pYaw), (context.pPitch - (int) context.pPitch), 800);
 
         // 背景
         graphics.fill(

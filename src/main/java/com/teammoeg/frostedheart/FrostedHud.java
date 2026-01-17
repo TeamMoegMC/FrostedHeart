@@ -20,12 +20,13 @@
 package com.teammoeg.frostedheart;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.CUIScreenWrapper;
-import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.category.CategoryHelper;
 import com.teammoeg.chorda.client.ui.*;
 import com.teammoeg.chorda.client.ui.Point;
@@ -996,7 +997,7 @@ public class FrostedHud {
         int y = (int) (mc.mouseHandler.isMouseGrabbed() ? mc.getWindow().getHeight()*0.5F : mc.mouseHandler.ypos());
         int pick = Colors.getColorAt(x, y);
         String hex = Colors.toHexString(pick);
-        if (ClientUtils.isKeyDown(GLFW.GLFW_KEY_C)) {
+        if (CInputHelper.isKeyPressed(GLFW.GLFW_KEY_C)) {
             ClientUtils.copyToClipboard(hex);
         }
 

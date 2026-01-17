@@ -19,17 +19,8 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
-import static com.teammoeg.frostedheart.FHMain.*;
-import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.*;
-import static com.teammoeg.frostedheart.infrastructure.gen.FHTagGen.*;
-import static net.minecraft.world.level.block.Blocks.*;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import com.google.common.collect.ImmutableMap;
+import com.simibubi.create.AllShapes;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.ModelGen;
@@ -37,17 +28,23 @@ import com.teammoeg.caupona.CPTags;
 import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
-import com.teammoeg.frostedheart.content.agriculture.*;
+import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.content.agriculture.FertilizedDirt;
+import com.teammoeg.frostedheart.content.agriculture.FertilizedFarmlandBlock;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer.FertilizerType;
+import com.teammoeg.frostedheart.content.agriculture.RubberDandelionBlock;
+import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
+import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
+import com.teammoeg.frostedheart.content.agriculture.WildRubberDandelionBlock;
 import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.ThinIceBlock;
-import com.teammoeg.frostedheart.content.decoration.*;
-import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
-import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
-import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
+import com.teammoeg.frostedheart.content.decoration.*;
+import com.teammoeg.frostedheart.content.energy.wind.VAWTBlock;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticChestBlock;
@@ -77,7 +74,6 @@ import com.teammoeg.frostedheart.infrastructure.gen.FHLootGen;
 import com.teammoeg.frostedheart.item.FHBlockItem;
 import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
 import com.tterrag.registrate.util.entry.BlockEntry;
-
 import net.minecraft.advancements.critereon.StatePropertiesPredicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.data.loot.packs.VanillaBlockLoot;
@@ -88,7 +84,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
@@ -101,11 +96,20 @@ import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
 import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
-import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
+import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.ruinedMachines;
+import static com.teammoeg.frostedheart.infrastructure.gen.FHTagGen.*;
+import static net.minecraft.world.level.block.Blocks.*;
 
 @SuppressWarnings("unused")
 public class FHBlocks {
@@ -1983,6 +1987,38 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .item()
+            .transform(ModelGen.customItemModel())
+            .register();
+    public static final BlockEntry<VAWTBlock> FABRIC_VAWT = REGISTRATE.block("fabric_vawt",
+                    p -> VAWTBlock.create(FHProps.woodenProps, "fabric", 120, 1.125F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
+            .blockstate(FHBlockStateGen.existed())
+            .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
+            .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
+            .item()
+            .transform(ModelGen.customItemModel())
+            .register();
+    public static final BlockEntry<VAWTBlock> METAL_VAWT = REGISTRATE.block("metal_vawt",
+                    p -> VAWTBlock.create(FHProps.metalDecoProps, "metal", 240, 0.75F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
+            .blockstate(FHBlockStateGen.existed())
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
+            .item()
+            .transform(ModelGen.customItemModel())
+            .register();
+    public static final BlockEntry<VAWTBlock> ALLOY_VAWT = REGISTRATE.block("alloy_vawt",
+                    p -> VAWTBlock.create(FHProps.metalDecoProps, "alloy", 480, 1.0F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
+            .blockstate(FHBlockStateGen.existed())
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
+            .item()
+            .transform(ModelGen.customItemModel())
+            .register();
+    public static final BlockEntry<VAWTBlock> DSP_VAWT = REGISTRATE.block("dsp_vawt",
+                    p -> VAWTBlock.create(FHProps.metalDecoProps, "dsp", Integer.MAX_VALUE, 1.0F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
+            .blockstate(FHBlockStateGen.existed())
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .item()
             .transform(ModelGen.customItemModel())
             .register();

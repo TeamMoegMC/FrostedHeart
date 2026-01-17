@@ -23,7 +23,6 @@ import com.simibubi.create.content.kinetics.BlockStressValues.IStressValueProvid
 import com.simibubi.create.foundation.utility.Couple;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-
 import net.minecraft.world.level.block.Block;
 
 public class FHStress implements IStressValueProvider {
@@ -34,6 +33,10 @@ public class FHStress implements IStressValueProvider {
     @Override
     public double getCapacity(Block arg0) {
     	if(arg0 ==FHBlocks.STEAM_CORE.get())return FHConfig.COMMON.steamCoreCapacity.get();
+    	if(arg0 ==FHBlocks.FABRIC_VAWT.get())return 9;
+    	if(arg0 ==FHBlocks.METAL_VAWT.get())return 9;
+    	if(arg0 ==FHBlocks.ALLOY_VAWT.get())return 9;
+    	if(arg0 ==FHBlocks.DSP_VAWT.get())return 9;
         return 0;
     }
 
@@ -45,7 +48,11 @@ public class FHStress implements IStressValueProvider {
 
     @Override
     public boolean hasCapacity(Block arg0) {
-        return arg0 == FHBlocks.STEAM_CORE.get();
+        return arg0 == FHBlocks.STEAM_CORE.get()
+                || arg0 == FHBlocks.FABRIC_VAWT.get()
+                || arg0 == FHBlocks.METAL_VAWT.get()
+                || arg0 == FHBlocks.ALLOY_VAWT.get()
+                || arg0 == FHBlocks.DSP_VAWT.get();
     }
 
     @Override

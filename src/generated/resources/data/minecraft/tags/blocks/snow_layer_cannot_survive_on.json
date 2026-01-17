@@ -1,6 +1,10 @@
 {
   "values": [
     "frostedheart:thin_ice",
-    "frostedheart:firm_ice"
+    "frostedheart:firm_ice",
+    "frostedheart:fabric_vawt",
+    "frostedheart:metal_vawt",
+    "frostedheart:alloy_vawt",
+    "frostedheart:dsp_vawt"
   ]
 }

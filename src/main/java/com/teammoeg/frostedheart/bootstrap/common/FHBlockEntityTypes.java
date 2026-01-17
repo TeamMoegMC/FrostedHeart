@@ -19,18 +19,14 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
-import static com.teammoeg.frostedheart.FHMain.*;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.kinetics.base.HalfShaftInstance;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
+import com.simibubi.create.content.kinetics.base.SingleRotatingInstance;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlockEntity;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
+import com.teammoeg.frostedheart.content.energy.wind.VAWTBlockEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.NetworkCoreTileEntity;
@@ -54,7 +50,6 @@ import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlockEntity;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentTileEntity;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerTileEntity;
 import com.tterrag.registrate.util.entry.BlockEntityEntry;
-
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -62,6 +57,13 @@ import net.minecraft.world.level.block.entity.BlockEntityType.BlockEntitySupplie
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
 
 public class FHBlockEntityTypes {
     public static final BlockEntityEntry<CreativeHeaterBlockEntity> CREATIVE_HEATER = REGISTRATE
@@ -104,6 +106,13 @@ public class FHBlockEntityTypes {
         .validBlocks(FHBlocks.STEAM_CORE)
         .renderer(() -> HalfShaftRenderer::new)
         .register();
+
+    public static final BlockEntityEntry<VAWTBlockEntity> VAWT = REGISTRATE
+            .blockEntity("vawt", VAWTBlockEntity::new)
+            .instance(() -> SingleRotatingInstance::new, false)
+            .validBlocks(FHBlocks.FABRIC_VAWT, FHBlocks.METAL_VAWT, FHBlocks.ALLOY_VAWT, FHBlocks.DSP_VAWT)
+            .renderer(() -> KineticBlockEntityRenderer::new)
+            .register();
 
     public static final RegistryObject<BlockEntityType<FountainTileEntity>> FOUNTAIN = REGISTER.register(
             "fountain", makeType(FountainTileEntity::new, FHBlocks.FOUNTAIN_BASE::get)
