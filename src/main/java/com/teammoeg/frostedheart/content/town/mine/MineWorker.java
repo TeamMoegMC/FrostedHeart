@@ -25,6 +25,8 @@ import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import com.teammoeg.frostedheart.content.town.resource.action.*;
+import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;

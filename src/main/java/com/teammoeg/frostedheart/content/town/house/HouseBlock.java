@@ -61,10 +61,7 @@ public class HouseBlock extends AbstractTownWorkerBlock implements CEntityBlock<
             if (te == null) {
                 return InteractionResult.FAIL;
             }
-            te.refresh();
-            player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.displayClientMessage(Components.str(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
-            player.displayClientMessage(Components.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(Components.str("Status: "+te.getStatus()), false);
             player.displayClientMessage(Components.str("Raw temperature: " +
                     CMath.round(te.getTemperature(), 2)), false);
             player.displayClientMessage(Components.str("Temperature modifier: " +

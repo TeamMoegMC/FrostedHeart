@@ -34,6 +34,8 @@ import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseWorker;
+import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
+
 import lombok.Getter;
 import net.minecraft.world.level.block.Block;
 

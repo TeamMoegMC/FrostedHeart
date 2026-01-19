@@ -19,30 +19,30 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-public enum TownWorkerState{
-    NOT_INITIALIZED(-1), NOT_VALID(0), VALID(1), OCCUPIED_AREA_OVERLAPPED(2);
+public enum TownWorkerStatus{
+    NOT_INITIALIZED(0), NOT_VALID(1), VALID(2), OCCUPIED_AREA_OVERLAPPED(3),TOO_COLD(4),NOT_VALID_STRUCTURE(5));
 
     byte stateNum;
 
-    TownWorkerState(byte stateNum) {
+    TownWorkerStatus(byte stateNum) {
         this.stateNum = stateNum;
     }
-    TownWorkerState(int stateNum){
+    TownWorkerStatus(int stateNum){
         this.stateNum = (byte) stateNum;
     }
 
     public byte getStateNum() {
         return stateNum;
     }
-    public static TownWorkerState fromByte(byte stateNum) {
-        for (TownWorkerState state : values()) {
+    public static TownWorkerStatus fromByte(byte stateNum) {
+        for (TownWorkerStatus state : values()) {
             if (state.stateNum == stateNum) {
                 return state;
             }
         }
         throw new IllegalArgumentException("Invalid state number: " + stateNum);
     }
-    public static TownWorkerState fromInt(int stateNum) {return fromByte((byte) stateNum);}
+    public static TownWorkerStatus fromInt(int stateNum) {return fromByte((byte) stateNum);}
 
     public boolean isValid(){
         return this == VALID;

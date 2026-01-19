@@ -1,10 +1,11 @@
 package com.teammoeg.frostedheart.content.town.hunting;
 
-import com.teammoeg.frostedheart.content.town.TownWorkerData;
-import com.teammoeg.frostedheart.content.town.TownWorkerState;
+import com.teammoeg.frostedheart.content.town.TownWorkerStatus;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.WorkerResidentHandler;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
+
 import net.minecraft.nbt.CompoundTag;
 
 import static java.lang.Double.NEGATIVE_INFINITY;
@@ -18,7 +19,7 @@ public class HuntingBaseResidentHandler extends WorkerResidentHandler {
     @Override
     public double getResidentPriority(TownWorkerData workerData) {
         CompoundTag tileEntityNBT = workerData.getWorkData().getCompound("tileEntity");
-        if(tileEntityNBT.getByte("workerState") != TownWorkerState.VALID.getStateNum()) return NEGATIVE_INFINITY;
+        if(tileEntityNBT.getByte("workerState") != TownWorkerStatus.VALID.getStateNum()) return NEGATIVE_INFINITY;
         int maxResident = tileEntityNBT.getInt("maxResident");
         double rating = tileEntityNBT.getDouble("rating");
         int currentResidentNum = tileEntityNBT.getInt("currentResidentNum");
@@ -31,7 +32,7 @@ public class HuntingBaseResidentHandler extends WorkerResidentHandler {
     @Override
     public double getResidentPriority(TownWorkerData workerData, int currentResidentNum) {
         CompoundTag tileEntityNBT = workerData.getWorkData().getCompound("tileEntity");
-        if(tileEntityNBT.getByte("workerState") != TownWorkerState.VALID.getStateNum()) return NEGATIVE_INFINITY;
+        if(tileEntityNBT.getByte("workerState") != TownWorkerStatus.VALID.getStateNum()) return NEGATIVE_INFINITY;
         int maxResident = tileEntityNBT.getInt("maxResident");
         if(currentResidentNum > maxResident) return NEGATIVE_INFINITY;
         double rating = tileEntityNBT.getDouble("rating");

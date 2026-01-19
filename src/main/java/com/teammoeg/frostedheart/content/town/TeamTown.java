@@ -28,6 +28,9 @@ import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
+import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
+import com.teammoeg.frostedheart.content.town.worker.WorkerState;
+
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
@@ -87,11 +90,11 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
      * @param pos position of the block
      * @return the work data
      */
-    public CompoundTag getTownBlockData(BlockPos pos) {
+    public WorkerState getTownBlockData(BlockPos pos) {
         TownWorkerData twd = data.blocks.get(pos);
         if (twd == null)
             return null;
-        return twd.getWorkData();
+        return twd.getState();
     }
 
     /**
@@ -103,7 +106,6 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
      */
     public void addTownBlock(BlockPos pos, TownBlockEntity tile) {
         TownWorkerData workerData = data.blocks.computeIfAbsent(pos, TownWorkerData::new);
-        workerData.fromTileEntity(tile);
     }
 
     /**

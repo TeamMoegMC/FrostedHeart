@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.town.hunting;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
-import com.teammoeg.frostedheart.content.town.TownWorkerState;
+import com.teammoeg.frostedheart.content.town.TownWorkerStatus;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
@@ -44,8 +44,8 @@ public class HuntingCampBlockEntity extends AbstractTownWorkerBlockEntity {
     @Override
     public void refresh() {
         this.occupiedArea.add(BlockScanner.toColumnPos(worldPosition));
-        if(this.workerState == TownWorkerState.OCCUPIED_AREA_OVERLAPPED) return;
-        this.workerState = isStructureValid()?TownWorkerState.VALID:TownWorkerState.NOT_VALID;
+        if(this.workerState == TownWorkerStatus.OCCUPIED_AREA_OVERLAPPED) return;
+        this.workerState = isStructureValid()?TownWorkerStatus.VALID:TownWorkerStatus.NOT_VALID;
     }
 
     @Override

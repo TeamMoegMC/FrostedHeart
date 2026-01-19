@@ -80,7 +80,7 @@ public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity implemen
             this.isStructureValid();
         }
         else {
-            this.setWorkerState(this.isStructureValid()?TownWorkerState.VALID: TownWorkerState.NOT_VALID);
+            this.setWorkerState(this.isStructureValid()?TownWorkerStatus.VALID: TownWorkerStatus.NOT_VALID);
         }
     }
 

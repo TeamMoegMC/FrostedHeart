@@ -1,6 +1,8 @@
 package com.teammoeg.frostedheart.content.town;
 
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
+
 import net.minecraft.nbt.*;
 
 import java.util.UUID;
@@ -116,76 +118,6 @@ public abstract class WorkerResidentHandler {
         return 1/(1+Math.exp(-num * parameter1 + 50 * parameter1));
     }
 
-    /**
-     * Get the residents of this worker.
-     * Should ONLY be used if the worker holds residents, like house, mine, etc.
-     */
-    public ListTag getResidentsByTag(TownWorkerData workerData) {
-        if (!isResidentWorker(workerData)) {
-            throw new IllegalArgumentException("Worker data type does not match");
-        }
-        return getResidentsByTag(workerData.getWorkData());
-    }
-
-    /**
-     * Get the max resident of this worker.
-     * Should ONLY be used if the worker holds residents, like house, mine, etc.
-     */
-    public int getMaxResident(TownWorkerData workerData) {
-        if (!isResidentWorker(workerData)) {
-            throw new IllegalArgumentException("Worker data type does not match");
-        }
-        return getMaxResident(workerData.getWorkData());
-    }
-
-    /**
-     * Add a resident to this worker.
-     * Should ONLY be used if the worker holds residents, like house, mine, etc.
-     */
-    public void addResident(TownWorkerData workerData, UUID uuid) {
-        if (!isResidentWorker(workerData)) {
-            throw new IllegalArgumentException("Worker data type does not match");
-        }
-        addResident(workerData.getWorkData(), uuid);
-    }
-
     
-    /**
-     * Get the residents of this worker.
-     * Should ONLY be used if the worker holds residents, like house, mine, etc.
-     */
-    public static ListTag getResidentsByTag(CompoundTag workData) {
-        return workData.getCompound("town").getList("residents", Tag.TAG_STRING);
-    }
-
-    /**
-     * Get the max resident of this worker.
-     * Should ONLY be used if the worker holds residents, like house, mine, etc.
-     */
-    public static int getMaxResident(CompoundTag workData) {
-        return workData.getCompound("tileEntity").getInt("maxResident");
-    }
-
-    /**
-     * Add a resident to this worker.
-     * Should ONLY be used if the worker holds residents, like house, mine, etc.
-     */
-    public static void addResident(CompoundTag workData, UUID uuid) {
-        CompoundTag dataFromTown = workData.getCompound("town");
-        ListTag list = dataFromTown.getList("residents", Tag.TAG_STRING);
-        list.add(StringTag.valueOf(uuid.toString()));
-        dataFromTown.put("residents", list);
-        workData.put("town", dataFromTown);
-    }
-
-    public static void removeResident(CompoundTag workData, UUID uuid){
-        CompoundTag dataFromTown = workData.getCompound("town");
-        ListTag list = dataFromTown.getList("residents", Tag.TAG_STRING);
-        for (int i = 0; i < list.size(); i++) {
-            if (list.getString(i).equals(uuid.toString())) {
-                list.remove(i);
-                break;
-            }
-        }
-    }
+ 
 }

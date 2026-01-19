@@ -23,6 +23,8 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
+import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
+
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
@@ -129,7 +131,7 @@ public class MineBlockEntity extends AbstractTownWorkerBlockEntity {
             this.isStructureValid();
             return;
         }
-        this.workerState = isStructureValid() ? TownWorkerState.VALID : TownWorkerState.NOT_VALID;
+        this.workerState = isStructureValid() ? TownWorkerStatus.VALID : TownWorkerStatus.NOT_VALID;
         if(this.isValid()) {
             assert this.level != null;
             this.computeRating();

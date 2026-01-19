@@ -19,13 +19,20 @@
 
 package com.teammoeg.frostedheart.content.town;
 
+import java.util.UUID;
+
 import com.teammoeg.chorda.block.CBlockInterfaces;
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.scheduler.ScheduledTaskTileEntity;
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
+import com.teammoeg.frostedheart.content.town.worker.WorkerState;
+import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 
-import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.core.BlockPos;
@@ -34,28 +41,48 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-public abstract class AbstractTownWorkerBlockEntity extends CBlockEntity implements
-        TownBlockEntity, ScheduledTaskTileEntity, CBlockInterfaces.IActiveState, CTickableBlockEntity {
-    @Getter
-    @Setter
-    public TownWorkerState workerState = TownWorkerState.NOT_INITIALIZED;
-    public OccupiedArea occupiedArea;
+public abstract class AbstractTownWorkerBlockEntity<T extends WorkerState> extends CBlockEntity implements
+        TownBlockEntity<T>, ScheduledTaskTileEntity, CBlockInterfaces.IActiveState, CTickableBlockEntity,IOwnerTile {
+    
     protected boolean addedToSchedulerQueue = false;
+    private UUID owner;
     public AbstractTownWorkerBlockEntity(BlockEntityType<? extends BlockEntity> type, BlockPos pos, BlockState state)  {
         super(type,pos,state);
     }
 
-    /**
+    @Override
+	public UUID getStoredOwner() {
+		return owner;
+	}
+
+	@Override
+	public void setStoredOwner(UUID id) {
+		owner=id;
+	}
+
+	/**
      * 重新进行结构的扫描、温度的检测等工作，并刷新方块的状态
      */
-    public abstract void refresh();
+    public abstract void refresh(T state);
 
     public void refresh_safe(){
         if(level != null && level.isLoaded(worldPosition)){
-            this.refresh();
+        	T state=getState();
+        	if(state!=null)
+        		this.refresh(state);
         }
     }
-
+    public TeamTownData getTownData() {
+    	TeamDataHolder datatype=CTeamDataManager.getDataByResearchID(owner);
+    	if(datatype==null)return null;
+    	return datatype.getData(FHSpecialDataTypes.TOWN_DATA);
+    }
+    public T getState() {
+    	TeamTownData teamTownData=getTownData();
+    	if(teamTownData==null)
+    		return null;
+    	return (T) teamTownData.getState(this.worldPosition);
+    }
     public void executeTask(){
         this.refresh_safe();
     }
@@ -66,86 +93,52 @@ public abstract class AbstractTownWorkerBlockEntity extends CBlockEntity impleme
 
     @Override
     public OccupiedArea getOccupiedArea() {
-        if(this.isWorkValid()) return occupiedArea;
-        return OccupiedArea.EMPTY;
-    }
-
-    /**
-     * @param nbt the work data of town tile entity
-     * @return occupied area of worker
-     */
-    public static OccupiedArea getOccupiedArea(CompoundTag nbt){
-        if(nbt.contains("occupiedArea")){
-            return OccupiedArea.fromNBT(nbt.getCompound("occupiedArea"));
-        }
-        if(nbt.contains("tileEntity")){
-            return getOccupiedArea(nbt.getCompound("tileEntity"));
+        if(this.isWorkValid()) {
+        	return getState().getOccupiedArea();
         }
         return OccupiedArea.EMPTY;
     }
 
     public static OccupiedArea getOccupiedArea(TownWorkerData data){
 
-        return getOccupiedArea(data.getWorkData().getCompound("tileEntity"));
+        return data.getState().getOccupiedArea();
     }
-
+    public TownWorkerStatus getStatus() {
+    	T state=getState();
+    	if(state==null)return TownWorkerStatus.NOT_VALID;
+    	return state.status;
+    }
     @Override
     public boolean isWorkValid(){
-        if(workerState== TownWorkerState.NOT_INITIALIZED) this.refresh_safe();
-        return workerState.isValid();
+    	TownWorkerStatus status=getStatus();
+        if(status== TownWorkerStatus.NOT_INITIALIZED) this.refresh_safe();
+        return status.isValid();
     }
 
 
     public boolean isValid(){
-        return this.workerState.isValid();
-    }
-
-    public static boolean isValid(CompoundTag nbt){
-        if(nbt.contains("workerState")){
-            return TownWorkerState.fromByte(nbt.getByte("workerState")).isValid();
-        }
-        if(nbt.contains("tileEntity")){
-            return isValid(nbt.getCompound("tileEntity"));
-        }
-        return false;
-    }
-
-    public static boolean isValid(TownWorkerData data){
-        return isValid(data.getWorkData());
+    	TownWorkerStatus status=getStatus();
+        return status.isValid();
     }
 
     public boolean isOccupiedAreaOverlapped(){
-        return this.workerState == TownWorkerState.OCCUPIED_AREA_OVERLAPPED;}
-
-    public abstract boolean isStructureValid();
-
-    protected CompoundTag getBasicWorkData(){
-        CompoundTag nbt = new CompoundTag();
-        nbt.putByte("workerState", workerState.getStateNum());
-        if(this.occupiedArea != null) nbt.put("occupiedArea", occupiedArea.toNBT());
-        return nbt;
-    }
-    protected void setBasicWorkData(CompoundTag data){
-        if(data.contains("isOverlapped")){
-            if(data.getBoolean(TownWorkerData.KEY_IS_OVERLAPPED)){
-                this.workerState = TownWorkerState.OCCUPIED_AREA_OVERLAPPED;
-            } else{
-                if(this.workerState == TownWorkerState.OCCUPIED_AREA_OVERLAPPED){
-                    this.workerState = TownWorkerState.NOT_INITIALIZED;
-                }
-            }
-        }
+        return getStatus() == TownWorkerStatus.OCCUPIED_AREA_OVERLAPPED;
     }
 
-    public static TownWorkerState getWorkerState(CompoundTag nbt){
-        return TownWorkerState.fromByte(nbt.getByte("workerState"));
+    public abstract boolean isStructureValid(T state);
+
+    public static TownWorkerStatus getStatus(TownWorkerData data){
+        return data.getState().status;
     }
 
-    public static TownWorkerState getWorkerState(TownWorkerData data){
-        return getWorkerState(data.getWorkData());
-    }
+    @Override
+	public void setStatus(TownWorkerStatus status) {
+		T state=getState();
+		if(state!=null)
+			state.status=status;
+	}
 
-    public void addToSchedulerQueue(){
+	public void addToSchedulerQueue(){
         if(!this.addedToSchedulerQueue){
             this.addedToSchedulerQueue = true;
             SchedulerQueue.add(this);

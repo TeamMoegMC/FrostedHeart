@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.town.mine;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
-import com.teammoeg.frostedheart.content.town.TownWorkerState;
+import com.teammoeg.frostedheart.content.town.TownWorkerStatus;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
@@ -157,7 +157,7 @@ public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity {
             this.isStructureValid();
             return;
         }
-        this.workerState = isStructureValid() ? TownWorkerState.VALID : TownWorkerState.NOT_VALID;
+        this.workerState = isStructureValid() ? TownWorkerStatus.VALID : TownWorkerStatus.NOT_VALID;
     }
 
     @Override

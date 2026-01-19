@@ -175,7 +175,7 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity {
             this.isStructureValid();
             this.isTemperatureValid();
         } else {
-            this.workerState = this.isStructureValid() && this.isTemperatureValid() ? TownWorkerState.VALID : TownWorkerState.NOT_VALID;
+            this.workerState = this.isStructureValid() && this.isTemperatureValid() ? TownWorkerStatus.VALID : TownWorkerStatus.NOT_VALID;
             this.rating = this.computeRating();
             this.maxResident = this.calculateMaxResidents();
         }

@@ -17,11 +17,15 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.town;
+package com.teammoeg.frostedheart.content.town.worker;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.io.CodecUtil;
+import com.teammoeg.frostedheart.content.town.Town;
+import com.teammoeg.frostedheart.content.town.TownBlockEntity;
+import com.teammoeg.frostedheart.content.town.TownWorkerType;
+import com.teammoeg.frostedheart.content.town.WorkerResidentHandler;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import lombok.Getter;
@@ -30,10 +34,13 @@ import net.minecraft.nbt.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -56,20 +63,19 @@ public class TownWorkerData {
 	public static final Codec<TownWorkerData> CODEC=RecordCodecBuilder.create(t->
 	t.group(CodecUtil.enumCodec(TownWorkerType.class).fieldOf("type").forGetter(o->o.type),
 		BlockPos.CODEC.fieldOf("pos").forGetter(o->o.pos),
-		CompoundTag.CODEC.fieldOf("data").forGetter(o->o.workData),
+		CompoundTag.CODEC.fieldOf("data").forGetter(o->{CompoundTag tag=new CompoundTag();o.state.writeNBT(tag,false);return tag;}),
 		Codec.INT.optionalFieldOf("priority",0).forGetter(o->o.priority)
 		).apply(t,TownWorkerData::new));
     public static final String KEY_IS_OVERLAPPED = "isOverlapped";
     @Getter
     private TownWorkerType type;
     @Getter
-    private BlockPos pos;
+    private WorkerState state;
     @Getter
-    @Setter
-    private CompoundTag workData;
+    private BlockPos pos;
     private int priority;
-    boolean loaded;
-
+    public boolean loaded;
+  
     public TownWorkerData(BlockPos pos) {
         super();
         this.pos = pos;
@@ -79,7 +85,8 @@ public class TownWorkerData {
 		super();
 		this.type = type;
 		this.pos = pos;
-		this.workData = workData;
+		this.state=type.getWorker().createState();
+		this.state.readNBT(workData, false);
 		this.priority = priority;
 	}
 
@@ -87,94 +94,29 @@ public class TownWorkerData {
         super();
         this.pos = BlockPos.of(data.getLong("pos"));
         this.type = TownWorkerType.valueOf(data.getString("type"));
-        this.workData = data.getCompound("data");
+		this.state=type.getWorker().createState();
+		this.state.readNBT(data.getCompound("data"), false);
         this.priority = data.getInt("priority");
-    }
-
-    public boolean afterWork(Town resource) {
-        return type.getWorker().afterWork(resource, workData);
-    }
-
-    public boolean beforeWork(Town resource) {
-        return type.getWorker().beforeWork(resource, workData);
-    }
-
-    public boolean firstWork(Town resource) {
-        return type.getWorker().firstWork(resource, workData);
-    }
-
-    public void fromTileEntity(TownBlockEntity te) {
-        type = te.getWorkerType();
-        workData = new CompoundTag();
-        workData.put("tileEntity", te.getWorkData());
-        priority = te.getPriority();
-    }
-
-    public void toTileEntity(TownBlockEntity te){
-        te.setWorkData(workData.getCompound("town"));
-    }
-
-    public void updateFromTileEntity(ServerLevel world){
-        if(loaded){
-            TownBlockEntity te = (TownBlockEntity) world.getBlockEntity(pos);
-            if(te != null){
-                workData.put("tileEntity", te.getWorkData());
-            }
-        }
-    }
-
-    public void updateFromTileEntity(TownBlockEntity te){
-        workData.put("tileEntity", te.getWorkData());
-    }
-
-    public void toTileEntity(ServerLevel world){
-        if(loaded){
-            TownBlockEntity te = (TownBlockEntity) world.getBlockEntity(pos);
-            if(te != null){
-                te.setWorkData(workData.getCompound("town"));
-            }
-        }
-    }
-
-    public void setDataFromTown(String key, Tag nbt){
-        CompoundTag nbt0 = workData.getCompound("town");
-        nbt0.put(key, nbt);
-        workData.put("town", nbt0);
-    }
-
-    public void setOverlappingState(boolean b){
-        this.setDataFromTown(KEY_IS_OVERLAPPED, b? ByteTag.ONE: ByteTag.ZERO);
     }
 
     public long getPriority() {
         return (long) (priority) << 32 + (type.getPriority());
     }
 
-    public boolean lastWork(Town resource) {
-        return type.getWorker().lastWork(resource, workData);
-    }
 
     public CompoundTag serialize() {
         CompoundTag data = new CompoundTag();
         data.putLong("pos", pos.asLong());
         data.putString("type", type.name());
-        data.put("data", workData);
+        CompoundTag workdata = new CompoundTag();
+        state.writeNBT(workdata, false);
+        data.put("data", workdata);
         data.putInt("priority", priority);
         return data;
     }
 
-    @Deprecated
-    public void setData(ServerLevel w) {
-        if (loaded) {
-            BlockEntity te = Utils.getExistingTileEntity(w, pos);
-            if (te instanceof TownBlockEntity) {
-                ((TownBlockEntity) te).setWorkData(workData);
-            }
-        }
-    }
-
-    public boolean work(Town resource) {
-        return type.getWorker().work(resource, workData);
+    public boolean work(Town resource,WorkOrder order) {
+        return type.getWorker().work(resource, state, order);
     }
 
     @Override
@@ -191,32 +133,13 @@ public class TownWorkerData {
         return Objects.hash(type, pos, priority);
     }
 
-
-    /**
-     * Get the residents of this worker.
-     * Should ONLY be used if the worker holds residents, like house, mine, etc.
-     */
-    public ListTag getResidentsByTag(){
-        if(!WorkerResidentHandler.isResidentWorker(this)){
-            throw new IllegalArgumentException("Worker Type: " + this.type.name() + " does not hold residents!");
-        }
-        return workData.getCompound("town").getList("residents", Tag.TAG_COMPOUND);
-    }
-
     /**
      * Get the residents of this worker.
      * Should ONLY be used if the worker holds residents, like house, mine, etc.
      * @return the residents, 且为UUID形式
      */
     public List<UUID> getResidents(){
-        if(!WorkerResidentHandler.isResidentWorker(this)){
-            throw new IllegalArgumentException("Worker Type: " + this.type.name() + " does not hold residents!");
-        }
-        ListTag list=getResidentsByTag();
-        List<UUID> ret=new ArrayList<>();
-        for(Tag tag:list)
-        	ret.add(UUID.fromString(tag.getAsString()));
-        return ret;
+        return state.getResidents();
     }
 
     /**
@@ -227,40 +150,29 @@ public class TownWorkerData {
         if(!WorkerResidentHandler.isResidentWorker(this)){
             throw new IllegalArgumentException("Worker Type: " + this.type.name() + " does not hold residents!");
         }
-        return workData.getCompound("tileEntity").getInt("maxResident");
+        return state.maxResidents;
     }
 
     /**
      * Add a resident to this worker.
      * Should ONLY be used if the worker holds residents, like house, mine, etc.
      */
-    public void addResident(UUID uuid){
+    public boolean addResident(UUID uuid){
         if(!WorkerResidentHandler.isResidentWorker(this)){
             throw new IllegalArgumentException("Worker Type: " + this.type.name() + " does not hold residents!");
         }
-        CompoundTag dataFromTown = workData.getCompound("town");
-        ListTag list = dataFromTown.getList("residents", Tag.TAG_STRING);
-        list.add(StringTag.valueOf(uuid.toString()));
-        dataFromTown.put("residents", list);
-        workData.put("town", dataFromTown);
+        return state.addResident(uuid);
     }
 
     /**
      * Remove a resident from this worker.
      * Should ONLY be used if the worker holds residents, like house, mine, etc.
      */
-    public void removeResident(UUID uuid){
+    public boolean removeResident(UUID uuid){
         if(!WorkerResidentHandler.isResidentWorker(this)){
             throw new IllegalArgumentException("Worker Type: " + this.type.name() + " does not hold residents!");
         }
-        CompoundTag dataFromTown = workData.getCompound("town");
-        ListTag list = dataFromTown.getList("residents", Tag.TAG_STRING);
-        for(int i=0;i<list.size();i++){
-            if(list.getString(i).equals(uuid.toString())){
-                list.remove(i);
-                return;
-            }
-        }
+        return state.removeResident(uuid);
     }
 
     //下面俩方法在别的地方检查了type的合法性，不需要在这里检查
@@ -275,13 +187,7 @@ public class TownWorkerData {
     public double getResidentPriority(int residentNum){
         return type.getResidentPriority(residentNum, this);
     }
-
-    /**
-     * @param nbt 完整的nbt，包含town和tileEntity部分
-     * @return rating
-     */
-    public static Double getRating(CompoundTag nbt){
-        return nbt.getCompound("tileEntity").getDouble("rating");
+    public void onRemove(ServerLevel level) {
+    	type.getWorker().onRemoved(level, state, pos);
     }
-
 }

@@ -7,20 +7,19 @@ import com.teammoeg.frostedheart.content.town.TownWorker;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
+import com.teammoeg.frostedheart.content.town.worker.WorkOrder;
+
 import net.minecraft.nbt.CompoundTag;
 
 import java.util.*;
 
-public class HouseWorker implements TownWorker {
+public class HouseWorker implements TownWorker<HouseState> {
     private HouseWorker() {}
     public static final HouseWorker INSTANCE = new HouseWorker();
     @Override
-    public boolean work(Town town, CompoundTag workData) {
+    public boolean work(Town town, HouseState workData, WorkOrder workOrder) {
         //获取所有居民
-        List<UUID> residentsUUID = workData.getCompound("tileEntity").getList("residents", 10)
-                .stream()
-                .map(nbt -> UUID.fromString(nbt.getAsString()))
-                .toList();
+        List<UUID> residentsUUID = workData.getResidents();
         double residentNum = residentsUUID.size();
         ItemResourceType[] foodTypes = new ItemResourceType[]{
                 ItemResourceType.FOOD_GRAINS,
@@ -76,10 +75,10 @@ public class HouseWorker implements TownWorker {
         }
 
         if(town instanceof ITownWithResidents residentTown){
-            double houseComprehensiveRating = workData.getCompound("tileEntity").getDouble("rating");
-            double temperatureRating = workData.getCompound("tileEntity").getDouble("temperatureRating");
-            double decorationRating = workData.getCompound("tileEntity").getDouble("decorationRating");
-            double spaceRating = workData.getCompound("tileEntity").getDouble("spaceRating");
+            double houseComprehensiveRating = workData.rating;
+            double temperatureRating = workData.temperatureRating;
+            double decorationRating = workData.decorationRating;
+            double spaceRating = workData.spaceRating;
             avgLevel /= residentNum * 20;//计算平均食物等级
             for(UUID uuid : residentsUUID){
                 if(residentTown.getResident(uuid).isPresent()){
@@ -104,4 +103,5 @@ public class HouseWorker implements TownWorker {
 
         return true;
     }
+
 }

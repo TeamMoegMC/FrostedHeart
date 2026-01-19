@@ -19,7 +19,12 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import net.minecraft.nbt.CompoundTag;
+import com.teammoeg.frostedheart.content.town.worker.NopWorkerState;
+import com.teammoeg.frostedheart.content.town.worker.WorkOrder;
+import com.teammoeg.frostedheart.content.town.worker.WorkerState;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 
 /**
  * Lowest level town processing function.
@@ -30,71 +35,30 @@ import net.minecraft.nbt.CompoundTag;
  * </p>
  */
 @FunctionalInterface
-public interface TownWorker {
+public interface TownWorker<T extends WorkerState> {
 
     /**
      * Empty work, don't do anything.
      * Just used to avoid null pointer exception.
      */
-    public static TownWorker EMPTY = (town, workData)->true;
+    public static TownWorker EMPTY = (town, workData, workOrder)->true;
 
-    /**
-     * Work with highest priority
-     * It's recommended that this work should add service from block data or constant but not from resources.
-     * This work should NOT provide resource or cost resource.
-     *
-     * @param town the town
-     * @param workData workData provided by work type
-     * @return true, if work done successfully
-     */
-    default boolean firstWork(Town town, CompoundTag workData) {
-        return true;
-    }
 
-    /**
-     * Work with higher priority;
-     * It's recommended that this work should provide service for other work with resource cost.
-     *
-     * @param town the town
-     * @param workData workData provided by work type
-     * @return true, if work done successfully
-     */
-    default boolean beforeWork(Town town, CompoundTag workData) {
-        return true;
-    }
 
     /**
      * Work during tick
-     * It's recommended that most of the jobs are done during this.
      *
      * @param town the town
      * @param workData workData provided by work type
      * @return true, if work done successfully
      */
-    boolean work(Town town, CompoundTag workData);
-
-    /**
-     * Work with lower priority;
-     * It's recommended that this job recycles resource.
-     *
-     * @param town the town
-     * @param workData workData provided by work type
-     * @return true, if work done successfully
-     */
-    default boolean afterWork(Town town, CompoundTag workData) {
-        return true;
-    }
-
-    /**
-     * Work with lowest priority
-     * It's recommended that this job recycles services
-     *
-     * @param town the town
-     * @param workData workData provided by work type
-     * @return true, if work done successfully
-     */
-    default boolean lastWork(Town town, CompoundTag workData) {
-        return true;
+    boolean work(Town town, T workData,WorkOrder workOrder);
+    
+    default WorkerState createState() {
+    	return new NopWorkerState();
+    };
+    default void onRemoved(ServerLevel level,WorkerState state,BlockPos pos) {
+    	
     }
 
 }
