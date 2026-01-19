@@ -51,7 +51,7 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         AbstractTownWorkerBlockEntity blockEntity = getMenu().getBlock();
         addTabContent((left,top)->{
             this.addRenderableWidget(new Label(left + 10, top + 20, Components.str(blockEntity.isWorkValid() ? "Valid working environment" : "Invalid working environment"), 0xFFFFFF));
-            this.addRenderableWidget(new Label(left + 10, top + 40, Components.str(blockEntity.isStructureValid() ? "Valid structure" : "Invalid structure"), 0xFFFFFF));
+            this.addRenderableWidget(new Label(left + 10, top + 40, Components.str(blockEntity.getStatus().isStructureValid() ? "Valid structure" : "Invalid structure"), 0xFFFFFF));
         });
     }
 

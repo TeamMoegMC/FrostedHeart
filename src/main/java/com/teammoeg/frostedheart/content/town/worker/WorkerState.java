@@ -20,6 +20,9 @@ public abstract class WorkerState {
 	@Getter
 	@Setter
 	private OccupiedArea occupiedArea=new OccupiedArea();
+	@Getter
+	@Setter
+	protected double rating=-1;
 	public int maxResidents;
 	public TownWorkerStatus status=TownWorkerStatus.NOT_INITIALIZED;
 	public static final Codec<List<UUID>> UUID_LIST_CODEC=Codec.list(CodecUtil.catchingCodec(Codec.STRING.xmap(UUID::fromString,UUID::toString)));
@@ -31,6 +34,7 @@ public abstract class WorkerState {
 		tag.putInt("maxResidents", maxResidents);
 		tag.put("occupiedArea", occupiedArea.toNBT());
 		tag.putByte("status", (byte) status.getStateNum());
+		tag.putDouble("rating",rating);
 	};
 	public void readNBT(CompoundTag tag,boolean isNetwork) {
 		residents.clear();
@@ -40,6 +44,7 @@ public abstract class WorkerState {
 		maxResidents=tag.getInt("maxResidents");
 		occupiedArea=OccupiedArea.fromNBT(tag.getCompound("occupiedArea"));
 		status=TownWorkerStatus.fromByte(tag.getByte("status"));
+		rating = tag.getDouble("rating");
 	};
 	public boolean addResident(UUID resident) {
 		for(UUID uuid:residents) {

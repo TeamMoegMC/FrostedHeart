@@ -18,9 +18,16 @@
  */
 
 package com.teammoeg.frostedheart.content.town;
-
+/**
+ * FSM:
+ * NOT_INITIALIZED -> NOT_VALID_STRUCTURE -> OCCUPIED_AREA_OVERLAPPED -> TOO_COLD -> VALID <-> NOT_VALID(User State Invalidate)
+ * OCCUPIED_AREA_OVERLAPPED -> NOT_INITIALIZED
+ * TOO_COLD -> NOT_INITIALIZED
+ * NOT_VALID_STRUCTURE -> NOT_INITIALIZED
+ * VALID -> NOT_INITIALIZED
+ * */
 public enum TownWorkerStatus{
-    NOT_INITIALIZED(0), NOT_VALID(1), VALID(2), OCCUPIED_AREA_OVERLAPPED(3),TOO_COLD(4),NOT_VALID_STRUCTURE(5));
+    NOT_INITIALIZED(0), NOT_VALID(1), VALID(2), OCCUPIED_AREA_OVERLAPPED(3),TOO_COLD(4),NOT_VALID_STRUCTURE(5);
 
     byte stateNum;
 
@@ -46,5 +53,8 @@ public enum TownWorkerStatus{
 
     public boolean isValid(){
         return this == VALID;
+    }
+    public boolean isStructureValid() {
+    	return this!=NOT_INITIALIZED&&this!=NOT_VALID_STRUCTURE;
     }
 }

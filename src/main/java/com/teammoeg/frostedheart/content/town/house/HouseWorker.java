@@ -18,6 +18,7 @@ public class HouseWorker implements TownWorker<HouseState> {
     public static final HouseWorker INSTANCE = new HouseWorker();
     @Override
     public boolean work(Town town, HouseState workData, WorkOrder workOrder) {
+    	if(workOrder!=WorkOrder.NORMAL)return false;
         //获取所有居民
         List<UUID> residentsUUID = workData.getResidents();
         double residentNum = residentsUUID.size();

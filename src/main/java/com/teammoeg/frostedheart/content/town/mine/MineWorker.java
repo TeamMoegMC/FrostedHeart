@@ -26,6 +26,8 @@ import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
+import com.teammoeg.frostedheart.content.town.worker.WorkOrder;
+import com.teammoeg.frostedheart.content.town.worker.WorkerState;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -38,9 +40,7 @@ import net.minecraft.world.item.Items;
 import java.util.*;
 import java.util.concurrent.atomic.LongAdder;
 
-import static com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity.isValid;
-
-public class MineWorker implements TownWorker {
+public class MineWorker implements TownWorker<MineState> {
     public static final MineWorker INSTANCE=new MineWorker();
 
     public static final Map<ResourceLocation, Map<Item,  Integer>> BIOME_RESOURCES = new HashMap<>();
@@ -62,8 +62,6 @@ public class MineWorker implements TownWorker {
 
     private MineWorker(){}
 
-
-    @Override
     /**
      * 执行矿山工作逻辑
      * 
@@ -71,21 +69,21 @@ public class MineWorker implements TownWorker {
      * @param workData 工作数据，包含矿场相关NBT数据
      * @return 工作是否成功执行
      */
-    public boolean work(Town town, CompoundTag workData) {
+	@Override
+	public boolean work(Town town, MineState workData, WorkOrder workOrder) {
+		if(workOrder!=WorkOrder.NORMAL)return false;
         // 检查城镇方块能否工作
-        if(!isValid(workData)){
+        if(!workData.status.isValid()){
             return false;
         }
         if(town instanceof ITownWithResidents townWithResidents){
-            CompoundTag dataTE = workData.getCompound("tileEntity");
-            CompoundTag dataTown = workData.getCompound("town");
             // 检查是否链接了MineBase
-            if(!dataTown.contains("linkedBasePos")){//检查MineBase是否存在
+            if(workData.getConnectedBase()==null){//检查MineBase是否存在
                 return false;
             } else{
                 // 验证链接的MineBase是否有效
                 if(town instanceof ITownWithBlocks townWithBlocks){
-                    BlockPos linkedBasePos = BlockPos.of(dataTown.getLong("linkedBasePos"));
+                    BlockPos linkedBasePos = workData.getConnectedBase();
                     Optional<TownWorkerData> mineBaseData = townWithBlocks.getTownBlock(linkedBasePos);
                     if(mineBaseData.isEmpty()){
                         return false;
@@ -99,7 +97,6 @@ public class MineWorker implements TownWorker {
                 }
             }
             // 获取各种工作参数
-            double rating = dataTE.getDouble("rating");
             long lastSyncedWorkID = dataTE.getLong("lastSyncedWorkID");
             long latestWorkID = dataTown.getLong("latestWorkID");
             double chunkResourceReservesCost = dataTown.getDouble("chunkResourceReservesCost");
@@ -175,5 +172,8 @@ public class MineWorker implements TownWorker {
         }
         return DEFAULT_RESOURCES;
     }
+
+
+
 
 }
