@@ -18,12 +18,16 @@ public class VirtualItemStack {
     public long getAmount() { return amount; }
     public void setAmount(long amount) { this.amount = amount; }
 
-    public static List<VirtualItemStack> toClientVisualList(List<VirtualItemStack> list,Map<ItemStack, Double> itemMap){
-        for (Map.Entry<ItemStack, Double> entry : itemMap.entrySet()) {
-            ItemStack stack = entry.getKey();
-            Double amount = entry.getValue();
-            list.add(new VirtualItemStack(stack, amount.longValue()));
+    public static List<VirtualItemStack> toClientVisualList(Map<ItemStack, Double> itemMap) {
+        if (itemMap == null || itemMap.isEmpty()) {
+            return List.of();
         }
-        return list;
+        return itemMap.entrySet().stream()
+                .map(entry -> {
+                    ItemStack stack = entry.getKey();
+                    Double amount = entry.getValue();
+                    return new VirtualItemStack(stack, amount.longValue());
+                })
+                .toList();
     }
 }

@@ -40,8 +40,8 @@ public enum ItemResourceType implements ITownResourceType {
     FOOD_PROTEIN,
     FOOD_FRUIT_AND_VEGETABLES(1),
     FOOD_EDIBLE_OIL,
-    FOOD_GRAINS(1);
-
+    FOOD_GRAINS(1),
+    RESIDENT_FOOD_LEVEL(5);
 	public static final Codec<ItemResourceType> CODEC=CodecUtil.enumCodec(ItemResourceType.class);
 
     /**

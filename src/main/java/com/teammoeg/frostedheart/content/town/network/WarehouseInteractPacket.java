@@ -133,8 +133,7 @@ public class WarehouseInteractPacket implements CMessage {
 
 
 				Map<ItemStack, Double> itemMap = TeamTown.from(player).getResourceHolder().getAllItems();
-				List<VirtualItemStack> list = new ArrayList<>();
-				VirtualItemStack.toClientVisualList(list,itemMap);
+				List<VirtualItemStack> list = VirtualItemStack.toClientVisualList(itemMap);
 				FHNetwork.INSTANCE.sendPlayer(player, new WarehouseS2CPacket(list));
 			}
 		});

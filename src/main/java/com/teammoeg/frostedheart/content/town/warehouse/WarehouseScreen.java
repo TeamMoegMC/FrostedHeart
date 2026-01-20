@@ -38,7 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WarehouseScreen extends AbstractTownWorkerBlockScreen<WarehouseMenu> {
-    private List<VirtualItemStack> ResourceClientCache = new ArrayList<>();
+    private List<VirtualItemStack> ResourceClientCache = List.of();
 
     private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("townworkerblock");
     public WarehouseScreen(WarehouseMenu inventorySlotsIn, Inventory inv, Component title) {
@@ -54,14 +54,16 @@ public class WarehouseScreen extends AbstractTownWorkerBlockScreen<WarehouseMenu
                     .setScale(2, RoundingMode.HALF_UP).doubleValue()), 0xFFFFFF));
         });
         addTabContent((left, top) -> {
-            VirtualItemGridWidget gridWidget = new VirtualItemGridWidget(left + 7, top + 18, ResourceClientCache);
+            VirtualItemGridWidget gridWidget = new VirtualItemGridWidget(left + 7, top + 18, this::getResources);
             FHNetwork.INSTANCE.sendToServer(new WarehouseC2SRequestPacket());
             this.addRenderableWidget(gridWidget);
         });
     }
     public void updateResourceList(List<VirtualItemStack> newResources) {
-        this.ResourceClientCache.clear();
-        this.ResourceClientCache.addAll(newResources);
+        this.ResourceClientCache=List.copyOf(newResources);
+    }
+    public List<VirtualItemStack> getResources() {
+        return ResourceClientCache;
     }
 }
 

@@ -14,13 +14,14 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import static com.teammoeg.chorda.client.CInputHelper.playClickSound;
 import static net.minecraft.client.gui.screens.Screen.hasShiftDown;
 
 public class VirtualItemGridWidget extends AbstractWidget implements AbstractTownWorkerBlockScreen.TabContentComponent {
 
-    private final List<VirtualItemStack> itemList; // 数据源
+    private final Supplier<List<VirtualItemStack>> itemSource;  // 数据源
     private float scrollOffset = 0.0f;
     private boolean isScrolling = false;
 
@@ -34,9 +35,9 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
     private final int scrollBarWidth = 12;
     private final int scrollBarHeight;
 
-    public VirtualItemGridWidget(int x, int y, List<VirtualItemStack> itemList) {
+    public VirtualItemGridWidget(int x, int y, Supplier<List<VirtualItemStack>> itemSource) {
         super(x, y, 9 * 18 + 14, 5 * 18, Component.empty());
-        this.itemList = itemList;
+        this.itemSource = itemSource;
         this.scrollBarHeight = height;
         this.scrollBarX = x + (cols * slotSize) + 2;
     }
@@ -55,6 +56,7 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
             }
         }
 
+        List<VirtualItemStack> itemList = itemSource.get();
         // 计算滚动
         int totalRows = (int) Math.ceil((double) itemList.size() / cols);
         int invisibleRows = Math.max(0, totalRows - rows);
@@ -109,7 +111,7 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
         // 简单的滚动条背景
         guiGraphics.fill(scrollBarX, getY(), scrollBarX + scrollBarWidth, getY() + scrollBarHeight, 0xFF000000);
 
-        int barHeight = (itemList.size() <= rows * cols) ? scrollBarHeight : (int)((float)scrollBarHeight / (itemList.size() / cols) * rows);
+        int barHeight = (itemSource.get().size() <= rows * cols) ? scrollBarHeight : (int)((float)scrollBarHeight / (itemSource.get().size() / cols) * rows);
         if (barHeight < 10) barHeight = 10;
         if (barHeight > scrollBarHeight) barHeight = scrollBarHeight;
 
@@ -154,8 +156,8 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
                 else {
                     // 取出 (EXTRACT)
                     int index = getIndexAt(row, col);
-                    if (index >= 0 && index < itemList.size()) {
-                        VirtualItemStack clickedVStack = this.itemList.get(index);
+                    if (index >= 0 && index < itemSource.get().size()) {
+                        VirtualItemStack clickedVStack = this.itemSource.get().get(index);
                         FHNetwork.INSTANCE.sendToServer(new WarehouseInteractPacket(WarehouseInteractPacket.Action.EXTRACT,hasShiftDown(),button,clickedVStack.getStack()));
                     }
                     playClickSound();
@@ -174,7 +176,7 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (this.isScrolling) {
-            int totalRows = (int) Math.ceil((double) itemList.size() / cols);
+            int totalRows = (int) Math.ceil((double) itemSource.get().size() / cols);
             if (totalRows <= rows) return false;
 
             float range = scrollBarHeight - 10; // 假设最小滑块高度10
@@ -188,7 +190,7 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (isHovered) {
-            int totalRows = (int) Math.ceil((double) itemList.size() / cols);
+            int totalRows = (int) Math.ceil((double) itemSource.get().size() / cols);
             if (totalRows <= rows) return false;
 
             float step = 1.0f / (totalRows - rows);
@@ -199,7 +201,7 @@ public class VirtualItemGridWidget extends AbstractWidget implements AbstractTow
     }
 
     private int getIndexAt(int row, int col) {
-        int totalRows = (int) Math.ceil((double) itemList.size() / cols);
+        int totalRows = (int) Math.ceil((double) itemSource.get().size() / cols);
         int invisibleRows = Math.max(0, totalRows - rows);
         int startRow = (int) (scrollOffset * invisibleRows);
         return (startRow + row) * cols + col;

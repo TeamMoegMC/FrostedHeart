@@ -53,8 +53,7 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 				if(!result.itemStackModified().isEmpty()){
 					slot.set(itemLeft);
 					slot.setChanged();
-					List<VirtualItemStack> list = new ArrayList<>();
-					VirtualItemStack.toClientVisualList(list, town.getResourceHolder().getAllItems());
+					List<VirtualItemStack> list = VirtualItemStack.toClientVisualList(town.getResourceHolder().getAllItems());
 					FHNetwork.INSTANCE.sendPlayer((ServerPlayer) player, new WarehouseS2CPacket(list));
                 }
             }
