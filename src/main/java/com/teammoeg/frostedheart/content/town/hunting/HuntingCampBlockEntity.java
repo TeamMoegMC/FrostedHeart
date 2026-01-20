@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.content.town.worker.WorkerState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class HuntingCampBlockEntity extends AbstractTownWorkerBlockEntity {
+public class HuntingCampBlockEntity extends AbstractTownWorkerBlockEntity<WorkerState> {
     public HuntingCampBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.HUNTING_CAMP.get(),pos,state);
     }
