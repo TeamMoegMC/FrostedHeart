@@ -30,39 +30,39 @@ import com.teammoeg.frostedresearch.gui.drawdesk.game.ClientResearchGame;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class CardButton extends Button {
-    CardPos card;
-    ClientResearchGame game;
+	CardPos card;
+	ClientResearchGame game;
 
-    public CardButton(UIElement panel, ClientResearchGame game, int x, int y) {
-        super(panel);
-        this.game = game;
-        card = CardPos.valueOf(x, y);
-    }
+	public CardButton(UIElement panel, ClientResearchGame game, int x, int y) {
+		super(panel);
+		this.game = game;
+		card = CardPos.valueOf(x, y);
+	}
 
-    @Override
-    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-        Card c = game.get(card);
-        if (c.isShow()) {
-            if (game.isTouchable(card)) {
-                DrawDeskIcons.getIcon(c.getCt(), c.getCard(), true).draw(matrixStack, x, y, 16, 16);
-                if (super.isMouseOver() || (game.getLastSelect() != null && game.getLastSelect().equals(card)))
-                    DrawDeskIcons.SELECTED.draw(matrixStack, x, y, 16, 16);
-            } else {
-                DrawDeskIcons.getIcon(c.getCt(), c.getCard(), false).draw(matrixStack, x, y, 16, 16);
-            }
-        }
-    }
+	@Override
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+		Card c = game.get(card);
+		if (c.isShow()) {
+			if (game.isTouchable(card)) {
+				DrawDeskIcons.getIcon(c.getCt(), c.getCard(), true).draw(matrixStack, x, y, 16, 16);
+				if (super.isMouseOver() || (game.getLastSelect() != null && game.getLastSelect().equals(card)))
+					DrawDeskIcons.SELECTED.draw(matrixStack, x, y, 16, 16);
+			} else {
+				DrawDeskIcons.getIcon(c.getCt(), c.getCard(), false).draw(matrixStack, x, y, 16, 16);
+			}
+		}
+	}
 
-    @Override
-    public Cursor getCursor() {
-        if (game.isTouchable(card))
-            return Cursor.HAND;
-        return super.getCursor();
-    }
+	@Override
+	public Cursor getCursor() {
+		if (game.isTouchable(card))
+			return Cursor.HAND;
+		return super.getCursor();
+	}
 
-    @Override
-    public void onClicked(MouseButton arg0) {
-        game.select(card);
-    }
+	@Override
+	public void onClicked(MouseButton arg0) {
+		game.select(card);
+	}
 
 }

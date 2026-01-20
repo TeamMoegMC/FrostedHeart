@@ -22,73 +22,73 @@ package com.teammoeg.frostedresearch.gui.drawdesk.game;
 import net.minecraft.network.FriendlyByteBuf;
 
 public class CardPos {
-    private static CardPos[][] cache = new CardPos[11][11];
+	private static CardPos[][] cache = new CardPos[11][11];
 
-    static {
-        for (int i = 0; i < 11; i++)
-            for (int j = 0; j < 11; j++)
-                cache[i][j] = new CardPos(i - 1, j - 1);
+	static {
+		for (int i = 0; i < 11; i++)
+			for (int j = 0; j < 11; j++)
+				cache[i][j] = new CardPos(i - 1, j - 1);
 
-    }
+	}
 
-    final int x;
-    final int y;
+	final int x;
+	final int y;
 
-    private int hash = 0;
+	private int hash = 0;
 
-    private CardPos(int x, int y) {
-        super();
-        this.x = x;
-        this.y = y;
-    }
+	private CardPos(int x, int y) {
+		super();
+		this.x = x;
+		this.y = y;
+	}
 
-    public static CardPos valueOf(int x, int y) {
-        int i = x + 1;
-        int j = y + 1;
-        if (i < cache.length && i >= 0 && j < cache[x].length && j >= 0)
-            return cache[i][j];
-        return new CardPos(x, y);
-    }
+	public static CardPos valueOf(int x, int y) {
+		int i = x + 1;
+		int j = y + 1;
+		if (i < cache.length && i >= 0 && j < cache[x].length && j >= 0)
+			return cache[i][j];
+		return new CardPos(x, y);
+	}
 
-    public static CardPos valueOf(FriendlyByteBuf pb) {
-        return valueOf(pb.readByte(), pb.readByte());
-    }
+	public static CardPos valueOf(FriendlyByteBuf pb) {
+		return valueOf(pb.readByte(), pb.readByte());
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        CardPos other = (CardPos) obj;
-        if (x != other.x)
-            return false;
-        return y == other.y;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		CardPos other = (CardPos) obj;
+		if (x != other.x)
+			return false;
+		return y == other.y;
+	}
 
-    @Override
-    public int hashCode() {
-        if (hash == 0) {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + x;
-            result = prime * result + y;
-            hash = result;
-        }
-        return hash;
+	@Override
+	public int hashCode() {
+		if (hash == 0) {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + x;
+			result = prime * result + y;
+			hash = result;
+		}
+		return hash;
 
-    }
+	}
 
-    @Override
-    public String toString() {
-        return "CardPos [x=" + x + ", y=" + y + ", hash=" + hash + "]";
-    }
+	@Override
+	public String toString() {
+		return "CardPos [x=" + x + ", y=" + y + ", hash=" + hash + "]";
+	}
 
-    public void write(FriendlyByteBuf pb) {
-        pb.writeByte(x);
-        pb.writeByte(y);
-    }
+	public void write(FriendlyByteBuf pb) {
+		pb.writeByte(x);
+		pb.writeByte(y);
+	}
 
 }

@@ -31,78 +31,80 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class ResearchCategoryPanel extends UILayer {
-    public static final int CAT_PANEL_HEIGHT = 40;
-    public ResearchPanel researchScreen;
+	public static final int CAT_PANEL_HEIGHT = 40;
+	public ResearchLayer researchScreen;
 
-    public ResearchCategoryPanel(ResearchPanel panel) {
-        super(panel);
-        researchScreen = panel;
-    }
+	public ResearchCategoryPanel(ResearchLayer panel) {
+		super(panel);
+		researchScreen = panel;
+	}
 
-    @Override
-    public void addUIElements() {
-        int k = 0;
-        for (ResearchCategory r : ResearchCategory.values()) {
-            CategoryButton button = new CategoryButton(this, r);
-            button.setPosAndSize(k * 40, 0, 30, 21);
-            add(button);
-            k++;
-        }
-    }
+	@Override
+	public void addUIElements() {
+		int k = 0;
+		for (ResearchCategory r : ResearchCategory.values()) {
+			CategoryButton button = new CategoryButton(this, r);
+			button.setPosAndSize(k * 40, 0, 30, 21);
+			add(button);
+			k++;
+		}
+	}
 
-    @Override
-    public void alignWidgets() {
+	@Override
+	public void alignWidgets() {
 
-    }
+	}
 
-    @Override
-    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-        super.render(matrixStack, x, y, w, h);
-        //drawBackground(matrixStack, theme, x, y, w, h);
-    }
+	@Override
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+		super.render(matrixStack, x, y, w, h);
+		// drawBackground(matrixStack, theme, x, y, w, h);
+	}
 
-    @Override
-    public boolean isEnabled() {
-        return researchScreen.canEnable(this);
-    }
+	@Override
+	public boolean isEnabled() {
+		return researchScreen.canEnable(this);
+	}
 
-    public static class CategoryButton extends Button {
+	public static class CategoryButton extends Button {
 
-        ResearchCategory category;
-        ResearchCategoryPanel categoryPanel;
+		ResearchCategory category;
+		ResearchCategoryPanel categoryPanel;
 
-        public CategoryButton(ResearchCategoryPanel panel, ResearchCategory category) {
-            super(panel, category.getName(), CIcons.getIcon(category.getIcon()));
-            this.category = category;
-            this.categoryPanel = panel;
-        }
+		public CategoryButton(ResearchCategoryPanel panel, ResearchCategory category) {
+			super(panel, category.getName(), CIcons.getIcon(category.getIcon()));
+			this.category = category;
+			this.categoryPanel = panel;
+		}
 
-        @Override
-        public void getTooltip(TooltipBuilder list) {
-            list.accept(category.getName());
-            list.accept(category.getDesc().copy().withStyle(ChatFormatting.GRAY));
-        }
+		@Override
+		public void getTooltip(TooltipBuilder list) {
+			list.accept(category.getName());
+			list.accept(category.getDesc().copy().withStyle(ChatFormatting.GRAY));
+		}
 
-        @Override
-        public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+		@Override
+		public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 
-            //theme.drawHorizontalTab(matrixStack, x, y, w, h,categoryPanel.researchScreen.selectedCategory==category);
+			// theme.drawHorizontalTab(matrixStack, x, y, w,
+			// h,categoryPanel.researchScreen.selectedCategory==category);
 
-            if (categoryPanel.researchScreen.selectedCategory == category) {
-                TechIcons.TAB_HL.draw(matrixStack, x, y, w, 7);
-                this.drawIcon(matrixStack, x + 7, y + 2, 16, 16);
-            } else
-                this.drawIcon(matrixStack, x + 7, y + 5, 16, 16);
-            //super.drawBackground(matrixStack, theme, x, y, w, h);
+			if (categoryPanel.researchScreen.selectedCategory == category) {
+				TechIcons.TAB_HL.draw(matrixStack, x, y, w, 7);
+				this.drawIcon(matrixStack, x + 7, y + 2, 16, 16);
+			} else
+				this.drawIcon(matrixStack, x + 7, y + 5, 16, 16);
+			// super.drawBackground(matrixStack, theme, x, y, w, h);
 
-            //theme.drawString(matrixStack, category.getName(), x + (w - theme.getStringWidth(category.getName())) / 2, y + 24);
-        }
+			// theme.drawString(matrixStack, category.getName(), x + (w -
+			// theme.getStringWidth(category.getName())) / 2, y + 24);
+		}
 
-        @Override
-        public void onClicked(MouseButton mouseButton) {
-            categoryPanel.researchScreen.selectCategory(category);
+		@Override
+		public void onClicked(MouseButton mouseButton) {
+			categoryPanel.researchScreen.selectCategory(category);
 
-        }
-    }
+		}
+	}
 
 }

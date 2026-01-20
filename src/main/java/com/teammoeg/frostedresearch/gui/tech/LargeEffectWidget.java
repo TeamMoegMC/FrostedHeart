@@ -30,34 +30,34 @@ import net.minecraft.client.gui.GuiGraphics;
 
 public class LargeEffectWidget extends EffectWidget {
 
-    public LargeEffectWidget(UIElement panel, Effect e, Research r) {
-        super(panel, e, r);
-        super.setSize(36, 36);
-    }
+	public LargeEffectWidget(UIElement panel, Effect e, Research r) {
+		super(panel, e, r);
+		super.setSize(36, 36);
+	}
 
-    public boolean checkMouseOver(int mouseX, int mouseY) {
-        if (parent == null) {
-            return true;
-        } else if (!parent.isMouseOver()) {
-            return false;
-        }
+	public boolean checkMouseOver(int mouseX, int mouseY) {
+		if (parent == null) {
+			return true;
+		} else if (!parent.isMouseOver()) {
+			return false;
+		}
 
-        int ax = getX();
-        int ay = getY();
-        return mouseX >= ax + 2 && mouseY >= ay + 2 && mouseX < ax + width - 4 && mouseY < ay + height - 4;
-    }
+		int ax = getX();
+		int ay = getY();
+		return mouseX >= ax + 2 && mouseY >= ay + 2 && mouseX < ax + width - 4 && mouseY < ay + height - 4;
+	}
 
-    @Override
-    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-        CGuiHelper.resetGuiDrawing();
-        TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
-        icon.draw(matrixStack, x + 2, y + 2, w - 4, h - 4);
-        if (ClientResearchDataAPI.getData().get().isEffectGranted(r, e)) {
-            matrixStack.pose().pushPose();
-            matrixStack.pose().translate(0, 0, 300);
-            CGuiHelper.resetGuiDrawing();
-            TechIcons.FIN.draw(matrixStack, x + 2, y + 2, 32, 32);
-            matrixStack.pose().popPose();
-        }
-    }
+	@Override
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+		CGuiHelper.resetGuiDrawing();
+		TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
+		icon.draw(matrixStack, x + 2, y + 2, w - 4, h - 4);
+		if (ClientResearchDataAPI.getData().get().isEffectGranted(r, e)) {
+			matrixStack.pose().pushPose();
+			matrixStack.pose().translate(0, 0, 300);
+			CGuiHelper.resetGuiDrawing();
+			TechIcons.FIN.draw(matrixStack, x + 2, y + 2, 32, 32);
+			matrixStack.pose().popPose();
+		}
+	}
 }

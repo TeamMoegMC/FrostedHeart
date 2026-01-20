@@ -33,7 +33,7 @@ import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.data.ResearchData;
-import com.teammoeg.frostedresearch.gui.FHTextUtil;
+import com.teammoeg.frostedresearch.gui.FRTextUtil;
 import com.teammoeg.frostedresearch.number.IResearchNumber;
 import com.teammoeg.frostedresearch.research.clues.Clue;
 import com.teammoeg.frostedresearch.research.effects.Effect;
@@ -328,7 +328,7 @@ public class Research implements FHRegisteredItem {
      * @return alt desc<br>
      */
     public List<Component> getAltDesc() {
-        return FHTextUtil.get(fdesc, "research", id + ".desc_alt");
+        return FRTextUtil.get(fdesc, "research", id + ".desc_alt");
     }
 
     /**
@@ -469,7 +469,7 @@ public class Research implements FHRegisteredItem {
      * @return name<br>
      */
     public Component getName() {
-        return FHTextUtil.get(name, "research", id + ".name");
+        return FRTextUtil.get(name, "research", id + ".name");
     }
 
     /**
@@ -478,7 +478,7 @@ public class Research implements FHRegisteredItem {
      * @return o desc<br>
      */
     public List<Component> getODesc() {
-        return FHTextUtil.get(desc, "research",  id + ".desc");
+        return FRTextUtil.get(desc, "research",  id + ".desc");
     }
 
     /**

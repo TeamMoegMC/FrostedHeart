@@ -25,7 +25,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.registry.TypedCodecRegistry;
-import com.teammoeg.frostedresearch.gui.FHTextUtil;
+import com.teammoeg.frostedresearch.gui.FRTextUtil;
 import com.teammoeg.frostedresearch.research.Research;
 
 import net.minecraft.network.chat.Component;
@@ -135,7 +135,7 @@ public abstract class Clue {
     public Component getDescription(Research parent) {
         if (parent == null || parent.getId() == null)
             return null;
-        return FHTextUtil.getOptional(desc, "clue",  parent.getId() + ".clue." + this.getNonce() + ".desc");
+        return FRTextUtil.getOptional(desc, "clue",  parent.getId() + ".clue." + this.getNonce() + ".desc");
     }
 
     public String getDescriptionString(Research parent) {
@@ -149,13 +149,13 @@ public abstract class Clue {
     public Component getHint(Research parent) {
         if (parent == null || parent.getId() == null)
             return null;
-        return FHTextUtil.getOptional(hint, "clue", parent.getId() + ".clue." + this.getNonce() + ".hint");
+        return FRTextUtil.getOptional(hint, "clue", parent.getId() + ".clue." + this.getNonce() + ".hint");
     }
 
     public Component getName(Research parent) {
         if (parent == null || parent.getId() == null)
             return null;
-        return FHTextUtil.get(name, "clue", parent.getId() + ".clue." + this.getNonce() + ".name");
+        return FRTextUtil.get(name, "clue", parent.getId() + ".clue." + this.getNonce() + ".name");
     }
 
     public String getNonce() {
