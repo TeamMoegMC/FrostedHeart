@@ -115,6 +115,12 @@ public class CUtils {
 	public static BlockPos vec2Pos(Vector3f vec) {
 		return new BlockPos((int)vec.x,(int)vec.y,(int)vec.z);
 	}
+	public static BlockPos vec2AlignedPos(Vec3 vec) {
+		return new BlockPos((int)Math.floor(vec.x),(int)Math.floor(vec.y),(int)Math.floor(vec.z));
+	}
+	public static BlockPos vec2AlignedPos(Vector3f vec) {
+		return new BlockPos((int)Math.floor(vec.x),(int)Math.floor(vec.y),(int)Math.floor(vec.z));
+	}
 	@Nullable
 	public static BlockPos randomPos(Level level,int sizeX,int sizeY,int sizeZ) {
 		return new BlockPos(level.random.nextInt(sizeX),level.random.nextInt(sizeY), level.random.nextInt(sizeZ));
