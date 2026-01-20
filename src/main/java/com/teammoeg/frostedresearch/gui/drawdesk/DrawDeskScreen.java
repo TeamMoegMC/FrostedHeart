@@ -70,7 +70,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
     }
     public void closeDialog(boolean refresh) {
         this.dialog = null;
-        r.setEnabled(true);
+        r.setVisible(true);
         if (refresh)
             this.refreshElements();
     }

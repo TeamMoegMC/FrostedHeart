@@ -44,8 +44,6 @@ public class DrawDeskPanel extends UILayer {
 
     boolean showHelp;
 
-    boolean enabled;
-
     boolean visible;
     @Override
 	public boolean isVisible() {
@@ -139,15 +137,6 @@ public class DrawDeskPanel extends UILayer {
     @Override
     public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         DrawDeskIcons.Background.draw(matrixStack, x, y, w, h);
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
     }
 
     @Override
