@@ -31,9 +31,9 @@ import com.teammoeg.frostedresearch.FRMain;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 
-public class FHTextUtil {
+public class FRTextUtil {
 
-    private FHTextUtil() {
+    private FRTextUtil() {
     }
 
     public static List<Component> get(List<String> orig, String type, String pid) {

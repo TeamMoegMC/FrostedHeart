@@ -36,7 +36,7 @@ import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.registry.TypedCodecRegistry;
 import com.teammoeg.frostedresearch.data.ResearchData;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
-import com.teammoeg.frostedresearch.gui.FHTextUtil;
+import com.teammoeg.frostedresearch.gui.FRTextUtil;
 import com.teammoeg.frostedresearch.research.Research;
 
 import net.minecraft.network.chat.Component;
@@ -221,7 +221,7 @@ public abstract class Effect {
     public final MutableComponent getName(Research rsh) {
         if (name.isEmpty())
             return getDefaultName();
-        return (MutableComponent) FHTextUtil.get(name, "effect", rsh.getId()+".effects."+nonce);
+        return (MutableComponent) FRTextUtil.get(name, "effect", rsh.getId()+".effects."+nonce);
     }
     
     /**
@@ -245,7 +245,7 @@ public abstract class Effect {
     public final List<Component> getTooltip(Research rsh) {
         if (tooltip.isEmpty())
             return getDefaultTooltip();
-        return FHTextUtil.get(tooltip, "effect",rsh.getId()+".effects."+nonce);
+        return FRTextUtil.get(tooltip, "effect",rsh.getId()+".effects."+nonce);
     }
 
     /**

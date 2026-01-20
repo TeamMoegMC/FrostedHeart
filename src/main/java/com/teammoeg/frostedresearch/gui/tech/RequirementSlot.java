@@ -34,44 +34,43 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.crafting.Ingredient;
 
 public class RequirementSlot extends UIElement {
-    ItemStack[] i;
-    int cnt;
+	ItemStack[] i;
+	int cnt;
 
-    public RequirementSlot(UIElement panel, Pair<Ingredient,Integer> iws) {
-        super(panel);
-        this.i = iws.getFirst().getItems();
-        this.cnt = iws.getSecond();
-        this.setSize(16, 16);
-    }
+	public RequirementSlot(UIElement panel, Pair<Ingredient, Integer> iws) {
+		super(panel);
+		this.i = iws.getFirst().getItems();
+		this.cnt = iws.getSecond();
+		this.setSize(16, 16);
+	}
 
-    @Override
-    public void getTooltip(TooltipBuilder list) {
-        ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
-        //list.add(cur.getDisplayName());
-        cur.getTooltipLines(ClientUtils.getPlayer(), TooltipFlag.Default.NORMAL).forEach(list::accept);
-    }
+	@Override
+	public void getTooltip(TooltipBuilder list) {
+		ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
+		// list.add(cur.getDisplayName());
+		cur.getTooltipLines(ClientUtils.getPlayer(), TooltipFlag.Default.NORMAL).forEach(list::accept);
+	}
 
-    @Override
-    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-        ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
-        CGuiHelper.resetGuiDrawing();
-        TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
-        CGuiHelper.drawItem(matrixStack, cur, x, y, 0, w / 16F, h / 16F, true, cnt != 0 ? String.valueOf(cnt) : null);
-    }
+	@Override
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+		ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
+		CGuiHelper.resetGuiDrawing();
+		TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
+		CGuiHelper.drawItem(matrixStack, cur, x, y, 0, w / 16F, h / 16F, true, cnt != 0 ? String.valueOf(cnt) : null);
+	}
 
-    @Override
-    public boolean onMousePressed(MouseButton button) {
-        if (isMouseOver()) {
-            if (isEnabled()) {
-                //TODO edit ingredient
-                JEICompat.showJEIFor(i[(int) ((System.currentTimeMillis() / 1000) % i.length)]);
-            }
+	@Override
+	public boolean onMousePressed(MouseButton button) {
+		if (isMouseOver()) {
+			if (isEnabled()) {
+				// TODO edit ingredient
+				JEICompat.showJEIFor(i[(int) ((System.currentTimeMillis() / 1000) % i.length)]);
+			}
 
-            return true;
-        }
+			return true;
+		}
 
-        return false;
-    }
-
+		return false;
+	}
 
 }

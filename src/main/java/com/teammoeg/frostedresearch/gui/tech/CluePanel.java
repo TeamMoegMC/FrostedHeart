@@ -36,97 +36,97 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 public class CluePanel extends UILayer {
-    public static final String sq = "☐";
-    public static final String sq_v = "☑";
-    public static final String sq_x = "☒";
-    Clue c;
-    Research r;
-    Component hover;
-    TextField clueName;
-    TextField desc;
-    TextField contribute;
-    TextField rq;
+	public static final String sq = "☐";
+	public static final String sq_v = "☑";
+	public static final String sq_x = "☒";
+	Clue c;
+	Research r;
+	Component hover;
+	TextField clueName;
+	TextField desc;
+	TextField contribute;
+	TextField rq;
 
-    public CluePanel(UIElement panel, Clue c, Research r) {
-        super(panel);
-        this.c = c;
-        this.r = r;
-    }
+	public CluePanel(UIElement panel, Clue c, Research r) {
+		super(panel);
+		this.c = c;
+		this.r = r;
+	}
 
-    @Override
-    public void getTooltip(TooltipBuilder list) {
-        super.getTooltip(list);
-        if (hover != null)
-        	list.accept(hover);
-    }
+	@Override
+	public void getTooltip(TooltipBuilder list) {
+		super.getTooltip(list);
+		if (hover != null)
+			list.accept(hover);
+	}
 
-    @Override
-    public void addUIElements() {
-        add(clueName);
-        if (desc != null)
-            add(desc);
-        if (rq != null)
-            add(rq);
-        add(contribute);
-    }
+	@Override
+	public void addUIElements() {
+		add(clueName);
+		if (desc != null)
+			add(desc);
+		if (rq != null)
+			add(rq);
+		add(contribute);
+	}
 
-    @Override
-    public void alignWidgets() {
-    }
+	@Override
+	public void alignWidgets() {
+	}
 
-    @Override
-    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-        // super.drawBackground(matrixStack, theme, x, y, w, h);
-        if (ClientResearchDataAPI.getData().get().isClueCompleted(r, c))
-            TechIcons.CHECKBOX_CHECKED.draw(matrixStack, x, y, 9, 9);
-        else if (r.isCompleted())
-            TechIcons.CHECKBOX_CROSS.draw(matrixStack, x, y, 9, 9);
-        else
-            TechIcons.CHECKBOX.draw(matrixStack, x, y, 9, 9);
-    }
+	@Override
+	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+		// super.drawBackground(matrixStack, theme, x, y, w, h);
+		if (ClientResearchDataAPI.getData().get().isClueCompleted(r, c))
+			TechIcons.CHECKBOX_CHECKED.draw(matrixStack, x, y, 9, 9);
+		else if (r.isCompleted())
+			TechIcons.CHECKBOX_CROSS.draw(matrixStack, x, y, 9, 9);
+		else
+			TechIcons.CHECKBOX.draw(matrixStack, x, y, 9, 9);
+	}
 
-    public void initWidgets() {
-        int offset = 1;
-        clueName = new TextField(this);
-        clueName.setMaxWidth(width - 6).setText(c.getName(r)).setColor(TechIcons.text).setPos(10, offset);
+	public void initWidgets() {
+		int offset = 1;
+		clueName = new TextField(this);
+		clueName.setMaxWidth(width - 6).setText(c.getName(r)).setColor(TechIcons.text).setPos(10, offset);
 
-        offset += clueName.getHeight() + 2;
-        Component itx = c.getDescription(r);
-        if (itx != null) {
-            desc = new TextField(this);
-            desc.setMaxWidth(width).setText(itx).setColor(TechIcons.text).setPos(0, offset);
-            offset += desc.getHeight() + 2;
-        }
-        if (c.isRequired()) {
-            rq = new TextField(this)
-                    .setMaxWidth(width)
-                    .setText(Lang.translateGui("research.required"))
-                    .setColor(TechIcons.text_red);
-            rq.setPos(0, offset);
-            offset += rq.getHeight() + 2;
-        }
-        contribute = new TextField(this)
-                .setMaxWidth(width)
-                .setText(Components.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
-                .setColor(TechIcons.text);
-        contribute.setPos(0, offset);
-        offset += contribute.getHeight() + 2;
-        offset += 1;
-        hover = c.getHint(r);
-        this.setHeight(offset);
-    }
+		offset += clueName.getHeight() + 2;
+		Component itx = c.getDescription(r);
+		if (itx != null) {
+			desc = new TextField(this);
+			desc.setMaxWidth(width).setText(itx).setColor(TechIcons.text).setPos(0, offset);
+			offset += desc.getHeight() + 2;
+		}
+		if (c.isRequired()) {
+			rq = new TextField(this)
+				.setMaxWidth(width)
+				.setText(Lang.translateGui("research.required"))
+				.setColor(TechIcons.text_red);
+			rq.setPos(0, offset);
+			offset += rq.getHeight() + 2;
+		}
+		contribute = new TextField(this)
+			.setMaxWidth(width)
+			.setText(Components.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
+			.setColor(TechIcons.text);
+		contribute.setPos(0, offset);
+		offset += contribute.getHeight() + 2;
+		offset += 1;
+		hover = c.getHint(r);
+		this.setHeight(offset);
+	}
 
-    @Override
-    public boolean onMousePressed(MouseButton button) {
-        if (isMouseOver()) {
-            if (isEnabled()) {
-                //TODO edit clue
-            }
+	@Override
+	public boolean onMousePressed(MouseButton button) {
+		if (isMouseOver()) {
+			if (isEnabled()) {
+				// TODO edit clue
+			}
 
-            return true;
-        }
+			return true;
+		}
 
-        return false;
-    }
+		return false;
+	}
 
 }

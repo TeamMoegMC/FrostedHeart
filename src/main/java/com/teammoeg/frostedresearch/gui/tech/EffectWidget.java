@@ -35,53 +35,53 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 public class EffectWidget extends UIElement {
-    List<Component> tooltips;
-    Component title;
-    CIcon icon;
-    Effect e;
-    Research r;
+	List<Component> tooltips;
+	Component title;
+	CIcon icon;
+	Effect e;
+	Research r;
 
-    public EffectWidget(UIElement panel, Effect e, Research r) {
-        super(panel);
-        tooltips = e.getTooltip(r);
-        title = e.getName(r);
-        icon = e.getIcon();
-        this.e = e;
-        this.r = r;
-        this.setSize(16, 16);
-    }
+	public EffectWidget(UIElement panel, Effect e, Research r) {
+		super(panel);
+		tooltips = e.getTooltip(r);
+		title = e.getName(r);
+		icon = e.getIcon();
+		this.e = e;
+		this.r = r;
+		this.setSize(16, 16);
+	}
 
-    @Override
-    public void getTooltip(TooltipBuilder list) {
-        list.accept(title);
-        tooltips.forEach(list::accept);
-    }
+	@Override
+	public void getTooltip(TooltipBuilder list) {
+		list.accept(title);
+		tooltips.forEach(list::accept);
+	}
 
-    @Override
-    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-        CGuiHelper.resetGuiDrawing();
-        TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
-        icon.draw(matrixStack, x, y, w, h);
-        if (ClientResearchDataAPI.getData().get().isEffectGranted(r, e)) {
-            matrixStack.pose().pushPose();
-            matrixStack.pose().translate(0, 0, 300);
-            CGuiHelper.resetGuiDrawing();
-            TechIcons.FIN.draw(matrixStack, x, y, w, h);
-            matrixStack.pose().popPose();
-        }
-    }
+	@Override
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+		CGuiHelper.resetGuiDrawing();
+		TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
+		icon.draw(matrixStack, x, y, w, h);
+		if (ClientResearchDataAPI.getData().get().isEffectGranted(r, e)) {
+			matrixStack.pose().pushPose();
+			matrixStack.pose().translate(0, 0, 300);
+			CGuiHelper.resetGuiDrawing();
+			TechIcons.FIN.draw(matrixStack, x, y, w, h);
+			matrixStack.pose().popPose();
+		}
+	}
 
-    @Override
-    public boolean onMousePressed(MouseButton button) {
-        if (isMouseOver()) {
-            if (this.isEnabled()) {
-                //TODO edit effect
-                e.onClick(r.getData());
-            }
+	@Override
+	public boolean onMousePressed(MouseButton button) {
+		if (isMouseOver()) {
+			if (this.isEnabled()) {
+				// TODO edit effect
+				e.onClick(r.getData());
+			}
 
-            return true;
-        }
+			return true;
+		}
 
-        return false;
-    }
+		return false;
+	}
 }

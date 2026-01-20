@@ -273,7 +273,7 @@ public class SurroundingTemperatureSimulator {
                 Vec3 curspeed = speedVectors[vid[i]];
                 Vec3 svec = Qpos[i];
                 Vec3 dvec = svec.add(curspeed);
-                BlockPos bpos = CUtils.vec2Pos(dvec);
+                BlockPos bpos = CUtils.vec2AlignedPos(dvec);
                 CachedBlockInfo info = getInfoCached(bpos);
 
                 VoxelShape shape = info.shape;

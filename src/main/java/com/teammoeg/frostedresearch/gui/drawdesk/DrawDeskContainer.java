@@ -30,70 +30,71 @@ import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
 public class DrawDeskContainer extends CBlockEntityMenu<DrawingDeskTileEntity> {
-    public DrawDeskContainer(int id, Inventory inventoryPlayer, DrawingDeskTileEntity tile) {
-        super(FRContents.MenuTypes.DRAW_DESK.get(), tile, id, inventoryPlayer.player, 3);
-        this.addSlot(new EnableSlotItemHandler(tile.getInventory(), DrawingDeskTileEntity.PAPER_SLOT, 114, 161) );
-        this.addSlot(new EnableSlotItemHandler(tile.getInventory(), DrawingDeskTileEntity.INK_SLOT, 114, 178));
-        this.addSlot(new EnableSlotItemHandler(tile.getInventory(), DrawingDeskTileEntity.EXAMINE_SLOT, 114, 93));
-        for (int i = 0; i < 36; i++) {
-            int posi = i;
-            if (i < 9)
-                posi += 27;
-            else
-                posi -= 9;
-            addSlot(new EnableSlot(inventoryPlayer, i, 10 + (posi % 6) * 17, 93 + (posi / 6) * 17));
-        }
-        //this.inventorySlots.get(0).set
+	public DrawDeskContainer(int id, Inventory inventoryPlayer, DrawingDeskTileEntity tile) {
+		super(FRContents.MenuTypes.DRAW_DESK.get(), tile, id, inventoryPlayer.player, 3);
+		this.addSlot(new EnableSlotItemHandler(tile.getInventory(), DrawingDeskTileEntity.PAPER_SLOT, 114, 161));
+		this.addSlot(new EnableSlotItemHandler(tile.getInventory(), DrawingDeskTileEntity.INK_SLOT, 114, 178));
+		this.addSlot(new EnableSlotItemHandler(tile.getInventory(), DrawingDeskTileEntity.EXAMINE_SLOT, 114, 93));
+		for (int i = 0; i < 36; i++) {
+			int posi = i;
+			if (i < 9)
+				posi += 27;
+			else
+				posi -= 9;
+			addSlot(new EnableSlot(inventoryPlayer, i, 10 + (posi % 6) * 17, 93 + (posi / 6) * 17));
+		}
+		// this.inventorySlots.get(0).set
 
-    }
+	}
 
-    public void setEnabled(boolean en) {
-        for (Slot s : this.slots) {
-            if (s instanceof Enabled)
-                ((Enabled) s).setEnabled(en);
-        }
-    }
+	public void setEnabled(boolean en) {
+		for (Slot s : this.slots) {
+			if (s instanceof Enabled)
+				((Enabled) s).setEnabled(en);
+		}
+	}
 
-    interface Enabled {
-        void setEnabled(boolean enabled);
-    }
+	interface Enabled {
+		void setEnabled(boolean enabled);
+	}
 
-    public static class EnableSlotItemHandler extends SlotItemHandler implements Enabled {
-        boolean enabled = true;
+	public static class EnableSlotItemHandler extends SlotItemHandler implements Enabled {
+		boolean enabled = true;
 
-        public EnableSlotItemHandler(ItemStackHandler inv, int id, int x, int y) {
-            super(inv, id, x, y);
-        }
+		public EnableSlotItemHandler(ItemStackHandler inv, int id, int x, int y) {
+			super(inv, id, x, y);
+		}
 
-        public boolean isActive() {
-            return enabled;
-        }
+		public boolean isActive() {
+			return enabled;
+		}
 
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
-    }
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+	}
 
-    public static class EnableSlot extends Slot implements Enabled {
-        boolean enabled = true;
+	public static class EnableSlot extends Slot implements Enabled {
+		boolean enabled = true;
 
-        public EnableSlot(Container inventoryIn, int index, int xPosition, int yPosition) {
-            super(inventoryIn, index, xPosition, yPosition);
-        }
+		public EnableSlot(Container inventoryIn, int index, int xPosition, int yPosition) {
+			super(inventoryIn, index, xPosition, yPosition);
+		}
 
-        public boolean isActive() {
-            return enabled;
-        }
+		public boolean isActive() {
+			return enabled;
+		}
 
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
-    }
-    
-/*
-	@Override
-	public boolean quickMoveIn(ItemStack slotStack) {
-		
-		return this.moveItemStackTo(slotStack, 0,1, false)||this.moveItemStackTo(slotStack, 1, 2, false)||this.moveItemStackTo(slotStack, 2, 3, false);
-	}*/
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+	}
+
+	/*
+	 * @Override public boolean quickMoveIn(ItemStack slotStack) {
+	 * 
+	 * return this.moveItemStackTo(slotStack, 0,1,
+	 * false)||this.moveItemStackTo(slotStack, 1, 2,
+	 * false)||this.moveItemStackTo(slotStack, 2, 3, false); }
+	 */
 }

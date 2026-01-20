@@ -27,30 +27,29 @@ import com.teammoeg.frostedresearch.gui.drawdesk.game.ClientResearchGame;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class OrderWidget extends UIElement {
-    ClientResearchGame rg;
-    int cardstate;
+	ClientResearchGame rg;
+	int cardstate;
 
-    public OrderWidget(UIElement p, ClientResearchGame rg, int cardstate) {
-        super(p);
-        this.rg = rg;
-        this.cardstate = cardstate;
-    }
+	public OrderWidget(UIElement p, ClientResearchGame rg, int cardstate) {
+		super(p);
+		this.rg = rg;
+		this.cardstate = cardstate;
+	}
 
-    @Override
-    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	@Override
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 
-        DrawDeskIcons.ORDER_FRAME.draw(matrixStack, x, y, 16, 16);
-        if (cardstate != 0) {
-            CardStat cs = rg.getStats().get(cardstate);
-            if (cs.card != 8)
-                DrawDeskIcons.ORDER_ARROW.draw(matrixStack, x, y + 16, 16, 12);
-            DrawDeskIcons.getIcon(cs.type, cs.card, true).draw(matrixStack, x, y, 16, 16);
-            if (cs.num <= 0) {
-                TechIcons.FIN.draw(matrixStack, x, y, 16, 16);
-            }
-        } else
-            TechIcons.DOTS.draw(matrixStack, x, y, 16, 16);
-    }
-
+		DrawDeskIcons.ORDER_FRAME.draw(matrixStack, x, y, 16, 16);
+		if (cardstate != 0) {
+			CardStat cs = rg.getStats().get(cardstate);
+			if (cs.card != 8)
+				DrawDeskIcons.ORDER_ARROW.draw(matrixStack, x, y + 16, 16, 12);
+			DrawDeskIcons.getIcon(cs.type, cs.card, true).draw(matrixStack, x, y, 16, 16);
+			if (cs.num <= 0) {
+				TechIcons.FIN.draw(matrixStack, x, y, 16, 16);
+			}
+		} else
+			TechIcons.DOTS.draw(matrixStack, x, y, 16, 16);
+	}
 
 }
