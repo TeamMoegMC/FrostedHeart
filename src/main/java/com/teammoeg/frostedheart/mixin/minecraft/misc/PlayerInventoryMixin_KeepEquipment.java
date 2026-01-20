@@ -45,7 +45,7 @@ public abstract class PlayerInventoryMixin_KeepEquipment implements Container, N
         if (getThis().player instanceof FakePlayer)
             return;
         DeathInventoryData dit = DeathInventoryData.get(getThis().player);
-        if (FHConfig.SERVER.keepEquipments.get()) {
+        if (FHConfig.SERVER.MISC.keepEquipments.get()) {
             if (dit != null)
                 dit.death(getThis());
         }

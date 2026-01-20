@@ -47,7 +47,7 @@ import java.util.Objects;
 public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
         CTickableBlockEntity, IHaveGoggleInformation,
         CBlockInterfaces.IActiveState, HeatNetworkProvider {
-    HeatEndpoint network = new HeatEndpoint(10, FHConfig.COMMON.steamCoreMaxPower.get().floatValue(), 0, FHConfig.COMMON.steamCorePowerIntake.get().floatValue());
+    HeatEndpoint network = new HeatEndpoint(10, FHConfig.SERVER.STEAM_CORE.steamCoreMaxPower.get().floatValue(), 0, FHConfig.SERVER.STEAM_CORE.steamCorePowerIntake.get().floatValue());
     LazyOptional<HeatEndpoint> heatcap = LazyOptional.of(() -> network);
 
     public SteamCoreTileEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -60,7 +60,7 @@ public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
     }
 
     public float calculateAddedStressCapacity() {
-        return this.lastCapacityProvided =FHConfig.COMMON.steamCoreCapacity.get().floatValue();
+        return this.lastCapacityProvided =FHConfig.SERVER.STEAM_CORE.steamCoreCapacity.get().floatValue();
     }
 
     @Override
@@ -68,8 +68,8 @@ public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
         super.tick();
         
         if (!level.isClientSide) {
-            if (network.tryDrainHeat(FHConfig.COMMON.steamCorePowerIntake.get().floatValue())) {
-            	float targetSpeed=FHConfig.COMMON.steamCoreGeneratedSpeed.get().floatValue();
+            if (network.tryDrainHeat(FHConfig.SERVER.STEAM_CORE.steamCorePowerIntake.get().floatValue())) {
+            	float targetSpeed=FHConfig.SERVER.STEAM_CORE.steamCoreGeneratedSpeed.get().floatValue();
                 if (generatingSpeed !=targetSpeed) {
                 	generatingSpeed=targetSpeed;
                 	this.setActive(true);

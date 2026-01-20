@@ -90,7 +90,7 @@ public class WaterCommonEvents {
         boolean flag;
         Player player = event.getEntity();
         flag = !(player instanceof FakePlayer) && player instanceof ServerPlayer;
-        if (FHConfig.SERVER.resetWaterLevelInDeath.get()) {
+        if (FHConfig.SERVER.NUTRITION.resetWaterLevelInDeath.get()) {
             flag = flag && !event.isWasDeath();
         }
         if (flag) {

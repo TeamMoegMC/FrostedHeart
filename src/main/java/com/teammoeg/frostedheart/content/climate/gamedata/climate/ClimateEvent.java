@@ -111,7 +111,7 @@ public class ClimateEvent {
      */
     public static ClimateEvent getClimateEvent(long startTime) {
         Random random = new Random();
-        int blizzardFrequency = FHConfig.SERVER.blizzardFrequency.get();
+        int blizzardFrequency = FHConfig.SERVER.CLIMATE.blizzardFrequency.get();
         int rand = random.nextInt(10)+((startTime/secondsPerDay<=15)?5:0);
         if (rand < blizzardFrequency) {
             return getBlizzardClimateEvent(startTime);

@@ -75,7 +75,7 @@ public class WaterLevelCapability implements NBTSerializable {
     }
 
     public void addExhaustion(Player player, float add) {
-        float finalValue = (float) (add * FHConfig.SERVER.waterReducingRate.get());
+        float finalValue = (float) (add * FHConfig.SERVER.NUTRITION.waterReducingRate.get());
 
         MobEffectInstance effect = player.getEffect(FHMobEffects.THIRST.get());
         // around 2 times faster at level zero thirst, 0.5 more each level
@@ -196,7 +196,7 @@ public class WaterLevelCapability implements NBTSerializable {
 
 
     protected static void mobEffectPunishment(Player player, int wlevel,int slevel) {
-        int Amp = FHConfig.SERVER.weaknessEffectAmplifier.get();
+        int Amp = FHConfig.SERVER.NUTRITION.weaknessEffectAmplifier.get();
         MobEffectInstance weaknessEffect = player.getEffect(MobEffects.WEAKNESS);
         MobEffectInstance movementSlowDownEffect = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
         if (Amp > -1 && (weaknessEffect == null || weaknessEffect.getDuration() <= 100))

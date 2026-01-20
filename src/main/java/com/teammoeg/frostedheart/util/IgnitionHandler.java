@@ -28,27 +28,27 @@ import net.minecraftforge.common.Tags;
 public class IgnitionHandler {
     public static boolean tryIgnition(RandomSource rand, ItemStack handStack, ItemStack offHandStack) {
         if (handStack.is(Tags.Items.RODS_WOODEN) && offHandStack.is(Tags.Items.RODS_WOODEN)) {
-            if (rand.nextFloat() < FHConfig.COMMON.stickIgnitionChance.get()) {
+            if (rand.nextFloat() < FHConfig.SERVER.FIRE_IGNITION.stickIgnitionChance.get()) {
                 handStack.shrink(1);
                 offHandStack.shrink(1);
                 return true;
-            } else if (rand.nextFloat() < FHConfig.COMMON.consumeChanceWhenIgnited.get()) {
+            } else if (rand.nextFloat() < FHConfig.SERVER.FIRE_IGNITION.consumeChanceWhenIgnited.get()) {
                 handStack.shrink(1);
                 offHandStack.shrink(1);
                 return false;
             }
         } else if (handStack.is(FHTags.Items.IGNITION_METAL.tag) && offHandStack.is(FHTags.Items.IGNITION_MATERIAL.tag)) {
-            if (rand.nextFloat() < FHConfig.COMMON.flintIgnitionChance.get()) {
+            if (rand.nextFloat() < FHConfig.SERVER.FIRE_IGNITION.flintIgnitionChance.get()) {
                 offHandStack.shrink(1);
-                if (rand.nextFloat() < FHConfig.COMMON.consumeChanceWhenIgnited.get()) {
+                if (rand.nextFloat() < FHConfig.SERVER.FIRE_IGNITION.consumeChanceWhenIgnited.get()) {
                     handStack.shrink(1);
                 }
                 return true;
             }
         } else if (handStack.is(FHTags.Items.IGNITION_MATERIAL.tag) && offHandStack.is(FHTags.Items.IGNITION_METAL.tag)) {
-            if (rand.nextFloat() < FHConfig.COMMON.flintIgnitionChance.get()) {
+            if (rand.nextFloat() < FHConfig.SERVER.FIRE_IGNITION.flintIgnitionChance.get()) {
                 handStack.shrink(1);
-                if (rand.nextFloat() < FHConfig.COMMON.consumeChanceWhenIgnited.get()) {
+                if (rand.nextFloat() < FHConfig.SERVER.FIRE_IGNITION.consumeChanceWhenIgnited.get()) {
                     offHandStack.shrink(1);
                 }
                 return true;

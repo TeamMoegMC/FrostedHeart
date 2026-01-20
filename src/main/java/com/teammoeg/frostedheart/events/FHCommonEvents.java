@@ -338,7 +338,7 @@ public class FHCommonEvents {
 
 	@SubscribeEvent
 	public static void onCuriosDrop(DropRulesEvent cde) {
-		if ((cde.getEntity() instanceof Player) && FHConfig.SERVER.keepEquipments.get()) {
+		if ((cde.getEntity() instanceof Player) && FHConfig.SERVER.MISC.keepEquipments.get()) {
 			cde.addOverride(e -> true, DropRule.ALWAYS_KEEP);
 		}
 	}
@@ -425,7 +425,7 @@ public class FHCommonEvents {
 			DeathInventoryData dit = DeathInventoryData.get(event.getEntity());
 			//dit.tryCallClone(event.getEntity());
 			//System.out.println("respawn called");
-			if (FHConfig.SERVER.keepEquipments.get() && !event.getEntity().level().isClientSide) {
+			if (FHConfig.SERVER.MISC.keepEquipments.get() && !event.getEntity().level().isClientSide) {
 				if (dit != null) {
 					//System.out.println("restore items");
 					dit.alive(event.getEntity().getInventory());

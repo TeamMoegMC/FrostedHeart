@@ -883,8 +883,8 @@ public class FrostedHud {
         renderWaypoint = FHConfig.CLIENT.enableWaypoint.get();
 
         // Forecast
-        boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
-        boolean forceEnables = FHConfig.COMMON.forceEnableTemperatureForecast.get();
+        boolean configAllows = FHConfig.SERVER.WEATHER_FORECAST.enablesTemperatureForecast.get();
+        boolean forceEnables = FHConfig.SERVER.WEATHER_FORECAST.forceEnableTemperatureForecast.get();
         renderForecast = (forceEnables
                 || (configAllows && ClientResearchDataAPI.getData().get().getVariantDouble(ResearchVariant.HAS_FORECAST)>0))
         && ((BossHealthOverlayAccess) ClientUtils.getGui().getBossOverlay()).getEvents().isEmpty(); // check if not boss fight

@@ -86,7 +86,7 @@ public class FoodTempStats implements TooltipModifier {
         
         if (data != null) {
             float env = PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getEnvTemp).orElse(0f);
-            float heat = (float) (data.getHeat(stack, env) * FHConfig.SERVER.tempSpeed.get());
+            float heat = (float) (data.getHeat(stack, env) * FHConfig.SERVER.CLIMATE.tempSpeed.get());
             String s = TemperatureDisplayHelper.toTemperatureDeltaFloatString(heat);
             Lang.translate("tooltip", "temp.food")
                     .style(ChatFormatting.GRAY)

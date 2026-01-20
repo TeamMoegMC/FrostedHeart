@@ -149,7 +149,7 @@ public class PlayerTemperatureData implements NBTSerializable {
 
     public FHTemperatureDifficulty getDifficulty() {
         if (difficulty == null)
-            return FHConfig.SERVER.tdiffculty.get();
+            return FHConfig.SERVER.CLIMATE.tdiffculty.get();
         return difficulty;
     }
 

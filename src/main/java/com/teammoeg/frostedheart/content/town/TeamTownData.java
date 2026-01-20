@@ -112,7 +112,7 @@ public class TeamTownData implements SpecialData {
 	 * @param world server world instance
 	 */
 	public void tick(ServerLevel world) {
-		if (!FHConfig.SERVER.enableTownTick.get()) return;
+		if (!FHConfig.SERVER.TOWN.enableTownTick.get()) return;
 		updateAllBlocks(world);
 		PriorityQueue<TownWorkerData> pq = new PriorityQueue<>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
 		for (TownWorkerData workerData : blocks.values()) {
@@ -140,7 +140,7 @@ public class TeamTownData implements SpecialData {
 	}
 
 	public void tickMorning(ServerLevel world) {
-		if (!FHConfig.SERVER.enableTownTickMorning.get()) return;
+		if (!FHConfig.SERVER.TOWN.enableTownTickMorning.get()) return;
 		this.updateAllBlocks(world);
 		this.checkOccupiedAreaOverlap();
 		this.connectMineAndBase();

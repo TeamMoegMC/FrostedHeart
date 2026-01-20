@@ -45,7 +45,7 @@ public class TemperatureComputation {
         int skyLight = world.getChunkSource().getLightEngine().getLayerListener(LightLayer.SKY).getLightValue(pos);
         float dayTime = world.getDayTime() % 24000L;
         float relativeTime = Mth.sin((float) Math.toRadians(dayTime / ((float) 200 / 3))); // range from -1 to 1
-        if (skyLight < FHConfig.SERVER.tempSkyLightThreshold.get()) {
+        if (skyLight < FHConfig.SERVER.CLIMATE.tempSkyLightThreshold.get()) {
             relativeTime = -1;
         }
 
@@ -54,10 +54,10 @@ public class TemperatureComputation {
         float weatherMultiplier = 1.0F;
         if (world.isRaining() && WorldTemperature.isRainingAt(player.blockPosition(), world)) {
             // Decrement by 5C
-            envtemp -= FHConfig.SERVER.snowTempModifier.get();
+            envtemp -= FHConfig.SERVER.CLIMATE.snowTempModifier.get();
             if (world.isThundering()) {
                 // Decrement by 10C
-                envtemp -= FHConfig.SERVER.blizzardTempModifier.get();
+                envtemp -= FHConfig.SERVER.CLIMATE.blizzardTempModifier.get();
             }
             // Due to wetness, daily day-night amplitude shrinks
             weatherMultiplier = 0.2F;
@@ -65,7 +65,7 @@ public class TemperatureComputation {
 
         // Apply day-night amplitude modification
         // This shift ranges [-10, 10]
-        envtemp += relativeTime * FHConfig.SERVER.dayNightTempAmplitude.get() * weatherMultiplier;
+        envtemp += relativeTime * FHConfig.SERVER.CLIMATE.dayNightTempAmplitude.get() * weatherMultiplier;
 
         if (player.isInPowderSnow)
             envtemp = -30 - 37;

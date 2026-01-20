@@ -108,7 +108,7 @@ public class FoodNutritionStats implements TooltipModifier {
             }
             list.add(builder.build());
             list.add(Lang.gui("nutrition.max_level").component());
-            double gainLostRate=FHConfig.SERVER.nutritionGainRate.get()/FHConfig.SERVER.nutritionConsumptionRate.get()/10000;
+            double gainLostRate=FHConfig.SERVER.NUTRITION.nutritionGainRate.get()/FHConfig.SERVER.NUTRITION.nutritionConsumptionRate.get()/10000;
             if(foodNutrition.getFat()>0)
             	list.add(Lang.gui("nutrition.fat").color(FAT_COLOR).space().percentage().number(foodNutrition.getFat()*gainLostRate).withStyle(ChatFormatting.GREEN).component());
             if(foodNutrition.getProtein()>0)

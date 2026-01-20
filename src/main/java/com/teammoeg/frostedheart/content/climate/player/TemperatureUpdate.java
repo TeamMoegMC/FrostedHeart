@@ -79,7 +79,7 @@ public class TemperatureUpdate {
                     return;
                 }
 
-                if (player.tickCount % FHConfig.SERVER.temperatureUpdateIntervalTicks.get() != 0) {
+                if (player.tickCount % FHConfig.SERVER.CLIMATE.temperatureUpdateIntervalTicks.get() != 0) {
                     return;
                 }
 
@@ -100,14 +100,14 @@ public class TemperatureUpdate {
                     // If armor is on, player gets a longer wet effect
                     if (hasArmor) {
                         player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(),
-                                FHConfig.SERVER.wetEffectDuration.get() *
-                                        FHConfig.SERVER.wetClothesDurationMultiplier.get(),
+                                FHConfig.SERVER.CLIMATE.wetEffectDuration.get() *
+                                        FHConfig.SERVER.CLIMATE.wetClothesDurationMultiplier.get(),
                                 0, false, false));// punish for wet clothes
                     }
                     // Otherwise, if there is no wet effect now, add normal wet effect
-                    else if (current == null || current.getDuration() < FHConfig.SERVER.wetEffectDuration.get()) {
+                    else if (current == null || current.getDuration() < FHConfig.SERVER.CLIMATE.wetEffectDuration.get()) {
                         player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(),
-                                FHConfig.SERVER.wetEffectDuration.get(), 0, false, false));
+                                FHConfig.SERVER.CLIMATE.wetEffectDuration.get(), 0, false, false));
                     }
                 }
 
@@ -263,13 +263,13 @@ public class TemperatureUpdate {
                 if (data.updateInterval <= 0) {
                     // Multithreaded Environment Simulation
                     if (threadingPool.tryCommitWork(player))
-                        data.updateInterval = FHConfig.SERVER.envTempUpdateIntervalTicks.get();
+                        data.updateInterval = FHConfig.SERVER.CLIMATE.envTempUpdateIntervalTicks.get();
                 }
 
                 /* MULTI-THREADED SURROUNDING BLOCK TEMPERATURE SIMULATION ENDS */
 
                 // Rest of update logic is handled every second.
-                if (player.tickCount % FHConfig.SERVER.temperatureUpdateIntervalTicks.get() == 0) {
+                if (player.tickCount % FHConfig.SERVER.CLIMATE.temperatureUpdateIntervalTicks.get() == 0) {
 
                     /* ENVIRONMENT TEMPERATURE COMPUTATION STARTS */
 
@@ -360,7 +360,7 @@ public class TemperatureUpdate {
                         // By default heatExchangeTimeConstant = 167
                         // Since this logic is invoked every 20 ticks (1s), this means
                         // 1 unit = 0.006 degrees per second
-                        float unit = 1F / FHConfig.SERVER.heatExchangeTimeConstant.get();
+                        float unit = 1F / FHConfig.SERVER.CLIMATE.heatExchangeTimeConstant.get();
                         float movementHeatedUnits = 0;
                         // Apply Self-heating based on movement status
                         // Food exhaustion is handled by Vanilla, so we don't repeat here
@@ -413,7 +413,7 @@ public class TemperatureUpdate {
                             // May be negative! (when dt < 0)
                             //float fluidModifiedDT = (1 + fluidModifier) * dt;
                             // Units from heat exchange
-                            float heatExchangedUnits = (float) (dt * unit / FHConfig.SERVER.heatExchangeTempConstant.get());
+                            float heatExchangedUnits = (float) (dt * unit / FHConfig.SERVER.CLIMATE.heatExchangeTempConstant.get());
 
 
                             // Additional Homeostasis using Stored (Food) Energy
@@ -509,7 +509,7 @@ public class TemperatureUpdate {
                             ctx.setBodyTemperature(part, partBodyTemps.get(part));
                         }
                         // A movement induced feel temperature delta
-                        float movementFeelTempDelta = Math.max(0, (float) (((movementHeatedUnits-1) / unit - 1 * selfHeatRate) * FHConfig.SERVER.heatExchangeTempConstant.get()));
+                        float movementFeelTempDelta = Math.max(0, (float) (((movementHeatedUnits-1) / unit - 1 * selfHeatRate) * FHConfig.SERVER.CLIMATE.heatExchangeTempConstant.get()));
                         // Update data and do the relevant display purpose computation there
                         data.update((float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get()), ctx, movementFeelTempDelta);
 
@@ -536,7 +536,7 @@ public class TemperatureUpdate {
     }
 
     public static void init() {
-        threadingPool = new TemperatureThreadingPool(FHConfig.SERVER.envTempThreadCount.get());
+        threadingPool = new TemperatureThreadingPool(FHConfig.SERVER.CLIMATE.envTempThreadCount.get());
 
     }
 

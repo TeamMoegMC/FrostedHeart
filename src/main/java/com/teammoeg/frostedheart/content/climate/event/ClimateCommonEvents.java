@@ -377,7 +377,7 @@ public class ClimateCommonEvents {
                     WorldClimate data = WorldClimate.get(serverWorld);
 
                     if (data != null) {
-                        if (FHConfig.SERVER.addInitClimate.get())
+                        if (FHConfig.SERVER.CLIMATE.addInitClimate.get())
                             if (!data.isInitialEventAdded()) {
                                 data.setInitialEventAdded(true);
                                 if (serverWorld.dimensionTypeRegistration().is(BuiltinDimensionTypes.OVERWORLD)) {
@@ -456,8 +456,8 @@ public class ClimateCommonEvents {
      * @author AlcatrazEscapee
      */
     public static void placeExtraSnow(ServerLevel level, ChunkAccess chunk) {
-        if (FHConfig.SERVER.enableSnowAccumulationDuringWeather.get()
-                && level.random.nextInt(FHConfig.SERVER.snowAccumulationDifficulty.get()) == 0) {
+        if (FHConfig.SERVER.WORLDGEN.enableSnowAccumulationDuringWeather.get()
+                && level.random.nextInt(FHConfig.SERVER.WORLDGEN.snowAccumulationDifficulty.get()) == 0) {
             int blockX = chunk.getPos().getMinBlockX();
             int blockZ = chunk.getPos().getMinBlockZ();
             BlockPos pos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING,

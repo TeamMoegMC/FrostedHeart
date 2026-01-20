@@ -65,13 +65,13 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         ServerLevel level = (ServerLevel)(Object)this;
         final long now = level.getGameTime();
         ChunkPos chunkpos = pChunk.getPos();
-        boolean updateTempBlock = (now + (chunkpos.x)+(chunkpos.z)) % FHConfig.SERVER.tempBlockstateUpdateIntervalTicks.get() == 0;
+        boolean updateTempBlock = (now + (chunkpos.x)+(chunkpos.z)) % FHConfig.SERVER.CLIMATE.tempBlockstateUpdateIntervalTicks.get() == 0;
         boolean isRaining = level.isRaining();
         int i = chunkpos.getMinBlockX();
         int j = chunkpos.getMinBlockZ();
         // Process fewer blocks for temperature checks to reduce performance impact
         // Adjust this divisor based on your performance needs
-        int temperatureChecks = Math.max(1, pRandomTickSpeed / FHConfig.SERVER.tempRandomTickSpeedDivisor.get());
+        int temperatureChecks = Math.max(1, pRandomTickSpeed / FHConfig.SERVER.CLIMATE.tempRandomTickSpeedDivisor.get());
 
         // Custom water freezing logic
         level.getProfiler().popPush("water");
@@ -287,7 +287,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         // general state transition
 
         // To save performance, we only focus on blocks that player cares more about, otherwise we reduce translation rate
-        boolean shouldDoAdjust = ChunkHeatData.hasActiveAdjust(level, pos)||level.random.nextInt(FHConfig.SERVER.ambientBlockStateUpdateDivisor.get())==0;
+        boolean shouldDoAdjust = ChunkHeatData.hasActiveAdjust(level, pos)||level.random.nextInt(FHConfig.SERVER.CLIMATE.ambientBlockStateUpdateDivisor.get())==0;
         float t = WorldTemperature.block(level, pos);
         // Determine the target state based on temperature thresholds
         // We check transitions in order of priority (solid->gas, gas->solid, etc.)

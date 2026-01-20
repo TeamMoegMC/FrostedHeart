@@ -125,7 +125,7 @@ public class FoodTemperatureHandler {
         Item it = stack.getItem();
 
         ITempAdjustFood adj;
-        double tspeed = FHConfig.SERVER.tempSpeed.get();
+        double tspeed = FHConfig.SERVER.CLIMATE.tempSpeed.get();
         if (it instanceof ITempAdjustFood) {
             adj = (ITempAdjustFood) it;
         } else {

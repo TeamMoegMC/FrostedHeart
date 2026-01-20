@@ -33,7 +33,7 @@ public class ForecastHandler {
     public static void sendForecastMessages(TickEvent.PlayerTickEvent event) {
         if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer) {
             ServerPlayer serverPlayer = (ServerPlayer) event.player;
-            boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
+            boolean configAllows = FHConfig.SERVER.WEATHER_FORECAST.enablesTemperatureForecast.get();
             if (configAllows && ResearchDataAPI.getVariants(serverPlayer).getDouble("has_forecast")>0) {
                 // Blizzard warning
                 //float thisHour = WorldClimate.getTemp(serverPlayer.world);
@@ -103,7 +103,7 @@ public class ForecastHandler {
                 }
             }
 
-            if (serverPlayer.level().getDayTime() % 24000 == 41 && FHConfig.COMMON.enableDailyKitchen.get())
+            if (serverPlayer.level().getDayTime() % 24000 == 41 && FHConfig.SERVER.MISC.enableDailyKitchen.get())
                 DailyKitchen.generateWantedFood(serverPlayer);//This is daily kitchen thing,not forecast message.
         }
     }

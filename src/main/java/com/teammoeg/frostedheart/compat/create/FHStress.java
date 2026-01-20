@@ -32,7 +32,7 @@ public class FHStress implements IStressValueProvider {
 
     @Override
     public double getCapacity(Block arg0) {
-    	if(arg0 ==FHBlocks.STEAM_CORE.get())return FHConfig.COMMON.steamCoreCapacity.get();
+    	if(arg0 ==FHBlocks.STEAM_CORE.get())return FHConfig.SERVER.STEAM_CORE.steamCoreCapacity.get();
     	if(arg0 ==FHBlocks.FABRIC_VAWT.get())return 9;
     	if(arg0 ==FHBlocks.METAL_VAWT.get())return 9;
     	if(arg0 ==FHBlocks.ALLOY_VAWT.get())return 9;
@@ -63,7 +63,7 @@ public class FHStress implements IStressValueProvider {
 	@Override
 	public Couple<Integer> getGeneratedRPM(Block block) {
 		if(block==FHBlocks.STEAM_CORE.get()) {
-			int rpm=(int)(double)FHConfig.COMMON.steamCoreGeneratedSpeed.get();
+			int rpm=(int)(double)FHConfig.SERVER.STEAM_CORE.steamCoreGeneratedSpeed.get();
 			return Couple.create(rpm,rpm);
 		}
 		return null;

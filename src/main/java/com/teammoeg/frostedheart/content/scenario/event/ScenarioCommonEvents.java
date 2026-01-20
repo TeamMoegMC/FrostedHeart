@@ -51,7 +51,7 @@ public class ScenarioCommonEvents {
 
     @SubscribeEvent
     public static void tickPlayer(TickEvent.PlayerTickEvent event) {
-        if (FHConfig.COMMON.enableScenario.get() && event.side == LogicalSide.SERVER && event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer player) {
+        if (FHConfig.SERVER.MISC.enableScenario.get() && event.side == LogicalSide.SERVER && event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer player) {
             // Scenario runner
             ScenarioConductor runner= FHScenario.getNullable(player);
             if (runner != null)
@@ -61,7 +61,7 @@ public class ScenarioCommonEvents {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void doPlayerInteract(PlayerInteractEvent ite) {
-        if(FHConfig.COMMON.enableScenario.get() && ite.getEntity() instanceof ServerPlayer&&!(ite.getEntity() instanceof FakePlayer)) {
+        if(FHConfig.SERVER.MISC.enableScenario.get() && ite.getEntity() instanceof ServerPlayer&&!(ite.getEntity() instanceof FakePlayer)) {
             FHScenario.trigVar(ite.getEntity(), EventTriggerType.PLAYER_INTERACT);
         }
     }
