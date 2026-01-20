@@ -57,9 +57,9 @@ public enum TownWorkerType {
     DUMMY(null, null, -1),
     HOUSE(FHBlocks.HOUSE::get, HouseWorker.INSTANCE, 0),
     WAREHOUSE(FHBlocks.WAREHOUSE::get, new WarehouseWorker(), 0),
-    MINE(FHBlocks.MINE::get, MineWorker.INSTANCE, 0, MineResidentHandler.INSTANCE),
+    //MINE(FHBlocks.MINE::get, MineWorker.INSTANCE, 0, MineResidentHandler.INSTANCE),
     MINE_BASE(FHBlocks.MINE_BASE::get, TownWorker.EMPTY, 0),
-    HUNTING_CAMP(FHBlocks.HUNTING_CAMP::get, TownWorker.EMPTY, 0),
+    //HUNTING_CAMP(FHBlocks.HUNTING_CAMP::get, TownWorker.EMPTY, 0),
     HUNTING_BASE(FHBlocks.HUNTING_BASE::get, HuntingBaseWorker.INSTANCE, -1,  HuntingBaseResidentHandler.INSTANCE);
 
     public static final Codec<TownWorkerType> CODEC= Codec.STRING.xmap(TownWorkerType::from,TownWorkerType::getKey);

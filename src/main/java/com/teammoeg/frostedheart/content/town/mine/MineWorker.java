@@ -45,6 +45,24 @@ public class MineWorker implements TownWorker<MineState> {
 
     public static final Map<ResourceLocation, Map<Item,  Integer>> BIOME_RESOURCES = new HashMap<>();
     public static final Map<Item, Integer> DEFAULT_RESOURCES = Map.of(Items.COBBLESTONE, 1);
+    private static void loadBiomeResources() {
+        for(BiomeMineResourceRecipe recipe : CUtils.filterRecipes(CDistHelper.getRecipeManager(), BiomeMineResourceRecipe.TYPE)){
+            ResourceLocation biomeID = recipe.biomeID;
+            Map<Item, Integer> weights = recipe.weights;
+            BIOME_RESOURCES.put(biomeID, weights);
+        }
+    }
+
+    public static Map<Item, Integer> getWeights(ResourceLocation biomeID){
+        if(BIOME_RESOURCES.isEmpty()){
+            loadBiomeResources();
+        }
+        if(BIOME_RESOURCES.containsKey(biomeID)){
+            return BIOME_RESOURCES.get(biomeID);
+        }
+        return DEFAULT_RESOURCES;
+    }
+
     /**
      * 表示当前chunkResourceReservesCost来源于哪次工作。
      * 用于在Worker和BlockEntity之间传输数据时，检查来自worker的chunkResourceReservesCost是否已经被BlockEntity同步到区块数据。
@@ -83,23 +101,6 @@ public class MineWorker implements TownWorker<MineState> {
         return false;
     }
 
-    private static void loadBiomeResources() {
-        for(BiomeMineResourceRecipe recipe : CUtils.filterRecipes(CDistHelper.getRecipeManager(), BiomeMineResourceRecipe.TYPE)){
-            ResourceLocation biomeID = recipe.biomeID;
-            Map<Item, Integer> weights = recipe.weights;
-            BIOME_RESOURCES.put(biomeID, weights);
-        }
-    }
-
-    public static Map<Item, Integer> getWeights(ResourceLocation biomeID){
-        if(BIOME_RESOURCES.isEmpty()){
-            loadBiomeResources();
-        }
-        if(BIOME_RESOURCES.containsKey(biomeID)){
-            return BIOME_RESOURCES.get(biomeID);
-        }
-        return DEFAULT_RESOURCES;
-    }
 
 
 

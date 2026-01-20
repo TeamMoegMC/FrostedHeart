@@ -63,7 +63,7 @@ public class TownWorkerData {
 	public static final Codec<TownWorkerData> CODEC=RecordCodecBuilder.create(t->
 	t.group(CodecUtil.enumCodec(TownWorkerType.class).fieldOf("type").forGetter(o->o.type),
 		BlockPos.CODEC.fieldOf("pos").forGetter(o->o.pos),
-		CompoundTag.CODEC.fieldOf("data").forGetter(o->{CompoundTag tag=new CompoundTag();o.state.writeNBT(tag,false);return tag;}),
+		CompoundTag.CODEC.fieldOf("data").forGetter(o->{CompoundTag tag=new CompoundTag();if(o.state!=null)o.state.writeNBT(tag,false);return tag;}),
 		Codec.INT.optionalFieldOf("priority",0).forGetter(o->o.priority)
 		).apply(t,TownWorkerData::new));
     public static final String KEY_IS_OVERLAPPED = "isOverlapped";
@@ -76,9 +76,12 @@ public class TownWorkerData {
     private int priority;
     public boolean loaded;
   
-    public TownWorkerData(BlockPos pos) {
+    public TownWorkerData(TownWorkerType type, BlockPos pos, int priority) {
         super();
         this.pos = pos;
+        this.type=type;
+        this.state=type.getWorker().createState();
+        this.priority=priority;
     }
 
     public TownWorkerData(TownWorkerType type, BlockPos pos, CompoundTag workData, int priority) {

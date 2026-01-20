@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.content.town.worker.WorkerState;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.BlockPos;
 
 /**
@@ -105,7 +106,10 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
      * @param tile the tile entity associated with the block
      */
     public void addTownBlock(BlockPos pos, TownBlockEntity tile) {
-        TownWorkerData workerData = data.blocks.computeIfAbsent(pos, TownWorkerData::new);
+    	if(!data.blocks.containsKey(pos)) {
+    		TownWorkerData workerData =new TownWorkerData(tile.getWorkerType(),pos,tile.getPriority());
+    		data.blocks.put(pos, workerData);
+    	}
     }
 
     /**
@@ -113,8 +117,9 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
      *
      * @param pos position of the block
      */
-    public void removeTownBlock(BlockPos pos) {
-        data.blocks.remove(pos);
+    public void removeTownBlock(ServerLevel sl,BlockPos pos) {
+        TownWorkerData twd=data.blocks.remove(pos);
+        twd.onRemove(sl);
     }
 
     public Map<UUID, Resident> getResidents() {
@@ -196,4 +201,13 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
     public Optional<TeamTownData> getTownData() {
         return Optional.of(data);
     }
+	public double maypickTerrainResource(TerrainResourceType type,double d) {
+		return data.maypickTerrainResource(type, d);
+	}
+	public double pickTerrainResource(TerrainResourceType type,double maxPick) {
+		return data.pickTerrainResource(type, maxPick);
+	}
+	public void unpickTerrainResource(TerrainResourceType type,double maxPick) {
+		data.unpickTerrainResource(type, maxPick);
+	}
 }

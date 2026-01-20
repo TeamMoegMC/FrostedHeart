@@ -68,7 +68,7 @@ public class TeamTownData implements SpecialData {
 		CodecUtil.mapCodec("uuid", UUIDUtil.CODEC, "data", Resident.CODEC)
 		.optionalFieldOf("residents", Map.of()).forGetter(o -> o.residents),
 		
-		CodecUtil.mapCodec("type", CodecUtil.enumCodec(TerrainResourceType.values()),"extracted",Codec.LONG.xmap(ResourceData::new, ResourceData::getExtracted))
+		CodecUtil.mapCodec("type", CodecUtil.enumCodec(TerrainResourceType.values()),"extracted",Codec.DOUBLE.xmap(ResourceData::new, ResourceData::getExtracted))
 		.optionalFieldOf("terrainResource", Map.of()).forGetter(o->o.terrainResource)
 		)
 		
@@ -279,7 +279,7 @@ public class TeamTownData implements SpecialData {
 	}
 
 	private void connectMineAndBase() {
-		for (TownWorkerData data : blocks.values()) {
+		/*for (TownWorkerData data : blocks.values()) {
 			if (data.getType() == TownWorkerType.MINE) {
 				((MineState)data.getState()).setConnectedBase(null);
 			}
@@ -290,7 +290,7 @@ public class TeamTownData implements SpecialData {
 					((MineState)blocks.get(pos).getState()).setConnectedBase(data.getPos());
 				}
 			}
-		}
+		}*/
 	}
 
 	// distribute homeless residents to house
@@ -356,11 +356,11 @@ public class TeamTownData implements SpecialData {
 		return blocks.get(worldPosition).getState();
 	}
 	private static final Function<TerrainResourceType,ResourceData> rdSupplier=a->new ResourceData();
-	public int pickTerrainResource(TerrainResourceType type,int maxPick) {
+	public double pickTerrainResource(TerrainResourceType type,double maxPick) {
 		ResourceData rd=this.terrainResource.computeIfAbsent(type, rdSupplier);
-		long total=Math.min(rd.getRemainResource(), maxPick);
+		double total=Math.min(rd.getRemainResource(), maxPick);
 		rd.costResource(total);
-		return (int)total;
+		return total;
 	}
 	public void recoverResources() {
 		for(Entry<TerrainResourceType, ResourceData> rd:this.terrainResource.entrySet()) {
@@ -373,5 +373,15 @@ public class TeamTownData implements SpecialData {
 			rd.getValue().recalculateRadius(rd.getKey().getResourcePerSq(), 3200);
 		}
 		
+	}
+
+	public void unpickTerrainResource(TerrainResourceType type, double maxPick) {
+		ResourceData rd=this.terrainResource.computeIfAbsent(type, rdSupplier);
+		rd.recoverResource(maxPick);
+	}
+
+	public double maypickTerrainResource(TerrainResourceType type, double d) {
+		ResourceData rd=this.terrainResource.computeIfAbsent(type, rdSupplier);
+		return rd.mayCostResource(d);
 	}
 }

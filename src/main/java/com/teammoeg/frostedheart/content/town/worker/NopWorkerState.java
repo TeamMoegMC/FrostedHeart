@@ -5,7 +5,7 @@ import net.minecraft.nbt.CompoundTag;
 
 public class NopWorkerState extends WorkerState {
 	@Getter
-	CompoundTag data;
+	CompoundTag data=new CompoundTag();
 	public NopWorkerState() {
 
 	}

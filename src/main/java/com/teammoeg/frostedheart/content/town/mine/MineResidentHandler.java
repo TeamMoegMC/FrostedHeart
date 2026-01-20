@@ -16,7 +16,7 @@ public class MineResidentHandler extends WorkerResidentHandler {
         super(type);
     }
 
-    public static final MineResidentHandler INSTANCE = new MineResidentHandler(TownWorkerType.MINE);
+    public static final MineResidentHandler INSTANCE = new MineResidentHandler(TownWorkerType.MINE_BASE);
 
     @Override
     public double getResidentPriority(TownWorkerData workerData) {
@@ -45,7 +45,7 @@ public class MineResidentHandler extends WorkerResidentHandler {
         double healthPart = WorkerResidentHandler.CalculatingFunction2(resident.getHealth(), 0.12);
         double mentalPart = 0.6 + 0.4 * (0.524+0.5*(1-Math.exp(-0.03*resident.getMental())));
         double strengthPart = 0.3 + 0.7 * WorkerResidentHandler.CalculatingFunction1(resident.getStrength());
-        double proficiencyPart = 0.6 + 0.4 * WorkerResidentHandler.CalculatingFunction1(resident.getWorkProficiency(TownWorkerType.MINE));
+        double proficiencyPart = 0.6 + 0.4 * WorkerResidentHandler.CalculatingFunction1(resident.getWorkProficiency(TownWorkerType.MINE_BASE));
         return healthPart * mentalPart * strengthPart * proficiencyPart;
     }
 }

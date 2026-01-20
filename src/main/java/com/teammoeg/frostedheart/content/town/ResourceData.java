@@ -8,33 +8,37 @@ public class ResourceData {
 	@Getter
 	int radius;
 	@Getter
-	long extracted;
-	long total;
+	double extracted;
+	double total;
 	public ResourceData() {
 	}
-	public ResourceData(long extracted) {
+	public ResourceData(double extracted) {
 		this.extracted=extracted;
 	}
 	public void recalculateRadius(double resoucePerSquare,int maxradius) {
 		if(resoucePerSquare<=0)return;
 		double convertedRadius=Math.sqrt(extracted/PI/resoucePerSquare);//use 3 as pi
-		total=(long) (PI*resoucePerSquare*maxradius*maxradius);
+		total=(PI*resoucePerSquare*maxradius*maxradius);
 		
 		radius=Mth.floor(convertedRadius)+1;
 	}
-	public void recoverResource(long number) {
+	public void recoverResource(double number) {
 		extracted-=number;
 		if(extracted<0)
 			extracted=0;
 	}
-	public void costResource(long number) {
+	public void costResource(double number) {
 		extracted+=number;
 	}
-	public long getRemainResource() {
+	public double getRemainResource() {
 		return total-extracted;
 	}
 	public double getSize() {
 		return PI*radius*radius;
+	}
+	public double mayCostResource(double d) {
+		return Math.min(total-extracted, d);
+		
 	}
 
 }

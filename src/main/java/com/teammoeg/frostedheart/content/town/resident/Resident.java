@@ -25,7 +25,10 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.ITownWithBlocks;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
+import com.teammoeg.frostedheart.content.town.Town;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
+import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseState;
+import com.teammoeg.frostedheart.content.town.worker.WorkerState;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.math.CMath;
@@ -343,5 +346,9 @@ public class Resident {
     public int hashCode() {
         return uuid.hashCode();
     }
+
+	public void onWork(Town town,TownWorkerType type, WorkerState workData) {
+		
+	}
 
 }

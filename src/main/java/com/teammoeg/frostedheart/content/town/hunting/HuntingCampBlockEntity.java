@@ -55,7 +55,7 @@ public class HuntingCampBlockEntity extends AbstractTownWorkerBlockEntity<Worker
 
     @Override
     public TownWorkerType getWorkerType() {
-        return TownWorkerType.HUNTING_CAMP;
+        return TownWorkerType.HUNTING_BASE;
     }
 
 

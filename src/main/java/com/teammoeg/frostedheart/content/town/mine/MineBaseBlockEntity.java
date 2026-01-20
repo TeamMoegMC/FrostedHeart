@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.town.mine;
 
+import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerStatus;
@@ -26,9 +28,6 @@ import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.LongTag;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
@@ -153,6 +152,7 @@ public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity<MineBaseS
     }
 
     public void refresh(MineBaseState state) {
+    	state.biomePath=CRegistryHelper.getBiomeKeyRuntime(level, CUtils.fastGetBiome(level, worldPosition).get());
     	if(this.isStructureValid(state)) {
 	        if(!this.isOccupiedAreaOverlapped()){
 	            state.status=TownWorkerStatus.VALID ;

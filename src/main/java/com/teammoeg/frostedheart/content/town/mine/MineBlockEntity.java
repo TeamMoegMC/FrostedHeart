@@ -101,7 +101,7 @@ public class MineBlockEntity extends AbstractTownWorkerBlockEntity<MineState> {
 
     @Override
     public TownWorkerType getWorkerType() {
-        return TownWorkerType.MINE;
+        return TownWorkerType.MINE_BASE;
     }
 
     /*@Override
