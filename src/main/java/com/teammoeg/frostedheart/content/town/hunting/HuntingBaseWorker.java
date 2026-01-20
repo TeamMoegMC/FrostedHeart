@@ -6,6 +6,7 @@ import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActionResults;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
+import com.teammoeg.frostedheart.content.town.worker.WorkerState;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -13,7 +14,7 @@ import net.minecraft.world.item.Items;
 
 import java.util.*;
 
-public class HuntingBaseWorker implements TownWorker {
+public class HuntingBaseWorker implements TownWorker<WorkerState> {
     private HuntingBaseWorker(){
         super();
     }

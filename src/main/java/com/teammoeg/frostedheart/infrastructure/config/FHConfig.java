@@ -452,7 +452,43 @@ public class FHConfig {
 		public static class Town {
 			public final ForgeConfigSpec.BooleanValue enableTownTick;
 			public final ForgeConfigSpec.BooleanValue enableTownTickMorning;
-
+			public static class Resource{
+				public final ForgeConfigSpec.ConfigValue<Double> oreCount;
+				public final ForgeConfigSpec.ConfigValue<Double> oreRecovery;
+				public final ForgeConfigSpec.ConfigValue<Double> treeCount;
+				public final ForgeConfigSpec.ConfigValue<Double> treeRecovery;
+				public final ForgeConfigSpec.ConfigValue<Double> huntCount;
+				public final ForgeConfigSpec.ConfigValue<Double> huntRecovery;
+				public final ForgeConfigSpec.ConfigValue<Double> poiCount;
+				public final ForgeConfigSpec.ConfigValue<Double> poiRecovery;
+				public final ForgeConfigSpec.ConfigValue<Double> salvageCount;
+				public final ForgeConfigSpec.ConfigValue<Double> salvageRecovery;
+				Resource(ForgeConfigSpec.Builder builder) {
+					builder.push("Pick Resource");
+					oreCount=builder.comment("Ore Count per block squared")
+						.defineInRange("orePerSq", 15d, 0d, 1000000d);
+					oreRecovery=builder.comment("Ore Recovery per block per day")
+						.defineInRange("orePerDay", 0d, 0d, 1000000d);
+					treeCount=builder.comment("Tree Count per block squared")
+						.defineInRange("treePerSq", 0.4d, 0d, 1000000d);
+					treeRecovery=builder.comment("Tree Recovery per block per day")
+						.defineInRange("treePerDay", 0.0025d, 0d, 1000000d);
+					huntCount=builder.comment("Hunt Count per block squared")
+						.defineInRange("huntPerSq", 0.1d, 0d, 1000000d);
+					huntRecovery=builder.comment("Hunt Recovery per block per day")
+						.defineInRange("huntPerDay", 0.005d, 0d, 1000000d);
+					poiCount=builder.comment("Research Point Count per block squared")
+						.defineInRange("poiPerSq", 100d, 0d, 1000000d);
+					poiRecovery=builder.comment("Research Point Recovery per block per day")
+						.defineInRange("poiPerDay", 0.5d, 0d, 1000000d);
+					salvageCount=builder.comment("Salvage Count per block squared")
+						.defineInRange("salvagePerSq", 0.25d, 0d, 1000000d);
+					salvageRecovery=builder.comment("Salvage Recovery per block per day")
+						.defineInRange("salvagePerDay", 0.05d, 0d, 1000000d);
+					builder.pop();
+				}
+			}
+			public final Resource RESOURCE;
 			Town(ForgeConfigSpec.Builder builder) {
 				builder.push("Town");
 				enableTownTick = builder.comment("Enables town tick every second.")
@@ -461,6 +497,7 @@ public class FHConfig {
 				enableTownTickMorning = builder.comment("Enables town tick in the morning of each days.")
 					.comment("This tick includes the refresh of some town things, like house allocating, checking overlap of buildings, work assigning...")
 					.define("enableTownTickMorning", true);
+				RESOURCE=new Resource(builder);
 				builder.pop();
 
 			}

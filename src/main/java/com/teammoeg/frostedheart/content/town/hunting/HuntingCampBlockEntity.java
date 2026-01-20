@@ -25,9 +25,9 @@ import com.teammoeg.frostedheart.content.town.TownWorkerStatus;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
+import com.teammoeg.frostedheart.content.town.worker.WorkerState;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class HuntingCampBlockEntity extends AbstractTownWorkerBlockEntity {
@@ -35,17 +35,17 @@ public class HuntingCampBlockEntity extends AbstractTownWorkerBlockEntity {
         super(FHBlockEntityTypes.HUNTING_CAMP.get(),pos,state);
     }
 
-    public boolean isStructureValid(){
+    public boolean isStructureValid(WorkerState state){
         ConfinedSpaceScanner confinedSpaceScanner = new ConfinedSpaceScanner(this.level, worldPosition.above());
         return !confinedSpaceScanner.scan(256);
     }
 
     
     @Override
-    public void refresh() {
-        this.occupiedArea.add(BlockScanner.toColumnPos(worldPosition));
-        if(this.workerState == TownWorkerStatus.OCCUPIED_AREA_OVERLAPPED) return;
-        this.workerState = isStructureValid()?TownWorkerStatus.VALID:TownWorkerStatus.NOT_VALID;
+    public void refresh(WorkerState state) {
+    	state.getOccupiedArea().add(BlockScanner.toColumnPos(worldPosition));
+        if(state.status == TownWorkerStatus.OCCUPIED_AREA_OVERLAPPED) return;
+        state.status = isStructureValid(state)?TownWorkerStatus.VALID:TownWorkerStatus.NOT_VALID;
     }
 
     @Override
@@ -58,13 +58,5 @@ public class HuntingCampBlockEntity extends AbstractTownWorkerBlockEntity {
         return TownWorkerType.HUNTING_CAMP;
     }
 
-    @Override
-    public CompoundTag getWorkData() {
-        return getBasicWorkData();
-    }
 
-    @Override
-    public void setWorkData(CompoundTag data) {
-        setBasicWorkData(data);
-    }
 }

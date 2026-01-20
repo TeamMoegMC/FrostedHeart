@@ -56,9 +56,20 @@ import java.util.stream.Collectors;
 public class TeamTownData implements SpecialData {
 	public static final Codec<TeamTownData> CODEC = RecordCodecBuilder.create(t -> t.group(
 		Codec.STRING.fieldOf("name").forGetter(o -> o.name),
+		
 		TeamTownResourceHolder.CODEC.fieldOf("resources").forGetter(o -> o.resources),
-		CodecUtil.mapCodec("pos", BlockPos.CODEC, "data", TownWorkerData.CODEC).optionalFieldOf("blocks", Map.of()).forGetter(o -> o.blocks),
-		CodecUtil.mapCodec("uuid", UUIDUtil.CODEC, "data", Resident.CODEC).optionalFieldOf("residents", Map.of()).forGetter(o -> o.residents)).apply(t, TeamTownData::new));
+		
+		CodecUtil.mapCodec("pos", BlockPos.CODEC, "data", TownWorkerData.CODEC)
+		.optionalFieldOf("blocks", Map.of()).forGetter(o -> o.blocks),
+		
+		CodecUtil.mapCodec("uuid", UUIDUtil.CODEC, "data", Resident.CODEC)
+		.optionalFieldOf("residents", Map.of()).forGetter(o -> o.residents),
+		
+		CodecUtil.mapCodec("type", CodecUtil.enumCodec(TerrainResourceType.values()),"extracted",Codec.LONG.xmap(ResourceData::new, ResourceData::getExtracted))
+		.optionalFieldOf("terrainResource", Map.of()).forGetter(o->o.terrainResource)
+		)
+		
+		.apply(t, TeamTownData::new));
 //    public static final Codec<TeamTownData> CODEC = CodecUtil.debugCodec(CODEC_TOWN);
 	/**
 	 * The town name.
@@ -79,12 +90,15 @@ public class TeamTownData implements SpecialData {
 	 */
 	Map<BlockPos, TownWorkerData> blocks = new LinkedHashMap<>();
 
-	public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, TownWorkerData> blocks, Map<UUID, Resident> residents) {
+	
+	Map<TerrainResourceType,ResourceData> terrainResource=new EnumMap<>(TerrainResourceType.class);
+	public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, TownWorkerData> blocks, Map<UUID, Resident> residents,Map<TerrainResourceType,ResourceData> terrainResource) {
 		super();
 		this.name = name;
 		this.resources = resources;
 		this.blocks.putAll(blocks);
 		this.residents.putAll(residents);
+		this.terrainResource.putAll(terrainResource);
 	}
 
 	public TeamTownData(SpecialDataHolder teamData) {

@@ -106,11 +106,11 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity<HouseState> 
 					state.spaceRating = calculateSpaceRating(volume, area);
 					state.decorationRating = calculateDecorationRating(decorations, area);
 				} else {
-					this.setStatus(TownWorkerStatus.TOO_COLD);
+					state.status =(TownWorkerStatus.TOO_COLD);
 				}
 			}
 		} else {
-			this.setStatus(TownWorkerStatus.NOT_VALID_STRUCTURE);
+			state.status =(TownWorkerStatus.NOT_VALID_STRUCTURE);
 		}
 
 	}
@@ -134,10 +134,12 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity<HouseState> 
 	public double getRating() {
 		if (this.isWorkValid()) {
 			HouseState state = getState();
-			if (state.rating == -1) {
-				return state.rating = this.computeRating();
+			if (state.getRating() == -1) {
+				double rating=this.computeRating();
+				state.setRating(rating);
+				return rating;
 			}
-			return state.rating;
+			return state.getRating();
 		}
 		return 0;
 	}
@@ -181,7 +183,7 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity<HouseState> 
 						this.decorations = scanner.getDecorations();
 						this.temperature = scanner.getTemperature();
 						state.setOccupiedArea(scanner.getOccupiedArea());
-						state.rating = computeRating();
+						state.setRating(computeRating());
 						this.beds = scanner.getBeds();
 						return true;
 					}

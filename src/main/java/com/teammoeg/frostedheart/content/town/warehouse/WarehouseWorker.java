@@ -25,21 +25,18 @@ import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
-import net.minecraft.nbt.CompoundTag;
+import com.teammoeg.frostedheart.content.town.worker.WorkOrder;
 
-public class WarehouseWorker implements TownWorker {
-    @Override
-    public boolean firstWork(Town town, CompoundTag workData) {
-        double capacity = workData.getCompound("tileEntity").getDouble("capacity");
-        //town.getResourceManager().addIfHaveCapacity(VirtualResourceType.MAX_CAPACITY.generateAttribute(0), capacity);
-        TownResourceActions.VirtualResourceAttributeAction action = new TownResourceActions.VirtualResourceAttributeAction(VirtualResourceType.MAX_CAPACITY.generateAttribute(0), capacity, ResourceActionType.ADD, ResourceActionMode.ATTEMPT);
-        town.getActionExecutorHandler().execute(action);
-        return true;
-
-    }
-
-    @Override
-    public boolean work(Town town, CompoundTag workData) {
-        return false;
-    }
+public class WarehouseWorker implements TownWorker<WareHouseState> {
+	@Override
+	public boolean work(Town town, WareHouseState workData, WorkOrder workOrder) {
+		if(workOrder==WorkOrder.FIRST) {
+			double capacity = workData.capacity;
+	        //town.getResourceManager().addIfHaveCapacity(VirtualResourceType.MAX_CAPACITY.generateAttribute(0), capacity);
+	        TownResourceActions.VirtualResourceAttributeAction action = new TownResourceActions.VirtualResourceAttributeAction(VirtualResourceType.MAX_CAPACITY.generateAttribute(0), capacity, ResourceActionType.ADD, ResourceActionMode.ATTEMPT);
+	        town.getActionExecutorHandler().execute(action);
+	        return true;
+		}
+		return false;
+	}
 }

@@ -61,7 +61,7 @@ public class WarehouseBlock extends AbstractTownWorkerBlock implements CEntityBl
                 return InteractionResult.FAIL;
             }
             player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.displayClientMessage(Components.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(Components.str("Status: " + te.getStatus()), false);
             player.displayClientMessage(Components.str("Volume: " + (te.getVolume())), false);
             player.displayClientMessage(Components.str("Area: " + (te.getArea())), false);
             player.displayClientMessage(Components.str("Capacity: " + BigDecimal.valueOf(te.getCapacity())

@@ -76,7 +76,7 @@ public class HouseWorker implements TownWorker<HouseState> {
         }
 
         if(town instanceof ITownWithResidents residentTown){
-            double houseComprehensiveRating = workData.rating;
+            double houseComprehensiveRating = workData.getRating();
             double temperatureRating = workData.temperatureRating;
             double decorationRating = workData.decorationRating;
             double spaceRating = workData.spaceRating;

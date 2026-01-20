@@ -38,17 +38,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity implements MenuProvider {
-    private int volume;//有效体积
-    private int area;//占地面积
-    private double capacity;//最大容量
+public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity<WareHouseState> implements MenuProvider {
+
     private boolean addedToSchedulerQueue = false;
 
     public WarehouseBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.WAREHOUSE.get(),pos,state);
     }
 
-    public boolean isStructureValid(){
+    public boolean isStructureValid(WareHouseState state){
         BlockPos warehousePos = this.getBlockPos();
         BlockPos doorPos = BlockScanner.getDoorAdjacent(level, warehousePos);
         if (doorPos == null) return false;
@@ -64,23 +62,24 @@ public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity implemen
             }
             WarehouseBlockScanner scanner = new WarehouseBlockScanner(level, startPos);
             if(scanner.scan()){
-                this.area = scanner.getArea();
-                this.volume = scanner.getVolume();
+            	state.area = scanner.getArea();
+            	state.volume = scanner.getVolume();
                 //容量与体积相似，但是在随着房间高度增高略有衰减
-                this.capacity = area*Math.pow((volume*0.02/area), 0.9)*37;
-                this.occupiedArea = scanner.getOccupiedArea();
+            	state.capacity = state.area*Math.pow((state.volume*0.02/state.area), 0.9)*37;
+            	state.setOccupiedArea(scanner.getOccupiedArea());
                 return true;
             }
         }
         return false;
     }
 
-    public void refresh(){
-        if(this.isOccupiedAreaOverlapped()){
-            this.isStructureValid();
-        }
-        else {
-            this.setWorkerState(this.isStructureValid()?TownWorkerStatus.VALID: TownWorkerStatus.NOT_VALID);
+    public void refresh(WareHouseState state){
+    	if(this.isStructureValid(state)) {
+	        if(!this.isOccupiedAreaOverlapped()){
+	        	state.status = TownWorkerStatus.VALID;
+	        }
+    	}else {
+    		state.status =TownWorkerStatus.NOT_VALID_STRUCTURE;
         }
     }
 
@@ -95,28 +94,15 @@ public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity implemen
     }
 
 
-    @Override
-    public CompoundTag getWorkData() {
-        CompoundTag nbt = getBasicWorkData();
-        if(this.isValid()){
-            nbt.putDouble("capacity", this.capacity);
-        }
-        return nbt;
-    }
-
-    @Override
-    public void setWorkData(CompoundTag data) {
-        this.setBasicWorkData(data);
-    }
 
     public int getVolume(){
-        return this.isWorkValid()?this.volume:0;
+        return this.isWorkValid()?getState().volume:0;
     }
     public int getArea(){
-        return this.isWorkValid()?this.area:0;
+        return this.isWorkValid()?getState().area:0;
     }
     public double getCapacity(){
-        return this.isWorkValid()?this.capacity:0;
+        return this.isWorkValid()?getState().capacity:0;
     }
 
     @Override
