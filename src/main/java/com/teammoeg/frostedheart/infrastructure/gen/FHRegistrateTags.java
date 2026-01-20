@@ -280,15 +280,16 @@ public class FHRegistrateTags {
                 .add(Items.IRON_INGOT);
         prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.METAL.generateAttribute(10)))
                 .add(Items.BEDROCK);
-        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.FOOD_GRAINS.generateAttribute(1)))
+/*        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.FOOD_GRAINS.generateAttribute(1)))
                 .add(Items.BREAD);
         prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.FOOD_GRAINS.generateAttribute(0)))
                 .add(Items.WHEAT);
         prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.FOOD_FRUIT_AND_VEGETABLES.generateAttribute(1)))
                 .add(Items.APPLE)
                 .add(Items.CARROT)
-                .add(Items.SWEET_BERRIES);
-
+                .add(Items.SWEET_BERRIES);*/
+/*        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.RESIDENT_FOOD_LEVEL.generateAttribute(0)))
+                .add(Items.BREAD);*/
 
         for (FHTags.Items tag : FHTags.Items.values()) {
             if (tag.alwaysDatagen) {

@@ -37,11 +37,11 @@ public enum ItemResourceType implements ITownResourceType {
     METAL(10),
     FUEL,
     TOOL,
-    FOOD_PROTEIN,
+/*    FOOD_PROTEIN,
     FOOD_FRUIT_AND_VEGETABLES(1),
     FOOD_EDIBLE_OIL,
-    FOOD_GRAINS(1),
-    RESIDENT_FOOD_LEVEL(5);
+    FOOD_GRAINS(1),*/
+    RESIDENT_FOOD_LEVEL(4);
 	public static final Codec<ItemResourceType> CODEC=CodecUtil.enumCodec(ItemResourceType.class);
 
     /**
