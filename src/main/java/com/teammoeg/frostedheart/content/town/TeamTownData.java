@@ -26,6 +26,7 @@ import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
+import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.content.town.house.HouseState;
 import com.teammoeg.frostedheart.content.town.mine.MineBaseState;
 import com.teammoeg.frostedheart.content.town.mine.MineState;
@@ -43,6 +44,8 @@ import net.minecraft.server.level.ColumnPos;
 import net.minecraft.server.level.ServerLevel;
 
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -127,6 +130,7 @@ public class TeamTownData implements SpecialData {
 	 */
 	public void tick(ServerLevel world) {
 		if (!FHConfig.SERVER.TOWN.enableTownTick.get()) return;
+		this.updateRadius();
 		updateAllBlocks(world);
 		PriorityQueue<TownWorkerData> pq = new PriorityQueue<>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
 		for (TownWorkerData workerData : blocks.values()) {
@@ -162,6 +166,7 @@ public class TeamTownData implements SpecialData {
 		this.residentAllocatingCheck();
 		this.allocateHouse();
 		this.assignWork();
+		this.recoverResources();
 	}
 
 	void updateAllBlocks(ServerLevel world) {
@@ -350,5 +355,23 @@ public class TeamTownData implements SpecialData {
 	public WorkerState getState(BlockPos worldPosition) {
 		return blocks.get(worldPosition).getState();
 	}
-
+	private static final Function<TerrainResourceType,ResourceData> rdSupplier=a->new ResourceData();
+	public int pickTerrainResource(TerrainResourceType type,int maxPick) {
+		ResourceData rd=this.terrainResource.computeIfAbsent(type, rdSupplier);
+		long total=Math.min(rd.getRemainResource(), maxPick);
+		rd.costResource(total);
+		return (int)total;
+	}
+	public void recoverResources() {
+		for(Entry<TerrainResourceType, ResourceData> rd:this.terrainResource.entrySet()) {
+			double recover=rd.getValue().getSize()*rd.getKey().getRecoverSpeed();
+			rd.getValue().recoverResource(CMath.randomValue(recover));
+		}
+	}
+	public void updateRadius() {
+		for(Entry<TerrainResourceType, ResourceData> rd:this.terrainResource.entrySet()) {
+			rd.getValue().recalculateRadius(rd.getKey().getResourcePerSq(), 3200);
+		}
+		
+	}
 }

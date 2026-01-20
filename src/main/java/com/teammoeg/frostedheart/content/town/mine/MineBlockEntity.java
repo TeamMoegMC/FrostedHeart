@@ -21,18 +21,20 @@ package com.teammoeg.frostedheart.content.town.mine;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.town.*;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
+import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;
+import com.teammoeg.frostedheart.content.town.TownWorkerStatus;
+import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.LongTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class MineBlockEntity extends AbstractTownWorkerBlockEntity {
+public class MineBlockEntity extends AbstractTownWorkerBlockEntity<MineState> {
     private int avgLightLevel;
     private int validStoneOrOre;
     private double temperature;
@@ -59,12 +61,12 @@ public class MineBlockEntity extends AbstractTownWorkerBlockEntity {
         super(FHBlockEntityTypes.MINE.get(),pos,state);
     }
 
-    public boolean isStructureValid(){
+    public boolean isStructureValid(MineState state){
         MineBlockScanner scanner = new MineBlockScanner(level, this.getBlockPos().above());
         if(scanner.scan()){
             this.avgLightLevel = scanner.getLight();
             this.validStoneOrOre = scanner.getValidStone();
-            this.occupiedArea = scanner.getOccupiedArea();
+            state.setOccupiedArea(scanner.getOccupiedArea());
             this.temperature = scanner.getTemperature();
             return validStoneOrOre > 0;
         }
@@ -102,7 +104,7 @@ public class MineBlockEntity extends AbstractTownWorkerBlockEntity {
         return TownWorkerType.MINE;
     }
 
-    @Override
+    /*@Override
     public CompoundTag getWorkData() {
         CompoundTag nbt = getBasicWorkData();
         if(this.isValid()){
@@ -123,15 +125,15 @@ public class MineBlockEntity extends AbstractTownWorkerBlockEntity {
             this.latestWorkID = latestWorkID;
             this.chunkResourceReserves = data.getDouble("chunkResourceReserves");
         }
-    }
+    }*/
 
 
-    public void refresh() {
+    public void refresh(MineState state) {
         if(this.isOccupiedAreaOverlapped()){
-            this.isStructureValid();
+            this.isStructureValid(state);
             return;
         }
-        this.workerState = isStructureValid() ? TownWorkerStatus.VALID : TownWorkerStatus.NOT_VALID;
+        state.status = isStructureValid(state) ? TownWorkerStatus.VALID : TownWorkerStatus.NOT_VALID;
         if(this.isValid()) {
             assert this.level != null;
             this.computeRating();
@@ -144,7 +146,7 @@ public class MineBlockEntity extends AbstractTownWorkerBlockEntity {
     public static void setLinkedBase(TownWorkerData mineData, BlockPos pos){
         if(mineData == null) return;
         if(pos == null) return;
-        mineData.setDataFromTown("linkedBasePos", LongTag.valueOf(pos.asLong()));
+        ((MineState)mineData.getState()).setConnectedBase(pos);
     }
 
     /**

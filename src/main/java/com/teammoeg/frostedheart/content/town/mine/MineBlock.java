@@ -57,9 +57,8 @@ public class MineBlock extends AbstractTownWorkerBlock implements CEntityBlock<M
             if (te == null) {
                 return InteractionResult.FAIL;
             }
-            te.refresh();
             player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.displayClientMessage(Components.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(Components.str("status: "+te.getStatus()), false);
             player.displayClientMessage(Components.str("Valid stone: " + (te.getValidStoneOrOre())), false);
             player.displayClientMessage(Components.str("Average light level: " + (te.getAvgLightLevel())), false);
             return InteractionResult.SUCCESS;

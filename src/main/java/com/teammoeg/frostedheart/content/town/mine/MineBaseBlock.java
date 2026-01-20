@@ -50,7 +50,7 @@ public class MineBaseBlock extends AbstractTownWorkerBlock implements CEntityBlo
                 return InteractionResult.FAIL;
             }
             player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.displayClientMessage(Components.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(Components.str("status: "+te.getStatus()), false);
             player.displayClientMessage(Components.str("Area: " + (te.getArea())), false);
             player.displayClientMessage(Components.str("Volume: " + (te.getVolume())), false);
             player.displayClientMessage(Components.str("Chest: " + (te.getChest())), false);

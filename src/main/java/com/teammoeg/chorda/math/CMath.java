@@ -55,6 +55,17 @@ public class CMath {
 		}
 		return 0;
 	}
+	public static int randomValue(double rate) {
+		if (rate > 0) {
+			int total = (int) rate;
+			double npart = Mth.frac(rate);
+			if (npart>0&&Math.random() < npart) {
+				total++;
+			}
+			return total;
+		}
+		return 0;
+	}
 	public static boolean inRange(float value,float min,float max) {
     	return value>=min&&value<=max;
     }

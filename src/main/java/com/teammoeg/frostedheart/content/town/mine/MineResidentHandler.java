@@ -5,6 +5,7 @@ import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.WorkerResidentHandler;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
+import com.teammoeg.frostedheart.content.town.worker.WorkerState;
 
 import net.minecraft.nbt.CompoundTag;
 
@@ -19,22 +20,22 @@ public class MineResidentHandler extends WorkerResidentHandler {
 
     @Override
     public double getResidentPriority(TownWorkerData workerData) {
-        CompoundTag tileEntityNBT = workerData.getWorkData().getCompound("tileEntity");
-        if(tileEntityNBT.getByte("workerState") != TownWorkerStatus.VALID.getStateNum()) return NEGATIVE_INFINITY;
-        int maxResident = tileEntityNBT.getInt("maxResident");
-        int currentResidentNum = tileEntityNBT.getInt("currentResidentNum");
+        MineBaseState state = (MineBaseState) workerData.getState();
+        if(state.status != TownWorkerStatus.VALID) return NEGATIVE_INFINITY;
+        int maxResident = state.maxResidents;
+        int currentResidentNum = state.getResidents().size();
         if(currentResidentNum > maxResident) return NEGATIVE_INFINITY;
-        double rating = tileEntityNBT.getDouble("rating");
+        double rating = state.getRating();
         return -currentResidentNum + 1.0 * currentResidentNum / maxResident + 0.4/*the base priority of workerType*/ + rating;
     }
 
     @Override
     public double getResidentPriority(TownWorkerData workerData, int currentResidentNum) {
-        CompoundTag tileEntityNBT = workerData.getWorkData().getCompound("tileEntity");
-        if(tileEntityNBT.getByte("workerState") != TownWorkerStatus.VALID.getStateNum()) return NEGATIVE_INFINITY;
-        int maxResident = tileEntityNBT.getInt("maxResident");
+    	MineBaseState state = (MineBaseState) workerData.getState();
+    	if(state.status != TownWorkerStatus.VALID) return NEGATIVE_INFINITY;
+        int maxResident = state.maxResidents;
         if(currentResidentNum > maxResident) return NEGATIVE_INFINITY;
-        double rating = tileEntityNBT.getDouble("rating");
+        double rating = state.getRating();
         return -currentResidentNum + 1.0 * currentResidentNum / maxResident + 0.4/*the base priority of workerType*/ + rating;
     }
 

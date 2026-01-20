@@ -77,79 +77,7 @@ public class MineWorker implements TownWorker<MineState> {
             return false;
         }
         if(town instanceof ITownWithResidents townWithResidents){
-            // 检查是否链接了MineBase
-            if(workData.getConnectedBase()==null){//检查MineBase是否存在
-                return false;
-            } else{
-                // 验证链接的MineBase是否有效
-                if(town instanceof ITownWithBlocks townWithBlocks){
-                    BlockPos linkedBasePos = workData.getConnectedBase();
-                    Optional<TownWorkerData> mineBaseData = townWithBlocks.getTownBlock(linkedBasePos);
-                    if(mineBaseData.isEmpty()){
-                        return false;
-                    } else {
-                        if(mineBaseData.get().getType() != TownWorkerType.MINE_BASE){
-                            return false;
-                        }
-                    }
-                } else {
-                    return false;//一般来说这是不可能的，怎么会有城镇没有ITownWithBlocks接口，但是存了一个城镇矿场而且还在工作的？
-                }
-            }
-            // 获取各种工作参数
-            long lastSyncedWorkID = dataTE.getLong("lastSyncedWorkID");
-            long latestWorkID = dataTown.getLong("latestWorkID");
-            double chunkResourceReservesCost = dataTown.getDouble("chunkResourceReservesCost");
-            double chunkResourceReserves = dataTE.getDouble("chunkResourceReserves");
-            // 检查工作ID是否已同步，如已同步则重置消耗
-            if(lastSyncedWorkID == latestWorkID){
-                chunkResourceReservesCost = 0;
-            }
-            // 应用资源消耗，如果资源不足则返回false
-            if(chunkResourceReservesCost > 0){
-                chunkResourceReserves = chunkResourceReserves - chunkResourceReservesCost;
-                if(chunkResourceReserves <= 0){
-                    return false;
-                }
-            }
-            // 解析生物群系位置并获取居民列表
-            ResourceLocation biomeLocation = ResourceLocation.tryParse(dataTE.getString("biome"));
-            List<Resident> residents = workData.getCompound("town").getList("residents", Tag.TAG_STRING)
-                    .stream()
-                    .map(nbt -> UUID.fromString(nbt.getAsString()))
-                    .map(townWithResidents::getResident)
-                    .map(optional -> optional.orElse(null))
-                    .filter(Objects::nonNull)
-                    .toList();
 
-            // 获取资源执行器并计算资源权重
-            IActionExecutorHandler executorHandler = townWithResidents.getActionExecutorHandler();
-            ITownResourceActionExecutor<TownResourceActions.ItemResourceAction> itemResourceExecutor = executorHandler.getExecutor(TownResourceActions.ItemResourceAction.class);
-            Map<Item,  Integer> weights = getWeights(biomeLocation);
-            int totalWeight = weights.values().stream().mapToInt(weight -> weight).sum();
-            // 遍历所有居民执行采矿操作
-            for(Resident resident : residents){
-                //获取居民评分
-                double score = TownWorkerType.MINE.getResidentScore( resident );
-                double finalChunkResourceReserves = chunkResourceReserves;
-                List<TownResourceActionResults.ItemResourceActionResult> results = weights.entrySet().stream()
-                        .map(entry -> new TownResourceActions.ItemResourceAction
-                                (new ItemStack(entry.getKey()), ResourceActionType.ADD, Math.sqrt(finalChunkResourceReserves) * rating * score * entry.getValue() / totalWeight, ResourceActionMode.ATTEMPT))
-                        .map(itemResourceExecutor::execute)
-                        .map(result -> (TownResourceActionResults.ItemResourceActionResult) result)
-                        .toList();
-                // 增加居民力量值
-                resident.addStrength(20 / resident.getStrength());
-                resident.addWorkProficiency(TownWorkerType.MINE);
-                // 累计资源消耗量
-                chunkResourceReservesCost += 0.0005 * chunkResourceReserves * rating * score;//至少2000人*天会挖空？
-            }
-            // 更新工作ID和资源消耗数据
-            WORK_ID.add(1);
-            latestWorkID = WORK_ID.longValue();
-            dataTown.putLong("latestWorkID", latestWorkID);
-            dataTown.putDouble("chunkResourceReservesCost", chunkResourceReservesCost);
-            workData.put("town", dataTown);
             return true;
         }
         return false;

@@ -1,17 +1,24 @@
 package com.teammoeg.frostedheart.content.town.house;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.town.Town;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
+import com.teammoeg.frostedheart.content.town.Town;
 import com.teammoeg.frostedheart.content.town.TownWorker;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
-import com.teammoeg.frostedheart.content.town.resource.action.*;
+import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
+import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
+import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionOrder;
+import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActionResults;
+import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 import com.teammoeg.frostedheart.content.town.worker.WorkOrder;
-
-import net.minecraft.nbt.CompoundTag;
-
-import java.util.*;
 
 public class HouseWorker implements TownWorker<HouseState> {
     private HouseWorker() {}

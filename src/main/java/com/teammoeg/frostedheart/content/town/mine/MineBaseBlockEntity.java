@@ -40,7 +40,7 @@ import java.util.Set;
 
 import static java.lang.Math.exp;
 
-public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity {
+public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity<MineBaseState> {
     public Set<BlockPos> linkedMines = new HashSet<>();
     private int volume;
     private int area;
@@ -53,7 +53,7 @@ public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity {
         super(FHBlockEntityTypes.MINE_BASE.get(),pos,state);
     }
 
-    public boolean isStructureValid(){
+    public boolean isStructureValid(MineBaseState state){
         BlockPos mineBasePos = this.getBlockPos();
         BlockPos doorPos = BlockScanner.getDoorAdjacent(level, mineBasePos);
         if (doorPos == null) return false;
@@ -74,7 +74,7 @@ public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity {
                 this.rack = scanner.getRack();
                 this.chest = scanner.getChest();
                 this.linkedMines = scanner.getLinkedMines();
-                this.occupiedArea = scanner.getOccupiedArea();
+                state.setOccupiedArea(scanner.getOccupiedArea());
                 this.temperature = scanner.getTemperature();
                 return true;
             }
@@ -100,7 +100,7 @@ public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity {
         return TownWorkerType.MINE_BASE;
     }
 
-
+/*
     @Override
     public CompoundTag getWorkData() {
         CompoundTag nbt = getBasicWorkData();
@@ -118,7 +118,7 @@ public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity {
     @Override
     public void setWorkData(CompoundTag data) {
         setBasicWorkData(data);
-    }
+    }*/
 
     public double getRating(){
         if(isWorkValid()) {
@@ -148,16 +148,19 @@ public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity {
     @Override
     public void refresh_safe(){
         if(level != null && level.isAreaLoaded(this.worldPosition,63)){
-            this.refresh();
+            super.refresh_safe();
         }
     }
 
-    public void refresh() {
-        if(this.isOccupiedAreaOverlapped()){
-            this.isStructureValid();
-            return;
-        }
-        this.workerState = isStructureValid() ? TownWorkerStatus.VALID : TownWorkerStatus.NOT_VALID;
+    public void refresh(MineBaseState state) {
+    	if(this.isStructureValid(state)) {
+	        if(!this.isOccupiedAreaOverlapped()){
+	            state.status=TownWorkerStatus.VALID ;
+	            return;
+	        }
+    	}else {
+    		state.status=TownWorkerStatus.NOT_VALID_STRUCTURE;
+    	}
     }
 
     @Override

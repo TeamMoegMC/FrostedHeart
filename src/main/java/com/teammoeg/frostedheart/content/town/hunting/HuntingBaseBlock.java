@@ -60,8 +60,7 @@ public class HuntingBaseBlock extends AbstractTownWorkerBlock implements CEntity
                 return InteractionResult.FAIL;
             }
             player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.displayClientMessage(Components.str(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
-            player.displayClientMessage(Components.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(Components.str("status:"+te.getStatus()), false);
             player.displayClientMessage(Components.str("Raw temperature: " +
                     CMath.round(te.getTemperature(), 2)), false);
             player.displayClientMessage(Components.str("Temperature modifier: " +
@@ -69,7 +68,8 @@ public class HuntingBaseBlock extends AbstractTownWorkerBlock implements CEntity
             player.displayClientMessage(Components.str("Effective temperature: " +
                     CMath.round(te.getEffectiveTemperature(), 2)), false);
             player.displayClientMessage(Components.str("BedNum: " + te.getBedNum()), false);
-            player.displayClientMessage(Components.str("MaxResident: " + te.getMaxResident()), false);
+            if(te.isWorkValid())
+            	player.displayClientMessage(Components.str("MaxResident: " + te.getState().maxResidents), false);
             player.displayClientMessage(Components.str("TanningRackNum: " + te.getTanningRackNum()), false);
             player.displayClientMessage(Components.str("chestNum: " + te.getChestNum()), false);
             player.displayClientMessage(Components.str("Volume: " + (te.getVolume())), false);

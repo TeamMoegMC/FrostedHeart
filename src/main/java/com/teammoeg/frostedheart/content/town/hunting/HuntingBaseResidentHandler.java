@@ -1,14 +1,12 @@
 package com.teammoeg.frostedheart.content.town.hunting;
 
+import static java.lang.Double.*;
+
 import com.teammoeg.frostedheart.content.town.TownWorkerStatus;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.WorkerResidentHandler;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
-
-import net.minecraft.nbt.CompoundTag;
-
-import static java.lang.Double.NEGATIVE_INFINITY;
 
 public class HuntingBaseResidentHandler extends WorkerResidentHandler {
     private HuntingBaseResidentHandler(TownWorkerType type) {
@@ -18,11 +16,11 @@ public class HuntingBaseResidentHandler extends WorkerResidentHandler {
 
     @Override
     public double getResidentPriority(TownWorkerData workerData) {
-        CompoundTag tileEntityNBT = workerData.getWorkData().getCompound("tileEntity");
-        if(tileEntityNBT.getByte("workerState") != TownWorkerStatus.VALID.getStateNum()) return NEGATIVE_INFINITY;
-        int maxResident = tileEntityNBT.getInt("maxResident");
-        double rating = tileEntityNBT.getDouble("rating");
-        int currentResidentNum = tileEntityNBT.getInt("currentResidentNum");
+        HuntingBaseState state = (HuntingBaseState)workerData.getState();
+        if(state.status != TownWorkerStatus.VALID) return NEGATIVE_INFINITY;
+        int maxResident = state.maxResidents;
+        double rating = state.getRating();
+        int currentResidentNum = state.getResidents().size();
         if(currentResidentNum < maxResident) {
             return -currentResidentNum + (double) currentResidentNum / maxResident + 0.5/*the base priority of workerType*/ + rating;
         }
@@ -31,11 +29,11 @@ public class HuntingBaseResidentHandler extends WorkerResidentHandler {
 
     @Override
     public double getResidentPriority(TownWorkerData workerData, int currentResidentNum) {
-        CompoundTag tileEntityNBT = workerData.getWorkData().getCompound("tileEntity");
-        if(tileEntityNBT.getByte("workerState") != TownWorkerStatus.VALID.getStateNum()) return NEGATIVE_INFINITY;
-        int maxResident = tileEntityNBT.getInt("maxResident");
+    	HuntingBaseState state = (HuntingBaseState)workerData.getState();
+        if(state.status != TownWorkerStatus.VALID) return NEGATIVE_INFINITY;
+        int maxResident = state.maxResidents;
         if(currentResidentNum > maxResident) return NEGATIVE_INFINITY;
-        double rating = tileEntityNBT.getDouble("rating");
+        double rating = state.getRating();
         return -currentResidentNum + (double) currentResidentNum / maxResident + 0.5/*the base priority of workerType*/ + rating;
     }
 
