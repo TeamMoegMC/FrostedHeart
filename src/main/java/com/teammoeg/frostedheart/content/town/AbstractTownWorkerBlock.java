@@ -22,18 +22,23 @@ package com.teammoeg.frostedheart.content.town;
 import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
+import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.core.Direction;
@@ -63,13 +68,13 @@ public abstract class AbstractTownWorkerBlock extends CBlock {
     @Override
     public void setPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(world, pos, state, entity, stack);
-        TownBlockEntity te = (TownBlockEntity) Utils.getExistingTileEntity(world, pos);    //这玩意原本是写在HouseBlock里面的，这里的强制转型原本转为了HouseTileEntity，现在改成TownTileEntity不知道是否可行
-        if (te != null) {
+        if (Utils.getExistingTileEntity(world, pos) instanceof TownBlockEntity te) {
             // register the house to the town
-            if (entity instanceof ServerPlayer) {
+            if (entity instanceof ServerPlayer placer) {
                 if (Town.DEBUG_MODE ||ChunkHeatData.hasActiveAdjust(world, pos)) {
-                    TeamTown.from((Player) entity).addTownBlock(pos, te);
+                    TeamTown.from(placer).addTownBlock(pos, te);
                 }
+                IOwnerTile.trySetOwner((BlockEntity) te, CTeamDataManager.get(placer).getId());
             }
         }
     }
@@ -80,3 +85,4 @@ public abstract class AbstractTownWorkerBlock extends CBlock {
         return this.defaultBlockState().setValue(BlockStateProperties.FACING, context.getClickedFace().getOpposite());
     }
 }
+

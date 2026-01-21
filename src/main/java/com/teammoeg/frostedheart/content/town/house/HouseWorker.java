@@ -19,6 +19,7 @@ import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import com.teammoeg.frostedheart.content.town.worker.WorkOrder;
+import com.teammoeg.frostedheart.content.town.worker.WorkerState;
 
 import static com.teammoeg.frostedheart.content.town.resource.ItemResourceType.RESIDENT_FOOD_LEVEL;
 
@@ -144,5 +145,9 @@ public class HouseWorker implements TownWorker<HouseState> {
 
         return true;
     }
+	@Override
+	public WorkerState createState() {
+		return new HouseState();
+	}
 
 }

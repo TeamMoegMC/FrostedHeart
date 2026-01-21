@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import static com.teammoeg.chorda.capability.CapabilityRegistry.*;
+
 import com.teammoeg.chorda.capability.types.codec.CodecCapabilityType;
 import com.teammoeg.chorda.capability.types.nbt.NBTCapabilityType;
 import com.teammoeg.chorda.capability.types.nonpresistent.TransientCapability;
@@ -38,9 +40,6 @@ import com.teammoeg.frostedheart.content.trade.PlayerTradeData;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.waypoint.capability.WaypointCapability;
-import com.teammoeg.frostedheart.content.world.dimensionalseed.DimensionalSeed;
-
-import static com.teammoeg.chorda.capability.CapabilityRegistry.*;
 
 public class FHCapabilities {
 	

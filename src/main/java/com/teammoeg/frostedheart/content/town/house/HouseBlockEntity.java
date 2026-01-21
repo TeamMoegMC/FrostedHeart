@@ -19,30 +19,32 @@
 
 package com.teammoeg.frostedheart.content.town.house;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import javax.annotation.Nonnull;
+
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerStatus;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
-import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+
 import lombok.Getter;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
-
-import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * A house in the town.
@@ -67,7 +69,7 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity<HouseState> 
 	private Map<String, Integer> decorations = new HashMap<>();
 	private double temperatureModifier = 0;
 	@Getter
-	private List<BlockPos> beds;
+	private List<BlockPos> beds=List.of();
 
 	/** Tile data, stored in tile entity. */
 	HeatEndpoint endpoint = HeatEndpoint.consumer(99, 1);
@@ -164,20 +166,20 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity<HouseState> 
 			for (BlockPos doorPos : doorPosSet) {
 				BlockPos floorBelowDoor = BlockScanner.getBlockBelow((pos) -> !(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);// 找到门下面垫的的那个方块
 				for (Direction direction : BlockScanner.PLANE_DIRECTIONS) {
-					// FHMain.LOGGER.debug("HouseScanner: creating new HouseBlockScanner");
+					FHMain.LOGGER.debug("HouseScanner: creating new HouseBlockScanner");
 					assert floorBelowDoor != null;
 					BlockPos startPos = floorBelowDoor.relative(direction);// 找到门下方块旁边的方块
-					// FHMain.LOGGER.debug("HouseScanner: start pos 1" + startPos);
+					FHMain.LOGGER.debug("HouseScanner: start pos 1" + startPos);
 					if (!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos)) {// 如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
 						if (!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos.below()) || FloorBlockScanner.isHouseBlock(level, startPos.above(2))) {// 如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
 							continue;
 						}
 						startPos = startPos.below();
-						// FHMain.LOGGER.debug("HouseScanner: start pos 2" + startPos);
+						FHMain.LOGGER.debug("HouseScanner: start pos 2" + startPos);
 					}
 					HouseBlockScanner scanner = new HouseBlockScanner(this.level, startPos);
 					if (scanner.scan()) {
-						// FHMain.LOGGER.debug("HouseScanner: scan successful");
+						FHMain.LOGGER.debug("HouseScanner: scan successful");
 						this.volume = scanner.getVolume();
 						this.area = scanner.getArea();
 						this.decorations = scanner.getDecorations();
@@ -249,11 +251,9 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity<HouseState> 
 	}
 
 	private int calculateMaxResidents() {
-		if (this.isValid()) {
-			int maxResidentOfSpace = (int) (calculateSpaceRating(this.volume, this.area) / 4 * this.area);
-			int maxResidentOfBeds = this.beds.size();
-			return Math.min(maxResidentOfSpace, maxResidentOfBeds);
-		} else return 0;
+		int maxResidentOfSpace = (int) (calculateSpaceRating(this.volume, this.area) / 4 * this.area);
+		int maxResidentOfBeds = this.beds.size();
+		return Math.min(maxResidentOfSpace, maxResidentOfBeds);
 	}
 
 	@Override

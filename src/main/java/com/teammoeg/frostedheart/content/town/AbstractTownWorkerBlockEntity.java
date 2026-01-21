@@ -66,6 +66,7 @@ public abstract class AbstractTownWorkerBlockEntity<T extends WorkerState> exten
     public abstract void refresh(T state);
 
     public void refresh_safe(){
+    	System.out.println(getState());
         if(level != null && level.isLoaded(worldPosition)){
         	T state=getState();
         	if(state!=null)
@@ -151,7 +152,14 @@ public abstract class AbstractTownWorkerBlockEntity<T extends WorkerState> exten
 
     //这两个方法除了在house里面，暂时没什么用
     @Override
-    public void readCustomNBT(CompoundTag compoundNBT, boolean b) {}
+    public void readCustomNBT(CompoundTag compoundNBT, boolean b) {
+    	if(compoundNBT.contains("owner"))
+    		owner=UUID.fromString(compoundNBT.getString("owner"));
+    }
     @Override
-    public void writeCustomNBT(CompoundTag compoundNBT, boolean b) {}
+    public void writeCustomNBT(CompoundTag compoundNBT, boolean b) {
+    	
+    	if(owner!=null)
+    		compoundNBT.putString("owner", owner.toString());
+    }
 }

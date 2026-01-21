@@ -81,6 +81,7 @@ minecraft {
             if (System.env.LIBGLFW_PATH != null) {
                 jvmArgs "-Dorg.lwjgl.glfw.libname=${System.env.LIBGLFW_PATH}/lib/libglfw.so"
             }
+            environment "FML_EARLY_WINDOW_DARK","1"
 			jvmArgs "-DFile.Encoding=UTF-8"
             arg "-mixin.config=" + "frostedheart.mixins.json"
             arg "-mixin.config=" + "frostedresearch.mixins.json"

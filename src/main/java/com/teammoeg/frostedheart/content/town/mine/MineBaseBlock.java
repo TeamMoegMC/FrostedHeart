@@ -21,19 +21,28 @@ package com.teammoeg.frostedheart.content.town.mine;
 
 import java.util.function.Supplier;
 
+import javax.annotation.Nullable;
+
 import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
+import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.common.util.FakePlayer;
 
 public class MineBaseBlock extends AbstractTownWorkerBlock implements CEntityBlock<MineBaseBlockEntity> {
 
@@ -49,6 +58,7 @@ public class MineBaseBlock extends AbstractTownWorkerBlock implements CEntityBlo
             if (te == null) {
                 return InteractionResult.FAIL;
             }
+            te.refresh_safe();
             player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
             player.displayClientMessage(Components.str("status: "+te.getStatus()), false);
             player.displayClientMessage(Components.str("Area: " + (te.getArea())), false);
@@ -66,4 +76,5 @@ public class MineBaseBlock extends AbstractTownWorkerBlock implements CEntityBlo
 	public Supplier<BlockEntityType<MineBaseBlockEntity>> getBlock() {
 		return FHBlockEntityTypes.MINE_BASE;
 	}
+ 
 }

@@ -20,23 +20,32 @@
 package com.teammoeg.frostedheart.content.town.hunting;
 
 import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.math.CMath;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 
 import java.util.function.Supplier;
+
+import javax.annotation.Nullable;
 
 public class HuntingBaseBlock extends AbstractTownWorkerBlock implements CEntityBlock<HuntingBaseBlockEntity> {
     public HuntingBaseBlock(Properties blockProps) {
@@ -59,6 +68,7 @@ public class HuntingBaseBlock extends AbstractTownWorkerBlock implements CEntity
             if (te == null) {
                 return InteractionResult.FAIL;
             }
+            te.refresh_safe();
             player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
             player.displayClientMessage(Components.str("status:"+te.getStatus()), false);
             player.displayClientMessage(Components.str("Raw temperature: " +
@@ -86,4 +96,5 @@ public class HuntingBaseBlock extends AbstractTownWorkerBlock implements CEntity
 	public Supplier<BlockEntityType<HuntingBaseBlockEntity>> getBlock() {
 		return FHBlockEntityTypes.HUNTING_BASE;
 	}
+
 }
