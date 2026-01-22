@@ -308,5 +308,10 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 		
 	}
 
+	@Override
+	public CUIScreen getManager() {
+		return screen;
+	}
+
 
 }

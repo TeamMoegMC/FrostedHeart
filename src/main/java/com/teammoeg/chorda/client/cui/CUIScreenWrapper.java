@@ -121,8 +121,8 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 		primaryLayer.render(graphics, x, y, w, h);
 		//ui foreground/overlay
 		primaryLayer.drawForeground(graphics, x, y, w, h);
-		this.width = w;
-		this.height = h;
+		//this.width = w;
+		//this.height = h;
 		TooltipBuilder builder=new TooltipBuilder(100);
 		primaryLayer.getTooltip(builder);
 		graphics.pose().pushPose();

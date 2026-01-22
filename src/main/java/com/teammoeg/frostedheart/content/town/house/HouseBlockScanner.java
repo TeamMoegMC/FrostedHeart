@@ -111,12 +111,12 @@ public class HouseBlockScanner extends BlockScanner {
         floorBlockScanner.scan(MAX_SCANNING_TIMES_FLOOR, (pos) -> {
             this.area++;
             this.occupiedArea.add(toColumnPos(pos));
-            FHMain.LOGGER.debug("HouseScanner: scanning floor pos " + pos);
+            //FHMain.LOGGER.debug("HouseScanner: scanning floor pos " + pos);
         }, (pos) -> !this.isValid);
-        FHMain.LOGGER.debug("HouseScanner: first scan area: " + area);
+       // FHMain.LOGGER.debug("HouseScanner: first scan area: " + area);
         if (this.area < MINIMUM_AREA) this.isValid = false;
         if (!floorBlockScanner.isValid || !this.isValid) return false;
-        FHMain.LOGGER.debug("HouseScanner: first scan completed");
+        //FHMain.LOGGER.debug("HouseScanner: first scan completed");
 
         //第二次扫描，判断房间是否密闭
         ConfinedSpaceScanner airScanner = new ConfinedSpaceScanner(world, startPos.above());
@@ -124,7 +124,7 @@ public class HouseBlockScanner extends BlockScanner {
                     this.temperature += WorldTemperature.block(world, pos);
                     this.volume++;
                     this.occupiedArea.add(new ColumnPos(pos.getX(), pos.getZ()));
-                    FHMain.LOGGER.debug("scanning air pos:" + pos);
+                    //FHMain.LOGGER.debug("scanning air pos:" + pos);
                 }, this::addDecoration,
                 (useless) -> !this.isValid);
         temperature /= volume;
