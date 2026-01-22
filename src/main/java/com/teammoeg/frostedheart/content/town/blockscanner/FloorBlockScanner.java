@@ -48,12 +48,12 @@ public class FloorBlockScanner extends BlockScanner{
 
     protected boolean isFloorBlock(BlockPos pos) {
         BlockState blockState = getBlockState(pos);
-        return (blockState.isCollisionShapeFullBlock(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
+        return !blockState.getCollisionShape(world, pos).isEmpty();//(blockState.isCollisionShapeFullBlock(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
     }
 
     public static boolean isFloorBlock(Level world, BlockPos pos) {
         BlockState blockState = world.getBlockState(pos);
-        return (blockState.isCollisionShapeFullBlock(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
+        return !blockState.getCollisionShape(world, pos).isEmpty();//(blockState.isCollisionShapeFullBlock(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
     }
 
     public static boolean isWallBlock(Level world, BlockPos pos) {
@@ -75,13 +75,13 @@ public class FloorBlockScanner extends BlockScanner{
     public static boolean isValidFloorOrLadder(Level world, BlockPos pos) {
         // Determine whether the block satisfies type requirements
         if (!FloorBlockScanner.isFloorBlock(world, pos) && !world.getBlockState(pos).is(BlockTags.CLIMBABLE)) return false;
-        AbstractMap.SimpleEntry<Integer, Boolean> information = countBlocksAbove(pos, (pos1)->FloorBlockScanner.isHouseBlock(world, pos1));
+        HeightCheckingInfo information = countBlocksAbove(world,pos, (pos1)->FloorBlockScanner.isHouseBlock(world, pos1));
         // Determine whether the block has open air above it
-        if (!information.getValue()) {
+        if (!information.result()) {
             return false;
         } else {
             // Determine whether the block has at least 2 blocks above it
-            return information.getKey() >= 2;
+            return information.height() >= 2;
         }
     }
 
@@ -98,15 +98,15 @@ public class FloorBlockScanner extends BlockScanner{
     public boolean isValidFloor(BlockPos pos) {
         // Determine whether the block satisfies type requirements
         if (!isFloorBlock(pos)) return false;
-        AbstractMap.SimpleEntry<Integer, Boolean> information = countBlocksAbove(pos, this::isHouseBlock);
+        HeightCheckingInfo information = countBlocksAbove(world,pos, this::isHouseBlock);
         // Determine whether the block has open air above it
-        if (!information.getValue()) {
+        if (!information.result()) {
             this.isValid = false;
             //FHMain.LOGGER.debug("HouseScanner: found block open air!");
             return false;
         } else {
             // Determine whether the block has at least 2 blocks above it
-            return information.getKey() >= 2;
+            return information.height() >= 2;
         }
     }
 

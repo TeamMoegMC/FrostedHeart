@@ -30,11 +30,13 @@ import java.util.function.Predicate;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ColumnPos;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.Level;
 
 /**
@@ -124,20 +126,21 @@ public class BlockScanner {
      * @param stopAt When the scanning block makes this true, stop scanning.
      * @return The number of target blocks above scanningBlock, and weather the scanning block makes stopAt returned true
      */
-    public static AbstractMap.SimpleEntry<Integer, Boolean> countBlocksAbove(Predicate<BlockPos> target, BlockPos startPos, Predicate<BlockPos> stopAt){
+    public static HeightCheckingInfo countBlocksAbove(LevelReader level,Predicate<BlockPos> target, BlockPos startPos, Predicate<BlockPos> stopAt){
         BlockPos scanningBlock;
         int num = 0;
         scanningBlock = startPos.above();
-        while(scanningBlock.getY() < 255){
+        int maxHeight=level.getHeight(Heightmap.Types.WORLD_SURFACE,startPos.getX(),startPos.getZ());
+        while(scanningBlock.getY() < maxHeight){
             if(stopAt.test(scanningBlock)){
-                return new AbstractMap.SimpleEntry<>(num, true);
+                return new HeightCheckingInfo(num, true);
             }
             if(target.test(scanningBlock)){
                 num++;
             }
             scanningBlock = scanningBlock.above();
         }
-        return new AbstractMap.SimpleEntry<>(num, false);
+        return new HeightCheckingInfo(num, false);
     }
     public static int countBlocksAbove(Predicate<BlockPos> target, BlockPos startPos){
         BlockPos scanningBlock;
@@ -150,8 +153,8 @@ public class BlockScanner {
         }
         return num;
     }
-    public static AbstractMap.SimpleEntry<Integer, Boolean> countBlocksAbove( BlockPos startPos, Predicate<BlockPos> stopAt){
-        return countBlocksAbove((useless)->true, startPos, stopAt);
+    public static HeightCheckingInfo countBlocksAbove(LevelReader level,BlockPos startPos, Predicate<BlockPos> stopAt){
+        return countBlocksAbove(level,(useless)->true, startPos, stopAt);
     }
 
 
@@ -295,7 +298,7 @@ public class BlockScanner {
     }
 
     public boolean isOpenAir(BlockPos pos){
-        return countBlocksAbove(pos, blockPos -> !world.getBlockState(blockPos).isAir()).getValue();
+        return countBlocksAbove(world ,pos, blockPos -> !world.getBlockState(blockPos).isAir()).result();
     }
 
     /**

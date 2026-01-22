@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.HeightCheckingInfo;
 
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
@@ -70,7 +71,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
         if(!isFloorBlock(pos)){
             return false;
         }
-        AbstractMap.SimpleEntry<Integer, Boolean> floorInformation = countBlocksAbove(pos,(pos1)->{
+        HeightCheckingInfo floorInformation = countBlocksAbove(world,pos,(pos1)->{
             if(isFloorBlock(pos1)) return true;
             BlockState state1 = world.getBlockState(pos1);
             if(state1.is(Tags.Blocks.CHESTS)){
@@ -88,8 +89,8 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
             }
             return false;
         });
-        if(floorInformation.getValue() && floorInformation.getKey() >= 2){
-            volume += floorInformation.getKey();
+        if(floorInformation.result() && floorInformation.height() >= 2){
+            volume += floorInformation.height();
             return true;
         } else return false;
     }

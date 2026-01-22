@@ -279,11 +279,13 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity<HouseState> 
 
 	@Override
 	public void readCustomNBT(CompoundTag compoundNBT, boolean isPacket) {
+		super.readCustomNBT(compoundNBT, isPacket);
 		endpoint.load(compoundNBT, isPacket);
 	}
 
 	@Override
 	public void writeCustomNBT(CompoundTag compoundNBT, boolean isPacket) {
+		super.writeCustomNBT(compoundNBT, isPacket);
 		endpoint.save(compoundNBT, isPacket);
 	}
 

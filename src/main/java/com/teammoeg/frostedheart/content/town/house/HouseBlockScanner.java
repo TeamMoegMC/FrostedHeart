@@ -27,6 +27,8 @@ import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.HeightCheckingInfo;
+
 import lombok.Getter;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Block;
@@ -66,13 +68,14 @@ public class HouseBlockScanner extends BlockScanner {
     public static boolean isValidFloorOrLadder(Level world, BlockPos pos) {
         // Determine whether the block satisfies type requirements
         if (!FloorBlockScanner.isFloorBlock(world, pos) && !world.getBlockState(pos).is(BlockTags.CLIMBABLE)) return false;
-        AbstractMap.SimpleEntry<Integer, Boolean> information = countBlocksAbove(pos, (pos1)->FloorBlockScanner.isHouseBlock(world, pos1));
+        HeightCheckingInfo information = countBlocksAbove(world,pos, (pos1)->FloorBlockScanner.isHouseBlock(world, pos1));
+        //FHMain.LOGGER.debug(information);
         // Determine whether the block has open air above it
-        if (!information.getValue()) {
+        if (!information.result()) {
             return false;
         } else {
             // Determine whether the block has at least 2 blocks above it
-            return information.getKey() >= 2;
+            return information.height() >= 2;
         }
     }
 

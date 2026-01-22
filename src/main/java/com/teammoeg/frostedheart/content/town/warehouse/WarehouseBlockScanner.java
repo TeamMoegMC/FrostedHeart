@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.content.town.warehouse;
 
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.HeightCheckingInfo;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
@@ -49,9 +51,9 @@ public class WarehouseBlockScanner extends FloorBlockScanner {
     public boolean scan(){
         return scan(MAX_SCANNING_TIMES, (pos1)->{
             this.area++;
-            AbstractMap.SimpleEntry<Integer, Boolean> floorInformation = countBlocksAbove(pos1, (pos2)->!world.getBlockState(pos2).isAir());
-            if(!floorInformation.getValue()) this.isValid=false;
-            this.volume += floorInformation.getKey();
+            HeightCheckingInfo floorInformation = countBlocksAbove(world,pos1, (pos2)->!world.getBlockState(pos2).isAir());
+            if(!floorInformation.result()) this.isValid=false;
+            this.volume += floorInformation.height();
             occupiedArea.add(toColumnPos(pos1));
         },(useless)->false);
     }
