@@ -19,32 +19,29 @@
 
 package com.teammoeg.frostedheart.content.town.warehouse;
 
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
 import com.teammoeg.frostedheart.content.town.network.WarehouseC2SRequestPacket;
-import com.teammoeg.frostedheart.content.town.network.WarehouseS2CPacket;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
-import mezz.jei.forge.network.NetworkHandler;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.network.NetworkHooks;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
 
 public class WarehouseScreen extends AbstractTownWorkerBlockScreen<WarehouseMenu> {
-    private List<VirtualItemStack> ResourceClientCache = List.of();
-
+    private VirtualItemGridElement grid;
     private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("townworkerblock");
-    public WarehouseScreen(WarehouseMenu inventorySlotsIn, Inventory inv, Component title) {
-        super(inventorySlotsIn, inv, title, TEXTURE);
+    public static final CIcons.CTextureIcon ALL = CIcons
+            .getIcon(new ResourceLocation(FHMain.MODID, "textures/gui/townworkerblock.png"));
+    public static final CIcons.CTextureIcon background = ALL.withUV(0, 0, 176, 222, 256, 256);
+    public static final CIcons.CTextureIcon activeButton = ALL.withUV(180, 59, 22, 18, 256, 256);
+    public static final CIcons.CTextureIcon inactiveButton = ALL.withUV(180 + 22, 59, 22, 18, 256, 256);
 
-        WarehouseBlockEntity blockEntity = getMenu().getBlock();
+    public WarehouseScreen(WarehouseMenu inventorySlotsIn) {
+        super(inventorySlotsIn);
+        FHNetwork.INSTANCE.sendToServer(new WarehouseC2SRequestPacket());
+/*        WarehouseBlockEntity blockEntity = getMenu().getBlock();
         addTabContent((left,top)->{
             this.addRenderableWidget(new Label(left + 10, top + 20, Components.str("Volume: " + (blockEntity.getVolume())), 0xFFFFFF));
             this.addRenderableWidget(new Label(left + 10, top + 40, Components.str("Area: " + (blockEntity.getArea())), 0xFFFFFF));
@@ -57,13 +54,28 @@ public class WarehouseScreen extends AbstractTownWorkerBlockScreen<WarehouseMenu
             VirtualItemGridWidget gridWidget = new VirtualItemGridWidget(left + 7, top + 18, this::getResources);
             FHNetwork.INSTANCE.sendToServer(new WarehouseC2SRequestPacket());
             this.addRenderableWidget(gridWidget);
+        });*/
+        addTabContent((layer) -> {
+
+        });
+        addTabContent((layer) -> {
+            this.grid = new VirtualItemGridElement(layer, 7, 18,
+                    () -> ((WarehouseMenu) getCMenu()).getResources()
+            );
+            layer.add(this.grid);
         });
     }
-    public void updateResourceList(List<VirtualItemStack> newResources) {
-        this.ResourceClientCache=List.copyOf(newResources);
+
+
+    @Override
+    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+        background.draw(graphics, x, y, 176, 222);
     }
-    public List<VirtualItemStack> getResources() {
-        return ResourceClientCache;
+
+    public CIcons.CIcon getButtonIcon(int i) {
+        if (i==0)
+            return activeButton;
+        return inactiveButton;
     }
 }
 

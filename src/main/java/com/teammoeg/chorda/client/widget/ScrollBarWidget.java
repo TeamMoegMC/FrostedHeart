@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
  * 可拖拽、可滚轮控制的垂直滚动条组件
  * 适用于Screen
  */
-public class ScrollBar extends AbstractWidget {
+public class ScrollBarWidget extends AbstractWidget {
     // 当前行数和最大行数
     @Getter
     private int currentRow;
@@ -60,7 +60,7 @@ public class ScrollBar extends AbstractWidget {
      * @param height 条的高度（长度）
      * @param maxRows 最大行数
      */
-    public ScrollBar(int x, int y, int width, int height, int maxRows) {
+    public ScrollBarWidget(int x, int y, int width, int height, int maxRows) {
         super(x, y, width, height, Component.empty());
         this.currentRow = 0;
         this.maxRows = Math.max(1, maxRows);
@@ -72,7 +72,7 @@ public class ScrollBar extends AbstractWidget {
     /**
      * 设置滑块尺寸
      */
-    public ScrollBar setThumbSize(int width, int height) {
+    public ScrollBarWidget setThumbSize(int width, int height) {
         this.thumbWidth = width;
         this.thumbHeight = height;
         return this;
@@ -81,7 +81,7 @@ public class ScrollBar extends AbstractWidget {
     /**
      * 设置轨道材质
      */
-    public ScrollBar setTrackTexture(@Nullable ResourceLocation texture) {
+    public ScrollBarWidget setTrackTexture(@Nullable ResourceLocation texture) {
         this.trackTexture = texture;
         return this;
     }
@@ -92,7 +92,7 @@ public class ScrollBar extends AbstractWidget {
      * @param uOffset 水平偏移量（像素）
      * @param vOffset 垂直偏移量（像素）
      */
-    public ScrollBar setTrackTexture(@Nullable ResourceLocation texture, int uOffset, int vOffset) {
+    public ScrollBarWidget setTrackTexture(@Nullable ResourceLocation texture, int uOffset, int vOffset) {
         this.trackTexture = texture;
         this.trackUOffset = uOffset;
         this.trackVOffset = vOffset;
@@ -107,7 +107,7 @@ public class ScrollBar extends AbstractWidget {
      * @param textureWidth 材质文件总宽度
      * @param textureHeight 材质文件总高度
      */
-    public ScrollBar setTrackTexture(@Nullable ResourceLocation texture, int uOffset, int vOffset, int textureWidth, int textureHeight) {
+    public ScrollBarWidget setTrackTexture(@Nullable ResourceLocation texture, int uOffset, int vOffset, int textureWidth, int textureHeight) {
         this.trackTexture = texture;
         this.trackUOffset = uOffset;
         this.trackVOffset = vOffset;
@@ -119,7 +119,7 @@ public class ScrollBar extends AbstractWidget {
     /**
      * 设置滑块材质
      */
-    public ScrollBar setThumbTexture(@Nullable ResourceLocation texture) {
+    public ScrollBarWidget setThumbTexture(@Nullable ResourceLocation texture) {
         this.thumbTexture = texture;
         return this;
     }
@@ -130,7 +130,7 @@ public class ScrollBar extends AbstractWidget {
      * @param uOffset 水平偏移量（像素）
      * @param vOffset 垂直偏移量（像素）
      */
-    public ScrollBar setThumbTexture(@Nullable ResourceLocation texture, int uOffset, int vOffset) {
+    public ScrollBarWidget setThumbTexture(@Nullable ResourceLocation texture, int uOffset, int vOffset) {
         this.thumbTexture = texture;
         this.thumbUOffset = uOffset;
         this.thumbVOffset = vOffset;
@@ -145,7 +145,7 @@ public class ScrollBar extends AbstractWidget {
      * @param textureWidth 材质文件总宽度
      * @param textureHeight 材质文件总高度
      */
-    public ScrollBar setThumbTexture(@Nullable ResourceLocation texture, int uOffset, int vOffset, int textureWidth, int textureHeight) {
+    public ScrollBarWidget setThumbTexture(@Nullable ResourceLocation texture, int uOffset, int vOffset, int textureWidth, int textureHeight) {
         this.thumbTexture = texture;
         this.thumbUOffset = uOffset;
         this.thumbVOffset = vOffset;
@@ -158,7 +158,7 @@ public class ScrollBar extends AbstractWidget {
      * 设置行数变化回调
      * @param callback 回调函数，参数为 (旧行数, 新行数)
      */
-    public ScrollBar setOnRowChanged(@Nullable BiConsumer<Integer, Integer> callback) {
+    public ScrollBarWidget setOnRowChanged(@Nullable BiConsumer<Integer, Integer> callback) {
         this.onRowChanged = callback;
         return this;
     }

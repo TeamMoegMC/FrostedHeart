@@ -115,6 +115,7 @@ public class HouseWorker implements TownWorker<HouseState> {
 
             double deviation = (nutrition_Average - 10000) / 10000; // 相对偏差（-1到+1）
             double balanceScore = Math.exp(-3.0 * deviation * deviation); // 10用来控制曲线宽度
+            double levelScore = 1; //目前不采用食物等级，只是用来控制消耗食物优先级
 
             for(UUID uuid : residentsUUID){
                 if(residentTown.getResident(uuid).isPresent()){
@@ -122,15 +123,12 @@ public class HouseWorker implements TownWorker<HouseState> {
 
 //                    foodAmounts.replaceAll((type, amount) -> amount / residentNum);//避免居民数量影响方差计算结果
 //                    double levelScore = 1 + Math.log(1 + avgLevel);/*即使食物等级为0，也加属性*/
-
-                    double levelScore = 1; //目前不采用食物等级，只是用来控制消耗食物优先级
-
 /*                    double balanceScore = foodAmounts.values().stream()
                             .mapToDouble(amount ->
                                     Math.pow(amount - residentNum * foodTypes.length,显然residentNum * foodTypes.length等于平均值 2))
                             .average()
                             .orElse(0);
-                    balanceScore = Math.exp( - 0.2 * balanceScore);*/  //已改为营养值控制
+                    balanceScore = Math.exp( - 0.2 * balanceScore);*/    //已改为营养值控制
 
                     r.addHealth( 2.5 * temperatureRating * levelScore * balanceScore * (100 - r.getHealth())/ 100);
                     r.addMental( houseComprehensiveRating * Math.pow(levelScore, 2.0) * balanceScore * (100 - r.getMental())/ 100);

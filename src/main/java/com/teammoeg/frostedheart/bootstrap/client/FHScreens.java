@@ -57,6 +57,7 @@ public class FHScreens {
         
         registerCUIScreen(FHMenuTypes.TRADE_GUI.get(), TradeScreen::new);
         registerCUIScreen(FHMenuTypes.HEAT_STAT.get(), HeatStatScreen::new);
+        registerCUIScreen(FHMenuTypes.WAREHOUSE.get(),WarehouseScreen::new);
         MenuScreens.register(FHMenuTypes.SAUNA.get(), SaunaScreen::new);
         MenuScreens.register(FHMenuTypes.INCUBATOR_T1.get(), IncubatorT1Screen::new);
         MenuScreens.register(FHMenuTypes.INCUBATOR_T2.get(), IncubatorT2Screen::new);
@@ -66,7 +67,6 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.SUPPLY_CHEST.get(), LogisticChestScreen::new);
         MenuScreens.register(FHMenuTypes.STORAGE_CHEST.get(), LogisticChestScreen::new);
         MenuScreens.register(FHMenuTypes.REQUEST_CHEST.get(), LogisticChestScreen::new);
-        MenuScreens.register(FHMenuTypes.WAREHOUSE.get(), WarehouseScreen::new);
         MenuScreens.register(FHMenuTypes.SNOW_SACK.get(), SnowSackScreen::new);
     }
 

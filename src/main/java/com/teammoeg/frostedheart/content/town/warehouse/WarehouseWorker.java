@@ -21,11 +21,13 @@ package com.teammoeg.frostedheart.content.town.warehouse;
 
 import com.teammoeg.frostedheart.content.town.Town;
 import com.teammoeg.frostedheart.content.town.TownWorker;
+import com.teammoeg.frostedheart.content.town.house.HouseState;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 import com.teammoeg.frostedheart.content.town.worker.WorkOrder;
+import com.teammoeg.frostedheart.content.town.worker.WorkerState;
 
 public class WarehouseWorker implements TownWorker<WareHouseState> {
 	@Override
@@ -39,4 +41,9 @@ public class WarehouseWorker implements TownWorker<WareHouseState> {
 		}
 		return false;
 	}
+	@Override
+	public WorkerState createState() {
+		return new WareHouseState();
+	}
+
 }

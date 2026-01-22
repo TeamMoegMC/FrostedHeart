@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.item.townmanager;
 
-import com.teammoeg.chorda.client.widget.ScrollBar;
+import com.teammoeg.chorda.client.widget.ScrollBarWidget;
 import com.teammoeg.chorda.client.widget.TabImageButton;
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.frostedheart.FHMain;
@@ -168,13 +168,13 @@ public class TownManagerScreen extends Screen {
         //由于这个的会随Scrollbar改变，直接以Widget形式加入
         List<Button> blockButtons;
 
-        ScrollBar scrollBar;
+        ScrollBarWidget scrollBar;
 
         //当前可见的行数
         int totalVisibleRows = imageHeight / 20;
 
         BlockListScreenMode(){
-            this.scrollBar = new ScrollBar(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getTownBlocks().size() - totalVisibleRows + 1)
+            this.scrollBar = new ScrollBarWidget(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getTownBlocks().size() - totalVisibleRows + 1)
                     .setOnRowChanged(this::onRowChanged)
                     /*.setThumbTexture(TEXTURE)todo:之后再加*/;
             this.blockButtons = new ArrayList<>();
@@ -252,12 +252,12 @@ public class TownManagerScreen extends Screen {
             //刷新ScrollBar
             if(scrollBar != null){
                 int currentRow = scrollBar.getCurrentRow();
-                this.scrollBar = new ScrollBar(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getTownBlocks().size() - totalVisibleRows + 1)
+                this.scrollBar = new ScrollBarWidget(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getTownBlocks().size() - totalVisibleRows + 1)
                         .setOnRowChanged(this::onRowChanged)
                 /*.setThumbTexture(TEXTURE)todo:之后再加*/;
                 scrollBar.setCurrentRow(currentRow);
             } else {
-                this.scrollBar = new ScrollBar(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getTownBlocks().size() - totalVisibleRows + 1)
+                this.scrollBar = new ScrollBarWidget(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getTownBlocks().size() - totalVisibleRows + 1)
                         .setOnRowChanged(this::onRowChanged)
                 /*.setThumbTexture(TEXTURE)todo:之后再加*/;
             }
@@ -342,13 +342,13 @@ public class TownManagerScreen extends Screen {
         //由于这个的会随Scrollbar改变，直接以Widget形式加入
         List<Button> residentButtons;
 
-        ScrollBar scrollBar;
+        ScrollBarWidget scrollBar;
 
         //当前可见的行数
         int totalVisibleRows = imageHeight / 20;
 
         ResidentListScreenMode(){
-            this.scrollBar = new ScrollBar(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getAllResidents().size() - totalVisibleRows + 1)
+            this.scrollBar = new ScrollBarWidget(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getAllResidents().size() - totalVisibleRows + 1)
                     .setOnRowChanged(this::onRowChanged)
                     /*.setThumbTexture(TEXTURE)todo:之后再加*/;
             this.residentButtons = new ArrayList<>();
@@ -426,12 +426,12 @@ public class TownManagerScreen extends Screen {
             //刷新ScrollBar
             if(scrollBar != null){
                 int currentRow = scrollBar.getCurrentRow();
-                this.scrollBar = new ScrollBar(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getAllResidents().size() - totalVisibleRows + 1)
+                this.scrollBar = new ScrollBarWidget(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getAllResidents().size() - totalVisibleRows + 1)
                         .setOnRowChanged(this::onRowChanged)
                 /*.setThumbTexture(TEXTURE)todo:之后再加*/;
                 scrollBar.setCurrentRow(currentRow);
             } else {
-                this.scrollBar = new ScrollBar(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getAllResidents().size() - totalVisibleRows + 1)
+                this.scrollBar = new ScrollBarWidget(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getAllResidents().size() - totalVisibleRows + 1)
                         .setOnRowChanged(this::onRowChanged)
                 /*.setThumbTexture(TEXTURE)todo:之后再加*/;
             }

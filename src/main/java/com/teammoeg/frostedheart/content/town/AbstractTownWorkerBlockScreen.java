@@ -19,67 +19,66 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
-import com.teammoeg.chorda.client.widget.TabImageButton;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.client.cui.MenuPrimaryLayer;
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TabImageButtonElement;
+import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractButton;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Inventory;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<? extends AbstractTownWorkerBlockEntity>> extends IEContainerScreen<C>  {
+public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<? extends AbstractTownWorkerBlockEntity>> extends MenuPrimaryLayer<C> {
 
 
     private int activeTab = 0;
     private final List<ITabContent> tabContents = new ArrayList<>();
-    private final List<AbstractButton> tabButtons = new ArrayList<>();
+    private final List<TabImageButtonElement> tabButtons = new ArrayList<>();
+    private UILayer contentLayer;
 
-    public AbstractTownWorkerBlockScreen(C inventorySlotsIn, Inventory inv, Component title,ResourceLocation background) {
-        super(inventorySlotsIn, inv, title, background);
-        super.imageWidth = 176;
-        super.imageHeight = 222;
+    public AbstractTownWorkerBlockScreen(C inventorySlotsIn) {
+        super(inventorySlotsIn);
 
-        AbstractTownWorkerBlockEntity blockEntity = getMenu().getBlock();
-        addTabContent((left,top)->{
-            this.addRenderableWidget(new Label(left + 10, top + 20, Components.str(blockEntity.isWorkValid() ? "Valid working environment" : "Invalid working environment"), 0xFFFFFF));
-            this.addRenderableWidget(new Label(left + 10, top + 40, Components.str(blockEntity.getStatus().isStructureValid() ? "Valid structure" : "Invalid structure"), 0xFFFFFF));
-        });
     }
-
-
-    @Override
-    protected void init() {
-        super.init();
+/*    @Override
+    public boolean onInit() {
         tabButtons.clear();
 
-        int guiLeft = leftPos;
-        int guiTop = topPos;
+
+//        this.setSize(176, 222);
+        int guiLeft = 0*//*getContentX()*//*;
+        int guiTop = 0*//*getContentY()*//*;
+        int leftPos = (this.width - 176) / 2;
+        int topPos = (this.height - 222) / 2;
+//        super.onI nit();
+//        this.setPos(leftPos, topPos);
+//        this.setPos(0, 0);
+//        this.setSize(176, 222);
+
+
 
         // Create tab button
-        for (int i = 0; i < tabContents.size(); i++) {
+*//*        for (int i = 0; i < tabContents.size(); i++) {
             final int tabI = i;
-            /*if (i<3) {*/
+            *//**//*if (i<3) {*//**//*
                 // Left side
                 int x = guiLeft - 22;
                 int y = guiTop + tabI * (18 + 2) +2;
                 int[] uv = getTabButtonUV(tabI);
-                TabImageButton tabButtonNew = new TabImageButton(getButtonTexture(i), x, y, 22, 18, uv[0], uv[1], tabI, button -> {
+            TabImageButtonElement tabButtonNew = new TabImageButtonElement(this, x, y, 22, 18, uv[0], uv[1], tabI,CIcon){
 //                menu.sendMessage(0, tabI);
-                    activeTab = tabButtons.indexOf(button);
+                @Override
+                public void onClicked(MouseButton mouseButton) {
+                    activeTab = tabButtons.indexOf(mouseButton);
                     updateTabContent();
-                }).bind(() -> activeTab );
-                tabButtons.add(tabButtonNew);
-                this.addRenderableWidget(tabButtonNew);
-            /*}else {
+                }
+            };
+
+            tabButtons.add(tabButtonNew);
+
+//                this.addRenderableWidget(tabButtonNew);
+            *//**//*}else {
                 // Right side
                 int x = guiLeft + 175;
                 int y = guiTop + tabI * (18 + 2) +2;
@@ -91,59 +90,70 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
                 }).bind(() -> activeTab);
                 tabButtons.add(tabButtonnew);
                 this.addRenderableWidget(tabButtonnew);
-            }*/
-        }
+            }*//**//*
+        }*//*
         // Initialize tab content
+
+        updateTabContent();
+        return true;
+    }*/
+
+    @Override
+    public void addUIElements() {
+
+        //初始化内容容器
+        if (this.contentLayer == null) {
+            this.contentLayer = new UILayer(this) {
+                @Override public void addUIElements() {
+                        if (activeTab >= 0 && activeTab < tabContents.size()) {
+                            tabContents.get(activeTab).renderTabContent(this);
+                    }
+                }
+                @Override public void alignWidgets() {}
+            };
+        }
+        this.contentLayer.setSize(176, 222);
+        this.add(this.contentLayer);
+
+        //初始化 Tab 按钮
+        this.tabButtons.clear();
+        for (int i = 0; i < tabContents.size(); i++) {
+            final int tabI = i;
+            int[] uv = getTabButtonUV(tabI);
+            int btnX = -22;
+            int btnY = 2 + i * 20;
+            TabImageButtonElement btn = new TabImageButtonElement(this, btnX, btnY, 22, 18, tabI, getButtonIcon(0), getButtonIcon(1)){
+                @Override
+                public void onClicked(MouseButton button) {
+                    selectTab(tabI);
+                }
+
+            };
+            btn.bind(() -> activeTab);
+            this.tabButtons.add(btn);
+            this.add(btn); // 添加到主 Screen
+        }
+
+
+    }
+    public void selectTab(int index) {
+        if (index < 0 || index >= tabContents.size()) return;
+        this.activeTab = index;
+
         updateTabContent();
     }
 
     private void updateTabContent() {
-        clearContentWidgets();
+        if (contentLayer != null) {
 
-        if (activeTab > tabButtons.size()) return;
-
-        tabContents.get(activeTab).renderTabContent(leftPos,topPos);
-
-    }
-    private void clearContentWidgets() {
-        // Remove widgets
-        List<GuiEventListener> toRemove = new ArrayList<>();
-        for (GuiEventListener child : this.children()) {
-            if (child instanceof TabContentComponent) {
-                toRemove.add(child);
-            }
-        }
-        for (GuiEventListener child : toRemove) {
-            this.removeWidget(child);
+            contentLayer.refresh();
         }
     }
 
-    public static class Label extends AbstractWidget implements TabContentComponent{
-        private final Component text;
-        private final int color;
-
-        public Label(int x, int y, Component text, int color) {
-            super(x, y, 0, 0, text);
-            this.text = text;
-            this.color = color;
-            this.width = Minecraft.getInstance().font.width(text);
-            this.height = Minecraft.getInstance().font.lineHeight;
-        }
-
-        @Override
-        public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-            guiGraphics.drawString(Minecraft.getInstance().font, text, getX(), getY(), color);
-        }
-
-        @Override
-        protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-
-        }
+    public CBlockEntityMenu getCMenu() {
+        return container;
     }
 
-    public ResourceLocation getButtonTexture(int tabIndex) {
-        return background;
-    }
     public int[] getTabButtonUV(int tabIndex) {
         /*if (tabIndex < 3) {*/
             return new int[]{180, 59};
@@ -152,12 +162,35 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         }*/
     }
 
+    @Override
+    public boolean onInit() {
+        int sw = 176;
+        int sh = 222;
+        this.setSize(sw, sh);
+        return super.onInit();
+    }
+    @Override
+    public void setSizeToContentSize() {
+    }
+    @Override
+    public int getContentHeight() {
+        return 222;
+    }
+
+    public int getHeight() {
+        return 222;
+    }
+
+    public CIcons.CIcon getButtonIcon(int i) {
+        return CIcons.nop();
+    }
+
     protected void addTabContent(ITabContent content){
         tabContents.add(content);
     }
 
     public interface ITabContent {
-        void renderTabContent(int guiLeft,int guiTop);
+        void renderTabContent(UILayer layer);
     }
 
     public interface TabContentComponent {}

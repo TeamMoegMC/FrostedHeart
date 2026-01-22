@@ -16,13 +16,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
+	private List<VirtualItemStack> ResourceClientCache = List.of();
 
 	public WarehouseMenu(int id, Inventory inventoryPlayer, WarehouseBlockEntity tile) {
 		super(FHMenuTypes.WAREHOUSE.get(),tile,id, inventoryPlayer.player,32);
 
 		super.addPlayerInventory(inventoryPlayer, 8, 139, 197);
 	}
-
 
 	@Override
 	public void receiveMessage(short btnId, int state) {
@@ -68,5 +68,13 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 	@Override
 	public void removed(Player pPlayer) {
 		super.removed(pPlayer);
+	}
+
+	public void updateResourceList(List<VirtualItemStack> newResources) {
+		this.ResourceClientCache=List.copyOf(newResources);
+	}
+
+	public List<VirtualItemStack> getResources() {
+		return ResourceClientCache;
 	}
 }

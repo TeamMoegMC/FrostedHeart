@@ -19,20 +19,12 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
-import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
-import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
-import com.teammoeg.chorda.io.codec.DataOps;
-import com.teammoeg.chorda.io.codec.ObjectWriter;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
-import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.warehouse.VirtualItemStack;
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseScreen;
+import com.teammoeg.frostedheart.content.town.warehouse.WarehouseMenu;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -57,9 +49,10 @@ public class WarehouseS2CPacket implements CMessage {
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
 		context.get().enqueueWork(() -> {
-			if (Minecraft.getInstance().screen instanceof WarehouseScreen screen) {
+			LocalPlayer player = Minecraft.getInstance().player;
+			if (player != null && player.containerMenu instanceof WarehouseMenu menu) {
 				//更新屏幕
-				screen.updateResourceList(resources);
+				menu.updateResourceList(resources);
 			}
 		});
 		context.get().setPacketHandled(true);
