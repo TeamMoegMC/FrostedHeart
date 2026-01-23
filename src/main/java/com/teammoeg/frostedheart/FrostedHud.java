@@ -1069,7 +1069,7 @@ public class FrostedHud {
                     // 开盒widget
                     if (iterator.hasNext()) {
                         UIElement widget = iterator.next();
-                        if (widget.isMouseOver() && widget.isEnabled()) {
+                        if (widget.isMouseOver() && CGuiHelper.isElementActuallyVisible(widget)) {
                             hoveredEle = widget;
                             il = indentLevel;
                         }
@@ -1092,9 +1092,9 @@ public class FrostedHud {
                         lines.add(c);
 
                         // 渲染边框
-                        int color = Color.HSBtoRGB(indentLevel / 6F, 1, 1);
-                        Rect b = CGuiHelper.getWidgetBounds(widget, pLayer);
                         if (shift && !Screen.hasControlDown() && widget.isVisible()) {
+                            int color = Color.HSBtoRGB(indentLevel / 6F, 1, 1);
+                            Rect b = CGuiHelper.getWidgetBounds(widget, pLayer);
                             CGuiHelper.drawRect(stack, b, Colors.setAlpha(color, 0.1F));
                             CGuiHelper.drawBox(stack, b, color, false);
                         }

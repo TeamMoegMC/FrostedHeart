@@ -30,11 +30,9 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.CUIScreen;
-import com.teammoeg.chorda.client.cui.CUIScreenWrapper;
-import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import net.minecraft.client.Minecraft;
@@ -725,6 +723,17 @@ public class CGuiHelper {
 		}
 
 		return new Rect(x, y, widget.getWidth(), widget.getHeight());
+	}
+
+	public static boolean isElementActuallyVisible(UIElement element) {
+		if (!element.isVisible()) {
+			return false;
+		}
+		UIElement parent = element;
+		do {
+			parent = parent.getParent();
+		} while (parent != null && parent.isVisible());
+		return parent == null || parent.isVisible();
 	}
 
 	@Nullable

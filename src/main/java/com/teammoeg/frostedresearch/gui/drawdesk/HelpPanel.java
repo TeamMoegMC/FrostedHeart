@@ -118,4 +118,9 @@ class HelpPanel extends UILayer {
 		return ot.showHelp;
 	}
 
+	@Override
+	public boolean isVisible() {
+		return ot.showHelp;
+	}
+
 }
