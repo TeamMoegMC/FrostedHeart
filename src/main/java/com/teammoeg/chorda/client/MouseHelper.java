@@ -65,12 +65,11 @@ public class MouseHelper {
 		rightClicked = 0;
 		return false;
     }
-
-    public static int getScaledX() {
-        return (int)(MC.mouseHandler.xpos() / MC.getWindow().getGuiScale());
+    public static double getScaledX() {
+        return MC.mouseHandler.xpos() * (double)MC.getWindow().getGuiScaledWidth() / (double)MC.getWindow().getScreenWidth();
     }
 
-    public static int getScaledY() {
-        return (int)(MC.mouseHandler.ypos() / MC.getWindow().getGuiScale());
+    public static double getScaledY() {
+        return MC.mouseHandler.ypos() * (double)MC.getWindow().getGuiScaledHeight() / (double)MC.getWindow().getScreenHeight();
     }
 }

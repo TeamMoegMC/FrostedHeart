@@ -1,7 +1,5 @@
 package com.teammoeg.chorda.client.cui;
 
-import java.util.function.Consumer;
-
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.lang.Components;
 
@@ -58,7 +56,7 @@ public class ScrollBar extends UIElement {
 			int scrollBarSize=getScrollBarSize();
 			if(isVertical) {
 				int barPos=(int) (lerpValue(height - scrollBarSize-2)+1);
-				//System.out.println(getMouseY()+"/"+barPos+"("+height);
+				System.out.println(getMouseY()+"/"+barPos+"("+height);
 				if(getMouseY()<barPos) {
 					this.setValue(this.getValue()-getPage());
 				}else if(getMouseY()>barPos+scrollBarSize) {
@@ -111,6 +109,7 @@ public class ScrollBar extends UIElement {
 
 			if (delta != Integer.MIN_VALUE) {
 				if (CInputHelper.isMouseLeftDown()) {
+					//System.out.println(delta);
 					if (isVertical) {
 						v += (getMouseY() - (delta)) * (getMax()-getMin()) / (double) (height - scrollBarSize);
 						delta=getMouseY();

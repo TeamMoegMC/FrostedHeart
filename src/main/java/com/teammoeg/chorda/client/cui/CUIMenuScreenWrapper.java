@@ -4,6 +4,7 @@ import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.platform.Window;
 import com.teammoeg.chorda.client.CInputHelper;
+import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 
@@ -36,7 +37,7 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 	}
     @Override
     public boolean mouseClicked(double x, double y, int button) {
-        primaryLayer.updateGui(x, y, -1);
+        primaryLayer.updateGui(x-leftPos, y-topPos, -1);
 
         if (button == GLFW.GLFW_MOUSE_BUTTON_4) {
             primaryLayer.back();
@@ -51,7 +52,7 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 
     @Override
     public boolean mouseReleased(double x, double y, int button) {
-    	primaryLayer.updateGui(x, y, -1);
+    	primaryLayer.updateGui(x-leftPos, y-topPos, -1);
         primaryLayer.onMouseReleased(MouseButton.of(button));
         return super.mouseReleased(x, y, button);
     }
@@ -144,7 +145,7 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 		CGuiHelper.resetGuiDrawing();
 		
 		
-		primaryLayer.updateGui(mouseX-leftPos, mouseY-topPos, partialTicks);
+		primaryLayer.updateGui(MouseHelper.getScaledX()-leftPos, MouseHelper.getScaledY()-topPos, partialTicks);
 		primaryLayer.updateMouseOver();
 		super.render(graphics, mouseX, mouseY, partialTicks);
 	}

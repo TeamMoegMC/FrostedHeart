@@ -44,9 +44,18 @@ public class FHKeyHandler {
             if(FHKeyMappings.key_clothes.get().consumeClick()) {
                 FHNetwork.INSTANCE.sendToServer(new C2SOpenClothesScreenMessage());
             }
-            if(FHKeyMappings.key_openWheelMenu.get().consumeClick()) {
+            if(FHKeyMappings.key_openWheelMenu.get().consumeClick()&&!WheelMenuRenderer.isOpened()) {
             	WheelMenuRenderer.open();
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void onClientScroll(InputEvent.MouseScrollingEvent event) {
+    	if(WheelMenuRenderer.isOpened()) {
+    		WheelMenuRenderer.scrollPage(event.getScrollDelta());
+    		event.setCanceled(true);
+    		
+    	}
     }
 }

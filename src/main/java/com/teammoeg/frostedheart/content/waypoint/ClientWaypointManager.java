@@ -99,8 +99,8 @@ public class ClientWaypointManager {
     private static void updateSelected(AbstractWaypoint waypoint) {
         Vec2 screenPos = waypoint.getScreenPos();
         boolean inGame = ClientUtils.getMc().mouseHandler.isMouseGrabbed();
-        int mouseX = inGame ? ClientUtils.screenCenterX() : MouseHelper.getScaledX();
-        int mouseY = inGame ? ClientUtils.screenCenterY() : MouseHelper.getScaledY();
+        int mouseX = (int) (inGame ? ClientUtils.screenCenterX() : MouseHelper.getScaledX());
+        int mouseY = (int) (inGame ? ClientUtils.screenCenterY() : MouseHelper.getScaledY());
 
         waypoint.setHovered(MouseHelper.isMouseIn(mouseX, mouseY, (int)(screenPos.x-20), (int)(screenPos.y-20), 40, 40));
         if (!waypoint.isHovered()) {

@@ -19,6 +19,19 @@
 
 package com.teammoeg.frostedheart.content.wheelmenu;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+
+import org.joml.Quaternionf;
+
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.serialization.Codec;
@@ -26,7 +39,7 @@ import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseCaptureUtil;
-import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.ScrollTracker;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
@@ -42,6 +55,7 @@ import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FGuis;
+
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -51,18 +65,6 @@ import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.loading.FMLPaths;
-import org.joml.Quaternionf;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
 
 public class WheelMenuRenderer {
 	public static final IGuiOverlay OVERLAY = WheelMenuRenderer::render;
@@ -101,8 +103,32 @@ public class WheelMenuRenderer {
 	public static boolean isOpened;
 	public static boolean isClosing;
 	static float openingStatus;
-
+	private static int wheelMenuPage;
+	public static final int ITEM_PER_PAGE=8;
+	private static final ScrollTracker tracker=new ScrollTracker(); 
+	private static int getPageSize() {
+		return Math.max(0, Math.min(8, visibleSelections.size()-wheelMenuPage*ITEM_PER_PAGE));
+	}
+	private static Selection getSelection(int item) {
+		int idx=item+wheelMenuPage*ITEM_PER_PAGE;
+		if(idx>=0&&idx<visibleSelections.size())
+			return visibleSelections.get(idx);
+		return null;
+	}
+	public static void scrollPage(double delta) {
+		int oldsize=getPageSize();
+		tracker.addScroll(delta);
+		wheelMenuPage+=tracker.getScroll();
+		int maxPage=Mth.ceil(visibleSelections.size()*1.0/ITEM_PER_PAGE);
+		wheelMenuPage=wheelMenuPage%maxPage;
+		if(wheelMenuPage<0)
+			wheelMenuPage+=maxPage;
+		if(oldsize!=getPageSize()) 
+			update();
+		
+	}
 	public static void render(ForgeGui gui, GuiGraphics graphics, float partialTicks, int width, int height) {
+		
 		if (!isOpened || visibleSelections.isEmpty())
 			return;
 		float p;
@@ -110,7 +136,8 @@ public class WheelMenuRenderer {
 			p = Mth.clamp((openingStatus + (1 - partialTicks) * 2) / 3f, 0, 1);
 		else
 			p = Mth.clamp((openingStatus + partialTicks) / 3f, 0, 1);
-		int size = visibleSelections.size();
+		int maxPage=Mth.ceil(visibleSelections.size()*1.0/ITEM_PER_PAGE);
+		int size = getPageSize();
 		int cw = ClientUtils.screenCenterX();
 		int ch = ClientUtils.screenCenterY();
 		var font = gui.getFont();
@@ -141,7 +168,7 @@ public class WheelMenuRenderer {
 			int selectedIndex = findIndex(degree + halfSliceSize, size);
 			Selection lastHovered = hoveredSelection;
 			if (!isClosing) {
-				hoveredSelection = visibleSelections.get(selectedIndex);
+				hoveredSelection = getSelection(selectedIndex);
 			}
 			if (hoveredSelection != lastHovered) {
 				hoveredSelection.hoverAction.execute(lastHovered);
@@ -162,18 +189,18 @@ public class WheelMenuRenderer {
 					Colors.setAlpha(Colors.CYAN, 0.5F * p),
 					Colors.setAlpha(Colors.CYAN, p*0.15f));
 			pose.popPose();
-			FlatIcon.CROSS.toCIcon().draw(graphics, -5, -30, 10, 10);
+			
 		} else {
 			FGuis.drawRing(graphics, 0, 0, 0, l, 0, 360,Colors.setAlpha(Colors.CYAN, 0.5F * p));
 			hoveredSelection = null;
 			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, 0, 360,
 					Colors.setAlpha(Colors.BLACK, 0.5F * p));
 		}
-		
+		FlatIcon.CROSS.toCIcon().draw(graphics, -5, -30, 10, 10);
 		// 渲染选项
 		if (size == positions.size())
 			for (int i = 0; i < size; i++) {
-				visibleSelections.get(i).render(gui, graphics, partialTicks,positions.get(i).getX(), positions.get(i).getY(), 16, 16);
+				getSelection(i).render(gui, graphics, partialTicks,positions.get(i).getX(), positions.get(i).getY(), 16, 16);
 			}
 
 		// 渲染“鼠标”
@@ -189,7 +216,13 @@ public class WheelMenuRenderer {
 		var message = hoveredSelection != null ? hoveredSelection.getMessage() : Component.translatable("gui.frostedheart.wheel_menu.message",
 				FHKeyMappings.key_openWheelMenu.get().getKey().getDisplayName());
 		var lines = font.split(message, (int) (innerRadius * 2 - 16));
+		String pageText=(wheelMenuPage+1)+"/"+maxPage;
+		
+		
 		CGuiHelper.drawStringLines(graphics, font, lines, 0, -lines.size() * 5, Colors.CYAN, 1, true, true, Alignment.CENTER);
+		
+		graphics.drawCenteredString(font, pageText, 0, 30, Colors.WHITE);
+		
 		pose.popPose();
 	}
 
@@ -228,7 +261,7 @@ public class WheelMenuRenderer {
 
 	public static void openIfNewSelection() {
 		
-		if(displayedSelections.size()<10) {
+		//if(displayedSelections.size()<12) {
 			boolean modified=false;
 			HashSet<ResourceLocation> set=new HashSet<>(displayedSelections);
 			for(Entry<ResourceLocation, Selection> rl:selections.entrySet()) {
@@ -245,7 +278,7 @@ public class WheelMenuRenderer {
 			if(modified) {
 				saveUserSelectedOptions();
 			}
-		}
+		//}
 	}
 
 	protected static boolean init() {
@@ -253,6 +286,7 @@ public class WheelMenuRenderer {
 		availableSelections.clear();
 		positions.clear();
 		degrees.clear();
+		tracker.clear();
 		wheelRadius = FHConfig.CLIENT.wheelMenuRadius.get();
 		ringWidth = 30 * Math.max(1, wheelRadius / FHConfig.CLIENT.wheelMenuRadius.getDefault());
 		virtualScreen = new CircleDimension(wheelRadius * 2);
@@ -276,7 +310,7 @@ public class WheelMenuRenderer {
 
 	private static void update() {
 		positions.clear();
-		int size = visibleSelections.size();
+		int size = getPageSize();
 		double averageRadius = (wheelRadius + wheelRadius - ringWidth) / 2.0;
 		double angleStep = 2 * Math.PI / size;
 		for (int i = 0; i < size; i++) {
@@ -311,6 +345,7 @@ public class WheelMenuRenderer {
 		}
 		if (isOpened) {
 			if (FHKeyMappings.key_openWheelMenu.get().isDown()) {
+				
 				isClosing = false;
 				if (openingStatus < 6)
 					openingStatus++;
