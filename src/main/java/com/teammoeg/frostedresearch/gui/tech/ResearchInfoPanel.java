@@ -54,7 +54,6 @@ public class ResearchInfoPanel extends UILayer {
 	public ResearchInfoPanel(ResearchDetailPanel panel) {
 		super(panel);
 		detailPanel = panel;
-		detailPanel.setZIndex(300);
 	}
 
 	@Override

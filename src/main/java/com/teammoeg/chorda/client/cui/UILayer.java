@@ -70,7 +70,10 @@ public abstract class UILayer extends UIElement {
 		alignWidgets();
 	}
 
-
+	public void setSizeToContentSize() {
+		this.width=this.getContentWidth();
+		this.height=this.getContentHeight();
+	}
 	public void add(UIElement element) {
 		if (element.getParent() != this) {
 			Chorda.LOGGER.warn(Chorda.UI, element+" Could not be added because parent mismatch");
@@ -244,9 +247,8 @@ public abstract class UILayer extends UIElement {
 	@Override
 	public void render(GuiGraphics graphics,  int x, int y, int w, int h) {
 
-		drawBackground(graphics, x, y, w, h);
-		if(scissorEnabled)
-			graphics.enableScissor(x, y, x+w, y+h);
+		
+
 
 		int contentX = x;
 		int contentY = y;
@@ -266,7 +268,11 @@ public abstract class UILayer extends UIElement {
 		}
 
 		graphics.pose().pushPose();
-		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, zIndex);
+		graphics.pose().translate(0, 0, zIndex);
+		drawBackground(graphics, x, y, w, h);
+		if(scissorEnabled)
+			graphics.enableScissor(x, y, x+w, y+h);
+		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
 		for(UIElement elm:elements) {
 			if(elm.isVisible()) {
 				drawElement(graphics, elm,x,y, contentX, contentY, w, h);

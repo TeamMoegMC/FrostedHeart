@@ -46,7 +46,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	}
 
 	@Override
-	public void setSizeToContentSize() {
+	public void alignWidgets() {
 	}
 
 	public DrawingDeskTileEntity getTile() {
