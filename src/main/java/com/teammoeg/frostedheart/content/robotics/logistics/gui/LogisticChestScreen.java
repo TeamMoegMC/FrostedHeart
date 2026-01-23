@@ -26,7 +26,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 
 public class LogisticChestScreen extends IEContainerScreen<LogisticChestMenu> {
-    private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("relic_chest");
+    private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("bot_dock");
 
     public LogisticChestScreen(LogisticChestMenu inventorySlotsIn, Inventory inv, Component title) {
         super(inventorySlotsIn, inv, title,TEXTURE);
