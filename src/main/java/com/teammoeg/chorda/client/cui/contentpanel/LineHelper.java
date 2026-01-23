@@ -105,6 +105,7 @@ public class LineHelper {
             Tip t1 = tips.get(j);
             if (t1.isHide()) continue;
             var tipContents = t1.getContents();
+            int color = Colors.cyanToTheme(t1.getFontColor());
             Consumer<MouseButton> clickAction = null;
             Component btnDesc = null;
             if (t1.hasClickAction()) {
@@ -114,19 +115,19 @@ public class LineHelper {
 
             // title
             if (j == 0) {
-                lines.add(text(parent, tipContents.get(0)).quote(t1.getFontColor()).button(btnDesc, clickAction));
+                lines.add(text(parent, tipContents.get(0)).quote(color).button(btnDesc, clickAction));
                 lines.add(br(parent));
             // new tip notification
             } else if (!TipManager.INSTANCE.state().isViewed(t1)) {
                 lines.add(br(parent));
-                lines.add(text(parent, Component.translatable("gui.frostedheart.archive.new_tip")).title(t1.getFontColor(), 1).color(Colors.readableColor(t1.getFontColor())));
+                lines.add(text(parent, Component.translatable("gui.frostedheart.archive.new_tip")).title(color, 1).color(Colors.readableColor(color)));
             } else {
                 lines.add(space(parent));
             }
             // if child tip has different title or click action
             if (j != 0 && (!tipContents.get(0).equals(tip.getContents().get(0)) || tip.hasClickAction())) {
                 lines.add(br(parent));
-                lines.add(text(parent, tipContents.get(0)).quote(t1.getFontColor()).button(btnDesc, clickAction));
+                lines.add(text(parent, tipContents.get(0)).quote(color).button(btnDesc, clickAction));
             }
             // lines
             for (int i = 1; i < tipContents.size(); i++) {

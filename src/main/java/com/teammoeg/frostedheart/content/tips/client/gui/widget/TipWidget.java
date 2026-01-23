@@ -68,17 +68,17 @@ public class TipWidget extends AbstractWidget {
 
     private TipWidget() {
         super(0, 0, 0, 0, Component.literal("tip"));
-        this.closeButton = new IconButton(0, 0, FlatIcon.CROSS, Colors.CYAN, Lang.gui("close").component(),
+        this.closeButton = new IconButton(0, 0, FlatIcon.CROSS, Colors.themeColor(), Lang.gui("close").component(),
                 b -> {
                     close();
                     b.setFocused(false);
                 });
-        this.pinButton = new IconButton(0, 0, FlatIcon.LOCK, Colors.CYAN, Lang.gui("pin").component(),
+        this.pinButton = new IconButton(0, 0, FlatIcon.LOCK, Colors.themeColor(), Lang.gui("pin").component(),
                 b -> {
                     this.alwaysVisibleOverride = true;
                     b.setFocused(false);
                 });
-        this.linkButton = new IconButton(0, 0, FlatIcon.JUMP, Colors.CYAN, Lang.gui("link").component(),
+        this.linkButton = new IconButton(0, 0, FlatIcon.JUMP, Colors.themeColor(), Lang.gui("link").component(),
                 b -> {
                     if (tip != null) {
                         tip.runClickAction();
@@ -324,7 +324,7 @@ public class TipWidget extends AbstractWidget {
 
         void update() {
             BGColor = Colors.setAlpha(tip.getBackgroundColor(), (isGuiOpened() ? 0.8F : 0.5F));
-            fontColor = Colors.setAlpha(tip.getFontColor(), 1.0F);
+            fontColor = Colors.setAlpha(Colors.cyanToTheme(tip.getFontColor()), 1.0F);
 
             // 跟随视角晃动
             Font font = ClientUtils.font();

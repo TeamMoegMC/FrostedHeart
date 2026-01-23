@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.infrastructure.config;
 
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biomes;
@@ -66,6 +67,8 @@ public class FHConfig {
 		public final ForgeConfigSpec.IntValue scenarioRenderThread;
 		public final ForgeConfigSpec.IntValue infraredViewUBOOffset;
 		public final ForgeConfigSpec.IntValue wheelMenuRadius;
+		public final ForgeConfigSpec.IntValue themeColor;
+		public final ForgeConfigSpec.BooleanValue enableWheelMenuCursor;
 		public final ForgeConfigSpec.BooleanValue enableTooltips;
 		public final ForgeConfigSpec.BooleanValue enableShaderPackCompat;
 
@@ -96,8 +99,14 @@ public class FHConfig {
 			enableTip = builder.comment("Enables the tips rendering. ")
 				.define("enableTip", true);
 			wheelMenuRadius = builder
-				.comment("Radius of the Wheel Menu. ")
+				.comment("Radius of the Radial Menu. ")
 				.defineInRange("wheelMenuRadius", 100, 60, Integer.MAX_VALUE);
+			enableWheelMenuCursor = builder
+				.comment("Enables the cursor in the Radial Menu. ")
+				.define("enableWheelMenuCursor", false);
+			themeColor = builder
+				.comment("The theme color of most FH HUDs. ")
+				.defineInRange("themeColor", Colors.CYAN, Integer.MIN_VALUE, Integer.MAX_VALUE);
 			builder.pop();
 
 			builder.push("Frozen Effects");

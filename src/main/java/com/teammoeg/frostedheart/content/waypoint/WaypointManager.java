@@ -26,8 +26,11 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.waypoint.capability.WaypointCapability;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
-import com.teammoeg.frostedheart.content.waypoint.waypoints.*;
-
+import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
+import com.teammoeg.frostedheart.content.waypoint.waypoints.ColumbiatWaypoint;
+import com.teammoeg.frostedheart.content.waypoint.waypoints.EntityWaypoint;
+import com.teammoeg.frostedheart.content.waypoint.waypoints.SunStationWaypoint;
+import com.teammoeg.frostedheart.content.waypoint.waypoints.Waypoint;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.util.LazyOptional;
@@ -61,7 +64,7 @@ public class WaypointManager {
     }
 
     public Waypoint fromBlock(BlockPos pos, String id) {
-        Waypoint waypoint = new Waypoint(pos, id, Colors.CYAN);
+        Waypoint waypoint = new Waypoint(pos, id, Colors.themeColor());
         waypoint.setDisplayName(player.level().getBlockState(pos).getBlock().getName());
         return waypoint;
     }

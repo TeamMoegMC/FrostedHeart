@@ -26,7 +26,6 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
-
 import com.teammoeg.frostedheart.content.waypoint.waypoints.Waypoint;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -164,7 +163,7 @@ public class ClientWaypointManager {
     public static boolean fromPickedBlock() {
         HitResult block = ClientUtils.getPlayer().pick(128, ClientUtils.partialTicks(), false);
         if (block.getType() == HitResult.Type.BLOCK) {
-            Waypoint waypoint = new Waypoint(((BlockHitResult)block).getBlockPos(), "picked_block", Colors.CYAN);
+            Waypoint waypoint = new Waypoint(((BlockHitResult)block).getBlockPos(), "picked_block", Colors.themeColor());
             waypoint.setFocused(true);
             waypoint.setDisplayName(ClientUtils.getWorld().getBlockState(((BlockHitResult)block).getBlockPos()).getBlock().getName());
             putWaypoint(waypoint);

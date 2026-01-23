@@ -147,7 +147,7 @@ public class TextLine extends Line<TextLine> {
             graphics.fill(x, y, x+w, y+h, Colors.L_BG_GRAY);
             icon.draw(graphics, x+1, y+1, fIcon.size.width, fIcon.size.height);
             if (isMouseOver()) {
-                CGuiHelper.drawBox(graphics, x, y, w, h, trimmingColor == 0 ? Colors.CYAN : trimmingColor, true);
+                CGuiHelper.drawBox(graphics, x, y, w, h, trimmingColor == 0 ? Colors.themeColor() : trimmingColor, true);
             }
         }
 

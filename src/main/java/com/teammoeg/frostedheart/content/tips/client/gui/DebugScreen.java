@@ -20,9 +20,12 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
 import com.simibubi.create.foundation.config.ui.BaseConfigScreen;
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.Colors;
+import com.teammoeg.chorda.client.widget.IconButton;
+import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.content.tips.Popup;
@@ -31,10 +34,6 @@ import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.ColumbiatWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.SunStationWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.Waypoint;
-import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.widget.IconButton;
-import com.teammoeg.chorda.lang.Components;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -75,19 +74,19 @@ public class DebugScreen extends Screen {
         var input = addRenderableWidget(new EditBox(ClientUtils.font(), ClientUtils.screenCenterX() - 60, ClientUtils.screenCenterY() + 20, 120, 12, Component.literal("input")));
         input.setMaxLength(1024);
 
-        addButton(FlatIcon.CROSS, Colors.CYAN, "Clear Tip Render Queue", (b) ->
+        addButton(FlatIcon.CROSS, Colors.themeColor(), "Clear Tip Render Queue", (b) ->
             TipManager.INSTANCE.display().clearRenderQueue()
         );
         addButton(FlatIcon.HISTORY, Colors.RED, "Reset State For All Tips", (b) ->
             TipManager.INSTANCE.state().resetAll()
         );
-        addButton(FlatIcon.HISTORY, Colors.CYAN, "Reload All Tips", (b) ->
+        addButton(FlatIcon.HISTORY, Colors.themeColor(), "Reload All Tips", (b) ->
             TipManager.INSTANCE.loadFromFile()
         );
-        addButton(FlatIcon.WRENCH, Colors.CYAN, "Open Tip Editor UI", (b) ->
+        addButton(FlatIcon.WRENCH, Colors.themeColor(), "Open Tip Editor UI", (b) ->
             ClientUtils.getMc().setScreen(new TipEditorScreen())
         );
-        addButton(FlatIcon.BOX_ON, Colors.CYAN, "Create a Random Waypoint", (b) -> {
+        addButton(FlatIcon.BOX_ON, Colors.themeColor(), "Create a Random Waypoint", (b) -> {
             Random random = new Random();
             String id = DebugEntityNameGenerator.getEntityName(UUID.randomUUID());
             Waypoint waypoint = new Waypoint(new Vec3((random.nextFloat()-0.5F)*1280, Math.abs(random.nextFloat())*256, (random.nextFloat()-0.5F)*1280), id, Colors.setAlpha(random.nextInt(), 1F));
@@ -103,19 +102,19 @@ public class DebugScreen extends Screen {
         addButton(FlatIcon.BOX, Colors.RED, "Remove The Waypoint You Are Looking At", (b) ->
             ClientWaypointManager.getSelected().ifPresent((hovered) -> ClientWaypointManager.removeWaypoint(hovered.getId()))
         );
-        addButton(FlatIcon.SIGHT, Colors.CYAN, "Create a Waypoint From The Block You Are Looking At", (b) -> {
+        addButton(FlatIcon.SIGHT, Colors.themeColor(), "Create a Waypoint From The Block You Are Looking At", (b) -> {
             ClientWaypointManager.fromPickedBlock();
         });
-        addButton(FlatIcon.TRADE, Colors.CYAN, "Toggle Debug Overlay", (b) ->
+        addButton(FlatIcon.TRADE, Colors.themeColor(), "Toggle Debug Overlay", (b) ->
             FrostedHud.renderDebugOverlay = !FrostedHud.renderDebugOverlay
         );
-        addButton(FlatIcon.LIST, Colors.CYAN, "Create Pop-up message", (b) ->
+        addButton(FlatIcon.LIST, Colors.themeColor(), "Create Pop-up message", (b) ->
             Popup.put(input.getValue())
         );
-        addButton(FlatIcon.LIST, Colors.CYAN, "Unlock All Tips", (b) ->
+        addButton(FlatIcon.LIST, Colors.themeColor(), "Unlock All Tips", (b) ->
             TipManager.INSTANCE.state().unlockAll()
         );
-        addButton(FlatIcon.LEAVE, Colors.CYAN, "Do Something", (b) -> {
+        addButton(FlatIcon.LEAVE, Colors.themeColor(), "Do Something", (b) -> {
             String message = debug();
             ClientUtils.getPlayer().sendSystemMessage(Components.str(message));
         });

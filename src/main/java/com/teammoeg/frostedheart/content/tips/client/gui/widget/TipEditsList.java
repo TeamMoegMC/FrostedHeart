@@ -24,18 +24,17 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.Colors;
-import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.frostedheart.content.tips.ClickActions;
-import com.teammoeg.frostedheart.content.tips.TipManager;
-import com.teammoeg.frostedheart.content.tips.TipRenderer;
-import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.widget.ActionStateIconButton;
 import com.teammoeg.chorda.client.widget.ColorEditbox;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.client.widget.IconCheckbox;
-
+import com.teammoeg.frostedheart.content.tips.ClickActions;
+import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipManager;
+import com.teammoeg.frostedheart.content.tips.TipRenderer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -277,7 +276,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
             });
             this.input.setMaxLength(1024);
 
-            this.addButton = new IconButton(0, 0, FlatIcon.CHECK, Colors.CYAN, Component.translatable("gui.frostedheart.tip_editor.add_line"), b -> {
+            this.addButton = new IconButton(0, 0, FlatIcon.CHECK, Colors.themeColor(), Component.translatable("gui.frostedheart.tip_editor.add_line"), b -> {
                 if (cachedId.isBlank()) return;
 
                 contents.add(getValidInputValue());
@@ -293,7 +292,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
                 updatePreview(Component.translatable("gui.frostedheart.tip_editor.info.enter"));
             });
 
-            this.deleteButton = new IconButton(0, 0, FlatIcon.TRASH_CAN, Colors.CYAN, Component.translatable("gui.frostedheart.tip_editor.delete_last_line"), b -> {
+            this.deleteButton = new IconButton(0, 0, FlatIcon.TRASH_CAN, Colors.themeColor(), Component.translatable("gui.frostedheart.tip_editor.delete_last_line"), b -> {
                 if (!contents.isEmpty()) {
                     contents.remove(contents.size() - 1);
                     translationContents.remove(contents.size());
@@ -303,7 +302,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
                 }
             });
 
-            this.translationButton = new ActionStateIconButton(0, 0, FlatIcon.LIST, Colors.CYAN, Component.translatable("gui.frostedheart.tip_editor.convert_and_copy"), Component.translatable("gui.frostedheart.copied"), b -> {
+            this.translationButton = new ActionStateIconButton(0, 0, FlatIcon.LIST, Colors.themeColor(), Component.translatable("gui.frostedheart.tip_editor.convert_and_copy"), Component.translatable("gui.frostedheart.copied"), b -> {
                 if (!contents.isEmpty()) {
                     StringBuilder copy = new StringBuilder();
                     for (int i = 0; i < translationContents.size(); i++) {

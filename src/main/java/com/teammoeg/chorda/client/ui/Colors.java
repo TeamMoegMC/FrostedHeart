@@ -20,8 +20,7 @@
 package com.teammoeg.chorda.client.ui;
 
 import com.teammoeg.chorda.client.ClientUtils;
-
-import net.minecraft.ChatFormatting;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import org.lwjgl.BufferUtils;
@@ -57,6 +56,14 @@ public class Colors {
     public static final int L_TEXT_GRAY = 0xFF9294A3;
     public static final int L_BG_GREEN = 0xFFC1E52F;
     public static final int L_BG_GRAY = 0xFF585966;
+
+    public static int themeColor() {
+        return setAlpha(FHConfig.CLIENT.themeColor.get(), 1F);
+    }
+
+    public static int cyanToTheme(int color) {
+        return color == CYAN ? themeColor() : color;
+    }
 
     public static int setAlpha(int color, int alpha) {
         return alpha << 24 | color & 0x00FFFFFF;

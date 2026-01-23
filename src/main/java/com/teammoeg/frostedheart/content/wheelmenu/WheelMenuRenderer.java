@@ -19,19 +19,6 @@
 
 package com.teammoeg.frostedheart.content.wheelmenu;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-
-import org.joml.Quaternionf;
-
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.serialization.Codec;
@@ -55,7 +42,6 @@ import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FGuis;
-
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -65,6 +51,18 @@ import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.loading.FMLPaths;
+import org.joml.Quaternionf;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
 
 public class WheelMenuRenderer {
 	public static final IGuiOverlay OVERLAY = WheelMenuRenderer::render;
@@ -179,19 +177,19 @@ public class WheelMenuRenderer {
 			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, halfSliceSize/2,
 					360-halfSliceSize, Colors.setAlpha(Colors.BLACK, 0.5F * p));
 			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, -halfSliceSize, halfSliceSize,
-					Colors.setAlpha(Colors.CYAN, p));
+					Colors.setAlpha(Colors.themeColor(), p));
 			pose.popPose();
 
 			// 当前选择的选项的圆环
 			pose.pushPose();
 			pose.rotateAround(new Quaternionf().rotateZ((float) Math.toRadians(degrees.get(selectedIndex))), 0, 0, 0);
 			FGuis.drawRing(graphics, 0, 0, innerRadius, wheelRadius, -halfSliceSize, halfSliceSize,
-					Colors.setAlpha(Colors.CYAN, 0.5F * p),
-					Colors.setAlpha(Colors.CYAN, p*0.15f));
+					Colors.setAlpha(Colors.themeColor(), 0.5F * p),
+					Colors.setAlpha(Colors.themeColor(), p*0.15f));
 			pose.popPose();
 			
 		} else {
-			FGuis.drawRing(graphics, 0, 0, 0, l, 0, 360,Colors.setAlpha(Colors.CYAN, 0.5F * p));
+			FGuis.drawRing(graphics, 0, 0, 0, l, 0, 360,Colors.setAlpha(Colors.themeColor(), 0.5F * p));
 			hoveredSelection = null;
 			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, 0, 360,
 					Colors.setAlpha(Colors.BLACK, 0.5F * p));
@@ -203,25 +201,24 @@ public class WheelMenuRenderer {
 				getSelection(i).render(gui, graphics, partialTicks,positions.get(i).getX(), positions.get(i).getY(), 16, 16);
 			}
 
-		// 渲染“鼠标”
-		/*pose.pushPose();
-		pose.translate(0, 0, 500);
-		FGuis.drawRing(graphics, (int) virtualScreen.getX()/2 + 1, (int) virtualScreen.getY()/2 + 1, 3, 6, 0, 360,
-				Colors.setAlpha(Colors.BLACK, p*0.5F), 0.15F);
-		FGuis.drawRing(graphics, (int) virtualScreen.getX()/2, (int) virtualScreen.getY()/2, 3, 6, 0, 360,
-				Colors.setAlpha(Colors.CYAN, p));
-		pose.popPose();*/
-
 		// 渲染选项标题
 		var message = hoveredSelection != null ? hoveredSelection.getMessage() : Component.translatable("gui.frostedheart.wheel_menu.message",
 				FHKeyMappings.key_openWheelMenu.get().getKey().getDisplayName());
 		var lines = font.split(message, (int) (innerRadius * 2 - 16));
 		String pageText=(wheelMenuPage+1)+"/"+maxPage;
-		
-		
-		CGuiHelper.drawStringLines(graphics, font, lines, 0, -lines.size() * 5, Colors.CYAN, 1, true, true, Alignment.CENTER);
-		
+		CGuiHelper.drawStringLines(graphics, font, lines, 0, -lines.size() * 5, Colors.themeColor(), 1, true, true, Alignment.CENTER);
 		graphics.drawCenteredString(font, pageText, 0, 30, Colors.WHITE);
+
+		// 渲染“鼠标”
+		if (FHConfig.CLIENT.enableWheelMenuCursor.get()) {
+			pose.pushPose();
+			pose.translate(0, 0, 500);
+			FGuis.drawRing(graphics, (int) virtualScreen.getX()/2 + 1, (int) virtualScreen.getY()/2 + 1, 3, 6, 0, 360,
+					Colors.setAlpha(Colors.BLACK, p*0.5F), 0.15F);
+			FGuis.drawRing(graphics, (int) virtualScreen.getX()/2, (int) virtualScreen.getY()/2, 3, 6, 0, 360,
+					Colors.setAlpha(Colors.themeColor(), p));
+			pose.popPose();
+		}
 		
 		pose.popPose();
 	}
