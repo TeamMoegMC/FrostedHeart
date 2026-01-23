@@ -273,8 +273,10 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 		return super.onInit();
 	}
 
+
+
 	@Override
-	public void setSizeToContentSize() {
+	public void alignWidgets() {
 	}
 
 

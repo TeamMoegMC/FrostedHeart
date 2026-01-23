@@ -220,7 +220,7 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 
 	@Override
 	public void alignWidgets() {
-
+		setSizeToContentSize();
 	}
 
 	@Override
@@ -233,18 +233,7 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 		return getY();
 	}
 
-	@Override
-	public void refresh() {
-		
-		super.refresh();
-		setSizeToContentSize();
-		
-	}
 
-	public void setSizeToContentSize() {
-		this.width=this.getContentWidth();
-		this.height=this.getContentHeight();
-	}
 	public boolean onInit() {
 		return true;
 	}

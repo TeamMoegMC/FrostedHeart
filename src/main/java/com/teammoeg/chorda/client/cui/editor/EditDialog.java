@@ -41,10 +41,6 @@ public abstract class EditDialog extends UILayer {
     public void close() {
         close(true);
     }
-	public void setSizeToContentSize() {
-		this.width=this.getContentWidth();
-		this.height=this.getContentHeight();
-	}
     public void close(boolean refresh) {
         try {
             onClose();

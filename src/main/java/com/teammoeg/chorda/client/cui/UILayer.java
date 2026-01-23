@@ -70,7 +70,10 @@ public abstract class UILayer extends UIElement {
 		alignWidgets();
 	}
 
-
+	public void setSizeToContentSize() {
+		this.width=this.getContentWidth();
+		this.height=this.getContentHeight();
+	}
 	public void add(UIElement element) {
 		if (element.getParent() != this) {
 			Chorda.LOGGER.warn(Chorda.UI, element+" Could not be added because parent mismatch");
