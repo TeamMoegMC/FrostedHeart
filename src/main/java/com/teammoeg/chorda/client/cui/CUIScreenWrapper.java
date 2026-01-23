@@ -5,6 +5,7 @@ import org.lwjgl.glfw.GLFW;
 import com.mojang.blaze3d.platform.Window;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.lang.Components;
 
@@ -56,12 +57,12 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 
 	@Override
 	public boolean mouseScrolled(double x, double y, double delta) {
-		return primaryLayer.onMouseScrolled(delta) || super.mouseScrolled(x, y, delta);
+		return primaryLayer.onMouseScrolled(delta) || super.mouseScrolled(x-this.x, y-this.y, delta);
 	}
 
 	@Override
 	public boolean mouseDragged(double x, double y, int button, double dragX, double dragY) {
-		return primaryLayer.onMouseDragged(MouseButton.of(button), dragX, dragY) || super.mouseDragged(x, y, button, dragX, dragY);
+		return primaryLayer.onMouseDragged(MouseButton.of(button), dragX-this.x, dragY-this.y) || super.mouseDragged(x, y, button, dragX, dragY);
 	}
 
 	@Override
@@ -114,8 +115,9 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 		renderBackground(graphics);
 		CGuiHelper.resetGuiDrawing();
 		//update mouse
-		//System.out.println("x="+x+"y="+y+"w="+w+"h="+h);
-		primaryLayer.updateGui(mouseX - x, mouseY - y, partialTicks);
+		//System.out.println("x="+x+"y="+y+"w="+w+"h="+h)
+
+		primaryLayer.updateGui(MouseHelper.getScaledX() - x, MouseHelper.getScaledY() - y, partialTicks);
 		primaryLayer.updateMouseOver();
 		//ui background
 		primaryLayer.render(graphics, x, y, w, h);

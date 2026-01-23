@@ -994,8 +994,8 @@ public class FrostedHud {
     public static void renderDebugOverlay(GuiGraphics stack, Minecraft mc) {
         Screen screen = mc.screen;
         Font font = mc.font;
-        int mouseX = MouseHelper.getScaledX();
-        int mouseY = MouseHelper.getScaledY();
+        int mouseX = (int) MouseHelper.getScaledX();
+        int mouseY = (int) MouseHelper.getScaledY();
         boolean shift = Screen.hasShiftDown();
         List<Object> lines = new ArrayList<>();
         Rect hovered = new Rect(0, 0, 0, 0);
