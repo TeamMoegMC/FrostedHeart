@@ -50,7 +50,7 @@ public class TextLine extends Line<TextLine> {
 
         int textW = w;
         if (isTitle) {
-            graphics.fill(x, y, x+w, y+h, -1, trimmingColor);
+            graphics.fill(x, y, x+w, y+h, trimmingColor);
             int offset = switch (alignment) {
                 case LEFT -> 2;
                 case CENTER -> 0;
@@ -60,7 +60,7 @@ public class TextLine extends Line<TextLine> {
             pose.translate(offset, 0, 0);
 
         } else if (isQuote) {
-            graphics.fill(x, y, x+4, y+h, -1, trimmingColor);
+            graphics.fill(x, y, x+4, y+h, trimmingColor);
             int offset = switch (alignment) {
                 case LEFT -> 8;
                 case CENTER -> 0;

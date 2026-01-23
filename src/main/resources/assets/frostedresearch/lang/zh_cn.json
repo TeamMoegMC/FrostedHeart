@@ -54,7 +54,7 @@
   "gui.frostedresearch.research_time_left": "剩余时间: %s 分钟",
   "gui.frostedresearch.research.insight_required":"所需/现有见闻：%s/%s",
   "gui.frostedresearch.minigame.can_start": "点击右下角的重置按键以开始一个研究论文",
-  "gui.frostedresearch.minigame.display": "游戏规则(鼠标放在文字上可以放大)",
+  "gui.frostedresearch.minigame.display": "游戏规则",
   "gui.frostedresearch.minigame.match": "元素配对",
   "gui.frostedresearch.minigame.no_clue": "该研究不需要进一步的理论研究",
   "gui.frostedresearch.minigame.no_ink": "没有适合使用的墨水",

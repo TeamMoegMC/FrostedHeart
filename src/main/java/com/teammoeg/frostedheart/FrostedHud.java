@@ -23,8 +23,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.cui.CUIMenuScreenWrapper;
 import com.teammoeg.chorda.client.cui.CUIScreen;
-import com.teammoeg.chorda.client.cui.CUIScreenWrapper;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.cui.UILayer;
@@ -980,6 +980,16 @@ public class FrostedHud {
         mc.getProfiler().pop();
     }
 
+    public static String tryGetTitle(UIElement element) {
+        Font font = ClientUtils.font();
+        String name = element.getClass().getSimpleName();
+        name = name.isBlank() ? "extends " + element.getClass().getSuperclass().getSimpleName() : name;
+        if (font.width(name) > 200) {
+            name = FormattedText.composite(font.substrByWidth(Component.literal(name), 200), CommonComponents.ELLIPSIS).getString();
+        }
+        return name;
+    }
+
     static UIElement hoveredEle = null;
     public static void renderDebugOverlay(GuiGraphics stack, Minecraft mc) {
         Screen screen = mc.screen;
@@ -1041,6 +1051,8 @@ public class FrostedHud {
         PrimaryLayer pLayer = null;
         if (screen instanceof CUIScreen cui) {
             pLayer = cui.getPrimaryLayer();
+        } else if (screen instanceof CUIMenuScreenWrapper<?> cui) {
+            pLayer = cui.getPrimaryLayer();
         }
         // CUI
         if (pLayer != null) {
@@ -1057,7 +1069,7 @@ public class FrostedHud {
                     // 开盒widget
                     if (iterator.hasNext()) {
                         UIElement widget = iterator.next();
-                        if (widget.isMouseOver()) {
+                        if (widget.isMouseOver() && widget.isEnabled()) {
                             hoveredEle = widget;
                             il = indentLevel;
                         }
@@ -1129,6 +1141,9 @@ public class FrostedHud {
                         } else {
                             title.append(Component.empty().append(hoveredEle.getTitle()).withStyle(color));
                         }
+                    }
+                    if (hoveredEle.getParent() != null) {
+                        title.append(" | P: " + tryGetTitle(hoveredEle.getParent()));
                     }
                     Component ui = Lang.builder().style(ChatFormatting.GRAY)
                             .text("L: x=")

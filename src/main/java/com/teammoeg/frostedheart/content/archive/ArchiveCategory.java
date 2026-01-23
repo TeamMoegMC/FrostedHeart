@@ -2,10 +2,10 @@ package com.teammoeg.frostedheart.content.archive;
 
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.category.Category;
 import com.teammoeg.chorda.client.cui.category.CategoryHelper;
 import com.teammoeg.chorda.client.cui.category.Entry;
@@ -34,9 +34,7 @@ public class ArchiveCategory extends UILayer {
         this.panel = contentPanel;
         this.scrollBar = new LayerScrollBar(parent, true, this) {
             @Override
-            public boolean isVisible() {
-                return false;
-            }
+            public void render(GuiGraphics graphics, int x, int y, int width, int height) {}
         };
         this.scrollBar.setScrollStep((Entry.DEF_HEIGHT+2)*2);
         this.root.clearElement();
@@ -45,16 +43,10 @@ public class ArchiveCategory extends UILayer {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-        int border = 8;
-        var pose = graphics.pose();
-        pose.pushPose();
-        pose.translate(0, 0, -1);
-        graphics.fill(x-border, y-border, x+w+border, y+h+border, -2, 0xFF444651);
+    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+        final int border = 8;
+        graphics.fill(x-border, y-border, x+w+border, y+h+border, 0xFF444651);
         CGuiHelper.drawBox(graphics, x-border, y-border, w+border*2, h+border*2, Colors.L_BG_GRAY, true);
-        pose.popPose();
-
-        super.render(graphics, x, y, w, h);
     }
 
     public UIElement open(String path) {
@@ -105,7 +97,7 @@ public class ArchiveCategory extends UILayer {
         Set<String> childTipIds = new HashSet<>();
         Map<String, Category> subTipCategory = new HashMap<>();
         for (Tip tip : TipManager.INSTANCE.state().getAllUnlockedTips()) {
-            // 获取所有子提示的ID
+            // 获取所有子提示的 ID
             childTipIds.addAll(tip.getChildren());
             // 获取所有分类
             String categoryName = tip.getCategory();

@@ -1,7 +1,5 @@
 package com.teammoeg.frostedresearch.gui;
 
-import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
 
@@ -17,7 +15,7 @@ public class DrawDeskTheme {
 		TechIcons.SLIDER_FRAME.draw(graphics, x, y, w, h);
 	}
 	public static void drawSliderBar(GuiGraphics graphics,int x,int y,int w,int h,boolean isHighlight) {
-		drawButton(graphics, x, y, w, h,!isHighlight,true);
+		drawButton(graphics, x - 1, y, w + 2, h,!isHighlight,true);
 	}
 	public static void drawPanel(GuiGraphics graphics,int x,int y,int w,int h) {
         TechIcons.HLINE_L.draw(graphics, x, y + 8, 80, 3);

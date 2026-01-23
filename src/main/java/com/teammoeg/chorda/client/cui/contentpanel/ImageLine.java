@@ -1,14 +1,15 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
+import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.client.ui.UV;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import lombok.Getter;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.util.Size2i;
 
@@ -17,6 +18,7 @@ public class ImageLine extends Line<ImageLine> {
     protected ResourceLocation imgLocation;
     protected Size2i imgSize;
     protected UV imgUV;
+    protected UV overrideUV;
     protected int backgroundColor = 0;
 
     public ImageLine(UIElement parent, ResourceLocation imageLocation, Alignment alignment) {
@@ -24,17 +26,22 @@ public class ImageLine extends Line<ImageLine> {
         setImage(imageLocation);
     }
 
+    public ImageLine uvOverride(UV uv) {
+        imgUV = overrideUV = uv;
+        imgSize = new Size2i(uv.getW(), uv.getH());
+        return this;
+    }
+
     @Override
     public void render(GuiGraphics graphics, int x, int y, int w, int h) {
         super.render(graphics, x, y, w, h);
         if (!isImgValid()) {
-            graphics.drawCenteredString(getFont(), ((MutableComponent)getTitle()).withStyle(ChatFormatting.RED),
-                    x+w/2, y+2, color);
+            FlatIcon.FILE_IMG_BROKEN.render(graphics.pose(), x+w/2-5, y+1, Colors.RED);
             return;
         }
 
         if (backgroundColor != 0) {
-            graphics.fill(x, y, x+w, y+h, -1, backgroundColor);
+            graphics.fill(x, y, x+w, y+h, backgroundColor);
         }
 
         int imgX = switch (alignment) {
@@ -46,7 +53,7 @@ public class ImageLine extends Line<ImageLine> {
     }
 
     public boolean isImgValid() {
-        return imgUV != null && imgSize != null && imgSize.height + imgSize.width > 0;
+        return (imgUV != null || overrideUV != null) && imgSize != null && imgSize.height + imgSize.width > 0;
     }
 
     public ImageLine setImage(ResourceLocation imageLocation) {
@@ -68,6 +75,11 @@ public class ImageLine extends Line<ImageLine> {
         if (isImgValid()) {
             int w = imgSize.width;
             int h = imgSize.height;
+            if (overrideUV != null) {
+                imgUV = overrideUV;
+                setHeight(h+6);
+                return;
+            }
             if (w > 32 || h > 32) {
                 w /= 2;
                 h /= 2;
@@ -79,6 +91,17 @@ public class ImageLine extends Line<ImageLine> {
             setHeight(h+6);
             imgUV = new UV(0, 0, w, h, w, h);
         }
+    }
+
+    @Override
+    public void getTooltip(TooltipBuilder list) {
+        super.getTooltip(list);
+        list.accept(getTitle());
+    }
+
+    @Override
+    public boolean hasTooltip() {
+        return super.hasTooltip() && !isImgValid();
     }
 
     @Override

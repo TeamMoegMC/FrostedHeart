@@ -1,11 +1,11 @@
 package com.teammoeg.chorda.client.cui.category;
 
 import com.teammoeg.chorda.client.MouseHelper;
-import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LimitedTextField;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.Colors;
 import lombok.Getter;
@@ -15,7 +15,6 @@ import net.minecraft.network.chat.Component;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
 
 public class Category extends UILayer {
     public static final int MAX_DEPTH = 16;
@@ -35,7 +34,7 @@ public class Category extends UILayer {
         super(panel);
         setSize(panel.getWidth(), Entry.DEF_HEIGHT);
 
-        this.title = new LimitedTextField(this, title, getWidth());
+        this.title = new LimitedTextField(this, title, getWidth()).shouldShowTooltip(false);
         this.icon = FlatIcon.RIGHT.toWidget(this, Colors.L_TEXT_GRAY);
         this.icon.setSize(10, 10);
         addUIElements();

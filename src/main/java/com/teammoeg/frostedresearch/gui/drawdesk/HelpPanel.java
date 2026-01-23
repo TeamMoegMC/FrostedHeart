@@ -21,15 +21,22 @@ package com.teammoeg.frostedresearch.gui.drawdesk;
 
 import com.teammoeg.chorda.client.cui.Button;
 import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
+import com.teammoeg.chorda.client.cui.contentpanel.LineHelper;
+import com.teammoeg.chorda.client.ui.UV;
+import com.teammoeg.frostedheart.content.archive.Alignment;
 import com.teammoeg.frostedresearch.Lang;
+import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.TechIcons;
-
+import com.teammoeg.frostedresearch.gui.TechScrollBar;
 import net.minecraft.client.gui.GuiGraphics;
+
+import java.util.List;
 
 class HelpPanel extends UILayer {
 	DrawDeskLayer ot;
+	ContentPanel contentPanel;
 
 	public HelpPanel(DrawDeskLayer panel) {
 		super(panel);
@@ -38,27 +45,6 @@ class HelpPanel extends UILayer {
 
 	@Override
 	public void addUIElements() {
-		float scale = Float.parseFloat(Lang.translateGui("minigame.scale").getString());
-		TextField t1 = new TextField(this).setColor(TechIcons.text).setScale(scale)
-			.setMaxWidth(112).setMaxLines(2).setText(Lang.translateGui("minigame.t1"));
-		t1.setPos(8, 70);
-		TextField t2 = new TextField(this).setColor(TechIcons.text).setScale(scale)
-			.setMaxWidth(114).setMaxLines(2).setText(Lang.translateGui("minigame.t2"));
-		t2.setPos(124, 70);
-		TextField t3 = new TextField(this).setColor(TechIcons.text).setScale(scale)
-			.setMaxWidth(90).setMaxLines(3).setText(Lang.translateGui("minigame.t3"));
-		t3.setPos(5, 137);
-		TextField t4 = new TextField(this).setColor(TechIcons.text).setScale(scale)
-			.setMaxWidth(68).setMaxLines(3).setText(Lang.translateGui("minigame.t4"));
-		t4.setPos(95, 137);
-		TextField t5 = new TextField(this).setColor(TechIcons.text).setScale(scale)
-			.setMaxWidth(74).setMaxLines(3).setText(Lang.translateGui("minigame.t5"));
-		t5.setPos(165, 137);
-		add(t1);
-		add(t2);
-		add(t3);
-		add(t4);
-		add(t5);
 		Button closePanel = new Button(this) {
 			@Override
 			public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
@@ -71,6 +57,44 @@ class HelpPanel extends UILayer {
 		};
 		closePanel.setPosAndSize(226, 7, 9, 8);
 		add(closePanel);
+
+		contentPanel = new ContentPanel(this) {
+			@Override
+			public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+			}
+
+			@Override
+			public void addUIElements() {
+				super.addUIElements();
+			}
+
+			@Override
+			public void resize() {
+				scrollBar.setPosAndSize(getX() + getWidth()+10, 20, 7, getHeight()-15);
+			}
+		};
+		contentPanel.fillContent(List.of(
+				LineHelper.text (contentPanel, Lang.translateGui("minigame.match")).alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()).scale(2),
+				LineHelper.img  (contentPanel, DrawDeskIcons.LOCATION).uvOverride(new UV(243, 319, 73, 56, 512, 512)),
+				LineHelper.text (contentPanel, Lang.translateGui("minigame.t1")).alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()),
+				LineHelper.br   (contentPanel).icon(TechIcons.HLINE).height(1),
+				LineHelper.img  (contentPanel, DrawDeskIcons.LOCATION).uvOverride(new UV(316, 319, 90, 56, 512, 512)),
+				LineHelper.text (contentPanel, Lang.translateGui("minigame.t2")).alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()),
+				LineHelper.space(contentPanel, 16),
+				LineHelper.text (contentPanel, Lang.translateGui("minigame.display")).alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()).scale(2),
+				LineHelper.img  (contentPanel, DrawDeskIcons.LOCATION).uvOverride(new UV(243, 375, 93, 48, 512, 512)),
+				LineHelper.text (contentPanel, Lang.translateGui("minigame.t3")).alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()),
+				LineHelper.br   (contentPanel).icon(TechIcons.HLINE).height(1),
+				LineHelper.img  (contentPanel, DrawDeskIcons.LOCATION).uvOverride(new UV(336, 375, 74, 48, 512, 512)),
+				LineHelper.text (contentPanel, Lang.translateGui("minigame.t4")).alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()),
+				LineHelper.br   (contentPanel).icon(TechIcons.HLINE).height(1),
+				LineHelper.img  (contentPanel, DrawDeskIcons.LOCATION).uvOverride(new UV(243, 423, 79, 48, 512, 512)),
+				LineHelper.text (contentPanel, Lang.translateGui("minigame.t5")).alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor())
+		));
+		contentPanel.scrollBar = new TechScrollBar(this, contentPanel);
+		contentPanel.setPosAndSize(5, 5, 212, 160);
+		add(contentPanel);
+		add(contentPanel.scrollBar);
 	}
 
 	@Override
@@ -80,10 +104,7 @@ class HelpPanel extends UILayer {
 	@Override
 	public void render(GuiGraphics guiGraphics, int x, int y, int w, int h) {
 		if (ot.showHelp) {
-
 			super.render(guiGraphics, x, y, w, h);
-			guiGraphics.drawString(getFont(), Lang.translateGui("minigame.match"), x + 8, y + 90, TechIcons.text, false);
-			guiGraphics.drawString(getFont(), Lang.translateGui("minigame.display"), x + 8, y + 2, TechIcons.text, false);
 		}
 	}
 

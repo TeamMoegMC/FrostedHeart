@@ -1,9 +1,9 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
-import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.ScrollBar;
 import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class ContentPanel extends UILayer {
-    public final ScrollBar scrollBar;
+    public ScrollBar scrollBar;
     protected List<Line<?>> lines = new ArrayList<>();
 
     public ContentPanel(UIElement parent) {
@@ -25,7 +25,7 @@ public class ContentPanel extends UILayer {
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
         int border = 8;
-        graphics.fill(x-border, y-border, x+w+border*2, y+h+border, -2, 0xFF444651);
+        graphics.fill(x-border, y-border, x+w+border*2, y+h+border, 0xFF444651);
         CGuiHelper.drawBox(graphics, x-border, y-border, w+border*3, h+border*2, Colors.L_BG_GRAY, true);
     }
 
@@ -64,7 +64,7 @@ public class ContentPanel extends UILayer {
     }
 
     public void resize() {
-        scrollBar.setPosAndSize(getX() + getWidth()+9, -8, 6, getHeight()+15);
+        scrollBar.setPosAndSize(getX() + getWidth()+9, -7, 6, getHeight()+14);
     }
 
     @Override

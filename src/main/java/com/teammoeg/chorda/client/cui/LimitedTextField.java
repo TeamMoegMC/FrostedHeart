@@ -3,7 +3,6 @@ package com.teammoeg.chorda.client.cui;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.lang.Components;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -13,6 +12,7 @@ public class LimitedTextField extends UIElement {
     private Component title;
     private Component displayTitle = Components.immutableEmpty();
     public int color;
+    public boolean tooltip = true;
 
     public LimitedTextField(UIElement parent, Component title, int w) {
         this(parent, title, w, Colors.WHITE);
@@ -40,6 +40,16 @@ public class LimitedTextField extends UIElement {
             return;
         }
         displayTitle = StringTextComponentParser.parse(title.getString());
+    }
+
+    public LimitedTextField shouldShowTooltip(boolean b) {
+        tooltip = b;
+        return this;
+    }
+
+    @Override
+    public boolean hasTooltip() {
+        return tooltip && super.hasTooltip();
     }
 
     @Override

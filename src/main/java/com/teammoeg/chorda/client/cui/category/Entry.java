@@ -1,17 +1,15 @@
 package com.teammoeg.chorda.client.cui.category;
 
-import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.LimitedTextField;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.Colors;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-
-import java.util.function.Consumer;
 
 public abstract class Entry extends UILayer {
     public static final int DEF_HEIGHT = 16;
@@ -23,7 +21,7 @@ public abstract class Entry extends UILayer {
     public Entry(Category parent, UILayer affectedPanel, Component title) {
         super(parent);
         this.panel = affectedPanel;
-        this.title = new LimitedTextField(this, title, getWidth());
+        this.title = new LimitedTextField(this, title, getWidth()).shouldShowTooltip(false);
         this.icon = new FlatIcon.FlatIconWidget(this);
         this.icon.setSize(10, 10);
         this.icon.setColor(Colors.L_TEXT_GRAY);

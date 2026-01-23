@@ -23,12 +23,11 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CTextureIcon;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardType;
-
 import net.minecraft.resources.ResourceLocation;
 
 public class DrawDeskIcons {
-	public static final CTextureIcon ALL = CIcons
-		.getIcon(new ResourceLocation(FRMain.MODID, "textures/gui/draw_desk.png"));
+	public static final ResourceLocation LOCATION = new ResourceLocation(FRMain.MODID, "textures/gui/draw_desk.png");
+	public static final CTextureIcon ALL = CIcons.getIcon(LOCATION);
 	public static final CTextureIcon Background = ALL.withUV(0, 0, 387, 203, 512, 512);
 	public static final CTextureIcon HELP = ALL.withUV(0, 267, 243, 170, 512, 512);
 	public static final CTextureIcon[] icons = new CTextureIcon[16];

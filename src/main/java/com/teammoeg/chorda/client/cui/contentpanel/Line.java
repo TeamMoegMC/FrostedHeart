@@ -1,7 +1,7 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
-import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import lombok.Getter;
@@ -26,6 +26,13 @@ public abstract class Line<T extends Line<T>> extends UILayer {
         super(parent);
         this.alignment = alignment;
         this.color = color;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T height(int h) {
+        setHeight(h);
+        refresh();
+        return (T) this;
     }
 
     @SuppressWarnings("unchecked")

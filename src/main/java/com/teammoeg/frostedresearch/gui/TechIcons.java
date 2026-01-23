@@ -24,7 +24,6 @@ import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.CIcons.CTextureIcon;
 import com.teammoeg.chorda.util.IterateUtils;
 import com.teammoeg.frostedresearch.FRMain;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
@@ -57,8 +56,8 @@ public class TechIcons {
     public static final VLineIcon VLINE = new VLineIcon(ALL, 342, 203, 1, 21, 10, 10, 512, 512);
     public static final CTextureIcon TAB_HL = ALL.withUV(241, 250, 30, 7, 512, 512);
     public static final CTextureIcon Background = ALL.withUV(0, 0, 387, 203, 512, 512);
-    public static final int text = 0x474139;
-    public static final int text_red = 0xa92b0d;
+    public static final int text = 0xFF474139;
+    public static final int text_red = 0xFFa92b0d;
     
 
     static {
