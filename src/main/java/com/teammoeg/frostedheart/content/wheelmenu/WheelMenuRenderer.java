@@ -95,7 +95,6 @@ public class WheelMenuRenderer {
 	private static final List<Float> degrees = new ArrayList<>();
 	@Getter
 	protected static Selection hoveredSelection;
-	protected static boolean mouseMoved = false;
 	// create a virtual screen to track mouse movement
 	protected static Dimension2D virtualScreen;
 	@Getter
@@ -124,23 +123,27 @@ public class WheelMenuRenderer {
 		pose.translate(cw, ch, 0);
 		pose.scale(p, p, p);
 
+		int l = (int)Math.max((Math.sqrt(2)*innerRadius)*0.8, 1);
+		boolean mouseOutside = !MouseHelper.isMouseIn(virtualScreen.getX(), virtualScreen.getY(), -l, -l, l*2, l*2);
 		// 背景圆环
 		FGuis.drawRing(graphics, 0, 0, innerRadius, wheelRadius, 0, 360,
 				Colors.setAlpha(Colors.BLACK, 0.5F * p));
-		if (!mouseMoved)
+		if (!mouseOutside)
 			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, 0, 360,
 					Colors.setAlpha(Colors.BLACK, 0.5F * p));
 
 		float halfSliceSize = 360F / (size * 2);
 
-		if (mouseMoved) {
+		if (mouseOutside) {
 			double radian = Math.atan2(virtualScreen.getX(), -(virtualScreen.getY()));
 			double degree = Math.toDegrees(radian);
 			if (degree < 0)
 				degree += 360;
 			int selectedIndex = findIndex(degree + halfSliceSize, size);
 			Selection lastHovered = hoveredSelection;
-			hoveredSelection = visibleSelections.get(selectedIndex);
+			if (!isClosing) {
+				hoveredSelection = visibleSelections.get(selectedIndex);
+			}
 			if (hoveredSelection != lastHovered) {
 				hoveredSelection.hoverAction.execute(lastHovered);
 			}
@@ -161,9 +164,9 @@ public class WheelMenuRenderer {
 					Colors.setAlpha(Colors.CYAN, p*0.15f));
 			pose.popPose();
 		} else {
-			mouseMoved = !MouseHelper.isMouseIn(virtualScreen.getX(), virtualScreen.getY(), -50, -50, 100, 100);
 			hoveredSelection = null;
 		}
+
 		// 渲染选项
 		if (size == positions.size())
 			for (int i = 0; i < size; i++) {
@@ -171,8 +174,13 @@ public class WheelMenuRenderer {
 			}
 
 		// 渲染“鼠标”
+		pose.pushPose();
+		pose.translate(0, 0, 500);
+		FGuis.drawRing(graphics, (int) virtualScreen.getX()/2 + 1, (int) virtualScreen.getY()/2 + 1, 3, 6, 0, 360,
+				Colors.setAlpha(Colors.BLACK, p*0.5F), 0.15F);
 		FGuis.drawRing(graphics, (int) virtualScreen.getX()/2, (int) virtualScreen.getY()/2, 3, 6, 0, 360,
 				Colors.setAlpha(Colors.CYAN, p));
+		pose.popPose();
 
 		// 渲染选项标题
 		var message = hoveredSelection != null ? hoveredSelection.getMessage() : Component.translatable("gui.frostedheart.wheel_menu.message",
@@ -331,7 +339,6 @@ public class WheelMenuRenderer {
 		FHKeyMappings.key_openWheelMenu.get().clickCount=0;
 		MouseCaptureUtil.stopMouseCapture();
 		isOpened = false;
-		mouseMoved = false;
 		if (ClientUtils.getPlayer() != null && hoveredSelection != null) {
 			hoveredSelection.selectAction.execute(hoveredSelection);
 		}
