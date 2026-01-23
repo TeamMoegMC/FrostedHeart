@@ -138,15 +138,15 @@ public class ScrollBar extends UIElement {
 	}
 
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-		int i = this.isMouseOver() ? getLayerHolder().getHighlightColor() : getLayerHolder().getFrameColor();
+		int i = this.isMouseOver() ? 0xFFFFFFFF : 0xFFA0A0A0;
 		graphics.fill(x, y, x + w, y + h, i);
-		graphics.fill(x + 1, y + 1, x + w - 1, y + h - 1, getLayerHolder().getBackgroundColor());
+		graphics.fill(x + 1, y + 1, x + w - 1, y + h - 1, 0xFF000000);
 	}
 
 	public void drawScrollBar(GuiGraphics graphics, int x, int y, int w, int h) {
 
-		graphics.fill(x, y, x + w, y + h, getLayerHolder().getButtonShadowColor());
-		graphics.fill(x, y, x + w - 1, y + h - 1, getLayerHolder().getButtonFaceColor());
+		graphics.fill(x, y, x + w, y + h, 0xFF808080);
+		graphics.fill(x, y, x + w - 1, y + h - 1,0xFFC0C0C0);
 
 	}
 

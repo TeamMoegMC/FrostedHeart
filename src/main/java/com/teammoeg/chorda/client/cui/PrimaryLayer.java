@@ -62,40 +62,7 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 		return ClientUtils.getMc().font;
 	}
 
-	@Override
-	public int getErrorColor() {
-		return 0xa92b0d;
-	}
 
-	@Override
-	public int getHighlightColor() {
-		return 0xFFFFFFFF;
-	}
-
-	@Override
-	public int getFrameColor() {
-		return -6250336;
-	}
-
-	@Override
-	public int getFontColor() {
-		return 0xFFFFFFFF;
-	}
-
-	@Override
-	public int getButtonShadowColor() {
-		return -8355712;
-	}
-
-	@Override
-	public int getBackgroundColor() {
-		return -16777216;
-	}
-
-	@Override
-	public int getButtonFaceColor() {
-		return -4144960;
-	}
 
 	@Override
 	public LayerHolder getLayerHolder() {

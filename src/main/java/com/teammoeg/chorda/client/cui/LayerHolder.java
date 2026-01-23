@@ -9,13 +9,6 @@ import net.minecraft.client.gui.screens.Screen;
 public interface LayerHolder {
 	void focusOn(UIElement elm);
 	Font getFont();
-	int getErrorColor();
-	int getHighlightColor();
-	int getFontColor();
-	int getBackgroundColor();
-	int getFrameColor();
-	int getButtonFaceColor();
-	int getButtonShadowColor();
 	void refreshElements();
 	/**
 	 * @return if the GUI should render a blur effect behind it

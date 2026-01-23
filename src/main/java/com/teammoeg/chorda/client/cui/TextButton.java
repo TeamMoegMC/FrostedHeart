@@ -62,7 +62,7 @@ public abstract class TextButton extends Button {
 		}
 		List<FormattedCharSequence> list=getFont().split(title, mw);
 		for(FormattedCharSequence fcs:list) {
-			graphics.drawString(getFont(), fcs, textX, textY, getLayerHolder().getFontColor(),true);
+			graphics.drawString(getFont(), fcs, textX, textY, 0xFFFFFFFF,true);
 			textY+=7;
 		}
 	}

@@ -113,7 +113,7 @@ public class SelectDialog<T> extends EditDialog {
 	@Override
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		super.render(matrixStack, x, y, w, h);
-		matrixStack.drawString(getFont(), lbl, x, y - 10, getLayerHolder().getFontColor());
+		matrixStack.drawString(getFont(), lbl, x, y - 10, 0xFFFFFFFF);
 	}
 
 	@Override
@@ -149,7 +149,7 @@ public class SelectDialog<T> extends EditDialog {
 
 			matrixStack.blitNineSliced(AbstractWidget.WIDGETS_LOCATION, x, y, w, h, 20, 4, 200, 20, 0, this.getTextureY());
 			this.drawIcon(matrixStack, x + 1, y + 1, 16, 16);
-			matrixStack.drawString(getFont(), t, x + 18, y + 6, getLayerHolder().getFontColor());
+			matrixStack.drawString(getFont(), t, x + 18, y + 6, 0xFFFFFFFF);
 
 		}
 

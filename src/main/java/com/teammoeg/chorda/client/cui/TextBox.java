@@ -433,7 +433,7 @@ public class TextBox extends UIElement implements Focusable {
 				isPressed=false;
 			
 		}
-		int cursorColor =( (!validText.isError() ? this.getLayerHolder().getFontColor():this.getLayerHolder().getErrorColor())&0xffffff)|((drawGhostText ? 0x78000000 : 0xFF000000));
+		int cursorColor =( (!validText.isError() ? 0xFFFFFFFF:0xffa92b0d)&0xffffff)|((drawGhostText ? 0x78000000 : 0xFF000000));
 		var j = cursorPos - displayPos;
 		var s = getFont().plainSubstrByWidth(textToDraw.substring(displayPos), w);
 		var textX = x + 4;
