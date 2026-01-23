@@ -28,13 +28,14 @@ public abstract class BaseEditDialog extends EditDialog {
 
     public BaseEditDialog(UIElement panel) {
         super(panel);
-        setWidth(400);
-        setHeight(250);
+        setWidth(300);
+        setHeight(200);
     }
 
 	@Override
     public void alignWidgets() {
         this.setHeight(super.align(false));
+        //setSizeToContentSize();
     }
 
     @Override

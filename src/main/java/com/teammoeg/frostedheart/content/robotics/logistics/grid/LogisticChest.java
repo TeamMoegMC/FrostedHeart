@@ -33,6 +33,7 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 		
 	}
 	private static final int MAX_SLOT=27;
+	@Getter
 	ItemStackHandler chest=new ItemStackHandler(MAX_SLOT);
 	Map<ItemKey,ItemData> cachedData=new HashMap<>();
 	ItemKey[] slotRef=new ItemKey[MAX_SLOT];

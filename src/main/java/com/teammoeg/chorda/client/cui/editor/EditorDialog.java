@@ -105,11 +105,9 @@ public class EditorDialog<O> extends BaseEditDialog {
 		}
 	
      
-        setWidth(400);
-        setHeight(250);
+
         this.title.setPos(2, 2);
-		mainPane.setPosAndSize(5, 12, width - 16, height - 14);
-        scroll.setPosAndSize(width - 16, 12, 16, height - 14);
+
 	}
 
 	boolean noSave=false;
@@ -147,5 +145,11 @@ public class EditorDialog<O> extends BaseEditDialog {
 	}
 	@Override
     public void alignWidgets() {
+		mainPane.setWidth(mainPane.getContentWidth());
+		int curheight=Math.min(200, mainPane.getContentHeight());
+		mainPane.setHeight(curheight);
+		mainPane.setPos(5, 12);
+		this.setSize(mainPane.getWidth()+21, mainPane.getHeight()+14);
+        scroll.setPosAndSize(width - 16, 12, 16, mainPane.getHeight());
     }
 }

@@ -47,14 +47,14 @@ public class TechScrollBar extends LayerScrollBar {
     public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         if (!isHidden) {
             CGuiHelper.resetGuiDrawing();
-            TechIcons.SLIDER_FRAME.draw(matrixStack, x, y, w, h);
+            DrawDeskTheme.drawSliderBackground(matrixStack, x, y, w, h);
         }
     }
 
     @Override
     public void drawScrollBar(GuiGraphics matrixStack, int x, int y, int w, int h) {
         if (!isHidden)
-        	TechIcons.drawTexturedRect(matrixStack, x, y, w, h, !isMouseOver());
+        	DrawDeskTheme.drawSliderBar(matrixStack, x, y, w, h, isMouseOver());
             //super.drawScrollBar(matrixStack, x + 1, y + 1, w - 2, h - 2);
     }
 

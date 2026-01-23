@@ -20,6 +20,8 @@
 package com.teammoeg.chorda.client.ui;
 
 import com.teammoeg.chorda.client.ClientUtils;
+
+import net.minecraft.ChatFormatting;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import org.lwjgl.BufferUtils;
@@ -33,7 +35,25 @@ public class Colors {
     public static final int BLACK = 0xFF000000;
     public static final int CYAN = 0xFFC6FCFF;
     public static final int RED = 0xFFFF5340;
-
+    public static final class ChatColors{
+    	public static final int BLACK			= 0xff000000;
+    	public static final int DARK_BLUE		= 0xff0000aa;
+    	public static final int DARK_GREEN		= 0xff00aa00;
+    	public static final int DARK_AQUA		= 0xff00aaaa;
+    	public static final int DARK_RED		= 0xffaa0000;
+    	public static final int DARK_PURPLE		= 0xffaa00aa;
+    	public static final int GOLD			= 0xffffaa00;
+    	public static final int GRAY			= 0xffaaaaaa;
+    	public static final int DARK_GRAY		= 0xff555555;
+    	public static final int BLUE			= 0xff5555ff;
+    	public static final int GREEN			= 0xff55ff55;
+    	public static final int AQUA			= 0xff55ffff;
+    	public static final int RED				= 0xffff5555;
+    	public static final int LIGHT_PURPLE	= 0xffff55ff;
+    	public static final int YELLOW			= 0xffffff55;
+    	public static final int WHITE			= 0xffffffff;
+    	private ChatColors() {}
+    }
     public static final int L_TEXT_GRAY = 0xFF9294A3;
     public static final int L_BG_GREEN = 0xFFC1E52F;
     public static final int L_BG_GRAY = 0xFF585966;

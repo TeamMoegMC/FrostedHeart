@@ -38,6 +38,7 @@ import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMe
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticRequestTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
 
+import lombok.Getter;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -60,6 +61,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemStackHandler;
 
 public class RequesterTileEntity extends CBlockEntity implements  CTickableBlockEntity,MenuProvider {
+	
 	ItemStackHandler container=new ItemStackHandler(27);
 	public LazyOptional<ItemStackHandler> grid=LazyOptional.of(()->container);
 	public LazyOptional<LogisticNetwork> network;

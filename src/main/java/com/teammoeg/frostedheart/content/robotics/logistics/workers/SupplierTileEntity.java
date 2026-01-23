@@ -36,6 +36,7 @@ import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMe
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
 
+import lombok.Getter;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -54,7 +55,8 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemStackHandler;
 
 @SuppressWarnings("unused")
-public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEntity,MenuProvider {
+public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEntity,MenuProvider,ILogisticProvider {
+	@Getter
 	RequestLogisticChest container;
 	public LazyOptional<LogisticChest> grid=LazyOptional.of(()->container);
 	public LazyOptional<LogisticNetwork> network;

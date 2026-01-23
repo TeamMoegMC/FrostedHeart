@@ -76,7 +76,7 @@ public class SelectDialog<T> extends EditDialog {
 		this.tostr = tostr;
 		this.tosearch = tosearch;
 		this.toicon = toicon;
-		setSize(400, 300);
+		setSize(300, 200);
 	}
 
 	public static <R> Function<R, Component> wrap(Function<R, Object> str) {
@@ -95,13 +95,13 @@ public class SelectDialog<T> extends EditDialog {
 		};
 		searchBox.ghostText = "Search...";
 		searchBox.setFocused(true);
-		rl.setPosAndSize(5, 25, width - 18, height - 30);
+		rl.setPosAndSize(5, 25, width - 21, height - 30);
 		scroll = new LayerScrollBar(this, rl);
 		add(rl);
 		add(scroll);
 		add(searchBox);
 		searchBox.setPosAndSize(5, 5, width - 12, 18);
-		scroll.setPosAndSize(width - 12, 25, 8, height - 30);
+		scroll.setPosAndSize(width - 16, 25, 8, height - 30);
 
 	}
 

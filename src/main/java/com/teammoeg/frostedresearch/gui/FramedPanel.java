@@ -55,8 +55,8 @@ public class FramedPanel extends UILayer {
     @Override
     public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
     	matrixStack.drawString(getFont(), title, x, y, TechIcons.text, false);
-        TechIcons.HLINE_L.draw(matrixStack, x, y + 8, 80, 3);
-        TechIcons.VLINE.draw(matrixStack, x + 2, y + 9, 1, this.height - 16);
+    	DrawDeskTheme.drawPanel(matrixStack, x, y, w, h);
+
         super.render(matrixStack, x, y, w, h);
     }
 

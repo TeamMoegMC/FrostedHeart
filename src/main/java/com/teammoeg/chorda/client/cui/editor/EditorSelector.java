@@ -122,13 +122,18 @@ public class EditorSelector<T> extends BaseEditDialog {
 		this.type = type;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void addUIElements() {
 		add(EditUtils.getTitle(this, label));
 		for (EditorDefinition<T> ent : type) {
 			add(new OpenEditorButton<T>(this, ent.label(), (Editor<T>) ent.editor.beforeOpen(v-> close(false)), val, callback));
 		}
+	}
+
+	@Override
+	public void alignWidgets() {
+		super.alignWidgets();
+		setSizeToContentSize() ;
 	}
 
 	@Override

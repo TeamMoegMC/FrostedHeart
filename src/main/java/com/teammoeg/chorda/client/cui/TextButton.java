@@ -6,6 +6,8 @@ import java.util.function.Consumer;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 
 import com.teammoeg.chorda.client.icon.FlatIcon;
+import com.teammoeg.chorda.lang.Components;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
@@ -25,7 +27,7 @@ public abstract class TextButton extends Button {
 
 	@Override
 	public void getTooltip(TooltipBuilder list) {
-		if (getFont().width(getTitle()) + (hasIcon() ? 28 : 8) > super.getWidth()) {
+		if ((!Components.isEmpty(getTitle()))&&getFont().width(getTitle()) + (hasIcon() ? 28 : 8) > super.getWidth()) {
 			list.accept(getTitle());
 		}
 	}

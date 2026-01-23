@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticChest;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestMenu;
 
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -48,7 +49,8 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class StorageTileEntity extends CBlockEntity implements CTickableBlockEntity,MenuProvider{
+public class StorageTileEntity extends CBlockEntity implements CTickableBlockEntity,MenuProvider,ILogisticProvider{
+	@Getter
 	public LogisticChest container;
 	public LazyOptional<LogisticChest> grid=LazyOptional.of(()->container);
 	public LazyOptional<LogisticNetwork> network;
