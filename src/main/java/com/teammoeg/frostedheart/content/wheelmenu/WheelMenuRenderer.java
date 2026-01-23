@@ -123,18 +123,17 @@ public class WheelMenuRenderer {
 		pose.translate(cw, ch, 0);
 		pose.scale(p, p, p);
 
-		int l = (int)Math.max((Math.sqrt(2)*innerRadius)*0.8, 1);
-		boolean mouseOutside = !MouseHelper.isMouseIn(virtualScreen.getX(), virtualScreen.getY(), -l, -l, l*2, l*2);
+		int l = (int)Math.max(innerRadius*0.6, 1);
+		boolean mouseOutside = (virtualScreen.getX()*virtualScreen.getX()+ virtualScreen.getY()*virtualScreen.getY())>l*l*4;
 		// 背景圆环
 		FGuis.drawRing(graphics, 0, 0, innerRadius, wheelRadius, 0, 360,
 				Colors.setAlpha(Colors.BLACK, 0.5F * p));
-		if (!mouseOutside)
-			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, 0, 360,
-					Colors.setAlpha(Colors.BLACK, 0.5F * p));
-
 		float halfSliceSize = 360F / (size * 2);
-
+		
+		
+		
 		if (mouseOutside) {
+			FGuis.drawRing(graphics, 0, 0, 0, l, 0, 360,Colors.setAlpha(Colors.BLACK, 0.5F * p));
 			double radian = Math.atan2(virtualScreen.getX(), -(virtualScreen.getY()));
 			double degree = Math.toDegrees(radian);
 			if (degree < 0)
@@ -163,10 +162,14 @@ public class WheelMenuRenderer {
 					Colors.setAlpha(Colors.CYAN, 0.5F * p),
 					Colors.setAlpha(Colors.CYAN, p*0.15f));
 			pose.popPose();
+			FlatIcon.CROSS.toCIcon().draw(graphics, -5, -30, 10, 10);
 		} else {
+			FGuis.drawRing(graphics, 0, 0, 0, l, 0, 360,Colors.setAlpha(Colors.CYAN, 0.5F * p));
 			hoveredSelection = null;
+			FGuis.drawRing(graphics, 0, 0, innerRadius - 6, innerRadius - 2, 0, 360,
+					Colors.setAlpha(Colors.BLACK, 0.5F * p));
 		}
-
+		
 		// 渲染选项
 		if (size == positions.size())
 			for (int i = 0; i < size; i++) {
@@ -174,13 +177,13 @@ public class WheelMenuRenderer {
 			}
 
 		// 渲染“鼠标”
-		pose.pushPose();
+		/*pose.pushPose();
 		pose.translate(0, 0, 500);
 		FGuis.drawRing(graphics, (int) virtualScreen.getX()/2 + 1, (int) virtualScreen.getY()/2 + 1, 3, 6, 0, 360,
 				Colors.setAlpha(Colors.BLACK, p*0.5F), 0.15F);
 		FGuis.drawRing(graphics, (int) virtualScreen.getX()/2, (int) virtualScreen.getY()/2, 3, 6, 0, 360,
 				Colors.setAlpha(Colors.CYAN, p));
-		pose.popPose();
+		pose.popPose();*/
 
 		// 渲染选项标题
 		var message = hoveredSelection != null ? hoveredSelection.getMessage() : Component.translatable("gui.frostedheart.wheel_menu.message",
@@ -203,7 +206,7 @@ public class WheelMenuRenderer {
 	public static void registerSelections(){
 		//System.out.println("fire registries");
 		if(!isInitialized) {
-		MinecraftForge.EVENT_BUS.post(new WheelMenuSelectionRegisterEvent(registeredSelections));
+			MinecraftForge.EVENT_BUS.post(new WheelMenuSelectionRegisterEvent(registeredSelections));
 		// 在此处添加轮盘选项
 
 		registeredSelections.put(new ResourceLocation("wheel_menu","edit"),new Selection(Component.translatable("gui.wheel_menu.editor.edit"), FlatIcon.LIST.toCIcon(), s->{
@@ -266,7 +269,7 @@ public class WheelMenuRenderer {
 				}
 			}
 			
-			availableSelections.add(0,new Selection(Component.translatable("gui.close"), FlatIcon.CROSS.toCIcon(), Selection.NO_ACTION));
+			//availableSelections.add(0,new Selection(Component.translatable("gui.close"), FlatIcon.CROSS.toCIcon(), Selection.NO_ACTION));
 		}
 		return rslt;
 	}

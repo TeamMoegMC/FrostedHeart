@@ -75,8 +75,10 @@ public class HealthStatScreen extends Screen implements MenuAccess<HealthStatMen
     private boolean shouldClose =false;
 
     public void onClose() {
-        shouldClose = true;
-        AnimationUtil.remove("NutritionScreen");
+    	if(!shouldClose) {
+	        shouldClose = true;
+	        AnimationUtil.remove("NutritionScreen");
+    	}
     }
 
     @Override
