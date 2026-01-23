@@ -49,8 +49,8 @@ public abstract class TechTextButton extends TechButton {
 
     @Override
     public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-        //drawBackground(matrixStack, theme, x, y, w, h);
-        TechIcons.drawTexturedRect(matrixStack, x, y, w, h, isMouseOver());
+        drawBackground(matrixStack, x, y, w, h);
+        //TechIcons.drawTexturedRect(matrixStack, x, y, w, h, isMouseOver());
         int s = h >= 16 ? 16 : 8;
         int off = (h - s) / 2;
         FormattedText title = getTitle();
@@ -77,7 +77,7 @@ public abstract class TechTextButton extends TechButton {
         RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
 
         //System.out.println(RenderSystem.getShader());
-        matrixStack.drawWordWrap(ClientUtils.font(), title, textX, textY, mw, TechIcons.text);
+        matrixStack.drawWordWrap(ClientUtils.font(), title, textX, textY, mw, DrawDeskTheme.getTextColor());
     }
 
     /*@Override

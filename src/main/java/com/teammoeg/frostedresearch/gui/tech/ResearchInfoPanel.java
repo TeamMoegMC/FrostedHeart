@@ -32,6 +32,7 @@ import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.data.ResearchData;
+import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.FramedPanel;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.TechTextButton;
@@ -53,6 +54,7 @@ public class ResearchInfoPanel extends UILayer {
 	public ResearchInfoPanel(ResearchDetailPanel panel) {
 		super(panel);
 		detailPanel = panel;
+		detailPanel.setZIndex(300);
 	}
 
 	@Override
@@ -187,7 +189,7 @@ public class ResearchInfoPanel extends UILayer {
 						offset += claimRewards.getHeight() + 1;
 					}
 				} else {
-					TextField rt = new TextField(fp).setColor(TechIcons.text).setMaxWidth(width - 5).setText(Lang.translateGui("effect_unknown"));
+					TextField rt = new TextField(fp).setColor(DrawDeskTheme.getTextColor()).setMaxWidth(width - 5).setText(Lang.translateGui("effect_unknown"));
 					rt.setPos(xoffset, offset);
 					offset += rt.getHeight();
 					fp.add(rt);

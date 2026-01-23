@@ -30,6 +30,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.CUIScreen;
 import com.teammoeg.chorda.client.cui.CUIScreenWrapper;
 import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
@@ -701,13 +702,13 @@ public class CGuiHelper {
 	public static Rect getWidgetBounds(UIElement widget, PrimaryLayer primaryLayer) {
 		int x = widget.getScreenX();
 		int y = widget.getScreenY();
-		if (primaryLayer.getManager() instanceof CUIScreenWrapper) {
+		//if (primaryLayer.getManager() instanceof CUIScreen) {
 			x += (ClientUtils.getMc().getWindow().getGuiScaledWidth() - primaryLayer.getWidth())/2;
 			y += (ClientUtils.getMc().getWindow().getGuiScaledHeight() - primaryLayer.getHeight())/2;
-		} else {
+		/*} else {
 			x += ClientUtils.screenCenterX();
 			y += ClientUtils.screenCenterY();
-		}
+		}*/
 
 		var w1 = widget.getParent();
 		while (w1.getParent() != null) {

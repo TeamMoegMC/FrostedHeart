@@ -44,7 +44,7 @@ public abstract class TechButton extends Button {
     @Override
     public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
         CGuiHelper.resetGuiDrawing();;
-        DrawDeskTheme.drawButton(matrixStack, x, y, w, h, isMouseOver());
+        DrawDeskTheme.drawButton(matrixStack, x, y, w, h, isMouseOver(),isEnabled());
 
         if (hasIcon()) {
             drawIcon(matrixStack, x + (w - 16) / 2, y + (h - 16) / 2, 16, 16);

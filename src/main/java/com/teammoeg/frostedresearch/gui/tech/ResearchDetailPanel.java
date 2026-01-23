@@ -27,6 +27,7 @@ import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.TechScrollBar;
 import com.teammoeg.frostedresearch.research.Research;
@@ -136,8 +137,7 @@ public class ResearchDetailPanel extends UILayer {
 	@Override
 	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		// drawBackground(matrixStack, theme, x, y, w, h);
-		// theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
-		TechIcons.DIALOG.draw(matrixStack, x, y, w, h);
+		DrawDeskTheme.drawDialog(matrixStack, x, y, w, h);
 	}
 
 	@Override
@@ -172,7 +172,7 @@ public class ResearchDetailPanel extends UILayer {
 				desc.setMaxWidth(width);
 				desc.setPosAndSize(0, offset, width, height);
 				desc.setText(itx);
-				desc.setColor(TechIcons.text);
+				desc.setColor(DrawDeskTheme.getTextColor());
 				offset += desc.getHeight() + 2;
 			}
 			if (offset + 3 > height) {

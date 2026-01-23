@@ -26,6 +26,7 @@ import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
+import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.Research;
 
@@ -41,7 +42,7 @@ public class ResearchProgressPanel extends UILayer {
 	@Override
 	public void addUIElements() {
 		TextField tf = new TextField(this);
-		tf.setMaxWidth(71).setMaxLines(2).setColor(TechIcons.text).setPos(40, 15);
+		tf.setMaxWidth(71).setMaxLines(2).setColor(DrawDeskTheme.getTextColor()).setPos(40, 15);
 		Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
 		if (inprog != null)
 			tf.setText(inprog.getName());
@@ -60,7 +61,7 @@ public class ResearchProgressPanel extends UILayer {
 		super.render(matrixStack, x, y, w, h);
 		// title
 
-		matrixStack.drawString(getFont(), Lang.translateGui("research_progress"), x + 3, y, TechIcons.text, false);
+		matrixStack.drawString(getFont(), Lang.translateGui("research_progress"), x + 3, y, DrawDeskTheme.getTextColor(), false);
 		// progress bar
 		// TODO: this cause crash when root clue is added
 		// float progress =
@@ -70,14 +71,11 @@ public class ResearchProgressPanel extends UILayer {
 		Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
 		if (inprog != null) {
 			float prog = inprog.getProgressFraction();
-			TechIcons.SLIDER_FRAME.draw(matrixStack, x + 40, y + 32, 70, 8);
-			int progressWidth = Mth.ceil(68f * prog);
-			if (progressWidth > 1)
-				TechIcons.drawTexturedRect(matrixStack, x + 41, y + 33, progressWidth, 6, true);
+			DrawDeskTheme.drawProgressBar(matrixStack, x+40, y+32, 70, 8, prog);
 			if (inprog.getData().canComplete(inprog))
-				matrixStack.drawString(getFont(), NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, TechIcons.text, false);
+				matrixStack.drawString(getFont(), NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, DrawDeskTheme.getTextColor(), false);
 			else
-				matrixStack.drawString(getFont(), Lang.translateGui("research.required_clue"), x + 40, y + 40, TechIcons.text_red, false);
+				matrixStack.drawString(getFont(), Lang.translateGui("research.required_clue"), x + 40, y + 40, DrawDeskTheme.getErrorColor(), false);
 			// research icon
 
 			TechIcons.SHADOW.draw(matrixStack, x + 1, y + 38, 36, 9);

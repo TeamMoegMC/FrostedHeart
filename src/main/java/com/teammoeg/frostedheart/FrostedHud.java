@@ -23,6 +23,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.cui.CUIScreen;
 import com.teammoeg.chorda.client.cui.CUIScreenWrapper;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.UIElement;
@@ -1038,7 +1039,7 @@ public class FrostedHud {
         lines.add(Component.literal("Current Screen: " + (screen == null ? "Null" : screen.getClass().getSimpleName())));
 
         PrimaryLayer pLayer = null;
-        if (screen instanceof CUIScreenWrapper cui) {
+        if (screen instanceof CUIScreen cui) {
             pLayer = cui.getPrimaryLayer();
         }
         // CUI

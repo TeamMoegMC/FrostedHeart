@@ -27,6 +27,7 @@ import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
+import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.effects.Effect;
@@ -60,7 +61,7 @@ public class EffectWidget extends UIElement {
 	@Override
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		CGuiHelper.resetGuiDrawing();
-		TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
+		DrawDeskTheme.drawSlot(matrixStack, x, y, w, h);
 		icon.draw(matrixStack, x, y, w, h);
 		if (ClientResearchDataAPI.getData().get().isEffectGranted(r, e)) {
 			matrixStack.pose().pushPose();

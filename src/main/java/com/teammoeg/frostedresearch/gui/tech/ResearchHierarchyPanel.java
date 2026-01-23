@@ -35,6 +35,7 @@ import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.Lang;
+import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.ResearchEditUtils;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.TechTextButton;
@@ -255,7 +256,7 @@ public class ResearchHierarchyPanel extends UILayer {
 	@Override
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		super.render(matrixStack, x, y, w, h);
-		matrixStack.drawString(getFont(), Lang.translateGui("research_hierarchy"), x + 3, y + 3, TechIcons.text, false);
+		matrixStack.drawString(getFont(), Lang.translateGui("research_hierarchy"), x + 3, y + 3, DrawDeskTheme.getTextColor(), false);
 		TechIcons.HLINE_L.draw(matrixStack, x + 1, y + 13, 80, 3);
 	}
 
@@ -285,9 +286,9 @@ public class ResearchHierarchyPanel extends UILayer {
 		@Override
 		public void draw(GuiGraphics matrixStack, int x, int y) {
 			if (doShow())
-				color = TechIcons.text;
+				color = DrawDeskTheme.getTextColor();
 			else
-				color = 0xADA691;
+				color = DrawDeskTheme.getWeakColor();
 			super.draw(matrixStack, x, y);
 		}
 	}
@@ -369,9 +370,9 @@ public class ResearchHierarchyPanel extends UILayer {
 		@Override
 		public void draw(GuiGraphics matrixStack, int x, int y) {
 			if (doShow())
-				color = TechIcons.text;
+				color = DrawDeskTheme.getTextColor();
 			else
-				color = 0xADA691;
+				color = DrawDeskTheme.getWeakColor();
 			super.draw(matrixStack, x, y);
 		}
 	}
@@ -406,7 +407,7 @@ public class ResearchHierarchyPanel extends UILayer {
 		@Override
 		public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 			CGuiHelper.resetGuiDrawing();
-			TechIcons.SLOT.draw(matrixStack, x, y, w, h);
+			DrawDeskTheme.drawSlot(matrixStack, x, y, w, h);
 			if (FHResearch.editor || research.isShowable()) {
 				this.drawIcon(matrixStack, x + 4, y + 4, 16, 16);
 				if (research.isCompleted()) {

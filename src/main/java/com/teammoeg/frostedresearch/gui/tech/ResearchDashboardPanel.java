@@ -32,6 +32,7 @@ import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.data.ResearchData;
+import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.ResearchEditUtils;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.TechTextButton;
@@ -55,9 +56,9 @@ public class ResearchDashboardPanel extends UILayer {
 	public ResearchDashboardPanel(ResearchDetailPanel panel) {
 		super(panel);
 		detailPanel = panel;
-		techpoint = new TextField(this).setMaxWidth(100).setMaxLines(1).setColor(TechIcons.text);
+		techpoint = new TextField(this).setMaxWidth(100).setMaxLines(1).setColor(DrawDeskTheme.getTextColor());
 		techpoint.setPos(40, 20 + ClientUtils.font().lineHeight);
-		availableInsightLevel = new TextField(this).setMaxWidth(100).setMaxLines(1).setColor(TechIcons.text);
+		availableInsightLevel = new TextField(this).setMaxWidth(100).setMaxLines(1).setColor(DrawDeskTheme.getTextColor());
 		availableInsightLevel.setPos(40, 20 + ClientUtils.font().lineHeight * 2);
 		availableInsightLevel.setMaxLines(1);
 	}
@@ -97,10 +98,10 @@ public class ResearchDashboardPanel extends UILayer {
 		TextField tf = new TextField(this);
 		tf.setPos(0, 0);
 		add(tf);
-		tf.setMaxWidth(140).setMinWidth(140).setMaxLines(2).setColor(TechIcons.text).addFlags(4);
+		tf.setMaxWidth(140).setMinWidth(140).setMaxLines(2).setColor(DrawDeskTheme.getTextColor()).addFlags(4);
 		tf.setText(detailPanel.research.getName());
 
-		TextField tp = new TextField(this).setMaxWidth(140).setMaxLines(1).setColor(TechIcons.text);
+		TextField tp = new TextField(this).setMaxWidth(140).setMaxLines(1).setColor(DrawDeskTheme.getTextColor());
 		tp.setPos(40, 20);
 		add(tp);
 		tp.setText(Lang.translateGui("research.points"));
@@ -120,12 +121,12 @@ public class ResearchDashboardPanel extends UILayer {
 		}
 		techpoint.setText(toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
 		add(techpoint);
-		techpoint.setColor(TechIcons.text);
+		techpoint.setColor(DrawDeskTheme.getTextColor());
 		ResearchData rd = detailPanel.research.getData();
 		if (rd.canResearch()) {
 			if (!rd.canComplete(detailPanel.research)) {
-				tp.setColor(TechIcons.text_red);
-				techpoint.setColor(TechIcons.text_red);
+				tp.setColor(DrawDeskTheme.getErrorColor());
+				techpoint.setColor(DrawDeskTheme.getErrorColor());
 			}
 			techpoint.setText(toReadable(rd.getTotalCommitted(detailPanel.research)) + "/" + toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
 		}
@@ -135,13 +136,13 @@ public class ResearchDashboardPanel extends UILayer {
 			int insightAvailable = ClientResearchDataAPI.getData().get().getAvailableInsightLevel();
 			availableInsightLevel.setText(Lang.translateGui("research.insight_required", insightNeeded, insightAvailable));
 			if (insightNeeded > insightAvailable) {
-				availableInsightLevel.setColor(TechIcons.text_red);
+				availableInsightLevel.setColor(DrawDeskTheme.getErrorColor());
 			}
 			add(availableInsightLevel);
 			availableInsightLevel.setX(140 - availableInsightLevel.getWidth());
 		}
 		if (rd.canResearch() && !rd.canComplete(detailPanel.research)) {
-			TextField rq = new TextField(this).setMaxWidth(140).setMaxLines(1).setColor(TechIcons.text_red);
+			TextField rq = new TextField(this).setMaxWidth(140).setMaxLines(1).setColor(DrawDeskTheme.getErrorColor());
 			rq.setPos(40, 20 + ClientUtils.font().lineHeight * 3);
 			add(rq);
 			rq.setText(Lang.translateGui("research.required_clue"));

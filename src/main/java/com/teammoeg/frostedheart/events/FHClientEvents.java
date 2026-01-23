@@ -22,7 +22,9 @@ package com.teammoeg.frostedheart.events;
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.client.CameraHelper;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.MouseCaptureUtil;
 import com.teammoeg.chorda.client.PartialTickTracker;
+import com.teammoeg.chorda.client.cui.CUIOverlay;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.ui.GuiClickedEvent;
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
@@ -391,14 +393,16 @@ public class FHClientEvents {
 	            }
 
             //if(WheelMenuRenderer.isOpened)
-            	WheelMenuRenderer.tick();
+            	
             }
+            WheelMenuRenderer.tick();
         }
     }
 
     @SubscribeEvent
     public static void unloadWorld(LevelEvent.Unload event) {
         ClientUtils.DoApplyGammaValue = false;
+        MouseCaptureUtil.stopMouseCapture();
     }
 
     /*
@@ -414,13 +418,6 @@ public class FHClientEvents {
                 HeaterVestRenderer.rendersAssigned = true;
             }
         }*/
-    @SuppressWarnings({"resource", "unchecked", "rawtypes"})
-
-
-    @SubscribeEvent
-    public void onWorldUnLoad(LevelEvent.Unload event) {
-
-    }
 
     /**
      * Add our custom render player

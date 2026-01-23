@@ -59,7 +59,7 @@ public class ItemSlot extends UIElement {
     }
     @Override
     public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-    	
+    	renderBackground(graphics,x,y,w,h);
     	if(item.length>1)
     		order=(int) ((System.currentTimeMillis() / 1000) % item.length);
     	else
@@ -75,6 +75,11 @@ public class ItemSlot extends UIElement {
             graphics.fill(x, y, x+w, y+h, 151, Colors.setAlpha(Colors.WHITE, 0.25F));
         }
     }
+    public void renderBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+    	
+    	
+    }
+    
 
     @Override
     public boolean onMousePressed(MouseButton button) {

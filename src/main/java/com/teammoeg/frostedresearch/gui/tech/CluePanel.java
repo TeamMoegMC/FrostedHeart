@@ -28,6 +28,7 @@ import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
+import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.clues.Clue;
@@ -77,38 +78,33 @@ public class CluePanel extends UILayer {
 	@Override
 	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		// super.drawBackground(matrixStack, theme, x, y, w, h);
-		if (ClientResearchDataAPI.getData().get().isClueCompleted(r, c))
-			TechIcons.CHECKBOX_CHECKED.draw(matrixStack, x, y, 9, 9);
-		else if (r.isCompleted())
-			TechIcons.CHECKBOX_CROSS.draw(matrixStack, x, y, 9, 9);
-		else
-			TechIcons.CHECKBOX.draw(matrixStack, x, y, 9, 9);
+		DrawDeskTheme.drawCheckBox(matrixStack, x, y, 9, 9, ClientResearchDataAPI.getData().get().isClueCompleted(r, c), r.isCompleted());
 	}
 
 	public void initWidgets() {
 		int offset = 1;
 		clueName = new TextField(this);
-		clueName.setMaxWidth(width - 6).setText(c.getName(r)).setColor(TechIcons.text).setPos(10, offset);
+		clueName.setMaxWidth(width - 6).setText(c.getName(r)).setColor(DrawDeskTheme.getTextColor()).setPos(10, offset);
 
 		offset += clueName.getHeight() + 2;
 		Component itx = c.getDescription(r);
 		if (itx != null) {
 			desc = new TextField(this);
-			desc.setMaxWidth(width).setText(itx).setColor(TechIcons.text).setPos(0, offset);
+			desc.setMaxWidth(width).setText(itx).setColor(DrawDeskTheme.getTextColor()).setPos(0, offset);
 			offset += desc.getHeight() + 2;
 		}
 		if (c.isRequired()) {
 			rq = new TextField(this)
 				.setMaxWidth(width)
 				.setText(Lang.translateGui("research.required"))
-				.setColor(TechIcons.text_red);
+				.setColor(DrawDeskTheme.getErrorColor());
 			rq.setPos(0, offset);
 			offset += rq.getHeight() + 2;
 		}
 		contribute = new TextField(this)
 			.setMaxWidth(width)
 			.setText(Components.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
-			.setColor(TechIcons.text);
+			.setColor(DrawDeskTheme.getTextColor());
 		contribute.setPos(0, offset);
 		offset += contribute.getHeight() + 2;
 		offset += 1;
