@@ -7,13 +7,17 @@ import com.teammoeg.chorda.client.MouseCaptureUtil;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
 import com.teammoeg.frostedheart.util.client.FGuis;
+import com.teammoeg.frostedresearch.gui.InsightOverlay;
 
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.event.InputEvent.MouseScrollingEvent;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.GuiOverlayManager;
@@ -21,6 +25,7 @@ import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.client.gui.overlay.NamedGuiOverlay;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -32,9 +37,16 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen {
 	private static double mouseX;
 	@Getter
 	private static double mouseY;
+	@Setter
+	@Getter
+	public static int virtualMouseZ=2000;
 	public static final IGuiOverlay VIRTUAL_MOUSE_OVERLAY=(gui,graphics,pt,sw,sh)->{
+		graphics.pose().pushPose();
+		graphics.pose().translate(0, 0, virtualMouseZ);//topmost?
+		
 		FGuis.drawRing(graphics, (int)mouseX, (int) mouseY, 3, 6, 0, 360,
 			Colors.setAlpha(Colors.CYAN, 0xff));
+		graphics.pose().popPose();
 	};
 	@Getter
 	private static boolean isMouseCaptured;
@@ -174,5 +186,8 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen {
 	}
 	//char typed event not available
 	//mouse dragged event not available
-
+    @SubscribeEvent(priority=EventPriority.LOWEST)
+    public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
+    	event.registerAboveAll("cui_virtual_mouse", VIRTUAL_MOUSE_OVERLAY);
+    }
 }
