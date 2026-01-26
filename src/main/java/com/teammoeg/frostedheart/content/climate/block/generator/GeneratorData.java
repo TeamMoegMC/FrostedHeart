@@ -72,6 +72,7 @@ public class GeneratorData implements SpecialData {
                     .flag("isBroken", o -> o.isBroken).build(),
             Codec.FLOAT.fieldOf("steamLevel").forGetter(o -> o.steamLevel),
             Codec.FLOAT.fieldOf("powerLevel").forGetter(o -> o.power),
+            Codec.FLOAT.optionalFieldOf("lastPowerLevel",0f).forGetter(o -> o.power),
             Codec.INT.optionalFieldOf("heated",0).forGetter(o -> o.heated),
             Codec.INT.optionalFieldOf("ranged",0).forGetter(o -> o.ranged),
             Codec.FLOAT.fieldOf("tempLevel").forGetter(o -> o.TLevel),
@@ -125,7 +126,7 @@ public class GeneratorData implements SpecialData {
     }
 
 
-    public GeneratorData(int process, int processMax, int overdriveLevel, boolean[] flags, float steamLevel, float power, int heated, int ranged, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, Optional<BlockPos> actualPos, Optional<ResourceLocation> dimension) {
+    public GeneratorData(int process, int processMax, int overdriveLevel, boolean[] flags, float steamLevel, float power,float lastPower, int heated, int ranged, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, Optional<BlockPos> actualPos, Optional<ResourceLocation> dimension) {
         super();
         this.process = process;
         this.processMax = processMax;
@@ -134,6 +135,7 @@ public class GeneratorData implements SpecialData {
         this.heated = heated;
         this.ranged = ranged;
         this.power = power;
+        this.lastPower=lastPower;
         this.isWorking = flags[0];
         this.isOverdrive = flags[1];
         this.isActive = flags[2];

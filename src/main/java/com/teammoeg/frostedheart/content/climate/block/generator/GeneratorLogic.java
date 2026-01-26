@@ -128,7 +128,9 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
 	public void regist(IMultiblockContext<R> ctx) {
 		ctx.getState().regist(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx));
 	}
-
+	public void onExplode(IMultiblockContext<R> ctx) {
+		
+	}
 	/**
 	 * Implements the core tick logic from GeneratorData
 	 * 
@@ -153,6 +155,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
 		boolean isBroken = data.map(t -> t.isBroken).orElse(false);
 		if (lastIsBroken != isBroken && isBroken) {
 			state.explodeTicks = 100;
+			onExplode(ctx);
 		}
 
 		Level level = ctx.getLevel().getRawLevel();

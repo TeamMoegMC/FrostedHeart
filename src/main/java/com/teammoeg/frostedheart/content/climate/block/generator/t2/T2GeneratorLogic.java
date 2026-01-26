@@ -118,33 +118,37 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
         }
         ctx.getState().manager.tick(ctx.getLevel().getRawLevel());
         boolean active = super.tickFuel(ctx);
-        this.tickLiquid(ctx);
+        this.tickLiquid(ctx,active);
         tickControls(ctx);
         return active;
     }
 
-    private void tickLiquid(IMultiblockContext<T2GeneratorState> ctx) {
+    private void tickLiquid(IMultiblockContext<T2GeneratorState> ctx,boolean active) {
         Optional<GeneratorData> data = getData(ctx);
     	data.ifPresent(t -> t.steamLevel = ctx.getState().steamLevel/100f);
         if (ctx.getState().noliquidtick > 0) {
             ctx.getState().noliquidtick--;
         }else {
+        	
 	        if (ctx.getState().steamLevel<100) {
-	        	int drain=FHConfig.SERVER.CLIMATE.generatorSteamSpeed.get();
-	            FluidStack fs = ctx.getState().tank.drain(drain, FluidAction.SIMULATE);
-	            if (fs.getAmount() >= drain) {
-	                final FluidStack fs2 = ctx.getState().tank.drain(drain, FluidAction.EXECUTE);
-	                ctx.getState().liquidtick++;
-	                if(ctx.getState().liquidtick>=FHConfig.SERVER.CLIMATE.generatorSteamCost.get()) {
-	                	ctx.getState().liquidtick=0;
-	                	ctx.getState().steamLevel++;
-	                }
-	                return;
-	            }else {
-	            	ctx.getState().tank.setFluid(FluidStack.EMPTY);
-	                ctx.getState().noliquidtick = 40;
-	            }
+	        	if(active) {
+		        	int drain=FHConfig.SERVER.CLIMATE.generatorSteamSpeed.get();
+		            FluidStack fs = ctx.getState().tank.drain(drain, FluidAction.SIMULATE);
+		            if (fs.getAmount() >= drain) {
+		                final FluidStack fs2 = ctx.getState().tank.drain(drain, FluidAction.EXECUTE);
+		                ctx.getState().liquidtick++;
+		                if(ctx.getState().liquidtick>=FHConfig.SERVER.CLIMATE.generatorSteamCost.get()) {
+		                	ctx.getState().liquidtick=0;
+		                	ctx.getState().steamLevel++;
+		                }
+		                return;
+		            }else {
+		            	ctx.getState().tank.setFluid(FluidStack.EMPTY);
+		                ctx.getState().noliquidtick = 40;
+		            }
+	        	}
 	        }else return;
+        	
         }
         if(ctx.getState().liquidtick<=0&&ctx.getState().steamLevel>0) {
         	ctx.getState().steamLevel--;
@@ -157,7 +161,14 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
         
     }
 
-    private void tickControls(IMultiblockContext<T2GeneratorState> ctx) {
+    @Override
+	public void onExplode(IMultiblockContext<T2GeneratorState> ctx) {
+		super.onExplode(ctx);
+		ctx.getState().steamLevel=0;
+		ctx.getState().liquidtick=0;
+	}
+
+	private void tickControls(IMultiblockContext<T2GeneratorState> ctx) {
 
         int power = ctx.getRedstoneInputValue(REDSTONE_OFFSET, 0);
 
