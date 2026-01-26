@@ -45,14 +45,11 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * Generator data and utility functions.
@@ -318,7 +315,6 @@ public class GeneratorData implements SpecialData {
 		        if(lastOverdrive<=getWarningOverdriveValue()&&overdriveLevel>getWarningOverdriveValue()) {
 		        	team.forEachOnline(t->t.sendSystemMessage(Lang.translateTooltip("generator.warning").withStyle(WARN_STYLE)));
 		        }
-		        
 	        }
         }
         lastPower=0;

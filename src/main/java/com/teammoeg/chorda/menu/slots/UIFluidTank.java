@@ -21,6 +21,7 @@ public class UIFluidTank implements IFluidTank{
 	public void bind(FluidTank tank) {
 		FLUID.bind(()->tank.getFluid(),t->tank.setFluid(t));
 	}
+
 	@Override
 	public @NotNull FluidStack getFluid() {
 		return FLUID.getValue();

@@ -38,7 +38,6 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.util.CapabilityPos
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.MultiblockFace;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.RelativeBlockFace;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.ShapeType;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -51,7 +50,6 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 
 public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2GeneratorState> {
@@ -120,8 +118,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
         }
         ctx.getState().manager.tick(ctx.getLevel().getRawLevel());
         boolean active = super.tickFuel(ctx);
-        if (active)
-            this.tickLiquid(ctx);
+        this.tickLiquid(ctx);
         tickControls(ctx);
         return active;
     }

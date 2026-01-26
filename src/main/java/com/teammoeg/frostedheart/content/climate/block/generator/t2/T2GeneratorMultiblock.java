@@ -23,6 +23,7 @@ import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks.Registration;
 import com.teammoeg.frostedheart.content.climate.block.generator.HeatingMultiblock;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
@@ -44,7 +45,6 @@ public class T2GeneratorMultiblock extends HeatingMultiblock {
 
     @Override
     public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
-        BlockPos master = this.getMasterFromOriginOffset();
         //FHMain.LOGGER.info("Running");
         CMultiblockHelper.getBEHelperOptional(world, origin).ifPresent(te -> {
             T2GeneratorState state = (T2GeneratorState) te.getState();

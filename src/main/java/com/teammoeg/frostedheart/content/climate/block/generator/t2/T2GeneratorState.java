@@ -43,7 +43,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class T2GeneratorState extends GeneratorState implements HeatNetworkProvider, IHaveGoggleInformation {
-    public static final int TANK_CAPACITY = 200 * 1000;
+    public static final int TANK_CAPACITY = 5 * 1000;
     public FluidTank tank = new FluidTank(TANK_CAPACITY,
             f -> FHTags.Fluids.STEAM.matches(f.getFluid()));
     public StoredCapability<IFluidHandler> tankCap = new StoredCapability<>(tank);

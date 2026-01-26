@@ -21,8 +21,10 @@ package com.teammoeg.frostedheart.content.climate.block.generator;
 
 import java.util.Arrays;
 import java.util.Optional;
+
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.chorda.util.CUtils;
+
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.CapabilityPosition;

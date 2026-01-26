@@ -83,5 +83,9 @@ public abstract class CMultiblock extends IETemplateMultiblock {
         });
         super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
 	}
-
+    public BlockPos getMasterPos(BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
+        BlockPos master = this.getMasterFromOriginOffset();
+        BlockPos offset = getAbsoluteOffset(master, mirrored, clickDirectionAtCreation);
+        return origin.offset(offset);
+    }
 }
