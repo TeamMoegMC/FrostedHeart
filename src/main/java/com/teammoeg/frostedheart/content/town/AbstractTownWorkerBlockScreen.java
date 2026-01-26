@@ -41,62 +41,7 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         super(inventorySlotsIn);
 
     }
-/*    @Override
-    public boolean onInit() {
-        tabButtons.clear();
 
-
-//        this.setSize(176, 222);
-        int guiLeft = 0*//*getContentX()*//*;
-        int guiTop = 0*//*getContentY()*//*;
-        int leftPos = (this.width - 176) / 2;
-        int topPos = (this.height - 222) / 2;
-//        super.onI nit();
-//        this.setPos(leftPos, topPos);
-//        this.setPos(0, 0);
-//        this.setSize(176, 222);
-
-
-
-        // Create tab button
-*//*        for (int i = 0; i < tabContents.size(); i++) {
-            final int tabI = i;
-            *//**//*if (i<3) {*//**//*
-                // Left side
-                int x = guiLeft - 22;
-                int y = guiTop + tabI * (18 + 2) +2;
-                int[] uv = getTabButtonUV(tabI);
-            TabImageButtonElement tabButtonNew = new TabImageButtonElement(this, x, y, 22, 18, uv[0], uv[1], tabI,CIcon){
-//                menu.sendMessage(0, tabI);
-                @Override
-                public void onClicked(MouseButton mouseButton) {
-                    activeTab = tabButtons.indexOf(mouseButton);
-                    updateTabContent();
-                }
-            };
-
-            tabButtons.add(tabButtonNew);
-
-//                this.addRenderableWidget(tabButtonNew);
-            *//**//*}else {
-                // Right side
-                int x = guiLeft + 175;
-                int y = guiTop + tabI * (18 + 2) +2;
-                int[] uv = getTabButtonUV(tabI);
-                TabImageButton tabButtonnew = new TabImageButton(getButtonTexture(i), x, y, 22, 18, uv[0], uv[1], tabI, button -> {
-//                menu.sendMessage(0, tabI);
-                    activeTab = tabButtons.indexOf(button);
-                    updateTabContent();
-                }).bind(() -> activeTab);
-                tabButtons.add(tabButtonnew);
-                this.addRenderableWidget(tabButtonnew);
-            }*//**//*
-        }*//*
-        // Initialize tab content
-
-        updateTabContent();
-        return true;
-    }*/
 
     @Override
     public void addUIElements() {
@@ -119,16 +64,9 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         this.tabButtons.clear();
         for (int i = 0; i < tabContents.size(); i++) {
             final int tabI = i;
-            int[] uv = getTabButtonUV(tabI);
             int btnX = -22;
             int btnY = 2 + i * 20;
-            TabImageButtonElement btn = new TabImageButtonElement(this, btnX, btnY, 22, 18, tabI, getButtonIcon(0), getButtonIcon(1)){
-                @Override
-                public void onClicked(MouseButton button) {
-                    selectTab(tabI);
-                }
-
-            };
+            TabImageButtonElement btn = getTabButton(btnX, btnY, tabI);
             btn.bind(() -> activeTab);
             this.tabButtons.add(btn);
             this.add(btn); // 添加到主 Screen
@@ -154,14 +92,15 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         return container;
     }
 
-    public int[] getTabButtonUV(int tabIndex) {
-        /*if (tabIndex < 3) {*/
-            return new int[]{180, 59};
-        /*} else {
-            return new int[]{0, 0};
-        }*/
-    }
+    public TabImageButtonElement getTabButton(int x, int y, int tabI) {
+        return new TabImageButtonElement(this, x, y, 22, 18, tabI, CIcons.nop(), CIcons.nop()){
+            @Override
+            public void onClicked(MouseButton button) {
+                selectTab(tabI);
+            }
 
+        };
+    }
     @Override
     public boolean onInit() {
         int sw = 176;
@@ -181,9 +120,6 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         return 222;
     }
 
-    public CIcons.CIcon getButtonIcon(int i) {
-        return CIcons.nop();
-    }
 
     protected void addTabContent(ITabContent content){
         tabContents.add(content);
@@ -193,7 +129,6 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         void renderTabContent(UILayer layer);
     }
 
-    public interface TabContentComponent {}
 
 }
 
