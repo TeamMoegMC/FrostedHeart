@@ -82,7 +82,7 @@ public class ConfinedSpaceScanner extends BlockScanner {
         BlockPos scanningBlock;
         scanningBlock = startPos.above();
         HashSet<BlockPos> blocks = new HashSet<>();
-        while(scanningBlock.getY() < 256){
+        while(scanningBlock.getY() <= 320){
             if( scannedBlocks.contains(scanningBlock) || !isValidAir(scanningBlock) ){
                 return new AbstractMap.SimpleEntry<>(blocks, true);
             }

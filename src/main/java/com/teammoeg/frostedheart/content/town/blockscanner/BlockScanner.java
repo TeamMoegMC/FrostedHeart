@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.town.blockscanner;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -38,6 +37,7 @@ import net.minecraft.server.level.ColumnPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * 提供了一些扫描方块用的静态方法
@@ -46,6 +46,7 @@ import net.minecraft.world.level.Level;
  * 可以进行的操作包括但不限于统计数量、统计温度
  * 和扫描方块有关的其它方法也可以丢在这里
  * 这里面的方法可能存在问题，发现的话请帮我改了谢谢茄子(
+ * <b>这里的部分方法由于高度限制只适用于主世界！</b>
  */
 public class BlockScanner {
     protected Set<BlockPos> scannedBlocks;
@@ -113,8 +114,11 @@ public class BlockScanner {
     public static int countBlocksAdjacent( BlockPos startPos, Predicate<BlockPos> target){
         int num = 0;
         for(Direction direction : Direction.values()){
-            if(target.test(startPos.relative(direction))){
-                num++;
+            BlockPos adjacentPos = startPos.relative(direction);
+            if(adjacentPos.getY() >= -64 && adjacentPos.getY() <= 320){
+                if(target.test(adjacentPos)){
+                    num++;
+                }
             }
         }
         return num;
@@ -146,7 +150,7 @@ public class BlockScanner {
         BlockPos scanningBlock;
         int num = 0;
         scanningBlock = startPos.above();
-        while(scanningBlock.getY() < 255){
+        while(scanningBlock.getY() < 320){
             if(target.test(scanningBlock)){
                 num++;
             }
@@ -189,7 +193,7 @@ public class BlockScanner {
         BlockPos scanningBlock;
         scanningBlock = startPos.above();
         ArrayList<BlockPos> blocks = new ArrayList<>();
-        while(scanningBlock.getY() < 256){
+        while(scanningBlock.getY() <= 320){
             if(stopAt.test(scanningBlock)){
                 return blocks;
             }
@@ -212,7 +216,7 @@ public class BlockScanner {
         BlockPos scanningBlock;
         scanningBlock = startPos.below();
         ArrayList<BlockPos> blocks = new ArrayList<>();
-        while(scanningBlock.getY() > 0){
+        while(scanningBlock.getY() >= -64){
             if(stopAt.test(scanningBlock)){
                 return blocks;
             }
@@ -312,15 +316,21 @@ public class BlockScanner {
     /**
      * @return return the first position of the block that makes target returns true
      */
+    @Nullable
     public static BlockPos getBlockBelow(Predicate<BlockPos> target, BlockPos startPos){
         BlockPos scanningBlock;
         scanningBlock = startPos.below();
-        while(scanningBlock.getY() > 0){
+        while(scanningBlock.getY() >= -64){
             if(target.test(scanningBlock)){
+                System.out.println("duck_egg debug: Found " + scanningBlock);
                 return scanningBlock;
             }
-            else scanningBlock = scanningBlock.below();
+            else {
+                System.out.println("duck_egg debug: Scanning " + scanningBlock);
+                scanningBlock = scanningBlock.below();
+            }
         }
+        System.out.println("duck_egg debug: Reached the bottom of the world");
         return null;
     }
 
