@@ -30,7 +30,6 @@ import javax.annotation.Nonnull;
 
 import com.teammoeg.chorda.util.struct.EnumDefaultedMap;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.data.*;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
@@ -66,7 +65,7 @@ public class FHRecipeCachingReloadListener implements ResourceManagerReloadListe
         if (recipes.isEmpty())
             return;
         //filterRecipes(recipes, GeneratorRecipe.class, GeneratorRecipe.TYPE);
-        GeneratorSteamRecipe.recipeList = filterRecipes(recipes, GeneratorSteamRecipe.class, GeneratorSteamRecipe.TYPE);
+        //GeneratorSteamRecipe.recipeList = filterRecipes(recipes, GeneratorSteamRecipe.class, GeneratorSteamRecipe.TYPE);
        /* InstallInnerRecipe.recipeList = recipes.stream()
                 .filter(iRecipe -> iRecipe.getClass() == InstallInnerRecipe.class)
                 .map(e -> (InstallInnerRecipe) e)

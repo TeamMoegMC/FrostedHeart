@@ -92,11 +92,11 @@ public class GeneratorState extends HeatingState {
         	
         	if(origin.equals(dat.actualPos)) {
         		dat.tick(level, teamData);
-        		endpoint.setHeat(dat.lastPower);
+        		dat.lastPower=endpoint.getHeat();
+        		endpoint.setHeat(dat.power);
                 endpoint.setTempLevel(dat.TLevel);
                 this.setRangeLevel(dat.RLevel);
         		this.setTempLevel(dat.TLevel);
-        		dat.lastPower=0;
         		return;
         	}
         	
@@ -166,6 +166,7 @@ public class GeneratorState extends HeatingState {
 	public void writeSyncNBT(CompoundTag nbt) {
 		super.writeSyncNBT(nbt);
 		nbt.putBoolean("hasFuel", hasFuel);
+
 	}
 
 	@Override

@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.ClientClimateData;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorLogic;
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
@@ -128,48 +128,36 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
 
     private void tickLiquid(IMultiblockContext<T2GeneratorState> ctx) {
         Optional<GeneratorData> data = getData(ctx);
-        ctx.getState().liquidtick = data.map(t -> t.steamProcess).orElse(0);
-        float rt = data.map(t->t.TLevel).orElse(0f);
-        /*if (rt == 0) {
-            this.spowerMod = 0;
-            this.slevelMod = 0;
-        }*/
+    	data.ifPresent(t -> t.steamLevel = ctx.getState().steamLevel/100f);
         if (ctx.getState().noliquidtick > 0) {
             ctx.getState().noliquidtick--;
-            return;
+        }else {
+	        if (ctx.getState().steamLevel<100) {
+	        	int drain=FHConfig.SERVER.CLIMATE.generatorSteamSpeed.get();
+	            FluidStack fs = ctx.getState().tank.drain(drain, FluidAction.SIMULATE);
+	            if (fs.getAmount() >= drain) {
+	                final FluidStack fs2 = ctx.getState().tank.drain(drain, FluidAction.EXECUTE);
+	                ctx.getState().liquidtick++;
+	                if(ctx.getState().liquidtick>=FHConfig.SERVER.CLIMATE.generatorSteamCost.get()) {
+	                	ctx.getState().liquidtick=0;
+	                	ctx.getState().steamLevel++;
+	                }
+	                return;
+	            }else {
+	            	ctx.getState().tank.setFluid(FluidStack.EMPTY);
+	                ctx.getState().noliquidtick = 40;
+	            }
+	        }else return;
         }
-
-        int liquidtick = data.map(t -> t.steamProcess).orElse(0);
-        if (liquidtick >= rt) {
-            data.ifPresent(t -> t.steamProcess -= (int) rt);
-            return;
+        if(ctx.getState().liquidtick<=0&&ctx.getState().steamLevel>0) {
+        	ctx.getState().steamLevel--;
+        	ctx.getState().liquidtick=FHConfig.SERVER.CLIMATE.generatorSteamCost.get();
         }
-        GeneratorSteamRecipe sgr = GeneratorSteamRecipe.findRecipe(ctx.getState().tank.getFluid());
-        if (sgr != null) {
-            int rdrain = (int) (20 * ctx.getState().getTempLevel());
-            int actualDrain = rdrain * sgr.input.getAmount();
-            FluidStack fs = ctx.getState().tank.drain(actualDrain, FluidAction.SIMULATE);
-            if (fs.getAmount() >= actualDrain) {
-                data.ifPresent(t -> {
-                    t.steamProcess = rdrain;
-                    t.steamLevel = sgr.level;
-                    t.power = sgr.power;
-                });
-
-                final FluidStack fs2 = ctx.getState().tank.drain(actualDrain, FluidAction.EXECUTE);
-                data.ifPresent(t -> t.fluid = fs2.getFluid());
-                return;
-            }else {
-            	ctx.getState().tank.setFluid(FluidStack.EMPTY);
-            }
+        //reduce process if steam not enough
+        if(ctx.getState().liquidtick>0) {
+        	ctx.getState().liquidtick--;
         }
-    	data.ifPresent(t -> {
-            t.steamLevel = 0;
-            t.steamProcess = 0;
-            t.power = 0;
-        });
         
-        ctx.getState().noliquidtick = 40;
     }
 
     private void tickControls(IMultiblockContext<T2GeneratorState> ctx) {

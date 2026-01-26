@@ -264,7 +264,8 @@ public class FHConfig {
 			public final ForgeConfigSpec.ConfigValue<Double> hurtingHeatUpdate;
 			public final ForgeConfigSpec.ConfigValue<Integer> minBodyTempChange;
 			public final ForgeConfigSpec.ConfigValue<Integer> maxBodyTempChange;
-
+			public final ForgeConfigSpec.IntValue generatorSteamSpeed;
+			public final ForgeConfigSpec.IntValue generatorSteamCost;
 			Climate(ForgeConfigSpec.Builder builder) {
 
 				builder.push("Temperature");
@@ -328,7 +329,13 @@ public class FHConfig {
 					.define("addInitClimate", true);
 				blizzardFrequency = builder.comment("Frequency out of 10 a blizzard happens when a new climate event happens.")
 					.defineInRange("blizzardFrequency", 3, 0, 10);
-
+				
+				builder.pop();
+				builder.push("Generator");
+				generatorSteamSpeed = builder.comment("Generator steam input rate mb/t")
+					.defineInRange("generatorSteamRate", 144, 1, 1000);
+				generatorSteamCost = builder.comment("Generator steam input time tick per 1%")
+					.defineInRange("generatorSteamTick", 60, 1, Integer.MAX_VALUE);
 				builder.pop();
 
 			}

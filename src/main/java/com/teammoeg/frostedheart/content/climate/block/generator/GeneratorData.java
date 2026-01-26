@@ -43,7 +43,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.util.LazyOptional;
@@ -64,7 +66,7 @@ public class GeneratorData implements SpecialData {
     public static final Codec<GeneratorData> CODEC = RecordCodecBuilder.create(t -> t.group(
             Codec.INT.fieldOf("process").forGetter(o -> o.process),
             Codec.INT.fieldOf("processMax").forGetter(o -> o.processMax),
-            Codec.INT.fieldOf("steamProcess").forGetter(o -> o.steamProcess),
+           // Codec.INT.fieldOf("steamProcess").forGetter(o -> o.steamProcess),
             Codec.INT.fieldOf("overdriveLevel").forGetter(o -> o.overdriveLevel),
             CodecUtil.<GeneratorData>booleans("flags")
                     .flag("isWorking", o -> o.isWorking)
@@ -75,7 +77,6 @@ public class GeneratorData implements SpecialData {
             Codec.FLOAT.fieldOf("powerLevel").forGetter(o -> o.power),
             Codec.INT.optionalFieldOf("heated",0).forGetter(o -> o.heated),
             Codec.INT.optionalFieldOf("ranged",0).forGetter(o -> o.ranged),
-            ForgeRegistries.FLUIDS.getCodec().optionalFieldOf("steamFluid").forGetter(o -> Optional.ofNullable(o.fluid)),
             Codec.FLOAT.fieldOf("tempLevel").forGetter(o -> o.TLevel),
             Codec.FLOAT.fieldOf("rangeLevel").forGetter(o -> o.RLevel),
             CompoundTag.CODEC.fieldOf("items").forGetter(o -> o.inventory.serializeNBT()),
@@ -112,12 +113,10 @@ public class GeneratorData implements SpecialData {
     final float heatChance = .05f;
     public int process = 0, processMax = 0;
     public int overdriveLevel = 0;
-    public float steamLevel;
-    public int steamProcess;
     public int heated, ranged;
+    public float steamLevel;
     public float lastPower;
     public float power;
-    public Fluid fluid;
     public boolean isWorking, isOverdrive, isActive, isBroken;
     public float TLevel, RLevel;
     public ItemStack currentItem = ItemStack.EMPTY;
@@ -129,17 +128,15 @@ public class GeneratorData implements SpecialData {
     }
 
 
-    public GeneratorData(int process, int processMax, int steamProcess, int overdriveLevel, boolean[] flags, float steamLevel, float power, int heated, int ranged, Optional<Fluid> fluid, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, Optional<BlockPos> actualPos, Optional<ResourceLocation> dimension) {
+    public GeneratorData(int process, int processMax, int overdriveLevel, boolean[] flags, float steamLevel, float power, int heated, int ranged, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, Optional<BlockPos> actualPos, Optional<ResourceLocation> dimension) {
         super();
         this.process = process;
         this.processMax = processMax;
         this.overdriveLevel = overdriveLevel;
         this.steamLevel = steamLevel;
-        this.steamProcess = steamProcess;
         this.heated = heated;
         this.ranged = ranged;
         this.power = power;
-        this.fluid = fluid.orElse(null);
         this.isWorking = flags[0];
         this.isOverdrive = flags[1];
         this.isActive = flags[2];
@@ -228,14 +225,13 @@ public class GeneratorData implements SpecialData {
     public void tick(Level w,SpecialDataHolder<?> teamData) {
         isActive = tickFuelProcess(w,teamData);
         tickHeatedProcess(w);
-        lastPower=0;
-        if (isActive && power > 0)
-            lastPower=((float) (power * getHeatEfficiency(teamData)));
+
     }
 
     public void tickHeatedProcess(Level world) {
         int heatedMax = getMaxHeated();
         int rangedMax = getMaxRanged();
+        
         if (isActive) {
             if (heated != heatedMax) {
                 if (world.random.nextFloat() < heatChance * (isOverdrive ? 2 : 1)) {
@@ -285,31 +281,36 @@ public class GeneratorData implements SpecialData {
         boolean isWorking=false;
         
         if(this.isWorking) {
+        	int baseFuelCost=1;
+        	float maxPower=steamLevel*25;//calculate max steam heat
+        	float powerRemain=Math.max(0, maxPower-lastPower);//then calculate heat required to generate 
+        	double efficiency=getHeatEfficiency(teamData);//get team heat efficiency
         	
+            float actualPowerCost=(float) (powerRemain/efficiency/25f*8f);//25 heat per 8 fuel tick
+            int extraCost=Mth.floor(actualPowerCost);
 	        if (isOverdrive) {
-	            while (process <= 1 && hasFuel) {
-	                hasFuel = consumesFuel(w,teamData);
-	            }
-	           
-	            if (process > 1) {
-	                process -= 2;
-	                isWorking=true;
+	        	baseFuelCost+=1;
+	        }
+            while (process <= baseFuelCost+extraCost && hasFuel) {
+                hasFuel = consumesFuel(w,teamData);
+            }
+           
+            if (process >= baseFuelCost) {
+                process -= baseFuelCost;
+                isWorking=true;
+                if(isOverdrive) {
 	                overdriveLevel += 20;
 	                if (overdriveLevel >= this.getMaxOverdrive()) {
 	                    isBroken = true;
 	                }
-	            }
-	
-	
-	        } else {
-	            while (process <= 0 && hasFuel) {
-	                hasFuel = consumesFuel(w,teamData);
-	            }
-	            if (process > 0) {
-	                process--;
-	                isWorking=true;
-	            }
-	        }
+                }
+            }
+            if(isWorking) {
+            	int actualCost=Math.min(extraCost, process);
+            	process-=actualCost;
+            	power=lastPower+(float)(efficiency*actualCost/8f*25);//refills power
+            	
+            }
 	        if(teamData instanceof TeamDataHolder team) {
 	        	if(lastOverdrive<=getCriticalOverdriveValue()&&overdriveLevel>getCriticalOverdriveValue()) {
 		        	team.forEachOnline(t->t.sendSystemMessage(Lang.translateTooltip("generator.critical").withStyle(WARN_STYLE)));
@@ -320,6 +321,7 @@ public class GeneratorData implements SpecialData {
 		        
 	        }
         }
+        lastPower=0;
         overdriveLevel=Math.max(0, overdriveLevel);
         return isWorking;
     }
@@ -331,9 +333,6 @@ public class GeneratorData implements SpecialData {
         RLevel = 0;
         process = 0;
         processMax = 0;
-        steamProcess = 0;
-        steamLevel = 0;
-        fluid = null;
         power = 0;
         lastPower=0;
         
