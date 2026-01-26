@@ -64,33 +64,27 @@ class HelpPanel extends UILayer {
 			}
 
 			@Override
-			public void addUIElements() {
-				super.addUIElements();
-			}
-
-			@Override
 			public void resize() {
 				scrollBar.setPosAndSize(getX() + getWidth()+10, 20, 7, getHeight()-15);
 			}
 		};
-		contentPanel.fillContent(List.of(
-				LineHelper.text (contentPanel, Lang.translateGui("minigame.match")).alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()).scale(2),
-				LineHelper.img  (contentPanel, DrawDeskIcons.LOCATION).uvOverride(new UV(243, 319, 73, 56, 512, 512)),
-				LineHelper.text (contentPanel, Lang.translateGui("minigame.t1")).alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()),
-				LineHelper.br   (contentPanel).icon(TechIcons.HLINE).height(1),
-				LineHelper.img  (contentPanel, DrawDeskIcons.LOCATION).uvOverride(new UV(316, 319, 90, 56, 512, 512)),
-				LineHelper.text (contentPanel, Lang.translateGui("minigame.t2")).alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()),
-				LineHelper.space(contentPanel, 16),
-				LineHelper.text (contentPanel, Lang.translateGui("minigame.display")).alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()).scale(2),
-				LineHelper.img  (contentPanel, DrawDeskIcons.LOCATION).uvOverride(new UV(243, 375, 93, 48, 512, 512)),
-				LineHelper.text (contentPanel, Lang.translateGui("minigame.t3")).alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()),
-				LineHelper.br   (contentPanel).icon(TechIcons.HLINE).height(1),
-				LineHelper.img  (contentPanel, DrawDeskIcons.LOCATION).uvOverride(new UV(336, 375, 74, 48, 512, 512)),
-				LineHelper.text (contentPanel, Lang.translateGui("minigame.t4")).alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()),
-				LineHelper.br   (contentPanel).icon(TechIcons.HLINE).height(1),
-				LineHelper.img  (contentPanel, DrawDeskIcons.LOCATION).uvOverride(new UV(243, 423, 79, 48, 512, 512)),
-				LineHelper.text (contentPanel, Lang.translateGui("minigame.t5")).alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor())
-		));
+		contentPanel.builder()
+		.text (Lang.translateGui("minigame.match"),c->c.alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()).scale(2))
+		.img  (DrawDeskIcons.LOCATION,c->c.uvOverride(new UV(243, 319, 73, 56, 512, 512)))
+		.text (Lang.translateGui("minigame.t1"),c->c.alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()))
+		.br   (c->c.icon(TechIcons.HLINE).height(1))
+		.img  (DrawDeskIcons.LOCATION,c->c.uvOverride(new UV(316, 319, 90, 56, 512, 512)))
+		.text (Lang.translateGui("minigame.t2"),c->c.alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()))
+		.space(16)
+		.text (Lang.translateGui("minigame.display"),c->c.alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()).scale(2))
+		.img  (DrawDeskIcons.LOCATION,c->c.uvOverride(new UV(243, 375, 93, 48, 512, 512)))
+		.text (Lang.translateGui("minigame.t3"),c->c.alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()))
+		.br   (c->c.icon(TechIcons.HLINE).height(1))
+		.img  (DrawDeskIcons.LOCATION,c->c.uvOverride(new UV(336, 375, 74, 48, 512, 512)))
+		.text (Lang.translateGui("minigame.t4"),c->c.alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()))
+		.br   (c->c.icon(TechIcons.HLINE).height(1))
+		.img  (DrawDeskIcons.LOCATION,c->c.uvOverride(new UV(243, 423, 79, 48, 512, 512)))
+		.text (Lang.translateGui("minigame.t5"),c->c.alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()));
 		contentPanel.scrollBar = new TechScrollBar(this, contentPanel);
 		contentPanel.setPosAndSize(5, 5, 212, 160);
 		add(contentPanel);
@@ -101,22 +95,12 @@ class HelpPanel extends UILayer {
 	public void alignWidgets() {
 	}
 
-	@Override
-	public void render(GuiGraphics guiGraphics, int x, int y, int w, int h) {
-		if (ot.showHelp) {
-			super.render(guiGraphics, x, y, w, h);
-		}
-	}
 
 	@Override
 	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		DrawDeskIcons.HELP.draw(matrixStack, x, y, w, h);
 	}
 
-	@Override
-	public boolean isEnabled() {
-		return ot.showHelp;
-	}
 
 	@Override
 	public boolean isVisible() {

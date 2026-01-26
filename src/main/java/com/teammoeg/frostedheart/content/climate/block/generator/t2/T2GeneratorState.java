@@ -19,6 +19,12 @@
 
 package com.teammoeg.frostedheart.content.climate.block.generator.t2;
 
+import static net.minecraft.ChatFormatting.*;
+
+import java.util.List;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorState;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
@@ -26,21 +32,15 @@ import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRendere
 import com.teammoeg.frostedheart.content.steamenergy.ClientHeatNetworkData;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
-
-import blusunrize.immersiveengineering.api.multiblocks.blocks.util.StoredCapability;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
 import com.teammoeg.frostedheart.util.Lang;
+
+import blusunrize.immersiveengineering.api.multiblocks.blocks.util.StoredCapability;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
-
-import static net.minecraft.ChatFormatting.GRAY;
 
 public class T2GeneratorState extends GeneratorState implements HeatNetworkProvider, IHaveGoggleInformation {
     public static final int TANK_CAPACITY = 200 * 1000;

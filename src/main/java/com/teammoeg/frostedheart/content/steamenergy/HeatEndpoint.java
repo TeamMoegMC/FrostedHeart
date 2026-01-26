@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.teammoeg.chorda.io.NBTSerializable;
-import com.teammoeg.frostedheart.FHMain;
 
 import lombok.Getter;
 import lombok.Setter;
