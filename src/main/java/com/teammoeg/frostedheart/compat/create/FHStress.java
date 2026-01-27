@@ -33,10 +33,10 @@ public class FHStress implements IStressValueProvider {
     @Override
     public double getCapacity(Block arg0) {
     	if(arg0 ==FHBlocks.STEAM_CORE.get())return FHConfig.SERVER.STEAM_CORE.steamCoreCapacity.get();
-//    	if(arg0 ==FHBlocks.FABRIC_VAWT.get())return 9;
-    	if(arg0 ==FHBlocks.METAL_VAWT.get())return 9;
-//    	if(arg0 ==FHBlocks.ALLOY_VAWT.get())return 9;
-//    	if(arg0 ==FHBlocks.DSP_VAWT.get())return 9;
+    	if(arg0 ==FHBlocks.FABRIC_VAWT.get())return FHConfig.SERVER.VAWT.vawtCapacity.get();
+    	if(arg0 ==FHBlocks.METAL_VAWT.get())return FHConfig.SERVER.VAWT.vawtCapacity.get();
+    	if(arg0 ==FHBlocks.ALLOY_VAWT.get())return FHConfig.SERVER.VAWT.vawtCapacity.get();
+    	if(arg0 ==FHBlocks.DSP_VAWT.get())return FHConfig.SERVER.VAWT.vawtCapacity.get();
         return 0;
     }
 
@@ -49,10 +49,10 @@ public class FHStress implements IStressValueProvider {
     @Override
     public boolean hasCapacity(Block arg0) {
         return arg0 == FHBlocks.STEAM_CORE.get()
-//                || arg0 == FHBlocks.FABRIC_VAWT.get()
-                || arg0 == FHBlocks.METAL_VAWT.get();
-//                || arg0 == FHBlocks.ALLOY_VAWT.get()
-//                || arg0 == FHBlocks.DSP_VAWT.get();
+                || arg0 == FHBlocks.FABRIC_VAWT.get()
+                || arg0 == FHBlocks.METAL_VAWT.get()
+                || arg0 == FHBlocks.ALLOY_VAWT.get()
+                || arg0 == FHBlocks.DSP_VAWT.get();
     }
 
     @Override
