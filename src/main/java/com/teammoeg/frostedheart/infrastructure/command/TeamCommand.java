@@ -23,6 +23,7 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataType;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
@@ -35,8 +36,12 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.GameProfileArgument;
+import net.minecraft.commands.arguments.NbtPathArgument;
+import net.minecraft.commands.arguments.NbtTagArgument;
+import net.minecraft.commands.arguments.selector.EntitySelector;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -48,13 +53,12 @@ public class TeamCommand {
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        LiteralArgumentBuilder<CommandSourceStack> getdata = Commands.literal("get")
-        	.then(Commands.argument("player", EntityArgument.player())
+        RequiredArgumentBuilder<CommandSourceStack, EntitySelector> getdata = Commands.argument("player", EntityArgument.player())
         		.then(Commands.argument("type", StringArgumentType.string()).suggests((ct,sb)->{
         			for(SpecialDataType i:CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).getTypes())
         				sb=sb.suggest(i.getId());
         			return sb.buildFuture();
-        		}).executes(ct->{
+        		}).then(Commands.argument("path", NbtPathArgument.nbtPath())).then(Commands.literal("get").executes(ct->{
         			SpecialDataType<SpecialData> type=(SpecialDataType<SpecialData>) SpecialDataType.getType(StringArgumentType.getString(ct, "type"));
         			if(type==null)
         				ct.getSource().sendFailure(Components.literal("Invalid data type"));
@@ -65,9 +69,9 @@ public class TeamCommand {
         				}else {
         					ct.getSource().sendSuccess(()->{
 								try {
-									return NbtUtils.toPrettyComponent(type.saveData(NbtOps.INSTANCE, data));
+									
+									return NbtUtils.toPrettyComponent(NbtPathArgument.getPath(ct, "path").get(type.saveData(NbtOps.INSTANCE, data)).get(0));
 								} catch (Exception e) {
-									// TODO Auto-generated catch block
 									e.printStackTrace();
 								}
 								return Components.literal("Can not get data of type");
@@ -76,7 +80,34 @@ public class TeamCommand {
         			}
         			
         			return Command.SINGLE_SUCCESS;
-        		})));
+        		})).then(Commands.literal("set").then(Commands.argument("data", NbtTagArgument.nbtTag()).executes(ct->{
+        			SpecialDataType<SpecialData> type=(SpecialDataType<SpecialData>) SpecialDataType.getType(StringArgumentType.getString(ct, "type"));
+        			if(type==null)
+        				ct.getSource().sendFailure(Components.literal("Invalid data type"));
+        			else {
+        				SpecialData data=CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).getData(type);
+        				if(data==null) {
+        					ct.getSource().sendFailure(Components.literal("Team does not contains specific data"));
+        				}else {
+        					try {
+								
+								Tag datax=type.saveData(NbtOps.INSTANCE, data);
+								int value=NbtPathArgument.getPath(ct, "path").set(datax, NbtTagArgument.getNbtTag(ct, "data"));
+								type.loadData(NbtOps.INSTANCE, datax);
+								if(value>0) {
+									ct.getSource().sendSuccess(()->Components.literal("Modified "+value+"."),false);
+								}else {
+									ct.getSource().sendSuccess(()->Components.literal("Could not modify."),false);
+								}
+							} catch (Exception e) {
+								e.printStackTrace();
+								ct.getSource().sendFailure(Components.literal("Error, see logs for detail"));
+							}
+        				}
+        			}
+        			
+        			return Command.SINGLE_SUCCESS;
+        		}))));
         
         
         LiteralArgumentBuilder<CommandSourceStack> data = Commands.literal("data").then(getdata);

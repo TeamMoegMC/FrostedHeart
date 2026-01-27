@@ -242,6 +242,12 @@ public class Research implements FHRegisteredItem {
     public void addParent(String par) {
         this.parents.add(par);
     }
+    public boolean hasParent(String par) {
+    	return this.parents.contains(par);
+    }
+    public boolean hasParent(Research rs) {
+    	return hasParent(rs.getId());
+    }
 
     /**
      * Attach clue.

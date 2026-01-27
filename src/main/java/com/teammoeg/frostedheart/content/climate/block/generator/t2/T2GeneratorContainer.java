@@ -22,9 +22,9 @@ package com.teammoeg.frostedheart.content.climate.block.generator.t2;
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
-import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorContainer;
+import com.teammoeg.steampowered.registrate.SPFluids;
 
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
@@ -47,7 +47,8 @@ public class T2GeneratorContainer extends GeneratorContainer<T2GeneratorState, T
     }
     public T2GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer) {
         super(type, id, inventoryPlayer);
-        slot_tank.bind(e->fakeTank.setFluid(new FluidStack(FHFluids.STEAM.get(),e)));
+        
+        slot_tank.bind(e->fakeTank.setFluid(new FluidStack(SPFluids.STEAM.get(),e)));
     }
 
     @Override

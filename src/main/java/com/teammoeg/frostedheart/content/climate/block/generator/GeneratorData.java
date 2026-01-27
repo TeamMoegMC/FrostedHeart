@@ -287,9 +287,11 @@ public class GeneratorData implements SpecialData {
         	
             float actualPowerCost=(float) (powerRemain/efficiency/25f*8f);//25 heat per 8 fuel tick
             int extraCost=Mth.floor(actualPowerCost);
+           
 	        if (isOverdrive) {
 	        	baseFuelCost+=1;
 	        }
+	        //System.out.println(baseFuelCost+","+extraCost);
             while (process <= baseFuelCost+extraCost && hasFuel) {
                 hasFuel = consumesFuel(w,teamData);
             }
