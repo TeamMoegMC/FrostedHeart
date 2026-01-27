@@ -85,6 +85,7 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
@@ -1811,8 +1812,97 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.rotateOrient("ruined_machine_switch"))
             .simpleItem()
             .register();
-
-
+    //Lab Blocks
+    public static BlockEntry<Block> LAB_BLCOK = REGISTRATE.block("lab_block", Block::new)
+            .transform(FHBlockStateGen.lab_block())
+            .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block"))
+            .simpleItem()
+            .lang("Lab Block")
+            .register();
+    public static BlockEntry<Block> studded_lab_block = REGISTRATE.block("studded_lab_block", Block::new)
+            .transform(FHBlockStateGen.lab_block())
+            .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/studded_lab_block"))
+            .simpleItem()
+            .lang("Studded Lab Block")
+            .register();
+    public static BlockEntry<Block> framed_lab_block = REGISTRATE.block("framed_lab_block", Block::new)
+            .transform(FHBlockStateGen.lab_block())
+            .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/framed_lab_block"))
+            .simpleItem()
+            .lang("framed Lab Block")
+            .register();
+    public static BlockEntry<Block> lab_block_tile = REGISTRATE.block("lab_block_tile", Block::new)
+            .transform(FHBlockStateGen.lab_block())
+            .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_tile"))
+            .simpleItem()
+            .lang("Lab Block Tile")
+            .register();
+    public static BlockEntry<Block> lab_block_small_tile = REGISTRATE.block("lab_block_small_tile", Block::new)
+            .transform(FHBlockStateGen.lab_block())
+            .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_small_tile"))
+            .lang("Lab Block Small Tile")
+            .simpleItem()
+            .register();
+    public static BlockEntry<Block> lab_block_acoustic_diffuser = REGISTRATE.block("lab_block_acoustic_diffuser", Block::new)
+            .transform(FHBlockStateGen.lab_block())
+            .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_acoustic_diffuser"))
+            .lang("Lab Block Acoustic Diffuser")
+            .simpleItem()
+            .register();
+    public static BlockEntry<Block> lab_block_cabinet = REGISTRATE.block("lab_block_cabinet", Block::new)
+            .transform(FHBlockStateGen.lab_block())
+            .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_cabinet"))
+            .lang("lab_block_cabinet")
+            .simpleItem()
+            .register();
+    public static BlockEntry<Block> lab_vent = REGISTRATE.block("lab_vent", Block::new)
+            .transform(FHBlockStateGen.lab_block())
+            .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_vent"))
+            .lang("lab_vent")
+            .simpleItem()
+            .register();
+    public static BlockEntry<LabBlockNumber> lab_block_number = REGISTRATE.block("lab_block_number", LabBlockNumber::new)
+            .transform(FHBlockStateGen.lab_block())
+            .blockstate(FHBlockStateGen.integerPropertyBlock(LabBlockNumber.NUMBER,
+                    "lab_block_number","lab_block/lab_block_number",false))
+            .lang("lab_block_number")
+            .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/lab_block_number_0"))).build()
+            .register();
+    public static BlockEntry<LabBlockAlphabet> lab_block_alphabet = REGISTRATE.block("lab_block_alphabet", LabBlockAlphabet::new)
+            .transform(FHBlockStateGen.lab_block())
+//            .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_alphabet"))
+            .blockstate(FHBlockStateGen.integerPropertyBlock(LabBlockAlphabet.ALPHABET,
+                    "lab_block_alphabet","lab_block/lab_block_alphabet",true))
+            .lang("lab_block_alphabet")
+            .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/lab_block_alphabet_a"))).build()
+            .register();
+    public static BlockEntry<LabBlockSign> lab_block_sign = REGISTRATE.block("lab_block_sign", LabBlockSign::new)
+            .transform(FHBlockStateGen.lab_block())
+            .blockstate(FHBlockStateGen.integerPropertyBlock(LabBlockSign.SIGN,
+                    "lab_block_sign","lab_block/lab_block_sign",false))
+            .lang("lab_block_sign")
+            .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/lab_block_sign_0"))).build()
+            .register();
+    public static BlockEntry<ConcreteBlock> concrete = REGISTRATE.block("concrete", ConcreteBlock::new)
+            .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
+                    .requiresCorrectToolForDrops()
+                    .strength(10, 20))
+            .tag(BlockTags.MINEABLE_WITH_PICKAXE)
+            .tag(BlockTags.NEEDS_IRON_TOOL)
+            .blockstate(FHBlockStateGen.existed())
+            .lang("Concrete")
+            .item().model(AssetLookup.existingItemModel()).build()
+            .register();
+    public static BlockEntry<ConcreteCrackedBlock> concrete_cracked = REGISTRATE.block("concrete_cracked", ConcreteCrackedBlock::new)
+            .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
+                    .requiresCorrectToolForDrops()
+                    .strength(8, 20))
+            .tag(BlockTags.MINEABLE_WITH_PICKAXE)
+            .tag(BlockTags.NEEDS_IRON_TOOL)
+            .blockstate(FHBlockStateGen.existed())
+            .lang("Concrete Cracked")
+            .item().model(AssetLookup.existingItemModel()).build()
+            .register();
     static {
         REGISTRATE.setCreativeTab(FHTabs.FUNCTIONAL_BLOCKS);
     }
@@ -1990,23 +2080,22 @@ public class FHBlocks {
             .item()
             .transform(ModelGen.customItemModel())
             .register();
-    public static final BlockEntry<VAWTBlock> FABRIC_VAWT = REGISTRATE.block("fabric_vawt",
+    /*public static final BlockEntry<VAWTBlock> FABRIC_VAWT = REGISTRATE.block("fabric_vawt",
                     p -> VAWTBlock.create(FHProps.woodenProps, "fabric", 120, 1.125F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .item()
             .transform(ModelGen.customItemModel())
-            .register();
+            .register();*/
     public static final BlockEntry<VAWTBlock> METAL_VAWT = REGISTRATE.block("metal_vawt",
                     p -> VAWTBlock.create(FHProps.metalDecoProps, "metal", 240, 0.75F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
-            .item()
-            .transform(ModelGen.customItemModel())
+            .simpleItem()
             .register();
-    public static final BlockEntry<VAWTBlock> ALLOY_VAWT = REGISTRATE.block("alloy_vawt",
+    /*public static final BlockEntry<VAWTBlock> ALLOY_VAWT = REGISTRATE.block("alloy_vawt",
                     p -> VAWTBlock.create(FHProps.metalDecoProps, "alloy", 480, 1.0F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
@@ -2021,7 +2110,7 @@ public class FHBlocks {
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .item()
             .transform(ModelGen.customItemModel())
-            .register();
+            .register();*/
     // WARDROBE, "wardrobe", like Blocks.SPRUCE_DOOR
     public static final BlockEntry<WardrobeBlock> WARDROBE = REGISTRATE.block("wardrobe", WardrobeBlock::new)
             .initialProperties(() -> Blocks.SPRUCE_DOOR)

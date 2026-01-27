@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "type=0": {
+      "model": "frostedheart:block/concrete/concrete_0"
+    },
+    "type=1": {
+      "model": "frostedheart:block/concrete/concrete_1"
+    },
+    "type=2": {
+      "model": "frostedheart:block/concrete/concrete_2"
+    },
+    "type=3": {
+      "model": "frostedheart:block/concrete/concrete_3"
+    }
+  }
+}

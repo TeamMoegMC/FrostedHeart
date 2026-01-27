@@ -70,7 +70,7 @@ public class VirtualItemGridElement extends UIElement{
         guiGraphics.pose().pushPose();
 //        guiGraphics.pose().translate(0, 0, 100);
         Minecraft mc = ClientUtils.getMc();
-        // 获取鼠标绝对坐标用于高亮判断
+        // 获取鼠标相对坐标用于高亮判断
         double relMouseX = getMouseX();
         double relMouseY = getMouseY();
 
