@@ -17,9 +17,9 @@ public abstract class HeatingMultiblock extends CMultiblock {
 	}
     @Override
     public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
-        BlockPos master = this.getMasterFromOriginOffset();
-        BlockPos offset = this.getAbsoluteOffset(master, mirrored, clickDirectionAtCreation);
-        ChunkHeatData.removeTempAdjust(world, origin.offset(offset).below(master.getY()));
+    	BlockPos master = this.getMasterFromOriginOffset();
+        ChunkHeatData.removeTempAdjust(world, getMasterPos(origin,mirrored,clickDirectionAtCreation).below(master.getY()));
         super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
     }
+
 }

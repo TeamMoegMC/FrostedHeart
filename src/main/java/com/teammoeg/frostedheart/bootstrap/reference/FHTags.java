@@ -362,7 +362,8 @@ public class FHTags {
 		HIDDEN_DRINK(false),
 		FLAMMABLE_FLUID(false),
 		WOODEN_CUP_DRINK(false),
-		IRON_CUP_DRINK(false)
+		IRON_CUP_DRINK(false),
+		STEAM(NameSpace.FORGE,"steam")
 		;
 
 		public final TagKey<Fluid> tag;

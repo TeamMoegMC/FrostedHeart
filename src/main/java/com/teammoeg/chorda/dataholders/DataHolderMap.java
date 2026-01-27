@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.dataholders;
 
+import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
@@ -113,7 +114,9 @@ public class DataHolderMap<T extends DataHolderMap<T>> implements SpecialDataHol
 		}
 		return ret;
 	}
-
+	public Collection<SpecialDataType> getTypes(){
+		return data.keySet();
+	}
 	@Override
 	public <U extends SpecialData> Optional<U> getOptional(SpecialDataType<U> cap) {
 		

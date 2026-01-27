@@ -21,6 +21,7 @@ package com.teammoeg.frostedresearch.gui.tech;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -88,10 +89,15 @@ public class ResearchHierarchyPanel extends UILayer {
 						Research r = researchPanel.selectedResearch;
 						ResearchEditors.RESEARCH_LIST.open(EditUtils.openEditorScreen(), Components.str("Edit children"), r.getChildren(), s -> {
 							r.getChildren().forEach(e -> {
-								e.removeParent(r);
+								if(!s.remove(e)) {
+									e.removeParent(r);
+									ResearchEditUtils.saveResearch(e);
+								}
+							});
+							s.forEach(e ->{
+								e.addParent(r);
 								ResearchEditUtils.saveResearch(e);
 							});
-							s.forEach(e -> e.addParent(r));
 							FHResearch.reindex();
 							ResearchEditUtils.saveResearch(r);
 						});
@@ -178,7 +184,7 @@ public class ResearchHierarchyPanel extends UILayer {
 			else
 				lmost = ButtonPos[1] + 12;
 			trmost = rmost;
-			lu.setPoints(lmost, 42, rmost, 42);
+			lu.setPoints(lmost, 45, rmost, 45);
 
 		}
 		if (k > 0) {
@@ -202,10 +208,10 @@ public class ResearchHierarchyPanel extends UILayer {
 			ResearchSimpleButton childButton = new ResearchSimpleButton(this, child);
 			childButton.setChildren(researchPanel.selectedResearch);
 			add(childButton);
-			childButton.setPos(x, 92);
+			childButton.setPos(x, 95);
 			ThickLine l = new ResearchHierarchyLine(researchPanel.selectedResearch);
 			lines.add(l);
-			l.setPosAndDelta(x + 12, 90, 0, 16);
+			l.setPosAndDelta(x + 12, 89, 0, 22);
 			k++;
 		}
 		if (k > 6)
@@ -226,7 +232,7 @@ public class ResearchHierarchyPanel extends UILayer {
 			else
 				lmost = ButtonPos[1] + 12;
 			trmost = Math.max(rmost, trmost);
-			lu.setPoints(lmost, 90, rmost, 90);
+			lu.setPoints(lmost, 89, rmost, 89);
 		}
 		if (k > 0) {
 			ThickLine lux2 = new ResearchHierarchyLine(researchPanel.selectedResearch);

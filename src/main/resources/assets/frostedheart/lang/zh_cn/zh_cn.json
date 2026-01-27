@@ -88,6 +88,8 @@
   "gui.frostedheart.generator.upgrade_material": "升级素材",
   "gui.frostedheart.generator.pressure": "气压",
   "gui.frostedheart.generator.temperature_level": "增温等级",
+  "gui.frostedheart.generator.steam.level":"蒸汽等级：%s%%",
+  "gui.frostedheart.generator.steam.fulfilled":"已充满",
   "gui.frostedheart.mb_per_sec": "%s mb 每秒",
   "gui.wheel_menu.editor.key":"按键行动",
   "gui.wheel_menu.editor.command":"指令行动",

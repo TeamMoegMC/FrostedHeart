@@ -45,7 +45,7 @@ public class DrawDeskTheme {
 		return TechIcons.text;
 	}
 	public static int getWeakColor() {
-		return 0xADA691;
+		return 0xFFADA691;
 	}
 	public static int getErrorColor() {
 		return TechIcons.text_red;

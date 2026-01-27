@@ -26,8 +26,8 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorState;
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
 import com.teammoeg.frostedheart.content.steamenergy.ClientHeatNetworkData;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
@@ -43,15 +43,16 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class T2GeneratorState extends GeneratorState implements HeatNetworkProvider, IHaveGoggleInformation {
-    public static final int TANK_CAPACITY = 200 * 1000;
+    public static final int TANK_CAPACITY = 5 * 1000;
     public FluidTank tank = new FluidTank(TANK_CAPACITY,
-            f -> GeneratorSteamRecipe.findRecipe(f) != null);
+            f -> FHTags.Fluids.STEAM.matches(f.getFluid()));
     public StoredCapability<IFluidHandler> tankCap = new StoredCapability<>(tank);
     
     public StoredCapability<HeatEndpoint> heatCap=new StoredCapability<>(endpoint);
     HeatNetwork manager=new HeatNetwork();
     int liquidtick = 0;
     int noliquidtick = 0;
+    int steamLevel=0;
     int tickUntilStopBoom = 20;
     int notFullPowerTick = 0;
     final int nextBoom = 200; //10s
@@ -67,6 +68,7 @@ public class T2GeneratorState extends GeneratorState implements HeatNetworkProvi
         nbt.putInt("noliquidtick", noliquidtick);
         nbt.putInt("tickUntilStopBoom", tickUntilStopBoom);
         nbt.putInt("notFullPowerTick", notFullPowerTick);
+        nbt.putInt("steamLevel", steamLevel);
         nbt.put("tank", tank.writeToNBT(new CompoundTag()));
         if(manager!=null)
             nbt.put("manager", manager.serializeNBT());
@@ -79,6 +81,7 @@ public class T2GeneratorState extends GeneratorState implements HeatNetworkProvi
         noliquidtick = nbt.getInt("noliquidtick");
         tickUntilStopBoom = nbt.getInt("tickUntilStopBoom");
         notFullPowerTick = nbt.getInt("notFullPowerTick");
+        steamLevel=nbt.getInt("steamLevel");
         tank.readFromNBT(nbt.getCompound("tank"));
         if(manager!=null)
             manager.deserializeNBT(nbt.getCompound("manager"));

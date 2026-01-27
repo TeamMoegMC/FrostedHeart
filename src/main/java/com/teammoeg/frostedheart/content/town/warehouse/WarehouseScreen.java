@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.town.warehouse;
 
+import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TabImageButtonElement;
 import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedheart.FHMain;
@@ -71,7 +73,15 @@ public class WarehouseScreen extends AbstractTownWorkerBlockScreen<WarehouseMenu
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
         background.draw(graphics, x, y, 176, 222);
     }
+    public TabImageButtonElement getTabButton(int x, int y, int tabI) {
+        return new TabImageButtonElement(this, x, y, 22, 18, tabI, getButtonIcon(0), getButtonIcon(1)){
+            @Override
+            public void onClicked(MouseButton button) {
+                selectTab(tabI);
+            }
 
+        };
+    }
     public CIcons.CIcon getButtonIcon(int i) {
         if (i==0)
             return activeButton;

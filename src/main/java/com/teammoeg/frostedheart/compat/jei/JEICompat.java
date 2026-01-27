@@ -44,7 +44,6 @@ import com.teammoeg.frostedheart.compat.jei.extension.FuelingExtension;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorContainer;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorScreen;
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
@@ -128,7 +127,7 @@ public class JEICompat implements IModPlugin {
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
         IGuiHelper guiHelper = registration.getJeiHelpers().getGuiHelper();
-        registration.addRecipeCategories(new GeneratorFuelCategory(guiHelper), new GeneratorSteamCategory(guiHelper),
+        registration.addRecipeCategories(new GeneratorFuelCategory(guiHelper), //new GeneratorSteamCategory(guiHelper),
                 new ChargerCategory(guiHelper), new ChargerCookingCategory(guiHelper), new CuttingCategory(guiHelper),
                 new CampfireDefrostCategory(guiHelper), new SmokingDefrostCategory(guiHelper),
                 new ChargerDefrostCategory(guiHelper), new SaunaCategory(guiHelper), new IncubatorCategory(guiHelper),
@@ -142,8 +141,8 @@ public class JEICompat implements IModPlugin {
 			public Collection<IGuiClickableArea> getGuiClickableAreas(GeneratorScreen<?,?> containerScreen, double mouseX, double mouseY) {
 				List<IGuiClickableArea> col=new ArrayList<>(2);
 				GeneratorContainer<?,?> container=containerScreen.getMenu();
-				if(container.getTank()!=null)
-					col.add(IGuiClickableArea.createBasic(98, 84, 34, 4, GeneratorSteamCategory.UID));
+				//if(container.getTank()!=null)
+				//	col.add(IGuiClickableArea.createBasic(98, 84, 34, 4, GeneratorSteamCategory.UID));
 				Point in=container.getSlotIn();
 				Point out=container.getSlotOut();
 				int ininvarry=in.getY()+6;
@@ -172,8 +171,7 @@ public class JEICompat implements IModPlugin {
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.Registration.GENERATOR_T1.blockItem().get()), GeneratorFuelCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.Registration.GENERATOR_T2.blockItem().get()), GeneratorFuelCategory.UID,
-                GeneratorSteamCategory.UID);
+        //registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.Registration.GENERATOR_T2.blockItem().get()), GeneratorFuelCategory.UID,GeneratorSteamCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHBlocks.CHARGER.get()), ChargerCategory.UID, ChargerCookingCategory.UID,
                 ChargerDefrostCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(Blocks.CAMPFIRE), CampfireDefrostCategory.UID);
@@ -193,7 +191,7 @@ public class JEICompat implements IModPlugin {
         CuttingCategory.matching = FHTags.Items.KNIFE.getTagCollection();
 
         registration.addRecipes(GeneratorFuelCategory.UID, CUtils.filterRecipes(recipeManager,GeneratorRecipe.TYPE));
-        registration.addRecipes(GeneratorSteamCategory.UID,new ArrayList<>(GeneratorSteamRecipe.recipeList.values()));
+        //registration.addRecipes(GeneratorSteamCategory.UID,new ArrayList<>(GeneratorSteamRecipe.recipeList.values()));
         registration.addRecipes(ChargerCategory.UID, CUtils.filterRecipes(recipeManager,ChargerRecipe.TYPE));
         registration.addRecipes(ChargerCookingCategory.UID, recipeManager.getAllRecipesFor(net.minecraft.world.item.crafting.RecipeType.SMOKING));
         registration.addRecipes(CampfireDefrostCategory.UID,new ArrayList<>(CampfireDefrostRecipe.recipeList.values()));

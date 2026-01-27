@@ -159,17 +159,10 @@ public class VirtualItemGridElement extends UIElement{
 
     @Override
     public boolean onMousePressed(MouseButton button) {
-        //鼠标绝对坐标
+        //鼠标相对坐标
         if (!isMouseOver()) return false;
-        double rawMx = getMouseX();
-        double rawMy = getMouseY();
-
-        var window = net.minecraft.client.Minecraft.getInstance().getWindow();
-        int guiLeft = (window.getGuiScaledWidth() - 176) / 2;
-        int guiTop = (window.getGuiScaledHeight() - 222) / 2;
-        //计算相对坐标
-        double mx = rawMx - guiLeft;
-        double my = rawMy - guiTop;
+        double mx = getMouseX();
+        double my = getMouseY();
 
         //滚动条点击检测
         int barX = getScrollBarXRelative();
@@ -220,12 +213,9 @@ public class VirtualItemGridElement extends UIElement{
 
     @Override
     public boolean onMouseDragged(MouseButton button, double dragX, double dragY) {
-        //鼠标绝对坐标
+        //鼠标相对坐标
         if (this.isScrolling) {
-            double rawMy = getMouseY();
-            var window = net.minecraft.client.Minecraft.getInstance().getWindow();
-            int guiTop = (window.getGuiScaledHeight() - 222) / 2;
-            double my = rawMy - guiTop;
+            double my = getMouseY();
 
             List<VirtualItemStack> list = itemSource.get();
             int totalItems = list != null ? list.size() : 0;
