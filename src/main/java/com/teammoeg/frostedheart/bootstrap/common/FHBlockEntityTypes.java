@@ -110,7 +110,7 @@ public class FHBlockEntityTypes {
     public static final BlockEntityEntry<VAWTBlockEntity> VAWT = REGISTRATE
             .blockEntity("vawt", VAWTBlockEntity::new)
             .instance(() -> SingleRotatingInstance::new, false)
-            .validBlocks(/*FHBlocks.FABRIC_VAWT, */FHBlocks.METAL_VAWT/*, FHBlocks.ALLOY_VAWT, FHBlocks.DSP_VAWT*/)
+            .validBlocks(FHBlocks.FABRIC_VAWT, FHBlocks.METAL_VAWT, FHBlocks.ALLOY_VAWT, FHBlocks.DSP_VAWT)
             .renderer(() -> KineticBlockEntityRenderer::new)
             .register();
 
