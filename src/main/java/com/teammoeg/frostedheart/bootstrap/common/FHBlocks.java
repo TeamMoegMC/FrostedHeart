@@ -1870,7 +1870,6 @@ public class FHBlocks {
             .register();
     public static BlockEntry<LabBlockAlphabet> lab_block_alphabet = REGISTRATE.block("lab_block_alphabet", LabBlockAlphabet::new)
             .transform(FHBlockStateGen.lab_block())
-//            .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_alphabet"))
             .blockstate(FHBlockStateGen.integerPropertyBlock(LabBlockAlphabet.ALPHABET,
                     "lab_block_alphabet","lab_block/lab_block_alphabet",true))
             .lang("lab_block_alphabet")
