@@ -24,6 +24,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataType;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
@@ -42,6 +43,7 @@ import net.minecraft.commands.arguments.selector.EntitySelector;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -58,7 +60,7 @@ public class TeamCommand {
         			for(SpecialDataType i:CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).getTypes())
         				sb=sb.suggest(i.getId());
         			return sb.buildFuture();
-        		}).then(Commands.argument("path", NbtPathArgument.nbtPath())).then(Commands.literal("get").executes(ct->{
+        		}).then(Commands.literal("get").then(Commands.argument("path", NbtPathArgument.nbtPath()).executes(ct->{
         			SpecialDataType<SpecialData> type=(SpecialDataType<SpecialData>) SpecialDataType.getType(StringArgumentType.getString(ct, "type"));
         			if(type==null)
         				ct.getSource().sendFailure(Components.literal("Invalid data type"));
@@ -67,20 +69,72 @@ public class TeamCommand {
         				if(data==null) {
         					ct.getSource().sendFailure(Components.literal("Team does not contains specific data"));
         				}else {
-        					ct.getSource().sendSuccess(()->{
+        					
 								try {
 									
-									return NbtUtils.toPrettyComponent(NbtPathArgument.getPath(ct, "path").get(type.saveData(NbtOps.INSTANCE, data)).get(0));
+									Component out=NbtUtils.toPrettyComponent(NbtPathArgument.getPath(ct, "path").get(type.saveData(NbtOps.INSTANCE, data)).get(0));
+									ct.getSource().sendSuccess(()->out, true);
+								} catch(CommandSyntaxException cse) {
+									throw cse;
 								} catch (Exception e) {
 									e.printStackTrace();
+									ct.getSource().sendFailure(Components.literal("Can not get data of type"));
 								}
-								return Components.literal("Can not get data of type");
-							}, true);
+								
+							
+        				}
+        			}
+        			
+        			return Command.SINGLE_SUCCESS;
+        		})).executes(ct->{
+        			SpecialDataType<SpecialData> type=(SpecialDataType<SpecialData>) SpecialDataType.getType(StringArgumentType.getString(ct, "type"));
+        			if(type==null)
+        				ct.getSource().sendFailure(Components.literal("Invalid data type"));
+        			else {
+        				SpecialData data=CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).getData(type);
+        				if(data==null) {
+        					ct.getSource().sendFailure(Components.literal("Team does not contains specific data"));
+        				}else {
+        					
+								try {
+									
+									Component out=NbtUtils.toPrettyComponent(type.saveData(NbtOps.INSTANCE, data));
+									ct.getSource().sendSuccess(()->out, true);
+								} catch(CommandSyntaxException cse) {
+									throw cse;
+								} catch (Exception e) {
+									e.printStackTrace();
+									ct.getSource().sendFailure(Components.literal("Can not get data of type"));
+								}
+								
+							
         				}
         			}
         			
         			return Command.SINGLE_SUCCESS;
         		})).then(Commands.literal("set").then(Commands.argument("data", NbtTagArgument.nbtTag()).executes(ct->{
+        			SpecialDataType<SpecialData> type=(SpecialDataType<SpecialData>) SpecialDataType.getType(StringArgumentType.getString(ct, "type"));
+        			if(type==null)
+        				ct.getSource().sendFailure(Components.literal("Invalid data type"));
+        			else {
+        				SpecialData data=CTeamDataManager.get(EntityArgument.getPlayer(ct, "player")).getData(type);
+        				if(data==null) {
+        					ct.getSource().sendFailure(Components.literal("Team does not contains specific data"));
+        				}else {
+        					try {
+								type.loadData(NbtOps.INSTANCE, NbtTagArgument.getNbtTag(ct, "data"));
+									ct.getSource().sendSuccess(()->Components.literal("Modified."),false);
+							} catch(CommandSyntaxException cse) {
+								throw cse;
+							}  catch (Exception e) {
+								e.printStackTrace();
+								ct.getSource().sendFailure(Components.literal("Error, see logs for detail"));
+							}
+        				}
+        			}
+        			
+        			return Command.SINGLE_SUCCESS;
+        		})).then(Commands.argument("path", NbtPathArgument.nbtPath()).then(Commands.argument("data", NbtTagArgument.nbtTag()).executes(ct->{
         			SpecialDataType<SpecialData> type=(SpecialDataType<SpecialData>) SpecialDataType.getType(StringArgumentType.getString(ct, "type"));
         			if(type==null)
         				ct.getSource().sendFailure(Components.literal("Invalid data type"));
@@ -99,7 +153,9 @@ public class TeamCommand {
 								}else {
 									ct.getSource().sendSuccess(()->Components.literal("Could not modify."),false);
 								}
-							} catch (Exception e) {
+							} catch(CommandSyntaxException cse) {
+								throw cse;
+							}  catch (Exception e) {
 								e.printStackTrace();
 								ct.getSource().sendFailure(Components.literal("Error, see logs for detail"));
 							}
@@ -107,7 +163,7 @@ public class TeamCommand {
         			}
         			
         			return Command.SINGLE_SUCCESS;
-        		}))));
+        		})))));
         
         
         LiteralArgumentBuilder<CommandSourceStack> data = Commands.literal("data").then(getdata);
