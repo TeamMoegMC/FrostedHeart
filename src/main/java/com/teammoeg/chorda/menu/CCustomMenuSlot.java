@@ -532,7 +532,7 @@ public class CCustomMenuSlot {
 		}
 
 	};
-	public static final OtherDataSlotEncoder<ResourceLocation> slot_RL=new OtherDataSlotEncoder<>() {
+	public static final OtherDataSlotEncoder<ResourceLocation> SLOT_RESOURCE_LOCATION=new OtherDataSlotEncoder<>() {
 
 		@Override
 		public NetworkEncoder<ResourceLocation> getEncoder() {

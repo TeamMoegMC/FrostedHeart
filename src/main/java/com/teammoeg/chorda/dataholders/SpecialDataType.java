@@ -50,6 +50,13 @@ public class SpecialDataType<T extends SpecialData>{
 	
 	final int numId;
 	private static int nid=0;
+	public static SpecialDataType<?> getType(String id){
+		for(SpecialDataType<?> data:TYPE_REGISTRY) {
+			if(data.getId().equals(id))
+				return data;
+		}
+		return null;
+	}
 	/**
 	 * Instantiates and register a new special data type.
 	 *

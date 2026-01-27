@@ -48,7 +48,12 @@ public class ResearchEditUtils {
         		//System.out.println("modified");
         		if(old!=null)
         			old.delete();
-				b.getChildren().forEach(t->t.addParent(b));
+				b.getChildren().forEach(t->{
+					if(!t.hasParent(b)) {
+						t.addParent(b);
+						ResearchEditUtils.saveResearch(t);
+					}
+				});
 				ResearchEditUtils.saveResearch(b);
 	            
 	            FHResearch.load(b);

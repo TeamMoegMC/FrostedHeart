@@ -44,6 +44,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.util.LazyOptional;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
@@ -460,6 +461,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         	return false;
         	
         });
+        LinkedHashMap<HeatEndpoint,Float> intook=new LinkedHashMap<>();
         for (LazyOptional<HeatEndpoint> lep : endpoints) {
         	HeatEndpoint endpoint=lep.orElse(null);
         	if(endpoint!=null)
@@ -469,6 +471,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
 	                accumulated += provided;
 	                // fetch the highest tLevel
 	                tlevel = Math.max(endpoint.getTempLevel(), tlevel);
+	                intook.put(endpoint, provided);
 	                // update display data
 	                endpoint.output = provided;
 	            }else
@@ -501,7 +504,10 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
             //if(accumulated <= 0)
             //	break;
         }
-
+        //divide unused heat to each endpoint
+        for(Entry<HeatEndpoint, Float> val:intook.entrySet()) {
+        	val.getKey().addHeat(accumulated*val.getValue()/totalEndpointOutput);
+        }
         // Process data
         endpoints.forEach(t->t.ifPresent(HeatEndpoint::pushData));
 

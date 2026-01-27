@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.climate.block.generator;
 
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IClientTickableComponent;

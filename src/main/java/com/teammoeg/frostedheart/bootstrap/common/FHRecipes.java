@@ -26,7 +26,6 @@ import com.teammoeg.chorda.recipe.DataContainerRecipe;
 import com.teammoeg.chorda.recipe.ToolActionIngredient;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorRecipe;
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.data.*;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.DismantleInnerRecipe;
@@ -65,7 +64,7 @@ public class FHRecipes {
 	static {
 		 
 		GeneratorRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("generator", GeneratorRecipe.Serializer::new);
-		GeneratorSteamRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("steam_generator", GeneratorSteamRecipe.Serializer::new);
+		//GeneratorSteamRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("steam_generator", GeneratorSteamRecipe.Serializer::new);
 		// InstallInnerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("recipe_inner",
 		// InstallInnerRecipe.Serializer::new);
 		ChargerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("charger", ChargerRecipe.Serializer::new);
@@ -87,7 +86,7 @@ public class FHRecipes {
 		ItemResourceAmountRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("item_resource_amount", ItemResourceAmountRecipe.Serializer::new);
 		BiomeMineResourceRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("biome_mine_resource", BiomeMineResourceRecipe.Serializer::new);
 		GeneratorRecipe.TYPE = createRecipeType("generator");
-		GeneratorSteamRecipe.TYPE = createRecipeType("steam_generator");
+		//GeneratorSteamRecipe.TYPE = createRecipeType("steam_generator");
 		ChargerRecipe.TYPE = createRecipeType("charger");
 		// DietValueRecipe.TYPE = createRecipeType("diet_override");
 		IncubateRecipe.TYPE = createRecipeType("incubate");

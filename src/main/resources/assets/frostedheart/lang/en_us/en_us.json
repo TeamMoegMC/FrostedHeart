@@ -85,6 +85,8 @@
   "gui.frostedheart.generator.temperature.level": "Temperature: ",
   "gui.frostedheart.generator.upgrade_material": "Upgrade material",
   "gui.frostedheart.generator.pressure": "Pressure",
+  "gui.frostedheart.generator.steam.level":"Steam Level: %s%%",
+  "gui.frostedheart.generator.steam.fulfilled":"Fulfilled",
   "gui.frostedheart.mb_per_sec": "%s mb per second",
   "gui.frostedheart.not_consume": "Does not consume",
   "gui.frostedheart.per_food_value": "%s mb per food value",
