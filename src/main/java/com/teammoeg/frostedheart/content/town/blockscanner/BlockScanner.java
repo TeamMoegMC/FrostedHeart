@@ -310,7 +310,7 @@ public class BlockScanner {
      */
     public static boolean isAirOrLadder(Level world, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
-        return state.isAir() || state.is(BlockTags.CLIMBABLE) || state.getBlockSupportShape(world, pos).isEmpty();
+        return state.isAir() || state.is(BlockTags.CLIMBABLE) || state.getCollisionShape(world, pos).isEmpty();
     }
 
     /**
