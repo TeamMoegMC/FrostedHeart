@@ -1300,13 +1300,14 @@ thinner.png
     public static ItemEntry<SnowBreakerItem> snow_shovel = REGISTRATE
             .item("snow_shovel", (properties) -> new SnowBreakerItem(true, properties))
             .tag(FHTags.Items.CURIOS_CHARM.tag)
+            .properties(p -> p.stacksTo(1).defaultDurability(1024))
             .model(AssetLookup.existingItemModel())
             .lang("Snow Shovel")
             .register();
     public static ItemEntry<SnowBreakerItem> snow_broom = REGISTRATE
             .item("snow_broom", (properties) -> new SnowBreakerItem(false, properties))
             .tag(ItemTags.TOOLS)
-            .properties(p -> p.stacksTo(1))
+            .properties(p -> p.stacksTo(1).defaultDurability(1024))
             .model(AssetLookup.existingItemModel())
             .lang("Broom")
             .register();

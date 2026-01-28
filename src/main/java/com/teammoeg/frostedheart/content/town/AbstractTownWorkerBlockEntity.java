@@ -28,6 +28,7 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.scheduler.ScheduledTaskTileEntity;
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
 import com.teammoeg.frostedheart.content.town.worker.WorkerState;
@@ -80,8 +81,17 @@ public abstract class AbstractTownWorkerBlockEntity<T extends WorkerState> exten
     }
     public T getState() {
     	TeamTownData teamTownData=getTownData();
-    	if(teamTownData==null)
-    		return null;
+    	if(teamTownData==null){
+            return null;
+        }
+        TownWorkerData blockData = teamTownData.blocks.get(worldPosition);
+        if(blockData.getType() == this.getWorkerType()){
+            return (T) blockData.getState();
+        } else{
+            FHMain.LOGGER.error("AbstractTownWorkerBlockEntity : Trying to get WorkerState, but type of TownWorkerData [{}] is not same with TownBlockEntity type [{}]", blockData.getType(), this.getWorkerType());
+            FHMain.LOGGER.info("Trying to fix worker type wrong in TeamTownData");
+            teamTownData.blocks.put(worldPosition, new TownWorkerData(this.getWorkerType(), worldPosition, this.getPriority()));
+        }
     	return (T) teamTownData.getState(this.worldPosition);
     }
     public void executeTask(){

@@ -15,10 +15,10 @@ public class LogisticChestMenu extends CBaseMenu {
 		
         for (int j = 0; j < 3; ++j) {
             for (int k = 0; k < 9; ++k) {
-                this.addSlot(new SlotItemHandler(handler, k + j*9 , 8 + k * 18, 8 + j * 18));
+                this.addSlot(new SlotItemHandler(handler, k + j*9 , 8 + k * 18, 28 + j * 18));
             }
         }
-        super.addPlayerInventory(player, 8, 84, 142);
+        super.addPlayerInventory(player, 8, 118, 176);
 	}
 	public LogisticChestMenu(MenuType<?> pMenuType, int pContainerId, Inventory player) {
 		this(pMenuType, pContainerId, player, new ItemStackHandler(27));

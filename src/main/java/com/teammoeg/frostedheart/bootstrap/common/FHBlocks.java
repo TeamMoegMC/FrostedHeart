@@ -85,7 +85,6 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
@@ -2079,37 +2078,38 @@ public class FHBlocks {
             .item()
             .transform(ModelGen.customItemModel())
             .register();
-    /*public static final BlockEntry<VAWTBlock> FABRIC_VAWT = REGISTRATE.block("fabric_vawt",
+    public static final BlockEntry<VAWTBlock> FABRIC_VAWT = REGISTRATE.block("fabric_vawt",
                     p -> VAWTBlock.create(FHProps.woodenProps, "fabric", 120, 1.125F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
-            .item()
-            .transform(ModelGen.customItemModel())
-            .register();*/
+            .lang("VAWT (Fabric)")
+            .simpleItem()
+            .register();
     public static final BlockEntry<VAWTBlock> METAL_VAWT = REGISTRATE.block("metal_vawt",
                     p -> VAWTBlock.create(FHProps.metalDecoProps, "metal", 240, 0.75F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
+            .lang("VAWT (Metal)")
             .simpleItem()
             .register();
-    /*public static final BlockEntry<VAWTBlock> ALLOY_VAWT = REGISTRATE.block("alloy_vawt",
+    public static final BlockEntry<VAWTBlock> ALLOY_VAWT = REGISTRATE.block("alloy_vawt",
                     p -> VAWTBlock.create(FHProps.metalDecoProps, "alloy", 480, 1.0F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
-            .item()
-            .transform(ModelGen.customItemModel())
+            .lang("VAWT (Alloy)")
+            .simpleItem()
             .register();
     public static final BlockEntry<VAWTBlock> DSP_VAWT = REGISTRATE.block("dsp_vawt",
                     p -> VAWTBlock.create(FHProps.metalDecoProps, "dsp", Integer.MAX_VALUE, 1.0F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
-            .item()
-            .transform(ModelGen.customItemModel())
-            .register();*/
+            .lang("VAWT (DSP)")
+            .simpleItem()
+            .register();
     // WARDROBE, "wardrobe", like Blocks.SPRUCE_DOOR
     public static final BlockEntry<WardrobeBlock> WARDROBE = REGISTRATE.block("wardrobe", WardrobeBlock::new)
             .initialProperties(() -> Blocks.SPRUCE_DOOR)

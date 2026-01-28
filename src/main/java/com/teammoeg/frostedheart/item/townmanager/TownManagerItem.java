@@ -21,7 +21,6 @@ public class TownManagerItem extends FHBaseItem {
 
         if (level.isClientSide) {
             // 打开GUI
-            System.out.println("duck_egg debug: Opening GUI");
             Minecraft.getInstance().setScreen(new TownManagerScreen(Component.translatable("gui.frostedheart.town_manager")));
         }
 

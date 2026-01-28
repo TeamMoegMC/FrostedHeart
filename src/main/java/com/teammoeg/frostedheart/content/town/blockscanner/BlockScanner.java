@@ -310,7 +310,7 @@ public class BlockScanner {
      */
     public static boolean isAirOrLadder(Level world, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
-        return state.isAir() || state.is(BlockTags.CLIMBABLE) || state.getBlockSupportShape(world, pos).isEmpty();
+        return state.isAir() || state.is(BlockTags.CLIMBABLE) || state.getCollisionShape(world, pos).isEmpty();
     }
 
     /**
@@ -322,15 +322,12 @@ public class BlockScanner {
         scanningBlock = startPos.below();
         while(scanningBlock.getY() >= -64){
             if(target.test(scanningBlock)){
-                System.out.println("duck_egg debug: Found " + scanningBlock);
                 return scanningBlock;
             }
             else {
-                System.out.println("duck_egg debug: Scanning " + scanningBlock);
                 scanningBlock = scanningBlock.below();
             }
         }
-        System.out.println("duck_egg debug: Reached the bottom of the world");
         return null;
     }
 

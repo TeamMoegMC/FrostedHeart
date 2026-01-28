@@ -106,10 +106,8 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
      * @param tile the tile entity associated with the block
      */
     public void addTownBlock(BlockPos pos, TownBlockEntity tile) {
-    	if(!data.blocks.containsKey(pos)) {
-    		TownWorkerData workerData =new TownWorkerData(tile.getWorkerType(),pos,tile.getPriority());
-    		data.blocks.put(pos, workerData);
-    	}
+        TownWorkerData workerData =new TownWorkerData(tile.getWorkerType(),pos,tile.getPriority());
+        data.blocks.put(pos, workerData);
     }
 
     /**

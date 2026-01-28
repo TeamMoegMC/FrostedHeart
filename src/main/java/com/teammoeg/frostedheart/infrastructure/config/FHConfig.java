@@ -362,6 +362,32 @@ public class FHConfig {
 			}
 		}
 
+		public static class VAWT {
+			public final ForgeConfigSpec.ConfigValue<Float> vawtDurability;
+			public final ForgeConfigSpec.ConfigValue<Double> vawtCapacity;
+			public final ForgeConfigSpec.IntValue vawtEmptyAreaRange;
+			public final ForgeConfigSpec.IntValue vawtEmptyAreaAllowsBlockCount;
+			public final ForgeConfigSpec.ConfigValue<Integer> vawtEmptyAreaMaxDetectCooldown;
+
+			VAWT(ForgeConfigSpec.Builder builder) {
+				builder.push("VAWT");
+				vawtDurability = builder.comment("""
+								The durability coefficient of VAWT.
+								It will not affect the VAWTs that was previously placed.
+								""")
+						.define("vawtDurability", 1f);
+				vawtCapacity = builder.comment("The capacity which VAWT can provide.")
+						.defineInRange("vawtCapacity", 9f, 0f, 256f);
+				vawtEmptyAreaRange = builder.comment("Detection radius of the open area.")
+						.defineInRange("vawtEmptyAreaRange", 8, 1, 64);
+				vawtEmptyAreaAllowsBlockCount = builder.comment("")
+						.defineInRange("vawtEmptyAreaAllowsBlockCount", 32, 0, 1024);
+				vawtEmptyAreaMaxDetectCooldown = builder.comment("Try increase this if you have performance issue by placing too many VAWTs. Unit: Second")
+						.define("vawtEmptyAreaMaxDetectCooldown", 60);
+				builder.pop();
+			}
+		}
+
 		public static class Nutrition {
 			public final ForgeConfigSpec.ConfigValue<Double> waterReducingRate;
 			public final ForgeConfigSpec.IntValue weaknessEffectAmplifier;
@@ -558,6 +584,7 @@ public class FHConfig {
 		public final WeatherForecast WEATHER_FORECAST;
 		public final Climate CLIMATE;
 		public final SteamCore STEAM_CORE;
+		public final VAWT VAWT;
 		public final Nutrition NUTRITION;
 		public final WorldGen WORLDGEN;
 		public final FireIgnition FIRE_IGNITION;
@@ -569,6 +596,7 @@ public class FHConfig {
 			WEATHER_FORECAST = new WeatherForecast(builder);
 			CLIMATE = new Climate(builder);
 			STEAM_CORE = new SteamCore(builder);
+			VAWT = new VAWT(builder);
 			NUTRITION = new Nutrition(builder);
 			WORLDGEN = new WorldGen(builder);
 			FIRE_IGNITION = new FireIgnition(builder);
