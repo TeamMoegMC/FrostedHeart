@@ -1,0 +1,8 @@
+# Made in Blockbench 5.0.7
+newmtl axis
+map_Kd create:block/axis
+newmtl axis_top
+map_Kd create:block/axis_top
+newmtl vawt
+map_Kd frostedheart:block/vawt/fabric
+newmtl none

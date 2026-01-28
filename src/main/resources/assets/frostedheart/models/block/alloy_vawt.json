@@ -1,0 +1,44 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+		"vawt": "frostedheart:block/vawt",
+		"axis": "create:block/axis",
+		"axis_top": "create:block/axis_top",
+		"particle": "frostedheart:block/vawt/metal"
+  },
+  "loader": "forge:obj",
+  "model": "frostedheart:models/block/vawt/metal/vawt.obj",
+  "automatic_culling": false,
+  "flip_v": true,
+  "render_type": "cutout",
+  "display": {
+    "thirdperson_righthand": {
+      "scale": [0.5, 0.5, 0.5]
+    },
+    "thirdperson_lefthand": {
+      "scale": [0.5, 0.5, 0.5]
+    },
+    "firstperson_righthand": {
+      "scale": [0.5, 0.5, 0.5]
+    },
+    "firstperson_lefthand": {
+      "scale": [0.5, 0.5, 0.5]
+    },
+    "ground": {
+      "translation": [0, 2, 0],
+      "scale": [0.5, 0.5, 0.5]
+    },
+    "gui": {
+      "rotation": [24, 0, 0],
+      "translation": [0, -3.25, 0],
+      "scale": [0.4, 0.4, 0.4]
+    },
+    "head": {
+      "translation": [0, 10.5, 0]
+    },
+    "fixed": {
+      "translation": [0, -3.75, 0],
+      "scale": [0.5, 0.5, 0.5]
+    }
+  }
+}
