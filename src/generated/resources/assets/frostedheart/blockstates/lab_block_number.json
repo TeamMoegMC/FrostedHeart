@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "number=0": {
+      "model": "frostedheart:block/lab_block_number_0"
+    },
+    "number=1": {
+      "model": "frostedheart:block/lab_block_number_1"
+    },
+    "number=2": {
+      "model": "frostedheart:block/lab_block_number_2"
+    },
+    "number=3": {
+      "model": "frostedheart:block/lab_block_number_3"
+    },
+    "number=4": {
+      "model": "frostedheart:block/lab_block_number_4"
+    },
+    "number=5": {
+      "model": "frostedheart:block/lab_block_number_5"
+    },
+    "number=6": {
+      "model": "frostedheart:block/lab_block_number_6"
+    },
+    "number=7": {
+      "model": "frostedheart:block/lab_block_number_7"
+    },
+    "number=8": {
+      "model": "frostedheart:block/lab_block_number_8"
+    },
+    "number=9": {
+      "model": "frostedheart:block/lab_block_number_9"
+    }
+  }
+}

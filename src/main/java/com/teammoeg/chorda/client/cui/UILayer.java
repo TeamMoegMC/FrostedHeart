@@ -75,6 +75,9 @@ public abstract class UILayer extends UIElement {
 		this.height=this.getContentHeight();
 	}
 	public void add(UIElement element) {
+		if (element == null) {
+			return;
+		}
 		if (element.getParent() != this) {
 			Chorda.LOGGER.warn(Chorda.UI, element+" Could not be added because parent mismatch");
 			return;

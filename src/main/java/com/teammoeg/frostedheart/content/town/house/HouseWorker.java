@@ -74,7 +74,7 @@ public class HouseWorker implements TownWorker<HouseState> {
             ItemResourceType toRemove = null;
             for (ItemResourceType foodType : availableFoodTypes) {
                 TownResourceActions.TownResourceTypeCostAction costTypeAction = new TownResourceActions.TownResourceTypeCostAction
-                        (foodType, toCost / residentNum, 0, 100, ResourceActionMode.MAXIMIZE, ResourceActionOrder.DESCENDING);//优先消耗高质量食物
+                        (foodType, toCost / residentNum, 0, 4, ResourceActionMode.MAXIMIZE, ResourceActionOrder.DESCENDING);//优先消耗高质量食物
                 TownResourceActionResults.TownResourceTypeCostActionResult result = (TownResourceActionResults.TownResourceTypeCostActionResult) executorHandler.execute(costTypeAction);
                 toCost -= result.totalModifiedAmount();
 

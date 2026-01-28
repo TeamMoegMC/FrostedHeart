@@ -288,8 +288,8 @@ public class FHRegistrateTags {
                 .add(Items.APPLE)
                 .add(Items.CARROT)
                 .add(Items.SWEET_BERRIES);*/
-/*        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.RESIDENT_FOOD_LEVEL.generateAttribute(0)))
-                .add(Items.BREAD);*/
+        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.RESIDENT_FOOD_LEVEL.generateAttribute(0)))
+                .add(Items.BREAD);
 
         for (FHTags.Items tag : FHTags.Items.values()) {
             if (tag.alwaysDatagen) {
@@ -298,9 +298,9 @@ public class FHRegistrateTags {
         }
 
         //register for town tags
-        if(FHTags.NameSpace.MOD.alwaysDatagenDefault){
+/*        if(FHTags.NameSpace.MOD.alwaysDatagenDefault){
             FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE.keySet().forEach(prov::getOrCreateRawBuilder);
-        }
+        }*/
     }
 
     private static void genFluidTags(RegistrateTagsProvider<Fluid> provIn) {

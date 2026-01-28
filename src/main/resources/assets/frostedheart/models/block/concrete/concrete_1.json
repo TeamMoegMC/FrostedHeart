@@ -1,0 +1,6 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "frostedheart:block/concrete_1"
+  }
+}

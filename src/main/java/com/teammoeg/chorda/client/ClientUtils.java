@@ -169,7 +169,7 @@ public class ClientUtils {
 
         var c = Component.empty();
         if (years > 100) {
-            c = Component.literal("Infinity");
+            c = Component.translatable("gui.frostedheart.infinity");
         } else {
             if (years   != 0) c.append(Component.translatable("gui.frostedheart.year", years));
             if (days    != 0) c.append(Component.translatable("gui.frostedheart.day", days));

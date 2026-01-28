@@ -47,11 +47,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.state.properties.AttachFace;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.EnumProperty;
-import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraftforge.client.model.generators.BlockModelBuilder;
 import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelFile;
 import net.minecraftforge.client.model.generators.VariantBlockStateBuilder;
@@ -243,6 +241,15 @@ public class FHBlockStateGen {
                 .tag(BlockTags.MINEABLE_WITH_PICKAXE)
                 .tag(BlockTags.NEEDS_IRON_TOOL);
     }
+    public static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> lab_block() {
+        return b -> b
+                .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
+                        .requiresCorrectToolForDrops()
+                        .strength(10, 10)
+                        )
+                .tag(BlockTags.MINEABLE_WITH_PICKAXE)
+                .tag(BlockTags.NEEDS_IRON_TOOL);
+    }
     public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> rotateOrient(
             String path) {
         return (c, p) -> p.getVariantBuilder(c.get()).forAllStates(bs->{
@@ -337,4 +344,39 @@ public class FHBlockStateGen {
         };
     }
 
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> integerPropertyBlock(
+            IntegerProperty property,   // 整数属性
+            String modelNamePrefix,     // 生成的模型文件名前缀
+            String texturePathPrefix,   // 贴图路径前缀
+            boolean isLetter
+    ) {
+        return (c, p) -> {
+            VariantBlockStateBuilder builder = p.getVariantBuilder(c.get());
+
+            for (int value : property.getPossibleValues()) {
+                BlockModelBuilder modelBuilder;
+                if (!isLetter) {
+                    ResourceLocation texture = p.modLoc("block/" + texturePathPrefix + "_" + value);
+                    String currentModelName = modelNamePrefix + "_" + value;
+                     modelBuilder = p.models()
+                            .withExistingParent(currentModelName, p.mcLoc("block/cube_all"))
+                            .texture("all", texture);
+                }
+                else {
+                    String letterSuffix = String.valueOf((char) ('a' + value));
+                    ResourceLocation texture = p.modLoc("block/" + texturePathPrefix + "_" + letterSuffix);
+                    String currentModelName = modelNamePrefix + "_" + letterSuffix;
+                    modelBuilder = p.models()
+                            .withExistingParent(currentModelName, p.mcLoc("block/cube_all"))
+                            .texture("all", texture);
+                }
+
+                builder.partialState()
+                        .with(property, value)
+                        .modelForState()
+                        .modelFile(modelBuilder)
+                        .addModel();
+            }
+        };
+    }
 }

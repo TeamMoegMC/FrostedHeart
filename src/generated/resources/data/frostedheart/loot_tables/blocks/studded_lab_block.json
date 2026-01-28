@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "frostedheart:studded_lab_block"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "frostedheart:blocks/studded_lab_block"
+}
