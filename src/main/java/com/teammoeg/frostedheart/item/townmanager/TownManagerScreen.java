@@ -62,12 +62,10 @@ public class TownManagerScreen extends Screen {
             switch(tabIndex){
                 case RESIDENT_TAB:{
                     tabImageButton = new TabImageButton(TEXTURE, x, y, 22, 18, 180, 59, tabIndex, pButton ->  setScreenMode(getResidentListScreenMode())).bind(() -> activeScreenMode.getTabBelongTo());
-                    System.out.println("duck_egg debug: adding tabImageButton of resident tab");
                     break;
                 }
                 case BLOCK_TAB:{
                     tabImageButton = new TabImageButton(TEXTURE, x, y, 22, 18, 180, 59, tabIndex, pButton ->  setScreenMode(getBlockListScreenMode())).bind(() -> activeScreenMode.getTabBelongTo());
-                    System.out.println("duck_egg debug: adding tabImageButton of block tab");
                     break;
                 }
                 default :
@@ -95,12 +93,9 @@ public class TownManagerScreen extends Screen {
         }
         if(this.activeScreenMode != null){
             this.activeScreenMode.onExit();
-            System.out.println("duck_egg debug: changing actingScreenMode from " + this.activeScreenMode.getClass().getName());
         }
         this.activeScreenMode = screenMode;
-        this.activeScreenMode.onEnter();
-        System.out.println("duck_egg debug: changing actingScreenMode to " + this.activeScreenMode.getClass().getName());
-    }
+        this.activeScreenMode.onEnter();}
 
     public interface ScreenMode{
 
@@ -188,8 +183,6 @@ public class TownManagerScreen extends Screen {
                         .build();
                 blockButtons.add(button);
                 i++;
-                System.out.println("duck_egg debug: adding block button for: " + workerData);
-                System.out.println("duck_egg debug: block button pos: " + button.getX() + " " + button.getY());
             }
         }
 
@@ -362,8 +355,6 @@ public class TownManagerScreen extends Screen {
                         .build();
                 residentButtons.add(button);
                 i++;
-                System.out.println("duck_egg debug: adding resident button for: " + resident.getFirstName() + " " + resident.getLastName());
-                System.out.println("duck_egg debug: resident button pos: " + button.getX() + " " + button.getY());
             }
         }
 

@@ -62,18 +62,22 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
 
     @Override
     public boolean isValidFloor(BlockPos pos){
-        BlockState state = world.getBlockState(pos);
+        //BlockState state = world.getBlockState(pos);
         if(scanningBlocksNew.contains(pos)) return false;
-        if(state.is(BlockTags.RAILS)){
-            rails.add(pos);
-            return false;
-        }
+        //if(state.is(BlockTags.RAILS)){
+        //    rails.add(pos);
+        //    return false;
+        //}
         if(!isFloorBlock(pos)){
             return false;
         }
         HeightCheckingInfo floorInformation = countBlocksAbove(world,pos,(pos1)->{
-            if(isFloorBlock(pos1)) return true;
+            if(isHouseBlock(pos1)) return true;
             BlockState state1 = world.getBlockState(pos1);
+            if(state1.is(BlockTags.RAILS)){
+                rails.add(pos1);
+                return true;
+            }
             if(state1.is(Tags.Blocks.CHESTS)){
                 chest++;
                 return false;
@@ -89,10 +93,15 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
             }
             return false;
         });
-        if(floorInformation.result() && floorInformation.height() >= 2){
-            volume += floorInformation.height();
-            return true;
-        } else return false;
+        if(floorInformation.result()){
+            if(floorInformation.height() >= 2){
+                volume += floorInformation.height();
+                return true;
+            }
+            return false;
+        }
+        this.isValid = false;
+        return false;
     }
 
     public boolean scan(){

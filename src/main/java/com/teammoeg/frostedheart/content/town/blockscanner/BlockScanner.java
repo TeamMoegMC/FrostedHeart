@@ -322,15 +322,12 @@ public class BlockScanner {
         scanningBlock = startPos.below();
         while(scanningBlock.getY() >= -64){
             if(target.test(scanningBlock)){
-                System.out.println("duck_egg debug: Found " + scanningBlock);
                 return scanningBlock;
             }
             else {
-                System.out.println("duck_egg debug: Scanning " + scanningBlock);
                 scanningBlock = scanningBlock.below();
             }
         }
-        System.out.println("duck_egg debug: Reached the bottom of the world");
         return null;
     }
 
