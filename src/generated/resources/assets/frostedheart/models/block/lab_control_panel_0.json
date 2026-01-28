@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "frostedheart:block/lab_block/lab_control_panel_0",
+    "side": "frostedheart:block/lab_block/lab_block",
+    "top": "frostedheart:block/lab_block/lab_block"
+  }
+}

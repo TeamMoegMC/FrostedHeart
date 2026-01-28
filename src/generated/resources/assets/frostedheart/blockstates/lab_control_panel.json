@@ -1,0 +1,49 @@
+{
+  "variants": {
+    "facing=east,screen=0": {
+      "model": "frostedheart:block/lab_control_panel_0",
+      "y": 90
+    },
+    "facing=east,screen=1": {
+      "model": "frostedheart:block/lab_control_panel_1",
+      "y": 90
+    },
+    "facing=east,screen=2": {
+      "model": "frostedheart:block/lab_control_panel_2",
+      "y": 90
+    },
+    "facing=north,screen=0": {
+      "model": "frostedheart:block/lab_control_panel_0"
+    },
+    "facing=north,screen=1": {
+      "model": "frostedheart:block/lab_control_panel_1"
+    },
+    "facing=north,screen=2": {
+      "model": "frostedheart:block/lab_control_panel_2"
+    },
+    "facing=south,screen=0": {
+      "model": "frostedheart:block/lab_control_panel_0",
+      "y": 180
+    },
+    "facing=south,screen=1": {
+      "model": "frostedheart:block/lab_control_panel_1",
+      "y": 180
+    },
+    "facing=south,screen=2": {
+      "model": "frostedheart:block/lab_control_panel_2",
+      "y": 180
+    },
+    "facing=west,screen=0": {
+      "model": "frostedheart:block/lab_control_panel_0",
+      "y": 270
+    },
+    "facing=west,screen=1": {
+      "model": "frostedheart:block/lab_control_panel_1",
+      "y": 270
+    },
+    "facing=west,screen=2": {
+      "model": "frostedheart:block/lab_control_panel_2",
+      "y": 270
+    }
+  }
+}

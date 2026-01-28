@@ -27,6 +27,7 @@ import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
+import com.teammoeg.chorda.item.CBlockItem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
@@ -80,11 +81,13 @@ import net.minecraft.data.loot.packs.VanillaBlockLoot;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
@@ -1880,6 +1883,35 @@ public class FHBlocks {
                     "lab_block_sign","lab_block/lab_block_sign",false))
             .lang("lab_block_sign")
             .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/lab_block_sign_0"))).build()
+            .register();
+    public static BlockEntry<HDBlock> lab_block_screen = REGISTRATE.block("lab_block_screen", HDBlock::new)
+            .transform(FHBlockStateGen.lab_block())
+            .blockstate(FHBlockStateGen.existed())
+            .lang("lab_block_screen")
+            .simpleItem()
+            .register();
+    public static BlockEntry<LabBlockScreenOn> lab_block_screen_on = REGISTRATE.block("lab_block_screen_on", LabBlockScreenOn::new)
+            .transform(FHBlockStateGen.lab_block())
+            .blockstate(FHBlockStateGen.orientableIntegerBlock(LabBlockScreenOn.SCREEN,
+                    "lab_block_screen_on","lab_block/lab_block_screen_on","lab_block/lab_block"))
+            .lang("lab_block_screen_on")
+            .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/lab_block_screen_on_0"))).build()
+            .register();
+    public static BlockEntry<LabBlockControl> lab_control_panel = REGISTRATE.block("lab_control_panel", LabBlockControl::new)
+            .transform(FHBlockStateGen.lab_block())
+            .blockstate(FHBlockStateGen.orientableIntegerBlock(LabBlockControl.SCREEN,
+                    "lab_control_panel","lab_block/lab_control_panel","lab_block/lab_block"))
+            .lang("lab_control_panel")
+            .item(/*(block, props) -> new CBlockItem(block, props, FHTabs.building_blocks)*/)
+            .model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/lab_control_panel_0"))).build()
+            .register();
+    public static BlockEntry<LabPanelLight> lab_panel_light = REGISTRATE.block("lab_panel_light", LabPanelLight::new)
+            .transform(FHBlockStateGen.lab_block())
+            .properties(properties -> properties.lightLevel(state -> state.getValue(BlockStateProperties.LIT) ? 15 : 0))
+            .blockstate(FHBlockStateGen.existed())
+            .lang("lab_panel_light")
+            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
+            .build()
             .register();
     public static BlockEntry<ConcreteBlock> concrete = REGISTRATE.block("concrete", ConcreteBlock::new)
             .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
