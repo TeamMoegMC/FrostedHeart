@@ -164,6 +164,8 @@
   "gui.frostedheart.minute": "%s分 ",
   "gui.frostedheart.second": "%s秒",
   "gui.frostedheart.infinity": "无限",
+  "gui.frostedheart.scroll_to_adjust": "使用滚轮调整：",
+  "gui.frostedheart.adjust_increment": "按住 [§7Shift/Ctrl§r] 改变调整数量",
   "item.frostedheart.advanced_thermos": "高级保温杯",
   "item.frostedheart.alumina_dust": "氧化铝粉",
   "item.frostedheart.aluminium_hydroxide_dust": "氢氧化铝粉",

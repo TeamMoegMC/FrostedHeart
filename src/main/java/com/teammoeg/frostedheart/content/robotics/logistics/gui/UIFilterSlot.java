@@ -1,14 +1,19 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
+import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ScrollTracker;
 import com.teammoeg.chorda.client.cui.MouseButton;
+import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.frostedheart.content.robotics.logistics.Filter;
-
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 
 public class UIFilterSlot extends UIElement {
@@ -40,10 +45,36 @@ public class UIFilterSlot extends UIElement {
 			graphics.fill(x, y, x + w, y + h, 300, Colors.setAlpha(Colors.WHITE, 0.25F));
 		}
 	}
+
+	@Override
+	public void getTooltip(TooltipBuilder tooltip) {
+		if (!displayStack.isEmpty()) {
+			tooltip.add(Component.empty().append(displayStack.getHoverName()).append(" x" + getFilter().getSize()));
+			tooltip.add(Component.empty()
+					.append(FlatIcon.INFO.toCTextIcon())
+					.append(" ")
+					.append(Component.translatable("gui.frostedheart.scroll_to_adjust"))
+					.append(Component.literal("±" + getAdjustIncrement()))
+					.withStyle(ChatFormatting.GRAY));
+			tooltip.add(Component.translatable("gui.frostedheart.adjust_increment").withStyle(ChatFormatting.DARK_GRAY));
+		}
+		super.getTooltip(tooltip);
+	}
+
+	private int getAdjustIncrement() {
+		boolean shift = CInputHelper.isShiftKeyDown();
+		boolean ctrl = CInputHelper.isCtrlKeyDown();
+		return shift&&ctrl?576:(shift?16:(ctrl?64:1));
+	}
+
 	@Override
 	public boolean onMousePressed(MouseButton button) {
 		if(!isMouseOver())return super.onMousePressed(button);
-		if(button==MouseButton.RIGHT) {
+		if (button==MouseButton.RIGHT && getFilter() == null) {
+			menu.setFilterItem(index);
+			menu.setFilterSize(index, 1);
+			return true;
+		} else if(button==MouseButton.RIGHT) {
 			menu.unsetFilterItem(index);
 			return true;
 		}else if(button==MouseButton.LEFT) {
@@ -67,10 +98,8 @@ public class UIFilterSlot extends UIElement {
 		tracker.addScroll(scroll);
 		int val=tracker.getScroll();
 		if(val!=0) {
-			int oldsize=filter.getSize();
-			int newsize=(oldsize+val-1)%1728+1;
-			if(newsize<=0)
-				newsize+=1728;
+			int oldsize = (filter.getSize() == 1 && (CInputHelper.isShiftKeyDown() || CInputHelper.isCtrlKeyDown())) ? 0 : filter.getSize();
+			int newsize = Mth.clamp(oldsize + (val*getAdjustIncrement()), 1, 1728);
 			menu.setFilterSize(index, newsize);
 		}
 		return true;
