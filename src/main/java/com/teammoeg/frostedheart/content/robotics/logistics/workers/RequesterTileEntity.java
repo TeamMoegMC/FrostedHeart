@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMe
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticRequestTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -64,15 +65,16 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 	ItemStackHandler container=new ItemStackHandler(27);
 	public LazyOptional<ItemStackHandler> grid=LazyOptional.of(()->container);
 	public LazyOptional<LogisticNetwork> network;
+	static final int MAX_TASKS=27;
 	public Filter[] filters=new Filter[9];
 	@Getter
 	protected int networkStatus=0;
 	@Getter
 	protected int uplinkStatus=0;
-	List<Supplier<LogisticTaskKey>> keys=new ArrayList<>(9);
+	List<Supplier<LogisticTaskKey>> keys=new ArrayList<>(MAX_TASKS);
 	public RequesterTileEntity(BlockPos pos,BlockState bs) {
 		super(FHBlockEntityTypes.REQUESTER_CHEST.get(),pos,bs);
-		for(int i=0;i<9;i++){
+		for(int i=0;i<MAX_TASKS;i++){
 			final int cnt=i;
 			keys.add(Lazy.of(()->new LogisticTaskKey(pos,cnt)));
 		}
@@ -108,7 +110,11 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 		if(network!=null&&network.isPresent()) {
 			boolean hasUplink=false;
 			boolean hasRequest=false;
+			int idx=0;
+			int[] lens=new int[filters.length];
+			int total=0;
 			for(int i=0;i<filters.length;i++) {
+				
 				if(filters[i]!=null) {
 					int currcnt=0;
 					hasUplink=true;
@@ -117,16 +123,49 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 						if(filters[i].matches(stack)) {
 							currcnt+=stack.getCount();
 						}
+					}if(currcnt<filters[i].getSize()) {
+						lens[i]=filters[i].getSize()-currcnt;
+						total+=lens[i];
 					}
-					if(currcnt<filters[i].getSize()) {
-						hasRequest=true;
-						Supplier<LogisticTaskKey> lt=keys.get(i);
-						LogisticNetwork networkGrid=network.resolve().get();
-						if(networkGrid.canAddTask(lt.get())) {
-							networkGrid.addTask(lt.get(), new LogisticRequestTask(filters[i],filters[i].getSize()-currcnt,this.getBlockPos(),grid.cast()));
+				}
+			}
+			int curidx=0;
+			LogisticNetwork networkGrid=network.resolve().get();
+			IntArrayList ial=new IntArrayList(MAX_TASKS);
+			for(int i=0;i<MAX_TASKS;i++) {
+				Supplier<LogisticTaskKey> lt=keys.get(curidx);
+				if(networkGrid.canAddTask(lt.get())) {
+					ial.add(i);
+					hasRequest=true;
+				
+				}
+			}
+			if(hasRequest) {
+				float perCount=total*1f/ial.size();
+				int ialidx=0;
+				//split keys with weight
+				for(int i=0;i<filters.length;i++) {
+					int cnt=Math.round(lens[i]/perCount);
+					if(cnt>0)
+						for(int j=0;j<cnt;j++) {
+							int ncnt=Math.min(lens[i], 64);
+							lens[i]-=ncnt;
+							
+							networkGrid.addTask(keys.get(ial.getInt(ialidx)).get(), new LogisticRequestTask(filters[i],ncnt,this.getBlockPos(),grid.cast()));
+							ialidx++;
 						}
+				}
+				//split reminder between each filter
+				if(ialidx<ial.size()) {
+					for(int j=ialidx;j<ial.size();j++) {
+						int icuridx=j%filters.length;
+						int ncnt=Math.min(lens[icuridx], 64);
+						if(ncnt>0) {
+							lens[icuridx]-=ncnt;
+							networkGrid.addTask(keys.get(ial.getInt(j)).get(), new LogisticRequestTask(filters[icuridx],ncnt,this.getBlockPos(),grid.cast()));
+						}
+						
 					}
-					
 				}
 			}
 			if(hasUplink) {

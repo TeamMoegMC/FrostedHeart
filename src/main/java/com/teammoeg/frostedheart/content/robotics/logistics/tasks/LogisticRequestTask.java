@@ -73,7 +73,7 @@ public class LogisticRequestTask extends LogisticTask {
 
 	@Override
 	public LogisticTask work(LogisticNetwork network) {
-		System.out.println("moving "+stack+" to "+targetPos);
+		//System.out.println("moving "+stack+" to "+targetPos);
 		if(target.isPresent()) {
 			stack=ItemHandlerHelper.insertItemStacked(target.resolve().get(), stack, false);
 		}	
@@ -105,7 +105,7 @@ public class LogisticRequestTask extends LogisticTask {
 		IGridElement grid=gaa.grid().resolve().get();
 		origin=grid.getPos();
 		stack=network.getHub().takeItem(gaa.grid(), key, size);
-		System.out.println("taken "+stack+" to "+targetPos);
+		//System.out.println("taken "+stack+" to "+targetPos);
 		this.ticks=20;
 		return this;
 	}

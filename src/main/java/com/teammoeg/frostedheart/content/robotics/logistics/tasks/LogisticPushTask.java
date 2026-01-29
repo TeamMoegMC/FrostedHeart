@@ -82,7 +82,7 @@ public class LogisticPushTask extends LogisticTask {
 
 	@Override
 	public LogisticTask work(LogisticNetwork network) {
-		System.out.println("pushing "+stack+" to "+targetPos);
+		//System.out.println("pushing "+stack+" to "+targetPos);
 		if(target!=null)
 			stack=network.getHub().pushItem(target, key, stack);
 		if(!stack.isEmpty()) {

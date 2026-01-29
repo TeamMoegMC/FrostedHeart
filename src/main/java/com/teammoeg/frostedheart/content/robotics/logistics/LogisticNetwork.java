@@ -20,12 +20,11 @@
 package com.teammoeg.frostedheart.content.robotics.logistics;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 
 import com.teammoeg.frostedheart.FHMain;
@@ -40,6 +39,7 @@ public class LogisticNetwork {
 	// List<LogisticEnvolop> envolops=new ArrayList<>();
 	Set<LogisticTaskKey> keys=new HashSet<>();
 	LinkedList<LogisticTask> tasks=new LinkedList<>();
+	List<LogisticTask> prelist=new ArrayList<>(100);
 	List<LogisticTask> working=new ArrayList<>(40);
 	Level world;
 	BlockPos centerPos;
@@ -58,7 +58,7 @@ public class LogisticNetwork {
 	public void addTask(LogisticTaskKey key,LogisticTask task) {
 		task.taskKey=key;
 		keys.add(key);
-		this.tasks.add(task);
+		this.prelist.add(task);
 	}
 	public Level getWorld() {
 		return world;
@@ -71,7 +71,7 @@ public class LogisticNetwork {
 		List<LogisticTask> nextCycle=new ArrayList<>(working);
 		working.clear();
 		for(LogisticTask lt:nextCycle) {
-			FHMain.LOGGER.info("Logistic task working "+lt.ticks+","+lt.toString());
+			//FHMain.LOGGER.info("Logistic task working "+lt.ticks+","+lt.toString());
 			if(lt.ticks>0) {
 				lt.ticks--;
 				working.add(lt);
@@ -87,6 +87,9 @@ public class LogisticNetwork {
 			}
 		}
 		if(working.size()<MAX_WORKING_TASKS) {
+			Collections.shuffle(prelist);
+			tasks.addAll(prelist);
+			prelist.clear();
 			//FHMain.LOGGER.info("Logistic task preparing");
 			for(int i=0;i<tasks.size();i++) {
 				LogisticTask wrapper=tasks.pollFirst();
@@ -94,10 +97,10 @@ public class LogisticNetwork {
 				LogisticTask lt=wrapper.prepare(this);
 				if(lt!=null) {
 					lt.taskKey=wrapper.taskKey;
-					FHMain.LOGGER.info("Logistic task added "+lt.toString());
+					//FHMain.LOGGER.info("Logistic task added "+lt.toString());
 					working.add(lt);
 				}else {
-					tasks.addLast(wrapper);
+					//tasks.addLast(wrapper);
 				}
 				if(working.size()>=MAX_WORKING_TASKS)
 					break;
