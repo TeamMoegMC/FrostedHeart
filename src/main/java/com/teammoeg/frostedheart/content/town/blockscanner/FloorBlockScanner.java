@@ -47,13 +47,13 @@ public class FloorBlockScanner extends BlockScanner{
     }
 
     protected boolean isFloorBlock(BlockPos pos) {
-        BlockState blockState = getBlockState(pos);
-        return !blockState.getCollisionShape(world, pos).isEmpty();//(blockState.isCollisionShapeFullBlock(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
+        return isFloorBlock(world, pos);
     }
 
     public static boolean isFloorBlock(Level world, BlockPos pos) {
         BlockState blockState = world.getBlockState(pos);
-        return !blockState.getCollisionShape(world, pos).isEmpty();//(blockState.isCollisionShapeFullBlock(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
+        //return !blockState.getCollisionShape(world, pos).isEmpty();
+        return (blockState.isCollisionShapeFullBlock(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
     }
 
     public static boolean isWallBlock(Level world, BlockPos pos) {
