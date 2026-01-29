@@ -1,0 +1,20 @@
+{
+    "providers": [
+        {
+            "type": "bitmap",
+            "file": "chorda:gui/hud/flat_icon_10x.png",
+            "height":10,
+            "ascent":9,
+            "chars":[
+                "\uF200\uF201\uF202\uF203\uF204\uF205\uF206\uF207",
+                "\uF210\uF211\uF212\uF213\uF214\uF215\uF216\uF217",
+                "\uF220\uF221\uF222\uF223\uF224\uF225\uF226\uF227",
+                "\uF230\uF231\uF232\uF233\uF234\uF235\uF236\uF237",
+                "\uF240\uF241\uF242\uF243\uF244\uF245\uF246\uF247",
+                "\uF250\uF251\uF252\uF253\uF254\uF255\uF256\uF257",
+                "\uF260\uF261\uF262\uF263\uF264\uF265\uF266\uF267",
+                "\uF270\uF271\uF272\uF273\uF274\uF275\uF276\uF277"
+            ]
+        }
+    ]
+}

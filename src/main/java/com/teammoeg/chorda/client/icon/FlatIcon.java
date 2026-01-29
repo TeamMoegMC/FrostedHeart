@@ -8,60 +8,69 @@ import com.teammoeg.chorda.client.ui.Colors;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.util.Size2i;
 
 public enum FlatIcon {
-    MOUSE_LEFT      (0 , 0 ),
-    MOUSE_RIGHT     (10, 0 ),
-    MOUSE_MIDDLE    (20, 0 ),
-    SIGHT           (30, 0 ),
-    QUESTION_MARK   (0 , 10),
-    LOCK            (10, 10),
-    CONTINUE        (20, 10),
-    FORBID          (30, 10),
-    RIGHT           (40, 10),
-    FILE            (40, 40),
-    FILE_TXT        (50, 40),
-    FILE_IMG        (60, 40),
-    FILE_IMG_BROKEN (70, 40),
-    DOWN            (50, 10),
-    LEFT            (60, 10),
-    TOP             (70, 10),
-    TRADE           (0 , 20),
-    GIVE            (10, 20),
-    GAIN            (20, 20),
-    LEAVE           (30, 20),
-    JUMP            (40, 20),
-    BOX             (0 , 30),
-    BOX_ON          (10, 30),
-    CROSS           (20, 30),
-    HISTORY         (30, 30),
-    LIST            (40, 30),
-    TRASH_CAN       (50, 30),
-    CHECK           (60, 30),
-    FOLDER          (70, 30),
-    LEFT_SLIDE      (0 , 40),
-    RIGHT_SLIDE     (0 , 50),
-    WRENCH          (0 , 70);
+    MOUSE_LEFT      (0 , 0 , "\uF200"),
+    MOUSE_RIGHT     (10, 0 , "\uF201"),
+    MOUSE_MIDDLE    (20, 0 , "\uF202"),
+    SIGHT           (30, 0 , "\uF203"),
+    INFO            (40, 0 , "\uF204"),
+    SORT            (50, 0 , "\uF205"),
+    QUESTION_MARK   (0 , 10, "\uF210"),
+    LOCK            (10, 10, "\uF211"),
+    CONTINUE        (20, 10, "\uF212"),
+    FORBID          (30, 10, "\uF213"),
+    RIGHT           (40, 10, "\uF214"),
+    DOWN            (50, 10, "\uF215"),
+    LEFT            (60, 10, "\uF216"),
+    TOP             (70, 10, "\uF217"),
+    TRADE           (0 , 20, "\uF220"),
+    GIVE            (10, 20, "\uF221"),
+    GAIN            (20, 20, "\uF222"),
+    LEAVE           (30, 20, "\uF223"),
+    JUMP            (40, 20, "\uF224"),
+    BOX             (0 , 30, "\uF230"),
+    BOX_ON          (10, 30, "\uF231"),
+    CROSS           (20, 30, "\uF232"),
+    HISTORY         (30, 30, "\uF233"),
+    LIST            (40, 30, "\uF234"),
+    TRASH_CAN       (50, 30, "\uF235"),
+    CHECK           (60, 30, "\uF236"),
+    FOLDER          (70, 30, "\uF237"),
+    LEFT_SLIDE      (0 , 40, "\uF240"),
+    UNLOCK          (10, 40, "\uF241"),
+    FILE            (40, 40, "\uF244"),
+    FILE_TXT        (50, 40, "\uF245"),
+    FILE_IMG        (60, 40, "\uF246"),
+    FILE_IMG_BROKEN (70, 40, "\uF247"),
+    RIGHT_SLIDE     (0 , 50, "\uF250"),
+    WRENCH          (0 , 70, "\uF270"),
+    CONFIG          (10, 70, "\uF271");
 
-    public static final ResourceLocation ICON_LOCATION = Chorda.rl("textures/gui/hud/flat_icon.png");
+    public static final ResourceLocation ICON_LOCATION = Chorda.rl("textures/gui/hud/flat_icon_10x.png");
+    public static final ResourceLocation FONT_LOCATION = Chorda.rl("default");
     public static final int TEXTURE_HEIGHT = 80;
     public static final int TEXTURE_WIDTH = 80;
 
     public final int x;
     public final int y;
+    public final String chr;
     public final Size2i size;
 
-    FlatIcon(int x, int y, Size2i size) {
+    FlatIcon(int x, int y, String chr, Size2i size) {
         this.x = x;
         this.y = y;
+        this.chr = chr;
         this.size = size;
     }
 
-    FlatIcon(int x, int y) {
+    FlatIcon(int x, int y, String chr) {
         this.x = x;
         this.y = y;
+        this.chr = chr;
         this.size = new Size2i(10, 10);
     }
 
@@ -118,10 +127,18 @@ public enum FlatIcon {
         }
     }
 
-    private CIcons.CIcon cache;
+    private CIcons.CIcon cIconCache;
     public CIcons.CIcon toCIcon() {
-        if (cache == null)
-            cache = CIcons.getIcon(ICON_LOCATION, x, y, size.width, size.height, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        return cache;
+        if (cIconCache == null)
+            cIconCache = CIcons.getIcon(ICON_LOCATION, x, y, size.width, size.height, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        return cIconCache;
+    }
+
+    private Component cTextIconCache;
+    public Component toCTextIcon(){
+        if (cTextIconCache == null) {
+            cTextIconCache = Component.literal(chr).withStyle(s -> s.withFont(FONT_LOCATION));
+        }
+        return cTextIconCache;
     }
 }
