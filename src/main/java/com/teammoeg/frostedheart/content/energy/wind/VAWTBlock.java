@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// TODO 检测空旷区域
 public class VAWTBlock extends KineticBlock implements IBE<VAWTBlockEntity> {
 
     public static final BooleanProperty DAMAGED = BooleanProperty.create("damaged");
@@ -49,6 +48,8 @@ public class VAWTBlock extends KineticBlock implements IBE<VAWTBlockEntity> {
         final long durability;
         final float weight;
         final Block block;
+        // TODO
+//        final VoxelShape AlternatorShape;
 
         private VAWTType(String name, int durability, float weight, Block owner) {
             this.name = name;
@@ -86,7 +87,10 @@ public class VAWTBlock extends KineticBlock implements IBE<VAWTBlockEntity> {
                 return;
             }
         }
-        tooltip.add(Component.translatable("gui.frostedheart.time_left").append(ClientUtils.asTime(durability)));
+        tooltip.add(Component.translatable("gui.frostedheart.durability_left").append(ClientUtils.msToTime(durability)));
+        tooltip.add(Component.translatable("message.frostedheart.vawt.speed_bonus",
+                        Component.literal(String.valueOf(type.weight*100-100)))
+                .withStyle(type.weight < 1 ? ChatFormatting.RED : ChatFormatting.GREEN));
     }
 
     @Override

@@ -275,11 +275,11 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements
                     .forGoggles(tooltip, 1);
 
             Lang.builder()
-                    .add(Component.translatable("gui.frostedheart.time_left"))
+                    .add(Component.translatable("gui.frostedheart.durability_left"))
                     .style(ChatFormatting.GRAY)
                     .forGoggles(tooltip);
             Lang.builder()
-                .add(ClientUtils.asTime(durability))
+                .add(ClientUtils.msToTime(durability))
                 .style(ChatFormatting.AQUA)
                 .add(Component.literal(" (" + Math.round(damageEffect*100) + "%)").withStyle(damageEffect > 1 ? ChatFormatting.RED : ChatFormatting.GREEN))
                 .forGoggles(tooltip, 1);

@@ -155,11 +155,14 @@ public class ClientUtils {
                 unregistered -> "[unregistered " + unregistered + "]");
     }
 
-    public static Component asTime(long milliseconds) {
+    public static Component msToTime(long milliseconds) {
         Duration duration = Duration.ofMillis(milliseconds);
-        long totalSeconds = duration.getSeconds();
-        long years = totalSeconds / (365 * 24 * 60 * 60);
-        long remainingSeconds = totalSeconds % (365 * 24 * 60 * 60);
+        return secToTime(duration.getSeconds());
+    }
+
+    public static Component secToTime(long secondIn) {
+        long years = secondIn / (365 * 24 * 60 * 60);
+        long remainingSeconds = secondIn % (365 * 24 * 60 * 60);
         long days = remainingSeconds / (24 * 60 * 60);
         remainingSeconds %= (24 * 60 * 60);
         long hours = remainingSeconds / (60 * 60);
