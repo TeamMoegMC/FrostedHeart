@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.content.climate.block.wardrobe;
 import com.teammoeg.chorda.capability.capabilities.ItemHandlerWrapper;
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
-import com.teammoeg.chorda.menu.CBaseMenu.QuickMoveStackBuilder;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.chorda.menu.slots.ArmorSlot;
 import com.teammoeg.chorda.menu.slots.ArmorSlotItemHandler;
@@ -14,7 +13,6 @@ import com.teammoeg.frostedheart.content.climate.block.LiningSlot;
 import com.teammoeg.frostedheart.content.climate.player.BodyPartData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
-
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -28,7 +26,7 @@ public class WardrobeMenu extends CBlockEntityMenu<WardrobeBlockEntity> {
 	CDataSlot<Integer> page=CCustomMenuSlot.SLOT_INT.create(this);
 	IItemHandler wrap;
 	public WardrobeMenu(int id, Inventory inventoryPlayer, WardrobeBlockEntity tile) {
-		super(FHMenuTypes.WARDROBE.get(),tile,id, inventoryPlayer.player,32);
+		super(FHMenuTypes.WARDROBE.get(),tile,id, inventoryPlayer.player,28);
 		//we don't actually switch inventory in client.
 		if(inventoryPlayer.player.level().isClientSide)
 			wrap=tile.invs[0];
@@ -81,8 +79,7 @@ public class WardrobeMenu extends CBlockEntityMenu<WardrobeBlockEntity> {
 	}
 	@Override
 	public QuickMoveStackBuilder defineQuickMoveStack() {
-
-		return QuickMoveStackBuilder.first(0,2).then(3,5).then(5,18).then(19,32).then(2).then(18);
+		return QuickMoveStackBuilder.first(0,2).then(3,5).then(5,18).then(19,28).then(2).then(18);
 	}
 
 	public void swapSlots() {
