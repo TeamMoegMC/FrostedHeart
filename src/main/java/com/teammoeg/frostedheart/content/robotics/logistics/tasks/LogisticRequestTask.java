@@ -28,13 +28,13 @@ import com.teammoeg.frostedheart.content.robotics.logistics.grid.GridAndAmount;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.IGridElement;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.ItemCountProvider;
 
+import lombok.ToString;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
-
+@ToString
 public class LogisticRequestTask extends LogisticTask {
 	/**
 	 * original data for a request task
@@ -73,14 +73,16 @@ public class LogisticRequestTask extends LogisticTask {
 
 	@Override
 	public LogisticTask work(LogisticNetwork network) {
+		System.out.println("moving "+stack+" to "+targetPos);
 		if(target.isPresent()) {
 			stack=ItemHandlerHelper.insertItemStacked(target.resolve().get(), stack, false);
-		}
+		}	
 		if(!stack.isEmpty()) {
 			GridAndAmount gaa=network.getHub().findGridForPlace(key, stack);
 			IGridElement grid=gaa.grid().resolve().get();
 			return new LogisticPushTask(targetPos,grid.getPos(),stack,key,gaa.grid());
 		}
+	
 		return null;
 	}
 	public ItemKey getActualKey(LogisticNetwork network) {
@@ -103,6 +105,7 @@ public class LogisticRequestTask extends LogisticTask {
 		IGridElement grid=gaa.grid().resolve().get();
 		origin=grid.getPos();
 		stack=network.getHub().takeItem(gaa.grid(), key, size);
+		System.out.println("taken "+stack+" to "+targetPos);
 		this.ticks=20;
 		return this;
 	}

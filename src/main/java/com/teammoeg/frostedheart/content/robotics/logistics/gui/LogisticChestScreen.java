@@ -22,11 +22,12 @@ package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
+
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
 
 public class LogisticChestScreen extends IEContainerScreen<LogisticChestMenu> {
     private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("bot_dock");

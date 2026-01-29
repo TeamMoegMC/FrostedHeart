@@ -5,15 +5,17 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.client.ClientUtils;
 
+import lombok.Getter;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 
 public class MenuPrimaryLayer<T extends AbstractContainerMenu> extends PrimaryLayer {
-	protected T container;
+	@Getter
+	protected T menu;
 	public MenuPrimaryLayer(T container) {
-		this.container=container;
+		this.menu=container;
 	}
 	@Nullable
 	public Slot getSlotUnderMouse() {
@@ -26,7 +28,7 @@ public class MenuPrimaryLayer<T extends AbstractContainerMenu> extends PrimaryLa
 	public void getTooltip(TooltipBuilder list) {
 		@Nullable
 		Slot slotUnderMouse = getSlotUnderMouse();
-		if (this.container.getCarried().isEmpty() && slotUnderMouse != null && slotUnderMouse.hasItem()) {
+		if (this.menu.getCarried().isEmpty() && slotUnderMouse != null && slotUnderMouse.hasItem()) {
 			AbstractContainerScreen.getTooltipFromItem(ClientUtils.getMc(), slotUnderMouse.getItem()).forEach(list::accept);
 		}
 		super.getTooltip(list);

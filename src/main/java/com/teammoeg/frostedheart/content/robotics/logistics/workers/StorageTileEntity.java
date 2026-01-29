@@ -32,7 +32,6 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticChest;
-import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestMenu;
 
 import lombok.Getter;
@@ -49,12 +48,16 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class StorageTileEntity extends CBlockEntity implements CTickableBlockEntity,MenuProvider,ILogisticProvider{
+public class StorageTileEntity extends CBlockEntity implements CTickableBlockEntity,MenuProvider,ILogisticProvider,LogisticStatusBlockEntity{
 	@Getter
 	public LogisticChest container;
 	public LazyOptional<LogisticChest> grid=LazyOptional.of(()->container);
 	public LazyOptional<LogisticNetwork> network;
 	ItemKey filter;
+	@Getter
+	protected int networkStatus=0;
+	@Getter
+	protected int uplinkStatus=0;
 	public StorageTileEntity(BlockPos pos,BlockState bs) {
 		super(FHBlockEntityTypes.STORAGE_CHEST.get(),pos,bs);
 		container=new LogisticChest(null,pos);
@@ -82,13 +85,17 @@ public class StorageTileEntity extends CBlockEntity implements CTickableBlockEnt
 						ln.resolve().get().getHub().addElement(grid.cast());
 					}
 				}
+				uplinkStatus=networkStatus=0;
+			}else {
+				uplinkStatus=networkStatus=2;
 			}
+			
 		}
 		//.ifPresent(t->t.getNetworkFor(level, worldPosition));
 	}
 	@Override
 	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-		return new StorageChestMenu(pContainerId,pPlayerInventory,container);
+		return new StorageChestMenu(pContainerId,this,pPlayerInventory,container);
 	}
 	@Override
 	public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {

@@ -24,11 +24,12 @@ import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.GridAndAmount;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.IGridElement;
 
+import lombok.ToString;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
-
+@ToString
 public class LogisticPushTask extends LogisticTask {
 	
 	/**
@@ -81,16 +82,22 @@ public class LogisticPushTask extends LogisticTask {
 
 	@Override
 	public LogisticTask work(LogisticNetwork network) {
-		stack=network.getHub().pushItem(target, key, stack);
+		System.out.println("pushing "+stack+" to "+targetPos);
+		if(target!=null)
+			stack=network.getHub().pushItem(target, key, stack);
 		if(!stack.isEmpty()) {
-			GridAndAmount gaa=network.getHub().findGridForPlace(key, stack);
-			target=gaa.grid();
 			origin=targetPos;
-			targetPos=target.resolve().get().getPos();
 			ticks=20;
-			return null;
+			GridAndAmount gaa=network.getHub().findGridForPlace(key, stack);
+			if(gaa==null) {
+				target=null;
+				return this;
+			}
+			target=gaa.grid();
+			targetPos=target.resolve().get().getPos();
+			return this;
 		}
-		return this;
+		return null;
 	}
 
 	@Override

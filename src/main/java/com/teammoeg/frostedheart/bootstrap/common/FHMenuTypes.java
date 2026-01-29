@@ -46,6 +46,9 @@ import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestMenu;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.RequesterTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.StorageTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.SupplierTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
@@ -81,9 +84,9 @@ public class FHMenuTypes {
 
 	public static final RegistryObject<MenuType<RelicChestContainer>> RELIC_CHEST = register(RelicChestTileEntity.class, ("relic_chest"), RelicChestContainer::new);
 	
-	public static final RegistryObject<MenuType<RequesterChestMenu>> REQUEST_CHEST = register(("reqeust_chest"), RequesterChestMenu::new);
-	public static final RegistryObject<MenuType<StorageChestMenu>> STORAGE_CHEST = register(("storage_chest"), StorageChestMenu::new);
-	public static final RegistryObject<MenuType<SupplierChestMenu>> SUPPLY_CHEST = register(("supply_chest"), SupplierChestMenu::new);
+	public static final RegistryObject<MenuType<RequesterChestMenu>> REQUEST_CHEST = register(RequesterTileEntity.class, ("reqeust_chest"), RequesterChestMenu::new);
+	public static final RegistryObject<MenuType<StorageChestMenu>> STORAGE_CHEST = register(StorageTileEntity.class,("storage_chest"), StorageChestMenu::new);
+	public static final RegistryObject<MenuType<SupplierChestMenu>> SUPPLY_CHEST = register(SupplierTileEntity.class,("supply_chest"), SupplierChestMenu::new);
 
 	public static final RegistryObject<MenuType<SnowSackMenu>> SNOW_SACK = register("snow_sack", SnowSackMenu::new);
 

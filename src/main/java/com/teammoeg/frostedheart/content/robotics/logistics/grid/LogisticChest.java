@@ -156,6 +156,8 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 		int totake=amount;
 		IntIterator ii=id.slots.iterator();
 		IntArrayList il=new IntArrayList();
+		ItemStack taken=ItemStack.EMPTY;
+		new Exception().printStackTrace();
 		while(ii.hasNext()) {
 			int slot=ii.nextInt();
 			ItemStack inslot=chest.getStackInSlot(slot);
@@ -163,17 +165,20 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 				isCacheInvalidated=true;
 				continue;
 			}
+			if(!taken.isEmpty()&&!ItemStack.isSameItemSameTags(taken, inslot))continue;
 			int slotToReduce=Math.min(totake, inslot.getCount());
-			
+			int oldCount=inslot.getCount();
 			if(slotToReduce>0) {
 				id.totalCount-=slotToReduce;
-				if(slotToReduce==inslot.getCount()) {
+				if(taken.isEmpty()) {
+					taken=chest.extractItem(slot, slotToReduce, false);
+				}else {
+					taken.grow(chest.extractItem(slot, slotToReduce, false).getCount());
+				}
+				if(slotToReduce==oldCount) {
 					il.add(slot);
 					slotRef[slot]=null;
-					chest.setStackInSlot(slot, ItemStack.EMPTY);
 					emptySlotCount++;
-				}else {
-					inslot.shrink(slotToReduce);
 				}
 				totake-=slotToReduce;
 				if(totake<=0)
@@ -184,7 +189,7 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 		if(id.slots.isEmpty()||id.totalCount<=0){
 			cachedData.remove(key);
 		}
-		return key.createStackWithSize(amount-totake);
+		return taken;
 		
 	}
 	public Map<ItemKey,? extends ItemCountProvider> getAllItems(){

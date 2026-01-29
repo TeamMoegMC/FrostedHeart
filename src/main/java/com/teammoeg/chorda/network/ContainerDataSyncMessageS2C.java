@@ -43,7 +43,7 @@ public record ContainerDataSyncMessageS2C(List<ContainerDataPair> data) implemen
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public void write(FriendlyByteBuf buffer) {
 			buffer.writeVarInt(slotIndex);
-			CCustomMenuSlot.Encoders.encoders.write(buffer, conv);
+			CCustomMenuSlot.Encoders.write(buffer, conv);
 			((NetworkEncoder)conv).write(buffer, data);
 		}
 	}
@@ -63,7 +63,7 @@ public record ContainerDataSyncMessageS2C(List<ContainerDataPair> data) implemen
 	}
 
 	public ContainerDataSyncMessageS2C(FriendlyByteBuf buf) {
-		this(SerializeUtil.readList(buf, t->new ContainerDataPair(buf,buf.readVarInt(), CCustomMenuSlot.Encoders.encoders.read(buf))));
+		this(SerializeUtil.readList(buf, t->new ContainerDataPair(buf,buf.readVarInt(), CCustomMenuSlot.Encoders.read(buf))));
 	}
 
 	@Override

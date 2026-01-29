@@ -15,6 +15,9 @@ public interface Verifier<T> {
 
 	}
 	public static final VerifyResult SUCCESS=new VerifyResult(false,null);
+	public static VerifyResult error(Component message) {
+		return new VerifyResult(true,message);
+	} 
 	public static <T> Verifier<T> nonNull(){
 		return successOrTranslatable(Objects::nonNull,"gui.chorda.editor.must_be_nonnull");
 	}

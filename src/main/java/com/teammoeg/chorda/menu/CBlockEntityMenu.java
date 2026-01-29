@@ -19,11 +19,14 @@
 
 package com.teammoeg.chorda.menu;
 
+import com.teammoeg.chorda.client.cui.menu.DeactivatableSlot;
+
 import blusunrize.immersiveengineering.common.gui.BlockEntityInventory;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.level.block.entity.BlockEntity;
 /**
  * use of blockentity in screens, use {@link CCustomMenuSlot} to serve as data synchronization instead

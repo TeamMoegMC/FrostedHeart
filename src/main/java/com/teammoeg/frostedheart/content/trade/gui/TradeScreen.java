@@ -183,12 +183,12 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 		ptf.setPos(0, 119);
 		super.add(ptf);
 		TextField vptf = new TextField(this).centerV().centerH().shadow().setMaxWidth(56).setMinWidth(56)
-			.setMaxLines(1).setText(Lang.translateGui("trade.profession." + container.data.policytype));
+			.setMaxLines(1).setText(Lang.translateGui("trade.profession." + menu.data.policytype));
 		vptf.setPos(132, 119);
 		super.add(vptf);
 
 		TextField vltf = new TextField(this).centerV().centerH().shadow().setMaxWidth(56).setMinWidth(56)
-			.setMaxLines(1).setText(Lang.translateKey("merchant.level." + (container.data.getTradeLevel() + 1)));
+			.setMaxLines(1).setText(Lang.translateKey("merchant.level." + (menu.data.getTradeLevel() + 1)));
 		vltf.setPos(132, 34);
 		super.add(vltf);
 
@@ -198,14 +198,14 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 
 		super.add(tab);
 		ToolTipElement ttw = new ToolTipElement(this, list -> {
-			int tot = container.relations.sum();
+			int tot = menu.relations.sum();
 			list.accept(Lang.translateGui("trade.relation").append(Components.str(tot > 0 ? " +" + tot : "" + tot)
 				.withStyle(tot > 0 ? ChatFormatting.GREEN : ChatFormatting.RED)));
 			if (tot <= TradeConstants.RELATION_TO_TRADE) {
 				list.accept(Component.translatable("gui.frostedheart.trade.no_trade_will"));
 			}
 			for (RelationModifier m : RelationModifier.values()) {
-				int rel = container.relations.get(m);
+				int rel = menu.relations.get(m);
 				if (rel == 0)
 					continue;
 				MutableComponent tx = Components.str(rel > 0 ? " +" + rel : " " + rel)
@@ -227,23 +227,23 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		TradeIcons.MAIN.draw(matrixStack, x, y, w, h);
 		TradeIcons.REL.draw(matrixStack, x + 133, y + 18, 54, 5);
-		int repos = container.relations.sum();
+		int repos = menu.relations.sum();
 		repos = Math.min(Math.max(repos, -50), 50);
 		int reposx = (repos + 50) * 50 / 100;
 		TradeIcons.PTR.draw(matrixStack, x + reposx + 133, y + 17, 3, 7);
 
-		TradeIcons.icons[container.balance + 3].draw(matrixStack, x, y, 56, 45);
-		if (container.poffer != 0)
+		TradeIcons.icons[menu.balance + 3].draw(matrixStack, x, y, 56, 45);
+		if (menu.poffer != 0)
 			TradeIcons.POFFER_EMP.draw(matrixStack, x + 54, y, 76, 60);
-		if (!container.order.isEmpty())
+		if (!menu.order.isEmpty())
 			TradeIcons.VOFFER_EMP.draw(matrixStack, x + 57, y + 73, 74, 60);
 		if (tab.isChecked())
 			TradeIcons.OVLBUY.draw(matrixStack, x + 189, y + 56, 48, 48);
 		else
 			TradeIcons.OVLSELL.draw(matrixStack, x + 189, y + 56, 48, 48);
-		int max = container.policy.maxExp;
+		int max = menu.policy.maxExp;
 		if (max > 0) {
-			float progress = ((float) (container.data.totaltraded)) / max;
+			float progress = ((float) (menu.data.totaltraded)) / max;
 			progress = Mth.clamp(progress, 0, 1);
 			TradeIcons.EXP.draw(matrixStack, 133 + x, 25 + y, (int) (54 * progress), 5);
 		} else {
@@ -252,13 +252,13 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 		InventoryScreen.renderEntityInInventoryFollowsMouse(matrixStack, x + 28, y + 115, 30, (float) ((x + 8) - this.getMouseX()),
 			(float) ((y + 75 - 50) - this.getMouseY()), ClientUtils.getPlayer());
 		InventoryScreen.renderEntityInInventoryFollowsMouse(matrixStack, x + 160, y + 115, 30, (float) ((x + 140) - this.getMouseX()),
-			(float) ((y + 75 - 50) - this.getMouseY()), container.data.parent);
+			(float) ((y + 75 - 50) - this.getMouseY()), menu.data.parent);
 	}
 
 	@Override
 	public void drawForeground(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		super.drawForeground(matrixStack, x, y, w, h);
-		for (DetectionSlot ds : container.slots) {
+		for (DetectionSlot ds : menu.slots) {
 			if (ds.isSaleable) {
 				TradeIcons.SALEABLE.draw(matrixStack, ds.x + x, ds.y + y, 7, 6);
 			}
@@ -283,13 +283,13 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 	public void onOrderSlotClick(int sno, MouseButton btn) {
 
 		boolean shift = CInputHelper.isShiftKeyDown();
-		String sd = container.order.keySet().stream().skip(sno).findFirst().orElse(null);
+		String sd = menu.order.keySet().stream().skip(sno).findFirst().orElse(null);
 		if (sd == null)
 			return;
 		if (shift)
-			container.order.remove(sd);
+			menu.order.remove(sd);
 		else
-			container.order.compute(sd, (k, v) -> {
+			menu.order.compute(sd, (k, v) -> {
 				int cnt = v == null ? 0 : v;
 				if (btn == MouseButton.LEFT)
 					cnt--;
@@ -302,20 +302,20 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 
 	public void onSlotClick(int sno, MouseButton btn) {
 		if (!tab.isChecked()) {
-			if (container.relations.sum() <= TradeConstants.RELATION_TO_TRADE) {
+			if (menu.relations.sum() <= TradeConstants.RELATION_TO_TRADE) {
 				return;
 			}
 			SellData sd = sds[sno];
 			boolean shift = CInputHelper.isShiftKeyDown();
-			if (container.order.size() >= 11 && !container.order.containsKey(sd.getId()))
+			if (menu.order.size() >= 11 && !menu.order.containsKey(sd.getId()))
 				return;
 			if (sd == null)
 				return;
 			if (shift) {
-				container.order.put(sd.getId(), sd.getStore());
+				menu.order.put(sd.getId(), sd.getStore());
 				// slots[sno].setCount(0);
 			} else
-				container.order.compute(sd.getId(), (k, v) -> {
+				menu.order.compute(sd.getId(), (k, v) -> {
 					int cnt = v == null ? 0 : v;
 					if (btn == MouseButton.LEFT)
 						cnt++;
@@ -340,11 +340,11 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 		Arrays.fill(sds, null);
 		if (tab.isChecked()) {
 			int start = 0;
-			int end = Math.min(container.policy.getBuys().size(), start + 27);
+			int end = Math.min(menu.policy.getBuys().size(), start + 27);
 			int j = 0;
 			if (start < end)
 				for (int i = start; i < end; i++) {
-					BuyData cur = container.policy.getBuys().get(i);
+					BuyData cur = menu.policy.getBuys().get(i);
 					OverlayItemSlot slot = slots[j++];
 					if (cur.getStore() == 0) {
 						slot.setOverlay(TradeIcons.NOBUY, 7, 6);
@@ -358,17 +358,17 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 				}
 		} else {
 			int start = 0;
-			int end = Math.min(container.policy.getSells().size(), start + 27);
+			int end = Math.min(menu.policy.getSells().size(), start + 27);
 			int j = 0;
 			if (start < end) {
 				end -= start;
-				Iterator<SellData> it = container.policy.getSells().values().stream().skip(start).limit(27).iterator();
+				Iterator<SellData> it = menu.policy.getSells().values().stream().skip(start).limit(27).iterator();
 				while (it.hasNext()) {
 					SellData sd = it.next();
 					sds[j] = sd;
 					OverlayItemSlot slot = slots[j++];
 					if (sd.getStore() == 0) {
-						if (sd.canRestock(container.data) > 0) {
+						if (sd.canRestock(menu.data) > 0) {
 							slot.setOverlay(TradeIcons.STOCKOUT, 7, 6);
 							slot.setTooltips(c -> c.accept(Lang.translateGui("trade.no_stock").withStyle(ChatFormatting.RED)));
 						} else {
@@ -379,7 +379,7 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 						if (sd.isFullStock()) {
 							slot.setOverlay(TradeIcons.FULL, 7, 6);
 							slot.setTooltips(c -> c.accept(Lang.translateGui("trade.full_stock").withStyle(ChatFormatting.GREEN)));
-						} else if (sd.canRestock(container.data) > 0) {
+						} else if (sd.canRestock(menu.data) > 0) {
 							slot.setOverlay(TradeIcons.RESTOCKS, 7, 6);
 							slot.setTooltips(c -> c.accept(Lang.translateGui("trade.restocking").withStyle(ChatFormatting.YELLOW)));
 						} else {
@@ -398,28 +398,28 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 	public void updateOrders() {
 		for (OverlayItemSlot fs : orders)
 			fs.clear();
-		Iterator<Entry<String, Integer>> it = container.order.entrySet().iterator();
+		Iterator<Entry<String, Integer>> it = menu.order.entrySet().iterator();
 		int j = 0;
 		while (it.hasNext()) {
 			Entry<String, Integer> cur = it.next();
 			OverlayItemSlot curs = orders[j++];
-			curs.setItem(container.policy.getSells().get(cur.getKey()).getItem());
+			curs.setItem(menu.policy.getSells().get(cur.getKey()).getItem());
 			curs.setCountOverride(cur.getValue());
 		}
 		updateTrade();
 	}
 
 	public void updateTrade() {
-		container.recalc();
-		if (container.balance >= 0 && container.poffer > 0) {
+		menu.recalc();
+		if (menu.balance >= 0 && menu.poffer > 0) {
 
 			trade.setEnabled(true);
 
-			if (container.originalVOffer > container.poffer) {
+			if (menu.originalVOffer > menu.poffer) {
 				trade.setNormal(TradeIcons.DEALGRN);
 				trade.setOver(TradeIcons.DEALGRNO);
 				trade.setTooltips(c -> c.accept(Lang.translateGui("trade.discounted_offering")));
-			} else if (container.poffer - container.originalVOffer > 10) {
+			} else if (menu.poffer - menu.originalVOffer > 10) {
 				trade.setNormal(TradeIcons.DEALYEL);
 				trade.setOver(TradeIcons.DEALYELO);
 				trade.setTooltips(c -> c.accept(Lang.translateGui("trade.too_much_offering")));
@@ -432,12 +432,12 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 			trade.setTooltips(c -> c.accept(Lang.translateGui("trade.not_enough_offering")));
 			trade.setEnabled(false);
 		}
-		if (container.relations.sum() >= 40) {
-			if (container.order.isEmpty()) {
+		if (menu.relations.sum() >= 40) {
+			if (menu.order.isEmpty()) {
 				bargain.setTooltips(c -> c.accept(Lang.translateGui("trade.trade_to_bargain")));
 				bargain.setEnabled(false);
 			} else {
-				if (container.discountRatio > 0.4) {
+				if (menu.discountRatio > 0.4) {
 					bargain.setTooltips(c -> c.accept(Lang.translateGui("trade.maxed_bargain")));
 					bargain.setEnabled(false);
 				} else {

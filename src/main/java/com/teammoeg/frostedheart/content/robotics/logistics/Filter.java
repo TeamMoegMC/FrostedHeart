@@ -1,5 +1,8 @@
 package com.teammoeg.frostedheart.content.robotics.logistics;
 
+import java.util.Objects;
+import java.util.Optional;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
@@ -9,7 +12,8 @@ import lombok.Setter;
 import net.minecraft.world.item.ItemStack;
 
 public class Filter {
-	public static final Codec<Filter> CODEC=RecordCodecBuilder.create(t->t.group(ItemKey.CODEC.fieldOf("key").forGetter(o->o.key),
+	public static final Codec<Filter> CODEC=RecordCodecBuilder.create(t->t.group(
+		ItemKey.CODEC.fieldOf("key").forGetter(o->o.key),
 		Codec.BOOL.optionalFieldOf("ignoreNBT",false).forGetter(o->o.ignoreNbt),
 		Codec.INT.fieldOf("size").forGetter(o->o.size)).apply(t, Filter::new));
 	@Getter
@@ -20,13 +24,16 @@ public class Filter {
 	boolean ignoreNbt;
 	@Setter
 	@Getter
-	int size;
-	
+	int size=0;
+
 	public Filter(ItemKey key, boolean ignoreNbt,int size) {
 		super();
 		this.key = key;
 		this.ignoreNbt = ignoreNbt;
 		this.size=size;
+	}
+	public Filter() {
+		
 	}
 	public boolean matches(ItemKey okey) {
 		if(ignoreNbt)
@@ -37,5 +44,21 @@ public class Filter {
 		if(ignoreNbt)
 			return okey.getItem()==key.item;
 		return key.isSameItem(okey);
+	}
+	public ItemStack createDisplayStack() {
+		if(key==null)return ItemStack.EMPTY;
+		return key.createStackWithSize(size);
+	}
+	@Override
+	public int hashCode() {
+		return Objects.hash(ignoreNbt, key, size);
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		Filter other = (Filter) obj;
+		return ignoreNbt == other.ignoreNbt && Objects.equals(key, other.key) && size == other.size;
 	}
 }

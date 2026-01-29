@@ -20,9 +20,13 @@
 package com.teammoeg.frostedheart.content.robotics.logistics;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticHub;
@@ -34,7 +38,8 @@ import net.minecraft.world.level.Level;
 public class LogisticNetwork {
 	private LogisticHub hub;
 	// List<LogisticEnvolop> envolops=new ArrayList<>();
-	LinkedHashMap<LogisticTaskKey,LogisticTask> tasks=new LinkedHashMap<>();
+	Set<LogisticTaskKey> keys=new HashSet<>();
+	LinkedList<LogisticTask> tasks=new LinkedList<>();
 	List<LogisticTask> working=new ArrayList<>(40);
 	Level world;
 	BlockPos centerPos;
@@ -48,50 +53,52 @@ public class LogisticNetwork {
 		hub=new LogisticHub(world,centerPos);
 	}
 	public boolean canAddTask(LogisticTaskKey key) {
-		return !tasks.containsKey(key);
+		return !keys.contains(key);
 	}
 	public void addTask(LogisticTaskKey key,LogisticTask task) {
 		task.taskKey=key;
-		this.tasks.put(key, task);
+		keys.add(key);
+		this.tasks.add(task);
 	}
 	public Level getWorld() {
 		return world;
 	}
-	public List<LogisticTask> getTasks(int num){
-		Iterator<LogisticTask> tid=tasks.values().iterator();
-		List<LogisticTask> task=new ArrayList<>();
-		for(int i=0;i<num;i++) {
-			if(!tid.hasNext())return task;
-			task.add(tid.next());
-		}
-		return task;
-	}
+
 	public void tick() {
-		FHMain.LOGGER.info("hub "+hub);
+		//FHMain.LOGGER.info("hub "+hub);
 		hub.tick();
-		FHMain.LOGGER.info("Logistic tasks working:"+working.size()+",queued:"+tasks.size());
+		//FHMain.LOGGER.info("Logistic tasks working:"+working.size()+",queued:"+tasks.size());
 		List<LogisticTask> nextCycle=new ArrayList<>(working);
 		working.clear();
 		for(LogisticTask lt:nextCycle) {
-			
+			FHMain.LOGGER.info("Logistic task working "+lt.ticks+","+lt.toString());
 			if(lt.ticks>0) {
 				lt.ticks--;
 				working.add(lt);
 			}else {
-				FHMain.LOGGER.info("Logistic task working");
-				tasks.remove(lt.taskKey);
+				
 				LogisticTask nlt=lt.work(this);
-				if(nlt!=null)
+				if(nlt!=null) {
 					working.add(nlt);
+					nlt.taskKey=lt.taskKey;
+				}else
+					keys.remove(lt.taskKey);
+					
 			}
 		}
 		if(working.size()<MAX_WORKING_TASKS) {
-			FHMain.LOGGER.info("Logistic task preparing");
-			for(LogisticTask wrapper:getTasks(MAX_WORKING_TASKS-working.size())) {
-				
+			//FHMain.LOGGER.info("Logistic task preparing");
+			for(int i=0;i<tasks.size();i++) {
+				LogisticTask wrapper=tasks.pollFirst();
+				if(wrapper==null)break;
 				LogisticTask lt=wrapper.prepare(this);
-				if(lt!=null)
+				if(lt!=null) {
+					lt.taskKey=wrapper.taskKey;
+					FHMain.LOGGER.info("Logistic task added "+lt.toString());
 					working.add(lt);
+				}else {
+					tasks.addLast(wrapper);
+				}
 				if(working.size()>=MAX_WORKING_TASKS)
 					break;
 			}
