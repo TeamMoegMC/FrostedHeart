@@ -89,7 +89,7 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
     }
 
     public CBlockEntityMenu getCMenu() {
-        return container;
+        return menu;
     }
 
     public TabImageButtonElement getTabButton(int x, int y, int tabI) {

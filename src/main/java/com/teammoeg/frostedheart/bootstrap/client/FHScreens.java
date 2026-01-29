@@ -37,6 +37,9 @@ import com.teammoeg.frostedheart.content.health.screen.HealthStatScreen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.LogisticChestScreen;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestScreen;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestScreen;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestScreen;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatScreen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseScreen;
@@ -64,9 +67,9 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.CLOTHES_GUI.get(), ClothesScreen::new);
         MenuScreens.register(FHMenuTypes.NUTRITION_GUI.get(), HealthStatScreen::new);
         MenuScreens.register(FHMenuTypes.WARDROBE.get(), WardrobeScreen::new);
-        MenuScreens.register(FHMenuTypes.SUPPLY_CHEST.get(), LogisticChestScreen::new);
-        MenuScreens.register(FHMenuTypes.STORAGE_CHEST.get(), LogisticChestScreen::new);
-        MenuScreens.register(FHMenuTypes.REQUEST_CHEST.get(), LogisticChestScreen::new);
+        registerCUIScreen(FHMenuTypes.SUPPLY_CHEST.get(),SupplierChestScreen::new);
+        registerCUIScreen(FHMenuTypes.STORAGE_CHEST.get(), StorageChestScreen::new);
+        registerCUIScreen(FHMenuTypes.REQUEST_CHEST.get(), RequesterChestScreen::new);
         MenuScreens.register(FHMenuTypes.SNOW_SACK.get(), SnowSackScreen::new);
     }
 

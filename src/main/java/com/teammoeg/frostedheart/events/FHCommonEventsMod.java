@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.events.MenuSlotEncoderRegisterEvent;
 import com.teammoeg.chorda.recipe.TagActionIngredient;
 import com.teammoeg.chorda.recipe.ToolActionIngredient;
 import com.teammoeg.frostedheart.FHMain;
@@ -79,6 +80,8 @@ public class FHCommonEventsMod {
 
 		}
 	}
+
+	
     
 	@SubscribeEvent
 	public static void entityAttributes(EntityAttributeCreationEvent event) {

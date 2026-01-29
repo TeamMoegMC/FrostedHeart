@@ -58,24 +58,20 @@ public class LogisticHub implements IGridElement {
 				var keys=it.next();
 				if(keys.getKey().isPresent()) {
 					IGridElement grid=keys.getKey().resolve().get();
-					int taken=grid.takeItem(ik, totake).getCount();
-					if(taken>0) {
-						totake-=taken;
+					ItemStack taken=grid.takeItem(ik, totake);
+					if(!taken.isEmpty()) {
 						ItemCountProvider ref=grid.getAllItems().get(ik);
-						int ncnt;
+						int ncnt=0,old=keys.getIntValue();
 						if(ref==null||(ncnt=ref.getTotalCount())<=0) {
 							it.remove();
-							continue;
-						}
-						int old=keys.getIntValue();
-						keys.setValue(ncnt);
+						}else
+							keys.setValue(ncnt);
 						this.totalCount+=ncnt-old;
-						break;
+						return taken;
 					}
 				}
-				if(totake<=0)break;
 			}
-			return ik.createStackWithSize(amount-totake);
+			return ItemStack.EMPTY;
 		}
 		public ItemStack takeItem(LazyOptional<IGridElement> element,ItemKey ik,int amount) {
 			if(element.isPresent()) {
@@ -83,12 +79,10 @@ public class LogisticHub implements IGridElement {
 				ItemStack taken=grid.takeItem(ik, amount);
 				if(taken.getCount()>0) {
 					ItemCountProvider ref=grid.getAllItems().get(ik);
-					int ncnt;
+					int ncnt=0,old=0;
 					if(ref==null||(ncnt=ref.getTotalCount())<=0) {
-						countmap.removeInt(element);
-						return taken;
-					}
-					int old=countmap.put(element, ncnt);
+						old=countmap.removeInt(element);
+					}else old=countmap.put(element, ncnt);
 					this.totalCount+=ncnt-old;
 					return taken;
 				}

@@ -29,6 +29,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 import com.teammoeg.chorda.ChordaNetwork;
+import com.teammoeg.chorda.client.cui.menu.DeactivatableSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.SyncableDataSlot;
 import com.teammoeg.chorda.network.ContainerDataSyncMessageS2C;
 import com.teammoeg.chorda.network.ContainerOperationMessageC2S;
@@ -276,7 +277,12 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 	public boolean quickMoveIn(ItemStack slotStack) {
 		return moveFunction.get().apply(slotStack);
 	}
-
+	public void setSlotVisible(boolean en) {
+		for (Slot s : this.slots) {
+			if (s instanceof DeactivatableSlot)
+				((DeactivatableSlot) s).setActived(en);
+		}
+	}
 	@Override
 	public ItemStack quickMoveStack(Player playerIn, int index) {
 		ItemStack itemStack = ItemStack.EMPTY;

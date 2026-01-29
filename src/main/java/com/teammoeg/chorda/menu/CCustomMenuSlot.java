@@ -28,6 +28,7 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 import com.mojang.serialization.Codec;
+import com.teammoeg.chorda.events.MenuSlotEncoderRegisterEvent;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.registry.IdRegistry;
 
@@ -39,13 +40,14 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fml.ModLoader;
 /**
  * a utility class for menu data sync and type conversion
  * 
  * */
 public class CCustomMenuSlot {
 	public static class Encoders{
-		public static final IdRegistry<NetworkEncoder<?>> encoders=new IdRegistry<>();
+		private static final IdRegistry<NetworkEncoder<?>> encoders=new IdRegistry<>();
 		static final NetworkEncoder<FluidStack> fluidEncoder=encoders.register(new NetworkEncoder<>() {
 
 			@Override
@@ -96,6 +98,12 @@ public class CCustomMenuSlot {
 						network.writeBoolean(false);
 				}
 			};
+		}
+		public static void write(FriendlyByteBuf pb, NetworkEncoder obj) {
+			CCustomMenuSlot.Encoders.encoders.write(pb,obj);
+		}
+		public static NetworkEncoder<?> read(FriendlyByteBuf buf) {
+			return CCustomMenuSlot.Encoders.encoders.read(buf);
 		}
 	}
 	
@@ -567,5 +575,7 @@ public class CCustomMenuSlot {
 		return slot;
 	}
 	
-	
+	public static void init() {
+		ModLoader.get().postEvent(new MenuSlotEncoderRegisterEvent(Encoders.encoders));
+	}
 }

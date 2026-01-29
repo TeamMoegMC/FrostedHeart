@@ -50,13 +50,13 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	}
 
 	public DrawingDeskTileEntity getTile() {
-		return container.getBlock();
+		return menu.getBlock();
 	}
 
 	public void hideTechTree() {
 		p.setVisible(true);
 		r.setVisible(false);
-		container.setEnabled(true);
+		menu.setSlotVisible(true);
 	}
 
 	@Override
@@ -99,7 +99,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		}
 		r.setVisible(true);
 		p.setVisible(false);
-		container.setEnabled(false);
+		menu.setSlotVisible(false);
 
 	}
 

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,12 +39,8 @@ import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMe
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticRequestTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import lombok.Getter;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -51,8 +48,11 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
@@ -60,17 +60,21 @@ import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemStackHandler;
 
-public class RequesterTileEntity extends CBlockEntity implements  CTickableBlockEntity,MenuProvider {
+public class RequesterTileEntity extends CBlockEntity implements  CTickableBlockEntity,MenuProvider,LogisticStatusBlockEntity {
 	
 	ItemStackHandler container=new ItemStackHandler(27);
 	public LazyOptional<ItemStackHandler> grid=LazyOptional.of(()->container);
 	public LazyOptional<LogisticNetwork> network;
-	Filter[] filters=new Filter[8];
-	
-	List<Supplier<LogisticTaskKey>> keys=new ArrayList<>(8);
+	static final int MAX_TASKS=27;
+	public Filter[] filters=new Filter[9];
+	@Getter
+	protected int networkStatus=0;
+	@Getter
+	protected int uplinkStatus=0;
+	List<Supplier<LogisticTaskKey>> keys=new ArrayList<>(MAX_TASKS);
 	public RequesterTileEntity(BlockPos pos,BlockState bs) {
 		super(FHBlockEntityTypes.REQUESTER_CHEST.get(),pos,bs);
-		for(int i=0;i<20;i++){
+		for(int i=0;i<MAX_TASKS;i++){
 			final int cnt=i;
 			keys.add(Lazy.of(()->new LogisticTaskKey(pos,cnt)));
 		}
@@ -104,32 +108,82 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 	}
 	LazyTickWorker worker=new LazyTickWorker(10,()->{
 		if(network!=null&&network.isPresent()) {
+			boolean hasUplink=false;
+			boolean hasRequest=false;
+			int idx=0;
+			int[] lens=new int[filters.length];
+			int total=0;
 			for(int i=0;i<filters.length;i++) {
+				
 				if(filters[i]!=null) {
 					int currcnt=0;
+					hasUplink=true;
 					for(int j=0;j<container.getSlots();j++) {
 						ItemStack stack=container.getStackInSlot(j);
 						if(filters[i].matches(stack)) {
 							currcnt+=stack.getCount();
 						}
+					}if(currcnt<filters[i].getSize()) {
+						lens[i]=filters[i].getSize()-currcnt;
+						total+=lens[i];
 					}
-					if(currcnt<filters[i].getSize()) {
-						Supplier<LogisticTaskKey> lt=keys.get(i);
-						LogisticNetwork networkGrid=network.resolve().get();
-						if(networkGrid.canAddTask(lt.get())) {
-							networkGrid.addTask(lt.get(), new LogisticRequestTask(filters[i],filters[i].getSize()-currcnt,this.getBlockPos(),grid.cast()));
-						}
-					}
-					
 				}
 			}
-			;
-		}
+			int curidx=0;
+			LogisticNetwork networkGrid=network.resolve().get();
+			IntArrayList ial=new IntArrayList(MAX_TASKS);
+			for(int i=0;i<MAX_TASKS;i++) {
+				Supplier<LogisticTaskKey> lt=keys.get(curidx);
+				if(networkGrid.canAddTask(lt.get())) {
+					ial.add(i);
+					hasRequest=true;
+				
+				}
+			}
+			if(hasRequest) {
+				float perCount=total*1f/ial.size();
+				int ialidx=0;
+				//split keys with weight
+				for(int i=0;i<filters.length;i++) {
+					int cnt=Math.round(lens[i]/perCount);
+					if(cnt>0)
+						for(int j=0;j<cnt;j++) {
+							int ncnt=Math.min(lens[i], 64);
+							lens[i]-=ncnt;
+							
+							networkGrid.addTask(keys.get(ial.getInt(ialidx)).get(), new LogisticRequestTask(filters[i],ncnt,this.getBlockPos(),grid.cast()));
+							ialidx++;
+						}
+				}
+				//split reminder between each filter
+				if(ialidx<ial.size()) {
+					for(int j=ialidx;j<ial.size();j++) {
+						int icuridx=j%filters.length;
+						int ncnt=Math.min(lens[icuridx], 64);
+						if(ncnt>0) {
+							lens[icuridx]-=ncnt;
+							networkGrid.addTask(keys.get(ial.getInt(j)).get(), new LogisticRequestTask(filters[icuridx],ncnt,this.getBlockPos(),grid.cast()));
+						}
+						
+					}
+				}
+			}
+			if(hasUplink) {
+				if(hasRequest) {
+					uplinkStatus=2;
+				}else
+					uplinkStatus=1;
+			}else
+				uplinkStatus=3;
+			
+		}else
+			uplinkStatus=0;
 	});
 	@Override
 	public void tick() {
 		if(!this.level.isClientSide) {
 			if(network==null||!network.isPresent()) {
+				networkStatus=0;
 				Optional<LazyOptional<LogisticNetwork>> chunkData=FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.
 				getCapability(this.level.getChunk(this.worldPosition)).map(t->t.getNetworkFor(level, worldPosition));
 				if(chunkData.isPresent()) {
@@ -139,7 +193,8 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 						network=ln;
 					}
 				}
-			}
+			}else
+				networkStatus=2;
 			worker.tick();
 		}
 	}
@@ -153,7 +208,7 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 
 	@Override
 	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-		return new RequesterChestMenu(pContainerId,pPlayerInventory,container);
+		return new RequesterChestMenu(pContainerId,this,pPlayerInventory,container);
 	}
 
 	@Override

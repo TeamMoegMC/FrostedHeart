@@ -17,27 +17,23 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.robotics.logistics.tasks;
+package com.teammoeg.chorda.listeners;
 
-import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
-/**
- * Stage for tasks:
- * Queue->Prepared->Working->finished
- *            ^-------|
- * 
- * */
-public abstract class LogisticTask {
-	public int ticks;
-	public LogisticTaskKey taskKey;
-	public LogisticTask(LogisticTaskKey taskKey, int ticks) {
-		super();
-		this.taskKey = taskKey;
-		this.ticks = ticks;
+import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.menu.CCustomMenuSlot;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegisterEvent;
+
+@Mod.EventBusSubscriber(modid = Chorda.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+public class ChordaCommonEventsMod {
+	@SubscribeEvent
+	public static void registerIngredient(RegisterEvent event) {
+		if (event.getRegistryKey().equals(ForgeRegistries.Keys.MENU_TYPES)) {
+			CCustomMenuSlot.init();
+		}
 	}
-	public LogisticTask() {
-		super();
-	}
-	public abstract LogisticTask prepare(LogisticNetwork network);
-	public abstract LogisticTask work(LogisticNetwork network);
-	public abstract boolean isStillValid() ;
+    
+  
 }
