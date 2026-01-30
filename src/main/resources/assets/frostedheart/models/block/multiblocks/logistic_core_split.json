@@ -1,0 +1,24 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "frostedheart:block/bot_dispatcher"
+  },
+  "loader": "immersiveengineering:basic_split",
+  "dynamic": false,
+  "inner_model": {
+    "parent": "minecraft:block/block",
+    "automatic_culling": false,
+    "flip_v": true,
+    "loader": "forge:obj",
+    "render_type":"cutout_mipped",
+    "model": "frostedheart:models/block/bot_dispatcher.obj",
+    "textures": {
+      "particle": "frostedheart:block/bot_dispatcher"
+    }
+  },
+  "split_parts": [
+    [0,-1,0],
+    [0,0,0],
+    [0,1,0]
+  ]
+}

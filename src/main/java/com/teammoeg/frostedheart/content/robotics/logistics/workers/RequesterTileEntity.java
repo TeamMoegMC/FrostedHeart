@@ -29,12 +29,14 @@ import org.jetbrains.annotations.Nullable;
 
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
+import com.teammoeg.chorda.math.Persentage2FractionHelper;
 import com.teammoeg.chorda.util.struct.LazyTickWorker;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.Filter;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
+import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticRequestTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
@@ -48,6 +50,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -112,7 +115,11 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 			boolean hasRequest=false;
 			int idx=0;
 			int[] lens=new int[filters.length];
-			int total=0;
+			int[] slotlens=new int[filters.length];
+			int total=0,totalslot=0;
+			IntArrayList unfilled=new IntArrayList(27);
+			LogisticNetwork networkGrid=network.resolve().get();
+			IntArrayList emptySlots=new IntArrayList(27);
 			for(int i=0;i<filters.length;i++) {
 				
 				if(filters[i]!=null) {
@@ -122,49 +129,66 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 						ItemStack stack=container.getStackInSlot(j);
 						if(filters[i].matches(stack)) {
 							currcnt+=stack.getCount();
-						}
-					}if(currcnt<filters[i].getSize()) {
-						lens[i]=filters[i].getSize()-currcnt;
-						total+=lens[i];
-					}
-				}
-			}
-			int curidx=0;
-			LogisticNetwork networkGrid=network.resolve().get();
-			IntArrayList ial=new IntArrayList(MAX_TASKS);
-			for(int i=0;i<MAX_TASKS;i++) {
-				Supplier<LogisticTaskKey> lt=keys.get(curidx);
-				if(networkGrid.canAddTask(lt.get())) {
-					ial.add(i);
-					hasRequest=true;
-				
-				}
-			}
-			if(hasRequest) {
-				float perCount=total*1f/ial.size();
-				int ialidx=0;
-				//split keys with weight
-				for(int i=0;i<filters.length;i++) {
-					int cnt=Math.round(lens[i]/perCount);
-					if(cnt>0)
-						for(int j=0;j<cnt;j++) {
-							int ncnt=Math.min(lens[i], 64);
-							lens[i]-=ncnt;
-							
-							networkGrid.addTask(keys.get(ial.getInt(ialidx)).get(), new LogisticRequestTask(filters[i],ncnt,this.getBlockPos(),grid.cast()));
-							ialidx++;
-						}
-				}
-				//split reminder between each filter
-				if(ialidx<ial.size()) {
-					for(int j=ialidx;j<ial.size();j++) {
-						int icuridx=j%filters.length;
-						int ncnt=Math.min(lens[icuridx], 64);
-						if(ncnt>0) {
-							lens[icuridx]-=ncnt;
-							networkGrid.addTask(keys.get(ial.getInt(j)).get(), new LogisticRequestTask(filters[icuridx],ncnt,this.getBlockPos(),grid.cast()));
+							if(stack.getMaxStackSize()>stack.getCount()) {
+								unfilled.add(j);
+							}
 						}
 						
+					}
+					if(currcnt<filters[i].getSize()) {
+						lens[i]=filters[i].getSize()-currcnt;
+						if(!unfilled.isEmpty()) {
+							int slotnum=unfilled.popInt();
+							ItemStack stack=container.getStackInSlot(slotnum);
+							int reminder=stack.getMaxStackSize()-stack.getCount();
+							if(reminder>0) {
+								reminder=Math.min(lens[i], reminder);
+								LogisticTaskKey key=keys.get(slotnum).get();
+								lens[i]-=reminder;
+								if(networkGrid.canAddTask(key)) {
+									Filter f;
+									if(filters[i].isIgnoreNbt())
+										f=new Filter(new ItemKey(stack),false,1);
+									else
+										f=filters[i];
+									hasRequest=true;
+									networkGrid.addTask(key, new LogisticRequestTask(f,reminder,this.getBlockPos(),grid.cast()));
+								}
+							}
+						}
+						if(lens[i]>0) {
+							total+=lens[i];
+							slotlens[i]=Mth.ceil(lens[i]*1f/filters[i].getKey().getMaxStackSize());
+							totalslot+=slotlens[i];
+						}
+					}
+				}
+				unfilled.clear();
+			}
+			
+			for(int j=0;j<container.getSlots();j++) {
+				if(container.getStackInSlot(j).isEmpty())
+					emptySlots.add(j);
+			}
+			int emptySlotNum=emptySlots.size();
+			Persentage2FractionHelper p2f=new Persentage2FractionHelper(emptySlotNum);
+			for(int i=0;i<filters.length;i++) {
+
+				if(filters[i]!=null) {
+					int toOccupy=slotlens[i];
+					if(slotlens[i]>emptySlotNum)
+						toOccupy=p2f.getPercentRounded(toOccupy*1f/totalslot);
+					
+					for(int k=0;k<toOccupy;k++) {
+						Supplier<LogisticTaskKey> lt=keys.get(emptySlots.popInt());
+						if(networkGrid.canAddTask(lt.get())) {
+							hasRequest=true;
+							int ncnt=Math.min(lens[i], filters[i].getKey().getMaxStackSize());
+							lens[i]-=ncnt;
+							networkGrid.addTask(lt.get(), new LogisticRequestTask(filters[i],ncnt,this.getBlockPos(),grid.cast()));
+						}
+						if(lens[i]<=0)
+							break;
 					}
 				}
 			}

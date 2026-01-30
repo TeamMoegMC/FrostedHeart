@@ -25,13 +25,16 @@ import com.teammoeg.chorda.block.CGuiBlock;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class LogisticChestBlock<T extends BlockEntity> extends CGuiBlock<T> {
 	Supplier<BlockEntityType<T>> blockEntity;
-
+	VoxelShape shape=Block.box(0, 0, 0, 16, 12, 16);
 
 	public LogisticChestBlock(Properties blockProps, Supplier<BlockEntityType<T>> blockEntity) {
 		super(blockProps);
@@ -44,6 +47,10 @@ public class LogisticChestBlock<T extends BlockEntity> extends CGuiBlock<T> {
 		return 1f;
 	}
 
+    @Override
+    public VoxelShape getShape(BlockState pState, BlockGetter pLevel, BlockPos pPos, CollisionContext pContext) {
+    	return shape;
+    }
 
 	@Override
 	public Supplier<BlockEntityType<T>> getBlock() {

@@ -157,7 +157,6 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 		IntIterator ii=id.slots.iterator();
 		IntArrayList il=new IntArrayList();
 		ItemStack taken=ItemStack.EMPTY;
-		new Exception().printStackTrace();
 		while(ii.hasNext()) {
 			int slot=ii.nextInt();
 			ItemStack inslot=chest.getStackInSlot(slot);

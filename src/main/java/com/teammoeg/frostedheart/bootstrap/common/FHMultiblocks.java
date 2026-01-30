@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorS
 import com.teammoeg.frostedheart.content.climate.block.radiator.RadiatorLogic;
 import com.teammoeg.frostedheart.content.climate.block.radiator.RadiatorMultiblock;
 import com.teammoeg.frostedheart.content.climate.block.radiator.RadiatorState;
+import com.teammoeg.frostedheart.content.robotics.logistics.core.LogisticCoreMultiblock;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.MultiblockRegistration;
@@ -62,7 +63,10 @@ public class FHMultiblocks {
 			.notMirrored()
 			.build();
 		
-		
+		public static final MultiblockRegistration<RadiatorState> LOGISTIC_CORE = metal(new RadiatorLogic(), "logistic_core",t->t.lightLevel(bs->bs.getValue(NonMirrorableWithActiveBlock.ACTIVE)?15:0))
+			.structure(() -> FHMultiblocks.LOGISTIC_CORE)
+			.notMirrored()
+			.build();
 		private static <S extends IMultiblockState> IEMultiblockBuilder<S> stone(IMultiblockLogic<S> logic, String name, boolean solid,Function<Properties,Properties> modifier) {
 			Properties properties = Properties.of()
 				.mapColor(MapColor.STONE)
@@ -92,10 +96,12 @@ public class FHMultiblocks {
 	public static final IETemplateMultiblock GENERATOR_T1 = new T1GeneratorMultiblock();
 	public static final IETemplateMultiblock GENERATOR_T2 = new T2GeneratorMultiblock();
 	public static final IETemplateMultiblock RADIATOR = new RadiatorMultiblock();
+	public static final IETemplateMultiblock LOGISTIC_CORE = new LogisticCoreMultiblock();
 	public static void registerMultiblocks() {
 		MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR_T1);
 		MultiblockHandler.registerMultiblock(FHMultiblocks.RADIATOR);
 		MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR_T2);
+		MultiblockHandler.registerMultiblock(FHMultiblocks.LOGISTIC_CORE);
 		//System.out.println("eventBus loaded");
 	}
 

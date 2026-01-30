@@ -100,6 +100,7 @@ public class LogisticNetwork {
 					//FHMain.LOGGER.info("Logistic task added "+lt.toString());
 					working.add(lt);
 				}else {
+					keys.remove(wrapper.taskKey);
 					//tasks.addLast(wrapper);
 				}
 				if(working.size()>=MAX_WORKING_TASKS)
