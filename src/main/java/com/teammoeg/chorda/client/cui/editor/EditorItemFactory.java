@@ -11,7 +11,7 @@ public interface EditorItemFactory<T> {
 	default <O> SetterAndGetter<O,T> forGetter(Function<O,T> getter){
 		return new SetterAndGetter<>(this,getter);
 	}
-	default <O> SetterAndGetter<O,T> decorator(){
-		return new SetterAndGetter<>(this,o->null);
+	default SetterAndGetter<T,T> decorator(){
+		return new SetterAndGetter<>(this,o->o);
 	}
 }

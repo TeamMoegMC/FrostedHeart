@@ -34,7 +34,7 @@ public class ResearchEditors {
 		.add(Editors.INT.withName("points").forGetter( r->r.points))
 		.add(Editors.openDialog(IconEditor.EDITOR,t->t,t->Components.str("icon")).withName("icon").forGetter( r->r.icon))
 		.add(Editors.enumBox(ResearchCategory.class,ResearchCategory::getName,a->CIcons.getIcon(a.getIcon())).withName("category").forGetter( r->r.getCategory()))
-		.decorator(Editors.createAction(CIcons.nop(), (d,v)->{
+		.decorator(Editors.<Research>createAction(CIcons.nop(), (d,v)->{
 			ClueEditors.RESEARCH_GAME.open(d, Components.str("Edit Minigame"), d.getValue(12), o->{d.setValue(12,o);d.refresh();});
 		}).withName("Edit minigame").decorator())
 		.add(Editors.openDialog(EditListDialog.STRING_LIST).withName("Edit Description").forGetter( r->r.desc))
@@ -44,7 +44,7 @@ public class ResearchEditors {
 		.add(Editors.openDialog(IngredientEditor.LIST_EDITOR).withName("Edit Ingredients").forGetter(r->r.getRequiredItems()))
 		.add(Editors.openDialog(EffectEditor.EFFECT_LIST).withName("Edit Effects").forGetter(r->r.getEffects()))
 		.add(Editors.openDialog(ClueEditors.EDITOR_LIST).withName("Edit Clues").forGetter(r->r.getClues()))
-		.decorator(Editors.<Research>createAction(CIcons.nop(), (r,t)->{r.setNoSave();t.delete();r.close();}).withName("Remove").decorator())
+		.decorator(Editors.<Research>createAction(CIcons.nop(), (r,t)->{r.setNoSave();if(t!=null)t.delete();r.close();}).withName("Remove").decorator())
 		.add(Editors.BOOLEAN.withName("Always show").forGetter( r->r.alwaysShow))
 		.add(Editors.BOOLEAN.withName("Hide effects").forGetter( r->r.hideEffects))
 		.add(Editors.BOOLEAN.withName("Show Alt description before complete").forGetter( r->r.showfdesc))

@@ -179,7 +179,7 @@ public class CurryApplicativeTemplate {
 			return new Applicative1<T, A>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), 0)));
 		}
 
-		public <UNUSED> Applicative0<T> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative0<T> decorator(Applicatable<T, ?> item) {
 			return new Applicative0<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
 
@@ -200,7 +200,7 @@ public class CurryApplicativeTemplate {
 			return new Applicative2<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), 1)));
 		}
 
-		public <UNUSED> Applicative1<T, A> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative1<T, A> decorator(Applicatable<T, ?> item) {
 			return new Applicative1<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
 
@@ -220,7 +220,7 @@ public class CurryApplicativeTemplate {
 			return new Applicative3<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), 2)));
 		}
 
-		public <UNUSED> Applicative2<T, A, B> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative2<T, A, B> decorator(Applicatable<T, ?> item) {
 			return new Applicative2<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
 
@@ -240,7 +240,7 @@ public class CurryApplicativeTemplate {
 			return new Applicative4<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), 3)));
 		}
 
-		public <UNUSED> Applicative3<T, A, B, C> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative3<T, A, B, C> decorator(Applicatable<T, ?> item) {
 			return new Applicative3<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
 
@@ -260,7 +260,7 @@ public class CurryApplicativeTemplate {
 			return new Applicative5<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), 4)));
 		}
 
-		public <UNUSED> Applicative4<T, A, B, C, D> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative4<T, A, B, C, D> decorator(Applicatable<T, ?> item) {
 			return new Applicative4<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
 
@@ -281,7 +281,7 @@ public class CurryApplicativeTemplate {
 			return new Applicative6<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), 5)));
 		}
 
-		public <UNUSED> Applicative5<T, A, B, C, D, E> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative5<T, A, B, C, D, E> decorator(Applicatable<T, ?> item) {
 			return new Applicative5<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
 
@@ -303,7 +303,7 @@ public class CurryApplicativeTemplate {
 			return new Applicative7<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), 6)));
 		}
 
-		public <UNUSED> Applicative6<T, A, B, C, D, E, F> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative6<T, A, B, C, D, E, F> decorator(Applicatable<T, ?> item) {
 			return new Applicative6<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
 
@@ -325,7 +325,7 @@ public class CurryApplicativeTemplate {
 			return new Applicative8<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), 7)));
 		}
 
-		public <UNUSED> Applicative7<T, A, B, C, D, E, F, G> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative7<T, A, B, C, D, E, F, G> decorator(Applicatable<T, ?> item) {
 			return new Applicative7<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
 
@@ -347,7 +347,7 @@ public class CurryApplicativeTemplate {
 			return new Applicative9<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), 8)));
 		}
 
-		public <UNUSED> Applicative8<T, A, B, C, D, E, F, G, H> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative8<T, A, B, C, D, E, F, G, H> decorator(Applicatable<T, ?> item) {
 			return new Applicative8<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
 
@@ -369,7 +369,7 @@ public class CurryApplicativeTemplate {
 			return new Applicative10<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), 9)));
 		}
 
-		public <UNUSED> Applicative9<T, A, B, C, D, E, F, G, H, I> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative9<T, A, B, C, D, E, F, G, H, I> decorator(Applicatable<T, ?> item) {
 			return new Applicative9<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
 
@@ -391,7 +391,7 @@ public class CurryApplicativeTemplate {
 			return new Applicative11<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), 10)));
 		}
 
-		public <UNUSED> Applicative10<T, A, B, C, D, E, F, G, H, I, J> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative10<T, A, B, C, D, E, F, G, H, I, J> decorator(Applicatable<T, ?> item) {
 			return new Applicative10<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
 
@@ -414,7 +414,7 @@ public class CurryApplicativeTemplate {
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), 11)));
 		}
 
-		public <UNUSED> Applicative11<T, A, B, C, D, E, F, G, H, I, J, K> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative11<T, A, B, C, D, E, F, G, H, I, J, K> decorator(Applicatable<T, ?> item) {
 			return new Applicative11<>(
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
@@ -439,7 +439,7 @@ public class CurryApplicativeTemplate {
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), 12)));
 		}
 
-		public <UNUSED> Applicative12<T, A, B, C, D, E, F, G, H, I, J, K, L> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative12<T, A, B, C, D, E, F, G, H, I, J, K, L> decorator(Applicatable<T, ?> item) {
 			return new Applicative12<>(
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
@@ -464,7 +464,7 @@ public class CurryApplicativeTemplate {
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), 13)));
 		}
 
-		public <UNUSED> Applicative13<T, A, B, C, D, E, F, G, H, I, J, K, L, M> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative13<T, A, B, C, D, E, F, G, H, I, J, K, L, M> decorator(Applicatable<T, ?> item) {
 			return new Applicative13<>(
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
@@ -490,7 +490,7 @@ public class CurryApplicativeTemplate {
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), 14)));
 		}
 
-		public <UNUSED> Applicative14<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative14<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N> decorator(Applicatable<T, ?> item) {
 			return new Applicative14<>(
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
@@ -516,7 +516,7 @@ public class CurryApplicativeTemplate {
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), 15)));
 		}
 
-		public <UNUSED> Applicative15<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative15<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O> decorator(Applicatable<T, ?> item) {
 			return new Applicative15<>(
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
@@ -542,7 +542,7 @@ public class CurryApplicativeTemplate {
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), 16)));
 		}
 
-		public <UNUSED> Applicative16<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative16<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P> decorator(Applicatable<T, ?> item) {
 			return new Applicative16<>(
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
@@ -568,7 +568,7 @@ public class CurryApplicativeTemplate {
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), 17)));
 		}
 
-		public <UNUSED> Applicative17<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative17<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q> decorator(Applicatable<T, ?> item) {
 			return new Applicative17<>(
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
@@ -595,7 +595,7 @@ public class CurryApplicativeTemplate {
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), 18)));
 		}
 
-		public <UNUSED> Applicative18<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative18<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R> decorator(Applicatable<T, ?> item) {
 			return new Applicative18<>(
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
@@ -622,7 +622,7 @@ public class CurryApplicativeTemplate {
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), 19)));
 		}
 
-		public <UNUSED> Applicative19<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative19<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S> decorator(Applicatable<T, ?> item) {
 			return new Applicative19<>(
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
@@ -649,7 +649,7 @@ public class CurryApplicativeTemplate {
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), 20)));
 		}
 
-		public <UNUSED> Applicative20<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative20<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U> decorator(Applicatable<T, ?> item) {
 			return new Applicative20<>(
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
@@ -676,7 +676,7 @@ public class CurryApplicativeTemplate {
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), 21)));
 		}
 
-		public <UNUSED> Applicative21<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative21<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V> decorator(Applicatable<T, ?> item) {
 			return new Applicative21<>(
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
@@ -704,7 +704,7 @@ public class CurryApplicativeTemplate {
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), 22)));
 		}
 
-		public <UNUSED> Applicative22<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V, W> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative22<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V, W> decorator(Applicatable<T, ?> item) {
 			return new Applicative22<>(
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
@@ -732,7 +732,7 @@ public class CurryApplicativeTemplate {
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), 23)));
 		}
 
-		public <UNUSED> Applicative23<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V, W, X> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative23<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V, W, X> decorator(Applicatable<T, ?> item) {
 			return new Applicative23<>(
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
@@ -760,7 +760,7 @@ public class CurryApplicativeTemplate {
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), 24)));
 		}
 */
-		public <UNUSED> Applicative24<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V, W, X, Y> decorator(Applicatable<T, UNUSED> item) {
+		public Applicative24<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V, W, X, Y> decorator(Applicatable<T, ?> item) {
 			return new Applicative24<>(
 				ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
