@@ -4,12 +4,12 @@ import com.teammoeg.chorda.lang.ComponentOptimizer;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.parsereader.ParseReader;
 import com.teammoeg.chorda.util.parsereader.source.StringLineSource;
-
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 
 public class StringTextComponentParser {
@@ -116,7 +116,24 @@ public class StringTextComponentParser {
 					while(parser.has()&&parser.read()!='}') {
 						parser.eat();
 					}
-					builder.appendRawComponent(parse(Components.translatable(parser.fromStart()).getString()).withStyle(style));
+					String content = parser.fromStart();
+					if (content.startsWith("@font")) {
+						var contents = content.split(" ");
+						Style font = Style.EMPTY.withFont(new ResourceLocation(contents[2]));
+						String t = contents[1];
+						if (contents[1].length() == 4)
+							try {
+                            	t = String.valueOf((char)Integer.parseInt(contents[1], 16));
+                        	} catch (NumberFormatException ignore) {}
+						var s = style;
+						if (contents.length >= 4)
+							s = s.withColor(Integer.parseInt(contents[3]));
+						var icon = Components.literal(t)
+								.withStyle(s)
+								.withStyle(font);
+						builder.appendRawComponent(icon);
+					} else
+						builder.appendRawComponent(parse(Components.translatable(parser.fromStart()).getString()).withStyle(style));
 					if(parser.has())
 						parser.eat('}');
 					break;
