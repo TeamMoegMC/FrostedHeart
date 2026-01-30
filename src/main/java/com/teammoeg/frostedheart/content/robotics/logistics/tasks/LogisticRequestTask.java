@@ -20,7 +20,11 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.tasks;
 
 import java.util.Map;
+import java.util.Optional;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.robotics.logistics.Filter;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
@@ -36,11 +40,19 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 @ToString
 public class LogisticRequestTask extends LogisticTask {
+	public static final MapCodec<LogisticRequestTask> WORKING_CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+		LogisticTaskKey.CODEC.fieldOf("key").forGetter(o->o.taskKey),
+		Codec.INT.fieldOf("ticks").forGetter(o->o.ticks),
+		BlockPos.CODEC.fieldOf("from").forGetter(o->o.origin),
+		BlockPos.CODEC.fieldOf("to").forGetter(o->o.targetPos),
+		ItemStack.CODEC.fieldOf("stack").forGetter(o->o.stack),
+		ItemKey.CODEC.fieldOf("item").forGetter(o->o.key)
+		).apply(t, LogisticRequestTask::new));
 	/**
 	 * original data for a request task
 	 * */
-	Filter filter;
-	int size;
+	transient Filter filter;
+	transient int size;
 	
 	
 	
@@ -61,7 +73,7 @@ public class LogisticRequestTask extends LogisticTask {
 	/**
 	 * Grid element to put
 	 * */
-	LazyOptional<IItemHandler> target;
+	transient LazyOptional<IItemHandler> target;
 	public LogisticRequestTask(Filter filter, int size,BlockPos targetPos, LazyOptional<IItemHandler> storage) {
 		super();
 		this.filter = filter;
@@ -110,9 +122,13 @@ public class LogisticRequestTask extends LogisticTask {
 		return this;
 	}
 
-	@Override
-	public boolean isStillValid() {
-		return target.isPresent();
+
+	public LogisticRequestTask(LogisticTaskKey taskKey, int ticks, BlockPos origin, BlockPos targetPos, ItemStack stack, ItemKey key) {
+		super(taskKey, ticks);
+		this.origin = origin;
+		this.targetPos = targetPos;
+		this.stack = stack;
+		this.key = key;
 	}
 
 }

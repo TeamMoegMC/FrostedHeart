@@ -35,11 +35,13 @@ public class LogisticState extends OwnerState {
 	@Override
 	public void writeSaveNBT(CompoundTag nbt) {
 		super.writeSaveNBT(nbt);
+		ln.save(nbt);
 	}
 
 	@Override
 	public void readSaveNBT(CompoundTag nbt) {
 		super.readSaveNBT(nbt);
+		ln.load(nbt);
 	}
 
 }

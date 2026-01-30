@@ -27,16 +27,18 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticHub;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
 
 public class LogisticNetwork {
 	private LogisticHub hub;
-	// List<LogisticEnvolop> envolops=new ArrayList<>();
 	Set<LogisticTaskKey> keys=new HashSet<>();
 	LinkedList<LogisticTask> tasks=new LinkedList<>();
 	List<LogisticTask> prelist=new ArrayList<>(100);
@@ -63,7 +65,13 @@ public class LogisticNetwork {
 	public Level getWorld() {
 		return world;
 	}
-
+	public void save(CompoundTag nbt) {
+		nbt.put("tasks", CodecUtil.toNBTList(working, LogisticTask.CODEC));
+	}
+	public void load(CompoundTag nbt) {
+		working.clear();
+		working.addAll(CodecUtil.fromNBTList(nbt.getList("tasks", Tag.TAG_COMPOUND), LogisticTask.CODEC));
+	}
 	public void tick() {
 		//FHMain.LOGGER.info("hub "+hub);
 		hub.tick();

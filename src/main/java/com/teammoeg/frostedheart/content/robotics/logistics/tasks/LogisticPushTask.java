@@ -19,6 +19,12 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.tasks;
 
+import java.util.Optional;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.GridAndAmount;
@@ -31,13 +37,20 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 @ToString
 public class LogisticPushTask extends LogisticTask {
-	
+	public static final MapCodec<LogisticPushTask> WORKING_CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+		LogisticTaskKey.CODEC.fieldOf("key").forGetter(o->o.taskKey),
+		Codec.INT.fieldOf("ticks").forGetter(o->o.ticks),
+		BlockPos.CODEC.fieldOf("from").forGetter(o->o.origin),
+		BlockPos.CODEC.optionalFieldOf("to").forGetter(o->Optional.ofNullable(o.targetPos)),
+		ItemStack.CODEC.fieldOf("stack").forGetter(o->o.stack),
+		ItemKey.CODEC.fieldOf("item").forGetter(o->o.key)
+		).apply(t, LogisticPushTask::new));
 	/**
 	 * The origin slot and handler, the task takes item from this chest if required
 	 * initial task for the task
 	 * */
-	int fromSlot;
-	LazyOptional<IItemHandler> handler;
+	transient int fromSlot;
+	transient LazyOptional<IItemHandler> handler;
 	/**
 	 * position of from and to pos, for rendering purpose
 	 * */
@@ -61,8 +74,15 @@ public class LogisticPushTask extends LogisticTask {
 	 * prepare stage:prepare
 	 * use stage:work
 	 * */
-	LazyOptional<IGridElement> target;
-
+	transient LazyOptional<IGridElement> target;
+	public LogisticPushTask(LogisticTaskKey taskKey, int ticks, BlockPos origin, Optional<BlockPos> targetPos, ItemStack stack, ItemKey key) {
+		super(taskKey, ticks);
+		this.origin = origin;
+		this.targetPos = targetPos.orElse(null);
+		this.stack = stack;
+		this.key = key;
+	}
+	
 	public LogisticPushTask(BlockPos origin, BlockPos targetPos, ItemStack stack, ItemKey key, LazyOptional<IGridElement> target) {
 		super();
 		this.origin = origin;
@@ -83,6 +103,9 @@ public class LogisticPushTask extends LogisticTask {
 	@Override
 	public LogisticTask work(LogisticNetwork network) {
 		//System.out.println("pushing "+stack+" to "+targetPos);
+		if(target==null&&targetPos!=null) {
+			target=network.getHub().getByPos(targetPos);
+		}
 		if(target!=null)
 			stack=network.getHub().pushItem(target, key, stack);
 		if(!stack.isEmpty()) {
@@ -91,6 +114,7 @@ public class LogisticPushTask extends LogisticTask {
 			GridAndAmount gaa=network.getHub().findGridForPlace(key, stack);
 			if(gaa==null) {
 				target=null;
+				targetPos=null;
 				return this;
 			}
 			target=gaa.grid();
@@ -99,12 +123,6 @@ public class LogisticPushTask extends LogisticTask {
 		}
 		return null;
 	}
-
-	@Override
-	public boolean isStillValid() {
-		return handler.isPresent()&&target==null;
-	}
-
 	@Override
 	public LogisticTask prepare(LogisticNetwork network) {
 		if(!handler.isPresent())
@@ -122,5 +140,6 @@ public class LogisticPushTask extends LogisticTask {
 		this.ticks=20;
 		return this;
 	}
-	
+
+
 }

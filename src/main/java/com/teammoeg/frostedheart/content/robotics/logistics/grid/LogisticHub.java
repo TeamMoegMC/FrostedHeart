@@ -211,6 +211,7 @@ public class LogisticHub implements IGridElement {
 	int emptySlotCount;
 	Map<ItemKey,ItemData> cachedData=new HashMap<>();
 	Map<LazyOptional<IGridElement>,GridStat> gridRef=new IdentityHashMap<>();
+	Map<BlockPos,LazyOptional<IGridElement>> gridByPos=new HashMap<>();
 	@Getter
 	Level level;
 	@Getter
@@ -223,6 +224,7 @@ public class LogisticHub implements IGridElement {
 	public void addElement(LazyOptional<IGridElement> cap) {
 		if(cap.isPresent()) {
 			IGridElement gridelm=cap.resolve().get();
+			gridByPos.put(gridelm.getPos(),cap);
 			Map<ItemKey, ? extends ItemCountProvider> allitem=gridelm.getAllItems();
 			GridStat set=gridRef.get(cap);
 			Set<ItemKey> newSet=new HashSet<>(allitem.keySet());
@@ -258,7 +260,12 @@ public class LogisticHub implements IGridElement {
 		}
 	}
 	public void removeElement(LazyOptional<IGridElement> cap) {
+		
 		GridStat set=gridRef.remove(cap);
+		if(cap.isPresent())
+			gridByPos.remove(cap.resolve().get().getPos());
+		/*else
+			gridByPos.values().remove(cap);*/
 		if(set!=null) {
 			for(ItemKey ik:set.items) {
 				ItemData id=cachedData.get(ik);
@@ -280,6 +287,7 @@ public class LogisticHub implements IGridElement {
 		List<LazyOptional<IGridElement>> caps=new ArrayList<>(this.gridRef.keySet());
 		this.gridRef.clear();
 		this.emptySlotCount=0;
+		gridByPos.values().removeIf(t->!t.isPresent());
 		for(LazyOptional<IGridElement> i:caps) {
 			if(i.isPresent()) {
 				this.addElement(i);
@@ -400,6 +408,17 @@ public class LogisticHub implements IGridElement {
 	@Override
 	public boolean consumeChange() {
 		return false;
+	}
+	public LazyOptional<IGridElement> getByPos(BlockPos pos){
+
+		LazyOptional<IGridElement> result=gridByPos.get(pos);
+		if(result!=null) {
+			if(result.isPresent())
+				return result;
+			else
+				gridByPos.remove(pos);
+		}
+		return LazyOptional.empty();
 	}
 	public static void main(String[] args) {
 	      SharedConstants.tryDetectVersion();
