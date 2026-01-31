@@ -83,10 +83,13 @@ public class HouseWorker implements TownWorker<HouseState> {
                     if (detail instanceof TownResourceActionResults.ItemResourceAttributeCostActionResult itemResult) {
                         Map<ItemStackResourceKey, Double> itemDetails = itemResult.details();
                         //遍历具体的物品营养
-                        for (ItemStackResourceKey key : itemDetails.keySet()) {
+                        for (Map.Entry<ItemStackResourceKey, Double> entry : itemDetails.entrySet()) {
+                            ItemStackResourceKey key = entry.getKey();
+                            Double amount = entry.getValue(); // 获取消耗数量
+
                             for(NutritionRecipe recipe : CUtils.filterRecipes(CDistHelper.getRecipeManager(), NutritionRecipe.TYPE)){
                                 if (recipe.conform(key.itemStack)) {
-                                    nutrition_Average += recipe.getNutrition().getNutritionValue() / 4; //营养
+                                    nutrition_Average += (recipe.getNutrition().getNutritionValue() / 4.0) * amount;
                                 }
                             }
                         }
@@ -116,6 +119,7 @@ public class HouseWorker implements TownWorker<HouseState> {
             double deviation = (nutrition_Average - 10000) / 10000; // 相对偏差（-1到+1）
             double balanceScore = Math.exp(-3.0 * deviation * deviation); // 10用来控制曲线宽度
             double levelScore = 1; //目前不采用食物等级，只是用来控制消耗食物优先级
+
 
             for(UUID uuid : residentsUUID){
                 if(residentTown.getResident(uuid).isPresent()){

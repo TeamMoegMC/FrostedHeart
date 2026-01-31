@@ -1868,21 +1868,40 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.integerPropertyBlock(LabBlockNumber.NUMBER,
                     "lab_block_number","lab_block/lab_block_number",false))
             .lang("lab_block_number")
-            .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/lab_block_number_0"))).build()
+            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
+            .model(FHBlockStateGen.overridesItemModel(
+                    "block/lab_block_number_0",
+                    "block/lab_block_number",
+                    "frostedheart:number",
+                    false,1,9
+            )).build()
             .register();
+
     public static BlockEntry<LabBlockAlphabet> lab_block_alphabet = REGISTRATE.block("lab_block_alphabet", LabBlockAlphabet::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.integerPropertyBlock(LabBlockAlphabet.ALPHABET,
                     "lab_block_alphabet","lab_block/lab_block_alphabet",true))
             .lang("lab_block_alphabet")
-            .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/lab_block_alphabet_a"))).build()
+            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
+            .model(FHBlockStateGen.overridesItemModel(
+                    "block/lab_block_alphabet_a",
+                    "block/lab_block_alphabet",
+                    "frostedheart:alphabet",
+                    true,1,25
+            )).build()
             .register();
     public static BlockEntry<LabBlockSign> lab_block_sign = REGISTRATE.block("lab_block_sign", LabBlockSign::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.integerPropertyBlock(LabBlockSign.SIGN,
                     "lab_block_sign","lab_block/lab_block_sign",false))
             .lang("lab_block_sign")
-            .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/lab_block_sign_0"))).build()
+            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
+            .model(FHBlockStateGen.overridesItemModel(
+                    "block/lab_block_sign_0",
+                    "block/lab_block_sign",
+                    "frostedheart:sign",
+                    false,1,4
+            )).build()
             .register();
     public static BlockEntry<HDBlock> lab_block_screen = REGISTRATE.block("lab_block_screen", HDBlock::new)
             .transform(FHBlockStateGen.lab_block())
@@ -1895,15 +1914,26 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.orientableIntegerBlock(LabBlockScreenOn.SCREEN,
                     "lab_block_screen_on","lab_block/lab_block_screen_on","lab_block/lab_block"))
             .lang("lab_block_screen_on")
-            .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/lab_block_screen_on_0"))).build()
+            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
+            .model(FHBlockStateGen.overridesItemModel(
+                    "block/lab_block_screen_on_0",
+                    "block/lab_block_screen_on",
+                    "frostedheart:screen",
+                    false,1,3
+            )).build()
             .register();
     public static BlockEntry<LabBlockControl> lab_control_panel = REGISTRATE.block("lab_control_panel", LabBlockControl::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.orientableIntegerBlock(LabBlockControl.SCREEN,
                     "lab_control_panel","lab_block/lab_control_panel","lab_block/lab_block"))
             .lang("lab_control_panel")
-            .item(/*(block, props) -> new CBlockItem(block, props, FHTabs.building_blocks)*/)
-            .model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/lab_control_panel_0"))).build()
+            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
+            .model(FHBlockStateGen.overridesItemModel(
+                    "block/lab_control_panel_0",
+                    "block/lab_control_panel",
+                    "frostedheart:screen",
+                    false,1,2
+            )).build()
             .register();
     public static BlockEntry<LabPanelLight> lab_panel_light = REGISTRATE.block("lab_panel_light", LabPanelLight::new)
             .transform(FHBlockStateGen.lab_block())
@@ -1921,7 +1951,13 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .blockstate(FHBlockStateGen.existed())
             .lang("Concrete")
-            .item().model(AssetLookup.existingItemModel()).build()
+            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
+            .model(FHBlockStateGen.overridesItemModel(
+                    "block/concrete/concrete_0",
+                    "block/concrete/concrete",
+                    "frostedheart:type",
+                    false,1,2
+            )).build()
             .register();
     public static BlockEntry<ConcreteCrackedBlock> concrete_cracked = REGISTRATE.block("concrete_cracked", ConcreteCrackedBlock::new)
             .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
@@ -1931,7 +1967,13 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .blockstate(FHBlockStateGen.existed())
             .lang("Concrete Cracked")
-            .item().model(AssetLookup.existingItemModel()).build()
+            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
+            .model(FHBlockStateGen.overridesItemModel(
+                    "block/concrete/concrete_cracked_0",
+                    "block/concrete/concrete_cracked",
+                    "frostedheart:type",
+                    false,1,6
+            )).build()
             .register();
     static {
         REGISTRATE.setCreativeTab(FHTabs.FUNCTIONAL_BLOCKS);
@@ -2116,7 +2158,7 @@ public class FHBlocks {
             .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .lang("VAWT (Fabric)")
-            .simpleItem()
+            .item().model(AssetLookup.existingItemModel()).build()
             .register();
     public static final BlockEntry<VAWTBlock> METAL_VAWT = REGISTRATE.block("metal_vawt",
                     p -> VAWTBlock.create(FHProps.metalDecoProps, "metal", 240, 0.75F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
@@ -2124,7 +2166,7 @@ public class FHBlocks {
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .lang("VAWT (Metal)")
-            .simpleItem()
+            .item().model(AssetLookup.existingItemModel()).build()
             .register();
     public static final BlockEntry<VAWTBlock> ALLOY_VAWT = REGISTRATE.block("alloy_vawt",
                     p -> VAWTBlock.create(FHProps.metalDecoProps, "alloy", 480, 1.0F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
@@ -2132,7 +2174,7 @@ public class FHBlocks {
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .lang("VAWT (Alloy)")
-            .simpleItem()
+            .item().model(AssetLookup.existingItemModel()).build()
             .register();
     public static final BlockEntry<VAWTBlock> DSP_VAWT = REGISTRATE.block("dsp_vawt",
                     p -> VAWTBlock.create(FHProps.metalDecoProps, "dsp", Integer.MAX_VALUE, 1.0F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
@@ -2140,7 +2182,7 @@ public class FHBlocks {
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .lang("VAWT (DSP)")
-            .simpleItem()
+            .item().model(AssetLookup.existingItemModel()).build()
             .register();
     // WARDROBE, "wardrobe", like Blocks.SPRUCE_DOOR
     public static final BlockEntry<WardrobeBlock> WARDROBE = REGISTRATE.block("wardrobe", WardrobeBlock::new)

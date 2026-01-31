@@ -25,6 +25,7 @@ import com.teammoeg.chorda.client.cui.TabImageButtonElement;
 import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
+import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,40 +34,41 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
 
 
     private int activeTab = 0;
-    private final List<ITabContent> tabContents = new ArrayList<>();
+    private final List<AbstractTownTab<C>> tabs = new ArrayList<>();
     private final List<TabImageButtonElement> tabButtons = new ArrayList<>();
     private UILayer contentLayer;
 
     public AbstractTownWorkerBlockScreen(C inventorySlotsIn) {
         super(inventorySlotsIn);
 
-    }
-
-
-    @Override
-    public void addUIElements() {
-
         //初始化内容容器
         if (this.contentLayer == null) {
             this.contentLayer = new UILayer(this) {
                 @Override public void addUIElements() {
-                        if (activeTab >= 0 && activeTab < tabContents.size()) {
-                            tabContents.get(activeTab).renderTabContent(this);
+                    if (activeTab >= 0 && activeTab < tabs.size()) {
+                        tabs.get(activeTab).build(this);
                     }
                 }
                 @Override public void alignWidgets() {}
             };
         }
+        initTabs();
+    }
+
+    @Override
+    public void addUIElements() {
         this.contentLayer.setSize(176, 222);
         this.add(this.contentLayer);
 
+
         //初始化 Tab 按钮
         this.tabButtons.clear();
-        for (int i = 0; i < tabContents.size(); i++) {
+        for (int i = 0; i < tabs.size(); i++) {
             final int tabI = i;
+            AbstractTownTab<C> tab = tabs.get(i);
             int btnX = -22;
             int btnY = 2 + i * 20;
-            TabImageButtonElement btn = getTabButton(btnX, btnY, tabI);
+            TabImageButtonElement btn = getTabButton(btnX, btnY, tabI, tab.getIcon(), tab.getActiveIcon());
             btn.bind(() -> activeTab);
             this.tabButtons.add(btn);
             this.add(btn); // 添加到主 Screen
@@ -75,25 +77,24 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
 
     }
     public void selectTab(int index) {
-        if (index < 0 || index >= tabContents.size()) return;
+        if (index < 0 || index >= tabs.size()) return;
         this.activeTab = index;
 
         updateTabContent();
     }
 
-    private void updateTabContent() {
+    protected void updateTabContent() {
         if (contentLayer != null) {
-
             contentLayer.refresh();
         }
     }
 
-    public CBlockEntityMenu getCMenu() {
+    public C getCBEMenu() {
         return menu;
     }
 
-    public TabImageButtonElement getTabButton(int x, int y, int tabI) {
-        return new TabImageButtonElement(this, x, y, 22, 18, tabI, CIcons.nop(), CIcons.nop()){
+    public TabImageButtonElement getTabButton(int x, int y, int tabI,CIcons.CIcon icon,CIcons.CIcon activeIcon) {
+        return new TabImageButtonElement(this, x, y, 22, 18, tabI, icon, activeIcon){
             @Override
             public void onClicked(MouseButton button) {
                 selectTab(tabI);
@@ -106,8 +107,12 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         int sw = 176;
         int sh = 222;
         this.setSize(sw, sh);
+
         return super.onInit();
     }
+
+    protected void initTabs() {}
+
     @Override
     public void setSizeToContentSize() {
     }
@@ -120,15 +125,9 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         return 222;
     }
 
-
-    protected void addTabContent(ITabContent content){
-        tabContents.add(content);
+    protected void addTab(AbstractTownTab<C> tab){
+        tabs.add(tab);
     }
-
-    public interface ITabContent {
-        void renderTabContent(UILayer layer);
-    }
-
 
 }
 

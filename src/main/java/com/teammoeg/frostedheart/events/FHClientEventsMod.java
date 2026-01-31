@@ -59,11 +59,14 @@ import com.teammoeg.frostedheart.content.climate.particle.SteamParticle;
 import com.teammoeg.frostedheart.content.climate.particle.WetSteamParticle;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import com.teammoeg.frostedheart.util.client.PropertyRegistrationHelper;
 import com.teammoeg.frostedresearch.gui.InsightOverlay;
 
 import blusunrize.immersiveengineering.api.EnumMetals;
 import blusunrize.immersiveengineering.common.register.IEBlocks;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FarmBlock;
 import net.minecraftforge.api.distmarker.Dist;
@@ -77,6 +80,10 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.registries.RegistryObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.teammoeg.frostedheart.FHMain.*;
 
@@ -118,11 +125,17 @@ public class FHClientEventsMod {
 				.andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))
 				.andThen(TooltipModifier.mapNull(KineticStats.create(item)));
 		});
-        
-        
 
 
-        
+        new PropertyRegistrationHelper(event)
+                .register(FHBlocks.lab_block_number, "frostedheart:number", "number")
+                .register(FHBlocks.lab_block_alphabet, "frostedheart:alphabet", "alphabet")
+                .register(FHBlocks.lab_block_sign, "frostedheart:sign", "sign")
+                .register(FHBlocks.lab_block_screen_on, "frostedheart:screen", "screen")
+                .register(FHBlocks.lab_control_panel, "frostedheart:screen", "screen")
+                .register(FHBlocks.concrete, "frostedheart:type", "type")
+                .register(FHBlocks.concrete_cracked, "frostedheart:type", "type");
+
         ShaderCompatHelper.use(Blocks.PACKED_ICE)
         .add(FHBlocks.FIRM_ICE_BLOCK);
         ShaderCompatHelper.use(Blocks.SNOW_BLOCK)

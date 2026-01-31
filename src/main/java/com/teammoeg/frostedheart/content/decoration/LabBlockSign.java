@@ -20,12 +20,17 @@
 package com.teammoeg.frostedheart.content.decoration;
 
 import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
-public class LabBlockSign extends CBlock {
+public class LabBlockSign extends CBlock implements ICreativeModeTabItem {
     public static IntegerProperty SIGN = IntegerProperty.create("sign", 0, 4);
     public LabBlockSign(Properties blockProps) {
         super(blockProps);
@@ -36,6 +41,18 @@ public class LabBlockSign extends CBlock {
         builder.add(SIGN);
     }
 
+    @Override
+    public void fillItemCategory(CreativeTabItemHelper helper) {
+        for (int value : SIGN.getPossibleValues()) {
+            if (helper.isType(FHTabs.building_blocks)) {
+                if (value == 0) continue;
+                ItemStack stack = new ItemStack(this);
+                CompoundTag blockStateTag = stack.getOrCreateTagElement("BlockStateTag");
+                blockStateTag.putString(SIGN.getName(), String.valueOf(value));
+                helper.accept(stack);
+            }
+        }
+    }
 /*    public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         Integer finalType = Math.abs(worldIn.random.nextInt()) % typeCount;
         BlockState newState = this.stateDefinition.any().setValue(NUMBER, finalType);

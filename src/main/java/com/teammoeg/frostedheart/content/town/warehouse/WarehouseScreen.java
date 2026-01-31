@@ -19,21 +19,16 @@
 
 package com.teammoeg.frostedheart.content.town.warehouse;
 
-import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.TabImageButtonElement;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
-import com.teammoeg.frostedheart.content.town.network.WarehouseC2SRequestPacket;
-import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import com.teammoeg.frostedheart.content.town.tabs.TownResourceTab;
+import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
 public class WarehouseScreen extends AbstractTownWorkerBlockScreen<WarehouseMenu> {
-    private VirtualItemGridElement grid;
-    private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("townworkerblock");
     public static final CIcons.CTextureIcon ALL = CIcons
             .getIcon(new ResourceLocation(FHMain.MODID, "textures/gui/townworkerblock.png"));
     public static final CIcons.CTextureIcon background = ALL.withUV(0, 0, 176, 222, 256, 256);
@@ -42,50 +37,33 @@ public class WarehouseScreen extends AbstractTownWorkerBlockScreen<WarehouseMenu
 
     public WarehouseScreen(WarehouseMenu inventorySlotsIn) {
         super(inventorySlotsIn);
-        FHNetwork.INSTANCE.sendToServer(new WarehouseC2SRequestPacket());
-/*        WarehouseBlockEntity blockEntity = getMenu().getBlock();
-        addTabContent((left,top)->{
-            this.addRenderableWidget(new Label(left + 10, top + 20, Components.str("Volume: " + (blockEntity.getVolume())), 0xFFFFFF));
-            this.addRenderableWidget(new Label(left + 10, top + 40, Components.str("Area: " + (blockEntity.getArea())), 0xFFFFFF));
-        });
-        addTabContent((left,top)->{
-            this.addRenderableWidget(new Label(left + 10, top + 20, Components.str("Capacity: " + BigDecimal.valueOf(blockEntity.getCapacity())
-                    .setScale(2, RoundingMode.HALF_UP).doubleValue()), 0xFFFFFF));
-        });
-        addTabContent((left, top) -> {
-            VirtualItemGridWidget gridWidget = new VirtualItemGridWidget(left + 7, top + 18, this::getResources);
-            FHNetwork.INSTANCE.sendToServer(new WarehouseC2SRequestPacket());
-            this.addRenderableWidget(gridWidget);
-        });*/
-        addTabContent((layer) -> {
-
-        });
-        addTabContent((layer) -> {
-            this.grid = new VirtualItemGridElement(layer, 7, 18,
-                    () -> ((WarehouseMenu) getCMenu()).getResources()
-            );
-            layer.add(this.grid);
-        });
     }
-
 
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
         background.draw(graphics, x, y, 176, 222);
     }
-    public TabImageButtonElement getTabButton(int x, int y, int tabI) {
-        return new TabImageButtonElement(this, x, y, 22, 18, tabI, getButtonIcon(0), getButtonIcon(1)){
+
+    @Override
+    protected void initTabs() {
+        addTab(new AbstractTownTab(this) {
             @Override
-            public void onClicked(MouseButton button) {
-                selectTab(tabI);
+            public CIcons.CIcon getIcon() {
+                return inactiveButton;
+            }
+            @Override
+            public CIcons.CIcon getActiveIcon() {
+                return WarehouseScreen.activeButton;
             }
 
-        };
+            @Override
+            public void build(UILayer layer) {
+
+            }
+        });
+
+        addTab(new TownResourceTab(this));
     }
-    public CIcons.CIcon getButtonIcon(int i) {
-        if (i==0)
-            return activeButton;
-        return inactiveButton;
-    }
+
 }
 

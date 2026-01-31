@@ -20,12 +20,17 @@
 package com.teammoeg.frostedheart.content.decoration;
 
 import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
-public class ConcreteBlock extends CBlock {
+public class ConcreteBlock extends CBlock implements ICreativeModeTabItem {
     private static IntegerProperty TYPE = IntegerProperty.create("type", 0, 3);
     public ConcreteBlock(Properties blockProps) {
         super(blockProps);
@@ -36,6 +41,17 @@ public class ConcreteBlock extends CBlock {
         builder.add(TYPE);
     }
 
-
+    @Override
+    public void fillItemCategory(CreativeTabItemHelper helper) {
+        for (int value : TYPE.getPossibleValues()) {
+            if (helper.isType(FHTabs.building_blocks)) {
+                if (value == 0) continue;
+                ItemStack stack = new ItemStack(this);
+                CompoundTag blockStateTag = stack.getOrCreateTagElement("BlockStateTag");
+                blockStateTag.putString(TYPE.getName(), String.valueOf(value));
+                helper.accept(stack);
+            }
+        }
+    }
 
 }

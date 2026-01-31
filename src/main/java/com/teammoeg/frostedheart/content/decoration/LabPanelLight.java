@@ -67,7 +67,6 @@ public class LabPanelLight extends CBlock implements ICreativeModeTabItem {
     @Override
     public void fillItemCategory(CreativeTabItemHelper helper) {
         if (helper.isType(FHTabs.building_blocks)) {
-            helper.accept(this);
             ItemStack stack = new ItemStack(this);
             CompoundTag blockStateTag = stack.getOrCreateTagElement("BlockStateTag");
             blockStateTag.putString("lit", "true");

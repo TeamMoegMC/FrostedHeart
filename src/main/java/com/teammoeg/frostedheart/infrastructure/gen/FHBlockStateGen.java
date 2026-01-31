@@ -49,10 +49,7 @@ import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.level.material.MapColor;
-import net.minecraftforge.client.model.generators.BlockModelBuilder;
-import net.minecraftforge.client.model.generators.ConfiguredModel;
-import net.minecraftforge.client.model.generators.ModelFile;
-import net.minecraftforge.client.model.generators.VariantBlockStateBuilder;
+import net.minecraftforge.client.model.generators.*;
 import net.minecraftforge.client.model.generators.VariantBlockStateBuilder.PartialBlockstate;
 import net.minecraftforge.client.model.generators.loaders.ObjModelBuilder;
 
@@ -386,36 +383,21 @@ public class FHBlockStateGen {
             String sideTexturePrefix
     ) {
         return (c, p) -> {
-            // 获取 Variant 构建器
             VariantBlockStateBuilder builder = p.getVariantBuilder(c.get());
 
-            // 遍历所有变种值 (0, 1, 2...)
             for (int value : property.getPossibleValues()) {
-
-                // 1. 计算后缀 (是 _1 还是 _b)
                 String suffix = String.valueOf(value);
-
-                // 2. 生成当前变种的模型
-                // 模型名称: prefix_suffix (例如: machine_0 或 machine_a)
                 String currentModelName = modelNamePrefix + "_" + suffix;
-
-                // 正面贴图路径: prefix_suffix (例如: block/machine_front_0)
                 ResourceLocation frontTexture = p.modLoc("block/" + frontTexturePrefix + "_" + suffix);
-
                 ResourceLocation sideTexture = p.modLoc("block/" + sideTexturePrefix);
-                // 使用 Forge 预设的 "orientable" 模板 (正面+侧面+顶面)
-                // orientable 模板包含: front, side, top
+
                 BlockModelBuilder modelBuilder = p.models()
                         .withExistingParent(currentModelName, p.mcLoc("block/orientable"))
-                        .texture("front", frontTexture) // 正面用变种贴图
-                        .texture("side", sideTexture)   // 侧面用通用贴图
-                        .texture("top", sideTexture);   // 顶底面也用通用贴图
+                        .texture("front", frontTexture) // 正面贴图
+                        .texture("side", sideTexture)   // 侧面贴图
+                        .texture("top", sideTexture);   // 顶底贴图
 
-                // 3. 为当前变种的所有方向生成状态
-                // 也就是: 当 number=1 且 facing=north 时...
-                //        当 number=1 且 facing=east 时...
                 for (Direction dir : Direction.Plane.HORIZONTAL) {
-
                     int yRot = 0;
                     switch (dir) {
                         case NORTH -> yRot = 0;
@@ -423,15 +405,40 @@ public class FHBlockStateGen {
                         case SOUTH -> yRot = 180;
                         case WEST -> yRot = 270;
                     }
-
-
                     builder.partialState()
-                            .with(property, value) // 匹配变种
-                            .with(BlockStateProperties.HORIZONTAL_FACING, dir) // 匹配方向
+                            .with(property, value)
+                            .with(BlockStateProperties.HORIZONTAL_FACING, dir)
                             .modelForState()
                             .modelFile(modelBuilder)
-                            .rotationY(yRot) // 应用旋转
+                            .rotationY(yRot)
                             .addModel();
+                }
+            }
+        };
+    }
+    public static <T extends Item> NonNullBiConsumer<DataGenContext<Item, T>, RegistrateItemModelProvider> overridesItemModel(
+            String defaultModelPath,
+            String overrideModelPath,
+            String propertyName,
+            Boolean isLetter,
+            int minValue,
+            int maxValue
+    ) {
+        return (c, p) -> {
+            ItemModelBuilder builder = p.getBuilder(c.getName())
+                    .parent(p.getExistingFile(p.modLoc(defaultModelPath)));
+            for (int i = minValue; i <= maxValue; i++) {
+                if (isLetter){
+                    String letterSuffix = String.valueOf((char) ('a' + i));
+                    builder.override()
+                            .predicate(new ResourceLocation(propertyName), i)
+                            .model(p.getExistingFile(p.modLoc(overrideModelPath + "_" + letterSuffix)))
+                            .end();
+                }else {
+                    builder.override()
+                        .predicate(new ResourceLocation(propertyName), i)
+                        .model(p.getExistingFile(p.modLoc(overrideModelPath + "_" + i)))
+                        .end();
                 }
             }
         };

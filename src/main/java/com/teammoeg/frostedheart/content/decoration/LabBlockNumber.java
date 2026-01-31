@@ -20,7 +20,11 @@
 package com.teammoeg.frostedheart.content.decoration;
 
 import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -36,7 +40,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import javax.annotation.Nullable;
 
-public class LabBlockNumber extends CBlock {
+public class LabBlockNumber extends CBlock implements ICreativeModeTabItem {
     public static IntegerProperty NUMBER = IntegerProperty.create("number", 0, 9);
     public LabBlockNumber(Properties blockProps) {
         super(blockProps);
@@ -46,10 +50,22 @@ public class LabBlockNumber extends CBlock {
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(NUMBER);
     }
-
+    @Override
+    public void fillItemCategory(CreativeTabItemHelper helper) {
+        for (int value : NUMBER.getPossibleValues()) {
+            if (helper.isType(FHTabs.building_blocks)) {
+                if (value == 0) continue;
+                ItemStack stack = new ItemStack(this);
+                CompoundTag blockStateTag = stack.getOrCreateTagElement("BlockStateTag");
+                blockStateTag.putString(NUMBER.getName(), String.valueOf(value));
+                helper.accept(stack);
+            }
+        }
+    }
 /*    public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         Integer finalType = Math.abs(worldIn.random.nextInt()) % typeCount;
         BlockState newState = this.stateDefinition.any().setValue(NUMBER, finalType);
         worldIn.setBlockAndUpdate(pos, newState);
     }*/
+
 }

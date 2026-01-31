@@ -25,6 +25,7 @@ import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedresearch.FRContents;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
@@ -36,7 +37,7 @@ import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
-public class LabBlockControl extends CBlock {
+public class LabBlockControl extends CBlock implements ICreativeModeTabItem{
     public static IntegerProperty SCREEN = IntegerProperty.create("screen", 0, 2);
     public LabBlockControl(Properties blockProps) {
         super(blockProps);
@@ -61,5 +62,17 @@ public class LabBlockControl extends CBlock {
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext pContext) {
         return this.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, pContext.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    public void fillItemCategory(CreativeTabItemHelper helper) {
+        for (int value : SCREEN.getPossibleValues()) {
+            if (helper.isType(FHTabs.building_blocks)) {
+                ItemStack stack = new ItemStack(this);
+                CompoundTag blockStateTag = stack.getOrCreateTagElement("BlockStateTag");
+                blockStateTag.putString(SCREEN.getName(), String.valueOf(value));
+                helper.accept(stack);
+            }
+        }
     }
 }

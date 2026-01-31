@@ -1,3 +1,155 @@
 {
-  "parent": "frostedheart:block/lab_block_alphabet_a"
+  "parent": "frostedheart:block/lab_block_alphabet_a",
+  "overrides": [
+    {
+      "model": "frostedheart:block/lab_block_alphabet_b",
+      "predicate": {
+        "frostedheart:alphabet": 1.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_c",
+      "predicate": {
+        "frostedheart:alphabet": 2.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_d",
+      "predicate": {
+        "frostedheart:alphabet": 3.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_e",
+      "predicate": {
+        "frostedheart:alphabet": 4.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_f",
+      "predicate": {
+        "frostedheart:alphabet": 5.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_g",
+      "predicate": {
+        "frostedheart:alphabet": 6.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_h",
+      "predicate": {
+        "frostedheart:alphabet": 7.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_i",
+      "predicate": {
+        "frostedheart:alphabet": 8.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_j",
+      "predicate": {
+        "frostedheart:alphabet": 9.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_k",
+      "predicate": {
+        "frostedheart:alphabet": 10.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_l",
+      "predicate": {
+        "frostedheart:alphabet": 11.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_m",
+      "predicate": {
+        "frostedheart:alphabet": 12.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_n",
+      "predicate": {
+        "frostedheart:alphabet": 13.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_o",
+      "predicate": {
+        "frostedheart:alphabet": 14.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_p",
+      "predicate": {
+        "frostedheart:alphabet": 15.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_q",
+      "predicate": {
+        "frostedheart:alphabet": 16.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_r",
+      "predicate": {
+        "frostedheart:alphabet": 17.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_s",
+      "predicate": {
+        "frostedheart:alphabet": 18.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_t",
+      "predicate": {
+        "frostedheart:alphabet": 19.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_u",
+      "predicate": {
+        "frostedheart:alphabet": 20.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_v",
+      "predicate": {
+        "frostedheart:alphabet": 21.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_w",
+      "predicate": {
+        "frostedheart:alphabet": 22.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_x",
+      "predicate": {
+        "frostedheart:alphabet": 23.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_y",
+      "predicate": {
+        "frostedheart:alphabet": 24.0
+      }
+    },
+    {
+      "model": "frostedheart:block/lab_block_alphabet_z",
+      "predicate": {
+        "frostedheart:alphabet": 25.0
+      }
+    }
+  ]
 }
