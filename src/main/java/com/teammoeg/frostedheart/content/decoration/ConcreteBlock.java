@@ -23,12 +23,21 @@ import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
+
+import javax.annotation.Nullable;
 
 public class ConcreteBlock extends CBlock implements ICreativeModeTabItem {
     private static IntegerProperty TYPE = IntegerProperty.create("type", 0, 3);
@@ -42,10 +51,18 @@ public class ConcreteBlock extends CBlock implements ICreativeModeTabItem {
     }
 
     @Override
+    public BlockState getStateForPlacement(BlockPlaceContext pContext) {
+        long seed = Mth.getSeed(pContext.getClickedPos());
+        RandomSource random = RandomSource.create(seed);
+        int finalType = random.nextInt(4);
+
+        return this.defaultBlockState().setValue(TYPE, finalType);
+    }
+
+    @Override
     public void fillItemCategory(CreativeTabItemHelper helper) {
         for (int value : TYPE.getPossibleValues()) {
             if (helper.isType(FHTabs.building_blocks)) {
-                if (value == 0) continue;
                 ItemStack stack = new ItemStack(this);
                 CompoundTag blockStateTag = stack.getOrCreateTagElement("BlockStateTag");
                 blockStateTag.putString(TYPE.getName(), String.valueOf(value));

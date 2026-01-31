@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.block.CBlock;
 
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -52,10 +53,12 @@ public class SmallGarage extends CBlock {
         builder.add(TYPE);
     }
 
-    public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        Integer finalType = Math.abs(worldIn.random.nextInt()) % typeCount;
-        BlockState newState = this.stateDefinition.any().setValue(TYPE, finalType);
-        worldIn.setBlockAndUpdate(pos, newState);
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext pContext) {
+        Integer finalType = Math.abs(pContext.getLevel().random.nextInt()) % typeCount;
+        /*BlockState newState = this.stateDefinition.any().setValue(TYPE, finalType);
+        pContext.getLevel().setBlockAndUpdate(pContext.getClickedPos(), newState);*/
+        return this.defaultBlockState().setValue(TYPE, finalType);
     }
 
     @Override

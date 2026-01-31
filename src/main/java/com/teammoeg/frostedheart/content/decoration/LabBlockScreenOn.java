@@ -40,28 +40,34 @@ public class LabBlockScreenOn extends CBlock implements ICreativeModeTabItem {
         super(blockProps);
         this.registerDefaultState(this.stateDefinition.any().setValue(SCREEN, 0));
     }
+
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(SCREEN);
         builder.add(BlockStateProperties.HORIZONTAL_FACING);
     }
+
     @Override
     public BlockState rotate(BlockState pState, Rotation pRot) {
         return pState.setValue(BlockStateProperties.HORIZONTAL_FACING, pRot.rotate(pState.getValue(BlockStateProperties.HORIZONTAL_FACING)));
     }
+
     @Override
     public BlockState mirror(BlockState pState, Mirror pMirror) {
         return pState.setValue(BlockStateProperties.HORIZONTAL_FACING, pMirror.mirror(pState.getValue(BlockStateProperties.HORIZONTAL_FACING)));
     }
+
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext pContext) {
-        return this.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, pContext.getHorizontalDirection().getOpposite());
+        Integer finalType = Math.abs(pContext.getLevel().random.nextInt()) % 4;
+        return this.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, pContext.getHorizontalDirection().getOpposite())
+                .setValue(SCREEN, finalType);
     }
+
     @Override
     public void fillItemCategory(CreativeTabItemHelper helper) {
         for (int value : SCREEN.getPossibleValues()) {
             if (helper.isType(FHTabs.building_blocks)) {
-                if (value == 0) continue;
                 ItemStack stack = new ItemStack(this);
                 CompoundTag blockStateTag = stack.getOrCreateTagElement("BlockStateTag");
                 blockStateTag.putString(SCREEN.getName(), String.valueOf(value));

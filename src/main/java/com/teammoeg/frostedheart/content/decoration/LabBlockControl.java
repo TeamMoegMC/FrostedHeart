@@ -59,9 +59,12 @@ public class LabBlockControl extends CBlock implements ICreativeModeTabItem{
     public BlockState mirror(BlockState pState, Mirror pMirror) {
         return pState.setValue(BlockStateProperties.HORIZONTAL_FACING, pMirror.mirror(pState.getValue(BlockStateProperties.HORIZONTAL_FACING)));
     }
+
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext pContext) {
-        return this.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, pContext.getHorizontalDirection().getOpposite());
+        Integer finalType = Math.abs(pContext.getLevel().random.nextInt()) % 3;
+        return this.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, pContext.getHorizontalDirection().getOpposite())
+                .setValue(SCREEN, finalType);
     }
 
     @Override
