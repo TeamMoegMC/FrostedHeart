@@ -39,27 +39,27 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
 import javax.annotation.Nullable;
 
-public class ConcreteBlock extends CBlock implements ICreativeModeTabItem {
-    private static IntegerProperty TYPE = IntegerProperty.create("type", 0, 3);
+public class ConcreteBlock extends CBlock /*implements ICreativeModeTabItem */{
+//    private static IntegerProperty TYPE = IntegerProperty.create("type", 0, 3);
     public ConcreteBlock(Properties blockProps) {
         super(blockProps);
-        this.registerDefaultState(this.stateDefinition.any().setValue(TYPE, 0));
+//        this.registerDefaultState(this.stateDefinition.any().setValue(TYPE, 0));
     }
 
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+/*    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(TYPE);
-    }
+    }*/
 
-    @Override
+/*    @Override
     public BlockState getStateForPlacement(BlockPlaceContext pContext) {
         long seed = Mth.getSeed(pContext.getClickedPos());
         RandomSource random = RandomSource.create(seed);
         int finalType = random.nextInt(4);
 
         return this.defaultBlockState().setValue(TYPE, finalType);
-    }
+    }*/
 
-    @Override
+/*    @Override
     public void fillItemCategory(CreativeTabItemHelper helper) {
         for (int value : TYPE.getPossibleValues()) {
             if (helper.isType(FHTabs.building_blocks)) {
@@ -69,6 +69,6 @@ public class ConcreteBlock extends CBlock implements ICreativeModeTabItem {
                 helper.accept(stack);
             }
         }
-    }
+    }*/
 
 }

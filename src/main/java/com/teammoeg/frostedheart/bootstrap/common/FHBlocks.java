@@ -1951,13 +1951,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .blockstate(FHBlockStateGen.existed())
             .lang("Concrete")
-            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
-            .model(FHBlockStateGen.overridesItemModel(
-                    "block/concrete/concrete_0",
-                    "block/concrete/concrete",
-                    "frostedheart:type",
-                    false,1,2
-            )).build()
+            .item().model(AssetLookup.existingItemModel()).build()
             .register();
     public static BlockEntry<ConcreteCrackedBlock> concrete_cracked = REGISTRATE.block("concrete_cracked", ConcreteCrackedBlock::new)
             .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
