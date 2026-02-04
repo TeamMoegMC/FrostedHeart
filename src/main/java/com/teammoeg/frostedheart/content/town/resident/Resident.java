@@ -27,7 +27,6 @@ import com.teammoeg.frostedheart.content.town.ITownWithBlocks;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.content.town.Town;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
-import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseState;
 import com.teammoeg.frostedheart.content.town.worker.WorkerState;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.SerializeUtil;

@@ -19,21 +19,15 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Supplier;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedheart.content.town.house.HouseWorker;
-import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseResidentHandler;
-import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseWorker;
-import com.teammoeg.frostedheart.content.town.mine.MineResidentHandler;
-import com.teammoeg.frostedheart.content.town.mine.MineWorker;
+import com.teammoeg.frostedheart.content.town.buildings.house.HouseWorker;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseResidentHandler;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseWorker;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
-import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseWorker;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseWorker;
 import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
 
 import lombok.Getter;

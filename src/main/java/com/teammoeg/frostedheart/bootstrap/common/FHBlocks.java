@@ -20,11 +20,9 @@
 package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.google.common.collect.ImmutableMap;
-import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
-import com.teammoeg.chorda.item.CBlockItem;
 import com.teammoeg.chorda.util.CFunctionUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
@@ -60,12 +58,12 @@ import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainNozzleBloc
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
-import com.teammoeg.frostedheart.content.town.house.HouseBlock;
-import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseBlock;
-import com.teammoeg.frostedheart.content.town.hunting.HuntingCampBlock;
-import com.teammoeg.frostedheart.content.town.mine.MineBaseBlock;
-import com.teammoeg.frostedheart.content.town.mine.MineBlock;
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlock;
+import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlock;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlock;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingCampBlock;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlock;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlock;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerBlock;
 import com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen;
@@ -79,7 +77,6 @@ import net.minecraft.data.loot.packs.VanillaBlockLoot;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BlockGetter;

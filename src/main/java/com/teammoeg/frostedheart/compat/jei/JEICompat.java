@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.compat.jei.category.*;
-import com.teammoeg.frostedheart.content.town.mine.BiomeMineResourceRecipe;
+import com.teammoeg.frostedheart.content.town.buildings.mine.BiomeMineResourceRecipe;
 import org.jetbrains.annotations.NotNull;
 
 import com.teammoeg.chorda.client.ui.Point;
@@ -72,7 +72,6 @@ import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;

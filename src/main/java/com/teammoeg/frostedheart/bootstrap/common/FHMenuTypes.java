@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseMenu;
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseMenu;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlockEntity;
 import com.teammoeg.frostedheart.item.snowsack.SnowSackMenu;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;

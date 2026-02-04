@@ -23,7 +23,6 @@ import java.util.function.Function;
 
 import com.teammoeg.chorda.client.cui.CUIMenuScreenWrapper;
 import com.teammoeg.chorda.client.cui.PrimaryLayer;
-import com.teammoeg.chorda.client.ui.ScreenAcceptor;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.climate.block.ClothesScreen;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorScreen;
@@ -36,13 +35,12 @@ import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
 import com.teammoeg.frostedheart.content.health.screen.HealthStatScreen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
-import com.teammoeg.frostedheart.content.robotics.logistics.gui.LogisticChestScreen;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestScreen;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestScreen;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestScreen;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatScreen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseScreen;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseScreen;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
 
 import com.teammoeg.frostedheart.item.snowsack.SnowSackScreen;

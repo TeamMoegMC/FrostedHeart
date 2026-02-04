@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.content.town.network;
 
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.content.town.warehouse.VirtualItemStack;
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseMenu;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.VirtualItemStack;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.FriendlyByteBuf;

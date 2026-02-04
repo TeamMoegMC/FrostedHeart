@@ -19,20 +19,16 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
-import com.teammoeg.chorda.io.codec.ObjectWriter;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.content.town.warehouse.VirtualItemStack;
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseMenu;
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseScreen;
-import net.minecraft.client.Minecraft;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.VirtualItemStack;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseMenu;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
