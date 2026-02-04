@@ -16,6 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 package com.teammoeg.frostedheart.bootstrap.common;
 
 import java.util.function.Function;

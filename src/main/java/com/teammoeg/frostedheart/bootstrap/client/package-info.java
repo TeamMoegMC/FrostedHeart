@@ -16,6 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 /**
  * This package is used to store client bootstrap registries
  * */
