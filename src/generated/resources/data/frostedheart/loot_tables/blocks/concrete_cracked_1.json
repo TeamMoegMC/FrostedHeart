@@ -11,11 +11,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "frostedheart:concrete_cracked"
+          "name": "frostedheart:concrete_cracked_1"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "frostedheart:blocks/concrete_cracked"
+  "random_sequence": "frostedheart:blocks/concrete_cracked_1"
 }
