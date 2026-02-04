@@ -128,11 +128,6 @@ public class FHClientEventsMod {
 
 
         new PropertyRegistrationHelper(event)
-                .register(FHBlocks.lab_block_number, "frostedheart:number", "number")
-                .register(FHBlocks.lab_block_alphabet, "frostedheart:alphabet", "alphabet")
-                .register(FHBlocks.lab_block_sign, "frostedheart:sign", "sign")
-                .register(FHBlocks.lab_block_screen_on, "frostedheart:screen", "screen")
-                .register(FHBlocks.lab_control_panel, "frostedheart:screen", "screen")
                 .register(FHBlocks.concrete, "frostedheart:type", "type")
                 .register(FHBlocks.concrete_cracked, "frostedheart:type", "type");
 

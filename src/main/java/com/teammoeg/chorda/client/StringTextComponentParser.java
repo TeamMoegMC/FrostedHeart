@@ -133,7 +133,7 @@ public class StringTextComponentParser {
 								.withStyle(font);
 						builder.appendRawComponent(icon);
 					} else
-						builder.appendRawComponent(parse(Components.translatable(parser.fromStart()).getString()).withStyle(style));
+						builder.appendRawComponent(parse(Components.translatable(content).getString()).withStyle(style));
 					if(parser.has())
 						parser.eat('}');
 					break;

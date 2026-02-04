@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "frostedheart:block/lab_control_panel_switches",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "frostedheart:block/lab_control_panel_switches"
+    },
+    "facing=south": {
+      "model": "frostedheart:block/lab_control_panel_switches",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "frostedheart:block/lab_control_panel_switches",
+      "y": 270
+    }
+  }
+}

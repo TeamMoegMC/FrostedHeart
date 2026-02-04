@@ -28,6 +28,7 @@ import com.teammoeg.caupona.CPTags;
 import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.chorda.item.CBlockItem;
+import com.teammoeg.chorda.util.CFunctionUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
@@ -105,6 +106,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -1854,15 +1856,22 @@ public class FHBlocks {
     public static BlockEntry<Block> lab_block_cabinet = REGISTRATE.block("lab_block_cabinet", Block::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_cabinet"))
-            .lang("lab_block_cabinet")
+            .lang("Lab Block Cabinet")
             .simpleItem()
             .register();
     public static BlockEntry<Block> lab_vent = REGISTRATE.block("lab_vent", Block::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_vent"))
-            .lang("lab_vent")
+            .lang("Lab Vent")
             .simpleItem()
             .register();
+    public static List<BlockEntry<Block>> lab_block_number=CFunctionUtils.generate(0, 10, i-> REGISTRATE.block("lab_block_number_"+i, Block::new)
+        .transform(FHBlockStateGen.lab_block())
+        .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_number_"+i))
+        .lang("Lab Block Number "+i)
+        .simpleItem()
+        .register());
+    /*
     public static BlockEntry<LabBlockNumber> lab_block_number = REGISTRATE.block("lab_block_number", LabBlockNumber::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.integerPropertyBlock(LabBlockNumber.NUMBER,
@@ -1876,7 +1885,14 @@ public class FHBlocks {
                     false,1,9
             )).build()
             .register();
-
+*/
+    public static List<BlockEntry<Block>> lab_block_alphabet=CFunctionUtils.generate(0, 26, i-> REGISTRATE.block("lab_block_alphabet_"+Character.toString('a'+i), Block::new)
+        .transform(FHBlockStateGen.lab_block())
+        .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_alphabet_"+Character.toString('a'+i)))
+        .lang("Lab Block Alphabet "+Character.toString('A'+i))
+        .simpleItem()
+        .register());
+    /*
     public static BlockEntry<LabBlockAlphabet> lab_block_alphabet = REGISTRATE.block("lab_block_alphabet", LabBlockAlphabet::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.integerPropertyBlock(LabBlockAlphabet.ALPHABET,
@@ -1889,7 +1905,16 @@ public class FHBlocks {
                     "frostedheart:alphabet",
                     true,1,25
             )).build()
-            .register();
+            .register();*/
+    public static final String[] sign_names=new String[] {"Stop","Restricted","Arrow Left","Arrow Right","Danger"};
+    public static final String[] sign_ids=new String[] {"stop","restricted","arrow_left","arrow_right","danger"};
+    public static List<BlockEntry<Block>> lab_block_sign=CFunctionUtils.generate(0, 5, i-> REGISTRATE.block("lab_block_sign_"+sign_ids[i], Block::new)
+        .transform(FHBlockStateGen.lab_block())
+        .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_sign_"+i))
+        .lang("Lab Block "+sign_names[i]+" Sign")
+        .simpleItem()
+        .register());
+    /*
     public static BlockEntry<LabBlockSign> lab_block_sign = REGISTRATE.block("lab_block_sign", LabBlockSign::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.integerPropertyBlock(LabBlockSign.SIGN,
@@ -1902,39 +1927,29 @@ public class FHBlocks {
                     "frostedheart:sign",
                     false,1,4
             )).build()
-            .register();
+            .register();*/
     public static BlockEntry<HDBlock> lab_block_screen = REGISTRATE.block("lab_block_screen", HDBlock::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.existed())
-            .lang("lab_block_screen")
+            .lang("Lab Block Screen")
             .simpleItem()
             .register();
-    public static BlockEntry<LabBlockScreenOn> lab_block_screen_on = REGISTRATE.block("lab_block_screen_on", LabBlockScreenOn::new)
+    public static final String[] screen_names=new String[] {"Console","Flow","Dialog","Smile"};
+    public static final String[] screen_ids=new String[] {"console","flow","dialog","smile"};
+    public static List<BlockEntry<HDBlock>> lab_block_screen_on = CFunctionUtils.generate(0, 4, i->REGISTRATE.block("lab_block_screen_"+screen_ids[i], HDBlock::new)
             .transform(FHBlockStateGen.lab_block())
-            .blockstate(FHBlockStateGen.orientableIntegerBlock(LabBlockScreenOn.SCREEN,
-                    "lab_block_screen_on","lab_block/lab_block_screen_on","lab_block/lab_block"))
-            .lang("lab_block_screen_on")
-            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
-            .model(FHBlockStateGen.overridesItemModel(
-                    "block/lab_block_screen_on_0",
-                    "block/lab_block_screen_on",
-                    "frostedheart:screen",
-                    false,1,3
-            )).build()
-            .register();
-    public static BlockEntry<LabBlockControl> lab_control_panel = REGISTRATE.block("lab_control_panel", LabBlockControl::new)
+            .blockstate(FHBlockStateGen.horizontalFrontBlock("block/lab_block_screen_"+screen_ids[i],"block/lab_block/lab_block_screen_on_"+i,"block/lab_block/lab_block"))
+            .lang("Lab Block Screen "+screen_names[i])
+            .simpleItem()
+            .register());
+    public static final String[] control_panel_names=new String[] {"Master","Switches","Controller"};
+    public static final String[] control_panel_ids=new String[] {"master","switches","controller"};
+    public static List<BlockEntry<HDBlock>> lab_control_panel = CFunctionUtils.generate(0, 3, i->REGISTRATE.block("lab_control_panel_"+control_panel_ids[i], HDBlock::new)
             .transform(FHBlockStateGen.lab_block())
-            .blockstate(FHBlockStateGen.orientableIntegerBlock(LabBlockControl.SCREEN,
-                    "lab_control_panel","lab_block/lab_control_panel","lab_block/lab_block"))
-            .lang("lab_control_panel")
-            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
-            .model(FHBlockStateGen.overridesItemModel(
-                    "block/lab_control_panel_0",
-                    "block/lab_control_panel",
-                    "frostedheart:screen",
-                    false,1,2
-            )).build()
-            .register();
+            .blockstate(FHBlockStateGen.horizontalFrontBlock("block/lab_control_panel_"+control_panel_ids[i],"block/lab_block/lab_control_panel_"+i,"block/lab_block/lab_block"))
+            .lang("Lab Control "+control_panel_names[i]+" Panel")
+            .simpleItem()
+            .register());
     public static BlockEntry<LabPanelLight> lab_panel_light = REGISTRATE.block("lab_panel_light", LabPanelLight::new)
             .transform(FHBlockStateGen.lab_block())
             .properties(properties -> properties.lightLevel(state -> state.getValue(BlockStateProperties.LIT) ? 15 : 0))

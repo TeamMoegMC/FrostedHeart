@@ -1,6 +1,9 @@
 package com.teammoeg.chorda.util;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 
@@ -25,5 +28,11 @@ public class CFunctionUtils {
 		if(available)
 			return supp.get();
 		return null;
+	}
+	public static <T> List<T> generate(int startInclusive,int endExclusive,IntFunction<T> generator) {
+		List<T> list=new ArrayList<>();
+		for(int i=startInclusive;i<endExclusive;i++)
+			list.add(generator.apply(i));
+		return list;
 	}
 }

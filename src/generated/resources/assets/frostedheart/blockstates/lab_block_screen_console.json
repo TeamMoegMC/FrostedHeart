@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "frostedheart:block/lab_block_screen_console",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "frostedheart:block/lab_block_screen_console"
+    },
+    "facing=south": {
+      "model": "frostedheart:block/lab_block_screen_console",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "frostedheart:block/lab_block_screen_console",
+      "y": 270
+    }
+  }
+}
