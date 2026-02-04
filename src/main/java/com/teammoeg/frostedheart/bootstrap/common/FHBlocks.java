@@ -1708,25 +1708,25 @@ public class FHBlocks {
             .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
             .register();
 
-    public static BlockEntry<Block> CHASSIS = REGISTRATE.block("chassis", Block::new)
+    public static final BlockEntry<Block> CHASSIS = REGISTRATE.block("chassis", Block::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/chassis"))
             .simpleItem()
             .register();
-    public static BlockEntry<Block> RUINED_FLUCTUATING = REGISTRATE.block("ruined_fluctuating", Block::new)
+    public static final BlockEntry<Block> RUINED_FLUCTUATING = REGISTRATE.block("ruined_fluctuating", Block::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_fluctuating"))
             .simpleItem()
             .lang("Fluctuating Ruined Block")
             .register();
-    public static BlockEntry<Block> RUINED_JAGGED = REGISTRATE.block("ruined_jagged", Block::new)
+    public static final BlockEntry<Block> RUINED_JAGGED = REGISTRATE.block("ruined_jagged", Block::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_jagged"))
             .simpleItem()
             .lang("Jagged Ruined Block")
             .register();
     // ruined ladder
-    public static BlockEntry<RotatedPillarBlock> RUINED_LADDER = REGISTRATE.block("ruined_ladder", RotatedPillarBlock::new)
+    public static final BlockEntry<RotatedPillarBlock> RUINED_LADDER = REGISTRATE.block("ruined_ladder", RotatedPillarBlock::new)
             .transform(ruinedMachines())
             .blockstate((c, p) -> {
                 p.axisBlock(c.get(), p.modLoc("block/ruined_machines/ruined_ladder"), p.modLoc("block/ruined_machines/ruined_fluctuating"));
@@ -1735,28 +1735,28 @@ public class FHBlocks {
             .lang("Ruined Ladder")
             .register();
     // ruined scale tile bordered
-    public static BlockEntry<Block> RUINED_SCALE_TILE_BORDERED = REGISTRATE.block("ruined_scale_tile_bordered", Block::new)
+    public static final BlockEntry<Block> RUINED_SCALE_TILE_BORDERED = REGISTRATE.block("ruined_scale_tile_bordered", Block::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_scale_tile_bordered"))
             .simpleItem()
             .lang("Bordered Ruined Scale Tile")
             .register();
     // ruined scale tile borderless
-    public static BlockEntry<Block> RUINED_SCALE_TILE_BORDERLESS = REGISTRATE.block("ruined_scale_tile_borderless", Block::new)
+    public static final BlockEntry<Block> RUINED_SCALE_TILE_BORDERLESS = REGISTRATE.block("ruined_scale_tile_borderless", Block::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_scale_tile_borderless"))
             .simpleItem()
             .lang("Borderless Ruined Scale Tile")
             .register();
     // ruined striped bordered
-    public static BlockEntry<Block> RUINED_STRIPED_BORDERED = REGISTRATE.block("ruined_striped_bordered", Block::new)
+    public static final BlockEntry<Block> RUINED_STRIPED_BORDERED = REGISTRATE.block("ruined_striped_bordered", Block::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_striped_bordered"))
             .simpleItem()
             .lang("Bordered Ruined Striped Block")
             .register();
     // ruined striped borderless
-    public static BlockEntry<Block> RUINED_STRIPED_BORDERLESS = REGISTRATE.block("ruined_striped_borderless", Block::new)
+    public static final BlockEntry<Block> RUINED_STRIPED_BORDERLESS = REGISTRATE.block("ruined_striped_borderless", Block::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_striped_borderless"))
             .simpleItem()
@@ -1766,224 +1766,166 @@ public class FHBlocks {
     // this is a block with six different side textures
     // TODO: need new block types
 
-    public static BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL = REGISTRATE.block("ruined_machine_general", CDirectionalFacingBlock::new)
+    public static final BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL = REGISTRATE.block("ruined_machine_general", CDirectionalFacingBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.existed())
             .simpleItem()
             .register();
     // ruined_machine_general_chassis
-    public static BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL_CHASSIS = REGISTRATE.block("ruined_machine_general_chassis", CDirectionalFacingBlock::new)
+    public static final BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL_CHASSIS = REGISTRATE.block("ruined_machine_general_chassis", CDirectionalFacingBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.existed())
             .simpleItem()
             .register();
     // ruined_machine_general_screen
-    public static BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL_SCREEN = REGISTRATE.block("ruined_machine_general_screen", CDirectionalFacingBlock::new)
+    public static final BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL_SCREEN = REGISTRATE.block("ruined_machine_general_screen", CDirectionalFacingBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.existed())
             .simpleItem()
             .register();
     // ruined_machine_general_screen_cracked
-    public static BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL_SCREEN_CRACKED = REGISTRATE.block("ruined_machine_general_screen_cracked", CDirectionalFacingBlock::new)
+    public static final BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL_SCREEN_CRACKED = REGISTRATE.block("ruined_machine_general_screen_cracked", CDirectionalFacingBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.existed())
             .simpleItem()
             .register();
     // ruined_machine_general_storage
-    public static BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL_STORAGE = REGISTRATE.block("ruined_machine_general_storage", CDirectionalFacingBlock::new)
+    public static final BlockEntry<CDirectionalFacingBlock> RUINED_MACHINE_GENERAL_STORAGE = REGISTRATE.block("ruined_machine_general_storage", CDirectionalFacingBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.existed())
             .simpleItem()
             .register();
     // OBJs
-    public static BlockEntry<CDirectionalRotatableBlock> RUINED_MACHINE_BUTTONS = REGISTRATE.block("ruined_machine_buttons", CDirectionalRotatableBlock::new)
+    public static final BlockEntry<CDirectionalRotatableBlock> RUINED_MACHINE_BUTTONS = REGISTRATE.block("ruined_machine_buttons", CDirectionalRotatableBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.rotateOrient("ruined_machine_buttons"))
             .simpleItem()
             .register();
-    public static BlockEntry<CDirectionalRotatableBlock> RUINED_MACHINE_SCREEN = REGISTRATE.block("ruined_machine_screen", CDirectionalRotatableBlock::new)
+    public static final BlockEntry<CDirectionalRotatableBlock> RUINED_MACHINE_SCREEN = REGISTRATE.block("ruined_machine_screen", CDirectionalRotatableBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.rotateOrient("ruined_machine_screen"))
             .simpleItem()
             .register();
-    public static BlockEntry<CDirectionalRotatableBlock> RUINED_MACHINE_SCREEN_CRACKED = REGISTRATE.block("ruined_machine_screen_cracked", CDirectionalRotatableBlock::new)
+    public static final BlockEntry<CDirectionalRotatableBlock> RUINED_MACHINE_SCREEN_CRACKED = REGISTRATE.block("ruined_machine_screen_cracked", CDirectionalRotatableBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.rotateOrient("ruined_machine_screen_cracked"))
             .simpleItem()
             .register();
-    public static BlockEntry<CDirectionalRotatableBlock> RUINED_MACHINE_SWITCH = REGISTRATE.block("ruined_machine_switch", CDirectionalRotatableBlock::new)
+    public static final BlockEntry<CDirectionalRotatableBlock> RUINED_MACHINE_SWITCH = REGISTRATE.block("ruined_machine_switch", CDirectionalRotatableBlock::new)
             .transform(ruinedMachines())
             .blockstate(FHBlockStateGen.rotateOrient("ruined_machine_switch"))
             .simpleItem()
             .register();
     //Lab Blocks
-    public static BlockEntry<Block> LAB_BLCOK = REGISTRATE.block("lab_block", Block::new)
+    public static final BlockEntry<Block> LAB_BLOCK = REGISTRATE.block("lab_block", Block::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block"))
             .simpleItem()
             .lang("Lab Block")
             .register();
-    public static BlockEntry<Block> studded_lab_block = REGISTRATE.block("studded_lab_block", Block::new)
+    public static final BlockEntry<Block> STUDDED_LAB_BLOCK = REGISTRATE.block("studded_lab_block", Block::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/studded_lab_block"))
             .simpleItem()
             .lang("Studded Lab Block")
             .register();
-    public static BlockEntry<Block> framed_lab_block = REGISTRATE.block("framed_lab_block", Block::new)
+    public static final BlockEntry<Block> FRAMED_LAB_BLOCK = REGISTRATE.block("framed_lab_block", Block::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/framed_lab_block"))
             .simpleItem()
             .lang("framed Lab Block")
             .register();
-    public static BlockEntry<Block> lab_block_tile = REGISTRATE.block("lab_block_tile", Block::new)
+    public static final BlockEntry<Block> LAB_BLOCK_TILE = REGISTRATE.block("lab_block_tile", Block::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_tile"))
             .simpleItem()
             .lang("Lab Block Tile")
             .register();
-    public static BlockEntry<Block> lab_block_small_tile = REGISTRATE.block("lab_block_small_tile", Block::new)
+    public static final BlockEntry<Block> LAB_BLOCK_SMALL_TILE = REGISTRATE.block("lab_block_small_tile", Block::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_small_tile"))
             .lang("Lab Block Small Tile")
             .simpleItem()
             .register();
-    public static BlockEntry<Block> lab_block_acoustic_diffuser = REGISTRATE.block("lab_block_acoustic_diffuser", Block::new)
+    public static final BlockEntry<Block> LAB_BLOCK_ACOUSTIC_DIFFUSER = REGISTRATE.block("lab_block_acoustic_diffuser", Block::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_acoustic_diffuser"))
             .lang("Lab Block Acoustic Diffuser")
             .simpleItem()
             .register();
-    public static BlockEntry<Block> lab_block_cabinet = REGISTRATE.block("lab_block_cabinet", Block::new)
+    public static final BlockEntry<Block> LAB_BLOCK_CABINET = REGISTRATE.block("lab_block_cabinet", Block::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_cabinet"))
             .lang("Lab Block Cabinet")
             .simpleItem()
             .register();
-    public static BlockEntry<Block> lab_vent = REGISTRATE.block("lab_vent", Block::new)
+    public static final BlockEntry<Block> LAB_VENT = REGISTRATE.block("lab_vent", Block::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_vent"))
             .lang("Lab Vent")
             .simpleItem()
             .register();
-    public static List<BlockEntry<Block>> lab_block_number=CFunctionUtils.generate(0, 10, i-> REGISTRATE.block("lab_block_number_"+i, Block::new)
+    public static final List<BlockEntry<Block>> LAB_BLOCK_NUMBER=CFunctionUtils.generate(0, 10, i-> REGISTRATE.block("lab_block_number_"+i, Block::new)
         .transform(FHBlockStateGen.lab_block())
         .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_number_"+i))
         .lang("Lab Block Number "+i)
         .simpleItem()
         .register());
-    /*
-    public static BlockEntry<LabBlockNumber> lab_block_number = REGISTRATE.block("lab_block_number", LabBlockNumber::new)
-            .transform(FHBlockStateGen.lab_block())
-            .blockstate(FHBlockStateGen.integerPropertyBlock(LabBlockNumber.NUMBER,
-                    "lab_block_number","lab_block/lab_block_number",false))
-            .lang("lab_block_number")
-            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
-            .model(FHBlockStateGen.overridesItemModel(
-                    "block/lab_block_number_0",
-                    "block/lab_block_number",
-                    "frostedheart:number",
-                    false,1,9
-            )).build()
-            .register();
-*/
-    public static List<BlockEntry<Block>> lab_block_alphabet=CFunctionUtils.generate(0, 26, i-> REGISTRATE.block("lab_block_alphabet_"+Character.toString('a'+i), Block::new)
+    public static final List<BlockEntry<Block>> LAB_BLOCK_ALPHABET=CFunctionUtils.generate(0, 26, i-> REGISTRATE.block("lab_block_alphabet_"+Character.toString('a'+i), Block::new)
         .transform(FHBlockStateGen.lab_block())
         .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_alphabet_"+Character.toString('a'+i)))
         .lang("Lab Block Alphabet "+Character.toString('A'+i))
         .simpleItem()
         .register());
-    /*
-    public static BlockEntry<LabBlockAlphabet> lab_block_alphabet = REGISTRATE.block("lab_block_alphabet", LabBlockAlphabet::new)
-            .transform(FHBlockStateGen.lab_block())
-            .blockstate(FHBlockStateGen.integerPropertyBlock(LabBlockAlphabet.ALPHABET,
-                    "lab_block_alphabet","lab_block/lab_block_alphabet",true))
-            .lang("lab_block_alphabet")
-            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
-            .model(FHBlockStateGen.overridesItemModel(
-                    "block/lab_block_alphabet_a",
-                    "block/lab_block_alphabet",
-                    "frostedheart:alphabet",
-                    true,1,25
-            )).build()
-            .register();*/
-    public static final String[] sign_names=new String[] {"Stop","Restricted","Arrow Left","Arrow Right","Danger"};
-    public static final String[] sign_ids=new String[] {"stop","restricted","arrow_left","arrow_right","danger"};
-    public static List<BlockEntry<Block>> lab_block_sign=CFunctionUtils.generate(0, 5, i-> REGISTRATE.block("lab_block_sign_"+sign_ids[i], Block::new)
+    public static final String[] SIGN_IDS=new String[] {"stop","restricted","arrow_left","arrow_right","danger"};
+    public static final List<BlockEntry<Block>> LAB_BLOCK_SIGN=CFunctionUtils.generate(0, 5, i-> REGISTRATE.block("lab_block_sign_"+SIGN_IDS[i], Block::new)
         .transform(FHBlockStateGen.lab_block())
         .blockstate(FHBlockStateGen.simpleCubeAll("lab_block/lab_block_sign_"+i))
-        .lang("Lab Block "+sign_names[i]+" Sign")
         .simpleItem()
         .register());
-    /*
-    public static BlockEntry<LabBlockSign> lab_block_sign = REGISTRATE.block("lab_block_sign", LabBlockSign::new)
-            .transform(FHBlockStateGen.lab_block())
-            .blockstate(FHBlockStateGen.integerPropertyBlock(LabBlockSign.SIGN,
-                    "lab_block_sign","lab_block/lab_block_sign",false))
-            .lang("lab_block_sign")
-            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
-            .model(FHBlockStateGen.overridesItemModel(
-                    "block/lab_block_sign_0",
-                    "block/lab_block_sign",
-                    "frostedheart:sign",
-                    false,1,4
-            )).build()
-            .register();*/
-    public static BlockEntry<HDBlock> lab_block_screen = REGISTRATE.block("lab_block_screen", HDBlock::new)
+    public static final BlockEntry<HDBlock> LAB_BLOCK_SCREEN = REGISTRATE.block("lab_block_screen", HDBlock::new)
             .transform(FHBlockStateGen.lab_block())
             .blockstate(FHBlockStateGen.existed())
             .lang("Lab Block Screen")
             .simpleItem()
             .register();
-    public static final String[] screen_names=new String[] {"Console","Flow","Dialog","Smile"};
-    public static final String[] screen_ids=new String[] {"console","flow","dialog","smile"};
-    public static List<BlockEntry<HDBlock>> lab_block_screen_on = CFunctionUtils.generate(0, 4, i->REGISTRATE.block("lab_block_screen_"+screen_ids[i], HDBlock::new)
+    public static final String[] SCREEN_IDS=new String[] {"console","flow","dialog","smile"};
+    public static final List<BlockEntry<HDBlock>> LAB_BLOCK_SCREEN_ON = CFunctionUtils.generate(0, 4, i->REGISTRATE.block("lab_block_screen_"+SCREEN_IDS[i], HDBlock::new)
             .transform(FHBlockStateGen.lab_block())
-            .blockstate(FHBlockStateGen.horizontalFrontBlock("block/lab_block_screen_"+screen_ids[i],"block/lab_block/lab_block_screen_on_"+i,"block/lab_block/lab_block"))
-            .lang("Lab Block Screen "+screen_names[i])
+            .blockstate(FHBlockStateGen.horizontalFrontBlock("block/lab_block_screen_"+SCREEN_IDS[i],"block/lab_block/lab_block_screen_on_"+i,"block/lab_block/lab_block"))
             .simpleItem()
             .register());
-    public static final String[] control_panel_names=new String[] {"Master","Switches","Controller"};
-    public static final String[] control_panel_ids=new String[] {"master","switches","controller"};
-    public static List<BlockEntry<HDBlock>> lab_control_panel = CFunctionUtils.generate(0, 3, i->REGISTRATE.block("lab_control_panel_"+control_panel_ids[i], HDBlock::new)
+    public static final String[] CONTROL_PANEL_IDS=new String[] {"master","switches","controller"};
+    public static final List<BlockEntry<HDBlock>> LAB_CONTROL_PANEL = CFunctionUtils.generate(0, 3, i->REGISTRATE.block("lab_control_panel_"+CONTROL_PANEL_IDS[i], HDBlock::new)
             .transform(FHBlockStateGen.lab_block())
-            .blockstate(FHBlockStateGen.horizontalFrontBlock("block/lab_control_panel_"+control_panel_ids[i],"block/lab_block/lab_control_panel_"+i,"block/lab_block/lab_block"))
-            .lang("Lab Control "+control_panel_names[i]+" Panel")
+            .blockstate(FHBlockStateGen.horizontalFrontBlock("block/lab_control_panel_"+CONTROL_PANEL_IDS[i],"block/lab_block/lab_control_panel_"+i,"block/lab_block/lab_block"))
             .simpleItem()
             .register());
-    public static BlockEntry<LabPanelLight> lab_panel_light = REGISTRATE.block("lab_panel_light", LabPanelLight::new)
+    public static final BlockEntry<LabPanelLight> LAB_PANEL_LIGHT = REGISTRATE.block("lab_panel_light", LabPanelLight::new)
             .transform(FHBlockStateGen.lab_block())
             .properties(properties -> properties.lightLevel(state -> state.getValue(BlockStateProperties.LIT) ? 15 : 0))
             .blockstate(FHBlockStateGen.existed())
-            .lang("lab_panel_light")
-            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
+            .item((block, props) -> new CBlockItem(block, props, FHTabs.BUILDING_BLOCKS_TYPE))
             .build()
             .register();
-    public static BlockEntry<ConcreteBlock> concrete = REGISTRATE.block("concrete", ConcreteBlock::new)
+    public static final BlockEntry<Block> CONCRETE = REGISTRATE.block("concrete", Block::new)
             .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
                     .requiresCorrectToolForDrops()
                     .strength(10, 20))
             .tag(BlockTags.MINEABLE_WITH_PICKAXE)
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .blockstate(FHBlockStateGen.existed())
-            .lang("Concrete")
             .item().model(AssetLookup.existingItemModel()).build()
             .register();
-    public static BlockEntry<ConcreteCrackedBlock> concrete_cracked = REGISTRATE.block("concrete_cracked", ConcreteCrackedBlock::new)
+    public static final List<BlockEntry<Block>> CONCRETE_CRACKED =  CFunctionUtils.generate(0, 7, i->REGISTRATE.block("concrete_cracked_"+i, Block::new)
             .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
                     .requiresCorrectToolForDrops()
                     .strength(8, 20))
             .tag(BlockTags.MINEABLE_WITH_PICKAXE)
             .tag(BlockTags.NEEDS_IRON_TOOL)
-            .blockstate(FHBlockStateGen.existed())
-            .lang("Concrete Cracked")
-            .item((block, props) -> new CBlockItem(block, props, FHTabs.building_blocks))
-            .model(FHBlockStateGen.overridesItemModel(
-                    "block/concrete/concrete_cracked_0",
-                    "block/concrete/concrete_cracked",
-                    "frostedheart:type",
-                    false,1,6
-            )).build()
-            .register();
+            .blockstate(FHBlockStateGen.simpleCubeAll("concrete/concrete_cracked_"+i))
+            .simpleItem()
+            .register());
     static {
         REGISTRATE.setCreativeTab(FHTabs.FUNCTIONAL_BLOCKS);
     }

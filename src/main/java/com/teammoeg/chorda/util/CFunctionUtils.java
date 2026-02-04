@@ -1,6 +1,7 @@
 package com.teammoeg.chorda.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -33,6 +34,18 @@ public class CFunctionUtils {
 		List<T> list=new ArrayList<>();
 		for(int i=startInclusive;i<endExclusive;i++)
 			list.add(generator.apply(i));
+		return list;
+	}
+	public static <O,T> List<T> generate(O[] types,Function<O,T> generator) {
+		List<T> list=new ArrayList<>();
+		for(O obj:types)
+			list.add(generator.apply(obj));
+		return list;
+	}
+	public static <O,T> List<T> generate(Collection<O> types,Function<O,T> generator) {
+		List<T> list=new ArrayList<>();
+		for(O obj:types)
+			list.add(generator.apply(obj));
 		return list;
 	}
 }

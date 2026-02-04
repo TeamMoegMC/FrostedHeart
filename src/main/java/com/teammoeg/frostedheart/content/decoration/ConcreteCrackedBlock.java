@@ -44,7 +44,7 @@ public class ConcreteCrackedBlock extends CBlock implements ICreativeModeTabItem
     @Override
     public void fillItemCategory(CreativeTabItemHelper helper) {
         for (int value : TYPE.getPossibleValues()) {
-            if (helper.isType(FHTabs.building_blocks)) {
+            if (helper.isType(FHTabs.BUILDING_BLOCKS_TYPE)) {
                 if (value == 0) continue;
                 ItemStack stack = new ItemStack(this);
                 CompoundTag blockStateTag = stack.getOrCreateTagElement("BlockStateTag");

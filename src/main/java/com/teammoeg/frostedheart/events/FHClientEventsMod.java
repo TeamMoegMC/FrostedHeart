@@ -127,9 +127,7 @@ public class FHClientEventsMod {
 		});
 
 
-        new PropertyRegistrationHelper(event)
-                .register(FHBlocks.concrete, "frostedheart:type", "type")
-                .register(FHBlocks.concrete_cracked, "frostedheart:type", "type");
+        //new PropertyRegistrationHelper(event);
 
         ShaderCompatHelper.use(Blocks.PACKED_ICE)
         .add(FHBlocks.FIRM_ICE_BLOCK);
@@ -269,6 +267,27 @@ public class FHClientEventsMod {
         .add(FHBlocks.LEAD_BLOCK)
         .add(FHBlocks.TUNGSTEN_STEEL_BLOCK)
         .add(FHBlocks.TUNGSTEN_BLOCK);
+        //ruin blocks
+        ShaderCompatHelper.use(Blocks.IRON_BLOCK)
+        .addAll(FHBlocks.LAB_BLOCK_SCREEN_ON);
+        ShaderCompatHelper.use(Blocks.PRISMARINE_BRICKS)
+        .add(FHBlocks.LAB_BLOCK)
+        .add(FHBlocks.LAB_BLOCK_ACOUSTIC_DIFFUSER)
+        .add(FHBlocks.LAB_BLOCK_CABINET)
+        .add(FHBlocks.LAB_BLOCK_SCREEN)
+        .add(FHBlocks.LAB_BLOCK_SMALL_TILE)
+        .add(FHBlocks.LAB_BLOCK_TILE)
+        .add(FHBlocks.LAB_VENT)
+        .addAll(FHBlocks.LAB_BLOCK_ALPHABET)
+        .addAll(FHBlocks.LAB_BLOCK_NUMBER)
+        .addAll(FHBlocks.LAB_BLOCK_SIGN)
+        .add(FHBlocks.STUDDED_LAB_BLOCK)
+        .add(FHBlocks.FRAMED_LAB_BLOCK);
+        ShaderCompatHelper.use(Blocks.GRAY_CONCRETE)
+        .add(FHBlocks.CONCRETE)
+        .addAll(FHBlocks.CONCRETE_CRACKED);
+        ShaderCompatHelper.use(Blocks.SEA_LANTERN)
+        .add(FHBlocks.LAB_PANEL_LIGHT);
         // FHTooltips.registerTooltipModifiers();
         /*
          ItemBlockRenderTypes.setRenderLayer(FHBlocks.RYE_BLOCK.get(), RenderType.cutout());

@@ -1,5 +1,6 @@
 package com.teammoeg.chorda.util;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -31,6 +32,11 @@ public class ShaderCompatHelper {
 		 * */
 		public <T extends Block> SimpleShaderBuilder add(Supplier<T> r){
 			shaderLikeState(r, vanilla);
+			return this;
+		}
+		public <T extends Block> SimpleShaderBuilder addAll(Collection<? extends Supplier<T>> r){
+			for(Supplier<T> i:r)
+				shaderLikeState(i, vanilla);
 			return this;
 		}
 		/**

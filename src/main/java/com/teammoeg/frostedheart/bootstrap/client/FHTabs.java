@@ -63,7 +63,7 @@ public class FHTabs {
                     .title(Lang.translateKey("itemGroup.frostedheart.building_blocks"))
                     .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.BUILDING_BLOCKS))
                     .build());
-    public static final TabType building_blocks = new TabType(BUILDING_BLOCKS);
+    public static final TabType BUILDING_BLOCKS_TYPE = new TabType(BUILDING_BLOCKS);
     // Natural blocks Tab
     public static final RegistryObject<CreativeModeTab> NATURAL_BLOCKS = TABS.register("frostedheart_natural_blocks",
             ()->CreativeModeTab
