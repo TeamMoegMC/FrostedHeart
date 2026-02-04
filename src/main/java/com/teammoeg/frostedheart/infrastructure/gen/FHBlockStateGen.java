@@ -50,6 +50,7 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.client.model.generators.*;
+import net.minecraftforge.client.model.generators.ModelFile.ExistingModelFile;
 import net.minecraftforge.client.model.generators.VariantBlockStateBuilder.PartialBlockstate;
 import net.minecraftforge.client.model.generators.loaders.ObjModelBuilder;
 
@@ -230,7 +231,13 @@ public class FHBlockStateGen {
 				.renderType("translucent");
 		};
 	}
+	public static NonNullBiConsumer<DataGenContext<Item, BlockItem>, RegistrateItemModelProvider> existingItemModel() {
+		return (c, p) -> p.getExistingFile(p.modLoc("item/" + c.getName()));
+	}
 
+	public static NonNullBiConsumer<DataGenContext<Item, BlockItem>, RegistrateItemModelProvider> blockModel(String name) {
+		return (c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/" + name));
+	}
 	public static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> ruinedMachines() {
 		return b -> b
 			.properties(p -> p.mapColor(MapColor.COLOR_GRAY)
@@ -428,7 +435,39 @@ public class FHBlockStateGen {
 
 		};
 	}
+	public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> horizontalLitFrontBlock(
+		String onModelName,
+		String offModelName) {
+		return (c, p) -> {
+			VariantBlockStateBuilder builder = p.getVariantBuilder(c.get());
+			ExistingModelFile onModel = p.models().getExistingFile(p.modLoc(onModelName));
+			ExistingModelFile offModel = p.models().getExistingFile(p.modLoc(offModelName));
+			for (Direction dir : Direction.Plane.HORIZONTAL) {
+				int yRot = 0;
+				switch (dir) {
+				case NORTH -> yRot = 0;
+				case EAST -> yRot = 90;
+				case SOUTH -> yRot = 180;
+				case WEST -> yRot = 270;
+				}
+				builder.partialState()
+					.with(BlockStateProperties.HORIZONTAL_FACING, dir)
+					.with(BlockStateProperties.LIT, false)
+					.modelForState()
+					.modelFile(offModel)
+					.rotationY(yRot)
+					.addModel();
+				builder.partialState()
+				.with(BlockStateProperties.HORIZONTAL_FACING, dir)
+				.with(BlockStateProperties.LIT, true)
+				.modelForState()
+				.modelFile(onModel)
+				.rotationY(yRot)
+				.addModel();
+			}
 
+		};
+	}
 	public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> orientableIntegerBlock(
 		IntegerProperty property,
 		String modelNamePrefix,

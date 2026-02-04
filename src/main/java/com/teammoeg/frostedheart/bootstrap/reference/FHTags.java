@@ -121,6 +121,8 @@ public class FHTags {
 		ICE_MOVEMENT("movement_modifiers/ice"),
 		STONE(NameSpace.FORGE),
 		ORES(NameSpace.FORGE),
+		NON_MOVABLE(NameSpace.CREATE),
+		SAFE_NBT(NameSpace.CREATE),
 		SLED_SNOW(),
 		CROP()
 

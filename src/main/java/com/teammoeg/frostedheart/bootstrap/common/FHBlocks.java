@@ -20,9 +20,6 @@
 package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.google.common.collect.ImmutableMap;
-import com.simibubi.create.AllShapes;
-import com.simibubi.create.AllTags;
-import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.chorda.block.CDirectionalFacingBlock;
@@ -100,6 +97,7 @@ import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
 import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -158,7 +156,7 @@ public class FHBlocks {
             .lang("Thin Ice Block")
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.ICE_CHIP.get(), ConstantValue.exactly(4))))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
     public static final BlockEntry<Block> FIRM_ICE_BLOCK = REGISTRATE.block("firm_ice", Block::new)
@@ -172,7 +170,7 @@ public class FHBlocks {
             .lang("Firm Ice Block")
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.ICE_CHIP.get(), ConstantValue.exactly(4))))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
     // Condensed ore blocks
@@ -184,7 +182,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.simpleCubeAllRandom("besnowed_debris", 3, false))
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, Items.SNOWBALL, ConstantValue.exactly(4))))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             
             .build()
             .register();
@@ -196,7 +194,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.simpleCubeAllRandom("besnowed_twigs", 3, false))
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, Items.SNOWBALL, ConstantValue.exactly(4))))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
     public static final BlockEntry<Block> CONDENSED_IRON_ORE_BLOCK = REGISTRATE.block("condensed_iron_ore_block", Block::new)
@@ -372,7 +370,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.layeredRandom("besnowed_debris", "besnowed_debris_block",
                     "besnowed_debris", 3, 8, false))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
     public static final BlockEntry<SnowLayerBlock> BESNOWED_TWIGS = REGISTRATE.block("besnowed_twigs", SnowLayerBlock::new)
@@ -392,7 +390,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.layeredRandom("besnowed_twigs", "besnowed_twigs_block",
                     "besnowed_twigs", 3, 8, false))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
     // condensed ores
@@ -1113,7 +1111,7 @@ public class FHBlocks {
             .initialProperties(() -> GRAVEL)
             .blockstate(FHBlockStateGen.existed())
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .loot((lt, b) -> lt.add(b,
                     lt.createSingleItemTableWithSilkTouch(b, Items.RAW_COPPER, ConstantValue.exactly(1))))
@@ -1122,7 +1120,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .loot(FHLootGen.existed())
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Rye")
             .tag(BlockTags.CROPS)
@@ -1132,7 +1130,7 @@ public class FHBlocks {
 //                    p -> new WolfBerryBushBlock(FHProps.berryBushBlocks))
 //            .blockstate(FHBlockStateGen.existed())
 //            .item()
-//            .model(AssetLookup.existingItemModel())
+//            .model(FHBlockStateGen.existingItemModel())
 //            .build()
 //            .lang("Chinese Wolfberry")
 //            .tag(BlockTags.CROPS)
@@ -1146,7 +1144,7 @@ public class FHBlocks {
             .item()
             .properties(p -> p.food(FHFoodProperties.WHITE_TURNIP))
             .tag(CPTags.Items.VEGETABLES)
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("White Turnip")
             .register();
@@ -1164,7 +1162,7 @@ public class FHBlocks {
                                     .withPool(LootPool.lootPool().add(LootItem.lootTableItem(block)))
                     ))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Rubber Root")
             .register();
@@ -1180,7 +1178,7 @@ public class FHBlocks {
                                             .apply(ApplyBonusCount.addUniformBonusCount(Enchantments.BLOCK_FORTUNE))
                                             .apply(SetItemCountFunction.setCount(UniformGenerator.between(0,3))))))))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Wild Rubber Root")
             .register();
@@ -1508,7 +1506,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_STONE_TOOL)
             .blockstate(FHBlockStateGen.existed())
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Generator Bricks")
             .register();
@@ -1523,7 +1521,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_STONE_TOOL)
             .blockstate(FHBlockStateGen.existed())
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Basic Generator Core")
             .register();
@@ -1538,7 +1536,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_STONE_TOOL)
             .blockstate(FHBlockStateGen.existed())
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Basic Generator Amplifier")
             .register();
@@ -1599,7 +1597,7 @@ public class FHBlocks {
             .tag(BlockTags.MINEABLE_WITH_AXE)
             .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Blood")
             .register();
@@ -1612,7 +1610,7 @@ public class FHBlocks {
             .tag(BlockTags.MINEABLE_WITH_AXE)
             .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Pile of Bones")
             .register();
@@ -1625,7 +1623,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Small Garage")
             .register();
@@ -1638,7 +1636,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Abandoned Package")
             .register();
@@ -1651,7 +1649,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Pebbles")
             .register();
@@ -1664,7 +1662,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Odd Mark")
             .register();
@@ -1677,7 +1675,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Wooden Box")
             .register();
@@ -1689,7 +1687,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Broken Generator Core")
             .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
@@ -1702,7 +1700,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Broken Generator Plating")
             .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
@@ -1901,13 +1899,20 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.horizontalFrontBlock("block/lab_control_panel_"+CONTROL_PANEL_IDS[i],"block/lab_block/lab_control_panel_"+i,"block/lab_block/lab_block"))
             .simpleItem()
             .register());
-    public static final BlockEntry<LabPanelLight> LAB_PANEL_LIGHT = REGISTRATE.block("lab_panel_light", LabPanelLight::new)
+    public static final BlockEntry<LabPanelLightBlock> LAB_PANEL_LIGHT = REGISTRATE.block("lab_panel_light", LabPanelLightBlock::new)
             .transform(FHBlockStateGen.lab_block())
             .properties(properties -> properties.lightLevel(state -> state.getValue(BlockStateProperties.LIT) ? 15 : 0))
-            .blockstate(FHBlockStateGen.existed())
-            .item((block, props) -> new CBlockItem(block, props, FHTabs.BUILDING_BLOCKS_TYPE))
-            .build()
+            .blockstate(FHBlockStateGen.horizontalLitFrontBlock("block/lab_panel_light_on", "block/lab_panel_light"))
+            .simpleItem()
             .register();
+    public static final BlockEntry<LabPanelLightBlock> LAB_PANEL_LIGHT_INVERSED = REGISTRATE.block("lab_panel_light_inverse", LabPanelLightBlock::new)
+        .transform(FHBlockStateGen.lab_block())
+        .properties(properties -> properties.lightLevel(state -> state.getValue(BlockStateProperties.LIT) ? 0 : 15))
+        .blockstate(FHBlockStateGen.horizontalLitFrontBlock("block/lab_panel_light", "block/lab_panel_light_on"))
+        .item().model(FHBlockStateGen.blockModel("lab_panel_light_on"))
+        .build()
+        .register();
+
     public static final BlockEntry<Block> CONCRETE = REGISTRATE.block("concrete", Block::new)
             .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
                     .requiresCorrectToolForDrops()
@@ -1915,7 +1920,7 @@ public class FHBlocks {
             .tag(BlockTags.MINEABLE_WITH_PICKAXE)
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .blockstate(FHBlockStateGen.existed())
-            .item().model(AssetLookup.existingItemModel()).build()
+            .item().model(FHBlockStateGen.existingItemModel()).build()
             .register();
     public static final List<BlockEntry<Block>> CONCRETE_CRACKED =  CFunctionUtils.generate(0, 7, i->REGISTRATE.block("concrete_cracked_"+i, Block::new)
             .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
@@ -1940,7 +1945,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
     // INCUBATOR
@@ -1948,7 +1953,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
     // HEAT_INCUBATOR
@@ -1956,7 +1961,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Steam Incubator")
             .register();
@@ -1969,7 +1974,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
     // DEBUG_HEATER
@@ -1982,7 +1987,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
     public static final BlockEntry<CreativeHeaterBlock> CREATIVE_HEATER = REGISTRATE.block("creative_heater", CreativeHeaterBlock::new)
@@ -1994,7 +1999,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
 
@@ -2008,7 +2013,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Steam Charger")
             .register();
@@ -2022,7 +2027,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("Oil Incinerator")
             .register();
@@ -2036,7 +2041,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
 
@@ -2050,7 +2055,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .lang("T1 Smoke Generator")
             .register();
@@ -2065,7 +2070,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
     public static final BlockEntry<FountainBlock> FOUNTAIN_BASE = REGISTRATE.block("fountain_base", FountainBlock::new)
@@ -2077,7 +2082,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
     public static final BlockEntry<FountainNozzleBlock> FOUNTAIN_NOZZLE = REGISTRATE.block("fountain_nozzle", FountainNozzleBlock::new)
@@ -2089,7 +2094,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
     public static final BlockEntry<SteamCoreBlock> STEAM_CORE = REGISTRATE.block("steam_core", SteamCoreBlock::new)
@@ -2098,51 +2103,53 @@ public class FHBlocks {
                     .strength(2, 10)
                     .noOcclusion())
             .blockstate(FHBlockStateGen.existed())
-            .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+            .tag(FHTags.Blocks.SAFE_NBT.tag)
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .item()
-            .transform(ModelGen.customItemModel())
+            .model(FHBlockStateGen.blockModel("steam_core/item"))
+            .build()
             .register();
     public static final BlockEntry<VAWTBlock> FABRIC_VAWT = REGISTRATE.block("fabric_vawt",
-                    p -> VAWTBlock.create(FHProps.woodenProps, "fabric", 120, 1.125F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
+                    p -> VAWTBlock.create(FHProps.woodenProps, "fabric", 120, 1.125F, Shapes.or(Block.box(0, 9, 0, 16, 32, 16), Block.box(6, 0, 6, 10, 9, 10))))
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .lang("VAWT (Fabric)")
-            .item().model(AssetLookup.existingItemModel()).build()
+            .item()
+            .model(FHBlockStateGen.existingItemModel()).build()
             .register();
     public static final BlockEntry<VAWTBlock> METAL_VAWT = REGISTRATE.block("metal_vawt",
-                    p -> VAWTBlock.create(FHProps.metalDecoProps, "metal", 240, 0.75F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
+                    p -> VAWTBlock.create(FHProps.metalDecoProps, "metal", 240, 0.75F,Shapes.or(Block.box(0, 9, 0, 16, 32, 16), Block.box(6, 0, 6, 10, 9, 10))))
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .lang("VAWT (Metal)")
-            .item().model(AssetLookup.existingItemModel()).build()
+            .item().model(FHBlockStateGen.existingItemModel()).build()
             .register();
     public static final BlockEntry<VAWTBlock> ALLOY_VAWT = REGISTRATE.block("alloy_vawt",
-                    p -> VAWTBlock.create(FHProps.metalDecoProps, "alloy", 480, 1.0F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
+                    p -> VAWTBlock.create(FHProps.metalDecoProps, "alloy", 480, 1.0F, Shapes.or(Block.box(0, 9, 0, 16, 32, 16), Block.box(6, 0, 6, 10, 9, 10))))
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .lang("VAWT (Alloy)")
-            .item().model(AssetLookup.existingItemModel()).build()
+            .item().model(FHBlockStateGen.existingItemModel()).build()
             .register();
     public static final BlockEntry<VAWTBlock> DSP_VAWT = REGISTRATE.block("dsp_vawt",
-                    p -> VAWTBlock.create(FHProps.metalDecoProps, "dsp", Integer.MAX_VALUE, 1.0F, new AllShapes.Builder(Block.box(0, 9, 0, 16, 32, 16)).add(6, 0, 6, 10, 9, 10).build()))
+                    p -> VAWTBlock.create(FHProps.metalDecoProps, "dsp", Integer.MAX_VALUE, 1.0F, Shapes.or(Block.box(0, 9, 0, 16, 32, 16), Block.box(6, 0, 6, 10, 9, 10))))
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .lang("VAWT (DSP)")
-            .item().model(AssetLookup.existingItemModel()).build()
+            .item().model(FHBlockStateGen.existingItemModel()).build()
             .register();
     // WARDROBE, "wardrobe", like Blocks.SPRUCE_DOOR
     public static final BlockEntry<WardrobeBlock> WARDROBE = REGISTRATE.block("wardrobe", WardrobeBlock::new)
             .initialProperties(() -> Blocks.SPRUCE_DOOR)
             .blockstate(FHBlockStateGen.wardrobeState("wardrobe"))
             .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
-            .tag(AllTags.AllBlockTags.NON_MOVABLE.tag)
+            .tag(FHTags.Blocks.NON_MOVABLE.tag)
             .item()
-            .model(AssetLookup.existingItemModel())
+            .model(FHBlockStateGen.existingItemModel())
             .build()
             .register();
 
