@@ -25,18 +25,22 @@ import net.minecraft.client.gui.GuiGraphics;
 
 public class FilterLayer extends UILayer {
 	RequesterChestScreen layer;
+	UIFilterSlot[] slots;
 	public FilterLayer(RequesterChestScreen panel) {
 		super(panel);
 		layer=panel;
+		slots=new UIFilterSlot[layer.getMenu().list.size()];
+		for(int i=0;i<slots.length;i++) {
+			UIFilterSlot slot=new UIFilterSlot(this,layer.getMenu(),i);
+			slot.setPosAndSize(8+18*i, 3, 16, 16);
+			slots[i]=slot;
+		}
 	}
 
 	@Override
 	public void addUIElements() {
-		for(int i=0;i<layer.getMenu().list.size();i++) {
-			UIFilterSlot slot=new UIFilterSlot(this,layer.getMenu(),i);
-			slot.setPosAndSize(8+18*i, 3, 16, 16);
-			add(slot);
-			
+		for(int i=0;i<slots.length;i++) {
+			add(slots[i]);
 		}
 		setSize(176,31);
 	}

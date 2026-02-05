@@ -73,6 +73,17 @@ public class CFormatHelper {
 			return String.valueOf(num);
 		return toDynamicDigits(lnum) + units.charAt(unit);
 	}
+	public static String toReadableItemStackUnit(long num) {
+		int unit = -1;
+		double lnum = num;
+		while (lnum > 999) {//upscale unit when number reaches 1000
+			unit++;
+			lnum /= 1000;
+		}
+		if (unit < 0)
+			return String.valueOf(num);
+		return getNumberFormats().decimal1digit.format(lnum) + units.charAt(unit);
+	}
 	public static String toReadableUnit(double num) {
 		int unit = -1;
 		double lnum = num;

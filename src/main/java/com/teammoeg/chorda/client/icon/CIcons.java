@@ -178,6 +178,9 @@ public class CIcons {
 	public static CIcon nop() {
 		return NopIcon.INSTANCE;
 	}
+	public static CIcon empty() {
+		return NopIcon.INSTANCE;
+	}
 
 	/**
 	 * get icon showing a text component

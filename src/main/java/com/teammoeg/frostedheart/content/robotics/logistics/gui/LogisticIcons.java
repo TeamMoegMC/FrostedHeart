@@ -37,7 +37,7 @@ public class LogisticIcons {
     public static final CTextureIcon[] STATUS_LIGHTS=new CTextureIcon[] {STATUS_RED,STATUS_YELLOW,STATUS_GREEN,STATUS_BLUE};
     
     public static final CTextureIcon FILTER_BACK=DOCK_FILTER.withUV(0, 0, 108, 50, 256, 256);
-    public static final CTextureIcon BUTTON_BACK_ON=DOCK_FILTER.withUV(108, 0, 13, 13, 256, 256);
+    public static final CTextureIcon BUTTON_BACK_ON=DOCK_FILTER.withUV(108, 0, 12, 12, 256, 256);
     public static final CTextureIcon BUTTON_CHECK=DOCK_FILTER.withUV(108, 13, 8, 8, 256, 256);
 	public LogisticIcons() {
 	}

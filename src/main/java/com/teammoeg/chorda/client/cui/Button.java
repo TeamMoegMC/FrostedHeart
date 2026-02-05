@@ -65,7 +65,7 @@ public abstract class Button extends UIElement {
 		return this;
 	}
 	protected void fitSize() {
-		setWidth(parent.getFont().width(title)+((title.getContents()==ComponentContents.EMPTY&&hasIcon())?0:8) + (hasIcon() ? 20 : 0));
+		setWidth(parent.getFont().width(title)+((Components.isEmpty(title)&&hasIcon())?0:8) + (hasIcon() ? 20 : 0));
 		setHeight(hasIcon() ?20:16);
 	}
 	private int getTextureY() {

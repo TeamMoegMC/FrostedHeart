@@ -95,6 +95,7 @@ public abstract class UILayer extends UIElement {
 	}
 	public void add(UIElement element) {
 		if (element == null) {
+			Chorda.LOGGER.warn(Chorda.UI, "trying to add null.");
 			return;
 		}
 		if (element.getParent() != this) {

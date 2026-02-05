@@ -25,6 +25,7 @@ public class TextBoxNoBackground extends TextBox {
 
 	public TextBoxNoBackground(UILayer panel) {
 		super(panel);
+		textStartPos=0;
 	}
 
 	@Override

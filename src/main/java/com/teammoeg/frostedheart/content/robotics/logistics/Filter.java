@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.robotics.logistics;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -67,6 +66,10 @@ public class Filter {
 	public ItemStack createDisplayStack() {
 		if(key==null)return ItemStack.EMPTY;
 		return key.createStackWithSize(size);
+	}
+	public ItemStack getDisplayItem() {
+		if(key==null)return ItemStack.EMPTY;
+		return key.getStack();
 	}
 	@Override
 	public int hashCode() {

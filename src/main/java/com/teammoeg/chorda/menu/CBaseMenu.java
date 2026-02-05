@@ -29,6 +29,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 import com.teammoeg.chorda.ChordaNetwork;
+import com.teammoeg.chorda.client.cui.menu.CUISlot;
 import com.teammoeg.chorda.client.cui.menu.DeactivatableSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.SyncableDataSlot;
 import com.teammoeg.chorda.network.ContainerDataSyncMessageS2C;
@@ -257,9 +258,9 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 	protected void addPlayerInventory(Inventory inv, int invX, int invY, int quickBarY) {
 		for (int i = 0; i < 3; i++)
 			for (int j = 0; j < 9; j++)
-				addSlot(new Slot(inv, j + i * 9 + 9, invX + j * 18, invY + i * 18));
+				addSlot(new CUISlot(inv, j + i * 9 + 9, invX + j * 18, invY + i * 18));
 		for (int i = 0; i < 9; i++)
-			addSlot(new Slot(inv, i, invX + i * 18, quickBarY));
+			addSlot(new CUISlot(inv, i, invX + i * 18, quickBarY));
 	}
 	/**
 	 * Define quickmovestack logic, when a player shift-clicked a slot item in their inventory, then it would traverse this builder definition and fill slots in defined order 

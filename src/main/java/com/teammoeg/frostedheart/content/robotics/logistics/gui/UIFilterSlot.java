@@ -28,8 +28,11 @@ import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
+import com.teammoeg.chorda.text.CFormatHelper;
 import com.teammoeg.frostedheart.content.robotics.logistics.Filter;
+
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -40,25 +43,56 @@ public class UIFilterSlot extends UIElement {
 	final int index;
 	ScrollTracker tracker=new ScrollTracker();
 	ItemStack displayStack=ItemStack.EMPTY;
-	public UIFilterSlot(UIElement parent, RequesterChestMenu menu, int index) {
+	FilterLayer layer;
+	public UIFilterSlot(FilterLayer parent, RequesterChestMenu menu, int index) {
 		super(parent);
 		this.menu = menu;
 		this.index = index;
-	}
-	@Override
-	public void refresh() {
+		this.layer=parent;
 		CDataSlot<Filter> slot=menu.list.get(index);
 		slot.bind(c->{
 			if(c==null)
 				displayStack=ItemStack.EMPTY;
 			else
-				displayStack=c.createDisplayStack();
+				displayStack=c.getDisplayItem();
 		});
+		if(slot.getValue()!=null)
+			displayStack=slot.getValue().getDisplayItem();
+		else
+			displayStack=ItemStack.EMPTY;
+	}
+	@Override
+	public void refresh() {
+
 	}
 	@Override
 	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-		if(!displayStack.isEmpty())
+		if(!displayStack.isEmpty()&&getFilter()!=null) {
 			CGuiHelper.drawItem(graphics,displayStack, x, y, 0, true , null);
+			
+			int size=getFilter().getSize();
+	         if (size != 1) {
+	        	 
+	             String s = CFormatHelper.toReadableItemStackUnit(size);
+	             Font pFont=getFont();
+	             int width=pFont.width(s);
+	             graphics.pose().pushPose();
+	             if(size>99) {
+		             width=(int) (width*0.8);
+		             
+		             graphics.pose().translate(x+18-width, y+11, 350.0F);
+		             graphics.pose().scale(0.8f, 0.8f,1f);
+		             graphics.drawString(pFont, s, 0, 0, 16777215, true);
+		             
+	             }else {
+	            	 graphics.pose().translate(0, 0, 350.0F);
+		             graphics.drawString(pFont, s, x+18-width, y+9, 16777215, true);
+	             }
+	             graphics.pose().popPose();
+	             
+	          }
+			
+		}
 		super.render(graphics, x, y, w, h);
 		if (isMouseOver()) {
 			graphics.fill(x, y, x + w, y + h, 300, Colors.setAlpha(Colors.WHITE, 0.25F));
@@ -100,6 +134,8 @@ public class UIFilterSlot extends UIElement {
 			if(!menu.getCarried().isEmpty()) {
 				menu.setFilterItem(index);
 				
+			}else if(getFilter() != null){
+				layer.layer.openFilterLayer(index);
 			}
 			return true;
 		}

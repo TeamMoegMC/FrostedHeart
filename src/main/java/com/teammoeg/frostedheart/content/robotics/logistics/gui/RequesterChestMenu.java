@@ -34,6 +34,10 @@ import net.minecraftforge.items.IItemHandler;
 
 public class RequesterChestMenu extends LogisticChestMenu<RequesterTileEntity> {
 	public List<CDataSlot<Filter>> list=new ArrayList<>();
+	public static final int CMD_SET_FILTER=0;
+	public static final int CMD_CLEAR_FILTER=1;
+	public static final int CMD_SET_IGNORE_NBT=2;
+	public static final int CMD_SET_SIZE=3;
 	public RequesterChestMenu(int pContainerId, Inventory inv,RequesterTileEntity blockEntity) {
 		super(FHMenuTypes.REQUEST_CHEST.get(),blockEntity, pContainerId, inv);
 		for(int i=0;i<blockEntity.filters.length;i++) {
@@ -56,26 +60,25 @@ public class RequesterChestMenu extends LogisticChestMenu<RequesterTileEntity> {
 		this.sendMessage(((cmdId&0xff)<<8)+(slotId&0xff), state);
 	}
 	public void setFilterItem(int slot) {
-		sendMessage(0,slot,0);
+		sendMessage(CMD_SET_FILTER,slot,0);
 	}
 	public void unsetFilterItem(int slot) {
-		sendMessage(1,slot,0);
+		sendMessage(CMD_CLEAR_FILTER,slot,0);
 	}
 	public void setFilterIgnoreNbt(int slot,boolean ignore) {
-		sendMessage(2,slot,ignore?1:0);
+		sendMessage(CMD_SET_IGNORE_NBT,slot,ignore?1:0);
 	}
 	public void setFilterSize(int slot,int size) {
-		sendMessage(3,slot,size);
+		sendMessage(CMD_SET_SIZE,slot,size);
 	}
 	public void receiveMessage(short btnId, int state) {
 		int cmdId=(btnId&0xff00)>>8;
 		int slotId=btnId&0xff;
-		System.out.println(cmdId+","+slotId+","+state);
 		switch(cmdId) {
-		case 0:this.blockEntity.filters[slotId]=new Filter(new ItemKey(this.getCarried()), true, this.getCarried().getCount());break;
-		case 1:this.blockEntity.filters[slotId]=null;break;
-		case 2:this.blockEntity.filters[slotId].setIgnoreNbt(state>0);break;
-		case 3:this.blockEntity.filters[slotId].setSize(state);break;
+		case CMD_SET_FILTER:this.blockEntity.filters[slotId]=new Filter(new ItemKey(this.getCarried()), true, this.getCarried().getCount());break;
+		case CMD_CLEAR_FILTER:this.blockEntity.filters[slotId]=null;break;
+		case CMD_SET_IGNORE_NBT:this.blockEntity.filters[slotId].setIgnoreNbt(state>0);break;
+		case CMD_SET_SIZE:this.blockEntity.filters[slotId].setSize(state);break;
 		}
 	}
 }

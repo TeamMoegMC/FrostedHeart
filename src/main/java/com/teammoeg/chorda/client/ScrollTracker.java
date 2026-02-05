@@ -18,7 +18,10 @@
  */
 
 package com.teammoeg.chorda.client;
-
+/**
+ * Utility for recording scroll and cast them to int
+ * 
+ * */
 public class ScrollTracker {
 	double accumulatedValue;
 	public void clear() {

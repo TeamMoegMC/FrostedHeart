@@ -40,6 +40,7 @@ import com.teammoeg.chorda.client.cui.editor.Verifier.VerifyResult;
 import com.teammoeg.chorda.text.Components;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 
@@ -60,6 +61,9 @@ public class TextBox extends UIElement implements Focusable {
 	private VerifyResult validText;
 	private int maxLength = 1024;
 	private Verifier<String> filter;
+	protected int textStartPos=4;
+	protected boolean rightAlign;
+	protected int textOffsetPos;
 	@Getter
 	protected String lastValidText="";
 	public TextBox(UILayer panel) {
@@ -76,7 +80,9 @@ public class TextBox extends UIElement implements Focusable {
 		super.setWidth(v);
 		scrollTo(getCursorPos());
 	}
-
+	public void setRightAlign() {
+		rightAlign=true;
+	}
 	@Override
 	public final boolean isFocused() {
 		return isFocused;
@@ -301,13 +307,16 @@ public class TextBox extends UIElement implements Focusable {
 		}
 	}
 	boolean isPressed;
+	public int getMouseTextPosition() {
+		return (int)getMouseX()-textStartPos+3-textOffsetPos;
+	}
 	@Override
 	public boolean onMousePressed(MouseButton button) {
 		if (isMouseOver()) {
 			setFocused(true);
 			if (button==MouseButton.LEFT) {
 				if (isFocused) {
-					int i = (int)getMouseX();
+					int i =getMouseTextPosition();
 					String s = getFont().plainSubstrByWidth(text.substring(displayPos), getWidth());
 					if (CInputHelper.isShiftKeyDown()) {
 						setSelectionPos(getFont().plainSubstrByWidth(s,i).length() + displayPos);
@@ -445,19 +454,21 @@ public class TextBox extends UIElement implements Focusable {
 		graphics.enableScissor( x, y, x+w, y+h);
 		if(this.isPressed) {
 			if(CInputHelper.isMouseLeftDown()) {
-				int i = (int)getMouseX();
+				int i = getMouseTextPosition();
 				String s = getFont().plainSubstrByWidth(text.substring(displayPos), getWidth());
 				setSelectionPos(getFont().plainSubstrByWidth(s,i).length() + displayPos);
 			}else
 				isPressed=false;
 			
 		}
-		int cursorColor =( (!validText.isError() ? 0xFFFFFFFF:0xffa92b0d)&0xffffff)|((drawGhostText ? 0x78000000 : 0xFF000000));
-		var j = cursorPos - displayPos;
-		var s = getFont().plainSubstrByWidth(textToDraw.substring(displayPos), w);
-		var textX = x + 4;
-		var textY = y + (h - 8) / 2;
-		var textX1 = textX;
+		int cursorColor =( (!validText.isError() ? 0xFFFFFFFF:0xffa92b0d)&0xffffffff)|((drawGhostText ? 0x78000000 : 0xFF000000));
+		int j = cursorPos - displayPos;
+		String s = getFont().plainSubstrByWidth(textToDraw.substring(displayPos), w);
+		if(rightAlign)
+			textOffsetPos=w-getFont().width(s);
+		int textX = x + textStartPos+textOffsetPos;
+		int textY = y + (h - 8) / 2;
+		int textX1 = textX;
 
 		// render text up to cursor pos
 		if (!s.isEmpty()) {
@@ -494,7 +505,7 @@ public class TextBox extends UIElement implements Focusable {
 		// highlight the selection if needed
 		int k = Mth.clamp(highlightPos - displayPos, 0, s.length());
 		if (k != j) {
-			var xMax = textX + getFont().width(Component.literal(s.substring(0, k)));
+			int xMax = textX + getFont().width(Component.literal(s.substring(0, k)));
 
 			int startX = Math.min(cursorX, xMax - 1);
 			int endX = Math.max(cursorX, xMax - 1);

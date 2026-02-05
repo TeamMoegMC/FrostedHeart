@@ -21,62 +21,63 @@ package com.teammoeg.chorda.client.cui;
 
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-
+import com.teammoeg.chorda.client.ui.CGuiHelper;
 import net.minecraft.client.gui.GuiGraphics;
 
-public class CheckBox extends UIElement {
-	protected boolean checked;
-    protected CIcon uncheckedIcon, checkedIcon;
+public abstract class ImageButton extends UIElement {
+	protected CIcon normal,over,pressed;
+	protected boolean isPressed;
 
 
-    public CheckBox(UIElement panel, CIcon uncheckedIcon, CIcon checkedIcon, boolean checked) {
-        super(panel);
-        this.checked = checked;
-        this.uncheckedIcon = uncheckedIcon;
-        this.checkedIcon = checkedIcon;
-    }
+	public ImageButton(UIElement parent, CIcon normal, CIcon over, CIcon pressed) {
+		super(parent);
+		this.normal = normal;
+		this.over = over;
+		this.pressed = pressed;
+	}
+	public ImageButton(UIElement parent, CIcon normal, CIcon over) {
+		this(parent,normal,over,over);
+	}
+	public ImageButton(UIElement parent, CIcon normal) {
+		this(parent,normal,normal);
+	}
 
-    @Override
+	@Override
 	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-        if (checked)
-        	checkedIcon.draw(graphics, x, y, w, h);
-        else
-        	uncheckedIcon.draw(graphics, x, y, w, h);
+		CGuiHelper.resetGuiDrawing();
+		if(isMouseOver()) {
+			if(isPressed) {
+				pressed.draw(graphics, x, y, w, h);
+			}else {
+				over.draw(graphics, x, y, w, h);
+			}
+		}else
+			normal.draw(graphics, x, y, w, h);
 	}
 
-
-    public boolean isChecked() {
-        return checked;
-    }
-
-    public void setChecked(boolean checked) {
-    	boolean isSwitched=false;
-    	if(checked!=this.checked)
-    		isSwitched=true;
-    	this.checked = checked;
-    	if(isSwitched)
-    		onSwitched();
-    }
-
-    @Override
+	@Override
 	public boolean onMousePressed(MouseButton button) {
-    	if(!isMouseOver())return false;
-    	if(!isEnabled())return false;
-    	checked = !checked;
-        onSwitched();
-		return true;
+		if (isMouseOver()) {
+			if (isEnabled()) {
+				onClicked(button);
+				isPressed=true;
+			}
+
+			return true;
+		}
+
+		return false;
 	}
 
-
-
-    public void onSwitched() {
-
-    }
+	@Override
+	public void onMouseReleased(MouseButton button) {
+		super.onMouseReleased(button);
+		isPressed=false;
+	}
+	public abstract void onClicked(MouseButton button);
 
 	@Override
 	public Cursor getCursor() {
 		return Cursor.HAND;
 	}
-
-
 }
