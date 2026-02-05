@@ -20,6 +20,8 @@
 package com.teammoeg.frostedheart.content.town;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import lombok.Getter;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.dataholders.SpecialData;
@@ -69,7 +71,10 @@ public class TeamTownData implements SpecialData {
 		.optionalFieldOf("residents", Map.of()).forGetter(o -> o.residents),
 		
 		CodecUtil.mapCodec("type", CodecUtil.enumCodec(TerrainResourceType.values()),"extracted",Codec.DOUBLE.xmap(ResourceData::new, ResourceData::getExtracted))
-		.optionalFieldOf("terrainResource", Map.of()).forGetter(o->o.terrainResource)
+		.optionalFieldOf("terrainResource", Map.of()).forGetter(o->o.terrainResource),
+		Codec.INT.optionalFieldOf("labour",0).forGetter(o->o.labour),
+		Codec.INT.optionalFieldOf("maxLabour",0).forGetter(o->o.maxLabour)
+		
 		)
 		
 		.apply(t, TeamTownData::new));
@@ -95,13 +100,19 @@ public class TeamTownData implements SpecialData {
 
 	
 	Map<TerrainResourceType,ResourceData> terrainResource=new EnumMap<>(TerrainResourceType.class);
-	public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, TownWorkerData> blocks, Map<UUID, Resident> residents,Map<TerrainResourceType,ResourceData> terrainResource) {
+	@Getter
+	int labour=0;
+	@Getter
+	int maxLabour=0;
+	public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, TownWorkerData> blocks, Map<UUID, Resident> residents,Map<TerrainResourceType,ResourceData> terrainResource,int labour,int maxlabour) {
 		super();
 		this.name = name;
 		this.resources = resources;
 		this.blocks.putAll(blocks);
 		this.residents.putAll(residents);
 		this.terrainResource.putAll(terrainResource);
+		this.labour=0;
+		this.maxLabour=0;
 	}
 
 	public TeamTownData(SpecialDataHolder teamData) {
