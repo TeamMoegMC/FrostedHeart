@@ -231,7 +231,7 @@ public class FHBlockStateGen {
 				.renderType("translucent");
 		};
 	}
-	public static NonNullBiConsumer<DataGenContext<Item, BlockItem>, RegistrateItemModelProvider> existingItemModel() {
+	public static <T extends Item> NonNullBiConsumer<DataGenContext<Item, T>, RegistrateItemModelProvider> existingItemModel() {
 		return (c, p) -> p.getExistingFile(p.modLoc("item/" + c.getName()));
 	}
 
@@ -533,5 +533,9 @@ public class FHBlockStateGen {
 				}
 			}
 		};
+	}
+
+	public static <T extends Item> NonNullBiConsumer<DataGenContext<Item, T>, RegistrateItemModelProvider> handheld(){
+	    return (ctx, prov) -> prov.handheld(ctx::getEntry);
 	}
 }

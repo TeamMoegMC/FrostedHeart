@@ -23,7 +23,7 @@ import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.UILayer;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;

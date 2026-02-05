@@ -28,7 +28,7 @@ import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.network.chat.Component;
 

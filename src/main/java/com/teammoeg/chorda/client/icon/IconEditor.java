@@ -46,7 +46,7 @@ import com.teammoeg.chorda.client.icon.CIcons.NopIcon;
 import com.teammoeg.chorda.client.icon.CIcons.TextIcon;
 import com.teammoeg.chorda.client.icon.CIcons.TextureIcon;
 import com.teammoeg.chorda.client.icon.CIcons.TextureUVIcon;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;

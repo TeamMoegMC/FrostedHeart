@@ -26,18 +26,15 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.Biome;
+
 import org.joml.Quaternionf;
 
-import java.time.Duration;
 import java.util.function.Function;
 
 /**
@@ -144,43 +141,6 @@ public class ClientUtils {
 
     public static ResourceLocation getDimLocation() {
         return getWorld().dimension().location();
-    }
-
-    public static String getBiomeName(Holder<Biome> biomeHolder) {
-        if (biomeHolder == null) {
-            return "null";
-        }
-        return biomeHolder.unwrap().map(
-                biomeResourceKey -> biomeResourceKey.location().toString(),
-                unregistered -> "[unregistered " + unregistered + "]");
-    }
-
-    public static Component msToTime(long milliseconds) {
-        Duration duration = Duration.ofMillis(milliseconds);
-        return secToTime(duration.getSeconds());
-    }
-
-    public static Component secToTime(long secondIn) {
-        long years = secondIn / (365 * 24 * 60 * 60);
-        long remainingSeconds = secondIn % (365 * 24 * 60 * 60);
-        long days = remainingSeconds / (24 * 60 * 60);
-        remainingSeconds %= (24 * 60 * 60);
-        long hours = remainingSeconds / (60 * 60);
-        remainingSeconds %= (60 * 60);
-        long minutes = remainingSeconds / 60;
-        long seconds = remainingSeconds % 60;
-
-        var c = Component.empty();
-        if (years > 100) {
-            c = Component.translatable("gui.frostedheart.infinity");
-        } else {
-            if (years   != 0) c.append(Component.translatable("gui.frostedheart.year", years));
-            if (days    != 0) c.append(Component.translatable("gui.frostedheart.day", days));
-            if (hours   != 0) c.append(Component.translatable("gui.frostedheart.hour", hours));
-            if (minutes != 0) c.append(Component.translatable("gui.frostedheart.minute", minutes));
-            c.append(Component.translatable("gui.frostedheart.second", seconds));
-        }
-        return c;
     }
 
     public static boolean isGameTimeUpdated() {

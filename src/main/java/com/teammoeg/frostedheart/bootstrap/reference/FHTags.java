@@ -219,7 +219,8 @@ public class FHTags {
 		CURIOS_BACK(NameSpace.CURIOS, "back"),
 		CURIOS_CHARM(NameSpace.CURIOS, "charm"),
 		CURIOS_HANDS(NameSpace.CURIOS, "hands"),
-		SLED_CONTAINER(false)
+		SLED_CONTAINER(false),
+		CRUSHED_RAW_MATERIALS(NameSpace.CREATE)
 
 		;
 

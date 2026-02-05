@@ -25,7 +25,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.CFormatHelper;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 
@@ -93,9 +94,9 @@ public class EffectStats extends Effect {
         tooltip.add(Lang.translateGui("effect.stats." + vars));
         String vtext;
         if (isPercentage) {
-            vtext = NumberFormat.getPercentInstance().format(val / 100);
+            vtext = CFormatHelper.formatPercentage(val / 100);
         } else
-            vtext = NumberFormat.getInstance().format(val);
+            vtext = CFormatHelper.formatNumber(val);
         if (val > 0) {
             tooltip.add(Components.str("+" + vtext));
         } else

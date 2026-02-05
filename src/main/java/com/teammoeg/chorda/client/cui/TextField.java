@@ -21,7 +21,7 @@ package com.teammoeg.chorda.client.cui;
 import java.util.List;
 import java.util.Optional;
 
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.locale.Language;

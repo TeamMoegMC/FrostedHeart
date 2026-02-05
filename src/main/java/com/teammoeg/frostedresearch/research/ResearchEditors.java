@@ -31,7 +31,7 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.compat.ftb.CIconFTBWrapper;
 import com.teammoeg.chorda.compat.ftb.FTBIconCWrapper;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskIcons;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardType;

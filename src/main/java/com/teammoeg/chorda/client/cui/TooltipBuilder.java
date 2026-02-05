@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;

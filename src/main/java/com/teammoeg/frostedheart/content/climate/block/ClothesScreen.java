@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.TexturedUV;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 

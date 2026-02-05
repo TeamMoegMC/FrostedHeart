@@ -41,7 +41,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.caupona.data.recipes.FoodValueRecipe;
 import com.teammoeg.chorda.io.FileUtil;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.content.world.FHFeatures;
 import com.teammoeg.frostedheart.util.mixin.SeedSetable;

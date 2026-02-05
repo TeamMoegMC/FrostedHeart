@@ -22,7 +22,7 @@ package com.teammoeg.chorda.client.widget;
 import java.util.function.Supplier;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;

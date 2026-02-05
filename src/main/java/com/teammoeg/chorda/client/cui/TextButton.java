@@ -23,9 +23,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.client.icon.FlatIcon;
-import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;

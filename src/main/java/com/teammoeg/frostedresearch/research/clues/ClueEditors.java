@@ -24,7 +24,7 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.editor.*;
 import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder.SetterAndGetter;
 import com.teammoeg.chorda.client.icon.CIcons;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Applicative0;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Applicative6;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Applicative7;

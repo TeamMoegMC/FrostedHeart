@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.town.warehouse;
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;

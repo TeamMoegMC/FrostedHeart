@@ -23,8 +23,8 @@ import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.client.cui.UIElement;
-import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.ChatFormatting;
 

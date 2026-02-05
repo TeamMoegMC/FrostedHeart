@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.util.client;
 
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.network.chat.Component;

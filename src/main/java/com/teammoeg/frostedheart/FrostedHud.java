@@ -32,7 +32,7 @@ import com.teammoeg.chorda.client.cui.category.CategoryHelper;
 import com.teammoeg.chorda.client.ui.*;
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.ui.UV.Transition;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.archive.ArchiveCategory;
 import com.teammoeg.frostedheart.content.climate.ClientClimateData;

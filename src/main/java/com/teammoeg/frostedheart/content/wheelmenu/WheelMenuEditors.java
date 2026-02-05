@@ -47,7 +47,7 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.CIcons.ItemIcon;
 import com.teammoeg.chorda.io.ConfigFileUtil;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CFunctionUtils;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate;
 import com.teammoeg.frostedheart.content.wheelmenu.useractions.CommandInputAction;

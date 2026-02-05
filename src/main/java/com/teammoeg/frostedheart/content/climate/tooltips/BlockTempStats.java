@@ -28,8 +28,8 @@ import org.lwjgl.glfw.GLFW;
 
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.lang.LangBuilder;
+import com.teammoeg.chorda.text.Components;
+import com.teammoeg.chorda.text.LangBuilder;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.util.Lang;

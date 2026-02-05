@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.town.mine;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.block.CEntityBlock;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 

@@ -27,7 +27,8 @@ import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.CFormatHelper;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
@@ -41,12 +42,7 @@ import net.minecraft.client.gui.GuiGraphics;
 
 public class ResearchDashboardPanel extends UILayer {
 
-	final static String read = "kmgtpezyh";
-	final static DecimalFormat df1 = new DecimalFormat("#.#");
 
-	final static DecimalFormat df2 = new DecimalFormat("#.##");
-
-	final static DecimalFormat df3 = new DecimalFormat("#.##");
 
 	ResearchDetailPanel detailPanel;
 	TextField techpoint;
@@ -61,26 +57,6 @@ public class ResearchDashboardPanel extends UILayer {
 		availableInsightLevel = new TextField(this).setMaxWidth(100).setMaxLines(1).setColor(DrawDeskTheme.getTextColor());
 		availableInsightLevel.setPos(40, 20 + ClientUtils.font().lineHeight * 2);
 		availableInsightLevel.setMaxLines(1);
-	}
-
-	public static synchronized String toReadable(long num) {
-		int unit = -1;
-		double lnum = num;
-		while (lnum > 1999) {
-			unit++;
-			lnum /= 1000;
-		}
-		if (unit < 0)
-			return String.valueOf(num);
-		if (lnum >= 1000) {
-			return "" + ((long) lnum) + read.charAt(unit);
-		} else if (lnum >= 100) {
-			return df1.format(lnum) + read.charAt(unit);
-		} else if (lnum >= 10) {
-			return df2.format(lnum) + read.charAt(unit);
-		} else {
-			return df3.format(lnum) + read.charAt(unit);
-		}
 	}
 
 	@Override
@@ -119,17 +95,20 @@ public class ResearchDashboardPanel extends UILayer {
 			create.setPos(40, 30);
 			add(create);
 		}
-		techpoint.setText(toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
-		add(techpoint);
-		techpoint.setColor(DrawDeskTheme.getTextColor());
 		ResearchData rd = detailPanel.research.getData();
 		if (rd.canResearch()) {
 			if (!rd.canComplete(detailPanel.research)) {
 				tp.setColor(DrawDeskTheme.getErrorColor());
 				techpoint.setColor(DrawDeskTheme.getErrorColor());
 			}
-			techpoint.setText(toReadable(rd.getTotalCommitted(detailPanel.research)) + "/" + toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
+			techpoint.setText(CFormatHelper.toReadableUnit(rd.getTotalCommitted(detailPanel.research)) + "/" + CFormatHelper.toReadableUnit(detailPanel.research.getRequiredPoints()) + "IOPS");
 		}
+		else
+		techpoint.setText(CFormatHelper.toReadableUnit(detailPanel.research.getRequiredPoints()) + "IOPS");
+		add(techpoint);
+		techpoint.setColor(DrawDeskTheme.getTextColor());
+		
+		
 		techpoint.setX(140 - techpoint.getWidth());
 		if (!rd.canResearch()) {
 			int insightNeeded = detailPanel.research.getInsight();

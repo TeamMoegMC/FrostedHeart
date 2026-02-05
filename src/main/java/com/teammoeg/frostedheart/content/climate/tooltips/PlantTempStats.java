@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.teammoeg.chorda.client.CInputHelper;
+import com.teammoeg.chorda.text.Components;
+import com.teammoeg.chorda.text.LangBuilder;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.agriculture.FertilizedDirt;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer.FertilizerGrade;
@@ -36,8 +38,6 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.chorda.lang.Components;
-import com.teammoeg.chorda.lang.LangBuilder;
 import com.teammoeg.chorda.util.TextProgressBarHelper;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;

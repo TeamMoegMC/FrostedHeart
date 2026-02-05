@@ -22,7 +22,7 @@ package com.teammoeg.chorda.client.cui.contentpanel;
 import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.ui.Colors;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.archive.Alignment;

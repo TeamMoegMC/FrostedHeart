@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.content.tips.network;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.content.tips.ServerTipSender;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import net.minecraft.network.FriendlyByteBuf;

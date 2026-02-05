@@ -22,7 +22,7 @@ package com.teammoeg.chorda.client.cui;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.ui.Rect;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 
 import lombok.Getter;
 import lombok.Setter;

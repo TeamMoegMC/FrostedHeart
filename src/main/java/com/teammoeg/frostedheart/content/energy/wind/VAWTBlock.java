@@ -20,8 +20,10 @@
 package com.teammoeg.frostedheart.content.energy.wind;
 
 import com.simibubi.create.content.kinetics.base.KineticBlock;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
 import com.simibubi.create.foundation.block.IBE;
-import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.text.CFormatHelper;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import lombok.Getter;
@@ -30,11 +32,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
@@ -78,8 +82,8 @@ public class VAWTBlock extends KineticBlock implements IBE<VAWTBlockEntity> {
             ALL_TYPES.put(name, this);
         }
 
-        public long getDurability() {
-            return (long) (durability * FHConfig.SERVER.VAWT.vawtDurability.get());
+        public int getDurability() {
+            return (int)(durability * FHConfig.SERVER.VAWT.vawtDurability.get());
         }
     }
 
@@ -97,16 +101,14 @@ public class VAWTBlock extends KineticBlock implements IBE<VAWTBlockEntity> {
     @Override
     public void appendHoverText(ItemStack stack, @Nullable BlockGetter level, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
-        long durability = type.getDurability();
-        var tag = stack.getTag();
-        if (tag != null && tag.contains("BlockEntityTag", 10)) {
-            durability = tag.getCompound("BlockEntityTag").getLong("durability");
-            if (durability <= 0) {
-                tooltip.add(Component.translatable("message.frostedheart.vawt.state.damaged").withStyle(ChatFormatting.RED));
-                return;
-            }
+        long durability = stack.getMaxDamage()-stack.getDamageValue();
+
+        if (durability <= 0) {
+            tooltip.add(Component.translatable("message.frostedheart.vawt.state.damaged").withStyle(ChatFormatting.RED));
+            return;
         }
-        tooltip.add(Component.translatable("gui.frostedheart.durability_left").append(ClientUtils.msToTime(durability)));
+        
+        tooltip.add(Component.translatable("gui.frostedheart.durability_left").append(CFormatHelper.msToTime(durability)));
         tooltip.add(Component.translatable("message.frostedheart.vawt.speed_bonus",
                         Component.literal(String.valueOf(type.weight*100-100)))
                 .withStyle(type.weight < 1 ? ChatFormatting.RED : ChatFormatting.GREEN));
@@ -128,9 +130,7 @@ public class VAWTBlock extends KineticBlock implements IBE<VAWTBlockEntity> {
     public static ItemStack setNBTOnStack(ItemStack stack, BlockEntity be, BlockState state) {
         if (be instanceof VAWTBlockEntity v) {
             // 不使用 saveToItem 的原因是会额外储存机械动力的网络数据
-            var data = new CompoundTag();
-            data.putLong("durability", v.getDurability());
-            BlockItem.setBlockEntityData(stack, be.getType(), data);
+        	stack.setDamageValue(v.getDamage());
         }
         if (state.getValue(DAMAGED)) {
             var stateTag = new CompoundTag();
@@ -139,6 +139,15 @@ public class VAWTBlock extends KineticBlock implements IBE<VAWTBlockEntity> {
         }
         return stack;
     }
+
+	@Override
+	public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+		super.setPlacedBy(worldIn, pos, state, placer, stack);
+		BlockEntity blockEntity = worldIn.getBlockEntity(pos);
+		if (blockEntity instanceof VAWTBlockEntity vawt)
+			vawt.setDamage(stack.getDamageValue());
+
+	}
 
     @Override
     public int getLightBlock(BlockState pState, BlockGetter pLevel, BlockPos pPos) {

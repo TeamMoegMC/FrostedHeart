@@ -19,8 +19,8 @@
 
 package com.teammoeg.chorda.client;
 
-import com.teammoeg.chorda.lang.ComponentOptimizer;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.ComponentOptimizer;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.parsereader.ParseReader;
 import com.teammoeg.chorda.util.parsereader.source.StringLineSource;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;

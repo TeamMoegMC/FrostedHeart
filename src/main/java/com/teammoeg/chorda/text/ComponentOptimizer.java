@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.chorda.lang;
+package com.teammoeg.chorda.text;
 
 import java.util.ArrayList;
 import java.util.List;

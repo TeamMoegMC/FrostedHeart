@@ -23,9 +23,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.teammoeg.chorda.lang.ComponentOptimizer;
-import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.math.Persentage2FractionHelper;
+import com.teammoeg.chorda.text.ComponentOptimizer;
+import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;

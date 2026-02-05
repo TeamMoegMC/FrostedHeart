@@ -24,9 +24,11 @@ import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.Lang;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
-import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.math.CMath;
+import com.teammoeg.chorda.text.CFormatHelper;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -61,23 +63,20 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements
     @Getter
     private String reason = "";
     @Getter
-    private long durability = 0; // ms
+    @Setter
+    private int damage = 0; // ms
 
     public VAWTBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-        if (state.getBlock() instanceof VAWTBlock vawt) {
+        /*if (state.getBlock() instanceof VAWTBlock vawt) {
             this.durability = vawt.type.getDurability();
-        }
+        }*/
         setLazyTickRate(20);
     }
 
     @Override
     public void tick() {
-        if (!damaged && durability <= 0) {
-            damaged = true;
-            if (!level.isClientSide)
-                level.setBlockAndUpdate(getBlockPos(), getBlockState().setValue(VAWTBlock.DAMAGED, true));
-        }
+        
         if (!level.isClientSide) {
             speedEffect = calcEffect(ModifierType.SPEED);
             damageEffect = calcEffect(ModifierType.DAMAGE);
@@ -95,10 +94,21 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements
             damage();
         }
     }
-
+    public long getDurability() {
+    	
+    	if (getBlockState().getBlock() instanceof VAWTBlock vawt) {
+    		return vawt.type.getDurability()-damage;
+    	}
+    	return 0;
+    }
     private void damage() {
         float dmg = 50 * lazyTickRate * damageEffect;
-        durability -= Math.round(dmg);
+        damage += CMath.randomValue(level.random, dmg);
+        if (getDurability()<=0) {
+            damaged = true;
+            if (!level.isClientSide)
+                level.setBlockAndUpdate(getBlockPos(), getBlockState().setValue(VAWTBlock.DAMAGED, true));
+        }
     }
 
     private int successTime = 0;
@@ -263,7 +273,7 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements
     @Override
     protected void read(CompoundTag compound, boolean clientPacket) {
         super.read(compound, clientPacket);
-        this.durability = compound.getLong("durability");
+        this.damage = compound.getInt("damage");
         this.reason = compound.getString("reason");
         this.speedEffect = compound.getFloat("speed_effect");
         this.damageEffect = compound.getFloat("damage_effect");
@@ -272,7 +282,7 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements
     @Override
     protected void write(CompoundTag compound, boolean clientPacket) {
         super.write(compound, clientPacket);
-        compound.putLong("durability", durability);
+        compound.putInt("damage", damage);
         compound.putString("reason", reason);
         compound.putFloat("speed_effect", speedEffect);
         compound.putFloat("damage_effect", damageEffect);
@@ -298,7 +308,7 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements
                     .style(ChatFormatting.GRAY)
                     .forGoggles(tooltip);
             Lang.builder()
-                .add(ClientUtils.msToTime(durability))
+                .add(CFormatHelper.msToTime(getDurability()))
                 .style(ChatFormatting.AQUA)
                 .add(Component.literal(" (" + Math.round(damageEffect*100) + "%)").withStyle(damageEffect > 1 ? ChatFormatting.RED : ChatFormatting.GREEN))
                 .forGoggles(tooltip, 1);

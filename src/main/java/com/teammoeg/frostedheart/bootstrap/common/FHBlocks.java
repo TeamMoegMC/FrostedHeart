@@ -44,6 +44,7 @@ import com.teammoeg.frostedheart.content.climate.block.ThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 import com.teammoeg.frostedheart.content.decoration.*;
 import com.teammoeg.frostedheart.content.energy.wind.VAWTBlock;
+import com.teammoeg.frostedheart.content.energy.wind.VAWTItem;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticChestBlock;
@@ -2115,7 +2116,7 @@ public class FHBlocks {
             .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .lang("VAWT (Fabric)")
-            .item()
+            .item((b,p)->new VAWTItem(b,p,b.type))
             .model(FHBlockStateGen.existingItemModel()).build()
             .register();
     public static final BlockEntry<VAWTBlock> METAL_VAWT = REGISTRATE.block("metal_vawt",
@@ -2124,7 +2125,8 @@ public class FHBlocks {
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .lang("VAWT (Metal)")
-            .item().model(FHBlockStateGen.existingItemModel()).build()
+            .item((b,p)->new VAWTItem(b,p,b.type))
+            .model(FHBlockStateGen.existingItemModel()).build()
             .register();
     public static final BlockEntry<VAWTBlock> ALLOY_VAWT = REGISTRATE.block("alloy_vawt",
                     p -> VAWTBlock.create(FHProps.metalDecoProps, "alloy", 480, 1.0F, Shapes.or(Block.box(0, 9, 0, 16, 32, 16), Block.box(6, 0, 6, 10, 9, 10))))
@@ -2132,7 +2134,8 @@ public class FHBlocks {
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .lang("VAWT (Alloy)")
-            .item().model(FHBlockStateGen.existingItemModel()).build()
+            .item((b,p)->new VAWTItem(b,p,b.type))
+            .model(FHBlockStateGen.existingItemModel()).build()
             .register();
     public static final BlockEntry<VAWTBlock> DSP_VAWT = REGISTRATE.block("dsp_vawt",
                     p -> VAWTBlock.create(FHProps.metalDecoProps, "dsp", Integer.MAX_VALUE, 1.0F, Shapes.or(Block.box(0, 9, 0, 16, 32, 16), Block.box(6, 0, 6, 10, 9, 10))))
@@ -2140,7 +2143,8 @@ public class FHBlocks {
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .lang("VAWT (DSP)")
-            .item().model(FHBlockStateGen.existingItemModel()).build()
+            .item((b,p)->new VAWTItem(b,p,b.type))
+            .model(FHBlockStateGen.existingItemModel()).build()
             .register();
     // WARDROBE, "wardrobe", like Blocks.SPRUCE_DOOR
     public static final BlockEntry<WardrobeBlock> WARDROBE = REGISTRATE.block("wardrobe", WardrobeBlock::new)

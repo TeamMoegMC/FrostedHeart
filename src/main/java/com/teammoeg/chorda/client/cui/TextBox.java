@@ -37,7 +37,7 @@ import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.editor.Verifier;
 import com.teammoeg.chorda.client.cui.editor.Verifier.VerifyResult;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 
 import lombok.Getter;
 

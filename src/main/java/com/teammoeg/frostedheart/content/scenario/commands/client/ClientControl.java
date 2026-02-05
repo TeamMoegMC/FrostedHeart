@@ -29,7 +29,7 @@ import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.ui.Rect;
 import com.teammoeg.chorda.io.nbtbuilder.CompoundNBTBuilder;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;

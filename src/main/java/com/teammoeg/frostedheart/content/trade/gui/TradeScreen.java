@@ -33,7 +33,7 @@ import com.teammoeg.chorda.client.cui.TextField;
 import com.teammoeg.chorda.client.cui.ToolTipElement;
 import com.teammoeg.chorda.client.cui.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.TristateCheckBox;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.trade.RelationModifier;
 import com.teammoeg.frostedheart.content.trade.TradeConstants;

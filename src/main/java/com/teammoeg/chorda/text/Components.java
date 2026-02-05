@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.chorda.lang;
+package com.teammoeg.chorda.text;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;

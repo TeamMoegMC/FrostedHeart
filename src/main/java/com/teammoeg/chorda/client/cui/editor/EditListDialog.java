@@ -33,7 +33,8 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
+
 import lombok.Getter;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;

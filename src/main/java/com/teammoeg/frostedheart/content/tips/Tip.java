@@ -28,7 +28,8 @@ import com.google.gson.JsonSyntaxException;
 import com.mojang.logging.LogUtils;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.io.FileUtil;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
+
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;

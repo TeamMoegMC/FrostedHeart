@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.tips;
 import com.mojang.logging.LogUtils;
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.client.ui.Colors;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.archive.ArchiveScreen;

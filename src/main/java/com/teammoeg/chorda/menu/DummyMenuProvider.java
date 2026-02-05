@@ -19,7 +19,7 @@
 
 package com.teammoeg.chorda.menu;
 
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;

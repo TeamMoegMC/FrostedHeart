@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.util;
 
 import java.util.Locale;
 
-import com.teammoeg.chorda.lang.LangBuilder;
-import com.teammoeg.chorda.lang.LangNumberFormat;
+import com.teammoeg.chorda.text.CFormatHelper;
+import com.teammoeg.chorda.text.LangBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -97,7 +97,7 @@ public class Lang {
     }
     
     public static LangBuilder number(double d) {
-        return builder().text(LangNumberFormat.format(d));
+        return builder().text(CFormatHelper.formatNumber(d));
     }
 
     public static LangBuilder suffix(String langKey, Object... args) {

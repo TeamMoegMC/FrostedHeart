@@ -20,7 +20,7 @@
 package com.teammoeg.chorda.client.cui;
 
 import com.teammoeg.chorda.client.CInputHelper;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 
 import lombok.Getter;
 import lombok.Setter;

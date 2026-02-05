@@ -21,7 +21,8 @@ package com.teammoeg.chorda.client.cui;
 
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.ui.Colors;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;

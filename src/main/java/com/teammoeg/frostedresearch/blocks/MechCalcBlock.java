@@ -27,7 +27,7 @@ import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.block.CKineticBlock;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedresearch.FRContents;
 

@@ -27,8 +27,8 @@ import java.util.function.Supplier;
 
 import com.mojang.serialization.DataResult;
 import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.client.cui.UIElement;
-import com.teammoeg.chorda.lang.Components;
 
 import net.minecraft.network.chat.Component;
 

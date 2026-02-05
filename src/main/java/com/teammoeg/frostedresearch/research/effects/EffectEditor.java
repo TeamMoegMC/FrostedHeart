@@ -25,7 +25,7 @@ import com.teammoeg.chorda.client.cui.editor.compat.IEEditors;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.IconEditor;
 import com.teammoeg.chorda.compat.ftb.CIconFTBWrapper;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;

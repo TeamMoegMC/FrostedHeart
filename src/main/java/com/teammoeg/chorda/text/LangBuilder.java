@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.chorda.lang;
+package com.teammoeg.chorda.text;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -50,7 +50,7 @@ public class LangBuilder {
     String namespace;
     LinkedList<MutableComponent> components=new LinkedList<>();
     Style mainStyle=Style.EMPTY;
-    NumberFormat currentNumberFormat=LangNumberFormat.numberFormat.get();
+    NumberFormat currentNumberFormat=CFormatHelper.getNumberFormats().decimal2digit;
     public LangBuilder(String namespace) {
         this.namespace = namespace;
     }
@@ -169,11 +169,12 @@ public class LangBuilder {
      * use number format for current locale
      * */
     public LangBuilder useLocalNumberFormat() {
-    	currentNumberFormat=LangNumberFormat.numberFormat.get();
+    	currentNumberFormat=CFormatHelper.getNumberFormats().decimal2digit;
     	return this;
     }
     public LangBuilder percentage() {
-        return setNumberFormat("0.0%");
+    	currentNumberFormat=CFormatHelper.getNumberFormats().percentage1digit;
+        return this;
     }
     public LangBuilder number(long d) {
         return add(Components.literal(currentNumberFormat.format(d)));

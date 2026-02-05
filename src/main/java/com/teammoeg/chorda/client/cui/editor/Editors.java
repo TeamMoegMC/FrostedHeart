@@ -35,8 +35,8 @@ import com.teammoeg.chorda.client.cui.MouseButton;
 import com.teammoeg.chorda.client.cui.TextButton;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.client.icon.IconEditor;
-import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.chorda.util.CFunctionUtils;
 import com.teammoeg.chorda.util.CRegistryHelper;
 

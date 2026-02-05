@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.health.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.client.AnimationUtil;
-import com.teammoeg.chorda.lang.Components;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.content.health.screen.widget.ColoredCubeWidget;
 import com.teammoeg.frostedheart.content.health.screen.widget.NutritionBarWidget;
 import com.teammoeg.frostedheart.util.Lang;
