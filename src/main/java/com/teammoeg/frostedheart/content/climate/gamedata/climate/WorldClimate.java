@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.function.LongFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -42,7 +43,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.event.ClimateCommonEvents;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.DayTemperatureData.HourData;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.DayClimateData.HourData;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 
 import net.minecraft.nbt.CompoundTag;
@@ -58,7 +59,7 @@ import net.minecraftforge.network.PacketDistributor;
  * Climate Data Capability attached to a world.
  * Currently, only attached to the Overworld dimension.
  * <p>
- * The overarching idea is by dividing continuous time into blocks called {@link ClimateEvent}
+ * The overarching idea is by dividing continuous time into blocks called {@link InterpolationClimateEvent}
  * Each temperature event is either a cold period, calm period, or warm period.
  * The temperature event stream will grow and trim automatically {@link #trimTempEventStream()}
  * <p>
@@ -96,14 +97,15 @@ public class WorldClimate implements NBTSerializable {
 
     public static final int DAY_CACHE_LENGTH = 8;
 
-    protected LinkedList<ClimateEvent> tempEventStream;
+
     protected WorldClockSource clockSource;
-    protected LinkedList<DayTemperatureData> dailyTempData;
+    protected LinkedList<DayClimateData> dailyTempData;
+    protected List<ClimateEventTrack> tracks=new ArrayList<>();
     protected short[] frames = new short[40];
     protected long lastforecast;
     protected long lasthour = -1;
     protected int hourInDay = 0;
-    protected DayTemperatureData daycache;
+    protected DayClimateData daycache;
     protected long lastday = -1;
     private boolean isInitialEventAdded;
 
@@ -447,13 +449,13 @@ public class WorldClimate implements NBTSerializable {
     }
 
     public WorldClimate() {
-        tempEventStream = new LinkedList<>();
         clockSource = new WorldClockSource();
         dailyTempData = new LinkedList<>();
     }
 
     public void addInitTempEvent(ServerLevel w) {
-        this.tempEventStream.clear();
+        for(ClimateEventTrack track:tracks)
+        	track.clear();
         this.dailyTempData.clear();
         long s = clockSource.secs;
 //    	this.tempEventStream.add(new TempEvent(s-60*50,s-45*50,-5,s+32*50,-23,s+100*50,s+136*50,true));
@@ -463,42 +465,20 @@ public class WorldClimate implements NBTSerializable {
         long coldpeak = warmpeak + 3 * f12cptime;
         long coldend = coldpeak + f12cptime;
         //this.tempEventStream.add(new TempEvent(s-2*50,s+12*50,0,s+24*50,0,s+36*50,s+42*50,true,true));
-        this.tempEventStream.add(new ClimateEvent(s, warmpeak, 8, coldpeak, -50, coldend, coldend + 72 * 50, true, true));
+        this.tracks.get(0).appendTempEvent(new InterpolationClimateEvent(s, warmpeak, 8, coldpeak, -50, coldend, coldend + 72 * 50, true, true));
+        if(tracks.size()>1) {
+        	for(int i=1;i<tracks.size();i++)
+        		this.tracks.get(i).appendTempEvent(new EmptyClimateEvent(s,coldend + 72 * 50));
+        }
         lasthour = -1;
         lastday = -1;
         this.updateCache(w);
         this.updateFrames();
     }
 
-    public void appendTempEvent(Function<Long, ClimateEvent> generator) {
-        ClimateEvent head = tempEventStream.getLast();
-        tempEventStream.add(generator.apply(head.calmEndTime));
-    }
 
-    /**
-     * Get temperature at given time.
-     * Grow tempEventStream as needed.
-     * No trimming will be performed.
-     * To perform trimming,
-     * use {@link #tempEventStreamTrim(long) tempEventStreamTrim}.
-     *
-     * @param time given in absolute seconds relative to clock source.
-     * @return temperature at given time
-     */
-    protected Pair<Float, ClimateType> computeTemp(long time) {
-        if (time < clockSource.getTimeSecs()) return Pair.of(0f, ClimateType.NONE);
-        tempEventStreamGrow(time);
-        while (true) {
-            Optional<Pair<Float, ClimateType>> f = tempEventStream
-                    .stream()
-                    .filter(e -> time <= e.calmEndTime && time >= e.startTime)
-                    .findFirst()
-                    .map(e -> e.getHourClimate(time));
-            if (f.isPresent())
-                return f.get();
-            rebuildTempEventStream(time);
-        }
-    }
+
+
 
 
 
@@ -511,18 +491,33 @@ public class WorldClimate implements NBTSerializable {
      * @param lasthumid prev humidity
      * @return a newly computed instance of DayTemperatureData for the day specified.
      */
-    private DayTemperatureData generateDay(long day, float lastnoise, float lasthumid,int lastWind) {
-        DayTemperatureData dtd = new DayTemperatureData();
+    private DayClimateData generateDay(long day, float lastnoise, float lasthumid,int lastWind) {
+        DayClimateData dtd = new DayClimateData();
         Random rnd = new Random();
         long startTime = day * 1200;
+        long currentTime=this.clockSource.getTimeSecs();
         dtd.day = day;
         dtd.dayNoise = (float) Mth.clamp(rnd.nextGaussian() * 5 + lastnoise, -5d, 5d);
         dtd.dayHumidity = (float) Mth.clamp(rnd.nextGaussian() * 5 + lasthumid, 0d, 50d);
         for (int i = 0; i < 24; i++) {
-            Pair<Float, ClimateType> temp = this.computeTemp(startTime + i * 50);
-            dtd.setTemp(i, temp.getFirst()); // Removed daynoise
-            dtd.setType(i, temp.getSecond());
-            dtd.setWind(i, getWind(lastWind,temp.getSecond(),temp.getFirst()));
+        	float min=0,max=0;
+        	ClimateType finalClimate=ClimateType.NONE;
+        	long time=startTime + i * 50;
+        	for(ClimateEventTrack track:tracks) {
+        		ClimateResult temp = track.computeTemp(currentTime, time);
+        		finalClimate=temp.climate().merge(finalClimate);
+        		float ctemp=temp.temperature();
+        		if(ctemp<min) {
+        			min=ctemp;
+        		}
+        		if(ctemp>max) {
+        			max=ctemp;
+        		}
+        	}
+
+            dtd.setTemp(i, max+min); // Removed daynoise
+            dtd.setType(i, finalClimate);
+            dtd.setWind(i, getWind(lastWind,finalClimate,max+min));
         }
         return dtd;
     }
@@ -574,8 +569,8 @@ public class WorldClimate implements NBTSerializable {
         return frames;
     }
 
-    public List<TemperatureFrame> getFrames(int min, int max) {
-        List<TemperatureFrame> frames = new ArrayList<>();
+    public List<ForecastFrame> getFrames(int min, int max) {
+        List<ForecastFrame> frames = new ArrayList<>();
         float lastTemp = 0;
 
         int i = 0;//(int) (this.clockSource.getHours()%3);
@@ -591,12 +586,12 @@ public class WorldClimate implements NBTSerializable {
                 lastTemp = f;
                 lastLevel = getTemperatureLevel(f);
                 if (bz != ClimateType.NONE) {
-                    frames.add(TemperatureFrame.weather(i, bz, lastLevel));
+                    frames.add(ForecastFrame.weather(i, bz, lastLevel));
                 }
                 if (lastLevel > 0) {
-                    frames.add(TemperatureFrame.increase(i, lastLevel));
+                    frames.add(ForecastFrame.increase(i, lastLevel));
                 } else if (lastLevel < 0) {
-                    frames.add(TemperatureFrame.decrease(i, lastLevel));
+                    frames.add(ForecastFrame.decrease(i, lastLevel));
                 }
                 i++;
                 continue;
@@ -610,7 +605,7 @@ public class WorldClimate implements NBTSerializable {
                     default:
                         lastLevel = getTemperatureLevel(f);
                 }
-                frames.add(TemperatureFrame.weather(i, bz, lastLevel));
+                frames.add(ForecastFrame.weather(i, bz, lastLevel));
                 lastType = bz;
                 lastTemp = f;
             } else if (lastType == ClimateType.BLIZZARD || lastType == ClimateType.SNOW_BLIZZARD) {
@@ -620,7 +615,7 @@ public class WorldClimate implements NBTSerializable {
                     for (int j = WorldTemperature.BOTTOMS.length - 1; j >= -lastLevel && j >= 0; j--) {//check out its level
                         if (f < WorldTemperature.BOTTOMS[j]) {//just acrosss a level
                             lastLevel = -j - 1;
-                            frames.add(TemperatureFrame.decrease(i, lastLevel));//mark as decreased
+                            frames.add(ForecastFrame.decrease(i, lastLevel));//mark as decreased
                             break;
                         }
                     }
@@ -628,12 +623,12 @@ public class WorldClimate implements NBTSerializable {
                 } else if (f <= 0 + WorldTemperature.WARM_PERIOD_LOWER_PEAK - 3) {//check out if its just go back to calm
                     if (lastLevel > 0) {
                         lastLevel = 0;
-                        frames.add(TemperatureFrame.calm(i, 0));
+                        frames.add(ForecastFrame.calm(i, 0));
                     }
                 } else if (f <= WorldTemperature.WARM_PERIOD_PEAK - 2) {//check out if its just go down from level 2
                     if (lastLevel > 1) {
                         lastLevel = 1;
-                        frames.add(TemperatureFrame.calm(i, 1));
+                        frames.add(ForecastFrame.calm(i, 1));
                     }
                 }
             } else if (f > lastTemp) {//when temperature increasing
@@ -641,23 +636,23 @@ public class WorldClimate implements NBTSerializable {
                 if (f > WorldTemperature.WARM_PERIOD_PEAK - 2) {
                     if (lastLevel < 2) {
                         lastLevel = 2;
-                        frames.add(TemperatureFrame.increase(i, 2));
+                        frames.add(ForecastFrame.increase(i, 2));
                     }
                 } else if (f > 0 + WorldTemperature.WARM_PERIOD_LOWER_PEAK - 3) {
                     if (lastLevel < 1) {
                         lastLevel = 1;
-                        frames.add(TemperatureFrame.increase(i, 1));
+                        frames.add(ForecastFrame.increase(i, 1));
                     }
                 } else if (f >= -2) {
                     if (lastLevel < 0) {
                         lastLevel = 0;
-                        frames.add(TemperatureFrame.calm(i, 0));
+                        frames.add(ForecastFrame.calm(i, 0));
                     }
                 } else if (lastLevel < 0) {//if lower than base line
                     for (int j = WorldTemperature.BOTTOMS.length - 1; j >= -lastLevel && j >= 0; j--) {//check out its level
                         if (f < WorldTemperature.BOTTOMS[j]) {//just acrosss a level
                             lastLevel = -j - 1;
-                            frames.add(TemperatureFrame.calm(i, lastLevel));//mark as decreased
+                            frames.add(ForecastFrame.calm(i, lastLevel));//mark as decreased
                             break;
                         }
                     }
@@ -727,7 +722,7 @@ public class WorldClimate implements NBTSerializable {
             dailyTempData.offer(generateDay(clockSource.getDate(), 0, 0,30));
         }
         while (dailyTempData.size() <= DAY_CACHE_LENGTH) {
-            DayTemperatureData last = dailyTempData.peekLast();
+            DayClimateData last = dailyTempData.peekLast();
             dailyTempData.offer(generateDay(last.day + 1, last.dayNoise, last.dayHumidity,last.getWind(23)));
         }
     }
@@ -752,31 +747,11 @@ public class WorldClimate implements NBTSerializable {
         this.updateFrames();
     }
 
-    /**
-     * Grows tempEventStream to contain temp events that cover the given point of time.
-     *
-     * @param time given in absolute seconds relative to clock source.
-     */
-    protected void rebuildTempEventStream(long time) {
-        // If tempEventStream becomes empty for some reason,
-        // start generating TempEvent from current time.
-        FHMain.LOGGER.error("Temperature Data corrupted, rebuilding temperature data");
-        long currentTime = clockSource.getTimeSecs();
-        if (tempEventStream.isEmpty() || tempEventStream.getFirst().startTime > currentTime) {
-            tempEventStream.clear();
-            tempEventStream.add(ClimateEvent.getClimateEvent(currentTime));
-        }
 
-        ClimateEvent head = tempEventStream.getFirst();
-        tempEventStream.clear();
-        tempEventStream.add(head);
-        while (head.calmEndTime < time) {
-            tempEventStream.add(head = ClimateEvent.getClimateEvent(head.calmEndTime));
-        }
-    }
 
     public void resetTempEvent(ServerLevel w) {
-        this.tempEventStream.clear();
+        for(ClimateEventTrack track:tracks)
+        	track.clear();
         this.dailyTempData.clear();
         lasthour = -1;
         lastday = -1;
@@ -786,50 +761,29 @@ public class WorldClimate implements NBTSerializable {
     }
 
 
-    /**
-     * Grows tempEventStream to contain temp events that cover the given point of time.
-     *
-     * @param time given in absolute seconds relative to clock source.
-     */
-    protected void tempEventStreamGrow(long time) {
-        // If tempEventStream becomes empty for some reason,
-        // start generating TempEvent from current time.
 
-        long currentTime = clockSource.getTimeSecs();
-        if (tempEventStream.isEmpty()) {
-            tempEventStream.add(ClimateEvent.getClimateEvent(currentTime));
-        }
-
-        ClimateEvent head = tempEventStream.getLast();
-        while (head.calmEndTime < time) {
-            tempEventStream.add(head = ClimateEvent.getClimateEvent(head.calmEndTime));
-        }
-    }
-
-    /**
-     * Trims all TempEvents that end before given time.
-     *
-     * @param time given in absolute seconds relative to clock source.
-     */
-    protected void tempEventStreamTrim(long time) {
-        ClimateEvent head = tempEventStream.peek();
-        if (head != null) {
-            while (head.calmEndTime < time) {
-                // Protection mechanism:
-                // it would be a disaster if the stream is trimmed to empty
-                if (tempEventStream.size() <= 1) {
-                    break;
-                }
-                tempEventStream.remove();
-                head = tempEventStream.peek();
-            }
-        }
-    }
 
     @Override
     public String toString() {
-        return "{tempEventStream=\n" + tempEventStream.stream().map(Object::toString).collect(Collectors.joining(",")) + ",\n clockSource=" + clockSource
-                + ",\n daycache=" + dailyTempData.stream().flatMap(t -> Arrays.stream(t.hourData)).map(HourData::getTemp).map(Object::toString).reduce("", (a, b) -> a + b + ",") + ",\n frames=" + IntStream.range(0, frames.length).mapToObj(i -> frames[i]).map(TemperatureFrame::unpack).map(String::valueOf).collect(Collectors.joining(",")) + "}";
+    	StringBuilder sb=new StringBuilder("clockSource=");
+    	sb.append(clockSource);
+    	sb.append("\n");
+    	sb.append("daycache=");
+    	for(DayClimateData t:dailyTempData){
+    		for(HourData data:t.hourData) {
+    			sb.append(data.getTemp()).append(",");
+    		}
+    	}
+    	sb.append("\n");
+    	sb.append("tracks:\n");
+    	for(ClimateEventTrack i:tracks) {
+    		sb.append(i).append("\n");
+    	}
+    	sb.append("frame=");
+    	for(int i=0;i<frames.length;i++) {
+    		sb.append(ForecastFrame.unpack(frames[i])).append(",");
+    	}
+        return sb.toString();
     }
 
     /**
@@ -837,7 +791,8 @@ public class WorldClimate implements NBTSerializable {
      * Called every second in server world tick loop.
      */
     public void trimTempEventStream() {
-        this.tempEventStreamTrim(this.clockSource.getTimeSecs() - 1200);
+    	for(ClimateEventTrack track:tracks)
+    		track.tempEventStreamTrim(this.clockSource.getTimeSecs() - 1200);
     }
 
     /**
@@ -880,11 +835,11 @@ public class WorldClimate implements NBTSerializable {
      */
     private void updateDayCache(long date) {
         if (dailyTempData.isEmpty()) {
-            dailyTempData.offer(new DayTemperatureData(date - 1));
+            dailyTempData.offer(new DayClimateData(date - 1));
         }
         while (dailyTempData.peek().day < date - 1) {
             dailyTempData.poll();
-            DayTemperatureData last = dailyTempData.peekLast();
+            DayClimateData last = dailyTempData.peekLast();
             dailyTempData.offer(generateDay(last.day + 1, last.dayNoise, last.dayHumidity,last.getWind(23)));
         }
         populateDays();
@@ -901,11 +856,11 @@ public class WorldClimate implements NBTSerializable {
     public void updateFrames() {
         int crt = clockSource.getHourInDay();
         int delta = crt % 3;
-        TemperatureFrame[] toRender = new TemperatureFrame[40];
-        for (TemperatureFrame te : getFrames(0, 120 - delta)) {
+        ForecastFrame[] toRender = new ForecastFrame[40];
+        for (ForecastFrame te : getFrames(0, 120 - delta)) {
             int renderIndex = (te.dhours + delta) / 3;
             if (renderIndex >= 40) break;
-            TemperatureFrame prev = toRender[renderIndex];
+            ForecastFrame prev = toRender[renderIndex];
             if (prev != null && prev.type.isWeatherEvent() && !te.type.isWeatherEvent())
                 continue;//Always not omit weather event
             if (prev == null ||//previous null, overwrite
@@ -921,7 +876,7 @@ public class WorldClimate implements NBTSerializable {
         }
         lastforecast = clockSource.getHours() + 120 - delta;
         int i = 0;
-        for (TemperatureFrame tf : toRender) {
+        for (ForecastFrame tf : toRender) {
             if (tf != null)
                 frames[i++] = tf.packNoHour();
             else
@@ -960,18 +915,15 @@ public class WorldClimate implements NBTSerializable {
 	@Override
 	public void save(CompoundTag nbt, boolean isPacket) {
         clockSource.serialize(nbt);
-        nbt.put("tempEventStream", CodecUtil.toNBTList(tempEventStream, ClimateEvent.CODEC));
-        nbt.put("hourlyTempStream", CodecUtil.toNBTList(dailyTempData, DayTemperatureData.CODEC));
+        nbt.put("hourlyTempStream", CodecUtil.toNBTList(dailyTempData, DayClimateData.CODEC));
         nbt.putBoolean("isInitialEventAdded", isInitialEventAdded);
 	}
 
 	@Override
 	public void load(CompoundTag nbt, boolean isPacket) {
         clockSource.deserialize(nbt);
-        tempEventStream.clear();
-        tempEventStream.addAll(CodecUtil.fromNBTList(nbt.getList("tempEventStream", Tag.TAG_COMPOUND), ClimateEvent.CODEC));
         dailyTempData.clear();
-        dailyTempData.addAll(CodecUtil.fromNBTList(nbt.getList("hourlyTempStream", Tag.TAG_COMPOUND), DayTemperatureData.CODEC));
+        dailyTempData.addAll(CodecUtil.fromNBTList(nbt.getList("hourlyTempStream", Tag.TAG_COMPOUND), DayClimateData.CODEC));
         setInitialEventAdded(nbt.getBoolean("isInitialEventAdded"));
         readCache();
 	}
@@ -982,5 +934,13 @@ public class WorldClimate implements NBTSerializable {
 
 	public void setInitialEventAdded(boolean isInitialEventAdded) {
 		this.isInitialEventAdded = isInitialEventAdded;
+	}
+
+	public void appendTempEvent(int track,LongFunction<ClimateEvent> event) {
+		tracks.get(track).appendTempEvent(event);
+		
+	}
+	public int getTrackSize() {
+		return tracks.size();
 	}
 }

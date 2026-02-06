@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart.content.climate;
 import java.util.Arrays;
 
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.TemperatureFrame;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ForecastFrame;
 
 public class ClientClimateData {
-    public static final TemperatureFrame[] forecastData = new TemperatureFrame[40];
+    public static final ForecastFrame[] forecastData = new ForecastFrame[40];
     public static ClimateType climate;
     public static ClimateType lastClimate;//store last climate for transition
     public static long climateChange;//store climate change time for transition

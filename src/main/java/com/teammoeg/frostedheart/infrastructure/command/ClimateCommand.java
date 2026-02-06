@@ -21,10 +21,12 @@ package com.teammoeg.frostedheart.infrastructure.command;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.ArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateEvent;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.InterpolationClimateEvent;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 
 import net.minecraft.commands.CommandSourceStack;
@@ -68,29 +70,35 @@ public class ClimateCommand {
                     return Command.SINGLE_SUCCESS;
                 });
 
-        LiteralArgumentBuilder<CommandSourceStack> app = Commands.literal("append").then(
+        LiteralArgumentBuilder<CommandSourceStack> app = Commands.literal("append").then(Commands.argument("track", IntegerArgumentType.integer(0))
+        	.suggests((ct,builder)->{
+        		for(int i=0;i<WorldClimate.get(ct.getSource().getLevel()).getTrackSize();i++)
+        			builder.suggest(i);
+    			return builder.buildFuture();
+    		})
+        	.then(
                 Commands.literal("warm").executes(ct -> {
-                    WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(ClimateEvent::getWarmClimateEvent);
+                    WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(IntegerArgumentType.getInteger(ct, "track"),InterpolationClimateEvent::getWarmClimateEvent);
                     ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })
         ).then(
                 Commands.literal("cold").executes(ct -> {
-                    WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(ClimateEvent::getColdClimateEvent);
+                    WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(IntegerArgumentType.getInteger(ct, "track"),InterpolationClimateEvent::getColdClimateEvent);
                     ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })
         ).then(
                 Commands.literal("blizzard").executes(ct -> {
-                    WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(ClimateEvent::getBlizzardClimateEvent);
+                    WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(IntegerArgumentType.getInteger(ct, "track"),InterpolationClimateEvent::getBlizzardClimateEvent);
                     ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })
         ).executes(ct -> {
-            WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(ClimateEvent::getClimateEvent);
+            WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(IntegerArgumentType.getInteger(ct, "track"),InterpolationClimateEvent::getClimateEvent);
             ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
             return Command.SINGLE_SUCCESS;
-        });
+        }));
         LiteralArgumentBuilder<CommandSourceStack> reset = Commands.literal("resetVanilla")
                 .executes((ct) -> {
                     ServerLevelData serverWorldInfo=ct.getSource().getLevel().serverLevelData;

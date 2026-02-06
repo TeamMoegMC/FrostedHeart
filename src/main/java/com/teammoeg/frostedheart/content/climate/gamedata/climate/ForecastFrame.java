@@ -24,7 +24,7 @@ package com.teammoeg.frostedheart.content.climate.gamedata.climate;
  * A frame class means, the temperature increase in warm or decrease in cold. If it just goes back to calm, the increase or decrease would both be false.
  * It stores hours from now and temperature level it transform to.
  */
-public class TemperatureFrame {
+public class ForecastFrame {
     public enum FrameType {
         NOP,
         INCRESING,
@@ -47,44 +47,44 @@ public class TemperatureFrame {
         }
     }
 
-    public final TemperatureFrame.FrameType type;
+    public final ForecastFrame.FrameType type;
     public final short dhours;
     public final byte toState;
 
-    public static TemperatureFrame blizzard(int hour, int to) {
-        return new TemperatureFrame(FrameType.STORMING, hour, (byte) to);
+    public static ForecastFrame blizzard(int hour, int to) {
+        return new ForecastFrame(FrameType.STORMING, hour, (byte) to);
     }
 
-    public static TemperatureFrame calm(int hour, int to) {
-        return new TemperatureFrame(FrameType.NOP, hour, (byte) to);
+    public static ForecastFrame calm(int hour, int to) {
+        return new ForecastFrame(FrameType.NOP, hour, (byte) to);
     }
 
-    public static TemperatureFrame cloud(int hour, int to) {
-        return new TemperatureFrame(FrameType.CLOUDY, hour, (byte) to);
+    public static ForecastFrame cloud(int hour, int to) {
+        return new ForecastFrame(FrameType.CLOUDY, hour, (byte) to);
     }
 
-    public static TemperatureFrame decrease(int hour, int to) {
-        return new TemperatureFrame(FrameType.DECREASING, hour, (byte) to);
+    public static ForecastFrame decrease(int hour, int to) {
+        return new ForecastFrame(FrameType.DECREASING, hour, (byte) to);
     }
 
-    public static TemperatureFrame increase(int hour, int to) {
-        return new TemperatureFrame(FrameType.INCRESING, hour, (byte) to);
+    public static ForecastFrame increase(int hour, int to) {
+        return new ForecastFrame(FrameType.INCRESING, hour, (byte) to);
     }
 
-    public static TemperatureFrame snow(int hour, int to) {
-        return new TemperatureFrame(FrameType.SNOWING, hour, (byte) to);
+    public static ForecastFrame snow(int hour, int to) {
+        return new ForecastFrame(FrameType.SNOWING, hour, (byte) to);
     }
 
-    public static TemperatureFrame sun(int hour, int to) {
-        return new TemperatureFrame(FrameType.RETREATING, hour, (byte) to);
+    public static ForecastFrame sun(int hour, int to) {
+        return new ForecastFrame(FrameType.RETREATING, hour, (byte) to);
     }
 
-    public static TemperatureFrame unpack(int val) {
+    public static ForecastFrame unpack(int val) {
         if (val == 0) return null;
-        return new TemperatureFrame(val);
+        return new ForecastFrame(val);
     }
 
-    public static TemperatureFrame weather(int hour, ClimateType type, int to) {
+    public static ForecastFrame weather(int hour, ClimateType type, int to) {
         switch (type) {
             case SNOW_BLIZZARD:
             case BLIZZARD:
@@ -101,14 +101,14 @@ public class TemperatureFrame {
 
     }
 
-    private TemperatureFrame(int packed) {
+    private ForecastFrame(int packed) {
         super();
         this.type = FrameType.values()[packed & 0x7F];
         this.dhours = (short) ((packed >> 16) & 0xFFFF);
         this.toState = (byte) ((packed >> 8) & 0xFF);
     }
 
-    public TemperatureFrame(TemperatureFrame.FrameType type, int dhours, byte toState) {
+    public ForecastFrame(ForecastFrame.FrameType type, int dhours, byte toState) {
         super();
         this.type = type;
         this.dhours = (short) dhours;

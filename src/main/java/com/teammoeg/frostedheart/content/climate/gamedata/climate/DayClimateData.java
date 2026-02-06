@@ -27,7 +27,7 @@ import com.teammoeg.chorda.io.CodecUtil;
 
 import net.minecraft.nbt.CompoundTag;
 
-public class DayTemperatureData {
+public class DayClimateData {
     public static class HourData {
     	public static final Codec<HourData> CODEC=Codec.INT.xmap(HourData::new,HourData::pack);
         private float temp = 0;
@@ -102,23 +102,23 @@ public class DayTemperatureData {
 
 
     }
-    public static final Codec<DayTemperatureData> CODEC=RecordCodecBuilder.create(t->t.group(
+    public static final Codec<DayClimateData> CODEC=RecordCodecBuilder.create(t->t.group(
     	CodecUtil.array(HourData.CODEC,new HourData[0]).fieldOf("ndata").forGetter(o->o.hourData),
     	Codec.FLOAT.fieldOf("humidity").forGetter(o->o.dayHumidity),
     	Codec.FLOAT.fieldOf("noise").forGetter(o->o.dayNoise),
-    	Codec.LONG.fieldOf("day").forGetter(o->o.day)).apply(t, DayTemperatureData::new));
+    	Codec.LONG.fieldOf("day").forGetter(o->o.day)).apply(t, DayClimateData::new));
     HourData[] hourData = new HourData[24];
     float dayHumidity;
     float dayNoise;
     long day;
 
-    public static DayTemperatureData read(CompoundTag data) {
-        DayTemperatureData dtd = new DayTemperatureData();
+    public static DayClimateData read(CompoundTag data) {
+        DayClimateData dtd = new DayClimateData();
         dtd.deserialize(data);
         return dtd;
     }
 
-    public DayTemperatureData(HourData[] hourData, float dayHumidity, float dayNoise, long day) {
+    public DayClimateData(HourData[] hourData, float dayHumidity, float dayNoise, long day) {
 		super();
 		this.hourData = hourData;
 		this.dayHumidity = dayHumidity;
@@ -126,12 +126,12 @@ public class DayTemperatureData {
 		this.day = day;
 	}
 
-	public DayTemperatureData() {
+	public DayClimateData() {
         for (int i = 0; i < 24; i++)
             hourData[i] = new HourData();
     }
 
-    public DayTemperatureData(long day) {
+    public DayClimateData(long day) {
         this();
         this.day = day;
     }

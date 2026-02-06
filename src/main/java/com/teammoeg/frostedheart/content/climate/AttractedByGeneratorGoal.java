@@ -27,7 +27,9 @@ import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.IHeatArea;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
-
+/**
+ * AI Goal for animals/residents attracted by heat field
+ * */
 public class AttractedByGeneratorGoal extends Goal {
 	protected final Mob animal;
 	private final double speedModifier;

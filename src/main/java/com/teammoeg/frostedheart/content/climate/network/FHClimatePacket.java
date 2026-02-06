@@ -25,7 +25,7 @@ import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.climate.ClientClimateData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.TemperatureFrame;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ForecastFrame;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 
 import net.minecraft.network.FriendlyByteBuf;
@@ -87,7 +87,7 @@ public class FHClimatePacket implements CMessage {
             }
             int max = Math.min(ClientClimateData.forecastData.length, data.length);
             for (int i = 0; i < max; i++) {
-                ClientClimateData.forecastData[i] = TemperatureFrame.unpack(data[i]);
+                ClientClimateData.forecastData[i] = ForecastFrame.unpack(data[i]);
             }
             if (ClientClimateData.climate != climate) {
                 ClientClimateData.climateChange = sec;

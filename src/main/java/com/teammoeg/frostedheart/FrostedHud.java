@@ -36,8 +36,8 @@ import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.archive.ArchiveCategory;
 import com.teammoeg.frostedheart.content.climate.ClientClimateData;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.TemperatureFrame;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.TemperatureFrame.FrameType;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ForecastFrame;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ForecastFrame.FrameType;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.tips.Tip;
@@ -521,11 +521,11 @@ public class FrostedHud {
         int firstDayW = HUDElements.forecast_marker.getW() - markerMovingOffset - 2;
         // forecast arrows
         // find the first hour lower than cold period bottom
-        TemperatureFrame[] toRender = ClientClimateData.forecastData;
+        ForecastFrame[] toRender = ClientClimateData.forecastData;
         int lastStart = 0;
         int lastLevel = 0;
         int i = -1;
-        for (TemperatureFrame fr : toRender) {
+        for (ForecastFrame fr : toRender) {
             i++;
             if (fr != null) {
                 if (lastLevel != fr.toState) {
@@ -567,7 +567,7 @@ public class FrostedHud {
 
         FrameType last = FrameType.NOP;
         for (i = 0; i < toRender.length; i++) {
-            TemperatureFrame fr = toRender[i];
+            ForecastFrame fr = toRender[i];
             if (fr == null) {
                 last = FrameType.NOP;
                 continue;

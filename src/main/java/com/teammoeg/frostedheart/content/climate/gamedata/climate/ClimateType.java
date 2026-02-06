@@ -20,18 +20,26 @@
 package com.teammoeg.frostedheart.content.climate.gamedata.climate;
 
 public enum ClimateType {
-    NONE(0),
-    SNOW_BLIZZARD(1),//A special snow before blizzard
-    BLIZZARD(1),
-    SNOW(2),
-    SUN(3),
-    CLOUDY(4);
+    NONE(0,0),
+    SNOW_BLIZZARD(1,98),//A special snow before blizzard
+    BLIZZARD(1,99),
+    SNOW(2,97),
+    SUN(3,1),
+    CLOUDY(4,2);
 
     final int typeId;//Same typeid represent same weather event but with different presentation, for forecasting
-
-    ClimateType(int typeId) {
+    final int sortId;
+    ClimateType(int typeId,int sortId) {
         this.typeId = typeId;
+        this.sortId = sortId;
     }
 
-
+    public boolean shouldKeep(ClimateType type) {
+    	return this.sortId>=type.sortId;
+    }
+    public ClimateType merge(ClimateType type) {
+    	if(shouldKeep(type))
+    		return this;
+    	return type;
+    }
 }
