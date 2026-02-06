@@ -24,7 +24,7 @@ import com.teammoeg.chorda.client.CameraHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseCaptureUtil;
 import com.teammoeg.chorda.client.PartialTickTracker;
-import com.teammoeg.chorda.client.cui.CUIOverlay;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIOverlay;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.ui.GuiClickedEvent;
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town.tabs;
 
-import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;

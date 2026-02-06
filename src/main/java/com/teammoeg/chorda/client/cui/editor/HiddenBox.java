@@ -21,7 +21,7 @@ package com.teammoeg.chorda.client.cui.editor;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 
 public class HiddenBox<T> extends UIElement {
 	T value;

@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.content.trade;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.CUIMenuScreenWrapper;
-import com.teammoeg.chorda.client.cui.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIMenuScreenWrapper;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
 
 import net.minecraft.client.gui.screens.Screen;

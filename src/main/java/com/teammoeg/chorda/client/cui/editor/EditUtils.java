@@ -22,10 +22,10 @@ package com.teammoeg.chorda.client.cui.editor;
 import java.util.function.Consumer;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.CUIScreenWrapper;
-import com.teammoeg.chorda.client.cui.PrimaryLayer;
-import com.teammoeg.chorda.client.cui.TextField;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
+import com.teammoeg.chorda.client.cui.widgets.TextField;
 
 import net.minecraft.network.chat.Component;
 

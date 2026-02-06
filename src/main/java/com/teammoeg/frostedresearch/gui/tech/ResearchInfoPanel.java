@@ -23,10 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.TextField;
-import com.teammoeg.chorda.client.cui.UIElement;
-import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRNetwork;

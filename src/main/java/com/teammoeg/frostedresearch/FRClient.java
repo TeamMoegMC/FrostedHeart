@@ -22,8 +22,8 @@ package com.teammoeg.frostedresearch;
 import java.util.function.Function;
 
 import com.teammoeg.chorda.CompatModule;
-import com.teammoeg.chorda.client.cui.CUIMenuScreenWrapper;
-import com.teammoeg.chorda.client.cui.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIMenuScreenWrapper;
 import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
 import com.teammoeg.frostedresearch.blocks.MechCalcRenderer;
 import com.teammoeg.frostedresearch.compat.ftb.FTBQCompat;

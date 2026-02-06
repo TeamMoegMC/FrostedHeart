@@ -8,5 +8,7 @@
   "gui.chorda.editor.edit":"Edit",
   "gui.chorda.editor.reorder":"Ordering",
   "gui.chorda.editor.must_be_nonnull":"Must not be null",
-  "gui.chorda.editor.command_must_starts_with_slash":"Command must starts with /"
+  "gui.chorda.editor.command_must_starts_with_slash":"Command must starts with /",
+  "gui.chorda.editor.wrong_number":"Incorrect Number Format",
+  "gui.chorda.editor.wrong_value_range":"Value Range:%s~%s"
 }

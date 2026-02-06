@@ -20,7 +20,8 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.Verifiers;
 
 import net.minecraft.network.chat.Component;
 

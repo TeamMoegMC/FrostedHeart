@@ -22,9 +22,9 @@ package com.teammoeg.frostedresearch.gui.tech;
 import java.text.DecimalFormat;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.TextField;
-import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.text.CFormatHelper;

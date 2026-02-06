@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
-import com.teammoeg.chorda.client.cui.Button;
-import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.TextField;
-import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.widgets.Button;
+import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.gui.DrawDeskTheme;

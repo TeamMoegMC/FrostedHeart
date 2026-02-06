@@ -24,7 +24,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import java.util.Collection;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.CUIMenuScreenWrapper;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIMenuScreenWrapper;
 
 public class ClientHeatHandler {
 	public static void loadEndPoint(Collection<HeatEndpoint> data) {

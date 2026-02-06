@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
-import com.teammoeg.chorda.client.cui.MenuPrimaryLayer;
+import com.teammoeg.chorda.client.cui.base.MenuPrimaryLayer;
 import com.teammoeg.chorda.client.cui.editor.EditDialog;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedresearch.gui.ResearchGui;

@@ -19,9 +19,10 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import com.teammoeg.chorda.client.cui.TextBox;
-import com.teammoeg.chorda.client.cui.UIElement;
-import com.teammoeg.chorda.client.cui.editor.Verifier.VerifyResult;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.Verifier;
+import com.teammoeg.chorda.client.cui.base.Verifier.VerifyResult;
+import com.teammoeg.chorda.client.cui.widgets.TextBox;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;

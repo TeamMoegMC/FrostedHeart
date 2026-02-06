@@ -22,11 +22,11 @@ package com.teammoeg.chorda.client.cui.editor;
 import java.util.function.Consumer;
 
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.client.cui.Button;
-import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.TextField;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.widgets.Button;
+import com.teammoeg.chorda.client.cui.widgets.TextButton;
+import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.text.Components;
 

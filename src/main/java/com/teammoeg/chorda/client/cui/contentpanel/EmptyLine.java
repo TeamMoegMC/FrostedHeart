@@ -19,7 +19,8 @@
 
 package com.teammoeg.chorda.client.cui.contentpanel;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+
 import net.minecraft.client.gui.GuiGraphics;
 
 public class EmptyLine extends Line<EmptyLine> {

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedresearch.gui;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedresearch.FHResearch;

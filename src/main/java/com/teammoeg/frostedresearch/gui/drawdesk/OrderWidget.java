@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardStat;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.ClientResearchGame;

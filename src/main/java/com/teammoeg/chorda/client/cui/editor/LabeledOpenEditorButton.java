@@ -22,7 +22,7 @@ package com.teammoeg.chorda.client.cui.editor;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 
 import net.minecraft.network.chat.Component;

@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
-import com.teammoeg.chorda.client.cui.TextField;
-import com.teammoeg.chorda.client.cui.UIElement;
-import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardStat;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.ClientResearchGame;

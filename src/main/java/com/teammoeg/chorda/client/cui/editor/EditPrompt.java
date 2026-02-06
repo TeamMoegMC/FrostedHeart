@@ -23,10 +23,11 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.chorda.client.cui.Button;
-import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.TextButton;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.Verifier;
+import com.teammoeg.chorda.client.cui.widgets.Button;
+import com.teammoeg.chorda.client.cui.widgets.TextButton;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.text.Components;
 

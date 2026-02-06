@@ -19,7 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 
 import net.minecraft.client.gui.GuiGraphics;

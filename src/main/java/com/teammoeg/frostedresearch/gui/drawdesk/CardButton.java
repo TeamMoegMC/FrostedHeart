@@ -20,9 +20,9 @@
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
-import com.teammoeg.chorda.client.cui.Button;
-import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.Card;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardPos;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.ClientResearchGame;

@@ -28,11 +28,11 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.chorda.client.cui.UILayer;
-import com.teammoeg.chorda.client.cui.LayerScrollBar;
-import com.teammoeg.chorda.client.cui.TextField;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder.SetterAndGetter;
+import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
+import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuildResult;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuiltParams;
 

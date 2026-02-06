@@ -20,13 +20,14 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
 import com.teammoeg.chorda.client.ScrollTracker;
-import com.teammoeg.chorda.client.cui.CheckBox;
-import com.teammoeg.chorda.client.cui.ImageButton;
-import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.TextBoxNoBackground;
-import com.teammoeg.chorda.client.cui.UIElement;
-import com.teammoeg.chorda.client.cui.UILayer;
-import com.teammoeg.chorda.client.cui.editor.Verifier;
+import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.base.Verifier.VerifyResult;
+import com.teammoeg.chorda.client.cui.base.Verifiers;
+import com.teammoeg.chorda.client.cui.widgets.CheckBox;
+import com.teammoeg.chorda.client.cui.widgets.ImageButton;
+import com.teammoeg.chorda.client.cui.widgets.TextBoxNoBackground;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.text.Components;
@@ -61,17 +62,7 @@ public class DockFilterDialog extends UILayer {
 		};
 		back.setPosAndSize(92,3, 12, 12);
 		numberBox=new TextBoxNoBackground(this);
-		numberBox.setFilter(b->{
-			try {
-				int val=Integer.parseInt(b);
-				if(val>1728||val<1)
-					return Verifier.error(Components.literal("1~1728"));
-			}catch(Exception ex) {
-				return Verifier.error(Components.literal("Number only"));
-			}
-			return Verifier.SUCCESS;
-			
-		});
+		numberBox.setFilter(Verifiers.intRange(1, 1728));
 		numberBox.setMaxLength(4);
 		numberBox.setPosAndSize(35, 18, 24, 7);
 		numberBox.setText(String.valueOf(getFilter().getSize()));

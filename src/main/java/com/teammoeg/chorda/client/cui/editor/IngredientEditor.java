@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.editor.EditorSelector.EditorSelectorBuilder;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.text.Components;

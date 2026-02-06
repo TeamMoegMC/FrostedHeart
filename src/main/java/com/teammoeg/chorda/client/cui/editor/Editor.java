@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 
 import net.minecraft.network.chat.Component;
 /**

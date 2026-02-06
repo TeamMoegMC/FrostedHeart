@@ -22,7 +22,7 @@ package com.teammoeg.chorda.client.cui.editor;
 import java.util.Optional;
 
 import com.mojang.serialization.DataResult;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 
 public interface EditItem<T> {
 	DataResult<Optional<T>> getValue();

@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.bootstrap.client;
 
 import java.util.function.Function;
 
-import com.teammoeg.chorda.client.cui.CUIMenuScreenWrapper;
-import com.teammoeg.chorda.client.cui.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIMenuScreenWrapper;
 import com.teammoeg.chorda.client.ui.ScreenAcceptor;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.climate.block.ClothesScreen;

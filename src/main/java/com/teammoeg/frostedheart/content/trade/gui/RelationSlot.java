@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.trade.gui;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.client.cui.TooltipBuilder;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 
 import net.minecraft.client.gui.GuiGraphics;
 

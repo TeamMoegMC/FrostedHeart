@@ -21,9 +21,9 @@ package com.teammoeg.frostedresearch.gui.tech;
 
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.TooltipBuilder;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedresearch.compat.JEICompat;
 import com.teammoeg.frostedresearch.gui.DrawDeskTheme;

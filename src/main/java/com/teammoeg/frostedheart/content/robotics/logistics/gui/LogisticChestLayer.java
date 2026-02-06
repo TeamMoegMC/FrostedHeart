@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
-import com.teammoeg.chorda.client.cui.MenuPrimaryLayer;
+import com.teammoeg.chorda.client.cui.base.MenuPrimaryLayer;
 
 public class LogisticChestLayer<T extends LogisticChestMenu<?>> extends MenuPrimaryLayer<T> {
 	BotDockStatus statusLayer;

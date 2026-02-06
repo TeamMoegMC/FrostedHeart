@@ -20,9 +20,9 @@
 package com.teammoeg.frostedheart.content.archive;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.CUIScreenWrapper;
-import com.teammoeg.chorda.client.cui.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
 
 import javax.annotation.Nullable;
 

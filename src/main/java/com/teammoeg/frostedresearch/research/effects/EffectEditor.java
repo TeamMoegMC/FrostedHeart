@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedresearch.research.effects;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.editor.*;
 import com.teammoeg.chorda.client.cui.editor.compat.IEEditors;
 import com.teammoeg.chorda.client.icon.CIcons;

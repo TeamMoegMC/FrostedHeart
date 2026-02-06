@@ -21,8 +21,8 @@ package com.teammoeg.frostedresearch.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.TooltipBuilder;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.text.Components;
 

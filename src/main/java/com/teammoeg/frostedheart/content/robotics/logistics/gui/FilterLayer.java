@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
-import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.base.UILayer;
 
 import net.minecraft.client.gui.GuiGraphics;
 

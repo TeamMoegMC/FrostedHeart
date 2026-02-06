@@ -21,7 +21,7 @@ package com.teammoeg.chorda.client.cui.editor;
 
 import java.util.function.Function;
 
-import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder.SetterAndGetter;
 
 public interface EditorItemFactory<T> {

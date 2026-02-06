@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedresearch.gui;
 
-import com.teammoeg.chorda.client.cui.Button;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 

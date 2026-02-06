@@ -20,8 +20,8 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.chorda.client.cui.UILayer;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.text.Components;

@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import com.teammoeg.chorda.client.cui.MenuPrimaryLayer;
-import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.TabImageButtonElement;
-import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.base.MenuPrimaryLayer;
+import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.widgets.TabImageButtonElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;

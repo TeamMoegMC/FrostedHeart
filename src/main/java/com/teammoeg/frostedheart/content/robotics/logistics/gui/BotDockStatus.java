@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
-import com.teammoeg.chorda.client.cui.TextBoxNoBackground;
-import com.teammoeg.chorda.client.cui.UIElement;
-import com.teammoeg.chorda.client.cui.UILayer;
-import com.teammoeg.chorda.client.cui.editor.Verifier;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.base.Verifier.VerifyResult;
+import com.teammoeg.chorda.client.cui.widgets.TextBoxNoBackground;
 import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -37,9 +37,9 @@ public class BotDockStatus extends UILayer {
 			try {
 			Integer.parseInt(b);
 			}catch(Exception ex) {
-				return Verifier.error(Components.literal("Number only"));
+				return VerifyResult.error(Components.literal("Number only"));
 			}
-			return Verifier.SUCCESS;
+			return VerifyResult.SUCCESS;
 			
 		});
 		layer=panel;

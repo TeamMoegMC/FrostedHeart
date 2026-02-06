@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.content.town.warehouse;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.MouseButton;
-import com.teammoeg.chorda.client.cui.TooltipBuilder;
-import com.teammoeg.chorda.client.cui.UIElement;
-import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
 import com.teammoeg.frostedheart.content.town.network.WarehouseInteractPacket;

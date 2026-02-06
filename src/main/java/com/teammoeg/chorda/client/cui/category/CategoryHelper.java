@@ -19,7 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.category;
 
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.content.archive.ArchiveCategory;
 import net.minecraft.client.resources.language.I18n;

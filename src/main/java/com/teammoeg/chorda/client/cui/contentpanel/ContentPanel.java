@@ -19,10 +19,10 @@
 
 package com.teammoeg.chorda.client.cui.contentpanel;
 
-import com.teammoeg.chorda.client.cui.LayerScrollBar;
-import com.teammoeg.chorda.client.cui.ScrollBar;
-import com.teammoeg.chorda.client.cui.UIElement;
-import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
+import com.teammoeg.chorda.client.cui.widgets.ScrollBar;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.frostedheart.content.archive.Alignment;

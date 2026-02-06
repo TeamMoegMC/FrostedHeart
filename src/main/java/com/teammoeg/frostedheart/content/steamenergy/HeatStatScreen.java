@@ -19,12 +19,12 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.chorda.client.cui.UILayer;
+import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.teammoeg.chorda.client.cui.LayerScrollBar;
-import com.teammoeg.chorda.client.cui.PrimaryLayer;
-import com.teammoeg.chorda.client.cui.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 
 import net.minecraft.client.gui.GuiGraphics;

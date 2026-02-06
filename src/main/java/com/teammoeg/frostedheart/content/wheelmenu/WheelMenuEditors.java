@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 
 import com.mojang.datafixers.util.Unit;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.UIElement;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.editor.BaseEditDialog;
 import com.teammoeg.chorda.client.cui.editor.EditListDialog;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;

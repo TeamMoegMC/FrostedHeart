@@ -20,7 +20,7 @@
 package com.teammoeg.frostedresearch;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.CUIScreen;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIScreen;
 import com.teammoeg.frostedresearch.gui.ResearchGui;
 
 import net.minecraft.client.gui.screens.Screen;
