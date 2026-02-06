@@ -29,12 +29,7 @@ import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
  * 
  * */
 public abstract class LogisticTask {
-	private static final TypedCodecRegistry<LogisticTask> idr=new TypedCodecRegistry<>();
-	static {
-		idr.register(LogisticPushTask.class, "push", LogisticPushTask.WORKING_CODEC);
-		idr.register(LogisticRequestTask.class, "pull", LogisticRequestTask.WORKING_CODEC);
-	}
-	public static final Codec<LogisticTask> CODEC=idr.codec();
+
 	public int ticks;
 	public LogisticTaskKey taskKey;
 	public LogisticTask(LogisticTaskKey taskKey, int ticks) {

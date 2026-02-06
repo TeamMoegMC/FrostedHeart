@@ -27,9 +27,13 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import com.mojang.serialization.Codec;
 import com.teammoeg.chorda.io.CodecUtil;
+import com.teammoeg.chorda.io.registry.TypedCodecRegistry;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticHub;
+import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticPushTask;
+import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticRequestTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
 import net.minecraft.core.BlockPos;
@@ -46,7 +50,12 @@ public class LogisticNetwork {
 	Level world;
 	BlockPos centerPos;
 	int MAX_WORKING_TASKS=20;
-
+	private static final TypedCodecRegistry<LogisticTask> idr=new TypedCodecRegistry<>();
+	static {
+		idr.register(LogisticPushTask.class, "push", LogisticPushTask.WORKING_CODEC);
+		idr.register(LogisticRequestTask.class, "pull", LogisticRequestTask.WORKING_CODEC);
+	}
+	public static final Codec<LogisticTask> TASK_CODEC=idr.codec();
 	
 	public LogisticNetwork(Level world, BlockPos centerPos) {
 		super();
@@ -66,11 +75,11 @@ public class LogisticNetwork {
 		return world;
 	}
 	public void save(CompoundTag nbt) {
-		nbt.put("tasks", CodecUtil.toNBTList(working, LogisticTask.CODEC));
+		nbt.put("tasks", CodecUtil.toNBTList(working, TASK_CODEC));
 	}
 	public void load(CompoundTag nbt) {
 		working.clear();
-		working.addAll(CodecUtil.fromNBTList(nbt.getList("tasks", Tag.TAG_COMPOUND), LogisticTask.CODEC));
+		working.addAll(CodecUtil.fromNBTList(nbt.getList("tasks", Tag.TAG_COMPOUND), TASK_CODEC));
 	}
 	public void tick() {
 		//FHMain.LOGGER.info("hub "+hub);
