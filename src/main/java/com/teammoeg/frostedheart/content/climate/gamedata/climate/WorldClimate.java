@@ -451,6 +451,8 @@ public class WorldClimate implements NBTSerializable {
     public WorldClimate() {
         clockSource = new WorldClockSource();
         dailyTempData = new LinkedList<>();
+        for(int i=0;i<3;i++)
+        	tracks.add(new ClimateEventTrack());
     }
 
     public void addInitTempEvent(ServerLevel w) {
@@ -943,4 +945,6 @@ public class WorldClimate implements NBTSerializable {
 	public int getTrackSize() {
 		return tracks.size();
 	}
+
+
 }
