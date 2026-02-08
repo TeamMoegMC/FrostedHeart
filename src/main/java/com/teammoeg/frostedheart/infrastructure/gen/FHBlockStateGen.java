@@ -19,12 +19,6 @@
 
 package com.teammoeg.frostedheart.infrastructure.gen;
 
-import java.util.NoSuchElementException;
-import java.util.function.Supplier;
-
-import javax.annotation.Nullable;
-
-import com.google.common.base.Preconditions;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.agriculture.FertilizedDirt;
 import com.teammoeg.frostedheart.content.agriculture.FertilizedFarmlandBlock;
@@ -36,9 +30,7 @@ import com.tterrag.registrate.providers.RegistrateBlockstateProvider;
 import com.tterrag.registrate.providers.RegistrateItemModelProvider;
 import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
-
 import net.minecraft.core.Direction;
-import net.minecraft.core.Direction.Axis;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.tags.BlockTags;
@@ -47,12 +39,19 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.state.properties.*;
+import net.minecraft.world.level.block.state.properties.AttachFace;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.MapColor;
-import net.minecraftforge.client.model.generators.*;
+import net.minecraftforge.client.model.generators.BlockModelBuilder;
+import net.minecraftforge.client.model.generators.ConfiguredModel;
+import net.minecraftforge.client.model.generators.ItemModelBuilder;
+import net.minecraftforge.client.model.generators.ModelFile;
 import net.minecraftforge.client.model.generators.ModelFile.ExistingModelFile;
-import net.minecraftforge.client.model.generators.VariantBlockStateBuilder.PartialBlockstate;
+import net.minecraftforge.client.model.generators.VariantBlockStateBuilder;
 import net.minecraftforge.client.model.generators.loaders.ObjModelBuilder;
+
+import java.util.NoSuchElementException;
 
 public class FHBlockStateGen {
 
@@ -429,6 +428,7 @@ public class FHBlockStateGen {
 					.with(BlockStateProperties.HORIZONTAL_FACING, dir)
 					.modelForState()
 					.modelFile(modelBuilder)
+					.uvLock(true)
 					.rotationY(yRot)
 					.addModel();
 			}
@@ -455,6 +455,7 @@ public class FHBlockStateGen {
 					.with(BlockStateProperties.LIT, false)
 					.modelForState()
 					.modelFile(offModel)
+					.uvLock(true)
 					.rotationY(yRot)
 					.addModel();
 				builder.partialState()
@@ -462,6 +463,7 @@ public class FHBlockStateGen {
 				.with(BlockStateProperties.LIT, true)
 				.modelForState()
 				.modelFile(onModel)
+				.uvLock(true)
 				.rotationY(yRot)
 				.addModel();
 			}
@@ -501,6 +503,7 @@ public class FHBlockStateGen {
 						.with(BlockStateProperties.HORIZONTAL_FACING, dir)
 						.modelForState()
 						.modelFile(modelBuilder)
+						.uvLock(true)
 						.rotationY(yRot)
 						.addModel();
 				}

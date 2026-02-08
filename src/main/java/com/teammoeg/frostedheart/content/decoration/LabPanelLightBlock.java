@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
+import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Mirror;
@@ -35,19 +36,25 @@ public class LabPanelLightBlock extends RedstoneLampBlock {
 	}
 
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> pBuilder) {
-		super.createBlockStateDefinition(pBuilder.add(BlockStateProperties.HORIZONTAL_FACING));
+		super.createBlockStateDefinition(pBuilder.add(BlockStateProperties.FACING));
 	}
 	@Override
     public BlockState rotate(BlockState pState, Rotation pRot) {
-        return pState.setValue(BlockStateProperties.HORIZONTAL_FACING, pRot.rotate(pState.getValue(BlockStateProperties.HORIZONTAL_FACING)));
+        return pState.setValue(BlockStateProperties.FACING, pRot.rotate(pState.getValue(BlockStateProperties.FACING)));
     }
 
     @Override
     public BlockState mirror(BlockState pState, Mirror pMirror) {
-        return pState.setValue(BlockStateProperties.HORIZONTAL_FACING, pMirror.mirror(pState.getValue(BlockStateProperties.HORIZONTAL_FACING)));
+        return pState.setValue(BlockStateProperties.FACING, pMirror.mirror(pState.getValue(BlockStateProperties.FACING)));
     }
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext pContext) {
-        return this.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, pContext.getHorizontalDirection().getOpposite());
+        Direction face;
+        if (pContext.getPlayer() != null && pContext.getPlayer().isShiftKeyDown()) {
+            face = pContext.getNearestLookingDirection();
+        } else {
+            face = pContext.getNearestLookingDirection().getOpposite();
+        }
+        return this.defaultBlockState().setValue(BlockStateProperties.FACING, face);
     }
 }

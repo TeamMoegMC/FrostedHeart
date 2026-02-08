@@ -4,7 +4,7 @@
             "type": "bitmap",
             "file": "chorda:gui/hud/flat_icon_10x.png",
             "height":10,
-            "ascent":9,
+            "ascent":8,
             "chars":[
                 "\uF200\uF201\uF202\uF203\uF204\uF205\uF206\uF207",
                 "\uF210\uF211\uF212\uF213\uF214\uF215\uF216\uF217",

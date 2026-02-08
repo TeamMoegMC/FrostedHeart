@@ -20,6 +20,7 @@
 package com.teammoeg.chorda.client.ui;
 
 import lombok.Getter;
+import net.minecraft.client.renderer.Rect2i;
 
 import java.util.Objects;
 
@@ -47,6 +48,10 @@ public class Rect extends Point {
 
 	public int getY2() {
 		return y + h;
+	}
+
+	public Rect2i toRect2i() {
+		return new Rect2i(x, y, w, h);
 	}
 
     @Override

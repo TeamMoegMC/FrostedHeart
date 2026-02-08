@@ -1,10 +1,14 @@
 {
   "variants": {
     "": [
-      { "model": "frostedheart:block/concrete/concrete_0", "weight": 1 },
-      { "model": "frostedheart:block/concrete/concrete_1", "weight": 1 },
-      { "model": "frostedheart:block/concrete/concrete_2", "weight": 1 },
-      { "model": "frostedheart:block/concrete/concrete_3", "weight": 1 }
+      { "model": "frostedheart:block/concrete/concrete_0"},
+      { "model": "frostedheart:block/concrete/concrete_1"},
+      { "model": "frostedheart:block/concrete/concrete_2"},
+      { "model": "frostedheart:block/concrete/concrete_3"},
+      { "model": "frostedheart:block/concrete/concrete_0", "y": 90},
+      { "model": "frostedheart:block/concrete/concrete_1", "y": 90},
+      { "model": "frostedheart:block/concrete/concrete_2", "y": 90},
+      { "model": "frostedheart:block/concrete/concrete_3", "y": 90}
     ]
   }
 }

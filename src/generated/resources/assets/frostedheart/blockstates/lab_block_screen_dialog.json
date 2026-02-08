@@ -2,17 +2,21 @@
   "variants": {
     "facing=east": {
       "model": "frostedheart:block/lab_block_screen_dialog",
+      "uvlock": true,
       "y": 90
     },
     "facing=north": {
-      "model": "frostedheart:block/lab_block_screen_dialog"
+      "model": "frostedheart:block/lab_block_screen_dialog",
+      "uvlock": true
     },
     "facing=south": {
       "model": "frostedheart:block/lab_block_screen_dialog",
+      "uvlock": true,
       "y": 180
     },
     "facing=west": {
       "model": "frostedheart:block/lab_block_screen_dialog",
+      "uvlock": true,
       "y": 270
     }
   }

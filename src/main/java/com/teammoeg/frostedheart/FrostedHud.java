@@ -533,14 +533,19 @@ public class FrostedHud {
                         if (lastLevel != 0) {
                             int end = windowX + i * segmentLength / 2 - 2;
                             int clr = clrs.get(lastLevel);
-                            CGuiHelper.fillGradient(stack.pose(),end, 1, end + 6, 15, clr, clrs.get((int) fr.toState));
+                            int clr2 = clrs.get((int) fr.toState);
+                            if (clr2 == 0) {
+                                clr2 = Colors.setAlpha(clr, 0);
+                            }
+                            CGuiHelper.fillGradient(stack.pose(),end, 1, end + 6, 15, clr, clr2);
                             int start = windowX + lastStart * segmentLength / 2 + 4;
                             if (lastStart == 0)
                                 start -= 3;
                             stack.fill( start, 1, end, 15, clr);
                         } else if (lastLevel == 0) {
                             int end = windowX + i * segmentLength / 2 - 2;
-                            CGuiHelper.fillGradient(stack.pose(),end, 1, end + 6, 15, 0, clrs.get((int) fr.toState));
+                            int clr = clrs.get((int) fr.toState);
+                            CGuiHelper.fillGradient(stack.pose(),end, 1, end + 6, 15, Colors.setAlpha(clr, 0), clr);
                         }
                     }
                     lastStart = i;

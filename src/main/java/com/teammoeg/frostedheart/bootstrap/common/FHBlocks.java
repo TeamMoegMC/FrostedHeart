@@ -20,11 +20,9 @@
 package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.google.common.collect.ImmutableMap;
-import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
-import com.teammoeg.chorda.item.CBlockItem;
 import com.teammoeg.chorda.util.CFunctionUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
@@ -80,7 +78,6 @@ import net.minecraft.data.loot.packs.VanillaBlockLoot;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BlockGetter;
@@ -1903,19 +1900,19 @@ public class FHBlocks {
     public static final BlockEntry<LabPanelLightBlock> LAB_PANEL_LIGHT = REGISTRATE.block("lab_panel_light", LabPanelLightBlock::new)
             .transform(FHBlockStateGen.lab_block())
             .properties(properties -> properties.lightLevel(state -> state.getValue(BlockStateProperties.LIT) ? 15 : 0))
-            .blockstate(FHBlockStateGen.horizontalLitFrontBlock("block/lab_panel_light_on", "block/lab_panel_light"))
+            .blockstate(FHBlockStateGen.existed())
             .simpleItem()
             .register();
     public static final BlockEntry<LabPanelLightBlock> LAB_PANEL_LIGHT_INVERSED = REGISTRATE.block("lab_panel_light_inverse", LabPanelLightBlock::new)
         .transform(FHBlockStateGen.lab_block())
         .properties(properties -> properties.lightLevel(state -> state.getValue(BlockStateProperties.LIT) ? 0 : 15))
-        .blockstate(FHBlockStateGen.horizontalLitFrontBlock("block/lab_panel_light", "block/lab_panel_light_on"))
+        .blockstate(FHBlockStateGen.existed())
         .item().model(FHBlockStateGen.blockModel("lab_panel_light_on"))
         .build()
         .register();
 
     public static final BlockEntry<Block> CONCRETE = REGISTRATE.block("concrete", Block::new)
-            .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
+            .properties(p -> p.mapColor(MapColor.COLOR_LIGHT_GRAY)
                     .requiresCorrectToolForDrops()
                     .strength(10, 20))
             .tag(BlockTags.MINEABLE_WITH_PICKAXE)
@@ -1924,7 +1921,7 @@ public class FHBlocks {
             .item().model(FHBlockStateGen.existingItemModel()).build()
             .register();
     public static final List<BlockEntry<Block>> CONCRETE_CRACKED =  CFunctionUtils.generate(0, 7, i->REGISTRATE.block("concrete_cracked_"+i, Block::new)
-            .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
+            .properties(p -> p.mapColor(MapColor.COLOR_LIGHT_GRAY)
                     .requiresCorrectToolForDrops()
                     .strength(8, 20))
             .tag(BlockTags.MINEABLE_WITH_PICKAXE)

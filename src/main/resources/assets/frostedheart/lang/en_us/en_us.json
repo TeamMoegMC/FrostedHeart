@@ -267,7 +267,7 @@
   "message.frostedheart.wandering_refugee.too_far_to_recruit": "This refugee is too far away from you and doesn't seem to hear what you're saying...",
   "message.frostedheart.wandering_refugee.recruited": "The refugee went to your town!",
   "message.frostedheart.vawt.speed_bonus": "Speed Bonus: %s %%",
-  "message.frostedheart.vawt.state.blocked": "VAWT is Blocked, \ntry place it in an open area on the ground surface",
+  "message.frostedheart.vawt.state.blocked": "VAWT is Blocked, try place it in an open area on the ground surface",
   "message.frostedheart.vawt.state.cannotwork": "Cannot Work",
   "message.frostedheart.vawt.state.damaged": "VAWT is Damaged",
   "message.frostedheart.vawt.state.detecting": "Detecting...",

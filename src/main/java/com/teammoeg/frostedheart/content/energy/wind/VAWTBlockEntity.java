@@ -86,7 +86,10 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements
 
     @Override
     public void lazyTick() {
-        if (level.isClientSide) return;
+        if (level.isClientSide) {
+            generatable = reason.isEmpty();
+            return;
+        }
 
         updateModifier();
         this.updateGeneratedRotation();
@@ -119,9 +122,7 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements
      * @param immediately if true check the whole area immediately
      * @return is environment valid
      */
-    public boolean checkEnvironment(boolean immediately) { // TODO
-        reason = "detecting";
-
+    public boolean checkEnvironment(boolean immediately) {
         boolean shouldCheck = false;
         if (successTime == 0 || immediately) {
             shouldCheck = true;
@@ -251,7 +252,6 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements
 
     @Override
     public float getGeneratedSpeed() {
-        if (level.isClientSide) return getTheoreticalSpeed();
         if (damaged || !generatable) return 0;
         return Math.round(16 * speedEffect);
     }
