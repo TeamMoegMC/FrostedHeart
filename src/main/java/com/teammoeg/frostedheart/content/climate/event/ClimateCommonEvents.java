@@ -425,13 +425,12 @@ public class ClimateCommonEvents {
 
     @SubscribeEvent
     public static void syncDataToClient(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof ServerPlayer) {
+        if (event.getEntity() instanceof ServerPlayer currentPlayer) {
             ServerLevel serverWorld = ((ServerPlayer) event.getEntity()).serverLevel();
-            PacketTarget currentPlayer = PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity());
             FHCapabilities.CLIMATE_DATA.getCapability(serverWorld)
-                    .ifPresent((cap) -> FHNetwork.INSTANCE.send(currentPlayer, new FHClimatePacket(cap)));
+                    .ifPresent((cap) -> FHNetwork.INSTANCE.sendPlayer(currentPlayer, new FHClimatePacket(cap,currentPlayer)));
 
-            FHNetwork.INSTANCE.send(currentPlayer, new WaypointSyncAllPacket((ServerPlayer) event.getEntity()));
+            FHNetwork.INSTANCE.sendPlayer(currentPlayer, new WaypointSyncAllPacket(currentPlayer));
             // System.out.println("=x-x=");
             // System.out.println(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS.getValue(new
             // ResourceLocation(FHMain.MODID,"add_loot")));
@@ -440,11 +439,11 @@ public class ClimateCommonEvents {
 
     @SubscribeEvent
     public static void syncDataWhenDimensionChanged(PlayerEvent.PlayerChangedDimensionEvent event) {
-        if (event.getEntity() instanceof ServerPlayer) {
-            ServerLevel serverWorld = ((ServerPlayer) event.getEntity()).serverLevel();
+        if (event.getEntity() instanceof ServerPlayer player) {
+            ServerLevel serverWorld = player.serverLevel();
 
-            FHNetwork.INSTANCE.sendPlayer((ServerPlayer) event.getEntity(),
-                    new FHClimatePacket(WorldClimate.get(serverWorld)));
+            FHNetwork.INSTANCE.sendPlayer(player,
+                    new FHClimatePacket(WorldClimate.get(serverWorld),player));
         }
     }
 
@@ -635,9 +634,9 @@ public class ClimateCommonEvents {
 
     @SubscribeEvent
     public static void respawn(PlayerEvent.PlayerRespawnEvent event) {
-        if (event.getEntity() instanceof ServerPlayer && !(event.getEntity() instanceof FakePlayer) && !event.isEndConquered()) {
+        if (event.getEntity() instanceof ServerPlayer player&& !(event.getEntity() instanceof FakePlayer) && !event.isEndConquered()) {
             ServerLevel serverWorld = ((ServerPlayer) event.getEntity()).serverLevel();
-            FHNetwork.INSTANCE.sendPlayer((ServerPlayer) event.getEntity(), new FHClimatePacket(WorldClimate.get(serverWorld)));
+            FHNetwork.INSTANCE.sendPlayer(player, new FHClimatePacket(WorldClimate.get(serverWorld),player));
             //PlayerTemperatureData.getCapability(event.getEntity()).ifPresent(PlayerTemperatureData::deathResetTemperature);
         }
     }

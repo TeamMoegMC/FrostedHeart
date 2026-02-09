@@ -32,7 +32,7 @@ import com.teammoeg.chorda.client.cui.contentpanel.LineHelper;
 import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.client.ui.Colors;
+import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import net.minecraft.client.gui.GuiGraphics;

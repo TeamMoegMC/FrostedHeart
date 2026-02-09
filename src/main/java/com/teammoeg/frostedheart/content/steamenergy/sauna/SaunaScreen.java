@@ -21,9 +21,9 @@ package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 
-import com.teammoeg.chorda.client.ui.Point;
 import com.teammoeg.chorda.client.ui.TexturedUV;
 import com.teammoeg.chorda.client.ui.UV.Transition;
+import com.teammoeg.chorda.math.Point;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

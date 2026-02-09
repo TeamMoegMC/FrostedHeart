@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 
 import java.util.List;
 
-import com.teammoeg.chorda.client.ui.Rect;
+import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;

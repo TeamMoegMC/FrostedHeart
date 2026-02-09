@@ -19,6 +19,8 @@
 
 package com.teammoeg.chorda.client.ui;
 
+import com.teammoeg.chorda.math.Point;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

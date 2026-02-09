@@ -21,7 +21,7 @@ package com.teammoeg.chorda.client.cui.contentpanel;
 
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.client.ui.Colors;
+import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedresearch.gui.LineIcon;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;

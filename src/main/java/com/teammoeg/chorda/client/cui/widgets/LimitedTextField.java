@@ -21,7 +21,7 @@ package com.teammoeg.chorda.client.cui.widgets;
 
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.client.ui.Colors;
+import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.client.gui.GuiGraphics;

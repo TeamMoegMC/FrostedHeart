@@ -20,7 +20,7 @@
 package com.teammoeg.chorda.client.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.chorda.client.ui.Colors;
+import com.teammoeg.chorda.math.Colors;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

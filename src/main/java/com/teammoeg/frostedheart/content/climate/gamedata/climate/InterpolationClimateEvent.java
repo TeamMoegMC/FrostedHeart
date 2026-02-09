@@ -37,7 +37,6 @@ import net.minecraft.util.RandomSource;
  * Allows computation of temperature at any timestamp within this event.
  */
 public class InterpolationClimateEvent implements ClimateEvent {
-    private static final long secondsPerDay = 24 * 50;
     @Getter
     private long startTime;
     private long peakTime;
@@ -53,7 +52,7 @@ public class InterpolationClimateEvent implements ClimateEvent {
     public static InterpolationClimateEvent getBlizzardClimateEvent(RandomSource random,long startTime) {
         long peakTime = 0, bottomTime = 0, endTime = 0;
         float peakTemp = 0, bottomTemp = 0;
-        int add=(int) Math.max(0,10-(startTime/secondsPerDay-15)/10);
+        int add=(int) Math.max(0,10-(startTime/WorldClockSource.secondsPerDay-15)/10);
         switch (random.nextInt(10)+add) {
             case 0:
                 bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T8;
@@ -73,14 +72,14 @@ public class InterpolationClimateEvent implements ClimateEvent {
         }
 
         long length = 0;
-        length = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
+        length = WorldClockSource.secondsPerDay * 2 + random.nextInt((int) (WorldClockSource.secondsPerDay * 5)); // 2 - 7 days length
         endTime = startTime + length;
         long padding = 8 * 50 + random.nextInt(16 * 50);
         peakTime = startTime + padding; // reach peak within 8-24h
         bottomTime = startTime + padding + (length - padding) / 4;
         peakTemp = WorldTemperature.BLIZZARD_WARM_PEAK - (float) Math.abs(random.nextGaussian());
         bottomTemp += (float) (random.nextGaussian());
-        long calmLength = secondsPerDay * 1 + random.nextInt((int) (secondsPerDay * 2)); // 1 - 3 days length
+        long calmLength = WorldClockSource.secondsPerDay * 1 + random.nextInt((int) (WorldClockSource.secondsPerDay * 2)); // 1 - 3 days length
         long calmEndTime = endTime + calmLength;
 
         return new InterpolationClimateEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, true, true);
@@ -115,7 +114,7 @@ public class InterpolationClimateEvent implements ClimateEvent {
      */
     public static InterpolationClimateEvent getClimateEvent(RandomSource random,long startTime) {
         //int blizzardFrequency = FHConfig.SERVER.CLIMATE.blizzardFrequency.get();
-        int rand = random.nextInt(10)+((startTime/secondsPerDay<=15)?3:0);
+        int rand = random.nextInt(10)+((startTime/WorldClockSource.secondsPerDay<=15)?3:0);
         /*if (rand < blizzardFrequency) {
             return getBlizzardClimateEvent(random,startTime);
         } else */if (rand > 7) {
@@ -147,14 +146,14 @@ public class InterpolationClimateEvent implements ClimateEvent {
         }
 
         long length = 0;
-        length = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
+        length = WorldClockSource.secondsPerDay * 2 + random.nextInt((int) (WorldClockSource.secondsPerDay * 5)); // 2 - 7 days length
         endTime = startTime + length;
         long padding = 8 * 50 + random.nextInt(16 * 50);
         peakTime = startTime + padding; // reach peak within 8-24h
         bottomTime = startTime + padding + (length - padding) / 4;
         peakTemp = WorldTemperature.COLD_PERIOD_PEAK - (float) Math.abs(random.nextGaussian());
         bottomTemp += (float) (random.nextGaussian());
-        long calmLength = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
+        long calmLength = WorldClockSource.secondsPerDay * 2 + random.nextInt((int) (WorldClockSource.secondsPerDay * 5)); // 2 - 7 days length
         long calmEndTime = endTime + calmLength;
 
         return new InterpolationClimateEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, true, false);
@@ -163,13 +162,13 @@ public class InterpolationClimateEvent implements ClimateEvent {
     public static InterpolationClimateEvent getWarmClimateEvent(RandomSource random,long startTime) {
         long peakTime = 0, bottomTime = 0, endTime = 0;
         float peakTemp = 0, bottomTemp = 0;
-        long length = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
+        long length = WorldClockSource.secondsPerDay * 2 + random.nextInt((int) (WorldClockSource.secondsPerDay * 5)); // 2 - 7 days length
         endTime = startTime + length;
         long padding = 8 * 50 + random.nextInt(16 * 50); // 8-24h
         peakTime = startTime + padding + (length - padding) / 2;
         peakTemp = WorldTemperature.WARM_PERIOD_PEAK - 2 * (float) Math.abs(random.nextGaussian());
 
-        long calmLength = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
+        long calmLength = WorldClockSource.secondsPerDay * 2 + random.nextInt((int) (WorldClockSource.secondsPerDay * 5)); // 2 - 7 days length
         long calmEndTime = endTime + calmLength;
 
         return new InterpolationClimateEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, false, false);
@@ -228,7 +227,7 @@ public class InterpolationClimateEvent implements ClimateEvent {
      * @author JackyWangMislantiaJnirvana <wmjwld@live.cn>
      */
     public float getHourTemp(long t) {
-        Random random = new Random();
+        //Random random = new Random();
 
         if (isCold) {
             if (t >= startTime && t < peakTime) {
@@ -238,9 +237,9 @@ public class InterpolationClimateEvent implements ClimateEvent {
             } else if (t >= bottomTime && t < endTime) {
                 return getPiecewiseTemp(t, bottomTime, endTime, bottomTemp, 0, 0, 0);
             } else if (t >= endTime && t <= calmEndTime) {
-                return 0 + (float) (random.nextGaussian());
+                return 0;
             } else {
-                return 0 + (float) (random.nextGaussian());
+                return 0;
             }
         }
         if (t >= startTime && t < peakTime) {
@@ -248,9 +247,9 @@ public class InterpolationClimateEvent implements ClimateEvent {
         } else if (t >= peakTime && t < endTime) {
             return getPiecewiseTemp(t, peakTime, endTime, peakTemp, 0, 0, 0);
         } else if (t >= endTime && t <= calmEndTime) {
-            return 0 + (float) (random.nextGaussian());
+            return 0;
         } else {
-            return 0 + (float) (random.nextGaussian());
+            return 0;
         }
 
     }
@@ -268,8 +267,8 @@ public class InterpolationClimateEvent implements ClimateEvent {
         float F1 = D3 / D4;
         float F2 = D1 / D2;
 
-        float P1 = (float) Math.pow(F1, 2);
-        float P2 = (float) Math.pow(F2, 2);
+        float P1 = F1*F1;
+        float P2 = F2*F2;
 
         return T0 * (1 + 2 * F2) * P1 + T1 * (1 + 2 * F1) * P2 + dT0 * D1 * P1 + dT1 * D3 * P2;
     }

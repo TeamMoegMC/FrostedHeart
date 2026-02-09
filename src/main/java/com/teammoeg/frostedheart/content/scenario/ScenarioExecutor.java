@@ -34,8 +34,8 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.joml.Vector3f;
 
-import com.teammoeg.chorda.client.ui.Point;
-import com.teammoeg.chorda.client.ui.Rect;
+import com.teammoeg.chorda.math.Point;
+import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 

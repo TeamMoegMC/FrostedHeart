@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.ui.Rect;
+import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.OrderedRenderableContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;

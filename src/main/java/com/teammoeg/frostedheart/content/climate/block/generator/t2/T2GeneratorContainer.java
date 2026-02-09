@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate.block.generator.t2;
 
-import com.teammoeg.chorda.client.ui.Point;
+import com.teammoeg.chorda.math.Point;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;

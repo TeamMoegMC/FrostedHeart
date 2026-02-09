@@ -22,6 +22,7 @@ package com.teammoeg.chorda.client.ui;
 import java.util.Arrays;
 import java.util.List;
 
+import com.teammoeg.chorda.math.Point;
 import com.teammoeg.chorda.util.IterateUtils;
 import com.teammoeg.chorda.util.struct.MutablePair;
 

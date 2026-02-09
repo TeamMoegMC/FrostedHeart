@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.chorda.client.ui;
+package com.teammoeg.chorda.math;
 
 import java.util.Objects;
 

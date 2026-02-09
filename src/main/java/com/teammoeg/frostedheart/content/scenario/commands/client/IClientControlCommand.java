@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.scenario.commands.client;
 
-import com.teammoeg.chorda.client.ui.Point;
-import com.teammoeg.chorda.client.ui.Rect;
+import com.teammoeg.chorda.math.Point;
+import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.content.scenario.client.IClientScene;
 
 public interface IClientControlCommand {

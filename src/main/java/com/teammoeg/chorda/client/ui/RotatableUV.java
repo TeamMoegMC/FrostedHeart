@@ -20,6 +20,8 @@
 package com.teammoeg.chorda.client.ui;
 
 
+import com.teammoeg.chorda.math.Point;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 

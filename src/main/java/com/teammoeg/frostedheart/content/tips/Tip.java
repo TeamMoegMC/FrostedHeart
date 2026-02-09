@@ -26,8 +26,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.logging.LogUtils;
-import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.io.FileUtil;
+import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.text.Components;
 
 import lombok.Getter;

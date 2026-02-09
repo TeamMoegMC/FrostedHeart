@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 
-import com.teammoeg.chorda.client.ui.Rect;
+import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
 

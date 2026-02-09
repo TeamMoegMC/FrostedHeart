@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.waypoint;
 
-import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.io.registry.NBTSerializerRegistry;
+import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.waypoint.capability.WaypointCapability;

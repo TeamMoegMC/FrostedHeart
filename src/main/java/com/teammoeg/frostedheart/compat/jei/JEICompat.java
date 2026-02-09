@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.compat.jei.category.*;
 import com.teammoeg.frostedheart.content.town.mine.BiomeMineResourceRecipe;
 import org.jetbrains.annotations.NotNull;
 
-import com.teammoeg.chorda.client.ui.Point;
+import com.teammoeg.chorda.math.Point;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;

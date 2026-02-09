@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.tips.client.gui;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.icon.FlatIcon;
-import com.teammoeg.chorda.client.ui.Colors;
 import com.teammoeg.chorda.client.widget.ActionStateIconButton;
+import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.tips.Tip;

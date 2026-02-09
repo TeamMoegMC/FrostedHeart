@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.wheelmenu;
 import java.util.function.Predicate;
 
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.client.icon.FlatIcon;
-import com.teammoeg.chorda.client.ui.Colors;
 
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;

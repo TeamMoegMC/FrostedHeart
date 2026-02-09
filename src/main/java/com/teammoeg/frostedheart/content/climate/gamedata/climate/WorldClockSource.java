@@ -28,6 +28,7 @@ import net.minecraft.server.level.ServerLevel;
 public class WorldClockSource {
     long secs;
     long lastdaytime;
+	public static final long secondsPerDay = 24 * 50;
 
     public WorldClockSource() {
     }

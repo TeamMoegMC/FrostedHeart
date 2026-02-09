@@ -44,11 +44,14 @@ import com.teammoeg.frostedheart.content.climate.gamedata.climate.DayClimateData
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 
 import lombok.Setter;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent;
@@ -100,8 +103,8 @@ public class WorldClimate implements NBTSerializable {
     protected WorldClockSource clockSource;
     protected LinkedList<DayClimateData> dailyTempData;
     protected List<ClimateEventTrack> tracks=new ArrayList<>();
-    protected short[] frames = new short[40];
-    protected long lastforecast;
+    protected List<WhiteCurtainInfo> whitecurtains=new ArrayList<>();
+
     protected long lasthour = -1;
     protected int hourInDay = 0;
     protected DayClimateData daycache;
@@ -109,6 +112,7 @@ public class WorldClimate implements NBTSerializable {
     private boolean isInitialEventAdded;
     @Setter
     private transient long seed;
+    WeatherForecast forecast=new WeatherForecast();
     
 	/**
      * Get ClimateData attached to this world
@@ -222,7 +226,7 @@ public class WorldClimate implements NBTSerializable {
                     curddate++;
                 }
 
-                return new ClimateResult(data.dailyTempData.get(curddate).getTemp(curdhours), data.dailyTempData.get(curddate).getType(curdhours));
+                return data.dailyTempData.get(curddate).getClimate(curdhours);
             }
 
         };
@@ -505,7 +509,7 @@ public class WorldClimate implements NBTSerializable {
         lasthour = -1;
         lastday = -1;
         this.updateCache(w);
-        this.updateFrames();
+        forecast.updateFrames(clockSource.getHours(),this.getFrames());
     }
 
 
@@ -600,91 +604,6 @@ public class WorldClimate implements NBTSerializable {
         return clockSource.getDate();
     }
 
-    public short[] getFrames() {
-        return frames;
-    }
-    private int getTemperatureLevel(float temp) {
-        if (temp >= WorldTemperature.WARM_PERIOD_PEAK-WorldTemperature.FORECAST_SENSITIVE_THERSOLD*2) {
-            return 1;
-        } else if (temp <= -2) {
-            for (int j = WorldTemperature.BOTTOMS.length - 1; j >= 0; j--) {//check out its level
-                float b = WorldTemperature.BOTTOMS[j]+WorldTemperature.FORECAST_SENSITIVE_THERSOLD;
-                if (temp < b) {//just acrosss a level
-                    return -j - 1;
-                }
-            }
-        }
-        return 0;
-    }
-    private float getLevelTemperature(int level) {
-    	if(level>0) {
-	    	switch(level) {
-	    	case 2:return WorldTemperature.WARM_PERIOD_PEAK;
-	    	case 1:return WorldTemperature.WARM_PERIOD_LOWER_PEAK;
-	    	default:return 0;
-	    	}
-    	}else if(level==0)
-    		return 0;
-    	return WorldTemperature.BOTTOMS[-level-1];
-    }
-    private float getLevelMaxThresold(float temp) {
-    	return temp+10-WorldTemperature.FORECAST_SENSITIVE_THERSOLD;
-    }
-    private float getLevelMinThresold(float temp) {
-    	int delta=10;
-    	if(temp>0)
-    		delta=8;
-    	return temp-delta+WorldTemperature.FORECAST_SENSITIVE_THERSOLD;
-    }
-    public List<ForecastFrame> getFrames(int min, int max) {
-        List<ForecastFrame> frames = new ArrayList<>();
-        ClimateResult lastClimate = getFutureClimate(-1);
-        int lastLevel=getTemperatureLevel(lastClimate.temperature());
-        ClimateType lastType = ClimateType.NONE;
-        int i = 0;//(int) (this.clockSource.getHours()%3);
-        float ltemp=getLevelTemperature(lastLevel);
-        float tmin=getLevelMinThresold(ltemp);
-        float tmax=getLevelMaxThresold(ltemp);
-        int curLevel=lastLevel;
-        lastLevel=0;
-        for (ClimateResult pf : getFutureClimateIterator(this, min)) {
-            if (i >= max) break;
-            final float f = pf.temperature();
-            final ClimateType bz = pf.climate();
-            //System.out.println(bz+","+lastlevel+","+f);
-            if(tmin>f||tmax<f){//over the thresold
-            	curLevel=getTemperatureLevel(f);
-            	ltemp=getLevelTemperature(curLevel);
-            	tmin=getLevelMinThresold(ltemp);
-            	tmax=getLevelMaxThresold(ltemp);
-            }
-            if (lastType.typeId != bz.typeId) {
-                switch (bz) {
-                    case SNOW_BLIZZARD:
-                    case BLIZZARD:
-                    	frames.add(ForecastFrame.weather(i, bz, -7));break;
-                    default:
-                    	frames.add(ForecastFrame.weather(i, bz, curLevel));
-                }
-                lastType = bz;
-            } else if (lastType == ClimateType.BLIZZARD || lastType == ClimateType.SNOW_BLIZZARD) {
-
-            } else /*if(i==0) {
-            	if(lastLevel>0)
-            		frames.add(ForecastFrame.increase(i, lastLevel));
-            	else if(lastLevel<0)
-            		frames.add(ForecastFrame.decrease(i, lastLevel));
-            } else */if(curLevel!=lastLevel) {
-            	if(lastLevel>curLevel)
-            		frames.add(ForecastFrame.decrease(i, curLevel));
-            	else
-            		frames.add(ForecastFrame.increase(i, curLevel));
-            }
-            lastLevel=curLevel;
-            i++;
-        }
-        return frames;
-    }
 
     public float getFutureTemp(int deltaHours) {
         long thours = this.clockSource.getHours() + deltaHours;
@@ -750,7 +669,7 @@ public class WorldClimate implements NBTSerializable {
         long date = clockSource.getDate();
         updateDayCache(date);
         updateHourCache(hours);
-        this.updateFrames();
+        forecast.updateFrames(clockSource.getHours(),this.getFrames());
     }
 
     public void rebuildCache(ServerLevel w) {
@@ -759,10 +678,12 @@ public class WorldClimate implements NBTSerializable {
         lastday = -1;
         this.populateDays();
         this.updateCache(w);
-        this.updateFrames();
+        forecast.updateFrames(clockSource.getHours(),this.getFrames());
     }
 
-
+    public List<ForecastFrame> getFrames(){
+    	return WeatherForecast.getFrames(getFutureClimateIterator(this,0),this.getFutureClimate(-1), (int) (120 - clockSource.getHours()%3));
+    }
 
     public void resetTempEvent(ServerLevel w) {
         for(ClimateEventTrack track:tracks)
@@ -772,7 +693,7 @@ public class WorldClimate implements NBTSerializable {
         lastday = -1;
         this.populateDays();
         this.updateCache(w);
-        this.updateFrames();
+        forecast.updateFrames(clockSource.getHours(),this.getFrames());
     }
 
 
@@ -794,10 +715,7 @@ public class WorldClimate implements NBTSerializable {
     	for(ClimateEventTrack i:tracks) {
     		sb.append(i).append("\n");
     	}
-    	sb.append("frame=");
-    	for(int i=0;i<frames.length;i++) {
-    		sb.append(ForecastFrame.unpack(frames[i])).append(",");
-    	}
+    	sb.append(forecast);
         return sb.toString();
     }
 
@@ -825,9 +743,11 @@ public class WorldClimate implements NBTSerializable {
                 updateDayCache(date);
             }
             updateHourCache(hours);
-            this.updateNewFrames();
+            if(forecast.shouldUpdateNewFrames(hours))
+            	forecast.updateFrames(hours,this.getFrames());
             // Send to client if hour increases
-            FHNetwork.INSTANCE.send(PacketDistributor.DIMENSION.with(serverWorld::dimension), new FHClimatePacket(this));
+            for(ServerPlayer p:serverWorld.players())
+            	FHNetwork.INSTANCE.send(PacketDistributor.PLAYER.with(()->p), new FHClimatePacket(this,p));
         }
     }
 
@@ -866,40 +786,6 @@ public class WorldClimate implements NBTSerializable {
     }
 
     /**
-     * Present a total update for forecast data
-     */
-    public void updateFrames() {
-        int crt = clockSource.getHourInDay();
-        int delta = crt % 3;
-        ForecastFrame[] toRender = new ForecastFrame[40];
-        for (ForecastFrame te : getFrames(0, 120 - delta)) {
-            int renderIndex = (te.dhours + delta) / 3;
-            if (renderIndex >= 40) break;
-            ForecastFrame prev = toRender[renderIndex];
-            if (prev != null && prev.type.isWeatherEvent() && !te.type.isWeatherEvent())
-                continue;//Always not omit weather event
-            if (prev == null ||//previous null, overwrite
-                    te.type.isWeatherEvent() ||//respect weather event
-                    (te.toState < 0 && prev.toState >= 0) ||//lower in value
-                    (te.toState < 0 && prev.toState < 0 && te.toState < prev.toState) || //lowest in value
-                    (te.toState > 0 && prev.toState <= 0) || //higher in value
-                    (te.toState > 0 && prev.toState > 0 && te.toState > prev.toState)//highest in value
-                //te.toState == 0
-            ) {
-                toRender[renderIndex] = te;
-            }
-        }
-        lastforecast = clockSource.getHours() + 120 - delta;
-        int i = 0;
-        for (ForecastFrame tf : toRender) {
-            if (tf != null)
-                frames[i++] = tf.packNoHour();
-            else
-                frames[i++] = 0;
-        }
-    }
-
-    /**
      * Update hour cache.
      *
      * @param hours in absolute hours relative to clock source.
@@ -910,23 +796,7 @@ public class WorldClimate implements NBTSerializable {
         hourInDay = clockSource.getHourInDay();
     }
 
-    /**
-     * Present a minor update for forecast data
-     */
-    public boolean updateNewFrames() {
-        long cur = clockSource.getHours();
-        if (cur >= lastforecast) {//times goes too fast.
-            updateFrames();
-            return true;
-        }
-        int crt = clockSource.getHourInDay();
-        int delta = crt % 3;
-        int from = (int) (lastforecast - cur);
-        int to = 120 - delta;
-        if (to - from < 3) return false;
-        updateFrames();
-        return true;
-    }
+
 	@Override
 	public void save(CompoundTag nbt, boolean isPacket) {
         clockSource.serialize(nbt);
@@ -959,6 +829,15 @@ public class WorldClimate implements NBTSerializable {
 	}
 	public int getTrackSize() {
 		return tracks.size();
+	}
+
+	public short[] getForecastFrames(ChunkPos pos) {
+		for(WhiteCurtainInfo wci:whitecurtains) {
+			if(wci.isAffected(pos)) {
+				return wci.getFrames(this,clockSource.getHours(), pos);
+			}
+		}
+		return forecast.getFrames();
 	}
 
 

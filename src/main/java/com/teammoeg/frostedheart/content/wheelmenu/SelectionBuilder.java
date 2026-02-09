@@ -24,7 +24,7 @@ import java.util.function.Predicate;
 import com.simibubi.create.foundation.utility.Components;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.teammoeg.chorda.client.ui.Colors;
+import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.wheelmenu.useractions.KeyMappingTriggerAction;
 
 import net.minecraft.network.chat.Component;

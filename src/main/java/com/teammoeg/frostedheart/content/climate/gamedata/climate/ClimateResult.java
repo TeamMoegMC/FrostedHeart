@@ -21,4 +21,20 @@ package com.teammoeg.frostedheart.content.climate.gamedata.climate;
 
 public record ClimateResult(float temperature,ClimateType climate) {
 	public static final ClimateResult EMPTY=new ClimateResult(0f,ClimateType.NONE);
+	public ClimateResult setClimate(ClimateType climate) {
+		return new ClimateResult(temperature,climate);
+	}
+	
+	public ClimateResult setTemperature(float temperature) {
+		return new ClimateResult(temperature,climate);
+	}
+	public ClimateResult merge(ClimateResult other) {
+		if(this.climate.merge(other.climate())==climate&&this.temperature<other.temperature()) {
+			return this;
+		}
+		if(this.climate.merge(other.climate())==other.climate&&this.temperature>other.temperature()) {
+			return other;
+		}
+		return new ClimateResult(Math.min(temperature, other.temperature()),climate.merge(other.climate()));
+	}
 }

@@ -25,6 +25,8 @@ import org.joml.AxisAngle4f;
 import org.joml.Quaternionf;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.chorda.math.Point;
+import com.teammoeg.chorda.math.Rect;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;

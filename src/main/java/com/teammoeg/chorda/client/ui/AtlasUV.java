@@ -22,6 +22,8 @@ package com.teammoeg.chorda.client.ui;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.teammoeg.chorda.math.Point;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 

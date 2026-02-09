@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.chorda.client.ui;
+package com.teammoeg.chorda.math;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;

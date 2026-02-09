@@ -29,6 +29,8 @@ import com.teammoeg.frostedheart.content.climate.gamedata.climate.ForecastFrame;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.network.NetworkEvent;
 
 public class FHClimatePacket implements CMessage {
@@ -54,7 +56,7 @@ public class FHClimatePacket implements CMessage {
         humidity = buffer.readFloat();
     }
 
-    public FHClimatePacket(WorldClimate climateData) {
+    public FHClimatePacket(WorldClimate climateData, ServerPlayer p) {
     	if(climateData==null) {
     		data = new short[0];
             sec = 0;
@@ -62,7 +64,7 @@ public class FHClimatePacket implements CMessage {
             wind = 0;
             humidity = 0;
     	}else {
-	        data = climateData.getFrames();
+	        data = climateData.getForecastFrames(new ChunkPos(p.blockPosition()));
 	        sec = climateData.getSec();
 	        climate = climateData.getClimate();
             wind = climateData.getWind();
@@ -70,7 +72,8 @@ public class FHClimatePacket implements CMessage {
     	}
     }
 
-    public void encode(FriendlyByteBuf buffer) {
+
+	public void encode(FriendlyByteBuf buffer) {
         SerializeUtil.writeShortArray(buffer, data);
         buffer.writeVarLong(sec);
         buffer.writeByte((byte) climate.ordinal());

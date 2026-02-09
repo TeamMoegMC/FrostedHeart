@@ -30,9 +30,7 @@ import net.minecraft.nbt.CompoundTag;
 public class DayClimateData {
     public static class HourData {
     	public static final Codec<HourData> CODEC=Codec.INT.xmap(HourData::new,HourData::pack);
-        private float temp = 0;
-
-        private ClimateType type = ClimateType.NONE;
+        private ClimateResult climate = ClimateResult.EMPTY;
         //6
         private byte windSpeed;//unsigned
 
@@ -43,15 +41,14 @@ public class DayClimateData {
 
         public HourData(ClimateType type) {
             super();
-            this.type = type;
+            this.climate = new ClimateResult(0f,type);
         }
 
 
         public HourData(float temp, ClimateType type,
                         int windSpeed) {
             super();
-            this.temp = temp;
-            this.type = type;
+            this.climate = new ClimateResult(temp,type);
             setWindSpeed(windSpeed);
         }
 
@@ -61,11 +58,11 @@ public class DayClimateData {
         }
 
         public float getTemp() {
-            return temp;
+            return climate.temperature();
         }
 
         public ClimateType getType() {
-            return type == null ? ClimateType.NONE : type;//IDK why this happens, but this would fix
+            return climate.climate();
         }
 
         public ClimateResult getClimate() {
@@ -77,7 +74,7 @@ public class DayClimateData {
 
         public int pack() {
             int val = 0;
-            short tempInt = (short) (temp * 100);
+            short tempInt = (short) (climate.temperature() * 100);
             val |= (tempInt & 0xFFFF);
             val |= windSpeed << 16;
 
@@ -91,15 +88,14 @@ public class DayClimateData {
 
         @Override
         public String toString() {
-            return "{T=" + temp + ",W=" + getType() + ",V=" + getWindSpeed() + "}";
+            return "{T=" + climate + ",V=" + getWindSpeed() + "}";
         }
 
         public void unpack(int val) {
             short tempInt = (short) (val & 0xFFFF);
-            temp = tempInt / 100f;
             windSpeed = (byte) ((val >> 16) & 0xff);
             int vx = (val >> 24);
-            type = ClimateType.values()[vx];
+            climate=new ClimateResult(tempInt / 100f,ClimateType.values()[vx]);
         }
 
 
@@ -167,7 +163,7 @@ public class DayClimateData {
     }
 
     public ClimateType getType(int hourInDay) {
-        return hourData[hourInDay].type;
+        return hourData[hourInDay].climate.climate();
     }
 
     public ClimateType getType(WorldClockSource wcs) {
@@ -227,31 +223,31 @@ public class DayClimateData {
     }
 
     public void setBlizzard(int hourInDay) {
-        hourData[hourInDay].type = ClimateType.BLIZZARD;
+    	 setType(hourInDay,ClimateType.BLIZZARD);
     }
 
     public void setCloudy(int hourInDay) {
-        hourData[hourInDay].type = ClimateType.CLOUDY;
+    	setType(hourInDay,ClimateType.CLOUDY);
     }
 
     public void setSnow(int hourInDay) {
-        hourData[hourInDay].type = ClimateType.SNOW;
+    	setType(hourInDay,ClimateType.SNOW);
     }
 
     public void setSunny(int hourInDay) {
-        hourData[hourInDay].type = ClimateType.SUN;
+    	setType(hourInDay,ClimateType.SUN);
     }
 
     void setTemp(int hourInDay, float temp) {
-        hourData[hourInDay].temp = temp;
+    	hourData[hourInDay].climate=hourData[hourInDay].climate.setTemperature(temp);
     }
 
     public void setType(int hourInDay, ClimateType type) {
-        hourData[hourInDay].type = type;
+    	hourData[hourInDay].climate=hourData[hourInDay].climate.setClimate(type);
     }
 
     public void setWind(int hourInDay, int speed) {
-        hourData[hourInDay].setWindSpeed(speed);
+    	hourData[hourInDay].setWindSpeed(speed);
     }
 
     @Override
@@ -259,6 +255,10 @@ public class DayClimateData {
         return "{hourData=" + Arrays.stream(hourData).map(Object::toString).reduce("", (a, b) -> a + b + ",") + ",rH=" + dayHumidity
                 + ",noise=" + dayNoise + "}";
     }
+
+	public void setClimate(int hourInDay, ClimateResult clr) {
+		hourData[hourInDay].climate=clr;
+	}
 
 
 }

@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutorService;
 
 import javax.imageio.ImageIO;
 
-import com.teammoeg.chorda.client.ui.Rect;
+import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
