@@ -30,6 +30,7 @@ import com.teammoeg.chorda.io.registry.TypedCodecRegistry;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.util.RandomSource;
 
 public class ClimateEventTrack {
 	public static final TypedCodecRegistry<ClimateEvent> REGISTRY=new TypedCodecRegistry<>();
@@ -41,9 +42,9 @@ public class ClimateEventTrack {
     protected LinkedList<ClimateEvent> tempEventStream = new LinkedList<>();
 	public ClimateEventTrack() {
 	}
-    public void appendTempEvent(LongFunction<ClimateEvent> generator) {
+    public void appendTempEvent(LongFunction<RandomSource> rs,ClimateEventProvider generator) {
         ClimateEvent head = tempEventStream.getLast();
-        tempEventStream.add(generator.apply(head.getCalmEndTime()));
+        tempEventStream.add(generator.generateEvent(rs.apply(head.getCalmEndTime()),head.getCalmEndTime()));
     }
     public void appendTempEvent(ClimateEvent event) {
         tempEventStream.add(event);
@@ -56,20 +57,20 @@ public class ClimateEventTrack {
      *
      * @param time given in absolute seconds relative to clock source.
      */
-    protected void rebuildTempEventStream(long currentTime,long time) {
+    protected void rebuildTempEventStream(RandomSource rs,long currentTime,long time) {
         // If tempEventStream becomes empty for some reason,
         // start generating TempEvent from current time.
         FHMain.LOGGER.error("Temperature Data corrupted, rebuilding temperature data");
         if (tempEventStream.isEmpty() || tempEventStream.getFirst().getStartTime() > currentTime) {
             tempEventStream.clear();
-            tempEventStream.add(InterpolationClimateEvent.getClimateEvent(currentTime));
+            tempEventStream.add(InterpolationClimateEvent.getClimateEvent(rs,currentTime));
         }
 
         ClimateEvent head = tempEventStream.getFirst();
         tempEventStream.clear();
         tempEventStream.add(head);
         while (head.getCalmEndTime() < time) {
-            tempEventStream.add(head = InterpolationClimateEvent.getClimateEvent(head.getCalmEndTime()));
+            tempEventStream.add(head = InterpolationClimateEvent.getClimateEvent(rs,head.getCalmEndTime()));
         }
     }
     /**
@@ -77,16 +78,16 @@ public class ClimateEventTrack {
      *
      * @param time given in absolute seconds relative to clock source.
      */
-    protected void tempEventStreamGrow(long currentTime,long time) {
+    protected void tempEventStreamGrow(RandomSource rs,long currentTime,long time) {
         // If tempEventStream becomes empty for some reason,
         // start generating TempEvent from current time.
         if (tempEventStream.isEmpty()) {
-            tempEventStream.add(InterpolationClimateEvent.getClimateEvent(currentTime));
+            tempEventStream.add(InterpolationClimateEvent.getClimateEvent(rs,currentTime));
         }
 
         ClimateEvent head = tempEventStream.getLast();
         while (head.getCalmEndTime() < time) {
-            tempEventStream.add(head = InterpolationClimateEvent.getClimateEvent(head.getCalmEndTime()));
+            tempEventStream.add(head = InterpolationClimateEvent.getClimateEvent(rs,head.getCalmEndTime()));
         }
     }
 
@@ -119,9 +120,9 @@ public class ClimateEventTrack {
      * @param time given in absolute seconds relative to clock source.
      * @return temperature at given time
      */
-    public ClimateResult computeTemp(long currentTime,long time) {
+    public ClimateResult computeTemp(RandomSource rs,long currentTime,long time) {
         if (time < currentTime) return ClimateResult.EMPTY;
-        tempEventStreamGrow(currentTime,time);
+        tempEventStreamGrow(rs,currentTime,time);
         while (true) {
             Optional<ClimateResult> f = tempEventStream
                     .stream()
@@ -130,7 +131,7 @@ public class ClimateEventTrack {
                     .map(e -> e.getHourClimate(time));
             if (f.isPresent())
                 return f.get();
-            rebuildTempEventStream(currentTime,time);
+            rebuildTempEventStream(rs,currentTime,time);
         }
     }
 	public void save(CompoundTag nbt) {

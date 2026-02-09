@@ -20,25 +20,19 @@
 package com.teammoeg.frostedheart.content.climate.gamedata.climate;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
-import java.util.function.Function;
 import java.util.function.LongFunction;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.NBTSerializable;
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.chorda.math.BaseRandomSource;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
@@ -46,10 +40,12 @@ import com.teammoeg.frostedheart.content.climate.event.ClimateCommonEvents;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.DayClimateData.HourData;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 
+import lombok.Setter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent;
@@ -108,8 +104,10 @@ public class WorldClimate implements NBTSerializable {
     protected DayClimateData daycache;
     protected long lastday = -1;
     private boolean isInitialEventAdded;
-
-    /**
+    @Setter
+    private transient long seed;
+    
+	/**
      * Get ClimateData attached to this world
      *
      * @param world server or client
@@ -117,7 +115,10 @@ public class WorldClimate implements NBTSerializable {
      */
     @Nullable
     public static WorldClimate get(LevelAccessor world) {
-        return getCapability(world).orElse(null);
+    	WorldClimate wc= getCapability(world).orElse(null);
+    	if(wc!=null&&world instanceof ServerLevel sl)
+    		wc.setSeed(sl.getSeed());
+    	return wc;
     }
 
     /**
@@ -484,7 +485,9 @@ public class WorldClimate implements NBTSerializable {
 
 
 
-
+    private RandomSource createRandomSource(long currentTime) {
+        return new BaseRandomSource(currentTime^0xBCAD6553AFAB0721L^seed);
+    }
     /**
      * Used to populate daily cache.
      *
@@ -495,9 +498,10 @@ public class WorldClimate implements NBTSerializable {
      */
     private DayClimateData generateDay(long day, float lastnoise, float lasthumid,int lastWind) {
         DayClimateData dtd = new DayClimateData();
-        Random rnd = new Random();
+       
         long startTime = day * 1200;
         long currentTime=this.clockSource.getTimeSecs();
+        RandomSource rnd =createRandomSource(currentTime);
         dtd.day = day;
         dtd.dayNoise = (float) Mth.clamp(rnd.nextGaussian() * 5 + lastnoise, -5d, 5d);
         dtd.dayHumidity = (float) Mth.clamp(rnd.nextGaussian() * 5 + lasthumid, 0d, 50d);
@@ -506,7 +510,7 @@ public class WorldClimate implements NBTSerializable {
         	ClimateType finalClimate=ClimateType.NONE;
         	long time=startTime + i * 50;
         	for(ClimateEventTrack track:tracks) {
-        		ClimateResult temp = track.computeTemp(currentTime, time);
+        		ClimateResult temp = track.computeTemp(rnd.fork(),currentTime, time);
         		finalClimate=temp.climate().merge(finalClimate);
         		float ctemp=temp.temperature();
         		if(ctemp<min) {
@@ -938,8 +942,10 @@ public class WorldClimate implements NBTSerializable {
 		this.isInitialEventAdded = isInitialEventAdded;
 	}
 
-	public void appendTempEvent(int track,LongFunction<ClimateEvent> event) {
-		tracks.get(track).appendTempEvent(event);
+	public void appendTempEvent(int track,ClimateEventProvider event) {
+
+        
+		tracks.get(track).appendTempEvent(this::createRandomSource,event);
 		
 	}
 	public int getTrackSize() {

@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import lombok.Getter;
+import net.minecraft.util.RandomSource;
 
 /**
  * A climate event defined by a set of timestamps and temperature
@@ -49,8 +50,7 @@ public class InterpolationClimateEvent implements ClimateEvent {
     @Getter
     private long calmEndTime;
 
-    public static InterpolationClimateEvent getBlizzardClimateEvent(long startTime) {
-        Random random = new Random();
+    public static InterpolationClimateEvent getBlizzardClimateEvent(RandomSource random,long startTime) {
         long peakTime = 0, bottomTime = 0, endTime = 0;
         float peakTemp = 0, bottomTemp = 0;
         int add=(int) Math.max(0,10-(startTime/secondsPerDay-15)/10);
@@ -113,21 +113,19 @@ public class InterpolationClimateEvent implements ClimateEvent {
      *                  seconds.
      * @return a new TempEvent.
      */
-    public static InterpolationClimateEvent getClimateEvent(long startTime) {
-        Random random = new Random();
+    public static InterpolationClimateEvent getClimateEvent(RandomSource random,long startTime) {
         int blizzardFrequency = FHConfig.SERVER.CLIMATE.blizzardFrequency.get();
         int rand = random.nextInt(10)+((startTime/secondsPerDay<=15)?5:0);
         if (rand < blizzardFrequency) {
-            return getBlizzardClimateEvent(startTime);
+            return getBlizzardClimateEvent(random,startTime);
         } else if (rand > 7) {
-            return getWarmClimateEvent(startTime);
+            return getWarmClimateEvent(random,startTime);
         } else {
-            return getColdClimateEvent(startTime);
+            return getColdClimateEvent(random,startTime);
         }
     }
 
-    public static InterpolationClimateEvent getColdClimateEvent(long startTime) {
-        Random random = new Random();
+    public static InterpolationClimateEvent getColdClimateEvent(RandomSource random,long startTime) {
         long peakTime = 0, bottomTime = 0, endTime = 0;
         float peakTemp = 0, bottomTemp = 0;
         switch (random.nextInt(10)) {
@@ -162,8 +160,7 @@ public class InterpolationClimateEvent implements ClimateEvent {
         return new InterpolationClimateEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, true, false);
     }
 
-    public static InterpolationClimateEvent getWarmClimateEvent(long startTime) {
-        Random random = new Random();
+    public static InterpolationClimateEvent getWarmClimateEvent(RandomSource random,long startTime) {
         long peakTime = 0, bottomTime = 0, endTime = 0;
         float peakTemp = 0, bottomTemp = 0;
         long length = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
