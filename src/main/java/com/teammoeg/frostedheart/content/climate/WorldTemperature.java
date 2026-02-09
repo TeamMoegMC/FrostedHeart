@@ -193,12 +193,12 @@ public class WorldTemperature {
     /**
      * The peak temperature of a blizzard period.
      */
-    public static final float BLIZZARD_WARM_PEAK = WARM_PERIOD_LOWER_PEAK;
+    public static final float BLIZZARD_WARM_PEAK = WARM_PERIOD_PEAK;
 
     /**
      * The bottom temperature of a cold period.
      */
-    public static final float COLD_PERIOD_BOTTOM_T1 = -5;
+    //public static final float COLD_PERIOD_BOTTOM_T1 = -5;
     public static final float COLD_PERIOD_BOTTOM_T2 = -10;
     public static final float COLD_PERIOD_BOTTOM_T3 = -20;
     public static final float COLD_PERIOD_BOTTOM_T4 = -30;
@@ -209,7 +209,7 @@ public class WorldTemperature {
     public static final float COLD_PERIOD_BOTTOM_T9 = -80;
     public static final float COLD_PERIOD_BOTTOM_T10 = -90;
     public static final float[] BOTTOMS = new float[]{
-            COLD_PERIOD_BOTTOM_T1,
+            //COLD_PERIOD_BOTTOM_T1,
             COLD_PERIOD_BOTTOM_T2,
             COLD_PERIOD_BOTTOM_T3,
             COLD_PERIOD_BOTTOM_T4,
@@ -220,7 +220,8 @@ public class WorldTemperature {
             COLD_PERIOD_BOTTOM_T9,
             COLD_PERIOD_BOTTOM_T10
     };
-
+    public static final int FORECAST_SENSITIVE_THERSOLD=2;
+    
     // Matter state transitions
     public static final float CO2_FREEZES = -78;
     public static final float OXYGEN_FREEZES = -218;

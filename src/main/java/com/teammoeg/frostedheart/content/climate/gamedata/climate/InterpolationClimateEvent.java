@@ -114,11 +114,11 @@ public class InterpolationClimateEvent implements ClimateEvent {
      * @return a new TempEvent.
      */
     public static InterpolationClimateEvent getClimateEvent(RandomSource random,long startTime) {
-        int blizzardFrequency = FHConfig.SERVER.CLIMATE.blizzardFrequency.get();
-        int rand = random.nextInt(10)+((startTime/secondsPerDay<=15)?5:0);
-        if (rand < blizzardFrequency) {
+        //int blizzardFrequency = FHConfig.SERVER.CLIMATE.blizzardFrequency.get();
+        int rand = random.nextInt(10)+((startTime/secondsPerDay<=15)?3:0);
+        /*if (rand < blizzardFrequency) {
             return getBlizzardClimateEvent(random,startTime);
-        } else if (rand > 7) {
+        } else */if (rand > 7) {
             return getWarmClimateEvent(random,startTime);
         } else {
             return getColdClimateEvent(random,startTime);
@@ -130,19 +130,19 @@ public class InterpolationClimateEvent implements ClimateEvent {
         float peakTemp = 0, bottomTemp = 0;
         switch (random.nextInt(10)) {
             case 0:
-                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T4;
+                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T5;
                 break;
             case 1:
             case 2:
-                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T3;
+                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T4;
                 break;
             case 3:
             case 4:
             case 5:
-                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T2;
+                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T3;
                 break;
             default:
-                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T1;
+                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T2;
                 break;
         }
 
@@ -210,7 +210,7 @@ public class InterpolationClimateEvent implements ClimateEvent {
                 type = ClimateType.BLIZZARD;
             } else if (temp <= WorldTemperature.SNOW_REACHES_GROUND && t < bottomTime) {
                 type = ClimateType.SNOW_BLIZZARD;
-            } else if (t > bottomTime) {
+            } else if (t > bottomTime&&t<endTime) {
                 type = ClimateType.SUN;
             }
         } else if (temp <= WorldTemperature.SNOW_REACHES_GROUND) {

@@ -274,8 +274,8 @@ public class FrostedHud {
     private static final Map<Integer, Integer> clrs = new HashMap<>();
 
     static {
-        clrs.put(2, 0x99FF9800);
-        clrs.put(1, 0x44FF9800);
+        clrs.put(1, 0x99FF9800);
+        //clrs.put(1, 0x44FF9800);
         clrs.put(0, 0x0);
         clrs.put(-1, 0x3357BDE8);
         clrs.put(-2, 0x4457BDE8);

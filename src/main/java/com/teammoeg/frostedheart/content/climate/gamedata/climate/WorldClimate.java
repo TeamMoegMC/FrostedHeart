@@ -28,6 +28,9 @@ import java.util.Random;
 import java.util.function.LongFunction;
 import javax.annotation.Nullable;
 
+import org.joml.Vector2f;
+import org.joml.Vector2i;
+
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.io.CodecUtil;
@@ -193,7 +196,7 @@ public class WorldClimate implements NBTSerializable {
         }
         return data.dailyTempData.get(deltaDays + 1).isSnow(deltaHours);
     }
-    public static Iterable<Pair<Float, ClimateType>> getFutureClimateIterator(WorldClimate data, int deltaHours) {
+    public static Iterable<ClimateResult> getFutureClimateIterator(WorldClimate data, int deltaHours) {
         long thours = data.clockSource.getHours() + deltaHours;
         long ddate = thours / 24 - data.clockSource.getDate() + 1;
         long dhours = thours % 24;
@@ -201,7 +204,7 @@ public class WorldClimate implements NBTSerializable {
             data.populateDays();
         }
         if (ddate < 0 || dhours < 0 || ddate >= DAY_CACHE_LENGTH) return ImmutableList.of();
-        return () -> new Iterator<Pair<Float, ClimateType>>() {
+        return () -> new Iterator<ClimateResult>() {
             int curddate = (int) ddate;
             int curdhours = (int) (dhours - 1);
 
@@ -211,7 +214,7 @@ public class WorldClimate implements NBTSerializable {
             }
 
             @Override
-            public Pair<Float, ClimateType> next() {
+            public ClimateResult next() {
                 if (!hasNext()) return null;
                 curdhours++;
                 if (curdhours >= 24) {
@@ -219,7 +222,7 @@ public class WorldClimate implements NBTSerializable {
                     curddate++;
                 }
 
-                return Pair.of(data.dailyTempData.get(curddate).getTemp(curdhours), data.dailyTempData.get(curddate).getType(curdhours));
+                return new ClimateResult(data.dailyTempData.get(curddate).getTemp(curdhours), data.dailyTempData.get(curddate).getType(curdhours));
             }
 
         };
@@ -264,7 +267,7 @@ public class WorldClimate implements NBTSerializable {
     private static float getFutureTemp(WorldClimate data, int deltaDays, int deltaHours) {
     	if(data==null)
     		return 0;
-        if (deltaDays < 0 || deltaDays > DAY_CACHE_LENGTH) {
+        if (deltaDays < -1 || deltaDays > DAY_CACHE_LENGTH) {
             return Float.NaN;
         }
         if (deltaHours < 0 || deltaHours >= 24)
@@ -274,7 +277,33 @@ public class WorldClimate implements NBTSerializable {
         }
         return data.dailyTempData.get(deltaDays + 1).getTemp(deltaHours);
     }
-
+    
+    /**
+     * Retrieves hourly updated temperature from cache
+     * Useful in weather forecast
+     *
+     * @param data       an instance of ClimateData
+     * @param deltaDays  delta days from now to forecast
+     * @param deltaHours in that day to forecast
+     * @return temperature at hour at index. 
+     */
+    private static ClimateResult getFutureClimate(WorldClimate data, int deltaDays, int deltaHours) {
+    	if(data==null)
+    		return ClimateResult.EMPTY;
+        if (deltaDays < -1 || deltaDays > DAY_CACHE_LENGTH) {
+            return ClimateResult.EMPTY;
+        }
+        if(deltaHours<0&&deltaDays<0) {
+        	deltaHours+=24;
+        }
+        if (deltaHours < 0 || deltaHours >= 24)
+            throw new IllegalArgumentException("Hours must be in range [0,24)");
+        if (data.dailyTempData.size() <= DAY_CACHE_LENGTH) { //this rarely happens, but for safety
+            data.populateDays();
+        }
+        return data.dailyTempData.get(deltaDays + 1).getClimate(deltaHours);
+    }
+    
     /**
      * Retrieves a iterator for future temperature until end of cache
      * Useful in long range weather forecast
@@ -574,97 +603,84 @@ public class WorldClimate implements NBTSerializable {
     public short[] getFrames() {
         return frames;
     }
-
+    private int getTemperatureLevel(float temp) {
+        if (temp >= WorldTemperature.WARM_PERIOD_PEAK-WorldTemperature.FORECAST_SENSITIVE_THERSOLD*2) {
+            return 1;
+        } else if (temp <= -2) {
+            for (int j = WorldTemperature.BOTTOMS.length - 1; j >= 0; j--) {//check out its level
+                float b = WorldTemperature.BOTTOMS[j]+WorldTemperature.FORECAST_SENSITIVE_THERSOLD;
+                if (temp < b) {//just acrosss a level
+                    return -j - 1;
+                }
+            }
+        }
+        return 0;
+    }
+    private float getLevelTemperature(int level) {
+    	if(level>0) {
+	    	switch(level) {
+	    	case 2:return WorldTemperature.WARM_PERIOD_PEAK;
+	    	case 1:return WorldTemperature.WARM_PERIOD_LOWER_PEAK;
+	    	default:return 0;
+	    	}
+    	}else if(level==0)
+    		return 0;
+    	return WorldTemperature.BOTTOMS[-level-1];
+    }
+    private float getLevelMaxThresold(float temp) {
+    	return temp+10-WorldTemperature.FORECAST_SENSITIVE_THERSOLD;
+    }
+    private float getLevelMinThresold(float temp) {
+    	int delta=10;
+    	if(temp>0)
+    		delta=8;
+    	return temp-delta+WorldTemperature.FORECAST_SENSITIVE_THERSOLD;
+    }
     public List<ForecastFrame> getFrames(int min, int max) {
         List<ForecastFrame> frames = new ArrayList<>();
-        float lastTemp = 0;
-
-        int i = 0;//(int) (this.clockSource.getHours()%3);
-        int lastLevel = 0;
+        ClimateResult lastClimate = getFutureClimate(-1);
+        int lastLevel=getTemperatureLevel(lastClimate.temperature());
         ClimateType lastType = ClimateType.NONE;
-        for (Pair<Float, ClimateType> pf : getFutureClimateIterator(this, min)) {
+        int i = 0;//(int) (this.clockSource.getHours()%3);
+        float ltemp=getLevelTemperature(lastLevel);
+        float tmin=getLevelMinThresold(ltemp);
+        float tmax=getLevelMaxThresold(ltemp);
+        int curLevel=lastLevel;
+        lastLevel=0;
+        for (ClimateResult pf : getFutureClimateIterator(this, min)) {
             if (i >= max) break;
-            final float f = pf.getFirst();
-            final ClimateType bz = pf.getSecond();
+            final float f = pf.temperature();
+            final ClimateType bz = pf.climate();
             //System.out.println(bz+","+lastlevel+","+f);
-
-            if (i == 0) {
-                lastTemp = f;
-                lastLevel = getTemperatureLevel(f);
-                if (bz != ClimateType.NONE) {
-                    frames.add(ForecastFrame.weather(i, bz, lastLevel));
-                }
-                if (lastLevel > 0) {
-                    frames.add(ForecastFrame.increase(i, lastLevel));
-                } else if (lastLevel < 0) {
-                    frames.add(ForecastFrame.decrease(i, lastLevel));
-                }
-                i++;
-                continue;
+            if(tmin>f||tmax<f){//over the thresold
+            	curLevel=getTemperatureLevel(f);
+            	ltemp=getLevelTemperature(curLevel);
+            	tmin=getLevelMinThresold(ltemp);
+            	tmax=getLevelMaxThresold(ltemp);
             }
-
             if (lastType.typeId != bz.typeId) {
                 switch (bz) {
                     case SNOW_BLIZZARD:
                     case BLIZZARD:
-                        lastLevel = -7;
+                    	frames.add(ForecastFrame.weather(i, bz, -7));break;
                     default:
-                        lastLevel = getTemperatureLevel(f);
+                    	frames.add(ForecastFrame.weather(i, bz, curLevel));
                 }
-                frames.add(ForecastFrame.weather(i, bz, lastLevel));
                 lastType = bz;
-                lastTemp = f;
             } else if (lastType == ClimateType.BLIZZARD || lastType == ClimateType.SNOW_BLIZZARD) {
 
-            } else if (lastTemp > f) {//when temperature decreasing
-                if (f < -2) {//if lower than base line
-                    for (int j = WorldTemperature.BOTTOMS.length - 1; j >= -lastLevel && j >= 0; j--) {//check out its level
-                        if (f < WorldTemperature.BOTTOMS[j]) {//just acrosss a level
-                            lastLevel = -j - 1;
-                            frames.add(ForecastFrame.decrease(i, lastLevel));//mark as decreased
-                            break;
-                        }
-                    }
-
-                } else if (f <= 0 + WorldTemperature.WARM_PERIOD_LOWER_PEAK - 3) {//check out if its just go back to calm
-                    if (lastLevel > 0) {
-                        lastLevel = 0;
-                        frames.add(ForecastFrame.calm(i, 0));
-                    }
-                } else if (f <= WorldTemperature.WARM_PERIOD_PEAK - 2) {//check out if its just go down from level 2
-                    if (lastLevel > 1) {
-                        lastLevel = 1;
-                        frames.add(ForecastFrame.calm(i, 1));
-                    }
-                }
-            } else if (f > lastTemp) {//when temperature increasing
-
-                if (f > WorldTemperature.WARM_PERIOD_PEAK - 2) {
-                    if (lastLevel < 2) {
-                        lastLevel = 2;
-                        frames.add(ForecastFrame.increase(i, 2));
-                    }
-                } else if (f > 0 + WorldTemperature.WARM_PERIOD_LOWER_PEAK - 3) {
-                    if (lastLevel < 1) {
-                        lastLevel = 1;
-                        frames.add(ForecastFrame.increase(i, 1));
-                    }
-                } else if (f >= -2) {
-                    if (lastLevel < 0) {
-                        lastLevel = 0;
-                        frames.add(ForecastFrame.calm(i, 0));
-                    }
-                } else if (lastLevel < 0) {//if lower than base line
-                    for (int j = WorldTemperature.BOTTOMS.length - 1; j >= -lastLevel && j >= 0; j--) {//check out its level
-                        if (f < WorldTemperature.BOTTOMS[j]) {//just acrosss a level
-                            lastLevel = -j - 1;
-                            frames.add(ForecastFrame.calm(i, lastLevel));//mark as decreased
-                            break;
-                        }
-                    }
-
-                }
+            } else /*if(i==0) {
+            	if(lastLevel>0)
+            		frames.add(ForecastFrame.increase(i, lastLevel));
+            	else if(lastLevel<0)
+            		frames.add(ForecastFrame.decrease(i, lastLevel));
+            } else */if(curLevel!=lastLevel) {
+            	if(lastLevel>curLevel)
+            		frames.add(ForecastFrame.decrease(i, curLevel));
+            	else
+            		frames.add(ForecastFrame.increase(i, curLevel));
             }
+            lastLevel=curLevel;
             i++;
         }
         return frames;
@@ -678,6 +694,14 @@ public class WorldClimate implements NBTSerializable {
         return getFutureTemp(this, (int) ddate, (int) dhours);
     }
 
+    public ClimateResult getFutureClimate(int deltaHours) {
+        long thours = this.clockSource.getHours() + deltaHours;
+        long ddate = thours / 24 - this.clockSource.getDate();
+        long dhours = thours % 24;
+        if (dhours < 0) return ClimateResult.EMPTY;
+        return getFutureClimate(this, (int) ddate, (int) dhours);
+    }
+    
     public HourData getHourData() {
     	if(daycache!=null)
     		return daycache.getData(hourInDay);
@@ -704,21 +728,6 @@ public class WorldClimate implements NBTSerializable {
         return 0;
     }
 
-    private int getTemperatureLevel(float temp) {
-        if (temp >= WorldTemperature.WARM_PERIOD_PEAK - 2) {
-            return 2;
-        } else if (temp >= WorldTemperature.WARM_PERIOD_LOWER_PEAK - 3) {
-            return 1;
-        } else if (temp <= -2) {
-            for (int j = WorldTemperature.BOTTOMS.length - 1; j >= 0; j--) {//check out its level
-                float b = WorldTemperature.BOTTOMS[j];
-                if (temp < b) {//just acrosss a level
-                    return -j - 1;
-                }
-            }
-        }
-        return 0;
-    }
 
     /**
      * Populate daily cache to DAY_CACHE_LENGTH.

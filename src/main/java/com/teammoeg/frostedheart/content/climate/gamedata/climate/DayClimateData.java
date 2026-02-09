@@ -68,7 +68,9 @@ public class DayClimateData {
             return type == null ? ClimateType.NONE : type;//IDK why this happens, but this would fix
         }
 
-
+        public ClimateResult getClimate() {
+        	return new ClimateResult(getTemp(),getType());
+        }
         public int getWindSpeed() {
             return windSpeed & 0xFF;
         }
@@ -156,7 +158,10 @@ public class DayClimateData {
     public float getTemp(int hourInDay) {
         return hourData[hourInDay].getTemp();
     }
-
+    
+    public ClimateResult getClimate(int hourInDay) {
+    	return hourData[hourInDay].getClimate();
+    }
     public float getTemp(WorldClockSource wcs) {
         return getTemp(wcs.getHourInDay());
     }
