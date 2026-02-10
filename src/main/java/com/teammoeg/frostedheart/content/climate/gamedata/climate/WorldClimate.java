@@ -45,6 +45,7 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.event.ClimateCommonEvents;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.DayClimateData.HourData;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
+import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_WeatherCycle;
 
 import lombok.Setter;
 import net.minecraft.core.BlockPos;
@@ -412,13 +413,18 @@ public class WorldClimate implements NBTSerializable {
      * @return temperature at current hour
      */
     public static boolean isBlizzard(LevelAccessor world) {
-        return getCapability(world).map(t->t.getHourData().getType() == ClimateType.BLIZZARD).orElse(false);
+        return getCapability(world).map(t->t.getHourData().getType().isBlizzard()).orElse(false);
     }
 
     public static boolean isCloudy(LevelAccessor world) {
-        return getCapability(world).map(t->t.getHourData().getType() == ClimateType.CLOUDY).orElse(false);
+        return getCapability(world).map(t->t.getHourData().getType().isCloudy()).orElse(false);
     }
-
+	public static ClimateType getClimate(LevelAccessor world) {
+		return getCapability(world).map(t->t.getHourData().getType()).orElse(ClimateType.NONE);
+	}
+	public static ClimateType getClimate(LevelAccessor world,ChunkPos pos) {
+		return getCapability(world).map(t->t.getClimate(pos)).orElse(ClimateType.NONE);
+	}
     /**
      * Retrieves hourly updated temperature from cache
      * If exceeds cache size, return NaN
@@ -479,14 +485,20 @@ public class WorldClimate implements NBTSerializable {
     public static boolean isFutureSnow(LevelAccessor world, int deltaDays, int deltaHours) {
         return getFutureSnow(get(world), deltaDays, deltaHours);
     }
-    public static boolean isSnowing(LevelAccessor world) {
-        return getCapability(world).map(t->t.getHourData().getType() == ClimateType.SNOW).orElse(false);
-    }
+    /*public static boolean isSnowing(LevelAccessor world) {
+        return getCapability(world).map(t->t.getHourData().getType().isSnowy()).orElse(false);
+    }*/
 
     public static boolean isSun(LevelAccessor world) {
-        return getCapability(world).map(t->t.getHourData().getType() == ClimateType.SUN).orElse(false);
+        return getCapability(world).map(t->t.getHourData().getType().isSunny()).orElse(false);
+    }
+    public static boolean isSnowing(LevelAccessor world,ChunkPos pos) {
+        return getCapability(world).map(t->t.getClimate(pos).isSnowy()).orElse(false);
     }
 
+    public static boolean isBlizzard(LevelAccessor world,ChunkPos pos) {
+        return getCapability(world).map(t->t.getClimate(pos).isBlizzard()).orElse(false);
+    }
     public WorldClimate() {
         clockSource = new WorldClockSource();
         dailyTempData = new LinkedList<>();
@@ -880,6 +892,12 @@ public class WorldClimate implements NBTSerializable {
 		this.whitecurtains.add(wci);
 		return true;
 	}
+
+	public ClimateType getGlobalClimate() {
+		return this.getHourData().getType();
+	}
+
+
 
 
 }

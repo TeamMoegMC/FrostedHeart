@@ -25,19 +25,25 @@ import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.storage.WritableLevelData;
+import net.minecraftforge.common.util.LazyOptional;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 
 import java.util.function.Supplier;
 /**
@@ -82,7 +88,7 @@ public abstract class ServerLevelMixin_WeatherCycle extends Level {
         // Only in overworld
         if (!this.dimensionType().hasSkyLight())
             return;
-
+        
         boolean flag = this.serverLevelData.isRaining();
 
         // vanilla weather params: these are only possible to set with vanilla weather commands,
@@ -102,8 +108,9 @@ public abstract class ServerLevelMixin_WeatherCycle extends Level {
 
         // calculate raining status and blizzard status based on our temp system
         // 'thundering' is replaced by our BlizzardRenderer
-        boolean climateBlizzard = WorldClimate.isBlizzard(this);
-        boolean climateSnowing = WorldClimate.isSnowing(this) || climateBlizzard;
+        ClimateType climate=WorldClimate.getClimate(this);
+        boolean climateBlizzard = climate.isBlizzard();
+        boolean climateSnowing = climate.isBlizzard() || climateBlizzard;
 
 
         // To make vanilla weather commands work, we still implement the following
@@ -148,8 +155,8 @@ public abstract class ServerLevelMixin_WeatherCycle extends Level {
         }
 
         this.rainLevel = Mth.clamp(this.rainLevel, 0.0F, 1.0F);
-
-        if (this.oRainLevel != this.rainLevel) {
+        
+        /*if (this.oRainLevel != this.rainLevel) {
             this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, this.rainLevel), this.dimension());
         }
 
@@ -166,9 +173,18 @@ public abstract class ServerLevelMixin_WeatherCycle extends Level {
 
             this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, this.rainLevel), this.dimension());
             this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE, this.thunderLevel), this.dimension());
-        }
+        }*/
 
         // Vanilla 1.20 Code End
+        for(Player sps:this.players()) {
+        	if(sps instanceof ServerPlayer sp) {
+        		LazyOptional<PlayerTemperatureData> ptd=PlayerTemperatureData.getCapability(sp);
+        		if(ptd.isPresent()) {
+        			ptd.resolve().get().advanceWeatherCycle(sp, (ServerLevel)(Object)this);
+        		}
+        	}
+        		
+        }
     }
 
 }

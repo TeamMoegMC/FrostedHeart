@@ -72,6 +72,7 @@
     "minecraft.temperature.SheepMixin",
     "minecraft.temperature.SnowLayerBlockMixin_Melt",
     "minecraft.temperature.WolfMixin",
+    "minecraft.temperature.PlayerListMixin",
     "minecraft.trade.AssignProfessionFromJobSite_DisableVanillaProfession",
     "minecraft.trade.ResetProfession_DisableVanillaProfession",
     "minecraft.trade.VillagerMixin",

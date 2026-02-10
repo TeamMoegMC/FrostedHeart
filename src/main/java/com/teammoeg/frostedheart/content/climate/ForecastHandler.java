@@ -27,6 +27,7 @@ import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.event.TickEvent;
 
 public class ForecastHandler {
@@ -65,7 +66,7 @@ public class ForecastHandler {
                     float tomorrowMorningTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.level(), 4, 0) * 10) / 10.0F;
                     TemperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.morning", false, morningTemp-10, noonTemp-10,
                             nightTemp-10, midnightTemp-10, tomorrowMorningTemp-10);
-                    boolean snow = WorldClimate.isSnowing(serverPlayer.level())
+                    boolean snow = WorldClimate.isSnowing(serverPlayer.level(),new ChunkPos(serverPlayer.blockPosition()))
                         || WorldClimate.isFutureSnow(serverPlayer.level(), 0, 12);
                     boolean blizzard = WorldClimate.isBlizzard(serverPlayer.level())
                             || WorldClimate.isFutureBlizzard(serverPlayer.level(), 0, 12);
@@ -90,7 +91,7 @@ public class ForecastHandler {
                             / 10.0F;
                     TemperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.night", false, nightTemp-10, midnightTemp-10,
                             tomorrowMorningTemp-10, tomorrowNoonTemp-10, tomorrowNightTemp-10);
-                    boolean snow = WorldClimate.isSnowing(serverPlayer.level())
+                    boolean snow = WorldClimate.isSnowing(serverPlayer.level(),new ChunkPos(serverPlayer.blockPosition()))
                         || WorldClimate.isFutureSnow(serverPlayer.level(), 0, 12);;
                     boolean blizzard = WorldClimate.isBlizzard(serverPlayer.level())
                             || WorldClimate.isFutureBlizzard(serverPlayer.level(), 12, 0);

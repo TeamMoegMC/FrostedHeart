@@ -42,4 +42,19 @@ public enum ClimateType {
     		return this;
     	return type;
     }
+    public boolean isSnowy() {
+    	return this==SNOW||this==SNOW_BLIZZARD;
+    }
+    public boolean isBlizzard() {
+    	return this==BLIZZARD;
+    }
+    public boolean isSnowyOrBlizzard() {
+    	return this==SNOW||this==SNOW_BLIZZARD||this==BLIZZARD;
+    }
+    public boolean isSunny() {
+    	return this==SUN;
+    }
+    public boolean isCloudy() {
+    	return this==CLOUDY;
+    }
 }

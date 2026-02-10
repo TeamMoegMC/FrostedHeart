@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -85,7 +86,12 @@ public abstract class ServerLevelMixin_TemperatureUpdate {
         final long now = level.getGameTime();
         ChunkPos chunkpos = pChunk.getPos();
         boolean updateTempBlock = (now + (chunkpos.x)+(chunkpos.z)) % FHConfig.SERVER.CLIMATE.tempBlockstateUpdateIntervalTicks.get() == 0;
+        
         boolean isRaining = level.isRaining();
+        WorldClimate wc=WorldClimate.get(level);
+        if(wc!=null) {
+        	isRaining=wc.getClimate(chunkpos).isSnowyOrBlizzard();
+        }
         int i = chunkpos.getMinBlockX();
         int j = chunkpos.getMinBlockZ();
         // Process fewer blocks for temperature checks to reduce performance impact

@@ -450,9 +450,9 @@ public class WorldTemperature {
      * Convenience method for checking is Blizzard in specific world
      *
      * */
-    public static boolean isBlizzard(LevelReader w) {
+    public static boolean isBlizzard(LevelReader w,ChunkPos cp) {
         if (w instanceof Level l) {
-            return WorldClimate.isBlizzard(l);
+            return WorldClimate.isBlizzard(l,cp);
         }
         return false;
     }
@@ -558,10 +558,11 @@ public class WorldTemperature {
         }
 
         if(openToAir(level,pos)) {
-            if (WorldTemperature.isBlizzard(level)&&data.blizzardVulnerable()) {
+        	 ChunkPos cpos=new ChunkPos(pos);
+            if (WorldTemperature.isBlizzard(level,cpos)&&data.blizzardVulnerable()) {
                 return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
             }
-            if (WorldClimate.isSnowing(level)&&data.snowVulnerable()) {
+            if (WorldClimate.isSnowing(level,cpos)&&data.snowVulnerable()) {
                 return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
             }
         }
@@ -590,12 +591,13 @@ public class WorldTemperature {
         if (data == null) {
             return PlantStatus.NOT_PLANT;
         }
-
+       
         if(openToAir(level,pos)) {
-            if (WorldTemperature.isBlizzard(level)&&data.blizzardVulnerable()) {
+        	 ChunkPos cpos=new ChunkPos(pos);
+            if (WorldTemperature.isBlizzard(level,cpos)&&data.blizzardVulnerable()) {
                 return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
             }
-            if (WorldClimate.isSnowing(level)&&data.snowVulnerable()) {
+            if (WorldClimate.isSnowing(level,cpos)&&data.snowVulnerable()) {
                 return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
             }
         }
@@ -619,12 +621,13 @@ public class WorldTemperature {
             if (data == null) {
                 return PlantStatus.NOT_PLANT;
             }
-
+            
             if(openToAir(level,pos)) {
-                if (WorldTemperature.isBlizzard(level)&&data.blizzardVulnerable()) {
+            	ChunkPos cpos=new ChunkPos(pos);
+                if (WorldTemperature.isBlizzard(level,cpos)&&data.blizzardVulnerable()) {
                     return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
                 }
-                if (WorldClimate.isSnowing(level)&&data.snowVulnerable()) {
+                if (WorldClimate.isSnowing(level,cpos)&&data.snowVulnerable()) {
                     return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
                 }
             }

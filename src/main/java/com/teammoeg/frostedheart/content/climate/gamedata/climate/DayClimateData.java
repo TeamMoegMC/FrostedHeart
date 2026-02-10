@@ -179,7 +179,7 @@ public class DayClimateData {
     }
 
     public boolean isBlizzard(int hourInDay) {
-        return hourData[hourInDay].getType() == ClimateType.BLIZZARD;
+        return hourData[hourInDay].getType().isBlizzard();
     }
 
     public boolean isBlizzard(WorldClockSource wcs) {
@@ -187,7 +187,7 @@ public class DayClimateData {
     }
 
     public boolean isCloudy(int hourInDay) {
-        return hourData[hourInDay].getType() == ClimateType.CLOUDY;
+        return hourData[hourInDay].getType().isCloudy();
     }
 
     public boolean isCloudy(WorldClockSource wcs) {
@@ -195,8 +195,7 @@ public class DayClimateData {
     }
 
     public boolean isSnow(int hourInDay) {
-        ClimateType type = hourData[hourInDay].getType();
-        return type == ClimateType.SNOW || type == ClimateType.SNOW_BLIZZARD;
+        return hourData[hourInDay].getType().isSnowy();
     }
 
     public boolean isSnow(WorldClockSource wcs) {
@@ -204,7 +203,7 @@ public class DayClimateData {
     }
 
     public boolean isSunny(int hourInDay) {
-        return hourData[hourInDay].getType() == ClimateType.SUN;
+        return hourData[hourInDay].getType().isSunny();
     }
 
     public boolean isSunny(WorldClockSource wcs) {
