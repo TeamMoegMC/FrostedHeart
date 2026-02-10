@@ -207,9 +207,9 @@ public class InterpolationClimateEvent implements ClimateEvent {
         if (isBlizzard) {
             if (temp <= WorldTemperature.BLIZZARD_REACHES_GROUND) {
                 type = ClimateType.BLIZZARD;
-            } else if (temp <= WorldTemperature.SNOW_REACHES_GROUND && t < bottomTime) {
+            } else if (temp <= WorldTemperature.SNOW_REACHES_GROUND && t < endTime) {
                 type = ClimateType.SNOW_BLIZZARD;
-            } else if (t > bottomTime&&t<endTime) {
+            } else if (t < endTime&&t>bottomTime) {
                 type = ClimateType.SUN;
             }
         } else if (temp <= WorldTemperature.SNOW_REACHES_GROUND) {

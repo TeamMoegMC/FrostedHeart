@@ -25,12 +25,14 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.chorda.text.Components;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.InterpolationClimateEvent;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -107,12 +109,29 @@ public class ClimateCommand {
                     serverWorldInfo.setClearWeatherTime(0);
                     return Command.SINGLE_SUCCESS;
                 });
-
+        LiteralArgumentBuilder<CommandSourceStack> whitecurtain = Commands.literal("white_curtain")
+        	.then(Commands.literal("clear") .executes((ct) -> {
+        		WorldClimate.get(ct.getSource().getLevel()).clearWhiteCurtain();
+        		ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                return Command.SINGLE_SUCCESS;
+            })).then(Commands.literal("add").executes((ct) -> {
+        		if(WorldClimate.get(ct.getSource().getLevel()).addWhiteCurtain(ct.getSource().getLevel().random,CUtils.vec2Pos(ct.getSource().getPosition())))
+        			ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+        		else
+        			ct.getSource().sendFailure(Components.str("Error: overlap found"));
+                return Command.SINGLE_SUCCESS;
+            }).then(Commands.argument("pos", BlockPosArgument.blockPos()).executes((ct) -> {
+        		if(WorldClimate.get(ct.getSource().getLevel()).addWhiteCurtain(ct.getSource().getLevel().random,BlockPosArgument.getBlockPos(ct, "pos")))
+        			ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+         		else
+         			ct.getSource().sendFailure(Components.str("Error: overlap found"));
+        		return Command.SINGLE_SUCCESS;
+            })));
         for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
-            dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(Commands.literal("climate").then(get).then(init).then(rebuild).then(reset).then(app)));
+            dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(Commands.literal("climate").then(get).then(init).then(rebuild).then(reset).then(app).then(whitecurtain)));
         }
 
         // register a simple /climate comand to skip /fh climate
-        dispatcher.register(Commands.literal("climate").requires(s -> s.hasPermission(2)).then(get).then(init).then(rebuild).then(reset).then(app));
+        dispatcher.register(Commands.literal("climate").requires(s -> s.hasPermission(2)).then(get).then(init).then(rebuild).then(reset).then(app).then(whitecurtain));
     }
 }

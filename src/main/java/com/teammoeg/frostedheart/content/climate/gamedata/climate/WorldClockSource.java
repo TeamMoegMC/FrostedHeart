@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.climate.gamedata.climate;
 
+import java.util.Calendar;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 
@@ -28,8 +30,16 @@ import net.minecraft.server.level.ServerLevel;
 public class WorldClockSource {
     long secs;
     long lastdaytime;
-	public static final long secondsPerDay = 24 * 50;
-
+	public static final int secondsPerHour = 50;
+	public static final int hoursPerDay = 24;
+	public static final int secondsPerDay = hoursPerDay * secondsPerHour;
+	public static final int daysPerMonth = 30;
+	public static final int gameStartYear=2060;
+	public static final int gameStartMonth=9;
+	public static final int gameStartDate=5;
+	private Calendar calendar;
+	
+	
     public WorldClockSource() {
     }
 
@@ -37,25 +47,66 @@ public class WorldClockSource {
         secs = cnbt.getLong("secs");
         lastdaytime = cnbt.getLong("last");
     }
+    public int getMonth() {
+        return getDate() / daysPerMonth;
+    }
 
-    public long getDate() {
-        return (secs / 50) / 24;
+    public int getDate() {
+        return (int) (secs / secondsPerDay);
     }
 
     public int getHourInDay() {
-        return (int) ((secs / 50) % 24);
+        return (int) ((secs / secondsPerHour) % hoursPerDay);
     }
 
     public long getHours() {
-        return (secs / 50);
+        return (secs / secondsPerHour);
     }
 
-    public long getMonth() {
-        return (secs / 50) / 24 / 30;
+    public int getMinutes() {
+        return Math.round(((secs % secondsPerHour)/secondsPerHour)*60);
     }
 
     public long getTimeSecs() {
         return secs;
+    }
+    public Calendar getGameCalendar() {
+    	if(calendar==null) {
+	    	calendar=Calendar.getInstance();
+	    	calendar.set(gameStartYear, gameStartMonth, gameStartDate,0,0,0);
+	    	calendar.add(Calendar.DATE, getDate());
+	    	calendar.add(Calendar.HOUR_OF_DAY, getHourInDay());
+	    	calendar.add(Calendar.MINUTE, getMinutes());
+    	}
+    	return calendar;
+    }
+    public int getDisplayWeekOfYear() {
+        return calendar.get(Calendar.WEEK_OF_YEAR);
+    }
+    public int getDisplayYear() {
+        return calendar.get(Calendar.YEAR);
+    }
+    public int getDisplayMonth() {
+        return calendar.get(Calendar.MONTH);
+    }
+
+    public int getDisplayDate() {
+        return calendar.get(Calendar.DAY_OF_MONTH);
+    }
+
+    public int getDisplayHourOfDay() {
+        return calendar.get(Calendar.HOUR_OF_DAY);
+    }
+
+    public int getDisplayHours() {
+        return calendar.get(Calendar.HOUR);
+    }
+    public int getDisplayAMPM() {
+        return calendar.get(Calendar.AM_PM);
+    }
+
+    public int getDisplayMinutes() {
+        return calendar.get(Calendar.MINUTE);
     }
 
     public CompoundTag serialize() {
@@ -82,9 +133,11 @@ public class WorldClockSource {
         if (dt < 0) {// if time run backwards, it's command done the trick
             long nextday = lastdaytime + 24000L;
             nextday = nextday - nextday % 24000L;
-            dt = newTime % 24000L + nextday - lastdaytime;//assumpt it's next day and continue
+            dt = newTime % 24000L + nextday - lastdaytime;//assume it's next day and continue
         }
         secs += dt / 20;
+        if(dt>20)
+        	calendar=null;
         lastdaytime = newTime - newTime % 20;
     }
 

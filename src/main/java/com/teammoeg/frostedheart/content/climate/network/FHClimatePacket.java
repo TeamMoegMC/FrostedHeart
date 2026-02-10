@@ -64,9 +64,10 @@ public class FHClimatePacket implements CMessage {
             wind = 0;
             humidity = 0;
     	}else {
-	        data = climateData.getForecastFrames(new ChunkPos(p.blockPosition()));
+    		ChunkPos pos=new ChunkPos(p.blockPosition());
+	        data = climateData.getForecastFrames(pos);
 	        sec = climateData.getSec();
-	        climate = climateData.getClimate();
+	        climate = climateData.getClimate(pos);
             wind = climateData.getWind();
             humidity = climateData.getHumidity();
     	}

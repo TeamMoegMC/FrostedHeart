@@ -21,7 +21,13 @@ package com.teammoeg.chorda.math;
 
 import java.util.Objects;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
 public class Point {
+	public final static Codec<Point> CODEC=RecordCodecBuilder.create(t->t.group(
+		Codec.INT.fieldOf("x").forGetter(o->o.x),
+		Codec.INT.fieldOf("y").forGetter(o->o.y)).apply(t, Point::new));
     protected final int x, y;
 
     public Point(int x, int y) {

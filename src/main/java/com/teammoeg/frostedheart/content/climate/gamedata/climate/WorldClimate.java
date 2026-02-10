@@ -21,9 +21,11 @@ package com.teammoeg.frostedheart.content.climate.gamedata.climate;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.function.LongFunction;
 import javax.annotation.Nullable;
@@ -36,6 +38,7 @@ import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.chorda.math.BaseRandomSource;
+import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
@@ -45,6 +48,7 @@ import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 
 import lombok.Setter;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
@@ -108,6 +112,7 @@ public class WorldClimate implements NBTSerializable {
     protected long lasthour = -1;
     protected int hourInDay = 0;
     protected DayClimateData daycache;
+    protected Map<ChunkPos,ClimateResult> whitecurtainCache=new HashMap<>();
     protected long lastday = -1;
     private boolean isInitialEventAdded;
     @Setter
@@ -138,8 +143,8 @@ public class WorldClimate implements NBTSerializable {
         return FHCapabilities.CLIMATE_DATA.getCapability(world);
     }
 
-    public static long getDay(LevelAccessor world) {
-    	return getCapability(world).map(t->t.clockSource.getDate()).orElse(0L);
+    public static int getDay(LevelAccessor world) {
+    	return getCapability(world).map(t->t.clockSource.getDate()).orElse(0);
     }
 
     public static int getFirstHourGreaterThan(LevelAccessor world, int withinHours, float highTemp) {
@@ -358,8 +363,8 @@ public class WorldClimate implements NBTSerializable {
         return getCapability(world).map(t->t.clockSource.getHourInDay()).orElse(0);
     }
 
-    public static long getMonth(LevelAccessor world) {
-        return getCapability(world).map(t->t.clockSource.getDate()).orElse(0L);
+    public static int getMonth(LevelAccessor world) {
+        return getCapability(world).map(t->t.clockSource.getDate()).orElse(0);
     }
 
     public static long getSec(LevelAccessor world) {
@@ -372,8 +377,8 @@ public class WorldClimate implements NBTSerializable {
      *
      * @return temperature at current hour
      */
-    public static float getTemp(LevelAccessor world) {
-        return getCapability(world).map(t->t.getTemp()).orElse(0f);
+    public static float getTemp(LevelAccessor world,BlockPos pos) {
+        return getCapability(world).map(t->t.getTemp(pos)).orElse(0f);
     }
 
     /**
@@ -596,9 +601,7 @@ public class WorldClimate implements NBTSerializable {
         return Mth.clamp(wind, 0, 100);
     }
 
-    public ClimateType getClimate() {
-        return this.getHourData().getType();
-    }
+
 
     public long getDay() {
         return clockSource.getDate();
@@ -630,10 +633,25 @@ public class WorldClimate implements NBTSerializable {
     public long getSec() {
         return clockSource.getTimeSecs();
     }
+    public ClimateResult getClimateOfWhiteCurtain(ChunkPos pos) {
+    	for(WhiteCurtainInfo wci:whitecurtains) {
+    		if(wci.isAffected(pos)) {
+    			return wci.getClimate(getSec(), pos);
+    		}
+    	}
+    	return ClimateResult.EMPTY;
+    }
+    public ClimateType getClimate(ChunkPos pos) {
 
-    public float getTemp() {
-    	if(daycache!=null)
-    		return daycache.getTemp(hourInDay);
+		ClimateResult cr=whitecurtainCache.computeIfAbsent(pos, this::getClimateOfWhiteCurtain);
+        return cr.climate().merge(this.getHourData().getType());
+    }
+    public float getTemp(BlockPos pos) {
+    	if(daycache!=null) {
+    		ChunkPos cp=new ChunkPos(pos);
+    		ClimateResult cr=whitecurtainCache.computeIfAbsent(cp, this::getClimateOfWhiteCurtain);
+    		return Math.min(daycache.getTemp(hourInDay), cr.temperature());
+    	}
     	return 0;
     }
     public int getWind() {
@@ -716,6 +734,10 @@ public class WorldClimate implements NBTSerializable {
     		sb.append(i).append("\n");
     	}
     	sb.append(forecast);
+    	sb.append("white curtain:\n");
+    	for(WhiteCurtainInfo i:whitecurtains) {
+    		sb.append(i).append("\n");
+    	}
         return sb.toString();
     }
 
@@ -727,7 +749,9 @@ public class WorldClimate implements NBTSerializable {
     	for(ClimateEventTrack track:tracks)
     		track.tempEventStreamTrim(this.clockSource.getTimeSecs() - 1200);
     }
-
+    public void clearWhiteCurtain() {
+    	whitecurtains.clear();
+    }
     /**
      * Check and refresh whole cache.
      * Sync updated data to client each hour.
@@ -737,17 +761,21 @@ public class WorldClimate implements NBTSerializable {
      */
     public void updateCache(ServerLevel serverWorld) {
         long hours = clockSource.getHours();
+        final long secs = clockSource.getTimeSecs();
         if (hours != lasthour) {
             long date = clockSource.getDate();
             if (date != lastday) {
                 updateDayCache(date);
             }
             updateHourCache(hours);
+            whitecurtainCache.clear();
             if(forecast.shouldUpdateNewFrames(hours))
             	forecast.updateFrames(hours,this.getFrames());
+            whitecurtains.removeIf(t->t.isInvalid(secs));
             // Send to client if hour increases
             for(ServerPlayer p:serverWorld.players())
             	FHNetwork.INSTANCE.send(PacketDistributor.PLAYER.with(()->p), new FHClimatePacket(this,p));
+            
         }
     }
 
@@ -801,6 +829,7 @@ public class WorldClimate implements NBTSerializable {
 	public void save(CompoundTag nbt, boolean isPacket) {
         clockSource.serialize(nbt);
         nbt.put("hourlyTempStream", CodecUtil.toNBTList(dailyTempData, DayClimateData.CODEC));
+        nbt.put("whiteCurtainInfos", CodecUtil.toNBTList(whitecurtains, WhiteCurtainInfo.CODEC));
         nbt.putBoolean("isInitialEventAdded", isInitialEventAdded);
 	}
 
@@ -809,6 +838,8 @@ public class WorldClimate implements NBTSerializable {
         clockSource.deserialize(nbt);
         dailyTempData.clear();
         dailyTempData.addAll(CodecUtil.fromNBTList(nbt.getList("hourlyTempStream", Tag.TAG_COMPOUND), DayClimateData.CODEC));
+        whitecurtains.clear();
+        whitecurtains.addAll(CodecUtil.fromNBTList(nbt.getList("whiteCurtainInfos", Tag.TAG_COMPOUND), WhiteCurtainInfo.CODEC));
         setInitialEventAdded(nbt.getBoolean("isInitialEventAdded"));
         readCache();
 	}
@@ -834,10 +865,20 @@ public class WorldClimate implements NBTSerializable {
 	public short[] getForecastFrames(ChunkPos pos) {
 		for(WhiteCurtainInfo wci:whitecurtains) {
 			if(wci.isAffected(pos)) {
-				return wci.getFrames(this,clockSource.getHours(), pos);
+				return wci.getFrames(this,clockSource.getTimeSecs(), pos);
 			}
 		}
 		return forecast.getFrames();
+	}
+	public boolean addWhiteCurtain(RandomSource rs,BlockPos center) {
+		WhiteCurtainInfo wci=WhiteCurtainInfo.generateWhiteCurtain(rs, clockSource.getTimeSecs(), center);
+		for(WhiteCurtainInfo wcie:whitecurtains) {
+			if(wcie.isIntersected(wci.affectedArea)){
+				return false;
+			}
+		}
+		this.whitecurtains.add(wci);
+		return true;
 	}
 
 

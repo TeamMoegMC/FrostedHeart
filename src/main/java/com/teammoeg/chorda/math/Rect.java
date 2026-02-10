@@ -24,8 +24,16 @@ import net.minecraft.client.renderer.Rect2i;
 
 import java.util.Objects;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
 @Getter
 public class Rect extends Point {
+	public final static Codec<Rect> CODEC=RecordCodecBuilder.create(t->t.group(
+		Codec.INT.fieldOf("x").forGetter(o->o.x),
+		Codec.INT.fieldOf("y").forGetter(o->o.y), 
+		Codec.INT.fieldOf("w").forGetter(o->o.w),
+		Codec.INT.fieldOf("h").forGetter(o->o.h)).apply(t, Rect::new));
 	protected final int w, h;
 
 	public static Rect delta(int x1, int y1, int x2, int y2) {

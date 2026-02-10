@@ -294,9 +294,9 @@ public class WorldTemperature {
      * Range: [COLD_PERIOD_BOTTOM_T10, WARM_PERIOD_PEAK]
      * Now, it is [-90, 8]
      */
-    public static float climate(LevelReader w) {
+    public static float climate(LevelReader w,BlockPos pos) {
         if (w instanceof Level) {
-            return WorldClimate.getTemp((Level) w);
+            return WorldClimate.getTemp((Level) w,pos);
         }
         return 0;
     }
@@ -348,7 +348,7 @@ public class WorldTemperature {
      * @return world temperature<br>
      */
     public static float base(LevelReader w, BlockPos pos) {
-        return dimension(w) + biome(w, pos) + altitude(w, pos) + climate(w);
+        return dimension(w) + biome(w, pos) + altitude(w, pos) + climate(w,pos);
     }
 
     /**
@@ -397,7 +397,7 @@ public class WorldTemperature {
         else {
             climateBlockAffection = 0.0F;
         }
-        float nature = climate(world) * climateBlockAffection +dimension(world) + biome(world, pos) + altitude(world, pos);
+        float nature = climate(world,pos) * climateBlockAffection +dimension(world) + biome(world, pos) + altitude(world, pos);
         float heat = heat(world,pos);
         float result;
         // if nature is greater than heat, use nature: like underground
@@ -441,7 +441,7 @@ public class WorldTemperature {
         }
 
         float result = dimension(world) + biome(world, pos) + altitude(world, pos) +
-                climate(world) * climateAirAffection + heat(world,pos) + gaussian(world, 0, 0.3F);
+                climate(world,pos) * climateAirAffection + heat(world,pos) + gaussian(world, 0, 0.3F);
 
         return Math.max(ABSOLUTE_ZERO, result);
     }

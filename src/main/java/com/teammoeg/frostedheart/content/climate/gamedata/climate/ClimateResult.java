@@ -29,12 +29,17 @@ public record ClimateResult(float temperature,ClimateType climate) {
 		return new ClimateResult(temperature,climate);
 	}
 	public ClimateResult merge(ClimateResult other) {
-		if(this.climate.merge(other.climate())==climate&&this.temperature<other.temperature()) {
+		ClimateType merged=this.climate.merge(other.climate());
+		if(this==EMPTY)
+			return other;
+		if(other==EMPTY)
+			return this;
+		if(merged==climate&&this.temperature<=other.temperature()) {//avoid creating new object
 			return this;
 		}
-		if(this.climate.merge(other.climate())==other.climate&&this.temperature>other.temperature()) {
+		if(merged==other.climate&&this.temperature>=other.temperature()) {
 			return other;
 		}
-		return new ClimateResult(Math.min(temperature, other.temperature()),climate.merge(other.climate()));
+		return new ClimateResult(Math.min(temperature, other.temperature()),merged);
 	}
 }

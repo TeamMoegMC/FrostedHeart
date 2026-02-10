@@ -11,7 +11,7 @@ import lombok.Getter;
 public class WeatherForecast {
 	@Getter
     protected short[] frames = new short[40];
-    protected long lastforecast;
+    protected long lastforecast=-1;
 	public WeatherForecast() {
 	}
 
