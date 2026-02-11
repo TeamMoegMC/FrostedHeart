@@ -16,7 +16,7 @@ public abstract class PlayerListMixin {
 
 	public PlayerListMixin() {
 	}
-	@Inject(method = "sendLevelInfo", at = @At(value="TAIL"), cancellable = true)
+	@Inject(method = "sendLevelInfo", at = @At(value="INVOKE",target="Lnet/minecraft/server/level/ServerLevel;isRaining()Z", ordinal = 0, remap=true), remap=true, cancellable = true)
 	public void fh$sendLevelInfo(ServerPlayer pPlayer, ServerLevel pLevel,CallbackInfo cbi) {
 		LazyOptional<PlayerTemperatureData> cap=PlayerTemperatureData.getCapability(pPlayer);
 		if(cap.isPresent()) {
