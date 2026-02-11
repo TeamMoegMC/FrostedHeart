@@ -35,7 +35,7 @@ public class Rect extends Point {
 		Codec.INT.fieldOf("w").forGetter(o->o.w),
 		Codec.INT.fieldOf("h").forGetter(o->o.h)).apply(t, Rect::new));
 	protected final int w, h;
-
+	public static final Rect NONE=new Rect(0,0,0,0);
 	public static Rect delta(int x1, int y1, int x2, int y2) {
 		return new Rect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
 	}
@@ -73,10 +73,13 @@ public class Rect extends Point {
 			other.y < this.y + this.h;
 		return xOverlap && yOverlap;
 	}
-
-	@Override
-	public String toString() {
-		return "Rect [w=" + w + ", h=" + h + ", x=" + x + ", y=" + y + "]";
+	public Rect and(Rect other) {
+		if(!intersects(other))return Rect.NONE;
+		int x1=Math.max(x, other.x);
+		int x2=Math.min(getX2(), other.getX2());
+		int y1=Math.max(y, other.y);
+		int y2=Math.min(getY2(), other.getY2());
+		return Rect.delta(x1, y1, x2, y2);
 	}
 
 	@Override
@@ -94,5 +97,13 @@ public class Rect extends Point {
 		if (getClass() != obj.getClass()) return false;
 		Rect other = (Rect) obj;
 		return h == other.h && w == other.w;
+	}
+
+	@Override
+	public String toString() {
+		return "Rect [x=" + x + ", y=" + y + ", w=" + w + ", h=" + h + "]";
+	}
+	public String toCornerString() {
+		return "Rect [x=" + x + ", y=" + y + ", x2=" + getX2() + ", y2=" + getY2() + "]";
 	}
 }

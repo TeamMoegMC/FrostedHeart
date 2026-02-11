@@ -26,6 +26,10 @@ public class WhiteCurtainInfo {
 		).apply(t,WhiteCurtainInfo::new));
 	public static final Codec<List<WhiteCurtainInfo>> LIST_CODEC=Codec.list(CODEC);
 	Rect affectedArea;
+	long snowStartHours=-1;
+	long blizzardStartHours=-1;
+	long snowEndHours=-1;
+	long blizzardEndHours=-1;
 	ClimateEvent climate;
 	Direction moveDirection;
 	protected LinkedList<DayClimateData> dailyTempData;
@@ -44,11 +48,20 @@ public class WhiteCurtainInfo {
 		for(long i=0;i<getMaxDelta();i++) {
 			forecastCache.add(new WeatherForecast());
 		}
+		
 		for(long i=0;i<emitHour;i++) {
 			long day=i/24;
 			long hourInDay=i%24;
 			ClimateResult clr=climate.getHourClimate(i*50+startTime);
 			dailyTempData.get((int)day).setClimate((int) hourInDay, clr);
+			switch(clr.climate()) {
+			case SNOW_BLIZZARD:if(snowStartHours==-1)snowStartHours=i;if(blizzardStartHours!=-1&&blizzardEndHours==-1)blizzardEndHours=i-1;break;
+			case BLIZZARD:if(blizzardStartHours==-1)blizzardStartHours=i;break;
+			case SUN:
+			case NONE:if(blizzardStartHours!=-1&&blizzardEndHours==-1)blizzardEndHours=i-1;
+			if(snowStartHours!=-1&&snowEndHours==-1)snowEndHours=i-1;
+				
+			}
 		}
 	}
 
@@ -61,8 +74,13 @@ public class WhiteCurtainInfo {
 	public boolean isIntersected(Rect rect) {
 		return affectedArea.intersects(rect);
 	}
+	private static final long HOURS_PER_CHUNK=6;
+	private static final long SECONDS_PER_CHUNK=(long) (WorldClockSource.secondsPerDay/(24f/HOURS_PER_CHUNK));
 	public static long getSecondsPerChunk() {
-		return WorldClockSource.secondsPerDay/4;
+		return SECONDS_PER_CHUNK;
+	}
+	public static long getHoursPerChunk() {
+		return HOURS_PER_CHUNK;
 	}
 	public long getDeltaTime(ChunkPos pos) {
 		return getDelta(pos)*getSecondsPerChunk();
@@ -90,6 +108,28 @@ public class WhiteCurtainInfo {
 	}
 	public boolean isInvalid(long dtime) {
 		return climate.getCalmEndTime()+getMaxDeltaTime()<dtime;
+	}
+	public Rect getSnowRect(long dtime) {
+		long climatestartEndpoint=(dtime-getMaxDeltaTime()-climate.getStartTime())/50;
+		int chunkStart=Mth.ceil((snowStartHours-climatestartEndpoint)*1f/getHoursPerChunk());
+		int chunkEnd=Mth.floor((snowEndHours-climatestartEndpoint)*1f/getHoursPerChunk());
+		return getPartialRect(chunkStart,chunkEnd).and(affectedArea);
+	}
+	public Rect getBlizzardRect(long dtime) {
+		long climatestartEndpoint=(dtime-getMaxDeltaTime()-climate.getStartTime())/50;
+		int chunkStart=Mth.ceil((blizzardStartHours-climatestartEndpoint)*1f/getHoursPerChunk());
+		int chunkEnd=Mth.floor((blizzardEndHours-climatestartEndpoint)*1f/getHoursPerChunk());
+		return getPartialRect(chunkStart,chunkEnd).and(affectedArea);
+	}
+	public Rect getPartialRect(int chunkStart,int chunkEnd) {
+		int chunkLen=chunkEnd-chunkStart;
+		switch(moveDirection) {
+		case NORTH:return new Rect(affectedArea.getX(),affectedArea.getY()+chunkStart,affectedArea.getW(),chunkLen);
+		case SOUTH:return new Rect(affectedArea.getX(),affectedArea.getY2()-chunkEnd,affectedArea.getW(),chunkLen);
+		case WEST:return new Rect(affectedArea.getX()+chunkStart,affectedArea.getY(),chunkLen,affectedArea.getH());
+		case EAST:return new Rect(affectedArea.getX2()-chunkEnd,affectedArea.getY(),chunkLen,affectedArea.getH());
+		}
+		return Rect.NONE;
 	}
 	public short[] getFrames(WorldClimate wclimate,long seconds,ChunkPos pos) {
 		long dtime=(seconds-getDeltaTime(pos)-climate.getStartTime())/50;
@@ -211,14 +251,15 @@ public class WhiteCurtainInfo {
     	BaseRandomSource rs=new BaseRandomSource(5678);
     	InterpolationClimateEvent ice=InterpolationClimateEvent.getBlizzardClimateEvent(rs, 1000);
     	System.out.println(ice);
-    	WhiteCurtainInfo wci=new WhiteCurtainInfo(new Rect(10,10,20,20),Direction.NORTH,ice);
-    	int sx=Direction.NORTH.getStepX();
-    	int sz=Direction.NORTH.getStepZ();
-    	final int thours=14300;
-    	for(int i=0;i<30;i++) {
-    		System.out.println(new ChunkPos(15,i)+"="+wci.getClimate(thours,new ChunkPos(15,i)));
+    	Direction dir=Direction.SOUTH;
+    	{
+	    	WhiteCurtainInfo wci=new WhiteCurtainInfo(new Rect(10,10,20,20),dir,ice);
+	    	final int thours=2000;
+	    	for(int i=0;i<30;i++) {
+	    		System.out.println(new ChunkPos(i,i)+"="+wci.getClimate(thours,new ChunkPos(i,i)));
+	    	}
+	    	System.out.println(wci.getBlizzardRect(thours).toCornerString());
     	}
-    	System.out.println(wci.isInvalid(14300));
     	//StringBuilder sb=new StringBuilder();
     	//StreamSupport.stream(wci.getFutureClimateIterator((thours-wci.getDeltaTime(new ChunkPos(15,16)))/50).spliterator(), false).map(String::valueOf).forEach(t->sb.append(t).append("\n"));
     	//System.out.println(sb);
