@@ -63,12 +63,8 @@ public class GraphicsLineContent extends GraphicLayerContent {
 		params.getG2d().setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
 		params.getG2d().setColor(new Color(color,true));
 		params.getG2d().setStroke(new BasicStroke(params.calculateScaledSize(wid)));
-		params.getG2d().setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
 		//System.out.println(String.format("Drawing line %s,%s->%s,%s %s", params.calculateScaledX(x),params.calculateScaledY(y), params.calculateScaledX(width), params.calculateScaledY(height),params.calculateScaledSize(wid)));
 		params.getG2d().drawLine(params.calculateScaledX(x),params.calculateScaledY(y), params.calculateScaledX(width), params.calculateScaledY(height));
-		params.getG2d().setRenderingHint(
-			    RenderingHints.KEY_ANTIALIASING,
-			    RenderingHints.VALUE_ANTIALIAS_DEFAULT);
 		params.getG2d().setComposite(AlphaComposite.SrcOver);
 
 	}

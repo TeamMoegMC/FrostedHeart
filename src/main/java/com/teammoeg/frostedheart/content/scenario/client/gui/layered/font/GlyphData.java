@@ -67,8 +67,11 @@ public class GlyphData {
 	}
 
 	public int renderFont(Graphics2D g2d, int x, int y, int hsize,int color) {
+		Object originalHint=g2d.getRenderingHint(RenderingHints.KEY_INTERPOLATION);
 		if(!isUnicode)
 			g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+
+		
 		int crx=this.x;
 		int cry=this.y;
 		BufferedImage currentImage=image;
@@ -112,7 +115,7 @@ public class GlyphData {
 		// AlphaComposite.
 		g2d.drawImage(currentImage, x, y, x + (int) (width * 1f / height * hsize*scale), y + (int)(hsize*scale),crx , cry, crx + width,
 				cry + height, null);
-		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, originalHint);
 		return (int) (advance * 1f / height * hsize);
 	}
 

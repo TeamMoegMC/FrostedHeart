@@ -65,6 +65,7 @@ public class FHConfig {
 		public final ForgeConfigSpec.BooleanValue skyRenderChanges;
 		public final ForgeConfigSpec.IntValue scenarioRenderQuality;
 		public final ForgeConfigSpec.IntValue scenarioRenderThread;
+		public final ForgeConfigSpec.BooleanValue scenarioAntiAliasing;
 		public final ForgeConfigSpec.IntValue infraredViewUBOOffset;
 		public final ForgeConfigSpec.IntValue wheelMenuRadius;
 		public final ForgeConfigSpec.IntValue themeColor;
@@ -173,7 +174,8 @@ public class FHConfig {
 				.defineInRange("scenarioRenderQuality", 2, 0, 16);
 			scenarioRenderThread = builder.comment("Scenario rendering thread, Scenario screen are pre-rendered in seperate pool to prevent lag")
 				.defineInRange("scenarioRenderThread", 2, 1, 16);
-
+			scenarioAntiAliasing = builder.comment("Scenario rendering Antialiasing, turn off to higher performance")
+				.define("scenarioAntiAliasing", true);
 			builder.pop();
 
 			builder.push("other");
