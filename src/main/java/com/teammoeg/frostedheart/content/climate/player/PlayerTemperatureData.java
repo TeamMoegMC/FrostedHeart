@@ -439,6 +439,12 @@ public class PlayerTemperatureData implements NBTSerializable {
 			if (globalClimate == localClimate) {
 				this.thunderLevel = level.thunderLevel;
 				this.rainLevel = level.rainLevel;
+			}else {
+				if(climate.isSnowyOrBlizzard()) {
+					this.rainLevel = 0.8f;
+					if(climate.isBlizzard())
+						this.thunderLevel = 0.8f;
+				}
 			}
 			climate = localClimate;
 		}
