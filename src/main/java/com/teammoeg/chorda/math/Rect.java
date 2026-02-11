@@ -65,6 +65,9 @@ public class Rect extends Point {
 	public boolean inRange(int cx, int cy) {
 		return (cx >= x && cx <= x + w) && (cy >= y && cy <= y + h);
 	}
+	public boolean inRange(Point p) {
+		return inRange(p.x,p.y);
+	}
 
 	public boolean intersects(Rect other) {
 		boolean xOverlap = this.x < other.x + other.w &&
@@ -81,7 +84,15 @@ public class Rect extends Point {
 		int y2=Math.min(getY2(), other.getY2());
 		return Rect.delta(x1, y1, x2, y2);
 	}
-
+	public Rect expand(int left,int right,int top,int bottom) {
+		return Rect.delta(x-left, y-top, getX2()+right, getY2()+bottom);
+	}
+	public Rect expand(int xradius,int yradius) {
+		return expand(xradius,xradius,yradius,yradius);
+	}
+	public Rect expand(int radius) {
+		return expand(radius,radius);
+	}
 	@Override
 	public int hashCode() {
 		final int prime = 31;
