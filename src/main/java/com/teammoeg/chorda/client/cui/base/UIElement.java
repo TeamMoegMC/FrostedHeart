@@ -21,6 +21,8 @@ package com.teammoeg.chorda.client.cui.base;
 
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreen;
+import com.teammoeg.chorda.client.cui.theme.Theme;
+import com.teammoeg.chorda.client.cui.theme.VanillaTheme;
 import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.text.Components;
@@ -51,12 +53,19 @@ public class UIElement{
 	private double mouseX,mouseY;
 	@Getter
 	private float partialTick;
+	@Getter
+	@Setter
+	private Theme theme=VanillaTheme.INSTANCE;
 	public UIElement(UIElement parent) {
 		this.parent = parent;
+		if(parent!=null)
+			this.theme=parent.getTheme();
 		//CUIDebugHelper.registerUIObject(this);
 	}
 	protected void setParent(UIElement parent) {
 		this.parent = parent;
+		if(parent!=null)
+			this.theme=parent.getTheme();
 	}
 	public LayerHolder getLayerHolder() {
 		if(layerholderCache==null)

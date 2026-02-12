@@ -61,7 +61,7 @@ public class EffectWidget extends UIElement {
 	@Override
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		CGuiHelper.resetGuiDrawing();
-		DrawDeskTheme.drawSlot(matrixStack, x, y, w, h);
+		getTheme().drawSlot(matrixStack, x, y, w, h);
 		icon.draw(matrixStack, x, y, w, h);
 		if (ClientResearchDataAPI.getData().get().isEffectGranted(r, e)) {
 			matrixStack.pose().pushPose();

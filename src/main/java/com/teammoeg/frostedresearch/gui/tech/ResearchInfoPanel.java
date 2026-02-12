@@ -26,6 +26,8 @@ import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.widgets.Panel;
+import com.teammoeg.chorda.client.cui.widgets.TextButton;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedresearch.FHResearch;
@@ -33,9 +35,7 @@ import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.data.ResearchData;
 import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
-import com.teammoeg.frostedresearch.gui.FramedPanel;
 import com.teammoeg.frostedresearch.gui.TechIcons;
-import com.teammoeg.frostedresearch.gui.TechTextButton;
 import com.teammoeg.frostedresearch.network.FHEffectTriggerPacket;
 import com.teammoeg.frostedresearch.network.FHResearchControlPacket;
 import com.teammoeg.frostedresearch.network.FHResearchControlPacket.Operator;
@@ -64,7 +64,7 @@ public class ResearchInfoPanel extends UILayer {
 
 		// exp materials
 
-		FramedPanel prl = new FramedPanel(this, fp -> {
+		Panel prl = new Panel(this, fp -> {
 			int ioffset = 4;
 			int xoffset = 4;
 			for (Pair<Ingredient, Integer> ingredient : detailPanel.research.getRequiredItems()) {
@@ -96,7 +96,7 @@ public class ResearchInfoPanel extends UILayer {
 		if (!researchData.canResearch()) {
 			if (detailPanel.research.isUnlocked()) {
 				// commit items button
-				TechTextButton commitItems = new TechTextButton(this, Lang.translateGui("research.commit_material_and_start"),
+				TextButton commitItems = new TextButton(this, Lang.translateGui("research.commit_material_and_start"),
 					CIcons.nop()) {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
@@ -109,7 +109,7 @@ public class ResearchInfoPanel extends UILayer {
 			}
 		} else if (detailPanel.research.isInProgress()) {
 			// commit items button
-			TechTextButton commitItems = new TechTextButton(this, Lang.translateGui("research.stop"), CIcons.nop()) {
+			TextButton commitItems = new TextButton(this, Lang.translateGui("research.stop"), CIcons.nop()) {
 				@Override
 				public void onClicked(MouseButton mouseButton) {
 					FRNetwork.INSTANCE.sendToServer(new FHResearchControlPacket(Operator.PAUSE, detailPanel.research));
@@ -119,7 +119,7 @@ public class ResearchInfoPanel extends UILayer {
 			add(commitItems);
 		} else if (!researchData.isCompleted() && !detailPanel.research.isInCompletable()) {
 			// commit items button
-			TechTextButton commitItems = new TechTextButton(this, Lang.translateGui("research.start"), CIcons.nop()) {
+			TextButton commitItems = new TextButton(this, Lang.translateGui("research.start"), CIcons.nop()) {
 				@Override
 				public void onClicked(MouseButton mouseButton) {
 					FRNetwork.INSTANCE.sendToServer(new FHResearchControlPacket(Operator.START, detailPanel.research));
@@ -131,7 +131,7 @@ public class ResearchInfoPanel extends UILayer {
 		}
 
 		if (!detailPanel.research.getEffects().isEmpty()) {
-			FramedPanel ppl = new FramedPanel(this, fp -> {
+			Panel ppl = new Panel(this, fp -> {
 				int offset = 2;
 				int xoffset = 2;
 				if ((!detailPanel.research.isHideEffects()) || detailPanel.research.isCompleted() || FHResearch.editor) {
@@ -143,7 +143,7 @@ public class ResearchInfoPanel extends UILayer {
 						LargeEffectWidget button = new LargeEffectWidget(fp, effect, detailPanel.research);
 						button.setPos(xoffset, offset);
 						fp.add(button);
-						xoffset += 32;
+						xoffset += 34;
 						if (xoffset >= 98) {
 							offset += 32;
 							xoffset = 2;
@@ -177,7 +177,7 @@ public class ResearchInfoPanel extends UILayer {
 					if (hasB)
 						offset += 24;
 					if (detailPanel.research.isCompleted() && hasUnclaimed) {
-						TechTextButton claimRewards = new TechTextButton(fp, Lang.translateGui("research.claim_rewards"), CIcons.nop()) {
+						TextButton claimRewards = new TextButton(fp, Lang.translateGui("research.claim_rewards"), CIcons.nop()) {
 							@Override
 							public void onClicked(MouseButton mouseButton) {
 								FRNetwork.INSTANCE.sendToServer(new FHEffectTriggerPacket(detailPanel.research));
@@ -188,7 +188,7 @@ public class ResearchInfoPanel extends UILayer {
 						offset += claimRewards.getHeight() + 1;
 					}
 				} else {
-					TextField rt = new TextField(fp).setColor(DrawDeskTheme.getTextColor()).setMaxWidth(width - 5).setText(Lang.translateGui("effect_unknown"));
+					TextField rt = new TextField(fp).setMaxWidth(width - 5).setText(Lang.translateGui("effect_unknown"));
 					rt.setPos(xoffset, offset);
 					offset += rt.getHeight();
 					fp.add(rt);
@@ -202,7 +202,7 @@ public class ResearchInfoPanel extends UILayer {
 			panels.add(ppl);
 		}
 		if (!detailPanel.research.getClues().isEmpty()) {
-			FramedPanel pcl = new FramedPanel(this, fp -> {
+			Panel pcl = new Panel(this, fp -> {
 				int offset = 1;
 				List<Clue> clues = new ArrayList<>();
 				int i = 0;

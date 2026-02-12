@@ -22,12 +22,12 @@ package com.teammoeg.frostedresearch.gui.tech;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.widgets.Button;
+import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.TechIcons;
-import com.teammoeg.frostedresearch.gui.TechScrollBar;
 import com.teammoeg.frostedresearch.research.Research;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -37,7 +37,7 @@ public class ResearchListPanel extends UILayer {
 	public static final int RESEARCH_HEIGHT = 18;
 	public static final int RES_PANEL_WIDTH = 80;
 	public ResearchLayer researchScreen;
-	public TechScrollBar scroll;
+	public LayerScrollBar scroll;
 	public ResearchList rl;
 
 	public ResearchListPanel(ResearchLayer panel) {
@@ -48,7 +48,7 @@ public class ResearchListPanel extends UILayer {
 	@Override
 	public void addUIElements() {
 		rl = new ResearchList(this);
-		scroll = new TechScrollBar(this, rl);
+		scroll = new LayerScrollBar(this, rl);
 		add(rl);
 		add(scroll);
 		scroll.setX(106);
@@ -90,9 +90,8 @@ public class ResearchListPanel extends UILayer {
 			else if (research.isCompleted()) {
 				tf.setColor(0x229000);
 			} else if (!research.isUnlocked()) {
-				tf.setColor(DrawDeskTheme.getErrorColor());
-			} else
-				tf.setColor(DrawDeskTheme.getTextColor());
+				tf.setColor(getTheme().getErrorColor());
+			}
 			lastupdate = System.currentTimeMillis() / 1000;
 		}
 
@@ -112,14 +111,13 @@ public class ResearchListPanel extends UILayer {
 				} else if (research.isCompleted()) {
 					tf.setColor(0x229000);
 				} else if (!research.isUnlocked()) {
-					tf.setColor(DrawDeskTheme.getErrorColor());
-				} else
-					tf.setColor(DrawDeskTheme.getTextColor());
+					tf.setColor(getTheme().getErrorColor());
+				}
 			}
 			tf.render(matrixStack, x + 18, y + 6, 81, tf.getHeight());
 			if (listPanel.researchScreen.selectedResearch == this.research)
 				TechIcons.SELECTED.draw(matrixStack, x - 4, y + 7, 4, 4);
-			DrawDeskTheme.horizontalSplit(matrixStack, x, y+17, 99);
+			DrawDeskTheme.INSTANCE.horizontalSplit(matrixStack, x, y+17, 99);
 		}
 
 		@Override

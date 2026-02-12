@@ -34,7 +34,7 @@ public class LabeledPane<T extends UIElement> extends UILayer {
 
     public LabeledPane(UIElement panel, Component lab) {
         super(panel);
-        label = new TextField(this).setMaxWidth(200).setTrim().setText(lab).setColor(0xFF000000);
+        label = new TextField(this).setMaxWidth(200).setTrim().setText(lab).setColor(getTheme().getUITextColor());
 
     }
 

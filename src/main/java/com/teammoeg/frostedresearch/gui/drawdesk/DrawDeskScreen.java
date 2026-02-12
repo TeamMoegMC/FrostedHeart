@@ -22,6 +22,7 @@ package com.teammoeg.frostedresearch.gui.drawdesk;
 import com.teammoeg.chorda.client.cui.base.MenuPrimaryLayer;
 import com.teammoeg.chorda.client.cui.editor.EditDialog;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
+import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.ResearchGui;
 import com.teammoeg.frostedresearch.gui.tech.ResearchLayer;
 
@@ -32,8 +33,10 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
 	public DrawDeskScreen(DrawDeskContainer cx) {
 		super(cx);
+		this.setTheme(DrawDeskTheme.INSTANCE);
 		p = new DrawDeskLayer(this);
 		p.setVisible(true);
+		
 	}
 
 	@Override

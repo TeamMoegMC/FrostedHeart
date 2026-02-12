@@ -52,6 +52,7 @@ public record ContainerOperationMessageC2S(int containerId, short buttonId, int 
 				container.receiveMessage(buttonId, state);
 			}
 		});
+		context.get().setPacketHandled(true);
 	}
 
 }

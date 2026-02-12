@@ -49,7 +49,11 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 	@Override
 	public void init() {
 		super.init();
-		primaryLayer.initGui();
+		try {
+			primaryLayer.initGui();
+		}catch(Throwable t) {
+			t.printStackTrace();
+		}
 	}
 
 	@Override

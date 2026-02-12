@@ -22,12 +22,12 @@ package com.teammoeg.frostedresearch.gui.drawdesk;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
-import com.teammoeg.frostedresearch.gui.TechButton;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardStat;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardType;
@@ -38,7 +38,7 @@ import net.minecraft.client.gui.GuiGraphics;
 class MainGamePanel extends UILayer {
 	ClientResearchGame rg;
 	DrawDeskLayer ot;
-	TechButton reset;
+	Button reset;
 	TextField status;
 	int lstatus = 0;
 	CardButton[][] cbs = new CardButton[9][9];
@@ -55,7 +55,7 @@ class MainGamePanel extends UILayer {
 				cb.setPosAndSize(17 * i, 17 * j + 3, 17, 17);
 				cbs[i][j] = cb;
 			}
-		reset = new TechButton(this, DrawDeskIcons.RESET) {
+		reset = new Button(this, DrawDeskIcons.RESET) {
 
 			@Override
 			public void getTooltip(TooltipBuilder list) {
@@ -142,7 +142,7 @@ class MainGamePanel extends UILayer {
 			}
 		}
 
-		TechButton help = new TechButton(this, TechIcons.Question) {
+		Button help = new Button(this, TechIcons.Question) {
 
 			@Override
 			public void getTooltip(TooltipBuilder list) {

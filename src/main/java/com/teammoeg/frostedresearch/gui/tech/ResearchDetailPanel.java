@@ -25,19 +25,17 @@ import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.widgets.Button;
+import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
-import com.teammoeg.frostedresearch.gui.TechIcons;
-import com.teammoeg.frostedresearch.gui.TechScrollBar;
 import com.teammoeg.frostedresearch.research.Research;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 public class ResearchDetailPanel extends UILayer {
-	public TechScrollBar scrollInfo;
-	public TechScrollBar scrolldetail;
+	public LayerScrollBar scrollInfo;
+	public LayerScrollBar scrolldetail;
 	Research research;
 	CIcon icon;
 	ResearchDashboardPanel dashboardPanel;
@@ -49,8 +47,8 @@ public class ResearchDetailPanel extends UILayer {
 		super(panel);
 		descPanel = new DescPanel(this);
 		infoPanel = new ResearchInfoPanel(this);
-		scrollInfo = new TechScrollBar(this, infoPanel);
-		scrolldetail = new TechScrollBar(this, descPanel);
+		scrollInfo = new LayerScrollBar(this, infoPanel);
+		scrolldetail = new LayerScrollBar(this, descPanel);
 		dashboardPanel = new ResearchDashboardPanel(this);
 		researchScreen = panel;
 		this.setZIndex(600);
@@ -137,7 +135,7 @@ public class ResearchDetailPanel extends UILayer {
 	@Override
 	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		// drawBackground(matrixStack, theme, x, y, w, h);
-		DrawDeskTheme.drawDialog(matrixStack, x, y, w, h);
+		getTheme().drawUIBackground(matrixStack, x, y, w, h);
 	}
 
 	@Override
@@ -172,7 +170,6 @@ public class ResearchDetailPanel extends UILayer {
 				desc.setMaxWidth(width);
 				desc.setPosAndSize(0, offset, width, height);
 				desc.setText(itx);
-				desc.setColor(DrawDeskTheme.getTextColor());
 				offset += desc.getHeight() + 2;
 			}
 			if (offset + 3 > height) {

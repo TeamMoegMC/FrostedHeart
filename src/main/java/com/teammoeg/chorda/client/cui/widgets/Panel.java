@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedresearch.gui;
+package com.teammoeg.chorda.client.cui.widgets;
 
 import java.util.function.Consumer;
 
@@ -27,11 +27,11 @@ import com.teammoeg.chorda.client.cui.base.UILayer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
-public class FramedPanel extends UILayer {
+public class Panel extends UILayer {
     Component title;
     Consumer<UILayer> addWidgets;
 
-    public FramedPanel(UIElement panel, Consumer<UILayer> addWidgets) {
+    public Panel(UIElement panel, Consumer<UILayer> addWidgets) {
         super(panel);
         this.addWidgets = addWidgets;
     }
@@ -54,8 +54,8 @@ public class FramedPanel extends UILayer {
 
     @Override
     public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-    	matrixStack.drawString(getFont(), title, x, y, DrawDeskTheme.getTextColor(), false);
-    	DrawDeskTheme.drawPanel(matrixStack, x, y, w, h);
+    	matrixStack.drawString(getFont(), title, x, y, getTheme().getUITextColor(), getTheme().isUITextShadow());
+    	getTheme().drawPanel(matrixStack, x, y, w, h);
 
         super.render(matrixStack, x, y, w, h);
     }

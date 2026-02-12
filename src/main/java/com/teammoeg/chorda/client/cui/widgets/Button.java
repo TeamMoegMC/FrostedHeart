@@ -28,9 +28,7 @@ import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentContents;
 
 public abstract class Button extends UIElement {
 	protected Component title;
@@ -45,6 +43,10 @@ public abstract class Button extends UIElement {
 
 	public Button(UIElement panel) {
 		this(panel, Components.immutableEmpty(), CIcons.nop());
+	}
+
+	public Button(UIElement panel, CIcon i) {
+		this(panel,Components.immutableEmpty(),i);
 	}
 
 	@Override
@@ -70,20 +72,10 @@ public abstract class Button extends UIElement {
 		setWidth(parent.getFont().width(title)+((Components.isEmpty(title)&&hasIcon())?0:8) + (hasIcon() ? 20 : 0));
 		setHeight(hasIcon() ?20:16);
 	}
-	private int getTextureY() {
-		int i = 1;
-		if (!this.isEnabled()) {
-			i = 0;
-		} else if (this.isMouseOver()) {
-			i = 2;
-		}
 
-		return 46 + i * 20;
-	}
 
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-		graphics.blitNineSliced(AbstractWidget.WIDGETS_LOCATION, x, y, w, h, 20, 4, 200, 20, 0, this.getTextureY());
-
+		getTheme().drawButton(graphics, x, y, w, h, isMouseOver(), isEnabled());
 	}
 
 	public void drawIcon(GuiGraphics graphics, int x, int y, int w, int h) {
@@ -93,9 +85,10 @@ public abstract class Button extends UIElement {
 	@Override
 	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
 		CGuiHelper.resetGuiDrawing();
-		var s = h >= 16 ? 16 : 8;
+		int s = h >= 16 ? 16 : 8;
 		drawBackground(graphics, x, y, w, h);
-		drawIcon(graphics, x + (w - s) / 2, y + (h - s) / 2, s, s);
+		if(hasIcon())
+			drawIcon(graphics, x + (w - s) / 2, y + (h - s) / 2, s, s);
 	}
 
 	@Override

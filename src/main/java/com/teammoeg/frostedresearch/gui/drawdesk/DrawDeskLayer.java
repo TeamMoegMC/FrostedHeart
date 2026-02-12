@@ -29,7 +29,6 @@ import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
-import com.teammoeg.frostedresearch.gui.TechButton;
 import com.teammoeg.frostedresearch.gui.tech.ResearchProgressPanel;
 import com.teammoeg.frostedresearch.network.FHDrawingDeskOperationPacket;
 import com.teammoeg.frostedresearch.network.FHResearchControlPacket;
@@ -74,7 +73,7 @@ public class DrawDeskLayer extends UILayer {
 		p.setPosAndSize(14, 19, 111, 68);
 		add(p);
 
-		TechButton techTree = new TechButton(this, DrawDeskIcons.TECH) {
+		Button techTree = new Button(this, DrawDeskIcons.TECH) {
 
 			@Override
 			public void onClicked(MouseButton arg0) {
@@ -85,7 +84,7 @@ public class DrawDeskLayer extends UILayer {
 		techTree.setPosAndSize(16, 68, 36, 19);
 
 		add(techTree);
-		TechButton techStop = new TechButton(this, DrawDeskIcons.STOP) {
+		Button techStop = new Button(this, DrawDeskIcons.STOP) {
 
 			@Override
 			public void onClicked(MouseButton arg0) {

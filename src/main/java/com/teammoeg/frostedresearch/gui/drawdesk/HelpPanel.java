@@ -22,17 +22,13 @@ package com.teammoeg.frostedresearch.gui.drawdesk;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
-import com.teammoeg.chorda.client.cui.contentpanel.LineHelper;
 import com.teammoeg.chorda.client.cui.widgets.Button;
+import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.ui.UV;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import com.teammoeg.frostedresearch.Lang;
-import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.TechIcons;
-import com.teammoeg.frostedresearch.gui.TechScrollBar;
 import net.minecraft.client.gui.GuiGraphics;
-
-import java.util.List;
 
 class HelpPanel extends UILayer {
 	DrawDeskLayer ot;
@@ -69,23 +65,23 @@ class HelpPanel extends UILayer {
 			}
 		};
 		contentPanel.builder()
-		.text (Lang.translateGui("minigame.match"),c->c.alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()).scale(2))
+		.text (Lang.translateGui("minigame.match"),c->c.alignment(Alignment.CENTER).scale(2))
 		.img  (DrawDeskIcons.LOCATION,c->c.uvOverride(new UV(243, 319, 73, 56, 512, 512)))
-		.text (Lang.translateGui("minigame.t1"),c->c.alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()))
+		.text (Lang.translateGui("minigame.t1"),c->c.alignment(Alignment.CENTER))
 		.br   (c->c.icon(TechIcons.HLINE).height(1))
 		.img  (DrawDeskIcons.LOCATION,c->c.uvOverride(new UV(316, 319, 90, 56, 512, 512)))
-		.text (Lang.translateGui("minigame.t2"),c->c.alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()))
+		.text (Lang.translateGui("minigame.t2"),c->c.alignment(Alignment.CENTER))
 		.space(16)
-		.text (Lang.translateGui("minigame.display"),c->c.alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()).scale(2))
+		.text (Lang.translateGui("minigame.display"),c->c.alignment(Alignment.CENTER).scale(2))
 		.img  (DrawDeskIcons.LOCATION,c->c.uvOverride(new UV(243, 375, 93, 48, 512, 512)))
-		.text (Lang.translateGui("minigame.t3"),c->c.alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()))
+		.text (Lang.translateGui("minigame.t3"),c->c.alignment(Alignment.CENTER))
 		.br   (c->c.icon(TechIcons.HLINE).height(1))
 		.img  (DrawDeskIcons.LOCATION,c->c.uvOverride(new UV(336, 375, 74, 48, 512, 512)))
-		.text (Lang.translateGui("minigame.t4"),c->c.alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()))
+		.text (Lang.translateGui("minigame.t4"),c->c.alignment(Alignment.CENTER))
 		.br   (c->c.icon(TechIcons.HLINE).height(1))
 		.img  (DrawDeskIcons.LOCATION,c->c.uvOverride(new UV(243, 423, 79, 48, 512, 512)))
-		.text (Lang.translateGui("minigame.t5"),c->c.alignment(Alignment.CENTER).color(DrawDeskTheme.getTextColor()));
-		contentPanel.scrollBar = new TechScrollBar(this, contentPanel);
+		.text (Lang.translateGui("minigame.t5"),c->c.alignment(Alignment.CENTER));
+		contentPanel.scrollBar = new LayerScrollBar(this, contentPanel);
 		contentPanel.setPosAndSize(5, 5, 212, 160);
 		add(contentPanel);
 		add(contentPanel.scrollBar);

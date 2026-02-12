@@ -56,7 +56,7 @@ public class RequirementSlot extends UIElement {
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
 		CGuiHelper.resetGuiDrawing();
-		DrawDeskTheme.drawSlot(matrixStack, x, y, w, h);
+		getTheme().drawSlot(matrixStack, x, y, w, h);
 		CGuiHelper.drawItem(matrixStack, cur, x, y, 0, w / 16F, h / 16F, true, cnt != 0 ? String.valueOf(cnt) : null);
 	}
 

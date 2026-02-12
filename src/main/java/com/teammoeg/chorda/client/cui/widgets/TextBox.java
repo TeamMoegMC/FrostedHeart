@@ -42,6 +42,7 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.base.Verifier;
 import com.teammoeg.chorda.client.cui.base.Verifier.VerifyResult;
+import com.teammoeg.chorda.client.cui.theme.VanillaTheme;
 import com.teammoeg.chorda.text.Components;
 
 import lombok.Getter;
@@ -466,7 +467,8 @@ public class TextBox extends UIElement implements Focusable {
 				isPressed=false;
 			
 		}
-		int cursorColor =( (!validText.isError() ? 0xFFFFFFFF:0xffa92b0d)&0xffffffff)|((drawGhostText ? 0x78000000 : 0xFF000000));
+		int textColor=getTheme().getButtonTextColor();
+		int cursorColor =( (!validText.isError() ? textColor:getTheme().getErrorColor())&textColor)|((drawGhostText ? 0x78000000 : 0xFF000000));
 		int j = cursorPos - displayPos;
 		String s = getFont().plainSubstrByWidth(textToDraw.substring(displayPos), w);
 		if(rightAlign)
@@ -528,9 +530,7 @@ public class TextBox extends UIElement implements Focusable {
 	}
 
 	public void drawTextBox(GuiGraphics graphics, int x, int y, int w, int h) {
-		int i = this.isFocused() ? -1 : -6250336;
-		graphics.fill(x - 1, y - 1, x + w + 1, y + h + 1, i);
-		graphics.fill(x, y, x + w, y + h, -16777216);
+		getTheme().drawTextboxBackground(graphics, x, y, w, h, isFocused());
 	}
 
 	public VerifyResult isValid(String txt) {

@@ -24,11 +24,11 @@ import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.data.ClientResearchData;
 import com.teammoeg.frostedresearch.gui.TechIcons;
-import com.teammoeg.frostedresearch.gui.TechScrollBar;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.ResearchCategory;
 
@@ -49,7 +49,7 @@ public abstract class ResearchLayer extends UILayer {
 
 	public UIElement modalPanel = null;
 
-	public TechScrollBar hierarchyBar;
+	public LayerScrollBar hierarchyBar;
 
 	boolean visible;
 
@@ -82,7 +82,7 @@ public abstract class ResearchLayer extends UILayer {
 				return false;
 			}
 		};
-		hierarchyBar = new TechScrollBar(this, false, researchHierarchyPanel);
+		hierarchyBar = new LayerScrollBar(this, false, researchHierarchyPanel);
 		detailframe = new ResearchDetailPanel(this);
 		selectedCategory = ResearchCategory.RESCUE;
 		selectedResearch = null;

@@ -25,6 +25,7 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
+import com.teammoeg.chorda.client.cui.theme.SimpleTechTheme;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 
 import net.minecraft.network.chat.Component;
@@ -40,17 +41,17 @@ public class EditUtils {
     }
     public static UIElement openEditorScreen() {
     	CUIScreenWrapper wrapper=new CUIScreenWrapper(new PrimaryLayer());
-    	
+    	wrapper.getPrimaryLayer().setTheme(SimpleTechTheme.INSTANCE);
     	ClientUtils.getMc().setScreen(wrapper);
     	return wrapper.getPrimaryLayer();
     }
     public static TextField getTitle(UIElement p, String title) {
 
-        return new TextField(p).setMaxWidth(200).setText(title).setColor(0xFF000000);
+        return new TextField(p).setMaxWidth(200).setText(title).setColor(p.getTheme().getUITextColor());
     }
     public static TextField getTitle(UIElement p, Component title) {
 
-        return new TextField(p).setMaxWidth(200).setText(title).setColor(0xFF000000);
+        return new TextField(p).setMaxWidth(200).setText(title).setColor(p.getTheme().getUITextColor());
     }
   
 }

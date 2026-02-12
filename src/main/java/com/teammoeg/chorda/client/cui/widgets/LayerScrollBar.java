@@ -105,7 +105,7 @@ public class LayerScrollBar extends ScrollBar {
 
 	@Override
 	public boolean isScrollFocused() {
-		return super.isScrollFocused() || layer.isMouseOver();
+		return (super.isScrollFocused() || layer.isMouseOver())&& getAffectedLayer().isEnabled()&&isEnabled()&&isVisible();
 	}
 
 	@Override
@@ -115,6 +115,15 @@ public class LayerScrollBar extends ScrollBar {
 
 	@Override
 	public boolean isEnabled() {
-		return getScrollBarSize() > 0;
+		return getScrollBarSize() > 0&&isVisible;
 	}
+    boolean isVisible = true;
+    public void hide() {
+        this.isVisible = false;
+    }
+
+    public void unhide() {
+        this.isVisible = true;
+    }
+    
 }

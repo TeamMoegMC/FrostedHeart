@@ -39,6 +39,7 @@ public abstract class Line<T extends Line<T>> extends UILayer {
 
     public Line(UIElement parent, Alignment alignment) {
         this(parent,alignment, Colors.WHITE);
+        this.color=getTheme().getUITextColor();
     }
 
     public Line(UIElement parent, Alignment alignment, int color) {

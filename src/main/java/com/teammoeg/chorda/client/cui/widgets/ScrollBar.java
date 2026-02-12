@@ -23,6 +23,7 @@ import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.theme.VanillaTheme;
 import com.teammoeg.chorda.text.Components;
 
 import lombok.Getter;
@@ -159,16 +160,11 @@ public class ScrollBar extends UIElement {
 	}
 
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-		int i = this.isMouseOver() ? 0xFFFFFFFF : 0xFFA0A0A0;
-		graphics.fill(x, y, x + w, y + h, i);
-		graphics.fill(x + 1, y + 1, x + w - 1, y + h - 1, 0xFF000000);
+		getTheme().drawSliderBackground(graphics, x, y, w, h, isMouseOver());
 	}
 
 	public void drawScrollBar(GuiGraphics graphics, int x, int y, int w, int h) {
-
-		graphics.fill(x, y, x + w, y + h, 0xFF808080);
-		graphics.fill(x, y, x + w - 1, y + h - 1,0xFFC0C0C0);
-
+		getTheme().drawSliderBar(graphics, x, y, w, h, isMouseOver());
 	}
 
 	public void onValueChanged() {

@@ -31,6 +31,7 @@ import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;
 import com.teammoeg.chorda.client.cui.widgets.Button;
+import com.teammoeg.chorda.client.cui.widgets.TextButton;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.text.Components;
@@ -39,7 +40,6 @@ import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.ResearchEditUtils;
 import com.teammoeg.frostedresearch.gui.TechIcons;
-import com.teammoeg.frostedresearch.gui.TechTextButton;
 import com.teammoeg.frostedresearch.gui.ThickLine;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.ResearchEditors;
@@ -62,7 +62,7 @@ public class ResearchHierarchyPanel extends UILayer {
 		if (FHResearch.editor) {
 			int offset = 5;
 			if (researchPanel.selectedResearch != null) {
-				TechTextButton par = new TechTextButton(this, Components.str("parents"), CIcons.nop()) {
+				TextButton par = new TextButton(this, Components.str("parents"), CIcons.nop()) {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
 						// TODO Add parent
@@ -82,7 +82,7 @@ public class ResearchHierarchyPanel extends UILayer {
 				par.setPos(offset, 130);
 				add(par);
 				offset += par.getWidth() + 3;
-				TechTextButton chd = new TechTextButton(this, Components.str("children"), CIcons.nop()) {
+				TextButton chd = new TextButton(this, Components.str("children"), CIcons.nop()) {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
 						// TODO Add children
@@ -108,7 +108,7 @@ public class ResearchHierarchyPanel extends UILayer {
 				offset += chd.getWidth() + 3;
 			}
 			{
-				TechTextButton create = new TechTextButton(this, Components.str("new"), CIcons.nop()) {
+				TextButton create = new TextButton(this, Components.str("new"), CIcons.nop()) {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
 						ResearchEditUtils.editResearch(this, null, researchPanel.selectedCategory);
@@ -119,7 +119,7 @@ public class ResearchHierarchyPanel extends UILayer {
 				offset += create.getWidth() + 3;
 			}
 			if (researchPanel.selectedResearch != null) {
-				TechTextButton create = new TechTextButton(this, Components.str("edit"), CIcons.nop()) {
+				TextButton create = new TextButton(this, Components.str("edit"), CIcons.nop()) {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
 						ResearchEditUtils.editResearch(this, researchPanel.selectedResearch);
@@ -128,7 +128,7 @@ public class ResearchHierarchyPanel extends UILayer {
 				create.setPos(offset, 130);
 				add(create);
 				offset += create.getWidth() + 3;
-				TechTextButton rem = new TechTextButton(this, Components.str("delete"), CIcons.nop()) {
+				TextButton rem = new TextButton(this, Components.str("delete"), CIcons.nop()) {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
 						researchPanel.selectedResearch.delete();
@@ -262,7 +262,7 @@ public class ResearchHierarchyPanel extends UILayer {
 	@Override
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		super.render(matrixStack, x, y, w, h);
-		matrixStack.drawString(getFont(), Lang.translateGui("research_hierarchy"), x + 3, y + 3, DrawDeskTheme.getTextColor(), false);
+		matrixStack.drawString(getFont(), Lang.translateGui("research_hierarchy"), x + 3, y + 3, getTheme().getUITextColor(), false);
 		TechIcons.HLINE_L.draw(matrixStack, x + 1, y + 13, 80, 3);
 	}
 
@@ -292,9 +292,9 @@ public class ResearchHierarchyPanel extends UILayer {
 		@Override
 		public void draw(GuiGraphics matrixStack, int x, int y) {
 			if (doShow())
-				color = DrawDeskTheme.getTextColor();
+				color = DrawDeskTheme.INSTANCE.getUITextColor();
 			else
-				color = DrawDeskTheme.getWeakColor();
+				color = DrawDeskTheme.INSTANCE.getButtonTextDisabledColor();
 			super.draw(matrixStack, x, y);
 		}
 	}
@@ -376,9 +376,9 @@ public class ResearchHierarchyPanel extends UILayer {
 		@Override
 		public void draw(GuiGraphics matrixStack, int x, int y) {
 			if (doShow())
-				color = DrawDeskTheme.getTextColor();
+				color = DrawDeskTheme.INSTANCE.getUITextColor();
 			else
-				color = DrawDeskTheme.getWeakColor();
+				color = DrawDeskTheme.INSTANCE.getButtonTextDisabledColor();
 			super.draw(matrixStack, x, y);
 		}
 	}
@@ -413,7 +413,7 @@ public class ResearchHierarchyPanel extends UILayer {
 		@Override
 		public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 			CGuiHelper.resetGuiDrawing();
-			DrawDeskTheme.drawSlot(matrixStack, x, y, w, h);
+			getTheme().drawSlot(matrixStack, x, y, w, h);
 			if (FHResearch.editor || research.isShowable()) {
 				this.drawIcon(matrixStack, x + 4, y + 4, 16, 16);
 				if (research.isCompleted()) {

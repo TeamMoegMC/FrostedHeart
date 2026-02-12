@@ -49,7 +49,11 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 	@Override
 	public void init() {
 		super.init();
-		primaryLayer.initGui();
+		try {
+			primaryLayer.initGui();
+		}catch(Throwable t) {
+			t.printStackTrace();
+		}
 
 	}
 
@@ -157,19 +161,25 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-		Window win=super.minecraft.getWindow();
-		primaryLayer.onBeforeRender();
-		imageWidth = primaryLayer.getWidth();
-		imageHeight = primaryLayer.getHeight();
-        leftPos=(win.getGuiScaledWidth() - imageWidth) / 2;
-        topPos=(win.getGuiScaledHeight() - imageHeight) / 2;
+		
+		try {
+			Window win=super.minecraft.getWindow();
+			primaryLayer.onBeforeRender();
+			imageWidth = primaryLayer.getWidth();
+			imageHeight = primaryLayer.getHeight();
+	        leftPos=(win.getGuiScaledWidth() - imageWidth) / 2;
+	        topPos=(win.getGuiScaledHeight() - imageHeight) / 2;
+	
+			renderBackground(graphics);
+			CGuiHelper.resetGuiDrawing();
+			
+			
+			primaryLayer.updateGui(MouseHelper.getScaledX()-leftPos, MouseHelper.getScaledY()-topPos, partialTicks);
+			primaryLayer.updateMouseOver();
 
-		renderBackground(graphics);
-		CGuiHelper.resetGuiDrawing();
-		
-		
-		primaryLayer.updateGui(MouseHelper.getScaledX()-leftPos, MouseHelper.getScaledY()-topPos, partialTicks);
-		primaryLayer.updateMouseOver();
+		}catch(Throwable t) {
+			t.printStackTrace();
+		}
 		super.render(graphics, mouseX, mouseY, partialTicks);
 	}
 

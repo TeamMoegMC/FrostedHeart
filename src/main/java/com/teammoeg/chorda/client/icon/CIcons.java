@@ -375,7 +375,7 @@ public class CIcons {
 			 * stack.getCount() > 1) { matrixStack.push(); matrixStack.translate(x + w - 8,
 			 * y + h - 7, 199); matrixStack.push(); matrixStack.scale(w / 16f, h / 16f, 0);
 			 * ClientUtils.mc().fontRenderer.drawStringWithShadow(matrixStack,
-			 * String.valueOf(stack.getCount()), 0, 0, 0xffffffff); matrixStack.pop();
+			 * String.valueOf(stack.getCount()), 0, 0, getTheme().getButtonTextColor()); matrixStack.pop();
 			 * matrixStack.pop(); }
 			 */
 		}

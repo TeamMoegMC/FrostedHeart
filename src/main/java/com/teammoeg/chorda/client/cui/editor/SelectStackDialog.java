@@ -283,7 +283,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
             @Override
             public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-            	CGuiHelper.drawLayerBackground(matrixStack, x, y, w, h);
+            	getTheme().drawPanel(matrixStack, x, y, w, h);
             }
 
 			@Override
@@ -365,7 +365,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
     @Override
     public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-        CGuiHelper.drawUIBackground(matrixStack, x, y, w, h);
+        getTheme().drawUIBackground(matrixStack, x, y, w, h);
 
         long now = System.currentTimeMillis();
 

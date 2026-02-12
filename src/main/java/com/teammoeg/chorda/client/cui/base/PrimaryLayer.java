@@ -26,6 +26,7 @@ import com.teammoeg.chorda.client.cui.CUIDebugHelper;
 import com.teammoeg.chorda.client.cui.editor.EditDialog;
 import com.teammoeg.chorda.client.cui.editor.EditorManager;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreen;
+import com.teammoeg.chorda.client.cui.theme.VanillaTheme;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -52,6 +53,7 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 		width = 176;
 		height = 166;
 		prevScreen = Minecraft.getInstance().screen;
+		setTheme(VanillaTheme.INSTANCE);
 		this.setScissorEnabled(false);
 	}
 	int mouseX;

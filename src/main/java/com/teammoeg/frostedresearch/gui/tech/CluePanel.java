@@ -84,27 +84,26 @@ public class CluePanel extends UILayer {
 	public void initWidgets() {
 		int offset = 1;
 		clueName = new TextField(this);
-		clueName.setMaxWidth(width - 6).setText(c.getName(r)).setColor(DrawDeskTheme.getTextColor()).setPos(10, offset);
+		clueName.setMaxWidth(width - 6).setText(c.getName(r)).setPos(10, offset);
 
 		offset += clueName.getHeight() + 2;
 		Component itx = c.getDescription(r);
 		if (itx != null) {
 			desc = new TextField(this);
-			desc.setMaxWidth(width).setText(itx).setColor(DrawDeskTheme.getTextColor()).setPos(0, offset);
+			desc.setMaxWidth(width).setText(itx).setPos(0, offset);
 			offset += desc.getHeight() + 2;
 		}
 		if (c.isRequired()) {
 			rq = new TextField(this)
 				.setMaxWidth(width)
 				.setText(Lang.translateGui("research.required"))
-				.setColor(DrawDeskTheme.getErrorColor());
+				.setColor(getTheme().getErrorColor());
 			rq.setPos(0, offset);
 			offset += rq.getHeight() + 2;
 		}
 		contribute = new TextField(this)
 			.setMaxWidth(width)
-			.setText(Components.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
-			.setColor(DrawDeskTheme.getTextColor());
+			.setText(Components.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())));
 		contribute.setPos(0, offset);
 		offset += contribute.getHeight() + 2;
 		offset += 1;

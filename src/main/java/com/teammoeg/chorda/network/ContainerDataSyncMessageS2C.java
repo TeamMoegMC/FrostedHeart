@@ -75,9 +75,10 @@ public record ContainerDataSyncMessageS2C(List<ContainerDataPair> data) implemen
 		context.get().enqueueWork(()->{
 			if(ClientUtils.getPlayer().containerMenu instanceof CBaseMenu container) {
 				container.processPacket(this);
-				context.get().setPacketHandled(true);
+				
 			}
 		});
+		context.get().setPacketHandled(true);
 	}
 
 }

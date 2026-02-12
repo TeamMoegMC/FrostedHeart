@@ -53,7 +53,7 @@ public class HeatStatScreen extends PrimaryLayer {
 
     @Override
     public void drawBackground(GuiGraphics matrixStack,  int x, int y, int w, int h) {
-    	CGuiHelper.drawUIBackground(matrixStack, x, y, w, h);
+    	getTheme().drawUIBackground(matrixStack, x, y, w, h);
        
     }
 
@@ -111,7 +111,7 @@ public class HeatStatScreen extends PrimaryLayer {
             if (isIntake)
             	matrixStack.drawString(getFont(), val, x + 32 - getFont().width(val), y + 30, epd.canCostMore ? 0xFFFF5555 : 0x55FF55);
             else
-            	matrixStack.drawString(getFont(), val, x + 32 - getFont().width(val), y + 30,0xFFFFFFFF);
+            	matrixStack.drawString(getFont(), val, x + 32 - getFont().width(val), y + 30,getTheme().getButtonTextColor());
         }
 
     }
@@ -161,7 +161,7 @@ public class HeatStatScreen extends PrimaryLayer {
 
         @Override
         public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-            CGuiHelper.drawLayerBackground(matrixStack, x, y, w, h);
+            getTheme().drawPanel(matrixStack, x, y, w, h);
         }
 
     }

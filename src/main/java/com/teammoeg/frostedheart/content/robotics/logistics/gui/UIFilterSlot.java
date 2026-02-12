@@ -77,7 +77,7 @@ public class UIFilterSlot extends UIElement {
 	             Font pFont=getFont();
 	             int width=pFont.width(s);
 	             graphics.pose().pushPose();
-	             if(size>99) {
+	             if(width>16) {
 		             width=(int) (width*0.8);
 		             
 		             graphics.pose().translate(x+18-width, y+11, 350.0F);

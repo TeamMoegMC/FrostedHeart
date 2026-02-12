@@ -47,16 +47,23 @@ public class TextField extends UIElement {
 	public int minLines=1;
 	public int textSpacing = 10;
 	public float scale = 1.0F;
-	public int textColor = 0xFFFFFFFF;
+	public int textColor;
 	public boolean trim = false;
 	private boolean tooltip = false;
 
 	public TextField(UIElement parent) {
 		super(parent);
+		textColor=getTheme().getButtonTextColor();
+		if(getTheme().isUITextShadow())
+			shadow();
 	}
-
+	
 	public TextField addFlags(int flags) {
 		textFlags |= flags;
+		return this;
+	}
+	public TextField deleteFlags(int flags) {
+		textFlags ^= flags;
 		return this;
 	}
 	//Horizontal centered(center in width)
@@ -69,6 +76,9 @@ public class TextField extends UIElement {
 	}
 	public TextField shadow() {
 		return addFlags(SHADOW);
+	}
+	public TextField noShadow() {
+		return deleteFlags(SHADOW);
 	}
 	public TextField setMinWidth(int width) {
 		minWidth = width;

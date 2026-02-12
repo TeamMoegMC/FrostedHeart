@@ -48,18 +48,22 @@ public abstract class TextButton extends Button {
 
 	@Override
 	public void getTooltip(TooltipBuilder list) {
-		if ((!Components.isEmpty(getTitle()))&&getFont().width(getTitle()) + (hasIcon() ? 28 : 8) > super.getWidth()) {
-			list.accept(getTitle());
+		Component title=getTitle();
+		if ((!Components.isEmpty(title))&&getFont().width(title) + (hasIcon() ? 28 : 8) > super.getWidth()) {
+			list.accept(title);
 		}
 	}
-
+    public TextButton setTitleAndSize(Component txt) {
+        super.setTitle(txt);
+        setWidth(getFont().width(getTitle()) + (hasIcon() ? 28 : 8));
+        return this;
+    }
 	@Override
 	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
 		drawBackground(graphics, x, y, w, h);
 		var s = h >= 16 ? 16 : 8;
 		var off = (h - s) / 2;
-		FormattedText title;
-		title = getTitle();
+		FormattedText title = getTitle();
 		var textX = x;
 		var textY = y + (h - getFont().lineHeight + 1) / 2;
 
@@ -82,8 +86,9 @@ public abstract class TextButton extends Button {
 			textX += off + s;
 		}
 		List<FormattedCharSequence> list=getFont().split(title, mw);
+		int textColor=(isEnabled()?(isMouseOver()?getTheme().getButtonTextOverColor():getTheme().getButtonTextColor()):getTheme().getButtonTextDisabledColor());
 		for(FormattedCharSequence fcs:list) {
-			graphics.drawString(getFont(), fcs, textX, textY, 0xFFFFFFFF,true);
+			graphics.drawString(getFont(), fcs, textX, textY, textColor,getTheme().isButtonTextShadow());
 			textY+=7;
 		}
 	}
