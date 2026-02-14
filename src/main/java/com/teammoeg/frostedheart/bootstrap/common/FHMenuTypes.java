@@ -19,12 +19,7 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseMenu;
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlockEntity;
-import com.teammoeg.frostedheart.item.snowsack.SnowSackMenu;
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-
+import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
 import com.teammoeg.chorda.menu.MultiBlockMenuServerFactory;
 import com.teammoeg.chorda.menu.MultiblockMenuClientFactory;
 import com.teammoeg.chorda.menu.MultiblockMenuType;
@@ -52,9 +47,10 @@ import com.teammoeg.frostedheart.content.robotics.logistics.workers.SupplierTile
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
+import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlockEntity;
+import com.teammoeg.frostedheart.content.town.warehouse.WarehouseMenu;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
-
-import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
+import com.teammoeg.frostedheart.item.snowsack.ui.SnowSackMenu;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -65,6 +61,8 @@ import net.minecraftforge.network.IContainerFactory;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 
 public class FHMenuTypes {
 	@FunctionalInterface

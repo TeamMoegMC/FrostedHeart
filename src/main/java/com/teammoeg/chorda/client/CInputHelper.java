@@ -19,13 +19,13 @@
 
 package com.teammoeg.chorda.client;
 
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.system.MemoryUtil;
-
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.sounds.SoundEvents;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.system.MemoryUtil;
 
 public class CInputHelper {
 
@@ -93,6 +93,9 @@ public class CInputHelper {
 	}
 	public static boolean isKeyPressed(int keyCode) {
 		return GLFW.glfwGetKey(Minecraft.getInstance().getWindow().getWindow(), keyCode) == GLFW.GLFW_PRESS;
+	}
+	public static boolean isDown(int key) {
+		return InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), key);
 	}
 	public static void playClickSound() {
 		ClientUtils.getMc().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1));

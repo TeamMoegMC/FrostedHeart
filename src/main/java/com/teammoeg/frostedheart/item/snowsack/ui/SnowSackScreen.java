@@ -17,9 +17,16 @@
  *
  */
 
-package com.teammoeg.frostedheart.item.snowsack;
+package com.teammoeg.frostedheart.item.snowsack.ui;
 
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.icon.FlatIcon;
+import com.teammoeg.chorda.client.widget.IconButton;
+import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.item.snowsack.SnowSackItem;
+import com.teammoeg.frostedheart.item.snowsack.network.ToggleAutoPickupMessage;
+import com.teammoeg.frostedheart.item.snowsack.network.ToggleDeleteOverflowMessage;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -40,6 +47,7 @@ public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> implem
     // 贴图还没有：private static final ResourceLocation SNOW_SACK_TEXTURE = new ResourceLocation(FHMain.MODID, "textures/gui/snow_sack.png");
     
     private Button autoPickupButton;
+    private Button deleteOverflowButton;
 
     public SnowSackScreen(SnowSackMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -50,18 +58,27 @@ public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> implem
     @Override
     protected void init() {
         super.init();
-        
+
         // 添加自动拾取切换按钮，调整位置避免与物品栏重叠
-        this.autoPickupButton = this.addRenderableWidget(Button.builder(
-                this.getAutoPickupText(), 
-                (button) -> {
+        this.autoPickupButton = new IconButton(this.leftPos + 8, this.topPos + 70, FlatIcon.JUMP_IN, Colors.L_BG_GRAY, getAutoPickupText(), b -> {
                     this.menu.toggleAutoPickup();
-                    button.setMessage(this.getAutoPickupText());
                     FHNetwork.INSTANCE.sendToServer(new ToggleAutoPickupMessage());
-                })
-                .pos(this.leftPos + 8, this.topPos + 70)
-                .size(80, 16)
-                .build());
+                    toggleButtonColor(b, Colors.themeColor(), Colors.L_BG_GRAY, this.menu.isAutoPickupEnabled());
+                });
+        toggleButtonColor(autoPickupButton, Colors.themeColor(), Colors.L_BG_GRAY, this.menu.isAutoPickupEnabled());
+        addRenderableWidget(autoPickupButton);
+
+        this.deleteOverflowButton = new IconButton(this.leftPos + 20, this.topPos + 70, FlatIcon.TRASH_CAN, Colors.L_BG_GRAY, getDeleteOverflowText(), b -> {
+                    this.menu.toggleDeleteOverflow();
+                    FHNetwork.INSTANCE.sendToServer(new ToggleDeleteOverflowMessage());
+                    toggleButtonColor(b, Colors.themeColor(), Colors.L_BG_GRAY, this.menu.isDeleteOverflowEnabled());
+                });
+        toggleButtonColor(deleteOverflowButton, Colors.themeColor(), Colors.L_BG_GRAY, this.menu.isDeleteOverflowEnabled());
+        addRenderableWidget(deleteOverflowButton);
+    }
+
+    private void toggleButtonColor(Button btn, int c1, int c2, boolean b) {
+        ((IconButton)btn).color = b ? c1 : c2;
     }
 
     @Override
@@ -122,7 +139,13 @@ public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> implem
     private Component getAutoPickupText() {
         boolean autoPickup = this.menu.isAutoPickupEnabled();
         return Component.translatable("gui.frostedheart.snow_sack.auto_pickup", 
-            autoPickup ? Component.translatable("gui.frostedheart.snow_sack.enabled") : Component.translatable("gui.frostedheart.snow_sack.disabled"));
+            autoPickup ? Component.translatable("gui.frostedheart.enabled") : Component.translatable("gui.frostedheart.disabled"));
+    }
+
+    private Component getDeleteOverflowText() {
+        boolean deleteOverflow = this.menu.isDeleteOverflowEnabled();
+        return Component.translatable("gui.frostedheart.snow_sack.delete_overflow",
+            deleteOverflow ? Component.translatable("gui.frostedheart.enabled") : Component.translatable("gui.frostedheart.disabled"));
     }
     
     @Override
@@ -132,5 +155,17 @@ public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> implem
         if (this.autoPickupButton != null) {
             this.autoPickupButton.setMessage(this.getAutoPickupText());
         }
+        if (this.deleteOverflowButton != null) {
+            this.deleteOverflowButton.setMessage(this.getDeleteOverflowText());
+        }
+    }
+
+    @Override
+    public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
+        // 防止副手交换
+        if (ClientUtils.getPlayer().getOffhandItem().getItem() instanceof SnowSackItem && ClientUtils.getMc().options.keySwapOffhand.matches(pKeyCode, pScanCode)) {
+            return true;
+        }
+        return super.keyPressed(pKeyCode, pScanCode, pModifiers);
     }
 }

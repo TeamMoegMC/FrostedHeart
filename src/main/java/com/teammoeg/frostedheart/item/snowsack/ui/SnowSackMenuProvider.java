@@ -17,9 +17,10 @@
  *
  */
 
-package com.teammoeg.frostedheart.item.snowsack;
+package com.teammoeg.frostedheart.item.snowsack.ui;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -33,8 +34,8 @@ import javax.annotation.Nullable;
 public class SnowSackMenuProvider implements MenuProvider {
     private final ItemStack snowSack;
 
-    public SnowSackMenuProvider(ItemStack snowSack) {
-        this.snowSack = snowSack;
+    public SnowSackMenuProvider(ServerPlayer player, int index) {
+        this.snowSack = player.inventoryMenu.getSlot(index).getItem();
     }
 
     @Nonnull

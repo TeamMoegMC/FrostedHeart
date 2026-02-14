@@ -17,9 +17,10 @@
  *
  */
 
-package com.teammoeg.frostedheart.item.snowsack;
+package com.teammoeg.frostedheart.item.snowsack.network;
 
 import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedheart.item.snowsack.ui.SnowSackMenu;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 

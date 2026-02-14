@@ -19,32 +19,10 @@
 
 package com.teammoeg.chorda.util;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.ToIntFunction;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import org.jetbrains.annotations.NotNull;
-import org.joml.Vector3f;
-
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.platform.InputConstants;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.capability.types.nbt.NBTCapabilityType;
 import com.teammoeg.chorda.io.NBTSerializable;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -65,6 +43,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
@@ -93,6 +72,24 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.wrappers.BucketPickupHandlerWrapper;
 import net.minecraftforge.fluids.capability.wrappers.FluidBlockWrapper;
 import net.minecraftforge.registries.RegistryObject;
+import org.jetbrains.annotations.NotNull;
+import org.joml.Vector3f;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.ToIntFunction;
 
 public class CUtils {
 	public static final Comparator<ResourceLocation> RESOURCE_LOCATION_COMPARATOR = Comparator.comparing(ResourceLocation::getNamespace).thenComparing(ResourceLocation::getPath);
@@ -349,10 +346,6 @@ public class CUtils {
 			l.setBlock(pos, curstate.createLegacyBlock(), 2);
 	}
 
-	public static boolean isDown(int key) {
-		return InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), key);
-	}
-
 	public static ThreadFactory makeThreadFactory(String name, boolean isDaemon) {
 		AtomicInteger THREAD_NUM = new AtomicInteger(0);
 		return r -> {
@@ -445,5 +438,14 @@ public class CUtils {
 	}
 	public static Holder<Biome> fastGetBiome(LevelChunk pChunk,BlockPos pos){
 		return pChunk.getSection(pChunk.getSectionIndex(pos.getY())).getNoiseBiome(QuartPos.fromBlock(pos.getX())&3, QuartPos.fromBlock(pos.getY())&3, QuartPos.fromBlock(pos.getZ())&3);
+	}
+
+	public static Slot getItemSlotInPlayerInv(Player player, ItemStack item) {
+		for (Slot slot : player.inventoryMenu.slots) {
+			if (slot.getItem() == item) {
+				return slot;
+			}
+		}
+		return null;
 	}
 }

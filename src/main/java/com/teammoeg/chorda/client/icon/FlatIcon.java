@@ -24,7 +24,6 @@ import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -39,6 +38,9 @@ public enum FlatIcon {
     SIGHT           (30, 0 , "\uF203"),
     INFO            (40, 0 , "\uF204"),
     SORT            (50, 0 , "\uF205"),
+    FILTER          (60, 0 , "\uF206"),
+    PIN             (70, 0 , "\uF207"),
+
     QUESTION_MARK   (0 , 10, "\uF210"),
     LOCK            (10, 10, "\uF211"),
     CONTINUE        (20, 10, "\uF212"),
@@ -47,11 +49,16 @@ public enum FlatIcon {
     DOWN            (50, 10, "\uF215"),
     LEFT            (60, 10, "\uF216"),
     TOP             (70, 10, "\uF217"),
+
     TRADE           (0 , 20, "\uF220"),
     GIVE            (10, 20, "\uF221"),
     GAIN            (20, 20, "\uF222"),
     LEAVE           (30, 20, "\uF223"),
     JUMP            (40, 20, "\uF224"),
+    JUMP_IN         (50, 20, "\uF225"),
+    UNUSED_R3C7     (60, 20, "\uF226"),
+    UNUSED_R3C8     (70, 20, "\uF227"),
+
     BOX             (0 , 30, "\uF230"),
     BOX_ON          (10, 30, "\uF231"),
     CROSS           (20, 30, "\uF232"),
@@ -60,15 +67,42 @@ public enum FlatIcon {
     TRASH_CAN       (50, 30, "\uF235"),
     CHECK           (60, 30, "\uF236"),
     FOLDER          (70, 30, "\uF237"),
+
     LEFT_SLIDE      (0 , 40, "\uF240"),
     UNLOCK          (10, 40, "\uF241"),
+    BLOCK           (20, 40, "\uF242"),
+    LIQUID          (30, 40, "\uF243"),
     FILE            (40, 40, "\uF244"),
     FILE_TXT        (50, 40, "\uF245"),
     FILE_IMG        (60, 40, "\uF246"),
     FILE_IMG_BROKEN (70, 40, "\uF247"),
+
     RIGHT_SLIDE     (0 , 50, "\uF250"),
+    UNUSED_R6C2     (10, 50, "\uF251"),
+    UNUSED_R6C3     (20, 50, "\uF252"),
+    UNUSED_R6C4     (30, 50, "\uF253"),
+    UNUSED_R6C5     (40, 50, "\uF254"),
+    UNUSED_R6C6     (50, 50, "\uF255"),
+    UNUSED_R6C7     (60, 50, "\uF256"),
+    UNUSED_R6C8     (70, 50, "\uF257"),
+
+    UNUSED_R7C1     (0 , 60, "\uF260"),
+    UNUSED_R7C2     (10, 60, "\uF261"),
+    UNUSED_R7C3     (20, 60, "\uF262"),
+    UNUSED_R7C4     (30, 60, "\uF263"),
+    UNUSED_R7C5     (40, 60, "\uF264"),
+    UNUSED_R7C6     (50, 60, "\uF265"),
+    UNUSED_R7C7     (60, 60, "\uF266"),
+    UNUSED_R7C8     (70, 60, "\uF267"),
+
     WRENCH          (0 , 70, "\uF270"),
-    CONFIG          (10, 70, "\uF271");
+    CONFIG          (10, 70, "\uF271"),
+    UNUSED_R8C3     (20, 70, "\uF272"),
+    UNUSED_R8C4     (30, 70, "\uF273"),
+    UNUSED_R8C5     (40, 70, "\uF274"),
+    UNUSED_R8C6     (50, 70, "\uF275"),
+    UNUSED_R8C7     (60, 70, "\uF276"),
+    UNUSED_R8C8     (70, 70, "\uF277");
 
     public static final ResourceLocation ICON_LOCATION = Chorda.rl("textures/gui/hud/flat_icon_10x.png");
     public static final ResourceLocation FONT_LOCATION = Chorda.rl("default");

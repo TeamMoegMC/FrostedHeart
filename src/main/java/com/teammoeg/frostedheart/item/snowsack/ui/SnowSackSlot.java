@@ -17,13 +17,14 @@
  *
  */
 
-package com.teammoeg.frostedheart.item.snowsack;
+package com.teammoeg.frostedheart.item.snowsack.ui;
 
+import com.teammoeg.frostedheart.item.snowsack.SnowSackItem;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.SimpleContainer;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 

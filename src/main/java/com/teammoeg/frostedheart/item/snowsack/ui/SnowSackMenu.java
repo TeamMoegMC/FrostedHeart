@@ -17,16 +17,24 @@
  *
  */
 
-package com.teammoeg.frostedheart.item.snowsack;
+package com.teammoeg.frostedheart.item.snowsack.ui;
 
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
+import com.teammoeg.frostedheart.item.snowsack.SnowSackItem;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.*;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickAction;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.DataSlot;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -36,10 +44,11 @@ public class SnowSackMenu extends AbstractContainerMenu {
     private final ItemStack snowSack;
     private final DataSlot snowAmount;
     private final DataSlot autoPickupEnabled;
+    private final DataSlot deleteOverflowEnabled;
 
     // 用于客户端构造
     public SnowSackMenu(int windowId, Inventory playerInventory, FriendlyByteBuf data) {
-        this(windowId, playerInventory, playerInventory.player.getMainHandItem());
+        this(windowId, playerInventory, playerInventory.player.inventoryMenu.getSlot(data.readInt()).getItem());
     }
 
     public SnowSackMenu(int windowId, Inventory playerInventory, ItemStack snowSack) {
@@ -49,38 +58,48 @@ public class SnowSackMenu extends AbstractContainerMenu {
         // 添加雪球和雪块槽位（横向排列）
         this.addSlot(new SnowSackSlot(null, snowSack, this, Items.SNOWBALL, 70, 35)); // 雪球槽位
         this.addSlot(new SnowSackSlot(null, snowSack, this, Items.SNOW_BLOCK, 98, 35)); // 雪块槽位
-        
+
         // 添加玩家物品栏槽位
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 9; j++) {
-                this.addSlot(new Slot(playerInventory, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
+                Slot slot = new Slot(playerInventory, j + i * 9 + 9, 8 + j * 18, 84 + i * 18);
+                if (slot.getItem().getItem() instanceof SnowSackItem) {
+                    slot = LockedSlot.convert(slot);
+                }
+                this.addSlot(slot);
             }
         }
 
         // 添加玩家快捷栏槽位
         for (int k = 0; k < 9; k++) {
-            this.addSlot(new Slot(playerInventory, k, 8 + k * 18, 142));
+            Slot slot = new Slot(playerInventory, k, 8 + k * 18, 142);
+            if (slot.getItem().getItem() instanceof SnowSackItem) {
+                slot = LockedSlot.convert(slot);
+            }
+            this.addSlot(slot);
         }
         
         // 创建数据槽用于同步雪的数量和自动拾取设置
         this.snowAmount = DataSlot.standalone();
         this.autoPickupEnabled = DataSlot.standalone();
+        this.deleteOverflowEnabled = DataSlot.standalone();
         this.addDataSlot(this.snowAmount);
         this.addDataSlot(this.autoPickupEnabled);
-        
+        this.addDataSlot(this.deleteOverflowEnabled);
+
         // 初始化数据
         this.snowAmount.set(SnowSackItem.getSnowAmount(snowSack));
         this.autoPickupEnabled.set(SnowSackItem.isAutoPickupEnabled(snowSack) ? 1 : 0);
+        this.deleteOverflowEnabled.set(SnowSackItem.isDeleteOverflowEnabled(snowSack) ? 1 : 0);
     }
 
     @Override
     public boolean stillValid(@NotNull Player player) {
-        return true;
+        return !snowSack.is(Items.AIR);
     }
 
     @Override
     public @NotNull ItemStack quickMoveStack(@NotNull Player player, int index) {
-        System.out.println("quickMoveStack");
         ItemStack itemStack = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
 
@@ -103,8 +122,8 @@ public class SnowSackMenu extends AbstractContainerMenu {
                 }
 
                 // 确保雪的数量同步更新
-                this.snowAmount.set(SnowSackItem.getSnowAmount(snowSack));
-                
+                setSnowAmount(SnowSackItem.getSnowAmount(snowSack));
+
                 // 返回EMPTY以防止重复调用
                 return ItemStack.EMPTY;
             } 
@@ -125,7 +144,7 @@ public class SnowSackMenu extends AbstractContainerMenu {
                     }
                     
                     // 更新显示的雪数量
-                    this.snowAmount.set(SnowSackItem.getSnowAmount(snowSack));
+                    setSnowAmount(SnowSackItem.getSnowAmount(snowSack));
                     return ItemStack.EMPTY;
                 }
                 
@@ -159,7 +178,17 @@ public class SnowSackMenu extends AbstractContainerMenu {
     
     // 更新雪的数量显示
     public void updateSnowAmount() {
-        this.snowAmount.set(SnowSackItem.getSnowAmount(snowSack));
+        int sack = SnowSackItem.getSnowAmount(snowSack);
+        if (this.snowAmount.get() != sack) {
+            setSnowAmount(sack);
+        }
+    }
+
+    public void setSnowAmount(int amount) {
+        this.snowAmount.set(amount);
+        if (FMLEnvironment.dist.isClient()) {
+            ClientUtils.getPlayer().playSound(SoundEvents.POWDER_SNOW_PLACE, 0.8F, 0.8F + ClientUtils.getPlayer().getRandom().nextFloat()*0.2F);
+        }
     }
     
     // 获取当前雪的数量
@@ -172,6 +201,10 @@ public class SnowSackMenu extends AbstractContainerMenu {
         return this.autoPickupEnabled.get() == 1;
     }
 
+    public boolean isDeleteOverflowEnabled() {
+        return this.deleteOverflowEnabled.get() == 1;
+    }
+
     public int getMaxSnowAmount() {
         return SnowSackItem.getMaxSnowAmount(snowSack);
     }
@@ -181,6 +214,14 @@ public class SnowSackMenu extends AbstractContainerMenu {
         boolean newValue = !isAutoPickupEnabled();
         SnowSackItem.setAutoPickup(snowSack, newValue);
         this.autoPickupEnabled.set(newValue ? 1 : 0);
+        // 确保更改同步到客户端
+        this.broadcastChanges();
+    }
+
+    public void toggleDeleteOverflow() {
+        boolean newValue = !isDeleteOverflowEnabled();
+        SnowSackItem.setDeleteOverflow(snowSack, newValue);
+        this.deleteOverflowEnabled.set(newValue ? 1 : 0);
         // 确保更改同步到客户端
         this.broadcastChanges();
     }

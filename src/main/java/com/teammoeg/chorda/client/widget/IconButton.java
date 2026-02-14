@@ -23,7 +23,6 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
-
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -58,7 +57,10 @@ public class IconButton extends Button {
         int color = isActive() ? this.color : 0xFF666666;
         int backgroundColor = Colors.makeDark(color, 0.3F);
         float alpha = 0.5F;
-        if (isHoveredOrFocused()) {
+        if (isFocused()) {
+            CGuiHelper.drawBox(graphics, getX(), getY(), getWidth(), getHeight(), color, false);
+        }
+        if (isHovered()) {
             graphics.fill(getX(), getY(), getX()+getWidth(), getY()+getHeight(), Colors.setAlpha(backgroundColor, alpha));
             if (!getMessage().getString().isBlank() && isHovered()) {
                 int textWidth = ClientUtils.font().width(getMessage());

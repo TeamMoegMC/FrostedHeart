@@ -24,18 +24,7 @@ import com.teammoeg.frostedheart.clusterserver.network.S2CRedirectPacket;
 import com.teammoeg.frostedheart.clusterserver.network.S2CTokenPacket;
 import com.teammoeg.frostedheart.content.climate.network.*;
 import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
-import com.teammoeg.frostedheart.content.scenario.network.C2SLinkClickedPacket;
-import com.teammoeg.frostedheart.content.scenario.network.C2SRenderingStatusMessage;
-import com.teammoeg.frostedheart.content.scenario.network.C2SScenarioCookies;
-import com.teammoeg.frostedheart.content.scenario.network.C2SScenarioResponsePacket;
-import com.teammoeg.frostedheart.content.scenario.network.C2SClientReadyPacket;
-import com.teammoeg.frostedheart.content.scenario.network.C2SSettingsPacket;
-import com.teammoeg.frostedheart.content.scenario.network.S2CRequestCookieMessage;
-import com.teammoeg.frostedheart.content.scenario.network.S2CScenarioCommandPacket;
-import com.teammoeg.frostedheart.content.scenario.network.S2CSenarioActPacket;
-import com.teammoeg.frostedheart.content.scenario.network.S2CSenarioScenePacket;
-import com.teammoeg.frostedheart.content.scenario.network.S2CSetCookiesMessage;
-import com.teammoeg.frostedheart.content.scenario.network.S2CWaitTransMessage;
+import com.teammoeg.frostedheart.content.scenario.network.*;
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkRequestC2SPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkResponseS2CPacket;
@@ -43,18 +32,25 @@ import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipRequestPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayPopupPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
-import com.teammoeg.frostedheart.content.town.network.*;
+import com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket;
+import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeOpenTradeGUIMessage;
+import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeRecruitMessage;
+import com.teammoeg.frostedheart.content.town.network.WarehouseC2SRequestPacket;
+import com.teammoeg.frostedheart.content.town.network.WarehouseInteractPacket;
+import com.teammoeg.frostedheart.content.town.network.WarehouseS2CPacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
 import com.teammoeg.frostedheart.content.utility.seld.FHServerBoundUpdateSledState;
-import com.teammoeg.frostedheart.item.snowsack.ToggleAutoPickupMessage;
 import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
+import com.teammoeg.frostedheart.item.snowsack.network.C2SOpenSnowSackScreenMessage;
+import com.teammoeg.frostedheart.item.snowsack.network.ToggleAutoPickupMessage;
+import com.teammoeg.frostedheart.item.snowsack.network.ToggleDeleteOverflowMessage;
 
 public class FHNetwork extends CBaseNetwork {
 	private FHNetwork() {
@@ -154,5 +150,7 @@ public class FHNetwork extends CBaseNetwork {
 
         //Snow Sack
         registerMessage("toggle_auto_pickup", ToggleAutoPickupMessage.class);
+        registerMessage("toggle_delete_overflow", ToggleDeleteOverflowMessage.class);
+        registerMessage("open_snow_sack", C2SOpenSnowSackScreenMessage.class);
     }
 }

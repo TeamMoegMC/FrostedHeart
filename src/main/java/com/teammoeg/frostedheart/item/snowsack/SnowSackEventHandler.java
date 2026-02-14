@@ -19,16 +19,17 @@
 
 package com.teammoeg.frostedheart.item.snowsack;
 
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.item.snowsack.ui.SnowSackMenu;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-
-import com.teammoeg.frostedheart.FHMain;
-
-import net.minecraft.world.entity.player.Player;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID)
 public class SnowSackEventHandler {
@@ -56,6 +57,10 @@ public class SnowSackEventHandler {
                             event.setCanceled(true);
                             event.getItem().discard();
                             syncSnowAmountToOpenMenus(event.getEntity());
+                            // 播放拾取音效
+                            var player = event.getEntity();
+                            var pos = player.position();
+                            player.level().playSound(null, pos.x, pos.y, pos.z, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2F, (player.getRandom().nextFloat() - player.getRandom().nextFloat()) * 1.4F + 2.0F);
                             return;
                         } else {
                             // 部分转换完成，更新物品数量

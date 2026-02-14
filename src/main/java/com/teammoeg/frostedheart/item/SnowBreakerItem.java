@@ -19,12 +19,17 @@
 
 package com.teammoeg.frostedheart.item;
 
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
@@ -45,11 +50,42 @@ public class SnowBreakerItem extends FHBaseItem {
     }
 
     @Override
+    public InteractionResult useOn(UseOnContext context) {
+        var level = context.getLevel();
+        var pos = context.getClickedPos();
+        var state = level.getBlockState(pos);
+        var player = context.getPlayer();
+        if (context.getHand() == InteractionHand.MAIN_HAND && state.is(BlockTags.SNOW)) {
+            if (player instanceof ServerPlayer sp) {
+                BlockPos.betweenClosedStream(pos.offset(-1, 0, -1), pos.offset(1, 1, 1))
+                        .forEach(pos2 -> {
+                            if (level.getBlockState(pos2).is(BlockTags.SNOW)) {
+                                sp.gameMode.destroyBlock(pos2);
+                            }
+                        });
+                player.getCooldowns().addCooldown(context.getItemInHand().getItem(), 10);
+                level.playSound(player, pos, state.getSoundType().getBreakSound(), SoundSource.BLOCKS);
+                return InteractionResult.SUCCESS;
+            } else if (level instanceof ClientLevel l) {
+                BlockPos.betweenClosedStream(pos.offset(-1, 0, -1), pos.offset(1, 1, 1))
+                        .forEach(pos2 -> {
+                            var s = level.getBlockState(pos2);
+                            if (s.is(BlockTags.SNOW)) {
+                                l.addDestroyBlockEffect(pos2, s);
+                            }
+                        });
+                l.playLocalSound(pos, state.getSoundType().getBreakSound(), SoundSource.BLOCKS, 1, 1, true);
+            }
+        }
+        return super.useOn(context);
+    }
+
+    @Override
     public float getDestroySpeed(@NotNull ItemStack pStack, BlockState pState) {
         if (pState.is(BlockTags.SNOW)) {
             return 1024.0F;
         } else {
-            return 1.0F;
+            return 0.0F;
         }
     }
 

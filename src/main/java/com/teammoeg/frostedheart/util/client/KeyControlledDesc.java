@@ -19,17 +19,17 @@
 
 package com.teammoeg.frostedheart.util.client;
 
+import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.util.Lang;
-
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
 import static net.minecraft.ChatFormatting.*;
-import static net.minecraft.ChatFormatting.DARK_GRAY;
 
 public class KeyControlledDesc {
 	List<Component> lines;
@@ -60,7 +60,7 @@ public class KeyControlledDesc {
 	}
 
 	public List<Component> getCurrentLines() {
-		if (com.teammoeg.chorda.util.CUtils.isDown(key1)) {
+		if (CInputHelper.isDown(key1)) {
 			List<Component> res=linesOnKey.get();
 			if(res!=null) {
 				appendKeyDesc(res,true);
