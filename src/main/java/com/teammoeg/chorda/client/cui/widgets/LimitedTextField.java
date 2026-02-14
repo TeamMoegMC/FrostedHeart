@@ -34,6 +34,7 @@ public class LimitedTextField extends UIElement {
     private Component displayTitle = Components.immutableEmpty();
     public int color;
     public boolean tooltip = true;
+    public boolean shadow = true;
 
     public LimitedTextField(UIElement parent, Component title, int w) {
         this(parent, title, w, Colors.WHITE);

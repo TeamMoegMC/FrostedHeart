@@ -43,7 +43,7 @@ public class ResearchEditUtils {
         		r.setCategory(categoryPeferred);
         }
         final Research old=r;
-        ResearchEditors.RESEARCH_EDITOR.open(EditUtils.openEditorScreen(), Components.str("Edit Research"), r, b->{
+        ResearchEditors.RESEARCH_EDITOR.open(EditUtils.openEditorScreen(DrawDeskTheme.INSTANCE), Components.str("Edit Research"), r, b->{
         	if(!b.equals(old)) {
         		//System.out.println("modified");
         		if(old!=null)

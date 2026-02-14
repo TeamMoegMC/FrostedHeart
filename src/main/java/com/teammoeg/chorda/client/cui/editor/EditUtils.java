@@ -26,6 +26,7 @@ import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
 import com.teammoeg.chorda.client.cui.theme.SimpleTechTheme;
+import com.teammoeg.chorda.client.cui.theme.Theme;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 
 import net.minecraft.network.chat.Component;
@@ -35,13 +36,21 @@ public class EditUtils {
     private EditUtils() {
     }
 
-    public static <T> void edit(Editor<T> editor,Component title, T oldVlaue,Consumer<T> onChange) {
+    public static <T> void edit(Editor<T> editor, Component title, T oldVlaue,Consumer<T> onChange) {
     	editor.open(openEditorScreen(), title, oldVlaue, onChange);
         //new ResearchEditorDialog(EditUtils.openEditorScreen(), r, r.getCategory()).open();
     }
+    public static <T> void edit(Editor<T> editor, Theme theme, Component title, T oldVlaue,Consumer<T> onChange) {
+    	editor.open(openEditorScreen(theme), title, oldVlaue, onChange);
+        //new ResearchEditorDialog(EditUtils.openEditorScreen(), r, r.getCategory()).open();
+    }
     public static UIElement openEditorScreen() {
+    	return openEditorScreen(SimpleTechTheme.INSTANCE);
+    }
+    
+    public static UIElement openEditorScreen(Theme theme) {
     	CUIScreenWrapper wrapper=new CUIScreenWrapper(new PrimaryLayer());
-    	wrapper.getPrimaryLayer().setTheme(SimpleTechTheme.INSTANCE);
+    	wrapper.getPrimaryLayer().setTheme(theme);
     	ClientUtils.getMc().setScreen(wrapper);
     	return wrapper.getPrimaryLayer();
     }

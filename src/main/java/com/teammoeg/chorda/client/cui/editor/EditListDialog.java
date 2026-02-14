@@ -207,7 +207,7 @@ public class EditListDialog<T> extends EditDialog {
         public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
             super.drawBackground(matrixStack, x, y, w, h);
             
-            matrixStack.drawString(getFont(), getTitle(), x+4, y+5, getTheme().getButtonTextColor());
+            matrixStack.drawString(getFont(), getTitle(), x+4, y+5, getTheme().getButtonTextColor(),getTheme().isButtonTextShadow());
         }
 
         @Override
@@ -303,13 +303,13 @@ public class EditListDialog<T> extends EditDialog {
                 	matrixStack.fill(x + w - 19, y, x+w, y+h, 0x21FFFFFF);
                 }
             }
-            matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+th, getTheme().getButtonTextColor());
+            matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+th, getTheme().getButtonTextColor(),getTheme().isButtonTextShadow());
 
             //if (mouseOver) {
             	FlatIcon.CROSS.toCIcon().draw(matrixStack, x+w-18, y+1,height-2,height-2);
             	//matrixStack.drawString(getFont(), "[-]", x+w-16, y+2, getTheme().getButtonTextColor());
-            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+2, getTheme().getButtonTextColor());
-            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+h-getFont().lineHeight, getTheme().getButtonTextColor());
+            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+2, getTheme().getButtonTextColor(),getTheme().isButtonTextShadow());
+            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+h-getFont().lineHeight, getTheme().getButtonTextColor(),getTheme().isButtonTextShadow());
             //}
             matrixStack.pose().popPose();
         }

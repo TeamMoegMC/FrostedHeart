@@ -67,7 +67,7 @@ public class ResearchHierarchyPanel extends UILayer {
 					public void onClicked(MouseButton mouseButton) {
 						// TODO Add parent
 						Research r = researchPanel.selectedResearch;
-						ResearchEditors.RESEARCH_LIST.open(EditUtils.openEditorScreen(), Components.str("Edit parents"), r.getParents(), s -> {
+						ResearchEditors.RESEARCH_LIST.open(EditUtils.openEditorScreen(DrawDeskTheme.INSTANCE), Components.str("Edit parents"), r.getParents(), s -> {
 							try {
 								// System.out.println(s);
 								r.setParents(s.stream().map(Research::getId).collect(Collectors.toList()));
@@ -87,7 +87,7 @@ public class ResearchHierarchyPanel extends UILayer {
 					public void onClicked(MouseButton mouseButton) {
 						// TODO Add children
 						Research r = researchPanel.selectedResearch;
-						ResearchEditors.RESEARCH_LIST.open(EditUtils.openEditorScreen(), Components.str("Edit children"), r.getChildren(), s -> {
+						ResearchEditors.RESEARCH_LIST.open(EditUtils.openEditorScreen(DrawDeskTheme.INSTANCE), Components.str("Edit children"), r.getChildren(), s -> {
 							r.getChildren().forEach(e -> {
 								if(!s.remove(e)) {
 									e.removeParent(r);
