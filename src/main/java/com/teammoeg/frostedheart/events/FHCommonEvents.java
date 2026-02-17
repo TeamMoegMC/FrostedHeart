@@ -476,11 +476,11 @@ public class FHCommonEvents {
 
 	@SubscribeEvent
 	public static void shovelSnow(BlockEvent.BlockToolModificationEvent event) {
-		if (!event.getLevel().isClientSide() && event.getPlayer() instanceof ServerPlayer player && event.getToolAction() == ToolActions.SHOVEL_FLATTEN) {
+		if (event.getPlayer() != null && event.getToolAction() == ToolActions.SHOVEL_FLATTEN) {
 			var state = event.getState();
 			if (state.getBlock() instanceof SnowLayerBlock) {
 				var pos = event.getPos();
-				var level = (ServerLevel)event.getLevel();
+				var level = (Level)event.getLevel();
 				// 获取最顶层的雪片
 				while (level.getBlockState(pos.above()).getBlock() instanceof SnowLayerBlock) {
 					pos = pos.offset(0, 1, 0);
@@ -490,10 +490,15 @@ public class FHCommonEvents {
 				// 减少1层雪
 				peelSnowLayer(level, state, pos);
 
+				var player = event.getPlayer();
+				level.playSound(player, pos, state.getSoundType().getBreakSound(), SoundSource.BLOCKS);
+				level.addDestroyBlockEffect(pos, state);
+				player.swing(event.getContext().getHand());
+
 				// 生成掉落物
-				if (!player.isCreative()) {
+				if (!player.isCreative() && level instanceof ServerLevel sl) {
 					var drops = Block.getDrops(state.getBlock().defaultBlockState().setValue(SnowLayerBlock.LAYERS, 1),
-							level, pos, null, player, event.getHeldItemStack());
+							sl, pos, null, player, event.getHeldItemStack());
 					for (ItemStack drop : drops) {
 						// 在玩家当前选择的面掉落方块
 						Block.popResourceFromFace(level, event.getPos(), event.getContext().getClickedFace(), drop);

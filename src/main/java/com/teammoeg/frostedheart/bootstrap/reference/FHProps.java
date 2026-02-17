@@ -70,7 +70,8 @@ public class FHProps {
             .mapColor(MapColor.WOOD)
             .requiresCorrectToolForDrops()
             .sound(SoundType.WOOD)
-            .strength(0.6F);
+            .strength(0.6F)
+            .ignitedByLava();
 
     public static final BlockBehaviour.Properties grassProps = BlockBehaviour.Properties
             .of()

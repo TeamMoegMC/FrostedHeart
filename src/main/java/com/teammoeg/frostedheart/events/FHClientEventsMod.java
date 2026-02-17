@@ -19,18 +19,32 @@
 
 package com.teammoeg.frostedheart.events;
 
+import blusunrize.immersiveengineering.api.EnumMetals;
+import blusunrize.immersiveengineering.common.register.IEBlocks;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.foundation.item.ItemDescription;
 import com.simibubi.create.foundation.item.KineticStats;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.frostedheart.*;
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.util.ShaderCompatHelper;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
+import com.teammoeg.frostedheart.bootstrap.client.FHScreens;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
+import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
 import com.teammoeg.frostedheart.compat.ie.FHManual;
 import com.teammoeg.frostedheart.compat.tetra.TetraClient;
+import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorRenderer;
+import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorRenderer;
+import com.teammoeg.frostedheart.content.climate.particle.BreathParticle;
 import com.teammoeg.frostedheart.content.climate.particle.SnowParticle;
+import com.teammoeg.frostedheart.content.climate.particle.SteamParticle;
+import com.teammoeg.frostedheart.content.climate.particle.WetSteamParticle;
 import com.teammoeg.frostedheart.content.climate.tooltips.BlockTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.EquipmentTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
@@ -45,28 +59,11 @@ import com.teammoeg.frostedheart.content.utility.seld.ContainerHolderModel;
 import com.teammoeg.frostedheart.content.utility.seld.SledEntityRenderer;
 import com.teammoeg.frostedheart.content.utility.seld.SledModel;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
-import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
-import com.teammoeg.frostedheart.bootstrap.client.FHScreens;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
-import com.teammoeg.frostedheart.bootstrap.common.FHItems;
-import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
-import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
-import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorRenderer;
-import com.teammoeg.frostedheart.content.climate.block.generator.t2.T2GeneratorRenderer;
-import com.teammoeg.frostedheart.content.climate.particle.BreathParticle;
-import com.teammoeg.frostedheart.content.climate.particle.SteamParticle;
-import com.teammoeg.frostedheart.content.climate.particle.WetSteamParticle;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
-import com.teammoeg.frostedheart.util.client.FHClientUtils;
-import com.teammoeg.frostedheart.util.client.PropertyRegistrationHelper;
 import com.teammoeg.frostedresearch.gui.InsightOverlay;
-
-import blusunrize.immersiveengineering.api.EnumMetals;
-import blusunrize.immersiveengineering.common.register.IEBlocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.item.Item;
+import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FarmBlock;
 import net.minecraftforge.api.distmarker.Dist;
@@ -74,16 +71,11 @@ import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.EntityRenderersEvent.AddLayers;
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinitions;
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers;
-import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.registries.RegistryObject;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static com.teammoeg.frostedheart.FHMain.*;
 
@@ -426,6 +418,7 @@ public class FHClientEventsMod {
         event.registerEntityRenderer(FHEntityTypes.WANDERING_REFUGEE.get(), WanderingRefugeeRenderer::new);
         event.registerEntityRenderer(FHEntityTypes.SLED.get(), SledEntityRenderer::new);
         event.registerEntityRenderer(FHEntityTypes.CONTAINER_ENTITY.get(), ContainerHolderEntityRenderer::new);
+        event.registerEntityRenderer(FHEntityTypes.GUNPOWDER_BARREL_ENTITY.get(), ThrownItemRenderer::new);
     }
 
     @SubscribeEvent

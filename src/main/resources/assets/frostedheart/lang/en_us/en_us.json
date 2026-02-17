@@ -59,6 +59,7 @@
   "tooltip.frostedheart.temp.plant.survivability.light.high": "Sky Light too strong. Current: %s%%",
   "tooltip.frostedheart.temp.plant.survivability.light.low": "Sky Light too dim. Current: %s%%",
   "tooltip.frostedheart.suitable_items": "Accepted Items:",
+  "tooltip.frostedheart.range":"Range: ",
   "ftbquests.reward.frostedheart.tip": "Tip",
   "ftbquests.reward.frostedheart.tip.fh_tip": "Tip ID",
   "ftbquests.reward.frostedheart.insight": "Insight",

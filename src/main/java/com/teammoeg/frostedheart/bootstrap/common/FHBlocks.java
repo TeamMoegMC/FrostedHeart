@@ -2143,6 +2143,11 @@ public class FHBlocks {
             .item((b,p)->new VAWTItem(b,p,b.type))
             .model(FHBlockStateGen.existingItemModel()).build()
             .register();
+    public static final BlockEntry<GunpowderBarrelBlock> GUNPOWDER_BARREL = REGISTRATE.block("gunpowder_barrel", GunpowderBarrelBlock::new)
+            .lang("Gunpowder Barrel")
+            .item(GunpowderBarrelItem::new)
+            .build()
+            .register();
     // WARDROBE, "wardrobe", like Blocks.SPRUCE_DOOR
     public static final BlockEntry<WardrobeBlock> WARDROBE = REGISTRATE.block("wardrobe", WardrobeBlock::new)
             .initialProperties(() -> Blocks.SPRUCE_DOOR)

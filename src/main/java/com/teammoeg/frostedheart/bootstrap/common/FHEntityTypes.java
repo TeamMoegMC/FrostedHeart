@@ -20,11 +20,11 @@
 package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.block.gunpowderbarrel.GunpowderBarrelEntity;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.utility.seld.ContainerHolderEntity;
 import com.teammoeg.frostedheart.content.utility.seld.SledEntity;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntity;
-
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -54,5 +54,10 @@ public class FHEntityTypes {
             () -> EntityType.Builder.<ContainerHolderEntity>of(ContainerHolderEntity::new, MobCategory.MISC)
                     .sized(0.75f, 0.75f).clientTrackingRange(8)
                     .build(new ResourceLocation(FHMain.MODID, "container_entity").toString())
+    );
+    public static final RegistryObject<EntityType<GunpowderBarrelEntity>> GUNPOWDER_BARREL_ENTITY = ENTITY_TYPES.register("gunpowder_barrel_entity",
+            () -> EntityType.Builder.<GunpowderBarrelEntity>of(GunpowderBarrelEntity::new, MobCategory.MISC)
+                    .sized(1f, 1f).clientTrackingRange(10)
+                    .build(new ResourceLocation(FHMain.MODID, "gunpowder_barrel_entity").toString())
     );
 }

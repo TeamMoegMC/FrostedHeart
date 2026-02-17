@@ -150,7 +150,7 @@ public class SnowSackItem extends FHBaseItem {
         if (player.level().isClientSide) {
             var slot = CUtils.getItemSlotInPlayerInv(player, stack);
             // 防止在合成栏打开
-            if (slot == null || (slot.container instanceof CraftingContainer && slot.index <= 4)) {
+            if (slot == null || (slot.container instanceof CraftingContainer)) {
                 return;
             }
             FHNetwork.INSTANCE.sendToServer(new C2SOpenSnowSackScreenMessage(slot.index));

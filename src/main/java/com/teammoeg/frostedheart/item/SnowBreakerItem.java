@@ -63,7 +63,9 @@ public class SnowBreakerItem extends FHBaseItem {
                                 sp.gameMode.destroyBlock(pos2);
                             }
                         });
-                player.getCooldowns().addCooldown(context.getItemInHand().getItem(), 10);
+                if (!player.isCreative()) {
+                    player.getCooldowns().addCooldown(context.getItemInHand().getItem(), 10);
+                }
                 level.playSound(player, pos, state.getSoundType().getBreakSound(), SoundSource.BLOCKS);
                 return InteractionResult.SUCCESS;
             } else if (level instanceof ClientLevel l) {

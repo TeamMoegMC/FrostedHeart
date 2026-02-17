@@ -24,6 +24,7 @@ import com.simibubi.create.content.kinetics.base.HalfShaftInstance;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import com.simibubi.create.content.kinetics.base.SingleRotatingInstance;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.block.gunpowderbarrel.GunpowderBarrelBlockEntity;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlockEntity;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.energy.wind.VAWTBlockEntity;
@@ -113,6 +114,10 @@ public class FHBlockEntityTypes {
             .validBlocks(FHBlocks.FABRIC_VAWT, FHBlocks.METAL_VAWT, FHBlocks.ALLOY_VAWT, FHBlocks.DSP_VAWT)
             .renderer(() -> KineticBlockEntityRenderer::new)
             .register();
+
+    public static final RegistryObject<BlockEntityType<GunpowderBarrelBlockEntity>> GUNPOWDER_BARREL = REGISTER.register(
+            "gunpowder_barrel", makeType(GunpowderBarrelBlockEntity::new, FHBlocks.GUNPOWDER_BARREL::get)
+    );
 
     public static final RegistryObject<BlockEntityType<FountainTileEntity>> FOUNTAIN = REGISTER.register(
             "fountain", makeType(FountainTileEntity::new, FHBlocks.FOUNTAIN_BASE::get)
