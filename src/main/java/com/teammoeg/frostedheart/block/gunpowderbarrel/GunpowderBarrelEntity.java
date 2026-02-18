@@ -4,12 +4,14 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.HitResult;
+import org.jetbrains.annotations.Nullable;
 
 public class GunpowderBarrelEntity extends ThrowableItemProjectile {
 
@@ -22,7 +24,19 @@ public class GunpowderBarrelEntity extends ThrowableItemProjectile {
     }
 
     public GunpowderBarrelEntity(Level pLevel) {
-        super(FHEntityTypes.GUNPOWDER_BARREL_ENTITY.get(), pLevel);
+        this(FHEntityTypes.GUNPOWDER_BARREL_ENTITY.get(), pLevel);
+        double d0 = pLevel.random.nextDouble() * (double)((float)Math.PI * 2F);
+        this.setDeltaMovement(-Math.sin(d0) * 0.01D, 0, -Math.cos(d0) * 0.01D);
+    }
+
+    public static GunpowderBarrelEntity fall(Level level, BlockPos pos, int range, int fortuneLevel, @Nullable Entity owner) {
+        var barrel = new GunpowderBarrelEntity(level);
+        barrel.setOwner(owner);
+        barrel.setPos(pos.getX()+0.5, pos.getY(), pos.getZ()+0.5);
+        barrel.setItem(GunpowderBarrelItem.create(range, fortuneLevel, true));
+        level.removeBlock(pos, false);
+        level.addFreshEntity(barrel);
+        return barrel;
     }
 
     @Override
@@ -40,7 +54,7 @@ public class GunpowderBarrelEntity extends ThrowableItemProjectile {
         super.onHit(result);
         if (!level().isClientSide()) {
             var loc = result.getLocation();
-            GunpowderBarrelBlock.explode(level(), new BlockPos((int)loc.x, (int)loc.y, (int)loc.z), getItem(), getOwner(), false);
+            GunpowderBarrelBlock.explode(level(), new BlockPos((int)Math.floor(loc.x), (int)Math.floor(loc.y), (int)Math.floor(loc.z)), getItem(), getOwner(), false);
             this.level().broadcastEntityEvent(this, (byte)3);
             this.discard();
         }

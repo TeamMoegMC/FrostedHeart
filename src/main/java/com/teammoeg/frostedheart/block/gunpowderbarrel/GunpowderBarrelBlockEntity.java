@@ -6,11 +6,14 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.UUID;
 
 @Getter
 public class GunpowderBarrelBlockEntity extends CBlockEntity implements CTickableBlockEntity {
@@ -21,7 +24,9 @@ public class GunpowderBarrelBlockEntity extends CBlockEntity implements CTickabl
     int litTime = 0;
     boolean lit = false;
     @Nullable
-    LivingEntity owner;
+    private UUID ownerUUID;
+    @Nullable
+    private Entity owner;
 
     public GunpowderBarrelBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.GUNPOWDER_BARREL.get(), pos, state);
@@ -29,20 +34,15 @@ public class GunpowderBarrelBlockEntity extends CBlockEntity implements CTickabl
 
     @Override
     public void tick() {
-        if (level == null) return;
+        if (!(level instanceof ServerLevel)) return;
         if (lit) {
             if (willFall) {
-                var barrel = new GunpowderBarrelEntity(level);
-                barrel.setOwner(owner);
-                barrel.setPos(getBlockPos().getCenter());
-                barrel.setItem(GunpowderBarrelItem.create(range, fortuneLevel, willFall));
-                level.removeBlock(getBlockPos(), false);
-                level.addFreshEntity(barrel);
+                GunpowderBarrelEntity.fall(level, getBlockPos(), range, fortuneLevel, getOwner());
                 return;
             }
             litTime++;
             if (litTime >= 100) {
-                GunpowderBarrelBlock.explode(level, getBlockPos(), range, fortuneLevel, owner, true);
+                GunpowderBarrelBlock.explode(level, getBlockPos(), range, fortuneLevel, getOwner(), true);
             }
         }
     }
@@ -54,6 +54,24 @@ public class GunpowderBarrelBlockEntity extends CBlockEntity implements CTickabl
         }
     }
 
+    public void setOwner(Entity owner) {
+        if (owner != null) {
+            this.ownerUUID = owner.getUUID();
+            this.owner = owner;
+        }
+    }
+
+    public Entity getOwner() {
+        if (this.owner != null && !this.owner.isRemoved()) {
+            return this.owner;
+        } else if (this.ownerUUID != null && level instanceof ServerLevel sl) {
+            this.owner = sl.getEntity(this.ownerUUID);
+            return this.owner;
+        } else {
+            return null;
+        }
+    }
+
     @Override
     public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         this.range = nbt.getInt(GunpowderBarrelBlock.RANGE);
@@ -61,6 +79,9 @@ public class GunpowderBarrelBlockEntity extends CBlockEntity implements CTickabl
         this.willFall = nbt.getBoolean(GunpowderBarrelBlock.WILL_FALL);
         this.litTime = nbt.getInt("litTime");
         this.lit = nbt.getBoolean("lit");
+        if (nbt.hasUUID("owner")) {
+            this.ownerUUID = nbt.getUUID("owner");
+        }
     }
 
     @Override
@@ -70,5 +91,8 @@ public class GunpowderBarrelBlockEntity extends CBlockEntity implements CTickabl
         nbt.putBoolean(GunpowderBarrelBlock.WILL_FALL, this.willFall);
         nbt.putInt("litTIme", this.litTime);
         nbt.putBoolean("lit", this.lit);
+        if (ownerUUID != null) {
+            nbt.putUUID("owner", ownerUUID);
+        }
     }
 }

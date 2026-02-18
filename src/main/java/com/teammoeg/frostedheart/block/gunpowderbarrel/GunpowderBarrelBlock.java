@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.block.gunpowderbarrel;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.compat.ftb.FTBChunks;
 import com.teammoeg.chorda.util.ItemStackMerger;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import lombok.Getter;
@@ -42,6 +43,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.level.BlockEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -108,19 +111,18 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
         return false;
     }
 
-
     /**
      * 造成一次爆炸，范围和时运读取自世界中已有方块
      */
-    public static void explode(Level level, BlockPos pos, Entity causer) {
-        explode(level, pos, getRange(level, pos), getFortuneLevel(level, pos), causer, true);
+    public static void explode(Level level, BlockPos pos, @Nullable Entity exploder) {
+        explode(level, pos, getRange(level, pos), getFortuneLevel(level, pos), exploder, true);
     }
 
     /**
      * 造成一次爆炸，范围和时运读取自传入的物品
      */
-    public static void explode(Level level, BlockPos pos, ItemStack stack, Entity causer, boolean isFromBlock) {
-        explode(level, pos, getRange(stack), getFortuneLevel(stack), causer, isFromBlock);
+    public static void explode(Level level, BlockPos pos, ItemStack stack, @Nullable Entity exploder, boolean isFromBlock) {
+        explode(level, pos, getRange(stack), getFortuneLevel(stack), exploder, isFromBlock);
     }
 
     /**
@@ -129,10 +131,10 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
      * @param pos 爆炸坐标
      * @param range 爆炸半径
      * @param fortuneLevel 时运等级
-     * @param causer 造成爆炸的实体
+     * @param exploder 造成爆炸的实体
      * @param isFromBlock 爆炸是否由方块产生
      */
-    public static void explode(Level level, BlockPos pos, int range, int fortuneLevel, @Nullable Entity causer, boolean isFromBlock) {
+    public static void explode(Level level, BlockPos pos, int range, int fortuneLevel, @Nullable Entity exploder, boolean isFromBlock) {
         if (range == 0) return;
         // 移除本体
         if (isFromBlock && level.getBlockState(pos).getBlock() instanceof GunpowderBarrelBlock) {
@@ -141,7 +143,7 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
         if (level instanceof ServerLevel sl) {
             // 生成一次原版无破坏爆炸
             var center = pos.getCenter();
-            level.explode(causer, center.x, center.y, center.z, range, Level.ExplosionInteraction.NONE);
+            level.explode(exploder, center.x, center.y, center.z, range+1, Level.ExplosionInteraction.NONE);
 
             range = Mth.clamp(range, 1, 7);
             fortuneLevel = Mth.clamp(fortuneLevel, 0, 10);
@@ -154,9 +156,25 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
             for (BlockPos pos1 : positions) {
                 var state = level.getBlockState(pos1);
                 if (state.isAir()) continue;
+                // 是否被阻止
+                boolean event = false;
+                boolean ftbc = false;
+                if (exploder instanceof Player player) {
+                    event = MinecraftForge.EVENT_BUS.post(new BlockEvent.BreakEvent(level, pos1, state, player));
+                    ftbc = FTBChunks.playerCanEdit(player, pos1);
+                } else if (exploder == null) {
+                    ftbc = FTBChunks.getClaimedChunk(level, pos1) != null;
+                }
+                if (ftbc || event) {
+                    continue;
+                }
                 // 连锁爆炸
                 if (state.getBlock() instanceof GunpowderBarrelBlock) {
-                    explode(level, pos1, causer);
+                    if (willFall(level, pos1)) {
+                        GunpowderBarrelEntity.fall(level, pos1, getRange(level, pos1), getFortuneLevel(level, pos1), exploder);
+                    } else {
+                        explode(level, pos1, exploder);
+                    }
                     continue;
                 }
                 // 尝试破坏方块
@@ -185,6 +203,20 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
     }
 
     @Override
+    public void onBlockExploded(BlockState state, Level level, BlockPos pos, Explosion explosion) {
+        if (willFall(level, pos)) {
+            GunpowderBarrelEntity.fall(level, pos, getRange(level, pos), getFortuneLevel(level, pos), explosion.getIndirectSourceEntity());
+            return;
+        }
+        explode(level, pos, explosion.getIndirectSourceEntity());
+    }
+
+    @Override
+    public boolean canDropFromExplosion(BlockState state, BlockGetter level, BlockPos pos, Explosion explosion) {
+        return false;
+    }
+
+    @Override
     public List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
         var stack = new ItemStack(this);
         if (params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof GunpowderBarrelBlockEntity be) {
@@ -199,6 +231,7 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
             be.range = getRange(pStack);
             be.fortuneLevel = getFortuneLevel(pStack);
             be.willFall = willFall(pStack);
+            be.setOwner(pPlacer);
         }
     }
 

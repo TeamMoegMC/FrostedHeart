@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.block.gunpowderbarrel;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -25,6 +26,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Iterator;
 import java.util.List;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -63,8 +65,22 @@ public class GunpowderBarrelItem extends BlockItem {
         // 防止摧毁掉落物
         if (!event.getExplosion().interactsWithBlocks()) {
             event.getAffectedEntities().removeIf(entity -> entity instanceof ItemEntity);
-            var e = event.getExplosion().getDirectSourceEntity();
+            var e = event.getExplosion().getIndirectSourceEntity();
             if (e != null) event.getAffectedEntities().add(e);
+        }
+        // 触发炸药桶
+        var level = event.getLevel();
+        var blocks = event.getAffectedBlocks();
+        for (Iterator<BlockPos> iterator = blocks.iterator(); iterator.hasNext();) {
+            BlockPos pos = iterator.next();
+            if (level.getBlockState(pos).getBlock() instanceof GunpowderBarrelBlock && GunpowderBarrelBlock.willFall(level, pos)) {
+                iterator.remove();
+                event.getAffectedEntities().add(GunpowderBarrelEntity.fall(level, pos,
+                        GunpowderBarrelBlock.getRange(level, pos),
+                        GunpowderBarrelBlock.getFortuneLevel(level, pos),
+                        event.getExplosion().getIndirectSourceEntity()));
+                level.removeBlock(pos, false);
+            }
         }
     }
 
