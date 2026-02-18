@@ -1,7 +1,9 @@
 package com.teammoeg.frostedheart.block.gunpowderbarrel;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -47,7 +49,7 @@ public class GunpowderBarrelItem extends BlockItem {
                 if (use == 59) player.playSound(SoundEvents.FLINTANDSTEEL_USE);
                 if (use == 60) player.playSound(SoundEvents.TNT_PRIMED);
                 if (use == max-1) {
-                    GunpowderBarrelBlock.explode(level, player.blockPosition(), stack, player);
+                    GunpowderBarrelBlock.explode(level, player.blockPosition(), stack, player, false);
                     if (!player.getAbilities().instabuild) {
                         stack.shrink(1);
                     }
@@ -66,6 +68,16 @@ public class GunpowderBarrelItem extends BlockItem {
         }
     }
 
+    public static ItemStack create(int range, int fortuneLevel, boolean willFall) {
+        var stack = FHBlocks.GUNPOWDER_BARREL.asStack();
+        var tag = new CompoundTag();
+        if (range != 1) tag.putInt(GunpowderBarrelBlock.RANGE, range);
+        if (fortuneLevel != 0) tag.putInt(GunpowderBarrelBlock.FORTUNE, fortuneLevel);
+        if (willFall) tag.putBoolean(GunpowderBarrelBlock.WILL_FALL, true);
+        if (!tag.isEmpty()) stack.setTag(tag);
+        return stack;
+    }
+
     @Override
     public void releaseUsing(ItemStack stack, Level level, LivingEntity pLivingEntity, int timeCharged) {
         if (pLivingEntity instanceof Player player) {
@@ -79,7 +91,6 @@ public class GunpowderBarrelItem extends BlockItem {
             }
             if (!level.isClientSide()) {
                 var barrel = new GunpowderBarrelEntity(level, player);
-                barrel.setBlock((GunpowderBarrelBlock)getBlock());
                 barrel.setItem(stack);
                 barrel.shootFromRotation(player, Math.max(player.getXRot()-10, -90), player.getYRot(), 0.0F, 3 * (float)use/getUseDuration(stack), 1.0F);
                 level.addFreshEntity(barrel);
@@ -109,11 +120,16 @@ public class GunpowderBarrelItem extends BlockItem {
         pTooltip.add(Component.translatable("tooltip.frostedheart.range")
                 .append(range + "x" + range + "x" + range)
                 .withStyle(ChatFormatting.GRAY));
+
+        if (GunpowderBarrelBlock.willFall(pStack)) {
+            pTooltip.add(Component.translatable("tooltip.frostedheart.gunpowder_barrel.will_fall")
+                    .withStyle(ChatFormatting.GRAY));
+        }
     }
 
     @Override
     public boolean isFoil(ItemStack pStack) {
-        return pStack.getTag() != null && pStack.getTag().contains(GunpowderBarrelBlock.FORTUNE_LEVEL_KEY);
+        return pStack.getTag() != null && pStack.getTag().contains(GunpowderBarrelBlock.FORTUNE);
     }
 
     @Override

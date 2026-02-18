@@ -30,6 +30,7 @@ import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.util.ShaderCompatHelper;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.block.gunpowderbarrel.ThrownBlockRenderer;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.client.FHScreens;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
@@ -63,7 +64,6 @@ import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
 import com.teammoeg.frostedresearch.gui.InsightOverlay;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FarmBlock;
 import net.minecraftforge.api.distmarker.Dist;
@@ -418,7 +418,7 @@ public class FHClientEventsMod {
         event.registerEntityRenderer(FHEntityTypes.WANDERING_REFUGEE.get(), WanderingRefugeeRenderer::new);
         event.registerEntityRenderer(FHEntityTypes.SLED.get(), SledEntityRenderer::new);
         event.registerEntityRenderer(FHEntityTypes.CONTAINER_ENTITY.get(), ContainerHolderEntityRenderer::new);
-        event.registerEntityRenderer(FHEntityTypes.GUNPOWDER_BARREL_ENTITY.get(), ThrownItemRenderer::new);
+        event.registerEntityRenderer(FHEntityTypes.GUNPOWDER_BARREL_ENTITY.get(), ThrownBlockRenderer::new);
     }
 
     @SubscribeEvent

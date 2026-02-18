@@ -9,7 +9,6 @@ import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
@@ -19,6 +18,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.Item;
@@ -31,6 +31,7 @@ import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Fallable;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -48,10 +49,20 @@ import java.util.List;
 import java.util.function.Supplier;
 
 @Getter
-public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlock, CEntityBlock<GunpowderBarrelBlockEntity> {
-    public static final String RANGE_KEY = "range";
-    public static final String FORTUNE_LEVEL_KEY = "fortuneLevel";
-    private final VoxelShape shape = Block.box(2, 0, 2, 14, 16, 14);
+public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlock, CEntityBlock<GunpowderBarrelBlockEntity>, Fallable {
+    /**
+     * 爆炸范围
+     */
+    public static final String RANGE = "range";
+    /**
+     * 时运等级
+     */
+    public static final String FORTUNE = "fortuneLevel";
+    /**
+     * 作为方块点燃后是否会下落
+     */
+    public static final String WILL_FALL = "willFall";
+    private static final VoxelShape shape = Block.box(2, 0, 2, 14, 16, 14);
 
     public GunpowderBarrelBlock(Properties blockProps) {
         super(blockProps);
@@ -59,43 +70,81 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
     }
 
     public static int getRange(ItemStack stack) {
+        if (!(stack.getItem() instanceof GunpowderBarrelItem)) return 0;
         var tag = stack.getTag();
-        return tag != null ? Math.max(tag.getInt(RANGE_KEY), 1) : 1;
+        return tag != null ? Math.max(tag.getInt(RANGE), 1) : 1;
     }
 
     public static int getFortuneLevel(ItemStack stack) {
+        if (!(stack.getItem() instanceof GunpowderBarrelItem)) return 0;
         var tag = stack.getTag();
-        return tag != null ? tag.getInt(FORTUNE_LEVEL_KEY) : 0;
+        return tag != null ? tag.getInt(FORTUNE) : 0;
+    }
+
+    public static boolean willFall(ItemStack stack) {
+        if (!(stack.getItem() instanceof GunpowderBarrelItem)) return false;
+        var tag = stack.getTag();
+        return tag != null && tag.getBoolean(WILL_FALL);
     }
 
     public static int getRange(Level level, BlockPos pos) {
         if (level.getBlockEntity(pos) instanceof GunpowderBarrelBlockEntity be) {
-            return be.getRange();
-        }
-        return 1;
-    }
-
-    public static int getFortuneLevel(Level level, BlockPos pos) {
-        if (level.getBlockEntity(pos) instanceof GunpowderBarrelBlockEntity be) {
-            return be.getFortuneLevel();
+            return be.range;
         }
         return 0;
     }
 
+    public static int getFortuneLevel(Level level, BlockPos pos) {
+        if (level.getBlockEntity(pos) instanceof GunpowderBarrelBlockEntity be) {
+            return be.fortuneLevel;
+        }
+        return 0;
+    }
+
+    public static boolean willFall(Level level, BlockPos pos) {
+        if (level.getBlockEntity(pos) instanceof GunpowderBarrelBlockEntity be) {
+            return be.willFall;
+        }
+        return false;
+    }
+
+
+    /**
+     * 造成一次爆炸，范围和时运读取自世界中已有方块
+     */
     public static void explode(Level level, BlockPos pos, Entity causer) {
-        explode(level, pos, getRange(level, pos), getFortuneLevel(level, pos), causer);
+        explode(level, pos, getRange(level, pos), getFortuneLevel(level, pos), causer, true);
     }
 
-    public static void explode(Level level, BlockPos pos, ItemStack stack, Entity causer) {
-        explode(level, pos, getRange(stack), getFortuneLevel(stack), causer);
+    /**
+     * 造成一次爆炸，范围和时运读取自传入的物品
+     */
+    public static void explode(Level level, BlockPos pos, ItemStack stack, Entity causer, boolean isFromBlock) {
+        explode(level, pos, getRange(stack), getFortuneLevel(stack), causer, isFromBlock);
     }
 
-    public static void explode(Level level, BlockPos pos, int range, int fortuneLevel, Entity causer) {
-        range = Mth.clamp(range, 1, 7);
-        fortuneLevel = Mth.clamp(fortuneLevel, 0, 10);
+    /**
+     * 造成一次爆炸
+     * @param level Level
+     * @param pos 爆炸坐标
+     * @param range 爆炸半径
+     * @param fortuneLevel 时运等级
+     * @param causer 造成爆炸的实体
+     * @param isFromBlock 爆炸是否由方块产生
+     */
+    public static void explode(Level level, BlockPos pos, int range, int fortuneLevel, @Nullable Entity causer, boolean isFromBlock) {
+        if (range == 0) return;
+        // 移除本体
+        if (isFromBlock && level.getBlockState(pos).getBlock() instanceof GunpowderBarrelBlock) {
+            level.removeBlock(pos, false);
+        }
         if (level instanceof ServerLevel sl) {
-            level.explode(causer, pos.getX(), pos.getY(), pos.getZ(), range, Level.ExplosionInteraction.NONE);
+            // 生成一次原版无破坏爆炸
+            var center = pos.getCenter();
+            level.explode(causer, center.x, center.y, center.z, range, Level.ExplosionInteraction.NONE);
 
+            range = Mth.clamp(range, 1, 7);
+            fortuneLevel = Mth.clamp(fortuneLevel, 0, 10);
             var positions = BlockPos.betweenClosed(pos.offset(-range, -range, -range), pos.offset(range, range, range));
             List<ItemStack> drops = new ArrayList<>();
             int exp = 0;
@@ -103,11 +152,6 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
             var tool = Items.NETHERITE_PICKAXE.getDefaultInstance();
             tool.enchant(Enchantments.BLOCK_FORTUNE, fortuneLevel);
             for (BlockPos pos1 : positions) {
-                // 移除本体
-                if (pos1.equals(pos)) {
-                    level.removeBlock(pos, false);
-                    continue;
-                }
                 var state = level.getBlockState(pos1);
                 if (state.isAir()) continue;
                 // 连锁爆炸
@@ -136,13 +180,15 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
     }
 
     @Override
+    public void onLand(Level pLevel, BlockPos pPos, BlockState pState, BlockState pReplaceableState, FallingBlockEntity pFallingBlock) {
+        explode(pLevel, pPos, null);
+    }
+
+    @Override
     public List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
         var stack = new ItemStack(this);
         if (params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof GunpowderBarrelBlockEntity be) {
-            var tag = new CompoundTag();
-            if (be.range != 1) tag.putInt(RANGE_KEY, be.range);
-            if (be.fortuneLevel != 0) tag.putInt(FORTUNE_LEVEL_KEY, be.fortuneLevel);
-            stack.setTag(tag);
+            stack = GunpowderBarrelItem.create(be.range, be.fortuneLevel, be.willFall);
         }
         return List.of(stack);
     }
@@ -152,6 +198,7 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
         if (pLevel.getBlockEntity(pPos) instanceof GunpowderBarrelBlockEntity be) {
             be.range = getRange(pStack);
             be.fortuneLevel = getFortuneLevel(pStack);
+            be.willFall = willFall(pStack);
         }
     }
 

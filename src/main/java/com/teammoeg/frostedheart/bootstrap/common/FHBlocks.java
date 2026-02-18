@@ -25,6 +25,8 @@ import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.chorda.util.CFunctionUtils;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.block.gunpowderbarrel.GunpowderBarrelBlock;
+import com.teammoeg.frostedheart.block.gunpowderbarrel.GunpowderBarrelItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
 import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
