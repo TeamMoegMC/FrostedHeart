@@ -4,6 +4,7 @@ import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.compat.ftb.FTBChunks;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.chorda.util.ItemStackMerger;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import lombok.Getter;
@@ -12,6 +13,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.stats.Stats;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
@@ -40,6 +42,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -65,6 +68,10 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
      * 作为方块点燃后是否会下落
      */
     public static final String WILL_FALL = "willFall";
+    /**
+     * 是否会破坏方块
+     */
+    public static final String SAFE_EXPLODE = "wontDestroyBlock";
     private static final VoxelShape shape = Block.box(2, 0, 2, 14, 16, 14);
 
     public GunpowderBarrelBlock(Properties blockProps) {
@@ -90,23 +97,42 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
         return tag != null && tag.getBoolean(WILL_FALL);
     }
 
-    public static int getRange(Level level, BlockPos pos) {
+    public static boolean willDestroyBlock(ItemStack stack) {
+        if (!(stack.getItem() instanceof GunpowderBarrelItem)) return false;
+        var tag = stack.getTag();
+        if (tag != null) {
+            return !tag.getBoolean(SAFE_EXPLODE);
+        }
+        return true;
+    }
+
+    /**
+     * @return 爆炸范围，如果对应坐标不是炸药桶则返回 0
+     */
+    public static int getRange(BlockGetter level, BlockPos pos) {
         if (level.getBlockEntity(pos) instanceof GunpowderBarrelBlockEntity be) {
             return be.range;
         }
         return 0;
     }
 
-    public static int getFortuneLevel(Level level, BlockPos pos) {
+    public static int getFortuneLevel(BlockGetter level, BlockPos pos) {
         if (level.getBlockEntity(pos) instanceof GunpowderBarrelBlockEntity be) {
             return be.fortuneLevel;
         }
         return 0;
     }
 
-    public static boolean willFall(Level level, BlockPos pos) {
+    public static boolean willFall(BlockGetter level, BlockPos pos) {
         if (level.getBlockEntity(pos) instanceof GunpowderBarrelBlockEntity be) {
             return be.willFall;
+        }
+        return false;
+    }
+
+    public static boolean willDestroyBlock(BlockGetter level, BlockPos pos) {
+        if (level.getBlockEntity(pos) instanceof GunpowderBarrelBlockEntity be) {
+            return be.destroyBlock;
         }
         return false;
     }
@@ -115,26 +141,26 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
      * 造成一次爆炸，范围和时运读取自世界中已有方块
      */
     public static void explode(Level level, BlockPos pos, @Nullable Entity exploder) {
-        explode(level, pos, getRange(level, pos), getFortuneLevel(level, pos), exploder, true);
+        explode(level, pos, getRange(level, pos), getFortuneLevel(level, pos), willDestroyBlock(level, pos), true, exploder);
     }
 
     /**
      * 造成一次爆炸，范围和时运读取自传入的物品
      */
-    public static void explode(Level level, BlockPos pos, ItemStack stack, @Nullable Entity exploder, boolean isFromBlock) {
-        explode(level, pos, getRange(stack), getFortuneLevel(stack), exploder, isFromBlock);
+    public static void explode(Level level, BlockPos pos, ItemStack stack, boolean isFromBlock, @Nullable Entity exploder) {
+        explode(level, pos, getRange(stack), getFortuneLevel(stack), willDestroyBlock(stack), isFromBlock, exploder);
     }
 
     /**
      * 造成一次爆炸
      * @param level Level
      * @param pos 爆炸坐标
-     * @param range 爆炸半径
+     * @param range 爆炸半径，为 0 时不会爆炸
      * @param fortuneLevel 时运等级
      * @param exploder 造成爆炸的实体
-     * @param isFromBlock 爆炸是否由方块产生
+     * @param isFromBlock 爆炸是否由方块产生，true 时会移除对应坐标的方块
      */
-    public static void explode(Level level, BlockPos pos, int range, int fortuneLevel, @Nullable Entity exploder, boolean isFromBlock) {
+    public static void explode(Level level, BlockPos pos, int range, int fortuneLevel, boolean destroyBlock, boolean isFromBlock, @Nullable Entity exploder) {
         if (range == 0) return;
         // 移除本体
         if (isFromBlock && level.getBlockState(pos).getBlock() instanceof GunpowderBarrelBlock) {
@@ -144,6 +170,7 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
             // 生成一次原版无破坏爆炸
             var center = pos.getCenter();
             level.explode(exploder, center.x, center.y, center.z, range+1, Level.ExplosionInteraction.NONE);
+            if (!destroyBlock) return;
 
             range = Mth.clamp(range, 1, 7);
             fortuneLevel = Mth.clamp(fortuneLevel, 0, 10);
@@ -157,21 +184,18 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
                 var state = level.getBlockState(pos1);
                 if (state.isAir()) continue;
                 // 是否被阻止
-                boolean event = false;
-                boolean ftbc = false;
-                if (exploder instanceof Player player) {
-                    event = MinecraftForge.EVENT_BUS.post(new BlockEvent.BreakEvent(level, pos1, state, player));
-                    ftbc = FTBChunks.playerCanEdit(player, pos1);
-                } else if (exploder == null) {
-                    ftbc = FTBChunks.getClaimedChunk(level, pos1) != null;
+                if (exploder instanceof Player player ? FTBChunks.playerCanEdit(player, pos1) : FTBChunks.getClaimedChunk(level, pos1) != null) {
+                    // 在认领区块中
+                    continue;
                 }
-                if (ftbc || event) {
+                if (exploder instanceof Player player && MinecraftForge.EVENT_BUS.post(new BlockEvent.BreakEvent(level, pos1, state, player))) {
+                    // 被事件阻止
                     continue;
                 }
                 // 连锁爆炸
                 if (state.getBlock() instanceof GunpowderBarrelBlock) {
                     if (willFall(level, pos1)) {
-                        GunpowderBarrelEntity.fall(level, pos1, getRange(level, pos1), getFortuneLevel(level, pos1), exploder);
+                        GunpowderBarrelEntity.fall(level, pos1, getRange(level, pos1), getFortuneLevel(level, pos1), willDestroyBlock(level, pos1), exploder);
                     } else {
                         explode(level, pos1, exploder);
                     }
@@ -199,13 +223,18 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
 
     @Override
     public void onLand(Level pLevel, BlockPos pPos, BlockState pState, BlockState pReplaceableState, FallingBlockEntity pFallingBlock) {
+        var data = pFallingBlock.blockData;
+        if (pLevel instanceof ServerLevel level && data != null && pState.getBlock() instanceof GunpowderBarrelBlock) {
+            explode(pLevel, pPos, data.getInt(RANGE), data.getInt(FORTUNE), !data.getBoolean(SAFE_EXPLODE), true, CUtils.getEntity(level, data.getUUID("owner")));
+            return;
+        }
         explode(pLevel, pPos, null);
     }
 
     @Override
     public void onBlockExploded(BlockState state, Level level, BlockPos pos, Explosion explosion) {
         if (willFall(level, pos)) {
-            GunpowderBarrelEntity.fall(level, pos, getRange(level, pos), getFortuneLevel(level, pos), explosion.getIndirectSourceEntity());
+            GunpowderBarrelEntity.fall(level, pos, getRange(level, pos), getFortuneLevel(level, pos), willDestroyBlock(level, pos), explosion.getIndirectSourceEntity());
             return;
         }
         explode(level, pos, explosion.getIndirectSourceEntity());
@@ -220,9 +249,23 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
     public List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
         var stack = new ItemStack(this);
         if (params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof GunpowderBarrelBlockEntity be) {
-            stack = GunpowderBarrelItem.create(be.range, be.fortuneLevel, be.willFall);
+            stack = GunpowderBarrelItem.create(be.range, be.fortuneLevel, be.willFall, be.destroyBlock);
         }
         return List.of(stack);
+    }
+
+    @Override
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos, Player player) {
+        return GunpowderBarrelItem.create(getRange(level, pos), getFortuneLevel(level, pos), willFall(level, pos), willDestroyBlock(level, pos));
+    }
+
+    @Override
+    public void onPlace(BlockState pState, Level pLevel, BlockPos pPos, BlockState pOldState, boolean pMovedByPiston) {
+        if (!pOldState.is(pState.getBlock())) {
+            if (pLevel.hasNeighborSignal(pPos)) {
+                onCaughtFire(pState, pLevel, pPos, null, null);
+            }
+        }
     }
 
     @Override
@@ -231,6 +274,7 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
             be.range = getRange(pStack);
             be.fortuneLevel = getFortuneLevel(pStack);
             be.willFall = willFall(pStack);
+            be.destroyBlock = willDestroyBlock(pStack);
             be.setOwner(pPlacer);
         }
     }
@@ -238,13 +282,13 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
     @Override
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
         ItemStack itemstack = pPlayer.getItemInHand(pHand);
-        if (!itemstack.is(Items.FLINT_AND_STEEL) && !itemstack.is(Items.FIRE_CHARGE)) {
+        if (!itemstack.is(Items.FLINT_AND_STEEL) && !itemstack.is(ItemTags.CREEPER_IGNITERS)) {
             return super.use(pState, pLevel, pPos, pPlayer, pHand, pHit);
         } else {
             onCaughtFire(pState, pLevel, pPos, pHit.getDirection(), pPlayer);
             Item item = itemstack.getItem();
             if (!pPlayer.isCreative()) {
-                if (itemstack.is(Items.FLINT_AND_STEEL)) {
+                if (itemstack.isDamageableItem()) {
                     itemstack.hurtAndBreak(1, pPlayer, (p_57425_) -> {
                         p_57425_.broadcastBreakEvent(pHand);
                     });
@@ -288,10 +332,6 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
     @Override
     public void onCaughtFire(BlockState state, Level level, BlockPos pos, @Nullable Direction direction, @Nullable LivingEntity igniter) {
         if (level.getBlockEntity(pos) instanceof GunpowderBarrelBlockEntity be) {
-            if (igniter == null) {
-                explode(level, pos, null);
-                return;
-            }
             be.lit();
         }
     }

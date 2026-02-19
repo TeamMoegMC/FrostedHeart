@@ -20,6 +20,7 @@ public class GunpowderBarrelBlockEntity extends CBlockEntity implements CTickabl
     int range = 1;
     int fortuneLevel = 0;
     boolean willFall = false;
+    boolean destroyBlock = true;
 
     int litTime = 0;
     boolean lit = false;
@@ -37,12 +38,12 @@ public class GunpowderBarrelBlockEntity extends CBlockEntity implements CTickabl
         if (!(level instanceof ServerLevel)) return;
         if (lit) {
             if (willFall) {
-                GunpowderBarrelEntity.fall(level, getBlockPos(), range, fortuneLevel, getOwner());
+                GunpowderBarrelEntity.vanillaFall(level, getBlockPos(), getBlockState());
                 return;
             }
             litTime++;
             if (litTime >= 100) {
-                GunpowderBarrelBlock.explode(level, getBlockPos(), range, fortuneLevel, getOwner(), true);
+                GunpowderBarrelBlock.explode(level, getBlockPos(), range, fortuneLevel, destroyBlock, true, getOwner());
             }
         }
     }
@@ -61,6 +62,7 @@ public class GunpowderBarrelBlockEntity extends CBlockEntity implements CTickabl
         }
     }
 
+    @Nullable
     public Entity getOwner() {
         if (this.owner != null && !this.owner.isRemoved()) {
             return this.owner;
@@ -77,6 +79,7 @@ public class GunpowderBarrelBlockEntity extends CBlockEntity implements CTickabl
         this.range = nbt.getInt(GunpowderBarrelBlock.RANGE);
         this.fortuneLevel = nbt.getInt(GunpowderBarrelBlock.FORTUNE);
         this.willFall = nbt.getBoolean(GunpowderBarrelBlock.WILL_FALL);
+        this.destroyBlock = !nbt.getBoolean(GunpowderBarrelBlock.SAFE_EXPLODE);
         this.litTime = nbt.getInt("litTime");
         this.lit = nbt.getBoolean("lit");
         if (nbt.hasUUID("owner")) {
@@ -89,6 +92,7 @@ public class GunpowderBarrelBlockEntity extends CBlockEntity implements CTickabl
         nbt.putInt(GunpowderBarrelBlock.RANGE, this.range);
         nbt.putInt(GunpowderBarrelBlock.FORTUNE, this.fortuneLevel);
         nbt.putBoolean(GunpowderBarrelBlock.WILL_FALL, this.willFall);
+        nbt.putBoolean(GunpowderBarrelBlock.SAFE_EXPLODE, !this.destroyBlock);
         nbt.putInt("litTIme", this.litTime);
         nbt.putBoolean("lit", this.lit);
         if (ownerUUID != null) {

@@ -763,6 +763,7 @@
   "tooltip.frostedheart.suitable_items":"接受物品：",
   "tooltip.frostedheart.range":"范围：",
   "tooltip.frostedheart.gunpowder_barrel.will_fall":"点燃后会下落",
+  "tooltip.frostedheart.gunpowder_barrel.wont_destroy_block":"不会破坏方块",
   "gui.frostedheart.creative_heater.heat": "产生的气压值",
   "tips.frostedheart.click_action.empty": "无操作",
   "tips.frostedheart.click_action.open_url": "打开链接“%s”",

@@ -61,6 +61,7 @@
   "tooltip.frostedheart.suitable_items": "Accepted Items:",
   "tooltip.frostedheart.range":"Range: ",
   "tooltip.frostedheart.gunpowder_barrel.will_fall":"Will fall after being ignited",
+  "tooltip.frostedheart.gunpowder_barrel.wont_destroy_block":"Will not destroy block",
   "ftbquests.reward.frostedheart.tip": "Tip",
   "ftbquests.reward.frostedheart.tip.fh_tip": "Tip ID",
   "ftbquests.reward.frostedheart.insight": "Insight",

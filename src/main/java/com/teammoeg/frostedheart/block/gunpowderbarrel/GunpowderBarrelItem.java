@@ -51,7 +51,7 @@ public class GunpowderBarrelItem extends BlockItem {
                 if (use == 59) player.playSound(SoundEvents.FLINTANDSTEEL_USE);
                 if (use == 60) player.playSound(SoundEvents.TNT_PRIMED);
                 if (use == max-1) {
-                    GunpowderBarrelBlock.explode(level, player.blockPosition(), stack, player, false);
+                    GunpowderBarrelBlock.explode(level, player.blockPosition(), stack, false, player);
                     if (!player.getAbilities().instabuild) {
                         stack.shrink(1);
                     }
@@ -78,18 +78,20 @@ public class GunpowderBarrelItem extends BlockItem {
                 event.getAffectedEntities().add(GunpowderBarrelEntity.fall(level, pos,
                         GunpowderBarrelBlock.getRange(level, pos),
                         GunpowderBarrelBlock.getFortuneLevel(level, pos),
+                        GunpowderBarrelBlock.willDestroyBlock(level, pos),
                         event.getExplosion().getIndirectSourceEntity()));
                 level.removeBlock(pos, false);
             }
         }
     }
 
-    public static ItemStack create(int range, int fortuneLevel, boolean willFall) {
+    public static ItemStack create(int range, int fortuneLevel, boolean willFall, boolean destroyBlock) {
         var stack = FHBlocks.GUNPOWDER_BARREL.asStack();
         var tag = new CompoundTag();
         if (range != 1) tag.putInt(GunpowderBarrelBlock.RANGE, range);
         if (fortuneLevel != 0) tag.putInt(GunpowderBarrelBlock.FORTUNE, fortuneLevel);
         if (willFall) tag.putBoolean(GunpowderBarrelBlock.WILL_FALL, true);
+        if (!destroyBlock) tag.putBoolean(GunpowderBarrelBlock.SAFE_EXPLODE, true);
         if (!tag.isEmpty()) stack.setTag(tag);
         return stack;
     }
@@ -139,6 +141,11 @@ public class GunpowderBarrelItem extends BlockItem {
 
         if (GunpowderBarrelBlock.willFall(pStack)) {
             pTooltip.add(Component.translatable("tooltip.frostedheart.gunpowder_barrel.will_fall")
+                    .withStyle(ChatFormatting.GRAY));
+        }
+
+        if (!GunpowderBarrelBlock.willDestroyBlock(pStack)) {
+            pTooltip.add(Component.translatable("tooltip.frostedheart.gunpowder_barrel.wont_destroy_block")
                     .withStyle(ChatFormatting.GRAY));
         }
     }
