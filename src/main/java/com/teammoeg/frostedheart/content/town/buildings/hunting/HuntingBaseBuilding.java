@@ -37,6 +37,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
+import static com.teammoeg.frostedheart.content.town.Town.DEBUG_MODE;
 import static java.lang.Double.NEGATIVE_INFINITY;
 
 public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
@@ -118,7 +119,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 			return true;
 		}
 		FHMain.LOGGER.error("HuntingBaseBuilding.work: Town is not TeamTown, need to fix work method.");//添加对其它城镇的适配
-		return false;
+		throw new IllegalArgumentException("HuntingBaseBuilding ERROR: Can't work in non-team town :" + town);
 	}
 
 	@Override
@@ -150,8 +151,13 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 		return temperature + temperatureModifier;
 	}
 
+	public static boolean isTemperatureValid(double effectiveTemperature){
+		if (DEBUG_MODE) return true;
+		return effectiveTemperature >= TownMathFunctions.COMFORTABLE_TEMP_HOUSE;
+	}
+
 	public boolean isTemperatureValid() {
-		return getEffectiveTemperature() >= TownMathFunctions.COMFORTABLE_TEMP_HOUSE;
+		return isTemperatureValid(getEffectiveTemperature());
 	}
 
 	public boolean isSpaceValid(){

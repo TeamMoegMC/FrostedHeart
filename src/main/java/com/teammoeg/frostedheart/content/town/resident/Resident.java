@@ -228,13 +228,45 @@ public class Resident {
         educationLevel = data.getInt("educationLevel");
         CompoundTag workProficiencyNBT = data.getCompound("workProficiency");
         workProficiency.keySet().forEach(key/*TownWorkerType*/ -> workProficiency.put(key, workProficiencyNBT.getDouble(key)));
-        workPos = BlockPos.of(data.getLong("workPos"));
-        housePos = BlockPos.of(data.getLong("housePos"));
+
+        if (data.contains("workPos")) {
+            workPos = BlockPos.of(data.getLong("workPos"));
+        } else {
+            workPos = null;
+        }
+        if (data.contains("housePos")) {
+            housePos = BlockPos.of(data.getLong("housePos"));
+        } else {
+            housePos = null;
+        }
+        
+        //  添加边界检查
+        if (health < 0 || health > 100) {
+            FHMain.LOGGER.error("Resident.deserialize: Invalid health value {} for resident {} {}, setting to 50", health, firstName, lastName);
+            health = 50.0;
+        }
+        if (mental < 0 || mental > 100) {
+            FHMain.LOGGER.error("Resident.deserialize: Invalid mental value {} for resident {} {}, setting to 50", mental, firstName, lastName);
+            mental = 50.0;
+        }
+        if (strength < 0 || strength > 100) {
+            FHMain.LOGGER.error("Resident.deserialize: Invalid strength value {} for resident {} {}, setting to 50", strength, firstName, lastName);
+            strength = 50.0;
+        }
+        if (intelligence < 0 || intelligence > 100) {
+            FHMain.LOGGER.error("Resident.deserialize: Invalid intelligence value {} for resident {} {}, setting to 50", intelligence, firstName, lastName);
+            intelligence = 50.0;
+        }
+        if (educationLevel < 0) {
+            FHMain.LOGGER.error("Resident.deserialize: Invalid educationLevel value {} for resident {} {}, setting to 0", educationLevel, firstName, lastName);
+            educationLevel = 0;
+        }
+        
         return null;
     }
 
     public void setWorkPos(BlockPos pos){
-        this.housePos = pos;
+        this.workPos = pos;
     }
 
     public void setHealth(double health) {

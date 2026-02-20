@@ -117,7 +117,7 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
             if(providerRaw != null){
                 if(townProvider.getTownType().isAssignableFrom(ITownWithBuildings.class)){
                     //这里经过getTownType判断类型之后，townProvider的类型一定为ITownWithBuildings，所以应该不会有问题了
-                    townProvider = (ITownProviderSerializable<ITownWithBuildings>) providerRaw;
+                    townProvider = (ITownProviderSerializable<? extends ITownWithBuildings>) providerRaw;
                 }
             }
         }

@@ -39,7 +39,7 @@ import java.util.Set;
 import static java.lang.Math.exp;
 
 public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBaseBuilding> {
-    public Set<BlockPos> linkedMines = new HashSet<>();//todo: to delete
+    public Set<BlockPos> linkedMines = new HashSet<>();
     private int volume;
     private int area;
     private int rack;

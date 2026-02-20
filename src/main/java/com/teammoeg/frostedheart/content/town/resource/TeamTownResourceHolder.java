@@ -96,7 +96,7 @@ public class TeamTownResourceHolder {
         double adder = 0.0;
         for(Map.Entry<ITownResourceKey, Double> entry : resources.entrySet()){
             ITownResourceKey key = entry.getKey();
-            resources.put(key, entry.getValue());
+            this.resources.put(key, entry.getValue());
             if(key instanceof ItemStackResourceKey){
                 adder += entry.getValue();
             } else if(key instanceof VirtualResourceAttribute virtualKey){

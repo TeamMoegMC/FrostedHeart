@@ -39,6 +39,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static com.teammoeg.frostedheart.content.town.Town.DEBUG_MODE;
 import static java.lang.Double.NEGATIVE_INFINITY;
 
 public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
@@ -71,8 +72,16 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	@Override
 	public boolean isBuildingWorkable() {
 		return super.isBuildingWorkable()
-				&& temperature > -10
-				&& temperature < 40;
+				&& isTemperatureValid();
+	}
+
+	public static boolean isTemperatureValid(double temperature){
+		if (DEBUG_MODE) return true;
+		return temperature > -10 && temperature < 40;
+	}
+
+	public boolean isTemperatureValid() {
+		return isTemperatureValid(this.temperature);
 	}
 
 	/**
@@ -148,7 +157,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 
 			return true;
 		}
-		return false;
+		throw new IllegalArgumentException("MineBaseBuilding ERROR: Can't work in non-team town :" + town);
 	}
 
 	@Override

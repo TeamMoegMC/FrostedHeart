@@ -38,6 +38,7 @@ import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import net.minecraft.core.BlockPos;
 
+import static com.teammoeg.frostedheart.content.town.Town.DEBUG_MODE;
 import static com.teammoeg.frostedheart.content.town.resource.ItemResourceType.RESIDENT_FOOD_LEVEL;
 
 /**
@@ -136,6 +137,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     }
 
     public static boolean isTemperatureValid(double effectiveTemperature){
+        if (DEBUG_MODE) return true;
         return effectiveTemperature >= TownMathFunctions.MIN_TEMP_HOUSE && effectiveTemperature <= TownMathFunctions.MAX_TEMP_HOUSE;
     }
 
@@ -152,7 +154,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         return super.isBuildingWorkable()
                 && isTemperatureValid()
                 && area >= 4
-                && volume >= 7;
+                && volume >= 8;
     }
 
     @Override

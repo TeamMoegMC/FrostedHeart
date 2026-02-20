@@ -43,8 +43,8 @@ import java.util.*;
 //严格来讲这不是一个正常的BlockScanner，而是一个用于将FloorBlockScanner和ConfinedSpaceScanner结合起来的类
 public class HouseBlockScanner extends BlockScanner {
     public static final int MAX_SCANNING_TIMES_VOLUME = 4096;
-    public static final int MINIMUM_VOLUME = 6;
-    public static final int MINIMUM_AREA = 3;
+    public static final int MINIMUM_VOLUME = 8;
+    public static final int MINIMUM_AREA = 4;
     public static final int MAX_SCANNING_TIMES_FLOOR = 512;
     @Getter
     protected int area = 0;
