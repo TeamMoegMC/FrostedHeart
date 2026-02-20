@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlock;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.state.BlockState;
@@ -39,7 +39,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.function.Supplier;
 
-public class WarehouseBlock extends AbstractTownWorkerBlock implements CEntityBlock<WarehouseBlockEntity> {
+public class WarehouseBlock extends AbstractTownBuildingBlock implements CEntityBlock<WarehouseBlockEntity> {
     public WarehouseBlock(Properties blockProps) {
         super(blockProps);
     }
@@ -52,12 +52,13 @@ public class WarehouseBlock extends AbstractTownWorkerBlock implements CEntityBl
             if (te == null) {
                 return InteractionResult.FAIL;
             }
-            player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.displayClientMessage(Components.str("Status: " + te.getStatus()), false);
-            player.displayClientMessage(Components.str("Volume: " + (te.getVolume())), false);
-            player.displayClientMessage(Components.str("Area: " + (te.getArea())), false);
-            player.displayClientMessage(Components.str("Capacity: " + BigDecimal.valueOf(te.getCapacity())
-                    .setScale(2, RoundingMode.HALF_UP).doubleValue()), false);
+            te.getBuilding().ifPresent(building -> {
+                player.displayClientMessage(Components.str(building.isStructureValid ? "Structure Valid" : "Structure Invalid"), false);
+                player.displayClientMessage(Components.str("Volume: " + (building.volume)), false);
+                player.displayClientMessage(Components.str("Area: " + (building.area)), false);
+                player.displayClientMessage(Components.str("Capacity: " + BigDecimal.valueOf(building.capacity)
+                        .setScale(2, RoundingMode.HALF_UP).doubleValue()), false);
+            });
             NetworkHooks.openScreen((ServerPlayer) player, te, pos);
             return InteractionResult.SUCCESS;
         }

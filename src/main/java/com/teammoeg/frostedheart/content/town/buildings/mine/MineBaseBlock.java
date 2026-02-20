@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlock;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -35,7 +35,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-public class MineBaseBlock extends AbstractTownWorkerBlock implements CEntityBlock<MineBaseBlockEntity> {
+public class MineBaseBlock extends AbstractTownBuildingBlock implements CEntityBlock<MineBaseBlockEntity> {
 
     public MineBaseBlock(Properties blockProps) {
         super(blockProps);
@@ -49,14 +49,16 @@ public class MineBaseBlock extends AbstractTownWorkerBlock implements CEntityBlo
             if (te == null) {
                 return InteractionResult.FAIL;
             }
-            te.refresh_safe();
-            player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.displayClientMessage(Components.str("status: "+te.getStatus()), false);
-            player.displayClientMessage(Components.str("Area: " + (te.getArea())), false);
-            player.displayClientMessage(Components.str("Volume: " + (te.getVolume())), false);
-            player.displayClientMessage(Components.str("Chest: " + (te.getChest())), false);
-            player.displayClientMessage(Components.str("Rack: " + (te.getRack())), false);
-            player.displayClientMessage(Components.str("Linked mines: " + (te.linkedMines)), false);
+            te.getBuilding().ifPresent(building -> {
+                te.refresh_safe(building);
+                player.displayClientMessage(Components.str(building.isBuildingWorkable() ? "Valid working environment" : "Invalid working environment"), false);
+                player.displayClientMessage(Components.str("Structure: "+(building.isStructureValid? "Valid" : "Invalid")), false);
+                player.displayClientMessage(Components.str("Area: " + (building.area)), false);
+                player.displayClientMessage(Components.str("Volume: " + (building.volume)), false);
+                //player.displayClientMessage(Components.str("Chest: " + (te.getChest())), false);
+                //player.displayClientMessage(Components.str("Rack: " + (te.getRack())), false);
+                player.displayClientMessage(Components.str("Linked mines: " + (te.linkedMines)), false);
+            });
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlock;
 
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -35,7 +35,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.Level;
 
-public class HuntingCampBlock extends AbstractTownWorkerBlock implements CEntityBlock<HuntingCampBlockEntity> {
+public class HuntingCampBlock extends AbstractTownBuildingBlock implements CEntityBlock<HuntingCampBlockEntity> {
     public HuntingCampBlock(Properties blockProps) {
         super(blockProps);
     }
@@ -49,7 +49,10 @@ public class HuntingCampBlock extends AbstractTownWorkerBlock implements CEntity
             if (te == null) {
                 return InteractionResult.FAIL;
             }
-            player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            te.getBuilding().ifPresent(building -> {
+                player.displayClientMessage(Components.str(building.isBuildingWorkable() ? "Valid working environment" : "Invalid working environment"), false);
+
+            });
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

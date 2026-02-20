@@ -23,8 +23,8 @@ import java.util.HashSet;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.town.OccupiedArea;
-import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
+import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.ConfinedSpaceScanner;
 
 import lombok.Getter;
 import net.minecraft.core.BlockPos;

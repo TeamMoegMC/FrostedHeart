@@ -19,22 +19,19 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.house;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
-import com.teammoeg.frostedheart.content.town.TownWorkerStatus;
-import com.teammoeg.frostedheart.content.town.TownWorkerType;
-import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.TownMathFunctions;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 
 import lombok.Getter;
@@ -45,6 +42,10 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static com.teammoeg.frostedheart.content.town.TownMathFunctions.calculateDecorationRating;
 
 /**
  * A house in the town.
@@ -54,38 +55,16 @@ import net.minecraftforge.common.util.LazyOptional;
  * maintain the house - Check if the house structure is valid - Compute comfort
  * rating based on the house structure
  */
-public class HouseBlockEntity extends AbstractTownWorkerBlockEntity<HouseState> {
+public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuilding> {
 
-	/** The temperature at which the house is comfortable. */
-	public static final double COMFORTABLE_TEMP_HOUSE = 24;
-	public static final int MAX_TEMP_HOUSE = 50;
-	public static final int MIN_TEMP_HOUSE = -50;// todo: debug, 原为0
-
-	// public List<UUID> residents = new ArrayList<>();
-	private int volume = -1;
-	// private int decoration = -1;
-	private int area = -1;
-	private double temperature = -1;
-	private Map<String, Integer> decorations = new HashMap<>();
-	private double temperatureModifier = 0;
 	@Getter
-	private List<BlockPos> beds=List.of();
+    private double temperatureModifier = 0;
 
 	/** Tile data, stored in tile entity. */
 	HeatEndpoint endpoint = HeatEndpoint.consumer(99, 1);
 
 	public HouseBlockEntity(BlockPos pos, BlockState state) {
 		super(FHBlockEntityTypes.HOUSE.get(), pos, state);
-	}
-
-	@Override
-	public int getPriority() {
-		return 0;
-	}
-
-	@Override
-	public TownWorkerType getWorkerType() {
-		return TownWorkerType.HOUSE;
 	}
 
 	/**
@@ -97,57 +76,17 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity<HouseState> 
 	 * Room structure should be valid. Temperature should be within a reasonable
 	 * range.
 	 */
-	public void refresh(HouseState state) {
+	public void refresh(@NotNull HouseBuilding building) {
+		this.scanStructure(building);
+		building.temperatureModifier = temperatureModifier;
+	}
 
-		if (this.isStructureValid(state)) {
-			if (!this.isOccupiedAreaOverlapped()) {
-				if (this.isTemperatureValid()) {
-					state.status = TownWorkerStatus.VALID;
-					state.maxResidents = this.calculateMaxResidents();
-					state.temperatureRating = calculateTemperatureRating(temperature);
-					state.spaceRating = calculateSpaceRating(volume, area);
-					state.decorationRating = calculateDecorationRating(decorations, area);
-				} else {
-					state.status =(TownWorkerStatus.TOO_COLD);
-				}
-			}
-		} else {
-			state.status =(TownWorkerStatus.NOT_VALID_STRUCTURE);
+	@Override
+	public @Nullable HouseBuilding getBuilding(AbstractTownBuilding abstractTownBuilding) {
+		if(abstractTownBuilding instanceof HouseBuilding){
+			return (HouseBuilding) abstractTownBuilding;
 		}
-
-	}
-
-	public int getMaxResident() {
-		return isWorkValid() ? getState().maxResidents : 0;
-	}
-
-	public int getVolume() {
-		return isWorkValid() ? this.volume : 0;
-	}
-
-	public int getArea() {
-		return isWorkValid() ? this.area : 0;
-	}
-
-	public double getTemperature() {
-		return isWorkValid() ? this.temperature : 0;
-	}
-
-	public double getRating() {
-		if (this.isWorkValid()) {
-			HouseState state = getState();
-			if (state.getRating() == -1) {
-				double rating=this.computeRating();
-				state.setRating(rating);
-				return rating;
-			}
-			return state.getRating();
-		}
-		return 0;
-	}
-
-	public double getTemperatureModifier() {
-		return isWorkValid() ? this.temperatureModifier : 0;
+		return null;
 	}
 
 	/**
@@ -159,34 +98,33 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity<HouseState> 
 	 *
 	 * @return whether the house structure is valid
 	 */
-	public boolean isStructureValid(HouseState state) {
+	public boolean scanStructure(HouseBuilding building) {
 		BlockPos housePos = this.getBlockPos();
 		List<BlockPos> doorPosSet = BlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS));
 		if (!doorPosSet.isEmpty()) {
 			for (BlockPos doorPos : doorPosSet) {
 				BlockPos floorBelowDoor = BlockScanner.getBlockBelow((pos) -> !(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);// 找到门下面垫的的那个方块
 				for (Direction direction : BlockScanner.PLANE_DIRECTIONS) {
-					FHMain.LOGGER.debug("HouseScanner: creating new HouseBlockScanner");
+					//FHMain.LOGGER.debug("HouseScanner: creating new HouseBlockScanner");
 					assert floorBelowDoor != null;
 					BlockPos startPos = floorBelowDoor.relative(direction);// 找到门下方块旁边的方块
-					FHMain.LOGGER.debug("HouseScanner: start pos 1" + startPos);
+					//FHMain.LOGGER.debug("HouseScanner: start pos 1" + startPos);
 					if (!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos)) {// 如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
 						if (!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos.below()) || FloorBlockScanner.isHouseBlock(level, startPos.above(2))) {// 如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
 							continue;
 						}
 						startPos = startPos.below();
-						FHMain.LOGGER.debug("HouseScanner: start pos 2" + startPos);
+						//FHMain.LOGGER.debug("HouseScanner: start pos 2" + startPos);
 					}
 					HouseBlockScanner scanner = new HouseBlockScanner(this.level, startPos);
 					if (scanner.scan()) {
-						FHMain.LOGGER.debug("HouseScanner: scan successful");
-						this.volume = scanner.getVolume();
-						this.area = scanner.getArea();
-						this.decorations = scanner.getDecorations();
-						this.temperature = scanner.getTemperature();
-						state.setOccupiedArea(scanner.getOccupiedArea());
-						state.setRating(computeRating());
-						this.beds = scanner.getBeds();
+						//FHMain.LOGGER.debug("HouseScanner: scan successful");
+						building.volume = scanner.getVolume();
+						building.area = scanner.getArea();
+						building.decorationRating = calculateDecorationRating(scanner.decorations, scanner.area);
+						building.temperature = scanner.getTemperature();
+						building.setOccupiedArea(scanner.getOccupiedArea());
+						building.maxResidents = calculateMaxResidents(building.area, building.volume, scanner.getBeds().size());
 						return true;
 					}
 				}
@@ -195,65 +133,10 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity<HouseState> 
 		return false;
 	}
 
-	/**
-	 * Determine whether the house temperature is valid for work.
-	 * <p>
-	 * If connected to heat network, this always returns true.
-	 *
-	 * @return whether the temperature is valid
-	 */
-	public boolean isTemperatureValid() {
-		double effective = temperature + temperatureModifier;
-		return effective >= MIN_TEMP_HOUSE && effective <= MAX_TEMP_HOUSE;
-	}
 
-	public double getEffectiveTemperature() {
-		return temperature + temperatureModifier;
-	}
-
-	/**
-	 * Get a comfort rating based on how the house is built.
-	 * <p>
-	 * This would affect the mood of the residents on the next day.
-	 *
-	 * @return a rating in range of zero to one
-	 */
-	private double computeRating() {
-		if (this.isValid()) {
-			return (calculateSpaceRating(this.volume, this.area) * (1 + calculateDecorationRating(this.decorations, this.area))
-				+ calculateTemperatureRating(this.temperature + this.temperatureModifier)) / 3;
-		} else return 0;
-	}
-
-	public static double calculateTemperatureRating(double temperature) {
-		double tempDiff = Math.abs(COMFORTABLE_TEMP_HOUSE - temperature);
-		return 0.017 + 1 / (1 + Math.exp(0.4 * (tempDiff - 10)));
-	}
-
-	public static double calculateDecorationRating(Map<?, Integer> decorations, int area) {
-		double score = 0;
-		for (Integer num : decorations.values()) {
-			if (num + 0.32 > 0) { // Ensure the argument for log is positive
-				score += Math.log(num + 0.32) * 1.75 + 0.9;
-			} else {
-				// Handle the case where num + 0.32 <= 0
-				// For example, you could add a minimal score or skip adding to the score.
-				score += 0; // Or some other handling logic
-			}
-		}
-		return Math.min(1, score / (6 + area / 16.0f));
-	}
-
-	public static double calculateSpaceRating(int volume, int area) {
-		double height = volume / (float) area;
-		double score = area * (1.55 + Math.log(height - 1.6) * 0.6);
-		return 1 - Math.exp(-0.024 * Math.pow(score, 1.11));
-	}
-
-	private int calculateMaxResidents() {
-		int maxResidentOfSpace = (int) (calculateSpaceRating(this.volume, this.area) / 4 * this.area);
-		int maxResidentOfBeds = this.beds.size();
-		return Math.min(maxResidentOfSpace, maxResidentOfBeds);
+	public static int calculateMaxResidents(int area, int volume, int bedNum) {
+		int maxResidentOfSpace = (int) (TownMathFunctions.calculateSpaceRating(volume, area) / 4 * area);
+        return Math.min(maxResidentOfSpace, bedNum);
 	}
 
 	@Override
@@ -261,7 +144,7 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity<HouseState> 
 		assert level != null;
 		if (!level.isClientSide) {
 			if (endpoint.tryDrainHeat(1)) {
-				temperatureModifier = Math.max(endpoint.getTempLevel() * 10, COMFORTABLE_TEMP_HOUSE);
+				temperatureModifier = Math.max(endpoint.getTempLevel() * 10, TownMathFunctions.COMFORTABLE_TEMP_HOUSE);
 				if (setActive(true)) {
 					setChanged();
 				}
@@ -303,5 +186,10 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity<HouseState> 
 	public void invalidateCaps() {
 		endpointCap.invalidate();
 		super.invalidateCaps();
+	}
+
+	@Override
+	public @NotNull HouseBuilding createBuilding() {
+		return new HouseBuilding(this.getBlockPos());
 	}
 }

@@ -25,12 +25,13 @@ import com.teammoeg.chorda.client.cui.TabImageButtonElement;
 import com.teammoeg.chorda.client.cui.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<? extends AbstractTownWorkerBlockEntity>> extends MenuPrimaryLayer<C> {
+public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<? extends AbstractTownBuildingBlockEntity>> extends MenuPrimaryLayer<C> {
 
 
     private int activeTab = 0;

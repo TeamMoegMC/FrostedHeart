@@ -23,14 +23,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.town.ITownWithBlocks;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
-import com.teammoeg.frostedheart.content.town.Town;
-import com.teammoeg.frostedheart.content.town.TownWorkerType;
-import com.teammoeg.frostedheart.content.town.worker.WorkerState;
+import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.SerializeUtil;
-import com.teammoeg.chorda.math.CMath;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -40,10 +36,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * A resident of the town.
@@ -61,12 +54,12 @@ public class Resident {
             Codec.DOUBLE.optionalFieldOf("strength",50.0).forGetter(o->o.strength),
             Codec.DOUBLE.optionalFieldOf("intelligence",50.0).forGetter(o->o.intelligence),
             Codec.INT.optionalFieldOf("educationLevel",0).forGetter(o->o.educationLevel),
-            CodecUtil.mapCodec("type", TownWorkerType.CODEC, "proficiency", Codec.DOUBLE).optionalFieldOf("workProficiency",Map.of()).forGetter(o->o.workProficiency),
+            CodecUtil.mapCodec("type", Codec.STRING, "proficiency", Codec.DOUBLE).optionalFieldOf("workProficiency",Map.of()).forGetter(o->o.workProficiency),
             BlockPos.CODEC.optionalFieldOf("housePos").forGetter(o-> Optional.ofNullable(o.housePos)),
             BlockPos.CODEC.optionalFieldOf("workPos").forGetter(o-> Optional.ofNullable(o.workPos))
 		).apply(t, Resident::new));
 
-    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<TownWorkerType, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos) {
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.uuid = uuid;
@@ -110,9 +103,10 @@ public class Resident {
     /**
      *  work proficiency.
      *  must be positive.
+     *  Key: clazz.getSimpleName() of Building class
      */
     @Getter
-    private final EnumMap<TownWorkerType, Double> workProficiency = new EnumMap<>(TownWorkerType.class);
+    private final Map<String, Double> workProficiency = new HashMap<>();
     //the pos of the HouseBlock that the resident is living in
     @Nullable
     @Getter
@@ -127,9 +121,6 @@ public class Resident {
         this.firstName = firstName;
         this.lastName = lastName;
         this.uuid = UUID.randomUUID();
-        workProficiency.forEach((k, v) -> {
-            if(k.needsResident()) workProficiency.put(k, CMath.RANDOM.nextDouble() * 20);
-        });
     }
 
     //public Resident() {
@@ -149,7 +140,7 @@ public class Resident {
         this(firstName,lastName,UUID.fromString(uuid));
     }
 
-    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<TownWorkerType, Double> workProficiency, BlockPos housePos, BlockPos workPos) {
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, BlockPos housePos, BlockPos workPos) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.uuid = uuid;
@@ -166,18 +157,6 @@ public class Resident {
     }
 
     public void setDeath(ITownWithResidents town){
-        if(town instanceof ITownWithBlocks townWithBlocks){
-            townWithBlocks.getTownBlock(housePos).ifPresent(townWorkerData -> {
-                if(townWorkerData.getType() == TownWorkerType.HOUSE){
-                    townWorkerData.removeResident(this.uuid);
-                }
-            });
-            townWithBlocks.getTownBlock(workPos).ifPresent(townWorkerData -> {
-                if(townWorkerData.getType().needsResident()){
-                    townWorkerData.removeResident(this.uuid);
-            }
-            });
-        }
         town.removeResident(this.uuid);
     }
 
@@ -185,24 +164,25 @@ public class Resident {
         return uuid;
     }
 
-    public double getWorkProficiency(TownWorkerType type) {
-        return workProficiency.getOrDefault(type, 0.0);
+    public double getWorkProficiency(Class<? extends ITownResidentWorkBuilding> type) {
+        return workProficiency.computeIfAbsent(type.getSimpleName(), (k)->generateRandomProficiency());
     }
 
-    public double addWorkProficiency(TownWorkerType type, double amount){
+    public double addWorkProficiency(Class<? extends ITownResidentWorkBuilding> type, double amount){
+        workProficiency.computeIfAbsent(type.getSimpleName(), (k)->generateRandomProficiency());
         if(amount < 0){
             amount = Math.max(0, amount);
             FHMain.LOGGER.error("Resident.addWorkProficiency:Trying to add work proficiency with negative amount!");
         }
-        return workProficiency.merge(type, amount, Double::sum);
+        return workProficiency.merge(type.getSimpleName(), amount, Double::sum);
     }
 
-    public double setWorkProficiency(TownWorkerType type,double amount){
+    public double setWorkProficiency(Class<? extends ITownResidentWorkBuilding> type,double amount){
         if(amount < 0){
             amount = Math.max(0, amount);
             FHMain.LOGGER.error("Resident.setWorkProficiency:Trying to set work proficiency to negative amount!");
         }
-        workProficiency.put(type, amount);
+        workProficiency.put(type.getSimpleName(), amount);
         return amount;
     }
 
@@ -211,7 +191,7 @@ public class Resident {
      * 会随熟练度的提高衰减。
      * @return 增加后的数量
      */
-    public double addWorkProficiency(TownWorkerType type){
+    public double addWorkProficiency(Class<? extends ITownResidentWorkBuilding> type){
         return addWorkProficiency(type, 1);
 
     }
@@ -227,9 +207,13 @@ public class Resident {
         data.putDouble("strength", strength);
         data.putDouble("intelligence", intelligence);
         data.putInt("educationLevel", educationLevel);
-        data.put("workProficiency", SerializeUtil.toNBTMap(workProficiency.entrySet(), (entry, compoundNBTBuilder) -> compoundNBTBuilder.putDouble(entry.getKey().getKey(), entry.getValue())));
-        data.putLong("workPos", workPos.asLong());
-        data.putLong("housePos", housePos.asLong());
+        data.put("workProficiency", SerializeUtil.toNBTMap(workProficiency.entrySet(), (entry, compoundNBTBuilder) -> compoundNBTBuilder.putDouble(entry.getKey(), entry.getValue())));
+        if (workPos != null) {
+            data.putLong("workPos", workPos.asLong());
+        }
+        if (housePos != null) {
+            data.putLong("housePos", housePos.asLong());
+        }
         return data;
     }
 
@@ -243,7 +227,7 @@ public class Resident {
         intelligence = data.getDouble("intelligence");
         educationLevel = data.getInt("educationLevel");
         CompoundTag workProficiencyNBT = data.getCompound("workProficiency");
-        workProficiency.keySet().forEach(key/*TownWorkerType*/ -> workProficiency.put(key, workProficiencyNBT.getDouble(key.getKey())));
+        workProficiency.keySet().forEach(key/*TownWorkerType*/ -> workProficiency.put(key, workProficiencyNBT.getDouble(key)));
         workPos = BlockPos.of(data.getLong("workPos"));
         housePos = BlockPos.of(data.getLong("housePos"));
         return null;
@@ -346,8 +330,8 @@ public class Resident {
         return uuid.hashCode();
     }
 
-	public void onWork(Town town,TownWorkerType type, WorkerState workData) {
-		
-	}
+    private static double generateRandomProficiency() {
+        return Math.pow(Math.random(), 2) * 50;
+    }
 
 }

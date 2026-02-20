@@ -19,14 +19,12 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
-import com.teammoeg.frostedheart.content.town.OccupiedArea;
-import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
-import com.teammoeg.frostedheart.content.town.blockscanner.HeightCheckingInfo;
+import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.HeightCheckingInfo;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-
-import java.util.AbstractMap;
 
 //仓库的结构不考虑密封，体积仅统计地板上方的空气。
 public class WarehouseBlockScanner extends FloorBlockScanner {

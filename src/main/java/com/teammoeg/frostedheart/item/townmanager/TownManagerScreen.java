@@ -25,8 +25,8 @@ import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -188,14 +188,14 @@ public class TownManagerScreen extends Screen {
         int totalVisibleRows = imageHeight / 20;
 
         BlockListScreenMode(){
-            this.scrollBar = new ScrollBarWidget(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getTownBlocks().size() - totalVisibleRows + 1)
+            this.scrollBar = new ScrollBarWidget(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getTownBuildings().size() - totalVisibleRows + 1)
                     .setOnRowChanged(this::onRowChanged)
                     /*.setThumbTexture(TEXTURE)todo:之后再加*/;
             this.blockButtons = new ArrayList<>();
             int i = 0;
-            for(TownWorkerData workerData : town.getTownBlocks().values()){
-                Button button = new Button.Builder(Component.literal( i+1 + workerData.getType().toString()), (pButton -> {
-                    setScreenMode(new BlockInfoScreenMode(workerData));
+            for(AbstractTownBuilding building : town.getTownBuildings().values()){
+                Button button = new Button.Builder(Component.literal( i+1 + building.getClass().getSimpleName()), (pButton -> {
+                    setScreenMode(new BlockInfoScreenMode(building));
                 }))
                         .size(imageWidth - 10, 20)
                         .pos(leftPos, topPos + 20 * i)
@@ -264,12 +264,12 @@ public class TownManagerScreen extends Screen {
             //刷新ScrollBar
             if(scrollBar != null){
                 int currentRow = scrollBar.getCurrentRow();
-                this.scrollBar = new ScrollBarWidget(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getTownBlocks().size() - totalVisibleRows + 1)
+                this.scrollBar = new ScrollBarWidget(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getTownBuildings().size() - totalVisibleRows + 1)
                         .setOnRowChanged(this::onRowChanged)
                 /*.setThumbTexture(TEXTURE)todo:之后再加*/;
                 scrollBar.setCurrentRow(currentRow);
             } else {
-                this.scrollBar = new ScrollBarWidget(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getTownBlocks().size() - totalVisibleRows + 1)
+                this.scrollBar = new ScrollBarWidget(leftPos + imageWidth - 10, topPos, 10, imageHeight, town.getTownBuildings().size() - totalVisibleRows + 1)
                         .setOnRowChanged(this::onRowChanged)
                 /*.setThumbTexture(TEXTURE)todo:之后再加*/;
             }
@@ -285,7 +285,7 @@ public class TownManagerScreen extends Screen {
         }
     }
 
-    private BlockInfoScreenMode getBlockInfoScreenMode(TownWorkerData data){
+    private BlockInfoScreenMode getBlockInfoScreenMode(AbstractTownBuilding data){
         if(blockInfoScreenMode == null){
             blockInfoScreenMode = new BlockInfoScreenMode(data);
         } else{
@@ -297,7 +297,7 @@ public class TownManagerScreen extends Screen {
     class BlockInfoScreenMode implements ScreenMode{
 
         //城镇方块的workerData
-        TownWorkerData workerData;
+        AbstractTownBuilding workerData;
 
         Button backButton = new Button.Builder(Component.literal("Back"/*todo: Translation Key*/)//todo: 应为ImageButton，弄个往左指的箭头
                 , (pButton -> setScreenMode(getBlockListScreenMode())))
@@ -305,7 +305,7 @@ public class TownManagerScreen extends Screen {
                 .pos(leftPos + 10, topPos + 10)
                 .build();
 
-        BlockInfoScreenMode(TownWorkerData data){
+        BlockInfoScreenMode(AbstractTownBuilding data){
             workerData = data;
         }
 
@@ -315,7 +315,7 @@ public class TownManagerScreen extends Screen {
                 pGuiGraphics.drawString(font, Component.translatable("frostedheart.town_manager.no_block_selected"), leftPos + 10, topPos + 20, 0xFFFFFF);
                 return;
             }
-            pGuiGraphics.drawString(font, Component.translatable("frostedheart.town_manager.block_type").append(" : " + workerData.getType().toString()), leftPos + 10, topPos + 20, 0xFFFFFF);
+            pGuiGraphics.drawString(font, Component.translatable("frostedheart.town_manager.block_type").append(" : " + workerData.getClass().getSimpleName()), leftPos + 10, topPos + 20, 0xFFFFFF);
             pGuiGraphics.drawString(font, Component.translatable("frostedheart.town_manager.block_pos").append(" : " + workerData.getPos().toString()), leftPos + 10, topPos + 40, 0xFFFFFF);
             pGuiGraphics.drawString(font, Component.translatable("frostedheart.town_manager.work_details"), leftPos + 10, topPos + 60, 0xFFFFFF);
         }

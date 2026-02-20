@@ -46,18 +46,11 @@ public interface Town {
     //TownResourceManager getResourceManager();
 
     /**
-     * Get the {@link IActionExecutorHandler} of this town, which is used to execute actions.
-     *
+     * Get the {@link IActionExecutorHandler} of this town, which is used to execute resource modifying actions.
      *
      * @return the action executor handler
      */
     IActionExecutorHandler getActionExecutorHandler();
 
-    /**
-     * Gets the team town data, may be null if not a player team.
-     *
-     * @return resource amount
-     */
-    Optional<TeamTownData> getTownData();
 
 }

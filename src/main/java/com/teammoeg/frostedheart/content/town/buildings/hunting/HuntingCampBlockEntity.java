@@ -20,43 +20,52 @@
 package com.teammoeg.frostedheart.content.town.buildings.hunting;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
-import com.teammoeg.frostedheart.content.town.TownWorkerStatus;
-import com.teammoeg.frostedheart.content.town.TownWorkerType;
-import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
-import com.teammoeg.frostedheart.content.town.worker.WorkerState;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
+import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.ConfinedSpaceScanner;
 
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ColumnPos;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class HuntingCampBlockEntity extends AbstractTownWorkerBlockEntity<WorkerState> {
+import java.util.Set;
+
+public class HuntingCampBlockEntity extends AbstractTownBuildingBlockEntity<HuntingCampBuilding> {
     public HuntingCampBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.HUNTING_CAMP.get(),pos,state);
     }
 
-    public boolean isStructureValid(WorkerState state){
-        ConfinedSpaceScanner confinedSpaceScanner = new ConfinedSpaceScanner(this.level, worldPosition.above());
-        return !confinedSpaceScanner.scan(256);
-    }
 
     
     @Override
-    public void refresh(WorkerState state) {
-    	state.getOccupiedArea().add(BlockScanner.toColumnPos(worldPosition));
-        if(state.status == TownWorkerStatus.OCCUPIED_AREA_OVERLAPPED) return;
-        state.status = isStructureValid(state)?TownWorkerStatus.VALID:TownWorkerStatus.NOT_VALID;
+    public void refresh(@NotNull HuntingCampBuilding building) {
+        scanStructure(building);
     }
 
     @Override
-    public int getPriority() {
-        return 0;
+    public @Nullable HuntingCampBuilding getBuilding(AbstractTownBuilding abstractTownBuilding) {
+        if(abstractTownBuilding instanceof HuntingCampBuilding){
+            return (HuntingCampBuilding) abstractTownBuilding;
+        }
+        return null;
+    }
+
+
+    @Override
+    public boolean scanStructure(HuntingCampBuilding building) {
+        ConfinedSpaceScanner confinedSpaceScanner = new ConfinedSpaceScanner(this.level, worldPosition.above());
+        if(!confinedSpaceScanner.scan(256)){//不密封，也就是露天
+            building.occupiedArea = new OccupiedArea(Set.of(new ColumnPos(worldPosition.getX(), worldPosition.getZ())));
+            return true;
+        }
+        return false;
     }
 
     @Override
-    public TownWorkerType getWorkerType() {
-        return TownWorkerType.HUNTING_BASE;
+    public @NotNull HuntingCampBuilding createBuilding() {
+        return new HuntingCampBuilding(this.getBlockPos());
     }
-
-
 }

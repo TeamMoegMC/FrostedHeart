@@ -19,19 +19,18 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.mine;
 
-import com.teammoeg.chorda.util.CRegistryHelper;
-import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
-import com.teammoeg.frostedheart.content.town.TownWorkerStatus;
-import com.teammoeg.frostedheart.content.town.TownWorkerType;
-import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockEntity;
-import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.TownMathFunctions;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -39,8 +38,8 @@ import java.util.Set;
 
 import static java.lang.Math.exp;
 
-public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity<MineBaseState> {
-    public Set<BlockPos> linkedMines = new HashSet<>();
+public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBaseBuilding> {
+    public Set<BlockPos> linkedMines = new HashSet<>();//todo: to delete
     private int volume;
     private int area;
     private int rack;
@@ -52,7 +51,7 @@ public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity<MineBaseS
         super(FHBlockEntityTypes.MINE_BASE.get(),pos,state);
     }
 
-    public boolean isStructureValid(MineBaseState state){
+    public boolean scanStructure(MineBaseBuilding building){
         BlockPos mineBasePos = this.getBlockPos();
         BlockPos doorPos = BlockScanner.getDoorAdjacent(level, mineBasePos);
         if (doorPos == null) return false;
@@ -68,13 +67,13 @@ public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity<MineBaseS
             }
             MineBaseBlockScanner scanner = new MineBaseBlockScanner(level, startPos);
             if(scanner.scan()){
-                this.area = scanner.getArea();
-                this.volume = scanner.getVolume();
-                this.rack = scanner.getRack();
-                this.chest = scanner.getChest();
-                this.linkedMines = scanner.getLinkedMines();
-                state.setOccupiedArea(scanner.getOccupiedArea());
-                this.temperature = scanner.getTemperature();
+                building.area = scanner.getArea();
+                building.volume = scanner.getVolume();
+                //this.rack = scanner.getRack();
+                //this.chest = scanner.getChest();
+                building.linkedMines = scanner.getLinkedMines();
+                building.setOccupiedArea(scanner.getOccupiedArea());
+                building.temperature = scanner.getTemperature();
                 return true;
             }
         }
@@ -84,21 +83,10 @@ public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity<MineBaseS
     public double computeRating() {
         double rackRating = 1 - exp(-this.rack);
         double chestRating = 1 - exp(-this.chest * 0.4);
-        double spaceRating = HouseBlockEntity.calculateSpaceRating(this.volume, this.area);
-        double temperatureRating = HouseBlockEntity.calculateTemperatureRating(this.temperature);
+        double spaceRating = TownMathFunctions.calculateSpaceRating(this.volume, this.area);
+        double temperatureRating = TownMathFunctions.calculateTemperatureRating(this.temperature);
         return this.rating = spaceRating*0.15 + temperatureRating*0.15 + chestRating*0.35 + rackRating*0.35;
     }
-
-    @Override
-    public int getPriority() {
-        return 0;
-    }
-
-    @Override
-    public TownWorkerType getWorkerType() {
-        return TownWorkerType.MINE_BASE;
-    }
-
 /*
     @Override
     public CompoundTag getWorkData() {
@@ -120,51 +108,26 @@ public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity<MineBaseS
     }*/
 
     public double getRating(){
-        if(isWorkValid()) {
-            if (this.rating == 0) return this.computeRating();
-            return this.rating;
-        }
-        return 0;
-    }
-    public int getVolume(){
-        return this.isWorkValid()?this.volume:0;
-    }
-    public int getArea() {
-        return this.isWorkValid() ? this.area : 0;
-    }
-    public int getRack() {
-        return this.isWorkValid() ? this.rack : 0;
-    }
-    public int getChest() {
-        return this.isWorkValid() ? this.chest : 0;
-    }
-    public double getTemperature() {
-        return this.isWorkValid() ? this.temperature : 0;
+        if (this.rating == 0) return this.computeRating();
+        return this.rating;
     }
 
+    public void refresh(@NotNull MineBaseBuilding building) {
+    	this.scanStructure(building);
 
-    //由于需要寻找Mine，MineBase可能需要扫描更远的位置，因此设置需要加载的区块更远。
-    @Override
-    public void refresh_safe(){
-        if(level != null && level.isAreaLoaded(this.worldPosition,63)){
-            super.refresh_safe();
-        }
-    }
 
-    public void refresh(MineBaseState state) {
-    	state.biomePath=CRegistryHelper.getBiomeKeyRuntime(level, CUtils.fastGetBiome(level, worldPosition).get());
-    	if(this.isStructureValid(state)) {
-	        if(!this.isOccupiedAreaOverlapped()){
-	            state.status=TownWorkerStatus.VALID ;
-	            return;
-	        }
-    	}else {
-    		state.status=TownWorkerStatus.NOT_VALID_STRUCTURE;
-    	}
     }
 
     @Override
-    public boolean isStillValid() {
-        return this.isWorkValid();
+    public @Nullable MineBaseBuilding getBuilding(AbstractTownBuilding abstractTownBuilding) {
+        if(abstractTownBuilding instanceof MineBaseBuilding){
+            return (MineBaseBuilding) abstractTownBuilding;
+        }
+        return null;
+    }
+
+    @Override
+    public @NotNull MineBaseBuilding createBuilding() {
+        return new MineBaseBuilding(this.getBlockPos());
     }
 }

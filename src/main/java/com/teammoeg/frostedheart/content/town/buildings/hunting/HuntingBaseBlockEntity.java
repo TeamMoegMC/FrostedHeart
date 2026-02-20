@@ -23,11 +23,12 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.town.*;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockScanner;
-import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockEntity;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
-import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import lombok.Getter;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
@@ -35,42 +36,24 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.util.*;
 
-public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity<HuntingBaseState> {
-	@Getter
-	private double rating = 0;
-	// get volume
-	@Getter
-	private int volume;
-	// get area
-	@Getter
-	private int area;
-	// get chest num
-	@Getter
-	private int chestNum;
-	// get bed num
-	@Getter
-	private int bedNum;
-	// get tanning rack num
-	@Getter
-	private int tanningRackNum;
-	// get temperature
-	@Getter
-	private double temperature;
-	private Map<String, Integer> decorations;
+public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<HuntingBaseBuilding> {
 	HeatEndpoint endpoint = HeatEndpoint.consumer(99, 1);
 	LazyOptional<HeatEndpoint> endpointCap = LazyOptional.of(() -> endpoint);
-	private double temperatureModifier = 0;
+	@Getter
+    private double temperatureModifier = 0;
 
 
 	public HuntingBaseBlockEntity(BlockPos pos, BlockState state) {
 		super(FHBlockEntityTypes.HUNTING_BASE.get(), pos, state);
 	}
 
-	public boolean isStructureValid(HuntingBaseState state) {
+	public boolean scanStructure(HuntingBaseBuilding building) {
 		BlockPos housePos = this.getBlockPos();
 		List<BlockPos> doorPosSet = BlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS));
 		if (doorPosSet.isEmpty()) return false;
@@ -87,14 +70,13 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity<Huntin
 				}
 				HuntingBaseBlockScanner scanner = new HuntingBaseBlockScanner(this.level, startPos);
 				if (scanner.scan()) {
-					this.volume = scanner.getVolume();
-					this.area = scanner.getArea();
-					this.decorations = scanner.getDecorations();
-					this.temperature = scanner.getTemperature();
-					state.setOccupiedArea(scanner.getOccupiedArea());
-					this.chestNum = scanner.getChestNum();
-					this.bedNum = scanner.getBedNum();
-					this.tanningRackNum = scanner.getTanningRackNum();
+					building.volume = scanner.getVolume();
+					building.area = scanner.getArea();
+					building.temperature = scanner.getTemperature();
+					building.setOccupiedArea(scanner.getOccupiedArea());
+					building.tanningRackNum = scanner.getTanningRackNum();
+					building.maxResidents = calculateMaxResidents(building.volume, building.area, scanner.getBeds().size());
+					building.rating = computeRating(building.volume, building.area, scanner.getDecorations(), building.temperature, this.getTemperatureModifier(), building.maxResidents, scanner.getChestNum());
 					return true;
 				}
 			}
@@ -102,31 +84,26 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity<Huntin
 		return false;
 	}
 
-	public boolean isTemperatureValid() {
-		double effective = temperature + temperatureModifier;
-		return effective >= HouseBlockEntity.MIN_TEMP_HOUSE && effective <= HouseBlockEntity.MAX_TEMP_HOUSE;
+	/**
+	 * Static method to compute hunting base rating based on provided parameters.
+	 * 
+	 * @param volume the volume of the hunting base
+	 * @param area the area of the hunting base
+	 * @param decorations map of decorations
+	 * @param temperature the base temperature
+	 * @param temperatureModifier the temperature modifier
+	 * @param maxResidents maximum number of residents
+	 * @param chestNum number of chests
+	 * @return computed rating value
+	 */
+	public static double computeRating(int volume, int area, Map<String, Integer> decorations, double temperature, double temperatureModifier, int maxResidents, int chestNum) {
+		return (TownMathFunctions.calculateSpaceRating(volume, area) * (2 + TownMathFunctions.calculateDecorationRating(decorations, area))
+				+ 2 * TownMathFunctions.calculateTemperatureRating(temperature + temperatureModifier) +
+				(1 - Math.exp(-maxResidents - chestNum))) / 6;
 	}
 
-	public double getTemperatureModifier() {
-		return isWorkValid() ? this.temperatureModifier : 0;
-	}
-
-	public double getEffectiveTemperature() {
-		return temperature + temperatureModifier;
-	}
-
-	private double computeRating() {
-		if (this.isValid()) {
-			return (HouseBlockEntity.calculateSpaceRating(this.volume, this.area) * (2 + HouseBlockEntity.calculateDecorationRating(this.decorations, this.area))
-				+ 2 * HouseBlockEntity.calculateTemperatureRating(this.temperature + this.temperatureModifier) +
-				(1 - Math.exp(-getState().maxResidents - chestNum))) / 6;
-		} else return 0;
-	}
-
-	private int calculateMaxResidents() {
-		if (this.isValid()) {
-			return Math.min((int) (HouseBlockEntity.calculateSpaceRating(this.volume, this.area) / 16 * this.area), Math.min(this.tanningRackNum, this.bedNum));
-		} else return 0;
+	private static int calculateMaxResidents(int volume, int area, int bedNum) {
+			return Math.min((int) (TownMathFunctions.calculateSpaceRating(volume, area) / 4 * area), bedNum);
 	}
 
 	@Override
@@ -134,7 +111,7 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity<Huntin
 		assert level != null;
 		if (!level.isClientSide) {
 			if (endpoint.tryDrainHeat(1)) {
-				temperatureModifier = Math.max(endpoint.getTempLevel() * 10, HouseBlockEntity.COMFORTABLE_TEMP_HOUSE);
+				temperatureModifier = Math.max(endpoint.getTempLevel() * 10, TownMathFunctions.COMFORTABLE_TEMP_HOUSE);
 				if (setActive(true)) {
 					setChanged();
 				}
@@ -159,36 +136,27 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity<Huntin
 	}
 
 	@Override
-	public void refresh(HuntingBaseState state) {
-		if (this.isStructureValid(state)) {
-			if (!this.isOccupiedAreaOverlapped()) {
-				if (this.isTemperatureValid()) {
-					state.status = TownWorkerStatus.VALID;
-					this.rating = this.computeRating();
-					state.maxResidents = this.calculateMaxResidents();
-				} else {
-					state.status = (TownWorkerStatus.TOO_COLD);
-				}
-			}
-		} else {
-			state.status = (TownWorkerStatus.NOT_VALID_STRUCTURE);
+	public void refresh(@NotNull HuntingBaseBuilding building) {
+		this.scanStructure(building);
+		building.temperatureModifier = this.getTemperatureModifier();
+	}
+
+	@Override
+	public @Nullable HuntingBaseBuilding getBuilding(AbstractTownBuilding abstractTownBuilding) {
+		if(abstractTownBuilding instanceof HuntingBaseBuilding){
+			return (HuntingBaseBuilding) abstractTownBuilding;
 		}
-
-	}
-
-	@Override
-	public int getPriority() {
-		return 0;
-	}
-
-	@Override
-	public TownWorkerType getWorkerType() {
-		return TownWorkerType.HUNTING_BASE;
+		return null;
 	}
 
 	@Override
 	public void invalidateCaps() {
 		endpointCap.invalidate();
 		super.invalidateCaps();
+	}
+
+	@Override
+	public @NotNull HuntingBaseBuilding createBuilding() {
+		return new HuntingBaseBuilding(this.getBlockPos());
 	}
 }

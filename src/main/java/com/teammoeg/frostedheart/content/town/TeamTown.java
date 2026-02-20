@@ -24,15 +24,20 @@ import java.util.Map.Entry;
 
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
+import com.teammoeg.frostedheart.content.town.block.TownBlockEntity;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
+import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
+import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
+import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
-import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
-import com.teammoeg.frostedheart.content.town.worker.TownWorkerData;
-import com.teammoeg.frostedheart.content.town.worker.WorkerState;
+import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.BlockPos;
 
@@ -42,7 +47,7 @@ import net.minecraft.core.BlockPos;
  * The TeamTown is only an interface of the underlying TeamTownData.
  * You may use this to access or modify town data.
  */
-public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
+public class TeamTown implements Town, ITownWithResidents, ITownWithBuildings {
 
     /** The town data, actual data stored on disk. */
     TeamTownData data;
@@ -82,32 +87,32 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
     /**
      * Get the blocks and their worker data.
      */
-    public Map<BlockPos, TownWorkerData> getTownBlocks() {
-        return data.blocks;
+    public Map<BlockPos, AbstractTownBuilding> getTownBuildings() {
+        return data.buildings;
     }
 
     /**
-     * Get the work data of the town block. (Not the TownWorkerData)
+     * Get the work data of the town block.
+     *
      * @param pos position of the block
      * @return the work data
      */
-    public WorkerState getTownBlockData(BlockPos pos) {
-        TownWorkerData twd = data.blocks.get(pos);
-        if (twd == null)
-            return null;
-        return twd.getState();
+    public Optional<AbstractTownBuilding> getTownBuilding(BlockPos pos) {
+        return Optional.ofNullable(data.buildings.get(pos));
     }
 
     /**
-     * Initializes new TownWorkerData from the tile entity.
+     * Initializes new AbstractTownBuilding from the townBlockEntity entity.
      * Put the data into the map.
      *
      * @param pos position of the block
-     * @param tile the tile entity associated with the block
+     * @param townBlockEntity the townBlockEntity entity associated with the block
      */
-    public void addTownBlock(BlockPos pos, TownBlockEntity tile) {
-        TownWorkerData workerData =new TownWorkerData(tile.getWorkerType(),pos,tile.getPriority());
-        data.blocks.put(pos, workerData);
+    public void addTownBlock(BlockPos pos, TownBlockEntity<? extends ITownBuilding> townBlockEntity) {
+        ITownBuilding building =townBlockEntity.createBuilding();
+        if(building instanceof AbstractTownBuilding abstractTownBuilding){
+            data.buildings.put(pos, abstractTownBuilding);
+        }
     }
 
     /**
@@ -116,8 +121,8 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
      * @param pos position of the block
      */
     public void removeTownBlock(ServerLevel sl,BlockPos pos) {
-        TownWorkerData twd=data.blocks.remove(pos);
-        twd.onRemove(sl);
+        AbstractTownBuilding building=data.buildings.remove(pos);
+        building.onRemoved(this);
     }
 
     public Map<UUID, Resident> getResidents() {
@@ -149,6 +154,26 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
     public boolean removeResident(UUID id) {
         if(!data.residents.containsKey(id)){
             return false;
+        }
+        Resident resident = data.residents.get(id);
+        if(resident.getHousePos() != null){
+            this.getTownBuilding(resident.getHousePos()).ifPresent(
+                    building -> {
+                        if(building instanceof HouseBuilding houseBuilding){
+                            houseBuilding.removeResident(resident);
+                        }
+                    }
+            );
+        }
+        if(resident.getWorkPos() != null){
+            this.getTownBuilding(resident.getWorkPos()).ifPresent(
+                    building -> {
+
+                        if(building instanceof AbstractTownResidentWorkBuilding workBuilding){
+                            workBuilding.removeResident(resident);
+                        }
+                    }
+            );
         }
         data.residents.remove(id);
         return true;
@@ -187,7 +212,7 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
     }
 
     @Override
-    public IActionExecutorHandler getActionExecutorHandler() {
+    public TeamTownResourceActionExecutorHandler getActionExecutorHandler() {
         return data.resources.actionExecutor;
     }
 
@@ -195,11 +220,11 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBlocks {
         return data.resources;
     }
 
-    @Override
+    //@Override
     public Optional<TeamTownData> getTownData() {
         return Optional.of(data);
     }
-	public double maypickTerrainResource(TerrainResourceType type,double d) {
+	public double maypickTerrainResource(TerrainResourceType type, double d) {
 		return data.maypickTerrainResource(type, d);
 	}
 	public double pickTerrainResource(TerrainResourceType type,double maxPick) {

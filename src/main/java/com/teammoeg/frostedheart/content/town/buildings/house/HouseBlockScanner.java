@@ -19,15 +19,14 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.house;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.town.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
 import com.teammoeg.chorda.util.CRegistryHelper;
-import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
-import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
-import com.teammoeg.frostedheart.content.town.blockscanner.HeightCheckingInfo;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.ConfinedSpaceScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.HeightCheckingInfo;
 
 import lombok.Getter;
 import net.minecraft.world.level.block.BedBlock;

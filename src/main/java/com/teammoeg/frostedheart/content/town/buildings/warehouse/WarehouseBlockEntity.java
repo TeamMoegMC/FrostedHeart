@@ -22,8 +22,10 @@ package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.*;
-import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.MenuProvider;
@@ -33,19 +35,18 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity<WareHouseState> implements MenuProvider {
-
-    private boolean addedToSchedulerQueue = false;
+public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<WarehouseBuilding> implements MenuProvider {
 
     public WarehouseBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.WAREHOUSE.get(),pos,state);
     }
 
-    public boolean isStructureValid(WareHouseState state){
+    public boolean scanStructure(WarehouseBuilding building){
         BlockPos warehousePos = this.getBlockPos();
         BlockPos doorPos = BlockScanner.getDoorAdjacent(level, warehousePos);
         if (doorPos == null) return false;
@@ -61,65 +62,39 @@ public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity<WareHous
             }
             WarehouseBlockScanner scanner = new WarehouseBlockScanner(level, startPos);
             if(scanner.scan()){
-            	state.area = scanner.getArea();
-            	state.volume = scanner.getVolume();
+            	building.area = scanner.getArea();
+            	building.volume = scanner.getVolume();
                 //容量与体积相似，但是在随着房间高度增高略有衰减
-            	state.capacity = state.area*Math.pow((state.volume*0.02/state.area), 0.9)*37;
-            	state.setOccupiedArea(scanner.getOccupiedArea());
+            	building.capacity = building.area*Math.pow((building.volume*0.02/building.area), 0.9)*37;
+            	building.setOccupiedArea(scanner.getOccupiedArea());
                 return true;
             }
         }
         return false;
     }
 
-    public void refresh(WareHouseState state){
-    	if(this.isStructureValid(state)) {
-	        if(!this.isOccupiedAreaOverlapped()){
-	        	state.status = TownWorkerStatus.VALID;
-	        }
-    	}else {
-    		state.status =TownWorkerStatus.NOT_VALID_STRUCTURE;
+
+    @Override
+    public @Nullable WarehouseBuilding getBuilding(AbstractTownBuilding abstractTownBuilding) {
+        if(abstractTownBuilding instanceof WarehouseBuilding){
+            return (WarehouseBuilding) abstractTownBuilding;
         }
-    }
-
-    @Override
-    public int getPriority() {
-        return 0;
-    }
-
-    @Override
-    public TownWorkerType getWorkerType() {
-        return TownWorkerType.WAREHOUSE;
-    }
-
-
-
-    public int getVolume(){
-        return this.isWorkValid()?getState().volume:0;
-    }
-    public int getArea(){
-        return this.isWorkValid()?getState().area:0;
-    }
-    public double getCapacity(){
-        return this.isWorkValid()?getState().capacity:0;
-    }
-
-    @Override
-    public void tick() {
-        if(!this.addedToSchedulerQueue){
-            SchedulerQueue.add(this);
-            this.addedToSchedulerQueue = true;
-        }
+        return null;
     }
 
     @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player player) {
+    public AbstractContainerMenu createMenu(int id, @NotNull Inventory playerInventory, @NotNull Player player) {
         return new WarehouseMenu(id, playerInventory, this);
     }
 
     @Override
     public Component getDisplayName() {
         return Component.translatable("container.warehouse");
+    }
+
+    @Override
+    public @NotNull WarehouseBuilding createBuilding() {
+        return new WarehouseBuilding(this.getBlockPos());
     }
 }
