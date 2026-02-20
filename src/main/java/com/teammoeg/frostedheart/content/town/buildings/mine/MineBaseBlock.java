@@ -55,9 +55,12 @@ public class MineBaseBlock extends AbstractTownBuildingBlock implements CEntityB
                 player.displayClientMessage(Components.str("Structure: "+(building.isStructureValid? "Valid" : "Invalid")), false);
                 player.displayClientMessage(Components.str("Area: " + (building.area)), false);
                 player.displayClientMessage(Components.str("Volume: " + (building.volume)), false);
-                //player.displayClientMessage(Components.str("Chest: " + (te.getChest())), false);
-                //player.displayClientMessage(Components.str("Rack: " + (te.getRack())), false);
-                player.displayClientMessage(Components.str("Linked mines: " + (te.linkedMines)), false);
+                player.displayClientMessage(Components.str("Temperature: " + String.format("%.2f", building.temperature) + "°C"), false);
+                player.displayClientMessage(Components.str("Temperature valid: " + (building.isTemperatureValid() ? "Yes" : "No")), false);
+                if(building.isBuildingWorkable())
+                    player.displayClientMessage(Components.str("Max residents: " + (building.maxResidents)), false);
+                player.displayClientMessage(Components.str("Linked mines: " + (building.linkedMines.size())), false);
+                player.displayClientMessage(Components.str("Rating: " + String.format("%.2f", building.rating)), false);
             });
             return InteractionResult.SUCCESS;
         }

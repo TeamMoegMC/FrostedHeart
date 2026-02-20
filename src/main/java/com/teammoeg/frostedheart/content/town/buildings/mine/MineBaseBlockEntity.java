@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.town.buildings.mine;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
@@ -36,16 +35,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import static java.lang.Math.exp;
-
 public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBaseBuilding> {
     public Set<BlockPos> linkedMines = new HashSet<>();
-    private int volume;
-    private int area;
-    private int rack;
-    private int chest;
-    private double temperature;
-    private double rating;
 
     public MineBaseBlockEntity(BlockPos pos, BlockState state){
         super(FHBlockEntityTypes.MINE_BASE.get(),pos,state);
@@ -80,13 +71,6 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
         return false;
     }
 
-    public double computeRating() {
-        double rackRating = 1 - exp(-this.rack);
-        double chestRating = 1 - exp(-this.chest * 0.4);
-        double spaceRating = TownMathFunctions.calculateSpaceRating(this.volume, this.area);
-        double temperatureRating = TownMathFunctions.calculateTemperatureRating(this.temperature);
-        return this.rating = spaceRating*0.15 + temperatureRating*0.15 + chestRating*0.35 + rackRating*0.35;
-    }
 /*
     @Override
     public CompoundTag getWorkData() {
@@ -106,11 +90,6 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
     public void setWorkData(CompoundTag data) {
         setBasicWorkData(data);
     }*/
-
-    public double getRating(){
-        if (this.rating == 0) return this.computeRating();
-        return this.rating;
-    }
 
     public void refresh(@NotNull MineBaseBuilding building) {
     	this.scanStructure(building);

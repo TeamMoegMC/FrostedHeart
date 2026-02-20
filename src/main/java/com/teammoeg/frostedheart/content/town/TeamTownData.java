@@ -106,8 +106,8 @@ public class TeamTownData implements SpecialData {
 		this.name = name;
 		this.resources = resources;
 		buildings.forEach((pos, building) -> {
-			if(building instanceof AbstractTownBuilding){
-				buildings.put(pos, building);
+			if(building instanceof AbstractTownBuilding abstractTownBuilding){
+				this.buildings.put(pos, abstractTownBuilding);
 			}
 		});
 		this.residents.putAll(residents);

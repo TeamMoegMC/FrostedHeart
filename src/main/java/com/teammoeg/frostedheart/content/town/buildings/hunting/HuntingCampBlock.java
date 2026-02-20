@@ -50,8 +50,9 @@ public class HuntingCampBlock extends AbstractTownBuildingBlock implements CEnti
                 return InteractionResult.FAIL;
             }
             te.getBuilding().ifPresent(building -> {
-                player.displayClientMessage(Components.str(building.isBuildingWorkable() ? "Valid working environment" : "Invalid working environment"), false);
-
+                te.refresh_safe(building);
+                player.displayClientMessage(Components.str(building.isBuildingWorkable() ? "Workable" : "Unworkable"), false);
+                player.displayClientMessage(Components.str(building.isStructureValid ? "Structure Valid" : "Structure Invalid"), false);
             });
             return InteractionResult.SUCCESS;
         }
