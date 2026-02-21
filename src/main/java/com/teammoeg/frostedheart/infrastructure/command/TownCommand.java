@@ -219,10 +219,10 @@ public class TownCommand {
         LiteralArgumentBuilder<CommandSourceStack> listBlocks =
                 Commands.literal("list").executes(ct -> {
                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                    ct.getSource().sendSuccess(()-> Components.str("Total blocks: " + town.getTownBlocks().size()), true);
-                    town.getTownBlocks().forEach((k, v) -> {
-                        String blockName = v.getType().getBlock().getDescriptionId();
-                        ct.getSource().sendSuccess(()-> Lang.translateKey(blockName).append(Components.str(" at " + k)), true);
+                    ct.getSource().sendSuccess(()-> Components.str("Total blocks: " + town.getTownBuildings().size()), true);
+                    town.getTownBuildings().forEach((k, v) -> {
+                        String buildingName = v.getClass().getSimpleName();
+                        ct.getSource().sendSuccess(()-> Components.str(buildingName).append(Components.str(" at " + k)), true);
                     });
                     return Command.SINGLE_SUCCESS;
                 });

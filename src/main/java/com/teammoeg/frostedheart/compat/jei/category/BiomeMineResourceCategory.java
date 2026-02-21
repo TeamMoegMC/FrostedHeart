@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.compat.jei.category;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedheart.content.town.mine.BiomeMineResourceRecipe;
+import com.teammoeg.frostedheart.content.town.buildings.mine.BiomeMineResourceRecipe;
 import com.teammoeg.frostedheart.util.Lang;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;

@@ -38,7 +38,7 @@ import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestScre
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestScreen;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatScreen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseScreen;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseScreen;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
 import com.teammoeg.frostedheart.item.snowsack.ui.SnowSackScreen;
 import net.minecraft.client.gui.screens.MenuScreens;

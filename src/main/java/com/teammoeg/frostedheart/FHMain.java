@@ -47,6 +47,7 @@ import com.teammoeg.frostedheart.compat.caupona.NutritionEvents;
 import com.teammoeg.frostedheart.compat.create.CreateCompat;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.compat.ftbq.FHRewardTypes;
+import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
 import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -231,6 +232,9 @@ public class FHMain {
 		
 		// modify default value
 		GameRules.GAME_RULE_TYPES.put(GameRules.RULE_SPAWN_RADIUS, IntegerValue.create(0));
+
+		//town stuff
+		ITownProviderSerializable.registerAll();
 
 		// stupid vanilla
 		ComposterBlock.COMPOSTABLES.putIfAbsent(FHBlocks.RYE_BLOCK.asItem(), 0.3f);

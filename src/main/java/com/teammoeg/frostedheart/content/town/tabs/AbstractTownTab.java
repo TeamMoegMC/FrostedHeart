@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart.content.town.tabs;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
 
-public abstract class AbstractTownTab<C extends CBlockEntityMenu<? extends AbstractTownWorkerBlockEntity>> {
+public abstract class AbstractTownTab<C extends CBlockEntityMenu<? extends AbstractTownBuildingBlockEntity>> {
     protected final AbstractTownWorkerBlockScreen<C> screen;
 
     public AbstractTownTab(AbstractTownWorkerBlockScreen<C> screen) {

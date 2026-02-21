@@ -60,13 +60,13 @@ import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainBlock;
 import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainNozzleBlock;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
-import com.teammoeg.frostedheart.content.town.house.HouseBlock;
-import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseBlock;
-import com.teammoeg.frostedheart.content.town.hunting.HuntingCampBlock;
-import com.teammoeg.frostedheart.content.town.mine.MineBaseBlock;
-import com.teammoeg.frostedheart.content.town.mine.MineBlock;
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlock;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlock;
+import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlock;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlock;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingCampBlock;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlock;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlock;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerBlock;
 import com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen;
@@ -2163,14 +2163,14 @@ public class FHBlocks {
 
     // Town blocks, registrate
     public static final BlockEntry<HouseBlock> HOUSE = REGISTRATE.block("house", HouseBlock::new)
-            .properties(t -> AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
+            .properties(t -> AbstractTownBuildingBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
             .tag(FHTags.Blocks.TOWN_BLOCKS.tag)
             .simpleItem()
             .lang("House")
             .register();
 
     public static final BlockEntry<WarehouseBlock> WAREHOUSE = REGISTRATE.block("warehouse", WarehouseBlock::new)
-            .properties(t -> AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
+            .properties(t -> AbstractTownBuildingBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
             .tag(FHTags.Blocks.TOWN_BLOCKS.tag)
             .transform(axeOnly())
             .simpleItem()
@@ -2178,7 +2178,7 @@ public class FHBlocks {
             .register();
 
     public static final BlockEntry<MineBlock> MINE = REGISTRATE.block("mine", MineBlock::new)
-            .properties(t -> AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
+            .properties(t -> AbstractTownBuildingBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
             .tag(FHTags.Blocks.TOWN_BLOCKS.tag)
             .transform(axeOnly())
             .simpleItem()
@@ -2186,7 +2186,7 @@ public class FHBlocks {
             .register();
 
     public static final BlockEntry<MineBaseBlock> MINE_BASE = REGISTRATE.block("mine_base", MineBaseBlock::new)
-            .properties(t -> AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
+            .properties(t -> AbstractTownBuildingBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
             .tag(FHTags.Blocks.TOWN_BLOCKS.tag)
             .transform(axeOnly())
             .simpleItem()
@@ -2194,7 +2194,7 @@ public class FHBlocks {
             .register();
 
     public static final BlockEntry<HuntingCampBlock> HUNTING_CAMP = REGISTRATE.block("hunting_camp", HuntingCampBlock::new)
-            .properties(t -> AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
+            .properties(t -> AbstractTownBuildingBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
             .tag(FHTags.Blocks.TOWN_BLOCKS.tag)
             .transform(axeOnly())
             .simpleItem()
@@ -2202,7 +2202,7 @@ public class FHBlocks {
             .register();
 
     public static final BlockEntry<HuntingBaseBlock> HUNTING_BASE = REGISTRATE.block("hunting_base", HuntingBaseBlock::new)
-            .properties(t -> AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
+            .properties(t -> AbstractTownBuildingBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
             .tag(FHTags.Blocks.TOWN_BLOCKS.tag)
             .transform(axeOnly())
             .simpleItem()
