@@ -49,4 +49,11 @@ public class TeamTownProvider implements ITownProviderSerializable<TeamTown>{
     public Class<TeamTown> getTownType() {
         return TeamTown.class;
     }
+
+    @Override
+    public String toString() {
+        return "{Team Town Provider: " +
+                ownerUUID +
+                '}';
+    }
 }

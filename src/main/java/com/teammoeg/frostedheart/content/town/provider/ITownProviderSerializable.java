@@ -37,7 +37,6 @@ public interface ITownProviderSerializable<T extends Town> extends ITownProvider
 
     default CompoundTag toNBT(){
         CompoundTag tag = new CompoundTag();
-        Class<?> clazz = this.getClass();
         tag.putString("townType", this.getTownType().getSimpleName());
         tag.put("data", serializeNBT());
         return tag;

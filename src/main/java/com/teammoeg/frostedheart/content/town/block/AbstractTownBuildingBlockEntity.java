@@ -115,9 +115,10 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
     	if(compoundNBT.contains("townProvider")){
             ITownProviderSerializable<? extends Town> providerRaw = ITownProviderSerializable.fromNBT(compoundNBT.getCompound("townProvider"));
             if(providerRaw != null){
-                if(townProvider.getTownType().isAssignableFrom(ITownWithBuildings.class)){
+                if(ITownWithBuildings.class.isAssignableFrom(providerRaw.getTownType())){
                     //这里经过getTownType判断类型之后，townProvider的类型一定为ITownWithBuildings，所以应该不会有问题了
                     townProvider = (ITownProviderSerializable<? extends ITownWithBuildings>) providerRaw;
+                } else{
                 }
             }
         }
@@ -126,7 +127,7 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
     @Override
     public void writeCustomNBT(CompoundTag compoundNBT, boolean b) {
         if(townProvider != null){
-            compoundNBT.put("townProvider", townProvider.serializeNBT());
+            compoundNBT.put("townProvider", townProvider.toNBT());
         }
     }
 }
