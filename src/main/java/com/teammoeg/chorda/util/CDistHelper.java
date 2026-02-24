@@ -21,7 +21,6 @@ package com.teammoeg.chorda.util;
 
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.ClientUtils;
-
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.item.crafting.RecipeManager;
@@ -30,6 +29,8 @@ import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+
 /**
  * A bunch of method that is related to server but may be used on both dists
  * 
@@ -38,6 +39,14 @@ import net.minecraftforge.fml.common.Mod;
 public class CDistHelper {
     private static MinecraftServer server;
 	private CDistHelper() {
+	}
+
+	public static boolean isClient() {
+		return FMLEnvironment.dist.isClient();
+	}
+
+	public static boolean isServer() {
+		return FMLEnvironment.dist.isDedicatedServer();
 	}
     
 	/**

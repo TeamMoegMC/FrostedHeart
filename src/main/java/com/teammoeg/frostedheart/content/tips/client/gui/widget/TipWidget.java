@@ -73,7 +73,7 @@ public class TipWidget extends AbstractWidget {
                     close();
                     b.setFocused(false);
                 });
-        this.pinButton = new IconButton(0, 0, FlatIcon.LOCK, Colors.themeColor(), Lang.gui("pin").component(),
+        this.pinButton = new IconButton(0, 0, FlatIcon.PIN, Colors.themeColor(), Lang.gui("pin").component(),
                 b -> {
                     this.alwaysVisibleOverride = true;
                     b.setFocused(false);

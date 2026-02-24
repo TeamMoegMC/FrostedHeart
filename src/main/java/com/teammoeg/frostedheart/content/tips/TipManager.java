@@ -140,6 +140,7 @@ public class TipManager {
     }
 
     public class DisplayManager {
+        private DisplayManager() {}
 
         /**
          * 添加对应 id 的 tip 到渲染队列中
@@ -263,6 +264,8 @@ public class TipManager {
         private static final Type STATE_TYPE = new TypeToken<Set<State>>(){}.getType();
         private final Map<Tip, State> tipStates = new HashMap<>();
 
+        private StateManager() {}
+
         /**
          * 加载 {@code tip_states.json} 文件
          */
@@ -286,7 +289,7 @@ public class TipManager {
                 if (stateList == null) {
                     // 文件存在但是无法正确读取
                     if (TIP_STATE_FILE.exists()) {
-                        String message = "'" + TIP_STATE_FILE + "' is exists but cannot be read correctly, it may corrupted";
+                        String message = "'" + TIP_STATE_FILE + "' exists but cannot be read correctly, it may corrupted";
                         displayException(Tip.ErrorType.LOAD, "tip_states.json", new Exception(message));
                         LOGGER.warn(message);
                     }

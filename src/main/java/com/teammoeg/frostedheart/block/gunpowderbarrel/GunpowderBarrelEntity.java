@@ -49,6 +49,7 @@ public class GunpowderBarrelEntity extends ThrowableItemProjectile {
         }
         var fallingBlock = FallingBlockEntity.fall(level, pos, state);
         fallingBlock.blockData = data;
+        fallingBlock.disableDrop();
         return fallingBlock;
     }
 

@@ -29,7 +29,6 @@ import com.mojang.logging.LogUtils;
 import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.text.Components;
-
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -51,7 +50,7 @@ import java.util.List;
 // TODO 再重写一遍… 至少加参数方便一点
 @Getter
 public class Tip {
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static final Logger LOGGER = LogUtils.getLogger();
     public static final Component ERROR_DESC = Component.translatable("tips.frostedheart.error.desc");
     public static final Tip EMPTY = Tip.builder("empty").error(ErrorType.OTHER,Component.translatable("tips.frostedheart.error.other"), ERROR_DESC).build();
@@ -375,6 +374,7 @@ public class Tip {
 
         public Builder image(ResourceLocation image) {
             if (!editable) return this;
+            if (image == null) return this;
             this.image = image;
             return this;
         }

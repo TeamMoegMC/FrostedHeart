@@ -161,7 +161,9 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
      * @param isFromBlock 爆炸是否由方块产生，true 时会移除对应坐标的方块
      */
     public static void explode(Level level, BlockPos pos, int range, int fortuneLevel, boolean destroyBlock, boolean isFromBlock, @Nullable Entity exploder) {
-        if (range == 0) return;
+        if (range <= 0) return;
+        range = Mth.clamp(range, 1, 7);
+
         // 移除本体
         if (isFromBlock && level.getBlockState(pos).getBlock() instanceof GunpowderBarrelBlock) {
             level.removeBlock(pos, false);
@@ -172,7 +174,6 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
             level.explode(exploder, center.x, center.y, center.z, range+1, Level.ExplosionInteraction.NONE);
             if (!destroyBlock) return;
 
-            range = Mth.clamp(range, 1, 7);
             fortuneLevel = Mth.clamp(fortuneLevel, 0, 10);
             var positions = BlockPos.betweenClosed(pos.offset(-range, -range, -range), pos.offset(range, range, range));
             List<ItemStack> drops = new ArrayList<>();
@@ -225,6 +226,16 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
     public void onLand(Level pLevel, BlockPos pPos, BlockState pState, BlockState pReplaceableState, FallingBlockEntity pFallingBlock) {
         var data = pFallingBlock.blockData;
         if (pLevel instanceof ServerLevel level && data != null && pState.getBlock() instanceof GunpowderBarrelBlock) {
+            explode(pLevel, pPos, data.getInt(RANGE), data.getInt(FORTUNE), !data.getBoolean(SAFE_EXPLODE), true, CUtils.getEntity(level, data.getUUID("owner")));
+            return;
+        }
+        explode(pLevel, pPos, null);
+    }
+
+    @Override
+    public void onBrokenAfterFall(Level pLevel, BlockPos pPos, FallingBlockEntity pFallingBlock) {
+        var data = pFallingBlock.blockData;
+        if (pLevel instanceof ServerLevel level && data != null && pFallingBlock.getBlockState().getBlock() instanceof GunpowderBarrelBlock) {
             explode(pLevel, pPos, data.getInt(RANGE), data.getInt(FORTUNE), !data.getBoolean(SAFE_EXPLODE), true, CUtils.getEntity(level, data.getUUID("owner")));
             return;
         }
