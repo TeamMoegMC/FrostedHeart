@@ -121,7 +121,7 @@ public class LineHelper {
         tips.addAll(TipManager.INSTANCE.state().getChildren(tip));
 
         for (int j = 0; j < tips.size(); j++) {
-            Tip t1 = tips.get(j);
+            final Tip t1 = tips.get(j);
             if (t1.isHide()) continue;
             var tipContents = t1.getContents();
             int color = Colors.cyanToTheme(t1.getFontColor());
@@ -165,7 +165,9 @@ public class LineHelper {
             }
             // debug
             if (FrostedHud.renderDebugOverlay) {
-                lines.add(text(parent, "ID: " + t1.getId()).color(Colors.L_BG_GRAY).alignment(Alignment.RIGHT));
+                lines.add(text(parent, "ID: " + t1.getId()).color(Colors.L_BG_GRAY).alignment(Alignment.RIGHT).button(Component.translatable("controls.reset"), b -> {
+                    TipManager.INSTANCE.state().reset(t1);
+                }));
             }
         }
         return lines;

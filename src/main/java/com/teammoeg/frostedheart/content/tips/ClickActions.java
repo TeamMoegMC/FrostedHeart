@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.tips;
 
-import com.mojang.logging.LogUtils;
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.text.Components;
@@ -31,7 +30,6 @@ import net.minecraft.Util;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLPaths;
-import org.slf4j.Logger;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -42,9 +40,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static com.teammoeg.frostedheart.FHMain.LOGGER;
+
 public class ClickActions {
     private static final Map<String, Action> ACTIONS = new HashMap<>();
-    private static final Logger LOGGER = LogUtils.getLogger();
     private static final Action NO_ACTION = new Action("NoAction", "tips.frostedheart.click_action.empty", s -> {});
 
     static {

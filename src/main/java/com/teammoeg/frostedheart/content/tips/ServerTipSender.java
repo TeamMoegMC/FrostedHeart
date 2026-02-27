@@ -38,6 +38,14 @@ public class ServerTipSender {
     }
 
     /**
+     * 使客户端显示对应 id 的 tip
+     * @param id tip 的 id，在文件中定义
+     */
+    public static void sendGeneralToALl(String id) {
+        FHNetwork.INSTANCE.sendToAll(new DisplayTipPacket(id));
+    }
+
+    /**
      * 向所有玩家发送自定义 tip
      * <p>
      * 注意：自定义 tip 不会储存任何状态

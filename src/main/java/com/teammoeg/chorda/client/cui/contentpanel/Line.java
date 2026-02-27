@@ -39,8 +39,7 @@ public abstract class Line<T extends Line<T>> extends UILayer {
 
     public Line(UIElement parent, Alignment alignment) {
         this(parent,alignment, Colors.WHITE);
-        // 会把档案字变黑，等我写一套Theme再加回去
-//        this.color=getTheme().getUITextColor();
+        this.color=getTheme().getUITextColor();
     }
 
     public Line(UIElement parent, Alignment alignment, int color) {

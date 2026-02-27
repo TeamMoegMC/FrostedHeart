@@ -23,16 +23,18 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
-import com.mojang.logging.LogUtils;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLPaths;
-import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.FileReader;
@@ -46,6 +48,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+
+import static com.teammoeg.frostedheart.content.tips.Tip.LOGGER;
 
 /**
  * 管理 tip 的展示和状态
@@ -55,7 +60,6 @@ import java.util.Set;
 @OnlyIn(Dist.CLIENT)
 public class TipManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
-    private static final Logger LOGGER = LogUtils.getLogger();
     public static final File CONFIG_PATH = new File(FMLPaths.CONFIGDIR.get().toFile(), "fhtips");
     public static final File TIP_PATH = new File(CONFIG_PATH, "tips");
     public static final File TIP_STATE_FILE = new File(CONFIG_PATH, "tip_states.json");
@@ -105,6 +109,21 @@ public class TipManager {
         return id != null && loadedTips.containsKey(id);
     }
 
+    public Set<String> getAllIds() {
+        return loadedTips.keySet();
+    }
+
+    public static CompletableFuture<Suggestions> suggest(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        INSTANCE.loadedTips.forEach((key, tip) -> {
+            var title = tip.getContents().get(0);
+            if (title != null) {
+                builder.suggest(key, title);
+            } else {
+                builder.suggest(key);
+            }
+        });
+        return builder.buildFuture();
+    }
     /**
      * 加载所有 tip 文件
      */
@@ -121,6 +140,7 @@ public class TipManager {
             for (File tipFile : files) {
                 Tip tip = Tip.fromJsonFile(tipFile);
                 if (loadedTips.containsKey(tip.getId())) {
+                    LOGGER.warn("Duplicated tip '{}'", tip.getId());
                     // 重复 id
                     Tip d = Tip.builder("duplicate").error(Tip.ErrorType.LOAD, Components.str(tip.getId()), Component.translatable("tips.frostedheart.error.load.duplicate_id")).build();
                     display.force(d);
@@ -129,7 +149,7 @@ public class TipManager {
                     sum++;
                 }
             }
-            LOGGER.debug("{} tip(s) loaded", sum);
+            LOGGER.info("{} tip(s) loaded", sum);
         }
         state.loadFromFile();
     }
@@ -366,6 +386,14 @@ public class TipManager {
 
         public void unlock(Collection<Tip> tips, boolean unlock) {
             tips.forEach(tip -> getState(tip).ifPresent(state -> state.unlocked = unlock));
+            saveToFile();
+        }
+
+        public void reset(Tip tip) {
+            getState(tip).ifPresent(state -> {
+                state.viewed = false;
+                state.unlocked = false;
+            });
             saveToFile();
         }
 

@@ -21,10 +21,9 @@ package com.teammoeg.chorda.client.cui.contentpanel;
 
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.Theme;
 import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.widgets.ScrollBar;
-import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -39,6 +38,7 @@ import java.util.function.Consumer;
 public class ContentPanel extends UILayer {
     public ScrollBar scrollBar;
     protected List<Line<?>> lines = new ArrayList<>();
+
     public static class Builder{
     	private ContentPanel parent;
     	public Builder(ContentPanel parent) {
@@ -127,22 +127,31 @@ public class ContentPanel extends UILayer {
     		return parent;
     	}
     }
+
     public ContentPanel(UIElement parent) {
         super(parent);
         this.scrollBar = new LayerScrollBar(parent, true, this);
         resize();
     }
+
+    public ContentPanel(UIElement parent, Theme theme) {
+        this(parent);
+        setTheme(theme);
+    }
+
     public Builder builder() {
     	return new Builder(this);
     }
+
     public static Builder builder(UIElement parent) {
     	return new Builder(new ContentPanel(parent));
     }
+
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-        int border = 8;
-        graphics.fill(x-border, y-border, x+w+border*2, y+h+border, 0xFF444651);
-        CGuiHelper.drawBox(graphics, x-border, y-border, w+border*3, h+border*2, Colors.L_BG_GRAY, true);
+        if (getTheme() instanceof ArchiveTheme theme) {
+            theme.drawUIBackgroundWithBorder(graphics, x, y, w, h, 8);
+        }
     }
 
     public void fillContent(Collection<? extends UIElement> widgets) {

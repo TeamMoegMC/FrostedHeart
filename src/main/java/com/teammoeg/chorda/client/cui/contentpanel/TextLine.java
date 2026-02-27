@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.contentpanel;
 
+import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
@@ -158,6 +159,7 @@ public class TextLine extends Line<TextLine> {
 
         @Override
         public void onClicked(MouseButton button) {
+            CInputHelper.playClickSound();
             clickAction.accept(button);
         }
 
@@ -191,7 +193,11 @@ public class TextLine extends Line<TextLine> {
         setHeight(splitText.size() * (DEF_LINE_HEIGHT + (isQuote ? 2 : 0)) * scale);
 
         if (button != null) {
-            button.setPos(getWidth() - button.getWidth(), (getHeight()-button.getHeight())/2);
+            int x = switch (alignment) {
+                case RIGHT -> 0;
+                default -> getWidth() - button.getWidth();
+            };
+            button.setPos(x, (getHeight()-button.getHeight())/2);
         }
     }
 

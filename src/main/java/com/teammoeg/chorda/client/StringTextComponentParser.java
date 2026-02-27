@@ -136,16 +136,16 @@ public class StringTextComponentParser {
 						parser.eat();
 					}
 					String content = parser.fromStart();
-					if (content.startsWith("@font")) {
+					if (content.startsWith("@font")) { // example: {@font F204 chorda:default -44224}
 						var contents = content.split(" ");
-						Style font = Style.EMPTY.withFont(new ResourceLocation(contents[2]));
-						String t = contents[1];
+						Style font = Style.EMPTY.withFont(new ResourceLocation(contents[2])); // font
+						String t = contents[1]; // content
 						if (contents[1].length() == 4)
 							try {
                             	t = String.valueOf((char)Integer.parseInt(contents[1], 16));
                         	} catch (NumberFormatException ignore) {}
 						var s = style;
-						if (contents.length >= 4)
+						if (contents.length >= 4) // color
 							s = s.withColor(Integer.parseInt(contents[3]));
 						var icon = Components.literal(t)
 								.withStyle(s)

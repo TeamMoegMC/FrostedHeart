@@ -68,7 +68,7 @@ public class FHProps {
     public static final BlockBehaviour.Properties woodenProps = BlockBehaviour.Properties
     		.of()
             .mapColor(MapColor.WOOD)
-            .requiresCorrectToolForDrops()
+//            .requiresCorrectToolForDrops() 木头应该任何工具都能掉落
             .sound(SoundType.WOOD)
             .strength(0.6F)
             .ignitedByLava();

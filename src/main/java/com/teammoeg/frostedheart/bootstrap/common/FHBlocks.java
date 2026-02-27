@@ -2145,8 +2145,9 @@ public class FHBlocks {
             .item((b,p)->new VAWTItem(b,p,b.type))
             .model(FHBlockStateGen.existingItemModel()).build()
             .register();
-    public static final BlockEntry<GunpowderBarrelBlock> GUNPOWDER_BARREL = REGISTRATE.block("gunpowder_barrel", GunpowderBarrelBlock::new)
+    public static final BlockEntry<GunpowderBarrelBlock> GUNPOWDER_BARREL = REGISTRATE.block("gunpowder_barrel", p -> new GunpowderBarrelBlock(FHProps.woodenProps))
             .lang("Gunpowder Barrel")
+            .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
             .item(GunpowderBarrelItem::new)
             .build()
             .register();

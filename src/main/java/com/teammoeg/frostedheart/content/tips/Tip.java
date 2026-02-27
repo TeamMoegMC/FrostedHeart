@@ -191,6 +191,25 @@ public class Tip {
         return buffer.writeNbt(toNBT());
     }
 
+    public Tip copy() {
+        return builder(id + "$copy")
+                .category(category)
+                .nextTip(nextTip)
+                .image(image)
+                .clickAction(clickAction, clickActionContent)
+                .alwaysVisible(alwaysVisible)
+                .onceOnly(onceOnly)
+                .hide(hide)
+                .pin(pin)
+                .displayTime(displayTime)
+                .color(fontColor, backgroundColor)
+                .lines(contents)
+                .children(children)
+                .unlock(unlock)
+                .setTemporary()
+                .build();
+    }
+
     public CompoundTag toNBT() {
         var nbt = new CompoundTag();
         nbt.putString("id", id);

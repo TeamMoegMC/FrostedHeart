@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.archive;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.contentpanel.ArchiveTheme;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
 
@@ -32,7 +33,7 @@ public final class ArchiveScreen extends PrimaryLayer {
     public final ArchiveCategory category;
 
     public ArchiveScreen() {
-        this.contentPanel = new ContentPanel(this) {
+        this.contentPanel = new ContentPanel(this, ArchiveTheme.INSTANCE) {
             @Override
             public void resize() {
                 int h = (int)(ClientUtils.screenHeight() * 0.8F);

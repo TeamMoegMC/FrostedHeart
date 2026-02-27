@@ -12,6 +12,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
@@ -287,6 +288,12 @@ public class GunpowderBarrelBlock extends CBlock implements ProperWaterloggedBlo
             be.willFall = willFall(pStack);
             be.destroyBlock = willDestroyBlock(pStack);
             be.setOwner(pPlacer);
+
+            if (pPlacer instanceof ServerPlayer player) {
+                if (player.getOffhandItem().is(ItemTags.CREEPER_IGNITERS)) {
+                    use(pState, pLevel, pPos, player, InteractionHand.OFF_HAND, new BlockHitResult(pPos.getCenter(), Direction.UP, pPos, false));
+                }
+            }
         }
     }
 
