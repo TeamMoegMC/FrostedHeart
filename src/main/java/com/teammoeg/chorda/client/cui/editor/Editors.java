@@ -106,7 +106,7 @@ public class Editors {
 	public static final EditorWidgetFactory<Float, RealBox> FLOAT = DOUBLE.xmap(Double::floatValue, Float::doubleValue);
 	public static final EditorWidgetFactory<Pair<Ingredient,Integer>,OpenEditorButton<Pair<Ingredient,Integer>>> SIZED_INGREDIENT=openDialog(IngredientEditor.EDITOR,e->CIcons.getIcon(e.getFirst(), e.getSecond()));
 	public static final EditorWidgetFactory<ResourceLocation, LabeledOpenEditorButton<Advancement>> ADVANCEMENT=
-		openDialogLabeled(EDITOR_ADVANCEMENT,CFunctionUtils.mapIfMapNullable(e->e.getDisplay(), e->CIcons.getIcon(e.getIcon()), e->CIcons.nop()),CFunctionUtils.mapIfMapNullable(e->e.getDisplay(), r->r.getTitle(), e->Components.str(e.getId().toString()))).xmap(e->e.getId(), ClientUtils.getMc().player.connection.getAdvancements().getAdvancements()::get);
+		openDialogLabeled(EDITOR_ADVANCEMENT,CFunctionUtils.mapIfMapNullable(e->e.getDisplay(), e->CIcons.getIcon(e.getIcon()), e->CIcons.nop()),CFunctionUtils.mapIfMapNullable(e->e.getDisplay(), r->r.getTitle(), e->Components.str(e.getId().toString()))).xmap(e->e.getId(), (e)->ClientUtils.getMc().player.connection.getAdvancements().getAdvancements().get(e));
 	public static final EditorWidgetFactory<Pair<Advancement,String>, AdvancementEditor> ADVANCEMENT_CITERION=EditorWidgetFactory.create(AdvancementEditor::new, AdvancementEditor::getValue,AdvancementEditor::setValue);
 	
 	
