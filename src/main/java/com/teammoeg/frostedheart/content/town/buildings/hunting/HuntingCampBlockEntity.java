@@ -38,13 +38,6 @@ public class HuntingCampBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
         super(FHBlockEntityTypes.HUNTING_CAMP.get(),pos,state);
     }
 
-
-    
-    @Override
-    public void refresh(@NotNull HuntingCampBuilding building) {
-        scanStructure(building);
-    }
-
     @Override
     public @Nullable HuntingCampBuilding getBuilding(AbstractTownBuilding abstractTownBuilding) {
         if(abstractTownBuilding instanceof HuntingCampBuilding){

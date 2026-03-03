@@ -91,11 +91,6 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
         setBasicWorkData(data);
     }*/
 
-    public void refresh(@NotNull MineBaseBuilding building) {
-    	this.scanStructure(building);
-
-
-    }
 
     @Override
     public @Nullable MineBaseBuilding getBuilding(AbstractTownBuilding abstractTownBuilding) {

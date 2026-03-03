@@ -137,7 +137,7 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 
 	@Override
 	public void refresh(@NotNull HuntingBaseBuilding building) {
-		this.scanStructure(building);
+		super.refresh(building);
 		building.temperatureModifier = this.getTemperatureModifier();
 	}
 

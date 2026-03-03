@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import net.minecraft.core.UUIDUtil;
 
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
@@ -47,9 +48,10 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 					BlockPos.CODEC.fieldOf("pos").forGetter(o -> o.pos),
 					Codec.BOOL.fieldOf("isStructureValid").forGetter(o -> o.isStructureValid),
 					OccupiedArea.CODEC.fieldOf("occupiedArea").forGetter(o -> o.occupiedArea),
+					Codec.list(UUIDUtil.CODEC).fieldOf("residentsID").forGetter(o -> new ArrayList<>(o.residentsID)),
 					Codec.INT.fieldOf("area").forGetter(o -> o.area),
 					Codec.INT.fieldOf("volume").forGetter(o -> o.volume),
-					CodecUtil.list(BlockPos.CODEC, ArrayList::new).fieldOf("linkedMines").forGetter(o -> new ArrayList<BlockPos>(o.linkedMines)),
+					CodecUtil.list(BlockPos.CODEC, ArrayList::new).fieldOf("linkedMines").forGetter(o -> new ArrayList<>(o.linkedMines)),
 					Codec.INT.fieldOf("maxResidents").forGetter(o -> o.maxResidents),
 					Codec.DOUBLE.fieldOf("rating").forGetter(o -> o.rating),
 					Codec.DOUBLE.fieldOf("temperature").forGetter(o -> o.temperature))
@@ -90,6 +92,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 * @param pos the block position
 	 * @param isStructureValid whether the structure is valid
 	 * @param occupiedArea the occupied area
+	 * @param residentsID list of resident UUIDs (will be converted to Set)
 	 * @param area the area
 	 * @param volume the volume
 	 * @param linkedMines list of linked mine positions
@@ -97,10 +100,11 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 * @param rating the building rating
 	 * @param temperature the mine internal temperature
 	 */
-	public MineBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedArea occupiedArea, int area, int volume, ArrayList<BlockPos> linkedMines, int maxResidents, double rating, double temperature) {
+	public MineBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedArea occupiedArea, java.util.List<UUID> residentsID, int area, int volume, ArrayList<BlockPos> linkedMines, int maxResidents, double rating, double temperature) {
 		super(pos);
 		this.isStructureValid = isStructureValid;
 		this.occupiedArea = occupiedArea;
+		this.residentsID = new java.util.HashSet<>(residentsID);
 		this.area = area;
 		this.volume = volume;
 		this.linkedMines = new java.util.HashSet<>(linkedMines);

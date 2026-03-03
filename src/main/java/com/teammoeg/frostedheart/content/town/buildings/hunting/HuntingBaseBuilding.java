@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import net.minecraft.core.UUIDUtil;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActionResults;
@@ -37,6 +38,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import static com.teammoeg.frostedheart.content.town.Town.DEBUG_MODE;
 import static java.lang.Double.NEGATIVE_INFINITY;
 
@@ -45,6 +50,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 					BlockPos.CODEC.fieldOf("pos").forGetter(o -> o.pos),
 					Codec.BOOL.fieldOf("isStructureValid").forGetter(o -> o.isStructureValid),
 					OccupiedArea.CODEC.fieldOf("occupiedArea").forGetter(o -> o.occupiedArea),
+					Codec.list(UUIDUtil.CODEC).fieldOf("residentsID").forGetter(o -> new ArrayList<>(o.residentsID)),
 					Codec.INT.fieldOf("area").forGetter(o -> o.area),
 					Codec.INT.fieldOf("volume").forGetter(o -> o.volume),
 					Codec.DOUBLE.fieldOf("temperature").forGetter(o -> o.temperature),
@@ -80,6 +86,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 * @param pos the block position
 	 * @param isStructureValid whether the structure is valid
 	 * @param occupiedArea the occupied area
+	 * @param residentsID list of resident UUIDs (will be converted to Set)
 	 * @param area the area
 	 * @param volume the volume
 	 * @param temperature the temperature
@@ -87,10 +94,11 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 * @param tanningRackNum the number of tanning racks
 	 * @param temperatureModifier the temperature modifier
 	 */
-	public HuntingBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedArea occupiedArea, int area, int volume, double temperature, int maxResidents, int tanningRackNum, double temperatureModifier) {
+	public HuntingBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedArea occupiedArea, java.util.List<UUID> residentsID, int area, int volume, double temperature, int maxResidents, int tanningRackNum, double temperatureModifier) {
 		super(pos);
 		this.isStructureValid = isStructureValid;
 		this.occupiedArea = occupiedArea;
+		this.residentsID = new java.util.HashSet<>(residentsID);
 		this.area = area;
 		this.volume = volume;
 		this.temperature = temperature;
