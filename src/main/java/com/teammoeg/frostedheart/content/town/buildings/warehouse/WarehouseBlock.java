@@ -54,8 +54,7 @@ public class WarehouseBlock extends AbstractTownBuildingBlock implements CEntity
             }
             te.getBuilding().ifPresent(building -> {
                 te.refresh_safe(building);
-                player.displayClientMessage(Components.str(building.isBuildingWorkable() ? "Workable" : "Unworkable"), false);
-                player.displayClientMessage(Components.str(building.isStructureValid ? "Structure Valid" : "Structure Invalid"), false);
+                AbstractTownBuildingBlock.displayBasicInfo(player, building);
                 player.displayClientMessage(Components.str("Volume: " + (building.volume)), false);
                 player.displayClientMessage(Components.str("Area: " + (building.area)), false);
                 player.displayClientMessage(Components.str("Capacity: " + BigDecimal.valueOf(building.capacity)

@@ -51,8 +51,7 @@ public class MineBaseBlock extends AbstractTownBuildingBlock implements CEntityB
             }
             te.getBuilding().ifPresent(building -> {
                 te.refresh_safe(building);
-                player.displayClientMessage(Components.str(building.isBuildingWorkable() ? "Valid working environment" : "Invalid working environment"), false);
-                player.displayClientMessage(Components.str("Structure: "+(building.isStructureValid? "Valid" : "Invalid")), false);
+                AbstractTownBuildingBlock.displayBasicInfo(player, building);
                 player.displayClientMessage(Components.str("Area: " + (building.area)), false);
                 player.displayClientMessage(Components.str("Volume: " + (building.volume)), false);
                 player.displayClientMessage(Components.str("Temperature: " + String.format("%.2f", building.temperature) + "°C"), false);

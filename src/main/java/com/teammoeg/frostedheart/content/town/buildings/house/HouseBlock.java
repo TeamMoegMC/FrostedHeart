@@ -66,13 +66,13 @@ public class HouseBlock extends AbstractTownBuildingBlock implements CEntityBloc
             }
             te.getBuilding().ifPresent(building -> {
                 te.refresh_safe(building);
-                player.displayClientMessage(Components.str(building.isBuildingWorkable()?"Workable" : "Unworkable"), false);
+                AbstractTownBuildingBlock.displayBasicInfo(player, building);
                 player.displayClientMessage(Components.str("Raw temperature: " +
                         CMath.round(building.temperature, 2)), false);
                 player.displayClientMessage(Components.str("Temperature modifier: " +
                         CMath.round(te.getTemperatureModifier(), 2)), false);
                 player.displayClientMessage(Components.str("Effective temperature: " +
-                        CMath.round(building.getEffectiveTemperature(), 2)), false);
+                        CMath.round(building.getEffectiveTemperature(), 2) + "(Temperature " + (building.isTemperatureValid() ? "Valid" : "Invalid") + ")"), false);
                 player.displayClientMessage(Components.str("Volume: " + (building.volume)), false);
                 player.displayClientMessage(Components.str("Area: " + (building.area)), false);
                 //player.displayClientMessage(Components.str("Bed num: " + te.getBeds().size()), false);

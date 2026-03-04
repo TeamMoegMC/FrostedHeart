@@ -24,13 +24,16 @@ import javax.annotation.Nullable;
 import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.Town;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
 import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.SoundType;
@@ -45,6 +48,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
@@ -63,7 +67,7 @@ public abstract class AbstractTownBuildingBlock extends CBlock {
     }
 
     @Override
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.@NotNull Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(LIT,BlockStateProperties.FACING);
     }
@@ -95,6 +99,15 @@ public abstract class AbstractTownBuildingBlock extends CBlock {
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         return this.defaultBlockState().setValue(BlockStateProperties.FACING, context.getClickedFace().getOpposite());
+    }
+
+    public static void displayBasicInfo(Player player, AbstractTownBuilding building) {
+        if(building != null){
+            player.displayClientMessage(Components.str(building.isBuildingWorkable() ? "Workable" : "Unworkable"), false);
+            player.displayClientMessage(Components.str(building.initialized ? "Initialized" : "Not Initialized"), false);
+            player.displayClientMessage(Components.str(building.isStructureValid ? "Structure Valid" : "Structure Invalid"), false);
+            player.displayClientMessage(Components.str(building.occupiedAreaOverlapped ? "Occupied Area Overlapped" : "Occupied Area didn't Overlap"), false);
+        }
     }
 }
 

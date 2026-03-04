@@ -68,8 +68,7 @@ public class MineBlock extends AbstractTownBuildingBlock implements CEntityBlock
             }
             te.getBuilding().ifPresent(building -> {
                 te.refresh_safe(building);
-                player.displayClientMessage(Components.str(building.isBuildingWorkable() ? "Workable" : "Unworkable"), false);
-                player.displayClientMessage(Components.str(building.isStructureValid ? "Valid structure" : "Invalid structure"), false);
+                AbstractTownBuildingBlock.displayBasicInfo(player, building);
                 player.displayClientMessage(Components.str("Biome: " + building.biomePath), false);
                 player.displayClientMessage(Components.str("Rating: " + String.format("%.2f", building.rating)), false);
             });
