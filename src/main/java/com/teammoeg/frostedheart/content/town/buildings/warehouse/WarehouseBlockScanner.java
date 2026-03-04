@@ -23,10 +23,12 @@ import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.HeightCheckingInfo;
 
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
 //仓库的结构不考虑密封，体积仅统计地板上方的空气。
+@Getter
 public class WarehouseBlockScanner extends FloorBlockScanner {
     private int volume = 0;
     private int area = 0;
@@ -37,10 +39,6 @@ public class WarehouseBlockScanner extends FloorBlockScanner {
         super(world, startPos);
     }
 
-    public int getVolume(){return this.volume;}
-    public int getArea(){return this.area;}
-    public OccupiedArea getOccupiedArea(){return this.occupiedArea;}
-
     @Override
     public boolean isValidFloor(BlockPos pos){
         return isFloorBlock(pos) && isAirOrLadder(world, pos.above()) && isAirOrLadder(world, pos.above(2));
@@ -49,7 +47,7 @@ public class WarehouseBlockScanner extends FloorBlockScanner {
     public boolean scan(){
         return scan(MAX_SCANNING_TIMES, (pos1)->{
             this.area++;
-            HeightCheckingInfo floorInformation = countBlocksAbove(world,pos1, (pos2)->!world.getBlockState(pos2).isAir());
+            HeightCheckingInfo floorInformation = countBlocksAbove(world,pos1, (pos2)->!world.getBlockState(pos2).getCollisionShape(world, pos2).isEmpty());
             if(!floorInformation.result()) this.isValid=false;
             this.volume += floorInformation.height();
             occupiedArea.add(toColumnPos(pos1));

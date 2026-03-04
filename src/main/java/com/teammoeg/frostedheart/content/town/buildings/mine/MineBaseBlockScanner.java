@@ -85,7 +85,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
                 rack++;
                 return false;
             }
-            if(state1.isAir()){
+            if(!state1.getCollisionShape(world, pos1).isEmpty()){
                 temperature += WorldTemperature.block(world, pos1);
                 counter_for_temperature++;
                 return false;

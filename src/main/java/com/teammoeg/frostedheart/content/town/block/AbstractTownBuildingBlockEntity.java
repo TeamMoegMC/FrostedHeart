@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.town.block;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import com.teammoeg.chorda.block.CBlockInterfaces;
 import com.teammoeg.chorda.block.entity.CBlockEntity;
@@ -55,7 +54,7 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
     public void refresh(@NotNull T building){
         building.initialized = true;
         building.isStructureValid = scanStructure(building);
-    };
+    }
 
     /**
      * 和refresh差不多，但是进行了一些检查
