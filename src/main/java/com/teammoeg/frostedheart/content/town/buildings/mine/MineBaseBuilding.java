@@ -51,7 +51,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 					Codec.list(UUIDUtil.CODEC).fieldOf("residentsID").forGetter(o -> new ArrayList<>(o.residentsID)),
 					Codec.INT.fieldOf("area").forGetter(o -> o.area),
 					Codec.INT.fieldOf("volume").forGetter(o -> o.volume),
-					CodecUtil.list(BlockPos.CODEC, ArrayList::new).fieldOf("linkedMines").forGetter(o -> new ArrayList<>(o.linkedMines)),
+					Codec.list(BlockPos.CODEC).fieldOf("linkedMines").forGetter(o -> new ArrayList<>(o.linkedMines)),
 					Codec.INT.fieldOf("maxResidents").forGetter(o -> o.maxResidents),
 					Codec.DOUBLE.fieldOf("rating").forGetter(o -> o.rating),
 					Codec.DOUBLE.fieldOf("temperature").forGetter(o -> o.temperature))
@@ -69,6 +69,14 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 
 	public MineBaseBuilding(BlockPos pos) {
 		super(pos);
+	}
+
+	/**
+	 * Temporary constructor for testing - matches current CODEC (without residentsID and linkedMines)
+	 * Calls the original constructor with default empty values for the two fields.
+	 */
+	public MineBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedArea occupiedArea, int area, int volume, int maxResidents, double rating, double temperature) {
+		this(pos, isStructureValid, occupiedArea, new ArrayList<>(), area, volume, new ArrayList<>(), maxResidents, rating, temperature);
 	}
 
 	@Override
@@ -100,7 +108,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 * @param rating the building rating
 	 * @param temperature the mine internal temperature
 	 */
-	public MineBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedArea occupiedArea, java.util.List<UUID> residentsID, int area, int volume, ArrayList<BlockPos> linkedMines, int maxResidents, double rating, double temperature) {
+	public MineBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedArea occupiedArea, java.util.List<UUID> residentsID, int area, int volume, List<BlockPos> linkedMines, int maxResidents, double rating, double temperature) {
 		super(pos);
 		this.isStructureValid = isStructureValid;
 		this.occupiedArea = occupiedArea;
