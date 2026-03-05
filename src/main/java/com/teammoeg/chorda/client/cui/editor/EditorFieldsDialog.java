@@ -39,16 +39,17 @@ import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuiltParams;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.network.chat.Component;
 
-public class EditorDialog<O> extends BaseEditDialog {
+public class EditorFieldsDialog<O> extends BaseEditDialog {
 	UILayer mainPane;
 	LayerScrollBar scroll;
 	public static record EditorPair<O,A>(EditorItemFactory<A> factory,Function<O,A> getter,int index) {
-		public Pair<Integer, EditItem<Object>> create(EditorDialog<O> dialog,UILayer parent,O o,Object[] params){
+		public Pair<Integer, EditItem<Object>> create(EditorFieldsDialog<O> dialog,UILayer parent,O o,Object[] params){
 			A val=null;
 			if(o!=null)
 				val=getter.apply(o);
 			if(index>=0)
 				params[index]=val;
+			final int cindex=index;
 			return Pair.of(index, (EditItem)factory.create(parent,dialog,val));
 		}
 	}
@@ -62,8 +63,8 @@ public class EditorDialog<O> extends BaseEditDialog {
 			this.paramSize=dialog.parcount();
 			this.consumer=dialog.consumer();
 		}
-		public EditorDialog<O> create(UIElement panel,Component title,O origin,Consumer<O> consumer){
-			return new EditorDialog<>(panel,title,this,origin,li->consumer.accept(this.consumer.apply(li)));
+		public EditorFieldsDialog<O> create(UIElement panel,Component title,O origin,Consumer<O> consumer){
+			return new EditorFieldsDialog<>(panel,title,this,origin,this.consumer,consumer);
 		}
 		
 	}
@@ -84,14 +85,16 @@ public class EditorDialog<O> extends BaseEditDialog {
 	List<Pair<Integer,EditItem<Object>>> values=new ArrayList<>();
 	Int2ObjectOpenHashMap<EditItem<Object>> map=new Int2ObjectOpenHashMap<>();
 	Map<UIElement,Integer> widgetNum=new IdentityHashMap<>();
-	Consumer<EditorResult> consumer;
+	Function<BuiltParams,O> constructor;
+	Consumer<O> consumer;
+	
 	Object[] params;
 	TextField title;
-	private EditorDialog(UIElement panel,Component title,EditorDialogPrototype<O> prototype,O origin,Consumer<EditorResult> consumer) {
+	private EditorFieldsDialog(UIElement panel,Component title,EditorDialogPrototype<O> prototype,O origin,Function<BuiltParams,O> constructor,Consumer<O> consumer) {
 		super(panel);
 		this.title=EditUtils.getTitle(this, title);
 		this.params=new Object[prototype.widgets.size()];
-		
+		this.constructor=constructor;
 		this.consumer=consumer;
         mainPane=new UILayer(this) {
 
@@ -143,15 +146,22 @@ public class EditorDialog<O> extends BaseEditDialog {
 		map.get(idx).setValue(value);
 		params[idx]=value;
 	}
+	public <T> void interalCallOnChange(EditItem<T> item,T oldVal,T newVal) {
+		
+	}
+	public O getValue(){
+		for(Pair<Integer, EditItem<Object>> i:values) {
+			if(i.getFirst()>=0) {
+				i.getSecond().getValue().result().ifPresent(t->params[i.getFirst()]=t.orElse(null));
+			}
+		}
+		return constructor.apply(new EditorResult(params));
+	}
 	@Override
 	public void onClose() {
 		if(!noSave) {
-			for(Pair<Integer, EditItem<Object>> i:values) {
-				if(i.getFirst()>=0) {
-					i.getSecond().getValue().result().ifPresent(t->params[i.getFirst()]=t.orElse(null));
-				}
-			}
-			consumer.accept(new EditorResult(params));
+			
+			consumer.accept(getValue());
 		}
 	}
 	@Override

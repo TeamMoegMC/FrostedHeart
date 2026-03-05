@@ -23,10 +23,6 @@ import java.util.function.Function;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder.SetterAndGetter;
-import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Applicative0;
-import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuildResult;
-
 public class CurryApplicativeTemplate {
 	private CurryApplicativeTemplate() {
 

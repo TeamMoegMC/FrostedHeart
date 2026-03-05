@@ -134,7 +134,7 @@ public class Editors {
 	public static <T> EditorWidgetFactory<T,HiddenBox<T>> hiddenSupplier(Supplier<T> def){
 		return EditorWidgetFactory.create((p,l,v)->new HiddenBox<>(p,v,def), HiddenBox::getValue,(w,v)->{w.setValue(v);});
 	}
-	public static <T> EditorWidgetFactory<T,TextButton> createAction(CIcon icon,BiConsumer<EditorDialog<T>,T> onClick){
+	public static <T> EditorWidgetFactory<T,TextButton> createAction(CIcon icon,BiConsumer<EditorFieldsDialog<T>,T> onClick){
 		return EditorWidgetFactory.create((d,p,l,v)->new TextButton(p,l,icon) {
 			@Override
 			public void onClicked(MouseButton button) {

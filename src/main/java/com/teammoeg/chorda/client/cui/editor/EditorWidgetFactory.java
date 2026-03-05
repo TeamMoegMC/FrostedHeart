@@ -37,9 +37,9 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 		W create(UILayer parent,Component prompt,T origin);
 	}
 	interface ActionWidgetConstructor<T,W extends UIElement>{
-		W create(EditorDialog dialog,UILayer parent,Component prompt,T origin);
+		W create(EditorFieldsDialog dialog,UILayer parent,Component prompt,T origin);
 	}
-	W create(UILayer parent,Component prompt,T origin,EditorDialog dialog);
+	W create(UILayer parent,Component prompt,T origin,EditorFieldsDialog dialog);
 	DataResult<Optional<T>> getValue(W widget);
 	W setValue(W widget,T value);
 	default EditorItemFactory<T> withName(String prompt){
@@ -49,7 +49,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 	default EditorItemFactory<T> withName(Component prompt){
 		return new EditorItemFactory<T>() {
 			@Override
-			public EditItem<T> create(UILayer layer,EditorDialog dialog,T val) {
+			public EditItem<T> create(UILayer layer,EditorFieldsDialog dialog,T val) {
 				return new EditItem<>() {
 					W widget=EditorWidgetFactory.this.create(layer,prompt,val,dialog);
 					@Override
@@ -64,6 +64,10 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 					public void setValue(T val) {
 						widget=EditorWidgetFactory.this.setValue(widget, val);
 					}
+					@Override
+					public void addOnChangeListener(EditItemChangeListener<T> listener) {
+						
+					}
 					
 				};
 			}
@@ -74,7 +78,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 		EditorWidgetFactory<T,W> objthis=this;
 		return new EditorWidgetFactory<>() {
 			@Override
-			public W create(UILayer parent, Component prompt, X origin,EditorDialog dialog) {
+			public W create(UILayer parent, Component prompt, X origin,EditorFieldsDialog dialog) {
 				return objthis.create(parent, prompt, origin==null?null:to.apply(origin),dialog);
 			}
 
@@ -94,7 +98,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 		EditorWidgetFactory<T,W> objthis=this;
 		return new EditorWidgetFactory<>() {
 			@Override
-			public W create(UILayer parent, Component prompt, X origin,EditorDialog dialog) {
+			public W create(UILayer parent, Component prompt, X origin,EditorFieldsDialog dialog) {
 				return objthis.create(parent, prompt, to.apply(origin),dialog);
 			}
 
@@ -114,7 +118,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 		EditorWidgetFactory<T,W> objthis=this;
 		return new EditorWidgetFactory<>() {
 			@Override
-			public W create(UILayer parent, Component prompt, T origin,EditorDialog dialog) {
+			public W create(UILayer parent, Component prompt, T origin,EditorFieldsDialog dialog) {
 				return objthis.create(parent, prompt, origin==null?def.get():origin,dialog);
 			}
 
@@ -133,7 +137,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 	public static <T,W extends UIElement> EditorWidgetFactory<T,W> create(WidgetConstructor<T,W> constr,Function<W,T> func,BiFunction<W,T,W> setValue){
 		return new EditorWidgetFactory<>() {
 			@Override
-			public W create(UILayer parent, Component prompt, T origin,EditorDialog dialog) {
+			public W create(UILayer parent, Component prompt, T origin,EditorFieldsDialog dialog) {
 				return constr.create(parent, prompt, origin);
 			}
 
@@ -152,7 +156,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 	public static <T,W extends UIElement> EditorWidgetFactory<T,W> create(WidgetConstructor<T,W> constr,Function<W,T> func,BiConsumer<W,T> setValue){
 		return new EditorWidgetFactory<>() {
 			@Override
-			public W create(UILayer parent, Component prompt, T origin,EditorDialog dialog) {
+			public W create(UILayer parent, Component prompt, T origin,EditorFieldsDialog dialog) {
 				return constr.create(parent, prompt, origin);
 			}
 
@@ -172,7 +176,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 	public static <T,W extends UIElement> EditorWidgetFactory<T,W> create(ActionWidgetConstructor<T,W> constr){
 		return new EditorWidgetFactory<>() {
 			@Override
-			public W create(UILayer parent, Component prompt, T origin,EditorDialog dialog) {
+			public W create(UILayer parent, Component prompt, T origin,EditorFieldsDialog dialog) {
 				return constr.create(dialog,parent, prompt, origin);
 			}
 

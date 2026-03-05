@@ -30,4 +30,5 @@ public interface EditItem<T> {
 	void setValue(T val);
 	default void onSave() {};
 	default void onCreated() {};
+	void addOnChangeListener(EditItemChangeListener<T> listener);
 }
