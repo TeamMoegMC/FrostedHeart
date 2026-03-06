@@ -64,22 +64,24 @@ public class HouseBlock extends AbstractTownBuildingBlock implements CEntityBloc
             if (te == null) {
                 return InteractionResult.FAIL;
             }
-            te.getBuilding().ifPresent(building -> {
-                te.refresh_safe(building);
-                AbstractTownBuildingBlock.displayBasicInfo(player, building);
-                player.displayClientMessage(Components.str("Raw temperature: " +
-                        CMath.round(building.temperature, 2)), false);
-                player.displayClientMessage(Components.str("Temperature modifier: " +
-                        CMath.round(te.getTemperatureModifier(), 2)), false);
-                player.displayClientMessage(Components.str("Effective temperature: " +
-                        CMath.round(building.getEffectiveTemperature(), 2) + "(Temperature " + (building.isTemperatureValid() ? "Valid" : "Invalid") + ")"), false);
-                player.displayClientMessage(Components.str("Volume: " + (building.volume)), false);
-                player.displayClientMessage(Components.str("Area: " + (building.area)), false);
-                //player.displayClientMessage(Components.str("Bed num: " + te.getBeds().size()), false);
-                player.displayClientMessage(Components.str("Max resident: " + (building.maxResidents)), false);
-                //player.displayClientMessage(Components.str("Rating: " +
-                //        CMath.round(, 2)), false);
-            });
+            te.getBuilding().ifPresentOrElse(
+                    building -> {
+                        te.refresh_safe(building);
+                        AbstractTownBuildingBlock.displayBasicInfo(player, building);
+                        player.displayClientMessage(Components.str("Raw temperature: " +
+                                CMath.round(building.temperature, 2)), false);
+                        player.displayClientMessage(Components.str("Temperature modifier: " +
+                                CMath.round(te.getTemperatureModifier(), 2)), false);
+                        player.displayClientMessage(Components.str("Effective temperature: " +
+                                CMath.round(building.getEffectiveTemperature(), 2) + "(Temperature " + (building.isTemperatureValid() ? "Valid" : "Invalid") + ")"), false);
+                        player.displayClientMessage(Components.str("Volume: " + (building.volume)), false);
+                        player.displayClientMessage(Components.str("Area: " + (building.area)), false);
+                        //player.displayClientMessage(Components.str("Bed num: " + te.getBeds().size()), false);
+                        player.displayClientMessage(Components.str("Max resident: " + (building.maxResidents)), false);
+                        //player.displayClientMessage(Components.str("Rating: " +
+                        //        CMath.round(, 2)), false);
+                    },
+                    () -> player.displayClientMessage(Components.str("No corresponding town building instance found."), false));
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

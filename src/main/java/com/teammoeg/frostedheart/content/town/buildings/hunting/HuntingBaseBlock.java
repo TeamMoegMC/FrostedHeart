@@ -61,7 +61,7 @@ public class HuntingBaseBlock extends AbstractTownBuildingBlock implements CEnti
             if (te == null) {
                 return InteractionResult.FAIL;
             }
-            te.getBuilding().ifPresent(building -> {
+            te.getBuilding().ifPresentOrElse(building -> {
                 te.refresh_safe(building);
                 AbstractTownBuildingBlock.displayBasicInfo(player, building);
                 player.displayClientMessage(Components.str("Raw temperature: " +
@@ -76,7 +76,7 @@ public class HuntingBaseBlock extends AbstractTownBuildingBlock implements CEnti
                 player.displayClientMessage(Components.str("Area: " + building.area), false);
                 player.displayClientMessage(Components.str("Rating: " +
                         CMath.round(building.rating, 2)), false);
-            });
+            }, () -> player.displayClientMessage(Components.str("No corresponding town building instance found."), false));
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

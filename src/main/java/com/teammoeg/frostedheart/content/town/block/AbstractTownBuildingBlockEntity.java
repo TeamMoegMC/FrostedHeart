@@ -26,6 +26,7 @@ import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.scheduler.ScheduledTaskTileEntity;
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.Town;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
@@ -75,10 +76,12 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
 
     public Optional<T> getBuilding(){
         if(this.townProvider == null){
+            FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: Town provider is null");
             return Optional.empty();
         }
         ITownWithBuildings town = townProvider.getTown();
         if(town == null){
+            FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: TownProvider didn't get town");
             return Optional.empty();
         }
         Optional<AbstractTownBuilding> buildingOptional = town.getTownBuilding(this.worldPosition);
@@ -87,6 +90,8 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
             if(building instanceof AbstractTownBuilding){
                 return Optional.ofNullable(getBuilding(building));
             }
+        } else{
+            FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: Building doesn't exist in town");
         }
         return Optional.empty();
     }

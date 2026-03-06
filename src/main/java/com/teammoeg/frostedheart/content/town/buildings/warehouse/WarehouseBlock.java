@@ -52,14 +52,14 @@ public class WarehouseBlock extends AbstractTownBuildingBlock implements CEntity
             if (te == null) {
                 return InteractionResult.FAIL;
             }
-            te.getBuilding().ifPresent(building -> {
+            te.getBuilding().ifPresentOrElse(building -> {
                 te.refresh_safe(building);
                 AbstractTownBuildingBlock.displayBasicInfo(player, building);
                 player.displayClientMessage(Components.str("Volume: " + (building.volume)), false);
                 player.displayClientMessage(Components.str("Area: " + (building.area)), false);
                 player.displayClientMessage(Components.str("Capacity: " + BigDecimal.valueOf(building.capacity)
                         .setScale(2, RoundingMode.HALF_UP).doubleValue()), false);
-            });
+            }, () -> player.displayClientMessage(Components.str("No corresponding town building instance found."), false));
             NetworkHooks.openScreen((ServerPlayer) player, te, pos);
             return InteractionResult.SUCCESS;
         }
