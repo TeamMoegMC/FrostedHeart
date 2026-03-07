@@ -77,7 +77,7 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 	 * range.
 	 */
 	public void refresh(@NotNull HouseBuilding building) {
-		this.scanStructure(building);
+		super.refresh(building);
 		building.temperatureModifier = temperatureModifier;
 	}
 

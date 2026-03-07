@@ -81,7 +81,7 @@ public class MineBlockEntity extends AbstractTownBuildingBlockEntity<MineBuildin
 
     public void refresh(@NotNull MineBuilding building) {
         assert level != null;
-        scanStructure( building);
+        super.refresh(building);
         building.biomePath= CRegistryHelper.getBiomeKeyRuntime(level, CUtils.fastGetBiome(level, worldPosition).get());
     }
 
