@@ -33,7 +33,7 @@ public class VirtualItemStack {
         this.amount = amount;
     }
 
-    public ItemStack getStack() { return stack; }
+    public ItemStack getItemStack() { return stack; }
     public long getAmount() { return amount; }
     public void setAmount(long amount) { this.amount = amount; }
 

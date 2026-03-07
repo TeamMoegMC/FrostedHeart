@@ -31,14 +31,21 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class WarehouseS2CPacket implements CMessage {
+public class WarehouseUpdatePacket implements CMessage {
 	private final List<VirtualItemStack> resources;
+	private final boolean isIncremental;
 
-    public WarehouseS2CPacket(List<VirtualItemStack> resources) {
+	public WarehouseUpdatePacket(List<VirtualItemStack> resources) {
+		this(resources, false);
+	}
+
+	public WarehouseUpdatePacket(List<VirtualItemStack> resources, boolean isIncremental) {
 		this.resources = resources;
-    }
+		this.isIncremental = isIncremental;
+	}
 
-	public WarehouseS2CPacket(FriendlyByteBuf buffer) {
+	public WarehouseUpdatePacket(FriendlyByteBuf buffer) {
+		this.isIncremental = buffer.readBoolean();
 		this.resources = buffer.readList(buf -> {
 			ItemStack stack = buf.readItem();
 			long amount = buf.readLong();
@@ -46,22 +53,23 @@ public class WarehouseS2CPacket implements CMessage {
 		});
 	}
 
-    @Override
-    public void handle(Supplier<NetworkEvent.Context> context) {
+	@Override
+	public void encode(FriendlyByteBuf buffer) {
+		buffer.writeBoolean(this.isIncremental);
+		buffer.writeCollection(this.resources, (buf, vStack) -> {
+			buf.writeItem(vStack.getItemStack());
+			buf.writeLong(vStack.getAmount());
+		});
+	}
+
+	@Override
+	public void handle(Supplier<NetworkEvent.Context> context) {
 		context.get().enqueueWork(() -> {
 			LocalPlayer player = Minecraft.getInstance().player;
 			if (player != null && player.containerMenu instanceof WarehouseMenu menu) {
-				//更新屏幕
-				menu.updateResourceList(resources);
+				menu.updateResourceList(resources, isIncremental);
 			}
 		});
 		context.get().setPacketHandled(true);
-	}
-	@Override
-	public void encode(FriendlyByteBuf buffer) {
-		buffer.writeCollection(this.resources, (buf, vStack) -> {
-			buf.writeItem(vStack.getStack());
-			buf.writeLong(vStack.getAmount());
-		});
 	}
 }

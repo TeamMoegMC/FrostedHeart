@@ -23,7 +23,6 @@ import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
-import com.teammoeg.frostedheart.content.town.network.WarehouseC2SRequestPacket;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.VirtualItemGridElement;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseMenu;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseScreen;
@@ -36,7 +35,6 @@ public class TownResourceTab extends AbstractTownTab<WarehouseMenu> {
 
     @Override
     public void build(UILayer layer) {
-        FHNetwork.INSTANCE.sendToServer(new WarehouseC2SRequestPacket());
         VirtualItemGridElement grid = new VirtualItemGridElement(layer, 7, 18,
                 () -> getMenu().getResources()
         );

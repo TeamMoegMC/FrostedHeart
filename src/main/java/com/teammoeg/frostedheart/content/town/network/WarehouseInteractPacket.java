@@ -67,6 +67,7 @@ public class WarehouseInteractPacket implements CMessage {
 			if (player.containerMenu instanceof WarehouseMenu) {
 				IActionExecutorHandler executor = TeamTown.from(player).getActionExecutorHandler();
 				ItemStack carried = player.containerMenu.getCarried();
+
 				// 构建存入 Action
 				if (this.action == Action.INSERT) {
 					ItemStack copyItem = carried.copy();
@@ -77,7 +78,6 @@ public class WarehouseInteractPacket implements CMessage {
 					TownResourceActionResults.ItemStackActionResult result = (TownResourceActionResults.ItemStackActionResult)executor.execute(action);
 					if (!result.itemStackModified().isEmpty()) {
 						carried.shrink(result.itemStackModified().getCount());
-						player.containerMenu.broadcastChanges();
 					}
 				} else if (this.action == Action.EXTRACT) {
 					if (targetItem.isEmpty()) return;
@@ -126,14 +126,9 @@ public class WarehouseInteractPacket implements CMessage {
 						else {
 							player.containerMenu.setCarried(extracted);
 						}
-						player.containerMenu.broadcastChanges();
 					}
 				}
-
-
-				Map<ItemStack, Double> itemMap = TeamTown.from(player).getResourceHolder().getAllItems();
-				List<VirtualItemStack> list = VirtualItemStack.toClientVisualList(itemMap);
-				FHNetwork.INSTANCE.sendPlayer(player, new WarehouseS2CPacket(list));
+				player.containerMenu.broadcastChanges();
 			}
 		});
 		context.get().setPacketHandled(true);
