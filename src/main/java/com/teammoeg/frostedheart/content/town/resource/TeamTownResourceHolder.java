@@ -491,4 +491,8 @@ private void addSigned(ITownResourceKey townResourceKey, double amount){
                 .forEach(type -> set(type.generateAttribute(0),0));
     }
 
+    public void resetMaxCapacity(){
+        set(VirtualResourceType.MAX_CAPACITY.generateAttribute(0), 0);
+    }
+
 }

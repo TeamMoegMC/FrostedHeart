@@ -346,14 +346,23 @@ public class TeamTownData implements SpecialData {
 		//updateAllBlocks(world);
 
 		TeamTown teamTown = new TeamTown(this);
-		resources.resetAllServices();
-		buildings.values().stream().filter(building -> building instanceof WarehouseBuilding)
-				.filter(AbstractTownBuilding::isBuildingWorkable)
-				.forEach(building -> ((WarehouseBuilding) building).addCapacity(teamTown));
+		reloadMaxCapacity();
+
 		buildings.values().stream()
 				.filter(AbstractTownBuilding::isBuildingWorkable)
 				.sorted(Comparator.comparingInt(AbstractTownBuilding::getWorkPriority).reversed())
 				.forEach(building -> building.work(teamTown));
+	}
+
+	/**
+	 * 清零MaxCapacity，并从仓库中重新读取和添加
+	 */
+	public void reloadMaxCapacity(){
+		resources.resetMaxCapacity();
+		TeamTown teamTown = this.createTeamTown();
+		buildings.values().stream().filter(building -> building instanceof WarehouseBuilding)
+				.filter(AbstractTownBuilding::isBuildingWorkable)
+				.forEach(building -> ((WarehouseBuilding) building).addCapacity(teamTown));
 	}
 
 	private static final Function<TerrainResourceType, TerrainResourceData> RESOURCE_DATA_SUPPLIER = a->new TerrainResourceData();
