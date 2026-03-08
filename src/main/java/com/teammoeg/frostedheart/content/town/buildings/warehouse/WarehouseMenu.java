@@ -37,7 +37,7 @@ import java.util.function.Supplier;
 
 public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 	private final Supplier<Map<SimpleItemKey, Long>> serverSource;
-	private Map<SimpleItemKey, Long> previousAvailableStacks = new HashMap<>();
+	private Map<SimpleItemKey, Long> previousAvailableStacks = Collections.emptyMap();
 	public final List<VirtualItemStack> clientItemList = new ArrayList<>();
 	private final Map<SimpleItemKey, VirtualItemStack> clientItemMap = new HashMap<>();
 	private boolean isFirstSync = true;
@@ -53,7 +53,6 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 				if (town == null) return Collections.emptyMap();
 				return town.getResourceHolder().getVirtualItemMap();
 			};
-			this.previousAvailableStacks = new HashMap<>();
 
 		} else {
 			this.serverSource = Collections::emptyMap;

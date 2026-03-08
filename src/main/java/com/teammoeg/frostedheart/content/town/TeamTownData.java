@@ -260,10 +260,19 @@ public class TeamTownData implements SpecialData {
 		// 移除house/worker里超过上限，或已不存在的的resident
 		for (AbstractTownBuilding building : buildings.values()) {
 			if (building instanceof ITownResidentBuilding residentBuilding) {
-				residentBuilding.getResidentsID().removeIf(resident -> !residents.containsKey(resident));
+				Collection<UUID> residentIDs = residentBuilding.getResidentsID();
+				//移除已不存在的居民
+				residentIDs.removeIf(uuid -> !residents.containsKey(uuid));
+
+				//移除超过上限的居民
 				int maxResident = residentBuilding.getMaxResidents();
-				while (residentBuilding.getResidentsID().size() > maxResident) {
-					residentBuilding.getResidentsID().stream().findAny().ifPresent(uuid -> residents.remove(uuid));
+				if (residentIDs.size() > maxResident) {
+					Iterator<UUID> iterator = residentIDs.iterator();
+					int removeCount = residentIDs.size() - maxResident;
+					for (int i = 0; i < removeCount && iterator.hasNext(); i++) {
+						iterator.next();
+						iterator.remove();
+					}
 				}
 				for (UUID resident : residentBuilding.getResidentsID()) {
 					// 把清空的居民的house/work位置设为加回来
