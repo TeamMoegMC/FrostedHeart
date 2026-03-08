@@ -19,13 +19,11 @@
 
 package com.teammoeg.frostedheart.content.town.resource;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.SimpleItemKey;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -349,6 +347,7 @@ private void addSigned(ITownResourceKey townResourceKey, double amount){
             resources.remove(itemStackResourceKey);
         }
         this.occupiedCapacity += amount;
+        markVirtualItemsDirty();
     }
     if(townResourceKey instanceof VirtualResourceAttribute virtualResourceKey){
         resources.merge(virtualResourceKey, amount, Double::sum);
@@ -493,6 +492,38 @@ private void addSigned(ITownResourceKey townResourceKey, double amount){
 
     public void resetMaxCapacity(){
         set(VirtualResourceType.MAX_CAPACITY.generateAttribute(0), 0);
+    }
+
+    //以下为仓库menu相关
+    private Map<SimpleItemKey, Long> cachedVirtualItems = Collections.emptyMap();
+    private boolean isVirtualItemsDirty = true;
+
+    public void markVirtualItemsDirty() {
+        this.isVirtualItemsDirty = true;
+    }
+
+    public Map<SimpleItemKey, Long> getVirtualItemMap() {
+        if (!isVirtualItemsDirty) {
+            return cachedVirtualItems;
+        }
+
+        Map<SimpleItemKey, Long> items = new HashMap<>(resources.size());
+
+        for (var entry : resources.entrySet()) {
+            if (entry.getKey() instanceof ItemStackResourceKey itemStackKey) {
+                double amount = entry.getValue();
+                if (amount > DELTA) {
+                    SimpleItemKey simpleKey = SimpleItemKey.from(itemStackKey.itemStack);
+                    long longAmount = (long) amount;
+                    items.merge(simpleKey, longAmount, Long::sum);
+                }
+            }
+        }
+
+        this.cachedVirtualItems = Collections.unmodifiableMap(items);
+        this.isVirtualItemsDirty = false;
+
+        return this.cachedVirtualItems;
     }
 
 }

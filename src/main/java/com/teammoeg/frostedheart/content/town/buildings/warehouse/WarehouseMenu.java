@@ -26,13 +26,10 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.network.WarehouseUpdatePacket;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
-import groovyjarjarantlr4.v4.runtime.misc.Nullable;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.*;
@@ -54,17 +51,7 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 			this.serverSource = () -> {
 				TeamTown town = TeamTown.from(serverPlayer);
 				if (town == null) return Collections.emptyMap();
-
-				Map<ItemStack, Double> rawMap = town.getResourceHolder().getAllItems();
-				Map<SimpleItemKey, Long> convertedMap = new HashMap<>();
-				for (Map.Entry<ItemStack, Double> entry : rawMap.entrySet()) {
-					ItemStack rawStack = entry.getKey();
-					Double rawAmount = entry.getValue();
-					SimpleItemKey newKey = SimpleItemKey.from(rawStack);
-					long newAmount = rawAmount.longValue();
-					convertedMap.merge(newKey, newAmount, Long::sum);
-				}
-				return convertedMap;
+				return town.getResourceHolder().getVirtualItemMap();
 			};
 			this.previousAvailableStacks = new HashMap<>();
 
@@ -89,61 +76,49 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 	}
 
 	private void detectAndSendChanges(ServerPlayer serverPlayer) {
-		Map<SimpleItemKey, Long> currentAvailableStacks = this.serverSource.get();
-		if (currentAvailableStacks == null || currentAvailableStacks.isEmpty() && previousAvailableStacks.isEmpty()) {
+		Map<SimpleItemKey, Long> current = this.serverSource.get();
+		if (current == this.previousAvailableStacks) {
 			return;
 		}
-
-		List<VirtualItemStack> changesToSend = new ArrayList<>();
+		if (current == null || (current.isEmpty() && previousAvailableStacks.isEmpty())) {
+			return;
+		}
+		List<VirtualItemStack> changes = new ArrayList<>();
 
 		if (isFirstSync) {
-			for (Map.Entry<SimpleItemKey, Long> entry : currentAvailableStacks.entrySet()) {
+			for (var entry : current.entrySet()) {
 				if (entry.getValue() > 0) {
-					changesToSend.add(new VirtualItemStack(entry.getKey().toStack(1), entry.getValue()));
+					changes.add(new VirtualItemStack(entry.getKey().toStack(1), entry.getValue()));
 				}
 			}
-
-			if (!changesToSend.isEmpty()) {
-				FHNetwork.INSTANCE.sendPlayer(serverPlayer, new WarehouseUpdatePacket(changesToSend, false));
+			if (!changes.isEmpty()) {
+				FHNetwork.INSTANCE.sendPlayer(serverPlayer, new WarehouseUpdatePacket(changes, false));
 			}
+			this.previousAvailableStacks = current;
 			this.isFirstSync = false;
 
 		} else {
 			//增量更新逻辑
 			//找出数量发生变化但还存在的物品
-			for (Map.Entry<SimpleItemKey, Long> entry : currentAvailableStacks.entrySet()) {
-				SimpleItemKey key = entry.getKey();
+			for (var entry : current.entrySet()) {
 				long currentCount = entry.getValue();
-				long prevCount = previousAvailableStacks.getOrDefault(key, 0L);
-
+				long prevCount = previousAvailableStacks.getOrDefault(entry.getKey(), 0L);
 				if (currentCount != prevCount) {
-					changesToSend.add(new VirtualItemStack(key.toStack(1), currentCount));
+					changes.add(new VirtualItemStack(entry.getKey().toStack(1), currentCount));
 				}
 			}
 			//找出之前有，现在没有的物品
 			for (SimpleItemKey key : previousAvailableStacks.keySet()) {
-				if (!currentAvailableStacks.containsKey(key)) {
-					changesToSend.add(new VirtualItemStack(key.toStack(1), 0));
+				if (!current.containsKey(key)) {
+					changes.add(new VirtualItemStack(key.toStack(1), 0));
 				}
 			}
 
-			if (!changesToSend.isEmpty()) {
-				FHNetwork.INSTANCE.sendPlayer(serverPlayer,
-						new WarehouseUpdatePacket(changesToSend, true));
+			if (!changes.isEmpty()) {
+				FHNetwork.INSTANCE.sendPlayer(serverPlayer, new WarehouseUpdatePacket(changes, true));
+				this.previousAvailableStacks = current;
 			}
-
-			this.previousAvailableStacks = currentAvailableStacks;
 		}
-	}
-
-	@Override
-	public void receiveMessage(short btnId, int state) {
-		switch(btnId) {
-		}
-	}
-	@Override
-	public void removed(Player pPlayer) {
-		super.removed(pPlayer);
 	}
 
 	public void updateResourceList(List<VirtualItemStack> changes, boolean isIncremental) {
@@ -186,21 +161,6 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 		return this.clientItemList;
 	}
 
-	public record SimpleItemKey(Item item, @Nullable CompoundTag tag) {
-		public static SimpleItemKey from(ItemStack stack) {
-			return new SimpleItemKey(stack.getItem(), stack.getTag());
-		}
-
-		public static SimpleItemKey from(VirtualItemStack vStack) {
-			return from(vStack.getItemStack());
-		}
-
-		public ItemStack toStack(int count) {
-			ItemStack s = new ItemStack(item, count);
-			s.setTag(tag != null ? tag.copy() : null);
-			return s;
-		}
-	}
 
 	@Override
 	public ItemStack quickMoveStack(Player player, int index) {
@@ -214,6 +174,7 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 			if (!player.level().isClientSide) {
 				TeamTown town = TeamTown.from(player);
 				IActionExecutorHandler executor = town.getActionExecutorHandler();
+				if (town == null) return ItemStack.EMPTY;
 				//构建存入 Action
 				TownResourceActions.ItemStackAction action = new TownResourceActions.ItemStackAction(
 						slotStack,
