@@ -16,7 +16,7 @@ public record SimpleItemKey(Item item, @Nullable CompoundTag tag)
     }
 
     public static SimpleItemKey from(VirtualItemStack vStack) {
-        return from(vStack.getItemStack());
+        return from(vStack.getDisplayStack());
     }
 
     public ItemStack toStack(int count) {

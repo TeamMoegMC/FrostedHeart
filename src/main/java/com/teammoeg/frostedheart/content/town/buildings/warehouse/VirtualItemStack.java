@@ -25,28 +25,27 @@ import java.util.List;
 import java.util.Map;
 
 public class VirtualItemStack {
-    private final ItemStack stack;
+    private final SimpleItemKey key;
     private long amount;
 
-    public VirtualItemStack(ItemStack stack, long amount) {
-        this.stack = stack;
+    public VirtualItemStack(SimpleItemKey key, long amount) {
+        this.key = key;
         this.amount = amount;
     }
 
-    public ItemStack getItemStack() { return stack; }
-    public long getAmount() { return amount; }
-    public void setAmount(long amount) { this.amount = amount; }
+    public SimpleItemKey getKey() {
+        return key;
+    }
 
-    public static List<VirtualItemStack> toClientVisualList(Map<ItemStack, Double> itemMap) {
-        if (itemMap == null || itemMap.isEmpty()) {
-            return List.of();
-        }
-        return itemMap.entrySet().stream()
-                .map(entry -> {
-                    ItemStack stack = entry.getKey();
-                    Double amount = entry.getValue();
-                    return new VirtualItemStack(stack, amount.longValue());
-                })
-                .toList();
+    public ItemStack getDisplayStack() {
+        return key.toStack(1);
+    }
+
+    public long getAmount() {
+        return amount;
+    }
+
+    public void setAmount(long amount) {
+        this.amount = amount;
     }
 }

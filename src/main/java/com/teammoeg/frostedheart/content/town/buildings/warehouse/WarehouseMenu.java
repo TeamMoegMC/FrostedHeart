@@ -88,14 +88,14 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 		if (isFirstSync) {
 			for (var entry : current.entrySet()) {
 				if (entry.getValue() > 0) {
-					changes.add(new VirtualItemStack(entry.getKey().toStack(1), entry.getValue()));
+					changes.add(new VirtualItemStack(entry.getKey(), entry.getValue()));
 				}
 			}
 			if (!changes.isEmpty()) {
 				FHNetwork.INSTANCE.sendPlayer(serverPlayer, new WarehouseUpdatePacket(changes, false));
 			}
-			this.previousAvailableStacks = current;
 			this.isFirstSync = false;
+			this.previousAvailableStacks = current;
 
 		} else {
 			//增量更新逻辑
@@ -104,13 +104,13 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 				long currentCount = entry.getValue();
 				long prevCount = previousAvailableStacks.getOrDefault(entry.getKey(), 0L);
 				if (currentCount != prevCount) {
-					changes.add(new VirtualItemStack(entry.getKey().toStack(1), currentCount));
+					changes.add(new VirtualItemStack(entry.getKey(), currentCount));
 				}
 			}
 			//找出之前有，现在没有的物品
 			for (SimpleItemKey key : previousAvailableStacks.keySet()) {
 				if (!current.containsKey(key)) {
-					changes.add(new VirtualItemStack(key.toStack(1), 0));
+					changes.add(new VirtualItemStack(key, 0));
 				}
 			}
 

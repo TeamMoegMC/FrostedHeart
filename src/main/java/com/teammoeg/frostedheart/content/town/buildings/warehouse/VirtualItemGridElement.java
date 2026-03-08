@@ -99,9 +99,9 @@ public class VirtualItemGridElement extends UIElement{
             int sy = y + row * slotSize;
 
             // 绘制物品
-            guiGraphics.renderItem(vStack.getItemStack(), sx + 1, sy + 1);
+            guiGraphics.renderItem(vStack.getDisplayStack(), sx + 1, sy + 1);
             //绘制耐久条
-            guiGraphics.renderItemDecorations(mc.font, vStack.getItemStack(), sx + 1, sy + 1, null);
+            guiGraphics.renderItemDecorations(mc.font, vStack.getDisplayStack(), sx + 1, sy + 1, null);
 
             // 绘制数量
             guiGraphics.pose().pushPose();
@@ -162,7 +162,7 @@ public class VirtualItemGridElement extends UIElement{
             List<VirtualItemStack> list = itemSource.get();
             if (list != null && index >= 0 && index < list.size()) {
                 VirtualItemStack vStack = list.get(index);
-                List<Component> itemTooltip = Screen.getTooltipFromItem(Minecraft.getInstance(), vStack.getItemStack());
+                List<Component> itemTooltip = Screen.getTooltipFromItem(Minecraft.getInstance(), vStack.getDisplayStack());
                 for (Component c : itemTooltip) {
                     tooltip.accept(c);
                 }
@@ -208,7 +208,7 @@ public class VirtualItemGridElement extends UIElement{
                 List<VirtualItemStack> list = itemSource.get();
                 if (list != null && index >= 0 && index < list.size()) {
                     VirtualItemStack clickedVStack = list.get(index);
-                    FHNetwork.INSTANCE.sendToServer(new WarehouseInteractPacket(WarehouseInteractPacket.Action.EXTRACT, shiftDown, btnId, clickedVStack.getItemStack()));
+                    FHNetwork.INSTANCE.sendToServer(new WarehouseInteractPacket(WarehouseInteractPacket.Action.EXTRACT, shiftDown, btnId, clickedVStack.getDisplayStack()));
                     playClickSound();
                     return true;
                 }
