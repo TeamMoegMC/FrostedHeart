@@ -319,7 +319,7 @@ public class TeamTownData implements SpecialData {
 				.filter(AbstractTownBuilding::isBuildingWorkable)
 				.filter(building -> building instanceof ITownResidentWorkBuilding)
 				.map(building -> (ITownResidentWorkBuilding) building)
-				.sorted(Comparator.comparingDouble(o -> -o.getResidentPriority()))// 降序排列
+				//.sorted(Comparator.comparingDouble(o -> -o.getResidentPriority()))//PriorityQueue本身就有排序，不需要额外排序
 				.collect(Collectors.toCollection(() -> new PriorityQueue<>(Comparator.comparingDouble(ITownResidentWorkBuilding::getResidentPriority).reversed())));
 
 		Map<ITownResidentWorkBuilding, Map<Resident, Double/*score*/>> buildingResidentScoreCache = new HashMap<>();
