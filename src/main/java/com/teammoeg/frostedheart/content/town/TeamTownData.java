@@ -330,6 +330,9 @@ public class TeamTownData implements SpecialData {
 			Resident bestResident = null;
 			double bestResidentScore = 0;
 			Map<Resident, Double> residentScoreCache = buildingResidentScoreCache.computeIfAbsent(topPriorityBuilding, a->new HashMap<>());
+			if(availableResidents.isEmpty()){
+				break;
+			}
 			for(Resident resident:availableResidents.values()){
 				double residentScore = residentScoreCache.computeIfAbsent(resident, topPriorityBuilding::getResidentScore);
 				if(residentScore > bestResidentScore){
