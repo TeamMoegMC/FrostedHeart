@@ -23,6 +23,7 @@ import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
+import com.teammoeg.frostedheart.content.town.tabs.TownInformationTab;
 import com.teammoeg.frostedheart.content.town.tabs.TownResourceTab;
 import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;
 import net.minecraft.client.gui.GuiGraphics;
@@ -46,22 +47,7 @@ public class WarehouseScreen extends AbstractTownWorkerBlockScreen<WarehouseMenu
 
     @Override
     protected void initTabs() {
-        addTab(new AbstractTownTab(this) {
-            @Override
-            public CIcons.CIcon getIcon() {
-                return inactiveButton;
-            }
-            @Override
-            public CIcons.CIcon getActiveIcon() {
-                return WarehouseScreen.activeButton;
-            }
-
-            @Override
-            public void build(UILayer layer) {
-
-            }
-        });
-
+        addTab(new TownInformationTab(this));
         addTab(new TownResourceTab(this));
     }
 

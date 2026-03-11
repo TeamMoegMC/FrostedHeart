@@ -357,14 +357,14 @@ public class ClimateCommonEvents {
                 // Town logic tick
                 int i = 0;
                 for (TeamDataHolder trd : CTeamDataManager.INSTANCE.getAllData()) {
-                    if (true || serverWorld.dimension().equals(trd.getData(FHSpecialDataTypes.GENERATOR_DATA).dimension)) {//todo: debug用，正式发布应改回正常的
+                    if (serverWorld.dimension().equals(trd.getData(FHSpecialDataTypes.GENERATOR_DATA).dimension)) {
                         if (serverWorld.getGameTime() % 20 == i % 20) {// Split town calculations to multiple seconds
-                            if (trd.getTeam().getOnlineMembers().size() > 0) {
+                            if (!trd.getTeam().getOnlineMembers().isEmpty()) {
                                 trd.getData(FHSpecialDataTypes.TOWN_DATA).tick(serverWorld);
                             }
                         }
                         if (serverWorld.getDayTime() % 24000 == i % 20 + 1000) {
-                            if (trd.getTeam().getOnlineMembers().size() > 0) {
+                            if (!trd.getTeam().getOnlineMembers().isEmpty()) {
                                 trd.getData(FHSpecialDataTypes.TOWN_DATA).tickMorning(serverWorld);// execute only once a day
                             }
                         }

@@ -58,7 +58,7 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 			this.serverSource = Collections::emptyMap;
 		}
 
-		super.addPlayerInventory(inventoryPlayer, 8, 139, 197);
+		super.addPlayerInventory(inventoryPlayer, 8, 140, 197);
 	}
 
 	@Override
