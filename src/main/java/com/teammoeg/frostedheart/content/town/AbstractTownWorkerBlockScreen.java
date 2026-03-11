@@ -79,6 +79,7 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
     }
     public void selectTab(int index) {
         if (index < 0 || index >= tabs.size()) return;
+        if (this.activeTab == index) return;
         this.activeTab = index;
 
         updateTabContent();

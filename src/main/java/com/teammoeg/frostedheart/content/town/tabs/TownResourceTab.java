@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.town.tabs;
 
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
-import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.VirtualItemGridElement;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseMenu;

@@ -80,4 +80,16 @@ public class WarehouseBuilding extends AbstractTownBuilding {
 		TownResourceActions.VirtualResourceAttributeAction action = new TownResourceActions.VirtualResourceAttributeAction(VirtualResourceType.MAX_CAPACITY.generateAttribute(0), capacity, ResourceActionType.ADD, ResourceActionMode.ATTEMPT);
 		town.getActionExecutorHandler().execute(action);
 	}
+
+	public int getVolume() {
+		return volume;
+	}
+
+	public int getArea() {
+		return area;
+	}
+
+	public double getCapacity() {
+		return capacity;
+	}
 }
