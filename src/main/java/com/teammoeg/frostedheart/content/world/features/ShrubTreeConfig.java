@@ -30,13 +30,15 @@ public record ShrubTreeConfig(
         BlockStateProvider logProvider,
         BlockStateProvider foliageProvider,
         IntProvider branchCount,
-        IntProvider branchLength
+        IntProvider branchLength,
+        IntProvider trunkHeight
 ) implements FeatureConfiguration {
 
     public static final Codec<ShrubTreeConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             BlockStateProvider.CODEC.fieldOf("log_provider").forGetter(ShrubTreeConfig::logProvider),
             BlockStateProvider.CODEC.fieldOf("foliage_provider").forGetter(ShrubTreeConfig::foliageProvider),
             IntProvider.CODEC.fieldOf("branch_count").forGetter(ShrubTreeConfig::branchCount),
-            IntProvider.CODEC.fieldOf("branch_length").forGetter(ShrubTreeConfig::branchLength)
+            IntProvider.CODEC.fieldOf("branch_length").forGetter(ShrubTreeConfig::branchLength),
+            IntProvider.CODEC.fieldOf("trunk_height").forGetter(ShrubTreeConfig::trunkHeight)
     ).apply(instance, ShrubTreeConfig::new));
 }

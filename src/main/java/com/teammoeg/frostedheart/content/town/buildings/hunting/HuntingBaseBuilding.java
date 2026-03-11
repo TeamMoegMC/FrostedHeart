@@ -115,6 +115,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 				if(resident==null)continue;
 				double efficiency=0.2 * getResidentScore(resident);
 				if(efficiency<=0)continue;
+//				efficiency=2;
 				totalEfficiency+=efficiency;
 			}
 			double picked=teamTown.maypickTerrainResource(TerrainResourceType.HUNT, totalEfficiency*2);
