@@ -20,13 +20,12 @@
 package com.teammoeg.chorda.client.cui.base;
 
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreen;
 import com.teammoeg.chorda.client.cui.theme.Theme;
 import com.teammoeg.chorda.client.cui.theme.VanillaTheme;
 import com.teammoeg.chorda.math.Rect;
-import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.text.Components;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.Font;
@@ -53,19 +52,20 @@ public class UIElement{
 	private double mouseX,mouseY;
 	@Getter
 	private float partialTick;
-	@Getter
 	@Setter
 	private Theme theme=VanillaTheme.INSTANCE;
+	public Theme theme() {return theme;}
+
 	public UIElement(UIElement parent) {
 		this.parent = parent;
 		if(parent!=null)
-			this.theme=parent.getTheme();
+			this.theme=parent.theme();
 		//CUIDebugHelper.registerUIObject(this);
 	}
 	protected void setParent(UIElement parent) {
 		this.parent = parent;
 		if(parent!=null)
-			this.theme=parent.getTheme();
+			this.theme=parent.theme();
 	}
 	public LayerHolder getLayerHolder() {
 		if(layerholderCache==null)
@@ -148,7 +148,7 @@ public class UIElement{
 		return getLayerHolder().getFont();
 	}
 	public boolean hasTooltip() {
-		return isEnabled() && isMouseOver();
+		return isEnabled() && isVisible() && isMouseOver();
 	}
 
 	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
@@ -215,6 +215,6 @@ public class UIElement{
 	}
 
 	public Rect getBounds() {
-		return new Rect(getX(), getY(), getWidth(), getHeight());
+		return new Rect(getScreenX(), getScreenY(), getWidth(), getHeight());
 	}
 }

@@ -19,12 +19,14 @@
 
 package com.teammoeg.frostedheart.content.tips.network;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.chorda.text.Components;
-import com.teammoeg.frostedheart.content.tips.ServerTipSender;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.tips.ServerTipHelper;
 import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipHelper;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -32,23 +34,25 @@ import java.util.function.Supplier;
 public record DisplayCustomTipRequestPacket(Tip tip) implements CMessage {
 
     public DisplayCustomTipRequestPacket(FriendlyByteBuf buffer) {
-        this(Tip.builder("").fromNBT(buffer.readNbt()).build());
+        this(TipHelper.parse(buffer.readNbt()));
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
-        tip.write(buffer);
+        Tip.CODEC.encodeStart(NbtOps.INSTANCE, tip);
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        var player = context.get().getSender();
+        ServerPlayer player = context.get().getSender();
         if (player != null) {
             if (!player.hasPermissions(2)) {
-                FHMain.LOGGER.warn("{} IS A HACKER!", player.getName().getString());
-                ServerTipSender.sendCustom(Tip.builder("warning").line(Components.str("HACKER!")).pin(true).alwaysVisible(true).build(), player);
+                var message = player.getName().getString() + " attempted to send tip to all players but did not have sufficient permission level";
+                FHMain.LOGGER.warn(message);
+                ServerTipHelper.sendCustomToAllOps(Tip.builder("warning").contents(message, "Tip contents:", "").contents(tip.contents()).pin(true).alwaysVisible(true).build());
+                ServerTipHelper.sendCustom(Tip.builder("warning").contents("HACKER!").pin(true).alwaysVisible(true).build(), player);
             } else {
-                context.get().enqueueWork(() -> ServerTipSender.sendCustomToAll(tip));
+                context.get().enqueueWork(() -> ServerTipHelper.sendCustomToAll(tip));
             }
         }
         context.get().setPacketHandled(true);

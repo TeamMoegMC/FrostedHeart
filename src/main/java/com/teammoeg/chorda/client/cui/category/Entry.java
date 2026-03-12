@@ -26,7 +26,6 @@ import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.widgets.LimitedTextField;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.math.Colors;
-
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -44,18 +43,18 @@ public abstract class Entry extends UILayer {
         this.title = new LimitedTextField(this, title, getWidth()).shouldShowTooltip(false);
         this.icon = new FlatIcon.FlatIconWidget(this);
         this.icon.setSize(10, 10);
-        this.icon.setColor(Colors.L_TEXT_GRAY);
+        this.icon.setColor(theme().UIAltTextColor());
         addUIElements();
     }
 
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-        graphics.fill(x, y, x+w, y+h, Colors.L_BG_GRAY);
+        theme().drawButton(graphics, x, y, w, h, false, isEnabled());
         if (isMouseOver() && isEnabled()) {
-            graphics.fill(x-4, y, x-2, y+h, Colors.L_TEXT_GRAY);
+            graphics.fill(x-4, y, x-2, y+h, theme().UIAltTextColor());
         }
         if (getParent().selected == this) {
-            graphics.fill(x-4, y, x-2, y+h, Colors.L_BG_GREEN);
+            graphics.fill(x-4, y, x-2, y+h, Colors.themeColor());
         }
     }
 

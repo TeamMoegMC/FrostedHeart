@@ -19,21 +19,19 @@
 
 package com.teammoeg.chorda.client.cui.screenadapter;
 
-import org.lwjgl.glfw.GLFW;
-
-import com.mojang.blaze3d.platform.Window;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
-import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.text.Components;
-
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import org.lwjgl.glfw.GLFW;
 
 public class CUIScreenWrapper extends Screen implements CUIScreen {
 	@Getter
@@ -129,14 +127,11 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 	int x,y;
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-
-		
-		Window win = super.minecraft.getWindow();
 		primaryLayer.onBeforeRender();
 		int w = primaryLayer.getWidth();
 		int h = primaryLayer.getHeight();
-		x = (win.getGuiScaledWidth() - w) / 2;
-		y = (win.getGuiScaledHeight() - h) / 2;
+		x = (ClientUtils.screenWidth() - w) / 2;
+		y = (ClientUtils.screenHeight() - h) / 2;
 		//backgound
 		renderBackground(graphics);
 		CGuiHelper.resetGuiDrawing();
@@ -154,7 +149,7 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 		TooltipBuilder builder=new TooltipBuilder(100);
 		primaryLayer.getTooltip(builder);
 		graphics.pose().pushPose();
-		builder.draw(graphics, mouseX, mouseY);
+		builder.draw(graphics, mouseX, mouseY, primaryLayer.theme());
 		graphics.pose().popPose();
 		Cursor cs=primaryLayer.getCursor();
 		if(cs==null)

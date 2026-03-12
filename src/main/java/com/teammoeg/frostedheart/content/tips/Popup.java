@@ -23,11 +23,13 @@ import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
+import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -44,11 +46,22 @@ public class Popup {
     private static State state = State.IDLE;
 
     @SubscribeEvent
-    public static void render(RenderGuiEvent.Post event) {
+    public static void onScreenRender(ScreenEvent.Render.Post event) {
+        if (FrostedHud.renderDebugOverlay) {
+            FrostedHud.renderDebugOverlay(event.getGuiGraphics(), ClientUtils.getMc());
+        }
+        render(event.getGuiGraphics());
+    }
+
+    @SubscribeEvent
+    public static void onGuiRender(RenderGuiEvent.Post event) {
+        render(event.getGuiGraphics());
+    }
+
+    private static void render(GuiGraphics graphic) {
         if (POPUPS.isEmpty()) {
             state = State.IDLE;
         } else {
-            var graphic = event.getGuiGraphics();
             var message = POPUPS.peek();
             if (message == null) {
                 POPUPS.remove();
@@ -96,7 +109,7 @@ public class Popup {
         float y = height * progress + 24;
         float x = ClientUtils.screenWidth() * 0.5F;
         pose.pushPose();
-        pose.translate(x, y-height, 0);
+        pose.translate(x, y-height, 1200);
         CGuiHelper.drawStringLines(graphic, font, lines, 0, 0, Colors.themeColor(), 1, true, true, Alignment.CENTER);
         pose.popPose();
     }

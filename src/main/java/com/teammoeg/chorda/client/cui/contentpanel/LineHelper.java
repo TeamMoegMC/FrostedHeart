@@ -19,16 +19,14 @@
 
 package com.teammoeg.chorda.client.cui.contentpanel;
 
-import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.math.Colors;
-import com.teammoeg.chorda.text.Components;
-import com.teammoeg.frostedheart.FrostedHud;
-import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.archive.Alignment;
-import com.teammoeg.frostedheart.content.tips.ClickActions;
 import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipHelper;
 import com.teammoeg.frostedheart.content.tips.TipManager;
+import com.teammoeg.frostedheart.infrastructure.command.TipCommand;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -36,7 +34,6 @@ import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
 
 public class LineHelper {
     public static TextLine text(UIElement parent, String text) {
@@ -79,95 +76,56 @@ public class LineHelper {
         return br(parent).color(color);
     }
 
-    public static List<Line<?>> fromTipWithoutChildren(Tip tip, ContentPanel parent) {
-        List<Line<?>> lines = new ArrayList<>();
-
-        List<Component> contents = tip.getContents();
-        // title
-        var title = contents.get(0);
-        if (FrostedHud.renderDebugOverlay) {
-            var id = Component.literal(" | ID: " + tip.getId()).withStyle(Components.color(Colors.L_BG_GRAY));
-            title = Component.empty().append(title).append(id);
-        }
-        // button
-        Consumer<MouseButton> clickAction = null;
-        Component btnDesc = null;
-        if (tip.hasClickAction()) {
-            clickAction = b -> tip.runClickAction();
-            btnDesc = ClickActions.getDesc(tip.getClickAction(), tip.getClickActionContent());
-        }
-        lines.add(text(parent, title).button(btnDesc, clickAction));
-        // contents
-        for (int i = 1; i < contents.size(); i++) {
-            lines.add(text(parent, contents.get(i)));
-        }
-        // image
-        if (tip.getImage() != null) {
-            lines.add(space(parent));
-            var img = img(parent, tip.getImage());
-            if (img.getImgSize() != null && img.getImgSize().width < 64) {
-                img.bgColor(Colors.L_BG_GRAY);
-            }
-            lines.add(img);
-        }
-        lines.add(items(parent, FHItems.ICE_SKATES.asStack(), FHItems.SNOWSHOES.asStack()));
-        return lines;
-    }
-
-    public static List<Line<?>> fromTip(Tip tip, ContentPanel parent) {
+    public static List<Line<?>> fromTip(Tip tipInput, ContentPanel parent) {
         List<Line<?>> lines = new ArrayList<>();
         List<Tip> tips = new ArrayList<>();
-        tips.add(tip);
-        tips.addAll(TipManager.INSTANCE.state().getChildren(tip));
+        tips.add(tipInput);
+        tips.addAll(TipManager.state().getChildren(tipInput));
 
         for (int j = 0; j < tips.size(); j++) {
-            final Tip t1 = tips.get(j);
-            if (t1.isHide()) continue;
-            var tipContents = t1.getContents();
-            int color = Colors.cyanToTheme(t1.getFontColor());
-            Consumer<MouseButton> clickAction = null;
-            Component btnDesc = null;
-            if (t1.hasClickAction()) {
-                clickAction = b -> t1.runClickAction();
-                btnDesc = ClickActions.getDesc(t1.getClickAction(), t1.getClickActionContent());
-            }
+            final Tip tip = tips.get(j);
+            if (tip.display().hide()) continue;
+            var tipContents = tip.contents();
+            int color = Colors.cyanToTheme(tip.display().fontColor());
 
             // title
             if (j == 0) {
-                lines.add(text(parent, tipContents.get(0)).quote(color).button(btnDesc, clickAction));
-                lines.add(br(parent));
+                lines.add(text(parent, Component.translatable(tipContents.get(0))).color(parent.theme().UIAltTextColor()).scale(2).button(tip.clickAction()));
             // new tip notification
-            } else if (!TipManager.INSTANCE.state().isViewed(t1)) {
+            } else if (!TipManager.state().isViewed(tip)) {
                 lines.add(br(parent));
                 lines.add(text(parent, Component.translatable("gui.frostedheart.archive.new_tip")).title(color, 1).color(Colors.readableColor(color)));
-            } else {
-                lines.add(space(parent));
             }
-            // if child tip has different title or click action
-            if (j != 0 && (!tipContents.get(0).equals(tip.getContents().get(0)) || tip.hasClickAction())) {
-                lines.add(br(parent));
-                lines.add(text(parent, tipContents.get(0)).quote(color).button(btnDesc, clickAction));
+            // if child tip has different title or has click action
+            if (j != 0 && (TipHelper.hasClickAction(tip) || !tipContents.get(0).equals(tipInput.contents().get(0)))) {
+                lines.add(space(parent));
+                lines.add(text(parent, Component.translatable(tipContents.get(0))).quote(color).button(tip.clickAction()));
             }
             // lines
             for (int i = 1; i < tipContents.size(); i++) {
-                Component line = tipContents.get(i);
-                if (!line.getString().isBlank()) {
-                    lines.add(text(parent, line));
+                String text = tipContents.get(i);
+                if (!text.isBlank()) {
+                    lines.add(text(parent, Component.translatable(text)));
                 }
             }
+            // items
+            if (!tip.display().displayItems().isEmpty()) {
+                lines.add(items(parent, tip.display().displayItems()));
+            }
             // image
-            if (t1.getImage() != null) {
-                var img = img(parent, t1.getImage());
-                if (img.getImgSize() != null && img.getImgSize().width < 64) {
-                    img.bgColor(Colors.L_BG_GRAY);
-                }
+            if (TipHelper.hasImage(tip)) {
+                var img = img(parent, tip.image());
                 lines.add(img);
             }
             // debug
-            if (FrostedHud.renderDebugOverlay) {
-                lines.add(text(parent, "ID: " + t1.getId()).color(Colors.L_BG_GRAY).alignment(Alignment.RIGHT).button(Component.translatable("controls.reset"), b -> {
-                    TipManager.INSTANCE.state().reset(t1);
-                }));
+            if (TipCommand.editMode) {
+                lines.add(text(parent, "ID: " + tip.id())
+                        .color(parent.theme().UIBGBorderColor())
+                        .alignment(Alignment.RIGHT)
+                        .button(Component.translatable("controls.reset"), FlatIcon.HISTORY, b -> TipManager.state().reset(tip))
+                        .button(Component.translatable("selectServer.edit"), FlatIcon.WRENCH, b -> TipHelper.edit(tip.id(), parent.theme()))
+                );
+                lines.add(space(parent));
             }
         }
         return lines;

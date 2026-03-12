@@ -51,8 +51,8 @@ public class SimpleTechTheme implements Theme{
 	}
 	@Override
 	public void drawUIBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-		graphics.fill(x, y, x+w, y+h, 0xaa005066);
-		drawRect(graphics,x,y,w,h,0xffe4eff0);
+		graphics.fill(x, y, x+w, y+h, UIBGColor());
+		drawRect(graphics,x,y,w,h, UIBGBorderColor());
 	}
 	@Override
 	public boolean isUITextShadow() {
@@ -65,27 +65,47 @@ public class SimpleTechTheme implements Theme{
 	}
 	
 	@Override
-	public int getUITextColor() {
+	public int UITextColor() {
 		return 0xFFe4eff0;
 	}
 
 	@Override
-	public int getErrorColor() {
+	public int UIAltTextColor() {
+		return 0xFFe4eff0;
+	}
+
+	@Override
+	public int UIBGColor() {
+		return 0xaa005066;
+	}
+
+	@Override
+	public int UIBGBorderColor() {
+		return 0xffe4eff0;
+	}
+
+	@Override
+	public int errorColor() {
 		return 0xFFAA9999;
 	}
 
-	
 	@Override
-	public int getButtonTextColor() {
+	public int successColor() {
+		return 0xFF99AA99;
+	}
+
+
+	@Override
+	public int buttonTextColor() {
 		return 0xFFe4eff0;
 	}
 	@Override
-	public int getButtonTextOverColor() {
+	public int buttonTextOverColor() {
 		return 0xFFFFFFFF;
 	}
 
 	@Override
-	public int getButtonTextDisabledColor() {
+	public int buttonTextDisabledColor() {
 		return 0xFF002439;
 	}
 

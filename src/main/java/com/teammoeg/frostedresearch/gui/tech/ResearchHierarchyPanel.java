@@ -19,13 +19,6 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -43,9 +36,14 @@ import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.ThickLine;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.ResearchEditors;
-
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ResearchHierarchyPanel extends UILayer {
 	private static int[] ButtonPos = new int[] { 76, 44, 108, 12, 140 };
@@ -262,7 +260,7 @@ public class ResearchHierarchyPanel extends UILayer {
 	@Override
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		super.render(matrixStack, x, y, w, h);
-		matrixStack.drawString(getFont(), Lang.translateGui("research_hierarchy"), x + 3, y + 3, getTheme().getUITextColor(), false);
+		matrixStack.drawString(getFont(), Lang.translateGui("research_hierarchy"), x + 3, y + 3, theme().UITextColor(), false);
 		TechIcons.HLINE_L.draw(matrixStack, x + 1, y + 13, 80, 3);
 	}
 
@@ -292,9 +290,9 @@ public class ResearchHierarchyPanel extends UILayer {
 		@Override
 		public void draw(GuiGraphics matrixStack, int x, int y) {
 			if (doShow())
-				color = DrawDeskTheme.INSTANCE.getUITextColor();
+				color = DrawDeskTheme.INSTANCE.UITextColor();
 			else
-				color = DrawDeskTheme.INSTANCE.getButtonTextDisabledColor();
+				color = DrawDeskTheme.INSTANCE.buttonTextDisabledColor();
 			super.draw(matrixStack, x, y);
 		}
 	}
@@ -376,9 +374,9 @@ public class ResearchHierarchyPanel extends UILayer {
 		@Override
 		public void draw(GuiGraphics matrixStack, int x, int y) {
 			if (doShow())
-				color = DrawDeskTheme.INSTANCE.getUITextColor();
+				color = DrawDeskTheme.INSTANCE.UITextColor();
 			else
-				color = DrawDeskTheme.INSTANCE.getButtonTextDisabledColor();
+				color = DrawDeskTheme.INSTANCE.buttonTextDisabledColor();
 			super.draw(matrixStack, x, y);
 		}
 	}
@@ -413,7 +411,7 @@ public class ResearchHierarchyPanel extends UILayer {
 		@Override
 		public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 			CGuiHelper.resetGuiDrawing();
-			getTheme().drawSlot(matrixStack, x, y, w, h);
+			theme().drawSlot(matrixStack, x, y, w, h);
 			if (FHResearch.editor || research.isShowable()) {
 				this.drawIcon(matrixStack, x + 4, y + 4, 16, 16);
 				if (research.isCompleted()) {

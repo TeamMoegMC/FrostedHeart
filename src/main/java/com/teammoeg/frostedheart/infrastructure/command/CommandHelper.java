@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.infrastructure.command;
 
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -8,7 +9,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 
-public class CMD {
+public class CommandHelper {
     public static LiteralArgumentBuilder<CommandSourceStack> literal(String name) {
         return Commands.literal(name);
     }
@@ -20,5 +21,8 @@ public class CMD {
     }
     public static RequiredArgumentBuilder<CommandSourceStack, ?> integer(String name) {
         return Commands.argument(name, IntegerArgumentType.integer());
+    }
+    public static RequiredArgumentBuilder<CommandSourceStack, ?> bool(String name) {
+        return Commands.argument(name, BoolArgumentType.bool());
     }
 }

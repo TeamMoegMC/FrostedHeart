@@ -89,22 +89,16 @@ public class ClimateClientEvents {
     @SubscribeEvent
     public static void playFrostedSound(TickEvent.PlayerTickEvent event) {
         if (event.side == LogicalSide.CLIENT && event.phase == TickEvent.Phase.START
-                && event.player instanceof LocalPlayer) {
-            LocalPlayer player = (LocalPlayer) event.player;
-            if(forstedSoundCd>0)
-            	forstedSoundCd--;
-            if (!player.isSpectator() && !player.isCreative() && player.level() != null&&forstedSoundCd>0) {
-            	
-            	PlayerTemperatureData.getCapability(player).ifPresent(ptd -> {
+                && event.player instanceof LocalPlayer player) {
+            if (!player.isSpectator() && !player.isCreative() && player.level() != null) {
+                PlayerTemperatureData.getCapability(player).ifPresent(ptd -> {
                     float prevTemp = ptd.smoothedBodyPrev;
                     float currTemp = ptd.smoothedBody;
                     // play sound if currTemp transitions across integer threshold
                     if (currTemp <= 0.5F && Mth.floor(prevTemp - 0.5F) != Mth.floor(currTemp - 0.5F)) {
                         player.level().playSound(player, player.blockPosition(), FHSoundEvents.ICE_CRACKING.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
-                        forstedSoundCd=20;
                     }
                 });
-
             }
         }
     }

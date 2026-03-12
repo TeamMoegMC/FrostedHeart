@@ -32,9 +32,7 @@ import com.teammoeg.chorda.client.cui.widgets.TextButton;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.FlatIcon;
-import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.text.Components;
-
 import lombok.Getter;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
@@ -171,8 +169,8 @@ public class EditListDialog<T> extends EditDialog {
     }
     @Override
     public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-    	getTheme().drawUIBackground(matrixStack, x, y, w, h);
-        matrixStack.drawString(getFont(), getTitle(), x+5, y+5, getTheme().getUITextColor(),getTheme().isUITextShadow());
+    	theme().drawUIBackground(matrixStack, x, y, w, h);
+        matrixStack.drawString(getFont(), getTitle(), x+5, y+5, theme().UITextColor(), theme().isUITextShadow());
     }
 
     @Override
@@ -207,7 +205,7 @@ public class EditListDialog<T> extends EditDialog {
         public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
             super.drawBackground(matrixStack, x, y, w, h);
             
-            matrixStack.drawString(getFont(), getTitle(), x+4, y+5, getTheme().getButtonTextColor(),getTheme().isButtonTextShadow());
+            matrixStack.drawString(getFont(), getTitle(), x+4, y+5, theme().buttonTextColor(), theme().isButtonTextShadow());
         }
 
         @Override
@@ -303,13 +301,13 @@ public class EditListDialog<T> extends EditDialog {
                 	matrixStack.fill(x + w - 19, y, x+w, y+h, 0x21FFFFFF);
                 }
             }
-            matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+th, getTheme().getButtonTextColor(),getTheme().isButtonTextShadow());
+            matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+th, theme().buttonTextColor(), theme().isButtonTextShadow());
 
             //if (mouseOver) {
             	FlatIcon.CROSS.toCIcon().draw(matrixStack, x+w-18, y+1,height-2,height-2);
             	//matrixStack.drawString(getFont(), "[-]", x+w-16, y+2, getTheme().getButtonTextColor());
-            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+2, getTheme().getButtonTextColor(),getTheme().isButtonTextShadow());
-            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+h-getFont().lineHeight, getTheme().getButtonTextColor(),getTheme().isButtonTextShadow());
+            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+2, theme().buttonTextColor(), theme().isButtonTextShadow());
+            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+h-getFont().lineHeight, theme().buttonTextColor(), theme().isButtonTextShadow());
             //}
             matrixStack.pose().popPose();
         }

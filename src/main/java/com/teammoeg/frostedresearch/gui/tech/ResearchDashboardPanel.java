@@ -94,8 +94,8 @@ public class ResearchDashboardPanel extends UILayer {
 		ResearchData rd = detailPanel.research.getData();
 		if (rd.canResearch()) {
 			if (!rd.canComplete(detailPanel.research)) {
-				tp.setColor(getTheme().getErrorColor());
-				techpoint.setColor(getTheme().getErrorColor());
+				tp.setColor(theme().errorColor());
+				techpoint.setColor(theme().errorColor());
 			}
 			techpoint.setText(CFormatHelper.toReadableUnit(rd.getTotalCommitted(detailPanel.research)) + "/" + CFormatHelper.toReadableUnit(detailPanel.research.getRequiredPoints()) + "IOPS");
 		}
@@ -110,13 +110,13 @@ public class ResearchDashboardPanel extends UILayer {
 			int insightAvailable = ClientResearchDataAPI.getData().get().getAvailableInsightLevel();
 			availableInsightLevel.setText(Lang.translateGui("research.insight_required", insightNeeded, insightAvailable));
 			if (insightNeeded > insightAvailable) {
-				availableInsightLevel.setColor(getTheme().getErrorColor());
+				availableInsightLevel.setColor(theme().errorColor());
 			}
 			add(availableInsightLevel);
 			availableInsightLevel.setX(140 - availableInsightLevel.getWidth());
 		}
 		if (rd.canResearch() && !rd.canComplete(detailPanel.research)) {
-			TextField rq = new TextField(this).setMaxWidth(140).setMaxLines(1).setColor(getTheme().getErrorColor());
+			TextField rq = new TextField(this).setMaxWidth(140).setMaxLines(1).setColor(theme().errorColor());
 			rq.setPos(40, 20 + ClientUtils.font().lineHeight * 3);
 			add(rq);
 			rq.setText(Lang.translateGui("research.required_clue"));

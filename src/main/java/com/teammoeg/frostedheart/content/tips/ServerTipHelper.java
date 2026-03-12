@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.tips;
 
+import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayPopupPacket;
@@ -26,7 +27,7 @@ import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
-public class ServerTipSender {
+public class ServerTipHelper {
 
     /**
      * 使客户端显示对应 id 的 tip
@@ -53,6 +54,16 @@ public class ServerTipSender {
      */
     public static void sendCustomToAll(Tip tip) {
         FHNetwork.INSTANCE.sendToAll(new DisplayCustomTipPacket(tip));
+    }
+
+    /**
+     * 向所有在线管理员发送自定义 tip
+     * <p>
+     * 注意：自定义 tip 不会储存任何状态
+     * @param tip tip
+     */
+    public static void sendCustomToAllOps(Tip tip) {
+        CDistHelper.getOnlineOPs().forEach(p -> sendCustom(tip, p));
     }
 
     /**

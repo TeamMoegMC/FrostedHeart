@@ -30,11 +30,11 @@ public class TipClientEvents {
 
     @SubscribeEvent
     public static void onPlayerLoggedIn(ClientPlayerNetworkEvent.LoggingIn event) {
-        TipManager.INSTANCE.display().clearRenderQueue();
+        TipManager.display().clearRenderQueue();
     }
 
     @SubscribeEvent
     public static void onPlayerLoggedOut(ClientPlayerNetworkEvent.LoggingOut event) {
-        TipManager.INSTANCE.display().clearRenderQueue();
+        TipManager.display().clearRenderQueue();
     }
 }

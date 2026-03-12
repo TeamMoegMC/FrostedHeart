@@ -18,6 +18,18 @@
  */
 
 package com.teammoeg.chorda.client.cui.widgets;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.chorda.client.CInputHelper;
+import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.cui.base.Focusable;
+import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.base.Verifier;
+import com.teammoeg.chorda.client.cui.base.Verifier.VerifyResult;
+import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
@@ -26,33 +38,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
-import net.minecraft.network.chat.Style;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
-
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.chorda.client.CInputHelper;
-import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.base.Focusable;
-import com.teammoeg.chorda.client.cui.base.MouseButton;
-import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
-import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.client.cui.base.UILayer;
-import com.teammoeg.chorda.client.cui.base.Verifier;
-import com.teammoeg.chorda.client.cui.base.Verifier.VerifyResult;
-import com.teammoeg.chorda.client.cui.theme.VanillaTheme;
-import com.teammoeg.chorda.text.Components;
-
-import lombok.Getter;
-import lombok.Setter;
-
-import com.teammoeg.chorda.client.CInputHelper.Cursor;
-
-import java.util.Objects;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 public class TextBox extends UIElement implements Focusable {
 	private boolean isFocused = false;
@@ -467,8 +454,8 @@ public class TextBox extends UIElement implements Focusable {
 				isPressed=false;
 			
 		}
-		int textColor=getTheme().getButtonTextColor();
-		int cursorColor =( (!validText.isError() ? textColor:getTheme().getErrorColor())&textColor)|((drawGhostText ? 0x78000000 : 0xFF000000));
+		int textColor= theme().buttonTextColor();
+		int cursorColor =( (!validText.isError() ? textColor: theme().errorColor())&textColor)|((drawGhostText ? 0x78000000 : 0xFF000000));
 		int j = cursorPos - displayPos;
 		String s = getFont().plainSubstrByWidth(textToDraw.substring(displayPos), w);
 		if(rightAlign)
@@ -530,7 +517,7 @@ public class TextBox extends UIElement implements Focusable {
 	}
 
 	public void drawTextBox(GuiGraphics graphics, int x, int y, int w, int h) {
-		getTheme().drawTextboxBackground(graphics, x, y, w, h, isFocused());
+		theme().drawTextboxBackground(graphics, x, y, w, h, isFocused());
 	}
 
 	public VerifyResult isValid(String txt) {

@@ -20,7 +20,6 @@
 package com.teammoeg.frostedresearch.gui;
 
 import com.teammoeg.chorda.client.cui.theme.Theme;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
 
@@ -70,9 +69,15 @@ public class DrawDeskTheme implements Theme{
 	}
 
 	@Override
-	public int getErrorColor() {
+	public int errorColor() {
 		return TechIcons.text_red;
 	}
+
+	@Override
+	public int successColor() {
+		return TechIcons.text_green;
+	}
+
 	public static void drawCheckBox(GuiGraphics graphics,int x,int y,int w,int h,boolean check,boolean cross) {
 		if (check)
 			TechIcons.CHECKBOX_CHECKED.draw(graphics, x, y, w, h);
@@ -97,19 +102,34 @@ public class DrawDeskTheme implements Theme{
 	}
 	
 	@Override
-	public int getUITextColor() {
+	public int UITextColor() {
 		return TechIcons.text;
 	}
 	@Override
-	public int getButtonTextColor() {
+	public int UIAltTextColor() {
+		return TechIcons.text;
+	}
+
+	@Override
+	public int UIBGColor() {
+		return 0xFFbcb59f;
+	}
+
+	@Override
+	public int UIBGBorderColor() {
+		return 0xFF9b9480;
+	}
+
+	@Override
+	public int buttonTextColor() {
 		return TechIcons.text;
 	}
 	@Override
-	public int getButtonTextOverColor() {
+	public int buttonTextOverColor() {
 		return TechIcons.text;
 	}
 	@Override
-	public int getButtonTextDisabledColor() {
+	public int buttonTextDisabledColor() {
 		return 0xFFADA691;
 	}
 	

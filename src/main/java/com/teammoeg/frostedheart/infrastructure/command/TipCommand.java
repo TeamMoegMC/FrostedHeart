@@ -19,18 +19,17 @@
 
 package com.teammoeg.frostedheart.infrastructure.command;
 
-import com.google.gson.JsonElement;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.tips.ServerTipSender;
+import com.teammoeg.frostedheart.content.tips.ServerTipHelper;
 import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipHelper;
 import com.teammoeg.frostedheart.content.tips.TipManager;
-import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -42,12 +41,14 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import static com.teammoeg.frostedheart.infrastructure.command.CMD.*;
+import static com.teammoeg.frostedheart.infrastructure.command.CommandHelper.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class TipCommand {
+    public static boolean editMode = false;
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
@@ -68,9 +69,13 @@ public class TipCommand {
         if (FMLEnvironment.dist.isClient()) {
             var client = server.then(literal("client")
                     .then(literal("reload")
-                            .executes(c -> {TipManager.INSTANCE.loadFromFile(); return Command.SINGLE_SUCCESS;}))
+                            .executes(c -> {TipManager.INSTANCE.loadFromFile(); c.getSource().sendSuccess(() -> Component.literal("Loaded " + TipManager.INSTANCE.getAllTips().size() + " tip(s)"), true); return Command.SINGLE_SUCCESS;}))
                     .then(literal("unlockAll")
-                            .executes(c -> {TipManager.INSTANCE.state().unlockAll(); return Command.SINGLE_SUCCESS;}))
+                            .executes(c -> {TipManager.state().unlockAll(); return Command.SINGLE_SUCCESS;}))
+//                    .then(literal("edit").then(string("id").suggests(TipManager::suggest)
+//                            .executes(c -> {TipHelper.edit(TipManager.INSTANCE.getTip(StringArgumentType.getString(c, "id"))); return Command.SINGLE_SUCCESS;})))
+                    .then(literal("editMode").then(bool("enableEdit")
+                            .executes(c -> {editMode = BoolArgumentType.getBool(c, "enableEdit"); return Command.SINGLE_SUCCESS;})))
                     .then(literal("display").then(string("id").suggests(TipManager::suggest)
                             .executes(TipCommand::clientDisplay)))
                     .then(literal("displayCustom")
@@ -92,7 +97,7 @@ public class TipCommand {
             String id = StringArgumentType.getString(ctx, "id");
             int count = 0;
             for (ServerPlayer player : players) {
-                ServerTipSender.sendGeneral(id, player);
+                ServerTipHelper.sendGeneral(id, player);
                 count++;
             }
 
@@ -115,17 +120,16 @@ public class TipCommand {
         try {
             var players = EntityArgument.getPlayers(ctx, "players");
             String json = StringArgumentType.getString(ctx, "json");
-            Tip tip = Tip.builder(String.valueOf(Util.getMillis()))
-                    .fromJson(Tip.GSON.fromJson(json, JsonElement.class).getAsJsonObject())
-                    .setTemporary()
+            Tip tip = TipHelper.parse(json).copy()
+                    .temporary()
                     .build();
             int count = 0;
             for (ServerPlayer player : players) {
-                ServerTipSender.sendCustom(tip, player);
+                ServerTipHelper.sendCustom(tip, player);
                 count++;
             }
 
-            String id = tip.getContents().isEmpty() ? tip.getId() : tip.getContents().get(0).getString();
+            String id = tip.contents().isEmpty() ? tip.id() : tip.contents().get(0);
             Component message;
             if (count > 1) {
                 message = Component.translatable("commands.tip.success.multiple", id, count);
@@ -150,11 +154,11 @@ public class TipCommand {
             Tip tip = toTip(title, content, displayTime);
             int count = 0;
             for (ServerPlayer player : players) {
-                ServerTipSender.sendCustom(tip, player);
+                ServerTipHelper.sendCustom(tip, player);
                 count++;
             }
 
-            String id = tip.getContents().isEmpty() ? tip.getId() : tip.getContents().get(0).getString();
+            String id = tip.contents().isEmpty() ? tip.id() : tip.contents().get(0);
             Component message;
             if (count > 1) {
                 message = Component.translatable("commands.tip.success.multiple", id, count);
@@ -172,17 +176,16 @@ public class TipCommand {
 
     private static int clientDisplay(CommandContext<CommandSourceStack> ctx) {
         String id = StringArgumentType.getString(ctx, "id");
-        TipManager.INSTANCE.display().general(id);
+        TipManager.display().general(id);
         return Command.SINGLE_SUCCESS;
     }
 
     private static int clientDisplayJson(CommandContext<CommandSourceStack> ctx) {
         String json = StringArgumentType.getString(ctx, "json");
-        Tip tip = Tip.builder(String.valueOf(Util.getMillis()))
-                .fromJson(Tip.GSON.fromJson(json, JsonElement.class).getAsJsonObject())
-                .setTemporary()
+        Tip tip = TipHelper.parse(json).copy()
+                .temporary()
                 .build();
-        TipManager.INSTANCE.display().general(tip);
+        TipManager.display().general(tip);
         return Command.SINGLE_SUCCESS;
     }
 
@@ -191,23 +194,21 @@ public class TipCommand {
         String content = StringArgumentType.getString(ctx, "content");
         int displayTime = IntegerArgumentType.getInteger(ctx, "displayTime");
         Tip tip = toTip(title, content, displayTime);
-        TipManager.INSTANCE.display().general(tip);
+        TipManager.display().general(tip);
         return Command.SINGLE_SUCCESS;
     }
 
     public static Tip toTip(String title, String content, int displayTime) {
-        List<Component> contents = new ArrayList<>();
+        List<String> contents = new ArrayList<>();
         if (!content.isEmpty()) {
-            for (String s : content.split("\\$\\$")) {
-                contents.add(Component.translatable(s));
-            }
+            contents.addAll(Arrays.asList(content.split("\\$\\$")));
         }
-        return Tip.builder(String.valueOf(Util.getMillis()))
-                .line(Components.str(title))
-                .lines(contents)
+        return Tip.builder(TipHelper.randomString())
+                .contents(title)
+                .contents(contents)
                 .displayTime(displayTime)
                 .alwaysVisible(displayTime <= -1)
-                .setTemporary()
+                .temporary()
                 .build();
     }
 }

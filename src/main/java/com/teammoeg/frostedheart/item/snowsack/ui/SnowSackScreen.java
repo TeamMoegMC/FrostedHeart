@@ -58,22 +58,23 @@ public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> implem
     @Override
     protected void init() {
         super.init();
+        int gray = 0xFF585966;
 
         // 添加自动拾取切换按钮，调整位置避免与物品栏重叠
-        this.autoPickupButton = new IconButton(this.leftPos + 8, this.topPos + 70, FlatIcon.JUMP_IN, Colors.L_BG_GRAY, getAutoPickupText(), b -> {
+        this.autoPickupButton = new IconButton(this.leftPos + 8, this.topPos + 70, FlatIcon.JUMP_IN, gray, getAutoPickupText(), b -> {
                     this.menu.toggleAutoPickup();
                     FHNetwork.INSTANCE.sendToServer(new ToggleAutoPickupMessage());
-                    toggleButtonColor(b, Colors.themeColor(), Colors.L_BG_GRAY, this.menu.isAutoPickupEnabled());
+                    toggleButtonColor(b, Colors.themeColor(), gray, this.menu.isAutoPickupEnabled());
                 });
-        toggleButtonColor(autoPickupButton, Colors.themeColor(), Colors.L_BG_GRAY, this.menu.isAutoPickupEnabled());
+        toggleButtonColor(autoPickupButton, Colors.themeColor(), gray, this.menu.isAutoPickupEnabled());
         addRenderableWidget(autoPickupButton);
 
-        this.deleteOverflowButton = new IconButton(this.leftPos + 20, this.topPos + 70, FlatIcon.TRASH_CAN, Colors.L_BG_GRAY, getDeleteOverflowText(), b -> {
+        this.deleteOverflowButton = new IconButton(this.leftPos + 20, this.topPos + 70, FlatIcon.TRASH_CAN, gray, getDeleteOverflowText(), b -> {
                     this.menu.toggleDeleteOverflow();
                     FHNetwork.INSTANCE.sendToServer(new ToggleDeleteOverflowMessage());
-                    toggleButtonColor(b, Colors.themeColor(), Colors.L_BG_GRAY, this.menu.isDeleteOverflowEnabled());
+                    toggleButtonColor(b, Colors.themeColor(), gray, this.menu.isDeleteOverflowEnabled());
                 });
-        toggleButtonColor(deleteOverflowButton, Colors.themeColor(), Colors.L_BG_GRAY, this.menu.isDeleteOverflowEnabled());
+        toggleButtonColor(deleteOverflowButton, Colors.themeColor(), gray, this.menu.isDeleteOverflowEnabled());
         addRenderableWidget(deleteOverflowButton);
     }
 

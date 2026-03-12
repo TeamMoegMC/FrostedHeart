@@ -19,19 +19,6 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
 import com.google.common.collect.Iterators;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.chorda.Chorda;
@@ -47,7 +34,6 @@ import com.teammoeg.chorda.client.cui.widgets.TextBox;
 import com.teammoeg.chorda.client.cui.widgets.TextButton;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
@@ -65,6 +51,19 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * @author khjxiaogu
@@ -283,7 +282,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
             @Override
             public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-            	getTheme().drawPanel(matrixStack, x, y, w, h);
+            	theme().drawPanel(matrixStack, x, y, w, h);
             }
 
 			@Override
@@ -365,7 +364,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
     @Override
     public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-        getTheme().drawUIBackground(matrixStack, x, y, w, h);
+        theme().drawUIBackground(matrixStack, x, y, w, h);
 
         long now = System.currentTimeMillis();
 

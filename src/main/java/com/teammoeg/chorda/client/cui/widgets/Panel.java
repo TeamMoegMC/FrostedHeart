@@ -19,13 +19,12 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
-import java.util.function.Consumer;
-
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+
+import java.util.function.Consumer;
 
 public class Panel extends UILayer {
     Component title;
@@ -54,8 +53,8 @@ public class Panel extends UILayer {
 
     @Override
     public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-    	matrixStack.drawString(getFont(), title, x, y, getTheme().getUITextColor(), getTheme().isUITextShadow());
-    	getTheme().drawPanel(matrixStack, x, y, w, h);
+    	matrixStack.drawString(getFont(), title, x, y, theme().UITextColor(), theme().isUITextShadow());
+    	theme().drawPanel(matrixStack, x, y, w, h);
 
         super.render(matrixStack, x, y, w, h);
     }

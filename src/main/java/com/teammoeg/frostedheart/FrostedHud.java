@@ -29,7 +29,12 @@ import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.category.CategoryHelper;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIMenuScreenWrapper;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreen;
-import com.teammoeg.chorda.client.ui.*;
+import com.teammoeg.chorda.client.ui.AtlasUV;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
+import com.teammoeg.chorda.client.ui.PointSet;
+import com.teammoeg.chorda.client.ui.TextPosition;
+import com.teammoeg.chorda.client.ui.TexturedUV;
+import com.teammoeg.chorda.client.ui.UV;
 import com.teammoeg.chorda.client.ui.UV.Transition;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.math.Point;
@@ -43,8 +48,8 @@ import com.teammoeg.frostedheart.content.climate.gamedata.climate.ForecastFrame.
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.frostedheart.content.tips.TipRenderer;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
+import com.teammoeg.frostedheart.content.tips.client.gui.TipOverlay;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
@@ -1025,16 +1030,17 @@ public class FrostedHud {
                 .withStyle(ChatFormatting.GRAY));
         lines.add(DebugScreen.message);
 
-        if (!TipRenderer.TIP_QUEUE.isEmpty()) {
+        if (!TipOverlay.getQUEUE().isEmpty()) {
             lines.add(Component.literal("Tip Queue: "));
-            for (Tip tip : TipRenderer.TIP_QUEUE) {
-                lines.add(Component.empty().append(shift ? " ▼ " : " ▶ ").append(tip.getContents().get(0)).append(" [%s]".formatted(tip.getId())));
+            for (Tip tip : TipOverlay.getQUEUE()) {
+                lines.add(Component.empty().append(shift ? " ▼ " : " ▶ ").append(tip.contents().get(0)).append(" [%s]".formatted(tip.id())));
                 if (shift) {
-                    for (int i = 1; i < tip.getContents().size(); i++) {
-                        lines.add(Component.literal("   ◆ ").append(tip.getContents().get(i)));
+                    for (int i = 1; i < tip.contents().size(); i++) {
+                        lines.add(Component.literal("   ◆ ").append(tip.contents().get(i)));
                     }
                 }
             }
+            lines.add(Component.literal("Rendering: " + TipOverlay.getCurrent()));
         }
 
         if (ClientWaypointManager.hasWaypoint()) {
@@ -1082,21 +1088,23 @@ public class FrostedHud {
                         }
 
                         // 文本
-                        var title = widget.getTitle().copy();
-                        var mem = Component.literal("@" + Integer.toHexString(widget.hashCode())).withStyle(ChatFormatting.GRAY);
-                        var isMouseOver = widget.isMouseOver() || shift;
-                        String name = widget.getClass().getSimpleName();
-                        name = name.isBlank() ? "extends " + widget.getClass().getSuperclass().getSimpleName() : name;
-                        if (title.getString().isBlank()) {
-                            title = Component.literal(name);
-                        } else {
-                            title.append(Component.literal(" | " + name).withStyle(ChatFormatting.GRAY));
+                        if (CInputHelper.isKeyPressed(GLFW.GLFW_KEY_RIGHT_ALT)) {
+                            var title = widget.getTitle().copy();
+                            var mem = Component.literal("@" + Integer.toHexString(widget.hashCode())).withStyle(ChatFormatting.GRAY);
+                            var isMouseOver = widget.isMouseOver() || shift;
+                            String name = widget.getClass().getSimpleName();
+                            name = name.isBlank() ? "extends " + widget.getClass().getSuperclass().getSimpleName() : name;
+                            if (title.getString().isBlank()) {
+                                title = Component.literal(name);
+                            } else {
+                                title.append(Component.literal(" | " + name).withStyle(ChatFormatting.GRAY));
+                            }
+                            var c = Component.literal("  ".repeat(indentLevel))
+                                    .append(isMouseOver ? " ▼ " : " ▶ ")
+                                    .append(isMouseOver ? title.append(mem) : title)
+                                    .withStyle(Components.color(hoveredEle == widget ? 0xFFAA00 : Colors.CYAN));
+                            lines.add(c);
                         }
-                        var c = Component.literal("  ".repeat(indentLevel))
-                                .append(isMouseOver ? " ▼ " : " ▶ ")
-                                .append(isMouseOver ? title.append(mem) : title)
-                                .withStyle(Components.color(hoveredEle == widget ? 0xFFAA00 : Colors.CYAN));
-                        lines.add(c);
 
                         // 渲染边框
                         if (shift && !Screen.hasControlDown() && widget.isVisible()) {
@@ -1193,7 +1201,7 @@ public class FrostedHud {
                     }
 
                     stack.fill(x1-1, y1-1, x2, y2, Colors.setAlpha(Colors.BLACK, 0.8F));
-                    CGuiHelper.drawStringLines(stack, font, list, x1, y1, Colors.L_TEXT_GRAY, 0, false, false);
+                    CGuiHelper.drawStringLines(stack, font, list, x1, y1, Colors.ChatColors.GRAY, 0, false, false);
                     stack.pose().popPose();
                 }
             }
@@ -1202,7 +1210,7 @@ public class FrostedHud {
         hoveredEle = null;
 
         // 原版UI
-        if (screen != null) {
+        if (screen != null && CInputHelper.isKeyPressed(GLFW.GLFW_KEY_RIGHT_ALT)) {
             for (GuiEventListener a : screen.children()) {
                 if (a instanceof ObjectSelectionList<?> l) {
                     boolean focused = l.isFocused() || l.isMouseOver(mouseX, mouseY) || shift;
@@ -1249,7 +1257,7 @@ public class FrostedHud {
             CGuiHelper.drawBox(stack, hovered.getX(), hovered.getY(), hovered.getW(), hovered.getH(), Colors.RED, false);
         }
         // 文本
-        if (!Screen.hasAltDown()) {
+        if (!CInputHelper.isKeyPressed(GLFW.GLFW_KEY_LEFT_ALT)) {
             CGuiHelper.drawStringLines(stack, font, lines.subList(0, Math.min(lines.size(), 256)), 0, 0, Colors.CYAN, 1, false, true);
         }
         stack.pose().popPose();

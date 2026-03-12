@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
+import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -26,7 +27,6 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.text.Components;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
@@ -75,7 +75,7 @@ public abstract class Button extends UIElement {
 
 
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-		getTheme().drawButton(graphics, x, y, w, h, isMouseOver(), isEnabled());
+		theme().drawButton(graphics, x, y, w, h, isMouseOver(), isEnabled());
 	}
 
 	public void drawIcon(GuiGraphics graphics, int x, int y, int w, int h) {
@@ -95,6 +95,7 @@ public abstract class Button extends UIElement {
 	public boolean onMousePressed(MouseButton button) {
 		if (isMouseOver()) {
 			if (isEnabled()) {
+				playClickSound();
 				onClicked(button);
 			}
 
@@ -105,6 +106,10 @@ public abstract class Button extends UIElement {
 	}
 
 	public abstract void onClicked(MouseButton button);
+
+	public void playClickSound() {
+		CInputHelper.playClickSound();
+	}
 
 	@Override
 	public Cursor getCursor() {

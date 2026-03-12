@@ -25,8 +25,6 @@ import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.teammoeg.chorda.client.ui.CGuiHelper;
-
 import net.minecraft.client.gui.GuiGraphics;
 
 public class HeatStatScreen extends PrimaryLayer {
@@ -53,7 +51,7 @@ public class HeatStatScreen extends PrimaryLayer {
 
     @Override
     public void drawBackground(GuiGraphics matrixStack,  int x, int y, int w, int h) {
-    	getTheme().drawUIBackground(matrixStack, x, y, w, h);
+    	theme().drawUIBackground(matrixStack, x, y, w, h);
        
     }
 
@@ -111,7 +109,7 @@ public class HeatStatScreen extends PrimaryLayer {
             if (isIntake)
             	matrixStack.drawString(getFont(), val, x + 32 - getFont().width(val), y + 30, epd.canCostMore ? 0xFFFF5555 : 0x55FF55);
             else
-            	matrixStack.drawString(getFont(), val, x + 32 - getFont().width(val), y + 30,getTheme().getButtonTextColor());
+            	matrixStack.drawString(getFont(), val, x + 32 - getFont().width(val), y + 30, theme().buttonTextColor());
         }
 
     }
@@ -161,7 +159,7 @@ public class HeatStatScreen extends PrimaryLayer {
 
         @Override
         public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-            getTheme().drawPanel(matrixStack, x, y, w, h);
+            theme().drawPanel(matrixStack, x, y, w, h);
         }
 
     }

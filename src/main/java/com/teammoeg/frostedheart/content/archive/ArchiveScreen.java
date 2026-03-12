@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.archive;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
+import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.contentpanel.ArchiveTheme;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
@@ -33,7 +34,8 @@ public final class ArchiveScreen extends PrimaryLayer {
     public final ArchiveCategory category;
 
     public ArchiveScreen() {
-        this.contentPanel = new ContentPanel(this, ArchiveTheme.INSTANCE) {
+        setTheme(ArchiveTheme.INSTANCE);
+        this.contentPanel = new ContentPanel(this) {
             @Override
             public void resize() {
                 int h = (int)(ClientUtils.screenHeight() * 0.8F);
@@ -58,6 +60,12 @@ public final class ArchiveScreen extends PrimaryLayer {
         add(category);
         add(contentPanel.scrollBar);
         add(category.scrollBar);
+    }
+
+    @Override
+    public void getTooltip(TooltipBuilder list) {
+        super.getTooltip(list);
+        list.translateZ(300);
     }
 
     public static void open(@Nullable String path) {

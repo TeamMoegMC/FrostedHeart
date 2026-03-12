@@ -58,6 +58,7 @@ public class TechIcons {
     public static final CTextureIcon Background = ALL.withUV(0, 0, 387, 203, 512, 512);
     public static final int text = 0xFF474139;
     public static final int text_red = 0xFFa92b0d;
+    public static final int text_green = 0xFF229000;
     
 
     static {

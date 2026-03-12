@@ -19,18 +19,17 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import com.mojang.serialization.DataResult;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.text.Components;
+import net.minecraft.network.chat.Component;
+
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import com.mojang.serialization.DataResult;
-import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.client.cui.base.UILayer;
-import com.teammoeg.chorda.text.Components;
-
-import net.minecraft.network.chat.Component;
 
 public interface EditorWidgetFactory<T,W extends UIElement> {
 	interface WidgetConstructor<T,W extends UIElement>{
@@ -99,7 +98,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 		return new EditorWidgetFactory<>() {
 			@Override
 			public W create(UILayer parent, Component prompt, X origin,EditorFieldsDialog dialog) {
-				return objthis.create(parent, prompt, to.apply(origin),dialog);
+				return objthis.create(parent, prompt, origin==null?null:to.apply(origin),dialog);
 			}
 
 			@Override

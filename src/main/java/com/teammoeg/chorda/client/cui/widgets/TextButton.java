@@ -19,20 +19,19 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
-import java.util.List;
-import java.util.function.Consumer;
-
-import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.FlatIcon;
-
+import com.teammoeg.chorda.text.Components;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.FormattedCharSequence;
+
+import java.util.List;
+import java.util.function.Consumer;
 
 public abstract class TextButton extends Button {
 	public TextButton(UIElement panel, Component txt, CIcon icon) {
@@ -86,9 +85,9 @@ public abstract class TextButton extends Button {
 			textX += off + s;
 		}
 		List<FormattedCharSequence> list=getFont().split(title, mw);
-		int textColor=(isEnabled()?(isMouseOver()?getTheme().getButtonTextOverColor():getTheme().getButtonTextColor()):getTheme().getButtonTextDisabledColor());
+		int textColor=(isEnabled()?(isMouseOver()? theme().buttonTextOverColor(): theme().buttonTextColor()): theme().buttonTextDisabledColor());
 		for(FormattedCharSequence fcs:list) {
-			graphics.drawString(getFont(), fcs, textX, textY, textColor,getTheme().isButtonTextShadow());
+			graphics.drawString(getFont(), fcs, textX, textY, textColor, theme().isButtonTextShadow());
 			textY+=7;
 		}
 	}

@@ -33,13 +33,13 @@ public class BreakLine extends Line<BreakLine> {
 
     public BreakLine(UIElement parent) {
         this(parent, (int)(DEF_LINE_HEIGHT * 1.5F));
-        color(Colors.L_BG_GRAY);
+        color(theme().UIBGBorderColor());
     }
 
     public BreakLine(UIElement parent, int height) {
         super(parent);
         setHeight(height);
-        color(Colors.L_BG_GRAY);
+        color(theme().UIBGBorderColor());
     }
 
     public BreakLine icon(LineIcon lineIcon) {

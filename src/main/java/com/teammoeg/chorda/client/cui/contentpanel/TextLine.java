@@ -19,16 +19,14 @@
 
 package com.teammoeg.chorda.client.cui.contentpanel;
 
-import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
-import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.archive.Alignment;
+import com.teammoeg.frostedheart.content.tips.ClickActions;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -48,7 +46,7 @@ public class TextLine extends Line<TextLine> {
     protected boolean isQuote = false;
     protected boolean hasShadow = false;
     protected int scale = 1;
-    protected Button button = null;
+    protected List<Button> buttons = new ArrayList<>();
 
     public TextLine(UIElement parent, Component text, Alignment alignment) {
         super(parent, alignment);
@@ -93,7 +91,7 @@ public class TextLine extends Line<TextLine> {
         pose.translate(0, 2F, 0);
 
         CGuiHelper.drawStringLinesInBound(graphics, getFont(), splitText, x, y, textW, color, 3,
-                hasShadow, backgroundColor, alignment);
+                theme().isUITextShadow() || hasShadow, backgroundColor, alignment);
 
         pose.popPose();
     }
@@ -134,55 +132,45 @@ public class TextLine extends Line<TextLine> {
         return this;
     }
 
-    public TextLine button(Component title, Consumer<MouseButton> clickAction) {
-        return button(title, FlatIcon.JUMP, clickAction);
-    }
+    public TextLine button(Button button) {
+        var old = button;
+        var icon = (old instanceof FlatIconButton f) ? f.fIcon : FlatIcon.JUMP;
+        button = new FlatIconButton(this, old.getTitle(), icon, old::onClicked);
 
-    public TextLine button(Component title, FlatIcon icon, Consumer<MouseButton> clickAction) {
-        if (clickAction == null) return this;
-        button = new TLButton(title, icon, clickAction);
+        buttons.add(button);
         add(button);
         refresh();
         return this;
     }
 
-    class TLButton extends Button {
-        Consumer<MouseButton> clickAction;
-        FlatIcon fIcon;
+    public TextLine button(ClickActions.ClickAction clickAction) {
+        return clickAction == ClickActions.NO_ACTION ? this : button(clickAction.getDesc(), b -> clickAction.run());
+    }
 
-        public TLButton(Component t, FlatIcon icon, Consumer<MouseButton> clickAction) {
-            super(TextLine.this, t, icon.toCIcon());
-            this.clickAction = clickAction;
-            this.fIcon = icon;
-            setSize(icon.size.width + 2, icon.size.height + 2);
-        }
+    public TextLine button(Component title, Consumer<MouseButton> clickAction) {
+        return button(title, FlatIcon.JUMP, clickAction);
+    }
 
-        @Override
-        public void onClicked(MouseButton button) {
-            CInputHelper.playClickSound();
-            clickAction.accept(button);
-        }
-
-        @Override
-        public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-            graphics.fill(x, y, x+w, y+h, Colors.L_BG_GRAY);
-            icon.draw(graphics, x+1, y+1, fIcon.size.width, fIcon.size.height);
-            if (isMouseOver()) {
-                CGuiHelper.drawBox(graphics, x, y, w, h, trimmingColor == 0 ? Colors.themeColor() : trimmingColor, true);
-            }
-        }
-
-        @Override
-        public void getTooltip(TooltipBuilder tooltip) {
-            tooltip.accept(getTitle());
-        }
+    public TextLine button(Component title, FlatIcon icon, Consumer<MouseButton> clickAction) {
+        var button = new FlatIconButton(this, title, icon, clickAction);
+        return button(button);
     }
 
     @Override
     public void refresh() {
         super.refresh();
+        int btnX = alignment == Alignment.RIGHT ? 0 : getWidth()-12;
+        for (Button button : buttons) {
+            button.setPos(btnX, (getHeight() - button.getHeight())/2);
+            btnX += alignment == Alignment.RIGHT ? button.getWidth()+2 : -button.getWidth()-2;
+        }
+
         int width = (getWidth() - ((isTitle||isQuote) ? 8 : 0));
-        width -= button == null ? 0 : button.getWidth();
+        if (alignment == Alignment.RIGHT) {
+            width -= btnX;
+        } else {
+            width -= width-btnX;
+        }
         width = (int)(width * (1.0F/scale));
 
         var pre = text.getString().split("\\n");
@@ -191,14 +179,6 @@ public class TextLine extends Line<TextLine> {
             splitText.addAll(getFont().split(StringTextComponentParser.parse(s), width));
         }
         setHeight(splitText.size() * (DEF_LINE_HEIGHT + (isQuote ? 2 : 0)) * scale);
-
-        if (button != null) {
-            int x = switch (alignment) {
-                case RIGHT -> 0;
-                default -> getWidth() - button.getWidth();
-            };
-            button.setPos(x, (getHeight()-button.getHeight())/2);
-        }
     }
 
     @Override

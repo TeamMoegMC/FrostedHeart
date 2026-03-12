@@ -23,7 +23,6 @@ import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.Util;
@@ -295,7 +294,7 @@ public abstract class UILayer extends UIElement {
 		graphics.pose().pushPose();
 		graphics.pose().translate(0, 0, zIndex);
 		drawBackground(graphics, x, y, w, h);
-		if(scissorEnabled)
+		if(isScissorEnabled())
 			graphics.enableScissor(x, y, x+w, y+h);
 		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
 		for(UIElement elm:elements) {
@@ -305,7 +304,7 @@ public abstract class UILayer extends UIElement {
 		}
 		graphics.pose().popPose();
 
-		if(scissorEnabled)
+		if(isScissorEnabled())
 			graphics.disableScissor();
 
 		lastFrameTime = Util.getNanos();

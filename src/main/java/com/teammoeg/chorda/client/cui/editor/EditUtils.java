@@ -19,8 +19,6 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import java.util.function.Consumer;
-
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -28,8 +26,9 @@ import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
 import com.teammoeg.chorda.client.cui.theme.SimpleTechTheme;
 import com.teammoeg.chorda.client.cui.theme.Theme;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
-
 import net.minecraft.network.chat.Component;
+
+import java.util.function.Consumer;
 
 public class EditUtils {
 
@@ -50,17 +49,17 @@ public class EditUtils {
     
     public static UIElement openEditorScreen(Theme theme) {
     	CUIScreenWrapper wrapper=new CUIScreenWrapper(new PrimaryLayer());
-    	wrapper.getPrimaryLayer().setTheme(theme);
+    	wrapper.getPrimaryLayer().setTheme(theme == null ? SimpleTechTheme.INSTANCE : theme);
     	ClientUtils.getMc().setScreen(wrapper);
     	return wrapper.getPrimaryLayer();
     }
     public static TextField getTitle(UIElement p, String title) {
 
-        return new TextField(p).setMaxWidth(200).setText(title).setColor(p.getTheme().getUITextColor());
+        return new TextField(p).setMaxWidth(200).setText(title).setColor(p.theme().UITextColor());
     }
     public static TextField getTitle(UIElement p, Component title) {
 
-        return new TextField(p).setMaxWidth(200).setText(title).setColor(p.getTheme().getUITextColor());
+        return new TextField(p).setMaxWidth(200).setText(title).setColor(p.theme().UITextColor());
     }
   
 }

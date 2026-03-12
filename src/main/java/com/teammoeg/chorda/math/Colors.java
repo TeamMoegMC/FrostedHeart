@@ -53,9 +53,6 @@ public class Colors {
     	public static final int WHITE			= 0xffffffff;
     	private ChatColors() {}
     }
-    public static final int L_TEXT_GRAY = 0xFF9294A3;
-    public static final int L_BG_GREEN = 0xFFC1E52F;
-    public static final int L_BG_GRAY = 0xFF585966;
 
     public static int themeColor() {
         return setAlpha(FHConfig.CLIENT.themeColor.get(), 1F);
@@ -172,5 +169,13 @@ public class Colors {
 
     public static String toHexString(int color) {
         return String.format("%08X", color).toUpperCase();
+    }
+
+    public static int getColor(String color, int fallback) {
+        try {
+            return Integer.parseUnsignedInt(color, 16);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
     }
 }

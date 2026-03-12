@@ -44,4 +44,8 @@ public enum MouseButton {
 	public static MouseButton of(int num) {
 		return MouseButton.values().length>num?MouseButton.values()[num]:ERROR;
 	}
+
+	public boolean is(MouseButton button) {
+		return this == button;
+	}
 }

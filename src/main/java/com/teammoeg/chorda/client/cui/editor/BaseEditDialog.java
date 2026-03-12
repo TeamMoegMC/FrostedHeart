@@ -20,8 +20,6 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.client.ui.CGuiHelper;
-
 import net.minecraft.client.gui.GuiGraphics;
 
 public abstract class BaseEditDialog extends EditDialog {
@@ -40,6 +38,6 @@ public abstract class BaseEditDialog extends EditDialog {
 
     @Override
     public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-    	getTheme().drawUIBackground(matrixStack, x-5, y-5, w+10, h+10);
+    	theme().drawUIBackground(matrixStack, x-5, y-5, w+10, h+10);
     }
 }

@@ -27,6 +27,7 @@ import com.teammoeg.chorda.client.ui.UV;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -38,7 +39,8 @@ public class ImageLine extends Line<ImageLine> {
     protected Size2i imgSize;
     protected UV imgUV;
     protected UV overrideUV;
-    protected int backgroundColor = 0;
+    @Setter
+    protected int blitColor = Colors.WHITE;
 
     public ImageLine(UIElement parent, ResourceLocation imageLocation, Alignment alignment) {
         super(parent, alignment);
@@ -55,24 +57,31 @@ public class ImageLine extends Line<ImageLine> {
     public void render(GuiGraphics graphics, int x, int y, int w, int h) {
         super.render(graphics, x, y, w, h);
         if (!isImgValid()) {
-            FlatIcon.FILE_IMG_BROKEN.render(graphics.pose(), x+w/2-5, y+1, Colors.RED);
+            FlatIcon.FILE_IMG_BROKEN.render(graphics.pose(), x+w/2-5, y+1, theme().errorColor());
             return;
         }
-
-        if (backgroundColor != 0) {
-            graphics.fill(x, y, x+w, y+h, backgroundColor);
-        }
-
         int imgX = switch (alignment) {
             case CENTER -> x + getWidth() / 2 - imgUV.getW() / 2;
             case RIGHT ->  x + getWidth() - imgUV.getW() - 2;
             default -> x+2;
         };
-        imgUV.blit(graphics, imgLocation, imgX, y + h/2 - imgUV.getH()/2);
+        int imgY = y + h/2 - imgUV.getH()/2;
+        CGuiHelper.bindTexture(imgLocation);
+        CGuiHelper.blitColored(graphics.pose(),
+                imgX, imgY,
+                imgUV.getW(), imgUV.getH(),
+                0, 0,
+                imgUV.getW(), imgUV.getH(),
+                imgUV.getW(), imgUV.getH(), blitColor);
+    }
+
+    @Override
+    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+        graphics.fill(x, y, x+w, y+h, theme().UIBGBorderColor());
     }
 
     public boolean isImgValid() {
-        return (imgUV != null || overrideUV != null) && imgSize != null && imgSize.height + imgSize.width > 0;
+        return (imgUV != null || overrideUV != null) && imgSize != null && imgSize.height > 0 && imgSize.width > 0;
     }
 
     public ImageLine setImage(ResourceLocation imageLocation) {
@@ -80,11 +89,6 @@ public class ImageLine extends Line<ImageLine> {
         imgSize = CGuiHelper.getImgSize(imageLocation);
         imgUV = new UV(0, 0, 0, 0);
         refresh();
-        return this;
-    }
-
-    public ImageLine bgColor(int color) {
-        this.backgroundColor = color;
         return this;
     }
 

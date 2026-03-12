@@ -21,9 +21,7 @@ package com.teammoeg.chorda.client.cui.widgets;
 
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.text.Components;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -37,7 +35,7 @@ public class LimitedTextField extends UIElement {
     public boolean shadow = true;
 
     public LimitedTextField(UIElement parent, Component title, int w) {
-        this(parent, title, w, Colors.WHITE);
+        this(parent, title, w, parent.theme().UITextColor());
     }
 
     public LimitedTextField(UIElement parent, Component title, int w, int textColor) {
@@ -49,7 +47,7 @@ public class LimitedTextField extends UIElement {
 
     @Override
     public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-        graphics.drawString(getFont(), displayTitle, x, y, color);
+        graphics.drawString(getFont(), displayTitle, x, y, color, theme().isButtonTextShadow());
     }
 
     @Override

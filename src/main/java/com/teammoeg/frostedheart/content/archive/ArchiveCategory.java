@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.archive;
 
 import com.teammoeg.chorda.client.AnimationUtil;
+import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -29,17 +30,22 @@ import com.teammoeg.chorda.client.cui.category.CategoryHelper;
 import com.teammoeg.chorda.client.cui.category.Entry;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
 import com.teammoeg.chorda.client.cui.contentpanel.LineHelper;
+import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.icon.FlatIcon;
-import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipHelper;
 import com.teammoeg.frostedheart.content.tips.TipManager;
+import com.teammoeg.frostedheart.infrastructure.command.TipCommand;
+import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class ArchiveCategory extends UILayer {
     public final LayerScrollBar scrollBar;
@@ -58,14 +64,19 @@ public class ArchiveCategory extends UILayer {
         this.scrollBar.setScrollStep((Entry.DEF_HEIGHT+2)*2);
         this.root.clearElement();
         addUIElements();
+        // 路径为空时打开第一个分类
+        if (currentPath.isBlank())
+            for (UIElement ele : getElements())
+                if (ele instanceof Category c) {
+                    c.setOpened(true);
+                    return;
+                }
         scrollTo(open(currentPath));
     }
 
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-        final int border = 8;
-        graphics.fill(x-border, y-border, x+w+border, y+h+border, 0xFF444651);
-        CGuiHelper.drawBox(graphics, x-border, y-border, w+border*2, h+border*2, Colors.L_BG_GRAY, true);
+        theme().drawUIBackground(graphics, x-8, y-8, w+16, h+16);
     }
 
     public UIElement open(String path) {
@@ -112,70 +123,94 @@ public class ArchiveCategory extends UILayer {
     }
 
     public void addCategory() {
-        Category tipCategory = new Category(this, Component.translatable("gui.frostedheart.archive.category.tips"));
-        Set<String> childTipIds = new HashSet<>();
-        Map<String, Category> subTipCategory = new HashMap<>();
-        for (Tip tip : TipManager.INSTANCE.state().getAllUnlockedTips()) {
-            // 获取所有子提示的 ID
-            childTipIds.addAll(tip.getChildren());
-            // 获取所有分类
-            String categoryName = tip.getCategory();
-            if (!categoryName.isBlank() && !subTipCategory.containsKey(categoryName)) {
-                subTipCategory.put(categoryName, new Category(tipCategory, Component.translatable(categoryName)));
-            }
-        }
-        List<TipEntry> tipEntries = new ArrayList<>();
-        for (Tip tip : TipManager.INSTANCE.state().getAllUnlockedTips()) {
-            if (tip.isHide()) continue;
-            if (!childTipIds.contains(tip.getId())) {
-                if (!tip.getCategory().isBlank()) {
-                    // 在子分类添加提示
-                    Category category = subTipCategory.get(tip.getCategory());
-                    category.add(new TipEntry(category, panel, tip));
-                } else {
-                    // 在主提示分类添加所有非子提示且无分类的提示
-                    TipEntry tipEntry = new TipEntry(tipCategory, panel, tip);
-                    tipEntries.add(tipEntry);
-                }
-            }
-        }
-        // 在主提示分类里添加所有子分类和无分类提示
-        tipCategory.addAll(tipEntries);
+        var tipCategory = TipHelper.getCategory(new Category(this, Component.translatable("gui.frostedheart.archive.category.tips")), panel);
         root.getElements().add(tipCategory);
     }
 
     @Override
     public boolean onKeyPressed(int keyCode, int scanCode, int modifier) {
-        Entry current = root.getSelected();
-        if (current == null) {
-            List<Entry> list = new ArrayList<>();
-            CategoryHelper.collectAllEntries(root, list);
-            if (list.isEmpty()) return super.onKeyPressed(keyCode, scanCode, modifier);
-            current = list.get(0);
-        } else {
-            switch (keyCode) {
-                case GLFW.GLFW_KEY_TAB -> {
-                    if (modifier == GLFW.GLFW_MOD_SHIFT) {
-                        current = CategoryHelper.prev(current);
-                    } else {
-                        current = CategoryHelper.next(current);
-                    }
+        if (CInputHelper.isNextKey(keyCode, scanCode, modifier) || CInputHelper.isPrevKey(keyCode, scanCode, modifier)) {
+            Entry current = root.getSelected();
+            if (current == null) {
+                List<Entry> list = new ArrayList<>();
+                CategoryHelper.collectAllEntries(root, list);
+                if (!list.isEmpty()) {
+                    scrollTo(open(currentPath = CategoryHelper.path(list.get(0))));
+                    return true;
                 }
-                case GLFW.GLFW_KEY_W, GLFW.GLFW_KEY_UP   -> current = CategoryHelper.prev(current);
-                case GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_DOWN -> current = CategoryHelper.next(current);
+                return super.onKeyPressed(keyCode, scanCode, modifier);
             }
-        }
 
-        if (current == root.getSelected()) {
-            return super.onKeyPressed(keyCode, scanCode, modifier);
+            if (CInputHelper.isNextKey(keyCode, scanCode, modifier)) {
+                current = CategoryHelper.next(current);
+            } else {
+                current = CategoryHelper.prev(current);
+            }
+            scrollTo(open(currentPath = CategoryHelper.path(current)));
+            return true;
         }
-        scrollTo(open(currentPath = CategoryHelper.path(current)));
-        return true;
+        return super.onKeyPressed(keyCode, scanCode, modifier);
     }
 
     @Override
     public void addUIElements() {
         clearElement();
+        if (TipCommand.editMode) {
+            getElements().add(new Button(this, Component.literal("Add New Tip"), FlatIcon.WRENCH.toCIcon()) {
+                @Override
+                public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+                    graphics.fill(x, y, x+w, y+h, theme().UIBGBorderColor());
+                    if (isMouseOver() && isEnabled()) {
+                        graphics.fill(x-4, y, x-2, y+h, theme().UIAltTextColor());
+                    }
+                }
+
+                @Override
+                public void onClicked(MouseButton button) {
+                    if (button.is(MouseButton.LEFT)) {
+                        TipHelper.edit((String)null, theme());
+                    }
+                }
+
+                @Override
+                public void refresh() {
+                    setSize(parent.getWidth(), Entry.DEF_HEIGHT);
+                }
+            });
+            getElements().add(new Button(this, Component.literal("Edit Tips"), FlatIcon.CONFIG.toCIcon()) {
+                @Override
+                public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+                    graphics.fill(x, y, x+w, y+h, theme().UIBGBorderColor());
+                    if (isMouseOver() && isEnabled()) {
+                        graphics.fill(x-4, y, x-2, y+h, theme().UIAltTextColor());
+                    }
+                }
+
+                @Override
+                public void onClicked(MouseButton button) {
+                    if (button.is(MouseButton.LEFT)) {
+                        var list = new ArrayList<UIElement>();
+                        var lock = Component.literal("{@font F211 chorda:default -44224}");
+                        var unlock = Component.literal("{@font F241 chorda:default -4070097}");
+                        for (Tip tip : TipManager.INSTANCE.getSortedTips()) {
+                            list.add(LineHelper.text(panel, (TipManager.state().isUnlocked(tip) ? unlock : lock).copy().append(" ID: " + tip.id()))
+                                    .button(Component.translatable("controls.reset"), FlatIcon.HISTORY, b -> TipManager.state().reset(tip))
+                                    .button(Component.translatable("gui.frostedheart.unlock"), FlatIcon.UNLOCK, b -> TipManager.state().unlock(tip))
+                                    .button(Component.translatable("selectServer.edit"), FlatIcon.CONFIG, b -> TipHelper.edit(tip.id(), theme()))
+                                    .button(Component.translatable("gui.open"), FlatIcon.FILE, b -> ArchiveCategory.this.panel.fillContent(LineHelper.fromTip(tip, ArchiveCategory.this.panel))));
+                            list.add(LineHelper.text(panel, Component.translatable(tip.contents().get(0))).color(theme().UIAltTextColor()));
+                            list.add(LineHelper.br(panel));
+                        }
+                        panel.fillContent(list);
+                    }
+                }
+
+                @Override
+                public void refresh() {
+                    setSize(parent.getWidth(), Entry.DEF_HEIGHT);
+                }
+            });
+        }
         addCategory();
     }
 
@@ -185,25 +220,24 @@ public class ArchiveCategory extends UILayer {
     }
 
     public static class TipEntry extends ArchiveEntry {
-        final Tip tip;
-        final List<Tip> children;
+        @Getter
+        final String tip;
 
-        public TipEntry(Category parent, ContentPanel affectedPanel, Tip tip) {
-            super(parent, affectedPanel, tip.getContents().get(0));
+        public TipEntry(Category parent, ContentPanel affectedPanel, String tip) {
+            super(parent, affectedPanel, Component.translatable(TipManager.INSTANCE.getTip(tip).contents().get(0)));
             this.tip = tip;
-            this.children = TipManager.INSTANCE.state().getChildren(tip);
             read = isRead();
             setIcon(FlatIcon.LIST);
         }
 
         @Override
         public boolean isRead() {
-            boolean hasUnread = !TipManager.INSTANCE.state().isViewed(tip);
+            boolean hasUnread = !TipManager.state().isViewed(tip);
             if (hasUnread) {
                 return false;
             }
-            for (Tip child : children) {
-                hasUnread = !TipManager.INSTANCE.state().isViewed(child);
+            for (Tip child : TipManager.state().getChildren(tip())) {
+                hasUnread = !TipManager.state().isViewed(child);
                 if (hasUnread) {
                     return false;
                 }
@@ -213,16 +247,20 @@ public class ArchiveCategory extends UILayer {
 
         @Override
         public boolean read() {
-            TipManager.INSTANCE.state().view(tip, true);
-            for (Tip tip : children) {
-                TipManager.INSTANCE.state().view(tip, true);
+            TipManager.state().view(tip());
+            for (Tip tip : TipManager.state().getChildren(tip())) {
+                TipManager.state().view(tip, true);
             }
             return true;
         }
 
+        public Tip tip() {
+            return TipManager.INSTANCE.getTip(tip);
+        }
+
         @Override
         public Collection<? extends UIElement> getContents() {
-            return LineHelper.fromTip(tip, getPanel());
+            return LineHelper.fromTip(tip(), getPanel());
         }
     }
 
@@ -240,7 +278,7 @@ public class ArchiveCategory extends UILayer {
             if (!read) {
                 float anim = AnimationUtil.progress(3000, "archive_unread", true);
                 anim = ((float)Math.sin(anim*Math.PI*2)*0.5F+0.5F)*0.3F;
-                graphics.fill(x, y, x+w, y+h, Colors.setAlpha(Colors.L_BG_GREEN, anim));
+                graphics.fill(x, y, x+w, y+h, Colors.setAlpha(Colors.themeColor(), anim));
             }
         }
 

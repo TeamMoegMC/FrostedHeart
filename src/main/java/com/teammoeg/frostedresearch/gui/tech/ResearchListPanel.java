@@ -29,7 +29,6 @@ import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.Research;
-
 import net.minecraft.client.gui.GuiGraphics;
 
 public class ResearchListPanel extends UILayer {
@@ -90,7 +89,7 @@ public class ResearchListPanel extends UILayer {
 			else if (research.isCompleted()) {
 				tf.setColor(0x229000);
 			} else if (!research.isUnlocked()) {
-				tf.setColor(getTheme().getErrorColor());
+				tf.setColor(theme().errorColor());
 			}
 			lastupdate = System.currentTimeMillis() / 1000;
 		}
@@ -111,7 +110,7 @@ public class ResearchListPanel extends UILayer {
 				} else if (research.isCompleted()) {
 					tf.setColor(0x229000);
 				} else if (!research.isUnlocked()) {
-					tf.setColor(getTheme().getErrorColor());
+					tf.setColor(theme().errorColor());
 				}
 			}
 			tf.render(matrixStack, x + 18, y + 6, 81, tf.getHeight());

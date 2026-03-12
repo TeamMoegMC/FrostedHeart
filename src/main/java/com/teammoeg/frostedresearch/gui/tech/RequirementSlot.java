@@ -26,9 +26,6 @@ import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedresearch.compat.JEICompat;
-import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
-import com.teammoeg.frostedresearch.gui.TechIcons;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -56,7 +53,7 @@ public class RequirementSlot extends UIElement {
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
 		CGuiHelper.resetGuiDrawing();
-		getTheme().drawSlot(matrixStack, x, y, w, h);
+		theme().drawSlot(matrixStack, x, y, w, h);
 		CGuiHelper.drawItem(matrixStack, cur, x, y, 0, w / 16F, h / 16F, true, cnt != 0 ? String.valueOf(cnt) : null);
 	}
 

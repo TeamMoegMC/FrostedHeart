@@ -21,7 +21,6 @@ package com.teammoeg.chorda.client.cui.contentpanel;
 
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.widgets.ItemSlot;
-import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -34,7 +33,6 @@ import java.util.List;
 public class ItemRow extends Line<ItemRow> {
     protected final List<ItemStack> items = new ArrayList<>();
     protected int rowSize = 1;
-    protected int backgroundColor = Colors.L_BG_GRAY;
 
     public ItemRow(UIElement parent, Collection<ItemStack> items, Alignment alignment) {
         super(parent, alignment);
@@ -53,9 +51,8 @@ public class ItemRow extends Line<ItemRow> {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-        graphics.fill(x, y, x+w, y+h, backgroundColor);
-        super.render(graphics, x, y, w, h);
+    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+        graphics.fill(x, y, x+w, y+h, theme().UIBGBorderColor());
     }
 
     @Override
@@ -90,11 +87,6 @@ public class ItemRow extends Line<ItemRow> {
                 }
             }
         }
-    }
-
-    public ItemRow bgColor(int color) {
-        this.backgroundColor = color;
-        return this;
     }
 
     @Override

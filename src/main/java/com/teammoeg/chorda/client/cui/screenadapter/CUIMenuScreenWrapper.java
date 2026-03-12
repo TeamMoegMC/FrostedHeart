@@ -19,23 +19,21 @@
 
 package com.teammoeg.chorda.client.cui.screenadapter;
 
-import org.lwjgl.glfw.GLFW;
-
 import com.mojang.blaze3d.platform.Window;
 import com.teammoeg.chorda.client.CInputHelper;
-import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import org.lwjgl.glfw.GLFW;
 
 public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> implements CUIScreen {
 	private final PrimaryLayer primaryLayer;
@@ -143,7 +141,7 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 		primaryLayer.getTooltip(builder);
 
 		graphics.pose().translate(-leftPos, -topPos, 0);
-		builder.draw(graphics, mouseX, mouseY);
+		builder.draw(graphics, mouseX, mouseY, primaryLayer.theme());
 		graphics.pose().popPose();
 		Cursor cs=primaryLayer.getCursor();
 		if(cs==null)

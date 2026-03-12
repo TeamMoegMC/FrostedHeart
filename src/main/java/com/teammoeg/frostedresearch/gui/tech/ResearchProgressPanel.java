@@ -29,9 +29,7 @@ import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.Research;
-
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.util.Mth;
 
 public class ResearchProgressPanel extends UILayer {
 
@@ -61,7 +59,7 @@ public class ResearchProgressPanel extends UILayer {
 		super.render(matrixStack, x, y, w, h);
 		// title
 
-		matrixStack.drawString(getFont(), Lang.translateGui("research_progress"), x + 3, y, getTheme().getUITextColor(), false);
+		matrixStack.drawString(getFont(), Lang.translateGui("research_progress"), x + 3, y, theme().UITextColor(), false);
 		// progress bar
 		// TODO: this cause crash when root clue is added
 		// float progress =
@@ -73,9 +71,9 @@ public class ResearchProgressPanel extends UILayer {
 			float prog = inprog.getProgressFraction();
 			DrawDeskTheme.INSTANCE.drawProgressBar(matrixStack, x+40, y+32, 70, 8, prog);
 			if (inprog.getData().canComplete(inprog))
-				matrixStack.drawString(getFont(), NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, getTheme().getUITextColor(), false);
+				matrixStack.drawString(getFont(), NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, theme().UITextColor(), false);
 			else
-				matrixStack.drawString(getFont(), Lang.translateGui("research.required_clue"), x + 40, y + 40, getTheme().getErrorColor(), false);
+				matrixStack.drawString(getFont(), Lang.translateGui("research.required_clue"), x + 40, y + 40, theme().errorColor(), false);
 			// research icon
 
 			TechIcons.SHADOW.draw(matrixStack, x + 1, y + 38, 36, 9);

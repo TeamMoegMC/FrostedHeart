@@ -29,6 +29,7 @@ import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.content.tips.Popup;
+import com.teammoeg.frostedheart.content.tips.TipHelper;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.ColumbiatWaypoint;
@@ -75,16 +76,16 @@ public class DebugScreen extends Screen {
         input.setMaxLength(1024);
 
         addButton(FlatIcon.CROSS, Colors.themeColor(), "Clear Tip Render Queue", (b) ->
-            TipManager.INSTANCE.display().clearRenderQueue()
+            TipManager.display().clearRenderQueue()
         );
         addButton(FlatIcon.HISTORY, Colors.RED, "Reset State For All Tips", (b) ->
-            TipManager.INSTANCE.state().resetAll()
+            TipManager.state().resetAll()
         );
         addButton(FlatIcon.HISTORY, Colors.themeColor(), "Reload All Tips", (b) ->
             TipManager.INSTANCE.loadFromFile()
         );
         addButton(FlatIcon.WRENCH, Colors.themeColor(), "Open Tip Editor UI", (b) ->
-            ClientUtils.getMc().setScreen(new TipEditorScreen())
+            TipHelper.edit((String)null, null)
         );
         addButton(FlatIcon.BOX_ON, Colors.themeColor(), "Create a Random Waypoint", (b) -> {
             Random random = new Random();
@@ -102,9 +103,9 @@ public class DebugScreen extends Screen {
         addButton(FlatIcon.BOX, Colors.RED, "Remove The Waypoint You Are Looking At", (b) ->
             ClientWaypointManager.getSelected().ifPresent((hovered) -> ClientWaypointManager.removeWaypoint(hovered.getId()))
         );
-        addButton(FlatIcon.SIGHT, Colors.themeColor(), "Create a Waypoint From The Block You Are Looking At", (b) -> {
-            ClientWaypointManager.fromPickedBlock();
-        });
+        addButton(FlatIcon.SIGHT, Colors.themeColor(), "Create a Waypoint From The Block You Are Looking At", (b) ->
+            ClientWaypointManager.fromPickedBlock()
+        );
         addButton(FlatIcon.TRADE, Colors.themeColor(), "Toggle Debug Overlay", (b) ->
             FrostedHud.renderDebugOverlay = !FrostedHud.renderDebugOverlay
         );
@@ -112,7 +113,7 @@ public class DebugScreen extends Screen {
             Popup.put(input.getValue())
         );
         addButton(FlatIcon.LIST, Colors.themeColor(), "Unlock All Tips", (b) ->
-            TipManager.INSTANCE.state().unlockAll()
+            TipManager.state().unlockAll()
         );
         addButton(FlatIcon.LEAVE, Colors.themeColor(), "Do Something", (b) -> {
             String message = debug();
@@ -120,7 +121,7 @@ public class DebugScreen extends Screen {
         });
     }
 
-    // 方便热重载debug
+    // 方便热重载 debug
     private String debug() {
         if (this.minecraft != null) {
             var config = new BaseConfigScreen(this, FHMain.MODID);
@@ -175,9 +176,7 @@ public class DebugScreen extends Screen {
                             .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, c));
                     text.append(Components.withColor(Components.str(s), color).withStyle(style));
                 }
-//                graphics.drawCenteredString(font, text, centerX, centerY+40, -1);
 
-//                int textW = font.width(text);
                 int textW = input*charW;
                 if (MouseHelper.isMouseIn(mouseX, mouseY, centerX-textW/2, centerY+40, textW, font.lineHeight)) {
                     int x = mouseX - (centerX-textW/2);

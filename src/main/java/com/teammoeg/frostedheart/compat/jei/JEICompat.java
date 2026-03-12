@@ -19,19 +19,7 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
-
-import com.teammoeg.frostedheart.compat.jei.category.*;
-import com.teammoeg.frostedheart.content.town.buildings.mine.BiomeMineResourceRecipe;
-import org.jetbrains.annotations.NotNull;
-
+import com.teammoeg.chorda.client.cui.screenadapter.CUIOverlay;
 import com.teammoeg.chorda.math.Point;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
@@ -39,6 +27,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.compat.jei.category.*;
 import com.teammoeg.frostedheart.compat.jei.extension.DamageModifierExtension;
 import com.teammoeg.frostedheart.compat.jei.extension.FuelingExtension;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorContainer;
@@ -51,14 +40,12 @@ import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
-import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
+import com.teammoeg.frostedheart.content.town.buildings.mine.BiomeMineResourceRecipe;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
 import com.teammoeg.frostedheart.content.utility.recipe.ModifyDamageRecipe;
-
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.gui.handlers.IGlobalGuiHandler;
 import mezz.jei.api.gui.handlers.IGuiClickableArea;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.helpers.IGuiHelper;
@@ -72,12 +59,18 @@ import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.block.Blocks;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @JeiPlugin
 public class JEICompat implements IModPlugin {
@@ -159,12 +152,7 @@ public class JEICompat implements IModPlugin {
         registry.addRecipeClickArea(IncubatorT1Screen.class, 80, 28, 32, 29, IncubatorCategory.UID);
         registry.addRecipeClickArea(IncubatorT2Screen.class, 107, 28, 14, 29, IncubatorCategory.UID);
 
-        registry.addGlobalGuiHandler(new IGlobalGuiHandler() {
-            @Override
-            public @NotNull Collection<Rect2i> getGuiExtraAreas() {
-                return Collections.singletonList(TipWidget.INSTANCE.getRect());
-            }
-        });
+        CUIOverlay.CUI_OVERLAYS.forEach(registry::addGlobalGuiHandler);
     }
 
     @Override

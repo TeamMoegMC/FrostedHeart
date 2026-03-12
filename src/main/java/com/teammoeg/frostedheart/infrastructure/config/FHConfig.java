@@ -54,6 +54,7 @@ public class FHConfig {
 		public final ForgeConfigSpec.DoubleValue textSpeed;
 		public final ForgeConfigSpec.BooleanValue renderScenario;
 		public final ForgeConfigSpec.BooleanValue enableTip;
+		public final ForgeConfigSpec.EnumValue<TempOrbPos> tipPosition;
 		public final ForgeConfigSpec.DoubleValue fogDensity;
 		public final ForgeConfigSpec.IntValue fogColorDay;
 		public final ForgeConfigSpec.IntValue fogColorNight;
@@ -78,37 +79,47 @@ public class FHConfig {
 			enableUI = builder
 				.comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE, DISABLING IS NOT RECOMMENDED. ")
 				.define("enableHUD", true);
-			enablesTemperatureOrb = builder
-				.comment("Enables the temperature orb overlay. ")
-				.define("enableTemperatureOrb", true);
-			useFahrenheit = builder.comment("Use Fahrenheit temperature instead of celsus.")
-				.define("useFahrenheit", false);
-			tempOrbPosition = builder
-				.comment("Position of the temperature orb in game screen. ")
-				.defineEnum("renderTempOrbAtCenter", TempOrbPos.MIDDLE);
-			tempOrbOffsetX = builder
-				.comment(
-					"X Offset of the temperature orb. The anchor point is defined by the tempOrbPosition value. Only when you set tempOrbPosition to value other than MIDDLE will this value be used. ")
-				.defineInRange("tempOrbOffsetX", 0, -4096, 4096);
-			tempOrbOffsetY = builder
-				.comment(
-					"Y Offset of the temperature orb. The anchor point is defined by the tempOrbPosition value. Only when you set tempOrbPosition to value other than MIDDLE will this value be used.  ")
-				.defineInRange("tempOrbOffsetY", 0, -4096, 4096);
-			enableWaypoint = builder
-				.comment("Enables the waypoints rendering. ")
-				.define("enableWaypoint", true);
-			enableTip = builder.comment("Enables the tips rendering. ")
-				.define("enableTip", true);
-			wheelMenuRadius = builder
-				.comment("Radius of the Radial Menu. ")
-				.defineInRange("wheelMenuRadius", 100, 60, Integer.MAX_VALUE);
-			enableWheelMenuCursor = builder
-				.comment("Enables the cursor in the Radial Menu. ")
-				.define("enableWheelMenuCursor", false);
 			themeColor = builder
-				.comment("The theme color of most FH HUDs. ")
-				.defineInRange("themeColor", Colors.CYAN, Integer.MIN_VALUE, Integer.MAX_VALUE);
+					.comment("The theme color of most FH HUDs. ")
+					.defineInRange("themeColor", Colors.CYAN, Integer.MIN_VALUE, Integer.MAX_VALUE);
+			builder.push("Temperature Orb");
+				enablesTemperatureOrb = builder
+						.comment("Enables the temperature orb overlay. ")
+						.define("enableTemperatureOrb", true);
+				useFahrenheit = builder.comment("Use Fahrenheit temperature instead of celsus.")
+						.define("useFahrenheit", false);
+				tempOrbPosition = builder
+						.comment("Position of the temperature orb in game screen. ")
+						.defineEnum("renderTempOrbAtCenter", TempOrbPos.MIDDLE);
+				tempOrbOffsetX = builder
+						.comment("X Offset of the temperature orb. The anchor point is defined by the tempOrbPosition value. Only when you set tempOrbPosition to value other than MIDDLE will this value be used. ")
+						.defineInRange("tempOrbOffsetX", 0, -4096, 4096);
+				tempOrbOffsetY = builder
+						.comment("Y Offset of the temperature orb. The anchor point is defined by the tempOrbPosition value. Only when you set tempOrbPosition to value other than MIDDLE will this value be used.  ")
+						.defineInRange("tempOrbOffsetY", 0, -4096, 4096);
 			builder.pop();
+			builder.push("Wheel Menu");
+				wheelMenuRadius = builder
+						.comment("Radius of the Radial Menu. ")
+						.defineInRange("wheelMenuRadius", 100, 60, Integer.MAX_VALUE);
+				enableWheelMenuCursor = builder
+						.comment("Enables the cursor in the Radial Menu. ")
+						.define("enableWheelMenuCursor", false);
+			builder.pop();
+			builder.push("Tip");
+				enableTip = builder.comment("Enables the tips rendering. ")
+						.define("enableTip", true);
+				tipPosition = builder.comment("")
+						.defineEnum("tipPosition", TempOrbPos.MIDDLE_RIGHT);
+			builder.pop();
+			builder.push("Waypoint");
+				enableWaypoint = builder
+						.comment("Enables the waypoints rendering. ")
+						.define("enableWaypoint", true);
+			builder.pop();
+			builder.pop();
+
+
 
 			builder.push("Frozen Effects");
 			enableFrozenOverlay = builder
@@ -133,6 +144,8 @@ public class FHConfig {
 				.comment("No worries, from my experience, offset 7 is compatible with 99% mods / shaders.")
 				.defineInRange("infraredViewUBOOffset", 7, 0, Integer.MAX_VALUE);
 			builder.pop();
+
+
 
 			builder.push("Weather");
 			weatherRenderChanges = builder.comment("Enables weather rendering changes.")
@@ -160,6 +173,8 @@ public class FHConfig {
 				.define("skyRenderChanges", true);
 			builder.pop();
 
+
+
 			builder.push("Scenario");
 			renderScenario = builder.comment("Enables the scenario act hud rendering. ")
 				.define("renderScenario", true); // todo: set true
@@ -177,6 +192,8 @@ public class FHConfig {
 			scenarioAntiAliasing = builder.comment("Scenario rendering Antialiasing, turn off to higher performance")
 				.define("scenarioAntiAliasing", true);
 			builder.pop();
+
+
 
 			builder.push("other");
 			enableTooltips = builder.comment("Enable item tooltips")
@@ -609,7 +626,9 @@ public class FHConfig {
 	}
 
 	public enum TempOrbPos {
-		MIDDLE, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
+		MIDDLE_LEFT, MIDDLE, MIDDLE_RIGHT,
+		TOP_LEFT, TOP_MIDDLE, TOP_RIGHT,
+		BOTTOM_LEFT, BOTTOM_MIDDLE, BOTTOM_RIGHT
 	}
 
 	public static final ForgeConfigSpec CLIENT_CONFIG;

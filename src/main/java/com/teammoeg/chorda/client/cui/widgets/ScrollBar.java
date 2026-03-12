@@ -23,9 +23,7 @@ import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.client.cui.theme.VanillaTheme;
 import com.teammoeg.chorda.text.Components;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -160,11 +158,11 @@ public class ScrollBar extends UIElement {
 	}
 
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-		getTheme().drawSliderBackground(graphics, x, y, w, h, isMouseOver());
+		theme().drawSliderBackground(graphics, x, y, w, h, isMouseOver());
 	}
 
 	public void drawScrollBar(GuiGraphics graphics, int x, int y, int w, int h) {
-		getTheme().drawSliderBar(graphics, x, y, w, h, isMouseOver());
+		theme().drawSliderBar(graphics, x, y, w, h, isMouseOver());
 	}
 
 	public void onValueChanged() {

@@ -19,21 +19,19 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
-import java.util.List;
-
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
-import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.effects.Effect;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+
+import java.util.List;
 
 public class EffectWidget extends UIElement {
 	List<Component> tooltips;
@@ -61,7 +59,7 @@ public class EffectWidget extends UIElement {
 	@Override
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		CGuiHelper.resetGuiDrawing();
-		getTheme().drawSlot(matrixStack, x, y, w, h);
+		theme().drawSlot(matrixStack, x, y, w, h);
 		icon.draw(matrixStack, x, y, w, h);
 		if (ClientResearchDataAPI.getData().get().isEffectGranted(r, e)) {
 			matrixStack.pose().pushPose();

@@ -18,19 +18,19 @@
  */
 
 package com.teammoeg.chorda.client.cui.widgets;
-import java.util.List;
-import java.util.Optional;
 
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.text.Components;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
+
+import java.util.List;
+import java.util.Optional;
 
 
 
@@ -53,8 +53,8 @@ public class TextField extends UIElement {
 
 	public TextField(UIElement parent) {
 		super(parent);
-		textColor=getTheme().getButtonTextColor();
-		if(getTheme().isUITextShadow())
+		textColor= theme().buttonTextColor();
+		if(theme().isUITextShadow())
 			shadow();
 	}
 	

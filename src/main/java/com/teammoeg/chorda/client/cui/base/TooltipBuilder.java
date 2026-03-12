@@ -19,16 +19,14 @@
 
 package com.teammoeg.chorda.client.cui.base;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
-
-import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.theme.Theme;
 import com.teammoeg.chorda.text.Components;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 public class TooltipBuilder implements Consumer<Component> {
 	private List<Component> tooltip = new ArrayList<>();
@@ -58,13 +56,9 @@ public class TooltipBuilder implements Consumer<Component> {
 		zOffset+=value;
 		return this;
 	}
-	public void draw(GuiGraphics graphics, int mouseX, int mouseY) {
+	public void draw(GuiGraphics graphics, int mouseX, int mouseY, Theme theme) {
 		if (!tooltip.isEmpty()) {
-			graphics.pose().translate(0, 0, zOffset);
-
-			graphics.setColor(1f, 1f, 1f, 0.8f);
-			graphics.renderTooltip(ClientUtils.getMc().font, tooltip, Optional.empty(), mouseX, Math.max(mouseY, 18));
-			graphics.setColor(1f, 1f, 1f, 1f);
+			theme.drawTooltip(graphics, tooltip, mouseX, mouseY, zOffset);
 		}
 	}
 }

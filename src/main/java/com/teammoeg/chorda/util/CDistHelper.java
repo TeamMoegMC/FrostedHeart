@@ -23,6 +23,7 @@ import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.ClientUtils;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
@@ -30,6 +31,9 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A bunch of method that is related to server but may be used on both dists
@@ -81,6 +85,16 @@ public class CDistHelper {
 		if(server!=null)
 			return server.registryAccess();
 		return ClientUtils.getWorld().registryAccess();
+	}
+
+	public static List<ServerPlayer> getOnlineOPs() {
+		var ops = new ArrayList<ServerPlayer>();
+		for (ServerPlayer p1 : server.getPlayerList().getPlayers()) {
+			if (server.getPlayerList().isOp(p1.getGameProfile())) {
+				ops.add(p1);
+			}
+		}
+		return ops;
 	}
 	
 }

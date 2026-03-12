@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.theme;
 
+import com.teammoeg.chorda.math.Colors;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.resources.ResourceLocation;
@@ -89,23 +90,44 @@ public class VanillaTheme implements Theme {
 	}
 	
 	@Override
-	public int getUITextColor() {
+	public int UITextColor() {
 		return 0xff000000;
 	}
 	@Override
-	public int getButtonTextColor() {
+	public int UIAltTextColor() {
+		return 0xff000000;
+	}
+
+	@Override
+	public int UIBGColor() {
+		return 0xFFc6c6c6;
+	}
+
+	@Override
+	public int UIBGBorderColor() {
+		return Colors.BLACK;
+	}
+
+	@Override
+	public int buttonTextColor() {
 		return 0xffffffff;
 	}
 	@Override
-	public int getErrorColor() {
+	public int errorColor() {
 		return 0xffa92b0d;
 	}
+
 	@Override
-	public int getButtonTextOverColor() {
+	public int successColor() {
+		return 0;
+	}
+
+	@Override
+	public int buttonTextOverColor() {
 		return 0xffffffff;
 	}
 	@Override
-	public int getButtonTextDisabledColor() {
+	public int buttonTextDisabledColor() {
 		return 0xccffffff;
 	}
 }

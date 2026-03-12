@@ -29,10 +29,8 @@ import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
-import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.clues.Clue;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
@@ -97,7 +95,7 @@ public class CluePanel extends UILayer {
 			rq = new TextField(this)
 				.setMaxWidth(width)
 				.setText(Lang.translateGui("research.required"))
-				.setColor(getTheme().getErrorColor());
+				.setColor(theme().errorColor());
 			rq.setPos(0, offset);
 			offset += rq.getHeight() + 2;
 		}

@@ -19,12 +19,15 @@
 
 package com.teammoeg.chorda.client.cui.contentpanel;
 
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.theme.Theme;
 import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.widgets.ScrollBar;
 import com.teammoeg.frostedheart.content.archive.Alignment;
+import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -37,96 +40,8 @@ import java.util.function.Consumer;
 
 public class ContentPanel extends UILayer {
     public ScrollBar scrollBar;
+    @Getter
     protected List<Line<?>> lines = new ArrayList<>();
-
-    public static class Builder{
-    	private ContentPanel parent;
-    	public Builder(ContentPanel parent) {
-			super();
-			this.parent = parent;
-		}
-		public <T extends Line<?>>Builder add(T line,Consumer<T> config){
-    		config.accept(line);
-    		parent.lines.add(line);
-    		parent.add(line);
-    		return this;
-    	}
-        public  Builder text(String text) {
-        	return text(text,a->{});
-        }
-
-        public  Builder text(Component text) {
-        	return text(text,a->{});
-        }
-        public  Builder text(String text,Consumer<TextLine> config) {
-        	return text(Component.literal(text),config);
-        }
-
-        public  Builder text(Component text,Consumer<TextLine> config) {
-        	return add(new TextLine(parent, text, Alignment.LEFT),config);
-        }
-
-        public  Builder img(ResourceLocation imageLocation) {
-        	 return img(imageLocation, a->{});
-        }
-        public  Builder img(String imageLocation) {
-            return img(imageLocation, a->{});
-        }
-
-        public  Builder img(String imageLocation,Consumer<ImageLine> config) {
-            return img(ResourceLocation.tryParse(imageLocation), config);
-        }
-
-        public  Builder img(ResourceLocation imageLocation,Consumer<ImageLine> config) {
-        	return add(new ImageLine(parent, imageLocation, Alignment.CENTER),config);
-        }
-        public  Builder items(ItemStack... items) {
-            return items(a->{},items);
-        }
-
-        public  Builder items(Collection<ItemStack> items) {
-        	return items(items, a->{});
-        }
-        public  Builder items(Consumer<ItemRow> config,ItemStack... items) {
-            return items(List.of(items),config);
-        }
-
-        public  Builder items(Collection<ItemStack> items,Consumer<ItemRow> config) {
-        	return add(new ItemRow(parent, items, Alignment.CENTER),config);
-        }
-        public  Builder space() {
-            return space(a->{});
-        }
-
-        public  Builder space(int height) {
-            return space(height,a->{});
-        }
-        public  Builder space(Consumer<EmptyLine> config) {
-            return space(8,config);
-        }
-
-        public  Builder space(int height,Consumer<EmptyLine> config) {
-        	return add(new EmptyLine(parent, height),config);
-        }
-        public  Builder br() {
-        	return br(a->{});
-        }
-
-        public  Builder br(int color) {
-            return br(color,a->{});
-        }
-        public  Builder br(Consumer<BreakLine> config) {
-        	return add(new BreakLine(parent),config);
-        }
-
-        public  Builder br(int color,Consumer<BreakLine> config) {
-            return br(c->{c.color(color);config.accept(c);});
-        }
-    	public ContentPanel build() {
-    		parent.refresh();
-    		return parent;
-    	}
-    }
 
     public ContentPanel(UIElement parent) {
         super(parent);
@@ -139,6 +54,12 @@ public class ContentPanel extends UILayer {
         setTheme(theme);
     }
 
+    public void setParent(UILayer parent) {
+        super.setParent(parent);
+        parent.add(this);
+        parent.add(scrollBar);
+    }
+
     public Builder builder() {
     	return new Builder(this);
     }
@@ -149,12 +70,11 @@ public class ContentPanel extends UILayer {
 
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-        if (getTheme() instanceof ArchiveTheme theme) {
-            theme.drawUIBackgroundWithBorder(graphics, x, y, w, h, 8);
-        }
+        theme().drawUIBackground(graphics, x-8, y-8, w+16, h+16);
     }
 
     public void fillContent(Collection<? extends UIElement> widgets) {
+        int old = getContentHeight();
         clearElement();
         for (UIElement widget : widgets) {
             if (widget instanceof Line<?> line) {
@@ -163,6 +83,9 @@ public class ContentPanel extends UILayer {
             add(widget);
         }
         refresh();
+        if (old != getContentHeight()) {
+            scrollBar.setValue(0);
+        }
     }
 
     public void addLine(Line<?> line) {
@@ -177,24 +100,26 @@ public class ContentPanel extends UILayer {
         refresh();
     }
 
-    public void addTo(UILayer parent) {
-        parent.add(this);
-        parent.add(scrollBar);
-    }
-
     @Override
     public void refresh() {
         resize();
-        recalcContentSize();
         for (UIElement element : elements) {
             element.refresh();
         }
         alignWidgets();
-        scrollBar.setValue(0);
     }
 
     public void resize() {
-        scrollBar.setPosAndSize(getX() + getWidth()+9, -7, 6, getHeight()+14);
+        int h = (int)(ClientUtils.screenHeight() * 0.8F);
+        int w = (int)(h * 1.3333F); // 4:3
+        setSize(w, h);
+        scrollBar.setPosAndSize(getX() + getWidth()+7, -7, 6, getHeight()+14);
+    }
+
+    @Override
+    public void getTooltip(TooltipBuilder list) {
+        super.getTooltip(list);
+//        list.translateZ(300);
     }
 
     @Override
@@ -204,4 +129,93 @@ public class ContentPanel extends UILayer {
 
     @Override
     public void addUIElements() {}
+
+    public static class Builder{
+        private final ContentPanel parent;
+        public Builder(ContentPanel parent) {
+            super();
+            this.parent = parent;
+        }
+        public <T extends Line<?>>Builder add(T line,Consumer<T> config){
+            config.accept(line);
+            parent.lines.add(line);
+            parent.add(line);
+            return this;
+        }
+        public  Builder text(String text) {
+            return text(text,a->{});
+        }
+
+        public  Builder text(Component text) {
+            return text(text,a->{});
+        }
+        public  Builder text(String text,Consumer<TextLine> config) {
+            return text(Component.literal(text),config);
+        }
+
+        public  Builder text(Component text,Consumer<TextLine> config) {
+            return add(new TextLine(parent, text, Alignment.LEFT),config);
+        }
+
+        public  Builder img(ResourceLocation imageLocation) {
+            return img(imageLocation, a->{});
+        }
+        public  Builder img(String imageLocation) {
+            return img(imageLocation, a->{});
+        }
+
+        public  Builder img(String imageLocation,Consumer<ImageLine> config) {
+            return img(ResourceLocation.tryParse(imageLocation), config);
+        }
+
+        public  Builder img(ResourceLocation imageLocation,Consumer<ImageLine> config) {
+            return add(new ImageLine(parent, imageLocation, Alignment.CENTER),config);
+        }
+        public  Builder items(ItemStack... items) {
+            return items(a->{},items);
+        }
+
+        public  Builder items(Collection<ItemStack> items) {
+            return items(items, a->{});
+        }
+        public  Builder items(Consumer<ItemRow> config,ItemStack... items) {
+            return items(List.of(items),config);
+        }
+
+        public  Builder items(Collection<ItemStack> items,Consumer<ItemRow> config) {
+            return add(new ItemRow(parent, items, Alignment.CENTER),config);
+        }
+        public  Builder space() {
+            return space(a->{});
+        }
+
+        public  Builder space(int height) {
+            return space(height,a->{});
+        }
+        public  Builder space(Consumer<EmptyLine> config) {
+            return space(8,config);
+        }
+
+        public  Builder space(int height,Consumer<EmptyLine> config) {
+            return add(new EmptyLine(parent, height),config);
+        }
+        public  Builder br() {
+            return br(a->{});
+        }
+
+        public  Builder br(int color) {
+            return br(color,a->{});
+        }
+        public  Builder br(Consumer<BreakLine> config) {
+            return add(new BreakLine(parent),config);
+        }
+
+        public  Builder br(int color,Consumer<BreakLine> config) {
+            return br(c->{c.color(color);config.accept(c);});
+        }
+        public ContentPanel build() {
+            parent.refresh();
+            return parent;
+        }
+    }
 }

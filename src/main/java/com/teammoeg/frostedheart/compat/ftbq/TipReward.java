@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.compat.ftbq;
 
-import com.teammoeg.frostedheart.content.tips.ServerTipSender;
+import com.teammoeg.frostedheart.content.tips.ServerTipHelper;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.reward.Reward;
@@ -86,6 +86,6 @@ public class TipReward extends Reward {
 
     @Override
     public void claim(ServerPlayer serverPlayer, boolean b) {
-        ServerTipSender.sendGeneral(tipId, serverPlayer);
+        ServerTipHelper.sendGeneral(tipId, serverPlayer);
     }
 }

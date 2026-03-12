@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
-import java.util.List;
-
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -29,9 +27,10 @@ import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.frostedresearch.research.Research;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+
+import java.util.List;
 
 public class ResearchDetailPanel extends UILayer {
 	public LayerScrollBar scrollInfo;
@@ -135,7 +134,7 @@ public class ResearchDetailPanel extends UILayer {
 	@Override
 	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
 		// drawBackground(matrixStack, theme, x, y, w, h);
-		getTheme().drawUIBackground(matrixStack, x, y, w, h);
+		theme().drawUIBackground(matrixStack, x, y, w, h);
 	}
 
 	@Override

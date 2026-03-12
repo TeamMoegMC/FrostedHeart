@@ -26,8 +26,6 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.widgets.LimitedTextField;
 import com.teammoeg.chorda.client.icon.FlatIcon;
-import com.teammoeg.chorda.math.Colors;
-
 import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
@@ -39,15 +37,15 @@ import java.util.List;
 public class Category extends UILayer {
     public static final int MAX_DEPTH = 16;
     public static final int CHILDREN_OFFSET = 8;
+    @Getter
     private final int depth;
-    private final LimitedTextField title;
+    protected final LimitedTextField title;
     @Getter
     protected final Category root;
     @Getter
     protected Entry selected;
     @Getter
     protected boolean opened = false;
-    public int backgroundColor = Colors.L_BG_GRAY;
     protected FlatIcon.FlatIconWidget icon;
 
     public Category(UILayer panel, Component title) {
@@ -55,7 +53,7 @@ public class Category extends UILayer {
         setSize(panel.getWidth(), Entry.DEF_HEIGHT);
 
         this.title = new LimitedTextField(this, title, getWidth()).shouldShowTooltip(false);
-        this.icon = FlatIcon.RIGHT.toWidget(this, Colors.L_TEXT_GRAY);
+        this.icon = FlatIcon.RIGHT.toWidget(this, theme().UIAltTextColor());
         this.icon.setSize(10, 10);
         addUIElements();
 
@@ -80,9 +78,9 @@ public class Category extends UILayer {
 
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-        graphics.fill(x, y, x+w, y+Entry.DEF_HEIGHT, backgroundColor);
+        theme().drawButton(graphics, x, y, w, Entry.DEF_HEIGHT, false, isEnabled());
         if (isMouseOver()) {
-            graphics.fill(x-4, y, x-2, y+Entry.DEF_HEIGHT, Colors.L_TEXT_GRAY);
+            graphics.fill(x-4, y, x-2, y+Entry.DEF_HEIGHT, theme().UIAltTextColor());
         }
     }
 
@@ -171,7 +169,7 @@ public class Category extends UILayer {
     }
 
     /**
-     * @param path 打开路径中的所有Category
+     * @param path 打开路径中的所有 Category
      * @return 路径的最后一个元素
      */
     public UIElement open(String path) {
@@ -239,11 +237,6 @@ public class Category extends UILayer {
             }
         }
         return false;
-    }
-
-    public Category setBgColor(int color) {
-        this.backgroundColor = color;
-        return this;
     }
 
     @Override

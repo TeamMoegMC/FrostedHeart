@@ -106,6 +106,15 @@ public class CInputHelper {
 	public static boolean isMouseRightDown() {
 		return GLFW.glfwGetMouseButton(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_MOUSE_BUTTON_RIGHT) == GLFW.GLFW_PRESS;
 	}
+
+	public static boolean isNextKey(int keyCode, int scanCode, int modifier) {
+		return (keyCode == GLFW.GLFW_KEY_TAB && modifier != GLFW.GLFW_MOD_SHIFT) || keyCode == GLFW.GLFW_KEY_S || keyCode == GLFW.GLFW_KEY_DOWN || keyCode == GLFW.GLFW_KEY_PAGE_DOWN;
+	}
+
+	public static boolean isPrevKey(int keyCode, int scanCode, int modifier) {
+		return (keyCode == GLFW.GLFW_KEY_TAB && modifier == GLFW.GLFW_MOD_SHIFT) || keyCode == GLFW.GLFW_KEY_W || keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_PAGE_UP;
+	}
+
 	public enum Cursor{
 		NORMAL(GLFW.GLFW_ARROW_CURSOR),
 		IBEAM(GLFW.GLFW_IBEAM_CURSOR),

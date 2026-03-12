@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.tips.network;
 
+import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipManager;
@@ -30,17 +31,17 @@ import java.util.function.Supplier;
 public record DisplayCustomTipPacket(Tip tip) implements CMessage {
 
     public DisplayCustomTipPacket(FriendlyByteBuf buffer) {
-        this(Tip.builder("").fromNBT(buffer.readNbt()).build());
+        this(CodecUtil.readCodecNBT(buffer, Tip.CODEC));
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
-        tip.write(buffer);
+        CodecUtil.writeCodecNBT(buffer, Tip.CODEC, tip == null ? Tip.EMPTY : tip);
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> TipManager.INSTANCE.display().general(tip));
+        ctx.get().enqueueWork(() -> TipManager.display().general(tip));
         ctx.get().setPacketHandled(true);
     }
 }

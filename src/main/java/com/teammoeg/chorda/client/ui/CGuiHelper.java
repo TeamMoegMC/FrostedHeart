@@ -28,7 +28,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -51,6 +50,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.FormattedCharSequence;
@@ -70,11 +70,13 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * Convenience functions for gui rendering
@@ -249,7 +251,6 @@ public class CGuiHelper {
 	 * @param pStack the item stack to decorate.
 	 * @param pX     the x-coordinate of the rendering position.
 	 * @param pY     the y-coordinate of the rendering position.
-	 * @param pText  the custom text to display. Can be null.
 	 */
 	public static void renderItemDecorationsWithoutCount(GuiGraphics guiGraphics, Font pFont, ItemStack pStack, int pX,
 			int pY) {
@@ -491,16 +492,58 @@ public class CGuiHelper {
 
 	}
 
-	public record LineDrawingContext(int lineSize, int maxWidth) {
+	public record LineDrawingContext(List<FormattedCharSequence> lines, int lineSize, int maxWidth) {
 	}
 
-	public static Pair<List<FormattedCharSequence>, LineDrawingContext> split(Component text, Font font, int w) {
+	public static LineDrawingContext split(FormattedText text, Font font, int w) {
 		var lines = font.split(text, w);
 		int maxW = 0;
 		for (FormattedCharSequence line : lines) {
 			maxW = Math.max(font.width(line), maxW);
 		}
-		return new Pair<>(lines, new LineDrawingContext(lines.size(), maxW));
+		return new LineDrawingContext(lines, lines.size(), maxW);
+	}
+
+	public static LineDrawingContext split(List<? extends FormattedText> texts, Font font, int maxWidth) {
+		var lines = new ArrayList<FormattedCharSequence>();
+		for (FormattedText text : texts) {
+			lines.addAll(font.split(text, maxWidth));
+		}
+		int maxTextWidth = 0;
+		for (FormattedCharSequence line : lines) {
+			maxTextWidth = Math.max(font.width(line), maxTextWidth);
+		}
+		return new LineDrawingContext(lines, lines.size(), maxTextWidth);
+	}
+
+	public static LineDrawingContext split(List<? extends FormattedText> texts, Font font, int mouseX, int screenWidth) {
+		// 1. 计算所有文本的最大宽度（像素）
+		int maxWidth = texts.stream()
+				.mapToInt(font::width)
+				.max()
+				.orElse(0);
+
+		boolean needsWrap = false;
+
+		// 2. 模拟默认放置位置，判断是否超出屏幕
+		int tooltipX = mouseX + 12; // 默认尝试放在鼠标右侧，偏移12像素
+		if (tooltipX + maxWidth + 4 > screenWidth) { // 右侧放不下，尝试左侧
+			tooltipX = mouseX - 16 - maxWidth;
+			if (tooltipX < 4) { // 左侧也放不下，需要重新计算可用宽度并换行
+				if (mouseX > screenWidth / 2) {
+					maxWidth = mouseX - 12 - 8;      // 鼠标左侧可用宽度
+				} else {
+					maxWidth = screenWidth - 16 - mouseX; // 鼠标右侧可用宽度
+				}
+				needsWrap = true;
+			}
+		}
+
+		int finalMaxWidth = needsWrap ? maxWidth : Integer.MAX_VALUE;
+		var result = texts.stream()
+				.flatMap(text -> font.split(text, finalMaxWidth).stream())
+				.collect(Collectors.toList());
+		return new LineDrawingContext(result, result.size(), maxWidth);
 	}
 
 	/**
@@ -840,10 +883,6 @@ public class CGuiHelper {
 		// if (primaryLayer.getManager() instanceof CUIScreen) {
 		x += (ClientUtils.getMc().getWindow().getGuiScaledWidth() - primaryLayer.getWidth()) / 2;
 		y += (ClientUtils.getMc().getWindow().getGuiScaledHeight() - primaryLayer.getHeight()) / 2;
-		/*
-		 * } else { x += ClientUtils.screenCenterX(); y += ClientUtils.screenCenterY();
-		 * }
-		 */
 
 		var w1 = widget.getParent();
 		while (w1.getParent() != null) {
@@ -873,7 +912,6 @@ public class CGuiHelper {
 		return parent == null || parent.isVisible();
 	}
 
-	@Nullable
 	public static Size2i getImgSize(ResourceLocation location) {
 		if (location != null) {
 			var resource = ClientUtils.getMc().getResourceManager().getResource(location);
@@ -886,6 +924,6 @@ public class CGuiHelper {
 				}
 			}
 		}
-		return null;
+		return new Size2i(0, 0);
 	}
 }
