@@ -36,8 +36,10 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
@@ -52,37 +54,23 @@ public class TipCommand {
     public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         var server = literal("tip")
-                        .then(literal("display").then(players("players").then(string("id").suggests(TipManager::suggest)
-                            .executes(TipCommand::display))))
-                        .then(literal("displayCustom")
-                            .then(players("players").then(literal("json").then(string("json")
-                                .executes(TipCommand::displayJson)))
-                            .then(string("title").then(string("content").then(integer("displayTime")
-                                .executes(TipCommand::displayCustom))))));
+                .then(literal("display").then(players("players").then(string("id")
+                        .executes(TipCommand::display))))
+                .then(literal("displayCustom")
+                        .then(players("players").then(literal("json").then(string("json")
+                                        .executes(TipCommand::displayJson)))
+                                .then(string("title").then(string("content").then(integer("displayTime")
+                                        .executes(TipCommand::displayCustom))))));
 
         for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
             dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(server));
         }
         dispatcher.register(server);
-
+        //避免server崩溃
         if (FMLEnvironment.dist.isClient()) {
-            var client = server.then(literal("client")
-                    .then(literal("reload")
-                            .executes(c -> {TipManager.INSTANCE.loadFromFile(); return Command.SINGLE_SUCCESS;}))
-                    .then(literal("unlockAll")
-                            .executes(c -> {TipManager.INSTANCE.state().unlockAll(); return Command.SINGLE_SUCCESS;}))
-                    .then(literal("display").then(string("id").suggests(TipManager::suggest)
-                            .executes(TipCommand::clientDisplay)))
-                    .then(literal("displayCustom")
-                            .then(literal("json").then(string("json")
-                                    .executes(TipCommand::clientDisplayJson)))
-                            .then(string("title").then(string("content").then(integer("displayTime")
-                                    .executes(TipCommand::clientDisplayCustom))))));
-
-            for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
-                dispatcher.register(Commands.literal(string).then(client));
-            }
-            dispatcher.register(client);
+            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+                registerClientCommands(dispatcher);
+            });
         }
     }
 
@@ -210,4 +198,30 @@ public class TipCommand {
                 .setTemporary()
                 .build();
     }
+
+    private static void registerClientCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
+        var client = literal("tip").then(literal("client")
+                .then(literal("reload")
+                        .executes(c -> {
+                            TipManager.INSTANCE.loadFromFile();
+                            return Command.SINGLE_SUCCESS;
+                        }))
+                .then(literal("unlockAll")
+                        .executes(c -> {
+                            TipManager.INSTANCE.state().unlockAll();
+                            return Command.SINGLE_SUCCESS;
+                        }))
+                .then(literal("display").then(string("id").suggests(TipManager::suggest)
+                        .executes(TipCommand::clientDisplay)))
+                .then(literal("displayCustom")
+                        .then(literal("json").then(string("json")
+                                .executes(TipCommand::clientDisplayJson)))
+                        .then(string("title").then(string("content").then(integer("displayTime")
+                                .executes(TipCommand::clientDisplayCustom))))));
+        for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
+            dispatcher.register(Commands.literal(string).then(client));
+        }
+        dispatcher.register(client);
+    }
+
 }

@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.town.network;
 
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
@@ -63,7 +64,7 @@ public class WanderingRefugeeRecruitMessage implements CMessage {
                         player.displayClientMessage(Component.translatable("message.frostedheart.wandering_refugee.too_far_to_recruit"), false);
                     } else{
                         TeamTown town = TeamTown.from(player);
-                        town.addResident(refugee.getFirstName(), refugee.getLastName());
+                        if (town.addResident(new Resident(refugee.getFirstName(), refugee.getLastName()))){
                         //随便产生点粒子效果吧
                         {
                             for (int i = 0; i < 16; i++) {
@@ -73,6 +74,7 @@ public class WanderingRefugeeRecruitMessage implements CMessage {
                         }
                         player.displayClientMessage(Component.translatable("message.frostedheart.wandering_refugee.recruited"), false);
                         refugee.remove(Entity.RemovalReason.DISCARDED);
+                        }
                     }
                 }
             }
