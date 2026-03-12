@@ -25,6 +25,8 @@ import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.contentpanel.ArchiveTheme;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.tips.ClickActions;
 
 import javax.annotation.Nullable;
 
@@ -32,6 +34,10 @@ public final class ArchiveScreen extends PrimaryLayer {
     public static String path;
     public final ContentPanel contentPanel;
     public final ArchiveCategory category;
+
+    static {
+        ClickActions.register(FHMain.rl("view_in_archive"), "tips.frostedheart.click_action.open_archive", ArchiveScreen::open);
+    }
 
     public ArchiveScreen() {
         setTheme(ArchiveTheme.INSTANCE);

@@ -3,6 +3,9 @@ package com.teammoeg.frostedheart.content.tips;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.serialization.JsonOps;
 import com.teammoeg.chorda.client.cui.category.Category;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
@@ -16,6 +19,7 @@ import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.archive.ArchiveCategory;
 import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
@@ -26,6 +30,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static com.teammoeg.frostedheart.content.tips.Tip.GSON;
@@ -268,6 +273,13 @@ public class TipHelper {
         // 4. 将所有主分类条目添加到主分类
         category.addAll(mainCategoryEntries);
         return category;
+    }
+
+    public static CompletableFuture<Suggestions> suggest(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        TipManager.INSTANCE.getAllTips().forEach(tip ->
+                builder.suggest(tip.id(), Component.translatable(tip.getTitle()))
+        );
+        return builder.buildFuture();
     }
 
     public static String randomString() {

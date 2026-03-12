@@ -77,7 +77,9 @@ public class ImageLine extends Line<ImageLine> {
 
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-        graphics.fill(x, y, x+w, y+h, theme().UIBGBorderColor());
+        if (imgSize.width < getWidth()/3) {
+            graphics.fill(x, y, x+w, y+h, theme().UIBGBorderColor());
+        }
     }
 
     public boolean isImgValid() {

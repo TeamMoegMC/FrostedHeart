@@ -37,7 +37,7 @@ import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipHelper;
 import com.teammoeg.frostedheart.content.tips.TipManager;
-import com.teammoeg.frostedheart.infrastructure.command.TipCommand;
+import com.teammoeg.frostedheart.infrastructure.command.TipClientCommand;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -155,7 +155,7 @@ public class ArchiveCategory extends UILayer {
     @Override
     public void addUIElements() {
         clearElement();
-        if (TipCommand.editMode) {
+        if (TipClientCommand.editMode) {
             getElements().add(new Button(this, Component.literal("Add New Tip"), FlatIcon.WRENCH.toCIcon()) {
                 @Override
                 public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {

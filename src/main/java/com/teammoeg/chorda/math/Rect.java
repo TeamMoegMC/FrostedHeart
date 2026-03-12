@@ -57,7 +57,6 @@ public class Rect extends Point {
 		return y + h;
 	}
 
-	public static final Rect2i NONE_2I = new Rect2i(0, 0, 0, 0);
 	public Rect2i toRect2i() {
 		return new Rect2i(x, y, w, h);
 	}

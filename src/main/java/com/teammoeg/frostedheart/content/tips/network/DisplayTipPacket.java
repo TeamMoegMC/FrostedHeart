@@ -38,7 +38,7 @@ public record DisplayTipPacket(String id) implements CMessage {
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> TipManager.INSTANCE.display().general(id));
+        context.get().enqueueWork(() -> TipManager.display().general(id));
         context.get().setPacketHandled(true);
     }
 }

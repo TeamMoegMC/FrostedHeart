@@ -19,9 +19,7 @@
 
 package com.teammoeg.frostedheart.infrastructure.command;
 
-import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -29,18 +27,14 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.ServerTipHelper;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipHelper;
-import com.teammoeg.frostedheart.content.tips.TipManager;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,7 +44,6 @@ import static com.teammoeg.frostedheart.infrastructure.command.CommandHelper.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class TipCommand {
-    public static boolean editMode = false;
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
@@ -59,20 +52,14 @@ public class TipCommand {
                         .executes(TipCommand::display))))
                 .then(literal("displayCustom")
                         .then(players("players").then(literal("json").then(string("json")
-                                        .executes(TipCommand::displayJson)))
-                                .then(string("title").then(string("content").then(integer("displayTime")
-                                        .executes(TipCommand::displayCustom))))));
+                                .executes(TipCommand::displayJson)))
+                        .then(string("title").then(string("content").then(integer("displayTime")
+                                .executes(TipCommand::displayCustom))))));
 
         for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
             dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(server));
         }
         dispatcher.register(server);
-        //避免server崩溃
-        if (FMLEnvironment.dist.isClient()) {
-            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-                registerClientCommands(dispatcher);
-            });
-        }
     }
 
     private static int display(CommandContext<CommandSourceStack> ctx) {
@@ -158,30 +145,6 @@ public class TipCommand {
         }
     }
 
-    private static int clientDisplay(CommandContext<CommandSourceStack> ctx) {
-        String id = StringArgumentType.getString(ctx, "id");
-        TipManager.display().general(id);
-        return Command.SINGLE_SUCCESS;
-    }
-
-    private static int clientDisplayJson(CommandContext<CommandSourceStack> ctx) {
-        String json = StringArgumentType.getString(ctx, "json");
-        Tip tip = TipHelper.parse(json).copy()
-                .temporary()
-                .build();
-        TipManager.display().general(tip);
-        return Command.SINGLE_SUCCESS;
-    }
-
-    private static int clientDisplayCustom(CommandContext<CommandSourceStack> ctx) {
-        String title = StringArgumentType.getString(ctx, "title");
-        String content = StringArgumentType.getString(ctx, "content");
-        int displayTime = IntegerArgumentType.getInteger(ctx, "displayTime");
-        Tip tip = toTip(title, content, displayTime);
-        TipManager.display().general(tip);
-        return Command.SINGLE_SUCCESS;
-    }
-
     public static Tip toTip(String title, String content, int displayTime) {
         List<String> contents = new ArrayList<>();
         if (!content.isEmpty()) {
@@ -195,29 +158,4 @@ public class TipCommand {
                 .temporary()
                 .build();
     }
-
-    private static void registerClientCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
-        var client = literal("client")
-                .then(literal("reload")
-                        .executes(c -> {TipManager.INSTANCE.loadFromFile(); c.getSource().sendSuccess(() -> Component.literal("Loaded " + TipManager.INSTANCE.getAllTips().size() + " tip(s)"), true); return Command.SINGLE_SUCCESS;}))
-                .then(literal("unlockAll")
-                        .executes(c -> {TipManager.state().unlockAll(); return Command.SINGLE_SUCCESS;}))
-//                    .then(literal("edit").then(string("id").suggests(TipManager::suggest)
-//                            .executes(c -> {TipHelper.edit(TipManager.INSTANCE.getTip(StringArgumentType.getString(c, "id"))); return Command.SINGLE_SUCCESS;})))
-                .then(literal("editMode").then(bool("enableEdit")
-                        .executes(c -> {editMode = BoolArgumentType.getBool(c, "enableEdit"); return Command.SINGLE_SUCCESS;})))
-                .then(literal("display").then(string("id").suggests(TipManager::suggest)
-                        .executes(TipCommand::clientDisplay)))
-                .then(literal("displayCustom")
-                        .then(literal("json").then(string("json")
-                                .executes(TipCommand::clientDisplayJson)))
-                        .then(string("title").then(string("content").then(integer("displayTime")
-                                .executes(TipCommand::clientDisplayCustom)))));
-
-        for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
-            dispatcher.register(Commands.literal(string).then(client));
-        }
-        dispatcher.register(client);
-    }
-
 }

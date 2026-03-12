@@ -66,7 +66,10 @@ public class TipLayer extends UILayer {
 
     @Override
     public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-        if (!isVisible()) return;
+        if (!isVisible() || tip == Tip.EMPTY) {
+            state = State.IDLE;
+            return;
+        }
 
         float anim = switch (state) {
             case FADING_IN -> {
@@ -82,10 +85,8 @@ public class TipLayer extends UILayer {
                 if (f == 0) {
                     AnimationUtil.remove("fh_tip_fading");
                     AnimationUtil.remove("fh_tip_progress");
-                    lastTip = tip;
+                    setTip(Tip.EMPTY);
                     state = State.IDLE;
-                    progress = 0;
-                    alwaysVisibleOverride = false;
                 }
                 yield f;
             }
@@ -130,6 +131,8 @@ public class TipLayer extends UILayer {
         this.tip = tip;
         this.display = tip.display();
         state = State.FADING_IN;
+        progress = 0;
+        alwaysVisibleOverride = false;
         refresh();
     }
 
@@ -168,7 +171,7 @@ public class TipLayer extends UILayer {
         if (TipHelper.hasImage(tip)) {
             contentWidth = Math.max(contentWidth, CGuiHelper.getImgSize(tip.image()).width);
         }
-        setWidth((int) Mth.clamp(contentWidth, sw*0.2F, maxWidth));
+        setWidth((int) Mth.clamp(contentWidth, Math.max(sw*0.2F, 120), maxWidth));
 
         // 3. 刷新
         addUIElements();

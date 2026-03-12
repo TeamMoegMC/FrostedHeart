@@ -30,7 +30,6 @@ import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
-import com.teammoeg.frostedheart.content.archive.ArchiveScreen;
 import com.teammoeg.frostedresearch.compat.ftb.FTBQCompat;
 import net.minecraft.Util;
 import net.minecraft.network.chat.Component;
@@ -112,7 +111,6 @@ public class ClickActions {
             }
             JEICompat.showJEIUsageFor(item);
         });
-        register(FHMain.rl("view_in_archive"), "tips.frostedheart.click_action.open_archive", ArchiveScreen::open);
         register(FHMain.rl("edit_tip"),        "tips.frostedheart.click_action.edit_tip",   s -> {
             if (s.startsWith("{")) {
                 TipHelper.edit(TipHelper.parse(s), null);

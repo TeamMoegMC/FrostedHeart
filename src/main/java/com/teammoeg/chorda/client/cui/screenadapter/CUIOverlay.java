@@ -29,7 +29,6 @@ import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
-import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.client.FGuis;
 import lombok.Getter;
@@ -249,9 +248,10 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen, IGlobalGuiHandler {
 		}
 	}
 
+	public static final Rect2i NONE = new Rect2i(0, 0, 0, 0);
 	@Override
 	public Collection<Rect2i> getGuiExtraAreas() {
-		return List.of(renderAboveScreen && whenVisibleAndEnabled.test(this) ? primaryLayer.getBounds().toRect2i() : Rect.NONE_2I);
+		return List.of(renderAboveScreen && whenVisibleAndEnabled.test(this) ? primaryLayer.getBounds().toRect2i() : NONE);
 	}
 	//char typed event not available
 	//mouse dragged event not available

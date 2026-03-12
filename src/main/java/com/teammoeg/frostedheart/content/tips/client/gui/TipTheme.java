@@ -46,7 +46,7 @@ public class TipTheme implements Theme {
 
     @Override
     public void drawUIBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-        graphics.fill(x-4, y-4, x+w+4, y+h+4, getBackgroundColor());
+        graphics.fill(x-4, y-4, x+w+4, y+h, getBackgroundColor());
     }
 
     @Override

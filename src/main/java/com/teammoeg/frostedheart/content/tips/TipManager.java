@@ -23,14 +23,9 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.teammoeg.frostedheart.content.tips.client.gui.TipOverlay;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -41,7 +36,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 
 import static com.teammoeg.frostedheart.content.tips.Tip.LOGGER;
 
@@ -116,13 +110,6 @@ public class TipManager {
 
     public List<Tip> getUnlockedTips() {
         return state.getUnlockedTips();
-    }
-
-    public static CompletableFuture<Suggestions> suggest(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
-        INSTANCE.loadedTips.forEach((key, tip) ->
-                builder.suggest(key, Component.translatable(tip.getTitle()))
-        );
-        return builder.buildFuture();
     }
 
     /**

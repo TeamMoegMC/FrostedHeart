@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.content.archive.Alignment;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipHelper;
 import com.teammoeg.frostedheart.content.tips.TipManager;
-import com.teammoeg.frostedheart.infrastructure.command.TipCommand;
+import com.teammoeg.frostedheart.infrastructure.command.TipClientCommand;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -118,7 +118,7 @@ public class LineHelper {
                 lines.add(img);
             }
             // debug
-            if (TipCommand.editMode) {
+            if (TipClientCommand.editMode) {
                 lines.add(text(parent, "ID: " + tip.id())
                         .color(parent.theme().UIBGBorderColor())
                         .alignment(Alignment.RIGHT)
