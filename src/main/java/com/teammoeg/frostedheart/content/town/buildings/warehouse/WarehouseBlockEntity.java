@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEnt
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.MenuProvider;
@@ -44,6 +45,15 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
 
     public WarehouseBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.WAREHOUSE.get(),pos,state);
+    }
+
+    @Override
+    public void refresh(@NotNull WarehouseBuilding building) {
+        super.refresh(building);
+        Town town = this.getTown();
+        if(town instanceof TeamTown teamTown){
+            teamTown.getTownData().ifPresent(TeamTownData::reloadMaxCapacity);
+        }
     }
 
     public boolean scanStructure(WarehouseBuilding building){

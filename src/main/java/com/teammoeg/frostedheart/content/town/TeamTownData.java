@@ -260,10 +260,19 @@ public class TeamTownData implements SpecialData {
 		// 移除house/worker里超过上限，或已不存在的的resident
 		for (AbstractTownBuilding building : buildings.values()) {
 			if (building instanceof ITownResidentBuilding residentBuilding) {
-				residentBuilding.getResidentsID().removeIf(resident -> !residents.containsKey(resident));
+				Collection<UUID> residentIDs = residentBuilding.getResidentsID();
+				//移除已不存在的居民
+				residentIDs.removeIf(uuid -> !residents.containsKey(uuid));
+
+				//移除超过上限的居民
 				int maxResident = residentBuilding.getMaxResidents();
-				while (residentBuilding.getResidentsID().size() > maxResident) {
-					residentBuilding.getResidentsID().stream().findAny().ifPresent(uuid -> residents.remove(uuid));
+				if (residentIDs.size() > maxResident) {
+					Iterator<UUID> iterator = residentIDs.iterator();
+					int removeCount = residentIDs.size() - maxResident;
+					for (int i = 0; i < removeCount && iterator.hasNext(); i++) {
+						iterator.next();
+						iterator.remove();
+					}
 				}
 				for (UUID resident : residentBuilding.getResidentsID()) {
 					// 把清空的居民的house/work位置设为加回来
@@ -310,7 +319,7 @@ public class TeamTownData implements SpecialData {
 				.filter(AbstractTownBuilding::isBuildingWorkable)
 				.filter(building -> building instanceof ITownResidentWorkBuilding)
 				.map(building -> (ITownResidentWorkBuilding) building)
-				.sorted(Comparator.comparingDouble(o -> -o.getResidentPriority()))// 降序排列
+				//.sorted(Comparator.comparingDouble(o -> -o.getResidentPriority()))//PriorityQueue本身就有排序，不需要额外排序
 				.collect(Collectors.toCollection(() -> new PriorityQueue<>(Comparator.comparingDouble(ITownResidentWorkBuilding::getResidentPriority).reversed())));
 
 		Map<ITownResidentWorkBuilding, Map<Resident, Double/*score*/>> buildingResidentScoreCache = new HashMap<>();
@@ -321,6 +330,9 @@ public class TeamTownData implements SpecialData {
 			Resident bestResident = null;
 			double bestResidentScore = 0;
 			Map<Resident, Double> residentScoreCache = buildingResidentScoreCache.computeIfAbsent(topPriorityBuilding, a->new HashMap<>());
+			if(availableResidents.isEmpty()){
+				break;
+			}
 			for(Resident resident:availableResidents.values()){
 				double residentScore = residentScoreCache.computeIfAbsent(resident, topPriorityBuilding::getResidentScore);
 				if(residentScore > bestResidentScore){
@@ -346,14 +358,23 @@ public class TeamTownData implements SpecialData {
 		//updateAllBlocks(world);
 
 		TeamTown teamTown = new TeamTown(this);
-		resources.resetAllServices();
-		buildings.values().stream().filter(building -> building instanceof WarehouseBuilding)
-				.filter(AbstractTownBuilding::isBuildingWorkable)
-				.forEach(building -> ((WarehouseBuilding) building).addCapacity(teamTown));
+		reloadMaxCapacity();
+
 		buildings.values().stream()
 				.filter(AbstractTownBuilding::isBuildingWorkable)
 				.sorted(Comparator.comparingInt(AbstractTownBuilding::getWorkPriority).reversed())
 				.forEach(building -> building.work(teamTown));
+	}
+
+	/**
+	 * 清零MaxCapacity，并从仓库中重新读取和添加
+	 */
+	public void reloadMaxCapacity(){
+		resources.resetMaxCapacity();
+		TeamTown teamTown = this.createTeamTown();
+		buildings.values().stream().filter(building -> building instanceof WarehouseBuilding)
+				.filter(AbstractTownBuilding::isBuildingWorkable)
+				.forEach(building -> ((WarehouseBuilding) building).addCapacity(teamTown));
 	}
 
 	private static final Function<TerrainResourceType, TerrainResourceData> RESOURCE_DATA_SUPPLIER = a->new TerrainResourceData();

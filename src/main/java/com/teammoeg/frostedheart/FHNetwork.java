@@ -32,12 +32,7 @@ import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipRequestPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayPopupPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
-import com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket;
-import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeOpenTradeGUIMessage;
-import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeRecruitMessage;
-import com.teammoeg.frostedheart.content.town.network.WarehouseC2SRequestPacket;
-import com.teammoeg.frostedheart.content.town.network.WarehouseInteractPacket;
-import com.teammoeg.frostedheart.content.town.network.WarehouseS2CPacket;
+import com.teammoeg.frostedheart.content.town.network.*;
 import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
@@ -107,9 +102,8 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("team_town_data_s2c", TeamTownDataS2CPacket.class);
         registerMessage("wandering_refugee_open_trade_gui", WanderingRefugeeOpenTradeGUIMessage.class);
         registerMessage("wandering_refugee_recruit", WanderingRefugeeRecruitMessage.class);
-        registerMessage("warehouse_s2c", WarehouseS2CPacket.class);
-        registerMessage("warehouse_c2s_request_packet", WarehouseC2SRequestPacket.class);
         registerMessage("warehouse_c2s_interact_packet", WarehouseInteractPacket.class);
+        registerMessage("warehouse_update_packet", WarehouseUpdatePacket.class);
 
         // Generator Messages
         //registerMessage("generator_upgrade", GeneratorModifyPacket.class);

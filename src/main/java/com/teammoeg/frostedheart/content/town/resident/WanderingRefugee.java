@@ -26,7 +26,6 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.trade.*;
 
 import lombok.Getter;
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -51,6 +50,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -157,8 +158,9 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
             return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
         if(this.level().isClientSide){
-            Minecraft.getInstance().setScreen(new WanderingRefugeeScreen(this));
-            return InteractionResult.sidedSuccess(this.level().isClientSide);
+            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+                WanderingRefugeeClientHelper.openScreen(this);
+            });
         }
 
         return InteractionResult.sidedSuccess(this.level().isClientSide);
@@ -322,4 +324,6 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
     public FHVillagerData getFHData() {
         return fh$data;
     }
+
+
 }

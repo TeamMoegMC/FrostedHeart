@@ -51,7 +51,8 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 					Codec.list(UUIDUtil.CODEC).fieldOf("residentsID").forGetter(o -> new ArrayList<>(o.residentsID)),
 					Codec.INT.fieldOf("area").forGetter(o -> o.area),
 					Codec.INT.fieldOf("volume").forGetter(o -> o.volume),
-					Codec.list(BlockPos.CODEC).fieldOf("linkedMines").forGetter(o -> new ArrayList<>(o.linkedMines)),
+					Codec.list(BlockPos.CODEC).optionalFieldOf("linkedMines", new ArrayList<>())
+							.forGetter(o -> o.linkedMines == null ? new ArrayList<>() : new ArrayList<>(o.linkedMines)),
 					Codec.INT.fieldOf("maxResidents").forGetter(o -> o.maxResidents),
 					Codec.DOUBLE.fieldOf("rating").forGetter(o -> o.rating),
 					Codec.DOUBLE.fieldOf("temperature").forGetter(o -> o.temperature))
@@ -131,6 +132,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 				if(resident==null)continue;
 				double efficiency=0.2 * getResidentScore(resident);
 				if(efficiency<=0)continue;
+//				efficiency = 2.0;
 				toModify+=efficiency;
 			}
 			final double picked=teamTown.maypickTerrainResource(TerrainResourceType.ORE, toModify);
@@ -166,7 +168,6 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 					.mapToDouble(TownResourceActionResults.ItemResourceActionResult::modifiedAmount)
 					.sum();
 			teamTown.pickTerrainResource(TerrainResourceType.ORE, modified);
-
 			return true;
 		}
 		throw new IllegalArgumentException("MineBaseBuilding ERROR: Can't work in non-team town :" + town);
