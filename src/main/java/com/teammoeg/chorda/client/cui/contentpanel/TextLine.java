@@ -159,17 +159,19 @@ public class TextLine extends Line<TextLine> {
     @Override
     public void refresh() {
         super.refresh();
-        int btnX = alignment == Alignment.RIGHT ? 0 : getWidth()-12;
-        for (Button button : buttons) {
-            button.setPos(btnX, (getHeight() - button.getHeight())/2);
-            btnX += alignment == Alignment.RIGHT ? button.getWidth()+2 : -button.getWidth()-2;
-        }
 
         int width = (getWidth() - ((isTitle||isQuote) ? 8 : 0));
-        if (alignment == Alignment.RIGHT) {
-            width -= btnX;
-        } else {
-            width -= width-btnX;
+        if (!buttons.isEmpty()) {
+            int btnX = alignment == Alignment.RIGHT ? 0 : getWidth();
+            for (Button button : buttons) {
+                button.setPos(btnX-12, (getHeight() - button.getHeight())/2);
+                btnX += alignment == Alignment.RIGHT ? button.getWidth()+2 : -button.getWidth()-2;
+            }
+            if (alignment == Alignment.RIGHT) {
+                width -= btnX;
+            } else {
+                width -= width-btnX;
+            }
         }
         width = (int)(width * (1.0F/scale));
 

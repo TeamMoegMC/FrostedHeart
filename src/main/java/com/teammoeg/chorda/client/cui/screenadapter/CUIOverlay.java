@@ -188,9 +188,8 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen, IGlobalGuiHandler {
 	}
 	public void onKeyPress(InputEvent.Key key) {
 		if(key.getAction()==InputConstants.PRESS) {
-			if(primaryLayer.onKeyPressed(key.getKey(),key.getScanCode(), key.getModifiers()))
-				key.setCanceled(true);
-		}else if(key.getAction()==InputConstants.RELEASE)
+			primaryLayer.onKeyPressed(key.getKey(),key.getScanCode(), key.getModifiers()); // InputEvent.Key is not cancelable
+		} else if(key.getAction()==InputConstants.RELEASE)
 			primaryLayer.onKeyRelease(key.getKey(),key.getScanCode(), key.getModifiers());
 	}
 	public void onMousePress(InputEvent.MouseButton.Pre mouse) {

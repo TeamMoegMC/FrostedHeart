@@ -4,13 +4,9 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.client.cui.contentpanel.FlatIconButton;
-import com.teammoeg.chorda.client.cui.widgets.Button;
-import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import lombok.Getter;
-import net.minecraft.network.chat.Component;
 import net.minecraftforge.common.util.Size2i;
 
 import java.util.ArrayList;
@@ -22,8 +18,6 @@ public class TipOverlay extends PrimaryLayer {
     protected static final List<Tip> QUEUE = new ArrayList<>();
     @Getter
     final TipLayer tipLayer;
-    final Button closeBtn;
-    final Button pinBtn;
 
     public static void add(Tip tip) {
         if (!QUEUE.contains(tip)) {
@@ -66,12 +60,6 @@ public class TipOverlay extends PrimaryLayer {
         this.tipLayer = new TipLayer(this);
         theme.tipLayer = this.tipLayer;
         tipLayer.setPosAndSize(0, 0, 100, 200);
-        this.closeBtn = new FlatIconButton(this, Component.translatable("gui.close"), FlatIcon.CROSS, b ->
-            removeCurrent()
-        );
-        this.pinBtn = new FlatIconButton(this, Component.translatable("gui.frostedheart.pin"), FlatIcon.PIN, b ->
-             tipLayer.alwaysVisibleOverride = true
-        );
         addUIElements();
     }
 

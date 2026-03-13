@@ -162,7 +162,7 @@ public record Tip(
         private ResourceLocation image;
         private ClickActions.ClickAction clickAction = ClickActions.NO_ACTION;
 
-        private final List<ItemStack> displayItems = Display.DEFAULT.displayItems;
+        private final List<ItemStack> displayItems = new ArrayList<>();
         private boolean alwaysVisible = Display.DEFAULT.alwaysVisible;
         private boolean onceOnly = Display.DEFAULT.onceOnly;
         private boolean hide = Display.DEFAULT.hide;

@@ -5,9 +5,12 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
+import com.teammoeg.chorda.client.cui.contentpanel.FlatIconButton;
 import com.teammoeg.chorda.client.cui.contentpanel.ImageLine;
 import com.teammoeg.chorda.client.cui.contentpanel.Line;
 import com.teammoeg.chorda.client.cui.contentpanel.LineHelper;
+import com.teammoeg.chorda.client.cui.widgets.Button;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.math.Point;
@@ -29,6 +32,8 @@ import java.util.List;
 public class TipLayer extends UILayer {
     boolean isEditing;
     final ContentPanel panel;
+    final Button closeBtn;
+    final Button pinBtn;
 
     @NotNull
     Tip tip = Tip.EMPTY;
@@ -61,6 +66,13 @@ public class TipLayer extends UILayer {
             }
         };
         this.panel.setScissorEnabled(false);
+        this.closeBtn = new FlatIconButton(this, Component.translatable("gui.close"), FlatIcon.CROSS, b ->
+                TipOverlay.removeCurrent()
+        );
+        this.pinBtn = new FlatIconButton(this, Component.translatable("gui.frostedheart.pin"), FlatIcon.PIN, b -> {
+            this.alwaysVisibleOverride = true;
+            refresh();
+        });
         this.setScissorEnabled(false);
     }
 
@@ -201,7 +213,7 @@ public class TipLayer extends UILayer {
         int sw = ClientUtils.screenWidth();
         int swc = sw/2-getWidth()/2;
         int sh = ClientUtils.screenHeight();
-        int sch = (int) (sh*.4F);
+        int sch = (sh/2-getHeight()/2) - (int)(sh*.025F);
 
         return switch (FHConfig.CLIENT.tipPosition.get()) {
             case TOP_LEFT      -> new Point(8, 12);
@@ -229,9 +241,9 @@ public class TipLayer extends UILayer {
             String text = contents.get(i);
             var line = LineHelper.text(panel, Component.translatable(text));
             if (i == 0) {
-                line.button(TipOverlay.INSTANCE.closeBtn);
+                line.button(closeBtn);
                 if (!tip.display().alwaysVisible() && !alwaysVisibleOverride) {
-                    line.button(TipOverlay.INSTANCE.pinBtn);
+                    line.button(pinBtn);
                 }
                 line.button(tip.clickAction());
             }
@@ -263,7 +275,7 @@ public class TipLayer extends UILayer {
     }
 
     class ProgressBar extends Line<ProgressBar> {
-        public static final int DEF_HEIGHT = -1;
+        public static final int DEF_HEIGHT = 0;
 
         public ProgressBar(UIElement parent) {
             super(parent);
