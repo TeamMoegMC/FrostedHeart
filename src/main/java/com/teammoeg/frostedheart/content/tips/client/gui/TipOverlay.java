@@ -4,6 +4,8 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.editor.EditorFieldsDialog;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
 import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import lombok.Getter;
@@ -67,6 +69,21 @@ public class TipOverlay extends PrimaryLayer {
     @Override
     public void tick() {
         super.tick();
+        if (ClientUtils.getMc().screen instanceof CUIScreenWrapper cui) {
+            if (cui.getPrimaryLayer().getDialog() instanceof EditorFieldsDialog<?> efd) {
+                if (efd.getValue() instanceof Tip tip) {
+                    if (!tipLayer.tip.equals(tip)) {
+                        tipLayer.tip = tip;
+                        tipLayer.display = tip.display();
+                        tipLayer.state = TipLayer.State.DONE;
+                        refresh();
+                    }
+                    tipLayer.setEditing(true);
+                }
+            }
+        } else {
+            tipLayer.setEditing(false);
+        }
         var newSize = new Size2i(ClientUtils.screenWidth(), ClientUtils.screenHeight());
         if (!newSize.equals(lastScreenSize)) {
             refresh();
@@ -89,6 +106,16 @@ public class TipOverlay extends PrimaryLayer {
     public void getTooltip(TooltipBuilder list) {
         super.getTooltip(list);
         list.translateZ(800);
+    }
+
+    @Override
+    public boolean isVisible() {
+        return isEnabled();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return tipLayer.isEnabled();
     }
 
     @Override

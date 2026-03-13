@@ -20,30 +20,22 @@
 package com.teammoeg.frostedheart.content.archive;
 
 import com.teammoeg.chorda.client.AnimationUtil;
-import com.teammoeg.chorda.client.CSSStylingUtil;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.contentpanel.ArchiveTheme;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
-import com.teammoeg.chorda.client.cui.contentpanel.Line;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.archive.ArchiveCategory.ArchiveEntry;
 import com.teammoeg.frostedheart.content.tips.ClickActions;
-
 import net.minecraft.client.gui.GuiGraphics;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-
-import javax.annotation.Nullable;
-
-import org.joml.Matrix4f;
-import org.joml.Quaternionf;
 
 public final class ArchiveScreen extends PrimaryLayer {
     public static String path;
@@ -56,6 +48,8 @@ public final class ArchiveScreen extends PrimaryLayer {
     static {
         ClickActions.register(FHMain.rl("view_in_archive"), "tips.frostedheart.click_action.open_archive", ArchiveScreen::open);
     }
+
+    public boolean flipAnimationEnabled = false;
 
     public ArchiveScreen() {
         setTheme(ArchiveTheme.INSTANCE);
@@ -97,38 +91,48 @@ public final class ArchiveScreen extends PrimaryLayer {
 
     @Override
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-    	if(currentEntry!=null) {
-	    	float value=AnimationUtil.fadeIn(750, "archive", false);
-	    	if(lastEntry==null)value=1;
-	    	int maxh=ClientUtils.screenHeight();
-	    	if(value<.66666f) {
-	    		float ratio=value*3/2;
-	    		contentPanelOut.setPos((int) (ratio*30+120),(int) (ratio*25));
-	    		contentPanel.setPos((int) (ratio*30+90),(int) (ratio*25-25));
-	    	}else {
-	    		float ratio=value*3-2;
-	    		contentPanelOut.setPos(150, (int) (25+ratio*maxh));
-	    	}
-	    	if(value>=1) {
-	    		AnimationUtil.remove("archive");
-	    		contentPanelOut.setVisible(false);
-	    		contentPanelOut.fillContent(currentEntry.apply(contentPanelOut));
-	    		lastEntry=currentEntry;
-	    		currentEntry=null;
-	    	}
-    	}else if(buffedEntry!=null) {
-    		AnimationUtil.remove("archive");
-    		currentEntry=buffedEntry;
-    		buffedEntry=null;
-    		contentPanelOut.setVisible(true);
-    		contentPanel.setPos(90, -25);
-    		contentPanelOut.setPos(120,0);
-    		contentPanel.fillContent(currentEntry.apply(contentPanel));
-    		
-    	}
-    	
-		super.drawBackground(graphics, x, y, w, h);
-	}
+        if (!flipAnimationEnabled) {
+            if (buffedEntry != null) {
+                currentEntry=buffedEntry;
+                contentPanel.fillContent(buffedEntry.apply(contentPanel));
+                buffedEntry=null;
+            }
+            super.drawBackground(graphics, x, y, w, h);
+            return;
+        }
+
+        if(currentEntry!=null) {
+            float value=AnimationUtil.fadeIn(750, "archive", false);
+            if(lastEntry==null)value=1;
+            int maxh=ClientUtils.screenHeight();
+            if(value<.66666f) {
+                float ratio=value*3/2;
+                contentPanelOut.setPos((int) (ratio*30+120),(int) (ratio*25));
+                contentPanel.setPos((int) (ratio*30+90),(int) (ratio*25-25));
+            }else {
+                float ratio=value*3-2;
+                contentPanelOut.setPos(150, (int) (25+ratio*maxh));
+            }
+            if(value>=1) {
+                AnimationUtil.remove("archive");
+                contentPanelOut.setVisible(false);
+                contentPanelOut.fillContent(currentEntry.apply(contentPanelOut));
+                lastEntry=currentEntry;
+                currentEntry=null;
+            }
+        }else if(buffedEntry!=null) {
+            AnimationUtil.remove("archive");
+            currentEntry=buffedEntry;
+            buffedEntry=null;
+            contentPanelOut.setVisible(true);
+            contentPanel.setPos(90, -25);
+            contentPanelOut.setPos(120,0);
+            contentPanel.fillContent(currentEntry.apply(contentPanel));
+
+        }
+
+        super.drawBackground(graphics, x, y, w, h);
+    }
 
 
 	@Override
@@ -138,7 +142,9 @@ public final class ArchiveScreen extends PrimaryLayer {
 	@Override
     public void addUIElements() {
         add(contentPanel);
-        add(contentPanelOut);
+        if (flipAnimationEnabled) {
+            add(contentPanelOut);
+        }
         add(category);
         add(contentPanel.scrollBar);
         add(category.scrollBar);

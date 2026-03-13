@@ -8,7 +8,6 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.serialization.JsonOps;
 import com.teammoeg.chorda.client.cui.category.Category;
-import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
 import com.teammoeg.chorda.client.cui.editor.EditListDialog;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;
 import com.teammoeg.chorda.client.cui.editor.Editor;
@@ -77,9 +76,8 @@ public class TipHelper {
     public static void edit(@Nullable Tip edit, @Nullable Theme theme) {
         Tip e = edit == null ? Tip.builder(randomString()).build() : edit;
         EDITOR.open(EditUtils.openEditorScreen(theme), Component.literal("Edit Tip"), e, t -> {
-            if (!t.equals(e)) {
-                save(t);
-            }
+            save(t);
+            TipManager.display().removeCurrent();
         });
     }
 
@@ -100,7 +98,7 @@ public class TipHelper {
         if (tip.display().displayItems().stream().anyMatch(ItemStack::isEmpty))
             errors.add("Illegal item(s)");
         if (!errors.isEmpty()) {
-            display(Error.SAVE.create(errors).clickAction("edit_tip", toString(tip)).build());
+            display(Tip.builder(randomString()).contents(Error.SAVE.desc()).contents(errors).fontColor(Colors.RED).pin().alwaysVisible().temporary().clickAction("edit_tip", toString(tip)).build());
             return false;
         }
 
