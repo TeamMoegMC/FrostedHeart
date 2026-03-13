@@ -72,4 +72,18 @@ public class MouseHelper {
     public static double getScaledY() {
         return MC.mouseHandler.ypos() * (double)MC.getWindow().getGuiScaledHeight() / (double)MC.getWindow().getScreenHeight();
     }
+    public static double getX() {
+        return MC.mouseHandler.xpos();
+    }
+
+    public static double getY() {
+        return MC.mouseHandler.ypos();
+    }
+    public static double getNormalX() {
+        return MC.mouseHandler.xpos()/(double)MC.getWindow().getScreenWidth();
+    }
+
+    public static double getNormalY() {
+        return MC.mouseHandler.ypos()/(double)MC.getWindow().getScreenHeight();
+    }
 }

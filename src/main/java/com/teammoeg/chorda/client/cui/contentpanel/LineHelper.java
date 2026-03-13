@@ -76,7 +76,7 @@ public class LineHelper {
         return br(parent).color(color);
     }
 
-    public static List<Line<?>> fromTip(Tip tipInput, ContentPanel parent) {
+    public static List<Line<?>> fromTip(Tip tipInput,UIElement parent) {
         List<Line<?>> lines = new ArrayList<>();
         List<Tip> tips = new ArrayList<>();
         tips.add(tipInput);

@@ -239,7 +239,7 @@ public class TipHelper {
         return id.matches(".*[<>:\"/\\\\|?*§].*");
     }
 
-    public static Category getCategory(Category category, ContentPanel panel) {
+    public static Category getCategory(Category category) {
         List<Tip> unlockedTips = TipManager.INSTANCE.getUnlockedTips();
 
         // 1. 收集所有子提示的 ID
@@ -263,10 +263,10 @@ public class TipHelper {
                 // 获取或创建子分类
                 Category subCategory = subTipCategory.computeIfAbsent(categoryName,
                         name -> new Category(category, Component.translatable(name)));
-                subCategory.add(new ArchiveCategory.TipEntry(subCategory, panel, tip.id()));
+                subCategory.add(new ArchiveCategory.TipEntry(subCategory, tip.id()));
             } else {
                 // 无分类的提示放入主分类
-                mainCategoryEntries.add(new ArchiveCategory.TipEntry(category, panel, tip.id()));
+                mainCategoryEntries.add(new ArchiveCategory.TipEntry(category, tip.id()));
             }
         }
 
