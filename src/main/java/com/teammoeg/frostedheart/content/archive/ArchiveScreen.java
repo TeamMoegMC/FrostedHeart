@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.archive;
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.CSSStylingUtil;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -42,6 +43,7 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 
 public final class ArchiveScreen extends PrimaryLayer {
     public static String path;
@@ -78,6 +80,7 @@ public final class ArchiveScreen extends PrimaryLayer {
         	}
 
         };
+        contentPanelOut.setVisible(false);
         this.category = new ArchiveCategory(this);
     }
     public void swapPanels() {
@@ -115,6 +118,7 @@ public final class ArchiveScreen extends PrimaryLayer {
     		buffedEntry=null;
     		contentPanelOut.setVisible(true);
     		contentPanel.setPos(90, -25);
+    		contentPanelOut.setPos(120,0);
     		contentPanel.fillContent(currentEntry.apply(contentPanel));
     		
     	}
@@ -126,6 +130,9 @@ public final class ArchiveScreen extends PrimaryLayer {
 	@Override
 	public void beforeDrawElements(GuiGraphics graphics, int parX, int parY, int x, int y, int w, int h) {
 		graphics.pose().mulPoseMatrix(transformation);
+		graphics.pose().rotateAround(new Quaternionf()
+			.rotateX((float) MouseHelper.getNormalY())
+			.rotateY((float) MouseHelper.getNormalX()), x+w/2, y+h/2, 0);
 		super.beforeDrawElements(graphics, parX, parY, x, y, w, h);
 	}
 	@Override

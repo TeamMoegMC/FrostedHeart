@@ -17,12 +17,12 @@ public class CSSStylingUtil {
 	}
 	public static Matrix4f skewX(float degrees) {
 		Matrix4f matrix=new Matrix4f();
-		matrix.m20((float) Math.tan(Math.toRadians(degrees)));
+		matrix.m01((float) Math.tan(Math.toRadians(degrees)));
 		return matrix;
 	}
 	public static Matrix4f perspective(float distance) {
 		Matrix4f matrix=new Matrix4f();
-		matrix.m23(-1f/distance);
+		matrix.m32(-1f/distance);
 		return matrix;
 	}
 	public static Matrix4f rotate(float degrees) {
