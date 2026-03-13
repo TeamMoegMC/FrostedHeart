@@ -131,6 +131,7 @@ public final class ArchiveScreen extends PrimaryLayer {
 	@Override
     public void addUIElements() {
         add(contentPanel);
+        add(contentPanelOut);
         add(category);
         add(contentPanel.scrollBar);
         add(category.scrollBar);
