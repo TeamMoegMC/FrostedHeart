@@ -26,20 +26,17 @@ import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.widgets.LimitedTextField;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.math.Colors;
-import lombok.Getter;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 public abstract class Entry extends UILayer {
     public static final int DEF_HEIGHT = 16;
-    @Getter
-    protected final UILayer panel;
     protected LimitedTextField title;
     protected FlatIcon.FlatIconWidget icon;
 
-    public Entry(Category parent, UILayer affectedPanel, Component title) {
+    public Entry(Category parent, Component title) {
         super(parent);
-        this.panel = affectedPanel;
         this.title = new LimitedTextField(this, title, getWidth()).shouldShowTooltip(false);
         this.icon = new FlatIcon.FlatIconWidget(this);
         this.icon.setSize(10, 10);

@@ -297,11 +297,13 @@ public abstract class UILayer extends UIElement {
 		if(isScissorEnabled())
 			graphics.enableScissor(x, y, x+w, y+h);
 		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
+		beforeDrawElements(graphics,x,y, contentX, contentY, w, h);
 		for(UIElement elm:elements) {
 			if(elm.isVisible()) {
 				drawElement(graphics, elm,x,y, contentX, contentY, w, h);
 			}
 		}
+		afterDrawElements(graphics,x,y, contentX, contentY, w, h);
 		graphics.pose().popPose();
 
 		if(isScissorEnabled())
@@ -312,6 +314,8 @@ public abstract class UILayer extends UIElement {
 		//	TechIcons.ADD.draw(graphics, (int)getMouseX()+x-4, (int)getMouseY()+y-4, 8, 8);
 		//graphics.pose().popPose();
 	}
+	public void beforeDrawElements(GuiGraphics graphics,int parX,int parY, int x, int y, int w, int h) {}
+	public void afterDrawElements(GuiGraphics graphics,int parX,int parY, int x, int y, int w, int h) {}
 	@Override
 	public void updateRenderInfo(double mx, double my, float pt) {
 		super.updateRenderInfo(mx, my, pt);

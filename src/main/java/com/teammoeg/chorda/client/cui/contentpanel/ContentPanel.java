@@ -28,6 +28,7 @@ import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.widgets.ScrollBar;
 import com.teammoeg.frostedheart.content.archive.Alignment;
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -42,7 +43,9 @@ public class ContentPanel extends UILayer {
     public ScrollBar scrollBar;
     @Getter
     protected List<Line<?>> lines = new ArrayList<>();
-
+    @Getter
+    @Setter
+    private boolean visible=true;
     public ContentPanel(UIElement parent) {
         super(parent);
         this.scrollBar = new LayerScrollBar(parent, true, this);
@@ -87,7 +90,20 @@ public class ContentPanel extends UILayer {
             scrollBar.setValue(0);
         }
     }
-
+    public void copy(Collection<? extends UIElement> widgets) {
+        int old = getContentHeight();
+        clearElement();
+        for (UIElement widget : widgets) {
+            if (widget instanceof Line<?> line) {
+                this.lines.add(line);
+            }
+            add(widget);
+        }
+        refresh();
+        if (old != getContentHeight()) {
+            scrollBar.setValue(0);
+        }
+    }
     public void addLine(Line<?> line) {
         this.lines.add(line);
         add(line);
