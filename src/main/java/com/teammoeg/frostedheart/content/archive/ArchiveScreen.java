@@ -131,8 +131,8 @@ public final class ArchiveScreen extends PrimaryLayer {
 	public void beforeDrawElements(GuiGraphics graphics, int parX, int parY, int x, int y, int w, int h) {
 		graphics.pose().mulPoseMatrix(transformation);
 		graphics.pose().rotateAround(new Quaternionf()
-			.rotateX((float) MouseHelper.getNormalY())
-			.rotateY((float) MouseHelper.getNormalX()), x+w/2, y+h/2, 0);
+			.rotateX((float)Math.toRadians( MouseHelper.getNormalY()*2))
+			.rotateY((float) Math.toRadians(MouseHelper.getNormalX()*2)), x+w/2, y+h/2, 0);
 		super.beforeDrawElements(graphics, parX, parY, x, y, w, h);
 	}
 	@Override
