@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
-@Mixin(ClientTeamManagerImpl.class)
+@Mixin(value = ClientTeamManagerImpl.class, remap = false)
 public abstract class MixinCTManager {
     @Shadow private ClientTeam selfTeam;
     @Shadow private KnownClientPlayer selfKnownPlayer;
