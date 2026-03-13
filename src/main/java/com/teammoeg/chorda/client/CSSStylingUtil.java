@@ -12,12 +12,12 @@ public class CSSStylingUtil {
 
 	public static Matrix4f skewY(float degrees) {
 		Matrix4f matrix=new Matrix4f();
-		matrix.m10((float) Math.tan(Math.toRadians(degrees)));
+		matrix.m10((float) Math.tan(Math.toRadians(-degrees)));
 		return matrix;
 	}
 	public static Matrix4f skewX(float degrees) {
 		Matrix4f matrix=new Matrix4f();
-		matrix.m01((float) Math.tan(Math.toRadians(degrees)));
+		matrix.m01((float) Math.tan(Math.toRadians(-degrees)));
 		return matrix;
 	}
 	public static Matrix4f perspective(float distance) {

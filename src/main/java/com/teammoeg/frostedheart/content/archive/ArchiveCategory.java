@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.archive;
 
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.CInputHelper;
+import com.teammoeg.chorda.client.CSSStylingUtil;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -46,6 +47,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
+import org.joml.Matrix4f;
 
 public class ArchiveCategory extends UILayer {
 	public final LayerScrollBar scrollBar;
@@ -74,7 +77,6 @@ public class ArchiveCategory extends UILayer {
 				}
 		scrollTo(open(currentPath));
 	}
-
 	@Override
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
 		theme().drawUIBackground(graphics, x - 8, y - 8, w + 16, h + 16);

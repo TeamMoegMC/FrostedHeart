@@ -50,6 +50,7 @@ public final class ArchiveScreen extends PrimaryLayer {
     public final ContentPanel contentPanelOut;
     public final ContentPanel contentPanel;
     public final ArchiveCategory category;
+    private Function<UIElement,List<? extends UIElement>> lastEntry;
     private Function<UIElement,List<? extends UIElement>> currentEntry;
     private Function<UIElement,List<? extends UIElement>> buffedEntry;
     static {
@@ -93,11 +94,12 @@ public final class ArchiveScreen extends PrimaryLayer {
             ArchiveCategory.currentPath = path;
         }
     }
-    private static Matrix4f transformation=CSSStylingUtil.skewY(-2);
+
     @Override
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
     	if(currentEntry!=null) {
 	    	float value=AnimationUtil.fadeIn(750, "archive", false);
+	    	if(lastEntry==null)value=1;
 	    	int maxh=ClientUtils.screenHeight();
 	    	if(value<.66666f) {
 	    		float ratio=value*3/2;
@@ -108,8 +110,10 @@ public final class ArchiveScreen extends PrimaryLayer {
 	    		contentPanelOut.setPos(150, (int) (25+ratio*maxh));
 	    	}
 	    	if(value>=1) {
+	    		AnimationUtil.remove("archive");
 	    		contentPanelOut.setVisible(false);
 	    		contentPanelOut.fillContent(currentEntry.apply(contentPanelOut));
+	    		lastEntry=currentEntry;
 	    		currentEntry=null;
 	    	}
     	}else if(buffedEntry!=null) {
@@ -129,7 +133,6 @@ public final class ArchiveScreen extends PrimaryLayer {
 
 	@Override
 	public void beforeDrawElements(GuiGraphics graphics, int parX, int parY, int x, int y, int w, int h) {
-		graphics.pose().mulPoseMatrix(transformation);
 		super.beforeDrawElements(graphics, parX, parY, x, y, w, h);
 	}
 	@Override
