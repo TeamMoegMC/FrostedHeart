@@ -27,7 +27,7 @@
     "forge.FluidHandlerItemStackSimpleMixin",
     "forge.FMLHandshakeAntiCheatMixin",
     "forge.ServerLifecycleHooksMixin",
-    "ftb.MixinCTManager",
+    "ftb.MixinCTeamManager",
     "immersiveengineering.IERegistrationMixin",
     "immersiveengineering.OwnerableStateMixin",
     "minecraft.accessors.NewChatGuiAccessor",

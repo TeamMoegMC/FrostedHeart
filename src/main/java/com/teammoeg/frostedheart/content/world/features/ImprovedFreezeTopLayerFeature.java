@@ -61,51 +61,63 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
     {
         final WorldGenLevel level = context.level();
         final BlockPos pos = context.origin();
+        final int originX = pos.getX();
+        final int originZ = pos.getZ();
+        final RandomSource random = context.random();
+        final boolean enableAccumulation =
+                FHConfig.SERVER.WORLDGEN.enableSnowAccumulationDuringWorldgen.get();
         final BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        final BlockPos.MutableBlockPos tempPos = new BlockPos.MutableBlockPos();
 
-
-        // First, find the highest and lowest exposed y pos in the chunk
+        // First, find the highest exposed y pos in the chunk
         int maxY = 0;
-        for (int x = 0; x < 16; ++x)
+        for (int idx = 0; idx < 256; idx++)
         {
-            for (int z = 0; z < 16; ++z)
+            int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING,
+                    originX + (idx & 15), originZ + (idx >> 4));
+            if (maxY < y)
             {
-                int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING, pos.getX() + x, pos.getZ() + z);
-                if (maxY < y)
-                {
-                    maxY = y;
-                }
+                maxY = y;
             }
         }
 
         // Then, step downwards, tracking the exposure to sky at each step
-        int[] skyLights = new int[16 * 16], prevSkyLights = new int[16 * 16];
+        int[] skyLights = new int[256], prevSkyLights = new int[256];
+        BlockState[] stateCache = new BlockState[256];
         Arrays.fill(prevSkyLights, 7);
         for (int y = maxY; y >= 0; y--)
         {
-            for (int x = 0; x < 16; ++x)
+            // Propagate skylight vertically and cache block states
+            for (int idx = 0; idx < 256; idx++)
             {
-                for (int z = 0; z < 16; ++z)
+                cursor.set(originX + (idx & 15), y, originZ + (idx >> 4));
+                final BlockState state = level.getBlockState(cursor);
+                stateCache[idx] = state;
+                if (state.isAir())
                 {
-                    final int skyLight = prevSkyLights[x + 16 * z];
-                    cursor.set(pos.getX() + x, y, pos.getZ() + z);
-                    final BlockState state = level.getBlockState(cursor);
-                    if (state.isAir())
-                    {
-                        // Continue skylight downwards
-                        skyLights[x + 16 * z] = prevSkyLights[x + 16 * z];
-                        extendSkyLights(skyLights, x, z);
-                    }
-                    if (skyLight > 0)
-                    {
-                        placeSnowAndIce(level, cursor, state, context.random(), skyLight);
-                    }
+                    // Continue skylight downwards
+                    skyLights[idx] = prevSkyLights[idx];
+                }
+            }
+
+            // Extend skylight horizontally (zero-allocation, replaces per-block BFS)
+            propagateSkyLights(skyLights);
+
+            // Place snow and ice where skylight reaches
+            for (int idx = 0; idx < 256; idx++)
+            {
+                final int skyLight = prevSkyLights[idx];
+                if (skyLight > 0)
+                {
+                    cursor.set(originX + (idx & 15), y, originZ + (idx >> 4));
+                    placeSnowAndIce(level, cursor, stateCache[idx], tempPos,
+                            random, skyLight, enableAccumulation);
                 }
             }
 
             // Break early if all possible sky light is gone
             boolean hasSkyLight = false;
-            for (int i = 0; i < 16 * 16; i++)
+            for (int i = 0; i < 256; i++)
             {
                 if (skyLights[i] > 0)
                 {
@@ -126,62 +138,42 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
     }
 
     /**
-     * Simple BFS that extends a skylight source outwards within the array
+     * Zero-allocation skylight horizontal propagation.
+     * Sweeps from highest light level downward, spreading to adjacent cells.
+     * Replaces the original per-block BFS (ArrayList + HashSet + Vec3i allocations).
      */
-    private void extendSkyLights(int[] skyLights, int startX, int startZ)
+    private static void propagateSkyLights(int[] skyLights)
     {
-        final List<Vec3i> positions = new ArrayList<>();
-        final Set<Vec3i> visited = new HashSet<>();
-        positions.add(new Vec3i(startX, skyLights[startX + 16 * startZ], startZ));
-        visited.add(new Vec3i(startX, 0, startZ));
-        while (!positions.isEmpty())
+        for (int light = 7; light >= 2; light--)
         {
-            final Vec3i position = positions.remove(0);
-            for (Direction direction : Direction.Plane.HORIZONTAL)
+            final int spread = light - 1;
+            for (int idx = 0; idx < 256; idx++)
             {
-                final int nextX = position.getX() + direction.getStepX();
-                final int nextZ = position.getZ() + direction.getStepZ();
-                final int nextSkyLight = position.getY() - 1;
-                if (nextX >= 0 && nextX < 16 && nextZ >= 0 && nextZ < 16 && skyLights[nextX + 16 * nextZ] < nextSkyLight)
+                if (skyLights[idx] == light)
                 {
-                    final Vec3i nextVisited = new Vec3i(nextX, 0, nextZ);
-                    if (!visited.contains(nextVisited))
-                    {
-                        skyLights[nextX + 16 * nextZ] = nextSkyLight;
-                        positions.add(new Vec3i(nextX, nextSkyLight, nextZ));
-                        visited.add(nextVisited);
-                    }
+                    final int x = idx & 15;
+                    final int z = idx >> 4;
+                    if (x > 0  && skyLights[idx - 1]  < spread) skyLights[idx - 1]  = spread;
+                    if (x < 15 && skyLights[idx + 1]  < spread) skyLights[idx + 1]  = spread;
+                    if (z > 0  && skyLights[idx - 16] < spread) skyLights[idx - 16] = spread;
+                    if (z < 15 && skyLights[idx + 16] < spread) skyLights[idx + 16] = spread;
                 }
             }
         }
     }
 
-    private void placeSnowAndIce(WorldGenLevel level, BlockPos pos, BlockState state, RandomSource random, int skyLight)
+    private void placeSnowAndIce(WorldGenLevel level, BlockPos.MutableBlockPos pos,
+                                 BlockState state, BlockPos.MutableBlockPos tempPos,
+                                 RandomSource random, int skyLight,
+                                 boolean enableAccumulation)
     {
-        final Biome biome = level.getBiome(pos).value();
-        if (!biome.coldEnoughToSnow(pos))
-        {
-            return;
-        }
+        // Biome check removed - all biomes are cold in this modpack
 
         final FluidState fluidState = level.getFluidState(pos);
-        final BlockPos posDown = pos.below();
-        final BlockState stateDown = level.getBlockState(posDown);
-
-        // First, possibly replace the block below. This may have impacts on being able to add snow on top
-        // TODO: Check if replace with permafrost
-//        if (state.isAir())
-//        {
-//            final Block replacementBlock = PrimalWinterBlocks.SNOWY_SPECIAL_TERRAIN_BLOCKS.getOrDefault(stateDown.getBlock(), () -> null).get();
-//            if (replacementBlock != null)
-//            {
-//                BlockState replacementState = replacementBlock.defaultBlockState();
-//                level.setBlock(posDown, replacementState, 2);
-//            }
-//        }
 
         // Then, try and place snow layers / ice at the current location
-        if (fluidState.getType() == Fluids.WATER && (state.getBlock() instanceof LiquidBlock || state.canBeReplaced()))
+        if (fluidState.getType() == Fluids.WATER
+                && (state.getBlock() instanceof LiquidBlock || state.canBeReplaced()))
         {
             level.setBlock(pos, Blocks.ICE.defaultBlockState(), 2);
             if (!(state.getBlock() instanceof LiquidBlock))
@@ -189,48 +181,72 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
                 level.scheduleTick(pos, Blocks.ICE, 0);
             }
         }
-        else if (fluidState.getType() == Fluids.LAVA && state.getBlock() instanceof LiquidBlock)
+        else if (fluidState.getType() == Fluids.LAVA
+                && state.getBlock() instanceof LiquidBlock)
         {
             level.setBlock(pos, Blocks.OBSIDIAN.defaultBlockState(), 2);
         }
-        else if (Blocks.SNOW.defaultBlockState().canSurvive(level, pos) && state.canBeReplaced())
+        else if (state.canBeReplaced()
+                && Blocks.SNOW.defaultBlockState().canSurvive(level, pos))
         {
-            // Special exceptions
-            BlockPos posUp = pos.above();
-            if (state.getBlock() instanceof DoublePlantBlock && level.getBlockState(posUp).getBlock() == state.getBlock())
+            // Protect existing snow layers: only increase, never decrease
+            if (state.is(Blocks.SNOW))
             {
-                // Remove the above plant
-                level.removeBlock(posUp, false);
+                if (enableAccumulation)
+                {
+                    int existing = state.getValue(BlockStateProperties.LAYERS);
+                    int newLayers = calcLayers(level, pos, tempPos, random, skyLight);
+                    if (newLayers > existing)
+                    {
+                        level.setBlock(pos, state.setValue(
+                                BlockStateProperties.LAYERS, newLayers), 3);
+                    }
+                }
+                return;
+            }
+
+            // Special exceptions
+            if (state.getBlock() instanceof DoublePlantBlock)
+            {
+                tempPos.set(pos).move(Direction.UP);
+                if (level.getBlockState(tempPos).is(state.getBlock()))
+                {
+                    // Remove the above plant
+                    level.removeBlock(tempPos, false);
+                }
             }
 
             int layers;
-            if (FHConfig.SERVER.WORLDGEN.enableSnowAccumulationDuringWorldgen.get())
+            if (enableAccumulation)
             {
-                layers = Mth.clamp(skyLight - random.nextInt(3) - countExposedFaces(level, pos), 1, 7);
+                layers = calcLayers(level, pos, tempPos, random, skyLight);
             }
             else
             {
                 layers = 1;
             }
-            level.setBlock(pos, Blocks.SNOW.defaultBlockState().setValue(BlockStateProperties.LAYERS, layers), 3);
-
-            // Replace the below block as well
-//            Block replacementBlock = PrimalWinterBlocks.SNOWY_TERRAIN_BLOCKS.getOrDefault(stateDown.getBlock(), () -> null).get();
-//            if (replacementBlock != null)
-//            {
-//                BlockState replacementState = replacementBlock.defaultBlockState();
-//                level.setBlock(posDown, replacementState, 2);
-//            }
+            level.setBlock(pos, Blocks.SNOW.defaultBlockState()
+                    .setValue(BlockStateProperties.LAYERS, layers), 3);
         }
     }
 
-    private int countExposedFaces(WorldGenLevel level, BlockPos pos)
+    private int calcLayers(WorldGenLevel level, BlockPos pos,
+                           BlockPos.MutableBlockPos tempPos,
+                           RandomSource random, int skyLight)
+    {
+        return Mth.clamp(skyLight - random.nextInt(3)
+                - countExposedFaces(level, pos, tempPos), 1, 7);
+    }
+
+    private static int countExposedFaces(WorldGenLevel level, BlockPos pos,
+                                         BlockPos.MutableBlockPos tempPos)
     {
         int count = 0;
         for (Direction direction : Direction.Plane.HORIZONTAL)
         {
-            BlockPos posAt = pos.relative(direction);
-            if (!level.getBlockState(posAt).isFaceSturdy(level, posAt, direction.getOpposite()))
+            tempPos.set(pos).move(direction);
+            if (!level.getBlockState(tempPos).isFaceSturdy(
+                    level, tempPos, direction.getOpposite()))
             {
                 count++;
             }

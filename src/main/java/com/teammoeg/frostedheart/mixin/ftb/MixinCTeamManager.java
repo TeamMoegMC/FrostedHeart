@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
 @Mixin(value = ClientTeamManagerImpl.class, remap = false)
-public abstract class MixinCTManager {
+public abstract class MixinCTeamManager {
     @Shadow private ClientTeam selfTeam;
     @Shadow private KnownClientPlayer selfKnownPlayer;
     @Shadow @Final
