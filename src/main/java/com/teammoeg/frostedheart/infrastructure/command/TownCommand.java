@@ -129,6 +129,84 @@ public class TownCommand {
                                 )
                         );
 
+        LiteralArgumentBuilder<CommandSourceStack> costResourceByType =
+                Commands.literal("costByType")
+                        .then(Commands.argument("type", StringArgumentType.string())
+                                .suggests((ct, s) -> {
+                                    // Get all TownResourceType enum values
+                                    Arrays.stream(VirtualResourceType.values()).forEach(t -> s.suggest(t.getKey()));
+                                    Arrays.stream(ItemResourceType.values()).forEach(t -> s.suggest(t.getKey()));
+                                    return s.buildFuture();
+                                })
+                                .then(Commands.argument("minLevel", IntegerArgumentType.integer())
+                                        .suggests((ct, s) -> {
+                                            ITownResourceType type = ITownResourceType.from(StringArgumentType.getString(ct, "type"));
+                                            if(type == null) return s.buildFuture();
+                                            IntStream.rangeClosed(0, type.getMaxLevel())
+                                                    .forEach(s::suggest);
+                                            return s.buildFuture();
+                                        })
+                                        .then(Commands.argument("maxLevel", IntegerArgumentType.integer())
+                                                .suggests((ct, s) -> {
+                                                    ITownResourceType type = ITownResourceType.from(StringArgumentType.getString(ct, "type"));
+                                                    if(type == null) return s.buildFuture();
+                                                    int minLevel = IntegerArgumentType.getInteger(ct, "minLevel");
+                                                    IntStream.rangeClosed(minLevel, type.getMaxLevel())
+                                                            .forEach(s::suggest);
+                                                    return s.buildFuture();
+                                                })
+                                                .then(Commands.argument("amount", DoubleArgumentType.doubleArg())
+                                                        .then(Commands.literal("ascending").executes(ct -> {
+                                                            double amount = DoubleArgumentType.getDouble(ct, "amount");
+                                                            String typeString = StringArgumentType.getString(ct, "type");
+                                                            int minLevel = IntegerArgumentType.getInteger(ct, "minLevel");
+                                                            int maxLevel = IntegerArgumentType.getInteger(ct, "maxLevel");
+                                                            ITownResourceType type = ITownResourceType.from(typeString);
+                                                            if(type == null){
+                                                                ct.getSource().sendFailure(Components.str("Invalid type"));
+                                                                return Command.SINGLE_SUCCESS;
+                                                            }
+                                                            if(amount < 0){
+                                                                ct.getSource().sendFailure(Components.str("Invalid amount: Amount must be positive."));
+                                                                return Command.SINGLE_SUCCESS;
+                                                            }
+                                                            TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
+                                                            IActionExecutorHandler executor = town.getActionExecutorHandler();
+                                                            TownResourceActions.TownResourceTypeCostAction action = new TownResourceActions.TownResourceTypeCostAction(type, amount, minLevel, maxLevel, ResourceActionMode.ATTEMPT, ResourceActionOrder.ASCENDING);
+                                                            TownResourceActionResults.TownResourceTypeCostActionResult result = executor.execute(action);
+                                                            if(result.allCosted()){
+                                                                ct.getSource().sendSuccess(()-> Components.str("Resource costed (ascending)."), true);
+                                                            } else ct.getSource().sendSuccess(()-> Components.str("Resource cost failed: No enough resource."), true);
+                                                            return Command.SINGLE_SUCCESS;
+                                                        }))
+                                                        .then(Commands.literal("descending").executes(ct -> {
+                                                            double amount = DoubleArgumentType.getDouble(ct, "amount");
+                                                            String typeString = StringArgumentType.getString(ct, "type");
+                                                            int minLevel = IntegerArgumentType.getInteger(ct, "minLevel");
+                                                            int maxLevel = IntegerArgumentType.getInteger(ct, "maxLevel");
+                                                            ITownResourceType type = ITownResourceType.from(typeString);
+                                                            if(type == null){
+                                                                ct.getSource().sendFailure(Components.str("Invalid type"));
+                                                                return Command.SINGLE_SUCCESS;
+                                                            }
+                                                            if(amount < 0){
+                                                                ct.getSource().sendFailure(Components.str("Invalid amount: Amount must be positive."));
+                                                                return Command.SINGLE_SUCCESS;
+                                                            }
+                                                            TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
+                                                            IActionExecutorHandler executor = town.getActionExecutorHandler();
+                                                            TownResourceActions.TownResourceTypeCostAction action = new TownResourceActions.TownResourceTypeCostAction(type, amount, minLevel, maxLevel, ResourceActionMode.ATTEMPT, ResourceActionOrder.DESCENDING);
+                                                            TownResourceActionResults.TownResourceTypeCostActionResult result = executor.execute(action);
+                                                            if(result.allCosted()){
+                                                                ct.getSource().sendSuccess(()-> Components.str("Resource costed (descending)."), true);
+                                                            } else ct.getSource().sendSuccess(()-> Components.str("Resource cost failed: No enough resource."), true);
+                                                            return Command.SINGLE_SUCCESS;
+                                                        }))
+                                                )
+                                        )
+                                )
+                        );
+
         LiteralArgumentBuilder<CommandSourceStack> costResource =
                 Commands.literal("cost")
                         .then(Commands.argument("type", StringArgumentType.string())
@@ -237,6 +315,7 @@ public class TownCommand {
                                 .then(modifyVirtualResources)
                                     .then(addItemOnHand)
                                 .then(costResource)
+                                    .then(costResourceByType)
                                     .then(listAllResources)
                             )
                             .then(Commands.literal("residents")
@@ -260,6 +339,7 @@ public class TownCommand {
                         .then(modifyVirtualResources)
                         .then(addItemOnHand)
                         .then(costResource)
+                        .then(costResourceByType)
                         .then(listAllResources)
                 )
                 .then(Commands.literal("residents")
