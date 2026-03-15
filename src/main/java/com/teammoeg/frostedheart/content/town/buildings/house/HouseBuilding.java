@@ -212,7 +212,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                 TownResourceActionResults.TownResourceTypeCostActionResult result = executorHandler.execute(costTypeAction);
                 toCost -= result.totalModifiedAmount();
 
-                for (ITownResourceAttributeActionResult detail : result.details()) {
+                for (ITownResourceAttributeActionResult<?> detail : result.details()) {
 
                     if (detail instanceof TownResourceActionResults.ItemResourceAttributeCostActionResult itemResult) {
                         Map<ItemStackResourceKey, Double> itemDetails = itemResult.details();
@@ -287,9 +287,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     public void onRemoved(Town town) {
         if(town instanceof ITownWithResidents residentTown){
             for(UUID uuid : residentsUUID){
-                residentTown.getResident(uuid).ifPresent(resident -> {
-                    resident.setHousePos(null);
-                });
+                residentTown.getResident(uuid).ifPresent(resident -> resident.setHousePos(null));
             }
         }
     }

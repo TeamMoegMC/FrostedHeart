@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.town.resource.action;
 
-import com.teammoeg.frostedheart.FHMain;
 import org.jetbrains.annotations.Nullable;
 
 /**

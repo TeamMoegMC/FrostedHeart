@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.town.buildings.mine;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
@@ -29,7 +28,6 @@ import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkB
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import net.minecraft.core.UUIDUtil;
 
-import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 import net.minecraft.core.BlockPos;
@@ -38,7 +36,6 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static com.teammoeg.frostedheart.content.town.Town.DEBUG_MODE;
 import static java.lang.Double.NEGATIVE_INFINITY;
@@ -70,14 +67,6 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 
 	public MineBaseBuilding(BlockPos pos) {
 		super(pos);
-	}
-
-	/**
-	 * Temporary constructor for testing - matches current CODEC (without residentsID and linkedMines)
-	 * Calls the original constructor with default empty values for the two fields.
-	 */
-	public MineBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedArea occupiedArea, int area, int volume, int maxResidents, double rating, double temperature) {
-		this(pos, isStructureValid, occupiedArea, new ArrayList<>(), area, volume, new ArrayList<>(), maxResidents, rating, temperature);
 	}
 
 	@Override

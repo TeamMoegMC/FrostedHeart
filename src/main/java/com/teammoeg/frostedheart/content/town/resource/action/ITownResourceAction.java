@@ -30,7 +30,7 @@ package com.teammoeg.frostedheart.content.town.resource.action;
  * <br>
  * @param <R> 这里的泛型类：Action和ActionResult相互绑定，在{@link IActionExecutorHandler}中的execute方法返回确定的Result类型。
  */
-public interface ITownResourceAction<R extends ITownResourceActionResult<?>> {
+public interface ITownResourceAction<R extends ITownResourceActionResult<?>> {//为啥编译器想让我删掉R？删了这个ActionHandler怎么知道要返回什么结果
 
     //int getID();目前不需要ID，AbstractActionExecutorHandler依靠Class判断。
 

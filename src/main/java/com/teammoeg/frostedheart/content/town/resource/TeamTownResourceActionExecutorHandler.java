@@ -128,7 +128,7 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
             java.util.List<ITownResourceAttributeActionResult<?>> details = new java.util.ArrayList<>();
             for(int level = startLevel ; levelLimit.test(level) ; level += step){
                 ITownResourceAction<? extends ITownResourceAttributeActionResult<?>> attributeAction = TownResourceActions.createAttributeCostAction(action.resourceToCost().generateAttribute(level), toCost, ResourceActionMode.MAXIMIZE);
-                ITownResourceAttributeActionResult<?> result = (ITownResourceAttributeActionResult<? extends ITownResourceAction<?>>) TeamTownResourceActionExecutorHandler.this.executeFuzzy(attributeAction);
+                ITownResourceAttributeActionResult<?> result = TeamTownResourceActionExecutorHandler.this.executeFuzzy(attributeAction);
                 details.add(result);
                 toCost = result.residualAmount();
                 if(toCost<= TeamTownResourceHolder.DELTA) break;
