@@ -163,7 +163,6 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 							(new ItemStack(entry.getKey()), ResourceActionType.ADD, picked * entry.getValue(), ResourceActionMode.ATTEMPT))
 					.map(resourceExecutorHandler::execute)
 							.filter(result -> result instanceof TownResourceActionResults.ItemResourceActionResult)
-									.map(result -> (TownResourceActionResults.ItemResourceActionResult) result)
 											.filter(TownResourceActionResults.ItemResourceActionResult::allModified)
 					.mapToDouble(TownResourceActionResults.ItemResourceActionResult::modifiedAmount)
 					.sum();

@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TeamTownResourceActionExecutorHandler extends AbstractActionExecutorHandler implements ITownResourceActionExecutor<ITownResourceAction> {
+public class TeamTownResourceActionExecutorHandler extends AbstractActionExecutorHandler{
     //进行操作的数据本身
     public TeamTownResourceHolder resourceHolder;
 
@@ -41,7 +41,7 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
     }
 
     //以下为各个Action分别的Executor
-    public class ItemResourceAttributeCostActionExecutor implements ITownResourceActionExecutor<TownResourceActions.ItemResourceAttributeCostAction> {
+    public class ItemResourceAttributeCostActionExecutor implements ITownResourceActionExecutor<TownResourceActions.ItemResourceAttributeCostAction, TownResourceActionResults.ItemResourceAttributeCostActionResult> {
 
         @Override
         public TownResourceActionResults.ItemResourceAttributeCostActionResult execute(TownResourceActions.ItemResourceAttributeCostAction action) {
@@ -71,7 +71,7 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
         }
     }
 
-    public class ItemStackActionExecutor implements ITownResourceActionExecutor<TownResourceActions.ItemStackAction> {
+    public class ItemStackActionExecutor implements ITownResourceActionExecutor<TownResourceActions.ItemStackAction, TownResourceActionResults.ItemStackActionResult> {
         @Override
         public TownResourceActionResults.ItemStackActionResult execute(TownResourceActions.ItemStackAction action) {
             int amount = action.itemToModify().getCount();
@@ -100,7 +100,7 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
         }
     }
 
-    public class TownResourceTypeCostActionExecutor implements ITownResourceActionExecutor<TownResourceActions.TownResourceTypeCostAction> {
+    public class TownResourceTypeCostActionExecutor implements ITownResourceActionExecutor<TownResourceActions.TownResourceTypeCostAction, TownResourceActionResults.TownResourceTypeCostActionResult> {
         @Override
         public TownResourceActionResults.TownResourceTypeCostActionResult execute(TownResourceActions.TownResourceTypeCostAction action) {
             double availableAmount = resourceHolder.get(action.resourceToCost());
@@ -125,10 +125,10 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
                 step = -1;
             }
             double toCostCopy = toCost;
-            java.util.List<ITownResourceAttributeActionResult> details = new java.util.ArrayList<>();
+            java.util.List<ITownResourceAttributeActionResult<?>> details = new java.util.ArrayList<>();
             for(int level = startLevel ; levelLimit.test(level) ; level += step){
-                ITownResourceAction attributeAction = TownResourceActions.createAttributeCostAction(action.resourceToCost().generateAttribute(level), toCost, ResourceActionMode.MAXIMIZE);
-                ITownResourceAttributeActionResult result = (ITownResourceAttributeActionResult) TeamTownResourceActionExecutorHandler.this.execute(attributeAction);
+                ITownResourceAction<? extends ITownResourceAttributeActionResult<?>> attributeAction = TownResourceActions.createAttributeCostAction(action.resourceToCost().generateAttribute(level), toCost, ResourceActionMode.MAXIMIZE);
+                ITownResourceAttributeActionResult<?> result = (ITownResourceAttributeActionResult<? extends ITownResourceAction<?>>) TeamTownResourceActionExecutorHandler.this.executeFuzzy(attributeAction);
                 details.add(result);
                 toCost = result.residualAmount();
                 if(toCost<= TeamTownResourceHolder.DELTA) break;
@@ -137,9 +137,9 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
         }
     }
 
-    public class VirtualResourceAttributeActionExecutor implements ITownResourceActionExecutor<TownResourceActions.VirtualResourceAttributeAction> {
+    public class VirtualResourceAttributeActionExecutor implements ITownResourceActionExecutor<TownResourceActions.VirtualResourceAttributeAction, TownResourceActionResults.VirtualResourceAttributeActionResult> {
         @Override
-        public TownResourceActions.VirtualResourceAttributeActionResult execute(TownResourceActions.VirtualResourceAttributeAction action) {
+        public TownResourceActionResults.VirtualResourceAttributeActionResult execute(TownResourceActions.VirtualResourceAttributeAction action) {
             double availableAmount;
             if(action.isAdd()){
                 if(action.resourceToModify().getType().needCapacity){
@@ -152,7 +152,7 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
             double toModify = action.amount();
             if(availableAmount < action.amount()){
                 if(action.actionMode() == ResourceActionMode.ATTEMPT || availableAmount <= TeamTownResourceHolder.DELTA){
-                    return new TownResourceActions.VirtualResourceAttributeActionResult(action, false, 0, action.amount());
+                    return new TownResourceActionResults.VirtualResourceAttributeActionResult(action, false, 0, action.amount());
                 } else if(action.actionMode() == ResourceActionMode.MAXIMIZE){
                     toModify = availableAmount;
                 }
@@ -163,14 +163,14 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
                 resourceHolder.costUnsafe(action.resourceToModify(), toModify);
             }
             if(availableAmount < action.amount()){
-                return new TownResourceActions.VirtualResourceAttributeActionResult(action, false, toModify, action.amount() - toModify);
+                return new TownResourceActionResults.VirtualResourceAttributeActionResult(action, false, toModify, action.amount() - toModify);
             } else{
-                return new TownResourceActions.VirtualResourceAttributeActionResult(action, true, toModify, 0);
+                return new TownResourceActionResults.VirtualResourceAttributeActionResult(action, true, toModify, 0);
             }
         }
     }
 
-    public class ItemResourceActionExecutor implements ITownResourceActionExecutor<TownResourceActions.ItemResourceAction> {
+    public class ItemResourceActionExecutor implements ITownResourceActionExecutor<TownResourceActions.ItemResourceAction, TownResourceActionResults.ItemResourceActionResult> {
         @Override
         public TownResourceActionResults.ItemResourceActionResult execute(TownResourceActions.ItemResourceAction action) {
             double amount = action.amount();
@@ -198,7 +198,7 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
         }
     }
 
-    public class GetActionExecutor implements ITownResourceActionExecutor<TownResourceActions.GetAction> {
+    public class GetActionExecutor implements ITownResourceActionExecutor<TownResourceActions.GetAction, TownResourceActionResults.GetActionResult> {
         @Override
         public TownResourceActionResults.GetActionResult execute(TownResourceActions.GetAction action) {
             double amount = resourceHolder.get(action.toGet());

@@ -75,7 +75,7 @@ public class WarehouseInteractPacket implements CMessage {
 						copyItem.setCount(1);
 					}
 					TownResourceActions.ItemStackAction action = new TownResourceActions.ItemStackAction(copyItem, ResourceActionType.ADD, ResourceActionMode.MAXIMIZE);
-					TownResourceActionResults.ItemStackActionResult result = (TownResourceActionResults.ItemStackActionResult)executor.execute(action);
+					TownResourceActionResults.ItemStackActionResult result = executor.execute(action);
 					if (!result.itemStackModified().isEmpty()) {
 						carried.shrink(result.itemStackModified().getCount());
 					}
@@ -96,7 +96,7 @@ public class WarehouseInteractPacket implements CMessage {
 					//TownResourceActionResults.ItemResourceActionResult result = (TownResourceActionResults.ItemResourceActionResult) executor.execute(action);
 					//尝试ItemStackAction
 					TownResourceActions.ItemStackAction action = new TownResourceActions.ItemStackAction(targetItem.copyWithCount(amountToTake), ResourceActionType.COST, ResourceActionMode.MAXIMIZE);
-					TownResourceActionResults.ItemStackActionResult result = (TownResourceActionResults.ItemStackActionResult)executor.execute(action);
+					TownResourceActionResults.ItemStackActionResult result = executor.execute(action);
 
 
 					//int shouldStack = (int) result.modifiedAmount();

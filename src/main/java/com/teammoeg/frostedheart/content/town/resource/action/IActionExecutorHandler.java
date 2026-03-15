@@ -19,23 +19,58 @@
 
 package com.teammoeg.frostedheart.content.town.resource.action;
 
+import com.teammoeg.frostedheart.FHMain;
+import org.jetbrains.annotations.Nullable;
+
 /**
  * 集中管理某种城镇的TownResourceActionExecutor，根据传入的action类型返回对应的executor或直接利用其执行action
  */
-public interface IActionExecutorHandler extends ITownResourceActionExecutor<ITownResourceAction>{
+public interface IActionExecutorHandler{
 
-    default <T extends ITownResourceAction> ITownResourceActionExecutor<T>  getExecutor(T action){
+    default @Nullable <A extends ITownResourceAction<R>, R extends ITownResourceActionResult<A>> ITownResourceActionExecutor<A, R>  getExecutor(A action){
         @SuppressWarnings("unchecked")
-        Class<T> actionClass = (Class<T>) action.getClass();
+        Class<A> actionClass = (Class<A>) action.getClass();
         return this.getExecutor(actionClass);
     }
 
-    <T extends ITownResourceAction> ITownResourceActionExecutor<T>  getExecutor(Class<T> clazz);
+    @Nullable <A extends ITownResourceAction<R>, R extends ITownResourceActionResult<A>> ITownResourceActionExecutor<A, R>  getExecutor(Class<A> clazz);
+
+
+    /**
+     * 判断此类能否处理此action
+     * @return true if this handler can handle this action
+     */
+    boolean hasExecutor(ITownResourceAction<?> action);
 
     /**
      * ActionExecutorHandler不一定实现所有种类的ActionExecutor，若传入了不支持的action会报错
      */
-    default ITownResourceActionResult execute(ITownResourceAction action) {
-    	return getExecutor(action).execute(action);
+    default <A extends ITownResourceAction<R>, R extends ITownResourceActionResult<A>> R execute(A action) {
+        ITownResourceActionExecutor<A, R> executor = this.getExecutor(action);
+        if(executor == null){
+            //我说这种严重问题就直接throw了
+            throw new IllegalArgumentException("Executor AbstractActionExecutorHandler can't execute action: "
+                    + action.getClass().getName()
+                    + "!\n Check AbstractActionExecutorHandler, add the sub_executor of this action, " +
+                    "or don't execute this action in this executor.");
+        }
+    	return executor.execute(action);
     }
+
+    /**
+     * 尝试执行action，允许action的类型是模糊的，但相应的，返回的Result类型也是模糊的
+     */
+    default <A extends ITownResourceAction<? super R>, R extends ITownResourceActionResult<?>> R executeFuzzy(A action) {
+        ITownResourceActionExecutor<ITownResourceAction<?>, ? extends ITownResourceActionResult<?>> executor = this.getExecutor(action.getClass());
+        if(executor == null){
+            throw new IllegalArgumentException("Executor AbstractActionExecutorHandler can't execute action: "
+                    + action.getClass().getName()
+                    + "!\n Check AbstractActionExecutorHandler, add the sub_executor of this action, " +
+                    "or don't execute this action in this executor.");
+        } else{
+            //我觉得这个转换应该没问题吧
+            return (R) executor.execute(action);
+        }
+    }
+
 }

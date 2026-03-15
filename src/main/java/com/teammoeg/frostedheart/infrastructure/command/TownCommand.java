@@ -34,7 +34,6 @@ import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.*;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
-import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -113,7 +112,7 @@ public class TownCommand {
                                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                                     IActionExecutorHandler executor = town.getActionExecutorHandler();
                                                     TownResourceActions.VirtualResourceAttributeAction action = new TownResourceActions.VirtualResourceAttributeAction(attribute, amount, actionType, ResourceActionMode.ATTEMPT);
-                                                    TownResourceActions.VirtualResourceAttributeActionResult result = (TownResourceActions.VirtualResourceAttributeActionResult) executor.execute(action);
+                                                    TownResourceActionResults.VirtualResourceAttributeActionResult result = executor.execute(action);
                                                     //TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().addIfHaveCapacity(VirtualResourceType.from(type).generateAttribute(level), amount);
                                                     if(result.allModified()){
                                                         ct.getSource().sendSuccess(()-> Components.str("Resource modified."), true);
@@ -163,8 +162,8 @@ public class TownCommand {
                                                     }
                                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                                     IActionExecutorHandler executor = town.getActionExecutorHandler();
-                                                    ITownResourceAction action = TownResourceActions.createAttributeCostAction(type.generateAttribute(level), amount, ResourceActionMode.ATTEMPT);
-                                                    ITownResourceAttributeActionResult result = (ITownResourceAttributeActionResult)executor.execute(action);
+                                                    ITownResourceAction<? extends ITownResourceAttributeActionResult<?>> action = TownResourceActions.createAttributeCostAction(type.generateAttribute(level), amount, ResourceActionMode.ATTEMPT);
+                                                    ITownResourceAttributeActionResult<?> result = executor.executeFuzzy(action);
                                                     //TownResourceManager.SimpleResourceActionResult result = null;
                                                     //result = town.getResourceManager().costIfHaveEnough(type.generateAttribute(level), amount);
                                                     if(result.allModified()){
@@ -185,7 +184,7 @@ public class TownCommand {
                                     ItemStack itemStack = ct.getSource().getPlayerOrException().getMainHandItem();
                                     ct.getSource().sendSuccess(()-> Components.str("Adding ItemStack: " + itemStack), true);
                                     TownResourceActions.ItemResourceAction action = new TownResourceActions.ItemResourceAction(itemStack, ResourceActionType.ADD, amount, ResourceActionMode.ATTEMPT);
-                                    TownResourceActionResults.ItemResourceActionResult result = (TownResourceActionResults.ItemResourceActionResult)town.getActionExecutorHandler().execute(action);
+                                    TownResourceActionResults.ItemResourceActionResult result = town.getActionExecutorHandler().execute(action);
                                     //TownResourceManager.SimpleResourceActionResult result = town.getResourceManager().addIfHaveCapacity(itemStack, amount);
                                     if(result.allModified()){
                                         ct.getSource().sendSuccess(()-> Components.str("Resource added"), true);

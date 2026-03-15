@@ -19,8 +19,10 @@
 
 package com.teammoeg.frostedheart.content.town.resource.action;
 
-import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
-
-public interface ITownResourceActionResult {
-    ITownResourceAction getAction();
+/**
+ * 用于记录对城镇资源进行操作的结果。
+ * @param <A> 这里的泛型类：Action和ActionResult相互绑定，在{@link IActionExecutorHandler}中的execute方法返回确定的Result类型。
+ */
+public interface ITownResourceActionResult <A extends ITownResourceAction<?>>{
+    A getAction();
 }

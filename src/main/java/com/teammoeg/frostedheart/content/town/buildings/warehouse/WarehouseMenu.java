@@ -181,7 +181,7 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 						ResourceActionMode.MAXIMIZE
 				);
 
-				var result = (TownResourceActionResults.ItemStackActionResult) executor.execute(action);
+				var result = executor.execute(action);
 				ItemStack itemLeft = result.itemStackLeft();
 				if(!result.itemStackModified().isEmpty()){
 					slot.set(itemLeft);

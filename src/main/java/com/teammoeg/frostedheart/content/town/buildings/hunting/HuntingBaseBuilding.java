@@ -120,7 +120,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 			}
 			double picked=teamTown.maypickTerrainResource(TerrainResourceType.HUNT, totalEfficiency*2);
 
-			TownResourceActionResults.ItemResourceActionResult result = (TownResourceActionResults.ItemResourceActionResult) town
+			TownResourceActionResults.ItemResourceActionResult result = town
 					.getActionExecutorHandler()
 					.execute(new TownResourceActions.ItemResourceAction(new ItemStack(Items.BEEF), ResourceActionType.ADD, picked, ResourceActionMode.MAXIMIZE));
 			teamTown.pickTerrainResource(TerrainResourceType.HUNT, result.modifiedAmount());

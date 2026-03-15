@@ -27,12 +27,11 @@ package com.teammoeg.frostedheart.content.town.resource.action;
  * 通常的，一个城镇的资源可以接受多种Action，因此可通过{@link IActionExecutorHandler}自动分配对应的executor，并执行。
  * <br>
  * Action实例一般放在{@link TownResourceActions}
+ * <br>
+ * @param <R> 这里的泛型类：Action和ActionResult相互绑定，在{@link IActionExecutorHandler}中的execute方法返回确定的Result类型。
  */
-public interface ITownResourceAction {
-    /**
-     * 请在实现这个接口的类中定义一个static final int字段，用于保存Action的ID。
-     * ID会在{@link AbstractActionExecutorHandler}中使用，作为Map的key，用来找到Action对应的Executor。
-     */
+public interface ITownResourceAction<R extends ITownResourceActionResult<?>> {
+
     //int getID();目前不需要ID，AbstractActionExecutorHandler依靠Class判断。
 
 }
