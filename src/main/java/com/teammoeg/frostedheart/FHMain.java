@@ -197,6 +197,7 @@ public class FHMain {
 		FHRecipes.CRECIPE_SERIALIZERS.register(mod);
 		FHRecipes.CRECIPE_TYPES.register(mod);
 		FHFeatures.FEATURES.register(mod);
+		FHFeatures.FHFoliagePlacerTypes.REGISTER.register(mod);
 		FHBiomes.BIOME_REGISTER.register(mod);
 		FHBiomeModifiers.BIOME_MODIFIERS.register(mod);
 		FHAttributes.REGISTER.register(mod);

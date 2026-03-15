@@ -1,0 +1,7 @@
+{
+	"parent": "minecraft:block/cross",
+	"textures": {
+		"cross": "frostedheart:block/tree/jack_pine_sapling"
+	},
+	"render_type": "cutout"
+}

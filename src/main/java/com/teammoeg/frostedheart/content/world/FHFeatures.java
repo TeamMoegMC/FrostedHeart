@@ -20,6 +20,8 @@
 package com.teammoeg.frostedheart.content.world;
 
 import com.mojang.serialization.Codec;
+import com.teammoeg.caupona.blocks.plants.BushLogBlock;
+import com.teammoeg.caupona.worldgen.LeavingLogReplacer;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.agriculture.WildRubberDandelionBlock;
@@ -31,18 +33,16 @@ import net.minecraft.data.worldgen.BootstapContext;
 import net.minecraft.data.worldgen.features.FeatureUtils;
 import net.minecraft.data.worldgen.placement.PlacementUtils;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.util.valueproviders.UniformInt;
-import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
-import net.minecraft.world.level.levelgen.feature.DiskFeature;
-import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.FossilFeatureConfiguration;
-import net.minecraft.world.level.levelgen.feature.configurations.DiskConfiguration;
-import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
-import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
-import net.minecraft.world.level.levelgen.feature.configurations.RandomPatchConfiguration;
-import net.minecraft.world.level.levelgen.feature.configurations.SimpleBlockConfiguration;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.feature.*;
+import net.minecraft.world.level.levelgen.feature.configurations.*;
+import net.minecraft.world.level.levelgen.feature.featuresize.TwoLayersFeatureSize;
+import net.minecraft.world.level.levelgen.feature.foliageplacers.FoliagePlacerType;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
 import net.minecraft.world.level.levelgen.feature.stateproviders.RandomizedIntStateProvider;
+import net.minecraft.world.level.levelgen.feature.trunkplacers.StraightTrunkPlacer;
 import net.minecraft.world.level.levelgen.placement.BiomeFilter;
 import net.minecraft.world.level.levelgen.placement.InSquarePlacement;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
@@ -51,6 +51,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
+import java.util.List;
 import java.util.function.Function;
 
 @SuppressWarnings("unused")
@@ -65,6 +66,7 @@ public class FHFeatures {
     public static final RegistryObject<FHFossilFeature> FH_FOSSIL = register("fossil", FHFossilFeature::new, FossilFeatureConfiguration.CODEC);
     public static final RegistryObject<FallenLogFeature> FALLEN_LOG = register("fallen_log", FallenLogFeature::new, FallenLogConfig.CODEC);
     public static final RegistryObject<ShrubTreeFeature> SHRUB_TREE = register("shrub_tree", ShrubTreeFeature::new, ShrubTreeConfig.CODEC);
+
 
     private static <C extends FeatureConfiguration, F extends Feature<C>> RegistryObject<F> register(String name, Function<Codec<C>, F> feature, Codec<C> codec)
     {
@@ -105,7 +107,8 @@ public class FHFeatures {
     
     public static final class FHConfiguredFeatures{
         public static final ResourceKey<ConfiguredFeature<?, ?>> WILD_RUBBER_DANDELION = key("wild_rubber_dandelion");
-        
+        public static final ResourceKey<ConfiguredFeature<?, ?>> JACK_PINE_CFG = key("jack_pine");
+
         @SuppressWarnings("SameParameterValue")
         private static ResourceKey<ConfiguredFeature<?, ?>> key(String name){
             return ResourceKey.create(Registries.CONFIGURED_FEATURE, FHMain.rl(name));
@@ -120,7 +123,30 @@ public class FHFeatures {
                                                     BlockStateProvider.simple(FHBlocks.WILD_RUBBER_DANDELION.get()),
                                                     WildRubberDandelionBlock.VARIANT,
                                                     UniformInt.of(0,2))))));
+
+            BlockState grownState = FHBlocks.JACK_PINE.log().getDefaultState()
+                    .setValue(BushLogBlock.FOILAGED, true)
+                    .setValue(BushLogBlock.CDIRS[0], true)
+                    .setValue(BushLogBlock.CDIRS[1], true)
+                    .setValue(BushLogBlock.CDIRS[2], true)
+                    .setValue(BushLogBlock.CDIRS[3], true);
+
+            FeatureUtils.register(ctx, JACK_PINE_CFG, Feature.TREE, new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(FHBlocks.JACK_PINE.log().get()),
+                            new StraightTrunkPlacer(2, 1, 0),
+                            BlockStateProvider.simple(FHBlocks.JACK_PINE.leaves().get()),
+                            new HotdogFoliagePlacer(ConstantInt.of(1), ConstantInt.of(0), 2),
+                            new TwoLayersFeatureSize(1, 0, 1))
+                    .decorators(List.of(new LeavingLogReplacer(BlockStateProvider.simple(grownState))))
+                    .build());
         }
+    }
+
+    public static class FHFoliagePlacerTypes {
+        public static final DeferredRegister<FoliagePlacerType<?>> REGISTER =
+                DeferredRegister.create(ForgeRegistries.FOLIAGE_PLACER_TYPES, FHMain.MODID);
+
+        public static final RegistryObject<FoliagePlacerType<HotdogFoliagePlacer>> HOTDOG_FOLIAGE_PLACER =
+                REGISTER.register("hotdog_foliage_placer", () -> new FoliagePlacerType<>(HotdogFoliagePlacer.CODEC));
     }
 
 }

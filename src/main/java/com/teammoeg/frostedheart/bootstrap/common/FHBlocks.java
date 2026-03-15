@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.google.common.collect.ImmutableMap;
 import com.teammoeg.caupona.CPTags;
+import com.teammoeg.caupona.worldgen.DefaultTreeGrower;
 import com.teammoeg.chorda.block.CDirectionalFacingBlock;
 import com.teammoeg.chorda.block.CDirectionalRotatableBlock;
 import com.teammoeg.chorda.util.CFunctionUtils;
@@ -69,9 +70,11 @@ import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerBlock;
+import com.teammoeg.frostedheart.content.world.FHFeatures;
 import com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen;
 import com.teammoeg.frostedheart.infrastructure.gen.FHLootGen;
 import com.teammoeg.frostedheart.item.FHBlockItem;
+import com.teammoeg.frostedheart.util.FUtils;
 import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.advancements.critereon.StatePropertiesPredicate;
@@ -1225,6 +1228,11 @@ public class FHBlocks {
                 p.dropOther(b, DIRT);
             })
             .register();
+
+    public static final FUtils.BushWoodSet JACK_PINE = FUtils.registerBushSet(
+            "jack_pine",
+            DefaultTreeGrower.supply(FHFeatures.FHConfiguredFeatures.JACK_PINE_CFG)
+    );
 
 
     static {

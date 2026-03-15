@@ -1,0 +1,73 @@
+{
+  "type": "minecraft:tree",
+  "config": {
+    "decorators": [
+      {
+        "type": "caupona:leaving_log_replacer",
+        "replace": {
+          "type": "minecraft:simple_state_provider",
+          "state": {
+            "Name": "frostedheart:jack_pine_log",
+            "Properties": {
+              "e": "true",
+              "fully_foliaged": "true",
+              "n": "true",
+              "s": "true",
+              "w": "true"
+            }
+          }
+        }
+      }
+    ],
+    "dirt_provider": {
+      "type": "minecraft:simple_state_provider",
+      "state": {
+        "Name": "minecraft:dirt"
+      }
+    },
+    "foliage_placer": {
+      "type": "frostedheart:hotdog_foliage_placer",
+      "foliage_height": 2,
+      "offset": 0,
+      "radius": 1
+    },
+    "foliage_provider": {
+      "type": "minecraft:simple_state_provider",
+      "state": {
+        "Name": "frostedheart:jack_pine_leaves",
+        "Properties": {
+          "distance": "7",
+          "persistent": "false",
+          "waterlogged": "false"
+        }
+      }
+    },
+    "force_dirt": false,
+    "ignore_vines": false,
+    "minimum_size": {
+      "type": "minecraft:two_layers_feature_size",
+      "limit": 1,
+      "lower_size": 0,
+      "upper_size": 1
+    },
+    "trunk_placer": {
+      "type": "minecraft:straight_trunk_placer",
+      "base_height": 2,
+      "height_rand_a": 1,
+      "height_rand_b": 0
+    },
+    "trunk_provider": {
+      "type": "minecraft:simple_state_provider",
+      "state": {
+        "Name": "frostedheart:jack_pine_log",
+        "Properties": {
+          "e": "false",
+          "fully_foliaged": "false",
+          "n": "false",
+          "s": "false",
+          "w": "false"
+        }
+      }
+    }
+  }
+}

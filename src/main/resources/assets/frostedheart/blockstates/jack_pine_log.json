@@ -1,0 +1,25 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "frostedheart:block/jack_pine_log"
+      }
+    },
+    {
+      "when": { "n": "true" },
+      "apply": { "model": "frostedheart:block/jack_pine_branches" }
+    },
+    {
+      "when": {"e": "true" },
+      "apply": { "model": "frostedheart:block/jack_pine_branches", "y": 90 }
+    },
+    {
+      "when": {"s": "true" },
+      "apply": { "model": "frostedheart:block/jack_pine_branches", "y": 180 }
+    },
+    {
+      "when": {"w": "true" },
+      "apply": { "model": "frostedheart:block/jack_pine_branches", "y": 270 }
+    }
+  ]
+}
