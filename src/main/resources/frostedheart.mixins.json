@@ -27,7 +27,6 @@
     "forge.FluidHandlerItemStackSimpleMixin",
     "forge.FMLHandshakeAntiCheatMixin",
     "forge.ServerLifecycleHooksMixin",
-    "ftb.MixinCTeamManager",
     "immersiveengineering.IERegistrationMixin",
     "immersiveengineering.OwnerableStateMixin",
     "minecraft.accessors.NewChatGuiAccessor",
@@ -81,6 +80,7 @@
     "tetra.MixinToolbeltInventory"
   ],
   "client": [
+    "ftb.MixinCTeamManager",
     "client.BossHealthOverlayAccess",
     "client.ChatScreenMixin",
     "client.ClientPacketListenerMixin",
