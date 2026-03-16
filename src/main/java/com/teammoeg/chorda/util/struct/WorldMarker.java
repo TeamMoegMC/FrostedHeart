@@ -35,11 +35,19 @@ import com.teammoeg.chorda.io.CodecUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 /**
- * A storage pattern to mark a very custom section of the world,
- * Works like Set&lt;BlockPos&gt;
- * 
- * */
+ * 世界标记器，用于标记世界中自定义区域的存储模式。
+ * 功能类似于Set&lt;BlockPos&gt;，但使用BitSet按区块和分段存储以节省内存。
+ * <p>
+ * World marker for marking custom sections of the world.
+ * Works like Set&lt;BlockPos&gt; but uses BitSet storage organized by chunk
+ * and section for memory efficiency.
+ */
 public class WorldMarker {
+	/**
+	 * 区块标记器，管理单个区块内16个分段的方块标记。
+	 * <p>
+	 * Chunk marker managing block marks across 16 sections within a single chunk.
+	 */
 	public static class ChunkMarker{
 		public static final Codec<ChunkMarker> CODEC=RecordCodecBuilder.create(t->t.group(CodecUtil.discreteList(Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of)).fieldOf("data").forGetter(o->o.getList())).apply(t, ChunkMarker::new));
 		BitSet[] sections=new BitSet[16];
@@ -88,9 +96,25 @@ public class WorldMarker {
 		super();
 		this.poss.putAll(poss);
 	}
+	/**
+	 * 设置指定位置的标记状态。
+	 * <p>
+	 * Set the mark state at the specified position.
+	 *
+	 * @param pos 方块位置 / the block position
+	 * @param data 标记值 / the mark value
+	 */
 	public void set(BlockPos pos,boolean data) {
 		getter.apply(new ChunkPos(pos)).setBit(pos, data);
 	}
+	/**
+	 * 获取指定位置的标记状态。
+	 * <p>
+	 * Get the mark state at the specified position.
+	 *
+	 * @param pos 方块位置 / the block position
+	 * @return 标记值，未标记的位置返回false / the mark value, false for unmarked positions
+	 */
 	public boolean get(BlockPos pos) {
 		ChunkPos cp=new ChunkPos(pos);
 		ChunkMarker cm=poss.get(cp);

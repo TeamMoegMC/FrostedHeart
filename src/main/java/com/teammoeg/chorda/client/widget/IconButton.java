@@ -29,20 +29,55 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
+/**
+ * 图标按钮控件。使用{@link FlatIcon}作为视觉表示的可点击按钮。
+ * 支持自定义颜色、缩放，悬停时在按钮上方显示消息文本并添加半透明背景高亮。
+ * 非激活状态下图标显示为灰色。
+ * <p>
+ * Icon button widget. A clickable button using {@link FlatIcon} as visual representation.
+ * Supports custom color and scaling. Shows message text above the button with a
+ * semi-transparent background highlight on hover. Displays the icon in gray when inactive.
+ */
 public class IconButton extends Button {
+    /** 按钮显示的图标 / The icon displayed on the button */
     @Setter
     private FlatIcon icon;
+    /** 图标颜色 / Icon color */
     public int color;
     // 为什么是int? 混素达咩(
+    /** 缩放比例 / Scale factor */
     private int scale;
 
     /**
-     * @param icon 按钮的图标 {@link FlatIcon}
+     * 创建一个图标按钮，使用默认缩放比例1。
+     * <p>
+     * Creates an icon button with default scale of 1.
+     *
+     * @param x x坐标 / X coordinate
+     * @param y y坐标 / Y coordinate
+     * @param icon 按钮的图标 {@link FlatIcon} / The button icon
+     * @param color 图标颜色 / Icon color
+     * @param title 按钮标题文本 / Button title text
+     * @param pressedAction 按下时的回调 / Callback when pressed
      */
     public IconButton(int x, int y, FlatIcon icon, int color, Component title, OnPress pressedAction) {
         this(x, y, icon, color, 1, title, pressedAction);
     }
 
+    /**
+     * 创建一个图标按钮，可指定缩放比例。按钮尺寸根据图标大小和缩放比例计算。
+     * <p>
+     * Creates an icon button with configurable scale. Button dimensions are calculated
+     * from the icon size and scale factor.
+     *
+     * @param x x坐标 / X coordinate
+     * @param y y坐标 / Y coordinate
+     * @param icon 按钮的图标 {@link FlatIcon} / The button icon
+     * @param color 图标颜色 / Icon color
+     * @param scale 缩放比例，最小为1 / Scale factor, minimum 1
+     * @param title 按钮标题文本 / Button title text
+     * @param pressedAction 按下时的回调 / Callback when pressed
+     */
     public IconButton(int x, int y, FlatIcon icon, int color, int scale, Component title, OnPress pressedAction) {
         super(x, y, icon.size.width, icon.size.height, title, pressedAction, Button.DEFAULT_NARRATION);
         this.scale = Mth.clamp(scale, 1, Integer.MAX_VALUE);
@@ -52,6 +87,19 @@ public class IconButton extends Button {
         this.icon = icon;
     }
 
+    /**
+     * 渲染图标按钮。处理聚焦边框、悬停高亮、消息文本和带颜色的图标绘制。
+     * 悬停时在按钮上方显示消息文本，文本位置会根据可用空间自动调整。
+     * <p>
+     * Renders the icon button. Handles focus border, hover highlight, message text,
+     * and colored icon drawing. When hovered, displays message text above the button,
+     * with text position automatically adjusted based on available space.
+     *
+     * @param graphics 图形上下文 / Graphics context
+     * @param mouseX 鼠标X坐标 / Mouse X coordinate
+     * @param mouseY 鼠标Y坐标 / Mouse Y coordinate
+     * @param partialTicks 渲染插值时间 / Partial tick time for rendering interpolation
+     */
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         int color = isActive() ? this.color : 0xFF666666;
@@ -87,6 +135,13 @@ public class IconButton extends Button {
         CGuiHelper.blitColored(graphics.pose(), getX(), getY(), getWidth(), getHeight(), icon.x*scale, icon.y*scale, getWidth(), getHeight(), FlatIcon.TEXTURE_WIDTH*scale, FlatIcon.TEXTURE_HEIGHT*scale, color, this.alpha);
     }
 
+    /**
+     * 设置缩放比例，并根据新的缩放值重新计算按钮尺寸。
+     * <p>
+     * Sets the scale factor and recalculates the button dimensions based on the new scale.
+     *
+     * @param scale 新的缩放比例 / New scale factor
+     */
     public void setScale(int scale) {
         int w = this.width / this.scale;
         int h = this.height / this.scale;

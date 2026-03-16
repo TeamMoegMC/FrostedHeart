@@ -36,6 +36,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * 文本行，用于在内容面板中显示富文本内容。
+ * 支持自动换行、文字缩放、标题样式、引用样式、阴影效果和行内按钮。
+ * 文本通过StringTextComponentParser解析，支持格式代码和翻译键。
+ * <p>
+ * Text line for displaying rich text content in a content panel.
+ * Supports automatic line wrapping, text scaling, title styling, quote styling,
+ * shadow effects, and inline buttons. Text is parsed via StringTextComponentParser,
+ * supporting formatting codes and translation keys.
+ */
 public class TextLine extends Line<TextLine> {
     @Getter
     protected Component text;

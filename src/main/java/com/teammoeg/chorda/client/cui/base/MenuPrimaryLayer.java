@@ -30,6 +30,16 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 
+/**
+ * 带容器菜单的主层，扩展PrimaryLayer以支持Minecraft容器菜单（背包/工作台等）交互。
+ * 自动处理物品槽位的悬停工具提示显示。
+ * <p>
+ * Menu-aware primary layer extending PrimaryLayer to support Minecraft container menu
+ * (inventory/crafting table etc.) interactions. Automatically handles item slot hover
+ * tooltip display.
+ *
+ * @param <T> 容器菜单类型 / The container menu type
+ */
 public class MenuPrimaryLayer<T extends AbstractContainerMenu> extends PrimaryLayer {
 	@Getter
 	protected T menu;

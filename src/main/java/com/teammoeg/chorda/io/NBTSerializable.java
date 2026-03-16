@@ -24,30 +24,38 @@ import net.minecraftforge.common.util.INBTSerializable;
 
 
 /**
- * Interface for serialization into NBT
+ * NBT序列化接口，提供对象与NBT之间的双向转换，支持网络数据包模式。
+ * <p>
+ * Interface for serialization into NBT, providing bidirectional conversion between objects and NBT, with network packet mode support.
  */
 public interface NBTSerializable extends INBTSerializable<CompoundTag> {
-	
+
 	/**
-	 * Save data into existing nbt
+	 * 将数据保存到已有的NBT标签中。
+	 * <p>
+	 * Save data into existing NBT tag.
 	 *
-	 * @param nbt data
-	 * @param isPacket is to packet
+	 * @param nbt NBT数据标签 / the NBT data tag
+	 * @param isPacket 是否用于网络数据包 / whether this is for a network packet
 	 */
 	void save(CompoundTag nbt,boolean isPacket) ;
 	
 	/**
-	 * load from existing nbt
+	 * 从已有的NBT标签中加载数据。
+	 * <p>
+	 * Load data from existing NBT tag.
 	 *
-	 * @param nbt data
-	 * @param isPacket is from packet
+	 * @param nbt NBT数据标签 / the NBT data tag
+	 * @param isPacket 是否来自网络数据包 / whether this is from a network packet
 	 */
 	void load(CompoundTag nbt,boolean isPacket) ;
 	
 	/**
-	 * Serialize to new NBT for storage.
+	 * 序列化为新的NBT标签用于存储。
+	 * <p>
+	 * Serialize to a new NBT tag for storage.
 	 *
-	 * @return the compound NBT
+	 * @return 复合NBT标签 / the compound NBT tag
 	 */
 	@Override
 	default CompoundTag serializeNBT() {
@@ -57,9 +65,11 @@ public interface NBTSerializable extends INBTSerializable<CompoundTag> {
 	}
 	
 	/**
-	 * Deserialize from NBT.
+	 * 从NBT标签反序列化。
+	 * <p>
+	 * Deserialize from NBT tag.
 	 *
-	 * @param nbt the nbt
+	 * @param nbt NBT标签 / the NBT tag
 	 */
 	@Override
 	default void deserializeNBT(CompoundTag nbt) {
@@ -67,10 +77,12 @@ public interface NBTSerializable extends INBTSerializable<CompoundTag> {
 	}
 	
 	/**
-	 * Serialize to nbt respects side setting.
+	 * 根据数据包模式序列化为NBT标签。
+	 * <p>
+	 * Serialize to NBT tag respecting packet mode setting.
 	 *
-	 * @param isPacket is to packet
-	 * @return the compound NBT
+	 * @param isPacket 是否用于网络数据包 / whether this is for a network packet
+	 * @return 复合NBT标签 / the compound NBT tag
 	 */
 	default CompoundTag serialize(boolean isPacket) {
 		CompoundTag nbt=new CompoundTag();
@@ -79,10 +91,12 @@ public interface NBTSerializable extends INBTSerializable<CompoundTag> {
 	}
 	
 	/**
-	 * Deserialize nbt respects side setting.
+	 * 根据数据包模式从NBT标签反序列化。
+	 * <p>
+	 * Deserialize from NBT tag respecting packet mode setting.
 	 *
-	 * @param nbt the nbt
-	 * @param isPacket is from packet
+	 * @param nbt NBT标签 / the NBT tag
+	 * @param isPacket 是否来自网络数据包 / whether this is from a network packet
 	 */
 	default void deserialize(CompoundTag nbt,boolean isPacket) {
 		load(nbt,isPacket);

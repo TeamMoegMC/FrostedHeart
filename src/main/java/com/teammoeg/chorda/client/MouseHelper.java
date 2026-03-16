@@ -23,16 +23,28 @@ import org.lwjgl.glfw.GLFW;
 
 import net.minecraft.client.Minecraft;
 
+/**
+ * 鼠标状态辅助工具类，提供鼠标位置查询、区域悬停检测和点击状态跟踪功能。
+ * 支持获取原始坐标、GUI缩放坐标和归一化坐标，以及左右键的按下和单击检测。
+ * <p>
+ * Mouse state helper utility providing mouse position queries, area hover detection,
+ * and click state tracking. Supports raw coordinates, GUI-scaled coordinates, and
+ * normalized coordinates, as well as left/right button press and single-click detection.
+ */
 public class MouseHelper {
     private static final Minecraft MC = Minecraft.getInstance();
     /**
-     * 鼠标是否悬停在指定的方形区域内
-     * @param mouseX 鼠标坐标 X
-     * @param mouseY 鼠标坐标 Y
-     * @param x 左上角 X 坐标
-     * @param y 左上角 Y 坐标
-     * @param w 宽度
-     * @param h 高度
+     * 鼠标是否悬停在指定的矩形区域内。
+     * <p>
+     * Checks whether the mouse is hovering within the specified rectangular area.
+     *
+     * @param mouseX 鼠标X坐标 / Mouse X coordinate
+     * @param mouseY 鼠标Y坐标 / Mouse Y coordinate
+     * @param x 矩形左上角X坐标 / Top-left X coordinate of the rectangle
+     * @param y 矩形左上角Y坐标 / Top-left Y coordinate of the rectangle
+     * @param w 矩形宽度 / Width of the rectangle
+     * @param h 矩形高度 / Height of the rectangle
+     * @return 鼠标是否在区域内 / Whether the mouse is within the area
      */
     public static boolean isMouseIn(double mouseX, double mouseY, int x, int y, int w, int h) {
         return mouseX >= x && mouseY >= y && mouseX <= x + w && mouseY <= y + h;

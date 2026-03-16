@@ -39,12 +39,27 @@ import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.config.ConfigFileType;
 
 
+/**
+ * 配置文件的读写工具类，支持基于Codec的JSON序列化与反序列化。
+ * <p>
+ * Utility class for reading and writing configuration files, supporting Codec-based JSON serialization and deserialization.
+ */
 public class ConfigFileUtil {
 	private static Gson gs = new GsonBuilder().setPrettyPrinting().create();
 
 	public ConfigFileUtil() {
 	}
 
+	/**
+	 * 从指定配置文件类型和名称加载单个配置数据。
+	 * <p>
+	 * Loads a single configuration data entry by config file type and name.
+	 *
+	 * @param <T> 配置数据类型 / the configuration data type
+	 * @param c 配置文件类型 / the config file type descriptor
+	 * @param name 配置文件名称（不含扩展名） / the config file name (without extension)
+	 * @return 加载的配置数据，失败时返回null / the loaded config data, or null on failure
+	 */
 	@Nullable
 	public static <T> T load(ConfigFileType<T> c, String name) {
 		File f = new File(c.folder(), name + ".json");
@@ -57,6 +72,15 @@ public class ConfigFileUtil {
 			}
 		return null;
 	}
+	/**
+	 * 删除指定的配置文件。
+	 * <p>
+	 * Deletes a specified configuration file.
+	 *
+	 * @param <T> 配置数据类型 / the configuration data type
+	 * @param c 配置文件类型 / the config file type descriptor
+	 * @param name 配置文件名称（不含扩展名） / the config file name (without extension)
+	 */
 	@Nullable
 	public static <T> void delete(ConfigFileType<T> c, String name) {
 		File f = new File(c.folder(), name + ".json");
@@ -64,6 +88,15 @@ public class ConfigFileUtil {
 			if(!f.delete())
 				f.deleteOnExit();
 	}
+	/**
+	 * 加载指定类型的所有配置文件数据。
+	 * <p>
+	 * Loads all configuration data entries of the given config file type.
+	 *
+	 * @param <T> 配置数据类型 / the configuration data type
+	 * @param c 配置文件类型 / the config file type descriptor
+	 * @return 文件名到配置数据的映射 / a map from file names to configuration data
+	 */
 	public static <T> Map<String, T> loadAll(ConfigFileType<T> c) {
 		Chorda.LOGGER.info("loading " + c + " data from files...");
 		Map<String, T> list = new LinkedHashMap<>();
@@ -86,6 +119,16 @@ public class ConfigFileUtil {
 		return list;
 	}
 
+	/**
+	 * 将单个配置数据保存到文件。
+	 * <p>
+	 * Saves a single configuration data entry to file.
+	 *
+	 * @param <T> 配置数据类型 / the configuration data type
+	 * @param c 配置文件类型 / the config file type descriptor
+	 * @param name 配置文件名称（不含扩展名） / the config file name (without extension)
+	 * @param data 要保存的数据 / the data to save
+	 */
 	public static <T> void save(ConfigFileType<T> c, String name, T data) {
 		c.folder().mkdirs();
 
@@ -99,6 +142,15 @@ public class ConfigFileUtil {
 		}
 	}
 
+	/**
+	 * 批量保存所有配置数据到文件。
+	 * <p>
+	 * Saves all configuration data entries to files in batch.
+	 *
+	 * @param <T> 配置数据类型 / the configuration data type
+	 * @param c 配置文件类型 / the config file type descriptor
+	 * @param data 文件名到配置数据的映射 / a map from file names to configuration data
+	 */
 	public static <T> void saveAll(ConfigFileType<T> c, Map<String, T> data) {
 		c.folder().mkdirs();
 

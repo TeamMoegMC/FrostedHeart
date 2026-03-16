@@ -19,12 +19,25 @@
 
 package com.teammoeg.chorda.math.noise;
 
+/**
+ * OpenSimplex三维噪声实现，使用ImproveXYPlanes选项优化XY平面的噪声质量。
+ * <p>
+ * OpenSimplex 3D noise implementation using the ImproveXYPlanes option to optimize noise quality
+ * on the XY plane.
+ */
 public class OpenSimplex3D implements INoise3D {
     private static final float SKEW_XY = (float) 0.211324865405187;
     private static final float SKEW_Z = (float) 0.577350269189626;
 
     private final int seed;
 
+    /**
+     * 使用指定种子构造三维OpenSimplex噪声。
+     * <p>
+     * Constructs a 3D OpenSimplex noise with the specified seed.
+     *
+     * @param seed 随机种子 / the random seed
+     */
     public OpenSimplex3D(long seed) {
         this.seed = (int) seed;
     }

@@ -19,6 +19,13 @@
 
 package com.teammoeg.chorda.math.evaluator;
 
+/**
+ * 空变量环境，不包含任何变量。用于对纯常量表达式求值。
+ * 调用get方法会抛出异常，getOptional返回null。
+ * <p>
+ * Null variable environment containing no variables. Used for evaluating pure constant expressions.
+ * Calling get throws an exception, getOptional returns null.
+ */
 public class NullEnvironment implements IEnvironment {
     public static final IEnvironment INSTANCE = new NullEnvironment();
 

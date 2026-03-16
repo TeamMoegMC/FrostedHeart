@@ -38,6 +38,16 @@ import com.teammoeg.chorda.client.icon.FlatIcon;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.network.chat.Component;
 
+/**
+ * 带标签的选择控件，通过左/右键点击在一组选项中循环切换。
+ * 提供布尔选择、枚举选择和自定义列表选择的工厂方法。
+ * <p>
+ * Labeled selection widget that cycles through a set of options via left/right
+ * mouse button clicks. Provides factory methods for boolean selection, enum
+ * selection, and custom list selection.
+ *
+ * @param <R> 选项值类型 / The option value type
+ */
 public class LabeledSelection<R> extends LabeledPane<TextButton> {
     List<R> objs;
 
@@ -98,6 +108,16 @@ public class LabeledSelection<R> extends LabeledPane<TextButton> {
         this(panel, lab, val, Arrays.asList(aobjs), atostr,atoicon);
     }
 
+    /**
+     * 创建一个布尔选择控件。
+     * <p>
+     * Creates a boolean selection widget.
+     *
+     * @param p   父UI元素 / the parent UI element
+     * @param lab 标签文本 / the label text
+     * @param val 初始布尔值 / the initial boolean value
+     * @return 布尔选择控件 / the boolean selection widget
+     */
     public static LabeledSelection<Boolean> createBool(UIElement p, Component lab, Boolean val) {
         return new LabeledSelection<>(p, lab, val, Arrays.asList(true, false), null,t->t? FlatIcon.BOX_ON.toCIcon(): FlatIcon.BOX.toCIcon()) {
             @Override
@@ -109,6 +129,18 @@ public class LabeledSelection<R> extends LabeledPane<TextButton> {
         };
     }
 
+    /**
+     * 创建一个枚举选择控件。
+     * <p>
+     * Creates an enum selection widget.
+     *
+     * @param p   父UI元素 / the parent UI element
+     * @param lab 标签文本 / the label text
+     * @param en  枚举类 / the enum class
+     * @param val 初始枚举值 / the initial enum value
+     * @param <T> 枚举类型 / the enum type
+     * @return 枚举选择控件 / the enum selection widget
+     */
     public static <T extends Enum<T>> LabeledSelection<T> createEnum(UIElement p, Component lab, Class<T> en, T val) {
         return new LabeledSelection<>(p, lab, val, Arrays.asList(en.getEnumConstants()), a->Components.str(a.name()),a->CIcons.nop());
     }
@@ -134,10 +166,24 @@ public class LabeledSelection<R> extends LabeledPane<TextButton> {
         };
     }
 
+    /**
+     * 获取当前选中的值。
+     * <p>
+     * Gets the currently selected value.
+     *
+     * @return 当前选中的值 / the currently selected value
+     */
     public R getSelection() {
         return objs.get(sel);
     }
 
+    /**
+     * 设置当前选中的值。
+     * <p>
+     * Sets the currently selected value.
+     *
+     * @param val 要选中的值 / the value to select
+     */
     public void setSelection(R val) {
         sel = objs.indexOf(val);
     }

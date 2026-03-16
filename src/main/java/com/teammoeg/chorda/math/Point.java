@@ -24,24 +24,60 @@ import java.util.Objects;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+/**
+ * 不可变的二维整数点，支持Codec序列化。
+ * <p>
+ * An immutable 2D integer point with Codec serialization support.
+ */
 public class Point {
 	public final static Codec<Point> CODEC=RecordCodecBuilder.create(t->t.group(
 		Codec.INT.fieldOf("x").forGetter(o->o.x),
 		Codec.INT.fieldOf("y").forGetter(o->o.y)).apply(t, Point::new));
     protected final int x, y;
 
+    /**
+     * 构造一个新的二维点。
+     * <p>
+     * Constructs a new 2D point.
+     *
+     * @param x X坐标 / the X coordinate
+     * @param y Y坐标 / the Y coordinate
+     */
     public Point(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
+    /**
+     * 获取X坐标。
+     * <p>
+     * Gets the X coordinate.
+     *
+     * @return X坐标 / the X coordinate
+     */
     public int getX() {
         return x;
     }
 
+    /**
+     * 获取Y坐标。
+     * <p>
+     * Gets the Y coordinate.
+     *
+     * @return Y坐标 / the Y coordinate
+     */
     public int getY() {
         return y;
     }
+    /**
+     * 创建一个新的Point实例的工厂方法。
+     * <p>
+     * Factory method to create a new Point instance.
+     *
+     * @param x X坐标 / the X coordinate
+     * @param y Y坐标 / the Y coordinate
+     * @return 新的Point实例 / a new Point instance
+     */
     public static Point of(int x, int y) {
     	return new Point(x, y);
     }

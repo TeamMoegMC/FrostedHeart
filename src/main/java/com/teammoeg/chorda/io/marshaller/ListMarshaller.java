@@ -24,12 +24,29 @@ import java.util.function.Function;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.ListTag;
 
+/**
+ * 列表/数组编组器。通过 {@link IList} 抽象在 NBT ListTag 和 Java 列表/数组之间进行序列化和反序列化。
+ * <p>
+ * List/array marshaller. Serializes and deserializes between NBT ListTag and Java lists/arrays
+ * via the {@link IList} abstraction.
+ *
+ * @param <T> 元素类型 / Element type
+ */
 public class ListMarshaller<T> implements Marshaller {
 	private final Class<T> elmType;
 	private final Function<Object,IList<T>> wrapper;
 	private final Function<Integer,IList<T>> factory;
 
 
+	/**
+	 * 构造列表编组器。
+	 * <p>
+	 * Constructs a list marshaller.
+	 *
+	 * @param elmType 元素类型 / Element type
+	 * @param wrapper 将已有对象包装为 IList 的函数 / Function to wrap an existing object as IList
+	 * @param factory 按大小创建新 IList 的工厂函数 / Factory function to create a new IList by size
+	 */
 	public ListMarshaller(Class<T> elmType, Function<Object, IList<T>> wrapper, Function<Integer, IList<T>> factory) {
 		super();
 		this.elmType = elmType;
@@ -37,6 +54,7 @@ public class ListMarshaller<T> implements Marshaller {
 		this.factory = factory;
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public Tag toNBT(Object o) {
 		ListTag nbt=new ListTag();
@@ -47,6 +65,7 @@ public class ListMarshaller<T> implements Marshaller {
 		return nbt;
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public Object fromNBT(Tag nbt) {
 		

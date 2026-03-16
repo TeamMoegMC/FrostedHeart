@@ -19,10 +19,23 @@
 
 package com.teammoeg.chorda.math.evaluator;
 
+/**
+ * 二元运算节点的抽象基类，包含左右两个子节点。
+ * <p>
+ * Abstract base class for binary operation nodes, containing left and right child nodes.
+ */
 abstract class BiNode implements Node {
     Node left;
     Node right;
 
+    /**
+     * 构造一个二元节点。
+     * <p>
+     * Constructs a binary node.
+     *
+     * @param left 左子节点 / the left child node
+     * @param right 右子节点 / the right child node
+     */
     public BiNode(Node left, Node right) {
         super();
         this.left = left;

@@ -21,8 +21,20 @@ package com.teammoeg.chorda.client.ui;
 
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 
+/**
+ * 屏幕接收器接口。用于接收和设置容器屏幕引用的组件。
+ * <p>
+ * Screen acceptor interface. Used by components that need to receive and hold a reference to a container screen.
+ */
 public interface ScreenAcceptor {
 
+	/**
+	 * 设置关联的容器屏幕。
+	 * <p>
+	 * Sets the associated container screen.
+	 *
+	 * @param screen 容器屏幕实例 / The container screen instance
+	 */
 	void setScreen(AbstractContainerScreen screen);
 
 }

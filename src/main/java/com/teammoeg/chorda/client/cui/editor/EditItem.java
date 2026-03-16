@@ -24,6 +24,15 @@ import java.util.Optional;
 import com.mojang.serialization.DataResult;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 
+/**
+ * 编辑项接口，封装一个可编辑值及其对应的UI控件。
+ * 提供值的获取/设置、变更监听和生命周期回调（创建/保存）。
+ * <p>
+ * Edit item interface encapsulating an editable value and its corresponding UI widget.
+ * Provides value get/set, change listeners, and lifecycle callbacks (create/save).
+ *
+ * @param <T> 被编辑的值类型 / The type of value being edited
+ */
 public interface EditItem<T> {
 	DataResult<Optional<T>> getValue();
 	UIElement getWidget();

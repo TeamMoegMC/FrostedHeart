@@ -28,6 +28,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * 工具提示构建器，用于收集和渲染CUI元素的工具提示文本。
+ * 支持添加文本组件、字符串、翻译键，并通过主题系统进行最终渲染。
+ * 可调整Z轴偏移以控制提示的渲染层级。
+ * <p>
+ * Tooltip builder for collecting and rendering tooltip text for CUI elements.
+ * Supports adding text components, plain strings, and translation keys, with final
+ * rendering delegated to the theme system. Z-axis offset can be adjusted to control
+ * the tooltip rendering layer.
+ */
 public class TooltipBuilder implements Consumer<Component> {
 	private List<Component> tooltip = new ArrayList<>();
 	private int zOffset = 600;

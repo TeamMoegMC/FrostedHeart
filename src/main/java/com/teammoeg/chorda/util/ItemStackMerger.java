@@ -10,6 +10,8 @@ import java.util.Map;
 
 /**
  * 工具类：合并物品列表，将相同的物品堆叠到其最大堆叠上限。
+ * <p>
+ * Utility class for merging item lists, stacking identical items up to their maximum stack size.
  */
 public class ItemStackMerger {
 
@@ -50,9 +52,11 @@ public class ItemStackMerger {
 
     /**
      * 合并给定的物品列表，将相同的物品尽可能堆叠到其最大堆叠上限。
+     * <p>
+     * Merge the given item list, stacking identical items up to their maximum stack size.
      *
-     * @param items 原始物品列表（可包含空物品）
-     * @return 合并后的新物品列表
+     * @param items 原始物品列表（可包含空物品） / the original item list (may contain empty items)
+     * @return 合并后的新物品列表 / the merged item list
      */
     public static List<ItemStack> mergeItemStacks(List<ItemStack> items) {
         // 过滤掉空物品

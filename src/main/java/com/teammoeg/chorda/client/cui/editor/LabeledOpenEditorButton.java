@@ -27,6 +27,13 @@ import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 
 import net.minecraft.network.chat.Component;
 
+/**
+ * 带标签的打开编辑器按钮，将标签文本和OpenEditorButton组合在一起。
+ * <p>
+ * Labeled open-editor button combining label text with an OpenEditorButton.
+ *
+ * @param <T> 被编辑的值类型 / The type of value being edited
+ */
 public class LabeledOpenEditorButton<T> extends LabeledPane<OpenEditorButton<T>> {
 
     public LabeledOpenEditorButton(UIElement panel, Component master, Component label, Editor<T> e, T val, Consumer<T> cb) {

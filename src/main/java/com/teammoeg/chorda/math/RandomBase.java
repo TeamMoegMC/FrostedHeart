@@ -19,6 +19,13 @@
 
 package com.teammoeg.chorda.math;
 
+/**
+ * 随机数生成器的抽象基类，提供各种原始类型的随机数生成方法。
+ * 子类需要实现核心的{@link #next(int)}方法和种子设置方法。
+ * <p>
+ * Abstract base class for random number generators, providing random number generation methods
+ * for various primitive types. Subclasses must implement the core {@link #next(int)} method and seed setters.
+ */
 public abstract class RandomBase{
     /** Next gaussian. */
     private double nextGaussian;

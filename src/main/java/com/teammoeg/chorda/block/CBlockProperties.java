@@ -19,5 +19,11 @@
 
 package com.teammoeg.chorda.block;
 
+/**
+ * 方块属性工具类，用于定义和管理自定义方块状态属性。
+ * <p>
+ * Block property utilities class for defining and managing custom block state properties.
+ * Currently a placeholder for future property definitions.
+ */
 public class CBlockProperties {
 }

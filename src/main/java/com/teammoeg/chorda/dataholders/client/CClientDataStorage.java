@@ -31,14 +31,35 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraftforge.fml.loading.FMLPaths;
 
+/**
+ * 客户端数据存储管理器。负责客户端本地数据的加载、保存和持久化。
+ * 数据以压缩 NBT 格式存储在游戏目录下的 chorda.client.dat 文件中，
+ * 并维护一个 .old 备份文件以防数据损坏时的回退。
+ * <p>
+ * Client data storage manager. Handles loading, saving, and persistence of client-local data.
+ * Data is stored in compressed NBT format in the chorda.client.dat file under the game directory,
+ * with a .old backup file maintained for fallback in case of data corruption.
+ */
 public class CClientDataStorage {
 	private static ClientDataHolder holder=new ClientDataHolder();
 	public static File clientDataFile=new File(FMLPaths.GAMEDIR.get().toFile(),"chorda.client.dat") ;
 	public static File clientDataOldFile=new File(FMLPaths.GAMEDIR.get().toFile(),"chorda.client.dat.old");
 	public static Object ioLock=new Object();
+	/**
+	 * 获取客户端数据持有者实例。
+	 * <p>
+	 * Gets the client data holder instance.
+	 *
+	 * @return 客户端数据持有者 / the client data holder
+	 */
 	public static ClientDataHolder getData() {
 		return holder;
 	}
+	/**
+	 * 从磁盘加载客户端数据。如果主文件不存在或损坏，尝试加载备份文件。
+	 * <p>
+	 * Loads client data from disk. Falls back to the backup file if the main file does not exist or is corrupted.
+	 */
 	public static void load() {
 		Chorda.LOGGER.info("Loading client stored data");
 		File toread=clientDataFile;
@@ -66,6 +87,13 @@ public class CClientDataStorage {
 				Chorda.LOGGER.error("Can not load client stored data");
 			}
 	}
+	/**
+	 * 检查数据是否有变更，如果有则异步保存到磁盘。
+	 * 保存前会将当前文件备份为 .old 文件，IO 操作在独立线程池中执行。
+	 * <p>
+	 * Checks if data has been modified and saves to disk asynchronously if so.
+	 * Backs up the current file as .old before saving. IO operations are executed in a separate thread pool.
+	 */
 	public static void checkAndSave() {
 		CompoundTag saved=null;
 		synchronized(holder.lock) {

@@ -44,7 +44,18 @@ import com.mojang.serialization.ListBuilder;
 import com.mojang.serialization.MapLike;
 import com.mojang.serialization.RecordBuilder;
 
+/**
+ * 基于原生Java对象（Map、List、Number、String等）的DynamicOps实现。提供压缩和非压缩两种模式。
+ * <p>
+ * A DynamicOps implementation based on native Java objects (Map, List, Number, String, etc.).
+ * Provides both compressed and uncompressed modes.
+ */
 public class DataOps implements DynamicOps<Object> {
+	/**
+	 * 列表构建器内部实现。
+	 * <p>
+	 * Internal list builder implementation.
+	 */
 	private static class LBuilder implements ListBuilder<Object> {
 		private DataResult<List<Object>> list = DataResult.success(new ArrayList<>());
 		DataOps ops;
@@ -90,6 +101,11 @@ public class DataOps implements DynamicOps<Object> {
 		}
 	}
 
+	/**
+	 * Map构建器内部实现。
+	 * <p>
+	 * Internal map builder implementation.
+	 */
 	private static class MBuilder implements RecordBuilder<Object> {
 		DataOps ops;
 		DataResult<Map<Object, Object>> map;
@@ -149,6 +165,11 @@ public class DataOps implements DynamicOps<Object> {
 		}
 	}
 
+	/**
+	 * MapLike接口的内部实现，封装了Java Map。
+	 * <p>
+	 * Internal MapLike implementation wrapping a Java Map.
+	 */
 	private static class MLike implements MapLike<Object> {
 		Map<Object, Object> map;
 
@@ -178,10 +199,13 @@ public class DataOps implements DynamicOps<Object> {
 		}
 	}
 
+	/** 非压缩模式的单例实例。 / Singleton instance for uncompressed mode. */
 	public static final DataOps INSTANCE = new DataOps(false);
 
+	/** 压缩模式的单例实例。 / Singleton instance for compressed mode. */
 	public static final DataOps COMPRESSED = new DataOps(true);
 
+	/** 表示空值的特殊标记对象。 / Special sentinel object representing null/empty value. */
 	public static final Object NULLTAG = new Object() {
 		public String toString() {
 			return "nulltag";
@@ -189,6 +213,14 @@ public class DataOps implements DynamicOps<Object> {
 	};
 	boolean compress;
 
+	/**
+	 * 获取列表中所有元素的公共类型。如果所有元素类型一致则返回该类型，否则返回null。
+	 * <p>
+	 * Gets the common element class of a list. Returns the class if all elements share the same type, null otherwise.
+	 *
+	 * @param objs 要检查的对象列表 / the list of objects to check
+	 * @return 公共元素类型，如果不一致则返回null / the common element class, or null if inconsistent
+	 */
 	public static Class<?> getElmClass(List<Object> objs) {
 		if (!objs.isEmpty()) {
 			Object obj0=objs.get(0);
@@ -202,6 +234,13 @@ public class DataOps implements DynamicOps<Object> {
 		return null;
 	}
 
+	/**
+	 * 构造DataOps实例。
+	 * <p>
+	 * Constructs a DataOps instance.
+	 *
+	 * @param compress 是否启用压缩模式 / whether to enable compressed mode
+	 */
 	public DataOps(boolean compress) {
 		super();
 		this.compress = compress;

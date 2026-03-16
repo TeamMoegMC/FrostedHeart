@@ -39,12 +39,22 @@ import org.apache.logging.log4j.MarkerManager;
 import com.teammoeg.chorda.compat.ftb.FTBTeamsEvents;
 import com.teammoeg.chorda.dataholders.client.CClientDataStorage;
 
+/**
+ * Chorda 模组主入口类。Chorda 是 TeamMoeg 项目的通用基础库模组，
+ * 提供方块、菜单、网络、序列化、UI 等基础框架。
+ * <p>
+ * Main entry point for the Chorda mod. Chorda is a general-purpose library mod
+ * for TeamMoeg projects, providing foundational frameworks for blocks, menus,
+ * networking, serialization, UI, and more.
+ */
 @Mod(Chorda.MODID)
 public class Chorda {
     public static final String MODID = "chorda";
     public static final String MODNAME = "Chorda";
-    // Logger
+    // 日志记录器 / Logger
     public static final Logger LOGGER = LogManager.getLogger(MODNAME);
+    // 日志标记，用于分类不同阶段的日志输出
+    // Log markers for categorizing log output at different stages
     public static final Marker VERSION_CHECK = MarkerManager.getMarker("Version Check");
     public static final Marker INIT = MarkerManager.getMarker("Init");
     public static final Marker SETUP = MarkerManager.getMarker("Setup");
@@ -54,10 +64,26 @@ public class Chorda {
     public static final Marker CLIENT_SETUP = MarkerManager.getMarker("Client").addParents(SETUP);
     public static final Marker UI = MarkerManager.getMarker("UI");
 
+    /**
+     * 创建属于本模组命名空间的资源路径。
+     * <p>
+     * Creates a {@link ResourceLocation} under this mod's namespace.
+     *
+     * @param path 资源路径 / the resource path
+     * @return 完整的资源定位符 / the full resource location
+     */
     public static ResourceLocation rl(String path) {
         return new ResourceLocation(MODID, path);
     }
 
+    /**
+     * 构造函数，Forge 模组加载时自动调用。
+     * 负责注册配置、事件监听器、兼容模块，以及初始化客户端。
+     * <p>
+     * Constructor, automatically invoked by Forge during mod loading.
+     * Responsible for registering configs, event listeners, compat modules,
+     * and initializing the client side.
+     */
     public Chorda() {
         IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
         IEventBus forge = MinecraftForge.EVENT_BUS;
@@ -100,35 +126,56 @@ public class Chorda {
     }
 
     /**
-     * Setup stuff that requires deferred registers to be filled.
-     * @param event The event
+     * 通用初始化，在延迟注册完成后执行。注册网络通道。
+     * <p>
+     * Common setup, executed after deferred registers are filled.
+     * Registers network channels.
+     *
+     * @param event 通用初始化事件 / the common setup event
      */
     private void setup(final FMLCommonSetupEvent event) {
         ChordaNetwork.INSTANCE.register();
     }
+
+    /**
+     * 客户端初始化，加载客户端数据存储。
+     * <p>
+     * Client setup, loads client-side data storage.
+     *
+     * @param ev 客户端初始化事件 / the client setup event
+     */
 	public void clientSetup(final FMLClientSetupEvent ev) {
 		CClientDataStorage.load();
 	}
+
     /**
-     * Enqueue Inter-Mod Communication
-     * @param event The event
+     * 发送模组间通信消息（IMC）。
+     * <p>
+     * Enqueue Inter-Mod Communication messages.
+     *
+     * @param event IMC 发送事件 / the IMC enqueue event
      */
     private void enqueueIMC(final InterModEnqueueEvent event) {
 
     }
 
     /**
-     * Process Inter-Mod Communication
-     * @param event The event
+     * 处理收到的模组间通信消息（IMC）。
+     * <p>
+     * Process received Inter-Mod Communication messages.
+     *
+     * @param event IMC 处理事件 / the IMC process event
      */
     private void processIMC(final InterModProcessEvent event) {
 
     }
 
     /**
-     * Stuff that needs to be done after everything is loaded.
-     * In general, not used.
-     * @param event The event
+     * 所有内容加载完成后的回调，通常不使用。
+     * <p>
+     * Callback after everything is loaded. Generally not used.
+     *
+     * @param event 加载完成事件 / the load complete event
      */
     private void loadComplete(FMLLoadCompleteEvent event) {
 

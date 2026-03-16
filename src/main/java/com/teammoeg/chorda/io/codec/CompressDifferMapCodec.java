@@ -27,9 +27,24 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.MapLike;
 import com.mojang.serialization.RecordBuilder;
 
+/**
+ * 根据DynamicOps是否压缩来选择不同MapCodec的实现。与{@link CompressDifferCodec}类似，但用于MapCodec。
+ * <p>
+ * A MapCodec implementation that selects different MapCodecs based on whether DynamicOps is compressed.
+ * Similar to {@link CompressDifferCodec}, but for MapCodec.
+ *
+ * @param <A> 编解码器处理的类型 / the type handled by the codec
+ */
 public class CompressDifferMapCodec<A> extends MapCodec<A> {
 	MapCodec<A> uncompressed;
 	MapCodec<A> compressed;
+	/**
+	 * 构造一个压缩差异MapCodec，压缩模式下将值包装在"value"字段中。
+	 * <p>
+	 * Constructs a compress-differ MapCodec, wrapping the value in a "value" field for compressed mode.
+	 *
+	 * @param uncompressed 非压缩模式下使用的MapCodec / the MapCodec used in uncompressed mode
+	 */
 	public CompressDifferMapCodec(MapCodec<A> uncompressed) {
 		super();
 		this.uncompressed = uncompressed;
@@ -37,6 +52,14 @@ public class CompressDifferMapCodec<A> extends MapCodec<A> {
 	}
 
 
+	/**
+	 * 构造一个压缩差异MapCodec，可分别指定压缩和非压缩编解码器。
+	 * <p>
+	 * Constructs a compress-differ MapCodec with separately specified compressed and uncompressed codecs.
+	 *
+	 * @param uncompressed 非压缩模式下使用的MapCodec / the MapCodec used in uncompressed mode
+	 * @param compressed 压缩模式下使用的MapCodec / the MapCodec used in compressed mode
+	 */
 	public CompressDifferMapCodec(MapCodec<A> uncompressed, MapCodec<A> compressed) {
 		super();
 		this.uncompressed = uncompressed;

@@ -31,6 +31,15 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.network.NetworkHooks;
 
+/**
+ * 多方块菜单组件。作为 IE 多方块系统的组件，处理玩家点击多方块时打开菜单的逻辑。
+ * <p>
+ * Multiblock menu component. Acts as a component in IE's multiblock system,
+ * handling the logic of opening a menu when a player clicks on the multiblock.
+ *
+ * @param <S> 多方块状态类型 / the multiblock state type
+ * @param <C> 菜单类型 / the menu type
+ */
 public record CMultiblockMenuComponent<S extends IMultiblockState,C extends AbstractContainerMenu>(MultiblockMenuType<S,C> cont) implements IMultiblockComponent<S> {
 	
 

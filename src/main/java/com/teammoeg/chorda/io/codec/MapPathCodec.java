@@ -24,10 +24,26 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 
+/**
+ * 嵌套路径编解码器。在编码时将值包装在嵌套的Map路径中，解码时按路径深入获取值。
+ * <p>
+ * Nested path codec. Wraps values in nested Map paths during encoding,
+ * and traverses the path to retrieve values during decoding.
+ *
+ * @param <A> 编解码器处理的类型 / the type handled by the codec
+ */
 public class MapPathCodec<A> implements Codec<A> {
 	Codec<A> codec;
 	String[] path;
 
+	/**
+	 * 构造一个嵌套路径编解码器。
+	 * <p>
+	 * Constructs a nested path codec.
+	 *
+	 * @param codec 值的编解码器 / the codec for the value
+	 * @param path 嵌套的路径键名数组 / the array of nested path key names
+	 */
 	public MapPathCodec(Codec<A> codec, String... path) {
 		super();
 		this.codec = codec;

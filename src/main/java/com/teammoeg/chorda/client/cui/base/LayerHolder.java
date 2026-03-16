@@ -22,9 +22,14 @@ package com.teammoeg.chorda.client.cui.base;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 /**
- * Modifies vanilla color palette
- * Interface method for minecraft screen
- * */
+ * 层持有者接口，定义CUI层与Minecraft Screen之间的交互契约。
+ * 提供焦点管理、字体获取、界面刷新、渐变背景控制、关闭查询、
+ * 前一屏幕获取和GUI更新等功能。
+ * <p>
+ * Layer holder interface defining the interaction contract between CUI layers and
+ * Minecraft Screen. Provides focus management, font access, element refresh,
+ * gradient background control, close query, previous screen access, and GUI update.
+ */
 public interface LayerHolder {
 	void focusOn(UIElement elm);
 	Font getFont();

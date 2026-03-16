@@ -19,6 +19,13 @@
 
 package com.teammoeg.chorda.math.noise;
 
+/**
+ * 二维细胞噪声（Worley噪声）实现，基于Voronoi图原理生成噪声。
+ * 支持多种返回值类型和可配置的抖动参数。
+ * <p>
+ * 2D cellular noise (Worley noise) implementation based on Voronoi diagram principles.
+ * Supports multiple return value types and configurable jitter parameters.
+ */
 public class Cellular2D implements INoise2D {
     private final int seed;
     private final float jitter;
@@ -32,10 +39,26 @@ public class Cellular2D implements INoise2D {
     // Modifiers
     private float frequency;
 
+    /**
+     * 使用默认参数构造二维细胞噪声。
+     * <p>
+     * Constructs a 2D cellular noise with default parameters.
+     *
+     * @param seed 随机种子 / the random seed
+     */
     public Cellular2D(long seed) {
         this(seed, 1.0f, CellularNoiseType.VALUE);
     }
 
+    /**
+     * 使用指定参数构造二维细胞噪声。
+     * <p>
+     * Constructs a 2D cellular noise with specified parameters.
+     *
+     * @param seed 随机种子 / the random seed
+     * @param jitter 特征点抖动量 / the feature point jitter amount
+     * @param returnType 噪声返回值类型 / the noise return value type
+     */
     public Cellular2D(long seed, float jitter, CellularNoiseType returnType) {
         this.seed = (int) seed;
         this.jitter = jitter;
@@ -43,14 +66,36 @@ public class Cellular2D implements INoise2D {
         this.frequency = 1;
     }
 
+    /**
+     * 使用替代返回类型获取上次计算的噪声值。
+     * <p>
+     * Gets the last computed noise value using an alternate return type.
+     *
+     * @param alternateType 替代噪声类型 / the alternate noise type
+     * @return 噪声值 / the noise value
+     */
     public float get(CellularNoiseType alternateType) {
         return alternateType.calculate(distance0, distance1, closestHash);
     }
 
+    /**
+     * 获取上次计算中最近特征点的X坐标。
+     * <p>
+     * Gets the X coordinate of the closest feature point from the last computation.
+     *
+     * @return 最近特征点的X坐标 / the X coordinate of the closest feature point
+     */
     public float getCenterX() {
         return centerX;
     }
 
+    /**
+     * 获取上次计算中最近特征点的Y坐标。
+     * <p>
+     * Gets the Y coordinate of the closest feature point from the last computation.
+     *
+     * @return 最近特征点的Y坐标 / the Y coordinate of the closest feature point
+     */
     public float getCenterY() {
         return centerY;
     }

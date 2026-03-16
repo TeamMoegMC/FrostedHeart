@@ -52,11 +52,13 @@ import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.common.MinecraftForge;
 
 /**
- * The data manager for all team data.
- * use {@link CClientTeamDataManager} to get data in client
- * Normally, use
- * get(PlayerEntity player) to get the data for a player's team.
- * get(Team team) to get the data for FTB team.
+ * 所有团队数据的服务端数据管理器。负责团队数据的加载、保存、传输和生命周期管理。
+ * 客户端应使用 {@link CClientTeamDataManager} 获取数据。
+ * 通常使用 {@link #get(Player)} 获取玩家所在团队的数据，或使用 {@link #get(AbstractTeam)} 获取指定团队的数据。
+ * <p>
+ * Server-side data manager for all team data. Handles loading, saving, transferring, and lifecycle management of team data.
+ * Use {@link CClientTeamDataManager} for client-side data access.
+ * Typically use {@link #get(Player)} to get data for a player's team, or {@link #get(AbstractTeam)} to get data for a specific team.
  */
 public class CTeamDataManager {
 
@@ -68,27 +70,47 @@ public class CTeamDataManager {
     private Map<UUID, UUID> playerOwnedTeam;
     private Map<String,UUID> playerNameOwnedTeam;
     
+    /**
+     * 构造一个新的团队数据管理器并将自身设置为全局实例。
+     * <p>
+     * Constructs a new team data manager and sets itself as the global instance.
+     */
     public CTeamDataManager() {
         INSTANCE = this;
     }
 
     /**
-     * Get all data of all teams.
-     * @return the data collection
+     * 获取所有团队的数据。
+     * <p>
+     * Gets data for all teams.
+     *
+     * @return 所有团队数据的集合 / the collection of all team data
      */
     public Collection<TeamDataHolder> getAllData() {
         return dataByOwnId.values();
     }
 
     /**
-     * Get all data of all teams of a specific type.
-     * @param type the type
-     * @param <T> the type
-     * @return the data stream
+     * 获取所有团队中指定类型的数据组件流。
+     * <p>
+     * Gets a stream of data components of the specified type from all teams.
+     *
+     * @param <T> 数据组件类型 / the data component type
+     * @param type 数据组件的类型定义 / the data component type definition
+     * @return 数据组件的流 / a stream of data components
      */
     public <T extends SpecialData> Stream<T> getAllData(SpecialDataType<T> type) {
         return dataByOwnId.values().stream().map(t->t.getOptional(type)).filter(Optional::isPresent).map(Optional::get);
     }
+    /**
+     * 遍历所有团队中指定类型的数据组件，对每个存在的数据执行消费操作。
+     * <p>
+     * Iterates over data components of the specified type across all teams, applying the consumer to each present data.
+     *
+     * @param <T> 数据组件类型 / the data component type
+     * @param type 数据组件的类型定义 / the data component type definition
+     * @param consumer 对数据组件和团队数据持有者的消费操作 / the consumer for the data component and team data holder
+     */
     public <T extends SpecialData> void forAllData(SpecialDataType<T> type,BiConsumer<T,TeamDataHolder> consumer) {
         dataByOwnId.values().stream().forEach(t->{
         	Optional<T> opt=t.getOptional(type);
@@ -102,10 +124,15 @@ public class CTeamDataManager {
 
 
     /**
-     * Helper method to get the data from frostedheart team id.
-     * @apiNote DO NOT CALL IN CLIENT, or it would return empty data
-     * @param id the research team id
-     * @return data
+     * 根据 Frosted Heart 团队 ID 获取团队数据的辅助方法。
+     * 在客户端调用时会返回空数据作为回退。
+     * <p>
+     * Helper method to get team data by Frosted Heart team ID.
+     * Returns empty data as a fallback when called on the client.
+     *
+     * @apiNote 请勿在客户端调用，否则会返回空数据 / DO NOT CALL IN CLIENT, or it would return empty data
+     * @param id 研究团队 ID / the research team ID
+     * @return 团队数据，或在客户端为空数据 / the team data, or empty data on client
      */
     @Nullable
     public static TeamDataHolder getDataByResearchID(UUID id) {
@@ -118,9 +145,12 @@ public class CTeamDataManager {
     }
 
     /**
-     * Get the data for a player's team, should not call in client
-     * @param player the player
-     * @return the data
+     * 获取玩家所在团队的数据，不应在客户端调用。
+     * <p>
+     * Gets the data for a player's team. Should not be called on the client.
+     *
+     * @param player 玩家 / the player
+     * @return 团队数据 / the team data
      */
 	public static TeamDataHolder get(Player player) {
 		AbstractTeam team=TeamsAPI.getAPI().getTeamByPlayer((ServerPlayer)player);
@@ -128,15 +158,28 @@ public class CTeamDataManager {
 		return INSTANCE.get(team);
 		
 	}
+	/**
+	 * 尝试加载团队数据（如果尚未加载）。
+	 * <p>
+	 * Attempts to load team data if it has not been loaded yet.
+	 *
+	 * @param team 团队数据持有者 / the team data holder
+	 * @return 已加载的团队数据持有者，如果输入为 null 则返回 null / the loaded team data holder, or null if input is null
+	 */
 	public TeamDataHolder tryLoad(TeamDataHolder team) {
 		if(team==null)return null;
 		team.loadIfNeeded();
 		return team;
 	}
     /**
-     * Get the data for a team, as well as check ownership and transfer if necessary.
-     * @param team the team
-     * @return the data
+     * 获取团队的数据，同时检查所有权并在必要时进行转移。
+     * 如果团队尚未关联数据，则创建新的数据持有者并触发 {@link TeamCreatedEvent} 事件。
+     * <p>
+     * Gets data for a team, checking ownership and transferring if necessary.
+     * If the team has no associated data, creates a new data holder and fires a {@link TeamCreatedEvent}.
+     *
+     * @param team 团队 / the team
+     * @return 团队数据 / the team data
      */
     public TeamDataHolder get(AbstractTeam team) {
         UUID cn = dataByFTBId.get(team.getId());
@@ -179,10 +222,12 @@ public class CTeamDataManager {
     }
 
     /**
-     * Get the data for a team from the frostedheart team id.
+     * 根据 Frosted Heart 团队 ID 获取团队数据。
+     * <p>
+     * Gets team data by its Frosted Heart team ID.
      *
-     * @param id the frostedheart team id
-     * @return the data
+     * @param id Frosted Heart 团队 ID / the Frosted Heart team ID
+     * @return 团队数据，如果未找到则返回 null / the team data, or null if not found
      */
     @Nullable
     public TeamDataHolder get(UUID id) {
@@ -190,7 +235,9 @@ public class CTeamDataManager {
     }
 
     /**
-     * Load all data from disk.
+     * 从磁盘加载所有团队数据。读取数据目录下的所有 .nbt 文件并反序列化为团队数据。
+     * <p>
+     * Loads all team data from disk. Reads all .nbt files in the data directory and deserializes them into team data.
      */
     public void load() {
         
@@ -235,7 +282,9 @@ public class CTeamDataManager {
     }
 
     /**
-     * Save all data to disk.
+     * 将所有团队数据保存到磁盘。序列化后写入 .nbt 文件，并删除不再存在的团队数据文件。
+     * <p>
+     * Saves all team data to disk. Serializes and writes to .nbt files, and deletes data files for teams that no longer exist.
      */
     public void save() {
     	Path local=CDistHelper.getServer().getWorldPath(dataFolder);
@@ -258,10 +307,12 @@ public class CTeamDataManager {
     }
 
     /**
-     * Transfer data from one team to another.
+     * 将数据从一个团队转移到另一个团队。更新所有者信息和团队关联。
+     * <p>
+     * Transfers data from one team to another. Updates ownership information and team association.
      *
-     * @param orig the original team id
-     * @param team the new team
+     * @param orig 原始团队 ID / the original team ID
+     * @param team 新的目标团队 / the new target team
      */
     public void transfer(UUID orig, AbstractTeam team) {
     	UUID rid=dataByFTBId.remove(orig);
@@ -281,6 +332,14 @@ public class CTeamDataManager {
 
 
     }
+    /**
+     * 根据 Frosted Heart 内部团队 ID 将数据转移到新团队。
+     * <p>
+     * Transfers data to a new team by Frosted Heart internal team ID.
+     *
+     * @param rid Frosted Heart 内部团队 ID / the Frosted Heart internal team ID
+     * @param team 新的目标团队 / the new target team
+     */
     public void transferByRid(UUID rid, AbstractTeam team) {
         TeamDataHolder odata = dataByOwnId.get(rid);
         if (odata != null) {

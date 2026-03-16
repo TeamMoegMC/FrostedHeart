@@ -26,6 +26,16 @@ import com.teammoeg.frostedheart.content.archive.Alignment;
 import lombok.Getter;
 import net.minecraft.network.chat.Style;
 
+/**
+ * 内容面板中行元素的抽象基类，支持对齐方式和颜色设置。
+ * 通过自引用泛型实现链式调用。所有行类型（文本行、图片行、物品行等）均继承此类。
+ * <p>
+ * Abstract base class for line elements in a content panel, supporting alignment
+ * and color configuration. Uses self-referencing generics for fluent method chaining.
+ * All line types (text, image, item, etc.) extend this class.
+ *
+ * @param <T> 具体行类型，用于链式调用 / The concrete line type for method chaining
+ */
 @Getter
 public abstract class Line<T extends Line<T>> extends UILayer {
     public static final int DEF_LINE_HEIGHT = 12;

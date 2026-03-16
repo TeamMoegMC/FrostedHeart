@@ -49,7 +49,9 @@ import net.minecraft.world.level.ItemLike;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
- * A uniform icon drawing/serializing network
+ * 统一的图标绘制与序列化网络。提供各种类型图标的创建工厂方法和编解码器注册。
+ * <p>
+ * A uniform icon drawing and serialization network. Provides factory methods for creating various icon types and codec registration.
  */
 public class CIcons {
 	public static final Map<String, CIcon> internals = new HashMap<>();
@@ -73,69 +75,123 @@ public class CIcons {
 		serializers.register(FHDelegateIcon.class, "internal", FHDelegateIcon.CODEC);
 	}
 
+	/**
+	 * 创建一个在多个图标间循环切换的动画图标。
+	 * <p>
+	 * Creates an animated icon that cycles through multiple icons.
+	 *
+	 * @param icons 要循环显示的图标数组 / the array of icons to cycle through
+	 * @return 动画图标实例 / the animated icon instance
+	 */
 	public static CIcon getAnimatedIcon(CIcon... icons) {
 		return new AnimatedIcon(icons);
 	}
 
 	/**
-	 * Make a FHIcon delegate of the given icon, THIS IS NOT SERIALIZABLE All
-	 * Serialization progress would result in getting an NOP icon.
+	 * 创建给定名称的委托图标，此图标不可序列化，序列化将得到空图标。
+	 * <p>
+	 * Creates a delegate icon by name. THIS IS NOT SERIALIZABLE; all serialization will result in a NOP icon.
+	 *
+	 * @param name 内部注册的图标名称 / the internally registered icon name
+	 * @return 委托图标实例 / the delegate icon instance
 	 */
 	public static CIcon getDelegateIcon(String name) {
 		return new FHDelegateIcon(name);
 	}
 
 	/**
-	 * get icon switching between items
+	 * 获取在多个物品间循环切换的图标。
+	 * <p>
+	 * Gets an icon that switches between the given items.
+	 *
+	 * @param items 物品集合 / the collection of items
+	 * @return 循环切换的图标 / the cycling icon
 	 */
 	public static CIcon getIcon(Collection<? extends ItemLike> items) {
 		return new IngredientIcon(Ingredient.of(items.toArray(new ItemLike[0])));
 	}
 
 	/**
-	 * get icon with a small icon on the bottom-right
+	 * 获取一个组合图标，右下角叠加一个小图标。
+	 * <p>
+	 * Gets an icon with a small icon overlaid on the bottom-right corner.
+	 *
+	 * @param base 基础图标 / the base icon
+	 * @param small 右下角的小图标 / the small icon on the bottom-right
+	 * @return 组合图标实例 / the combined icon instance
 	 */
 	public static CIcon getIcon(CIcon base, CIcon small) {
 		return new CombinedIcon(base, small);
 	}
 
 	/**
-	 * get icon with item
+	 * 获取显示单个物品的图标。
+	 * <p>
+	 * Gets an icon displaying a single item.
+	 *
+	 * @param item 要显示的物品 / the item to display
+	 * @return 物品图标 / the item icon
 	 */
 	public static CIcon getIcon(ItemLike item) {
 		return new ItemIcon(item);
 	}
 
 	/**
-	 * get icon with a list of item
+	 * 获取在物品列表间循环切换的图标。
+	 * <p>
+	 * Gets an icon that switches between an array of items.
+	 *
+	 * @param items 物品数组 / the array of items
+	 * @return 循环切换的图标 / the cycling icon
 	 */
 	public static CIcon getIcon(ItemLike[] items) {
 		return new IngredientIcon(Ingredient.of(items));
 	}
 
 	/**
-	 * get icon switching between valid stack of ingredient
+	 * 获取在合成材料的有效物品栈间循环切换的图标。
+	 * <p>
+	 * Gets an icon that switches between valid stacks of an ingredient.
+	 *
+	 * @param i 合成材料 / the ingredient
+	 * @return 循环切换的图标 / the cycling icon
 	 */
 	public static CIcon getIcon(Ingredient i) {
 		return getIcon(i, 1);
 	}
 
 	/**
-	 * get icon switching between valid stack of ingredient and with count display
+	 * 获取在合成材料的有效物品栈间循环切换并显示数量的图标。
+	 * <p>
+	 * Gets an icon that switches between valid stacks of an ingredient with count display.
+	 *
+	 * @param i 合成材料 / the ingredient
+	 * @param count 显示的数量 / the count to display
+	 * @return 带数量显示的循环切换图标 / the cycling icon with count display
 	 */
 	public static CIcon getIcon(Ingredient i, int count) {
 		return new IngredientIcon(i, count);
 	}
 
 	/**
-	 * get icon showing an item stack
+	 * 获取显示物品栈的图标。
+	 * <p>
+	 * Gets an icon showing an item stack.
+	 *
+	 * @param item 要显示的物品栈 / the item stack to display
+	 * @return 物品栈图标 / the item stack icon
 	 */
 	public static CIcon getIcon(ItemStack item) {
 		return new ItemIcon(item);
 	}
 
 	/**
-	 * get icon showing a list of item stack
+	 * 获取在物品栈列表间循环切换的动画图标。
+	 * <p>
+	 * Gets an animated icon showing a list of item stacks.
+	 *
+	 * @param stacks 物品栈数组 / the array of item stacks
+	 * @return 动画图标 / the animated icon
 	 */
 	public static CIcon getIcon(ItemStack[] stacks) {
 		CIcon[] icons = new CIcon[stacks.length];
@@ -145,50 +201,97 @@ public class CIcons {
 	}
 
 	/**
-	 * get icon showing a texture
+	 * 获取显示纹理的图标。
+	 * <p>
+	 * Gets an icon showing a texture.
+	 *
+	 * @param texture 纹理资源位置 / the texture resource location
+	 * @return 纹理图标 / the texture icon
 	 */
 	public static CTextureIcon getIcon(ResourceLocation texture) {
 		return new TextureIcon(texture);
 	}
 
 	/**
-	 * get icon showing a part of the texture
+	 * 获取显示纹理局部区域的图标。
+	 * <p>
+	 * Gets an icon showing a part of a texture with UV coordinates.
+	 *
+	 * @param texture 纹理资源位置 / the texture resource location
+	 * @param x 纹理U偏移 / the texture U offset
+	 * @param y 纹理V偏移 / the texture V offset
+	 * @param w 采样宽度 / the sample width
+	 * @param h 采样高度 / the sample height
+	 * @param tw 纹理总宽度 / the total texture width
+	 * @param th 纹理总高度 / the total texture height
+	 * @return 带UV的纹理图标 / the texture icon with UV
 	 */
 	public static CTextureIcon getIcon(ResourceLocation texture, int x, int y, int w, int h, int tw, int th) {
 		return new TextureUVIcon(texture, x, y, w, h, tw, th);
 	}
 
 	/**
-	 * get icon showing a string text
+	 * 获取显示文本字符串的图标。
+	 * <p>
+	 * Gets an icon showing a string text.
+	 *
+	 * @param text 要显示的文本 / the text to display
+	 * @return 文本图标 / the text icon
 	 */
 	public static CIcon getIcon(String text) {
 		return new TextIcon(Components.str(text));
 	}
 
 	/**
-	 * get icon switching between stacks
+	 * 获取在物品栈集合间循环切换的图标。
+	 * <p>
+	 * Gets an icon that switches between the given item stacks.
+	 *
+	 * @param rewards 物品栈集合 / the collection of item stacks
+	 * @return 循环切换的图标 / the cycling icon
 	 */
 	public static CIcon getStackIcons(Collection<ItemStack> rewards) {
 		return new IngredientIcon(Ingredient.of(rewards.stream()));
 	}
 
 	/**
-	 * get icon showing nothing
+	 * 获取不显示任何内容的空图标。
+	 * <p>
+	 * Gets an icon that shows nothing.
+	 *
+	 * @return 空图标实例 / the empty icon instance
 	 */
 	public static CIcon nop() {
 		return NopIcon.INSTANCE;
 	}
+	/**
+	 * 获取空图标，与 {@link #nop()} 相同。
+	 * <p>
+	 * Gets an empty icon, same as {@link #nop()}.
+	 *
+	 * @return 空图标实例 / the empty icon instance
+	 */
 	public static CIcon empty() {
 		return NopIcon.INSTANCE;
 	}
 
 	/**
-	 * get icon showing a text component
+	 * 获取显示文本组件的图标。
+	 * <p>
+	 * Gets an icon showing a text component.
+	 *
+	 * @param text 要显示的文本组件 / the text component to display
+	 * @return 文本图标 / the text icon
 	 */
 	public static CIcon getIcon(Component text) {
 		return new TextIcon(text);
 	}
 
+	/**
+	 * 根据时间在多个图标间循环切换的动画图标。
+	 * <p>
+	 * An animated icon that cycles through multiple icons based on time.
+	 */
 	static class AnimatedIcon extends CIcon {
 		private static final MapCodec<AnimatedIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
 			Codec.list(CIcons.CODEC).fieldOf("icons").forGetter(o -> o.icons)).apply(t, AnimatedIcon::new));
@@ -221,6 +324,11 @@ public class CIcons {
 		}
 	}
 
+	/**
+	 * 组合图标，将一个大图标和一个小图标叠加在一起显示，小图标位于右下角。
+	 * <p>
+	 * A combined icon that overlays a large icon with a small icon at the bottom-right corner.
+	 */
 	static class CombinedIcon extends CIcon {
 		private static final MapCodec<CombinedIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
 			CIcons.CODEC.optionalFieldOf("base", NopIcon.INSTANCE).forGetter(o -> o.large),
@@ -249,6 +357,11 @@ public class CIcons {
 		}
 	}
 
+	/**
+	 * 委托图标，通过名称引用内部注册的图标。未找到时显示问号图标。
+	 * <p>
+	 * A delegate icon that references internally registered icons by name. Shows a question mark if not found.
+	 */
 	static class FHDelegateIcon extends CIcon {
 		private static final MapCodec<FHDelegateIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
 			Codec.STRING.fieldOf("name").forGetter(o -> o.name)).apply(t, FHDelegateIcon::new));
@@ -277,6 +390,11 @@ public class CIcons {
 		}
 	}
 
+	/**
+	 * 图标的抽象基类。所有图标类型都必须实现绘制和空检查方法。
+	 * <p>
+	 * Abstract base class for all icons. All icon types must implement draw and isEmpty methods.
+	 */
 	public static abstract class CIcon implements Cloneable {
 
 		public CIcon() {
@@ -297,6 +415,11 @@ public class CIcons {
 		public abstract boolean isEmpty();
 	}
 
+	/**
+	 * 纹理图标的抽象基类。提供UV裁切、九宫格拉伸和子区域提取功能。
+	 * <p>
+	 * Abstract base class for texture icons. Provides UV slicing, nine-slice scaling, and sub-region extraction.
+	 */
 	public static abstract class CTextureIcon extends CIcon {
 		public abstract CTextureIcon withUV(int x, int y, int w, int h, int tw, int th);
 
@@ -311,6 +434,11 @@ public class CIcons {
 		
 	}
 
+	/**
+	 * 合成材料图标，在合成材料的所有有效物品栈间循环显示。
+	 * <p>
+	 * An ingredient icon that cycles through all valid item stacks of an ingredient.
+	 */
 	static class IngredientIcon extends AnimatedIcon {
 		private static final MapCodec<IngredientIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
 			CodecUtil.INGREDIENT_CODEC.fieldOf("ingredient").forGetter(o -> o.igd),
@@ -344,6 +472,11 @@ public class CIcons {
 		}
 	}
 
+	/**
+	 * 物品图标，在GUI中渲染一个物品栈。
+	 * <p>
+	 * An item icon that renders an item stack in the GUI.
+	 */
 	public static class ItemIcon extends CIcon {
 		private static final MapCodec<ItemIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
 			ItemStack.CODEC.fieldOf("item").forGetter(o -> o.stack)).apply(t, ItemIcon::new));
@@ -385,6 +518,11 @@ public class CIcons {
 		}
 	}
 
+	/**
+	 * 空图标，不绘制任何内容。作为单例使用。
+	 * <p>
+	 * A no-operation icon that draws nothing. Used as a singleton.
+	 */
 	static class NopIcon extends CIcon {
 
 		public static final NopIcon INSTANCE = new NopIcon();
@@ -402,6 +540,11 @@ public class CIcons {
 		}
 	}
 
+	/**
+	 * 文本图标，在GUI中渲染文本组件。
+	 * <p>
+	 * A text icon that renders a text component in the GUI.
+	 */
 	static class TextIcon extends CIcon {
 		private static final MapCodec<TextIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
 			CodecUtil.COMPONENT_CODEC.fieldOf("text").forGetter(o -> o.text)).apply(t, TextIcon::new));
@@ -433,6 +576,11 @@ public class CIcons {
 		}
 	}
 
+	/**
+	 * 纹理图标，绘制完整的纹理图片。
+	 * <p>
+	 * A texture icon that draws a complete texture image.
+	 */
 	static class TextureIcon extends CTextureIcon {
 		private static final MapCodec<TextureIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
 			ResourceLocation.CODEC.fieldOf("location").forGetter(o -> o.rl)).apply(t, TextureIcon::new));
@@ -464,6 +612,11 @@ public class CIcons {
 
 	}
 
+	/**
+	 * 带UV坐标的纹理图标，可以绘制纹理的指定区域。
+	 * <p>
+	 * A texture icon with UV coordinates that can draw a specified region of a texture.
+	 */
 	static class TextureUVIcon extends TextureIcon {
 		private static final MapCodec<TextureUVIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
 			ResourceLocation.CODEC.fieldOf("location").forGetter(o -> o.rl),
@@ -508,6 +661,11 @@ public class CIcons {
 		}
 	}
 
+	/**
+	 * 九宫格图标，支持按九宫格方式拉伸纹理，常用于可变大小的UI背景。
+	 * <p>
+	 * A nine-slice icon that stretches a texture using nine-slice scaling, commonly used for resizable UI backgrounds.
+	 */
 	static class NineSliceIcon extends TextureUVIcon {
 		private static final MapCodec<NineSliceIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
 			ResourceLocation.CODEC.fieldOf("location").forGetter(o -> o.rl),

@@ -39,6 +39,16 @@ import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuiltParams;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.network.chat.Component;
 
+/**
+ * 多字段编辑器对话框，自动从EditorDialogPrototype生成包含多个编辑项的可滚动表单。
+ * 关闭时自动收集所有字段值并通过构造函数重建对象。
+ * <p>
+ * Multi-field editor dialog that automatically generates a scrollable form with
+ * multiple edit items from an EditorDialogPrototype. On close, automatically collects
+ * all field values and reconstructs the object via the constructor function.
+ *
+ * @param <O> 被编辑对象的类型 / The type of object being edited
+ */
 public class EditorFieldsDialog<O> extends BaseEditDialog {
 	UILayer mainPane;
 	LayerScrollBar scroll;
@@ -133,15 +143,45 @@ public class EditorFieldsDialog<O> extends BaseEditDialog {
 	}
 
 	boolean noSave=false;
+	/**
+	 * 设置关闭时不保存。
+	 * <p>
+	 * Sets this dialog to not save on close.
+	 */
 	public void setNoSave() {
 		noSave=true;
 	}
+	/**
+	 * 获取控件对应的字段索引。
+	 * <p>
+	 * Gets the field index for a given widget.
+	 *
+	 * @param wg UI元素 / the UI element
+	 * @return 字段索引，未找到返回-1 / the field index, or -1 if not found
+	 */
 	public int getCurrentIndex(UIElement wg) {
 		return widgetNum.getOrDefault(wg, -1);
 	}
+	/**
+	 * 获取指定索引的字段值。
+	 * <p>
+	 * Gets the field value at the specified index.
+	 *
+	 * @param idx 字段索引 / the field index
+	 * @param <T> 值类型 / the value type
+	 * @return 字段值 / the field value
+	 */
 	public <T> T getValue(int idx) {
 		return (T) map.get(idx).getValue().result().flatMap(t->t).orElse(null);
 	}
+	/**
+	 * 设置指定索引的字段值。
+	 * <p>
+	 * Sets the field value at the specified index.
+	 *
+	 * @param idx   字段索引 / the field index
+	 * @param value 新值 / the new value
+	 */
 	public void setValue(int idx,Object value) {
 		map.get(idx).setValue(value);
 		params[idx]=value;

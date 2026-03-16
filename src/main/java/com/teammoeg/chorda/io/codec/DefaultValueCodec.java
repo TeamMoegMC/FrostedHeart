@@ -30,16 +30,39 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.MapLike;
 import com.mojang.serialization.RecordBuilder;
 
+/**
+ * 带默认值的编解码器包装器。当解码失败时返回默认值，当编码null值时输出空。
+ * <p>
+ * A codec wrapper with default values. Returns the default value when decoding fails,
+ * and outputs empty when encoding null values.
+ *
+ * @param <A> 编解码器处理的类型 / the type handled by the codec
+ */
 public class DefaultValueCodec<A> implements Codec<A> {
 	Codec<A> original;
 	Supplier<A> defVal;
 
+	/**
+	 * 构造一个默认值编解码器，默认值为null。
+	 * <p>
+	 * Constructs a default value codec with null as the default.
+	 *
+	 * @param original 原始编解码器 / the original codec
+	 */
 	public DefaultValueCodec(final Codec<A> original) {
 		super();
 		this.original = original;
 		this.defVal=()->null;
 	}
 
+	/**
+	 * 构造一个带指定默认值提供器的编解码器。
+	 * <p>
+	 * Constructs a default value codec with a specified default value supplier.
+	 *
+	 * @param original 原始编解码器 / the original codec
+	 * @param defVal 默认值提供器 / the default value supplier
+	 */
 	public DefaultValueCodec(final Codec<A> original,final Supplier<A> defVal) {
 		super();
 		this.original = original;

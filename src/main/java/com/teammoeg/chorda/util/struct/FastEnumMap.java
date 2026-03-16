@@ -27,16 +27,26 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 
 /**
- * An optimized enummap with most common use, it has faster query speed and lower memory usage, but it's not very good at iteration<br>
- * It don't check input type as they are bounded in generics<br>
- * Consider constructing with a shared {@link FastEnumMapGenerator#create()} to speed up the construction
- * It don't allow null value, such mapping would be treated as none entry<br>
- * If Other collection feature is needed, use {@link java.util.EnumMap} instead
- * **/
+ * 优化的枚举映射，查询速度更快、内存占用更低，但迭代性能稍差。
+ * 不检查输入类型（由泛型约束），不允许null值（null值视为无映射）。
+ * 建议使用共享的{@link FastEnumMapGenerator#create()}来加速构造。
+ * 如需其他集合功能，请使用{@link java.util.EnumMap}。
+ * <p>
+ * An optimized enum map with faster query speed and lower memory usage, but not optimal for iteration.
+ * Does not check input type as they are bounded in generics. Does not allow null values
+ * (null values are treated as no entry). Consider constructing with a shared
+ * {@link FastEnumMapGenerator#create()} to speed up construction.
+ * If other collection features are needed, use {@link java.util.EnumMap} instead.
+ *
+ * @param <K> 枚举键类型 / the enum key type
+ * @param <V> 值类型 / the value type
+ */
 public class FastEnumMap<K extends Enum<K>,V> implements Iterable<Map.Entry<K, V>>{
 	/**
-	 * An optimized way to produce fast enum map.
-	 * */
+	 * 优化的FastEnumMap工厂，缓存枚举常量以加速创建。
+	 * <p>
+	 * An optimized factory for producing FastEnumMap instances, caching enum constants to speed up creation.
+	 */
 	public static class FastEnumMapGenerator<K extends Enum<K>>{
 		private K[] keys;
 

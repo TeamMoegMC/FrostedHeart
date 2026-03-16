@@ -31,6 +31,19 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * 编辑器控件工厂接口，定义创建编辑控件、获取/设置值的通用契约。
+ * 支持值类型映射（xmap/flatXmap）、默认值注入和命名绑定。
+ * 是连接Editor接口和具体UI控件的桥梁。
+ * <p>
+ * Editor widget factory interface defining the generic contract for creating edit
+ * widgets and getting/setting values. Supports value type mapping (xmap/flatXmap),
+ * default value injection, and named binding. Acts as the bridge between the Editor
+ * interface and concrete UI widgets.
+ *
+ * @param <T> 被编辑的值类型 / The type of value being edited
+ * @param <W> UI控件类型 / The UI widget type
+ */
 public interface EditorWidgetFactory<T,W extends UIElement> {
 	interface WidgetConstructor<T,W extends UIElement>{
 		W create(UILayer parent,Component prompt,T origin);

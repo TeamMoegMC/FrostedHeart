@@ -25,6 +25,12 @@ import com.teammoeg.chorda.client.cui.editor.SelectDialog;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 
+/**
+ * Immersive Engineering兼容编辑器，提供IE多方块结构的选择编辑器。
+ * <p>
+ * Immersive Engineering compatibility editors providing selection editors
+ * for IE multiblock structures.
+ */
 public class IEEditors {
 
 	public static final Editor<IMultiblock> EDITOR_MULTIBLOCK = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, MultiblockHandler::getMultiblocks,

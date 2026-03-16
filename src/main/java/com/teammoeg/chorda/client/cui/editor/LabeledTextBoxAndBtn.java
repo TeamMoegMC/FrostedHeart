@@ -30,6 +30,14 @@ import com.teammoeg.chorda.client.icon.CIcons;
 
 import net.minecraft.network.chat.Component;
 
+/**
+ * 带标签的文本输入框和按钮组合控件，在LabeledTextBox基础上增加一个操作按钮。
+ * 按钮点击时通过回调函数接收一个文本设置器，用于外部逻辑设置文本框内容。
+ * <p>
+ * Labeled text box with an additional action button, extending LabeledTextBox.
+ * When the button is clicked, the callback receives a text setter that allows
+ * external logic to set the text box content.
+ */
 public class LabeledTextBoxAndBtn extends LabeledTextBox {
     Button btn;
 

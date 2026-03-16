@@ -38,6 +38,16 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * 可搜索的选择对话框，从提供的选项集合中选择一个元素。
+ * 支持搜索过滤、自定义显示文本和图标，选中后通过回调返回结果。
+ * <p>
+ * Searchable selection dialog for choosing an element from a provided collection
+ * of options. Supports search filtering, custom display text and icons, and
+ * returns the result via callback on selection.
+ *
+ * @param <T> 选项元素类型 / The option element type
+ */
 public class SelectDialog<T> extends EditDialog {
 	public LayerScrollBar scroll;
 	public SelectorList rl;

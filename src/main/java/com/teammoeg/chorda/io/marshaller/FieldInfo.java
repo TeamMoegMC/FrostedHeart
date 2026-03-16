@@ -32,10 +32,23 @@ import com.teammoeg.chorda.io.SerializeName;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 
+/**
+ * 字段元信息。封装反射 Field 对象，处理序列化名称解析、Codec 创建以及字段级别的 NBT 读写操作。
+ * <p>
+ * Field metadata information. Wraps a reflection Field object, handles serialization name resolution,
+ * Codec creation, and field-level NBT read/write operations.
+ */
 public class FieldInfo {
 	public Field field;
 	public String name;
 	public Codec<?> codecCache;
+	/**
+	 * 根据反射 Field 构造字段信息，自动解析 {@link SerializeName} 注解。
+	 * <p>
+	 * Constructs field info from a reflection Field, automatically resolving the {@link SerializeName} annotation.
+	 *
+	 * @param f 反射字段对象 / The reflection Field object
+	 */
 	public FieldInfo(Field f) {
 		field=f;
 		SerializeName anno=f.getAnnotation(SerializeName.class);
@@ -44,6 +57,13 @@ public class FieldInfo {
 		else
 			name=f.getName();
 	}
+	/**
+	 * 获取此字段的 Codec，使用懒加载缓存。
+	 * <p>
+	 * Gets the Codec for this field, using lazy-initialized caching.
+	 *
+	 * @return 字段对应的 Codec / The Codec for this field
+	 */
 	public Codec<?> getCodec(){
 		if(codecCache==null)
 			codecCache=createCodec();
@@ -60,6 +80,14 @@ public class FieldInfo {
 		}
 		return MarshallUtil.getOrCreateCodec(field.getType());
 	}
+	/**
+	 * 从 CompoundTag 中加载此字段的值到目标对象。
+	 * <p>
+	 * Loads this field's value from a CompoundTag into the target object.
+	 *
+	 * @param data 数据源 CompoundTag / The source CompoundTag
+	 * @param o 目标对象 / The target object
+	 */
 	public void load(CompoundTag data,Object o) {
 		if(data.contains(name)) {
 			Tag nbt=data.get(name);
@@ -72,6 +100,14 @@ public class FieldInfo {
 		}
 		
 	}
+	/**
+	 * 将目标对象中此字段的值保存到 CompoundTag。
+	 * <p>
+	 * Saves this field's value from the target object into a CompoundTag.
+	 *
+	 * @param data 目标 CompoundTag / The target CompoundTag
+	 * @param o 源对象 / The source object
+	 */
 	public void save(CompoundTag data,Object o) {
 		try {
 			Object f=field.get(o);

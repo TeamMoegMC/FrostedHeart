@@ -19,8 +19,18 @@
 
 package com.teammoeg.chorda.io;
 
+/**
+ * 通用数据序列化器的占位类。
+ * <p>
+ * Placeholder class for generic data serializers.
+ */
 public class CGenericDataSerializers {
 
+	/**
+	 * 构造一个新的通用数据序列化器实例。
+	 * <p>
+	 * Constructs a new generic data serializer instance.
+	 */
 	public CGenericDataSerializers() {
 		// TODO Auto-generated constructor stub
 	}

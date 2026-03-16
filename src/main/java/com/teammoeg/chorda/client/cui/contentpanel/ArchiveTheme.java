@@ -10,6 +10,14 @@ import net.minecraft.network.chat.Component;
 
 import java.util.List;
 
+/**
+ * 档案系统专用主题，为档案/百科内容面板提供深色风格的UI渲染。
+ * 定义了按钮、滑块、文本框、面板、工具提示等组件的绘制方式和配色方案。
+ * <p>
+ * Archive system theme providing dark-styled UI rendering for archive/encyclopedia
+ * content panels. Defines drawing methods and color schemes for buttons, sliders,
+ * text boxes, panels, tooltips, and other components.
+ */
 public class ArchiveTheme implements Theme {
     public static final ArchiveTheme INSTANCE = new ArchiveTheme();
     private ArchiveTheme() {}

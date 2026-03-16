@@ -24,6 +24,14 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 
 import net.minecraft.network.chat.Component;
 
+/**
+ * 双精度浮点数输入框，继承自LabeledTextBox。
+ * 提供浮点数值的读取和设置方法，解析失败时返回原始值。
+ * <p>
+ * Double-precision floating-point number input box extending LabeledTextBox.
+ * Provides methods for reading and setting double values, falling back to the
+ * original value on parse failure.
+ */
 public class RealBox extends LabeledTextBox {
 
     public RealBox(UIElement panel, Component lab, Double val) {

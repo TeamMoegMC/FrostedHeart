@@ -23,9 +23,22 @@ import java.util.Random;
 
 import org.joml.Vector4f;
 
+/**
+ * 三维元球(Metaballs)噪声实现，在三维空间中生成基于影响场的有机形状。
+ * <p>
+ * 3D Metaballs noise implementation, generating organic shapes based on influence fields in 3D space.
+ */
 public class Metaballs3D implements INoise3D {
     private final Vector4f[] balls; // x, y, z, weight
 
+    /**
+     * 构造一个指定大小的三维元球噪声，随机生成5-11个元球。
+     * <p>
+     * Constructs a 3D metaballs noise of the specified size, randomly generating 5-11 metaballs.
+     *
+     * @param size 元球分布区域大小 / the size of the metaball distribution area
+     * @param random 随机数生成器 / the random number generator
+     */
     public Metaballs3D(int size, Random random) {
         balls = new Vector4f[5 + random.nextInt(7)];
         for (int i = 0; i < balls.length; i++) {

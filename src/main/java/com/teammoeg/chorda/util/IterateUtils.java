@@ -24,6 +24,13 @@ import java.util.List;
 
 import com.teammoeg.chorda.util.struct.MutablePair;
 
+/**
+ * 迭代工具类，提供将两个可迭代对象并行联合遍历的功能。
+ * 支持AND模式（两者都有下一个元素时继续）和OR模式（任一有下一个元素时继续）。
+ * <p>
+ * Iteration utility class providing parallel joint traversal of two iterables.
+ * Supports AND mode (continues when both have next) and OR mode (continues when either has next).
+ */
 public class IterateUtils {
 	private static abstract class BiIterator<K,V> implements Iterator<MutablePair<K,V>>{
 		protected Iterator<K> first;
@@ -67,6 +74,17 @@ public class IterateUtils {
 			return pair;
 		}
 	}
+	/**
+	 * 以AND模式联合两个可迭代对象，当两者都有下一个元素时产生配对。
+	 * <p>
+	 * Join two iterables in AND mode, producing pairs when both have a next element.
+	 *
+	 * @param <K> 第一个元素类型 / the first element type
+	 * @param <V> 第二个元素类型 / the second element type
+	 * @param first 第一个可迭代对象 / the first iterable
+	 * @param second 第二个可迭代对象 / the second iterable
+	 * @return 配对的可迭代对象 / the paired iterable
+	 */
 	public static <K,V> Iterable<MutablePair<K,V>> joinAnd(Iterable<K> first,Iterable<V> second){
 		return new Iterable<MutablePair<K,V>>() {
 			@Override
@@ -75,6 +93,18 @@ public class IterateUtils {
 			}
 		};
 	}
+	/**
+	 * 以OR模式联合两个可迭代对象，当任一有下一个元素时产生配对（缺失的一方为null）。
+	 * <p>
+	 * Join two iterables in OR mode, producing pairs when either has a next element
+	 * (the missing side is null).
+	 *
+	 * @param <K> 第一个元素类型 / the first element type
+	 * @param <V> 第二个元素类型 / the second element type
+	 * @param first 第一个可迭代对象 / the first iterable
+	 * @param second 第二个可迭代对象 / the second iterable
+	 * @return 配对的可迭代对象 / the paired iterable
+	 */
 	public static <K,V> Iterable<MutablePair<K,V>> joinOr(Iterable<K> first,Iterable<V> second){
 		return new Iterable<MutablePair<K,V>>() {
 			@Override

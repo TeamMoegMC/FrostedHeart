@@ -51,6 +51,14 @@ import net.minecraftforge.common.crafting.CompoundIngredient;
 import net.minecraftforge.common.crafting.PartialNBTIngredient;
 import net.minecraftforge.registries.ForgeRegistries;
 
+/**
+ * 合成材料编辑器对话框，用于编辑Minecraft合成配方中的Ingredient及其数量。
+ * 提供多种编辑模式：单物品、标签、NBT物品、多物品列表和JSON编辑。
+ * <p>
+ * Ingredient editor dialog for editing Minecraft crafting recipe Ingredients and
+ * their quantities. Provides multiple editing modes: single item, tag, NBT item,
+ * multi-item list, and JSON editing.
+ */
 public class IngredientEditor extends BaseEditDialog {
     public static final Editor<Ingredient> EDITOR_JSON = (p, l, v, c) -> Editors.JSON_PROMPT.open(p, l, v == null ? null : v.toJson(), e -> c.accept(Ingredient.fromJson(e)));
     public static final Editor<Pair<Ingredient,Integer>> EDITOR = (p, l, v, c) -> new IngredientEditor(p, l, v, c).open();
@@ -157,6 +165,16 @@ public class IngredientEditor extends BaseEditDialog {
     Ingredient orig;
     NumberBox count;
 
+    /**
+     * 创建一个合成材料编辑器。
+     * <p>
+     * Creates an ingredient editor.
+     *
+     * @param panel    父UI元素 / the parent UI element
+     * @param label    标签文本 / the label text
+     * @param i        初始合成材料和数量 / the initial ingredient and count
+     * @param callback 完成回调 / the completion callback
+     */
     public IngredientEditor(UIElement panel, Component label, Pair<Ingredient,Integer> i, Consumer<Pair<Ingredient,Integer>> callback) {
         super(panel);
         this.label = label;
@@ -170,6 +188,14 @@ public class IngredientEditor extends BaseEditDialog {
         count = new NumberBox(this, Components.str("Count"), cnt);
     }
 
+    /**
+     * 获取合成材料的描述文本。
+     * <p>
+     * Gets the description text for an ingredient.
+     *
+     * @param w 合成材料与数量的键值对 / the ingredient-count pair
+     * @return 描述文本组件 / the description text component
+     */
     public static Component getDesc(Pair<Ingredient,Integer> w) {
         return getODesc(w.getFirst()).append(" x " + w.getSecond());
     }

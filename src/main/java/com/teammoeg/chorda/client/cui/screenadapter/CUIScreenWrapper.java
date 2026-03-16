@@ -33,11 +33,26 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import org.lwjgl.glfw.GLFW;
 
+/**
+ * CUI屏幕包装器。将PrimaryLayer适配到Minecraft的Screen上，处理输入事件、渲染和生命周期管理。
+ * 不包含容器菜单，适用于纯UI界面。
+ * <p>
+ * CUI screen wrapper. Adapts a PrimaryLayer onto Minecraft's Screen,
+ * handling input events, rendering, and lifecycle management.
+ * Does not include a container menu, suitable for pure UI screens.
+ */
 public class CUIScreenWrapper extends Screen implements CUIScreen {
 	@Getter
 	private final PrimaryLayer primaryLayer;
 
 
+	/**
+	 * 构造一个CUI屏幕包装器。
+	 * <p>
+	 * Constructs a CUI screen wrapper.
+	 *
+	 * @param layer 主层 / the primary layer
+	 */
 	public CUIScreenWrapper(PrimaryLayer layer) {
 		super(Components.str(""));
 		primaryLayer=layer;
@@ -171,6 +186,11 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 		primaryLayer.tick();
 	}
 
+	/**
+	 * 屏幕被移除时调用，通知主层关闭并重置光标。
+	 * <p>
+	 * Called when the screen is removed, notifying the primary layer to close and resetting the cursor.
+	 */
 	@Override
 	public void removed() {
 		primaryLayer.onClosed();
@@ -178,10 +198,13 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 		super.removed();
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public boolean shouldCloseOnEsc() {
 		return primaryLayer.onCloseQuery();
 	}
+
+	/** {@inheritDoc} */
 	@Override
 	public Screen getScreen() {
 		return this;

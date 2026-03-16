@@ -26,8 +26,24 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 
+/**
+ * 带工厂方法的Codec包装器，在解码失败时使用工厂方法提供默认实例。
+ * <p>
+ * A Codec wrapper with a factory supplier that provides a default instance when decoding fails.
+ *
+ * @param <A> 编解码的对象类型 / the type of object being encoded and decoded
+ * @param codec 底层编解码器 / the underlying codec
+ * @param factory 默认实例工厂 / the factory supplier for default instances
+ */
 public record CodecWithFactory<A>(Codec<A> codec, Supplier<A> factory) implements Codec<A>{
 
+	/**
+	 * 通过工厂方法获取一个新实例。
+	 * <p>
+	 * Gets a new instance from the factory supplier.
+	 *
+	 * @return 工厂创建的新实例 / a new instance created by the factory
+	 */
 	public A getInstance() {
 		return factory.get();
 	}

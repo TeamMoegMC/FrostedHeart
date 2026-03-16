@@ -21,6 +21,14 @@ package com.teammoeg.chorda.client.cui;
 
 import com.teammoeg.chorda.client.ClientUtils;
 
+/**
+ * CUI调试辅助工具类，控制CUI框架的调试模式开关。
+ * 调试模式仅在原版F3调试界面开启时可用，启用后会在UI元素周围显示边框等调试信息。
+ * <p>
+ * CUI debug helper utility controlling the debug mode toggle for the CUI framework.
+ * Debug mode is only available when the vanilla F3 debug screen is enabled;
+ * when active, it displays debug information such as borders around UI elements.
+ */
 public class CUIDebugHelper {
 	private static boolean isDebugEnabled;
 	private CUIDebugHelper() {

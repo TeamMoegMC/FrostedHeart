@@ -30,7 +30,24 @@ import java.util.List;
 
 import com.teammoeg.chorda.Chorda;
 
+/**
+ * Immersive Engineering配方相关的工具类，提供检查玩家背包物品、扣除物品消耗、
+ * 创建带数量配料等功能。
+ * <p>
+ * Immersive Engineering recipe utility class providing player inventory item checking,
+ * item cost deduction, and ingredient-with-size creation.
+ */
 public class IERecipeUtils {
+    /**
+     * 检查玩家背包中各配料的满足情况，返回一个BitSet表示每个配料是否足够。
+     * <p>
+     * Check the fulfillment status of each ingredient in the player's inventory,
+     * returning a BitSet indicating whether each ingredient is satisfied.
+     *
+     * @param player 玩家 / the player
+     * @param costList 消耗列表 / the cost list
+     * @return 表示每个配料是否足够的BitSet / a BitSet indicating whether each ingredient is sufficient
+     */
     public static BitSet checkItemList(Player player, List<IngredientWithSize> costList) {
     	BitSet bs=new BitSet(costList.size());
     	int i=0;
@@ -52,6 +69,16 @@ public class IERecipeUtils {
         return bs;
     }
 
+    /**
+     * 从玩家背包中扣除指定的物品消耗，先验证后扣除。如果扣除过程中出错则回滚。
+     * <p>
+     * Deduct the specified item costs from the player's inventory. Validates first,
+     * then deducts. Rolls back if an error occurs during deduction.
+     *
+     * @param player 玩家 / the player
+     * @param costList 消耗列表 / the cost list
+     * @return 是否成功扣除所有物品 / whether all items were successfully deducted
+     */
     public static boolean costItems(Player player, List<IngredientWithSize> costList) {
         // first do simple verify
         for (IngredientWithSize iws : costList) {
@@ -94,14 +121,40 @@ public class IERecipeUtils {
         return true;
     }
 
+    /**
+     * 从物品堆创建带数量的配料。
+     * <p>
+     * Create an IngredientWithSize from an ItemStack.
+     *
+     * @param is 物品堆 / the item stack
+     * @return 带数量的配料 / the ingredient with size
+     */
     public static IngredientWithSize createIngredientWithSize(ItemStack is) {
         return new IngredientWithSize(CUtils.createIngredient(is), is.getCount());
     }
 
+    /**
+     * 从标签和数量创建带数量的配料。
+     * <p>
+     * Create an IngredientWithSize from a tag and count.
+     *
+     * @param tag 标签资源位置 / the tag resource location
+     * @param count 数量 / the count
+     * @return 带数量的配料 / the ingredient with size
+     */
     public static IngredientWithSize createIngredientWithSize(ResourceLocation tag, int count) {
         return new IngredientWithSize(CUtils.createIngredient(tag), count);
     }
 
+    /**
+     * 检查玩家是否拥有指定消耗列表中的所有物品。
+     * <p>
+     * Check if the player has all items in the specified cost list.
+     *
+     * @param player 玩家 / the player
+     * @param costList 消耗列表 / the cost list
+     * @return 是否拥有所有物品 / whether the player has all required items
+     */
     public static boolean hasItems(Player player,List<IngredientWithSize> costList) {
     	int i=0;
         for (IngredientWithSize iws : costList) {

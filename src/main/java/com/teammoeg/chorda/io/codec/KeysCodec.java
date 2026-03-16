@@ -30,14 +30,40 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.MapLike;
 import com.mojang.serialization.RecordBuilder;
 
+/**
+ * 多键名MapCodec。解码时按顺序尝试多个键名读取值，编码时使用第一个键名写入。
+ * <p>
+ * Multi-key MapCodec. Tries multiple key names in order during decoding,
+ * and uses the first key name for encoding.
+ *
+ * @param <A> 编解码器处理的类型 / the type handled by the codec
+ */
 public class KeysCodec<A> extends MapCodec<A> {
 	String[] keys;
 	Codec<A> codec;
+	/**
+	 * 构造一个多键名MapCodec。
+	 * <p>
+	 * Constructs a multi-key MapCodec.
+	 *
+	 * @param codec 值的编解码器 / the codec for the value
+	 * @param strings 可用的键名列表 / the list of available key names
+	 */
 	public KeysCodec(Codec<A> codec,String...strings) {
 		this.keys=strings;
 		this.codec=codec;
 	}
 	Function def;
+	/**
+	 * 构造一个带默认值函数的多键名MapCodec。
+	 * <p>
+	 * Constructs a multi-key MapCodec with a default value function.
+	 *
+	 * @param codec 值的编解码器 / the codec for the value
+	 * @param def 当所有键都不存在时提供默认值的函数 / the function to provide default value when all keys are absent
+	 * @param strings 可用的键名列表 / the list of available key names
+	 * @param <T> DynamicOps的类型参数 / the type parameter of DynamicOps
+	 */
 	public <T> KeysCodec(Codec<A> codec,Function<DynamicOps<T>,T> def,String...strings) {
 		this.keys=strings;
 		this.codec=codec;

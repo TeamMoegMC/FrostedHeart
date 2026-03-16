@@ -52,6 +52,14 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * 图标编辑器的抽象基类。提供各种图标类型的编辑器实现，用于在GUI中创建和修改图标。
+ * <p>
+ * Abstract base class for icon editors. Provides editor implementations for various icon types,
+ * used for creating and modifying icons in the GUI.
+ *
+ * @param <T> 编辑的图标类型 / the type of icon being edited
+ */
 public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
 
     public static final Editor<ItemIcon> ITEM_EDITOR = (p, l, v, c) -> Editors.EDITOR_FULL_ITEM.open(p, l, v == null ? null : v.stack, e -> c.accept(new ItemIcon(e)));
@@ -96,9 +104,21 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
         .addEditor("Combined", IconEditor.COMBINED_EDITOR,v->v.getClass()== CombinedIcon.class)
         .addEditor("Animated", IconEditor.ANIMATED_EDITOR,v->v.getClass()== AnimatedIcon.class)
         .build();
+    /**
+     * 获取图标编辑器实例（延迟引用以避免静态初始化循环）。
+     * <p>
+     * Gets the icon editor instance (lazy reference to avoid static initialization cycle).
+     *
+     * @return 图标编辑器 / the icon editor
+     */
     private static Editor<CIcon> getEditor(){
     	return EDITOR;
     }
+    /**
+     * 组合图标编辑器，允许编辑基础图标和角落小图标。
+     * <p>
+     * Combined icon editor that allows editing the base icon and corner icon.
+     */
     private static class Combined extends IconEditor<CombinedIcon> {
         Component label;
         Consumer<CombinedIcon> i;
@@ -123,6 +143,11 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
 
     }
 
+    /**
+     * 带UV坐标的纹理图标编辑器，允许编辑纹理路径和UV参数。
+     * <p>
+     * Texture UV icon editor that allows editing the texture path and UV parameters.
+     */
     private static class UV extends IconEditor<TextureUVIcon> {
     	Component label;
         Consumer<TextureUVIcon> i;

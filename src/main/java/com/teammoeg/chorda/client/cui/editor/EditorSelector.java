@@ -29,6 +29,16 @@ import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.network.chat.Component;
 
+/**
+ * 编辑器选择器对话框，当一个值有多种可用编辑器时，让用户选择使用哪个编辑器。
+ * 通过EditorSelectorBuilder构建，自动根据当前值的类型过滤适用的编辑器。
+ * <p>
+ * Editor selector dialog that lets users choose which editor to use when multiple
+ * editors are available for a value. Built via EditorSelectorBuilder, automatically
+ * filters applicable editors based on the current value type.
+ *
+ * @param <T> 被编辑的值类型 / The type of value being edited
+ */
 public class EditorSelector<T> extends BaseEditDialog {
 	private static record EditorDefinition<T>(Component label, Editor<T> editor, Predicate<T> isSuitable) {
 	}

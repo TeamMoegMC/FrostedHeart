@@ -66,6 +66,16 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
+ * 资源栈选择对话框，用于从注册表中选择物品/方块等资源。
+ * 支持多种资源来源（全部物品、背包、方块）、搜索过滤、NBT编辑、
+ * 数量设置和Forge能力编辑等高级功能。使用异步搜索避免UI阻塞。
+ * <p>
+ * Resource stack selection dialog for choosing items/blocks from registries.
+ * Supports multiple resource sources (all items, inventory, blocks), search
+ * filtering, NBT editing, count setting, and Forge capabilities editing.
+ * Uses asynchronous search to avoid UI blocking.
+ *
+ * @param <T> 资源栈类型 / The resource stack type
  * @author khjxiaogu
  */
 public class SelectStackDialog<T> extends EditDialog {

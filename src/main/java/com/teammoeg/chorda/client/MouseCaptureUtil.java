@@ -20,8 +20,13 @@
 package com.teammoeg.chorda.client;
 
 /**
- * A convenience utility class for handling mouse capture without screen
- * This class is generally threadsafe
+ * 鼠标捕获便捷工具类，用于在不打开屏幕的情况下处理鼠标捕获。
+ * 此类通常是线程安全的。捕获鼠标后，鼠标移动不再转动玩家视角，
+ * 而是通过增量值获取鼠标位移。
+ * <p>
+ * A convenience utility class for handling mouse capture without opening a screen.
+ * This class is generally thread-safe. When the mouse is captured, mouse movement
+ * no longer rotates the player's camera, and displacement is obtained via delta values.
  */
 public class MouseCaptureUtil {
 

@@ -23,29 +23,88 @@ import java.util.BitSet;
 import java.util.Date;
 import java.util.Random;
 
+/**
+ * 星图生成器，使用扩散限制聚集(DLA)算法生成星图状的二维图案。
+ * 通过多步扩展和粒子聚集生成类似星云的分形结构。
+ * <p>
+ * Star map generator that uses Diffusion-Limited Aggregation (DLA) algorithm to generate
+ * star-map-like 2D patterns. Produces fractal structures resembling nebulae through
+ * multi-step expansion and particle aggregation.
+ */
 public class StarMapGenerator {
+	/**
+	 * 基于BitSet的二维位图槽，用于存储星图的像素数据。
+	 * <p>
+	 * A BitSet-based 2D bitmap slot for storing star map pixel data.
+	 */
 	public static class MapSlot{
 		final BitSet set;
 		final int width;
 		final int height;
+		/**
+		 * 构造指定宽高的位图槽。
+		 * <p>
+		 * Constructs a bitmap slot with the specified width and height.
+		 *
+		 * @param width 宽度 / the width
+		 * @param height 高度 / the height
+		 */
 		public MapSlot(int width,int height){
 			super();
 			this.set =new BitSet(width*height);
 			this.width = width;
 			this.height = height;
 		}
+		/**
+		 * 设置指定坐标的像素值。越界时静默忽略。
+		 * <p>
+		 * Sets the pixel value at the specified coordinates. Silently ignores out-of-bounds coordinates.
+		 *
+		 * @param x X坐标 / the X coordinate
+		 * @param y Y坐标 / the Y coordinate
+		 * @param value 像素值 / the pixel value
+		 */
 		public void set(int x,int y,boolean value) {
 			if(x<0||y<0||x>=width||y>=height)return;
 			set.set(x+y*width,value);
 		}
+		/**
+		 * 检查坐标是否在位图范围内。
+		 * <p>
+		 * Checks whether the coordinates are within the bitmap bounds.
+		 *
+		 * @param x X坐标 / the X coordinate
+		 * @param y Y坐标 / the Y coordinate
+		 * @return 如果在范围内则返回true / true if within bounds
+		 */
 		public boolean inRange(int x,int y) {
 			if(x<0||y<0||x>=width||y>=height)return false;
 			return true;
 		}
+		/**
+		 * 获取指定坐标的像素值。越界时返回false。
+		 * <p>
+		 * Gets the pixel value at the specified coordinates. Returns false for out-of-bounds coordinates.
+		 *
+		 * @param x X坐标 / the X coordinate
+		 * @param y Y坐标 / the Y coordinate
+		 * @return 该位置的像素值 / the pixel value at that position
+		 */
 		public boolean get(int x,int y) {
 			if(x<0||y<0||x>=width||y>=height)return false;
 			return set.get(x+y*width);
 		}
+		/**
+		 * 在四个方向上扩展位图，原有数据保持不变。
+		 * <p>
+		 * Expands the bitmap in four directions, preserving existing data.
+		 *
+		 * @param east 东（右）侧扩展量 / the east (right) expansion amount
+		 * @param north 北（上）侧扩展量 / the north (top) expansion amount
+		 * @param west 西（左）侧扩展量 / the west (left) expansion amount
+		 * @param south 南（下）侧扩展量 / the south (bottom) expansion amount
+		 * @return 扩展后的新位图 / a new expanded bitmap
+		 */
 		public MapSlot expand(int east,int north,int west,int south) {
 			MapSlot map=new MapSlot(east+width+west,north+height+south);
 			for(int x=0;x<width;x++)
@@ -53,12 +112,30 @@ public class StarMapGenerator {
 					map.set.set(x+east+(y+north)*map.width,set.get(x+y*width));
 			return map;
 		}
+		/**
+		 * 按指定宽高居中扩展位图。
+		 * <p>
+		 * Expands the bitmap centered by the specified width and height.
+		 *
+		 * @param width 总宽度扩展量 / the total width expansion
+		 * @param height 总高度扩展量 / the total height expansion
+		 * @return 扩展后的新位图 / a new expanded bitmap
+		 */
 		public MapSlot expand(int width,int height) {
 			int dx=width/2;
 			int dy=height/2;
 			return expand(dx,dy,width-dx,height-dy);
 			
 		}
+		/**
+		 * 将位图扩展到指定的目标尺寸。
+		 * <p>
+		 * Expands the bitmap to the specified target dimensions.
+		 *
+		 * @param width 目标宽度 / the target width
+		 * @param height 目标高度 / the target height
+		 * @return 扩展后的新位图 / a new expanded bitmap
+		 */
 		public  MapSlot expandTo(int width,int height) {
 			return expand(width-this.width,height-this.height);
 			
@@ -116,6 +193,16 @@ public class StarMapGenerator {
 		generate(new Date().getTime(),5);
 	}
 	
+	/**
+	 * 使用DLA算法生成星图。从中心单点开始，通过多步扩展和粒子聚集生成图案。
+	 * <p>
+	 * Generates a star map using the DLA algorithm. Starts from a single center point and generates
+	 * patterns through multi-step expansion and particle aggregation.
+	 *
+	 * @param seed 随机种子 / the random seed
+	 * @param steps 生成步数，越多图案越大 / number of generation steps, more steps produce larger patterns
+	 * @return 生成的星图位图 / the generated star map bitmap
+	 */
 	public static MapSlot generate(long seed,int steps) {
 		MapSlot map=new MapSlot(1,1);
 		map.set(0, 0, true);

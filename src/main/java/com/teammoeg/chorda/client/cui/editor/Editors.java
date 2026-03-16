@@ -53,6 +53,16 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.registries.ForgeRegistries;
 
+/**
+ * 预定义编辑器和编辑器控件工厂的注册中心。
+ * 提供各种类型的编辑器实例（布尔确认、文本输入、数字输入、物品选择、方块选择、
+ * 进度选择、实体选择等）以及对应的控件工厂（复选框、数字框、文本框、下拉选择等）。
+ * <p>
+ * Registry of predefined editors and editor widget factories.
+ * Provides various editor instances (boolean confirm, text input, number input, item
+ * selection, block selection, advancement selection, entity selection, etc.) and
+ * corresponding widget factories (checkbox, number box, text box, dropdown, etc.).
+ */
 public class Editors {
 
 	public static final Editor<Boolean> CONFIRM_DIALOG = (p, l, v, c) -> new ConfirmDialog(p, l, v, c).open();

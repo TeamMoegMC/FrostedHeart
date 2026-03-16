@@ -29,8 +29,25 @@ import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.network.chat.Component;
 
+/**
+ * ID输入框，扩展带按钮的文本框，提供随机ID生成和重置到原始值功能。
+ * 如果初始值为空，自动生成一个基于UUID的随机十六进制ID。
+ * <p>
+ * ID input box extending the text box with button, providing random ID generation
+ * and reset-to-original-value functionality. If the initial value is empty,
+ * automatically generates a random hexadecimal ID based on UUID.
+ */
 public class IdBox extends LabeledTextBoxAndBtn {
 	String oldVal;
+	/**
+	 * 创建一个ID输入框。
+	 * <p>
+	 * Creates an ID input box.
+	 *
+	 * @param panel 父UI元素 / the parent UI element
+	 * @param lab   标签文本 / the label text
+	 * @param txt   初始ID值 / the initial ID value
+	 */
 	public IdBox(UIElement panel, Component lab, String txt) {
 		super(panel, lab, txt, Components.str("Random"), s->s.accept(Long.toHexString(UUID.randomUUID().getMostSignificantBits())));
 		oldVal=txt;

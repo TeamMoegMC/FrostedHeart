@@ -49,7 +49,15 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
- * @author  khjxiaogu
+ * 列表编辑对话框，用于编辑一个元素集合。支持添加、删除、编辑和拖拽重排列表元素。
+ * 关闭时如有未保存的修改会弹出确认对话框。
+ * <p>
+ * List edit dialog for editing a collection of elements. Supports adding, deleting,
+ * editing, and drag-to-reorder list elements. Shows a confirmation dialog on close
+ * if there are unsaved changes.
+ *
+ * @param <T> 列表元素类型 / The type of list elements
+ * @author khjxiaogu
  */
 public class EditListDialog<T> extends EditDialog {
     public static final Editor<Collection<String>> STRING_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, "", Editors.TEXT_PROMPT,Components::str, c).open();
@@ -65,6 +73,18 @@ public class EditListDialog<T> extends EditDialog {
     private final Function<T, Component> read;
     private final Function<T, CIcon> toicon;
     boolean modified;
+    /**
+     * 创建一个集合编辑器，从可用选项中选择元素添加到列表中。
+     * <p>
+     * Creates a set editor that selects elements from available options to add to the list.
+     *
+     * @param def        默认值 / the default value
+     * @param availables 可用选项流供应器 / the available options stream supplier
+     * @param toread     元素转文本组件函数 / the function to convert elements to text components
+     * @param icon       元素转图标函数 / the function to convert elements to icons
+     * @param <T>        列表元素类型 / the type of list elements
+     * @return 集合编辑器 / the set editor
+     */
     public static <T> Editor<Collection<T>> createSetEditor(T def, Supplier<Stream<T>> availables, Function<T, Component> toread, Function<T, CIcon> icon) {
     	
     	

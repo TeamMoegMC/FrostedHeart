@@ -33,6 +33,15 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.util.Size2i;
 
+/**
+ * 图片行，用于在内容面板中显示纹理图片。
+ * 自动从资源位置加载图片尺寸，支持自适应缩放和UV覆盖。
+ * 当图片加载失败时显示损坏图标。
+ * <p>
+ * Image line for displaying texture images in a content panel.
+ * Automatically loads image dimensions from resource location, supports adaptive
+ * scaling and UV override. Shows a broken image icon when loading fails.
+ */
 @Getter
 public class ImageLine extends Line<ImageLine> {
     protected ResourceLocation imgLocation;

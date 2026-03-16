@@ -35,6 +35,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * 内容行工厂辅助类，提供创建各类内容行（文本、图片、物品、空白、分割线）的静态方法。
+ * 还提供从Tip对象构建完整内容行列表的功能，用于档案/提示系统的内容展示。
+ * <p>
+ * Content line factory helper providing static methods to create various line types
+ * (text, image, item, space, break). Also provides functionality to build complete
+ * content line lists from Tip objects for the archive/tip system content display.
+ */
 public class LineHelper {
     public static TextLine text(UIElement parent, String text) {
         return text(parent, Component.literal(text));

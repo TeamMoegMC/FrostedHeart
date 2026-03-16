@@ -19,10 +19,12 @@
 
 package com.teammoeg.chorda.client.cui.base;
 /**
- * Represent/Rename of glfw mouse
- * order is important, its ordinal would be used to convert button to enum
- * 
- * */
+ * GLFW鼠标按钮的枚举封装。枚举顺序与GLFW按钮编号一致，
+ * 其ordinal值用于从整数按钮编号转换为枚举值。
+ * <p>
+ * Enum wrapper for GLFW mouse buttons. The enum order matches GLFW button numbers;
+ * the ordinal value is used to convert integer button numbers to enum values.
+ */
 public enum MouseButton {
 	LEFT,
 	RIGHT,

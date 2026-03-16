@@ -23,6 +23,14 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 
+/**
+ * 多方块菜单的客户端工厂接口。用于在客户端创建菜单实例（不包含多方块上下文）。
+ * <p>
+ * Client-side factory interface for multiblock menus. Used to create menu instances
+ * on the client side (without multiblock context).
+ *
+ * @param <C> 菜单类型 / the menu type
+ */
 @FunctionalInterface
 public interface MultiblockMenuClientFactory<C extends AbstractContainerMenu>
 {

@@ -35,8 +35,20 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 
+/**
+ * Chorda通用Forge事件监听器，处理服务端Tick和数据包重载事件。
+ * <p>
+ * Chorda common Forge event listener handling server tick and datapack reload events.
+ */
 @Mod.EventBusSubscriber(modid = Chorda.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ChordaCommonEvents {
+    /**
+     * 处理服务端世界Tick事件，执行调度队列中的定时任务。
+     * <p>
+     * Handles server level tick events, executing scheduled tasks from the scheduler queue.
+     *
+     * @param event 世界Tick事件 / The level tick event
+     */
     @SubscribeEvent
     public static void onServerTick(TickEvent.LevelTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == TickEvent.Phase.START) {
@@ -49,6 +61,13 @@ public class ChordaCommonEvents {
             }
         }
     }
+    /**
+     * 添加数据包重载监听器，用于在数据包重载时重新处理配方数据。
+     * <p>
+     * Adds datapack reload listeners for reprocessing recipe data on datapack reload.
+     *
+     * @param event 添加重载监听器事件 / The add reload listener event
+     */
     @SubscribeEvent
     public static void addReloadListenersLowest(AddReloadListenerEvent event) {
         ReloadableServerResources dataPackRegistries = event.getServerResources();

@@ -20,7 +20,10 @@
 package com.teammoeg.chorda.math.noise;
 
 /**
- * A collection of fast noise utility functions
+ * 快速噪声工具函数集合，包含哈希、梯度计算、插值和随机向量等基础操作。
+ * <p>
+ * A collection of fast noise utility functions, including hashing, gradient computation,
+ * interpolation, and random vector tables.
  */
 public final class NoiseUtil {
     public static final int PRIME_X = 501125321;
@@ -151,22 +154,68 @@ public final class NoiseUtil {
             1, 1, 0, 0, 0, -1, 1, 0, -1, 1, 0, 0, 0, -1, -1, 0
     };
 
+    /**
+     * 快速向下取整。
+     * <p>
+     * Fast floor operation.
+     *
+     * @param f 输入值 / the input value
+     * @return 向下取整结果 / the floor result
+     */
     public static int fastFloor(float f) {
         return f < 0 ? (int) f - 1 : (int) f;
     }
 
+    /**
+     * 快速取最大值。
+     * <p>
+     * Fast maximum operation.
+     *
+     * @param a 第一个值 / the first value
+     * @param b 第二个值 / the second value
+     * @return 较大的值 / the larger value
+     */
     public static float fastMax(float a, float b) {
         return Math.max(a, b);
     }
 
+    /**
+     * 快速取最小值。
+     * <p>
+     * Fast minimum operation.
+     *
+     * @param a 第一个值 / the first value
+     * @param b 第二个值 / the second value
+     * @return 较小的值 / the smaller value
+     */
     public static float fastMin(float a, float b) {
         return Math.min(a, b);
     }
 
+    /**
+     * 快速四舍五入。
+     * <p>
+     * Fast rounding operation.
+     *
+     * @param f 输入值 / the input value
+     * @return 四舍五入结果 / the rounded result
+     */
     public static int fastRound(float f) {
         return f >= 0 ? (int) (f + 0.5f) : (int) (f - 0.5f);
     }
 
+    /**
+     * 计算二维梯度坐标的点积贡献。
+     * <p>
+     * Computes the dot product contribution of a 2D gradient coordinate.
+     *
+     * @param seed 种子值 / the seed value
+     * @param xPrimed 预乘X坐标 / the pre-multiplied X coordinate
+     * @param yPrimed 预乘Y坐标 / the pre-multiplied Y coordinate
+     * @param xd X方向距离 / the X-direction distance
+     * @param yd Y方向距离 / the Y-direction distance
+     * @return 梯度点积值 / the gradient dot product value
+     */
     public static float gradientCoord(int seed, int xPrimed, int yPrimed, float xd, float yd) {
         int hash = hashPrimed(seed, xPrimed, yPrimed);
         hash ^= hash >> 15;
@@ -178,6 +227,20 @@ public final class NoiseUtil {
         return xd * xg + yd * yg;
     }
 
+    /**
+     * 计算三维梯度坐标的点积贡献。
+     * <p>
+     * Computes the dot product contribution of a 3D gradient coordinate.
+     *
+     * @param seed 种子值 / the seed value
+     * @param xPrimed 预乘X坐标 / the pre-multiplied X coordinate
+     * @param yPrimed 预乘Y坐标 / the pre-multiplied Y coordinate
+     * @param zPrimed 预乘Z坐标 / the pre-multiplied Z coordinate
+     * @param xd X方向距离 / the X-direction distance
+     * @param yd Y方向距离 / the Y-direction distance
+     * @param zd Z方向距离 / the Z-direction distance
+     * @return 梯度点积值 / the gradient dot product value
+     */
     public static float gradientCoord(int seed, int xPrimed, int yPrimed, int zPrimed, float xd, float yd, float zd) {
         int hash = hashPrimed(seed, xPrimed, yPrimed, zPrimed);
         hash ^= hash >> 15;
@@ -190,30 +253,95 @@ public final class NoiseUtil {
         return xd * xg + yd * yg + zd * zg;
     }
 
+    /**
+     * 计算二维坐标的哈希值。
+     * <p>
+     * Computes the hash value of 2D coordinates.
+     *
+     * @param seed 种子值 / the seed value
+     * @param x X坐标 / the X coordinate
+     * @param y Y坐标 / the Y coordinate
+     * @return 哈希值 / the hash value
+     */
     public static int hash(int seed, int x, int y) {
         return hashPrimed(seed, x * PRIME_X, y * PRIME_Y);
     }
 
+    /**
+     * 计算三维坐标的哈希值。
+     * <p>
+     * Computes the hash value of 3D coordinates.
+     *
+     * @param seed 种子值 / the seed value
+     * @param x X坐标 / the X coordinate
+     * @param y Y坐标 / the Y coordinate
+     * @param z Z坐标 / the Z coordinate
+     * @return 哈希值 / the hash value
+     */
     public static int hash(int seed, int x, int y, int z) {
         return hashPrimed(seed, x * PRIME_X, y * PRIME_Y, z * PRIME_Z);
     }
 
+    /**
+     * 使用预乘坐标计算二维哈希值。
+     * <p>
+     * Computes a 2D hash value using pre-multiplied coordinates.
+     *
+     * @param seed 种子值 / the seed value
+     * @param xPrimed 预乘X坐标 / the pre-multiplied X coordinate
+     * @param yPrimed 预乘Y坐标 / the pre-multiplied Y coordinate
+     * @return 哈希值 / the hash value
+     */
     public static int hashPrimed(int seed, int xPrimed, int yPrimed) {
         long hash = seed ^ xPrimed ^ yPrimed;
         hash *= 0x27d4eb2d;
         return (int) hash;
     }
 
+    /**
+     * 使用预乘坐标计算三维哈希值。
+     * <p>
+     * Computes a 3D hash value using pre-multiplied coordinates.
+     *
+     * @param seed 种子值 / the seed value
+     * @param xPrimed 预乘X坐标 / the pre-multiplied X coordinate
+     * @param yPrimed 预乘Y坐标 / the pre-multiplied Y coordinate
+     * @param zPrimed 预乘Z坐标 / the pre-multiplied Z coordinate
+     * @return 哈希值 / the hash value
+     */
     public static int hashPrimed(int seed, int xPrimed, int yPrimed, int zPrimed) {
         long hash = seed ^ xPrimed ^ yPrimed ^ zPrimed;
         hash *= 0x27d4eb2d;
         return (int) hash;
     }
 
+    /**
+     * 线性插值。
+     * <p>
+     * Linear interpolation.
+     *
+     * @param start 起始值 / the start value
+     * @param end 结束值 / the end value
+     * @param t 插值因子 (0.0-1.0) / the interpolation factor (0.0-1.0)
+     * @return 插值结果 / the interpolated result
+     */
     public static float lerp(float start, float end, float t) {
         return start * (1 - t) + end * t;
     }
 
+    /**
+     * 网格双线性插值，在四个角值之间进行插值。
+     * <p>
+     * Grid bilinear interpolation between four corner values.
+     *
+     * @param valueNE 东北角值 / the northeast corner value
+     * @param valueNW 西北角值 / the northwest corner value
+     * @param valueSE 东南角值 / the southeast corner value
+     * @param valueSW 西南角值 / the southwest corner value
+     * @param tNS 南北方向插值因子 / the north-south interpolation factor
+     * @param tEW 东西方向插值因子 / the east-west interpolation factor
+     * @return 双线性插值结果 / the bilinearly interpolated result
+     */
     public static float lerpGrid(float valueNE, float valueNW, float valueSE, float valueSW, float tNS, float tEW) {
         final float valueN = lerp(valueNE, valueNW, tEW);
         final float valueS = lerp(valueSE, valueSW, tEW);

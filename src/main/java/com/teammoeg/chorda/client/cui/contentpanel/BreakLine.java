@@ -26,6 +26,13 @@ import com.teammoeg.frostedresearch.gui.LineIcon;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 
+/**
+ * 分割线，用于在内容面板中添加水平分隔线。
+ * 支持实线和渐变线两种样式，可选配装饰图标。
+ * <p>
+ * Break line for adding horizontal separators in a content panel.
+ * Supports both solid and gradient line styles, with optional decorative icons.
+ */
 @Getter
 public class BreakLine extends Line<BreakLine> {
     protected boolean solid = false;

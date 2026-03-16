@@ -29,8 +29,21 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.biome.Biome;
 
+/**
+ * 文本格式化工具类，提供生物群系名称、时间、数字和单位的格式化方法。
+ * <p>
+ * Text formatting utility class providing formatting methods for biome names, time, numbers, and units.
+ */
 public class CFormatHelper {
 
+	/**
+	 * 获取生物群系的名称字符串。
+	 * <p>
+	 * Gets the name string of a biome holder.
+	 *
+	 * @param biomeHolder 生物群系持有者 / The biome holder to get the name from
+	 * @return 生物群系名称，若为null则返回"null" / The biome name, or "null" if the holder is null
+	 */
 	public static String getBiomeName(Holder<Biome> biomeHolder) {
 	    if (biomeHolder == null) {
 	        return "null";
@@ -40,6 +53,14 @@ public class CFormatHelper {
 	            unregistered -> "[unregistered " + unregistered + "]");
 	}
 
+	/**
+	 * 将秒数转换为可读的时间组件（年/天/时/分/秒）。
+	 * <p>
+	 * Converts seconds to a human-readable time component (years/days/hours/minutes/seconds).
+	 *
+	 * @param secondIn 输入的秒数 / The number of seconds to convert
+	 * @return 格式化的时间组件 / The formatted time component
+	 */
 	public static Component secToTime(long secondIn) {
 	    long years = secondIn / (365 * 24 * 60 * 60);
 	    long remainingSeconds = secondIn % (365 * 24 * 60 * 60);
@@ -63,12 +84,28 @@ public class CFormatHelper {
 	    return c;
 	}
 
+	/**
+	 * 将毫秒数转换为可读的时间组件。
+	 * <p>
+	 * Converts milliseconds to a human-readable time component.
+	 *
+	 * @param milliseconds 输入的毫秒数 / The number of milliseconds to convert
+	 * @return 格式化的时间组件 / The formatted time component
+	 */
 	public static Component msToTime(long milliseconds) {
 	    Duration duration = Duration.ofMillis(milliseconds);
 	    return secToTime(duration.getSeconds());
 	}
+	/** SI单位前缀字符串（千、兆、吉等） / SI unit prefix string (k, M, G, T, etc.) */
 	final static String units = "kMGTPEZYRQ";//6 units should satisfy
+	/** SI小数单位前缀字符串（毫、微、纳等） / SI fractional unit prefix string (m, u, n, p, etc.) */
 	final static String fractionUnits="mμnpfazyrq";
+
+	/**
+	 * 线程安全的数字格式化器集合，提供不同精度的十进制和百分比格式。
+	 * <p>
+	 * Thread-safe collection of number formatters providing decimal and percentage formats with varying precision.
+	 */
 	public static class NumberFormats{
 		private NumberFormats() {}
 		final DecimalFormat decimal1digit = new DecimalFormat("#.#");
@@ -80,10 +117,26 @@ public class CFormatHelper {
 		final DecimalFormat percentage1digit = new DecimalFormat("0.0%");
 	}
 	private static ThreadLocal<NumberFormats> numberFormat=ThreadLocal.withInitial(()->new NumberFormats());
+
+	/**
+	 * 获取当前线程的数字格式化器集合。
+	 * <p>
+	 * Gets the number formatters for the current thread.
+	 *
+	 * @return 当前线程的NumberFormats实例 / The NumberFormats instance for the current thread
+	 */
 	public static NumberFormats getNumberFormats() {
 		return numberFormat.get();
 	}
 
+	/**
+	 * 将长整数转换为带SI单位前缀的可读字符串（超过2000时升级单位）。
+	 * <p>
+	 * Converts a long number to a human-readable string with SI unit prefixes (upscales when exceeding 2000).
+	 *
+	 * @param num 要格式化的数字 / The number to format
+	 * @return 带单位前缀的可读字符串 / A readable string with unit prefix
+	 */
 	public static String toReadableUnit(long num) {
 		int unit = -1;
 		double lnum = num;
@@ -95,6 +148,16 @@ public class CFormatHelper {
 			return String.valueOf(num);
 		return toDynamicDigits(lnum) + units.charAt(unit);
 	}
+	/**
+	 * 将大数字字符串转换为带SI单位前缀的可读字符串。
+	 * 支持小数和非常大的数字，通过解析字符串中的有效数字来确定合适的单位。
+	 * <p>
+	 * Converts a big number string to a human-readable string with SI unit prefixes.
+	 * Supports decimals and very large numbers by parsing significant digits to determine the appropriate unit.
+	 *
+	 * @param bigNumber 要格式化的数字字符串 / The number string to format
+	 * @return 带单位前缀的可读字符串 / A readable string with unit prefix
+	 */
 	public static String toBigReadableUnit(String bigNumber) {
 		int index=0,exponent=0,unit=0,fractionDigits=3;
 		char[] digits=new char[3];
@@ -161,6 +224,14 @@ public class CFormatHelper {
 		System.out.println("-"+i+"="+toBigReadableUnit(num));
 		}
 	}
+	/**
+	 * 将长整数转换为适用于物品堆叠显示的可读单位字符串（超过1000时升级单位）。
+	 * <p>
+	 * Converts a long number to a readable unit string suitable for item stack display (upscales when exceeding 1000).
+	 *
+	 * @param num 要格式化的数字 / The number to format
+	 * @return 带单位前缀的可读字符串 / A readable string with unit prefix
+	 */
 	public static String toReadableItemStackUnit(long num) {
 		int unit = -1;
 		double lnum = num;
@@ -172,6 +243,14 @@ public class CFormatHelper {
 			return String.valueOf(num);
 		return getNumberFormats().decimal1digit.format(lnum) + units.charAt(unit);
 	}
+	/**
+	 * 将浮点数转换为带SI单位前缀的可读字符串，同时支持大于1和小于1的数值。
+	 * <p>
+	 * Converts a double to a human-readable string with SI unit prefixes, supporting both values greater than and less than 1.
+	 *
+	 * @param num 要格式化的数字 / The number to format
+	 * @return 带单位前缀的可读字符串 / A readable string with unit prefix
+	 */
 	public static String toReadableUnit(double num) {
 		int unit = -1;
 		double lnum = num;
@@ -192,6 +271,16 @@ public class CFormatHelper {
 			return number+units.charAt(unit);
 		}
 	}
+	/**
+	 * 根据数值大小动态选择小数位数进行格式化。
+	 * 大于等于1000时无小数位，大于等于100时1位小数，否则2位小数。
+	 * <p>
+	 * Dynamically selects decimal precision based on the value's magnitude.
+	 * No decimal for values >= 1000, 1 decimal for >= 100, otherwise 2 decimals.
+	 *
+	 * @param lnum 要格式化的数字 / The number to format
+	 * @return 格式化后的字符串 / The formatted string
+	 */
 	public static String toDynamicDigits(double lnum) {
 		NumberFormats numberFormat=getNumberFormats();
 		if (lnum >= 1000) {//4 digits, no decimal digits
@@ -204,10 +293,26 @@ public class CFormatHelper {
 			return numberFormat.decimal2digit.format(lnum);
 		}
 	}
+	/**
+	 * 将浮点数格式化为百分比字符串（保留1位小数）。
+	 * <p>
+	 * Formats a double value as a percentage string with 1 decimal place.
+	 *
+	 * @param value 要格式化的值（0.0-1.0） / The value to format (0.0-1.0)
+	 * @return 百分比字符串 / The percentage string
+	 */
 	public static String formatPercentage(double value) {
 		return getNumberFormats().percentage1digit.format(value);
 	}
 	
+	/**
+	 * 将浮点数格式化为保留1位小数的字符串。
+	 * <p>
+	 * Formats a double value as a string with 1 decimal place.
+	 *
+	 * @param value 要格式化的值 / The value to format
+	 * @return 格式化后的字符串 / The formatted string
+	 */
 	public static String formatNumber(double value) {
 		return getNumberFormats().decimal1digit.format(value);
 	}

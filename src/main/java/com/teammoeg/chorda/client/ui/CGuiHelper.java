@@ -79,7 +79,10 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- * Convenience functions for gui rendering
+ * GUI渲染的便捷工具类。提供绘制物品、文本、线条、矩形、渐变、纹理和流体等功能。
+ * <p>
+ * Convenience utility class for GUI rendering. Provides functions for drawing items, text, lines,
+ * rectangles, gradients, textures, and fluids.
  */
 public class CGuiHelper {
 	// hack to access render state protected members

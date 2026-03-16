@@ -19,7 +19,20 @@
 
 package com.teammoeg.chorda.math.noise;
 
+/**
+ * float类型的一元函数接口，接受一个float参数并返回一个float结果。
+ * <p>
+ * A unary function interface for float type, accepting a float argument and returning a float result.
+ */
 @FunctionalInterface
 public interface FloatUnaryFunction {
+    /**
+     * 对给定的float值应用此函数。
+     * <p>
+     * Applies this function to the given float value.
+     *
+     * @param f 输入值 / the input value
+     * @return 函数结果 / the function result
+     */
     float applyAsFloat(float f);
 }

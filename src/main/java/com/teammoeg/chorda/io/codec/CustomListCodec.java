@@ -29,9 +29,26 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.ListBuilder;
 
+/**
+ * 自定义列表编解码器。允许使用自定义的集合工厂来创建集合实例，而非默认的List。
+ * <p>
+ * Custom list codec. Allows using a custom collection factory to create collection instances
+ * instead of the default List.
+ *
+ * @param <A> 集合元素的类型 / the type of collection elements
+ * @param <L> 集合的类型 / the type of the collection
+ */
 public class CustomListCodec<A,L extends Collection<A>> implements Codec<L> {
     private final Codec<A> elementCodec;
     private final Supplier<L> factory;
+    /**
+     * 构造一个自定义列表编解码器。
+     * <p>
+     * Constructs a custom list codec.
+     *
+     * @param elementCodec 元素的编解码器 / the codec for elements
+     * @param factory 集合实例的工厂 / the factory for collection instances
+     */
     public CustomListCodec(final Codec<A> elementCodec,Supplier<L> factory) {
         this.elementCodec = elementCodec;
         this.factory=factory;

@@ -34,6 +34,16 @@ import com.teammoeg.chorda.util.CFunctionUtils;
 import net.minecraft.network.chat.Component;
 
 
+/**
+ * 点击后打开编辑器的按钮控件，显示当前值的文本和图标。
+ * 支持自定义图标和文本的动态更新函数，编辑完成后自动刷新显示。
+ * <p>
+ * Button widget that opens an editor on click, displaying the current value's
+ * text and icon. Supports custom dynamic icon and text update functions, and
+ * automatically refreshes the display after editing completes.
+ *
+ * @param <T> 被编辑的值类型 / The type of value being edited
+ */
 public class OpenEditorButton<T> extends TextButton {
     private final Editor<T> edi;
     private T val;

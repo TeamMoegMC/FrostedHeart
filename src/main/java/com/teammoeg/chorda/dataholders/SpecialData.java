@@ -19,5 +19,10 @@
 
 package com.teammoeg.chorda.dataholders;
 
+/**
+ * 特殊数据的标记接口。所有需要附加到数据持有者上的数据组件都应实现此接口。
+ * <p>
+ * Marker interface for special data. All data components that need to be attached to data holders should implement this interface.
+ */
 public interface SpecialData {
 }

@@ -22,11 +22,15 @@ package com.teammoeg.chorda.dataholders.team;
 import java.util.UUID;
 
 /**
- * Synced client data manager.
+ * 客户端同步的团队数据管理器。维护一个客户端侧的 {@link TeamDataHolder} 实例，
+ * 用于接收和存储从服务器同步过来的团队数据。
+ * <p>
+ * Client-side synced team data manager. Maintains a client-side {@link TeamDataHolder} instance
+ * for receiving and storing team data synchronized from the server.
  */
 public class CClientTeamDataManager {
 	
-	/** The instance. */
+	/** 单例实例。 / The singleton instance. */
 	public static CClientTeamDataManager INSTANCE=new CClientTeamDataManager();
 	
 	private TeamDataHolder holder=new TeamDataHolder(UUID.randomUUID(),new ClientTeam());
@@ -34,16 +38,20 @@ public class CClientTeamDataManager {
 	}
 	
 	/**
-	 * Reset all data for client.
+	 * 重置客户端的所有团队数据，创建一个新的空数据持有者。
+	 * <p>
+	 * Resets all team data on the client, creating a new empty data holder.
 	 */
 	public void reset() {
 		holder=new TeamDataHolder(UUID.randomUUID(),new ClientTeam());
 	}
 	
 	/**
-	 * Gets the single instance of CClientTeamDataManager.
+	 * 获取客户端团队数据持有者实例。
+	 * <p>
+	 * Gets the client team data holder instance.
 	 *
-	 * @return single instance of CClientTeamDataManager
+	 * @return 客户端团队数据持有者 / the client team data holder
 	 */
 	public TeamDataHolder getInstance() {
 		return holder;

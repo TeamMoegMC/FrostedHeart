@@ -27,18 +27,56 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapCodec;
 
+/**
+ * 基于类型键的分派编解码器。根据"type"字段的值选择不同的MapCodec进行编解码。
+ * <p>
+ * A dispatch codec based on a type key. Selects different MapCodecs for encoding/decoding
+ * based on the value of the "type" field.
+ *
+ * @param typeKey 类型键的字段名 / the field name of the type key
+ * @param keyCodec 类型键值的编解码器 / the codec for type key values
+ * @param forType 从对象获取类型键的函数 / the function to get the type key from an object
+ * @param forCodec 从类型键获取MapCodec的函数 / the function to get a MapCodec from a type key
+ * @param <A> 编解码器处理的类型 / the type handled by the codec
+ * @param <K> 类型键的类型 / the type of the type key
+ */
 public record KeyMapCodec<A, K>(String typeKey,Codec<K> keyCodec, Function<A, K> forType, Function<K, MapCodec<A>> forCodec) implements Codec<A> {
 
 
+	/**
+	 * 使用默认类型键"type"构造分派编解码器。
+	 * <p>
+	 * Constructs a dispatch codec using the default type key "type".
+	 *
+	 * @param keyCodec 类型键值的编解码器 / the codec for type key values
+	 * @param forType 从对象获取类型键的函数 / the function to get the type key from an object
+	 * @param forCodec 从类型键获取MapCodec的函数 / the function to get a MapCodec from a type key
+	 */
 	public KeyMapCodec(Codec<K> keyCodec,Function<A, K> forType, Function<K, MapCodec<A>> forCodec) {
 		this("type",keyCodec, forType, forCodec);
 	}
+	/**
+	 * 根据类型键获取对应的MapCodec。
+	 * <p>
+	 * Gets the corresponding MapCodec for the given type key.
+	 *
+	 * @param type 类型键值 / the type key value
+	 * @return 包含MapCodec的DataResult / DataResult containing the MapCodec
+	 */
 	public DataResult<MapCodec<A>> getCodec(K type){
 		MapCodec<A> codec = forCodec.apply(type);
 		if (codec == null)
 			return DataResult.error(() -> "Cannot find valid codec for type " + type);
 		return DataResult.success(codec);
 	}
+	/**
+	 * 获取对象的类型键。
+	 * <p>
+	 * Gets the type key for an object.
+	 *
+	 * @param input 输入对象 / the input object
+	 * @return 包含类型键的DataResult / DataResult containing the type key
+	 */
 	public DataResult<K> getType(A input){
 		K type = forType.apply(input);
 		if (type == null)

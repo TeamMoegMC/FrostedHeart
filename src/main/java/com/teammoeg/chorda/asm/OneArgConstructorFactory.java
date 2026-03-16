@@ -28,15 +28,34 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 /**
- * A magic code for accessing one-arg constructor reflectively but with significant higher performance(about 10x-100x)
- * 
- * */
+ * 单参数构造函数工厂。通过 ASM 动态生成实现 {@link Function} 接口的类，
+ * 以高性能方式调用目标类的单参数构造函数（比传统反射快 10-100 倍）。
+ * <p>
+ * One-argument constructor factory. Dynamically generates classes implementing
+ * {@link Function} via ASM to invoke a target class's one-arg constructor
+ * with high performance (10-100x faster than traditional reflection).
+ *
+ * @param <T> 构造函数参数类型 / the constructor parameter type
+ * @param <R> 构造函数返回类型 / the constructor return type
+ */
 public class OneArgConstructorFactory<T, R> extends AbstractConstructorFactory {
 	private final Class<T> clazz;
 	private final Type inType;
 	private static final String READ_ACCESSOR_DESC = Type.getInternalName(Function.class);
 	private static final String READ_ACCESSOR_READ_METHOD_DESC = Type.getMethodDescriptor(Type.getType(Object.class), Type.getType(Object.class));
 
+	/**
+	 * 为指定类创建一个 {@link Function}，该 Function 通过 invokedynamic 调用其单参数构造函数。
+	 * <p>
+	 * Creates a {@link Function} for the specified class that invokes its one-arg
+	 * constructor via invokedynamic.
+	 *
+	 * @param clazz 目标类 / the target class
+	 * @param <AT>  目标类型（必须是 R 的子类型） / the target type (must extend R)
+	 * @return 调用单参数构造函数的 Function / a Function that invokes the one-arg constructor
+	 * @throws InvocationTargetException 如果构造函数不可访问 / if the constructor is inaccessible
+	 * @throws NoSuchMethodException     如果匹配的构造函数不存在 / if no matching constructor exists
+	 */
 	public <AT extends R> Function<T, AT> create(Class<AT> clazz) throws InvocationTargetException, NoSuchMethodException {
 		try {// check if corresponding constructor exists
 			clazz.getDeclaredConstructor(this.clazz);
@@ -54,6 +73,13 @@ public class OneArgConstructorFactory<T, R> extends AbstractConstructorFactory {
 		}
 	}
 
+	/**
+	 * 创建一个单参数构造函数工厂。
+	 * <p>
+	 * Creates a one-argument constructor factory.
+	 *
+	 * @param inType 构造函数参数的类型 / the type of the constructor parameter
+	 */
 	public OneArgConstructorFactory(Class<T> inType) {
 		super();
 		this.clazz = inType;
@@ -61,6 +87,14 @@ public class OneArgConstructorFactory<T, R> extends AbstractConstructorFactory {
 	}
 
 
+	/**
+	 * 生成实现 {@link Function} 接口的类的字节码。
+	 * 生成的 {@code apply()} 方法通过 invokedynamic 调用目标类的单参数构造函数。
+	 * <p>
+	 * Generates bytecode for a class implementing the {@link Function} interface.
+	 * The generated {@code apply()} method invokes the target class's one-arg constructor
+	 * via invokedynamic.
+	 */
 	@Override
 	protected void transformNode(String name, Class<?> retType, ClassNode target) {
 		MethodVisitor mv;

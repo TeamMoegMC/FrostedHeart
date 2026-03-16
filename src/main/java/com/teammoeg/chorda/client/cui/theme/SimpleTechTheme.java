@@ -2,11 +2,24 @@ package com.teammoeg.chorda.client.cui.theme;
 
 import net.minecraft.client.gui.GuiGraphics;
 
+/**
+ * 简约科技风格主题。使用线框矩形和青色调配色，呈现简洁的科技感UI风格。
+ * <p>
+ * Simple tech style theme. Uses wireframe rectangles and cyan-toned colors to present a clean tech UI style.
+ */
 public class SimpleTechTheme implements Theme{
+	/** 单例实例 / Singleton instance */
 	public static final SimpleTechTheme INSTANCE=new SimpleTechTheme();
+
+	/**
+	 * 受保护的构造函数，使用{@link #INSTANCE}获取实例。
+	 * <p>
+	 * Protected constructor, use {@link #INSTANCE} to get the instance.
+	 */
 	protected SimpleTechTheme() {
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public void drawButton(GuiGraphics graphics, int x, int y, int w, int h, boolean isHighlight, boolean enabled) {
 		int color=0xffe4eff0;
@@ -43,6 +56,18 @@ public class SimpleTechTheme implements Theme{
 	public void drawSlot(GuiGraphics graphics, int x, int y, int w, int h) {
 		drawRect(graphics,x,y,w,h, 0xffe4eff0);
 	}
+	/**
+	 * 绘制线框矩形。
+	 * <p>
+	 * Draws a wireframe rectangle.
+	 *
+	 * @param graphics 图形上下文 / the graphics context
+	 * @param x X坐标 / the x position
+	 * @param y Y坐标 / the y position
+	 * @param w 宽度 / the width
+	 * @param h 高度 / the height
+	 * @param color 颜色值 / the color value
+	 */
 	protected void drawRect(GuiGraphics graphics, int x, int y, int w, int h,int color) {
 		graphics.hLine(x, x+w, y, color);
 		graphics.hLine(x, x+w, y+h, color);

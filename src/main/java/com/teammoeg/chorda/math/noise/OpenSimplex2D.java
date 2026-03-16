@@ -19,6 +19,11 @@
 
 package com.teammoeg.chorda.math.noise;
 
+/**
+ * OpenSimplex二维噪声实现，相比经典Perlin噪声具有更少的方向性伪影。
+ * <p>
+ * OpenSimplex 2D noise implementation with fewer directional artifacts compared to classic Perlin noise.
+ */
 public class OpenSimplex2D implements INoise2D {
     private static final float SQRT3 = (float) 1.7320508075688772935274463415059;
     private static final float F2 = 0.5f * (SQRT3 - 1);
@@ -26,6 +31,13 @@ public class OpenSimplex2D implements INoise2D {
 
     private final int seed;
 
+    /**
+     * 使用指定种子构造二维OpenSimplex噪声。
+     * <p>
+     * Constructs a 2D OpenSimplex noise with the specified seed.
+     *
+     * @param seed 随机种子 / the random seed
+     */
     public OpenSimplex2D(long seed) {
         this.seed = (int) seed;
     }

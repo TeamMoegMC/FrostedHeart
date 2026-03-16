@@ -22,6 +22,13 @@ package com.teammoeg.chorda.math.evaluator;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 乘除法项节点，维护乘项和除项两个列表来表示多项乘除运算。
+ * 化简时会合并嵌套的TermNode并折叠常量因子。
+ * <p>
+ * Multiplication/division term node maintaining multiply and divide term lists to represent
+ * multi-factor multiplication/division. Simplification merges nested TermNodes and folds constant factors.
+ */
 class TermNode implements Node {
     List<Node> positive = new ArrayList<>();
     List<Node> negative = new ArrayList<>();
@@ -32,6 +39,15 @@ class TermNode implements Node {
         super();
     }
 
+    /**
+     * 构造一个包含两个因子的项节点。
+     * <p>
+     * Constructs a term node with two factors.
+     *
+     * @param type 如果为true则两个因子都为乘项，否则第二个为除项 / if true both factors are multipliers, otherwise the second is a divisor
+     * @param pos 第一个操作数 / the first operand
+     * @param pos2 第二个操作数 / the second operand
+     */
     public TermNode(boolean type, Node pos, Node pos2) {
         if (type) {
             positive.add(pos);

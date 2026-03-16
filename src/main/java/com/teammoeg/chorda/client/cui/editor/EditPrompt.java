@@ -33,10 +33,28 @@ import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.network.chat.Component;
 
+/**
+ * 文本输入提示对话框，提供单行文本输入框配合确认/取消按钮。
+ * 支持可选的文本验证器。
+ * <p>
+ * Text input prompt dialog providing a single-line text input field with
+ * confirm/cancel buttons. Supports an optional text verifier.
+ */
 public class EditPrompt extends BaseEditDialog {
     LabeledTextBox box;
     Button ok;
     Button cancel;
+    /**
+     * 创建一个文本输入提示对话框。
+     * <p>
+     * Creates a text input prompt dialog.
+     *
+     * @param panel      父UI元素 / the parent UI element
+     * @param label      输入框标签 / the input label
+     * @param val        初始文本值 / the initial text value
+     * @param onFinished 确认回调 / the confirm callback
+     * @param verifier   文本验证器，可为null / the text verifier, may be null
+     */
     public EditPrompt(UIElement panel, Component label, String val, Consumer<String> onFinished,Verifier<String> verifier) {
         super(panel);
         box = new LabeledTextBox(this, label, val,verifier);
@@ -65,9 +83,30 @@ public class EditPrompt extends BaseEditDialog {
         ok.setSize(300, 20);
     }
 
+    /**
+     * 打开一个无验证器的文本输入提示对话框。
+     * <p>
+     * Opens a text input prompt dialog without a verifier.
+     *
+     * @param p 父UI元素 / the parent UI element
+     * @param l 标签 / the label
+     * @param v 初始值 / the initial value
+     * @param f 确认回调 / the confirm callback
+     */
     public static void open(UIElement p, Component l, String v, Consumer<String> f) {
         new EditPrompt(p, l, v, f,null).open();
     }
+    /**
+     * 打开一个带验证器的文本输入提示对话框。
+     * <p>
+     * Opens a text input prompt dialog with a verifier.
+     *
+     * @param p     父UI元素 / the parent UI element
+     * @param l     标签 / the label
+     * @param v     初始值 / the initial value
+     * @param f     确认回调 / the confirm callback
+     * @param verif 文本验证器 / the text verifier
+     */
     public static void open(UIElement p, Component l, String v, Consumer<String> f,Verifier<String> verif) {
         new EditPrompt(p, l, v, f,verif).open();
     }

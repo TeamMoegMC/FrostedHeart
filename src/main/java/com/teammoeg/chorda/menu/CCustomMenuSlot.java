@@ -42,10 +42,20 @@ import net.minecraft.world.inventory.DataSlot;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.ModLoader;
 /**
- * a utility class for menu data sync and type conversion
- * 
- * */
+ * 菜单数据同步和类型转换的工具类。提供多种数据槽类型用于在服务端和客户端之间
+ * 同步各种类型的数据（整数、布尔、浮点、流体、文本组件等）。
+ * <p>
+ * Utility class for menu data synchronization and type conversion. Provides
+ * multiple data slot types for synchronizing various data types between server
+ * and client (integers, booleans, floats, fluids, text components, etc.).
+ */
 public class CCustomMenuSlot {
+	/**
+	 * 网络编码器注册表。管理各种数据类型的网络序列化和反序列化。
+	 * <p>
+	 * Network encoder registry. Manages network serialization and deserialization
+	 * for various data types.
+	 */
 	public static class Encoders{
 		private static final IdRegistry<NetworkEncoder<?>> encoders=new IdRegistry<>();
 		static final NetworkEncoder<FluidStack> fluidEncoder=encoders.register(new NetworkEncoder<>() {
@@ -107,6 +117,15 @@ public class CCustomMenuSlot {
 		}
 	}
 	
+	/**
+	 * 单值数据槽转换器。将数据类型与单个 int 值互相转换，
+	 * 适用于可以压缩为一个整数的简单数据。
+	 * <p>
+	 * Single-value data slot converter. Converts between a data type and
+	 * a single int value, suitable for simple data compressible to one integer.
+	 *
+	 * @param <A> 数据类型 / the data type
+	 */
 	public static interface DataSlotConverter<A> extends IntFunction<A>{
 		int apply(A a);
 		A getDefault();
@@ -114,10 +133,26 @@ public class CCustomMenuSlot {
 			return CCustomMenuSlot.create(container,this);
 		}
 	}
+	/**
+	 * 网络编码器接口。定义数据的网络读写协议。
+	 * <p>
+	 * Network encoder interface. Defines the network read/write protocol for data.
+	 *
+	 * @param <T> 数据类型 / the data type
+	 */
 	public static interface NetworkEncoder<T>{
 		public T read(FriendlyByteBuf network);
 		public void write(FriendlyByteBuf network, T data);
 	};
+	/**
+	 * 复杂数据槽编码器。用于无法压缩为 int 的复杂数据类型（如流体、文本等），
+	 * 通过自定义网络协议进行同步。
+	 * <p>
+	 * Complex data slot encoder. For complex data types that cannot be compressed
+	 * to int (e.g., fluids, text), synchronized via custom network protocol.
+	 *
+	 * @param <A> 数据类型 / the data type
+	 */
 	public static interface OtherDataSlotEncoder<A>{
 		NetworkEncoder<A> getEncoder();
 		A copy(A data);
@@ -129,6 +164,16 @@ public class CCustomMenuSlot {
 			return CCustomMenuSlot.create(container,this);
 		}
 	}
+	/**
+	 * 多值数据槽转换器。将数据类型与多个 int 值互相转换，
+	 * 适用于需要多个整数才能表示的数据（如 long、BlockPos 等）。
+	 * <p>
+	 * Multiple-value data slot converter. Converts between a data type and
+	 * multiple int values, for data requiring multiple integers to represent
+	 * (e.g., long, BlockPos).
+	 *
+	 * @param <A> 数据类型 / the data type
+	 */
 	public static interface MultipleDataSlotConverter<A>{
 		void encode(A a,int[] values);
 		A decode(int[] values);
@@ -141,6 +186,13 @@ public class CCustomMenuSlot {
 			return CCustomMenuSlot.create(container,this);
 		}
 	}
+	/**
+	 * 自定义数据槽接口。支持值的获取、设置和双向绑定。
+	 * <p>
+	 * Custom data slot interface. Supports getting, setting, and bidirectional binding of values.
+	 *
+	 * @param <T> 数据类型 / the data type
+	 */
 	public interface CDataSlot<T>{
 		T getValue();
 		

@@ -33,9 +33,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * UI Layer, contains elements as well as manage them
- * 
- * */
+ * UI层，包含并管理一组子UI元素。
+ * 提供元素的添加、布局对齐（线性/流式）、滚动（含平滑滚动）、裁剪、
+ * 输入事件分发和内容尺寸计算等功能。是CUI框架中面板和容器类的基础。
+ * <p>
+ * UI layer that contains and manages a collection of child UI elements.
+ * Provides element addition, layout alignment (linear/flow), scrolling (including
+ * smooth scrolling), scissoring, input event dispatching, and content size calculation.
+ * Serves as the foundation for panels and containers in the CUI framework.
+ */
 public abstract class UILayer extends UIElement {
 	
 	@Getter

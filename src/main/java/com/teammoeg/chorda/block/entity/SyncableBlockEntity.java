@@ -19,6 +19,17 @@
 
 package com.teammoeg.chorda.block.entity;
 
+/**
+ * 可同步的方块实体接口，提供客户端-服务器数据同步能力。
+ * <p>
+ * Interface for syncable block entities, providing client-server data synchronization capability.
+ */
 public interface SyncableBlockEntity {
+
+	/**
+	 * 将方块实体数据同步到客户端。
+	 * <p>
+	 * Synchronizes the block entity data to clients.
+	 */
 	void syncData();
 }

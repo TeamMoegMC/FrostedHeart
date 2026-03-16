@@ -22,6 +22,11 @@ package com.teammoeg.chorda.math;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 矩形约束的二维空间实现，位置被限制在指定的矩形边界内。
+ * <p>
+ * A rectangular-constrained 2D space implementation where the position is confined within specified rectangular bounds.
+ */
 public class SquareDimension implements Dimension2D {
 	@Getter
 	@Setter
@@ -63,6 +68,16 @@ public class SquareDimension implements Dimension2D {
 		this.setPos(this.x+x, this.y+y);
 	}
 
+	/**
+	 * 构造一个指定边界的矩形约束空间。
+	 * <p>
+	 * Constructs a rectangular constraint space with the specified bounds.
+	 *
+	 * @param boundsX1 X最小边界 / the minimum X boundary
+	 * @param boundsY1 Y最小边界 / the minimum Y boundary
+	 * @param boundsX2 X最大边界 / the maximum X boundary
+	 * @param boundsY2 Y最大边界 / the maximum Y boundary
+	 */
 	public SquareDimension(int boundsX1, int boundsY1, int boundsX2, int boundsY2) {
 		super();
 		this.boundsX1 = boundsX1;

@@ -21,9 +21,22 @@ package com.teammoeg.chorda.math.evaluator;
 
 import java.util.Map;
 
+/**
+ * 只读的常量变量环境，变量值在构造时固定，不支持修改。
+ * <p>
+ * A read-only constant variable environment where variable values are fixed at construction time
+ * and cannot be modified.
+ */
 public class ConstantEnvironment implements IEnvironment {
     Map<String, Double> map;
 
+    /**
+     * 使用指定的变量映射构造常量环境。
+     * <p>
+     * Constructs a constant environment with the specified variable map.
+     *
+     * @param map 变量名到值的映射 / the variable name to value map
+     */
     public ConstantEnvironment(Map<String, Double> map) {
         super();
         this.map = map;

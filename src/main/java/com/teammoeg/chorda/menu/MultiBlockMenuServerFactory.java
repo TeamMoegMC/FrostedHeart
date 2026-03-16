@@ -24,6 +24,15 @@ import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenu
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
+/**
+ * 多方块菜单的服务端工厂接口。用于在服务端创建带有多方块上下文的菜单实例。
+ * <p>
+ * Server-side factory interface for multiblock menus. Used to create menu instances
+ * with multiblock context on the server side.
+ *
+ * @param <T> 多方块状态类型 / the multiblock state type
+ * @param <C> 菜单类型 / the menu type
+ */
 @FunctionalInterface
 public interface MultiBlockMenuServerFactory<T extends IMultiblockState,C extends AbstractContainerMenu>
 {

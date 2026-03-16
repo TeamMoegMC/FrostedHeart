@@ -21,15 +21,28 @@ package com.teammoeg.chorda.util.struct;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-/** 
- * Wraper to wrap a single function to an iterator
- * */
+/**
+ * 结果缓存迭代器，将单个生成函数包装为Iterator接口。
+ * 子类实现{@link #internalNext()}提供下一个元素，返回null表示结束。
+ * <p>
+ * Result-caching iterator that wraps a single generator function into an Iterator interface.
+ * Subclasses implement {@link #internalNext()} to provide the next element, returning null to indicate end.
+ *
+ * @param <E> 元素类型 / the element type
+ */
 public abstract class ResultCacheIterator<E> implements Iterator<E> {
 	E cached;
 	boolean hasCached;
 	boolean isEnded;
 	public ResultCacheIterator() {
 	}
+	/**
+	 * 内部获取下一个元素。返回null表示迭代结束。
+	 * <p>
+	 * Internally get the next element. Return null to indicate end of iteration.
+	 *
+	 * @return 下一个元素，或null表示结束 / the next element, or null to indicate end
+	 */
 	protected abstract E internalNext() ;
 	
 	@Override

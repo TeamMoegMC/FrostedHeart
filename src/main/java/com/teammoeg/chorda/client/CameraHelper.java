@@ -33,6 +33,16 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * 摄像机辅助工具类，提供世界坐标到屏幕坐标的投影转换以及视锥体可见性检测。
+ * 在每帧渲染时缓存投影矩阵、姿态栈、视锥体和摄像机实例，
+ * 供HUD和世界标记等功能将3D世界坐标映射到2D屏幕位置。
+ * <p>
+ * Camera helper utility providing world-to-screen coordinate projection and frustum
+ * visibility checks. Caches the projection matrix, pose stack, frustum, and camera
+ * instance each render frame, allowing HUD and world markers to map 3D world
+ * coordinates to 2D screen positions.
+ */
 public class CameraHelper {
     public static Matrix4f projectionMatrix;
     public static PoseStack poseStack;
@@ -40,8 +50,13 @@ public class CameraHelper {
     public static Camera camera;
 
     /**
-     * 获取一个世界坐标显示在屏幕中的坐标
-     * @param worldPos 世界坐标
+     * 获取一个世界坐标显示在屏幕中的坐标。当坐标不在视锥体内时，会映射到屏幕边缘。
+     * <p>
+     * Converts a world position to screen coordinates. When the position is outside
+     * the camera frustum, it is mapped to the screen edge.
+     *
+     * @param worldPos 世界坐标 / World position to project
+     * @return 屏幕坐标 / Screen coordinates
      */
     public static Vec2 worldPosToScreenPos(Vec3 worldPos) {
         if (projectionMatrix == null) return Vec2.ZERO;
@@ -76,8 +91,12 @@ public class CameraHelper {
     }
 
     /**
-     * 检查一个坐标是否在视野中
-     * @param pos 世界坐标
+     * 检查一个世界坐标是否在摄像机视锥体（视野）内。
+     * <p>
+     * Checks whether a world position is within the camera frustum (field of view).
+     *
+     * @param pos 世界坐标 / World position to check
+     * @return 如果在视野内返回true / True if the position is visible
      */
     public static boolean isPosInFrustum(Vec3 pos) {
         if (frustum == null) return false;
