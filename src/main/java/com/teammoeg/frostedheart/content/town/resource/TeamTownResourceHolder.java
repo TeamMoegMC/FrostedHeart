@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.SimpleItemKey;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -50,7 +51,9 @@ public class TeamTownResourceHolder {
      */
     //private Map<ItemStackResourceKey, Double> itemResources = new HashMap<>();
     //private Map<VirtualResourceAttribute, Double> virtualResources = new HashMap<>();
-    private final Map<ITownResourceKey, Double> resources = new HashMap<>();
+            //使用Object2DoubleOpenHashMap改进性能
+    private final Object2DoubleOpenHashMap<ITownResourceKey> resources
+            = new Object2DoubleOpenHashMap<>();
 
     public final TeamTownResourceActionExecutorHandler actionExecutor = new TeamTownResourceActionExecutorHandler(this);
 
