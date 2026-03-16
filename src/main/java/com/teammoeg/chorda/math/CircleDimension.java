@@ -21,6 +21,11 @@ package com.teammoeg.chorda.math;
 
 import lombok.Getter;
 
+/**
+ * 圆形约束的二维空间实现，位置被限制在指定半径的圆内。
+ * <p>
+ * A circular-constrained 2D space implementation where the position is confined within a circle of the specified radius.
+ */
 public class CircleDimension implements Dimension2D {
 	@Getter
 	float radius;
@@ -30,11 +35,25 @@ public class CircleDimension implements Dimension2D {
 	@Getter
 	float y;
 	private static final float EDGE_THRESOLD=.2f;
+	/**
+	 * 构造一个指定半径的圆形约束空间。
+	 * <p>
+	 * Constructs a circular constraint space with the specified radius.
+	 *
+	 * @param radius 圆的半径 / the radius of the circle
+	 */
 	public CircleDimension(float radius) {
 		super();
 		this.setRadius(radius);
 	}
 
+	/**
+	 * 设置圆的半径并更新半径的平方缓存。
+	 * <p>
+	 * Sets the radius of the circle and updates the squared radius cache.
+	 *
+	 * @param radius 新的半径 / the new radius
+	 */
 	public void setRadius(float radius) {
 		this.radius=radius;
 		this.radiusSquared=radius*radius;

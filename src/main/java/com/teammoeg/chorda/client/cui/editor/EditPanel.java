@@ -19,6 +19,11 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+/**
+ * 编辑面板接口，提供对EditorManager的访问。
+ * <p>
+ * Edit panel interface providing access to the EditorManager.
+ */
 public interface EditPanel {
 	public EditorManager getManager();
 }

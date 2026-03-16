@@ -38,8 +38,15 @@ import org.joml.Quaternionf;
 import java.util.function.Function;
 
 /**
- * Rendering not related client functions, used for get/set client data, spawning particles
- * */
+ * 客户端通用工具类，提供与渲染无关的客户端数据访问和粒子生成功能。
+ * 包括获取玩家、世界、Minecraft实例等快捷方法，以及火焰、烟雾等粒子效果的生成，
+ * 屏幕尺寸查询和剪贴板操作等。
+ * <p>
+ * General client utility class providing non-rendering client data access and particle
+ * spawning. Includes shortcuts for getting the player, world, and Minecraft instance,
+ * as well as fire and smoke particle spawning, screen dimension queries, and clipboard
+ * operations.
+ */
 public class ClientUtils {
     public static float OverwriteGammaValue;
     public static boolean DoApplyGammaValue;

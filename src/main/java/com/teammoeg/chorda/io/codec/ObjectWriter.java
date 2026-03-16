@@ -31,7 +31,19 @@ import com.teammoeg.chorda.io.SerializeUtil;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.FriendlyByteBuf;
 
+/**
+ * 通用对象读写器。将Java原生对象（Number、String、Map、List等）序列化到FriendlyByteBuf，并支持反序列化。
+ * 使用类型标记字节来区分不同的数据类型。
+ * <p>
+ * General-purpose object reader/writer. Serializes native Java objects (Number, String, Map, List, etc.)
+ * to FriendlyByteBuf with deserialization support. Uses type tag bytes to distinguish different data types.
+ */
 public class ObjectWriter {
+	/**
+	 * 带类型标记的值封装。
+	 * <p>
+	 * Value wrapper with a type tag.
+	 */
 	private static class TypedValue{
 		int type;
 		Object value;
@@ -48,6 +60,14 @@ public class ObjectWriter {
 	}
 	public ObjectWriter() {
 	}
+	/**
+	 * 获取对象的类型标记和值。
+	 * <p>
+	 * Gets the type tag and value for an object.
+	 *
+	 * @param input 输入对象 / the input object
+	 * @return 带类型标记的值 / the typed value
+	 */
 	public static TypedValue getTyped(Object input) {
 		if(input instanceof Byte) {
 			return new TypedValue(1,input);
@@ -86,6 +106,14 @@ public class ObjectWriter {
 			return new TypedValue(0,input);
 		}
 	}
+	/**
+	 * 将带类型标记的值写入缓冲区。
+	 * <p>
+	 * Writes a typed value to the buffer.
+	 *
+	 * @param pb 包缓冲区 / the packet buffer
+	 * @param input 带类型标记的值 / the typed value
+	 */
 	public static void writeTyped(FriendlyByteBuf pb,TypedValue input) {
 		switch(input.type) {
 		case 1:pb.writeByte((Byte)input.value);break;
@@ -122,6 +150,15 @@ public class ObjectWriter {
 		}break;
 		}
 	}
+    /**
+     * 根据类型标记从缓冲区读取对象。
+     * <p>
+     * Reads an object from the buffer based on the type tag.
+     *
+     * @param type 类型标记 / the type tag
+     * @param pb 包缓冲区 / the packet buffer
+     * @return 读取的对象 / the read object
+     */
     public static Object readWithType(int type,FriendlyByteBuf pb) {
     	switch(type) {
     	case 1:return pb.readByte();
@@ -160,11 +197,27 @@ public class ObjectWriter {
     	}
     	return DataOps.NULLTAG;
     }
+    /**
+     * 将对象写入缓冲区，自动附加类型标记。
+     * <p>
+     * Writes an object to the buffer with an automatic type tag prefix.
+     *
+     * @param pb 包缓冲区 / the packet buffer
+     * @param input 要写入的对象 / the object to write
+     */
     public static void writeObject(FriendlyByteBuf pb,Object input) {
     	TypedValue value=getTyped(input);
     	pb.writeByte(value.type);
     	writeTyped(pb,value);
     }
+    /**
+     * 从缓冲区读取对象，自动读取类型标记并解析。
+     * <p>
+     * Reads an object from the buffer, automatically reading the type tag and parsing accordingly.
+     *
+     * @param pb 包缓冲区 / the packet buffer
+     * @return 读取的对象 / the read object
+     */
     public static Object readObject(FriendlyByteBuf pb) {
     	return readWithType(pb.readByte(),pb);
     }

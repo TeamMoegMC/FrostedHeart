@@ -23,6 +23,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.DoubleBinaryOperator;
 
+/**
+ * 二元算术运算节点，使用{@link DoubleBinaryOperator}执行运算。
+ * 支持加减乘除、安全除法、幂运算和取模运算。
+ * <p>
+ * Binary arithmetic operation node that uses {@link DoubleBinaryOperator} for computation.
+ * Supports addition, subtraction, multiplication, division, safe division, power, and modulo operations.
+ */
 class BiCalcNode extends BiNode {
     public static Map<DoubleBinaryOperator, String> toStr = new HashMap<>();
     public static DoubleBinaryOperator add = Double::sum;
@@ -44,6 +51,15 @@ class BiCalcNode extends BiNode {
 
     DoubleBinaryOperator calc;
 
+    /**
+     * 构造一个二元算术运算节点。
+     * <p>
+     * Constructs a binary arithmetic operation node.
+     *
+     * @param left 左操作数节点 / the left operand node
+     * @param right 右操作数节点 / the right operand node
+     * @param calc 二元运算操作 / the binary operation
+     */
     public BiCalcNode(Node left, Node right, DoubleBinaryOperator calc) {
         super(left, right);
         this.calc = calc;

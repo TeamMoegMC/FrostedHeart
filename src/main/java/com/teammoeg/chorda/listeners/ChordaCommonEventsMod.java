@@ -26,8 +26,22 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegisterEvent;
 
+/**
+ * Chorda通用模组总线事件监听器，处理注册事件。
+ * 在菜单类型注册时初始化自定义菜单槽位。
+ * <p>
+ * Chorda common mod bus event listener handling registration events.
+ * Initializes custom menu slots during menu type registration.
+ */
 @Mod.EventBusSubscriber(modid = Chorda.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ChordaCommonEventsMod {
+	/**
+	 * 在注册事件中初始化自定义菜单槽位编码器。
+	 * <p>
+	 * Initializes custom menu slot encoders during the register event.
+	 *
+	 * @param event 注册事件 / The register event
+	 */
 	@SubscribeEvent
 	public static void registerIngredient(RegisterEvent event) {
 		if (event.getRegistryKey().equals(ForgeRegistries.Keys.MENU_TYPES)) {

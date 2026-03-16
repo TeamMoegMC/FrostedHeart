@@ -19,9 +19,21 @@
 
 package com.teammoeg.chorda.math.evaluator;
 
+/**
+ * 常量节点，表示表达式树中的一个固定数值。
+ * <p>
+ * Constant node representing a fixed numeric value in the expression tree.
+ */
 class ConstNode implements Node {
     double val;
 
+    /**
+     * 构造一个常量节点。
+     * <p>
+     * Constructs a constant node.
+     *
+     * @param val 常量值 / the constant value
+     */
     public ConstNode(double val) {
         this.val = val;
     }

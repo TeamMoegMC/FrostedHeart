@@ -32,9 +32,23 @@ import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.Lifecycle;
 import com.mojang.serialization.ListBuilder;
 
+/**
+ * 流编解码器。将Stream编码为列表，并将列表解码为Stream。
+ * <p>
+ * Stream codec. Encodes a Stream as a list, and decodes a list back into a Stream.
+ *
+ * @param <A> 流元素的类型 / the type of stream elements
+ */
 public final class StreamCodec<A> implements Codec<Stream<A>> {
     private final Codec<A> elementCodec;
 
+    /**
+     * 构造一个流编解码器。
+     * <p>
+     * Constructs a stream codec.
+     *
+     * @param elementCodec 元素的编解码器 / the codec for elements
+     */
     public StreamCodec(final Codec<A> elementCodec) {
         this.elementCodec = elementCodec;
     }

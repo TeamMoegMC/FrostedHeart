@@ -20,7 +20,9 @@
 package com.teammoeg.chorda.math.noise;
 
 /**
- * Important to note: all distances are concerning square distances!
+ * 细胞噪声（Worley噪声）的返回值类型枚举。注意：所有距离均为平方距离。
+ * <p>
+ * Return value type enumeration for cellular noise (Worley noise). Note: all distances are squared distances.
  */
 public enum CellularNoiseType {
     VALUE,
@@ -32,6 +34,16 @@ public enum CellularNoiseType {
     DISTANCE_QUOTIENT,
     OTHER;
 
+    /**
+     * 根据噪声类型计算返回值。
+     * <p>
+     * Calculates the return value based on the noise type.
+     *
+     * @param distance0 到最近特征点的平方距离 / the squared distance to the closest feature point
+     * @param distance1 到第二近特征点的平方距离 / the squared distance to the second closest feature point
+     * @param closestHash 最近特征点的哈希值 / the hash of the closest feature point
+     * @return 计算出的噪声值 / the computed noise value
+     */
     public float calculate(float distance0, float distance1, int closestHash) {
         switch (this) {
             case VALUE:

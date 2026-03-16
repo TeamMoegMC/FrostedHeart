@@ -31,9 +31,24 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 
+/**
+ * 用于NBTSerializable对象的编解码器。通过NBT序列化/反序列化接口与DFU的编解码系统桥接。
+ * <p>
+ * A codec for NBTSerializable objects. Bridges the NBT serialization/deserialization interface
+ * with the DFU codec system.
+ *
+ * @param <A> 实现NBTSerializable接口的类型 / the type implementing NBTSerializable
+ */
 public class NBTCodec<A extends NBTSerializable> implements Codec<A> {
 	Class<A> clazz;
-	
+
+	/**
+	 * 构造一个NBT编解码器。
+	 * <p>
+	 * Constructs an NBT codec.
+	 *
+	 * @param clazz 要序列化的类 / the class to serialize
+	 */
 	public NBTCodec(Class<A> clazz) {
 		super();
 		this.clazz = clazz;

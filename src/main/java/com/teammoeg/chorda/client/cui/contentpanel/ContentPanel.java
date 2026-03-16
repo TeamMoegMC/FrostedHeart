@@ -39,6 +39,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * 内容面板，用于展示可滚动的富文本内容（文字、图片、物品等）。
+ * 自动管理滚动条，支持通过Builder模式流式构建内容行。
+ * 面板尺寸默认按屏幕高度80%的4:3比例计算。
+ * <p>
+ * Content panel for displaying scrollable rich content (text, images, items, etc.).
+ * Automatically manages a scrollbar and supports fluent content line building via
+ * the Builder pattern. Panel size defaults to a 4:3 ratio at 80% of screen height.
+ */
 public class ContentPanel extends UILayer {
     public ScrollBar scrollBar;
     @Getter

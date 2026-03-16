@@ -65,7 +65,21 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Codec工具类，提供大量用于构建、组合和使用Mojang DataFixerUpper Codec的工具方法。
+ * 包括数组编解码、Map编解码、枚举编解码、NBT编解码、网络数据包编解码等。
+ * <p>
+ * Codec utility class providing extensive tools for building, composing, and using Mojang DataFixerUpper Codecs.
+ * Includes array codecs, map codecs, enum codecs, NBT encoding/decoding, network packet encoding/decoding, and more.
+ */
 public class CodecUtil {
+	/**
+	 * 按类型名称或整数索引分发的Codec构建器，用于多态类型的编解码。
+	 * <p>
+	 * Dispatch codec builder by type name or integer index, used for polymorphic type encoding/decoding.
+	 *
+	 * @param <A> 基类型 / the base type
+	 */
 	public static class DispatchNameCodecBuilder<A>{
 		Map<Class<? extends A>,String> classes=new LinkedHashMap<>();
 		Map<String,Codec<? extends A>> codecs=new LinkedHashMap<>();

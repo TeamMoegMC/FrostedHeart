@@ -23,6 +23,11 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 
 import net.minecraft.client.gui.GuiGraphics;
 
+/**
+ * 空白行，用于在内容面板中添加垂直间距。默认高度为8像素。
+ * <p>
+ * Empty line for adding vertical spacing in a content panel. Default height is 8 pixels.
+ */
 public class EmptyLine extends Line<EmptyLine> {
     public EmptyLine(UIElement parent) {
         this(parent, 8);

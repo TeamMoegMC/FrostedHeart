@@ -31,6 +31,16 @@ import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 
+/**
+ * 字符串文本组件解析器，将带有格式代码的字符串解析为Minecraft的MutableComponent。
+ * 支持传统的&amp;和§格式代码、#HEX颜色代码（3位和6位）、反斜杠转义，
+ * 以及花括号内的翻译键和自定义字体引用。
+ * <p>
+ * String text component parser that parses strings with formatting codes into Minecraft
+ * MutableComponent instances. Supports legacy &amp; and section-sign formatting codes,
+ * #HEX color codes (3 and 6 digit), backslash escaping, and curly-brace enclosed
+ * translation keys and custom font references.
+ */
 public class StringTextComponentParser {
 	public static final Char2ObjectOpenHashMap<ChatFormatting> LEGACY_FORMAT_CODE_CACHE = new Char2ObjectOpenHashMap<>();
 

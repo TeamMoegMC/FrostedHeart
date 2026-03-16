@@ -24,11 +24,23 @@ import java.util.Random;
 import org.joml.Vector3f;
 
 /**
- * A 2D Implementation of <a href="https://en.wikipedia.org/wiki/Metaballs">Metaballs</a>, primarily using the techniques outlined in <a href="http://jamie-wong.com/2014/08/19/metaballs-and-marching-squares/">this blog</a>
+ * 二维元球(Metaballs)噪声实现，生成基于影响场的有机形状。
+ * <p>
+ * 2D Metaballs noise implementation, generating organic shapes based on influence fields.
+ *
+ * @see <a href="https://en.wikipedia.org/wiki/Metaballs">Metaballs - Wikipedia</a>
  */
 public class Metaballs2D implements INoise2D {
     private final Vector3f[] balls; // x, y, weight
 
+    /**
+     * 构造一个指定大小的二维元球噪声，随机生成3-7个元球。
+     * <p>
+     * Constructs a 2D metaballs noise of the specified size, randomly generating 3-7 metaballs.
+     *
+     * @param size 元球分布区域大小 / the size of the metaball distribution area
+     * @param random 随机数生成器 / the random number generator
+     */
     public Metaballs2D(int size, Random random) {
         balls = new Vector3f[3 + random.nextInt(5)];
         for (int i = 0; i < balls.length; i++) {

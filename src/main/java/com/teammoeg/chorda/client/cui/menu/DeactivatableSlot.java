@@ -19,6 +19,18 @@
 
 package com.teammoeg.chorda.client.cui.menu;
 
+/**
+ * 可停用槽位接口。允许在运行时动态启用或禁用槽位。
+ * <p>
+ * Deactivatable slot interface. Allows dynamically enabling or disabling a slot at runtime.
+ */
 public interface DeactivatableSlot {
+	/**
+	 * 设置槽位的激活状态。
+	 * <p>
+	 * Sets the activation state of the slot.
+	 *
+	 * @param enabled 是否启用 / whether to enable
+	 */
 	void setActived(boolean enabled);
 }

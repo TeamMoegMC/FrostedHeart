@@ -30,11 +30,25 @@ import com.teammoeg.chorda.math.Colors;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
+/**
+ * 分类条目的抽象基类。可在分类中被选中并显示图标和标题。
+ * <p>
+ * Abstract base class for category entries. Can be selected within a category and displays an icon and title.
+ */
 public abstract class Entry extends UILayer {
+    /** 默认条目高度 / Default entry height */
     public static final int DEF_HEIGHT = 16;
     protected LimitedTextField title;
     protected FlatIcon.FlatIconWidget icon;
 
+    /**
+     * 创建一个新的分类条目。
+     * <p>
+     * Creates a new category entry.
+     *
+     * @param parent 父分类 / the parent category
+     * @param title  条目标题 / the entry title
+     */
     public Entry(Category parent, Component title) {
         super(parent);
         this.title = new LimitedTextField(this, title, getWidth()).shouldShowTooltip(false);
@@ -104,12 +118,28 @@ public abstract class Entry extends UILayer {
         super.getTooltip(list);
     }
 
+    /**
+     * 设置条目图标。
+     * <p>
+     * Sets the entry icon.
+     *
+     * @param icon 要设置的图标 / the icon to set
+     * @return 当前条目实例（链式调用） / this entry instance (for chaining)
+     */
     public Entry setIcon(FlatIcon icon) {
         this.icon.setIcon(icon);
         refresh();
         return this;
     }
 
+    /**
+     * 设置条目标题。
+     * <p>
+     * Sets the entry title.
+     *
+     * @param title 新标题 / the new title
+     * @return 当前条目实例（链式调用） / this entry instance (for chaining)
+     */
     public Entry setTitle(Component title) {
         this.title.setTitle(title);
         return this;

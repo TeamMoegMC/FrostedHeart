@@ -22,8 +22,21 @@ package com.teammoeg.chorda.client.cui.editor;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import net.minecraft.client.gui.GuiGraphics;
 
+/**
+ * 基础编辑对话框，提供带背景绘制和垂直自动布局的对话框基类。
+ * <p>
+ * Base edit dialog providing a dialog base class with background drawing
+ * and automatic vertical layout.
+ */
 public abstract class BaseEditDialog extends EditDialog {
 
+    /**
+     * 创建一个基础编辑对话框，默认尺寸为300x200。
+     * <p>
+     * Creates a base edit dialog with default size 300x200.
+     *
+     * @param panel 父UI元素 / the parent UI element
+     */
     public BaseEditDialog(UIElement panel) {
         super(panel);
         setWidth(300);

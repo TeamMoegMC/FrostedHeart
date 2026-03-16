@@ -28,6 +28,13 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuConstructor;
 
+/**
+ * 简易菜单提供者。包装一个 {@link MenuConstructor} 并提供空的显示名称，
+ * 用于不需要自定义标题的菜单打开场景。
+ * <p>
+ * Simple menu provider. Wraps a {@link MenuConstructor} with an empty display name,
+ * for menu opening scenarios that don't require a custom title.
+ */
 public class DummyMenuProvider implements MenuProvider {
 	MenuConstructor type;
 	public DummyMenuProvider(MenuConstructor type) {

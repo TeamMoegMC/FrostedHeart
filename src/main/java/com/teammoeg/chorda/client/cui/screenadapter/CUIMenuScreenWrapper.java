@@ -35,15 +35,34 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.lwjgl.glfw.GLFW;
 
+/**
+ * CUI菜单屏幕包装器。将PrimaryLayer适配到Minecraft的AbstractContainerScreen上，处理输入事件、渲染和生命周期管理。
+ * <p>
+ * CUI menu screen wrapper. Adapts a PrimaryLayer onto Minecraft's AbstractContainerScreen,
+ * handling input events, rendering, and lifecycle management.
+ *
+ * @param <T> 容器菜单类型 / the container menu type
+ */
 public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> implements CUIScreen {
 	private final PrimaryLayer primaryLayer;
 
+	/**
+	 * 构造一个CUI菜单屏幕包装器。
+	 * <p>
+	 * Constructs a CUI menu screen wrapper.
+	 *
+	 * @param g 主层 / the primary layer
+	 * @param menu 容器菜单 / the container menu
+	 * @param playerInventory 玩家背包 / the player inventory
+	 * @param title 屏幕标题 / the screen title
+	 */
 	public CUIMenuScreenWrapper(PrimaryLayer g, T menu, Inventory playerInventory, Component title) {
 		super(menu, playerInventory, title);
 		primaryLayer = g;
 		primaryLayer.setScreen(this);
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public void init() {
 		super.init();
@@ -55,10 +74,17 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public boolean isPauseScreen() {
 		return primaryLayer.isPauseScreen();
 	}
+
+	/**
+	 * 处理鼠标点击事件，将事件转发给主层。鼠标侧键触发返回操作。
+	 * <p>
+	 * Handles mouse click events, forwarding them to the primary layer. Mouse side button triggers back navigation.
+	 */
     @Override
     public boolean mouseClicked(double x, double y, int button) {
         primaryLayer.updateGui(x-leftPos, y-topPos, -1);
@@ -125,11 +151,21 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
         return super.charTyped(keyChar, keyChar);
     }
 
+	/**
+	 * 渲染背景层，委托给主层进行绘制。
+	 * <p>
+	 * Renders the background layer, delegating drawing to the primary layer.
+	 */
 	@Override
 	protected void renderBg(GuiGraphics graphics, float f, int mx, int my) {;
 		CGuiHelper.resetGuiDrawing();
 		primaryLayer.render(graphics, leftPos, topPos, imageWidth, imageHeight);
 	}
+	/**
+	 * 渲染前景标签，包括工具提示和光标更新。
+	 * <p>
+	 * Renders foreground labels, including tooltips and cursor updates.
+	 */
 	@Override
 	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
 		graphics.pose().pushPose();
@@ -157,9 +193,15 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 		}
 	}
 
+	/**
+	 * 主渲染方法。更新主层尺寸和位置，处理鼠标状态更新，然后调用父类渲染。
+	 * <p>
+	 * Main render method. Updates primary layer dimensions and position, handles mouse state updates,
+	 * then calls the parent render.
+	 */
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-		
+
 		try {
 			Window win=super.minecraft.getWindow();
 			primaryLayer.onBeforeRender();
@@ -187,6 +229,11 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 		primaryLayer.tick();
 	}
 
+	/**
+	 * 屏幕被移除时调用，通知主层关闭并重置光标。
+	 * <p>
+	 * Called when the screen is removed, notifying the primary layer to close and resetting the cursor.
+	 */
 	@Override
 	public void removed() {
 		primaryLayer.onClosed();
@@ -194,15 +241,19 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 		super.removed();
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public boolean shouldCloseOnEsc() {
 		return primaryLayer.onCloseQuery();
 	}
+
+	/** {@inheritDoc} */
 	@Override
 	public PrimaryLayer getPrimaryLayer() {
 		return primaryLayer;
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public Screen getScreen() {
 		return this;

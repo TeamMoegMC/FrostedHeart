@@ -29,13 +29,27 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.level.block.entity.BlockEntity;
 /**
- * use of blockentity in screens, use {@link CCustomMenuSlot} to serve as data synchronization instead
- * */
+ * 方块实体菜单的基类。将菜单与特定的 {@link BlockEntity} 关联，
+ * 自动处理物品栏初始化和验证逻辑。使用 {@link CCustomMenuSlot} 进行数据同步。
+ * <p>
+ * Base class for block entity menus. Associates a menu with a specific
+ * {@link BlockEntity}, automatically handling inventory initialization
+ * and validation logic. Use {@link CCustomMenuSlot} for data synchronization.
+ *
+ * @param <T> 方块实体类型 / the block entity type
+ */
 public abstract class CBlockEntityMenu<T extends BlockEntity> extends CBaseMenu {
 	protected T blockEntity;
 	public Container inv;
 
 
+	/**
+	 * 获取关联的方块实体。
+	 * <p>
+	 * Gets the associated block entity.
+	 *
+	 * @return 方块实体 / the block entity
+	 */
 	public T getBlock() {
 		return blockEntity;
 	}
@@ -59,6 +73,14 @@ public abstract class CBlockEntityMenu<T extends BlockEntity> extends CBaseMenu 
 	public boolean stillValid(Player pPlayer) {
 		return !blockEntity.isRemoved();
 	}
+	/**
+	 * 绑定服务端逻辑。子类可覆写以在服务端初始化时执行额外操作。
+	 * <p>
+	 * Binds server-side logic. Subclasses can override to perform additional
+	 * operations during server-side initialization.
+	 *
+	 * @return 当前菜单实例 / the current menu instance
+	 */
 	public CBlockEntityMenu<T> bindServer(){
 		
 		return this;

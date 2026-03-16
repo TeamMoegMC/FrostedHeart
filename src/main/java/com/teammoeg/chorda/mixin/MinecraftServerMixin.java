@@ -29,12 +29,30 @@ import com.teammoeg.chorda.events.ServerLevelDataSaveEvent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
 
+/**
+ * MinecraftServer的Mixin，在保存所有区块时触发ServerLevelDataSaveEvent事件。
+ * 使自定义数据持有者能够在世界保存时一并保存自己的数据。
+ * <p>
+ * Mixin for MinecraftServer that fires ServerLevelDataSaveEvent when saving all chunks.
+ * Enables custom data holders to save their data alongside world saves.
+ */
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
 
 	public MinecraftServerMixin() {
-	
+
 	}
+
+	/**
+	 * 在saveAllChunks方法头部注入，发布ServerLevelDataSaveEvent事件。
+	 * <p>
+	 * Injects at the head of saveAllChunks to post a ServerLevelDataSaveEvent.
+	 *
+	 * @param pSuppressLog 是否抑制日志 / Whether to suppress logging
+	 * @param pFlush 是否刷新 / Whether to flush
+	 * @param pForced 是否强制保存 / Whether the save is forced
+	 * @param ret 回调信息 / The callback info
+	 */
 	@Inject(at=@At("HEAD"),method="saveAllChunks")
 	public void saveAllChunks(boolean pSuppressLog, boolean pFlush, boolean pForced,CallbackInfoReturnable<Boolean> ret) {
 		MinecraftForge.EVENT_BUS.post(new ServerLevelDataSaveEvent());

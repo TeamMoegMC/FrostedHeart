@@ -30,9 +30,23 @@ import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.network.chat.Component;
 
+/**
+ * 进度编辑器，用于选择进度和对应的条件。
+ * <p>
+ * Advancement editor for selecting an advancement and its corresponding criterion.
+ */
 public class AdvancementEditor extends UILayer {
 	Advancement advancement;
 	String criterion;
+    /**
+     * 创建一个进度编辑器。
+     * <p>
+     * Creates an advancement editor.
+     *
+     * @param panel 父UI元素 / the parent UI element
+     * @param lbl   标签文本 / the label text
+     * @param e     进度与条件的键值对，可为null / the advancement-criterion pair, may be null
+     */
     public AdvancementEditor(UIElement panel, Component lbl, Pair<Advancement,String> e) {
         super(panel);
         if(e!=null) {
@@ -40,6 +54,13 @@ public class AdvancementEditor extends UILayer {
         	criterion=e.getSecond();
         }
     }
+    /**
+     * 获取当前选择的进度和条件。
+     * <p>
+     * Gets the currently selected advancement and criterion.
+     *
+     * @return 进度与条件的键值对，无进度则返回null / the advancement-criterion pair, or null if no advancement
+     */
     public Pair<Advancement,String> getValue(){
     	if(advancement==null)
     		return null;
@@ -66,6 +87,13 @@ public class AdvancementEditor extends UILayer {
         add(LabeledSelection.createCriterion(this, Components.str("Select Criterion"), advancement, criterion, c -> criterion = c));
 
     }
+    /**
+     * 设置进度和条件的值。
+     * <p>
+     * Sets the advancement and criterion values.
+     *
+     * @param e 进度与条件的键值对 / the advancement-criterion pair
+     */
     public void setValue(Pair<Advancement,String> e) {
     	 if(e!=null) {
          	advancement=e.getFirst();

@@ -29,6 +29,16 @@ import java.util.stream.Collectors;
 
 import com.mojang.datafixers.util.Pair;
 
+/**
+ * 键值对列表，继承自ArrayList，提供便捷的Pair操作方法。
+ * 支持从Map构造、双参数添加/删除、以及BiConsumer/BiFunction/BiPredicate操作。
+ * <p>
+ * Key-value pair list extending ArrayList, providing convenient Pair operation methods.
+ * Supports construction from Map, dual-parameter add/remove, and BiConsumer/BiFunction/BiPredicate operations.
+ *
+ * @param <K> 键类型 / the key type
+ * @param <V> 值类型 / the value type
+ */
 public class PairList<K,V> extends ArrayList<Pair<K,V>> {
 	private static final long serialVersionUID = 29730037267288743L;
 	public PairList() {
@@ -40,6 +50,15 @@ public class PairList<K,V> extends ArrayList<Pair<K,V>> {
 	public PairList(int initialCapacity) {
 		super(initialCapacity);
 	}
+	/**
+	 * 添加一个键值对。
+	 * <p>
+	 * Add a key-value pair.
+	 *
+	 * @param e1 键 / the key
+	 * @param e2 值 / the value
+	 * @return 是否添加成功 / whether the addition was successful
+	 */
 	public boolean add(K e1,V e2) {
 		return super.add(Pair.of(e1, e2));
 	}

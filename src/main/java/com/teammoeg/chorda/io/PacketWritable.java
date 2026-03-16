@@ -21,8 +21,21 @@ package com.teammoeg.chorda.io;
 
 import net.minecraft.network.FriendlyByteBuf;
 
+/**
+ * 可写入网络数据包的接口，定义将对象序列化到网络缓冲区的能力。
+ * <p>
+ * Interface for objects that can be written to network packets, defining the ability to serialize to a network buffer.
+ */
 public interface PacketWritable {
 
+	/**
+	 * 将此对象写入网络缓冲区。
+	 * <p>
+	 * Writes this object to a network buffer.
+	 *
+	 * @param buffer 网络字节缓冲区 / the network byte buffer
+	 * @deprecated 此方法已弃用 / this method is deprecated
+	 */
 	@Deprecated void write(FriendlyByteBuf buffer);
 
 }

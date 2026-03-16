@@ -25,8 +25,20 @@ import static java.lang.annotation.RetentionPolicy.*;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+/**
+ * 字段注解，用于指定序列化时使用的自定义名称，替代默认的字段名。
+ * <p>
+ * Field annotation to specify a custom name for serialization, overriding the default field name.
+ */
 @Retention(RUNTIME)
 @Target(FIELD)
 public @interface SerializeName {
+	/**
+	 * 序列化时使用的名称。
+	 * <p>
+	 * The name to use during serialization.
+	 *
+	 * @return 自定义序列化名称 / the custom serialization name
+	 */
 	String value();
 }

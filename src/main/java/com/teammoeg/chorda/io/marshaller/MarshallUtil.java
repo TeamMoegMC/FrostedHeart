@@ -35,20 +35,73 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+/**
+ * 编组工具类。管理类型到编组器和 Codec 的映射，提供对象与 NBT 之间的序列化/反序列化入口。
+ * 支持基本类型、NBT 可序列化类型、数组和列表的自动编组。
+ * <p>
+ * Marshalling utility class. Manages mappings from types to marshallers and codecs,
+ * providing entry points for serialization/deserialization between objects and NBT.
+ * Supports automatic marshalling of primitive types, NBT-serializable types, arrays, and lists.
+ */
 public class MarshallUtil {
 
     private static final Map<Class<?>,Marshaller> marshallers=new HashMap<>();
     private static final Map<Class<?>,Codec<?>> codecs=new HashMap<>();
     private static boolean isBasicInitialized=false;
+    /**
+     * 注册一个带默认值的基础类型编组器。
+     * <p>
+     * Registers a basic type marshaller with a default value.
+     *
+     * @param val Java 类型类 / Java type class
+     * @param cls NBT 标签类 / NBT tag class
+     * @param from NBT 转对象的函数 / Function to convert from NBT to object
+     * @param to 对象转 NBT 的函数 / Function to convert from object to NBT
+     * @param def 默认值 / Default value
+     * @param <R> NBT 标签类型 / NBT tag type
+     * @param <T> Java 对象类型 / Java object type
+     */
     public static <R extends Tag,T> void basicMarshaller(Class<T> val,Class<R> cls,Function<R, T> from, Function<T, R> to, T def){
     	marshallers.put(val,new BasicMarshaller<>(cls,from,to,def));
     }
+    /**
+     * 注册一个无默认值的基础类型编组器。
+     * <p>
+     * Registers a basic type marshaller without a default value.
+     *
+     * @param val Java 类型类 / Java type class
+     * @param cls NBT 标签类 / NBT tag class
+     * @param from NBT 转对象的函数 / Function to convert from NBT to object
+     * @param to 对象转 NBT 的函数 / Function to convert from object to NBT
+     * @param <R> NBT 标签类型 / NBT tag type
+     * @param <T> Java 对象类型 / Java object type
+     */
     public static <R extends Tag,T> void basicMarshaller(Class<T> val,Class<R> cls,Function<R, T> from, Function<T, R> to){
     	basicMarshaller(val, cls, from, to, null);
     }
+    /**
+     * 注册一个基于 CompoundTag 读写函数的 NBT 编组器。
+     * <p>
+     * Registers an NBT marshaller based on CompoundTag read/write functions.
+     *
+     * @param val Java 类型类 / Java type class
+     * @param from CompoundTag 转对象的函数 / Function to convert from CompoundTag to object
+     * @param to 对象转 CompoundTag 的函数 / Function to convert from object to CompoundTag
+     * @param <T> Java 对象类型 / Java object type
+     */
     public static <T> void nbtMarshaller(Class<T> val,Function<CompoundTag, T> from, Function<T, CompoundTag> to){
     	marshallers.put(val, new NBTRWMarshaller<>(from,to));
     }
+    /**
+     * 注册一个基于实例的 NBT 编组器，先创建实例再加载数据。
+     * <p>
+     * Registers an instance-based NBT marshaller that creates an instance first then loads data into it.
+     *
+     * @param val Java 类型类 / Java type class
+     * @param from 将 CompoundTag 数据加载到已有实例的消费者 / Consumer to load CompoundTag data into an existing instance
+     * @param to 对象转 CompoundTag 的函数 / Function to convert from object to CompoundTag
+     * @param <T> Java 对象类型 / Java object type
+     */
     public static <T> void nbtInstanceMarshaller(Class<T> val,BiConsumer<T, CompoundTag> from, Function<T, CompoundTag> to){
     	marshallers.put(val, new NBTInstanceMarshaller<>(val,from,to));
     }

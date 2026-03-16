@@ -32,6 +32,13 @@ import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.network.chat.Component;
 
+/**
+ * 确认对话框，显示一条消息并提供确认和取消按钮。
+ * 用户点击确认或取消后通过回调返回布尔结果。
+ * <p>
+ * Confirmation dialog displaying a message with confirm and cancel buttons.
+ * Returns a boolean result via callback when the user clicks confirm or cancel.
+ */
 public class ConfirmDialog extends BaseEditDialog {
     TextField tf;
     Button cancel;
@@ -39,6 +46,16 @@ public class ConfirmDialog extends BaseEditDialog {
     Consumer<Boolean> fin;
     boolean selected = false;
 
+    /**
+     * 创建一个确认对话框。
+     * <p>
+     * Creates a confirmation dialog.
+     *
+     * @param panel      父UI元素 / the parent UI element
+     * @param label      对话框消息文本 / the dialog message text
+     * @param exp        确认时返回的布尔值 / the boolean value returned on confirm
+     * @param onFinished 完成回调 / the completion callback
+     */
     public ConfirmDialog(UIElement panel, Component label, boolean exp, Consumer<Boolean> onFinished) {
         super(panel);
         tf = new TextField(this).setColor(0xFFFF0000).setMaxWidth(200).setText(label);

@@ -21,7 +21,29 @@ package com.teammoeg.chorda.io.marshaller;
 
 import net.minecraft.nbt.Tag;
 
+/**
+ * 编组器接口。定义对象与NBT标签之间的双向转换契约。
+ * <p>
+ * Marshaller interface. Defines the bidirectional conversion contract between objects and NBT tags.
+ */
 public interface Marshaller {
+	/**
+	 * 将对象序列化为NBT标签。
+	 * <p>
+	 * Serializes an object to an NBT tag.
+	 *
+	 * @param o 要序列化的对象 / the object to serialize
+	 * @return 序列化后的NBT标签 / the serialized NBT tag
+	 */
 	Tag toNBT(Object o);
+
+	/**
+	 * 从NBT标签反序列化为对象。
+	 * <p>
+	 * Deserializes an object from an NBT tag.
+	 *
+	 * @param nbt 要反序列化的NBT标签 / the NBT tag to deserialize from
+	 * @return 反序列化后的对象 / the deserialized object
+	 */
 	Object fromNBT(Tag nbt);
 }

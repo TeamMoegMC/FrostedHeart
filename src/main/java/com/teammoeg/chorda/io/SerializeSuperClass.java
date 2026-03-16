@@ -25,6 +25,11 @@ import static java.lang.annotation.RetentionPolicy.*;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+/**
+ * 类型注解，标记该类的父类字段也应当被包含在反射序列化中。
+ * <p>
+ * Type annotation that marks superclass fields to be included in reflection-based serialization.
+ */
 @Retention(RUNTIME)
 @Target(TYPE)
 public @interface SerializeSuperClass {

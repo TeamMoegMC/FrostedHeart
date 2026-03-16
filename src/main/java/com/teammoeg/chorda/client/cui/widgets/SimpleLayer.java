@@ -22,17 +22,33 @@ package com.teammoeg.chorda.client.cui.widgets;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 
+/**
+ * 简单图层控件。无任何默认子元素或布局逻辑的空白UI图层，
+ * 用于手动添加和管理子元素。
+ * <p>
+ * Simple layer widget. A blank UI layer with no default child elements or layout logic,
+ * intended for manually adding and managing child elements.
+ */
 public class SimpleLayer extends UILayer {
 
+	/**
+	 * 创建简单图层。
+	 * <p>
+	 * Creates a simple layer.
+	 *
+	 * @param panel 父级UI元素 / Parent UI element
+	 */
 	public SimpleLayer(UIElement panel) {
 		super(panel);
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public void addUIElements() {
-		
+
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public void alignWidgets() {
 	}

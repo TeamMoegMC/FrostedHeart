@@ -31,53 +31,69 @@ import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
 /**
- * 可拖拽、可滚轮控制的垂直滚动条组件
- * 适用于Screen
+ * 可拖拽、可滚轮控制的垂直滚动条组件。适用于Screen，支持自定义轨道和滑块纹理。
+ * 提供鼠标拖拽、轨道点击跳转、鼠标滚轮滚动等交互方式，并支持行数变化回调。
+ * <p>
+ * A draggable, scroll-wheel-controllable vertical scrollbar widget. Designed for use
+ * in Screen, supports custom track and thumb textures. Provides mouse dragging, track
+ * click-to-jump, and mouse wheel scrolling interactions, with a row change callback.
  */
 public class ScrollBarWidget extends AbstractWidget {
-    // 当前行数和最大行数
+    /** 当前行索引 / Current row index */
     @Getter
     private int currentRow;
 
+    /** 最大行数 / Maximum number of rows */
     @Getter
     private int maxRows;
 
-    // 滑块尺寸
+    /** 滑块宽度 / Thumb width */
     private int thumbWidth;
+    /** 滑块高度 / Thumb height */
     private int thumbHeight;
 
-    // 自定义材质
+    /** 轨道自定义纹理 / Custom track texture */
     @Nullable
     private ResourceLocation trackTexture;
+    /** 滑块自定义纹理 / Custom thumb texture */
     @Nullable
     private ResourceLocation thumbTexture;
-    
-    // 材质偏移量（用于选择材质文件中的特定区域）
+
+    /** 轨道纹理水平偏移量 / Track texture horizontal offset */
     private int trackUOffset = 0;
+    /** 轨道纹理垂直偏移量 / Track texture vertical offset */
     private int trackVOffset = 0;
+    /** 滑块纹理水平偏移量 / Thumb texture horizontal offset */
     private int thumbUOffset = 0;
+    /** 滑块纹理垂直偏移量 / Thumb texture vertical offset */
     private int thumbVOffset = 0;
-    
-    // 材质文件的总尺寸
+
+    /** 轨道纹理文件总宽度 / Track texture file total width */
     private int trackTextureWidth = 256;
+    /** 轨道纹理文件总高度 / Track texture file total height */
     private int trackTextureHeight = 256;
+    /** 滑块纹理文件总宽度 / Thumb texture file total width */
     private int thumbTextureWidth = 256;
+    /** 滑块纹理文件总高度 / Thumb texture file total height */
     private int thumbTextureHeight = 256;
 
-    // 是否正在拖拽
+    /** 是否正在拖拽滑块 / Whether the thumb is being dragged */
     private boolean dragging;
 
-    // 行数变化回调
+    /** 行数变化回调 / Row change callback */
     @Nullable
     private BiConsumer<Integer, Integer> onRowChanged;
 
     /**
-     * 创建滚动条
-     * @param x 条的X坐标
-     * @param y 条的Y坐标
-     * @param width 条的宽度
-     * @param height 条的高度（长度）
-     * @param maxRows 最大行数
+     * 创建滚动条。滑块高度根据最大行数自动计算。
+     * <p>
+     * Creates a scrollbar. The thumb height is automatically calculated based on the max rows.
+     *
+     * @param x 滚动条X坐标 / Scrollbar X coordinate
+     * @param y 滚动条Y坐标 / Scrollbar Y coordinate
+     * @param width 滚动条宽度 / Scrollbar width
+     * @param height 滚动条高度（长度） / Scrollbar height (length)
+     * @param maxRows 最大行数 / Maximum number of rows
      */
     public ScrollBarWidget(int x, int y, int width, int height, int maxRows) {
         super(x, y, width, height, Component.empty());
@@ -89,7 +105,13 @@ public class ScrollBarWidget extends AbstractWidget {
     }
 
     /**
-     * 设置滑块尺寸
+     * 设置滑块尺寸。
+     * <p>
+     * Sets the thumb dimensions.
+     *
+     * @param width 滑块宽度 / Thumb width
+     * @param height 滑块高度 / Thumb height
+     * @return 当前实例，用于链式调用 / This instance for method chaining
      */
     public ScrollBarWidget setThumbSize(int width, int height) {
         this.thumbWidth = width;
@@ -98,7 +120,12 @@ public class ScrollBarWidget extends AbstractWidget {
     }
 
     /**
-     * 设置轨道材质
+     * 设置轨道纹理。
+     * <p>
+     * Sets the track texture.
+     *
+     * @param texture 纹理资源位置，null则使用默认样式 / Texture resource location, null for default style
+     * @return 当前实例，用于链式调用 / This instance for method chaining
      */
     public ScrollBarWidget setTrackTexture(@Nullable ResourceLocation texture) {
         this.trackTexture = texture;
@@ -106,10 +133,14 @@ public class ScrollBarWidget extends AbstractWidget {
     }
     
     /**
-     * 设置轨道材质及其在材质文件中的位置
-     * @param texture 材质资源位置
-     * @param uOffset 水平偏移量（像素）
-     * @param vOffset 垂直偏移量（像素）
+     * 设置轨道纹理及其在纹理文件中的位置。
+     * <p>
+     * Sets the track texture and its position within the texture file.
+     *
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param uOffset 水平偏移量（像素） / Horizontal offset in pixels
+     * @param vOffset 垂直偏移量（像素） / Vertical offset in pixels
+     * @return 当前实例，用于链式调用 / This instance for method chaining
      */
     public ScrollBarWidget setTrackTexture(@Nullable ResourceLocation texture, int uOffset, int vOffset) {
         this.trackTexture = texture;
@@ -119,12 +150,16 @@ public class ScrollBarWidget extends AbstractWidget {
     }
     
     /**
-     * 设置轨道材质及其在材质文件中的位置和材质文件总尺寸
-     * @param texture 材质资源位置
-     * @param uOffset 水平偏移量（像素）
-     * @param vOffset 垂直偏移量（像素）
-     * @param textureWidth 材质文件总宽度
-     * @param textureHeight 材质文件总高度
+     * 设置轨道纹理及其在纹理文件中的位置和纹理文件总尺寸。
+     * <p>
+     * Sets the track texture, its position within the texture file, and the texture file dimensions.
+     *
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param uOffset 水平偏移量（像素） / Horizontal offset in pixels
+     * @param vOffset 垂直偏移量（像素） / Vertical offset in pixels
+     * @param textureWidth 纹理文件总宽度 / Total texture file width
+     * @param textureHeight 纹理文件总高度 / Total texture file height
+     * @return 当前实例，用于链式调用 / This instance for method chaining
      */
     public ScrollBarWidget setTrackTexture(@Nullable ResourceLocation texture, int uOffset, int vOffset, int textureWidth, int textureHeight) {
         this.trackTexture = texture;
@@ -136,7 +171,12 @@ public class ScrollBarWidget extends AbstractWidget {
     }
 
     /**
-     * 设置滑块材质
+     * 设置滑块纹理。
+     * <p>
+     * Sets the thumb texture.
+     *
+     * @param texture 纹理资源位置，null则使用默认样式 / Texture resource location, null for default style
+     * @return 当前实例，用于链式调用 / This instance for method chaining
      */
     public ScrollBarWidget setThumbTexture(@Nullable ResourceLocation texture) {
         this.thumbTexture = texture;
@@ -144,10 +184,14 @@ public class ScrollBarWidget extends AbstractWidget {
     }
     
     /**
-     * 设置滑块材质及其在材质文件中的位置
-     * @param texture 材质资源位置
-     * @param uOffset 水平偏移量（像素）
-     * @param vOffset 垂直偏移量（像素）
+     * 设置滑块纹理及其在纹理文件中的位置。
+     * <p>
+     * Sets the thumb texture and its position within the texture file.
+     *
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param uOffset 水平偏移量（像素） / Horizontal offset in pixels
+     * @param vOffset 垂直偏移量（像素） / Vertical offset in pixels
+     * @return 当前实例，用于链式调用 / This instance for method chaining
      */
     public ScrollBarWidget setThumbTexture(@Nullable ResourceLocation texture, int uOffset, int vOffset) {
         this.thumbTexture = texture;
@@ -157,12 +201,16 @@ public class ScrollBarWidget extends AbstractWidget {
     }
     
     /**
-     * 设置滑块材质及其在材质文件中的位置和材质文件总尺寸
-     * @param texture 材质资源位置
-     * @param uOffset 水平偏移量（像素）
-     * @param vOffset 垂直偏移量（像素）
-     * @param textureWidth 材质文件总宽度
-     * @param textureHeight 材质文件总高度
+     * 设置滑块纹理及其在纹理文件中的位置和纹理文件总尺寸。
+     * <p>
+     * Sets the thumb texture, its position within the texture file, and the texture file dimensions.
+     *
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param uOffset 水平偏移量（像素） / Horizontal offset in pixels
+     * @param vOffset 垂直偏移量（像素） / Vertical offset in pixels
+     * @param textureWidth 纹理文件总宽度 / Total texture file width
+     * @param textureHeight 纹理文件总高度 / Total texture file height
+     * @return 当前实例，用于链式调用 / This instance for method chaining
      */
     public ScrollBarWidget setThumbTexture(@Nullable ResourceLocation texture, int uOffset, int vOffset, int textureWidth, int textureHeight) {
         this.thumbTexture = texture;
@@ -174,8 +222,12 @@ public class ScrollBarWidget extends AbstractWidget {
     }
 
     /**
-     * 设置行数变化回调
-     * @param callback 回调函数，参数为 (旧行数, 新行数)
+     * 设置行数变化回调。
+     * <p>
+     * Sets the row change callback.
+     *
+     * @param callback 回调函数，参数为(旧行数, 新行数) / Callback function with parameters (oldRow, newRow)
+     * @return 当前实例，用于链式调用 / This instance for method chaining
      */
     public ScrollBarWidget setOnRowChanged(@Nullable BiConsumer<Integer, Integer> callback) {
         this.onRowChanged = callback;
@@ -183,7 +235,12 @@ public class ScrollBarWidget extends AbstractWidget {
     }
 
     /**
-     * 设置当前行数
+     * 设置当前行数。值会被限制在有效范围内，变化时触发回调。
+     * <p>
+     * Sets the current row. The value is clamped to the valid range,
+     * and the callback is triggered on change.
+     *
+     * @param row 目标行数 / Target row number
      */
     public void setCurrentRow(int row) {
         int oldRow = this.currentRow;
@@ -194,7 +251,12 @@ public class ScrollBarWidget extends AbstractWidget {
     }
 
     /**
-     * 设置最大行数
+     * 设置最大行数。同时重新计算滑块高度并校正当前行数。
+     * <p>
+     * Sets the maximum number of rows. Also recalculates the thumb height
+     * and clamps the current row.
+     *
+     * @param maxRows 最大行数，最小为1 / Maximum number of rows, minimum 1
      */
     public void setMaxRows(int maxRows) {
         this.maxRows = Math.max(1, maxRows);
@@ -203,12 +265,24 @@ public class ScrollBarWidget extends AbstractWidget {
         this.thumbHeight = Math.max(10, this.height / Math.max(1, this.maxRows));
     }
 
+    /**
+     * 将行数限制在有效范围[0, maxRows-1]内。
+     * <p>
+     * Clamps the row number to the valid range [0, maxRows-1].
+     *
+     * @param row 待限制的行数 / Row number to clamp
+     * @return 限制后的行数 / Clamped row number
+     */
     private int clampRow(int row) {
         return Math.max(0, Math.min(row, maxRows - 1));
     }
 
     /**
-     * 计算滑块的Y坐标
+     * 根据当前行数计算滑块的Y坐标。
+     * <p>
+     * Calculates the thumb's Y coordinate based on the current row.
+     *
+     * @return 滑块的Y坐标 / The thumb's Y coordinate
      */
     private int getThumbY() {
         if (maxRows <= 1) {
@@ -220,7 +294,12 @@ public class ScrollBarWidget extends AbstractWidget {
     }
 
     /**
-     * 根据鼠标Y坐标计算对应的行数
+     * 根据鼠标Y坐标计算对应的行数。
+     * <p>
+     * Calculates the corresponding row number from the mouse Y coordinate.
+     *
+     * @param mouseY 鼠标Y坐标 / Mouse Y coordinate
+     * @return 计算得到的行数 / Calculated row number
      */
     private int getRowFromMouseY(double mouseY) {
         if (maxRows <= 1) {
@@ -233,6 +312,16 @@ public class ScrollBarWidget extends AbstractWidget {
         return Math.round(progress * (maxRows - 1));
     }
 
+    /**
+     * 渲染滚动条控件，包括轨道和滑块。
+     * <p>
+     * Renders the scrollbar widget, including the track and thumb.
+     *
+     * @param guiGraphics 图形上下文 / Graphics context
+     * @param mouseX 鼠标X坐标 / Mouse X coordinate
+     * @param mouseY 鼠标Y坐标 / Mouse Y coordinate
+     * @param partialTick 渲染插值时间 / Partial tick time for rendering interpolation
+     */
     @Override
     protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         // 渲染轨道（条）
@@ -242,7 +331,11 @@ public class ScrollBarWidget extends AbstractWidget {
     }
 
     /**
-     * 渲染轨道
+     * 渲染轨道。使用自定义纹理或默认的灰色背景样式。
+     * <p>
+     * Renders the track. Uses a custom texture or a default gray background style.
+     *
+     * @param guiGraphics 图形上下文 / Graphics context
      */
     protected void renderTrack(GuiGraphics guiGraphics) {
         if (trackTexture != null) {
@@ -256,7 +349,14 @@ public class ScrollBarWidget extends AbstractWidget {
     }
 
     /**
-     * 渲染滑块
+     * 渲染滑块。使用自定义纹理或根据悬停/拖拽状态改变颜色的默认样式。
+     * <p>
+     * Renders the thumb. Uses a custom texture or a default style that changes
+     * color based on hover/drag state.
+     *
+     * @param guiGraphics 图形上下文 / Graphics context
+     * @param mouseX 鼠标X坐标 / Mouse X coordinate
+     * @param mouseY 鼠标Y坐标 / Mouse Y coordinate
      */
     protected void renderThumb(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         int thumbY = getThumbY();
@@ -274,7 +374,13 @@ public class ScrollBarWidget extends AbstractWidget {
     }
 
     /**
-     * 检查鼠标是否在滑块上
+     * 检查鼠标是否悬停在滑块上。
+     * <p>
+     * Checks whether the mouse is hovering over the thumb.
+     *
+     * @param mouseX 鼠标X坐标 / Mouse X coordinate
+     * @param mouseY 鼠标Y坐标 / Mouse Y coordinate
+     * @return 鼠标是否在滑块区域内 / Whether the mouse is within the thumb area
      */
     private boolean isThumbHovered(int mouseX, int mouseY) {
         int thumbY = getThumbY();
@@ -283,6 +389,16 @@ public class ScrollBarWidget extends AbstractWidget {
                 && mouseY >= thumbY && mouseY < thumbY + thumbHeight;
     }
 
+    /**
+     * 处理鼠标滚轮事件。向上滚动减少行数，向下滚动增加行数。
+     * <p>
+     * Handles mouse scroll events. Scrolling up decreases the row, scrolling down increases it.
+     *
+     * @param mouseX 鼠标X坐标 / Mouse X coordinate
+     * @param mouseY 鼠标Y坐标 / Mouse Y coordinate
+     * @param delta 滚轮滚动量 / Scroll wheel delta
+     * @return 始终返回true表示事件已处理 / Always returns true indicating the event was handled
+     */
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         // 鼠标滚轮控制：向上滚动减少行数，向下滚动增加行数
@@ -290,6 +406,15 @@ public class ScrollBarWidget extends AbstractWidget {
         return true;
     }
 
+    /**
+     * 处理鼠标点击事件。点击滑块开始拖拽，点击轨道直接跳转到对应行。
+     * <p>
+     * Handles mouse click events. Clicking the thumb starts dragging,
+     * clicking the track jumps directly to the corresponding row.
+     *
+     * @param mouseX 鼠标X坐标 / Mouse X coordinate
+     * @param mouseY 鼠标Y坐标 / Mouse Y coordinate
+     */
     @Override
     public void onClick(double mouseX, double mouseY) {
         if (isThumbHovered((int) mouseX, (int) mouseY)) {
@@ -300,6 +425,17 @@ public class ScrollBarWidget extends AbstractWidget {
         }
     }
 
+    /**
+     * 处理鼠标拖拽事件。拖拽时根据鼠标Y坐标更新当前行。
+     * <p>
+     * Handles mouse drag events. Updates the current row based on the mouse Y coordinate
+     * during dragging.
+     *
+     * @param mouseX 鼠标X坐标 / Mouse X coordinate
+     * @param mouseY 鼠标Y坐标 / Mouse Y coordinate
+     * @param dragX X方向拖拽增量 / X-axis drag delta
+     * @param dragY Y方向拖拽增量 / Y-axis drag delta
+     */
     @Override
     protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
         if (dragging) {
@@ -307,11 +443,26 @@ public class ScrollBarWidget extends AbstractWidget {
         }
     }
 
+    /**
+     * 处理鼠标释放事件。结束拖拽状态。
+     * <p>
+     * Handles mouse release events. Ends the dragging state.
+     *
+     * @param mouseX 鼠标X坐标 / Mouse X coordinate
+     * @param mouseY 鼠标Y坐标 / Mouse Y coordinate
+     */
     @Override
     public void onRelease(double mouseX, double mouseY) {
         this.dragging = false;
     }
 
+    /**
+     * 更新控件的无障碍叙述信息。
+     * <p>
+     * Updates the widget's accessibility narration information.
+     *
+     * @param narrationElementOutput 叙述输出 / Narration element output
+     */
     @Override
     protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
         this.defaultButtonNarrationText(narrationElementOutput);

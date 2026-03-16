@@ -21,17 +21,45 @@ package com.teammoeg.chorda.util.parsereader.source;
 
 import com.teammoeg.chorda.util.parsereader.CodeLineSource;
 
+/**
+ * 基于字符流的行数据源抽象基类，将字符流逐字符读取并按行分割。
+ * 子类需实现{@link #readCh()}方法提供字符数据。
+ * <p>
+ * Abstract base class for stream-based line sources that reads character streams
+ * character by character and splits them into lines.
+ * Subclasses must implement {@link #readCh()} to provide character data.
+ */
 public abstract class StreamLineSource implements CodeLineSource {
 	String name;
 	boolean hasNext=true;
 	int lch=0;
+	/**
+	 * 构造流行数据源。
+	 * <p>
+	 * Construct a stream line source.
+	 *
+	 * @param name 数据源名称 / the source name
+	 */
 	public StreamLineSource(String name) {
 		super();
 		this.name = name;
 	}
 
+	/**
+	 * 读取下一个字符。流结束时返回-1。
+	 * <p>
+	 * Read the next character. Returns -1 when the stream ends.
+	 *
+	 * @return 字符码点，或-1表示流结束 / the character code point, or -1 for end of stream
+	 */
 	public abstract int readCh();
 
+	/**
+	 * {@inheritDoc}
+	 * 逐字符读取并按换行符分割，处理CR、LF和CRLF格式的换行。
+	 * <p>
+	 * Reads character by character and splits by line breaks, handling CR, LF and CRLF line endings.
+	 */
 	@Override
 	public String readLine() {
 		StringBuilder sb=new StringBuilder();
@@ -51,11 +79,13 @@ public abstract class StreamLineSource implements CodeLineSource {
 		return sb.toString();
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public String getName() {
 		return name;
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public final boolean hasNext() {
 		return hasNext;

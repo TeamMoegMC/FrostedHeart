@@ -19,9 +19,13 @@
 
 package com.teammoeg.chorda.client;
 /**
- * Utility for recording scroll and cast them to int
- * 
- * */
+ * 滚动量累积追踪器，将浮点数滚动值累积并转换为整数滚动步数。
+ * 用于处理高精度触控板等设备产生的小数滚动值，当方向改变时自动重置累积量。
+ * <p>
+ * Scroll accumulation tracker that accumulates floating-point scroll values and
+ * converts them to integer scroll steps. Used for handling fractional scroll values
+ * from high-precision trackpads; automatically resets accumulation when direction changes.
+ */
 public class ScrollTracker {
 	double accumulatedValue;
 	public void clear() {

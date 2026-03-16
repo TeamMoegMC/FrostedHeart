@@ -35,8 +35,12 @@ import net.minecraftforge.common.util.NonNullPredicate;
 import net.minecraftforge.common.util.NonNullSupplier;
 
 /**
- * An modified version for LazyOptional by forge, compatibilities for null return
- * @deprecated use {@link net.minecraftforge.common.util.Lazy Lazy} instead
+ * Forge的LazyOptional修改版，兼容null返回值。
+ * <p>
+ * A modified version of Forge's LazyOptional, compatible with null return values.
+ *
+ * @param <T> 包含值的类型 / the type of value contained
+ * @deprecated 请使用 {@link net.minecraftforge.common.util.Lazy Lazy} 代替 / use {@link net.minecraftforge.common.util.Lazy Lazy} instead
  */
 @Deprecated
 public class OptionalLazy<T> {
@@ -49,35 +53,61 @@ public class OptionalLazy<T> {
     private boolean isValid = true;
 
     /**
-     * @return The singleton empty instance
+     * 获取单例空实例。
+     * <p>
+     * Get the singleton empty instance.
+     *
+     * @param <T> 值类型 / the value type
+     * @return 空的OptionalLazy实例 / the singleton empty instance
      */
     public static <T> OptionalLazy<T> empty() {
         return EMPTY.cast();
     }
 
     /**
-     * Construct a new {@link OptionalLazy} that wraps the given
-     * {@link NonNullSupplier}.
+     * 构造包装给定Supplier的新OptionalLazy。
+     * <p>
+     * Construct a new {@link OptionalLazy} that wraps the given Supplier.
      *
-     * @param instanceSupplier The {@link NonNullSupplier} to wrap. Cannot return
-     *                         null, but can be null itself. If null, this method
-     *                         returns {@link #empty()}.
+     * @param <T> 值类型 / the value type
+     * @param instanceSupplier 要包装的Supplier，可以为null（返回空实例） / the Supplier to wrap, can be null (returns empty)
+     * @return 新的OptionalLazy实例 / a new OptionalLazy instance
      */
     public static <T> OptionalLazy<T> of(final @Nullable Supplier<T> instanceSupplier) {
         return instanceSupplier == null ? empty() : new OptionalLazy<>(instanceSupplier);
     }
+
+    /**
+     * 从Optional的Supplier构造OptionalLazy。
+     * <p>
+     * Construct an OptionalLazy from a Supplier of Optional.
+     *
+     * @param <T> 值类型 / the value type
+     * @param instanceSupplier Optional的Supplier / the Supplier of Optional
+     * @return 新的OptionalLazy实例 / a new OptionalLazy instance
+     */
     public static <T> OptionalLazy<T> ofOptional(final @Nullable Supplier<Optional<T>> instanceSupplier) {
         return instanceSupplier == null ? empty() : new OptionalLazy<>(()->instanceSupplier.get().orElse(null));
     }
+
+    /**
+     * 私有构造器。
+     * <p>
+     * Private constructor.
+     *
+     * @param instanceSupplier 值供应器 / the value supplier
+     */
     private OptionalLazy(@Nullable Supplier<T> instanceSupplier) {
         this.supplier = instanceSupplier;
     }
+
     /**
-     * This method hides an unchecked cast to the inferred type. Only use this if
-     * you are sure the type should match. For capabilities, generally
-     * {@link Capability#orEmpty(Capability, LazyOptional)} should be used.
+     * 将此OptionalLazy强制转换为推断的泛型类型。仅在确定类型匹配时使用。
+     * <p>
+     * Cast this OptionalLazy to the inferred generic type. Only use when you are sure the type matches.
      *
-     * @return This {@link OptionalLazy}, cast to the inferred generic type
+     * @param <X> 目标类型 / the target type
+     * @return 转换后的OptionalLazy / this OptionalLazy cast to the inferred type
      */
     @SuppressWarnings("unchecked")
     public <X> OptionalLazy<X> cast() {
@@ -85,20 +115,13 @@ public class OptionalLazy<T> {
     }
 
     /**
-     * Resolve the contained supplier if non-empty, and filter it by the given
-     * {@link NonNullPredicate}, returning empty if false.
+     * 如果非空，解析供应器并用给定的谓词过滤结果。此方法不是懒加载的。
      * <p>
-     * <em>It is important to note that this method is <strong>not</strong> lazy, as
-     * it must resolve the value of the supplier to validate it with the
-     * predicate.</em>
+     * Resolve the contained supplier if non-empty, and filter it by the given
+     * {@link NonNullPredicate}, returning empty if false. This method is not lazy.
      *
-     * @param predicate A {@link NonNullPredicate} to apply to the result of the
-     *                  contained supplier, if non-empty
-     * @return An {@link Optional} containing the result of the contained
-     * supplier, if and only if the passed {@link NonNullPredicate} returns
-     * true, otherwise an empty {@link Optional}
-     * @throws NullPointerException If {@code predicate} is null and this
-     *                              {@link Optional} is non-empty
+     * @param predicate 要应用于结果的谓词 / a predicate to apply to the result
+     * @return 包含结果的Optional，如果谓词返回false则为空 / an Optional containing the result, or empty if predicate returns false
      */
     public Optional<T> filter(NonNullPredicate<? super T> predicate) {
         Objects.requireNonNull(predicate);
@@ -106,6 +129,13 @@ public class OptionalLazy<T> {
         return value != null && predicate.test(value) ? Optional.of(value) : Optional.empty();
     }
 
+    /**
+     * 获取内部值，使用双重检查锁定确保线程安全的懒加载。
+     * <p>
+     * Get the internal value, using double-checked locking for thread-safe lazy initialization.
+     *
+     * @return 解析后的值，如果无效或供应器为null则返回null / the resolved value, or null if invalid or supplier is null
+     */
     private @Nullable T getValue() {
         if (!isValid || supplier == null)
             return null;
@@ -122,11 +152,11 @@ public class OptionalLazy<T> {
     }
 
     /**
-     * If non-empty, invoke the specified {@link NonNullConsumer} with the object,
-     * otherwise do nothing.
+     * 如果非空，使用包含的对象调用指定的消费者。
+     * <p>
+     * If non-empty, invoke the specified consumer with the contained object.
      *
-     * @param consumer The {@link NonNullConsumer} to run if this optional is non-empty.
-     * @throws NullPointerException if {@code consumer} is null and this {@link OptionalLazy} is non-empty
+     * @param consumer 非空时执行的消费者 / the consumer to run if non-empty
      */
     public void ifPresent(NonNullConsumer<? super T> consumer) {
         Objects.requireNonNull(consumer);
@@ -136,10 +166,11 @@ public class OptionalLazy<T> {
     }
 
     /**
-     * Check if this {@link OptionalLazy} is non-empty.
+     * 检查此OptionalLazy是否非空。
+     * <p>
+     * Check if this OptionalLazy is non-empty.
      *
-     * @return {@code true} if this {@link OptionalLazy} is non-empty, i.e. holds a
-     * non-null supplier
+     * @return 如果持有非null的供应器返回true / true if this holds a non-null supplier
      */
     public boolean isPresent() {
         if (supplier == null || !isValid) return false;
@@ -147,21 +178,14 @@ public class OptionalLazy<T> {
     }
 
     /**
-     * If a this {@link OptionalLazy} is non-empty, return a new
-     * {@link OptionalLazy} encapsulating the mapping function. Otherwise, returns
-     * {@link #empty()}.
+     * 如果非空，返回封装映射函数的新OptionalLazy。内部供应器不会被解析。
      * <p>
-     * The supplier inside this object is <strong>NOT</strong> resolved.
+     * If non-empty, return a new OptionalLazy encapsulating the mapping function.
+     * The supplier inside is NOT resolved.
      *
-     * @param mapper A mapping function to apply to the mod object, if present
-     * @return A {@link OptionalLazy} describing the result of applying a mapping
-     * function to the value of this {@link OptionalLazy}, if a value is
-     * present, otherwise an empty {@link OptionalLazy}
-     * @throws NullPointerException if {@code mapper} is null.
-     * @apiNote This method supports post-processing on optional values, without the
-     * need to explicitly check for a return status.
-     * @apiNote The returned value does not receive invalidation messages from the original {@link OptionalLazy}.
-     * If you need the invalidation, you will need to manage them yourself.
+     * @param <U> 映射结果类型 / the mapped result type
+     * @param mapper 映射函数 / the mapping function
+     * @return 映射后的OptionalLazy / the mapped OptionalLazy
      */
     public <U> OptionalLazy<U> lazyMap(NonNullFunction<? super T, ? extends U> mapper) {
         Objects.requireNonNull(mapper);
@@ -169,17 +193,14 @@ public class OptionalLazy<T> {
     }
 
     /**
-     * If a this {@link OptionalLazy} is non-empty, return a new
-     * {@link Optional} encapsulating the mapped value. Otherwise, returns
-     * {@link Optional#empty()}.
+     * 如果非空，返回封装映射值的新Optional。此方法会解析供应器的值。
+     * <p>
+     * If non-empty, return a new Optional encapsulating the mapped value.
+     * This method explicitly resolves the supplier value.
      *
-     * @param mapper A mapping function to apply to the mod object, if present
-     * @return An {@link Optional} describing the result of applying a mapping
-     * function to the value of this {@link Optional}, if a value is
-     * present, otherwise an empty {@link Optional}
-     * @throws NullPointerException if {@code mapper} is null.
-     * @apiNote This method explicitly resolves the value of the {@link OptionalLazy}.
-     * For a non-resolving mapper that will lazily run the mapping, use {@link #lazyMap(NonNullFunction)}.
+     * @param <U> 映射结果类型 / the mapped result type
+     * @param mapper 映射函数 / the mapping function
+     * @return 映射后的Optional / the mapped Optional
      */
     public <U> Optional<U> map(NonNullFunction<? super T, ? extends U> mapper) {
         Objects.requireNonNull(mapper);
@@ -187,11 +208,12 @@ public class OptionalLazy<T> {
     }
 
     /**
-     * Resolve the contained supplier if non-empty and return the result, otherwise return
-     * {@code other}.
+     * 解析供应器并返回结果，如果为空则返回备选值。
+     * <p>
+     * Resolve the supplier and return the result, or return the alternative value if empty.
      *
-     * @param other the value to be returned if this {@link OptionalLazy} is empty
-     * @return the result of the supplier, if non-empty, otherwise {@code other}
+     * @param other 为空时返回的备选值 / the alternative value to return if empty
+     * @return 供应器结果或备选值 / the supplier result or the alternative value
      */
     public T orElse(T other) {
         T val = getValue();
@@ -199,15 +221,12 @@ public class OptionalLazy<T> {
     }
 
     /**
-     * Resolve the contained supplier if non-empty and return the result, otherwise return the
-     * result of {@code other}.
+     * 解析供应器并返回结果，如果为空则返回备选供应器的结果。
+     * <p>
+     * Resolve the supplier and return the result, or return the result of the alternative supplier if empty.
      *
-     * @param other A {@link NonNullSupplier} whose result is returned if this
-     *              {@link OptionalLazy} is empty
-     * @return The result of the supplier, if non-empty, otherwise the result of
-     * {@code other.get()}
-     * @throws NullPointerException If {@code other} is null and this
-     *                              {@link OptionalLazy} is non-empty
+     * @param other 为空时使用的备选供应器 / the alternative supplier to use if empty
+     * @return 供应器结果或备选供应器结果 / the supplier result or the alternative supplier result
      */
     public T orElseGet(Supplier<? extends T> other) {
         T val = getValue();
@@ -244,6 +263,14 @@ public class OptionalLazy<T> {
     public Optional<T> resolve() {
         return isPresent() ? Optional.ofNullable(getValue()) : Optional.empty();
     }
+    /**
+     * 解析并获取值，如果为空则抛出NoSuchElementException。
+     * <p>
+     * Resolve and get the value, throwing NoSuchElementException if empty.
+     *
+     * @return 解析后的值 / the resolved value
+     * @throws NoSuchElementException 如果对象不存在 / if the object is not present
+     */
     public T get() {
         T val = getValue();
         if (val != null)
@@ -251,6 +278,13 @@ public class OptionalLazy<T> {
         throw new NoSuchElementException("Object not present");
     }
 
+	/**
+	 * 检查值是否已被解析。
+	 * <p>
+	 * Check if the value has been resolved.
+	 *
+	 * @return 如果已解析返回true / true if resolved
+	 */
 	public boolean isResolved() {
 		return isResolved;
 	}

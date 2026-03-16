@@ -30,10 +30,30 @@ import org.objectweb.asm.tree.ClassNode;
 
 import com.teammoeg.chorda.Chorda;
 
+/**
+ * 无参构造函数工厂。通过 ASM 动态生成实现 {@link Supplier} 接口的类，
+ * 以高性能方式调用目标类的无参构造函数（比传统反射快 10-100 倍）。
+ * <p>
+ * No-argument constructor factory. Dynamically generates classes implementing
+ * {@link Supplier} via ASM to invoke a target class's no-arg constructor
+ * with high performance (10-100x faster than traditional reflection).
+ */
 public class NoArgConstructorFactory extends AbstractConstructorFactory {
 	private static final String READ_ACCESSOR_DESC = Type.getInternalName(Supplier.class);
 	private static final String READ_ACCESSOR_READ_METHOD_DESC= Type.getMethodDescriptor(Type.getType(Object.class));
 
+	/**
+	 * 为指定类创建一个 {@link Supplier}，该 Supplier 每次调用时通过 invokedynamic 调用其无参构造函数。
+	 * <p>
+	 * Creates a {@link Supplier} for the specified class that invokes its no-arg
+	 * constructor via invokedynamic on each call.
+	 *
+	 * @param clazz 目标类 / the target class
+	 * @param <AT>  目标类型 / the target type
+	 * @return 调用无参构造函数的 Supplier / a Supplier that invokes the no-arg constructor
+	 * @throws InvocationTargetException 如果构造函数不可访问 / if the constructor is inaccessible
+	 * @throws NoSuchMethodException     如果无参构造函数不存在 / if no no-arg constructor exists
+	 */
 	public <AT> Supplier<AT> create(Class<AT> clazz) throws InvocationTargetException, NoSuchMethodException {
 		try {// check if corresponding constructor exists
 			clazz.getDeclaredConstructor();
@@ -55,6 +75,14 @@ public class NoArgConstructorFactory extends AbstractConstructorFactory {
 		super();
 	}
 
+	/**
+	 * 生成实现 {@link Supplier} 接口的类的字节码。
+	 * 生成的 {@code get()} 方法通过 invokedynamic 调用目标类的无参构造函数。
+	 * <p>
+	 * Generates bytecode for a class implementing the {@link Supplier} interface.
+	 * The generated {@code get()} method invokes the target class's no-arg constructor
+	 * via invokedynamic.
+	 */
 	@Override
 	protected void transformNode(String name, Class<?> retType, ClassNode target) {
 		Chorda.LOGGER.debug("Making supplier of class "+name);

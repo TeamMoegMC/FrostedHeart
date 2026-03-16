@@ -26,6 +26,15 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 
+/**
+ * 带标签的面板，将标签文本和一个子UI元素水平排列。
+ * 是编辑器表单中各种带标签输入控件的基类。
+ * <p>
+ * Labeled pane arranging a label text and a child UI element horizontally.
+ * Serves as the base class for various labeled input widgets in editor forms.
+ *
+ * @param <T> 子UI元素类型 / The child UI element type
+ */
 public class LabeledPane<T extends UIElement> extends UILayer {
 
     protected TextField label;

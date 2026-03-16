@@ -3,8 +3,13 @@ package com.teammoeg.chorda.client;
 import org.joml.Matrix4f;
 
 /**
- * Perform CSS alike styling for game rendering
- * */
+ * 类CSS变换工具类，提供类似CSS transform属性的矩阵变换操作，用于游戏渲染。
+ * 支持skew（倾斜）、perspective（透视）、rotate（旋转）和scale（缩放）等变换。
+ * <p>
+ * CSS-like transform utility class providing matrix transformation operations similar to
+ * CSS transform properties for game rendering. Supports skew, perspective, rotate,
+ * and scale transformations.
+ */
 public class CSSStylingUtil {
 
 	private CSSStylingUtil() {

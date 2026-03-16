@@ -22,10 +22,13 @@ package com.teammoeg.chorda.client;
 import net.minecraft.client.Minecraft;
 
 /**
- * Bridge between tick animation and partialticks
- * This would track changes of partialTicks to avoid blink
- * 
- * */
+ * Tick动画与partialTicks之间的桥接器，跟踪partialTicks的变化以避免画面闪烁。
+ * 提供与tick对齐的平滑过渡值，确保动画在tick边界处不会出现跳变。
+ * <p>
+ * Bridge between tick-based animation and partialTicks, tracking partialTicks changes
+ * to avoid visual blinking. Provides tick-aligned smooth transition values ensuring
+ * animations do not jump at tick boundaries.
+ */
 public class PartialTickTracker {
 	private static final PartialTickTracker INSTANCE=new PartialTickTracker();
 	long ltimeMs;

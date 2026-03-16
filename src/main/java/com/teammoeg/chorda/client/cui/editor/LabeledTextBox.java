@@ -29,6 +29,14 @@ import net.minecraft.network.chat.Component;
 
 
 
+/**
+ * 带标签的文本输入框，组合标签和可编辑文本框。支持可选的文本验证器。
+ * 当文本验证失败时返回原始值。
+ * <p>
+ * Labeled text input box combining a label with an editable text box.
+ * Supports an optional text verifier. Returns the original value when
+ * text validation fails.
+ */
 public class LabeledTextBox extends LabeledPane<TextBox> {
     String orig;
     VerifyResult result;

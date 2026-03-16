@@ -29,6 +29,13 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 
+/**
+ * 光影兼容辅助类，提供将模组方块状态映射到原版方块状态的功能，
+ * 使光影包能正确渲染模组方块。
+ * <p>
+ * Shader compatibility helper class providing mapping from mod block states
+ * to vanilla block states, enabling shader packs to correctly render mod blocks.
+ */
 public class ShaderCompatHelper {
 	public static final Map<BlockState,BlockState> modBlockState2VanillaBlockMap=new HashMap<>();
 	/*public static final List<Runnable> initializers=new ArrayList<>();
@@ -99,14 +106,41 @@ public class ShaderCompatHelper {
 	public static SimpleShaderBuilder use(BlockState vanilla){
 		return new SimpleShaderBuilder(vanilla);
 	}
+	/**
+	 * 将方块的所有可能状态通过映射函数映射到原版方块状态。
+	 * <p>
+	 * Map all possible states of a block to vanilla block states via a mapping function.
+	 *
+	 * @param <T> 方块类型 / the block type
+	 * @param r 方块供应器 / the block supplier
+	 * @param blockState2Vanilla 状态映射函数 / the state mapping function
+	 */
 	public static <T extends Block> void shaderLikeStates(Supplier<T> r,Function<BlockState,BlockState> blockState2Vanilla) {
 		for(BlockState bs:r.get().getStateDefinition().getPossibleStates()) {
 			ShaderCompatHelper.modBlockState2VanillaBlockMap.put(bs, blockState2Vanilla.apply(bs));
 		}
 	}
+	/**
+	 * 将方块的所有状态属性复制到原版方块的默认状态上。
+	 * <p>
+	 * Copy all state properties of a block onto the default state of a vanilla block.
+	 *
+	 * @param <T> 方块类型 / the block type
+	 * @param r 方块供应器 / the block supplier
+	 * @param vanilla 原版方块 / the vanilla block
+	 */
 	public static <T extends Block> void shaderLikeCopyState(Supplier<T> r,Block vanilla){
 		shaderLikeCopyState(r,vanilla.defaultBlockState());
 	}
+	/**
+	 * 将方块的所有状态属性复制到指定的原版方块状态上。
+	 * <p>
+	 * Copy all state properties of a block onto the specified vanilla block state.
+	 *
+	 * @param <T> 方块类型 / the block type
+	 * @param r 方块供应器 / the block supplier
+	 * @param vanilla 原版方块状态 / the vanilla block state
+	 */
 	public static <T extends Block> void shaderLikeCopyState(Supplier<T> r,BlockState vanilla){
 		shaderLikeStates(r, b->{
 			BlockState bs=vanilla;
@@ -117,9 +151,27 @@ public class ShaderCompatHelper {
 			return bs;
 		});
 	}
+	/**
+	 * 将方块的所有状态统一映射到原版方块的默认状态。
+	 * <p>
+	 * Map all states of a block to the default state of a vanilla block.
+	 *
+	 * @param <T> 方块类型 / the block type
+	 * @param r 方块供应器 / the block supplier
+	 * @param vanilla 原版方块 / the vanilla block
+	 */
 	public static <T extends Block> void shaderLike(Supplier<T> r,Block vanilla){
 		shaderLikeState(r,vanilla.defaultBlockState());
 	}
+	/**
+	 * 将方块的所有状态统一映射到指定的原版方块状态。
+	 * <p>
+	 * Map all states of a block to the specified vanilla block state.
+	 *
+	 * @param <T> 方块类型 / the block type
+	 * @param r 方块供应器 / the block supplier
+	 * @param vanilla 原版方块状态 / the vanilla block state
+	 */
 	public static <T extends Block> void shaderLikeState(Supplier<T> r,BlockState vanilla){
 		shaderLikeStates(r, b->vanilla);
 	}

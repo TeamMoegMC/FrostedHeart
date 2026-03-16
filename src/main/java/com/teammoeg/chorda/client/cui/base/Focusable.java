@@ -19,6 +19,14 @@
 
 package com.teammoeg.chorda.client.cui.base;
 
+/**
+ * 可获得焦点的UI元素接口。实现此接口的UI元素可以接收键盘输入焦点。
+ * 焦点由PrimaryLayer统一管理，同一时间只有一个元素可以获得焦点。
+ * <p>
+ * Interface for UI elements that can receive input focus. Elements implementing this
+ * interface can receive keyboard input focus. Focus is managed centrally by PrimaryLayer,
+ * with only one element focused at a time.
+ */
 public interface Focusable{
     boolean isFocused();
 

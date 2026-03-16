@@ -30,8 +30,17 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 
 import net.minecraft.network.chat.Component;
 /**
- * Fundamental of editor framework
- * */
+ * 编辑器框架的核心函数式接口，定义了打开编辑器的通用契约。
+ * 编辑器可以是对话框、提示框或任何能够编辑和返回值的UI组件。
+ * 支持值映射（xmap）、变更监听、默认值注入等组合操作。
+ * <p>
+ * Core functional interface of the editor framework defining the generic contract
+ * for opening editors. An editor can be a dialog, prompt, or any UI component capable
+ * of editing and returning a value. Supports value mapping (xmap), change listeners,
+ * default value injection, and other compositional operations.
+ *
+ * @param <T> 被编辑的值类型 / The type of value being edited
+ */
 @FunctionalInterface
 public interface Editor<T> {
 	/**

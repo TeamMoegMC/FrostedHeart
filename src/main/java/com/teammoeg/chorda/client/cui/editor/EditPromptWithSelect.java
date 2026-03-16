@@ -31,11 +31,30 @@ import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.network.chat.Component;
 
+/**
+ * 带选择按钮的文本输入提示对话框，在文本输入框旁提供一个额外的选择按钮，
+ * 点击可打开一个选择器来填充文本内容。
+ * <p>
+ * Text input prompt dialog with a select button, providing an additional selection
+ * button next to the text input. Clicking it opens a selector to populate the text.
+ */
 public class EditPromptWithSelect extends BaseEditDialog {
     LabeledTextBoxAndBtn box;
     Button ok;
     Button cancel;
 
+    /**
+     * 创建一个带选择按钮的文本输入提示对话框。
+     * <p>
+     * Creates a text input prompt dialog with a select button.
+     *
+     * @param panel      父UI元素 / the parent UI element
+     * @param label      输入框标签 / the input label
+     * @param val        初始文本值 / the initial text value
+     * @param sel        选择按钮标签 / the select button label
+     * @param onFinished 确认回调 / the confirm callback
+     * @param onbtn      选择按钮点击时打开的编辑器 / the editor opened on select button click
+     */
     public EditPromptWithSelect(UIElement panel, Component label, String val, Component sel, Consumer<String> onFinished, Editor<String> onbtn) {
         super(panel);
         box = new LabeledTextBoxAndBtn(this, label, val, sel, e -> onbtn.open(panel, sel, box.getText(), e));
@@ -64,6 +83,18 @@ public class EditPromptWithSelect extends BaseEditDialog {
         ok.setSize(300, 20);
     }
 
+    /**
+     * 创建一个带选择按钮的文本输入提示对话框（使用函数转换器）。
+     * <p>
+     * Creates a text input prompt dialog with a select button (using a function converter).
+     *
+     * @param panel      父UI元素 / the parent UI element
+     * @param label      输入框标签 / the input label
+     * @param val        初始文本值 / the initial text value
+     * @param sel        选择按钮标签 / the select button label
+     * @param onFinished 确认回调 / the confirm callback
+     * @param onbtn      选择按钮的值转换函数 / the value conversion function for select button
+     */
     public EditPromptWithSelect(UIElement panel, Component label, String val, Component sel, Consumer<String> onFinished, Function<String, String> onbtn) {
         this(panel, label, val, sel, onFinished, (p, l, v, c) -> c.accept(onbtn.apply(v)));
 

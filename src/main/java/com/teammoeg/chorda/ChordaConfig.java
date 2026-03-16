@@ -23,8 +23,20 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 
+/**
+ * Chorda 配置管理类。定义客户端、通用和服务端三种配置。
+ * 使用 Forge 的 {@link ForgeConfigSpec} 系统。
+ * <p>
+ * Configuration management class for Chorda. Defines client, common,
+ * and server configurations using Forge's {@link ForgeConfigSpec} system.
+ */
 public class ChordaConfig {
 
+    /**
+     * 客户端配置。仅影响本地客户端的设置。
+     * <p>
+     * Client configuration. Settings that only affect the local client.
+     */
     public static class Client {
 
         Client(ForgeConfigSpec.Builder builder) {
@@ -33,6 +45,11 @@ public class ChordaConfig {
 
     }
 
+    /**
+     * 通用配置。在客户端和服务端之间同步的设置。
+     * <p>
+     * Common configuration. Settings synchronized between client and server.
+     */
     public static class Common {
 
         Common(ForgeConfigSpec.Builder builder) {
@@ -41,7 +58,13 @@ public class ChordaConfig {
 
     }
 
+    /**
+     * 服务端配置。仅在服务端生效的设置。
+     * <p>
+     * Server configuration. Settings that only take effect on the server side.
+     */
     public static class Server {
+        /** 每 tick 执行的调度任务数量 / Number of scheduled tasks to execute per tick */
         public final ForgeConfigSpec.ConfigValue<Double> taskPerTick;
 
         Server(ForgeConfigSpec.Builder builder) {
@@ -50,6 +73,12 @@ public class ChordaConfig {
         }
 
     }
+
+    /**
+     * 向 Forge 注册所有配置类型。
+     * <p>
+     * Registers all config types with Forge.
+     */
     public static void register() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, CLIENT_CONFIG);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, COMMON_CONFIG);

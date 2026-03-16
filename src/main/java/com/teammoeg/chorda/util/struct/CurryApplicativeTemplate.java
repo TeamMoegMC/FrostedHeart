@@ -23,11 +23,32 @@ import java.util.function.Function;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+/**
+ * 柯里化应用函子模板，提供从1到32个参数的函数接口和类型安全的构建器模式。
+ * 用于构建具有多个参数的解析器或编解码器组合。
+ * <p>
+ * Curried applicative functor template providing function interfaces from 1 to 32 parameters
+ * and a type-safe builder pattern. Used for constructing parsers or codec combinations
+ * with multiple parameters.
+ */
 public class CurryApplicativeTemplate {
+	/**
+	 * 私有构造器，防止实例化此工具类。
+	 * <p>
+	 * Private constructor to prevent instantiation of this utility class.
+	 */
 	private CurryApplicativeTemplate() {
 
 	}
 
+	/**
+	 * 接受1个参数的函数接口。
+	 * <p>
+	 * Function interface accepting 1 parameter.
+	 *
+	 * @param <O> 返回类型 / the return type
+	 * @param <A> 参数类型 / the parameter type
+	 */
 	public static interface Function1<O, A> {
 		O apply(A a);
 	}
@@ -156,26 +177,88 @@ public class CurryApplicativeTemplate {
 		O apply(A a, B b, C c, D d, E e, F f, G g, H h, I i, J j, K k, L l, M m, N n, P o, Q p, R r, S s, T t, U u, V v, W w, X x, Y y, Z z, AA aa, AB ab, AC ac, AD ad, AE ae, AF af, AG ag);
 	}
 
+	/**
+	 * 包含对象和索引的条目记录，用于应用函子构建过程中追踪参数位置。
+	 * <p>
+	 * Item record containing an object and its index, used for tracking parameter positions during applicative functor building.
+	 *
+	 * @param <T> 条目类型 / the item type
+	 */
 	public static record Item<T>(T obj, int index) {
 	}
 
+	/**
+	 * 构建结果记录，包含条目数组、消费函数和参数数量。
+	 * <p>
+	 * Build result record containing the item array, consumer function and parameter count.
+	 *
+	 * @param <T> 条目类型 / the item type
+	 * @param <O> 输出类型 / the output type
+	 */
 	public static record BuildResult<T, O>(Item<T>[] obj, Function<BuiltParams, O> consumer,int parcount) {
 	}
+
+	/**
+	 * 已构建参数接口，提供按索引访问参数的能力。
+	 * <p>
+	 * Built parameters interface providing the ability to access parameters by index.
+	 */
 	public static interface BuiltParams{
 
+		/**
+		 * 获取指定索引的原始参数对象。
+		 * <p>
+		 * Get the raw parameter object at the specified index.
+		 *
+		 * @param params 参数索引 / the parameter index
+		 * @return 原始参数对象 / the raw parameter object
+		 */
 		public Object getRaw(int params);
+
+		/**
+		 * 获取指定索引的参数，自动转换类型。
+		 * <p>
+		 * Get the parameter at the specified index with automatic type casting.
+		 *
+		 * @param <T> 目标类型 / the target type
+		 * @param params 参数索引 / the parameter index
+		 * @return 类型转换后的参数 / the type-cast parameter
+		 */
 		@SuppressWarnings("unchecked")
 		default <T> T get(int params) {
 			return (T)getRaw(params);
 		}
 	}
+
+	/**
+	 * 可应用接口，表示可以参与应用函子构建的元素。
+	 * <p>
+	 * Applicatable interface representing elements that can participate in applicative functor building.
+	 *
+	 * @param <T> 自身类型 / the self type
+	 * @param <A> 值类型 / the value type
+	 */
 	public static interface Applicatable<T extends Applicatable<T, ?>, A> {
+		/**
+		 * 获取当前条目，默认返回自身。
+		 * <p>
+		 * Get the current item, defaults to returning self.
+		 *
+		 * @return 当前条目 / the current item
+		 */
 		@SuppressWarnings("unchecked")
 		default T getItem() {
 			return (T) this;
 		}
 	}
 
+	/**
+	 * 0参数应用函子构建器，作为链式构建的起点。
+	 * <p>
+	 * Zero-parameter applicative functor builder, serving as the starting point of the chain building.
+	 *
+	 * @param <T> 可应用元素类型 / the applicatable element type
+	 */
 	public static class Applicative0<T extends Applicatable<T, ?>> {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public static final Applicative0 EMPTY = new Applicative0<>(new Item[0]);
@@ -790,6 +873,16 @@ public class CurryApplicativeTemplate {
 				o.get(20), o.get(21), o.get(22), o.get(23)),24);
 		}
 	}
+	/**
+	 * 使用构建器函数创建应用函子构建结果。从空的Applicative0开始链式构建。
+	 * <p>
+	 * Create an applicative functor build result using a builder function. Starts chain building from an empty Applicative0.
+	 *
+	 * @param <T> 可应用元素类型 / the applicatable element type
+	 * @param <O> 输出类型 / the output type
+	 * @param builder 构建器函数 / the builder function
+	 * @return 构建结果 / the build result
+	 */
 	public static <T extends Applicatable<T, ?>,O> BuildResult<T, O> build(Function<Applicative0<T>, BuildResult<T, O>> builder) {
 		return builder.apply(Applicative0.getInstance());
 	}

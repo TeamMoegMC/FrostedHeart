@@ -26,12 +26,34 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 
+/**
+ * 空操作编解码器。编码时不输出任何数据，解码时始终返回预设值。适用于不需要持久化的常量或默认值。
+ * <p>
+ * No-operation codec. Outputs no data during encoding and always returns a preset value during decoding.
+ * Suitable for constants or default values that do not need persistence.
+ *
+ * @param <A> 编解码器处理的类型 / the type handled by the codec
+ */
 public class NopCodec<A> implements Codec<A> {
 	Supplier<A> generator;
+	/**
+	 * 使用固定值构造空操作编解码器。
+	 * <p>
+	 * Constructs a no-operation codec with a fixed value.
+	 *
+	 * @param value 解码时返回的固定值 / the fixed value returned during decoding
+	 */
 	public NopCodec(A value) {
 		super();
 		this.generator =()-> value;
 	}
+	/**
+	 * 使用值提供器构造空操作编解码器。
+	 * <p>
+	 * Constructs a no-operation codec with a value supplier.
+	 *
+	 * @param generator 解码时返回值的提供器 / the supplier for the value returned during decoding
+	 */
 	public NopCodec(Supplier<A> generator) {
 		super();
 		this.generator = generator;

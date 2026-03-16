@@ -27,6 +27,16 @@ import net.minecraft.sounds.SoundEvents;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.system.MemoryUtil;
 
+/**
+ * 客户端输入辅助工具类，提供键盘和鼠标输入状态检测、剪贴板操作和光标管理功能。
+ * 封装了GLFW底层输入API，提供更方便的修饰键检测（Shift/Ctrl/Alt）、
+ * 常用按键判断（回车/退格/复制/粘贴等）以及标准光标样式切换。
+ * <p>
+ * Client-side input helper utility providing keyboard and mouse input state detection,
+ * clipboard operations, and cursor management. Wraps low-level GLFW input APIs for
+ * convenient modifier key detection (Shift/Ctrl/Alt), common key checks
+ * (Enter/Backspace/Copy/Paste etc.), and standard cursor style switching.
+ */
 public class CInputHelper {
 
 	public CInputHelper() {
@@ -115,6 +125,11 @@ public class CInputHelper {
 		return (keyCode == GLFW.GLFW_KEY_TAB && modifier == GLFW.GLFW_MOD_SHIFT) || keyCode == GLFW.GLFW_KEY_W || keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_PAGE_UP;
 	}
 
+	/**
+	 * 标准光标样式枚举，封装GLFW光标类型。
+	 * <p>
+	 * Standard cursor style enum wrapping GLFW cursor types.
+	 */
 	public enum Cursor{
 		NORMAL(GLFW.GLFW_ARROW_CURSOR),
 		IBEAM(GLFW.GLFW_IBEAM_CURSOR),

@@ -27,14 +27,30 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 
 import net.minecraft.network.chat.Component;
 
+/**
+ * 提示框元素控件。一个不可见的UI元素，仅用于在悬停时提供自定义提示信息。
+ * <p>
+ * Tooltip element widget. An invisible UI element used solely to provide
+ * custom tooltip information on hover.
+ */
 public class ToolTipElement extends UIElement {
+    /** 提示信息构建回调 / Tooltip builder callback */
     Consumer<TooltipBuilder> csm;
 
+    /**
+     * 创建提示框元素。
+     * <p>
+     * Creates a tooltip element.
+     *
+     * @param p 父级UI元素 / Parent UI element
+     * @param csm 提示信息构建回调 / Tooltip builder callback
+     */
     public ToolTipElement(UIElement p, Consumer<TooltipBuilder> csm) {
         super(p);
         this.csm = csm;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void getTooltip(TooltipBuilder list) {
         super.getTooltip(list);

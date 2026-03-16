@@ -33,9 +33,15 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 /**
- * Abstract ui element, for any basic ui element
- * 
- * */
+ * CUI框架的抽象UI元素基类，所有UI组件的根类。
+ * 提供位置、尺寸、鼠标交互、键盘事件、工具提示、主题和渲染等基础功能。
+ * 每个元素都有一个父元素引用，形成树形层级结构。
+ * <p>
+ * Abstract base class for all UI elements in the CUI framework.
+ * Provides fundamental capabilities including position, size, mouse interaction,
+ * keyboard events, tooltips, theming, and rendering. Each element holds a parent
+ * reference, forming a tree-based hierarchy.
+ */
 public class UIElement{
 	@Getter
 	protected UIElement parent;

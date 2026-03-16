@@ -53,33 +53,40 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * utils wrapped function for serialization and networking.
+ * 序列化和网络通信的封装工具类，提供JSON、NBT、网络数据包的读写方法。
+ * <p>
+ * Utility class with wrapped functions for serialization and networking,
+ * providing read/write methods for JSON, NBT, and network packets.
  */
 @ParametersAreNonnullByDefault
 public class SerializeUtil {
 	
 	/**
-	 * The Class Deserializer.
+	 * 反序列化器类，支持从JSON和网络数据包两种来源反序列化对象。
+	 * <p>
+	 * Deserializer class supporting deserialization from both JSON and network packet sources.
 	 *
-	 * @param <T> the generic type
-	 * @param <U> the generic type
+	 * @param <T> JSON元素类型 / the JSON element type
+	 * @param <U> 可写入对象类型 / the writable object type
 	 */
 	public static class Deserializer<T extends JsonElement, U extends Writeable> {
-		
-		/** The id. */
+
+		/** 类型ID / the type ID. */
 		private int id;
-		
-		/** The from json. */
+
+		/** JSON反序列化函数 / the JSON deserialization function. */
 		public Function<T, U> fromJson;
-		
-		/** The from packet. */
+
+		/** 数据包反序列化函数 / the packet deserialization function. */
 		public Function<FriendlyByteBuf, U> fromPacket;
 
 		/**
+		 * 创建一个新的反序列化器实例。
+		 * <p>
 		 * Instantiates a new deserializer.
 		 *
-		 * @param fromJson the from json
-		 * @param fromPacket the from packet
+		 * @param fromJson JSON反序列化函数 / the JSON deserialization function
+		 * @param fromPacket 数据包反序列化函数 / the packet deserialization function
 		 */
 		public Deserializer(Function<T, U> fromJson, Function<FriendlyByteBuf, U> fromPacket) {
 			super();
@@ -88,40 +95,48 @@ public class SerializeUtil {
 		}
 
 		/**
-		 * Read.
+		 * 从网络数据包读取对象。
+		 * <p>
+		 * Reads an object from a network packet.
 		 *
-		 * @param packet the packet
-		 * @return the u
+		 * @param packet 网络数据包 / the network packet
+		 * @return 反序列化的对象 / the deserialized object
 		 */
 		public U read(FriendlyByteBuf packet) {
 			return fromPacket.apply(packet);
 		}
 
 		/**
-		 * Read.
+		 * 从JSON元素读取对象。
+		 * <p>
+		 * Reads an object from a JSON element.
 		 *
-		 * @param json the json
-		 * @return the u
+		 * @param json JSON元素 / the JSON element
+		 * @return 反序列化的对象 / the deserialized object
 		 */
 		public U read(T json) {
 			return fromJson.apply(json);
 		}
 
 		/**
-		 * Serialize.
+		 * 将对象序列化为JSON元素。
+		 * <p>
+		 * Serializes an object to a JSON element.
 		 *
-		 * @param obj the obj
-		 * @return the json element
+		 * @param obj 要序列化的对象 / the object to serialize
+		 * @return JSON元素 / the JSON element
 		 */
 		public JsonElement serialize(U obj) {
 			return obj.serialize();
 		}
 
 		/**
-		 * Write.
+		 * 将对象写入网络数据包，包含类型ID前缀。
+		 * <p>
+		 * Writes an object to a network packet with a type ID prefix.
 		 *
-		 * @param packet the packet
-		 * @param obj the obj
+		 * @param packet 网络数据包 / the network packet
+		 * @param obj 要写入的对象 / the object to write
 		 */
 		public void write(FriendlyByteBuf packet, U obj) {
 			packet.writeVarInt(id);
@@ -130,10 +145,12 @@ public class SerializeUtil {
 	}
 	
 	/**
-	 * Read ItemStack from json
+	 * 从JSON元素读取ItemStack。
+	 * <p>
+	 * Read ItemStack from JSON element.
 	 * @see #toJson
-	 * @param elm the elm
-	 * @return the item stack
+	 * @param elm JSON元素 / the JSON element
+	 * @return 物品栈 / the item stack
 	 */
 	@Nonnull
 	public static ItemStack fromJson(JsonElement elm) {
@@ -156,12 +173,14 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Cached generator
-	 * @deprecated use {@link net.minecraft.Util#memoize(java.util.function.Function) Util.memorize} for better multithreading
-	 * @param <K> the key type
-	 * @param <V> the value type
-	 * @param func the generator function
-	 * @return the cached generator function
+	 * 缓存生成器，将函数结果缓存以避免重复计算。
+	 * <p>
+	 * Cached generator that caches function results to avoid repeated computation.
+	 * @deprecated 请使用 {@link net.minecraft.Util#memoize(java.util.function.Function) Util.memorize} 以获得更好的多线程支持 / use Util.memorize for better multithreading
+	 * @param <K> 键类型 / the key type
+	 * @param <V> 值类型 / the value type
+	 * @param func 生成器函数 / the generator function
+	 * @return 缓存后的生成器函数 / the cached generator function
 	 */
 	@Deprecated
 	public static <K, V> Function<K, V> cached(Function<K, V> func) {
@@ -170,16 +189,14 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Parses the json element list, this would check if elm is array/null.<p>
-	 * case array, mapper would be called to serialize each element.<br>
-	 * case null, an empty list would be returned<br>
-	 * case other, mapper would be called to serialize to element itself
-	 * 
+	 * 解析JSON元素列表，自动检测数组/null/单元素情况。
+	 * <p>
+	 * Parses a JSON element list, automatically detecting array/null/single-element cases.
 	 *
-	 * @param <T> the return object
-	 * @param elm the json element read from file
-	 * @param mapper the mapper converts json to object
-	 * @return the object list
+	 * @param <T> 返回对象类型 / the return object type
+	 * @param elm 从文件读取的JSON元素 / the JSON element read from file
+	 * @param mapper JSON到对象的转换函数 / the mapper that converts JSON to object
+	 * @return 对象列表 / the object list
 	 */
 	@Nonnull
 	public static <T> List<T> parseJsonElmList(@Nullable JsonElement elm, Function<JsonElement, T> mapper) {
@@ -192,17 +209,15 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Parses the json object list, this would check if elm is array/null.<p>
-	 * case array, mapper would be called to deserialize each element.<br>
-	 * case null, an empty list would be returned<br>
-	 * case object, mapper would be called to deserialize element itself
-	 * 
-	 * @throws IllegalStateException when element of array or the element itself is not json object
-	 * 
-	 * @param <T> the generic type
-	 * @param elm the elm
-	 * @param mapper the mapper
-	 * @return the list
+	 * 解析JSON对象列表，自动检测数组/null/单对象情况。
+	 * <p>
+	 * Parses a JSON object list, automatically detecting array/null/single-object cases.
+	 *
+	 * @throws IllegalStateException 当数组元素或元素本身不是JSON对象时抛出 / when array element or element itself is not a JSON object
+	 * @param <T> 返回对象类型 / the return object type
+	 * @param elm JSON元素 / the JSON element
+	 * @param mapper JSON对象到对象的转换函数 / the mapper that converts JSON object to object
+	 * @return 对象列表 / the object list
 	 */
 	@Nonnull
 	public static <T> List<T> parseJsonList(@Nullable JsonElement elm, Function<JsonObject, T> mapper) {
@@ -215,20 +230,24 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Read 8 boolean flags from byte bits
+	 * 从网络缓冲区读取8个布尔标志位。
+	 * <p>
+	 * Reads 8 boolean flags from byte bits in a network buffer.
 	 * @see #writeBooleans(FriendlyByteBuf, boolean...)
-	 * @param buffer the network buffer
-	 * @return the boolean flags
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @return 布尔标志数组 / the boolean flags array
 	 */
 	public static boolean[] readBooleans(FriendlyByteBuf buffer) {
 		return readBooleans(buffer.readByte());
 	}
 
 	/**
-	 * Read boolean flags from byte bits.
+	 * 从字节位中读取布尔标志。
+	 * <p>
+	 * Reads boolean flags from byte bits.
 	 * @see #writeBooleans(boolean...)
-	 * @param in the input byte
-	 * @return the boolean flags
+	 * @param in 输入字节 / the input byte
+	 * @return 布尔标志数组 / the boolean flags array
 	 */
 	public static boolean[] readBooleans(byte in) {
 		boolean[] ret = new boolean[8];
@@ -240,11 +259,13 @@ public class SerializeUtil {
 	}
 	
 	/**
-	 * Read booleans with a maximum count of bits, in BE order
+	 * 从long值中按大端序读取指定数量的布尔标志。
+	 * <p>
+	 * Reads a specified number of boolean flags from a long value in big-endian order.
 	 * @see #writeLongBooleans
-	 * @param in the input long
-	 * @param size the flag count
-	 * @return the flags
+	 * @param in 输入long值 / the input long value
+	 * @param size 标志数量 / the flag count
+	 * @return 布尔标志数组 / the boolean flags array
 	 */
 	public static boolean[] readLongBooleans(long in,int size) {
 		boolean[] ret = new boolean[size];
@@ -256,10 +277,12 @@ public class SerializeUtil {
 	}
 	
 	/**
-	 * Write booleans to a long in BE order
+	 * 将布尔标志按大端序写入long值。
+	 * <p>
+	 * Writes boolean flags to a long value in big-endian order.
 	 * @see #readLongBooleans
-	 * @param elms the flags
-	 * @return the long
+	 * @param elms 布尔标志 / the boolean flags
+	 * @return 编码后的long值 / the encoded long value
 	 */
 	public static long writeLongBooleans(boolean... elms) {
 		long b = 0;
@@ -273,15 +296,16 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Read list from buffer, may return null if the list written is null
-	 * the function would be called to read each element to read from packet to required object.
+	 * 从缓冲区读取可空列表，若写入时为null则返回null。
+	 * <p>
+	 * Reads a nullable list from buffer, may return null if the written list was null.
 	 * @see #readList(FriendlyByteBuf, Function)
 	 * @see #writeListNullable(FriendlyByteBuf, Collection, BiConsumer)
 	 * @see #writeListNullable2(FriendlyByteBuf, Collection, BiConsumer)
-	 * @param <T> the list element type
-	 * @param buffer the buffer
-	 * @param func the read method for the required object
-	 * @return the list
+	 * @param <T> 列表元素类型 / the list element type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param func 元素读取方法 / the read method for each element
+	 * @return 列表或null / the list or null
 	 */
 	@Nullable
 	public static <T> List<T> readListNullable(FriendlyByteBuf buffer, Function<FriendlyByteBuf, T> func) {
@@ -291,14 +315,15 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Read a list from buffer
-	 * the function would be called to read each element to read from packet to required object.
+	 * 从缓冲区读取列表。
+	 * <p>
+	 * Reads a list from buffer.
 	 * @see #writeList(FriendlyByteBuf, Collection, BiConsumer)
 	 * @see #writeList2(FriendlyByteBuf, Collection, BiConsumer)
-	 * @param <T> the list element type
-	 * @param buffer the buffer
-	 * @param func the read method for the required object
-	 * @return the list
+	 * @param <T> 列表元素类型 / the list element type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param func 元素读取方法 / the read method for each element
+	 * @return 读取的列表 / the list
 	 */
 	public static <T> List<T> readList(FriendlyByteBuf buffer, Function<FriendlyByteBuf, T> func) {
 		int cnt = buffer.readVarInt();
@@ -309,16 +334,17 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Read values and set the provided map to the read key values with separate key and value reader.
-	 * The key reader and value reader would be called to read each entry
+	 * 使用分别的键和值读取器从缓冲区读取并设置Map。
+	 * <p>
+	 * Reads values from buffer and sets the provided map using separate key and value readers.
 	 * @see #writeMap(FriendlyByteBuf, Map, BiConsumer, BiConsumer)
-	 * @param <K> the key type
-	 * @param <V> the value type
-	 * @param buffer the buffer
-	 * @param map the map to write entrys within
-	 * @param keyreader the key reader
-	 * @param valuereader the value reader
-	 * @return the given map
+	 * @param <K> 键类型 / the key type
+	 * @param <V> 值类型 / the value type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param map 要填充的Map / the map to populate
+	 * @param keyreader 键读取器 / the key reader
+	 * @param valuereader 值读取器 / the value reader
+	 * @return 填充后的Map / the populated map
 	 */
 	public static <K, V> Map<K, V> readMap(FriendlyByteBuf buffer, Map<K, V> map, Function<FriendlyByteBuf, K> keyreader, Function<FriendlyByteBuf, V> valuereader) {
 		map.clear();
@@ -331,15 +357,16 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Read values and set the provided map to the read key values with single entry reader.
-	 * The entry reader would be called to read each entry
+	 * 使用单一条目读取器从缓冲区读取并设置Map。
+	 * <p>
+	 * Reads values from buffer and sets the provided map using a single entry reader.
 	 * @see #writeEntry(FriendlyByteBuf, Map, BiConsumer)
-	 * @param <K> the key type
-	 * @param <V> the value type
-	 * @param buffer the buffer
-	 * @param map the map to write entrys within
-	 * @param reader the entry reader
-	 * @return the given map
+	 * @param <K> 键类型 / the key type
+	 * @param <V> 值类型 / the value type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param map 要填充的Map / the map to populate
+	 * @param reader 条目读取器 / the entry reader
+	 * @return 填充后的Map / the populated map
 	 */
 	public static <K, V> Map<K, V> readEntry(FriendlyByteBuf buffer, Map<K, V> map, BiConsumer<FriendlyByteBuf, BiConsumer<K, V>> reader) {
 		map.clear();
@@ -350,14 +377,16 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Read optional from packet
+	 * 从数据包读取Optional值。
+	 * <p>
+	 * Reads an Optional value from a packet.
 	 * @see #writeOptional(FriendlyByteBuf, Optional, BiConsumer)
 	 * @see #writeOptional(FriendlyByteBuf, Object, BiConsumer)
 	 * @see #writeOptional2(FriendlyByteBuf, Object, BiConsumer)
-	 * @param <T> the optional type
-	 * @param buffer the buffer
-	 * @param func the read function if object present
-	 * @return the optional value
+	 * @param <T> Optional类型 / the optional type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param func 对象存在时的读取函数 / the read function when object is present
+	 * @return Optional值 / the optional value
 	 */
 	public static <T> Optional<T> readOptional(FriendlyByteBuf buffer, Function<FriendlyByteBuf, T> func) {
 		if (buffer.readBoolean())
@@ -366,10 +395,12 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Read short array from packet
+	 * 从数据包读取short数组。
+	 * <p>
+	 * Reads a short array from a packet.
 	 * @see #writeShortArray(FriendlyByteBuf, short[])
-	 * @param buffer the buffer
-	 * @return the short array
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @return short数组 / the short array
 	 */
 	public static short[] readShortArray(FriendlyByteBuf buffer) {
 		if (!buffer.readBoolean())
@@ -382,24 +413,27 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Read string-value map and set the provided map to the read key values with value reader.
-	 * The value reader would be called to read each entry value
+	 * 读取字符串键Map，使用值读取器读取每个条目。
+	 * <p>
+	 * Reads a string-keyed map, using a value reader for each entry.
 	 * @see #readStringMap(FriendlyByteBuf, Map, Function)
-	 * @param <V> the value type
-	 * @param buffer the buffer
-	 * @param map the map to write entrys within
-	 * @param valuereader the value reader
-	 * @return the given map
+	 * @param <V> 值类型 / the value type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param map 要填充的Map / the map to populate
+	 * @param valuereader 值读取器 / the value reader
+	 * @return 填充后的Map / the populated map
 	 */
 	public static <V> Map<String, V> readStringMap(FriendlyByteBuf buffer, Map<String, V> map, Function<FriendlyByteBuf, V> valuereader) {
 		return readMap(buffer, map, FriendlyByteBuf::readUtf, valuereader);
 	}
 
 	/**
-	 * Save itemstack to json
+	 * 将物品栈保存为JSON。
+	 * <p>
+	 * Saves an ItemStack to JSON.
 	 * @see #fromJson(JsonElement)
-	 * @param stack the stack
-	 * @return the json element
+	 * @param stack 物品栈 / the item stack
+	 * @return JSON元素 / the JSON element
 	 */
 	public static JsonElement toJson(ItemStack stack) {
 		boolean hasCount = stack.getCount() > 1, hasTag = stack.hasTag();
@@ -415,12 +449,14 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * convert collection to json list.
+	 * 将集合转换为JSON数组。
+	 * <p>
+	 * Converts a collection to a JSON array.
 	 *
-	 * @param <T> the collection element list
-	 * @param li the collection
-	 * @param mapper the function convert element to json
-	 * @return the json array
+	 * @param <T> 集合元素类型 / the collection element type
+	 * @param li 集合 / the collection
+	 * @param mapper 元素转JSON函数 / the function to convert element to JSON
+	 * @return JSON数组 / the JSON array
 	 */
 	public static <T> JsonArray toJsonList(Collection<T> li, Function<T, JsonElement> mapper) {
 		JsonArray ja = new JsonArray();
@@ -429,15 +465,16 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * To json string list.
-	 * convert object to a type with toString, and this would call toString to serialize items to json string.
+	 * 将集合转换为JSON字符串列表，使用toString序列化。
+	 * <p>
+	 * Converts a collection to a JSON string list using toString serialization.
 	 * @see #toJsonList(Collection, Function)
 	 *
-	 * @param <T> the original object type
-	 * @param <B> the toString type
-	 * @param li the collection
-	 * @param mapper the function convert element to toString object
-	 * @return the json array
+	 * @param <T> 原始对象类型 / the original object type
+	 * @param <B> toString类型 / the toString type
+	 * @param li 集合 / the collection
+	 * @param mapper 元素到toString对象的转换函数 / the function to convert element to toString object
+	 * @return JSON数组 / the JSON array
 	 */
 	public static <T, B> JsonArray toJsonStringList(Collection<T> li, Function<T, B> mapper) {
 		JsonArray ja = new JsonArray();
@@ -446,12 +483,14 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Serialize a collection to a NBT list
-	 * 
-	 * @param <T> the element type
-	 * @param stacks the collection
-	 * @param mapper the element serializer, the second argument is array nbt element builder
-	 * @return the list tag
+	 * 将集合序列化为NBT列表标签。
+	 * <p>
+	 * Serializes a collection to an NBT list tag.
+	 *
+	 * @param <T> 元素类型 / the element type
+	 * @param stacks 集合 / the collection
+	 * @param mapper 元素序列化器，第二个参数为数组NBT元素构建器 / the element serializer, second argument is the array NBT element builder
+	 * @return 列表标签 / the list tag
 	 */
 	public static <T> ListTag toNBTList(Collection<T> stacks, BiConsumer<T, ArrayNBTBuilder<Void>> mapper) {
 		ArrayNBTBuilder<Void> arrayBuilder = ArrayNBTBuilder.create();
@@ -460,12 +499,14 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Serialize a collection to a NBT map.
+	 * 将集合序列化为NBT复合标签（Map形式）。
+	 * <p>
+	 * Serializes a collection to an NBT compound tag (map form).
 	 *
-	 * @param <T> the element type
-	 * @param stacks the collection
-	 * @param mapper the element serializer, the second argument is map nbt entry builder
-	 * @return the compound tag
+	 * @param <T> 元素类型 / the element type
+	 * @param stacks 集合 / the collection
+	 * @param mapper 元素序列化器，第二个参数为Map NBT条目构建器 / the element serializer, second argument is the map NBT entry builder
+	 * @return 复合标签 / the compound tag
 	 */
 	public static <T> CompoundTag toNBTMap(Collection<T> stacks, BiConsumer<T, CompoundNBTBuilder<Void>> mapper) {
 		CompoundNBTBuilder<Void> compoundBuilder = CompoundNBTBuilder.create();
@@ -474,20 +515,24 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write boolean flags as a byte into buffer.
+	 * 将布尔标志作为一个字节写入缓冲区。
+	 * <p>
+	 * Writes boolean flags as a byte into buffer.
 	 *
-	 * @param buffer the buffer
-	 * @param elms elements to write, 8 elements max
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param elms 要写入的元素，最多8个 / elements to write, 8 elements max
 	 */
 	public static void writeBooleans(FriendlyByteBuf buffer, boolean... elms) {
 		buffer.writeByte(writeBooleans(elms));
 	}
 
 	/**
-	 * Write boolean flags to a byte bit.
+	 * 将布尔标志写入一个字节的各位。
+	 * <p>
+	 * Writes boolean flags to a byte's bits.
 	 * @see #readBooleans(byte)
-	 * @param elms the elms
-	 * @return the byte
+	 * @param elms 布尔标志 / the boolean flags
+	 * @return 编码后的字节 / the encoded byte
 	 */
 	public static byte writeBooleans(boolean... elms) {
 		if (elms.length > 8) {
@@ -504,13 +549,15 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write a nullable colleciton to the packet, each element is written by calling the function.
+	 * 将可空集合写入数据包。
+	 * <p>
+	 * Writes a nullable collection to the packet.
 	 * @see #readListNullable(FriendlyByteBuf, Function)
 	 * @see #writeListNullable2(FriendlyByteBuf, Collection, BiConsumer)
-	 * @param <T> the element type
-	 * @param buffer the buffer
-	 * @param elms the colleciton
-	 * @param func the write function
+	 * @param <T> 元素类型 / the element type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param elms 集合 / the collection
+	 * @param func 写入函数 / the write function
 	 */
 	public static <T> void writeListNullable(FriendlyByteBuf buffer,@Nullable Collection<T> elms, BiConsumer<T, FriendlyByteBuf> func) {
 		if (elms == null) {
@@ -522,14 +569,15 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write a nullable colleciton to the packet, each element is written by calling the function.
-	 * This method is different from {@link #writeListNullable(FriendlyByteBuf, Collection, BiConsumer) writeListNullable} with reversed function parameter order, so that :: operator can be used
+	 * 将可空集合写入数据包，函数参数顺序反转以支持方法引用。
+	 * <p>
+	 * Writes a nullable collection to the packet with reversed function parameter order for method reference support.
 	 * @see #readListNullable(FriendlyByteBuf, Function)
 	 * @see #writeListNullable(FriendlyByteBuf, Collection, BiConsumer)
-	 * @param <T> the element type
-	 * @param buffer the buffer
-	 * @param elms the colleciton
-	 * @param func the write function
+	 * @param <T> 元素类型 / the element type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param elms 集合 / the collection
+	 * @param func 写入函数 / the write function
 	 */
 	public static <T> void writeListNullable2(FriendlyByteBuf buffer, Collection<T> elms, BiConsumer<FriendlyByteBuf, T> func) {
 		if (elms == null) {
@@ -541,13 +589,15 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write a nonnull colleciton to the packet, each element is written by calling the function.
+	 * 将非空集合写入数据包。
+	 * <p>
+	 * Writes a non-null collection to the packet.
 	 * @see #readList(FriendlyByteBuf, Function)
 	 * @see #writeList2(FriendlyByteBuf, Collection, BiConsumer)
-	 * @param <T> the element type
-	 * @param buffer the buffer
-	 * @param elms the colleciton
-	 * @param func the write function
+	 * @param <T> 元素类型 / the element type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param elms 集合 / the collection
+	 * @param func 写入函数 / the write function
 	 */
 	public static <T> void writeList(FriendlyByteBuf buffer, Collection<T> elms, BiConsumer<T, FriendlyByteBuf> func) {
 		buffer.writeVarInt(elms.size());
@@ -555,13 +605,15 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write entries of the map to packet with given write function
+	 * 将Map的条目写入数据包。
+	 * <p>
+	 * Writes map entries to the packet with the given write function.
 	 * @see #readEntry(FriendlyByteBuf, Map, BiConsumer)
-	 * @param <K> the key type
-	 * @param <V> the value type
-	 * @param buffer the buffer
-	 * @param elms the map
-	 * @param func the write function
+	 * @param <K> 键类型 / the key type
+	 * @param <V> 值类型 / the value type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param elms Map / the map
+	 * @param func 写入函数 / the write function
 	 */
 	public static <K, V> void writeEntry(FriendlyByteBuf buffer, Map<K, V> elms, BiConsumer<Map.Entry<K, V>, FriendlyByteBuf> func) {
 		buffer.writeVarInt(elms.size());
@@ -569,14 +621,15 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write a nonnull colleciton to the packet, each element is written by calling the function.
-	 * This method is different from {@link #writeList(FriendlyByteBuf, Collection, BiConsumer) writeList} with reversed function parameter order, so that :: operator can be used
+	 * 将非空集合写入数据包，函数参数顺序反转以支持方法引用。
+	 * <p>
+	 * Writes a non-null collection to the packet with reversed function parameter order for method reference support.
 	 * @see #readList(FriendlyByteBuf, Function)
 	 * @see #writeList(FriendlyByteBuf, Collection, BiConsumer)
-	 * @param <T> the element type
-	 * @param buffer the buffer
-	 * @param elms the colleciton
-	 * @param func the write function
+	 * @param <T> 元素类型 / the element type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param elms 集合 / the collection
+	 * @param func 写入函数 / the write function
 	 */
 	public static <T> void writeList2(FriendlyByteBuf buffer, Collection<T> elms, BiConsumer<FriendlyByteBuf, T> func) {
 		buffer.writeVarInt(elms.size());
@@ -584,14 +637,16 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write map to packet with the given key and value writer for each entry.
+	 * 使用指定的键和值写入器将Map写入数据包。
+	 * <p>
+	 * Writes a map to the packet with given key and value writers for each entry.
 	 * @see #readMap(FriendlyByteBuf, Map, Function, Function)
-	 * @param <K> the key type
-	 * @param <V> the value type
-	 * @param buffer the buffer
-	 * @param elms the map
-	 * @param keywriter the key writer
-	 * @param valuewriter the value writer
+	 * @param <K> 键类型 / the key type
+	 * @param <V> 值类型 / the value type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param elms Map / the map
+	 * @param keywriter 键写入器 / the key writer
+	 * @param valuewriter 值写入器 / the value writer
 	 */
 	public static <K, V> void writeMap(FriendlyByteBuf buffer, Map<K, V> elms, BiConsumer<K, FriendlyByteBuf> keywriter, BiConsumer<V, FriendlyByteBuf> valuewriter) {
 		writeListNullable(buffer, elms.entrySet(), (p, b) -> {
@@ -601,12 +656,14 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write optional value to packet, the write function would be called to write data when optional is not null
+	 * 将Optional值写入数据包，值存在时调用写入函数。
+	 * <p>
+	 * Writes an Optional value to the packet, calling the write function when the value is present.
 	 *
-	 * @param <T> the optional type
-	 * @param buffer the buffer
-	 * @param data the optional data
-	 * @param func the write function
+	 * @param <T> Optional类型 / the optional type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param data Optional数据 / the optional data
+	 * @param func 写入函数 / the write function
 	 */
 	public static <T> void writeOptional(FriendlyByteBuf buffer, Optional<T> data, BiConsumer<T, FriendlyByteBuf> func) {
 		if (data.isPresent()) {
@@ -618,35 +675,40 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write nullable data as optional to packet.
+	 * 将可空数据作为Optional写入数据包。
+	 * <p>
+	 * Writes nullable data as an Optional to the packet.
 	 * @see #writeOptional(FriendlyByteBuf, Optional, BiConsumer)
-	 * @param <T> the optional type
-	 * @param buffer the buffer
-	 * @param data the data
-	 * @param func the write function
+	 * @param <T> Optional类型 / the optional type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param data 数据 / the data
+	 * @param func 写入函数 / the write function
 	 */
 	public static <T> void writeOptional(FriendlyByteBuf buffer,@Nullable T data, BiConsumer<T, FriendlyByteBuf> func) {
 		writeOptional(buffer, Optional.ofNullable(data), func);
 	}
 
 	/**
-	 * Write nullable data as optional to packet.
-	 * This method is different from {@link #writeOptional(FriendlyByteBuf, Object, BiConsumer) writeOptional} with reversed function parameter order, so that :: operator can be used 
+	 * 将可空数据作为Optional写入数据包，函数参数顺序反转以支持方法引用。
+	 * <p>
+	 * Writes nullable data as Optional to the packet with reversed function parameter order for method reference support.
 	 * @see #writeOptional(FriendlyByteBuf, Optional, BiConsumer)
-	 * @param <T> the optional type
-	 * @param buffer the buffer
-	 * @param data the data
-	 * @param func the write function
+	 * @param <T> Optional类型 / the optional type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param data 数据 / the data
+	 * @param func 写入函数 / the write function
 	 */
 	public static <T> void writeOptional2(FriendlyByteBuf buffer, T data, BiConsumer<FriendlyByteBuf, T> func) {
 		writeOptional(buffer, data, (a, b) -> func.accept(b, a));
 	}
 
 	/**
-	 * Write short array.
+	 * 将short数组写入数据包。
+	 * <p>
+	 * Writes a short array to the packet.
 	 *
-	 * @param buffer the buffer
-	 * @param arr the array
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param arr short数组 / the short array
 	 */
 	public static void writeShortArray(FriendlyByteBuf buffer, short[] arr) {
 		if (arr == null) {
@@ -660,13 +722,15 @@ public class SerializeUtil {
 	}
 
 	/**
-	 * Write string-value map to the packet, the value writer is called to write each entry.
+	 * 将字符串键Map写入数据包，使用值写入器写入每个条目。
+	 * <p>
+	 * Writes a string-keyed map to the packet, using a value writer for each entry.
 	 *
 	 * @see #readStringMap(FriendlyByteBuf, Map, Function)
-	 * @param <V> the value type
-	 * @param buffer the buffer
-	 * @param elms the map
-	 * @param valuewriter the value writer
+	 * @param <V> 值类型 / the value type
+	 * @param buffer 网络缓冲区 / the network buffer
+	 * @param elms Map / the map
+	 * @param valuewriter 值写入器 / the value writer
 	 */
 	public static <V> void writeStringMap(FriendlyByteBuf buffer, Map<String, V> elms, BiConsumer<V, FriendlyByteBuf> valuewriter) {
 		writeMap(buffer, elms, (p, b) -> b.writeUtf(p), valuewriter);

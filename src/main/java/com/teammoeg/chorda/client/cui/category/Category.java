@@ -34,8 +34,15 @@ import net.minecraft.network.chat.Component;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * 可折叠的分类容器，支持嵌套子分类和条目选择。
+ * <p>
+ * A collapsible category container that supports nested sub-categories and entry selection.
+ */
 public class Category extends UILayer {
+    /** 最大嵌套深度 / Maximum nesting depth */
     public static final int MAX_DEPTH = 16;
+    /** 子元素的水平偏移量 / Horizontal offset for child elements */
     public static final int CHILDREN_OFFSET = 8;
     @Getter
     private final int depth;
@@ -48,6 +55,14 @@ public class Category extends UILayer {
     protected boolean opened = false;
     protected FlatIcon.FlatIconWidget icon;
 
+    /**
+     * 创建一个新的分类。
+     * <p>
+     * Creates a new category.
+     *
+     * @param panel 父层容器 / the parent layer container
+     * @param title 分类标题 / the category title
+     */
     public Category(UILayer panel, Component title) {
         super(panel);
         setSize(panel.getWidth(), Entry.DEF_HEIGHT);
@@ -111,6 +126,13 @@ public class Category extends UILayer {
         title.setWidth(getWidth() - titleOffsetX - CHILDREN_OFFSET);
     }
 
+    /**
+     * 批量添加子元素到此分类。
+     * <p>
+     * Adds all child elements to this category in batch.
+     *
+     * @param widgets 要添加的子元素集合 / the collection of child elements to add
+     */
     public void addAll(Collection<? extends UIElement> widgets) {
         widgets.forEach(this::add);
     }
@@ -131,8 +153,12 @@ public class Category extends UILayer {
     }
 
     /**
-     * @param path 获取路径的最后一个元素
-     * @return 路径的最后一个元素
+     * 通过路径查找子元素。路径以"/"分隔各层级名称。
+     * <p>
+     * Finds a child element by path. The path uses "/" to separate level names.
+     *
+     * @param path 以"/"分隔的路径字符串 / a "/" separated path string
+     * @return 路径末端的元素，未找到则返回null / the element at the end of the path, or null if not found
      */
     public UIElement find(String path) {
         if (path == null || path.isBlank()) return null;
@@ -169,8 +195,12 @@ public class Category extends UILayer {
     }
 
     /**
-     * @param path 打开路径中的所有 Category
-     * @return 路径的最后一个元素
+     * 打开路径中的所有分类，并选中末端条目。
+     * <p>
+     * Opens all categories along the path and selects the terminal entry.
+     *
+     * @param path 以"/"分隔的路径字符串 / a "/" separated path string
+     * @return 路径末端的元素，未找到则返回null / the element at the end of the path, or null if not found
      */
     public UIElement open(String path) {
         UIElement widget = find(path);
@@ -192,6 +222,13 @@ public class Category extends UILayer {
         return widget;
     }
 
+    /**
+     * 设置分类的展开/折叠状态。
+     * <p>
+     * Sets the opened/collapsed state of this category.
+     *
+     * @param opened true为展开，false为折叠 / true to expand, false to collapse
+     */
     public void setOpened(boolean opened) {
         if (this.opened != opened) {
             this.opened = opened;
@@ -200,6 +237,13 @@ public class Category extends UILayer {
         }
     }
 
+    /**
+     * 选中一个条目。
+     * <p>
+     * Selects an entry.
+     *
+     * @param widget 要选中的条目 / the entry to select
+     */
     public void select(Entry widget) {
         root.setSelected(widget);
     }
@@ -252,6 +296,13 @@ public class Category extends UILayer {
         return getParent() instanceof Category p ? p.isOpened() : super.isVisible();
     }
 
+    /**
+     * 设置分类标题。
+     * <p>
+     * Sets the category title.
+     *
+     * @param title 新标题 / the new title
+     */
     public void setTitle(Component title) {
         this.title.setTitle(title);
     }

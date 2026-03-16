@@ -19,9 +19,21 @@
 
 package com.teammoeg.chorda.math.evaluator;
 
+/**
+ * 变量引用节点，通过变量名从环境中查找对应的值。
+ * <p>
+ * Variable reference node that looks up the corresponding value by variable name from the environment.
+ */
 class VarNode implements Node {
     String token;
 
+    /**
+     * 构造一个变量引用节点。
+     * <p>
+     * Constructs a variable reference node.
+     *
+     * @param token 变量名 / the variable name
+     */
     public VarNode(String token) {
         this.token = token;
     }

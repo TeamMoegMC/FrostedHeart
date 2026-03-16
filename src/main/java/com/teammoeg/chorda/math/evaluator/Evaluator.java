@@ -27,6 +27,18 @@ import java.util.function.Function;
 
 import net.minecraft.util.Mth;
 
+/**
+ * 数学表达式解析器和求值器，支持基本算术运算、内置函数和变量引用。
+ * 使用递归下降解析器将字符串表达式解析为抽象语法树(AST)节点。
+ * <p>
+ * Mathematical expression parser and evaluator supporting basic arithmetic operations, built-in functions,
+ * and variable references. Uses a recursive descent parser to parse string expressions into AST nodes.
+ *
+ * <p>支持的运算 / Supported operations: +, -, *, /, %, \(安全除法/safe division), ^(幂/power)</p>
+ * <p>支持的函数 / Supported functions: sqrt, sin, cos, tan, sinf, cosf, rad, deg, abs, ceil, floor, round,
+ * log, log10, exp, max, min, if, evl</p>
+ * <p>内置常量 / Built-in constants: PI, E</p>
+ */
 public class Evaluator {
     public static Map<String, Function<Node[], Node>> functions = new HashMap<>();
     public static Map<String, Double> constants = new HashMap<>();
@@ -58,6 +70,14 @@ public class Evaluator {
 
     public final String str;
 
+    /**
+     * 解析并化简一个数学表达式字符串。
+     * <p>
+     * Parses and simplifies a mathematical expression string.
+     *
+     * @param exp 表达式字符串 / the expression string
+     * @return 化简后的AST节点 / the simplified AST node
+     */
     public static Node eval(String exp) {
         return new Evaluator(exp).parse().simplify();
     }
@@ -72,6 +92,13 @@ public class Evaluator {
         System.out.println(eval("sin(v+1+2+3*5*n)*(v*2*5*8*1)*cos(90)+PI"));
     }
 
+    /**
+     * 构造一个新的表达式求值器。
+     * <p>
+     * Constructs a new expression evaluator.
+     *
+     * @param str 要解析的表达式字符串 / the expression string to parse
+     */
     public Evaluator(String str) {
         this.str = str;
     }
@@ -90,6 +117,14 @@ public class Evaluator {
         ch = (++pos < str.length()) ? str.charAt(pos) : -1;
     }
 
+    /**
+     * 解析表达式字符串为AST节点。
+     * <p>
+     * Parses the expression string into an AST node.
+     *
+     * @return 解析后的根节点 / the parsed root node
+     * @throws RuntimeException 如果表达式语法错误 / if the expression has syntax errors
+     */
     public Node parse() {
         try {
             nextChar();

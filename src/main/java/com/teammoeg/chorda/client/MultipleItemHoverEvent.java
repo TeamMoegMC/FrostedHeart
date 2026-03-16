@@ -24,10 +24,14 @@ import java.util.List;
 import net.minecraft.network.chat.HoverEvent.ItemStackInfo;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.Lazy;
-/*
- * client only event to display multiple items
- * This is a hack and can not be sent by network
- * */
+/**
+ * 客户端专用的多物品悬停事件，用于在工具提示中循环显示多个物品。
+ * 这是一个hack实现，不能通过网络发送。物品每秒自动轮换显示。
+ * <p>
+ * Client-only multiple item hover event for cycling through multiple items in tooltips.
+ * This is a hack implementation and cannot be sent over the network.
+ * Items are automatically rotated every second.
+ */
 public class MultipleItemHoverEvent extends ItemStackInfo {
 	List<Lazy<ItemStack>> stacks;
 	public MultipleItemHoverEvent(List<Lazy<ItemStack>> pStack) {

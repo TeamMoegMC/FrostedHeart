@@ -1,0 +1,27 @@
+/*
+ * Copyright (c) 2026 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+/**
+ * CUI分类系统包。提供UI元素的分类和分组功能，
+ * 用于构建带有标签页或分类浏览的界面。
+ * <p>
+ * CUI category system package. Provides categorization and grouping for UI elements,
+ * used for building interfaces with tabbed or categorized browsing.
+ */
+package com.teammoeg.chorda.client.cui.category;

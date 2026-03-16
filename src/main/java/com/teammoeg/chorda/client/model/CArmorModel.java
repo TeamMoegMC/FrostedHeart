@@ -35,6 +35,13 @@ import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.util.Mth;
 
+/**
+ * 自定义盔甲模型。扩展人形模型以支持盔甲架、僵尸和骷髅的特殊姿态动画。
+ * <p>
+ * Custom armor model. Extends the humanoid model to support special pose animations for armor stands, zombies, and skeletons.
+ *
+ * @param <T> 穿戴盔甲的生物实体类型 / the type of living entity wearing the armor
+ */
 public class CArmorModel<T extends LivingEntity> extends HumanoidModel<T> {
     T entityTemp;
 
@@ -48,6 +55,11 @@ public class CArmorModel<T extends LivingEntity> extends HumanoidModel<T> {
 		super(pRoot);
 	}
 
+	/**
+	 * 渲染模型到缓冲区，渲染前同步实体的年龄、蹲伏和骑乘状态。
+	 * <p>
+	 * Renders the model to the buffer, syncing the entity's baby, crouching, and riding states before rendering.
+	 */
 	@Override
     public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
         if (entityTemp != null) {
@@ -58,6 +70,12 @@ public class CArmorModel<T extends LivingEntity> extends HumanoidModel<T> {
         super.renderToBuffer(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
     }
 
+    /**
+     * 设置模型动画。根据实体类型分别处理盔甲架、僵尸/骷髅和普通实体的动画。
+     * <p>
+     * Sets up model animations. Dispatches to different animation handlers based on entity type
+     * (armor stand, zombie/skeleton, or normal entities).
+     */
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         entityTemp = entity;
@@ -70,6 +88,18 @@ public class CArmorModel<T extends LivingEntity> extends HumanoidModel<T> {
             super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
     }
 
+    /**
+     * 设置盔甲架的旋转角度，从盔甲架的姿态数据中读取各部位旋转。
+     * <p>
+     * Sets rotation angles for armor stands by reading pose data from the armor stand entity.
+     *
+     * @param entity 盔甲架实体 / the armor stand entity
+     * @param limbSwing 肢体摆动量 / the limb swing amount
+     * @param limbSwingAmount 肢体摆动幅度 / the limb swing amplitude
+     * @param ageInTicks 实体年龄刻 / the entity age in ticks
+     * @param netHeadYaw 头部水平旋转 / the net head yaw
+     * @param headPitch 头部俯仰角 / the head pitch
+     */
     public void setRotationAnglesStand(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         if (entity instanceof ArmorStand) {
             ArmorStand entityarmorstand = (ArmorStand) entity;
@@ -98,6 +128,18 @@ public class CArmorModel<T extends LivingEntity> extends HumanoidModel<T> {
         }
     }
 
+    /**
+     * 设置僵尸/骷髅的旋转角度，手臂前伸并添加攻击动画。
+     * <p>
+     * Sets rotation angles for zombies/skeletons with arms extended forward and attack animations applied.
+     *
+     * @param entity 僵尸或骷髅实体 / the zombie or skeleton entity
+     * @param limbSwing 肢体摆动量 / the limb swing amount
+     * @param limbSwingAmount 肢体摆动幅度 / the limb swing amplitude
+     * @param ageInTicks 实体年龄刻 / the entity age in ticks
+     * @param netHeadYaw 头部水平旋转 / the net head yaw
+     * @param headPitch 头部俯仰角 / the head pitch
+     */
     public void setRotationAnglesZombie(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
         float f6 = Mth.sin(this.attackTime * 3.141593F);

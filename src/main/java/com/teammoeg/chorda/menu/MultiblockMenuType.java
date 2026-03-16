@@ -34,6 +34,16 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.registries.RegistryObject;
 
+/**
+ * 多方块菜单类型。封装了 Forge 的 {@link MenuType} 和服务端工厂，
+ * 提供便捷的方法来创建多方块菜单提供者和菜单组件。
+ * <p>
+ * Multiblock menu type. Wraps Forge's {@link MenuType} and server factory,
+ * providing convenient methods to create multiblock menu providers and components.
+ *
+ * @param <S> 多方块状态类型 / the multiblock state type
+ * @param <C> 菜单类型 / the menu type
+ */
 public class MultiblockMenuType<S extends IMultiblockState, C extends AbstractContainerMenu>
 {
 	private final RegistryObject<MenuType<C>> type;

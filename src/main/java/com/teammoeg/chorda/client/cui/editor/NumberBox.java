@@ -25,6 +25,14 @@ import com.teammoeg.chorda.client.cui.base.Verifiers;
 
 import net.minecraft.network.chat.Component;
 
+/**
+ * 长整型数字输入框，继承自LabeledTextBox并使用数字验证器。
+ * 提供数值的读取和设置方法，解析失败时返回原始值。
+ * <p>
+ * Long integer number input box extending LabeledTextBox with number validation.
+ * Provides methods for reading and setting numeric values, falling back to the
+ * original value on parse failure.
+ */
 public class NumberBox extends LabeledTextBox {
 
     public NumberBox(UIElement panel, Component lab, long val) {

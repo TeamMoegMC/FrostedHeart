@@ -31,6 +31,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.util.Size2i;
 
+/**
+ * 扁平化图标枚举。定义了一组来自纹理图集的固定大小图标，支持通过纹理或字体字符渲染。
+ * <p>
+ * Flat icon enumeration. Defines a set of fixed-size icons from a texture atlas, supporting rendering via texture or font characters.
+ */
 public enum FlatIcon {
     MOUSE_LEFT      (0 , 0 , "\uF200"),
     MOUSE_RIGHT     (10, 0 , "\uF201"),
@@ -128,27 +133,70 @@ public enum FlatIcon {
         this.size = new Size2i(10, 10);
     }
 
+    /**
+     * 在指定位置以指定颜色渲染此图标。
+     * <p>
+     * Renders this icon at the specified position with the given color.
+     *
+     * @param pose 渲染用的姿态矩阵栈 / the pose stack for rendering
+     * @param x 渲染的X坐标 / the X coordinate to render at
+     * @param y 渲染的Y坐标 / the Y coordinate to render at
+     * @param color 图标的颜色 / the icon color
+     */
     public void render(PoseStack pose, int x, int y, int color) {
         CGuiHelper.bindTexture(ICON_LOCATION);
         CGuiHelper.blitColored(pose, x, y, this.size.width, this.size.height, this.x, this.y, this.size.width, this.size.height, TEXTURE_WIDTH, TEXTURE_HEIGHT, color);
     }
 
+    /**
+     * 静态方法，渲染指定的扁平图标。
+     * <p>
+     * Static method that renders the specified flat icon.
+     *
+     * @param icon 要渲染的图标 / the icon to render
+     * @param pose 渲染用的姿态矩阵栈 / the pose stack for rendering
+     * @param x 渲染的X坐标 / the X coordinate to render at
+     * @param y 渲染的Y坐标 / the Y coordinate to render at
+     * @param color 图标的颜色 / the icon color
+     */
     public static void render(FlatIcon icon, PoseStack pose, int x, int y, int color) {
         icon.render(pose, x, y, color);
     }
 
+    /**
+     * 将此图标转换为默认颜色（白色）的UI组件。
+     * <p>
+     * Converts this icon to a UI widget with default color (white).
+     *
+     * @param parent 父UI元素 / the parent UI element
+     * @return 扁平图标组件 / the flat icon widget
+     */
     public FlatIconWidget toWidget(UIElement parent) {
         var widget = new FlatIconWidget(parent);
         widget.setIcon(this);
         return widget;
     }
 
+    /**
+     * 将此图标转换为指定颜色的UI组件。
+     * <p>
+     * Converts this icon to a UI widget with the specified color.
+     *
+     * @param parent 父UI元素 / the parent UI element
+     * @param color 图标颜色 / the icon color
+     * @return 扁平图标组件 / the flat icon widget
+     */
     public FlatIconWidget toWidget(UIElement parent, int color) {
         var widget = new FlatIconWidget(parent, color);
         widget.setIcon(this);
         return widget;
     }
 
+    /**
+     * 扁平图标的UI组件包装器，可在CUI系统中使用。
+     * <p>
+     * A UI widget wrapper for flat icons, usable within the CUI system.
+     */
     @Getter
     @Setter
     public static class FlatIconWidget extends UIElement {
@@ -182,6 +230,13 @@ public enum FlatIcon {
     }
 
     private CIcons.CIcon cIconCache;
+    /**
+     * 将此扁平图标转换为CIcon实例，结果会被缓存。
+     * <p>
+     * Converts this flat icon to a CIcon instance. The result is cached.
+     *
+     * @return 对应的CIcon实例 / the corresponding CIcon instance
+     */
     public CIcons.CIcon toCIcon() {
         if (cIconCache == null)
             cIconCache = CIcons.getIcon(ICON_LOCATION, x, y, size.width, size.height, TEXTURE_WIDTH, TEXTURE_HEIGHT);
@@ -189,6 +244,13 @@ public enum FlatIcon {
     }
 
     private Component cTextIconCache;
+    /**
+     * 将此扁平图标转换为文本组件（使用自定义字体字符），结果会被缓存。
+     * <p>
+     * Converts this flat icon to a text component using a custom font character. The result is cached.
+     *
+     * @return 对应的文本组件 / the corresponding text component
+     */
     public Component toCTextIcon(){
         if (cTextIconCache == null) {
             cTextIconCache = Component.literal(chr).withStyle(s -> s.withFont(FONT_LOCATION));

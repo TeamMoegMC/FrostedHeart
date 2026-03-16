@@ -25,12 +25,21 @@ import lombok.Getter;
 import net.minecraftforge.eventbus.api.Event;
 
 /**
- * This event is fired when data of a specific team is loaded
- * data providers should capture this event in order to properly initialize team data
+ * 当队伍被创建时触发的事件。数据提供者应监听此事件以正确初始化队伍数据。
+ * <p>
+ * Event fired when a team is created.
+ * Data providers should listen to this event to properly initialize team data.
  */
 public class TeamCreatedEvent extends Event{
 	@Getter
 	private final TeamDataHolder teamData;
+	/**
+	 * 创建队伍创建事件。
+	 * <p>
+	 * Creates a team created event.
+	 *
+	 * @param teamData 新创建的队伍数据持有者 / The newly created team data holder
+	 */
 	public TeamCreatedEvent(TeamDataHolder teamData) {
 		super();
 		this.teamData = teamData;

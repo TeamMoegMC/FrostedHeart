@@ -33,18 +33,42 @@ import net.minecraft.util.FormattedCharSequence;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * 文本按钮控件。显示文本标题的按钮，支持图标和文本组合显示。
+ * 当文本超出按钮宽度时，自动截断并在悬停时通过提示框显示完整文本。
+ * <p>
+ * Text button widget. A button that displays a text title, supporting combined
+ * icon and text display. When text exceeds the button width, it is automatically
+ * truncated and the full text is shown via tooltip on hover.
+ */
 public abstract class TextButton extends Button {
+
+	/**
+	 * 创建文本按钮。
+	 * <p>
+	 * Creates a text button.
+	 *
+	 * @param panel 父级UI元素 / Parent UI element
+	 * @param txt 按钮文本 / Button text
+	 * @param icon 按钮图标 / Button icon
+	 */
 	public TextButton(UIElement panel, Component txt, CIcon icon) {
 		super(panel, txt, icon);
 		fitSize();
 	}
 
+	/**
+	 * 是否居中渲染标题文本。默认返回false。
+	 * <p>
+	 * Whether to render the title text centered. Returns false by default.
+	 *
+	 * @return 是否居中渲染 / Whether to render centered
+	 */
 	public boolean renderTitleInCenter() {
 		return false;
 	}
 
-
-
+	/** {@inheritDoc} */
 	@Override
 	public void getTooltip(TooltipBuilder list) {
 		Component title=getTitle();
@@ -52,11 +76,22 @@ public abstract class TextButton extends Button {
 			list.accept(title);
 		}
 	}
+
+    /**
+     * 设置标题并自动调整按钮宽度以适应文本。
+     * <p>
+     * Sets the title and auto-adjusts button width to fit the text.
+     *
+     * @param txt 新标题 / New title
+     * @return 当前实例（链式调用） / This instance (for chaining)
+     */
     public TextButton setTitleAndSize(Component txt) {
         super.setTitle(txt);
         setWidth(getFont().width(getTitle()) + (hasIcon() ? 28 : 8));
         return this;
     }
+
+	/** {@inheritDoc} */
 	@Override
 	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
 		drawBackground(graphics, x, y, w, h);
@@ -92,6 +127,18 @@ public abstract class TextButton extends Button {
 		}
 	}
 
+	/**
+	 * 创建带回调和提示信息的文本按钮。
+	 * <p>
+	 * Creates a text button with a callback and tooltip.
+	 *
+	 * @param panel 父级UI元素 / Parent UI element
+	 * @param txt 按钮文本 / Button text
+	 * @param icon 按钮图标 / Button icon
+	 * @param callback 点击回调 / Click callback
+	 * @param tooltip 提示信息 / Tooltip components
+	 * @return 新创建的文本按钮 / Newly created text button
+	 */
 	public static TextButton create(UIElement panel, Component txt, CIcon icon, Consumer<MouseButton> callback, Component... tooltip) {
 		return new TextButton(panel, txt, icon) {
 			@Override
@@ -108,10 +155,30 @@ public abstract class TextButton extends Button {
 		};
 	}
 
+	/**
+	 * 创建"接受"按钮（带勾选图标）。
+	 * <p>
+	 * Creates an "Accept" button with a checkmark icon.
+	 *
+	 * @param panel 父级UI元素 / Parent UI element
+	 * @param callback 点击回调 / Click callback
+	 * @param tooltip 提示信息 / Tooltip components
+	 * @return 接受按钮 / Accept button
+	 */
 	public static TextButton accept(UIElement panel, Consumer<MouseButton> callback, Component... tooltip) {
 		return create(panel, Component.translatable("gui.accept"), FlatIcon.CHECK.toCIcon(), callback, tooltip);
 	}
 
+	/**
+	 * 创建"取消"按钮（带叉号图标）。
+	 * <p>
+	 * Creates a "Cancel" button with a cross icon.
+	 *
+	 * @param panel 父级UI元素 / Parent UI element
+	 * @param callback 点击回调 / Click callback
+	 * @param tooltip 提示信息 / Tooltip components
+	 * @return 取消按钮 / Cancel button
+	 */
 	public static TextButton cancel(UIElement panel, Consumer<MouseButton> callback, Component... tooltip) {
 		return create(panel, Component.translatable("gui.cancel"), FlatIcon.CROSS.toCIcon(), callback, tooltip);
 	}

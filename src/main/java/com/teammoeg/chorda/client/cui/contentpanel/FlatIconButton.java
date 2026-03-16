@@ -11,6 +11,13 @@ import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
 
+/**
+ * 扁平图标按钮，使用FlatIcon矢量图标作为显示内容的紧凑按钮。
+ * 常用于内容面板中文本行的行内操作按钮。
+ * <p>
+ * Flat icon button using FlatIcon vector icons as compact button display content.
+ * Commonly used as inline action buttons within text lines in content panels.
+ */
 @Getter
 @Setter
 public class FlatIconButton extends Button {

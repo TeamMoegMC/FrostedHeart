@@ -53,7 +53,23 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.util.Lazy;
 
+/**
+ * 容器菜单的基类。提供玩家物品栏管理、Shift-点击物品转移逻辑、
+ * 菜单有效性验证、以及自定义数据槽同步功能。
+ * <p>
+ * Base class for container menus. Provides player inventory management,
+ * shift-click item transfer logic, menu validity validation, and custom
+ * data slot synchronization.
+ */
 public abstract class CBaseMenu extends AbstractContainerMenu {
+	/**
+	 * 菜单有效性验证器。通过链式调用定义多个验证条件（距离、维度、方块实体存在等），
+	 * 当任一条件不满足时菜单将被关闭。
+	 * <p>
+	 * Menu validity validator. Defines multiple validation conditions via chaining
+	 * (distance, dimension, block entity existence, etc.). The menu closes when
+	 * any condition is not met.
+	 */
 	public static class Validator implements Predicate<Player> {
 		private static record BoundCheck(Supplier<Vec3> initial,AABB bounds) implements Predicate<Player> {
 			@Override
@@ -160,9 +176,13 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 		}
 	}
 	/**
-	 * A simple builder to define the slot fill order when player shift-click its invertory slot
-	 * It would start to fill from the earlier defined range, then the later
-	 * */
+	 * 快速移动构建器。定义玩家 Shift-点击物品栏槽位时的物品填充顺序，
+	 * 按照定义的先后顺序依次尝试填充。
+	 * <p>
+	 * Quick move stack builder. Defines the slot fill order when a player
+	 * shift-clicks an inventory slot. Fills in the order defined, trying
+	 * earlier ranges first.
+	 */
 	public static class QuickMoveStackBuilder {
 		private static record Range(int start, int end, boolean reverse) {
 			private Range(int slot) {
@@ -240,21 +260,47 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 	@Getter
 	private Player player;
 	/**
-	 * Constructor of c base menu
+	 * CBaseMenu 构造函数。
+	 * <p>
+	 * 实现说明：
+	 * <ul>
+	 *   <li>调用 {@link #addPlayerInventory} 添加默认玩家物品栏槽位</li>
+	 *   <li>覆写 {@link #buildValidator(Validator)} 定义菜单关闭条件</li>
+	 *   <li>覆写 {@link #defineQuickMoveStack()} 定义 Shift-点击行为，默认从第一个槽位填充到最后</li>
+	 *   <li>使用 {@link CCustomMenuSlot} 向客户端广播 UI 数据变化</li>
+	 * </ul>
+	 * <p>
+	 * Constructor for CBaseMenu.
+	 * <p>
 	 * Implementation notes:
-	 * You can call {@link #addPlayerInventory addPlayerInventory} to add defaulted player inventory slots
-	 * You may override {@link #buildValidator(Validator) buildValidator} to define rules whether this menu should close
-	 * You may override {@link #defineQuickMoveStack() defineQuickMoveStack} to define quickMoveStack(shift-click) behaviour of the menu slots,default ones is to fill from the first slot to the last one.
-	 * You may use {@link CCustomMenuSlot} to broadcast ui changes to the client menu.
-	 * @param inv_start start slot index of player inventory, for example, if the machine has 5 slots, then this should be 5
-	 * 
-	 * */
+	 * <ul>
+	 *   <li>Call {@link #addPlayerInventory} to add default player inventory slots</li>
+	 *   <li>Override {@link #buildValidator(Validator)} to define menu closing conditions</li>
+	 *   <li>Override {@link #defineQuickMoveStack()} to define shift-click behavior</li>
+	 *   <li>Use {@link CCustomMenuSlot} to broadcast UI data changes to the client</li>
+	 * </ul>
+	 *
+	 * @param pMenuType    菜单类型 / the menu type
+	 * @param pContainerId 容器 ID / the container ID
+	 * @param player       玩家 / the player
+	 * @param inv_start    玩家物品栏起始槽位索引，例如机器有5个槽位则为5 / start slot index of player inventory, e.g. 5 if the machine has 5 slots
+	 */
 	public CBaseMenu(MenuType<?> pMenuType, int pContainerId, Player player, int inv_start) {
 		super(pMenuType, pContainerId);
 		this.INV_START = inv_start;
 		this.player = player;
 	}
 
+	/**
+	 * 添加标准玩家物品栏和快捷栏槽位。
+	 * <p>
+	 * Adds standard player inventory and hotbar slots.
+	 *
+	 * @param inv       玩家物品栏 / the player inventory
+	 * @param invX      物品栏起始 X 坐标 / inventory start X position
+	 * @param invY      物品栏起始 Y 坐标 / inventory start Y position
+	 * @param quickBarY 快捷栏 Y 坐标 / hotbar Y position
+	 */
 	protected void addPlayerInventory(Inventory inv, int invX, int invY, int quickBarY) {
 		for (int i = 0; i < 3; i++)
 			for (int j = 0; j < 9; j++)
@@ -263,14 +309,26 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 			addSlot(new CUISlot(inv, i, invX + i * 18, quickBarY));
 	}
 	/**
-	 * Define quickmovestack logic, when a player shift-clicked a slot item in their inventory, then it would traverse this builder definition and fill slots in defined order 
-	 * */
+	 * 定义快速移动逻辑。当玩家 Shift-点击物品栏中的槽位时，
+	 * 按照此构建器定义的顺序依次填充槽位。
+	 * <p>
+	 * Defines the quick-move-stack logic. When a player shift-clicks a slot
+	 * in their inventory, items fill slots in the order defined by this builder.
+	 *
+	 * @return 快速移动构建器 / the quick move stack builder
+	 */
 	public QuickMoveStackBuilder defineQuickMoveStack() {
 		return QuickMoveStackBuilder.first(0, INV_START);
 	}
 	/**
-	 * Build gui validator logic, when some condition in validator does not meet, then the ui would be closed.
-	 * */
+	 * 构建 GUI 验证逻辑。当验证器中的某个条件不满足时，UI 将被关闭。
+	 * <p>
+	 * Builds GUI validator logic. When some condition in the validator
+	 * is not met, the UI will be closed.
+	 *
+	 * @param builder 验证器构建器 / the validator builder
+	 * @return 配置好的验证器 / the configured validator
+	 */
 	@Nonnull
 	protected Validator buildValidator(@Nonnull Validator builder) {
 		return builder;
@@ -409,18 +467,51 @@ public abstract class CBaseMenu extends AbstractContainerMenu {
 
 	}
 
+	/**
+	 * 接收来自客户端的操作消息。子类覆写以处理自定义按钮操作。
+	 * <p>
+	 * Receives operation messages from the client. Override in subclasses
+	 * to handle custom button operations.
+	 *
+	 * @param btnId 按钮 ID / the button ID
+	 * @param state 状态值 / the state value
+	 */
 	public void receiveMessage(short btnId, int state) {
 
 	}
 
+	/**
+	 * 向服务端发送整数类型的操作消息。
+	 * <p>
+	 * Sends an integer operation message to the server.
+	 *
+	 * @param btnId 按钮 ID / the button ID
+	 * @param state 状态值 / the state value
+	 */
 	public void sendMessage(int btnId, int state) {
 		ChordaNetwork.INSTANCE.sendToServer(new ContainerOperationMessageC2S(this.containerId, (short) btnId, state));
 	}
 
+	/**
+	 * 向服务端发送布尔类型的操作消息。
+	 * <p>
+	 * Sends a boolean operation message to the server.
+	 *
+	 * @param btnId 按钮 ID / the button ID
+	 * @param state 布尔状态值 / the boolean state value
+	 */
 	public void sendMessage(int btnId, boolean state) {
 		ChordaNetwork.INSTANCE.sendToServer(new ContainerOperationMessageC2S(this.containerId, (short) btnId, state ? 1 : 0));
 	}
 
+	/**
+	 * 向服务端发送浮点类型的操作消息。
+	 * <p>
+	 * Sends a float operation message to the server.
+	 *
+	 * @param btnId 按钮 ID / the button ID
+	 * @param state 浮点状态值 / the float state value
+	 */
 	public void sendMessage(int btnId, float state) {
 		ChordaNetwork.INSTANCE.sendToServer(new ContainerOperationMessageC2S(this.containerId, (short) btnId, Float.floatToRawIntBits(state)));
 	}

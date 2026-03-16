@@ -36,14 +36,32 @@ import com.mojang.serialization.Lifecycle;
 import com.mojang.serialization.ListBuilder;
 import com.mojang.serialization.RecordBuilder;
 
+/**
+ * 离散列表编解码器。仅序列化非空元素及其索引位置，反序列化时根据索引恢复完整列表，空位用空元素填充。
+ * <p>
+ * Discrete list codec. Only serializes non-empty elements with their index positions,
+ * and restores the full list by index during deserialization, filling gaps with empty elements.
+ *
+ * @param <A> 列表元素的类型 / the type of list elements
+ */
 public final class DiscreteListCodec<A> implements Codec<List<A>> {
     private final Codec<A> elementCodec;
     private final Predicate<A> empty;
     private final Supplier<A> emptyItem;
     private final String index;
-    
 
 
+
+	/**
+	 * 构造一个离散列表编解码器。
+	 * <p>
+	 * Constructs a discrete list codec.
+	 *
+	 * @param elementCodec 元素的编解码器 / the codec for elements
+	 * @param empty 判断元素是否为空的谓词 / the predicate to determine if an element is empty
+	 * @param emptyItem 空元素的提供器 / the supplier for empty elements
+	 * @param index 索引字段的键名 / the key name for the index field
+	 */
 	public DiscreteListCodec(Codec<A> elementCodec, Predicate<A> empty, Supplier<A> emptyItem, String index) {
 		super();
 		this.elementCodec = elementCodec;

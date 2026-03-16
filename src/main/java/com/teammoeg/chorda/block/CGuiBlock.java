@@ -41,13 +41,55 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 import net.minecraft.world.level.Level;
 
+/**
+ * 具有 GUI 交互功能的方块基类，结合了 {@link CBlock} 的透光度支持和 {@link CEntityBlock} 的方块实体支持。
+ * 处理玩家右键交互，支持沉浸工程（IE）的方向旋转、玩家交互接口以及菜单打开。
+ * <p>
+ * Abstract base block class with GUI interaction capabilities, combining {@link CBlock}'s
+ * light opacity support with {@link CEntityBlock}'s block entity support.
+ * Handles player right-click interactions including IE directional rotation with hammers,
+ * player interaction interfaces, and menu provider opening.
+ *
+ * @param <T> 方块实体类型 / the block entity type
+ */
 public abstract class CGuiBlock<T extends BlockEntity> extends CBlock implements CEntityBlock<T> {
 
+    /**
+     * 使用给定的方块属性构造 GUI 方块。
+     * <p>
+     * Constructs a GUI block with the given properties.
+     *
+     * @param blockProps 方块属性 / the block properties
+     */
     public CGuiBlock(Properties blockProps) {
         super(blockProps);
     }
 
-
+    /**
+     * 处理玩家对方块的右键交互。依次检查：
+     * <ol>
+     *   <li>父类交互结果</li>
+     *   <li>使用锤子旋转方向性方块实体（IE 集成）</li>
+     *   <li>玩家交互接口（IPlayerInteraction）</li>
+     *   <li>IE 交互对象或菜单提供者以打开 GUI</li>
+     * </ol>
+     * <p>
+     * Handles player right-click interactions with this block. Checks in order:
+     * <ol>
+     *   <li>Super class interaction result</li>
+     *   <li>Hammer rotation for directional block entities (IE integration)</li>
+     *   <li>Player interaction interface (IPlayerInteraction)</li>
+     *   <li>IE interaction object or menu provider to open GUI</li>
+     * </ol>
+     *
+     * @param state 方块状态 / the block state
+     * @param world 当前世界 / the level
+     * @param pos 方块位置 / the block position
+     * @param player 交互的玩家 / the interacting player
+     * @param hand 使用的手 / the hand used
+     * @param hit 方块命中结果 / the block hit result
+     * @return 交互结果 / the interaction result
+     */
     @Override
     public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         InteractionResult superResult = super.use(state, world, pos, player, hand, hit);

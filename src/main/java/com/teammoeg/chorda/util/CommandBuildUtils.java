@@ -21,6 +21,11 @@ package com.teammoeg.chorda.util;
 
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
+/**
+ * 命令构建工具类，提供Brigadier命令构建的辅助方法。
+ * <p>
+ * Command building utility class providing helper methods for Brigadier command construction.
+ */
 public class CommandBuildUtils {
 
 	public CommandBuildUtils() {

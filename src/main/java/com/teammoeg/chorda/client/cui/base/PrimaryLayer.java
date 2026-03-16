@@ -40,8 +40,15 @@ import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 
 /**
- * Primary layer for bridging between screen and layer infrastructure
- * */
+ * 主层，作为Minecraft Screen与CUI层级基础设施之间的桥梁。
+ * 是所有CUI界面的顶层容器，负责焦点管理、GUI生命周期（初始化/关闭/返回上一屏幕）、
+ * 编辑器对话框管理以及键盘/鼠标事件的顶层分发。
+ * <p>
+ * Primary layer serving as the bridge between Minecraft Screen and the CUI layer
+ * infrastructure. Acts as the top-level container for all CUI interfaces, handling
+ * focus management, GUI lifecycle (init/close/back-to-previous-screen), editor dialog
+ * management, and top-level keyboard/mouse event dispatching.
+ */
 public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	UIElement lastFocused;
 	Screen prevScreen;

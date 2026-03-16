@@ -30,6 +30,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * 物品行，用于在内容面板中以网格布局展示一组物品。
+ * 自动根据面板宽度计算每行显示的物品数量，支持左/居中/右对齐。
+ * <p>
+ * Item row for displaying a collection of items in a grid layout within a content panel.
+ * Automatically calculates items per row based on panel width, supporting
+ * left/center/right alignment.
+ */
 public class ItemRow extends Line<ItemRow> {
     protected final List<ItemStack> items = new ArrayList<>();
     protected int rowSize = 1;

@@ -29,6 +29,16 @@ import com.teammoeg.chorda.text.Components;
 
 import net.minecraft.network.chat.Component;
 
+/**
+ * 通用验证器接口，用于验证编辑器中的输入值并返回验证结果。
+ * 支持组合验证（and操作）和基于谓词的快捷创建方法。
+ * <p>
+ * Generic verifier interface for validating input values in editors and returning
+ * verification results. Supports composite verification (and operation) and
+ * predicate-based shortcut factory methods.
+ *
+ * @param <T> 待验证的值类型 / The type of value to verify
+ */
 public interface Verifier<T> {
 	public static record VerifyResult(boolean isError,@Nullable Component hint){
 		public static final Verifier.VerifyResult SUCCESS=new Verifier.VerifyResult(false,null);

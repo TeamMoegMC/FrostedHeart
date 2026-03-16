@@ -19,9 +19,19 @@
 
 package com.teammoeg.chorda.block.entity;
 /**
- * Replaces TickableBlockEntity for easier intergration and migration.
- * Corrensponding block must implements CEntityBlock.
- * */
+ * 可刻更新的方块实体接口，替代旧版的 TickableBlockEntity 以便于集成和迁移。
+ * 对应的方块必须实现 {@link com.teammoeg.chorda.block.CEntityBlock} 接口。
+ * <p>
+ * Interface for tickable block entities, replacing the legacy TickableBlockEntity
+ * for easier integration and migration. The corresponding block must implement
+ * {@link com.teammoeg.chorda.block.CEntityBlock}.
+ */
 public interface CTickableBlockEntity {
+
+	/**
+	 * 每游戏刻调用一次的更新方法。在服务端和客户端均会被调用。
+	 * <p>
+	 * Called once per game tick. Invoked on both server and client sides.
+	 */
 	void tick();
 }

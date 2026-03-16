@@ -21,11 +21,25 @@ package com.teammoeg.chorda.math.evaluator;
 
 import java.util.function.DoubleUnaryOperator;
 
+/**
+ * 一元运算节点，使用{@link DoubleUnaryOperator}对嵌套节点执行运算。
+ * <p>
+ * Unary operation node that uses {@link DoubleUnaryOperator} to compute on a nested node.
+ */
 class CalcNode implements Node {
     DoubleUnaryOperator calc;
     Node nested;
     String name;
 
+    /**
+     * 构造一个一元运算节点。
+     * <p>
+     * Constructs a unary operation node.
+     *
+     * @param nested 被操作的子节点 / the child node to operate on
+     * @param name 运算名称（用于toString） / the operation name (for toString)
+     * @param calc 一元运算操作 / the unary operation
+     */
     public CalcNode(Node nested, String name, DoubleUnaryOperator calc) {
         this.calc = calc;
         this.nested = nested;

@@ -36,9 +36,27 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.irisshaders.iris.shaderpack.materialmap.BlockEntry;
 import net.irisshaders.iris.shaderpack.materialmap.BlockMaterialMapping;
 import net.minecraft.world.level.block.state.BlockState;
+/**
+ * Iris着色器兼容Mixin，自动将模组方块的材质映射添加到着色器的方块状态ID映射中。
+ * 通过将模组方块状态映射到对应的原版方块状态ID，使着色器包能正确渲染模组方块。
+ * <p>
+ * Iris shader compatibility Mixin that automatically adds mod block material mappings
+ * to the shader's block state ID map. Maps modded block states to corresponding vanilla
+ * block state IDs so shader packs can render modded blocks correctly.
+ */
 @Mixin(BlockMaterialMapping.class)
 public class IdMapMixin_AddModdedBlocksAutomatically {
-	
+
+	/**
+	 * 在创建方块状态ID映射后注入，将模组方块状态重映射到对应的原版方块状态ID。
+	 * <p>
+	 * Injects after block state ID map creation to remap modded block states
+	 * to their corresponding vanilla block state IDs.
+	 *
+	 * @param blockPropertiesMap 方块属性映射 / The block properties map
+	 * @param cbi 回调信息 / The callback info
+	 * @param blockStateIds 方块状态ID映射 / The block state ID map
+	 */
 	@Inject(at=@At(value="TAIL"),method="createBlockStateIdMap",remap=false,locals=LocalCapture.CAPTURE_FAILSOFT)
 	private static void fh$createBlockStateIdMap(Int2ObjectMap<List<BlockEntry>> blockPropertiesMap,CallbackInfoReturnable<Object2IntMap<BlockState>> cbi,Object2IntMap<BlockState> blockStateIds) {
 		//reverse collect entry to map

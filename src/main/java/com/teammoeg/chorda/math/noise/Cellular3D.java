@@ -20,6 +20,11 @@
 package com.teammoeg.chorda.math.noise;
 
 
+/**
+ * 三维细胞噪声（Worley噪声）实现，基于Voronoi图原理在三维空间中生成噪声。
+ * <p>
+ * 3D cellular noise (Worley noise) implementation based on Voronoi diagram principles in 3D space.
+ */
 public class Cellular3D implements INoise3D {
     private final int seed;
     private final float jitter;
@@ -28,10 +33,26 @@ public class Cellular3D implements INoise3D {
     private float centerX, centerY, centerZ;
     private float frequency;
 
+    /**
+     * 使用默认参数构造三维细胞噪声。
+     * <p>
+     * Constructs a 3D cellular noise with default parameters.
+     *
+     * @param seed 随机种子 / the random seed
+     */
     public Cellular3D(long seed) {
         this(seed, 1.0f, CellularNoiseType.VALUE);
     }
 
+    /**
+     * 使用指定参数构造三维细胞噪声。
+     * <p>
+     * Constructs a 3D cellular noise with specified parameters.
+     *
+     * @param seed 随机种子 / the random seed
+     * @param jitter 特征点抖动量 / the feature point jitter amount
+     * @param returnType 噪声返回值类型 / the noise return value type
+     */
     public Cellular3D(long seed, float jitter, CellularNoiseType returnType) {
         this.seed = (int) seed;
         this.jitter = jitter;
@@ -39,14 +60,35 @@ public class Cellular3D implements INoise3D {
         this.frequency = 1;
     }
 
+    /**
+     * 获取上次计算中最近特征点的X坐标。
+     * <p>
+     * Gets the X coordinate of the closest feature point from the last computation.
+     *
+     * @return 最近特征点的X坐标 / the X coordinate of the closest feature point
+     */
     public float getCenterX() {
         return centerX;
     }
 
+    /**
+     * 获取上次计算中最近特征点的Y坐标。
+     * <p>
+     * Gets the Y coordinate of the closest feature point from the last computation.
+     *
+     * @return 最近特征点的Y坐标 / the Y coordinate of the closest feature point
+     */
     public float getCenterY() {
         return centerY;
     }
 
+    /**
+     * 获取上次计算中最近特征点的Z坐标。
+     * <p>
+     * Gets the Z coordinate of the closest feature point from the last computation.
+     *
+     * @return 最近特征点的Z坐标 / the Z coordinate of the closest feature point
+     */
     public float getCenterZ() {
         return centerZ;
     }

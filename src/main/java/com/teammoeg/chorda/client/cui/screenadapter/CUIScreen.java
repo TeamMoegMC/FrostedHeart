@@ -23,7 +23,27 @@ import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 
 import net.minecraft.client.gui.screens.Screen;
 
+/**
+ * CUI屏幕接口。定义获取主层和底层Screen实例的统一访问方式。
+ * <p>
+ * CUI screen interface. Defines a unified way to access the primary layer and the underlying Screen instance.
+ */
 public interface CUIScreen {
+	/**
+	 * 获取主层。
+	 * <p>
+	 * Gets the primary layer.
+	 *
+	 * @return 主层实例 / the primary layer instance
+	 */
 	PrimaryLayer getPrimaryLayer();
+
+	/**
+	 * 获取底层的Minecraft Screen实例。
+	 * <p>
+	 * Gets the underlying Minecraft Screen instance.
+	 *
+	 * @return Screen实例，如果不是Screen则返回null / the Screen instance, or null if not a Screen
+	 */
 	Screen getScreen();
 }

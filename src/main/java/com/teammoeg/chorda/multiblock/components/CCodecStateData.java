@@ -21,6 +21,25 @@ package com.teammoeg.chorda.multiblock.components;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
 
+/**
+ * 基于 Codec 的多方块状态数据接口。
+ * 实现此接口的类作为 {@link CCodecState} 的数据载体，需要提供多方块初始化时的状态设置逻辑。
+ * <p>
+ * Interface for Codec-based multiblock state data.
+ * Classes implementing this interface serve as data carriers for {@link CCodecState} and must
+ * provide state initialization logic during multiblock setup.
+ *
+ * @see CCodecState
+ */
 public interface CCodecStateData {
+
+	/**
+	 * 设置多方块的初始状态。在多方块首次成型时调用，用于根据多方块上下文初始化数据。
+	 * <p>
+	 * Sets the initial state of the multiblock. Called when the multiblock is first formed,
+	 * used to initialize data based on the multiblock context.
+	 *
+	 * @param init 多方块初始化上下文 / The initial multiblock context
+	 */
 	void setInitialState(IInitialMultiblockContext<CCodecState<CCodecStateData>> init);
 }

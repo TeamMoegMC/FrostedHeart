@@ -22,6 +22,13 @@ package com.teammoeg.chorda.math.evaluator;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 加减法表达式节点，维护正项和负项两个列表来表示多项加减运算。
+ * 化简时会合并嵌套的ExprNode并折叠常量项。
+ * <p>
+ * Addition/subtraction expression node maintaining positive and negative term lists to represent
+ * multi-term addition/subtraction. Simplification merges nested ExprNodes and folds constant terms.
+ */
 class ExprNode implements Node {
     List<Node> positive = new ArrayList<>();
     List<Node> negative = new ArrayList<>();
@@ -32,6 +39,15 @@ class ExprNode implements Node {
         super();
     }
 
+    /**
+     * 构造一个包含两个项的表达式节点。
+     * <p>
+     * Constructs an expression node with two terms.
+     *
+     * @param type 如果为true则两项都为正项（加法），否则第二项为负项（减法） / if true both terms are positive (addition), otherwise the second term is negative (subtraction)
+     * @param pos 第一个操作数 / the first operand
+     * @param pos2 第二个操作数 / the second operand
+     */
     public ExprNode(boolean type, Node pos, Node pos2) {
         if (type) {
             positive.add(pos);

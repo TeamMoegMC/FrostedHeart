@@ -22,6 +22,14 @@ package com.teammoeg.chorda.client.cui.base;
 import com.simibubi.create.foundation.utility.Components;
 import com.teammoeg.chorda.client.cui.base.Verifier.VerifyResult;
 
+/**
+ * 预定义验证器集合，提供常用的字符串输入验证器。
+ * 包括命令格式验证、数字格式验证（整数/长整数/浮点数）以及范围验证工厂方法。
+ * <p>
+ * Collection of predefined verifiers providing commonly used string input validators.
+ * Includes command format validation, number format validation (int/long/double),
+ * and range validation factory methods.
+ */
 public class Verifiers {
 	public static final Verifier<String> COMMAND=Verifier.successOrTranslatable(s->s.startsWith("/"), "gui.chorda.editor.command_must_starts_with_slash");
 	public static final Verifier<String> NUMBER_STR=Verifier.successOrTranslatable(s->{try{

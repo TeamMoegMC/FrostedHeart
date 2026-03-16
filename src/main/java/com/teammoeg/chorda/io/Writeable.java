@@ -22,12 +22,19 @@ package com.teammoeg.chorda.io;
 import com.google.gson.JsonElement;
 
 /**
- * Not an typo, just to avoid name conflict
+ * 可写入接口，扩展PacketWritable，同时支持JSON序列化。名称非拼写错误，是为了避免命名冲突。
+ * <p>
+ * Writable interface extending PacketWritable with JSON serialization support. The name is intentional to avoid naming conflicts.
  */
 public interface Writeable extends PacketWritable {
 	/**
-	 * Deprecated: should not call this method to serialize things
-	 * */
+	 * 将此对象序列化为JSON元素。
+	 * <p>
+	 * Serializes this object to a JSON element.
+	 *
+	 * @return JSON元素 / the JSON element
+	 * @deprecated 不应调用此方法进行序列化 / should not call this method to serialize things
+	 */
 	@Deprecated JsonElement serialize();
 	
 }

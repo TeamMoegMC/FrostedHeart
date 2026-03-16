@@ -20,9 +20,10 @@
 package com.teammoeg.chorda.math;
 
 /**
- * A Mersenne Twister Algorithm implement of MT19937
- * 
- * */
+ * 梅森旋转算法(MT19937)的实现，一种高质量的伪随机数生成器。
+ * <p>
+ * Implementation of the Mersenne Twister algorithm (MT19937), a high-quality pseudorandom number generator.
+ */
 public class MersenneTwister extends RandomBase{
 
     /** Serializable version identifier. */

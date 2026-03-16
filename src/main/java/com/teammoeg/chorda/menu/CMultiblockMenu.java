@@ -30,19 +30,41 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 
+/**
+ * 多方块结构菜单的基类。与 Immersive Engineering 的多方块系统集成，
+ * 自动处理服务端和客户端的构造差异以及多方块有效性验证。
+ * <p>
+ * Base class for multiblock structure menus. Integrates with Immersive Engineering's
+ * multiblock system, automatically handling server/client constructor differences
+ * and multiblock validity validation.
+ *
+ * @param <R> 多方块状态类型 / the multiblock state type
+ */
 public class CMultiblockMenu<R extends IMultiblockState> extends CBaseMenu {
 	@Getter
 	private MultiblockMenuContext<R> menuContext;
-	//Server constructor
+	/**
+	 * 服务端构造函数，包含完整的多方块上下文。
+	 * <p>
+	 * Server-side constructor with full multiblock context.
+	 */
 	public CMultiblockMenu(MenuType<?> pMenuType, int pContainerId, Player player, MultiblockMenuContext<R> ctx, int inv_start) {
 		super(pMenuType, pContainerId, player, inv_start);
 		this.menuContext=ctx;
 	}
-	//Client constructor
+	/**
+	 * 客户端构造函数，不含多方块上下文。
+	 * <p>
+	 * Client-side constructor without multiblock context.
+	 */
 	public CMultiblockMenu(MenuType<?> pMenuType, int pContainerId, Player player, int inv_start) {
 		super(pMenuType, pContainerId, player, inv_start);
 	}
-	//Client constructor with clicked position
+	/**
+	 * 客户端构造函数，带有点击位置以恢复多方块上下文。
+	 * <p>
+	 * Client-side constructor with clicked position to restore multiblock context.
+	 */
 	public CMultiblockMenu(MenuType<?> pMenuType, int pContainerId, Player player, int inv_start,BlockPos pos) {
 		super(pMenuType, pContainerId, player, inv_start);
 		this.menuContext=new MultiblockMenuContext<R>((IMultiblockContext)CMultiblockHelper.getBEHelper(player.level(), pos).getContext(),pos);
