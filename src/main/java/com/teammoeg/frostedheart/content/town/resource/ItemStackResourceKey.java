@@ -21,9 +21,13 @@ package com.teammoeg.frostedheart.content.town.resource;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import groovyjarjarantlr4.v4.runtime.misc.Nullable;
 import lombok.Getter;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.Objects;
 
@@ -33,45 +37,91 @@ import java.util.Objects;
  */
 @Getter
 public class ItemStackResourceKey implements ITownResourceKey {
-    public ItemStack itemStack;
+    private final Item item;
+    @Nullable
+    private final CompoundTag tag;
+    private final int hashCode;
 
-    public static final Codec<ItemStackResourceKey> CODEC = RecordCodecBuilder.create(t -> t.group(
-                    ItemStack.CODEC
-                            .xmap(
-                                    // 反序列化时强制 count=1
-                                    stack -> stack.copyWithCount(1),
-                                    // 序列化时也保持 count=1
-                                    stack -> stack.copyWithCount(1)
-                            ).fieldOf("itemStack").forGetter(o -> o.itemStack)
-            ).apply(t, ItemStackResourceKey::new)
-    );
+    public static final Codec<ItemStackResourceKey> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            BuiltInRegistries.ITEM.byNameCodec()
+                    .fieldOf("item")
+                    .forGetter(ItemStackResourceKey::getItem),
+            CompoundTag.CODEC
+                    .optionalFieldOf("tag", null)
+                    .forGetter(ItemStackResourceKey::getCompoundTag)
+    ).apply(instance, ItemStackResourceKey::new));
 
-    public ItemStackResourceKey(ItemStack itemStack) {
-        this.itemStack = itemStack.copyWithCount(1);
+    //三种构造函数
+    public ItemStackResourceKey(Item item, @Nullable CompoundTag tag) {
+        this.item = item;
+        this.tag = tag != null ? tag.copy() : null;
+        this.hashCode = computeHash();
+    }
+
+    public ItemStackResourceKey(ItemStack stack) {
+        this.item = stack.getItem();
+        this.tag = stack.getTag() != null ? stack.getTag().copy() : null;
+        this.hashCode = computeHash();
     }
 
     public ItemStackResourceKey(Item item) {
-        this.itemStack = new ItemStack(item, 1);
+        this.item = item;
+        this.tag = null;
+        this.hashCode = computeHash();
     }
 
+    public CompoundTag getCompoundTag() {
+        return tag;
+    }
+
+    public Item getItem() {
+        return item;
+    }
+
+
+    public ItemStack toItemStack() {
+        ItemStack stack = new ItemStack(item, 1);
+        if (tag != null) {
+            stack.setTag(tag.copy());
+        }
+        return stack;
+    }
+
+    public boolean matches(ItemStack stack) {
+        if (stack.getItem() != this.item) return false;
+        return Objects.equals(stack.getTag(), this.tag);
+    }
+
+
+
+    @Override
     public boolean equals(Object o) {
-        ItemStack itemStack2;
-        if (o instanceof ItemStackResourceKey) {
-            itemStack2 = ((ItemStackResourceKey) o).getItemStack();
-        } else return false;
-        return ItemStack.isSameItemSameTags(itemStack, itemStack2);
-    }
-
-    public int hashCode() {
-        int itemHash = itemStack.getItem().hashCode();
-        int tagHash = itemStack.getTag() == null ? 0 : itemStack.getTag().hashCode();
-        return Objects.hash(itemHash, tagHash);
+        if (this == o) return true;
+        if (!(o instanceof ItemStackResourceKey other)) return false;
+        return this.item == other.item
+                && Objects.equals(this.tag, other.tag);
     }
 
     @Override
+    public int hashCode() {
+        return hashCode;
+    }
+
+    private int computeHash() {
+        int h = item.hashCode();
+        if (tag != null) {
+            h = 31 * h + tag.hashCode();
+        }
+        return h;
+    }
+
+    public boolean isEmpty() {
+        return item == Items.AIR;
+    }
+
+
+    @Override
     public String toString() {
-        return "{Item Resource: " +
-                itemStack +
-                '}';
+        return "{Item Resource: " + item + (tag != null ? " " + tag : "") + '}';
     }
 }

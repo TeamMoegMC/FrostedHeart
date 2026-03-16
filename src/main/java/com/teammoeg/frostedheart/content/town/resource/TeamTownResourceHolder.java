@@ -146,7 +146,7 @@ public class TeamTownResourceHolder {
             if(itemAmounts == null) return 1.0;
             amount.setValue(itemAmounts.getOrDefault(attribute, 1.0));
         } else{
-            itemStackResourceKey.getItemStack().getTags()
+            itemStackResourceKey.getItem().builtInRegistryHolder().tags()
                     .map(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE::get)
                     .filter(attribute::equals)
                     .findFirst()
@@ -178,7 +178,7 @@ public class TeamTownResourceHolder {
      * @param itemStackResourceKey ItemStack的包装类
      */
     public static void addItemToCache(ItemStackResourceKey itemStackResourceKey){
-        itemStackResourceKey.getItemStack().getTags()
+        itemStackResourceKey.getItem().builtInRegistryHolder().tags()
                 //仅获取有对应ItemResourceAttribute的tag
                 .filter(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE::containsKey)
                 //转化为ItemResourceAttribute
@@ -244,12 +244,12 @@ public class TeamTownResourceHolder {
      * Get all items stored in town.
      * @return A map that contains all items stored in town.
      */
-    public Map<ItemStack, Double> getAllItems(){
-        Map<ItemStack, Double> items = new HashMap<>();
+    public Map<ItemStackResourceKey, Double> getAllItems(){
+        Map<ItemStackResourceKey, Double> items = new HashMap<>();
         for(ITownResourceKey townResourceKey : resources.keySet()){
             if(townResourceKey instanceof ItemStackResourceKey itemStackResourceKey) {
                 if (get(itemStackResourceKey) > DELTA) {
-                    items.put(itemStackResourceKey.getItemStack(), get(itemStackResourceKey));
+                    items.put(itemStackResourceKey, get(itemStackResourceKey));
                 }
             }
         }
@@ -278,18 +278,18 @@ public class TeamTownResourceHolder {
      * Can't be used to change the resource.
      * @return A map that contains all items of the given attribute stored in town.
      */
-    public Map<ItemStack, Double> getAllItems(ItemResourceAttribute attribute){
-        Map<ItemStack, Double> items = new HashMap<>();
+    public Map<ItemStackResourceKey, Double> getAllItems(ItemResourceAttribute attribute){
+        Map<ItemStackResourceKey, Double> items = new HashMap<>();
         for(ItemStackResourceKey itemStackResourceKey : ITEM_RESOURCE_ATTRIBUTE_CACHE.get(attribute)){
             if(get(itemStackResourceKey) > DELTA){
-                items.put(itemStackResourceKey.getItemStack(), get(itemStackResourceKey) * getResourceAmount(itemStackResourceKey, attribute));
+                items.put(itemStackResourceKey, get(itemStackResourceKey) * getResourceAmount(itemStackResourceKey, attribute));
             }
         }
         return items;
     }
 
     public Map<VirtualResourceAttribute, Double> getAllVirtualResources() {
-        return resources.entrySet().stream()
+        return resources.object2DoubleEntrySet().stream()
                 .filter(entry -> entry.getKey() instanceof VirtualResourceAttribute)
                 .collect(Collectors.toMap(
                         entry -> (VirtualResourceAttribute) entry.getKey(),
@@ -341,13 +341,13 @@ public class TeamTownResourceHolder {
 private void addSigned(ITownResourceKey townResourceKey, double amount){
     //System.out.println("resourcesBefore: " + resources);
     if(townResourceKey instanceof ItemStackResourceKey itemStackResourceKey){
-        if(itemStackResourceKey.itemStack.isEmpty()) return;
+        if(itemStackResourceKey.isEmpty()) return;
         double amountExist = get(itemStackResourceKey);
         if(amountExist <= DELTA){
             addItemToCache(itemStackResourceKey);
         }
         if(Math.abs(resources.merge(itemStackResourceKey, amount, Double::sum)) <= DELTA){
-            resources.remove(itemStackResourceKey);
+            resources.removeDouble(itemStackResourceKey);
         }
         this.occupiedCapacity += amount;
         markVirtualItemsDirty();
@@ -453,7 +453,7 @@ private void addSigned(ITownResourceKey townResourceKey, double amount){
     public void updateCache(){
         for(ITownResourceKey key : resources.keySet()){
             if(key instanceof ItemStackResourceKey itemStackResourceKey){
-                if(itemStackResourceKey.getItemStack().isEmpty()) continue;
+                if(itemStackResourceKey.isEmpty()) continue;
                 addItemToCache(itemStackResourceKey);
             }
         }
@@ -481,7 +481,7 @@ private void addSigned(ITownResourceKey townResourceKey, double amount){
      * Remove all items and virtual resources with zero amount from map.
      */
     public void removeZeros(){
-        resources.entrySet().removeIf((entry) -> entry.getValue() < DELTA);
+        resources.object2DoubleEntrySet().removeIf((entry) -> entry.getDoubleValue() < DELTA);
     }
 
     /**
@@ -512,11 +512,11 @@ private void addSigned(ITownResourceKey townResourceKey, double amount){
 
         Map<SimpleItemKey, Long> items = new HashMap<>(resources.size());
 
-        for (var entry : resources.entrySet()) {
+        for (var entry : resources.object2DoubleEntrySet()) {
             if (entry.getKey() instanceof ItemStackResourceKey itemStackKey) {
-                double amount = entry.getValue();
+                double amount = entry.getDoubleValue();
                 if (amount > DELTA) {
-                    SimpleItemKey simpleKey = SimpleItemKey.from(itemStackKey.itemStack);
+                    SimpleItemKey simpleKey = SimpleItemKey.from(itemStackKey);
                     long longAmount = (long) amount;
                     items.merge(simpleKey, longAmount, Long::sum);
                 }

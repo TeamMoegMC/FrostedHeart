@@ -32,6 +32,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -106,6 +107,19 @@ public class NutritionRecipe implements Recipe<Inventory> {
         return ingredient.test(conformStack);
     }
 
+    public boolean conform(Item conformItem) {
+        if (conformItem == null) {
+            return false;
+        } else if (conformItem == Items.AIR) {
+            return false;
+        }
+        for (ItemStack stack : ingredient.getItems()) {
+            if (stack.getItem() == conformItem) {
+                return true;
+            }
+        }
+        return false;
+    }
     @Override
     public boolean matches(Inventory iInventory, Level world) {
         return false;

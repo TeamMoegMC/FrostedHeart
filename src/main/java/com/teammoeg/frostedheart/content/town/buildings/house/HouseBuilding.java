@@ -222,7 +222,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                             Double amount = entry.getValue(); // 获取消耗数量
 
                             for(NutritionRecipe recipe : CUtils.filterRecipes(CDistHelper.getRecipeManager(), NutritionRecipe.TYPE)){
-                                if (recipe.conform(key.itemStack)) {
+                                if (recipe.conform(key.getItem())) {
                                     nutrition_Average += (recipe.getNutrition().getNutritionValue() / 4.0) * amount;
                                 }
                             }

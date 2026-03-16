@@ -222,9 +222,9 @@ public class TownResourceManager {
         double resourceLeft = get(attribute);
         if(resourceLeft<=amount) return SimpleResourceActionResult.NOT_SUCCESS;
         double toCost;
-        Map<ItemStack, Double> items = resourceHolder.getAllItems(attribute);
+        Map<ItemStackResourceKey, Double> items = resourceHolder.getAllItems(attribute);
         toCost = amount;
-        for(ItemStack itemStack : items.keySet()){
+        for(ItemStackResourceKey itemStack : items.keySet()){
             double itemResourceAmount = TeamTownResourceHolder.getResourceAmount(itemStack, attribute);
             SimpleResourceActionResult result = costToEmpty(itemStack, toCost / itemResourceAmount);
             toCost -= result.actualAmount() * itemResourceAmount;
@@ -245,8 +245,8 @@ public class TownResourceManager {
      * @param itemStack The item to cost. The count of item will be ignored.
      * @return The result of the action. You can know if all the resource is costed, and how many resources are costed, etc.
      */
-    public SimpleResourceActionResult costToEmpty(ItemStack itemStack, double amount){
-        double resourceLeft = get(itemStack);
+    public SimpleResourceActionResult costToEmpty(ItemStackResourceKey itemStack, double amount){
+        double resourceLeft = get((ITownResourceAttribute) itemStack);
         if(resourceLeft<=0) return SimpleResourceActionResult.NOT_SUCCESS;
         if(resourceLeft>=amount){
             resourceHolder.costUnsafe(itemStack,amount);
@@ -268,9 +268,9 @@ public class TownResourceManager {
     public SimpleResourceActionResult costToEmpty(ItemResourceAttribute attribute, double amount){
         double resourceLeft = get(attribute);
         double toCost;
-        Map<ItemStack, Double> items = resourceHolder.getAllItems(attribute);
+        Map<ItemStackResourceKey, Double> items = resourceHolder.getAllItems(attribute);
         toCost = Math.min(resourceLeft, amount);
-        for(ItemStack itemStack : items.keySet()){
+        for(ItemStackResourceKey itemStack : items.keySet()){
             double itemResourceAmount = TeamTownResourceHolder.getResourceAmount(itemStack, attribute);
             SimpleResourceActionResult result = costToEmpty(itemStack, toCost / itemResourceAmount);
             toCost -= result.actualAmount() * itemResourceAmount;

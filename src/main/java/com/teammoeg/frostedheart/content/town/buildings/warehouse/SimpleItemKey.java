@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
 import groovyjarjarantlr4.v4.runtime.misc.Nullable;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
@@ -13,6 +14,10 @@ public record SimpleItemKey(Item item, @Nullable CompoundTag tag)
 
     public static SimpleItemKey from(ItemStack stack) {
         return new SimpleItemKey(stack.getItem(), stack.getTag());
+    }
+
+    public static SimpleItemKey from(ItemStackResourceKey stackResourceKey) {
+        return new SimpleItemKey(stackResourceKey.getItem(), stackResourceKey.toItemStack().getTag());
     }
 
     public static SimpleItemKey from(VirtualItemStack vStack) {
