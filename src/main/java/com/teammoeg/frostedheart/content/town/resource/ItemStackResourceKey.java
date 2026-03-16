@@ -30,6 +30,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Wrapper for ItemStack, added special hashCode and equals method, for saving ItemStack in HashMap.
@@ -47,9 +48,9 @@ public class ItemStackResourceKey implements ITownResourceKey {
                     .fieldOf("item")
                     .forGetter(ItemStackResourceKey::getItem),
             CompoundTag.CODEC
-                    .optionalFieldOf("tag", null)
-                    .forGetter(ItemStackResourceKey::getCompoundTag)
-    ).apply(instance, ItemStackResourceKey::new));
+                    .optionalFieldOf("tag")
+                    .forGetter(k -> Optional.ofNullable(k.getCompoundTag()))
+    ).apply(instance, (item, optTag) -> new ItemStackResourceKey(item, optTag.orElse(null))));
 
     //三种构造函数
     public ItemStackResourceKey(Item item, @Nullable CompoundTag tag) {
