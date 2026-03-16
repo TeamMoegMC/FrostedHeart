@@ -53,32 +53,25 @@ public class TownInformationTab extends AbstractTownTab<WarehouseMenu> {
     private List<Component> collectBuildingInfo() {
         List<Component> lines = new ArrayList<>();
 
-        WarehouseBlockEntity te = screen.getCBEMenu().getBlock();
-        if (te == null) {
+        WarehouseMenu menu = screen.getCBEMenu();
+        if (!menu.hasBuilding()) {
             return lines;
         }
+        lines.add(BuildingInfoElement.title("Building Info"));
+        lines.add(BuildingInfoElement.separator());
 
-        te.getBuilding().ifPresentOrElse(building -> {
-            lines.add(BuildingInfoElement.title("Building Info"));
-            lines.add(BuildingInfoElement.separator());
+        lines.add(BuildingInfoElement.status("Workable", menu.isWorkable()));
+        lines.add(BuildingInfoElement.status("Initialized", menu.isInitialized()));
+        lines.add(BuildingInfoElement.status("Structure Valid", menu.isStructureValid()));
+        lines.add(BuildingInfoElement.status("Area Overlapped", menu.isAreaOverlapped()));
+        lines.add(BuildingInfoElement.separator());
 
-
-            lines.add(BuildingInfoElement.status("Workable", building.isBuildingWorkable()));
-            lines.add(BuildingInfoElement.status("Initialized", building.initialized));
-            lines.add(BuildingInfoElement.status("Structure Valid", building.isStructureValid));
-            lines.add(BuildingInfoElement.status("Area Overlapped", building.occupiedAreaOverlapped));
-            lines.add(BuildingInfoElement.separator());
-            lines.add(BuildingInfoElement.keyValue("Volume", building.getVolume()));
-            lines.add(BuildingInfoElement.keyValue("Area", building.getArea()));
-            lines.add(BuildingInfoElement.keyValue("Capacity",
-                    BigDecimal.valueOf(building.getCapacity())
-                            .setScale(2, RoundingMode.HALF_UP)
-                            .doubleValue()));
-
-        }, () -> {
-
-        });
-
+        lines.add(BuildingInfoElement.keyValue("Volume", menu.getVolume()));
+        lines.add(BuildingInfoElement.keyValue("Area", menu.getArea()));
+        lines.add(BuildingInfoElement.keyValue("Capacity",
+                BigDecimal.valueOf(menu.getCapacity())
+                        .setScale(2, RoundingMode.HALF_UP)
+                        .doubleValue()));
         return lines;
     }
 
