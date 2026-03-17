@@ -19,26 +19,10 @@
 
 package com.teammoeg.frostedheart.events;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
-
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.events.ServerLevelDataSaveEvent;
-import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.clusterserver.AuthConfig;
-import com.teammoeg.frostedheart.clusterserver.ServerConnectionHelper;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
 import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
@@ -54,7 +38,6 @@ import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.fml.loading.FMLPaths;
 
 /**
  * Events fired only on logical server side.

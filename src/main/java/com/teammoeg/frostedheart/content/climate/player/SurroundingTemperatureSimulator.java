@@ -63,7 +63,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * @author Alphagem618
  */
 public class SurroundingTemperatureSimulator {
-	public static record SimulationResult(float blockTemp,float windStrengh){
+	public static record SimulationResult(float blockTemp,float windStrength){
 		
 	}
     /**
