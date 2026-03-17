@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.town.buildings.mine;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
@@ -65,6 +66,7 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
                 building.linkedMines = scanner.getLinkedMines();
                 building.setOccupiedArea(scanner.getOccupiedArea());
                 building.temperature = scanner.getTemperature();
+                building.maxResidents = (int) (TownMathFunctions.calculateSpaceRating(scanner.getVolume(), scanner.getArea()) / 4 * scanner.getArea());
                 return true;
             }
         }
