@@ -32,12 +32,9 @@ import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBaseBuilding> {
-    public Set<BlockPos> linkedMines = new HashSet<>();
 
     public MineBaseBlockEntity(BlockPos pos, BlockState state){
         super(FHBlockEntityTypes.MINE_BASE.get(),pos,state);
