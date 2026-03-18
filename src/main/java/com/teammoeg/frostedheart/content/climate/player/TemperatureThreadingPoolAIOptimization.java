@@ -98,7 +98,7 @@ public class TemperatureThreadingPoolAIOptimization {
 //		scheduler.shutdown();
 
 		if (scheduler != null) {
-			SurroundingTemperatureSimulatorAIOptimization.cleanupAll(scheduler);
+			SurroundingTemperatureSimulatorAIOptimization.cleanup();
 			scheduler.shutdown();
 		} else {
 			SurroundingTemperatureSimulatorAIOptimization.cleanup();

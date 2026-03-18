@@ -23,7 +23,7 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.events.ServerLevelDataSaveEvent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.clusterserver.AuthConfig;
-import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
+import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulatorAIOptimization;
 import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
 import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
 
@@ -65,7 +65,8 @@ public class FHServerEvents {
 	 */
 	@SubscribeEvent
 	public static void serverAboutToStart(final ServerAboutToStartEvent event) {
-		SurroundingTemperatureSimulator.init();
+//		SurroundingTemperatureSimulator.init();
+		SurroundingTemperatureSimulatorAIOptimization.init();
 		TemperatureUpdate.init();
 		if(FMLEnvironment.dist==Dist.DEDICATED_SERVER) {
 			TssapProtocolHandler.serverPrepareUpdateReminder();

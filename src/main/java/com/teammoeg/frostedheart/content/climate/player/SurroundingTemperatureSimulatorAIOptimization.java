@@ -95,7 +95,10 @@ public class SurroundingTemperatureSimulatorAIOptimization {
         final double[] qx = new double[n];
         final double[] qy = new double[n];
         final double[] qz = new double[n];
-        final int[] vid = new int[n];
+
+        final double[] pvx = new double[n];
+        final double[] pvy = new double[n];
+        final double[] pvz = new double[n];
 
         // 位置缓存：32^3 = 32768 个槽位，覆盖 [-16,16) 三个轴
         final CachedBlockInfo[] posCache = new CachedBlockInfo[CACHE_SIZE];
@@ -205,7 +208,6 @@ public class SurroundingTemperatureSimulatorAIOptimization {
 
     private final int ox, oy, oz; // origin 坐标（int 缓存，避免反复 getX/Y/Z）
     private SplittableRandom rnd;  // 无锁随机数（替代 java.util.Random 的 CAS）
-    private Level level;
 
     // BlockState → CachedBlockInfo 去重缓存（实例级，避免跨世界污染）
     private final IdentityHashMap<BlockState, CachedBlockInfo> stateCache =
@@ -258,7 +260,6 @@ public class SurroundingTemperatureSimulatorAIOptimization {
 
         rnd = new SplittableRandom(
                 BlockPos.asLong(sourceX, sourceY, sourceZ) ^ (world.getGameTime() >> 6));
-        level = world.getLevel();
     }
 
     // ======================== 核心模拟 ========================
@@ -272,29 +273,28 @@ public class SurroundingTemperatureSimulatorAIOptimization {
         Arrays.fill(buf.qx, qx0);
         Arrays.fill(buf.qy, qy0);
         Arrays.fill(buf.qz, qz0);
-        for (int i = 0; i < n; i++) buf.vid[i] = i;
+        System.arraycopy(speedVX, 0, buf.pvx, 0, n);
+        System.arraycopy(speedVY, 0, buf.pvy, 0, n);
+        System.arraycopy(speedVZ, 0, buf.pvz, 0, n);
 
         float heat = 0f, wind = 0f, minTemp = 0f, maxTemp = 0f;
         // 局部变量缓存，JIT 优化更友好
         final int lox = this.ox, loy = this.oy, loz = this.oz;
+        final double[] localPvx = buf.pvx, localPvy = buf.pvy, localPvz = buf.pvz;
+        final double[] localQx = buf.qx, localQy = buf.qy, localQz = buf.qz;
 
         for (int round = 0; round < num_rounds; ++round) {
             for (int i = 0; i < n; ++i) {
-                final int curVid = buf.vid[i];
+                final double vx = localPvx[i];
+                final double vy = localPvy[i];
+                final double vz = localPvz[i];
 
-                // ---- 读取当前状态（全部原始类型，零分配） ----
-                final double sx = buf.qx[i], sy = buf.qy[i], sz = buf.qz[i];
-                final double vx = speedVX[curVid], vy = speedVY[curVid], vz = speedVZ[curVid];
+                final double sx = localQx[i], sy = localQy[i], sz = localQz[i];
                 final double dx = sx + vx, dy = sy + vy, dz = sz + vz;
-
-                // 目标方块坐标
-                // 注意：如果 CUtils.vec2AlignedPos 内部使用 (int) 强转而非 Mth.floor，
-                //       请将这里改为 (int) 强转以保持行为一致
                 final int bx = Mth.floor(dx), by = Mth.floor(dy), bz = Mth.floor(dz);
 
                 // ---- 缓存查找（世代标记 + 直接数组索引） ----
                 final CachedBlockInfo info = getInfoFast(buf, bx, by, bz);
-                int nid = curVid;
 
                 // ---- 碰撞处理（三路分支：FULL / 部分形状 / EMPTY） ----
                 if (info.isFull) {
@@ -302,12 +302,17 @@ public class SurroundingTemperatureSimulatorAIOptimization {
                     int sxi = Mth.floor(sx), syi = Mth.floor(sy), szi = Mth.floor(sz);
                     if (sxi != bx || syi != by || szi != bz) {
                         // 从外部进入 → 计算入射面并反弹
+                        int nid;
                         if (rnd.nextInt(3) == 0) {
                             nid = rnd.nextInt(n);
                         } else {
                             nid = getOutboundSpeedFrom(
                                     computeEntryFace(sx, sy, sz, vx, vy, vz, bx, by, bz));
                         }
+                        // ★ 仅在反弹时写入 3 个 double（替代每轮写入 1 个 int）
+                        localPvx[i] = speedVX[nid];
+                        localPvy[i] = speedVY[nid];
+                        localPvz[i] = speedVZ[nid];
                     }
                     // 粒子已在同一 FULL 方块内部 → 不反弹（与原代码行为一致：
                     //   shape.clip 对两端点都在 AABB 内部时返回 null → 不进入反弹分支）
@@ -323,6 +328,7 @@ public class SurroundingTemperatureSimulatorAIOptimization {
                     // （shape == FULL 在此分支中不可能为 true，已被上方 isFull 拦截）
                     if (bhr != null && bhr.isInside()) {
                         BlockHitResult brtr = AABB.clip(info.aabbList, svec, dvec, bpos);
+                        int nid;
                         if (brtr != null) {
                             nid = rnd.nextInt(3) == 0
                                     ? rnd.nextInt(n)
@@ -330,6 +336,10 @@ public class SurroundingTemperatureSimulatorAIOptimization {
                         } else {
                             nid = rnd.nextInt(n);
                         }
+
+                        localPvx[i] = speedVX[nid];
+                        localPvy[i] = speedVY[nid];
+                        localPvz[i] = speedVZ[nid];
                     }
                 }
                 // EMPTY：无碰撞，nid 不变，零开销
@@ -338,7 +348,6 @@ public class SurroundingTemperatureSimulatorAIOptimization {
                 buf.qx[i] = dx;
                 buf.qy[i] = dy;
                 buf.qz[i] = dz;
-                buf.vid[i] = nid;
 
                 // ---- 温度累积 ----
                 final float curheat = info.temperature;
@@ -584,40 +593,6 @@ public class SurroundingTemperatureSimulatorAIOptimization {
         WORK_BUFFER.remove();
     }
 
-    /**
-     * 彻底清理所有线程的 ThreadLocal 缓冲区。
-     * 适用于 Mod 热重载等需要确保所有缓冲区释放的场景。
-     */
-    public static void cleanupAll(ExecutorService scheduler) {
-        // 清理调用线程（通常是主线程）
-        WORK_BUFFER.remove();
-
-        if (scheduler == null || scheduler.isShutdown()) return;
-
-        // 向线程池提交清理任务，尽量覆盖所有工作线程
-        int poolSize;
-        if (scheduler instanceof ThreadPoolExecutor tpe) {
-            poolSize = tpe.getMaximumPoolSize();
-        } else {
-            poolSize = Runtime.getRuntime().availableProcessors();
-        }
-
-        // 提交 2 倍于线程数的任务以最大化覆盖率
-        List<Future<?>> futures = new ArrayList<>(poolSize * 2);
-        for (int i = 0; i < poolSize * 2; i++) {
-            try {
-                futures.add(scheduler.submit(WORK_BUFFER::remove));
-            } catch (Exception ignored) {
-                break; // 线程池正在关闭
-            }
-        }
-        for (Future<?> f : futures) {
-            try {
-                f.get(5, TimeUnit.SECONDS);
-            } catch (Exception ignored) {
-            }
-        }
-    }
 
     // ======================== 兼容性保留（未使用） ========================
 
