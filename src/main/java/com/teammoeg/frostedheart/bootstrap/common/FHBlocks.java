@@ -113,6 +113,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
+import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.existingItemModel;
 import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.ruinedMachines;
 import static com.teammoeg.frostedheart.infrastructure.gen.FHTagGen.*;
 import static net.minecraft.world.level.block.Blocks.*;
@@ -2118,7 +2119,7 @@ public class FHBlocks {
             .build()
             .register();
     public static final BlockEntry<VAWTBlock> FABRIC_VAWT = REGISTRATE.block("fabric_vawt",
-                    p -> VAWTBlock.create(FHProps.woodenProps, "fabric", 120, 1.125F, Shapes.or(Block.box(0, 9, 0, 16, 32, 16), Block.box(6, 0, 6, 10, 9, 10))))
+                    p -> VAWTBlock.create(FHProps.woodenProps, "fabric", 120, 1.25F, Shapes.or(Block.box(0, 9, 0, 16, 32, 16), Block.box(6, 0, 6, 10, 9, 10))))
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
@@ -2127,7 +2128,7 @@ public class FHBlocks {
             .model(FHBlockStateGen.existingItemModel()).build()
             .register();
     public static final BlockEntry<VAWTBlock> METAL_VAWT = REGISTRATE.block("metal_vawt",
-                    p -> VAWTBlock.create(FHProps.metalDecoProps, "metal", 240, 0.75F,Shapes.or(Block.box(0, 9, 0, 16, 32, 16), Block.box(6, 0, 6, 10, 9, 10))))
+                    p -> VAWTBlock.create(FHProps.metalDecoProps, "metal", 240, 1F,Shapes.or(Block.box(0, 9, 0, 16, 32, 16), Block.box(6, 0, 6, 10, 9, 10))))
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
@@ -2136,7 +2137,7 @@ public class FHBlocks {
             .model(FHBlockStateGen.existingItemModel()).build()
             .register();
     public static final BlockEntry<VAWTBlock> ALLOY_VAWT = REGISTRATE.block("alloy_vawt",
-                    p -> VAWTBlock.create(FHProps.metalDecoProps, "alloy", 480, 1.0F, Shapes.or(Block.box(0, 9, 0, 16, 32, 16), Block.box(6, 0, 6, 10, 9, 10))))
+                    p -> VAWTBlock.create(FHProps.metalDecoProps, "alloy", 480, 1.125F, Shapes.or(Block.box(0, 9, 0, 16, 32, 16), Block.box(6, 0, 6, 10, 9, 10))))
             .blockstate(FHBlockStateGen.existed())
             .tag(FHTags.Blocks.METAL_MACHINES.tag)
             .tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
@@ -2157,6 +2158,7 @@ public class FHBlocks {
             .lang("Gunpowder Barrel")
             .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
             .item(GunpowderBarrelItem::new)
+            .model(existingItemModel())
             .build()
             .register();
     // WARDROBE, "wardrobe", like Blocks.SPRUCE_DOOR
