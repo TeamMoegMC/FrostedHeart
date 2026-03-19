@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.archive;
 
 import com.teammoeg.chorda.client.AnimationUtil;
+import com.teammoeg.chorda.client.CSSStylingUtil;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
@@ -33,6 +34,9 @@ import com.teammoeg.frostedheart.content.tips.ClickActions;
 import net.minecraft.client.gui.GuiGraphics;
 
 import javax.annotation.Nullable;
+
+import org.joml.Matrix4f;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -134,9 +138,10 @@ public final class ArchiveScreen extends PrimaryLayer {
         super.drawBackground(graphics, x, y, w, h);
     }
 
-
+    Matrix4f transform=CSSStylingUtil.skewX(-2);
 	@Override
 	public void beforeDrawElements(GuiGraphics graphics, int parX, int parY, int x, int y, int w, int h) {
+		graphics.pose().mulPoseMatrix(transform);
 		super.beforeDrawElements(graphics, parX, parY, x, y, w, h);
 	}
 	@Override

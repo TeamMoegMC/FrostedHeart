@@ -19,6 +19,11 @@
 
 package com.teammoeg.chorda.client.cui.base;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
@@ -27,10 +32,17 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector3i;
+import org.lwjgl.opengl.GL11;
 
 /**
  * UI层，包含并管理一组子UI元素。
@@ -273,7 +285,6 @@ public abstract class UILayer extends UIElement {
 	public void resetOffset(boolean flag) {
 		offsetX = offsetY = 0;
 	}
-
 	@Override
 	public void render(GuiGraphics graphics,  int x, int y, int w, int h) {
 
@@ -300,8 +311,60 @@ public abstract class UILayer extends UIElement {
 		graphics.pose().pushPose();
 		graphics.pose().translate(0, 0, zIndex);
 		drawBackground(graphics, x, y, w, h);
-		if(isScissorEnabled())
+	    boolean stencilEnabled=false;
+	    int stencilMask=0,stencilFunc=0,stencilRef=0,stencilValueMask=0,stencilFail=0,stencilDepthFail=0,stencilPass=0,nextStencil=0;
+	    final boolean isScissorEnabled=isScissorEnabled();
+        Matrix4f pose=graphics.pose().last().pose();
+		if(isScissorEnabled) {
+		    stencilEnabled = GL11.glIsEnabled(GL11.GL_STENCIL_TEST);
+		    stencilMask = GL11.glGetInteger(GL11.GL_STENCIL_WRITEMASK);
+		    stencilFunc = GL11.glGetInteger(GL11.GL_STENCIL_FUNC);
+		    stencilRef = GL11.glGetInteger(GL11.GL_STENCIL_REF);
+		    stencilValueMask = GL11.glGetInteger(GL11.GL_STENCIL_VALUE_MASK);
+		    stencilFail = GL11.glGetInteger(GL11.GL_STENCIL_FAIL);
+		    stencilDepthFail = GL11.glGetInteger(GL11.GL_STENCIL_PASS_DEPTH_FAIL);
+		    stencilPass = GL11.glGetInteger(GL11.GL_STENCIL_PASS_DEPTH_PASS);
+		    nextStencil=(stencilRef>0)?stencilRef+1:1;
+
+	        {
+	        	RenderSystem.setShader(GameRenderer::getPositionColorShader);
+		        Tesselator tessellator = Tesselator.getInstance();
+		        BufferBuilder buffer = tessellator.getBuilder();
+		        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+		        buffer.vertex(pose,x,y,0).color(255,0,0,255).endVertex();
+		        buffer.vertex(pose,x+w,y,0).color(255,0,0,255).endVertex();
+		        buffer.vertex(pose,x+w,y+h,0).color(255,0,0,255).endVertex();
+		        buffer.vertex(pose,x,y+h,0).color(255,0,0,255).endVertex();
+		        tessellator.end();
+	        }
+	        
+	        //boolean depthTestEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
+	       // GL11.glDisable(GL11.GL_DEPTH_TEST);
+	        GL11.glEnable(GL11.GL_STENCIL_TEST);
+	        RenderSystem.clear(GL11.GL_STENCIL_BUFFER_BIT, false); // 清空模板缓冲，不影响颜色/深度
+	        GL11.glStencilMask(0xFF);               // 允许写入所有模板位
+	        GL11.glStencilFunc(GL11.GL_ALWAYS, nextStencil, 0xFF); // 总是通过模板测试
+	        System.out.println(nextStencil);
+	        GL11.glStencilOp(GL11.GL_KEEP, GL11.GL_REPLACE, GL11.GL_REPLACE); // 通过时将模板值替换为参考值(1)
+	        GL11.glColorMask(false, false, false, false);
+	        Tesselator tessellator = Tesselator.getInstance();
+	        BufferBuilder buffer = tessellator.getBuilder();
+	        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+	        buffer.vertex(pose,x,y,0).endVertex();
+	        buffer.vertex(pose,x+w,y,0).endVertex();
+	        buffer.vertex(pose,x+w,y+h,0).endVertex();
+	        buffer.vertex(pose,x,y+h,0).endVertex();
+	        tessellator.end();
+	        GL11.glColorMask(true, true, true, true);
+	        GL11.glStencilFunc(GL11.GL_EQUAL, nextStencil, 0xFF); // 只绘制模板值等于1的区域
+	        GL11.glStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP); // 后续不修改模板值
+	        GL11.glStencilMask(0x00);                   // 禁止写入模板
+	        /*if(depthTestEnabled)
+	        	GL11.glEnable(GL11.GL_DEPTH_TEST);*/
+	     
+
 			graphics.enableScissor(x, y, x+w, y+h);
+		}
 		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
 		beforeDrawElements(graphics,x,y, contentX, contentY, w, h);
 		for(UIElement elm:elements) {
@@ -312,8 +375,36 @@ public abstract class UILayer extends UIElement {
 		afterDrawElements(graphics,x,y, contentX, contentY, w, h);
 		graphics.pose().popPose();
 
-		if(isScissorEnabled())
+		if(isScissorEnabled) {
+			/*
+			   // 6. 恢复模板测试状态
+			boolean depthTestEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
+	        GL11.glDisable(GL11.GL_DEPTH_TEST);
+			GL11.glColorMask(false, false, false, false);
+			Tesselator tessellator = Tesselator.getInstance();
+			BufferBuilder buffer = tessellator.getBuilder();
+			buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+	        buffer.vertex(pose,x,y,0).endVertex();
+	        buffer.vertex(pose,x+w,y,0).endVertex();
+	        buffer.vertex(pose,x+w,y+h,0).endVertex();
+	        buffer.vertex(pose,x,y+h,0).endVertex();
+
+			tessellator.end();
+			
+			// 恢复颜色写入
+			GL11.glColorMask(true, true, true, true);
+			if(!stencilEnabled)
+				GL11.glDisable(GL11.GL_STENCIL_TEST);
+			 
+	        GL11.glStencilMask(stencilMask);
+	        GL11.glStencilFunc(stencilFunc, stencilRef, stencilValueMask);
+	        GL11.glStencilOp(stencilFail, stencilDepthFail, stencilPass);
+	        if(depthTestEnabled)
+	        	GL11.glEnable(GL11.GL_DEPTH_TEST);
+			
+			*/
 			graphics.disableScissor();
+		}
 
 		lastFrameTime = Util.getNanos();
 		//if(isMouseOver)

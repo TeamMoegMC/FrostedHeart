@@ -133,7 +133,7 @@ public class CMultiblockHelper {
 	 * @return 包含多方块注册信息的 Optional / An Optional containing the multiblock registration
 	 */
 	public static Optional<MultiblockRegistration<?>> getMultiblockOptional(IMultiblockContext<?> ctx){
-		unwrap(ctx);
+		ctx=unwrap(ctx);
 		if(ctx instanceof MultiblockContext mbctx) {
 			return Optional.of(mbctx.multiblock());
 		}
