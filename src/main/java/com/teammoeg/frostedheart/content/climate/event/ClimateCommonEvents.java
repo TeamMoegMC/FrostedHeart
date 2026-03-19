@@ -110,6 +110,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static com.teammoeg.frostedheart.content.climate.WorldTemperature.SNOW_REACHES_GROUND;
+import static com.teammoeg.frostedheart.content.town.Town.DEBUG_MODE;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ClimateCommonEvents {
@@ -357,7 +358,7 @@ public class ClimateCommonEvents {
                 // Town logic tick
                 int i = 0;
                 for (TeamDataHolder trd : CTeamDataManager.INSTANCE.getAllData()) {
-                    if (serverWorld.dimension().equals(trd.getData(FHSpecialDataTypes.GENERATOR_DATA).dimension)) {
+                    if (DEBUG_MODE && serverWorld.dimension().equals(trd.getData(FHSpecialDataTypes.GENERATOR_DATA).dimension)) {
                         if (serverWorld.getGameTime() % 20 == i % 20) {// Split town calculations to multiple seconds
                             if (!trd.getTeam().getOnlineMembers().isEmpty()) {
                                 trd.getData(FHSpecialDataTypes.TOWN_DATA).tick(serverWorld);

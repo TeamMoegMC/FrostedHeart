@@ -290,7 +290,7 @@ public class TeamTownData implements SpecialData {
 		Iterator<HouseBuilding> houseIterator = buildings.values().stream()
 				.filter(building -> building instanceof HouseBuilding)
 				.map(building -> (HouseBuilding) building)
-				.filter(building ->building.getMaxResidents() > building.getResidentsID().size())
+				.filter(building ->building.isBuildingWorkable() && building.getMaxResidents() > building.getResidentsID().size())
 			.sorted(Comparator.comparingDouble(building -> -building.getRating()))// 优先分配评分最高的house。因此在rating前面加了负号。
 			.iterator();
 		if (!houseIterator.hasNext()) return;
