@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.archive;
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.CSSStylingUtil;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -32,10 +33,14 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.archive.ArchiveCategory.ArchiveEntry;
 import com.teammoeg.frostedheart.content.tips.ClickActions;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
 
 import javax.annotation.Nullable;
 
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
+import org.joml.Vector3d;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,7 +97,30 @@ public final class ArchiveScreen extends PrimaryLayer {
             ArchiveCategory.currentPath = path;
         }
     }
-
+    
+    @Override
+	public void updateRenderInfo(double mx, double my, float pt) {
+    	if(transformation!=null) {
+    		double scx=MouseHelper.getScaledX();
+    		double scy=MouseHelper.getScaledY();
+    		Vector3f v2f=unprojectScreenToPlane(scx,scy,transformation);
+    		if(v2f!=null) {
+    			double nmx=v2f.x-scx+mx;
+    			double nmy=v2f.y-scy+my;
+	    		super.updateRenderInfo(nmx, nmy, pt);
+	    		return;
+    		}
+    	}
+		super.updateRenderInfo(mx, my, pt);
+	}
+    private static Matrix4f skewm2=CSSStylingUtil.skewY(-.5f);
+    private Matrix4f transformation;
+	public Vector3f unprojectScreenToPlane(double screenX, double screenY,
+            Matrix4f mvp) {
+		Vector3f start=new Vector3f((float)screenX,(float)screenY,1f);
+		mvp.transformPosition(start);
+		return start;
+	}
     @Override
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
         if (!flipAnimationEnabled) {
@@ -138,10 +166,19 @@ public final class ArchiveScreen extends PrimaryLayer {
         super.drawBackground(graphics, x, y, w, h);
     }
 
-    Matrix4f transform=CSSStylingUtil.skewX(-2);
+
 	@Override
 	public void beforeDrawElements(GuiGraphics graphics, int parX, int parY, int x, int y, int w, int h) {
-		graphics.pose().mulPoseMatrix(transform);
+		Matrix4f before=new Matrix4f(graphics.pose().last().pose());
+		graphics.pose().translate(-x-w/2, -y-h/2, 50);
+		graphics.pose().mulPoseMatrix(skewm2);
+		graphics.pose().translate(x+w/2, y+h/2, 0);
+		graphics.fill(x+Mth.floor(getMouseX())-2,y+Mth.floor(getMouseY())-2, x+Mth.floor(getMouseX())+2, y+Mth.floor(getMouseY())+2, 0xffffffff);
+		graphics.pose().translate(0,0,-50);
+		Matrix4f after=new Matrix4f(graphics.pose().last().pose());
+		after.mul(before.invert());
+		after.invert();
+		transformation=after;
 		super.beforeDrawElements(graphics, parX, parY, x, y, w, h);
 	}
 	@Override
