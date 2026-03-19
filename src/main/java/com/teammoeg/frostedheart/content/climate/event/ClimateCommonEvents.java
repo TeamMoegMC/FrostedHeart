@@ -358,7 +358,7 @@ public class ClimateCommonEvents {
                 // Town logic tick
                 int i = 0;
                 for (TeamDataHolder trd : CTeamDataManager.INSTANCE.getAllData()) {
-                    if (DEBUG_MODE && serverWorld.dimension().equals(trd.getData(FHSpecialDataTypes.GENERATOR_DATA).dimension)) {
+                    if (DEBUG_MODE || serverWorld.dimension().equals(trd.getData(FHSpecialDataTypes.GENERATOR_DATA).dimension)) {
                         if (serverWorld.getGameTime() % 20 == i % 20) {// Split town calculations to multiple seconds
                             if (!trd.getTeam().getOnlineMembers().isEmpty()) {
                                 trd.getData(FHSpecialDataTypes.TOWN_DATA).tick(serverWorld);
