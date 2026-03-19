@@ -165,7 +165,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	public double getResidentPriority() {
 		if(!this.isBuildingWorkable()) return NEGATIVE_INFINITY;
 		int currentResidentNum = this.residentsID.size();
-		if(currentResidentNum > maxResidents) return NEGATIVE_INFINITY;
+		if(currentResidentNum >= maxResidents) return NEGATIVE_INFINITY;
 		//double rating = state.getRating();
 		return -currentResidentNum + 1.0 * currentResidentNum / maxResidents + 0.4/*the base priority of workerType*/;
 	}

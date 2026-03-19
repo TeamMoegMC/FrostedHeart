@@ -141,7 +141,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	public double getResidentPriority() {
 		if(!this.isBuildingWorkable()) return NEGATIVE_INFINITY;
 		int currentResidentNum = this.residentsID.size();
-		if(currentResidentNum > maxResidents) return NEGATIVE_INFINITY;
+		if(currentResidentNum >= maxResidents) return NEGATIVE_INFINITY;
 		return -currentResidentNum + (double) currentResidentNum / maxResidents + 0.5/*the base priority of workerType*/ + rating;
 	}
 

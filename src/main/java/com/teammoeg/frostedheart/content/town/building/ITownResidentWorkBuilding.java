@@ -30,7 +30,7 @@ public interface ITownResidentWorkBuilding extends ITownResidentBuilding {
      * <br>
      * 每有一个居民在此工作，优先级应减少1左右，这样可以使居民尽可能均匀地分配在所有工作方块中。
      * <br>
-     * 当居民数量大于最大居民数时，应该返回Double. NEGATIVE_INFINITY
+     * 当居民数量大于等于最大居民数时，应该返回Double. NEGATIVE_INFINITY
      * <br>
      * 这个方法不应直接调用下面的那个同名方法，以避免重复读取nbt中的数据。
      */
