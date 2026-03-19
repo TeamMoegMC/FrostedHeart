@@ -20,7 +20,9 @@
 package com.teammoeg.chorda.client.cui.base;
 
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
 import com.teammoeg.chorda.client.cui.editor.EditDialog;
@@ -172,7 +174,17 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	}
 	@Override
 	public final void render(GuiGraphics graphics, int x, int y, int w, int h) {
+		int stencilMask=GL11.glGetInteger(GL11.GL_STENCIL_WRITEMASK);
+		GL11.glStencilMask(0xFF);
+		RenderSystem.clearStencil(0);
+		RenderSystem.clear(GL11.GL_STENCIL_BUFFER_BIT, false);
+		
 		super.render(graphics, x, y, w, h);
+		GL11.glStencilMask(0xFF);
+		RenderSystem.clearStencil(0);
+		RenderSystem.clear(GL11.GL_STENCIL_BUFFER_BIT, false);
+		
+		GL11.glStencilMask(stencilMask);
 	}
 
 	@Override
