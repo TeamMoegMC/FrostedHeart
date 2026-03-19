@@ -134,7 +134,7 @@ public class TeamTown implements Town, ITownWithResidents, ITownWithBuildings {
     }
 
     public Optional<Resident> getResident(UUID id){
-        return Optional.of(data.residents.get(id));
+        return Optional.ofNullable(data.residents.get(id));
     }
 
     public boolean addResident(Resident resident) {
