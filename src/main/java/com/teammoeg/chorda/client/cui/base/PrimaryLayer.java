@@ -35,6 +35,8 @@ import lombok.Setter;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.StencilHelper;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -174,17 +176,8 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	}
 	@Override
 	public final void render(GuiGraphics graphics, int x, int y, int w, int h) {
-		int stencilMask=GL11.glGetInteger(GL11.GL_STENCIL_WRITEMASK);
-		GL11.glStencilMask(0xFF);
-		RenderSystem.clearStencil(0);
-		RenderSystem.clear(GL11.GL_STENCIL_BUFFER_BIT, false);
-		
 		super.render(graphics, x, y, w, h);
-		GL11.glStencilMask(0xFF);
-		RenderSystem.clearStencil(0);
-		RenderSystem.clear(GL11.GL_STENCIL_BUFFER_BIT, false);
-		
-		GL11.glStencilMask(stencilMask);
+		StencilHelper.clearStencil();
 	}
 
 	@Override

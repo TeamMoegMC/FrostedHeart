@@ -29,6 +29,8 @@ import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.StencilHelper;
+import com.teammoeg.chorda.client.StencilHelper.StencilStackElement;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
 import lombok.Getter;
 import lombok.Setter;
@@ -314,8 +316,6 @@ public abstract class UILayer extends UIElement {
 		graphics.pose().pushPose();
 		graphics.pose().translate(0, 0, zIndex);
 		drawBackground(graphics, x, y, w, h);
-	    boolean stencilEnabled=false;
-	    int stencilMask=0,stencilFunc=0,stencilRef=0,stencilValueMask=0,stencilFail=0,stencilDepthFail=0,stencilPass=0,nextStencil=0;
 	    final boolean isScissorEnabled=isScissorEnabled();
         /*int scw=ClientUtils.screenWidth();
         int sch=ClientUtils.screenHeight();*/
@@ -324,39 +324,21 @@ public abstract class UILayer extends UIElement {
 		if(isScissorEnabled) {
 			//记录stencil状态
 			Matrix4f pose=graphics.pose().last().pose();
-		    stencilEnabled = GL11.glIsEnabled(GL11.GL_STENCIL_TEST);
-		    stencilMask = GL11.glGetInteger(GL11.GL_STENCIL_WRITEMASK);
-		    stencilFunc = GL11.glGetInteger(GL11.GL_STENCIL_FUNC);
-		    stencilRef = GL11.glGetInteger(GL11.GL_STENCIL_REF);
-		    stencilValueMask = GL11.glGetInteger(GL11.GL_STENCIL_VALUE_MASK);
-		    stencilFail = GL11.glGetInteger(GL11.GL_STENCIL_FAIL);
-		    stencilDepthFail = GL11.glGetInteger(GL11.GL_STENCIL_PASS_DEPTH_FAIL);
-		    stencilPass = GL11.glGetInteger(GL11.GL_STENCIL_PASS_DEPTH_PASS);
-		    nextStencil=stencilRef+1;
+
 		    //计算显示区域
 		    br=pose.transformPosition(new Vector3f(x+w,y+h,0));
 		    tr=pose.transformPosition(new Vector3f(x+w,y,0));
 		    tl=pose.transformPosition(new Vector3f(x,y,0));
 		    bl=pose.transformPosition(new Vector3f(x,y+h,0));
 		    //绘制stencil（取现有stencil与显示区域的交集，增加1）
-	        GL11.glEnable(GL11.GL_STENCIL_TEST);
-	        GL11.glStencilFunc(GL11.GL_EQUAL, stencilRef, 0xFF);
-	        GL11.glStencilMask(0xFF);
-	        GL11.glStencilOp(GL11.GL_KEEP, GL11.GL_INCR, GL11.GL_INCR);
-	        GL11.glColorMask(false, false, false, false);
-	        RenderSystem.setShader(GameRenderer::getPositionShader);
-	        Tesselator tessellator = Tesselator.getInstance();
-	        BufferBuilder buffer = tessellator.getBuilder();
+		    StencilStackElement elem=StencilHelper.pushStencil();
+		    BufferBuilder buffer=elem.getBuilder();
 	        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
 	        buffer.vertex(br.x(),br.y(),br.z()).endVertex();
 	        buffer.vertex(tr.x(),tr.y(),tr.z()).endVertex();
 	        buffer.vertex(tl.x(),tl.y(),tl.z()).endVertex();
 	        buffer.vertex(bl.x(),bl.y(),bl.z()).endVertex();
-	        tessellator.end();
-	        GL11.glColorMask(true, true, true, true);
-	        //切换到新stencil byte
-	        GL11.glStencilMask(0x00);
-	        GL11.glStencilFunc(GL11.GL_EQUAL, nextStencil, 0xFF);
+	        elem.drawStencil();
 		}
 		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
 		for(UIElement elm:elements) {
@@ -365,28 +347,8 @@ public abstract class UILayer extends UIElement {
 			}
 		}
 		if(isScissorEnabled) {
-			//恢复stencil（取新stencil与显示区域的交集，减少1）
-			GL11.glEnable(GL11.GL_STENCIL_TEST);
-			GL11.glStencilFunc(GL11.GL_EQUAL, nextStencil, 0xFF);
-	        GL11.glStencilMask(0xFF); 
-	        GL11.glStencilOp(GL11.GL_KEEP, GL11.GL_DECR, GL11.GL_DECR);
-			GL11.glColorMask(false, false, false, false);
-			RenderSystem.setShader(GameRenderer::getPositionShader);
-			Tesselator tessellator = Tesselator.getInstance();
-			BufferBuilder buffer = tessellator.getBuilder();
-			buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-	        buffer.vertex(br.x(),br.y(),br.z()).endVertex();
-	        buffer.vertex(tr.x(),tr.y(),tr.z()).endVertex();
-	        buffer.vertex(tl.x(),tl.y(),tl.z()).endVertex();
-	        buffer.vertex(bl.x(),bl.y(),bl.z()).endVertex();
-	        tessellator.end();
-			GL11.glColorMask(true, true, true, true);
-			//恢复stencil状态
-			if(!stencilEnabled)
-				GL11.glDisable(GL11.GL_STENCIL_TEST);
-	        GL11.glStencilMask(stencilMask);
-	        GL11.glStencilFunc(stencilFunc, stencilRef, stencilValueMask);
-	        GL11.glStencilOp(stencilFail, stencilDepthFail, stencilPass);
+			StencilHelper.popStencil();
+
 		}
 		afterDrawElements(graphics,x,y, contentX, contentY, w, h);
 		graphics.pose().popPose();
