@@ -19,14 +19,12 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
-import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -41,11 +39,6 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 /**
  * A simulator built on Alphagem618's heat conducting model
@@ -104,6 +97,9 @@ public class SurroundingTemperatureSimulatorAIOptimization {
         final CachedBlockInfo[] posCache = new CachedBlockInfo[CACHE_SIZE];
         final int[] gen = new int[CACHE_SIZE]; // 世代标记
         int currentGen = 1;
+
+        //优化：预计算高度图（32×32 = 1024 个 int）
+        final int[] topYCache = new int[CACHE_DIM * CACHE_DIM];
 
         /**
          * O(1) 重置：仅递增世代号，旧缓存自动失效
@@ -277,11 +273,15 @@ public class SurroundingTemperatureSimulatorAIOptimization {
         System.arraycopy(speedVY, 0, buf.pvy, 0, n);
         System.arraycopy(speedVZ, 0, buf.pvz, 0, n);
 
+        //预计算高度图
+        fillTopYCache(buf.topYCache);
+
         float heat = 0f, wind = 0f, minTemp = 0f, maxTemp = 0f;
         // 局部变量缓存，JIT 优化更友好
         final int lox = this.ox, loy = this.oy, loz = this.oz;
         final double[] localPvx = buf.pvx, localPvy = buf.pvy, localPvz = buf.pvz;
         final double[] localQx = buf.qx, localQy = buf.qy, localQz = buf.qz;
+        final int[] topYCache = buf.topYCache;
 
         for (int round = 0; round < num_rounds; ++round) {
             for (int i = 0; i < n; ++i) {
@@ -345,9 +345,9 @@ public class SurroundingTemperatureSimulatorAIOptimization {
                 // EMPTY：无碰撞，nid 不变，零开销
 
                 // ---- 更新粒子状态 ----
-                buf.qx[i] = dx;
-                buf.qy[i] = dy;
-                buf.qz[i] = dz;
+                localQx[i] = dx;
+                localQy[i] = dy;
+                localQz[i] = dz;
 
                 // ---- 温度累积 ----
                 final float curheat = info.temperature;
@@ -365,7 +365,18 @@ public class SurroundingTemperatureSimulatorAIOptimization {
                 }
 
                 // ---- 风力计算 ----
-                int topY = getTopY(bx - lox, bz - loz);
+                int rx = bx - lox;
+                int rz = bz - loz;
+
+                int topY;
+                if (rx >= -CACHE_OFFSET && rx < CACHE_OFFSET &&
+                        rz >= -CACHE_OFFSET && rz < CACHE_OFFSET) {
+                    topY = topYCache[topYIndex(rx, rz)];
+                } else {
+                    // 保持与 getTopY 越界时一致
+                    topY = -32767;
+                }
+
                 if (topY <= by) {
                     // 方块位于天空下方 → 强风
                     wind += 2f;
@@ -571,6 +582,21 @@ public class SurroundingTemperatureSimulatorAIOptimization {
         if (x >= 0) i |= 2;
         if (z >= 0) i |= 1;
         return maps[i].getFirstAvailable(x & 15, z & 15);
+    }
+    /**
+     * 预计算当前 32×32 区域内的 topY。
+     * 坐标覆盖相对 origin 的 [-16,16) × [-16,16)。
+     */
+    private void fillTopYCache(int[] topYCache) {
+        for (int x = -CACHE_OFFSET; x < CACHE_OFFSET; x++) {
+            for (int z = -CACHE_OFFSET; z < CACHE_OFFSET; z++) {
+                topYCache[topYIndex(x, z)] = getTopY(x, z);
+            }
+        }
+    }
+
+    private static int topYIndex(int rx, int rz) {
+        return ((rx + CACHE_OFFSET) << 5) | (rz + CACHE_OFFSET);
     }
 
     // ======================== 生命周期管理 ========================
