@@ -86,14 +86,15 @@ public abstract class UILayer extends UIElement {
 	private Matrix4f invertedTransform;
 	@Getter
 	@Setter
-	protected Vector2f transformOrigin = new Vector2f(0.5f,.5f);
+	protected Vector2f transformOrigin = new Vector2f(.5f,.5f);
 	public UILayer(UIElement panel) {
 		super(panel);
 		elements = new ArrayList<>();
 	}
 	public void setTransform(Matrix4f ntrans) {
 		transform=ntrans;
-		invertedTransform=ntrans.invert(new Matrix4f());
+		invertedTransform=new Matrix4f();
+		transform.invert(invertedTransform);
 	}
 
 	public abstract void addUIElements();
@@ -386,13 +387,15 @@ public abstract class UILayer extends UIElement {
 	@Override
 	public void updateRenderInfo(double mx, double my, float pt) {
 
-    	if(transform!=null) {
+    	if(invertedTransform!=null) {
+    		mx=mx-this.getX();
+    		my=my-this.getY();
     		float dx=width*transformOrigin.x;
     		float dy=height*transformOrigin.y;
-    		Vector3f v2f=unprojectScreenToPlane(mx-dx,my-dy,invertedTransform);
+    		Vector3f v2f=unprojectScreenToPlane((mx-dx)/width,(my-dy)/height,invertedTransform);
     		if(v2f!=null) {
-    			mx=dx+v2f.x;
-    			my=dy+v2f.y;
+    			mx=dx+v2f.x+this.getX();
+    			my=dy+v2f.y+this.getY();
     		}
     	}
 		
@@ -403,9 +406,8 @@ public abstract class UILayer extends UIElement {
 	}
 	public Vector3f unprojectScreenToPlane(double screenX, double screenY,
         Matrix4f mvp) {
-		Vector3f start=new Vector3f((float)screenX,(float)screenY,1f);
-		mvp.transformPosition(start);
-		return start;
+		Vector3f start=new Vector3f((float)screenX,(float)screenY,zIndex);
+		return mvp.transformPosition(start);
 	}
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
 	}
