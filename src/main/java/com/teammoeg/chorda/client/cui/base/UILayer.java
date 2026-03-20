@@ -29,6 +29,7 @@ import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.StencilHelper;
 import com.teammoeg.chorda.client.StencilHelper.StencilStackElement;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
@@ -44,6 +45,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 import org.joml.Vector4f;
@@ -79,9 +81,19 @@ public abstract class UILayer extends UIElement {
 	@Getter
 	@Setter
 	private boolean scissorEnabled=true;
+	@Getter
+	private Matrix4f transform;
+	private Matrix4f invertedTransform;
+	@Getter
+	@Setter
+	protected Vector2f transformOrigin = new Vector2f(0.5f,.5f);
 	public UILayer(UIElement panel) {
 		super(panel);
 		elements = new ArrayList<>();
+	}
+	public void setTransform(Matrix4f ntrans) {
+		transform=ntrans;
+		invertedTransform=ntrans.invert(new Matrix4f());
 	}
 
 	public abstract void addUIElements();
@@ -315,40 +327,52 @@ public abstract class UILayer extends UIElement {
 
 		graphics.pose().pushPose();
 		graphics.pose().translate(0, 0, zIndex);
+		//Matrix4f before=new Matrix4f(graphics.pose().last().pose());
+		if(transform!=null) {
+			float dx=x+w*transformOrigin.x;
+			float dy=y+h*transformOrigin.y;
+			graphics.pose().translate(-dx, -dy, 50);
+			graphics.pose().mulPoseMatrix(transform);
+			graphics.pose().translate(dx, dy, 0);
+			graphics.fill(x+Mth.floor(getMouseX())-2,y+Mth.floor(getMouseY())-2, x+Mth.floor(getMouseX())+2, y+Mth.floor(getMouseY())+2, 0xffffffff);
+			graphics.pose().translate(0, 0, -50);
+		}
+		/*Matrix4f after=new Matrix4f(graphics.pose().last().pose());
+		after.mul(before.invert());
+		after.invert();*/
 		drawBackground(graphics, x, y, w, h);
 	    final boolean isScissorEnabled=isScissorEnabled();
-        /*int scw=ClientUtils.screenWidth();
-        int sch=ClientUtils.screenHeight();*/
-        Vector3f br=null,tr=null,tl=null,bl=null;
         beforeDrawElements(graphics,x,y, contentX, contentY, w, h);
+        StencilStackElement elem=null;
 		if(isScissorEnabled) {
 			//记录stencil状态
+			Vector3f br=null,tr=null,tl=null,bl=null;
 			Matrix4f pose=graphics.pose().last().pose();
-
 		    //计算显示区域
 		    br=pose.transformPosition(new Vector3f(x+w,y+h,0));
 		    tr=pose.transformPosition(new Vector3f(x+w,y,0));
 		    tl=pose.transformPosition(new Vector3f(x,y,0));
 		    bl=pose.transformPosition(new Vector3f(x,y+h,0));
 		    //绘制stencil（取现有stencil与显示区域的交集，增加1）
-		    StencilStackElement elem=StencilHelper.pushStencil();
-		    BufferBuilder buffer=elem.getBuilder();
-	        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+		    elem=StencilHelper.pushStencil();
+		    BufferBuilder buffer=elem.getBuilder(VertexFormat.Mode.QUADS);
 	        buffer.vertex(br.x(),br.y(),br.z()).endVertex();
 	        buffer.vertex(tr.x(),tr.y(),tr.z()).endVertex();
 	        buffer.vertex(tl.x(),tl.y(),tl.z()).endVertex();
 	        buffer.vertex(bl.x(),bl.y(),bl.z()).endVertex();
 	        elem.drawStencil();
 		}
-		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
-		for(UIElement elm:elements) {
-			if(elm.isVisible()) {
-				drawElement(graphics, elm,x,y, contentX, contentY, w, h);
+		try {
+			graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
+			for(UIElement elm:elements) {
+				if(elm.isVisible()) {
+					drawElement(graphics, elm,x,y, contentX, contentY, w, h);
+				}
 			}
-		}
-		if(isScissorEnabled) {
-			StencilHelper.popStencil();
-
+		}finally {
+			if(isScissorEnabled) {
+				StencilHelper.popStencil(elem);
+			}
 		}
 		afterDrawElements(graphics,x,y, contentX, contentY, w, h);
 		graphics.pose().popPose();
@@ -361,10 +385,27 @@ public abstract class UILayer extends UIElement {
 	public void afterDrawElements(GuiGraphics graphics,int parX,int parY, int x, int y, int w, int h) {}
 	@Override
 	public void updateRenderInfo(double mx, double my, float pt) {
+
+    	if(transform!=null) {
+    		float dx=width*transformOrigin.x;
+    		float dy=height*transformOrigin.y;
+    		Vector3f v2f=unprojectScreenToPlane(mx-dx,my-dy,invertedTransform);
+    		if(v2f!=null) {
+    			mx=dx+v2f.x;
+    			my=dy+v2f.y;
+    		}
+    	}
+		
 		super.updateRenderInfo(mx, my, pt);
 		for(UIElement elm:elements) {
 			elm.updateRenderInfo(getMouseX()-offsetX, getMouseY()-offsetY, pt);
 		}
+	}
+	public Vector3f unprojectScreenToPlane(double screenX, double screenY,
+        Matrix4f mvp) {
+		Vector3f start=new Vector3f((float)screenX,(float)screenY,1f);
+		mvp.transformPosition(start);
+		return start;
 	}
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
 	}
@@ -636,6 +677,11 @@ public abstract class UILayer extends UIElement {
 		}
 		return null;
 	}
-
+	public void mulTransform(Matrix4f transform) {
+		if(this.transform==null)
+			this.setTransform(new Matrix4f(transform));
+		else
+			this.setTransform(this.transform.mul(transform));
+	}
 
 }

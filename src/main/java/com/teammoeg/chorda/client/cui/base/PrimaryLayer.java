@@ -19,6 +19,8 @@
 
 package com.teammoeg.chorda.client.cui.base;
 
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
@@ -163,10 +165,7 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 
 	@Override
 	public final void updateGui(double mx, double my, float pt) {
-
 		this.updateRenderInfo(mx, my, pt);
-
-
 	}
 	public void onBeforeRender() {
 		if (refreshRequested) {

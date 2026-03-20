@@ -22,16 +22,20 @@ package com.teammoeg.chorda.client;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
+
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.BufferBuilder.RenderedBuffer;
 
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 
 import com.mojang.blaze3d.vertex.VertexBuffer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 /**
  * 模板测试辅助工具类，用于在Minecraft 1.20.1渲染中管理OpenGL模板测试的状态栈。
  * 支持嵌套的模板区域绘制，通过栈结构保存和恢复渲染状态，避免状态污染。
@@ -55,6 +59,7 @@ public class StencilHelper {
 	    //stencil buffer
 	    private BufferBuilder builder=new BufferBuilder(100);
 	    private boolean isBufferFinished=false;
+	    private ShaderInstance shader;
 	    private VertexBuffer vertexBuffer=new VertexBuffer(VertexBuffer.Usage.DYNAMIC);
 	    private StencilStackElement() {
 	    	
@@ -67,6 +72,7 @@ public class StencilHelper {
          * Checks that stencil layer count does not exceed 0xFF (stencil buffer is usually 8-bit).
          */
 	    private void push() {
+	    	
 		    stencilEnabled = GL11.glIsEnabled(GL11.GL_STENCIL_TEST);
 		    stencilMask = GL11.glGetInteger(GL11.GL_STENCIL_WRITEMASK);
 		    stencilFunc = GL11.glGetInteger(GL11.GL_STENCIL_FUNC);
@@ -80,7 +86,10 @@ public class StencilHelper {
 		    if(currentStencil>0xFF)
 		    	throw new IllegalStateException("Stencil stack must not exceed 0xff");
 		    isBufferFinished=false;
-
+		    shader=null;
+	    }
+	    public BufferBuilder getBuilder(VertexFormat.Mode mode) {
+	    	return getBuilder(mode,DefaultVertexFormat.POSITION,GameRenderer.getPositionShader());
 	    }
 	    /**
          * 获取用于构建模板形状顶点数据的{@link BufferBuilder}。
@@ -88,7 +97,9 @@ public class StencilHelper {
          * Gets the {@link BufferBuilder} for building vertex data of the stencil shape.
          * @return 用于构建模板形状的BufferBuilder (BufferBuilder for building the stencil shape)
          */
-	    public BufferBuilder getBuilder() {
+	    public BufferBuilder getBuilder(VertexFormat.Mode mode,VertexFormat format,ShaderInstance shader) {
+	    	this.shader=shader;
+	    	builder.begin(mode, format);
 	    	return builder;
 	    }
 	    /**
@@ -115,14 +126,10 @@ public class StencilHelper {
 	        RenderSystem.stencilMask(0xFF);
 	        RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_INCR, GL11.GL_INCR);
 	        RenderSystem.colorMask(false, false, false, false);
-	    	ShaderInstance shader=RenderSystem.getShader();
-	    	RenderSystem.setShader(GameRenderer::getPositionShader);
 	    	vertexBuffer.bind();
 	    	vertexBuffer.upload(buffer);
-	    	vertexBuffer.drawWithShader(RenderSystem.getModelViewMatrix(), RenderSystem.getProjectionMatrix(), RenderSystem.getShader());
+	    	vertexBuffer.drawWithShader(RenderSystem.getModelViewMatrix(), RenderSystem.getProjectionMatrix(), shader);
 	    	isBufferFinished=true;
-	    	if(shader!=null)
-	    		RenderSystem.setShader(()->shader);
 	    	RenderSystem.colorMask(colorMask.get(0)!=0, colorMask.get(1)!=0, colorMask.get(2)!=0, colorMask.get(3)!=0);
 	        //切换到新stencil byte
 	    	RenderSystem.stencilMask(0x00);
@@ -142,12 +149,8 @@ public class StencilHelper {
 				RenderSystem.stencilMask(0xFF); 
 		        RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_DECR, GL11.GL_DECR);
 		        RenderSystem.colorMask(false, false, false, false);
-		        ShaderInstance shader=RenderSystem.getShader();
-				RenderSystem.setShader(GameRenderer::getPositionShader);
 				vertexBuffer.bind();
-				vertexBuffer.drawWithShader(RenderSystem.getModelViewMatrix(), RenderSystem.getProjectionMatrix(), RenderSystem.getShader());
-				if(shader!=null)
-		    		RenderSystem.setShader(()->shader);
+				vertexBuffer.drawWithShader(RenderSystem.getModelViewMatrix(), RenderSystem.getProjectionMatrix(), shader);
 				RenderSystem.colorMask(colorMask.get(0)!=0, colorMask.get(1)!=0, colorMask.get(2)!=0, colorMask.get(3)!=0);
 	    	}
 			if(!stencilEnabled)
@@ -189,13 +192,16 @@ public class StencilHelper {
      * Must be called on render thread.
      * @throws IllegalStateException 如果模板栈为空 (If stencil stack is empty)
      */
-	public static void popStencil() {
+	public static void popStencil(StencilStackElement element) {
 		RenderSystem.assertOnRenderThread();
 		if(currentIndex<=0) {
 			throw new IllegalStateException("Empty stencil stack");
 		}
+		if(stencilStack.get(currentIndex-1)!=element) {
+			throw new IllegalStateException("Stencil stack mismatch");
+		}
 		currentIndex--;
-		stencilStack.get(currentIndex).pop();
+		element.pop();
 		
 	}
 	 /**
@@ -219,7 +225,7 @@ public class StencilHelper {
      */
 	public static void assertStencilEmpty() {
 		if(currentIndex>0) {
-			throw new IllegalStateException("Stencil stack not empty");
+			throw new IllegalStateException("Stencil stack not empty, curr size="+currentIndex);
 		}
 	}
 }
