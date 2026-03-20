@@ -63,8 +63,7 @@ public class TemperatureUpdate {
     public static final int MIN_BODY_TEMP_CHANGE = FHConfig.SERVER.minBodyTempChange.get();
     public static final int MAX_BODY_TEMP_CHANGE = FHConfig.SERVER.maxBodyTempChange.get();*/
 
-    //public static TemperatureThreadingPool threadingPool;
-    public static TemperatureThreadingPoolAIOptimization threadingPool;
+    public static TemperatureThreadingPool threadingPool;
     /**
      * Perform temperature effect
      *
@@ -536,8 +535,7 @@ public class TemperatureUpdate {
     }
 
     public static void init() {
-//        threadingPool = new TemperatureThreadingPool(FHConfig.SERVER.CLIMATE.envTempThreadCount.get());
-        threadingPool = new TemperatureThreadingPoolAIOptimization(FHConfig.SERVER.CLIMATE.envTempThreadCount.get());
+        threadingPool = new TemperatureThreadingPool(FHConfig.SERVER.CLIMATE.envTempThreadCount.get());
     }
 
     public static void shutdown() {

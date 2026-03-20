@@ -20,7 +20,9 @@
 package com.teammoeg.chorda.client.cui.base;
 
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
 import com.teammoeg.chorda.client.cui.editor.EditDialog;
@@ -33,6 +35,8 @@ import lombok.Setter;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.StencilHelper;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -173,6 +177,7 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	@Override
 	public final void render(GuiGraphics graphics, int x, int y, int w, int h) {
 		super.render(graphics, x, y, w, h);
+		StencilHelper.clearStencil();
 	}
 
 	@Override

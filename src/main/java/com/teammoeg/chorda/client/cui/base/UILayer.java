@@ -19,18 +19,35 @@
 
 package com.teammoeg.chorda.client.cui.base;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.StencilHelper;
+import com.teammoeg.chorda.client.StencilHelper.StencilStackElement;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector3i;
+import org.joml.Vector4f;
+import org.lwjgl.opengl.GL11;
 
 /**
  * UI层，包含并管理一组子UI元素。
@@ -273,7 +290,6 @@ public abstract class UILayer extends UIElement {
 	public void resetOffset(boolean flag) {
 		offsetX = offsetY = 0;
 	}
-
 	@Override
 	public void render(GuiGraphics graphics,  int x, int y, int w, int h) {
 
@@ -300,21 +316,42 @@ public abstract class UILayer extends UIElement {
 		graphics.pose().pushPose();
 		graphics.pose().translate(0, 0, zIndex);
 		drawBackground(graphics, x, y, w, h);
-		if(isScissorEnabled())
-			graphics.enableScissor(x, y, x+w, y+h);
+	    final boolean isScissorEnabled=isScissorEnabled();
+        /*int scw=ClientUtils.screenWidth();
+        int sch=ClientUtils.screenHeight();*/
+        Vector3f br=null,tr=null,tl=null,bl=null;
+        beforeDrawElements(graphics,x,y, contentX, contentY, w, h);
+		if(isScissorEnabled) {
+			//记录stencil状态
+			Matrix4f pose=graphics.pose().last().pose();
+
+		    //计算显示区域
+		    br=pose.transformPosition(new Vector3f(x+w,y+h,0));
+		    tr=pose.transformPosition(new Vector3f(x+w,y,0));
+		    tl=pose.transformPosition(new Vector3f(x,y,0));
+		    bl=pose.transformPosition(new Vector3f(x,y+h,0));
+		    //绘制stencil（取现有stencil与显示区域的交集，增加1）
+		    StencilStackElement elem=StencilHelper.pushStencil();
+		    BufferBuilder buffer=elem.getBuilder();
+	        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+	        buffer.vertex(br.x(),br.y(),br.z()).endVertex();
+	        buffer.vertex(tr.x(),tr.y(),tr.z()).endVertex();
+	        buffer.vertex(tl.x(),tl.y(),tl.z()).endVertex();
+	        buffer.vertex(bl.x(),bl.y(),bl.z()).endVertex();
+	        elem.drawStencil();
+		}
 		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
-		beforeDrawElements(graphics,x,y, contentX, contentY, w, h);
 		for(UIElement elm:elements) {
 			if(elm.isVisible()) {
 				drawElement(graphics, elm,x,y, contentX, contentY, w, h);
 			}
 		}
+		if(isScissorEnabled) {
+			StencilHelper.popStencil();
+
+		}
 		afterDrawElements(graphics,x,y, contentX, contentY, w, h);
 		graphics.pose().popPose();
-
-		if(isScissorEnabled())
-			graphics.disableScissor();
-
 		lastFrameTime = Util.getNanos();
 		//if(isMouseOver)
 		//	TechIcons.ADD.draw(graphics, (int)getMouseX()+x-4, (int)getMouseY()+y-4, 8, 8);

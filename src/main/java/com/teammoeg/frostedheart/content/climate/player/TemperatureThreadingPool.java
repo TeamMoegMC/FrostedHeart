@@ -19,6 +19,11 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
+import com.teammoeg.chorda.util.CDistHelper;
+import com.teammoeg.chorda.util.CUtils;
+import lombok.Getter;
+import net.minecraft.server.level.ServerPlayer;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -29,15 +34,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import com.teammoeg.chorda.util.CDistHelper;
-import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator.SimulationResult;
-
-import lombok.Getter;
-import net.minecraft.server.level.ServerPlayer;
-
 public class TemperatureThreadingPool {
-	Map<UUID,Future<SimulationResult>> resultMap;
+	Map<UUID,Future<SurroundingTemperatureSimulator.SimulationResult>> resultMap;
 	ExecutorService scheduler;
 	/**
 	 * Used to benchmark temperature calculation performance
@@ -56,11 +54,13 @@ public class TemperatureThreadingPool {
 		double y=player.getEyeY()-0.7;
 		double z=player.getZ();
 		if(scheduler==null) {
+
 			SurroundingTemperatureSimulator sts=new SurroundingTemperatureSimulator(player.serverLevel(),player.getX(),player.getEyeY(),player.getZ(),false);
 			submitPlayerData(player, sts.getBlockTemperatureAndWind(x, y, z));
 			return true;
 		}else if(!resultMap.containsKey(player.getUUID())){
 			//System.out.println("committing work for "+player.getName().getString());
+
 			SurroundingTemperatureSimulator sts=new SurroundingTemperatureSimulator(player.serverLevel(),player.getX(),player.getEyeY(),player.getZ(),true);
 			resultMap.put(player.getUUID(), scheduler.submit(()->sts.getBlockTemperatureAndWind(x, y, z)));
 			return true;
@@ -70,8 +70,8 @@ public class TemperatureThreadingPool {
 	public void tick() {
 		if(resultMap!=null) {
 			int tasksRemain=0;
-			for(Iterator<Entry<UUID, Future<SimulationResult>>> it=resultMap.entrySet().iterator();it.hasNext();) {
-				Entry<UUID, Future<SimulationResult>> entry=it.next();
+			for(Iterator<Entry<UUID, Future<SurroundingTemperatureSimulator.SimulationResult>>> it = resultMap.entrySet().iterator(); it.hasNext();) {
+				Entry<UUID, Future<SurroundingTemperatureSimulator.SimulationResult>> entry=it.next();
 				if(entry.getValue().isDone()) {
 					it.remove();
 					
@@ -93,10 +93,16 @@ public class TemperatureThreadingPool {
 	}
 	public void close() {
 		//no need to wait till they shutdown as they are daemon
-		scheduler.shutdown();
-		
+//		scheduler.shutdown();
+
+		if (scheduler != null) {
+			SurroundingTemperatureSimulator.cleanup();
+			scheduler.shutdown();
+		} else {
+			SurroundingTemperatureSimulator.cleanup();
+		}
 	}
-	private void submitPlayerData(ServerPlayer player,SimulationResult result) {
+	private void submitPlayerData(ServerPlayer player, SurroundingTemperatureSimulator.SimulationResult result) {
 		//System.out.println(result);
 		PlayerTemperatureData.getCapability(player).ifPresent(t->{
 			t.blockTemp=result.blockTemp();
