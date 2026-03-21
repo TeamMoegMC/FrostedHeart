@@ -20,13 +20,15 @@
 package com.teammoeg.chorda.listeners;
 
 import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIOverlay;
 import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
-
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelEvent;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -75,5 +77,10 @@ public class ChordaClientRegistry {
 		});
 		helper.register(event);
 	
+	}
+
+	@SubscribeEvent(priority = EventPriority.LOWEST)
+	public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
+		event.registerAboveAll("cui_virtual_mouse", CUIOverlay.VIRTUAL_MOUSE_OVERLAY);
 	}
 }

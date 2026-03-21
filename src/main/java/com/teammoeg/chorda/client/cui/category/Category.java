@@ -27,7 +27,6 @@ import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.widgets.LimitedTextField;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import lombok.Getter;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
@@ -40,19 +39,18 @@ import java.util.List;
  * A collapsible category container that supports nested sub-categories and entry selection.
  */
 public class Category extends UILayer {
-    /** 最大嵌套深度 / Maximum nesting depth */
-    public static final int MAX_DEPTH = 16;
     /** 子元素的水平偏移量 / Horizontal offset for child elements */
     public static final int CHILDREN_OFFSET = 8;
+
     @Getter
     private final int depth;
-    protected final LimitedTextField title;
     @Getter
-    protected final Category root;
-    @Getter
-    protected Entry selected;
+    private final Category root;
+    private Entry selected;
     @Getter
     protected boolean opened = false;
+
+    protected final LimitedTextField title;
     protected FlatIcon.FlatIconWidget icon;
 
     /**
@@ -74,18 +72,12 @@ public class Category extends UILayer {
 
         if (panel instanceof Category p) {
             root = p.root;
-            if (p.depth >= MAX_DEPTH) {
-                depth = 1;
-                setParent(p.root);
-                root.add(this);
-                setTitle(Component.literal("Category depth cannot greater than %s!".formatted(MAX_DEPTH)).withStyle(ChatFormatting.RED));
-                return;
-            }
             depth = p.depth + 1;
         } else {
             depth = 0;
             root = this;
         }
+
         if (!panel.getElements().contains(this)) {
             panel.add(this);
         }
@@ -105,9 +97,6 @@ public class Category extends UILayer {
         setOffsetY(Entry.DEF_HEIGHT);
         setOffsetX(CHILDREN_OFFSET);
 
-        elements.remove(title);
-        elements.remove(icon);
-        recalcContentSize();
         if (opened) {
             for (UIElement ele : elements) {
                 ele.refresh();
@@ -117,8 +106,6 @@ public class Category extends UILayer {
         } else {
             setHeight(Entry.DEF_HEIGHT);
         }
-        elements.add(icon);
-        elements.add(title);
 
         icon.setPos(-CHILDREN_OFFSET, -Entry.DEF_HEIGHT + 3);
         int titleOffsetX = 4;
@@ -146,7 +133,7 @@ public class Category extends UILayer {
     @Override
     public void alignWidgets() {
         if (opened) {
-            align(2, 2, false);
+            align(2, 2, false, icon, title);
         } else {
             recalcContentSize();
         }
@@ -245,16 +232,14 @@ public class Category extends UILayer {
      * @param widget 要选中的条目 / the entry to select
      */
     public void select(Entry widget) {
-        root.setSelected(widget);
+        root.selected = widget;
     }
 
-    private void setSelected(Entry widget) {
-        selected = widget;
-        for (UIElement element : getElements()) {
-            if (element instanceof Category sc) {
-                sc.setSelected(widget);
-            }
-        }
+    /**
+     * 获取选中的条目
+     */
+    public Entry getSelected() {
+        return root.selected;
     }
 
     @Override

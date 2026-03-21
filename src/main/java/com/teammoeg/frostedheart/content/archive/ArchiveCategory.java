@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.archive;
 
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.CInputHelper;
-import com.teammoeg.chorda.client.CSSStylingUtil;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -29,7 +28,6 @@ import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.category.Category;
 import com.teammoeg.chorda.client.cui.category.CategoryHelper;
 import com.teammoeg.chorda.client.cui.category.Entry;
-import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
 import com.teammoeg.chorda.client.cui.contentpanel.LineHelper;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
@@ -47,8 +45,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
-import org.joml.Matrix4f;
 
 public class ArchiveCategory extends UILayer {
 	public final LayerScrollBar scrollBar;
@@ -88,12 +84,9 @@ public class ArchiveCategory extends UILayer {
 			currentPath = path;
 			if (entry instanceof ArchiveEntry ae) {
 				// 在内容面板显示内容
-
 				panel.select(ae);
 				// 选中条目
 				ae.getParent().select(ae);
-				// 已读
-				ae.read = ae.read();
 			}
 		}
 		return entry;

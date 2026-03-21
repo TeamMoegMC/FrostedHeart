@@ -26,7 +26,6 @@ import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.widgets.LimitedTextField;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.math.Colors;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
@@ -64,7 +63,7 @@ public abstract class Entry extends UILayer {
         if (isMouseOver() && isEnabled()) {
             graphics.fill(x-4, y, x-2, y+h, theme().UIAltTextColor());
         }
-        if (getParent().selected == this) {
+        if (getParent().getSelected() == this) {
             graphics.fill(x-4, y, x-2, y+h, Colors.themeColor());
         }
     }

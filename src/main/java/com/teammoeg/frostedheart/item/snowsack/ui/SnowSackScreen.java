@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.item.snowsack.network.ToggleAutoPickupMessage;
 import com.teammoeg.frostedheart.item.snowsack.network.ToggleDeleteOverflowMessage;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
 import net.minecraft.network.chat.Component;
@@ -36,6 +37,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.glfw.GLFW;
 
 //不建议开发时参考此类
 @OnlyIn(Dist.CLIENT)
@@ -45,7 +47,8 @@ public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> implem
     // 雪量条背景位置: (176, 0) 尺寸: 12x52
     // 雪量条填充位置: (188, 0) 尺寸: 12x52 (从底部向上绘制)
     // 贴图还没有：private static final ResourceLocation SNOW_SACK_TEXTURE = new ResourceLocation(FHMain.MODID, "textures/gui/snow_sack.png");
-    
+
+    Screen previous;
     private Button autoPickupButton;
     private Button deleteOverflowButton;
 
@@ -53,6 +56,7 @@ public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> implem
         super(menu, playerInventory, title);
         this.imageWidth = 176;
         this.imageHeight = 166;
+        previous = ClientUtils.getMc().screen;
     }
     
     @Override
@@ -168,5 +172,17 @@ public class SnowSackScreen extends AbstractContainerScreen<SnowSackMenu> implem
             return true;
         }
         return super.keyPressed(pKeyCode, pScanCode, pModifiers);
+    }
+
+    @Override
+    public void onClose() {
+        var mc = ClientUtils.getMc();
+        double mx = mc.mouseHandler.xpos();
+        double my = mc.mouseHandler.ypos();
+        super.onClose();
+        if (previous != null) {
+            mc.setScreen(previous);
+            GLFW.glfwSetCursorPos(mc.getWindow().getWindow(), mx, my);
+        }
     }
 }

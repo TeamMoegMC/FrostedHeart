@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.content.archive;
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.CSSStylingUtil;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -33,15 +32,8 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.archive.ArchiveCategory.ArchiveEntry;
 import com.teammoeg.frostedheart.content.tips.ClickActions;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.util.Mth;
 
 import javax.annotation.Nullable;
-
-import org.joml.Matrix4f;
-import org.joml.Vector2f;
-import org.joml.Vector3d;
-import org.joml.Vector3f;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -86,7 +78,9 @@ public final class ArchiveScreen extends PrimaryLayer {
         };
         contentPanelOut.setVisible(false);
         this.category = new ArchiveCategory(this);
-        this.setTransform(CSSStylingUtil.skewX(-2f));
+        if (flipAnimationEnabled) {
+            this.setTransform(CSSStylingUtil.skewX(-2f));
+        }
     }
     public void swapPanels() {
     	contentPanel.fillContent(elements);
@@ -169,6 +163,7 @@ public final class ArchiveScreen extends PrimaryLayer {
 		buffedEntry=panel->{
 			List<UIElement> contents = new ArrayList<>(ae.getContents(panel));
 	        contents.addAll(ae.getExtraElements(panel));
+            ae.read = ae.read();
 	        return contents;
 		};
 		

@@ -49,7 +49,7 @@ public class CategoryHelper {
         if (!(entry.getParent() instanceof Category) || offset == 0) return entry;
 
         List<Entry> allEntries = new ArrayList<>();
-        collectAllEntries(entry.getParent().root, allEntries);
+        collectAllEntries(entry.getParent().getRoot(), allEntries);
         if (allEntries.isEmpty()) return entry;
 
         int currentIndex = -1;

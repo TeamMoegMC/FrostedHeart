@@ -19,17 +19,11 @@
 
 package com.teammoeg.chorda.client.cui.base;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
-import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.StencilHelper;
 import com.teammoeg.chorda.client.StencilHelper.StencilStackElement;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
@@ -37,19 +31,13 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.lang3.mutable.MutableInt;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.joml.Vector3i;
-import org.joml.Vector4f;
-import org.lwjgl.opengl.GL11;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * UI层，包含并管理一组子UI元素。
@@ -186,11 +174,15 @@ public abstract class UILayer extends UIElement {
 		return contentHeight;
 	}
 
-	public final int align(int start, int lineSpace, boolean isHorizontal) {
+	public final int align(int start, int lineSpace, boolean isHorizontal, UIElement... skipElements) {
 		contentWidth = contentHeight = 0;
+		var skip = List.of(skipElements);
 		if(isHorizontal) {
 			contentWidth += start;
 			for(UIElement elm:elements) {
+				if (skip.contains(elm)) {
+					continue;
+				}
 				elm.setX(contentWidth);
 				contentWidth+=elm.getWidth()+lineSpace;
 				contentHeight=Math.max(elm.getHeight(), contentHeight);
@@ -200,6 +192,9 @@ public abstract class UILayer extends UIElement {
 		}
 		contentHeight += start;
 		for(UIElement elm:elements) {
+			if (skip.contains(elm)) {
+				continue;
+			}
 			elm.setY(contentHeight);
 			contentHeight+=elm.getHeight()+lineSpace;
 			contentWidth=Math.max(elm.getWidth(), contentWidth);
