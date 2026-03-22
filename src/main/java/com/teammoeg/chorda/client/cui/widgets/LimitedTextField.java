@@ -44,8 +44,6 @@ public class LimitedTextField extends UIElement {
     public int color;
     /** 是否启用提示框 / Whether tooltip is enabled */
     public boolean tooltip = true;
-    /** 是否绘制文本阴影 / Whether to draw text shadow */
-    public boolean shadow = true;
 
     /**
      * 使用默认UI文本颜色创建限宽文本字段。
@@ -90,9 +88,10 @@ public class LimitedTextField extends UIElement {
      */
     @Override
     public void refresh() {
-        if (getFont().width(title) > getWidth()) {
+        final int space = 2;
+        if (getFont().width(title) > getWidth()-space) {
             var e = CommonComponents.ELLIPSIS;
-            var sub = getFont().substrByWidth(title, getWidth() - getFont().width(e));
+            var sub = getFont().substrByWidth(title, getWidth()-space - getFont().width(e));
             sub = FormattedText.composite(sub, e);
             displayTitle = StringTextComponentParser.parse(sub.getString()).withStyle(title.getStyle());
             return;
@@ -116,7 +115,7 @@ public class LimitedTextField extends UIElement {
     /** {@inheritDoc} */
     @Override
     public boolean hasTooltip() {
-        return tooltip && super.hasTooltip();
+        return (tooltip && getFont().width(title) > getWidth()) && super.hasTooltip();
     }
 
     /** {@inheritDoc} */

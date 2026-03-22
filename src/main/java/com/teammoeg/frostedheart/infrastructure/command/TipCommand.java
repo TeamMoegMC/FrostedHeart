@@ -20,8 +20,6 @@
 package com.teammoeg.frostedheart.infrastructure.command;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.ServerTipHelper;
@@ -29,7 +27,6 @@ import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipHelper;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -63,9 +60,10 @@ public class TipCommand {
     }
 
     private static int display(CommandContext<CommandSourceStack> ctx) {
+        var c = new CommandHelper(ctx);
         try {
-            var players = EntityArgument.getPlayers(ctx, "players");
-            String id = StringArgumentType.getString(ctx, "id");
+            var players = c.getPlayers("players");
+            String id = c.getString("id");
             int count = 0;
             for (ServerPlayer player : players) {
                 ServerTipHelper.sendGeneral(id, player);
@@ -78,19 +76,20 @@ public class TipCommand {
             } else {
                 message = Component.translatable("commands.tip.success.single", id, players.iterator().next().getDisplayName());
             }
-            ctx.getSource().sendSuccess(() -> message, true);
+            c.sendSuccess(message);
             return count;
         } catch (Exception e) {
             Tip.LOGGER.error("Failed to display tip: ", e);
-            ctx.getSource().sendFailure(Component.translatable("commands.tip.fail", e.getMessage()));
+            c.sendFailure(Component.translatable("commands.tip.fail", e.getMessage()));
             return 0;
         }
     }
 
     private static int displayJson(CommandContext<CommandSourceStack> ctx) {
+        var c = new CommandHelper(ctx);
         try {
-            var players = EntityArgument.getPlayers(ctx, "players");
-            String json = StringArgumentType.getString(ctx, "json");
+            var players = c.getPlayers("players");
+            String json = c.getString("json");
             Tip tip = TipHelper.parse(json).copy()
                     .temporary()
                     .build();
@@ -107,21 +106,22 @@ public class TipCommand {
             } else {
                 message = Component.translatable("commands.tip.success.single", id, players.iterator().next().getDisplayName());
             }
-            ctx.getSource().sendSuccess(() -> message, true);
+            c.sendSuccess(message);
             return count;
         } catch (Exception e) {
             Tip.LOGGER.error("Failed to display tip: ", e);
-            ctx.getSource().sendFailure(Component.translatable("commands.tip.fail", e.getMessage()));
+            c.sendFailure(Component.translatable("commands.tip.fail", e.getMessage()));
             return 0;
         }
     }
 
     private static int displayCustom(CommandContext<CommandSourceStack> ctx) {
+        var c = new CommandHelper(ctx);
         try {
-            var players = EntityArgument.getPlayers(ctx, "players");
-            String title = StringArgumentType.getString(ctx, "title");
-            String content = StringArgumentType.getString(ctx, "content");
-            int displayTime = IntegerArgumentType.getInteger(ctx, "displayTime");
+            var players = c.getPlayers("players");
+            String title = c.getString("title");
+            String content = c.getString("content");
+            int displayTime = c.getInt("displayTime");
             Tip tip = toTip(title, content, displayTime);
             int count = 0;
             for (ServerPlayer player : players) {
@@ -136,11 +136,11 @@ public class TipCommand {
             } else {
                 message = Component.translatable("commands.tip.success.single", id, players.iterator().next().getDisplayName());
             }
-            ctx.getSource().sendSuccess(() -> message, true);
+            c.sendSuccess(message);
             return count;
         } catch (Exception e) {
             Tip.LOGGER.error("Failed to display tip: ", e);
-            ctx.getSource().sendFailure(Component.translatable("commands.tip.fail", e.getMessage()));
+            c.sendFailure(Component.translatable("commands.tip.fail", e.getMessage()));
             return 0;
         }
     }

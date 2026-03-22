@@ -147,6 +147,7 @@ public class SnowSackItem extends FHBaseItem {
 
 
     private static void openScreenFromClient(Player player, ItemStack stack) {
+        // FIXME 创造标签页物品栏中打开能刷雪块，目前暂未在其它 GUI 中复现
         if (player.level().isClientSide) {
             var slot = CUtils.getItemSlotInPlayerInv(player, stack);
             // 防止在合成栏打开

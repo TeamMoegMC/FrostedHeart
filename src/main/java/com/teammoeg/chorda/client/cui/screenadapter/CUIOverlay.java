@@ -48,6 +48,7 @@ import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.client.gui.overlay.NamedGuiOverlay;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -74,7 +75,8 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen, IGlobalGuiHandler {
 	boolean isInited=false;
 	@Getter
 	protected boolean renderAboveScreen;
-	protected Predicate<CUIOverlay> canInteract = o -> false;
+	protected Predicate<CUIOverlay> canInteract = whenAITakesOverTheWorld;
+	public static final Predicate<CUIOverlay> whenAITakesOverTheWorld = o -> false;
 	/** 当覆盖层可见且启用时允许交互 / Allows interaction when overlay is visible and enabled */
 	public static final Predicate<CUIOverlay> whenVisibleAndEnabled = o -> o.primaryLayer.isVisible() && o.primaryLayer.isEnabled();
 	/** 当有Screen打开且覆盖层可见启用时允许交互 / Allows interaction when a Screen is open and overlay is visible and enabled */
@@ -190,10 +192,6 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen, IGlobalGuiHandler {
 	}
 	@Override
 	public void render(ForgeGui gui, GuiGraphics graphics, float partialTick, int screenWidth, int screenHeight) {
-		if(!isInited) {
-			isInited=true;
-			primaryLayer.initGui();
-		}
 		if (renderAboveScreen && mc().screen != null) return;
 		renderOverlay(graphics, partialTick, screenWidth, screenHeight);
 	}
@@ -204,6 +202,10 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen, IGlobalGuiHandler {
 	 * Performs the full overlay rendering pipeline: background, mouse update, UI drawing, tooltips, and cursor.
 	 */
 	private void renderOverlay(GuiGraphics graphics, float partialTick, int screenWidth, int screenHeight) {
+		if(!isInited) {
+			isInited=true;
+			primaryLayer.initGui();
+		}
 		primaryLayer.onBeforeRender();
 		int x = primaryLayer.getX();
 		int y = primaryLayer.getY();
@@ -295,7 +297,7 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen, IGlobalGuiHandler {
 	 * <p>
 	 * Post-screen-render event handler. Used to render overlays that need to display above the Screen.
 	 */
-	@SubscribeEvent
+	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public static void onScreenRender(ScreenEvent.Render.Post event) {
 		for(NamedGuiOverlay overlay:GuiOverlayManager.getOverlays())
 			if(overlay.overlay() instanceof CUIOverlay col && col.renderAboveScreen)

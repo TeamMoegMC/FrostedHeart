@@ -27,6 +27,7 @@ import com.simibubi.create.foundation.item.KineticStats;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.chorda.CompatModule;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIOverlay;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.util.ShaderCompatHelper;
 import com.teammoeg.frostedheart.FHMain;
@@ -52,6 +53,7 @@ import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
+import com.teammoeg.frostedheart.content.tips.client.gui.TipOverlay;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestExtension;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestModel;
@@ -300,6 +302,7 @@ public class FHClientEventsMod {
     public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
     	event.registerAboveAll("insight", new InsightOverlay());
         event.registerAboveAll("wheel_menu", WheelMenuRenderer.OVERLAY);
+        event.registerAboveAll("twr_tip", new CUIOverlay(TipOverlay.INSTANCE, true, CUIOverlay.whenScreenOpened));
     }
     @SubscribeEvent
     public static void registerReloadListeners(RegisterClientReloadListenersEvent event) {

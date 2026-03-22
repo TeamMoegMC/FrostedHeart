@@ -127,7 +127,7 @@ public class TipLayer extends UILayer {
         setOffsetX((int)yaw);
         setOffsetY((int)pitch);
         pose.pushPose();
-        pose.translate((yaw-(int)yaw) + (offset*(1-anim)), pitch-(int)pitch, 800);
+        pose.translate((yaw-(int)yaw) + (offset*(1-anim)), pitch-(int)pitch, 800); // FIXME 和 FTB 小地图冲突
         graphics.setColor(1, 1, 1, anim);
         theme().drawUIBackground(graphics, x+(int)yaw, y+(int)pitch, w, h);
         for (UIElement ele : panel.getLines())
