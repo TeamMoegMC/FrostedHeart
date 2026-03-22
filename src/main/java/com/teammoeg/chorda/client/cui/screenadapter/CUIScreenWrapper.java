@@ -31,6 +31,8 @@ import com.teammoeg.chorda.text.Components;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+
+import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -76,7 +78,7 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 
 	@Override
 	public boolean mouseClicked(double x, double y, int button) {
-		primaryLayer.updateGui(x-this.x, y-this.y, -1);
+		primaryLayer.updateGui(this.x,this.y,x, y, -1);
 
 		if (button == GLFW.GLFW_MOUSE_BUTTON_4) {
 			primaryLayer.back();
@@ -89,7 +91,7 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 
 	@Override
 	public boolean mouseReleased(double x, double y, int button) {
-		primaryLayer.updateGui(x-this.x, y-this.y, -1);
+		primaryLayer.updateGui(this.x,this.y,x, y, -1);
 		primaryLayer.onMouseReleased(MouseButton.of(button));
 		return super.mouseReleased(x, y, button);
 	}
@@ -145,6 +147,8 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 		primaryLayer.onBeforeRender();
 		int w = primaryLayer.getWidth();
 		int h = primaryLayer.getHeight();
+		
+
 		x = (ClientUtils.screenWidth() - w) / 2;
 		y = (ClientUtils.screenHeight() - h) / 2;
 		//backgound
@@ -152,8 +156,8 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 		CGuiHelper.resetGuiDrawing();
 		//update mouse
 		//System.out.println("x="+x+"y="+y+"w="+w+"h="+h)
-
-		primaryLayer.updateGui(MouseHelper.getScaledX() - x, MouseHelper.getScaledY() - y, partialTicks);
+		//primaryLayer.setPos(x, y);
+		primaryLayer.updateGui(x,y,MouseHelper.getScaledX(), MouseHelper.getScaledY(), partialTicks);
 		primaryLayer.updateMouseOver();
 		//ui background
 		primaryLayer.render(graphics, x, y, w, h);

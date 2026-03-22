@@ -190,9 +190,9 @@ public class UIElement{
 		return false;
 	}
 
-	public void updateRenderInfo(double mx,double my,float pt) {
-		this.mouseX=mx-this.getX();
-		this.mouseY=my-this.getY();
+	public void updateRenderInfo(int x,int y,double mx,double my,float pt) {
+		this.mouseX=mx-this.getX()-x;
+		this.mouseY=my-this.getY()-y;
 		if(pt>0)
 		this.partialTick=pt;
 	}

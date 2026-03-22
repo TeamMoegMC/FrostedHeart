@@ -87,7 +87,7 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 	 */
     @Override
     public boolean mouseClicked(double x, double y, int button) {
-        primaryLayer.updateGui(x-leftPos, y-topPos, -1);
+    	primaryLayer.updateGui(leftPos,topPos,x, y, -1);
 
         if (button == GLFW.GLFW_MOUSE_BUTTON_4) {
             primaryLayer.back();
@@ -102,7 +102,7 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 
     @Override
     public boolean mouseReleased(double x, double y, int button) {
-    	primaryLayer.updateGui(x-leftPos, y-topPos, -1);
+    	primaryLayer.updateGui(leftPos,topPos,x, y, -1);
         primaryLayer.onMouseReleased(MouseButton.of(button));
         return super.mouseReleased(x, y, button);
     }
@@ -214,7 +214,7 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 			CGuiHelper.resetGuiDrawing();
 			
 			
-			primaryLayer.updateGui(MouseHelper.getScaledX()-leftPos, MouseHelper.getScaledY()-topPos, partialTicks);
+			primaryLayer.updateGui(leftPos,topPos,MouseHelper.getScaledX(), MouseHelper.getScaledY(), partialTicks);
 			primaryLayer.updateMouseOver();
 
 		}catch(Throwable t) {

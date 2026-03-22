@@ -164,8 +164,8 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	}
 
 	@Override
-	public final void updateGui(double mx, double my, float pt) {
-		this.updateRenderInfo(mx, my, pt);
+	public final void updateGui(int offX,int offY,double mx, double my, float pt) {
+		this.updateRenderInfo(offX,offY,mx, my, pt);
 	}
 	public void onBeforeRender() {
 		if (refreshRequested) {

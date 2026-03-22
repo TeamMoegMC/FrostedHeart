@@ -221,7 +221,7 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen, IGlobalGuiHandler {
 			mouseY = MouseHelper.getScaledY();
 		}
 		//System.out.println("x="+x+"y="+y+"w="+w+"h="+h);
-		primaryLayer.updateGui(mouseX, mouseY, partialTick);
+		primaryLayer.updateGui(x,y,mouseX, mouseY, partialTick);
 		primaryLayer.updateMouseOver();
 		//ui background
 		primaryLayer.render(graphics, x, y, w, h);

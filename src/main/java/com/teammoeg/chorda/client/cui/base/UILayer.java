@@ -46,6 +46,7 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
+import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 import org.joml.Vector4f;
@@ -83,6 +84,8 @@ public abstract class UILayer extends UIElement {
 	private boolean scissorEnabled=true;
 	@Getter
 	private Matrix4f transform;
+	private Matrix4f cachedTransform;
+	private int cacheTransformX,cachedTransformY;
 	private Matrix4f invertedTransform;
 	@Getter
 	@Setter
@@ -211,7 +214,7 @@ public abstract class UILayer extends UIElement {
 	public final void flow(boolean isHorizontalFirst) {
 		contentWidth = contentHeight = 0;
 		int currentX=0,currentY=0;
-		int currentH=0,currentW=0;;
+		int currentH=0,currentW=0;
 		if(isHorizontalFirst) {
 			for(UIElement elm:elements) {
 				if(currentX+elm.getWidth()>width) {
@@ -325,22 +328,17 @@ public abstract class UILayer extends UIElement {
 			contentX += offsetX;
 			contentY += offsetY;
 		}
-
 		graphics.pose().pushPose();
 		graphics.pose().translate(0, 0, zIndex);
-		//Matrix4f before=new Matrix4f(graphics.pose().last().pose());
+		
 		if(transform!=null) {
 			float dx=x+w*transformOrigin.x;
 			float dy=y+h*transformOrigin.y;
-			graphics.pose().translate(-dx, -dy, 50);
-			graphics.pose().mulPoseMatrix(transform);
 			graphics.pose().translate(dx, dy, 0);
-			graphics.fill(x+Mth.floor(getMouseX())-2,y+Mth.floor(getMouseY())-2, x+Mth.floor(getMouseX())+2, y+Mth.floor(getMouseY())+2, 0xffffffff);
-			graphics.pose().translate(0, 0, -50);
+			graphics.pose().mulPoseMatrix(transform);
+			graphics.pose().translate(-dx, -dy, 0);
 		}
-		/*Matrix4f after=new Matrix4f(graphics.pose().last().pose());
-		after.mul(before.invert());
-		after.invert();*/
+		//invertedTransform=after;
 		drawBackground(graphics, x, y, w, h);
 	    final boolean isScissorEnabled=isScissorEnabled();
         beforeDrawElements(graphics,x,y, contentX, contentY, w, h);
@@ -384,30 +382,35 @@ public abstract class UILayer extends UIElement {
 	}
 	public void beforeDrawElements(GuiGraphics graphics,int parX,int parY, int x, int y, int w, int h) {}
 	public void afterDrawElements(GuiGraphics graphics,int parX,int parY, int x, int y, int w, int h) {}
-	@Override
-	public void updateRenderInfo(double mx, double my, float pt) {
 
-    	if(invertedTransform!=null) {
-    		mx=mx-this.getX();
-    		my=my-this.getY();
-    		float dx=width*transformOrigin.x;
-    		float dy=height*transformOrigin.y;
-    		Vector3f v2f=unprojectScreenToPlane((mx-dx)/width,(my-dy)/height,invertedTransform);
+	@Override
+	public void updateRenderInfo(int x,int y,double mx, double my, float pt) {
+
+    	if(transform!=null) {
+    		float dx=x+width*transformOrigin.x;
+    		float dy=y+height*transformOrigin.y;
+    		Matrix4f m4f=new Matrix4f();
+    		m4f.translate(dx, dy, 0);
+    		m4f.mul(transform);
+    		m4f.translate(-dx, -dy, 0);
+    		m4f.invert();
+    		Vector3d v2f=unprojectScreenToPlane((mx),(my),m4f);
     		if(v2f!=null) {
-    			mx=dx+v2f.x+this.getX();
-    			my=dy+v2f.y+this.getY();
+    			mx=v2f.x;
+    			my=v2f.y;
+    			System.out.println(mx+","+my);
     		}
     	}
 		
-		super.updateRenderInfo(mx, my, pt);
+		super.updateRenderInfo(x,y,mx, my, pt);
 		for(UIElement elm:elements) {
-			elm.updateRenderInfo(getMouseX()-offsetX, getMouseY()-offsetY, pt);
+			elm.updateRenderInfo(x+offsetX+this.getX(),y+offsetY+this.getY(),mx,my, pt);
 		}
 	}
-	public Vector3f unprojectScreenToPlane(double screenX, double screenY,
-        Matrix4f mvp) {
-		Vector3f start=new Vector3f((float)screenX,(float)screenY,zIndex);
-		return mvp.transformPosition(start);
+	public Vector3d unprojectScreenToPlane(double screenX, double screenY,Matrix4f mvp) {
+		Vector3d start=new Vector3d(screenX,screenY, (zIndex));
+		start.mulPosition(mvp);
+		return start;
 	}
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
 	}

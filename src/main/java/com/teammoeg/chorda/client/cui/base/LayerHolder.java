@@ -42,5 +42,5 @@ public interface LayerHolder {
 	Screen getPrevScreen();
 	boolean isPauseScreen();
 	void closeGui(boolean openPrevScreen);
-	void updateGui(double mx, double my, float pt);
+	void updateGui(int offX,int offY,double mx, double my, float pt);
 }

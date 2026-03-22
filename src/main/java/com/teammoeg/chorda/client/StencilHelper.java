@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -227,5 +228,15 @@ public class StencilHelper {
 		if(currentIndex>0) {
 			throw new IllegalStateException("Stencil stack not empty, curr size="+currentIndex);
 		}
+	}
+	public static void main(String[] args) {
+		//1.000E+0 -3.492E-2  0.000E+0 -4.190E+0
+		//0.000E+0  1.000E+0  0.000E+0  0.000E+0
+		//0.000E+0  0.000E+0  1.000E+0  0.000E+0
+		//0.000E+0  0.000E+0  0.000E+0  1.000E+0
+		Matrix4f m4f=new Matrix4f();
+		m4f.translate(0, 0, 2000);
+		System.out.println(m4f);
+		
 	}
 }
