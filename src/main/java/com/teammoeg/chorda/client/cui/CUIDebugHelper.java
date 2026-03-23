@@ -62,91 +62,93 @@ public class CUIDebugHelper {
 	}
 
 	public static void renderDebug(GuiGraphics graphics, int x, int y, CUIScreen manager) {
-		if (!isDebugEnabled()) return;
+		if (!isDebugEnabled() || Screen.hasAltDown() || !shouldRender(manager)) return;
 		// debug
 		var ele = UILayer.hoveredEle;
 		graphics.pose().pushPose();
 		graphics.pose().translate(0, 0, 1200);
-		if (!Screen.hasAltDown() && shouldRender(manager)) {
-			assert ele != null;
-			boolean shift = Screen.hasShiftDown();
-			int depth = 0;
-			var parent = ele;
-			while (parent != null) {
-				parent = parent.getParent();
-				depth++;
-			}
-			// 子元素
-			if (ele instanceof UILayer layer) {
-				for (UIElement cele : layer.getElements()) {
-					if (cele.isVisible() || shift) {
-						CGuiHelper.drawBox(graphics, cele.getScreenX()+ x, cele.getScreenY()+ y, cele.getWidth(), cele.getHeight(), Color.HSBtoRGB((depth+2) / 6F, 1, 1), false);
-					}
+		assert ele != null;
+		boolean shift = Screen.hasShiftDown();
+		int depth = 0;
+		var parent = ele;
+		while (parent != null) {
+			parent = parent.getParent();
+			depth++;
+		}
+		// 子元素
+		if (ele instanceof UILayer layer) {
+			for (UIElement cele : layer.getElements()) {
+				if (cele.isVisible() || shift) {
+					CGuiHelper.drawBox(graphics, cele.getScreenX()+ x, cele.getScreenY()+ y, cele.getWidth(), cele.getHeight(), Color.HSBtoRGB((depth+2) / 6F, 1, 1), false);
 				}
 			}
-			// 选中的元素
-			int color = Color.HSBtoRGB((depth+1) / 6F, 1, 1);
-			var bound = new Rect(ele.getScreenX()+ x, ele.getScreenY()+ y, ele.getWidth(), ele.getHeight());
-			CGuiHelper.drawRect(graphics, bound, Colors.setAlpha(color, 0.1F));
-			CGuiHelper.drawBox(graphics, bound, color, false);
 		}
+		// 选中的元素
+		int color = Color.HSBtoRGB((depth+1) / 6F, 1, 1);
+		var bound = new Rect(ele.getScreenX()+ x, ele.getScreenY()+ y, ele.getWidth(), ele.getHeight());
+		CGuiHelper.drawRect(graphics, bound, Colors.setAlpha(color, 0.1F));
+		CGuiHelper.drawBox(graphics, bound, color, false);
 		graphics.pose().popPose();
 	}
 
 	public static void getDebugTooltip(TooltipBuilder list, Font font, CUIScreen manager) {
-		if (!isDebugEnabled()) return;
+		if (Screen.hasControlDown() || !shouldRender(manager)) return;
 		// debug
 		list.translateZ(1200);
 		if (!list.isEmpty())
 			list.add(net.minecraft.network.chat.Component.literal(" "));
 		var ele = UILayer.hoveredEle;
-		if (!Screen.hasControlDown() && shouldRender(manager)) {
-			var b = ele.getBounds();
-			var gray = ChatFormatting.GRAY;
-			var color = ChatFormatting.GOLD;
-			if (!ele.getTitle().getString().isBlank()) {
-				var title = net.minecraft.network.chat.Component.literal("T: ").withStyle(gray);
-				if (font.width(ele.getTitle()) > 200) {
-					var t = FormattedText.composite(font.substrByWidth(ele.getTitle(), 200), CommonComponents.ELLIPSIS).getString();
-					title.append(net.minecraft.network.chat.Component.literal(t).withStyle(color));
-				} else {
-					title.append(net.minecraft.network.chat.Component.empty().append(ele.getTitle()).withStyle(color));
-				}
-				list.add(title);
+		var b = ele.getBounds();
+		var gray = ChatFormatting.GRAY;
+		var color = ChatFormatting.GOLD;
+		// 标题
+		if (!ele.getTitle().getString().isBlank()) {
+			var title = net.minecraft.network.chat.Component.literal("T: ").withStyle(gray);
+			if (font.width(ele.getTitle()) > 200) {
+				var t = FormattedText.composite(font.substrByWidth(ele.getTitle(), 200), CommonComponents.ELLIPSIS).getString();
+				title.append(net.minecraft.network.chat.Component.literal(t).withStyle(color));
+			} else {
+				title.append(net.minecraft.network.chat.Component.empty().append(ele.getTitle()).withStyle(color));
 			}
-			String clazz = ele.getClass().getSimpleName();
-			clazz = clazz.isBlank() ? "extends " + ele.getClass().getSuperclass().getSimpleName() : clazz;
-			list.add(net.minecraft.network.chat.Component.literal("C: ")
-					.withStyle(gray)
-					.append(net.minecraft.network.chat.Component.literal(clazz).withStyle(color)));
-			if (ele.getParent() != null) {
-				list.add(Lang.builder().style(gray)
-						.text("P: ")
-						.add(net.minecraft.network.chat.Component.literal(FrostedHud.tryGetTitle(ele.getParent())).withStyle(color))
-						.component());
-			}
-			list.add(Lang.builder().style(gray)
-					.text("L: x=")
-					.add(net.minecraft.network.chat.Component.literal(String.valueOf(ele.getX())).withStyle(color))
-					.text(", y=")
-					.add(net.minecraft.network.chat.Component.literal(String.valueOf(ele.getY())).withStyle(color))
-					.component());
-			list.add(Lang.builder().style(gray)
-					.text("S: x=")
-					.add(net.minecraft.network.chat.Component.literal(String.valueOf(b.getX())).withStyle(color))
-					.text(", y=")
-					.add(net.minecraft.network.chat.Component.literal(String.valueOf(b.getY())).withStyle(color))
-					.text(", w=")
-					.add(net.minecraft.network.chat.Component.literal(String.valueOf(b.getW())).withStyle(color))
-					.text(", h=")
-					.add(net.minecraft.network.chat.Component.literal(String.valueOf(b.getH())).withStyle(color))
-					.component());
-			list.add(net.minecraft.network.chat.Component.empty()
-					.append(net.minecraft.network.chat.Component.literal("Enable" ).withStyle(ele.isEnabled() ? ChatFormatting.GREEN : ChatFormatting.RED))
-					.append(net.minecraft.network.chat.Component.literal(" | "))
-					.append(Component.literal("Visible").withStyle(ele.isVisible() ? ChatFormatting.GREEN : ChatFormatting.RED)));
-			UILayer.hoveredEle = null;
+			list.add(title);
 		}
+		// 类名
+		String clazz = ele.getClass().getSimpleName();
+		clazz = clazz.isBlank() ? "extends " + ele.getClass().getSuperclass().getSimpleName() : clazz;
+		list.add(net.minecraft.network.chat.Component.literal("C: ")
+				.withStyle(gray)
+				.append(net.minecraft.network.chat.Component.literal(clazz).withStyle(color)));
+		// 父元素类名
+		if (ele.getParent() != null) {
+			list.add(Lang.builder().style(gray)
+					.text("P: ")
+					.add(net.minecraft.network.chat.Component.literal(FrostedHud.tryGetTitle(ele.getParent())).withStyle(color))
+					.component());
+		}
+		// X 和 Y
+		list.add(Lang.builder().style(gray)
+				.text("L: x=")
+				.add(net.minecraft.network.chat.Component.literal(String.valueOf(ele.getX())).withStyle(color))
+				.text(", y=")
+				.add(net.minecraft.network.chat.Component.literal(String.valueOf(ele.getY())).withStyle(color))
+				.component());
+		// 在屏幕中的 X 和 Y
+		list.add(Lang.builder().style(gray)
+				.text("S: x=")
+				.add(net.minecraft.network.chat.Component.literal(String.valueOf(b.getX())).withStyle(color))
+				.text(", y=")
+				.add(net.minecraft.network.chat.Component.literal(String.valueOf(b.getY())).withStyle(color))
+				.text(", w=")
+				.add(net.minecraft.network.chat.Component.literal(String.valueOf(b.getW())).withStyle(color))
+				.text(", h=")
+				.add(net.minecraft.network.chat.Component.literal(String.valueOf(b.getH())).withStyle(color))
+				.component());
+		// 开启和可见
+		list.add(net.minecraft.network.chat.Component.empty()
+				.append(net.minecraft.network.chat.Component.literal("Enable" ).withStyle(ele.isEnabled() ? ChatFormatting.GREEN : ChatFormatting.RED))
+				.append(net.minecraft.network.chat.Component.literal(" | "))
+				.append(Component.literal("Visible").withStyle(ele.isVisible() ? ChatFormatting.GREEN : ChatFormatting.RED)));
+		UILayer.hoveredEle = null;
 	}
 
 	public static boolean shouldRender(CUIScreen manager) {

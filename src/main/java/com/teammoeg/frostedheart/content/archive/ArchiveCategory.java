@@ -95,7 +95,13 @@ public class ArchiveCategory extends UILayer {
 
 	public void scrollTo(UIElement widget) {
 		if (widget != null) {
-			scrollBar.setValue(widget.getScreenY());
+			int y = 0;
+			var p = widget;
+			while (p != null) {
+				y += p.getY();
+				p = p.getParent();
+			}
+			scrollBar.setValue(y);
 		}
 	}
 
