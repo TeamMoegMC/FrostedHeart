@@ -110,7 +110,7 @@ public class UIElement {
      */
     @Setter
     @Getter
-    private boolean visible;
+    private boolean visible=true;
 
     /**
      * 设置/获取元素的启用状态（是否响应用户交互）。
@@ -118,7 +118,7 @@ public class UIElement {
      */
     @Setter
     @Getter
-    private boolean enabled;
+    private boolean enabled=true;
 
     /**
      * 设置元素的主题（由 Lombok 生成 setter）。
