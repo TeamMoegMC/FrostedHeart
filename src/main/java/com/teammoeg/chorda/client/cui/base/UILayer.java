@@ -72,9 +72,6 @@ public abstract class UILayer extends UIElement {
 	private boolean scissorEnabled=true;
 	@Getter
 	private Matrix4f transform;
-	private Matrix4f cachedTransform;
-	private int cacheTransformX,cachedTransformY;
-	private Matrix4f invertedTransform;
 	@Getter
 	@Setter
 	protected Vector2f transformOrigin = new Vector2f(.5f,.5f);
@@ -84,8 +81,6 @@ public abstract class UILayer extends UIElement {
 	}
 	public void setTransform(Matrix4f ntrans) {
 		transform=ntrans;
-		invertedTransform=new Matrix4f();
-		transform.invert(invertedTransform);
 	}
 
 	public abstract void addUIElements();
@@ -329,9 +324,14 @@ public abstract class UILayer extends UIElement {
 		if(transform!=null) {
 			float dx=x+w*transformOrigin.x;
 			float dy=y+h*transformOrigin.y;
+			graphics.pose().translate(0, 0, 50);
 			graphics.pose().translate(dx, dy, 0);
 			graphics.pose().mulPoseMatrix(transform);
 			graphics.pose().translate(-dx, -dy, 0);
+		
+			graphics.fill(x+Mth.floor(getMouseX())-2,y+Mth.floor(getMouseY())-2, x+Mth.floor(getMouseX())+2, y+Mth.floor(getMouseY())+2, 0xffff00ff+(x%0xf)*0x1100);
+			
+			graphics.pose().translate(0, 0, -50);
 		}
 		//invertedTransform=after;
 		drawBackground(graphics, x, y, w, h);
