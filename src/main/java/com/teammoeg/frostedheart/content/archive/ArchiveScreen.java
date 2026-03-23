@@ -79,6 +79,7 @@ public final class ArchiveScreen extends PrimaryLayer {
         	}
 
         };
+        contentPanelOut.setZIndex(1000);
         contentPanelOut.setVisible(false);
         this.category = new ArchiveCategory(this);
         if (flipAnimationEnabled) {
