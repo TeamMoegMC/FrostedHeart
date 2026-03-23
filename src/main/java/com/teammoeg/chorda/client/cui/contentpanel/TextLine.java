@@ -173,7 +173,7 @@ public class TextLine extends Line<TextLine> {
 
         int width = (getWidth() - ((isTitle||isQuote) ? 8 : 0));
         if (!buttons.isEmpty()) {
-            int btnX = alignment == Alignment.RIGHT ? 0 : getWidth();
+            int btnX = alignment == Alignment.RIGHT ? 12 : getWidth();
             for (Button button : buttons) {
                 button.setPos(btnX-12, (getHeight() - button.getHeight())/2);
                 btnX += alignment == Alignment.RIGHT ? button.getWidth()+2 : -button.getWidth()-2;

@@ -173,7 +173,7 @@ public class ArchiveCategory extends UILayer {
 					setSize(parent.getWidth(), Entry.DEF_HEIGHT);
 				}
 			});
-			getElements().add(new Button(this, Component.literal("Edit Tips"), FlatIcon.CONFIG.toCIcon()) {
+			getElements().add(new Button(this, Component.literal("All Tips"), FlatIcon.CONFIG.toCIcon()) {
 				@Override
 				public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 					graphics.fill(x, y, x + w, y + h, hint.theme(this).UIBGBorderColor());
@@ -259,6 +259,11 @@ public class ArchiveCategory extends UILayer {
 		@Override
 		public Collection<? extends UIElement> getContents(UIElement parent) {
 			return LineHelper.fromTip(tip(), parent);
+		}
+
+		@Override
+		public String getIdentifier() {
+			return tip;
 		}
 	}
 

@@ -65,7 +65,7 @@ public abstract class Entry extends UILayer {
             graphics.fill(x-4, y, x-2, y+h, Colors.themeColor());
         }
         if(icon!=null)
-        	icon.render(graphics.pose(),-getOffsetX() + 1, 3, hint.theme(this).UIAltTextColor());
+        	icon.render(graphics.pose(),x+1, y+3, hint.theme(this).UIAltTextColor());
     }
 
     @Override
@@ -145,6 +145,11 @@ public abstract class Entry extends UILayer {
     public Component getTitle() {
         return this.title.getTitle();
     }
+
+    /**
+     * 用于在 Category 中区分同名条目
+     */
+    public abstract String getIdentifier();
 
     @Override
     public boolean isVisible() {

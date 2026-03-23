@@ -20,6 +20,24 @@
 package com.teammoeg.chorda.client.cui;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIScreen;
+import com.teammoeg.chorda.client.ui.CGuiHelper;
+import com.teammoeg.chorda.math.Colors;
+import com.teammoeg.chorda.math.Rect;
+import com.teammoeg.frostedheart.FrostedHud;
+import com.teammoeg.frostedheart.util.Lang;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+
+import java.awt.*;
 
 /**
  * CUI调试辅助工具类，控制CUI框架的调试模式开关。
@@ -41,6 +59,110 @@ public class CUIDebugHelper {
 	public static void toggleDebug() {
 		if(ClientUtils.getMc().options.renderDebug)
 			isDebugEnabled=!isDebugEnabled;
+	}
+
+	public static void renderDebug(GuiGraphics graphics, int x, int y, CUIScreen manager) {
+		if (!isDebugEnabled()) return;
+		// debug
+		var ele = UILayer.hoveredEle;
+		graphics.pose().pushPose();
+		graphics.pose().translate(0, 0, 1200);
+		if (!Screen.hasAltDown() && shouldRender(manager)) {
+			assert ele != null;
+			boolean shift = Screen.hasShiftDown();
+			int depth = 0;
+			var parent = ele;
+			while (parent != null) {
+				parent = parent.getParent();
+				depth++;
+			}
+			// 子元素
+			if (ele instanceof UILayer layer) {
+				for (UIElement cele : layer.getElements()) {
+					if (cele.isVisible() || shift) {
+						CGuiHelper.drawBox(graphics, cele.getScreenX()+ x, cele.getScreenY()+ y, cele.getWidth(), cele.getHeight(), Color.HSBtoRGB((depth+2) / 6F, 1, 1), false);
+					}
+				}
+			}
+			// 选中的元素
+			int color = Color.HSBtoRGB((depth+1) / 6F, 1, 1);
+			var bound = new Rect(ele.getScreenX()+ x, ele.getScreenY()+ y, ele.getWidth(), ele.getHeight());
+			CGuiHelper.drawRect(graphics, bound, Colors.setAlpha(color, 0.1F));
+			CGuiHelper.drawBox(graphics, bound, color, false);
+		}
+		graphics.pose().popPose();
+	}
+
+	public static void getDebugTooltip(TooltipBuilder list, Font font, CUIScreen manager) {
+		if (!isDebugEnabled()) return;
+		// debug
+		list.translateZ(1200);
+		if (!list.isEmpty())
+			list.add(net.minecraft.network.chat.Component.literal(" "));
+		var ele = UILayer.hoveredEle;
+		if (!Screen.hasControlDown() && shouldRender(manager)) {
+			var b = ele.getBounds();
+			var gray = ChatFormatting.GRAY;
+			var color = ChatFormatting.GOLD;
+			if (!ele.getTitle().getString().isBlank()) {
+				var title = net.minecraft.network.chat.Component.literal("T: ").withStyle(gray);
+				if (font.width(ele.getTitle()) > 200) {
+					var t = FormattedText.composite(font.substrByWidth(ele.getTitle(), 200), CommonComponents.ELLIPSIS).getString();
+					title.append(net.minecraft.network.chat.Component.literal(t).withStyle(color));
+				} else {
+					title.append(net.minecraft.network.chat.Component.empty().append(ele.getTitle()).withStyle(color));
+				}
+				list.add(title);
+			}
+			String clazz = ele.getClass().getSimpleName();
+			clazz = clazz.isBlank() ? "extends " + ele.getClass().getSuperclass().getSimpleName() : clazz;
+			list.add(net.minecraft.network.chat.Component.literal("C: ")
+					.withStyle(gray)
+					.append(net.minecraft.network.chat.Component.literal(clazz).withStyle(color)));
+			if (ele.getParent() != null) {
+				list.add(Lang.builder().style(gray)
+						.text("P: ")
+						.add(net.minecraft.network.chat.Component.literal(FrostedHud.tryGetTitle(ele.getParent())).withStyle(color))
+						.component());
+			}
+			list.add(Lang.builder().style(gray)
+					.text("L: x=")
+					.add(net.minecraft.network.chat.Component.literal(String.valueOf(ele.getX())).withStyle(color))
+					.text(", y=")
+					.add(net.minecraft.network.chat.Component.literal(String.valueOf(ele.getY())).withStyle(color))
+					.component());
+			list.add(Lang.builder().style(gray)
+					.text("S: x=")
+					.add(net.minecraft.network.chat.Component.literal(String.valueOf(b.getX())).withStyle(color))
+					.text(", y=")
+					.add(net.minecraft.network.chat.Component.literal(String.valueOf(b.getY())).withStyle(color))
+					.text(", w=")
+					.add(net.minecraft.network.chat.Component.literal(String.valueOf(b.getW())).withStyle(color))
+					.text(", h=")
+					.add(net.minecraft.network.chat.Component.literal(String.valueOf(b.getH())).withStyle(color))
+					.component());
+			list.add(net.minecraft.network.chat.Component.empty()
+					.append(net.minecraft.network.chat.Component.literal("Enable" ).withStyle(ele.isEnabled() ? ChatFormatting.GREEN : ChatFormatting.RED))
+					.append(net.minecraft.network.chat.Component.literal(" | "))
+					.append(Component.literal("Visible").withStyle(ele.isVisible() ? ChatFormatting.GREEN : ChatFormatting.RED)));
+			UILayer.hoveredEle = null;
+		}
+	}
+
+	public static boolean shouldRender(CUIScreen manager) {
+		if (!isDebugEnabled() || ClientUtils.getMc().screen == null) return false;
+
+		var ele = UILayer.hoveredEle;
+		if (ele == null) return false;
+
+		var p = ele;
+		while (p != null) {
+			if (p.getParent() == manager.getPrimaryLayer()) {
+				return true;
+			}
+			p = p.getParent();
+		}
+		return false;
 	}
 
 }

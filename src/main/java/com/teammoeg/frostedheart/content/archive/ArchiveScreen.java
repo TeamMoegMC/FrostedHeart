@@ -51,7 +51,7 @@ public final class ArchiveScreen extends PrimaryLayer {
         ClickActions.register(FHMain.rl("view_in_archive"), "tips.frostedheart.click_action.open_archive", ArchiveScreen::open);
     }
 
-    public boolean flipAnimationEnabled = true;
+    public boolean flipAnimationEnabled = false;
 
     public ArchiveScreen() {
         setTheme(ArchiveTheme.INSTANCE);

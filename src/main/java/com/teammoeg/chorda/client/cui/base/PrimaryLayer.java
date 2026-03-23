@@ -19,32 +19,23 @@
 
 package com.teammoeg.chorda.client.cui.base;
 
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL11;
-
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
-import com.teammoeg.chorda.client.cui.CUIDebugHelper;
-import com.teammoeg.chorda.client.cui.editor.EditDialog;
-import com.teammoeg.chorda.client.cui.editor.EditorManager;
-import com.teammoeg.chorda.client.cui.screenadapter.CUIScreen;
-import com.teammoeg.chorda.client.cui.theme.VanillaTheme;
-
-import lombok.Getter;
-import lombok.Setter;
-
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.StencilHelper;
-
+import com.teammoeg.chorda.client.cui.CUIDebugHelper;
+import com.teammoeg.chorda.client.cui.editor.EditDialog;
+import com.teammoeg.chorda.client.cui.editor.EditorManager;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIScreen;
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * 主层，作为Minecraft Screen与CUI层级基础设施之间的桥梁。
@@ -177,6 +168,7 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	public final void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 		super.render(graphics, x, y, w, h, hint);
 		StencilHelper.clearStencil();
+		CUIDebugHelper.renderDebug(graphics, x, y, getManager());
 	}
 
 	@Override
@@ -274,18 +266,17 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 
 	void finishInit() {
 	}
-	EditDialog dialog;
+
+	@Getter
+    EditDialog dialog;
     public void closeDialog(boolean quit) {
         this.dialog = null;
         if (quit) {
             closeGui();
         }
-        
+
     }
 
-    public EditDialog getDialog() {
-        return dialog;
-    }
     public void openDialog(EditDialog dialog, boolean refresh) {
         this.dialog = dialog;
         if (refresh)
@@ -301,6 +292,12 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	@Override
 	public CUIScreen getManager() {
 		return screen;
+	}
+
+	@Override
+	public void getTooltip(TooltipBuilder list) {
+		super.getTooltip(list);
+		CUIDebugHelper.getDebugTooltip(list, getFont(), getManager());
 	}
 
 

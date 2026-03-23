@@ -227,7 +227,7 @@ public final class Components {
      * @return 带颜色的可变文本组件 / A colored mutable text component
      */
     public static MutableComponent withColor(Component text, int color) {
-        return withColor(Component.empty().append(text), color);
+        return withColor(text.copy(), color);
     }
 
     /**

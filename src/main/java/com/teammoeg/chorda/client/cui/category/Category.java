@@ -88,7 +88,7 @@ public class Category extends UILayer {
         if (isMouseOver()) {
             graphics.fill(x-4, y, x-2, y+Entry.DEF_HEIGHT, hint.theme(this).UIAltTextColor());
         }
-        icon.render(graphics.pose(), -CHILDREN_OFFSET, -Entry.DEF_HEIGHT + 3, hint.theme(this).UIAltTextColor());
+        icon.render(graphics.pose(), x, y+3, hint.theme(this).UIAltTextColor());
         
     }
 

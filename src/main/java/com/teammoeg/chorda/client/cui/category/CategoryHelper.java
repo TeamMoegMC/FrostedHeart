@@ -20,6 +20,7 @@
 package com.teammoeg.chorda.client.cui.category;
 
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.content.archive.ArchiveCategory;
 import net.minecraft.client.resources.language.I18n;
@@ -121,7 +122,13 @@ public class CategoryHelper {
      * @return 原始标题字符串 / the raw title string
      */
     public static String getRawTitle(UIElement widget) {
-        return widget == null ? "" : Components.getKeyOrElseStr(widget.getTitle());
+        if (widget == null) {
+            return "";
+        } else if (widget instanceof Entry entry) {
+            return entry.getIdentifier() + "$$" + Components.getKeyOrElseStr(entry.getTitle());
+        } else {
+            return Components.getKeyOrElseStr(widget.getTitle());
+        }
     }
 
     /**
@@ -155,6 +162,10 @@ public class CategoryHelper {
         var c = Component.empty();
         if (path != null && !path.isBlank()) {
             for (String s : path.split("/")) {
+                if (s.contains("$$")) {
+                    var s2 = s.split("\\$\\$", -1);
+                    s = s2.length >= 2 ? s2[1] : s2[0];
+                }
                 if (I18n.exists(s)) {
                     c.append(Component.translatable(s));
                 } else {

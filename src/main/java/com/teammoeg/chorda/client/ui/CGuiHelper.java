@@ -29,9 +29,7 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.math.Point;
 import com.teammoeg.chorda.math.Rect;
@@ -878,30 +876,6 @@ public class CGuiHelper {
 
 	public static void drawBox(GuiGraphics graphics, Rect box, int color, boolean inner) {
 		drawBox(graphics, box.getX(), box.getY(), box.getW(), box.getH(), color, inner);
-	}
-
-	public static Rect getWidgetBounds(UIElement widget, PrimaryLayer primaryLayer) {
-		int x = widget.getScreenX();
-		int y = widget.getScreenY();
-		// if (primaryLayer.getManager() instanceof CUIScreen) {
-		x += (ClientUtils.getMc().getWindow().getGuiScaledWidth() - primaryLayer.getWidth()) / 2;
-		y += (ClientUtils.getMc().getWindow().getGuiScaledHeight() - primaryLayer.getHeight()) / 2;
-
-		var w1 = widget.getParent();
-		while (w1.getParent() != null) {
-			if (w1 instanceof UILayer l) {
-				if (l.isSmoothScrollEnabled()) {
-					x += (int) l.getDisplayOffsetX();
-					y += (int) l.getDisplayOffsetY();
-				} else {
-					x += l.getOffsetX();
-					y += l.getOffsetY();
-				}
-			}
-			w1 = w1.getParent();
-		}
-
-		return new Rect(x, y, widget.getWidth(), widget.getHeight());
 	}
 
 	public static boolean isElementActuallyVisible(UIElement element) {

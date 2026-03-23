@@ -219,9 +219,11 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen, IGlobalGuiHandler {
 		if(isMouseCaptured) {
 			mouseX += MouseCaptureUtil.getAndResetCapturedDeltaX();
 			mouseY += MouseCaptureUtil.getAndResetCapturedDeltaY();
-		} else {
+		} else if (ClientUtils.getMc().screen != null) {
 			mouseX = MouseHelper.getScaledX();
 			mouseY = MouseHelper.getScaledY();
+		} else {
+			mouseX = mouseY = -114514;
 		}
 		//System.out.println("x="+x+"y="+y+"w="+w+"h="+h);
 		primaryLayer.updateGui(x,y,mouseX, mouseY, partialTick);

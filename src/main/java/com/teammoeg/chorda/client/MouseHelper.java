@@ -19,9 +19,8 @@
 
 package com.teammoeg.chorda.client;
 
-import org.lwjgl.glfw.GLFW;
-
 import net.minecraft.client.Minecraft;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * 鼠标状态辅助工具类，提供鼠标位置查询、区域悬停检测和点击状态跟踪功能。
@@ -48,6 +47,9 @@ public class MouseHelper {
      */
     public static boolean isMouseIn(double mouseX, double mouseY, int x, int y, int w, int h) {
         return mouseX >= x && mouseY >= y && mouseX <= x + w && mouseY <= y + h;
+    }
+    public static boolean isMouseIn(int x, int y, int w, int h) {
+        return isMouseIn(getScaledX(), getScaledY(), x, y, w, h);
     }
     public static boolean isLeftPressed() {
         //MouseHandler.isLeftPressed() 在GUI打开时无效

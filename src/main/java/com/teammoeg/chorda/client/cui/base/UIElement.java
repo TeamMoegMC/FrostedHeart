@@ -228,7 +228,11 @@ public class UIElement {
      * @return 屏幕 X 坐标
      */
     public int getScreenX() {
-        return parent.getScreenX() + x;
+        int x = parent.getScreenX() + this.x;
+        if (parent instanceof UILayer layer) {
+            x += layer.getOffsetX();
+        }
+        return x;
     }
 
     /**
@@ -236,7 +240,11 @@ public class UIElement {
      * @return 屏幕 Y 坐标
      */
     public int getScreenY() {
-        return parent.getScreenY() + y;
+        int y = parent.getScreenY() + this.y;
+        if (parent instanceof UILayer layer) {
+            y += layer.getOffsetY();
+        }
+        return y;
     }
 
     // ==================== 工具提示相关 ====================

@@ -46,6 +46,9 @@ public class TooltipBuilder implements Consumer<Component> {
 		zOffset=initZ;
 	}
 
+	public boolean isEmpty() {
+		return tooltip.isEmpty();
+	}
 	@Override
 	public void accept(Component t) {
 		tooltip.add(t);

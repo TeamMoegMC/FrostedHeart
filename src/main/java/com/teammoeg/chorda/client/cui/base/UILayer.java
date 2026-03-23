@@ -418,6 +418,10 @@ public abstract class UILayer extends UIElement {
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 	}
 
+	/**
+     * 获取选中的元素，仅用于调试
+     */
+	public static UIElement hoveredEle;
 	public void drawElement(GuiGraphics graphics, UIElement element,int parX,int parY, int x, int y, int w, int h,RenderingHint hint) {
 		int childX=element.getX()+x;
 		int childY=element.getY()+y;
@@ -430,13 +434,14 @@ public abstract class UILayer extends UIElement {
 			}
 		}
 
-		element.render(graphics, childX, childY, childW, childH, hint);
 		if(CUIDebugHelper.isDebugEnabled()) {
-			graphics.hLine(childX, childX+childW, childY, 0xFF00FF00);
-			graphics.vLine(childX, childY, childY+childH, 0xFF00FF00);
-			graphics.hLine(childX, childX+childW, childY+childH, 0xFF00FF00);
-			graphics.vLine(childX+childW, childY, childY+childH, 0xFF00FF00);
+			if (element.isMouseOver()) {
+				hoveredEle = element;
+			}
 		}
+
+		element.render(graphics, childX, childY, childW, childH, hint);
+
 	}
 
 	@Override
