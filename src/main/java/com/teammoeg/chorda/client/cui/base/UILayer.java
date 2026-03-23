@@ -297,7 +297,6 @@ public abstract class UILayer extends UIElement {
 	public void resetOffset(boolean flag) {
 		offsetX = offsetY = 0;
 	}
-	static int orderIndex;
 	@Override
 	public void render(GuiGraphics graphics,  int x, int y, int w, int h, RenderingHint hint) {
 
@@ -328,16 +327,16 @@ public abstract class UILayer extends UIElement {
 			if(transform!=null) {
 				float dx=x+w*transformOrigin.x;
 				float dy=y+h*transformOrigin.y;
-				graphics.pose().translate(0, 0, 50);
+				
+				//graphics.pose().translate(0, 0, 50);
 				graphics.pose().translate(dx, dy, 0);
 				graphics.pose().mulPoseMatrix(transform);
 				graphics.pose().translate(-dx, -dy, 0);
+
+				//graphics.fill(x+Mth.floor(getMouseX())-2,y+Mth.floor(getMouseY())-2, x+Mth.floor(getMouseX())+2, y+Mth.floor(getMouseY())+2, 0xffff00ff+(hint.renderingDepth)*0x2200);
 				
-				graphics.fill(x+Mth.floor(getMouseX())-2,y+Mth.floor(getMouseY())-2, x+Mth.floor(getMouseX())+2, y+Mth.floor(getMouseY())+2, 0xffff00ff+(orderIndex)*0x2200);
-				
-				graphics.pose().translate(0, 0, -50);
+				//graphics.pose().translate(0, 0, -50);
 			}
-			orderIndex++;
 			//invertedTransform=after;
 			drawBackground(graphics, x, y, w, h, hint);
 		    final boolean isScissorEnabled=isScissorEnabled();
@@ -374,7 +373,6 @@ public abstract class UILayer extends UIElement {
 					
 				}
 			}
-			orderIndex--;
 			afterDrawElements(graphics,x,y, contentX, contentY, w, h);
 		}finally {
 			graphics.pose().popPose();

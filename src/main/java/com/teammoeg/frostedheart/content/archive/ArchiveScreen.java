@@ -51,7 +51,7 @@ public final class ArchiveScreen extends PrimaryLayer {
         ClickActions.register(FHMain.rl("view_in_archive"), "tips.frostedheart.click_action.open_archive", ArchiveScreen::open);
     }
 
-    public boolean flipAnimationEnabled = false;
+    public boolean flipAnimationEnabled = true;
 
     public ArchiveScreen() {
         setTheme(ArchiveTheme.INSTANCE);
@@ -81,8 +81,6 @@ public final class ArchiveScreen extends PrimaryLayer {
         };
         contentPanelOut.setVisible(false);
         this.category = new ArchiveCategory(this);
-        this.setTransform(CSSStylingUtil.rotate(10f));
-        contentPanel.setTransform(CSSStylingUtil.skewX(5f));
         if (flipAnimationEnabled) {
             this.setTransform(CSSStylingUtil.skewX(-2f));
         }
