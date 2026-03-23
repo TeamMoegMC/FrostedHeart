@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -46,7 +47,7 @@ public class FilterLayer extends UILayer {
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 		LogisticIcons.INV_FILTER.draw(graphics, x, y, w, h);
 	}
 

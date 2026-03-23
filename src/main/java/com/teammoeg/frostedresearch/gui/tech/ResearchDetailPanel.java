@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -77,7 +78,7 @@ public class ResearchDetailPanel extends UILayer {
 		infoPanel.setPosAndSize(150, 15, 135, 151);
 		Button closePanel = new Button(this) {
 			@Override
-			public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+			public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 			}
 
 			@Override
@@ -122,8 +123,8 @@ public class ResearchDetailPanel extends UILayer {
 	}
 
 	@Override
-	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-		super.render(matrixStack, x, y, w, h);
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
+		super.render(matrixStack, x, y, w, h, hint);
 	}
 
 	@Override
@@ -132,9 +133,9 @@ public class ResearchDetailPanel extends UILayer {
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		// drawBackground(matrixStack, theme, x, y, w, h);
-		theme().drawUIBackground(matrixStack, x, y, w, h);
+		hint.theme(this).drawUIBackground(matrixStack, x, y, w, h);
 	}
 
 	@Override

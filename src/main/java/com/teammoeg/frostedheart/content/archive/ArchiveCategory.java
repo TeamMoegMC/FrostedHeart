@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.archive;
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -58,7 +59,7 @@ public class ArchiveCategory extends UILayer {
 		this.panel = panel;
 		this.scrollBar = new LayerScrollBar(parent, true, this) {
 			@Override
-			public void render(GuiGraphics graphics, int x, int y, int width, int height) {
+			public void render(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
 			}
 		};
 		this.scrollBar.setScrollStep((Entry.DEF_HEIGHT + 2) * 2);
@@ -74,8 +75,8 @@ public class ArchiveCategory extends UILayer {
 		scrollTo(open(currentPath));
 	}
 	@Override
-	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-		theme().drawUIBackground(graphics, x - 8, y - 8, w + 16, h + 16);
+	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+		hint.theme(this).drawUIBackground(graphics, x - 8, y - 8, w + 16, h + 16);
 	}
 
 	public UIElement open(String path) {
@@ -153,10 +154,10 @@ public class ArchiveCategory extends UILayer {
 		if (TipClientCommand.editMode) {
 			getElements().add(new Button(this, Component.literal("Add New Tip"), FlatIcon.WRENCH.toCIcon()) {
 				@Override
-				public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-					graphics.fill(x, y, x + w, y + h, theme().UIBGBorderColor());
+				public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+					graphics.fill(x, y, x + w, y + h, hint.theme(this).UIBGBorderColor());
 					if (isMouseOver() && isEnabled()) {
-						graphics.fill(x - 4, y, x - 2, y + h, theme().UIAltTextColor());
+						graphics.fill(x - 4, y, x - 2, y + h, hint.theme(this).UIAltTextColor());
 					}
 				}
 
@@ -174,10 +175,10 @@ public class ArchiveCategory extends UILayer {
 			});
 			getElements().add(new Button(this, Component.literal("Edit Tips"), FlatIcon.CONFIG.toCIcon()) {
 				@Override
-				public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-					graphics.fill(x, y, x + w, y + h, theme().UIBGBorderColor());
+				public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+					graphics.fill(x, y, x + w, y + h, hint.theme(this).UIBGBorderColor());
 					if (isMouseOver() && isEnabled()) {
-						graphics.fill(x - 4, y, x - 2, y + h, theme().UIAltTextColor());
+						graphics.fill(x - 4, y, x - 2, y + h, hint.theme(this).UIAltTextColor());
 					}
 				}
 
@@ -270,8 +271,8 @@ public class ArchiveCategory extends UILayer {
 		}
 
 		@Override
-		public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-			super.render(graphics, x, y, w, h);
+		public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+			super.render(graphics, x, y, w, h, hint);
 			if (!read) {
 				float anim = AnimationUtil.progress(3000, "archive_unread", true);
 				anim = ((float) Math.sin(anim * Math.PI * 2) * 0.5F + 0.5F) * 0.3F;

@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.widgets.Button;
@@ -61,7 +62,7 @@ public class ResearchListPanel extends UILayer {
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		// theme.drawPanelBackground(matrixStack, x, y, w, h);
 	}
 
@@ -95,7 +96,7 @@ public class ResearchListPanel extends UILayer {
 		}
 
 		@Override
-		public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+		public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 			// CGuis.setupDrawing();
 			this.drawIcon(matrixStack, x + 1, y + 1, 16, 16);
 			long secs = System.currentTimeMillis() / 1000;
@@ -110,10 +111,10 @@ public class ResearchListPanel extends UILayer {
 				} else if (research.isCompleted()) {
 					tf.setColor(0x229000);
 				} else if (!research.isUnlocked()) {
-					tf.setColor(theme().errorColor());
+					tf.setColor(hint.theme(this).errorColor());
 				}
 			}
-			tf.render(matrixStack, x + 18, y + 6, 81, tf.getHeight());
+			tf.render(matrixStack, x + 18, y + 6, 81, tf.getHeight(), hint);
 			if (listPanel.researchScreen.selectedResearch == this.research)
 				TechIcons.SELECTED.draw(matrixStack, x - 4, y + 7, 4, 4);
 			DrawDeskTheme.INSTANCE.horizontalSplit(matrixStack, x, y+17, 99);

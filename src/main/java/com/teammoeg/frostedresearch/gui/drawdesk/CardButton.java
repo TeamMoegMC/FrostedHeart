@@ -20,6 +20,7 @@
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.widgets.Button;
@@ -40,7 +41,7 @@ public class CardButton extends Button {
 	}
 
 	@Override
-	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		Card c = game.get(card);
 		if (c.isShow()) {
 			if (game.isTouchable(card)) {

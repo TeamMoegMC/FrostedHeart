@@ -20,6 +20,7 @@
 package com.teammoeg.frostedresearch.gui.tech;
 
 import com.teammoeg.chorda.client.CInputHelper;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -50,17 +51,6 @@ public abstract class ResearchLayer extends UILayer {
 	public UIElement modalPanel = null;
 
 	public LayerScrollBar hierarchyBar;
-
-	boolean visible;
-
-	@Override
-	public boolean isVisible() {
-		return visible;
-	}
-
-	public void setVisible(boolean visible) {
-		this.visible = visible;
-	}
 
 	public ResearchLayer(UIElement p) {
 		super(p);
@@ -142,7 +132,7 @@ public abstract class ResearchLayer extends UILayer {
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		TechIcons.Background.draw(matrixStack, x, y, w, h);
 	}
 

@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
@@ -43,7 +44,7 @@ class HelpPanel extends UILayer {
 	public void addUIElements() {
 		Button closePanel = new Button(this) {
 			@Override
-			public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+			public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h,RenderingHint hint) {
 			}
 
 			@Override
@@ -56,7 +57,7 @@ class HelpPanel extends UILayer {
 
 		contentPanel = new ContentPanel(this) {
 			@Override
-			public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+			public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h,RenderingHint hint) {
 			}
 
 			@Override
@@ -93,7 +94,7 @@ class HelpPanel extends UILayer {
 
 
 	@Override
-	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		DrawDeskIcons.HELP.draw(matrixStack, x, y, w, h);
 	}
 

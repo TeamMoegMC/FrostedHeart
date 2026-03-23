@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -50,7 +51,7 @@ public class TextBoxNoBackground extends TextBox {
 	 * No-op implementation; does not draw any text box background.
 	 */
 	@Override
-	public void drawTextBox(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void drawTextBox(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 
 	}
 

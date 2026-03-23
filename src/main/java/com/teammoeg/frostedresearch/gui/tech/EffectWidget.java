@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -57,9 +58,9 @@ public class EffectWidget extends UIElement {
 	}
 
 	@Override
-	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		CGuiHelper.resetGuiDrawing();
-		theme().drawSlot(matrixStack, x, y, w, h);
+		hint.theme(this).drawSlot(matrixStack, x, y, w, h);
 		icon.draw(matrixStack, x, y, w, h);
 		if (ClientResearchDataAPI.getData().get().isEffectGranted(r, e)) {
 			matrixStack.pose().pushPose();

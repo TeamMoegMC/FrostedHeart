@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.ScrollTracker;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -76,9 +77,9 @@ public class DockFilterDialog extends UILayer {
 		menu.setFilterIgnoreNbt(index, check.isChecked());
 	};
 	@Override
-	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 		LogisticIcons.FILTER_BACK.draw(graphics, x, y, w, h);
-		super.render(graphics, x, y, w, h);
+		super.render(graphics, x, y, w, h, hint);
 		CGuiHelper.drawItem(graphics,displayStack, x+9, y+9, 0, true, "");
 	}
 	@Override

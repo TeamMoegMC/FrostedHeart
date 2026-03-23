@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
@@ -53,13 +54,13 @@ public class CardStatPanel extends UILayer {
 	}
 
 	@Override
-	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		CardStat cs = rg.getStats().get(cardstate);
 		tf.setColor(cs.isGood() ? TechIcons.text : TechIcons.text_red);
 		tf.setText("" + cs.num);
 
 		DrawDeskIcons.getIcon(cs.type, cs.card, true).draw(matrixStack, x, y - 1, 16, 16);
-		super.render(matrixStack, x, y, w, h);
+		super.render(matrixStack, x, y, w, h, hint);
 	}
 
 }

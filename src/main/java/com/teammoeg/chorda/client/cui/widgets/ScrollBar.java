@@ -20,6 +20,7 @@
 package com.teammoeg.chorda.client.cui.widgets;
 
 import com.teammoeg.chorda.client.CInputHelper;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -188,7 +189,7 @@ public class ScrollBar extends UIElement {
 
 	/** {@inheritDoc} */
 	@Override
-	public void render(GuiGraphics graphics, int x, int y, int width, int height) {
+	public void render(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
 		int scrollBarSize = getScrollBarSize();
 
 		if (scrollBarSize > 0) {
@@ -212,13 +213,13 @@ public class ScrollBar extends UIElement {
 			setValue(v);
 		}
 
-		drawBackground(graphics, x-1, y-1, width+2, height+2);
+		drawBackground(graphics, x-1, y-1, width+2, height+2, hint);
 
 		if (scrollBarSize > 0) {
 			if (isVertical) {
-				drawScrollBar(graphics, x+1, (int) (y + lerpValue(height - scrollBarSize-2)+1), width-2, scrollBarSize);
+				drawScrollBar(graphics, x+1, (int) (y + lerpValue(height - scrollBarSize-2)+1), width-2, scrollBarSize, hint);
 			} else {
-				drawScrollBar(graphics, (int) (x + lerpValue(width - scrollBarSize-2)+1), y+1, scrollBarSize, height-2);
+				drawScrollBar(graphics, (int) (x + lerpValue(width - scrollBarSize-2)+1), y+1, scrollBarSize, height-2, hint);
 			}
 		}
 	}
@@ -234,8 +235,8 @@ public class ScrollBar extends UIElement {
 	 * @param w 宽度 / Width
 	 * @param h 高度 / Height
 	 */
-	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-		theme().drawSliderBackground(graphics, x, y, w, h, isMouseOver());
+	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+		hint.theme(this).drawSliderBackground(graphics, x, y, w, h, isMouseOver());
 	}
 
 	/**
@@ -249,8 +250,8 @@ public class ScrollBar extends UIElement {
 	 * @param w 宽度 / Width
 	 * @param h 高度 / Height
 	 */
-	public void drawScrollBar(GuiGraphics graphics, int x, int y, int w, int h) {
-		theme().drawSliderBar(graphics, x, y, w, h, isMouseOver());
+	public void drawScrollBar(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+		hint.theme(this).drawSliderBar(graphics, x, y, w, h, isMouseOver());
 	}
 
 	/**

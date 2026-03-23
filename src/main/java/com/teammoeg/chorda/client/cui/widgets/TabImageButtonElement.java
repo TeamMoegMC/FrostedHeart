@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import net.minecraft.client.gui.GuiGraphics;
@@ -90,7 +91,7 @@ public abstract class TabImageButtonElement extends Button{
 
     /** {@inheritDoc} */
     @Override
-    public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+    public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
         int current=0;
         if(currentTab!=null)
             current=currentTab.get();

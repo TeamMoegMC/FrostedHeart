@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -58,7 +59,7 @@ public class VirtualItemGridElement extends UIElement{
 
 
     @Override
-    public void render(GuiGraphics guiGraphics, int x, int y, int w, int h) {
+    public void render(GuiGraphics guiGraphics, int x, int y, int w, int h, RenderingHint hint) {
         //参数x, y 是屏幕绝对坐标
         //槽位背景绘制
         for (int r = 0; r < rows; r++) {

@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.trade.gui;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 
@@ -50,7 +51,7 @@ public class RelationSlot extends UIElement {
 	}
 
 	@Override
-	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 
         if (toshow == null)
             return;

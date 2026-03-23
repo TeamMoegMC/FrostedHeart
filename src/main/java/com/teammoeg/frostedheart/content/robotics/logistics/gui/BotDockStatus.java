@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.base.Verifier.VerifyResult;
@@ -46,13 +47,13 @@ public class BotDockStatus extends UILayer {
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 		LogisticIcons.INV_STATUS.draw(graphics, x, y, w, h);
 	}
 
 	@Override
-	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-		super.render(graphics, x, y, w, h);
+	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+		super.render(graphics, x, y, w, h, hint);
 		//upload status
 		LogisticIcons.STATUS_LIGHTS[layer.getMenu().uplinkStatus.getValue()].draw(graphics, x+58, y+8, 10, 10);
 		//network status

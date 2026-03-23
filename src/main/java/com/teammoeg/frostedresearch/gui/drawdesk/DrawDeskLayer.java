@@ -20,6 +20,7 @@
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
 import com.teammoeg.chorda.client.CInputHelper;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -43,16 +44,6 @@ public class DrawDeskLayer extends UILayer {
 
 	boolean showHelp;
 
-	boolean visible;
-
-	@Override
-	public boolean isVisible() {
-		return visible;
-	}
-
-	public void setVisible(boolean visible) {
-		this.visible = visible;
-	}
 
 	public DrawDeskLayer(DrawDeskScreen p) {
 		super(p);
@@ -107,7 +98,7 @@ public class DrawDeskLayer extends UILayer {
 			}
 
 			@Override
-			public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+			public void render(GuiGraphics matrixStack, int x, int y, int w, int h,RenderingHint hint) {
 				if (isMouseOver() || !ResearchHooks.canExamine(dd.getTile().getInventory().getStackInSlot(DrawingDeskTileEntity.EXAMINE_SLOT)))
 					DrawDeskIcons.EXAMINE.draw(matrixStack, x, y, w, h);
 			}
@@ -135,7 +126,7 @@ public class DrawDeskLayer extends UILayer {
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		DrawDeskIcons.Background.draw(matrixStack, x, y, w, h);
 	}
 

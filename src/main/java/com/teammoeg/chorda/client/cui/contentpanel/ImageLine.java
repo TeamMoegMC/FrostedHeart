@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.contentpanel;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.icon.FlatIcon;
@@ -63,10 +64,10 @@ public class ImageLine extends Line<ImageLine> {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-        super.render(graphics, x, y, w, h);
+    public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+        super.render(graphics, x, y, w, h, hint);
         if (!isImgValid()) {
-            FlatIcon.FILE_IMG_BROKEN.render(graphics.pose(), x+w/2-5, y+1, theme().errorColor());
+            FlatIcon.FILE_IMG_BROKEN.render(graphics.pose(), x+w/2-5, y+1, hint.theme(this).errorColor());
             return;
         }
         int imgX = switch (alignment) {
@@ -85,9 +86,9 @@ public class ImageLine extends Line<ImageLine> {
     }
 
     @Override
-    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
         if (imgSize.width < getWidth()/3) {
-            graphics.fill(x, y, x+w, y+h, theme().UIBGBorderColor());
+            graphics.fill(x, y, x+w, y+h, hint.theme(this).UIBGBorderColor());
         }
     }
 

@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.archive;
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.CSSStylingUtil;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -80,6 +81,8 @@ public final class ArchiveScreen extends PrimaryLayer {
         };
         contentPanelOut.setVisible(false);
         this.category = new ArchiveCategory(this);
+        this.setTransform(CSSStylingUtil.rotate(10f));
+        contentPanel.setTransform(CSSStylingUtil.skewX(5f));
         if (flipAnimationEnabled) {
             this.setTransform(CSSStylingUtil.skewX(-2f));
         }
@@ -95,14 +98,14 @@ public final class ArchiveScreen extends PrimaryLayer {
         }
     }
     @Override
-	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
         if (!flipAnimationEnabled) {
             if (buffedEntry != null) {
                 currentEntry=buffedEntry;
                 contentPanel.fillContent(buffedEntry.apply(contentPanel));
                 buffedEntry=null;
             }
-            super.drawBackground(graphics, x, y, w, h);
+            super.drawBackground(graphics, x, y, w, h, hint);
             return;
         }
 
@@ -136,7 +139,7 @@ public final class ArchiveScreen extends PrimaryLayer {
 
         }
 
-        super.drawBackground(graphics, x, y, w, h);
+        super.drawBackground(graphics, x, y, w, h, hint);
     }
 
 

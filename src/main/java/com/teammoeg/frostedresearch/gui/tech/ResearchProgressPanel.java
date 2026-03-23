@@ -20,6 +20,7 @@
 package com.teammoeg.frostedresearch.gui.tech;
 
 import com.ibm.icu.text.NumberFormat;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
@@ -55,11 +56,11 @@ public class ResearchProgressPanel extends UILayer {
 	}
 
 	@Override
-	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-		super.render(matrixStack, x, y, w, h);
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
+		super.render(matrixStack, x, y, w, h, hint);
 		// title
 
-		matrixStack.drawString(getFont(), Lang.translateGui("research_progress"), x + 3, y, theme().UITextColor(), false);
+		matrixStack.drawString(getFont(), Lang.translateGui("research_progress"), x + 3, y, hint.theme(this).UITextColor(), false);
 		// progress bar
 		// TODO: this cause crash when root clue is added
 		// float progress =
@@ -71,9 +72,9 @@ public class ResearchProgressPanel extends UILayer {
 			float prog = inprog.getProgressFraction();
 			DrawDeskTheme.INSTANCE.drawProgressBar(matrixStack, x+40, y+32, 70, 8, prog);
 			if (inprog.getData().canComplete(inprog))
-				matrixStack.drawString(getFont(), NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, theme().UITextColor(), false);
+				matrixStack.drawString(getFont(), NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, hint.theme(this).UITextColor(), false);
 			else
-				matrixStack.drawString(getFont(), Lang.translateGui("research.required_clue"), x + 40, y + 40, theme().errorColor(), false);
+				matrixStack.drawString(getFont(), Lang.translateGui("research.required_clue"), x + 40, y + 40, hint.theme(this).errorColor(), false);
 			// research icon
 
 			TechIcons.SHADOW.draw(matrixStack, x + 1, y + 38, 36, 9);
@@ -93,7 +94,7 @@ public class ResearchProgressPanel extends UILayer {
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		// theme.drawPanelBackground(matrixStack, x, y, w, h);
 	}
 	/*

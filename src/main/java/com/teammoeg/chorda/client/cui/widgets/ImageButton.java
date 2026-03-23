@@ -20,6 +20,7 @@
 package com.teammoeg.chorda.client.cui.widgets;
 
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
@@ -83,7 +84,7 @@ public abstract class ImageButton extends UIElement {
 
 	/** {@inheritDoc} */
 	@Override
-	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 		CGuiHelper.resetGuiDrawing();
 		if(isMouseOver()) {
 			if(isPressed) {

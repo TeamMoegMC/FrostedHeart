@@ -24,6 +24,7 @@ import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseCaptureUtil;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
@@ -225,8 +226,9 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen, IGlobalGuiHandler {
 		//System.out.println("x="+x+"y="+y+"w="+w+"h="+h);
 		primaryLayer.updateGui(x,y,mouseX, mouseY, partialTick);
 		primaryLayer.updateMouseOver();
+		RenderingHint hint=new RenderingHint();
 		//ui background
-		primaryLayer.render(graphics, x, y, w, h);
+		primaryLayer.render(graphics, x, y, w, h, hint);
 		//ui foreground/overlay
 		primaryLayer.drawForeground(graphics, x, y, w, h);
 		//this.width = w;

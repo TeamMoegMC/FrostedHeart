@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardStat;
@@ -37,7 +38,7 @@ public class OrderWidget extends UIElement {
 	}
 
 	@Override
-	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 
 		DrawDeskIcons.ORDER_FRAME.draw(matrixStack, x, y, 16, 16);
 		if (cardstate != 0) {

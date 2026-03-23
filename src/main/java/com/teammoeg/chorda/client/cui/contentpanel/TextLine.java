@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.contentpanel;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -64,8 +65,8 @@ public class TextLine extends Line<TextLine> {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-        super.render(graphics, x, y, w, h);
+    public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+        super.render(graphics, x, y, w, h, hint);
         var pose = graphics.pose();
         pose.pushPose();
 
@@ -101,7 +102,7 @@ public class TextLine extends Line<TextLine> {
         pose.translate(0, 2F, 0);
 
         CGuiHelper.drawStringLinesInBound(graphics, getFont(), splitText, x, y, textW, color, 3,
-                theme().isUITextShadow() || hasShadow, backgroundColor, alignment);
+                hint.theme(this).isUITextShadow() || hasShadow, backgroundColor, alignment);
 
         pose.popPose();
     }

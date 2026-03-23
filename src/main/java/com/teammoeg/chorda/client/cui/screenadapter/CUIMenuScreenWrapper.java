@@ -23,6 +23,7 @@ import com.mojang.blaze3d.platform.Window;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
@@ -159,7 +160,8 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 	@Override
 	protected void renderBg(GuiGraphics graphics, float f, int mx, int my) {;
 		CGuiHelper.resetGuiDrawing();
-		primaryLayer.render(graphics, leftPos, topPos, imageWidth, imageHeight);
+		RenderingHint hint=new RenderingHint();
+		primaryLayer.render(graphics, leftPos, topPos, imageWidth, imageHeight, hint);
 	}
 	/**
 	 * 渲染前景标签，包括工具提示和光标更新。

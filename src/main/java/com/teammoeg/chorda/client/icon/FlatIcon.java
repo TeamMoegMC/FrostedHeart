@@ -21,6 +21,7 @@ package com.teammoeg.chorda.client.icon;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
@@ -213,7 +214,7 @@ public enum FlatIcon {
         }
 
         @Override
-        public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+        public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
             if (icon != null) {
                 icon.render(graphics.pose(), x, y, color);
             }

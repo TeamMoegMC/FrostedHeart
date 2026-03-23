@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.content.tips.client.gui;
 
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
@@ -47,7 +48,7 @@ public class TipLayer extends UILayer {
         super(parent);
         this.panel = new ContentPanel(this) {
             @Override
-            public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {}
+            public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {}
 
             @Override
             public void refresh() {
@@ -77,7 +78,7 @@ public class TipLayer extends UILayer {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+    public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
         if (!isVisible() || tip == Tip.EMPTY) {
             state = State.IDLE;
             return;
@@ -129,11 +130,11 @@ public class TipLayer extends UILayer {
         pose.pushPose();
         pose.translate((yaw-(int)yaw) + (offset*(1-anim)), pitch-(int)pitch, 800); // FIXME 和 FTB 小地图冲突
         graphics.setColor(1, 1, 1, anim);
-        theme().drawUIBackground(graphics, x+(int)yaw, y+(int)pitch, w, h);
+        hint.theme(this).drawUIBackground(graphics, x+(int)yaw, y+(int)pitch, w, h);
         for (UIElement ele : panel.getLines())
             if (ele instanceof ImageLine i)
                 i.setBlitColor(Colors.setAlpha(-1, anim));
-        super.render(graphics, x, y, w, h);
+        super.render(graphics, x, y, w, h, hint);
         graphics.setColor(1, 1, 1, 1);
         pose.popPose();
     }
@@ -283,7 +284,7 @@ public class TipLayer extends UILayer {
         }
 
         @Override
-        public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+        public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
             var pose = graphics.pose();
             pose.pushPose();
             pose.translate(x-4, y-1, 0);

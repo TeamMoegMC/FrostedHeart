@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -119,14 +120,14 @@ public class SelectDialog<T> extends EditDialog {
 	}
 
 	@Override
-	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-		super.render(matrixStack, x, y, w, h);
-		matrixStack.drawString(getFont(), lbl, x, y - 10, theme().buttonTextColor(), theme().isButtonTextShadow());
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
+		super.render(matrixStack, x, y, w, h, hint);
+		matrixStack.drawString(getFont(), lbl, x, y - 10, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-		theme().drawUIBackground(matrixStack, x, y, w, h);
+	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
+		hint.theme(this).drawUIBackground(matrixStack, x, y, w, h);
 	}
 
 	@Override
@@ -152,12 +153,12 @@ public class SelectDialog<T> extends EditDialog {
 		}
 
 		@Override
-		public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+		public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 			// CGuis.setupDrawing();
 
 			matrixStack.blitNineSliced(AbstractWidget.WIDGETS_LOCATION, x, y, w, h, 20, 4, 200, 20, 0, this.getTextureY());
 			this.drawIcon(matrixStack, x + 1, y + 1, 16, 16);
-			matrixStack.drawString(getFont(), t, x + 18, y + 6, theme().buttonTextColor(), theme().isButtonTextShadow());
+			matrixStack.drawString(getFont(), t, x + 18, y + 6, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
 
 		}
 

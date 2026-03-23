@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -56,7 +57,10 @@ public abstract class TextButton extends Button {
 		super(panel, txt, icon);
 		fitSize();
 	}
-
+	protected void fitSize() {
+		setWidth(parent.getFont().width(title)+((Components.isEmpty(title)&&hasIcon())?0:8) + (hasIcon() ? 20 : 0));
+		setHeight(hasIcon() ?20:16);
+	}
 	/**
 	 * 是否居中渲染标题文本。默认返回false。
 	 * <p>
@@ -93,8 +97,8 @@ public abstract class TextButton extends Button {
 
 	/** {@inheritDoc} */
 	@Override
-	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-		drawBackground(graphics, x, y, w, h);
+	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+		drawBackground(graphics, x, y, w, h, hint);
 		var s = h >= 16 ? 16 : 8;
 		var off = (h - s) / 2;
 		FormattedText title = getTitle();
@@ -120,9 +124,9 @@ public abstract class TextButton extends Button {
 			textX += off + s;
 		}
 		List<FormattedCharSequence> list=getFont().split(title, mw);
-		int textColor=(isEnabled()?(isMouseOver()? theme().buttonTextOverColor(): theme().buttonTextColor()): theme().buttonTextDisabledColor());
+		int textColor=(isEnabled()?(isMouseOver()? hint.theme(this).buttonTextOverColor(): hint.theme(this).buttonTextColor()): hint.theme(this).buttonTextDisabledColor());
 		for(FormattedCharSequence fcs:list) {
-			graphics.drawString(getFont(), fcs, textX, textY, textColor, theme().isButtonTextShadow());
+			graphics.drawString(getFont(), fcs, textX, textY, textColor, hint.theme(this).isButtonTextShadow());
 			textY+=7;
 		}
 	}

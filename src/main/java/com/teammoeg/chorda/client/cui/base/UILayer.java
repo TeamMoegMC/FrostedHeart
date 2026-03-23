@@ -24,6 +24,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.StencilHelper;
 import com.teammoeg.chorda.client.StencilHelper.StencilStackElement;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
@@ -296,8 +297,9 @@ public abstract class UILayer extends UIElement {
 	public void resetOffset(boolean flag) {
 		offsetX = offsetY = 0;
 	}
+	static int orderIndex;
 	@Override
-	public void render(GuiGraphics graphics,  int x, int y, int w, int h) {
+	public void render(GuiGraphics graphics,  int x, int y, int w, int h, RenderingHint hint) {
 
 		
 
@@ -318,58 +320,66 @@ public abstract class UILayer extends UIElement {
 			contentX += offsetX;
 			contentY += offsetY;
 		}
+		hint.pushHint();
 		graphics.pose().pushPose();
-		graphics.pose().translate(0, 0, zIndex);
-		
-		if(transform!=null) {
-			float dx=x+w*transformOrigin.x;
-			float dy=y+h*transformOrigin.y;
-			graphics.pose().translate(0, 0, 50);
-			graphics.pose().translate(dx, dy, 0);
-			graphics.pose().mulPoseMatrix(transform);
-			graphics.pose().translate(-dx, -dy, 0);
-		
-			graphics.fill(x+Mth.floor(getMouseX())-2,y+Mth.floor(getMouseY())-2, x+Mth.floor(getMouseX())+2, y+Mth.floor(getMouseY())+2, 0xffff00ff+(x%0xf)*0x1100);
-			
-			graphics.pose().translate(0, 0, -50);
-		}
-		//invertedTransform=after;
-		drawBackground(graphics, x, y, w, h);
-	    final boolean isScissorEnabled=isScissorEnabled();
-        beforeDrawElements(graphics,x,y, contentX, contentY, w, h);
-        StencilStackElement elem=null;
-		if(isScissorEnabled) {
-			//记录stencil状态
-			Vector3f br=null,tr=null,tl=null,bl=null;
-			Matrix4f pose=graphics.pose().last().pose();
-		    //计算显示区域
-		    br=pose.transformPosition(new Vector3f(x+w,y+h,0));
-		    tr=pose.transformPosition(new Vector3f(x+w,y,0));
-		    tl=pose.transformPosition(new Vector3f(x,y,0));
-		    bl=pose.transformPosition(new Vector3f(x,y+h,0));
-		    //绘制stencil（取现有stencil与显示区域的交集，增加1）
-		    elem=StencilHelper.pushStencil();
-		    BufferBuilder buffer=elem.getBuilder(VertexFormat.Mode.QUADS);
-	        buffer.vertex(br.x(),br.y(),br.z()).endVertex();
-	        buffer.vertex(tr.x(),tr.y(),tr.z()).endVertex();
-	        buffer.vertex(tl.x(),tl.y(),tl.z()).endVertex();
-	        buffer.vertex(bl.x(),bl.y(),bl.z()).endVertex();
-	        elem.drawStencil();
-		}
 		try {
-			graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
-			for(UIElement elm:elements) {
-				if(elm.isVisible()) {
-					drawElement(graphics, elm,x,y, contentX, contentY, w, h);
+			graphics.pose().translate(0, 0, zIndex);
+			
+			if(transform!=null) {
+				float dx=x+w*transformOrigin.x;
+				float dy=y+h*transformOrigin.y;
+				graphics.pose().translate(0, 0, 50);
+				graphics.pose().translate(dx, dy, 0);
+				graphics.pose().mulPoseMatrix(transform);
+				graphics.pose().translate(-dx, -dy, 0);
+				
+				graphics.fill(x+Mth.floor(getMouseX())-2,y+Mth.floor(getMouseY())-2, x+Mth.floor(getMouseX())+2, y+Mth.floor(getMouseY())+2, 0xffff00ff+(orderIndex)*0x2200);
+				
+				graphics.pose().translate(0, 0, -50);
+			}
+			orderIndex++;
+			//invertedTransform=after;
+			drawBackground(graphics, x, y, w, h, hint);
+		    final boolean isScissorEnabled=isScissorEnabled();
+	        beforeDrawElements(graphics,x,y, contentX, contentY, w, h);
+	        StencilStackElement elem=null;
+			if(isScissorEnabled) {
+				//记录stencil状态
+				Vector3f br=null,tr=null,tl=null,bl=null;
+				Matrix4f pose=graphics.pose().last().pose();
+			    //计算显示区域
+			    br=pose.transformPosition(new Vector3f(x+w,y+h,0));
+			    tr=pose.transformPosition(new Vector3f(x+w,y,0));
+			    tl=pose.transformPosition(new Vector3f(x,y,0));
+			    bl=pose.transformPosition(new Vector3f(x,y+h,0));
+			    //绘制stencil（取现有stencil与显示区域的交集，增加1）
+			    elem=StencilHelper.pushStencil();
+			    BufferBuilder buffer=elem.getBuilder(VertexFormat.Mode.QUADS);
+		        buffer.vertex(br.x(),br.y(),br.z()).endVertex();
+		        buffer.vertex(tr.x(),tr.y(),tr.z()).endVertex();
+		        buffer.vertex(tl.x(),tl.y(),tl.z()).endVertex();
+		        buffer.vertex(bl.x(),bl.y(),bl.z()).endVertex();
+		        elem.drawStencil();
+			}
+			try {
+				graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
+				for(UIElement elm:elements) {
+					if(elm.isVisible()) {
+						drawElement(graphics, elm,x,y, contentX, contentY, w, h,hint);
+					}
+				}
+			}finally {
+				if(isScissorEnabled) {
+					StencilHelper.popStencil(elem);
+					
 				}
 			}
+			orderIndex--;
+			afterDrawElements(graphics,x,y, contentX, contentY, w, h);
 		}finally {
-			if(isScissorEnabled) {
-				StencilHelper.popStencil(elem);
-			}
+			graphics.pose().popPose();
+			hint.popHint();
 		}
-		afterDrawElements(graphics,x,y, contentX, contentY, w, h);
-		graphics.pose().popPose();
 		lastFrameTime = Util.getNanos();
 		//if(isMouseOver)
 		//	TechIcons.ADD.draw(graphics, (int)getMouseX()+x-4, (int)getMouseY()+y-4, 8, 8);
@@ -407,10 +417,10 @@ public abstract class UILayer extends UIElement {
 		start.mulPosition(mvp);
 		return start;
 	}
-	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 	}
 
-	public void drawElement(GuiGraphics graphics, UIElement element,int parX,int parY, int x, int y, int w, int h) {
+	public void drawElement(GuiGraphics graphics, UIElement element,int parX,int parY, int x, int y, int w, int h,RenderingHint hint) {
 		int childX=element.getX()+x;
 		int childY=element.getY()+y;
 		int childW=element.getWidth();
@@ -422,7 +432,7 @@ public abstract class UILayer extends UIElement {
 			}
 		}
 
-		element.render(graphics, childX, childY, childW, childH);
+		element.render(graphics, childX, childY, childW, childH, hint);
 		if(CUIDebugHelper.isDebugEnabled()) {
 			graphics.hLine(childX, childX+childW, childY, 0xFF00FF00);
 			graphics.vLine(childX, childY, childY+childH, 0xFF00FF00);

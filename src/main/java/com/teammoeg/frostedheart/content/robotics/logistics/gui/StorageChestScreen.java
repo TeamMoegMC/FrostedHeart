@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
+import com.teammoeg.chorda.client.RenderingHint;
+
 import net.minecraft.client.gui.GuiGraphics;
 
 public class StorageChestScreen extends LogisticChestLayer<StorageChestMenu> {
@@ -33,9 +35,9 @@ public class StorageChestScreen extends LogisticChestLayer<StorageChestMenu> {
 		return super.onInit();
 	}
 	@Override
-	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 		LogisticIcons.INV_CHEST.draw(graphics, x+0, y+25, 176, 59);
 		LogisticIcons.INV_BACK.draw(graphics, x+0, y+84, 176, 84);
-		super.drawBackground(graphics, x, y, w, h);
+		super.drawBackground(graphics, x, y, w, h, hint);
 	}
 }

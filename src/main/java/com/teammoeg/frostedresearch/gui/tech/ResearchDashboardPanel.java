@@ -20,6 +20,7 @@
 package com.teammoeg.frostedresearch.gui.tech;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.widgets.TextButton;
@@ -130,9 +131,9 @@ public class ResearchDashboardPanel extends UILayer {
 	}
 
 	@Override
-	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 
-		super.render(matrixStack, x, y, w, h);
+		super.render(matrixStack, x, y, w, h, hint);
 
 		// name
 		// theme.drawString(matrixStack, detailPanel.research.getName(), x+7, y+8);

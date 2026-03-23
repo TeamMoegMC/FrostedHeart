@@ -23,6 +23,7 @@ import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
@@ -151,6 +152,7 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 
 		x = (ClientUtils.screenWidth() - w) / 2;
 		y = (ClientUtils.screenHeight() - h) / 2;
+		RenderingHint hint=new RenderingHint();
 		//backgound
 		renderBackground(graphics);
 		CGuiHelper.resetGuiDrawing();
@@ -160,7 +162,7 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 		primaryLayer.updateGui(x,y,MouseHelper.getScaledX(), MouseHelper.getScaledY(), partialTicks);
 		primaryLayer.updateMouseOver();
 		//ui background
-		primaryLayer.render(graphics, x, y, w, h);
+		primaryLayer.render(graphics, x, y, w, h, hint);
 		//ui foreground/overlay
 		primaryLayer.drawForeground(graphics, x, y, w, h);
 		//this.width = w;

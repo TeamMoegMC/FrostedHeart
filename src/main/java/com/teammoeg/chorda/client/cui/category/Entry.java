@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.category;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -38,7 +39,7 @@ public abstract class Entry extends UILayer {
     /** 默认条目高度 / Default entry height */
     public static final int DEF_HEIGHT = 16;
     protected LimitedTextField title;
-    protected FlatIcon.FlatIconWidget icon;
+    protected FlatIcon icon;
 
     /**
      * 创建一个新的分类条目。
@@ -51,21 +52,20 @@ public abstract class Entry extends UILayer {
     public Entry(Category parent, Component title) {
         super(parent);
         this.title = new LimitedTextField(this, title, getWidth()).shouldShowTooltip(false);
-        this.icon = new FlatIcon.FlatIconWidget(this);
-        this.icon.setSize(10, 10);
-        this.icon.setColor(theme().UIAltTextColor());
         addUIElements();
     }
 
     @Override
-    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-        theme().drawButton(graphics, x, y, w, h, false, isEnabled());
+    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+    	hint.theme(this).drawButton(graphics, x, y, w, h, false, isEnabled());
         if (isMouseOver() && isEnabled()) {
-            graphics.fill(x-4, y, x-2, y+h, theme().UIAltTextColor());
+            graphics.fill(x-4, y, x-2, y+h, hint.theme(this).UIAltTextColor());
         }
         if (getParent().getSelected() == this) {
             graphics.fill(x-4, y, x-2, y+h, Colors.themeColor());
         }
+        if(icon!=null)
+        	icon.render(graphics.pose(),-getOffsetX() + 1, 3, hint.theme(this).UIAltTextColor());
     }
 
     @Override
@@ -75,9 +75,7 @@ public abstract class Entry extends UILayer {
         int offsetX = 4;
         setOffsetX(offsetX);
         int y = Math.round((getHeight() - title.getHeight())*0.5F);
-
-        icon.setPos(-offsetX + 1, 3);
-        int titleOffsetX = icon.hasIcon() ? 9 : 0;
+        int titleOffsetX = icon!=null ? 9 : 0;
         title.setPos(titleOffsetX, y);
         title.setWidth(getWidth() - offsetX - titleOffsetX);
 
@@ -100,7 +98,6 @@ public abstract class Entry extends UILayer {
     @Override
     public void addUIElements() {
         add(this.title);
-        add(this.icon);
     }
 
     @Override
@@ -126,7 +123,7 @@ public abstract class Entry extends UILayer {
      * @return 当前条目实例（链式调用） / this entry instance (for chaining)
      */
     public Entry setIcon(FlatIcon icon) {
-        this.icon.setIcon(icon);
+        this.icon=icon;
         refresh();
         return this;
     }

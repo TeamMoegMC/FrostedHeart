@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
@@ -54,9 +55,9 @@ public class LabeledPane<T extends UIElement> extends UILayer {
     }
 
     @Override
-	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
     	//System.out.println("render");
-		super.render(graphics, x, y, w, h);
+		super.render(graphics, x, y, w, h, hint);
 	}
 
 	@Override

@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -56,8 +57,8 @@ public class ResearchCategoryPanel extends UILayer {
 	}
 
 	@Override
-	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-		super.render(matrixStack, x, y, w, h);
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
+		super.render(matrixStack, x, y, w, h, hint);
 		// drawBackground(matrixStack, theme, x, y, w, h);
 	}
 
@@ -84,7 +85,7 @@ public class ResearchCategoryPanel extends UILayer {
 		}
 
 		@Override
-		public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+		public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 
 			// theme.drawHorizontalTab(matrixStack, x, y, w,
 			// h,categoryPanel.researchScreen.selectedCategory==category);

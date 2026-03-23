@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.town.tabs;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -27,7 +28,7 @@ public class BuildingInfoElement extends UIElement {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int x, int y, int w, int h) {
+    public void render(GuiGraphics guiGraphics, int x, int y, int w, int h, RenderingHint hint) {
         Minecraft mc = Minecraft.getInstance();
         List<Component> lines = lineSource.get();
         if (lines == null || lines.isEmpty()) return;

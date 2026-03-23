@@ -21,6 +21,7 @@ package com.teammoeg.chorda.client.cui.widgets;
 
 import java.util.function.Consumer;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
@@ -105,9 +106,9 @@ public class OverlayItemSlot extends ItemSlot {
 
 	/** {@inheritDoc} */
 	@Override
-	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 
-		super.render(graphics, x, y, w, h);
+		super.render(graphics, x, y, w, h, hint);
 
         if (overlay != null) {
         	graphics.pose().pushPose();

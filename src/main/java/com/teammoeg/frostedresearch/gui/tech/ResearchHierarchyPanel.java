@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -258,14 +259,14 @@ public class ResearchHierarchyPanel extends UILayer {
 	}
 
 	@Override
-	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-		super.render(matrixStack, x, y, w, h);
-		matrixStack.drawString(getFont(), Lang.translateGui("research_hierarchy"), x + 3, y + 3, theme().UITextColor(), false);
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
+		super.render(matrixStack, x, y, w, h, hint);
+		matrixStack.drawString(getFont(), Lang.translateGui("research_hierarchy"), x + 3, y + 3, hint.theme(this).UITextColor(), false);
 		TechIcons.HLINE_L.draw(matrixStack, x + 1, y + 13, 80, 3);
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		CGuiHelper.resetGuiDrawing();
 		for (ThickLine l : lines)
 			l.draw(matrixStack, x, y);
@@ -335,7 +336,7 @@ public class ResearchHierarchyPanel extends UILayer {
 		}
 
 		@Override
-		public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+		public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 			// this.drawBackground(matrixStack, theme, x, y, w, h);
 			CGuiHelper.resetGuiDrawing();
 			TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
@@ -409,9 +410,9 @@ public class ResearchHierarchyPanel extends UILayer {
 		}
 
 		@Override
-		public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+		public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 			CGuiHelper.resetGuiDrawing();
-			theme().drawSlot(matrixStack, x, y, w, h);
+			hint.theme(this).drawSlot(matrixStack, x, y, w, h);
 			if (FHResearch.editor || research.isShowable()) {
 				this.drawIcon(matrixStack, x + 4, y + 4, 16, 16);
 				if (research.isCompleted()) {

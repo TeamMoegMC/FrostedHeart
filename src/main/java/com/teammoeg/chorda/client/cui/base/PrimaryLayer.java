@@ -37,6 +37,7 @@ import lombok.Setter;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.StencilHelper;
 
 import net.minecraft.client.Minecraft;
@@ -66,7 +67,6 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 		width = 176;
 		height = 166;
 		prevScreen = Minecraft.getInstance().screen;
-		setTheme(VanillaTheme.INSTANCE);
 		this.setScissorEnabled(false);
 	}
 	int mouseX;
@@ -174,8 +174,8 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 		}
 	}
 	@Override
-	public final void render(GuiGraphics graphics, int x, int y, int w, int h) {
-		super.render(graphics, x, y, w, h);
+	public final void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+		super.render(graphics, x, y, w, h, hint);
 		StencilHelper.clearStencil();
 	}
 
@@ -186,7 +186,7 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 		//CGuiHelper.drawUIBackground(graphics, x, y, w, h);
 	}
 

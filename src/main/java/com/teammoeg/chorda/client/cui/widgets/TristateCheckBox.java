@@ -25,6 +25,7 @@ import net.minecraft.network.chat.Component;
 import java.util.function.Consumer;
 
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -81,7 +82,7 @@ public abstract class TristateCheckBox extends UIElement {
 
     /** {@inheritDoc} */
     @Override
-	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
         if (getEnabled()) {
             if (super.isMouseOver())
                 over.draw(graphics, x, y, w, h);

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -246,6 +247,6 @@ public class ResearchInfoPanel extends UILayer {
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 	}
 }

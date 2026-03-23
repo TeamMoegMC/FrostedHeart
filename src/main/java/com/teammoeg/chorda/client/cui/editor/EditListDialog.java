@@ -22,6 +22,7 @@ package com.teammoeg.chorda.client.cui.editor;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -146,7 +147,7 @@ public class EditListDialog<T> extends EditDialog {
     }
     int movingIndex;
     @Override
-	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
     	if(moving!=null) {
     		movingIndex=(int) Mth.clamp((this.getMouseY()-configPanel.getY()-configPanel.getOffsetY())/(moving.getHeight()+1),0,list.size()-1);
     		if(MouseHelper.isLeftPressed()) {
@@ -163,7 +164,7 @@ public class EditListDialog<T> extends EditDialog {
     			}
     		}
     	}
-		super.render(graphics, x, y, w, h);
+		super.render(graphics, x, y, w, h, hint);
 	}
 	@Override
     public void addUIElements() {
@@ -188,9 +189,9 @@ public class EditListDialog<T> extends EditDialog {
     	movingIndex=moving.index;
     }
     @Override
-    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-    	theme().drawUIBackground(matrixStack, x, y, w, h);
-        matrixStack.drawString(getFont(), getTitle(), x+5, y+5, theme().UITextColor(), theme().isUITextShadow());
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
+    	hint.theme(this).drawUIBackground(matrixStack, x, y, w, h);
+        matrixStack.drawString(getFont(), getTitle(), x+5, y+5, hint.theme(this).UITextColor(), hint.theme(this).isUITextShadow());
     }
 
     @Override
@@ -222,10 +223,10 @@ public class EditListDialog<T> extends EditDialog {
 
 
 		@Override
-        public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-            super.drawBackground(matrixStack, x, y, w, h);
+        public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
+            super.drawBackground(matrixStack, x, y, w, h, hint);
             
-            matrixStack.drawString(getFont(), getTitle(), x+4, y+5, theme().buttonTextColor(), theme().isButtonTextShadow());
+            matrixStack.drawString(getFont(), getTitle(), x+4, y+5, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
         }
 
         @Override
@@ -285,7 +286,7 @@ public class EditListDialog<T> extends EditDialog {
         float displayY;
         boolean fresh = true;
         @Override
-        public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
             matrixStack.pose().pushPose();
             // 还是会不可避免的有点小卡顿因为每次刷新所有元素都会重新创建
             if(moving!=null || Math.abs(displayY)-Math.abs(y) < 0.001F) {
@@ -305,7 +306,7 @@ public class EditListDialog<T> extends EditDialog {
                 }
             }
 
-            super.drawBackground(matrixStack, x, y, w, h);
+            super.drawBackground(matrixStack, x, y, w, h, hint);
             boolean mouseOver = isMouseOver();
             int ioffset = 1;
             if (icon!=null&&icon!=CIcons.nop()) {
@@ -321,13 +322,13 @@ public class EditListDialog<T> extends EditDialog {
                 	matrixStack.fill(x + w - 19, y, x+w, y+h, 0x21FFFFFF);
                 }
             }
-            matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+th, theme().buttonTextColor(), theme().isButtonTextShadow());
+            matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+th, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
 
             //if (mouseOver) {
             	FlatIcon.CROSS.toCIcon().draw(matrixStack, x+w-18, y+1,height-2,height-2);
             	//matrixStack.drawString(getFont(), "[-]", x+w-16, y+2, getTheme().getButtonTextColor());
-            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+2, theme().buttonTextColor(), theme().isButtonTextShadow());
-            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+h-getFont().lineHeight, theme().buttonTextColor(), theme().isButtonTextShadow());
+            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+2, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
+            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+h-getFont().lineHeight, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
             //}
             matrixStack.pose().popPose();
         }

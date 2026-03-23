@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.contentpanel;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
@@ -60,8 +61,8 @@ public class BreakLine extends Line<BreakLine> {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-        super.render(graphics, x, y, w, h);
+    public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+        super.render(graphics, x, y, w, h, hint);
         if (lineIcon != null) {
             lineIcon.draw(graphics, x, y, w, h);
         } else if (isSolid()) {

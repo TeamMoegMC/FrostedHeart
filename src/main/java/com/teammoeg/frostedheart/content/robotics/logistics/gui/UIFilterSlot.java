@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
 import com.teammoeg.chorda.client.CInputHelper;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.ScrollTracker;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
@@ -66,7 +67,7 @@ public class UIFilterSlot extends UIElement {
 
 	}
 	@Override
-	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 		if(!displayStack.isEmpty()&&getFilter()!=null) {
 			CGuiHelper.drawItem(graphics,displayStack, x, y, 0, true , null);
 			
@@ -93,7 +94,7 @@ public class UIFilterSlot extends UIElement {
 	          }
 			
 		}
-		super.render(graphics, x, y, w, h);
+		super.render(graphics, x, y, w, h, hint);
 		if (isMouseOver()) {
 			graphics.fill(x, y, x + w, y + h, 300, Colors.setAlpha(Colors.WHITE, 0.25F));
 		}

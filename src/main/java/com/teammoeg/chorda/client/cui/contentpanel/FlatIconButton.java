@@ -1,5 +1,6 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.widgets.Button;
@@ -38,9 +39,9 @@ public class FlatIconButton extends Button {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-        theme().drawButton(graphics, x, y, w, h, isMouseOver(), isEnabled());
-        fIcon.render(graphics.pose(), x+1, y+1, theme().UITextColor());
+    public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+        hint.theme(this).drawButton(graphics, x, y, w, h, isMouseOver(), isEnabled());
+        fIcon.render(graphics.pose(), x+1, y+1, hint.theme(this).UITextColor());
 //        icon.draw(graphics, x+1, y+1, fIcon.size.width, fIcon.size.height);
     }
 

@@ -21,6 +21,7 @@ package com.teammoeg.frostedresearch.gui.tech;
 
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -50,10 +51,10 @@ public class RequirementSlot extends UIElement {
 	}
 
 	@Override
-	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
 		CGuiHelper.resetGuiDrawing();
-		theme().drawSlot(matrixStack, x, y, w, h);
+		hint.theme(this).drawSlot(matrixStack, x, y, w, h);
 		CGuiHelper.drawItem(matrixStack, cur, x, y, 0, w / 16F, h / 16F, true, cnt != 0 ? String.valueOf(cnt) : null);
 	}
 

@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -50,8 +51,8 @@ public class HeatStatScreen extends PrimaryLayer {
     }
 
     @Override
-    public void drawBackground(GuiGraphics matrixStack,  int x, int y, int w, int h) {
-    	theme().drawUIBackground(matrixStack, x, y, w, h);
+    public void drawBackground(GuiGraphics matrixStack,  int x, int y, int w, int h, RenderingHint hint) {
+    	hint.theme(this).drawUIBackground(matrixStack, x, y, w, h);
        
     }
 
@@ -77,7 +78,7 @@ public class HeatStatScreen extends PrimaryLayer {
         }
 
         @Override
-        public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
             //theme.drawContainerSlot(matrixStack, x, y, w, h);
         }
 
@@ -103,13 +104,13 @@ public class HeatStatScreen extends PrimaryLayer {
         }
 
         @Override
-        public void render(GuiGraphics matrixStack,  int x, int y, int w, int h) {
+        public void render(GuiGraphics matrixStack,  int x, int y, int w, int h, RenderingHint hint) {
             //theme.drawContainerSlot(matrixStack, x, y, w, h);
             ic.draw(matrixStack, x + 4, y + 2, 24, 24);
             if (isIntake)
             	matrixStack.drawString(getFont(), val, x + 32 - getFont().width(val), y + 30, epd.canCostMore ? 0xFFFF5555 : 0x55FF55);
             else
-            	matrixStack.drawString(getFont(), val, x + 32 - getFont().width(val), y + 30, theme().buttonTextColor());
+            	matrixStack.drawString(getFont(), val, x + 32 - getFont().width(val), y + 30, hint.theme(this).buttonTextColor());
         }
 
     }
@@ -158,8 +159,8 @@ public class HeatStatScreen extends PrimaryLayer {
         }
 
         @Override
-        public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-            theme().drawPanel(matrixStack, x, y, w, h);
+        public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
+            hint.theme(this).drawPanel(matrixStack, x, y, w, h);
         }
 
     }

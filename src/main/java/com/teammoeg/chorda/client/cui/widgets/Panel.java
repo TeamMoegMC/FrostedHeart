@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import net.minecraft.client.gui.GuiGraphics;
@@ -75,16 +76,16 @@ public class Panel extends UILayer {
 
     /** {@inheritDoc} */
     @Override
-    public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
-    	matrixStack.drawString(getFont(), title, x, y, theme().UITextColor(), theme().isUITextShadow());
-    	theme().drawPanel(matrixStack, x, y, w, h);
+    public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
+    	matrixStack.drawString(getFont(), title, x, y, hint.theme(this).UITextColor(), hint.theme(this).isUITextShadow());
+    	hint.theme(this).drawPanel(matrixStack, x, y, w, h);
 
-        super.render(matrixStack, x, y, w, h);
+        super.render(matrixStack, x, y, w, h, hint);
     }
 
     /** {@inheritDoc} */
     @Override
-    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 
     }
 

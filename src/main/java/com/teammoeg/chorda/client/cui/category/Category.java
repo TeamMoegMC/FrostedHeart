@@ -20,6 +20,7 @@
 package com.teammoeg.chorda.client.cui.category;
 
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -51,8 +52,7 @@ public class Category extends UILayer {
     protected boolean opened = false;
 
     protected final LimitedTextField title;
-    protected FlatIcon.FlatIconWidget icon;
-
+    protected FlatIcon icon;
     /**
      * 创建一个新的分类。
      * <p>
@@ -66,8 +66,7 @@ public class Category extends UILayer {
         setSize(panel.getWidth(), Entry.DEF_HEIGHT);
 
         this.title = new LimitedTextField(this, title, getWidth()).shouldShowTooltip(false);
-        this.icon = FlatIcon.RIGHT.toWidget(this, theme().UIAltTextColor());
-        this.icon.setSize(10, 10);
+        this.icon = FlatIcon.RIGHT;
         addUIElements();
 
         if (panel instanceof Category p) {
@@ -84,11 +83,13 @@ public class Category extends UILayer {
     }
 
     @Override
-    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-        theme().drawButton(graphics, x, y, w, Entry.DEF_HEIGHT, false, isEnabled());
+    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+    	hint.theme(this).drawButton(graphics, x, y, w, Entry.DEF_HEIGHT, false, isEnabled());
         if (isMouseOver()) {
-            graphics.fill(x-4, y, x-2, y+Entry.DEF_HEIGHT, theme().UIAltTextColor());
+            graphics.fill(x-4, y, x-2, y+Entry.DEF_HEIGHT, hint.theme(this).UIAltTextColor());
         }
+        icon.render(graphics.pose(), -CHILDREN_OFFSET, -Entry.DEF_HEIGHT + 3, hint.theme(this).UIAltTextColor());
+        
     }
 
     @Override
@@ -107,7 +108,6 @@ public class Category extends UILayer {
             setHeight(Entry.DEF_HEIGHT);
         }
 
-        icon.setPos(-CHILDREN_OFFSET, -Entry.DEF_HEIGHT + 3);
         int titleOffsetX = 4;
         title.setPos(titleOffsetX, -Entry.DEF_HEIGHT + 4);
         title.setWidth(getWidth() - titleOffsetX - CHILDREN_OFFSET);
@@ -127,13 +127,12 @@ public class Category extends UILayer {
     @Override
     public void addUIElements() {
         add(this.title);
-        add(this.icon);
     }
 
     @Override
     public void alignWidgets() {
         if (opened) {
-            align(2, 2, false, icon, title);
+            align(2, 2, false, title);
         } else {
             recalcContentSize();
         }
@@ -219,7 +218,7 @@ public class Category extends UILayer {
     public void setOpened(boolean opened) {
         if (this.opened != opened) {
             this.opened = opened;
-            icon.setIcon(opened ? FlatIcon.DOWN : FlatIcon.RIGHT);
+            icon=opened ? FlatIcon.DOWN : FlatIcon.RIGHT;
             root.parent.refresh();
         }
     }

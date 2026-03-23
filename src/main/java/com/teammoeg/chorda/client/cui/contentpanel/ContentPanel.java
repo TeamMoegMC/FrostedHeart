@@ -20,6 +20,7 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -81,8 +82,8 @@ public class ContentPanel extends UILayer {
     }
 
     @Override
-    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-        theme().drawUIBackground(graphics, x-8, y-8, w+16, h+16);
+    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+        hint.theme(this).drawUIBackground(graphics, x-8, y-8, w+16, h+16);
     }
 
     public void fillContent(Collection<? extends UIElement> widgets) {

@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.text.Components;
@@ -77,8 +78,8 @@ public class LimitedTextField extends UIElement {
 
     /** {@inheritDoc} */
     @Override
-    public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-        graphics.drawString(getFont(), displayTitle, x, y, color, theme().isButtonTextShadow());
+    public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+        graphics.drawString(getFont(), displayTitle, x, y, color, hint.theme(this).isButtonTextShadow());
     }
 
     /**

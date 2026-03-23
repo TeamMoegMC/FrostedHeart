@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.contentpanel;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.widgets.ItemSlot;
 import com.teammoeg.frostedheart.content.archive.Alignment;
@@ -59,8 +60,8 @@ public class ItemRow extends Line<ItemRow> {
     }
 
     @Override
-    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-        graphics.fill(x, y, x+w, y+h, theme().UIBGBorderColor());
+    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h,RenderingHint hint) {
+        graphics.fill(x, y, x+w, y+h, hint.theme(this).UIBGBorderColor());
     }
 
     @Override

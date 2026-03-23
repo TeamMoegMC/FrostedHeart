@@ -21,6 +21,7 @@ package com.teammoeg.chorda.client.icon;
 
 import java.util.function.Consumer;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -86,8 +87,8 @@ public abstract class IconEditor<T extends CIcon> extends BaseEditDialog {
     }        
 
     @Override
-    public void render(GuiGraphics arg0, int arg2, int arg3, int arg4, int arg5) {
-        super.render(arg0,arg2, arg3, arg4, arg5);
+    public void render(GuiGraphics arg0, int arg2, int arg3, int arg4, int arg5, RenderingHint hint) {
+        super.render(arg0,arg2, arg3, arg4, arg5, hint);
     }
     public static final Editor<AnimatedIcon> ANIMATED_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v == null ? null : v.icons, null, getEditor(), e -> Components.str(e.getClass().getSimpleName()),
             e -> e, e -> c.accept(new AnimatedIcon(e.toArray(new CIcon[0])))).open();

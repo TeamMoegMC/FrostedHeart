@@ -20,6 +20,7 @@
 package com.teammoeg.frostedresearch.gui.tech;
 
 import com.ibm.icu.text.NumberFormat;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -74,7 +75,7 @@ public class CluePanel extends UILayer {
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		// super.drawBackground(matrixStack, theme, x, y, w, h);
 		DrawDeskTheme.drawCheckBox(matrixStack, x, y, 9, 9, ClientResearchDataAPI.getData().get().isClueCompleted(r, c), r.isCompleted());
 	}

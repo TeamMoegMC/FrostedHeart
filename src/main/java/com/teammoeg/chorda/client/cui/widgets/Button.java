@@ -21,6 +21,7 @@ package com.teammoeg.chorda.client.cui.widgets;
 
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
@@ -132,7 +133,7 @@ public abstract class Button extends UIElement {
 	 * Auto-fits the button size based on title and icon.
 	 */
 	protected void fitSize() {
-		setWidth(parent.getFont().width(title)+((Components.isEmpty(title)&&hasIcon())?0:8) + (hasIcon() ? 20 : 0));
+		setWidth(hasIcon() ? 20 : 0);
 		setHeight(hasIcon() ?20:16);
 	}
 
@@ -147,8 +148,8 @@ public abstract class Button extends UIElement {
 	 * @param w 绘制宽度 / Drawing width
 	 * @param h 绘制高度 / Drawing height
 	 */
-	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-		theme().drawButton(graphics, x, y, w, h, isMouseOver(), isEnabled());
+	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h,RenderingHint hint) {
+		hint.theme(this).drawButton(graphics, x, y, w, h, isMouseOver(), isEnabled());
 	}
 
 	/**
@@ -168,10 +169,10 @@ public abstract class Button extends UIElement {
 
 	/** {@inheritDoc} */
 	@Override
-	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 		CGuiHelper.resetGuiDrawing();
 		int s = h >= 16 ? 16 : 8;
-		drawBackground(graphics, x, y, w, h);
+		drawBackground(graphics, x, y, w, h, hint);
 		if(hasIcon())
 			drawIcon(graphics, x + (w - s) / 2, y + (h - s) / 2, s, s);
 	}

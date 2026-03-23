@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
 import com.teammoeg.chorda.client.CInputHelper;
+import com.teammoeg.chorda.client.RenderingHint;
 
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -83,11 +84,11 @@ public class RequesterChestScreen extends LogisticChestLayer<RequesterChestMenu>
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 		if(screen==null) {
 			LogisticIcons.INV_CHEST.draw(graphics, x+0, y+25, 176, 59);
 			LogisticIcons.INV_BACK.draw(graphics, x+0, y+115, 176, 84);
-			super.drawBackground(graphics, x, y, w, h);
+			super.drawBackground(graphics, x, y, w, h, hint);
 		}
 	}
 

@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MenuPrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
@@ -224,7 +225,7 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 	}
 
 	@Override
-	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		TradeIcons.MAIN.draw(matrixStack, x, y, w, h);
 		TradeIcons.REL.draw(matrixStack, x + 133, y + 18, 54, 5);
 		int repos = menu.relations.sum();

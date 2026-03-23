@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.text.Components;
@@ -379,7 +380,7 @@ public class TextField extends UIElement {
 
 	/** {@inheritDoc} */
 	@Override
-	public void render(GuiGraphics graphics,  int x, int y, int w, int h) {
+	public void render(GuiGraphics graphics,  int x, int y, int w, int h, RenderingHint hint) {
 		drawBackground(graphics, x, y, w, h);
 		
 		if (formattedText.size() != 0) {

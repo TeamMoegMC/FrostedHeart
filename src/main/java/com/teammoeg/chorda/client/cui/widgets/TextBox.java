@@ -22,6 +22,7 @@ package com.teammoeg.chorda.client.cui.widgets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.Focusable;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
@@ -658,8 +659,8 @@ public class TextBox extends UIElement implements Focusable {
 
 	/** {@inheritDoc} */
 	@Override
-	public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-		drawTextBox(graphics, x+1, y+1, w-2, h-2);
+	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+		drawTextBox(graphics, x+1, y+1, w-2, h-2, hint);
 		var drawGhostText = !isFocused() && text.isEmpty() && !ghostText.isEmpty();
 		var textToDraw = getFormattedText();
 		graphics.enableScissor( x, y, x+w, y+h);
@@ -672,8 +673,8 @@ public class TextBox extends UIElement implements Focusable {
 				isPressed=false;
 			
 		}
-		int textColor= theme().buttonTextColor();
-		int cursorColor =( (!validText.isError() ? textColor: theme().errorColor())&textColor)|((drawGhostText ? 0x78000000 : 0xFF000000));
+		int textColor= hint.theme(this).buttonTextColor();
+		int cursorColor =( (!validText.isError() ? textColor: hint.theme(this).errorColor())&textColor)|((drawGhostText ? 0x78000000 : 0xFF000000));
 		int j = cursorPos - displayPos;
 		String s = getFont().plainSubstrByWidth(textToDraw.substring(displayPos), w);
 		if(rightAlign)
@@ -745,8 +746,8 @@ public class TextBox extends UIElement implements Focusable {
 	 * @param w 宽度 / Width
 	 * @param h 高度 / Height
 	 */
-	public void drawTextBox(GuiGraphics graphics, int x, int y, int w, int h) {
-		theme().drawTextboxBackground(graphics, x, y, w, h, isFocused());
+	public void drawTextBox(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+		hint.theme(this).drawTextboxBackground(graphics, x, y, w, h, isFocused());
 	}
 
 	/**

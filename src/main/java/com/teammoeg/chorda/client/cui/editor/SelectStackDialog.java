@@ -24,6 +24,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -291,8 +292,8 @@ public class SelectStackDialog<T> extends EditDialog {
             }
 
             @Override
-            public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-            	theme().drawPanel(matrixStack, x, y, w, h);
+            public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h,RenderingHint hint) {
+            	hint.theme(this).drawPanel(matrixStack, x, y, w, h);
             }
 
 			@Override
@@ -373,8 +374,8 @@ public class SelectStackDialog<T> extends EditDialog {
     }
 
     @Override
-    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
-        theme().drawUIBackground(matrixStack, x, y, w, h);
+    public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
+        hint.theme(this).drawUIBackground(matrixStack, x, y, w, h);
 
         long now = System.currentTimeMillis();
 
@@ -591,7 +592,7 @@ public class SelectStackDialog<T> extends EditDialog {
         }
 
         @Override
-        public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h) {
+        public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
         	matrixStack.fill(x, y, x+w, y+h, (this.isMouseOver()||type.isSame(current, stack))?0x46FFFFFF:0x22000000);
 
         }

@@ -20,6 +20,7 @@
 package com.teammoeg.chorda.client.cui.widgets;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -152,8 +153,8 @@ public class ItemSlot extends UIElement {
     }
     /** {@inheritDoc} */
     @Override
-    public void render(GuiGraphics graphics, int x, int y, int w, int h) {
-    	renderBackground(graphics,x,y,w,h);
+    public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+    	renderBackground(graphics,x,y,w,h,hint);
     	if(item.length>1)
     		order=(int) ((System.currentTimeMillis() / 1000) % item.length);
     	else
@@ -180,7 +181,7 @@ public class ItemSlot extends UIElement {
      * @param w 宽度 / Width
      * @param h 高度 / Height
      */
-    public void renderBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+    public void renderBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
     	
     	
     }

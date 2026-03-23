@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedheart.FHMain;
@@ -41,7 +42,7 @@ public class WarehouseScreen extends AbstractTownWorkerBlockScreen<WarehouseMenu
     }
 
     @Override
-    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
         background.draw(graphics, x, y, 176, 222);
     }
 

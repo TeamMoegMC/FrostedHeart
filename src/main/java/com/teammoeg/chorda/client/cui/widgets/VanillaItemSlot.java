@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
@@ -46,8 +47,8 @@ public class VanillaItemSlot extends ItemSlot {
 
 	/** {@inheritDoc} */
 	@Override
-	public void renderBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-		theme().drawSlot(graphics, x, y, w, h);
+	public void renderBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+		hint.theme(this).drawSlot(graphics, x, y, w, h);
 		//super.renderBackground(graphics, x, y, w, h);
 	}
 

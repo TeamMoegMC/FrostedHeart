@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
@@ -48,7 +49,7 @@ public class LargeEffectWidget extends EffectWidget {
 	}
 
 	@Override
-	public void render(GuiGraphics matrixStack, int x, int y, int w, int h) {
+	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		CGuiHelper.resetGuiDrawing();
 		TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
 		icon.draw(matrixStack, x + 2, y + 2, w - 4, h - 4);
