@@ -142,14 +142,17 @@ public abstract class TesselateHelper implements AutoCloseable {
 			int y2 = y + h;
 			return drawRect(mat, x, y, x2, y2, color, inner);
 		}
-		public ShapeTesslator fillRect(Matrix4f mat, int x, int y, int w, int h, int color) {
+		public ShapeTesslator fillRectWH(Matrix4f mat, int x, int y, int w, int h, int color) {
+			return fillRect(mat,x,y,x+w,y+h,color);
+		}
+		public ShapeTesslator fillRect(Matrix4f mat, int x, int y, int x2, int y2, int color) {
+			bufferbuilder.vertex(mat, x2, y2, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color),
+					FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color)).endVertex();
+			bufferbuilder.vertex(mat, x2, y, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color),
+					FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color)).endVertex();
 			bufferbuilder.vertex(mat, x, y, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color),
 					FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color)).endVertex();
-			bufferbuilder.vertex(mat, x + w, y, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color),
-					FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color)).endVertex();
-			bufferbuilder.vertex(mat, x + w, y + h, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color),
-					FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color)).endVertex();
-			bufferbuilder.vertex(mat, x, y + h, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color),
+			bufferbuilder.vertex(mat, x, y2, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color),
 					FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color)).endVertex();
 			return this;
 		}

@@ -682,7 +682,7 @@ public abstract class UILayer extends UIElement {
 		for (var i = elements.size() - 1; i >= 0; i--) {
 			UIElement widget = elements.get(i);
 			if (widget.isEnabled() && widget.isVisible() && widget.isMouseOver()) {
-				var cursor = widget.getCursor();
+				Cursor cursor = widget.getCursor();
 				if (cursor != null) {
 					return cursor;
 				}

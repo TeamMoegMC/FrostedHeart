@@ -182,6 +182,7 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 		builder.draw(graphics, mouseX, mouseY, primaryLayer.theme());
 		graphics.pose().popPose();
 		Cursor cs=primaryLayer.getCursor();
+		
 		if(cs==null)
 			Cursor.reset();
 		else
@@ -194,7 +195,6 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 			super.renderBackground(graphics);
 		}
 	}
-
 	/**
 	 * 主渲染方法。更新主层尺寸和位置，处理鼠标状态更新，然后调用父类渲染。
 	 * <p>
@@ -218,7 +218,8 @@ public class CUIMenuScreenWrapper<T extends AbstractContainerMenu> extends Abstr
 			
 			primaryLayer.updateGui(leftPos,topPos,MouseHelper.getScaledX(), MouseHelper.getScaledY(), partialTicks);
 			primaryLayer.updateMouseOver();
-
+			
+			
 		}catch(Throwable t) {
 			t.printStackTrace();
 		}

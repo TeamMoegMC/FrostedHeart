@@ -57,6 +57,8 @@ import com.teammoeg.frostedheart.mixin.client.BossHealthOverlayAccess;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.data.ResearchVariant;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
+
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.AttackIndicatorStatus;
 import net.minecraft.client.Minecraft;
@@ -276,7 +278,7 @@ public class FrostedHud {
     static final ResourceLocation FORECAST_ELEMENTS = new ResourceLocation(FHMain.MODID,
             "textures/gui/hud/forecast_elements.png");
 
-    private static final Map<Integer, Integer> clrs = new HashMap<>();
+    private static final Int2IntOpenHashMap clrs = new Int2IntOpenHashMap();
 
     static {
         clrs.put(1, 0x99FF9800);
@@ -547,7 +549,7 @@ public class FrostedHud {
 	                            int start = windowX + lastStart * segmentLength / 2 + 4;
 	                            if (lastStart == 0)
 	                                start -= 3;
-	                            stack.fill( start, 1, end, 15, clr);
+	                            shape.fillRect(stack.pose().last().pose(),start, 1, end, 15, clr);
 	                        } else if (lastLevel == 0) {
 	                            int end = windowX + i * segmentLength / 2 - 2;
 	                            int clr = clrs.get((int) fr.toState);
@@ -559,10 +561,11 @@ public class FrostedHud {
 	                }
 	            }
 	        }
-        }
-        if (lastLevel != 0 && lastStart * segmentLength / 2 < 253) {
-        	stack.fill(windowX + lastStart * segmentLength / 2 + 4, 1, windowX + 257, 15,
-                    clrs.get(lastLevel));
+        
+	        if (lastLevel != 0 && lastStart * segmentLength / 2 < 253) {
+	        	shape.fillRect(stack.pose().last().pose(),windowX + lastStart * segmentLength / 2 + 4, 1, windowX + 257, 15,
+	                    clrs.get(lastLevel));
+	        }
         }
         RenderSystem.enableBlend();
         // window

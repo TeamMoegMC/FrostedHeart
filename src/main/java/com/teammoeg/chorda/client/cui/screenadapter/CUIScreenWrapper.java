@@ -19,6 +19,8 @@
 
 package com.teammoeg.chorda.client.cui.screenadapter;
 
+import org.lwjgl.glfw.GLFW;
+
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.ClientUtils;
@@ -29,12 +31,10 @@ import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.text.Components;
+
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-
-import org.joml.Matrix4f;
-import org.lwjgl.glfw.GLFW;
 
 /**
  * CUI屏幕包装器。将PrimaryLayer适配到Minecraft的Screen上，处理输入事件、渲染和生命周期管理。
@@ -141,7 +141,6 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 
 		return super.charTyped(keyChar, keyChar);
 	}
-
 	int x,y;
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
@@ -175,8 +174,9 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 		Cursor cs=primaryLayer.getCursor();
 		if(cs==null)
 			Cursor.reset();
-		else
+		else{
 			cs.use();
+		}
 	}
 
 	@Override

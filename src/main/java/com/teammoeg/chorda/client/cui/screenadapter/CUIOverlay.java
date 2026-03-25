@@ -240,11 +240,11 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen, IGlobalGuiHandler {
 		graphics.pose().pushPose();
 		builder.draw(graphics, (int)mouseX, (int)mouseY, primaryLayer.theme());
 		graphics.pose().popPose();
-		Cursor cs=primaryLayer.getCursor();
+		/*Cursor cs=primaryLayer.getCursor();
 		if(cs==null)
 			Cursor.reset();
 		else
-			cs.use();
+			cs.use();*/
 	}
 
 	/**

@@ -629,7 +629,7 @@ public class CGuiHelper {
 		drawBox(graphics, box.getX(), box.getY(), box.getW(), box.getH(), color, inner);
 	}
 	public static void drawRect(GuiGraphics graphics, int x, int y, int w, int h, int color) {
-		TesselateHelper.getShapeTesslator().fillRect(graphics.pose().last().pose(), x, y, w, h, color).close();
+		TesselateHelper.getShapeTesslator().fillRectWH(graphics.pose().last().pose(), x, y, w, h, color).close();
 	}
 
 	public static void drawRect(GuiGraphics graphics, Rect box, int color) {

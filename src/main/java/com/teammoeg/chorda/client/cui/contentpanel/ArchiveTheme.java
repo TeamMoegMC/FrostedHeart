@@ -28,7 +28,7 @@ public class ArchiveTheme implements Theme {
         graphics.fill(x, y, x+w, y+h, UIBGBorderColor());
         if (isHighlight && enabled) {
         	TesselateHelper.getShapeTesslator()
-        	.drawRect(graphics.pose().last().pose(), x, y, w, h, Colors.themeColor(), true)
+        	.drawRectWH(graphics.pose().last().pose(), x, y, w, h, Colors.themeColor(), true)
         	.close();
         }
     }
@@ -66,8 +66,8 @@ public class ArchiveTheme implements Theme {
     @Override
     public void drawUIBackground(GuiGraphics graphics, int x, int y, int w, int h) {
         TesselateHelper.getShapeTesslator()
-        .fillRect(graphics.pose().last().pose(), x, y, w, h, UIBGColor())
-    	.drawRect(graphics.pose().last().pose(), x, y, w, h, UIBGBorderColor(), true)
+        .fillRectWH(graphics.pose().last().pose(), x, y, w, h, UIBGColor())
+    	.drawRectWH(graphics.pose().last().pose(), x, y, w, h, UIBGBorderColor(), true)
     	.close();
     }
 
