@@ -1,6 +1,7 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.TesselateHelper;
 import com.teammoeg.chorda.client.cui.theme.Theme;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
@@ -26,7 +27,9 @@ public class ArchiveTheme implements Theme {
     public void drawButton(GuiGraphics graphics, int x, int y, int w, int h, boolean isHighlight, boolean enabled) {
         graphics.fill(x, y, x+w, y+h, UIBGBorderColor());
         if (isHighlight && enabled) {
-            CGuiHelper.drawBox(graphics, x, y, w, h, Colors.themeColor(), true);
+        	TesselateHelper.getShapeTesslator()
+        	.drawRect(graphics.pose().last().pose(), x, y, w, h, Colors.themeColor(), true)
+        	.close();
         }
     }
 
@@ -62,8 +65,10 @@ public class ArchiveTheme implements Theme {
 
     @Override
     public void drawUIBackground(GuiGraphics graphics, int x, int y, int w, int h) {
-        graphics.fill(x, y, x+w, y+h, UIBGColor());
-        CGuiHelper.drawBox(graphics, x, y, w, h, UIBGBorderColor(), true);
+        TesselateHelper.getShapeTesslator()
+        .fillRect(graphics.pose().last().pose(), x, y, w, h, UIBGColor())
+    	.drawRect(graphics.pose().last().pose(), x, y, w, h, UIBGBorderColor(), true)
+    	.close();
     }
 
     @Override

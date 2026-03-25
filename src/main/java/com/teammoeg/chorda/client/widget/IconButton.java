@@ -20,6 +20,8 @@
 package com.teammoeg.chorda.client.widget;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.TesselateHelper;
+import com.teammoeg.chorda.client.TesselateHelper.ShapeTesslator;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
@@ -105,32 +107,39 @@ public class IconButton extends Button {
         int color = isActive() ? this.color : 0xFF666666;
         int backgroundColor = Colors.makeDark(color, 0.3F);
         float alpha = 0.5F;
-        if (isFocused()) {
-            CGuiHelper.drawBox(graphics, getX(), getY(), getWidth(), getHeight(), color, false);
+        int fontX=Integer.MIN_VALUE;
+        
+        try(ShapeTesslator tesselator=TesselateHelper.getShapeTesslator()){
+	        if (isFocused()) {
+	        	tesselator.drawRectWH(graphics.pose().last().pose(), getX(), getY(), getWidth(), getHeight(), color, false);
+	        }
+	        if (isHovered()) {
+	        	tesselator.fillRect(graphics.pose().last().pose(), getX(), getY(), getX()+getWidth(), getY()+getHeight(), Colors.setAlpha(backgroundColor, alpha));
+	            if (!getMessage().getString().isBlank() && isHovered()) {
+	                int textWidth = ClientUtils.font().width(getMessage());
+	                int renderX = getX()-textWidth+8;
+	                if (renderX < 0) {
+	                	tesselator.fillRect(graphics.pose().last().pose(), 
+	                			getX(),
+	                            getY()-12,
+	                            getX()+2 + textWidth,
+	                            getY(),
+	                            Colors.setAlpha(backgroundColor, alpha));
+	                	fontX=getX()+2;
+	                } else {
+	                	tesselator.fillRect(graphics.pose().last().pose(), 
+	                		getX()-textWidth+getWidth()-1,
+	                            getY()-12,
+	                            getX()+getWidth(),
+	                            getY(),
+	                            Colors.setAlpha(backgroundColor, alpha));
+	                	fontX=getX()-textWidth+getWidth();
+	                }
+	            }
+	        }
         }
-        if (isHovered()) {
-            graphics.fill(getX(), getY(), getX()+getWidth(), getY()+getHeight(), Colors.setAlpha(backgroundColor, alpha));
-            if (!getMessage().getString().isBlank() && isHovered()) {
-                int textWidth = ClientUtils.font().width(getMessage());
-                int renderX = getX()-textWidth+8;
-                if (renderX < 0) {
-                    graphics.fill(getX(),
-                            getY()-12,
-                            getX()+2 + textWidth,
-                            getY(),
-                            Colors.setAlpha(backgroundColor, alpha));
-                    graphics.drawString(ClientUtils.font(), getMessage(), getX()+2, getY()-10, color);
-                } else {
-                    graphics.fill(getX()-textWidth+getWidth()-1,
-                            getY()-12,
-                            getX()+getWidth(),
-                            getY(),
-                            Colors.setAlpha(backgroundColor, alpha));
-                    graphics.drawString(ClientUtils.font(), getMessage(), getX()-textWidth+getWidth(), getY()-10, color);
-                }
-            }
-        }
-
+        if(fontX!=Integer.MIN_VALUE)
+        	graphics.drawString(ClientUtils.font(), getMessage(), fontX, getY()-10, color);
         CGuiHelper.bindTexture(FlatIcon.ICON_LOCATION);
         CGuiHelper.blitColored(graphics.pose(), getX(), getY(), getWidth(), getHeight(), icon.x*scale, icon.y*scale, getWidth(), getHeight(), FlatIcon.TEXTURE_WIDTH*scale, FlatIcon.TEXTURE_HEIGHT*scale, color, this.alpha);
     }

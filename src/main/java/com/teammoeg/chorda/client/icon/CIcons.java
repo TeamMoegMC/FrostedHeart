@@ -32,6 +32,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.TesselateHelper;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.codec.AlternativeCodecBuilder;
@@ -689,7 +690,9 @@ public class CIcons {
 		@Override
 		public void draw(GuiGraphics ms, int x, int y, int w, int h) {
 			CGuiHelper.resetGuiDrawing();
-			CGuiHelper.blitNineSliced(ms, rl, x, y, w, h, corner, this.w, this.h, this.x, this.y, this.tw, this.th);
+			TesselateHelper.getTextureTesselator(rl)
+			.tesellateNineSliced(ms.pose().last().pose(), x, y, w, h, corner, this.w, this.h, this.x, this.y, this.tw, this.th)
+			.close();
 		}
 
 		public CTextureIcon withUV(int x, int y, int w, int h, int tw, int th) {

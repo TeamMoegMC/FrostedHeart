@@ -20,6 +20,7 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
 import com.teammoeg.chorda.client.RenderingHint;
+import com.teammoeg.chorda.client.TesselateHelper;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
@@ -68,8 +69,10 @@ public class BreakLine extends Line<BreakLine> {
         } else if (isSolid()) {
             graphics.fill(x, y+h/2, x+w, y+h/2+1, color);
         } else {
-            CGuiHelper.fillGradient(graphics.pose(), x, y+h/2, x+w/2, y+h/2+1, Colors.setAlpha(color, 0), color);
-            CGuiHelper.fillGradient(graphics.pose(),x+w/2, y+h/2, x+w, y+h/2+1, color, Colors.setAlpha(color, 0));
+        	TesselateHelper.getShapeTesslator()
+            .fillGradient(graphics.pose().last().pose(), x, y+h/2, x+w/2, y+h/2+1, Colors.setAlpha(color, 0), color)
+            .fillGradient(graphics.pose().last().pose(),x+w/2, y+h/2, x+w, y+h/2+1, color, Colors.setAlpha(color, 0))
+            .close();
         }
     }
 }

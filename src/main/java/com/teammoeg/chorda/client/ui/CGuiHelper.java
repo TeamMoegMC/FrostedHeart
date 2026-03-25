@@ -28,14 +28,20 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.math.Divisor;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.TesselateHelper;
+import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.math.Point;
 import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.chorda.text.CFormatHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.archive.Alignment;
+
+import it.unimi.dsi.fastutil.ints.IntIterator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -288,132 +294,7 @@ public class CGuiHelper {
 	public static void drawTextShadow(GuiGraphics guiGraphics, String text, Point point, int color) {
 		guiGraphics.drawString(Minecraft.getInstance().font, text, point.getX(), point.getY(), color);
 	}
-	// TODO fix line drawing
-
-	private static void drawVertexLine(Matrix4f mat, VertexConsumer renderBuffer, int color, int startX, int startY,
-			int endX, int endY, float z) {
-		// RenderSystem.disableTexture();
-		// RenderSystem.enableColorLogicOp();
-		// RenderSystem.colorMask(false, false, false, false);
-		renderBuffer.vertex(mat, startX, startY, z).color(color).endVertex();
-		/*
-		 * renderBuffer.vertex(mat, startX, startY, z).color(color.redi(),
-		 * color.greeni(), color.bluei(), color.alphai()) .endVertex();
-		 */
-		renderBuffer.vertex(mat, endX, endY, z).color(color).endVertex();
-		/*
-		 * renderBuffer.vertex(mat, endX, endY, z).color(color.redi(), color.greeni(),
-		 * color.bluei(), color.alphai()) .endVertex();
-		 */
-		// RenderSystem.enableTexture();
-	}
-
-	private static void drawVertexLine2(Matrix4f mat, VertexConsumer renderBuffer, int color, int startX, int startY,
-			int endX, int endY, float z) {
-		// RenderSystem.disableTexture();
-		// RenderSystem.enableColorMaterial();
-		// RenderSystem.colorMask(false, false, false, false);
-
-		renderBuffer.vertex(mat, startX, 0, z).color(color).endVertex();
-		renderBuffer.vertex(mat, endX, 0, z).color(color).endVertex();
-		renderBuffer.vertex(mat, 0, startY, z).color(color).endVertex();
-		renderBuffer.vertex(mat, 0, endY, z).color(color).endVertex();
-		// RenderSystem.enableTexture();
-	}
-
-	// draw a line from start to end by color, ABSOLUTE POSITION
-
-	public static void drawLine(PoseStack matrixStack, int color, int startX, int startY, int endX, int endY, float z) {
-		Tesselator t = Tesselator.getInstance();
-
-		BufferBuilder vertexBuilderLines = t.getBuilder();
-		vertexBuilderLines.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
-		drawVertexLine(matrixStack.last().pose(), vertexBuilderLines, color, startX, startY, endX, endY, z);
-		t.end();
-	}
-
-	private static class ShaderSetter implements Supplier<ShaderInstance> {
-		ShaderInstance inst;
-
-		@Override
-		public ShaderInstance get() {
-			return inst;
-		}
-
-	}
-
-	public static ThreadLocal<ShaderSetter> shaderSetterCache = ThreadLocal.withInitial(() -> new ShaderSetter());
-
-	// draw a line from start to end by color, ABSOLUTE POSITION
-	// TODO: THE LINES IS NOT SHOWING
-	public static void drawLine(GuiGraphics graphics, int color, int startX, int startY, int endX, int endY) {
-		ShaderSetter ss = shaderSetterCache.get();
-		ss.inst = RenderSystem.getShader();
-
-		VertexConsumer vertexBuilderLines = graphics.bufferSource().getBuffer(RenderStateAccess.BOLD_LINE_TYPE);
-		drawVertexLine(graphics.pose().last().pose(), vertexBuilderLines, color, startX, startY, endX, endY, 0f);
-		RenderSystem.setShader(ss);
-
-	}
-
-	public static void drawRect(GuiGraphics graphics, Rect rect, int color) {
-		graphics.fill(rect.getX(), rect.getY(), rect.getX2(), rect.getY2(), color);
-	}
-
-	private static void drawRect(Matrix4f mat, BufferBuilder renderBuffer, int x, int y, int w, int h, int color) {
-		renderBuffer.vertex(mat, x, y, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color),
-				FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color)).endVertex();
-		renderBuffer.vertex(mat, x + w, y, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color),
-				FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color)).endVertex();
-		renderBuffer.vertex(mat, x + w, y + h, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color),
-				FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color)).endVertex();
-		renderBuffer.vertex(mat, x, y + h, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color),
-				FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color)).endVertex();
-	}
-
-	private static void fillGradient(Matrix4f matrix, BufferBuilder builder, int x1, int y1, int x2, int y2, int colorB,
-			int colorA) {
-		float f = (colorA >> 24 & 255) / 255.0F;
-		float f1 = (colorA >> 16 & 255) / 255.0F;
-		float f2 = (colorA >> 8 & 255) / 255.0F;
-		float f3 = (colorA & 255) / 255.0F;
-		float f4 = (colorB >> 24 & 255) / 255.0F;
-		float f5 = (colorB >> 16 & 255) / 255.0F;
-		float f6 = (colorB >> 8 & 255) / 255.0F;
-		float f7 = (colorB & 255) / 255.0F;
-		builder.vertex(matrix, x2, y2, 0f).color(f1, f2, f3, f).endVertex();
-		builder.vertex(matrix, x2, y1, 0f).color(f1, f2, f3, f).endVertex();
-		builder.vertex(matrix, x1, y1, 0f).color(f5, f6, f7, f4).endVertex();
-		builder.vertex(matrix, x1, y2, 0f).color(f5, f6, f7, f4).endVertex();
-	}
-
-	// draw a rectangle
-	public static void fillGradient(PoseStack matrixStack, int x1, int y1, int x2, int y2, int colorFrom, int colorTo) {
-		RenderSystem.enableDepthTest();
-		RenderSystem.enableBlend();
-		RenderSystem.defaultBlendFunc();
-		RenderSystem.setShader(GameRenderer::getPositionColorShader);
-		Tesselator tessellator = Tesselator.getInstance();
-		BufferBuilder bufferbuilder = tessellator.getBuilder();
-		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-		fillGradient(matrixStack.last().pose(), bufferbuilder, x1, y1, x2, y2, colorFrom, colorTo);
-		tessellator.end();
-		RenderSystem.disableBlend();
-	}
-
-	// draw a rectangle
-	public static void fillRect(PoseStack matrixStack, int x1, int y1, int w, int h, int color) {
-		RenderSystem.enableDepthTest();
-		RenderSystem.enableBlend();
-		RenderSystem.defaultBlendFunc();
-		RenderSystem.setShader(GameRenderer::getPositionColorShader);
-		Tesselator tessellator = Tesselator.getInstance();
-		BufferBuilder bufferbuilder = tessellator.getBuilder();
-		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-		drawRect(matrixStack.last().pose(), bufferbuilder, x1, y1, w, h, color);
-		tessellator.end();
-		RenderSystem.disableBlend();
-	}
+	
 
 	public static void blit(PoseStack matrixStack, int x, int y, int width, int height, float uOffset, float vOffset,
 			int uWidth, int vHeight, int textureWidth, int textureHeight, float opacity) {
@@ -740,7 +621,20 @@ public class CGuiHelper {
 			lineOffset += (font.lineHeight + lineSpace);
 		}
 	}
+	public static void drawBox(GuiGraphics graphics, int x, int y, int w, int h, int color, boolean inner) {
+		TesselateHelper.getShapeTesslator().drawRectWH(graphics.pose().last().pose(), x, y, w, h, color, inner).close();
+	}
 
+	public static void drawBox(GuiGraphics graphics, Rect box, int color, boolean inner) {
+		drawBox(graphics, box.getX(), box.getY(), box.getW(), box.getH(), color, inner);
+	}
+	public static void drawRect(GuiGraphics graphics, int x, int y, int w, int h, int color) {
+		TesselateHelper.getShapeTesslator().fillRect(graphics.pose().last().pose(), x, y, w, h, color).close();
+	}
+
+	public static void drawRect(GuiGraphics graphics, Rect box, int color) {
+		drawRect(graphics, box.getX(), box.getY(), box.getW(), box.getH(), color);
+	}
 	public static void resetGuiDrawing() {
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
@@ -792,90 +686,29 @@ public class CGuiHelper {
 		}).orElse(0xffffffff);
 	}
 
-	public static void blitNineSliced(GuiGraphics graphics, ResourceLocation pAtlasLocation, int pTargetX, int pTargetY,
-			int pTargetWidth, int pTargetHeight, int pCorner, int pSourceWidth, int pSourceHeight, int pSourceX,
-			int pSourceY, int textureWidth, int textureHeight) {
-		blitNineSliced(graphics, pAtlasLocation, pTargetX, pTargetY, pTargetWidth, pTargetHeight, pCorner, pCorner,
-				pCorner, pCorner, pSourceWidth, pSourceHeight, pSourceX, pSourceY, textureWidth, textureHeight);
-	}
+	
+	public static Rect getWidgetBounds(UIElement widget, PrimaryLayer primaryLayer) {
+		int x = widget.getScreenX();
+		int y = widget.getScreenY();
+		// if (primaryLayer.getManager() instanceof CUIScreen) {
+		x += (ClientUtils.getMc().getWindow().getGuiScaledWidth() - primaryLayer.getWidth()) / 2;
+		y += (ClientUtils.getMc().getWindow().getGuiScaledHeight() - primaryLayer.getHeight()) / 2;
 
-	public static void blitNineSliced(GuiGraphics graphics, ResourceLocation pAtlasLocation, int pTargetX, int pTargetY,
-			int pTargetWidth, int pTargetHeight, int pCornerWidth, int pCornerHeight, int pEdgeWidth, int pEdgeHeight,
-			int pSourceWidth, int pSourceHeight, int pSourceX, int pSourceY, int textureWidth, int textureHeight) {
-		pCornerWidth = Math.min(pCornerWidth, pTargetWidth / 2);
-		pEdgeWidth = Math.min(pEdgeWidth, pTargetWidth / 2);
-		pCornerHeight = Math.min(pCornerHeight, pTargetHeight / 2);
-		pEdgeHeight = Math.min(pEdgeHeight, pTargetHeight / 2);
-		if (pTargetWidth == pSourceWidth && pTargetHeight == pSourceHeight) {
-			graphics.blit(pAtlasLocation, pTargetX, pTargetY, pSourceX, pSourceY, pTargetWidth, pTargetHeight,
-					textureWidth, textureHeight);
-		} else if (pTargetHeight == pSourceHeight) {
-			graphics.blit(pAtlasLocation, pTargetX, pTargetY, pSourceX, pSourceY, pCornerWidth, pTargetHeight,
-					textureWidth, textureHeight);
-			graphics.blitRepeating(pAtlasLocation, pTargetX + pCornerWidth, pTargetY,
-					pTargetWidth - pEdgeWidth - pCornerWidth, pTargetHeight, pSourceX + pCornerWidth, pSourceY,
-					pSourceWidth - pEdgeWidth - pCornerWidth, pSourceHeight, textureWidth, textureHeight);
-			graphics.blit(pAtlasLocation, pTargetX + pTargetWidth - pEdgeWidth, pTargetY,
-					pSourceX + pSourceWidth - pEdgeWidth, pSourceY, pEdgeWidth, pTargetHeight, textureWidth,
-					textureHeight);
-		} else if (pTargetWidth == pSourceWidth) {
-			graphics.blit(pAtlasLocation, pTargetX, pTargetY, pSourceX, pSourceY, pTargetWidth, pCornerHeight,
-					textureWidth, textureHeight);
-			graphics.blitRepeating(pAtlasLocation, pTargetX, pTargetY + pCornerHeight, pTargetWidth,
-					pTargetHeight - pEdgeHeight - pCornerHeight, pSourceX, pSourceY + pCornerHeight, pSourceWidth,
-					pSourceHeight - pEdgeHeight - pCornerHeight, textureWidth, textureHeight);
-			graphics.blit(pAtlasLocation, pTargetX, pTargetY + pTargetHeight - pEdgeHeight, pSourceX,
-					pSourceY + pSourceHeight - pEdgeHeight, pTargetWidth, pEdgeHeight, textureWidth, textureHeight);
-		} else {
-			graphics.blit(pAtlasLocation, pTargetX, pTargetY, pSourceX, pSourceY, pCornerWidth, pCornerHeight,
-					textureWidth, textureHeight);
-			graphics.blitRepeating(pAtlasLocation, pTargetX + pCornerWidth, pTargetY,
-					pTargetWidth - pEdgeWidth - pCornerWidth, pCornerHeight, pSourceX + pCornerWidth, pSourceY,
-					pSourceWidth - pEdgeWidth - pCornerWidth, pCornerHeight, textureWidth, textureHeight);
-			graphics.blit(pAtlasLocation, pTargetX + pTargetWidth - pEdgeWidth, pTargetY,
-					pSourceX + pSourceWidth - pEdgeWidth, pSourceY, pEdgeWidth, pCornerHeight, textureWidth,
-					textureHeight);
-			graphics.blit(pAtlasLocation, pTargetX, pTargetY + pTargetHeight - pEdgeHeight, pSourceX,
-					pSourceY + pSourceHeight - pEdgeHeight, pCornerWidth, pEdgeHeight, textureWidth, textureHeight);
-			graphics.blitRepeating(pAtlasLocation, pTargetX + pCornerWidth, pTargetY + pTargetHeight - pEdgeHeight,
-					pTargetWidth - pEdgeWidth - pCornerWidth, pEdgeHeight, pSourceX + pCornerWidth,
-					pSourceY + pSourceHeight - pEdgeHeight, pSourceWidth - pEdgeWidth - pCornerWidth, pEdgeHeight,
-					textureWidth, textureHeight);
-			graphics.blit(pAtlasLocation, pTargetX + pTargetWidth - pEdgeWidth, pTargetY + pTargetHeight - pEdgeHeight,
-					pSourceX + pSourceWidth - pEdgeWidth, pSourceY + pSourceHeight - pEdgeHeight, pEdgeWidth,
-					pEdgeHeight, textureWidth, textureHeight);
-			graphics.blitRepeating(pAtlasLocation, pTargetX, pTargetY + pCornerHeight, pCornerWidth,
-					pTargetHeight - pEdgeHeight - pCornerHeight, pSourceX, pSourceY + pCornerHeight, pCornerWidth,
-					pSourceHeight - pEdgeHeight - pCornerHeight, textureWidth, textureHeight);
-			graphics.blitRepeating(pAtlasLocation, pTargetX + pCornerWidth, pTargetY + pCornerHeight,
-					pTargetWidth - pEdgeWidth - pCornerWidth, pTargetHeight - pEdgeHeight - pCornerHeight,
-					pSourceX + pCornerWidth, pSourceY + pCornerHeight, pSourceWidth - pEdgeWidth - pCornerWidth,
-					pSourceHeight - pEdgeHeight - pCornerHeight, textureWidth, textureHeight);
-			graphics.blitRepeating(pAtlasLocation, pTargetX + pTargetWidth - pEdgeWidth, pTargetY + pCornerHeight,
-					pCornerWidth, pTargetHeight - pEdgeHeight - pCornerHeight, pSourceX + pSourceWidth - pEdgeWidth,
-					pSourceY + pCornerHeight, pEdgeWidth, pSourceHeight - pEdgeHeight - pCornerHeight, textureWidth,
-					textureHeight);
+		var w1 = widget.getParent();
+		while (w1.getParent() != null) {
+			if (w1 instanceof UILayer l) {
+				if (l.isSmoothScrollEnabled()) {
+					x += (int) l.getDisplayOffsetX();
+					y += (int) l.getDisplayOffsetY();
+				} else {
+					x += l.getOffsetX();
+					y += l.getOffsetY();
+				}
+			}
+			w1 = w1.getParent();
 		}
-	}
 
-	public static void drawBox(GuiGraphics graphics, int x, int y, int w, int h, int color, boolean inner) {
-		int x2 = x + w;
-		int y2 = y + h;
-		if (inner) {
-			graphics.fill(x, y, x2, y + 1, color); // top
-			graphics.fill(x, y2 - 1, x2, y2, color); // bottom
-			graphics.fill(x, y, x + 1, y2, color); // left
-			graphics.fill(x2 - 1, y, x2, y2, color); // right
-		} else {
-			graphics.fill(x - 1, y - 1, x2 + 1, y, color); // top
-			graphics.fill(x - 1, y2, x2 + 1, y2 + 1, color); // bottom
-			graphics.fill(x - 1, y, x, y2, color); // left
-			graphics.fill(x2, y, x2 + 1, y2, color); // right
-		}
-	}
-
-	public static void drawBox(GuiGraphics graphics, Rect box, int color, boolean inner) {
-		drawBox(graphics, box.getX(), box.getY(), box.getW(), box.getH(), color, inner);
+		return new Rect(x, y, widget.getWidth(), widget.getHeight());
 	}
 
 	public static boolean isElementActuallyVisible(UIElement element) {

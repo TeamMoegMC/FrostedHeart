@@ -23,6 +23,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
+import com.teammoeg.chorda.client.TesselateHelper;
+import com.teammoeg.chorda.client.TesselateHelper.ShapeTesslator;
+import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.category.CategoryHelper;
 import com.teammoeg.chorda.client.ui.AtlasUV;
@@ -527,33 +530,35 @@ public class FrostedHud {
         int lastStart = 0;
         int lastLevel = 0;
         int i = -1;
-        for (ForecastFrame fr : toRender) {
-            i++;
-            if (fr != null) {
-                if (lastLevel != fr.toState) {
-                    if (lastStart != i) {
-                        if (lastLevel != 0) {
-                            int end = windowX + i * segmentLength / 2 - 2;
-                            int clr = clrs.get(lastLevel);
-                            int clr2 = clrs.get((int) fr.toState);
-                            if (clr2 == 0) {
-                                clr2 = Colors.setAlpha(clr, 0);
-                            }
-                            CGuiHelper.fillGradient(stack.pose(),end, 1, end + 6, 15, clr, clr2);
-                            int start = windowX + lastStart * segmentLength / 2 + 4;
-                            if (lastStart == 0)
-                                start -= 3;
-                            stack.fill( start, 1, end, 15, clr);
-                        } else if (lastLevel == 0) {
-                            int end = windowX + i * segmentLength / 2 - 2;
-                            int clr = clrs.get((int) fr.toState);
-                            CGuiHelper.fillGradient(stack.pose(),end, 1, end + 6, 15, Colors.setAlpha(clr, 0), clr);
-                        }
-                    }
-                    lastStart = i;
-                    lastLevel = fr.toState;
-                }
-            }
+        try(ShapeTesslator shape=TesselateHelper.getShapeTesslator()){
+	        for (ForecastFrame fr : toRender) {
+	            i++;
+	            if (fr != null) {
+	                if (lastLevel != fr.toState) {
+	                    if (lastStart != i) {
+	                        if (lastLevel != 0) {
+	                            int end = windowX + i * segmentLength / 2 - 2;
+	                            int clr = clrs.get(lastLevel);
+	                            int clr2 = clrs.get((int) fr.toState);
+	                            if (clr2 == 0) {
+	                                clr2 = Colors.setAlpha(clr, 0);
+	                            }
+	                            shape.fillGradient(stack.pose().last().pose(),end, 1, end + 6, 15, clr, clr2);
+	                            int start = windowX + lastStart * segmentLength / 2 + 4;
+	                            if (lastStart == 0)
+	                                start -= 3;
+	                            stack.fill( start, 1, end, 15, clr);
+	                        } else if (lastLevel == 0) {
+	                            int end = windowX + i * segmentLength / 2 - 2;
+	                            int clr = clrs.get((int) fr.toState);
+	                            shape.fillGradient(stack.pose().last().pose(),end, 1, end + 6, 15, Colors.setAlpha(clr, 0), clr);
+	                        }
+	                    }
+	                    lastStart = i;
+	                    lastLevel = fr.toState;
+	                }
+	            }
+	        }
         }
         if (lastLevel != 0 && lastStart * segmentLength / 2 < 253) {
         	stack.fill(windowX + lastStart * segmentLength / 2 + 4, 1, windowX + 257, 15,
@@ -1008,7 +1013,7 @@ public class FrostedHud {
 
         stack.pose().pushPose();
         stack.pose().translate(0, 0, 1200);
-
+       
         // 复制颜色
         int x = (int) (mc.mouseHandler.isMouseGrabbed() ? mc.getWindow().getWidth() *0.5F : mc.mouseHandler.xpos());
         int y = (int) (mc.mouseHandler.isMouseGrabbed() ? mc.getWindow().getHeight()*0.5F : mc.mouseHandler.ypos());
@@ -1054,7 +1059,6 @@ public class FrostedHud {
 
         lines.add(Component.literal("Archive Path: ").append(CategoryHelper.translatePath(ArchiveCategory.currentPath)));
         lines.add(Component.literal("Current Screen: " + (screen == null ? "Null" : screen.getClass().getSimpleName())));
-
         // 原版UI
         if (screen != null && CInputHelper.isKeyPressed(GLFW.GLFW_KEY_RIGHT_ALT)) {
             for (GuiEventListener a : screen.children()) {
