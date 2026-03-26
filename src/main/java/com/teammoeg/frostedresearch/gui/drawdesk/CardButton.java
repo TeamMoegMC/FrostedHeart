@@ -21,6 +21,7 @@ package com.teammoeg.frostedresearch.gui.drawdesk;
 
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.RenderingHint;
+import com.teammoeg.chorda.client.TesselateHelper.TextureTesselator;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.widgets.Button;
@@ -42,18 +43,20 @@ public class CardButton extends Button {
 
 	@Override
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
+		
+	}
+	public void collectRenderInfo(TextureTesselator tex,GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		Card c = game.get(card);
 		if (c.isShow()) {
 			if (game.isTouchable(card)) {
-				DrawDeskIcons.getIcon(c.getCt(), c.getCard(), true).draw(matrixStack, x, y, 16, 16);
+				DrawDeskIcons.getIcon(c.getCt(), c.getCard(), true).tesselate(tex,matrixStack, x, y, 16, 16);
 				if (super.isMouseOver() || (game.getLastSelect() != null && game.getLastSelect().equals(card)))
-					DrawDeskIcons.SELECTED.draw(matrixStack, x, y, 16, 16);
+					DrawDeskIcons.SELECTED.tesselate(tex,matrixStack, x, y, 16, 16);
 			} else {
-				DrawDeskIcons.getIcon(c.getCt(), c.getCard(), false).draw(matrixStack, x, y, 16, 16);
+				DrawDeskIcons.getIcon(c.getCt(), c.getCard(), false).tesselate(tex,matrixStack, x, y, 16, 16);
 			}
 		}
 	}
-
 	@Override
 	public Cursor getCursor() {
 		if (game.isTouchable(card))

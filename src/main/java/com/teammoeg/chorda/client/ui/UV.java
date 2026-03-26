@@ -22,9 +22,11 @@ package com.teammoeg.chorda.client.ui;
 import java.util.Objects;
 
 import org.joml.AxisAngle4f;
+import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.chorda.client.TesselateHelper.TextureTesselator;
 import com.teammoeg.chorda.math.Point;
 import com.teammoeg.chorda.math.Rect;
 
@@ -367,6 +369,212 @@ public class UV extends Rect {
     //blit with atlas and add point
     public void blitAtlas(GuiGraphics s,ResourceLocation texture, int targetX, int targetY, Point loc, int gridX, int gridY) {
         blitAtlas(s,texture, targetX + loc.getX(), targetY + loc.getY(), gridX, gridY);
+    }
+    
+    
+    
+	/**
+	 * 围绕指定中心点旋转绘制纹理。通过矩阵变换实现旋转效果。
+	 * <p>
+	 * Draws the texture rotated around the specified center point. Uses matrix transformation for rotation.
+	 *
+	 * @param graphics 图形上下文 / Graphics context
+	 * @param texture 纹理资源位置 / Texture resource location
+	 * @param targetX 目标X坐标 / Target X coordinate
+	 * @param targetY 目标Y坐标 / Target Y coordinate
+	 * @param centerX 旋转中心X偏移 / Rotation center X offset
+	 * @param centerY 旋转中心Y偏移 / Rotation center Y offset
+	 * @param degrees 旋转角度（度） / Rotation angle in degrees
+	 */
+	public void tesselateRotated(TextureTesselator texture,GuiGraphics graphics, int targetX, int targetY,int centerX,int centerY,float degrees) {
+		Matrix4f pos=new Matrix4f(graphics.pose().last().pose());
+		pos.translate(targetX + centerX, targetY + centerY, 0);//move to gauge center
+		pos.rotate(new Quaternionf(new AxisAngle4f((float)(degrees/180*Math.PI),0f,0f,1f)));//rotate around Z
+		texture.blit(pos,-centerX,-centerY, w, h, x, y, w, h, textureW, textureH);//draw with center offset
+
+	}
+    /**
+     * 围绕指定中心点旋转绘制纹理，带点偏移。
+     * <p>
+     * Draws the texture rotated around the specified center point with point offset.
+     *
+     * @param matrixStack 图形上下文 / Graphics context
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param targetX 目标X坐标 / Target X coordinate
+     * @param targetY 目标Y坐标 / Target Y coordinate
+     * @param loc 位置偏移 / Position offset
+     * @param centerX 旋转中心X偏移 / Rotation center X offset
+     * @param centerY 旋转中心Y偏移 / Rotation center Y offset
+     * @param degrees 旋转角度（度） / Rotation angle in degrees
+     */
+    public void tesselateRotated(TextureTesselator texture,GuiGraphics graphics, int targetX, int targetY,Point loc,int centerX,int centerY,float degrees) {
+    	tesselateRotated(texture,graphics, targetX + loc.getX(), targetY + loc.getY(), centerX, centerY, degrees);
+    }
+    /**
+     * 使用自定义源宽高绘制纹理。
+     * <p>
+     * Draws the texture with custom source width and height.
+     *
+     * @param s 图形上下文 / Graphics context
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param targetX 目标X坐标 / Target X coordinate
+     * @param targetY 目标Y坐标 / Target Y coordinate
+     * @param sourceWidth 源宽度 / Source width
+     * @param sourceHeight 源高度 / Source height
+     */
+    public void tesselate(TextureTesselator texture,GuiGraphics graphics,  int targetX, int targetY, int sourceWidth, int sourceHeight) {
+        texture.blit(graphics.pose().last().pose(), targetX, targetY, x, y, sourceWidth, sourceHeight, textureW, textureH);
+    }
+    
+    /**
+     * 使用自定义源宽度绘制纹理（高度使用默认值）。
+     * <p>
+     * Draws the texture with custom source width (height uses default).
+     *
+     * @param s 图形上下文 / Graphics context
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param targetX 目标X坐标 / Target X coordinate
+     * @param targetY 目标Y坐标 / Target Y coordinate
+     * @param sourceWidth 源宽度 / Source width
+     */
+    public void tesselate(TextureTesselator texture,GuiGraphics graphics, int targetX, int targetY, int sourceWidth) {
+        texture.blit(graphics.pose().last().pose(), targetX, targetY, x, y, sourceWidth, h, textureW, textureH);
+    }
+
+    /**
+     * 在目标位置绘制完整纹理。
+     * <p>
+     * Draws the full texture at the target position.
+     *
+     * @param s 图形上下文 / Graphics context
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param targetX 目标X坐标 / Target X coordinate
+     * @param targetY 目标Y坐标 / Target Y coordinate
+     */
+    public void tesselate(TextureTesselator texture,GuiGraphics graphics, int targetX, int targetY) {
+    	texture.blit(graphics.pose().last().pose(), targetX, targetY, x, y, w, h, textureW, textureH);
+    }
+    
+    /**
+     * 以中心点为基准绘制纹理。
+     * <p>
+     * Draws the texture centered at the specified point.
+     *
+     * @param s 图形上下文 / Graphics context
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param centerX 中心X坐标 / Center X coordinate
+     * @param centerY 中心Y坐标 / Center Y coordinate
+     */
+    public void tesselateCenter(TextureTesselator texture,GuiGraphics graphics, int centerX, int centerY) {
+    	texture.blit(graphics.pose().last().pose(), centerX - w / 2, centerY - h / 2, x, y, w, h, textureW, textureH);
+    }
+    /**
+     * 以中心点为基准绘制纹理，带点偏移。
+     * <p>
+     * Draws the texture centered at the specified point with point offset.
+     *
+     * @param s 图形上下文 / Graphics context
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param centerX 中心X坐标 / Center X coordinate
+     * @param centerY 中心Y坐标 / Center Y coordinate
+     * @param loc 位置偏移 / Position offset
+     */
+    public void tesselateCenter(TextureTesselator texture,GuiGraphics graphics, int centerX, int centerY, Point loc) {
+    	tesselateCenter(texture, graphics, centerX + loc.getX(), centerY + loc.getY());
+    }
+    /**
+     * 使用图集网格坐标绘制纹理。根据网格索引偏移源坐标。
+     * <p>
+     * Draws the texture using atlas grid coordinates. Offsets the source coordinates based on grid indices.
+     *
+     * @param s 图形上下文 / Graphics context
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param targetX 目标X坐标 / Target X coordinate
+     * @param targetY 目标Y坐标 / Target Y coordinate
+     * @param gridX 网格X索引 / Grid X index
+     * @param gridY 网格Y索引 / Grid Y index
+     */
+    public void tesselateAtlas(TextureTesselator texture,GuiGraphics graphics, int targetX, int targetY, int gridX, int gridY) {
+    	texture.blit(graphics.pose().last().pose(), targetX, targetY, x + gridX * w, y + gridY * h, w, h, textureW, textureH);
+    }
+    /**
+     * 在带有点偏移的位置绘制纹理。
+     * <p>
+     * Draws the texture at a position with point offset.
+     *
+     * @param s 图形上下文 / Graphics context
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param targetX 目标X坐标 / Target X coordinate
+     * @param targetY 目标Y坐标 / Target Y coordinate
+     * @param loc 位置偏移 / Position offset
+     */
+    public void tesselate(TextureTesselator texture,GuiGraphics graphics, int targetX, int targetY, Point loc) {
+        tesselate(texture, graphics, targetX + loc.getX(), targetY + loc.getY());
+    }
+    /**
+     * 在带有点偏移的位置使用自定义宽度绘制纹理。
+     * <p>
+     * Draws the texture with custom width at a position with point offset.
+     *
+     * @param s 图形上下文 / Graphics context
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param targetX 目标X坐标 / Target X coordinate
+     * @param targetY 目标Y坐标 / Target Y coordinate
+     * @param loc 位置偏移 / Position offset
+     * @param sourceWidth 源宽度 / Source width
+     */
+    public void tesselate(TextureTesselator texture,GuiGraphics graphics, int targetX, int targetY, Point loc, int sourceWidth) {
+        tesselate(texture, graphics, targetX + loc.getX(), targetY + loc.getY(), sourceWidth);
+    }
+
+    /**
+     * 使用过渡动画和点偏移绘制纹理。
+     * <p>
+     * Draws the texture with transition animation and point offset.
+     *
+     * @param s 图形上下文 / Graphics context
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param targetX 目标X坐标 / Target X coordinate
+     * @param targetY 目标Y坐标 / Target Y coordinate
+     * @param loc 位置偏移 / Position offset
+     * @param direction 过渡方向 / Transition direction
+     * @param progress 过渡进度（0.0-1.0） / Transition progress (0.0-1.0)
+     */
+    public void tesselate(TextureTesselator texture,GuiGraphics graphics, int targetX, int targetY, Point loc, Transition direction,double progress) {
+    	tesselate(texture, graphics, targetX + loc.getX(), targetY + loc.getY(), direction, progress);
+    }
+    /**
+     * 使用过渡动画绘制纹理。根据方向和进度裁剪显示区域。
+     * <p>
+     * Draws the texture with transition animation. Clips the display area based on direction and progress.
+     *
+     * @param s 图形上下文 / Graphics context
+     * @param texture 纹理资源位置 / Texture resource location
+     * @param targetX 目标X坐标 / Target X coordinate
+     * @param targetY 目标Y坐标 / Target Y coordinate
+     * @param direction 过渡方向 / Transition direction
+     * @param progress 过渡进度（0.0-1.0） / Transition progress (0.0-1.0)
+     */
+    public void tesselate(TextureTesselator texture,GuiGraphics graphics, int targetX, int targetY, Transition direction,double progress) {
+    	if(progress<0)
+    		return;
+    	if(progress>1)
+    		progress=1;
+    	switch(direction) {
+    	case UP   :tesselate(texture, graphics, targetX, targetY +(int)(h*(1-progress)), w, (int)(h*progress));return;
+    	case LEFT :tesselate(texture, graphics, targetX +(int)(w*(1-progress)), targetY, (int)(w*progress), h);return;
+    	case DOWN :tesselate(texture, graphics, targetX, targetY, w, (int)(h*progress));return;
+    	case RIGHT:tesselate(texture, graphics, targetX, targetY, (int)(w*progress), h);return;
+    	}
+    }
+    //normal tesselate add point with custom texture size
+    public void tesselateAt(TextureTesselator texture,GuiGraphics graphics, int targetX, int targetY, Point loc) {
+        tesselate(texture, graphics, targetX + loc.getX(), targetY + loc.getY());
+    }
+
+    //tesselate with atlas and add point
+    public void tesselateAtlas(TextureTesselator texture,GuiGraphics graphics, int targetX, int targetY, Point loc, int gridX, int gridY) {
+        tesselateAtlas(texture, graphics, targetX + loc.getX(), targetY + loc.getY(), gridX, gridY);
     }
 	@Override
 	public int hashCode() {

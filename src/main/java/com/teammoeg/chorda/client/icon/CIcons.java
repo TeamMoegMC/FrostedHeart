@@ -33,6 +33,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.TesselateHelper;
+import com.teammoeg.chorda.client.TesselateHelper.TextureTesselator;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.codec.AlternativeCodecBuilder;
@@ -427,7 +428,9 @@ public class CIcons {
 		public abstract CTextureIcon toNineSlice(int c);
 
 		public abstract CTextureIcon asPart(int x, int y, int w, int h);
-
+		
+		public abstract void tesselate(TextureTesselator tex, GuiGraphics ms, int x,int y,int w,int h);
+		public abstract ResourceLocation getTexture();
 		@Override
 		public boolean isEmpty() {
 			return false;
@@ -585,7 +588,7 @@ public class CIcons {
 	static class TextureIcon extends CTextureIcon {
 		private static final MapCodec<TextureIcon> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
 			ResourceLocation.CODEC.fieldOf("location").forGetter(o -> o.rl)).apply(t, TextureIcon::new));
-		ResourceLocation rl;
+		protected ResourceLocation rl;
 
 		public TextureIcon(ResourceLocation rl) {
 			this.rl = rl;
@@ -611,6 +614,17 @@ public class CIcons {
 			return new TextureUVIcon(rl, x, y, w, h, 256, 256);
 		}
 
+		@Override
+		public void tesselate(TextureTesselator tex, GuiGraphics ms, int x, int y, int w, int h) {
+			tex.blit(ms.pose().last().pose(), x, y, 0, 0, w, h, w, h,256,256);
+		}
+
+		@Override
+		public ResourceLocation getTexture() {
+			return rl;
+		}
+
+
 	}
 
 	/**
@@ -627,7 +641,6 @@ public class CIcons {
 			Codec.INT.fieldOf("h").forGetter(o -> o.h),
 			Codec.INT.fieldOf("tw").forGetter(o -> o.tw),
 			Codec.INT.fieldOf("th").forGetter(o -> o.th)).apply(t, TextureUVIcon::new));
-		ResourceLocation rl;
 		protected int x, y, w, h, tw = 256, th = 256;
 
 		public TextureUVIcon() {
@@ -657,6 +670,10 @@ public class CIcons {
 		}
 
 		@Override
+		public void tesselate(TextureTesselator tex, GuiGraphics ms, int x, int y, int w, int h) {
+			tex.blit(ms.pose().last().pose(), x, y, w, h,  this.x, this.y,this.w, this.h, this.tw, this.th);
+		}
+		@Override
 		public CTextureIcon asPart(int x, int y, int w, int h) {
 			return new TextureUVIcon(rl, this.x + x, this.y + y, Math.min(w, this.w - x), Math.min(h, this.h - y), tw, th);
 		}
@@ -677,7 +694,6 @@ public class CIcons {
 			Codec.INT.fieldOf("c").forGetter(o -> o.corner),
 			Codec.INT.fieldOf("tw").forGetter(o -> o.tw),
 			Codec.INT.fieldOf("th").forGetter(o -> o.th)).apply(t, NineSliceIcon::new));
-		ResourceLocation rl;
 		int corner;
 
 		public NineSliceIcon(ResourceLocation rl, int x, int y, int w, int h, int corner, int tw, int th) {
@@ -690,11 +706,14 @@ public class CIcons {
 		@Override
 		public void draw(GuiGraphics ms, int x, int y, int w, int h) {
 			CGuiHelper.resetGuiDrawing();
-			TesselateHelper.getTextureTesselator(rl)
-			.tesellateNineSliced(ms.pose().last().pose(), x, y, w, h, corner, this.w, this.h, this.x, this.y, this.tw, this.th)
-			.close();
+			try(TextureTesselator tex=TesselateHelper.getTextureTesselator(rl)){
+				tesselate(tex,ms,x,y,w,h);
+			}
 		}
-
+		@Override
+		public void tesselate(TextureTesselator tex, GuiGraphics ms, int x, int y, int w, int h) {
+			tex.tesselateNineSliced(ms.pose().last().pose(), x, y, w, h, corner, this.w, this.h, this.x, this.y, this.tw, this.th);
+		}
 		public CTextureIcon withUV(int x, int y, int w, int h, int tw, int th) {
 			return new NineSliceIcon(rl, x, y, w, h, corner, tw, th);
 		}

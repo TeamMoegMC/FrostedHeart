@@ -22,6 +22,7 @@ package com.teammoeg.chorda.client.ui;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.teammoeg.chorda.client.TesselateHelper.TextureTesselator;
 import com.teammoeg.chorda.math.Point;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -151,5 +152,72 @@ public class AtlasUV extends TexturedUV {
 	 */
 	public UV childAtlasVH(int gridIndex) {
 		return childAtlas(gridIndex / gridW, gridIndex % gridW);
+	}
+
+	/**
+	 * 按线性索引绘制图集中的单元格（水平优先排列）。
+	 * <p>
+	 * Draws an atlas cell by linear index (horizontal-first layout).
+	 *
+	 * @param s 图形上下文 / the graphics context
+	 * @param targetX 目标X坐标 / the target X coordinate
+	 * @param targetY 目标Y坐标 / the target Y coordinate
+	 * @param gridIndex 网格线性索引 / the grid linear index
+	 */
+	public void tesselateAtlas(TextureTesselator tex, GuiGraphics s, int targetX, int targetY, int gridIndex) {
+		if(gridIndex>=gridSize)
+			gridIndex=gridSize-1;
+		if(gridIndex<0)return;
+		super.tesselateAtlas(tex, s, targetX, targetY, gridIndex % gridW, gridIndex / gridW);
+	}
+	/**
+	 * 按线性索引绘制图集中的单元格，附加位置偏移（水平优先排列）。
+	 * <p>
+	 * Draws an atlas cell by linear index with position offset (horizontal-first layout).
+	 *
+	 * @param s 图形上下文 / the graphics context
+	 * @param targetX 目标X坐标 / the target X coordinate
+	 * @param targetY 目标Y坐标 / the target Y coordinate
+	 * @param loc 位置偏移点 / the position offset point
+	 * @param gridIndex 网格线性索引 / the grid linear index
+	 */
+	public void tesselateAtlas(TextureTesselator tex, GuiGraphics s, int targetX, int targetY, Point loc, int gridIndex) {
+		if(gridIndex>=gridSize)
+			gridIndex=gridSize-1;
+		if(gridIndex<0)return;
+		super.tesselateAtlas(tex, s, targetX, targetY, loc, gridIndex % gridW, gridIndex / gridW);
+	}
+	/**
+	 * 按线性索引绘制图集中的单元格（垂直优先排列）。
+	 * <p>
+	 * Draws an atlas cell by linear index (vertical-first layout).
+	 *
+	 * @param s 图形上下文 / the graphics context
+	 * @param targetX 目标X坐标 / the target X coordinate
+	 * @param targetY 目标Y坐标 / the target Y coordinate
+	 * @param gridIndex 网格线性索引 / the grid linear index
+	 */
+	public void tesselateAtlasVH(TextureTesselator tex, GuiGraphics s, int targetX, int targetY, int gridIndex) {
+		if(gridIndex>=gridSize)
+			gridIndex=gridSize-1;
+		if(gridIndex<0)return;
+		super.tesselateAtlas(tex, s, targetX, targetY, gridIndex / gridW, gridIndex % gridW);
+	}
+	/**
+	 * 按线性索引绘制图集中的单元格，附加位置偏移（垂直优先排列）。
+	 * <p>
+	 * Draws an atlas cell by linear index with position offset (vertical-first layout).
+	 *
+	 * @param s 图形上下文 / the graphics context
+	 * @param targetX 目标X坐标 / the target X coordinate
+	 * @param targetY 目标Y坐标 / the target Y coordinate
+	 * @param loc 位置偏移点 / the position offset point
+	 * @param gridIndex 网格线性索引 / the grid linear index
+	 */
+	public void tesselateAtlasVH(TextureTesselator tex, GuiGraphics s, int targetX, int targetY, Point loc, int gridIndex) {
+		if(gridIndex>=gridSize)
+			gridIndex=gridSize-1;
+		if(gridIndex<0)return;
+		super.tesselateAtlas(tex, s, targetX, targetY, loc, gridIndex / gridW, gridIndex % gridW);
 	}
 }

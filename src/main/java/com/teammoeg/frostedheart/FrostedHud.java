@@ -25,6 +25,7 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.TesselateHelper;
 import com.teammoeg.chorda.client.TesselateHelper.ShapeTesslator;
+import com.teammoeg.chorda.client.TesselateHelper.TextureTesselator;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.category.CategoryHelper;
@@ -355,21 +356,24 @@ public class FrostedHud {
 
     public static void renderAirBar(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_air");
-        RenderSystem.enableBlend();
+        
         int air = player.getAirSupply();
         int maxAir = 300;
         if (player.isEyeInFluid(FluidTags.WATER) || air < maxAir-2) {
-            
-            HUDElements.right_half_frame.blitAt(stack, x, y, BasePos.right_half_3);
-            if (air <= 30) {
-                HUDElements.icon_oxygen_abnormal_white.blitAt(stack, x, y, IconPos.right_half_3);
-            } else {
-                HUDElements.icon_oxygen_normal.blitAt(stack, x, y, IconPos.right_half_3);
-            }
+        	try(TextureTesselator tex=TesselateHelper.getTextureTesselator(FrostedHud.HUD_ELEMENTS)){
+	            HUDElements.right_half_frame.tesselateAt(tex, stack, x, y, BasePos.right_half_3);
+	            if (air <= 30) {
+	                HUDElements.icon_oxygen_abnormal_white.tesselateAt(tex, stack, x, y, IconPos.right_half_3);
+	            } else {
+	                HUDElements.icon_oxygen_normal.tesselateAt(tex, stack, x, y, IconPos.right_half_3);
+	            }
+        	}
+        	RenderSystem.enableBlend();
             int airState = Mth.ceil(air / (float) maxAir * 100) - 1;
             Atlases.oxygen_bar.blitAtlasVH(stack, x, y, BarPos.right_half_3, airState);
+
+            RenderSystem.disableBlend();
         }
-        RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
     public static void renderScenarioAct(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
@@ -423,12 +427,14 @@ public class FrostedHud {
 
     public static void renderArmor(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
         mc.getProfiler().push("frostedheart_armor");
-        RenderSystem.enableBlend();
-
-        HUDElements.left_half_frame.blitAt(stack, x, y, BasePos.left_half_1);
-        HUDElements.icon_defence_normal.blitAt(stack, x, y, IconPos.left_half_1);
+        
+        try(TextureTesselator tex=TesselateHelper.getTextureTesselator(FrostedHud.HUD_ELEMENTS)){
+	        HUDElements.left_half_frame.tesselateAt(tex, stack, x, y, BasePos.left_half_1);
+	        HUDElements.icon_defence_normal.tesselateAt(tex, stack, x, y, IconPos.left_half_1);
+        }
         int armorValue = player.getArmorValue();
         int armorValueState = Mth.ceil(armorValue / 20.0F * 100) - 1;
+        RenderSystem.enableBlend();
         Atlases.defence_bar.blitAtlasVH(stack, x, y, BarPos.left_half_1, armorValueState);
 
         RenderSystem.disableBlend();
@@ -438,14 +444,16 @@ public class FrostedHud {
     public static void renderExperience(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
         mc.getProfiler().push("frostedheart_experience");
 
-        RenderSystem.enableBlend();
-
-        HUDElements.exp_bar_frame.blitAt(stack, x, y, BasePos.exp_bar);
-        int i = mc.player.getXpNeededForNextLevel();
-        if (i > 0) {
-            HUDElements.exp_bar.blit(stack, x, y, BarPos.exp_bar, Transition.RIGHT, mc.player.experienceProgress);
+        
+        try(TextureTesselator tex=TesselateHelper.getTextureTesselator(FrostedHud.HUD_ELEMENTS)){
+	        HUDElements.exp_bar_frame.tesselateAt(tex, stack, x, y, BasePos.exp_bar);
+	        int i = mc.player.getXpNeededForNextLevel();
+	        if (i > 0) {
+	            HUDElements.exp_bar.tesselate(tex, stack, x, y, BarPos.exp_bar, Transition.RIGHT, mc.player.experienceProgress);
+	        }
         }
         if (mc.player.experienceLevel > 0) {
+        	RenderSystem.enableBlend();
             String s = "" + mc.player.experienceLevel;
             int i1 = (x * 2 - mc.font.width(s)) / 2;
             int j1 = y - 29;
@@ -455,25 +463,26 @@ public class FrostedHud {
             stack.drawString(mc.font, s, i1, j1 + 1, 0, false);
             stack.drawString(mc.font, s, i1, j1 - 1, 0, false);
             stack.drawString(mc.font, s, i1, j1, 8453920, false);
+
+            RenderSystem.disableBlend();
         }
 
-        RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
 
     public static void renderInsight(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
         mc.getProfiler().push("frostedheart_insight");
-
-        RenderSystem.enableBlend();
-
-        HUDElements.exp_bar_frame.blitAt(stack, x, y, BasePos.exp_bar);
         TeamResearchData data = ClientResearchDataAPI.getData().get();
         float progress = data.getInsightProgress();
         int level = data.getInsightLevel();
-        if (progress > 0) {
-            HUDElements.exp_bar.blit(stack, x, y, BarPos.exp_bar, Transition.RIGHT, progress);
+        try(TextureTesselator tex=TesselateHelper.getTextureTesselator(FrostedHud.HUD_ELEMENTS)){
+	        HUDElements.exp_bar_frame.tesselateAt(tex, stack, x, y, BasePos.exp_bar);
+	        if (progress > 0) {
+	            HUDElements.exp_bar.tesselate(tex, stack, x, y, BarPos.exp_bar, Transition.RIGHT, progress);
+	        }
         }
         if (level > 0) {
+        	RenderSystem.enableBlend();
             String s = "" + level;
             int i1 = (x * 2 - mc.font.width(s)) / 2;
             int j1 = y - 29;
@@ -483,24 +492,27 @@ public class FrostedHud {
             stack.drawString(mc.font, s, i1, j1 + 1, 0, false);
             stack.drawString(mc.font, s, i1, j1 - 1, 0, false);
             stack.drawString(mc.font, s, i1, j1, 8453920, false);
+            RenderSystem.disableBlend();
         }
 
-        RenderSystem.disableBlend();
+        
         mc.getProfiler().pop();
     }
 
     public static void renderFood(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_food");
-        RenderSystem.enableBlend();
-
-        HUDElements.right_half_frame.blitAt(stack, x, y, BasePos.right_half_1);
-        MobEffectInstance effectInstance = mc.player.getEffect(MobEffects.HUNGER);
-        boolean isHunger = effectInstance != null;
-        if (isHunger) {
-            HUDElements.icon_hunger_abnormal_green.blitAt(stack, x, y, IconPos.right_half_1);
-        } else {
-            HUDElements.icon_hunger_normal.blitAt(stack, x, y, IconPos.right_half_1);
+        
+        try(TextureTesselator tex=TesselateHelper.getTextureTesselator(FrostedHud.HUD_ELEMENTS)){
+	        HUDElements.right_half_frame.tesselateAt(tex, stack, x, y, BasePos.right_half_1);
+	        MobEffectInstance effectInstance = mc.player.getEffect(MobEffects.HUNGER);
+	        boolean isHunger = effectInstance != null;
+	        if (isHunger) {
+	            HUDElements.icon_hunger_abnormal_green.tesselateAt(tex, stack, x, y, IconPos.right_half_1);
+	        } else {
+	            HUDElements.icon_hunger_normal.tesselateAt(tex, stack, x, y, IconPos.right_half_1);
+	        }
         }
+        RenderSystem.enableBlend();
         FoodData stats = mc.player.getFoodData();
         int foodLevel = stats.getFoodLevel();
         if (foodLevel > 0) {
@@ -567,57 +579,62 @@ public class FrostedHud {
 	                    clrs.get(lastLevel));
 	        }
         }
-        RenderSystem.enableBlend();
-        // window
-        HUDElements.forecast_window.blitAt(stack, x, 0, BasePos.forecast_window);
-        // markers (moving across window by hour)
-        stack.blit(FrostedHud.FORECAST_ELEMENTS,windowX + 2, 0, firstDayU, markerV, firstDayW, markerH, 512, 256);
-
-        HUDElements.forecast_marker.blit(stack, x - markerMovingOffset + markerLength, 0, BasePos.forecast_frame);
-        HUDElements.forecast_marker.blit(stack, x - markerMovingOffset + markerLength * 2, 0, BasePos.forecast_frame);
-        HUDElements.forecast_marker.blit(stack, x - markerMovingOffset + markerLength * 3, 0, BasePos.forecast_frame);
-        HUDElements.forecast_marker.blit(stack, x - markerMovingOffset + markerLength * 4, 0, BasePos.forecast_frame);
-        HUDElements.forecast_marker.blit(stack, x - markerMovingOffset + markerLength * 5, 0, BasePos.forecast_frame, 257 - markerLength * 5 + markerMovingOffset + 2);
-
-
-        FrameType last = FrameType.NOP;
-        for (i = 0; i < toRender.length; i++) {
-            ForecastFrame fr = toRender[i];
-            if (fr == null) {
-                last = FrameType.NOP;
-                continue;
-            }
-            TexturedUV uv = null;
-            if (fr.type == FrameType.INCRESING)
-                uv = HUDElements.forecast_increase;
-            if (fr.type == FrameType.DECREASING)
-                uv = HUDElements.forecast_decrease;
-            if (fr.type == FrameType.SNOWING)
-                uv = HUDElements.forecast_snow;
-            if (fr.type == FrameType.STORMING)
-                uv = HUDElements.forecast_blizzard;
-            if (fr.type == FrameType.RETREATING)
-                uv = HUDElements.forecast_sun;
-            if ((last.isWeatherEvent() && !fr.type.isWeatherEvent()) || (toRender.length > i + 1 && toRender[i + 1] != null && toRender[i + 1].type.isWeatherEvent())) {
-                uv = null;
-            }
-            last = fr.type;
-            if (uv != null)
-                uv.blit(stack, windowX + i * segmentLength / 2 - (i == 0 ? 0 : 1), 3);
-        }
-        boolean f = FHConfig.CLIENT.useFahrenheit.get();
+        
         float temperature = 0;
-        float tlvl = PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getEnvTemp).orElse(0F);
-        tlvl = Math.max(-273, tlvl);
-        TexturedUV unit;
-        if (f) {
-            temperature = (tlvl * 9 / 5 + 32);
-            unit = HUDElements.forecast_fehrenheit;
-        } else {
-            temperature = tlvl;
-            unit = HUDElements.forecast_celsius;
+        // window
+        try(TextureTesselator tex=TesselateHelper.getTextureTesselator(FrostedHud.FORECAST_ELEMENTS)){
+	        HUDElements.forecast_window.tesselateAt(tex, stack, x, 0, BasePos.forecast_window);
+	        // markers (moving across window by hour)
+	        tex.blit(stack.pose().last().pose(),windowX + 2, 0, firstDayU, markerV, firstDayW, markerH, 512, 256);
+	
+	        HUDElements.forecast_marker.tesselate(tex, stack, x - markerMovingOffset + markerLength, 0, BasePos.forecast_frame);
+	        HUDElements.forecast_marker.tesselate(tex, stack, x - markerMovingOffset + markerLength * 2, 0, BasePos.forecast_frame);
+	        HUDElements.forecast_marker.tesselate(tex, stack, x - markerMovingOffset + markerLength * 3, 0, BasePos.forecast_frame);
+	        HUDElements.forecast_marker.tesselate(tex, stack, x - markerMovingOffset + markerLength * 4, 0, BasePos.forecast_frame);
+	        HUDElements.forecast_marker.tesselate(tex, stack, x - markerMovingOffset + markerLength * 5, 0, BasePos.forecast_frame, 257 - markerLength * 5 + markerMovingOffset + 2);
+	
+	
+	        FrameType last = FrameType.NOP;
+	        for (i = 0; i < toRender.length; i++) {
+	            ForecastFrame fr = toRender[i];
+	            if (fr == null) {
+	                last = FrameType.NOP;
+	                continue;
+	            }
+	            TexturedUV uv = null;
+	            if (fr.type == FrameType.INCRESING)
+	                uv = HUDElements.forecast_increase;
+	            if (fr.type == FrameType.DECREASING)
+	                uv = HUDElements.forecast_decrease;
+	            if (fr.type == FrameType.SNOWING)
+	                uv = HUDElements.forecast_snow;
+	            if (fr.type == FrameType.STORMING)
+	                uv = HUDElements.forecast_blizzard;
+	            if (fr.type == FrameType.RETREATING)
+	                uv = HUDElements.forecast_sun;
+	            if ((last.isWeatherEvent() && !fr.type.isWeatherEvent()) || (toRender.length > i + 1 && toRender[i + 1] != null && toRender[i + 1].type.isWeatherEvent())) {
+	                uv = null;
+	            }
+	            last = fr.type;
+	            if (uv != null)
+	                uv.tesselate(tex, stack, windowX + i * segmentLength / 2 - (i == 0 ? 0 : 1), 3);
+	        }
+	        boolean f = FHConfig.CLIENT.useFahrenheit.get();
+	        
+	        float tlvl = PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getEnvTemp).orElse(0F);
+	        tlvl = Math.max(-273, tlvl);
+	        TexturedUV unit;
+	        if (f) {
+	            temperature = (tlvl * 9 / 5 + 32);
+	            unit = HUDElements.forecast_fehrenheit;
+	        } else {
+	            temperature = tlvl;
+	            unit = HUDElements.forecast_celsius;
+	        }
+	        unit.tesselate(tex, stack, x, 0, BasePos.forecast_unit);
         }
-        unit.blit(stack, x, 0, BasePos.forecast_unit);
+        
+        RenderSystem.enableBlend();
         // day render
         BasePos.forecast_date.drawText(stack,"" + date,x,0,0xe6e6f2);
 
@@ -664,10 +681,6 @@ public class FrostedHud {
     }
     public static void renderHealth(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_health");
-        RenderSystem.enableBlend();
-
-        HUDElements.left_threequarters_frame.blitAt(stack, x, y, BasePos.left_threequarters);
-
         float health = player.getHealth();
         // ModifiableAttributeInstance attrMaxHealth =
         // player.getAttribute(Attributes.MAX_HEALTH);
@@ -678,45 +691,55 @@ public class FrostedHud {
             healthMax = 20;
         float absorb = player.getAbsorptionAmount(); // let's say max is 20
 
-        TexturedUV heart;
-        if (mc.level.getLevelData().isHardcore()) {
-            if (player.hasEffect(MobEffects.WITHER)) {
-                heart = HUDElements.icon_health_hardcore_abnormal_black;
-            } else if (player.hasEffect(MobEffects.POISON)) {
-                heart = HUDElements.icon_health_hardcore_abnormal_green;
-            } else if (player.hasEffect(FHMobEffects.HYPOTHERMIA.get())) {
-                heart = HUDElements.icon_health_hardcore_abnormal_cyan;
-            } else if (player.hasEffect(FHMobEffects.HYPERTHERMIA.get())) {
-                heart = HUDElements.icon_health_hardcore_abnormal_orange;
-            } else
-                heart = HUDElements.icon_health_hardcore_normal;
-        } else {
-            if (player.hasEffect(MobEffects.WITHER)) {
-                heart = HUDElements.icon_health_abnormal_black;
-            } else if (player.hasEffect(MobEffects.POISON)) {
-                heart = HUDElements.icon_health_abnormal_green;
-            } else if (player.hasEffect(FHMobEffects.HYPOTHERMIA.get())) {
-                heart = HUDElements.icon_health_abnormal_cyan;
-            } else if (player.hasEffect(FHMobEffects.HYPERTHERMIA.get())) {
-                heart = HUDElements.icon_health_abnormal_orange;
-            } else
-                heart = HUDElements.icon_health_normal;
-        }
-        heart.blitAt(stack, x, y, IconPos.left_threequarters);
+        try(TextureTesselator tex=TesselateHelper.getTextureTesselator(FrostedHud.HUD_ELEMENTS)){
 
+	        HUDElements.left_threequarters_frame.tesselateAt(tex, stack, x, y, BasePos.left_threequarters);
+	
+
+	        TexturedUV heart;
+	        if (mc.level.getLevelData().isHardcore()) {
+	            if (player.hasEffect(MobEffects.WITHER)) {
+	                heart = HUDElements.icon_health_hardcore_abnormal_black;
+	            } else if (player.hasEffect(MobEffects.POISON)) {
+	                heart = HUDElements.icon_health_hardcore_abnormal_green;
+	            } else if (player.hasEffect(FHMobEffects.HYPOTHERMIA.get())) {
+	                heart = HUDElements.icon_health_hardcore_abnormal_cyan;
+	            } else if (player.hasEffect(FHMobEffects.HYPERTHERMIA.get())) {
+	                heart = HUDElements.icon_health_hardcore_abnormal_orange;
+	            } else
+	                heart = HUDElements.icon_health_hardcore_normal;
+	        } else {
+	            if (player.hasEffect(MobEffects.WITHER)) {
+	                heart = HUDElements.icon_health_abnormal_black;
+	            } else if (player.hasEffect(MobEffects.POISON)) {
+	                heart = HUDElements.icon_health_abnormal_green;
+	            } else if (player.hasEffect(FHMobEffects.HYPOTHERMIA.get())) {
+	                heart = HUDElements.icon_health_abnormal_cyan;
+	            } else if (player.hasEffect(FHMobEffects.HYPERTHERMIA.get())) {
+	                heart = HUDElements.icon_health_abnormal_orange;
+	            } else
+	                heart = HUDElements.icon_health_normal;
+	        }
+	        heart.tesselateAt(tex, stack, x, y, IconPos.left_threequarters);
+	
+	       
+	       
+        }
         // range: [0, 99]
         int mhealthState = omax >= 20 ? 99 : Mth.ceil(omax / 20 * 100) - 1;
         int healthState = health <= 0 ? 0 : Mth.ceil(health / healthMax * 100) - 1;
         int absorbState = absorb <= 0 ? 0 : Mth.ceil(absorb / 20 * 100) - 1;
+        int ihealth = (int) Math.ceil(health);
+        RenderSystem.enableBlend();
         Atlases.maxhealth_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_inner, mhealthState);
         Atlases.health_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_inner, healthState);
         Atlases.absorption_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_outer, absorbState);
-        int ihealth = (int) Math.ceil(health);
+        
         stack.drawCenteredString(mc.font, String.valueOf(ihealth), x + BasePos.left_threequarters.getX() + HUDElements.left_threequarters_frame.getW() / 2,
         		y + BasePos.left_threequarters.getY() + HUDElements.left_threequarters_frame.getH() / 2, 0xFFFFFF);
-
-
         RenderSystem.disableBlend();
+
+        
         mc.getProfiler().pop();
     }
     public static void renderHeatVignette(GuiGraphics pGuiGraphics, int x, int y, Minecraft mc, Player player) {
@@ -738,21 +761,26 @@ public class FrostedHud {
     public static void renderHotbar(GuiGraphics stack, int x, int y, Minecraft mc, Player player,
                                     float partialTicks) {
         mc.getProfiler().push("frostedheart_hotbar");
-        RenderSystem.enableBlend();
-
-        HUDElements.hotbar_slot.blitAt(stack, x, y, BasePos.hotbar_1);
-        HUDElements.hotbar_slot.blitAt(stack, x, y, BasePos.hotbar_2);
-        HUDElements.hotbar_slot.blitAt(stack, x, y, BasePos.hotbar_3);
-        HUDElements.hotbar_slot.blitAt(stack, x, y, BasePos.hotbar_4);
-        HUDElements.hotbar_slot.blitAt(stack, x, y, BasePos.hotbar_5);
-        HUDElements.hotbar_slot.blitAt(stack, x, y, BasePos.hotbar_6);
-        HUDElements.hotbar_slot.blitAt(stack, x, y, BasePos.hotbar_7);
-        HUDElements.hotbar_slot.blitAt(stack, x, y, BasePos.hotbar_8);
-        HUDElements.hotbar_slot.blitAt(stack, x, y, BasePos.hotbar_9);
+        HumanoidArm offhandSide = player.getMainArm().getOpposite();
+        boolean isLeftOffHand = offhandSide == HumanoidArm.LEFT;
+        
+        try(TextureTesselator tex=TesselateHelper.getTextureTesselator(FrostedHud.HUD_ELEMENTS)){
+	        HUDElements.hotbar_slot.tesselateAt(tex,stack, x, y, BasePos.hotbar_1);
+	        HUDElements.hotbar_slot.tesselateAt(tex,stack, x, y, BasePos.hotbar_2);
+	        HUDElements.hotbar_slot.tesselateAt(tex,stack, x, y, BasePos.hotbar_3);
+	        HUDElements.hotbar_slot.tesselateAt(tex,stack, x, y, BasePos.hotbar_4);
+	        HUDElements.hotbar_slot.tesselateAt(tex,stack, x, y, BasePos.hotbar_5);
+	        HUDElements.hotbar_slot.tesselateAt(tex,stack, x, y, BasePos.hotbar_6);
+	        HUDElements.hotbar_slot.tesselateAt(tex,stack, x, y, BasePos.hotbar_7);
+	        HUDElements.hotbar_slot.tesselateAt(tex,stack, x, y, BasePos.hotbar_8);
+	        HUDElements.hotbar_slot.tesselateAt(tex,stack, x, y, BasePos.hotbar_9);
+	        HUDElements.selected.tesselateAt(tex,stack, x - 1 + player.getInventory().selected * 20, y - 1,
+	                BasePos.hotbar_1);
+	        HUDElements.off_hand_slot.tesselateAt(tex,stack, x, y, isLeftOffHand ?BasePos.off_hand_left : BasePos.off_hand_right);
+        }
 
         // Selection overlay
-        HUDElements.selected.blitAt(stack, x - 1 + player.getInventory().selected * 20, y - 1,
-                BasePos.hotbar_1);
+        
 
         /*if (player.getOffhandItem().isEmpty()) {
             HUDElements.off_hand_slot.blitAt(stack, x, y, BasePos.off_hand);
@@ -760,9 +788,8 @@ public class FrostedHud {
         	HUDElements.off_hand_slot.blitAt(stack, x, y, BasePos.off_hand);
             HUDElements.selected.blitAt(stack, x, y, BasePos.off_hand);
         }*/
-        HumanoidArm offhandSide = player.getMainArm().getOpposite();
-        boolean isLeftOffHand = offhandSide == HumanoidArm.LEFT;
-        HUDElements.off_hand_slot.blitAt(stack, x, y, isLeftOffHand ?BasePos.off_hand_left : BasePos.off_hand_right);
+       
+        
         ItemStack itemstack = player.getOffhandItem();
        
         //RenderSystem.enableRescaleNormal();
@@ -830,22 +857,23 @@ public class FrostedHud {
         HUDElements.exp_bar_frame.blitAt(stack, x, y, BasePos.exp_bar);
 //        double startTemp = -0.5, endTemp = -3.0;
 //        int k = (int) ((Math.abs(Math.max(TemperatureCore.getBodyTemperature(player), endTemp)) - Math.abs(startTemp)) / (Math.abs(endTemp) - Math.abs(startTemp)) * 181.0F);
-        if (temp < -0.5) {
-            double stage1length = calculateHypoBarLength(0.5, 1.0, temp);
-            double stage2length = calculateHypoBarLength(2.0, 3.0, temp);
-            if (stage1length > 0)
-                HUDElements.hypothermia_bar.blit(stack, x + 1, y, BarPos.exp_bar, Transition.RIGHT, stage1length);
-            if (stage2length > 0)
-                HUDElements.dangerthermia_bar.blit(stack, x + 1, y, BarPos.exp_bar, Transition.RIGHT, stage2length);
-        } else if (temp > 0.5) {
-            double stage1length = calculateHypoBarLength(0.5, 1.0, temp);
-            double stage2length = calculateHypoBarLength(2.0, 3.0, temp);
-            if (stage1length > 0)
-                HUDElements.hyperthermia_bar.blit(stack, x + 1, y, BarPos.exp_bar, Transition.RIGHT, stage1length);
-            if (stage2length > 0)
-                HUDElements.dangerthermia_bar.blit(stack, x + 1, y, BarPos.exp_bar, Transition.RIGHT, stage2length);
+        try(TextureTesselator tex=TesselateHelper.getTextureTesselator(FrostedHud.HUD_ELEMENTS)){
+	        if (temp < -0.5) {
+	            double stage1length = calculateHypoBarLength(0.5, 1.0, temp);
+	            double stage2length = calculateHypoBarLength(2.0, 3.0, temp);
+	            if (stage1length > 0)
+	                HUDElements.hypothermia_bar.tesselate(tex,stack, x + 1, y, BarPos.exp_bar, Transition.RIGHT, stage1length);
+	            if (stage2length > 0)
+	                HUDElements.dangerthermia_bar.tesselate(tex,stack, x + 1, y, BarPos.exp_bar, Transition.RIGHT, stage2length);
+	        } else if (temp > 0.5) {
+	            double stage1length = calculateHypoBarLength(0.5, 1.0, temp);
+	            double stage2length = calculateHypoBarLength(2.0, 3.0, temp);
+	            if (stage1length > 0)
+	                HUDElements.hyperthermia_bar.tesselate(tex,stack, x + 1, y, BarPos.exp_bar, Transition.RIGHT, stage1length);
+	            if (stage2length > 0)
+	                HUDElements.dangerthermia_bar.tesselate(tex,stack, x + 1, y, BarPos.exp_bar, Transition.RIGHT, stage2length);
+	        }
         }
-        RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
     public static void renderJumpbar(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
@@ -861,9 +889,10 @@ public class FrostedHud {
     }
     public static void renderMountHealth(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
         mc.getProfiler().push("frostedheart_mounthealth");
-        RenderSystem.enableBlend();
-        HUDElements.right_threequarters_frame.blitAt(stack, x, y, BasePos.right_threequarters);
-        HUDElements.icon_horse_normal.blitAt(stack, x, y, IconPos.right_threequarters);
+        try(TextureTesselator tex=TesselateHelper.getTextureTesselator(FrostedHud.HUD_ELEMENTS)){
+	        HUDElements.right_threequarters_frame.tesselateAt(tex, stack, x, y, BasePos.right_threequarters);
+	        HUDElements.icon_horse_normal.tesselateAt(tex, stack, x, y, IconPos.right_threequarters);
+        }
         Entity tmp = player.getVehicle();
         if (!(tmp instanceof LivingEntity))
             return;
@@ -871,8 +900,8 @@ public class FrostedHud {
         int health = (int) mount.getHealth();
         float healthMax = mount.getMaxHealth();
         int healthState = Mth.ceil(health / healthMax * 100) - 1;
-        Atlases.horse_health_bar.blitAtlasVH(stack, x, y, BarPos.right_threequarters_inner, healthState);
-
+        RenderSystem.enableBlend();
+        Atlases.horse_health_bar.blitAtlasVH( stack, x, y, BarPos.right_threequarters_inner, healthState);
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
@@ -910,7 +939,6 @@ public class FrostedHud {
                                    boolean celsius) {
     	TexturedUV unitUV = celsius ? HUDElements.hud_celsius : HUDElements.hud_farenhit;
     	TexturedUV signUV = temp >= 0 ? HUDElements.hud_positive : HUDElements.hud_negative;
- 
         double abs = Math.abs(temp);
         ResourceLocation orb;
         // draw orb
@@ -934,22 +962,24 @@ public class FrostedHud {
             orb=(hadean);
         }
         HUDElements.temperature_orb.blit(stack, orb, offsetX, offsetY);
+    	try(TextureTesselator tex=TesselateHelper.getTextureTesselator(FrostedHud.digits)){
 
-        // draw temperature
-        // sign and unit
-
-        //signUV.blit(stack, offsetX, offsetY, BasePos.sign);
-        //unitUV.blit(stack, offsetX, offsetY, BasePos.unit);
-
-        // digits
-        ArrayList<TexturedUV> uv4is = getIntegerDigitUVs((int) Math.round(abs));
-        int size=uv4is.size();
-        if(size < 3)
-        	uv4is.add(HUDElements.hud_decimal_digits[(int) (Math.round(abs*10)%10)]);
-        uv4is.add(signUV);
-        uv4is.add(unitUV);
-        BasePos.digits[size-1].drawUVs(uv4is, stack, offsetX, offsetY);
-        
+	
+	        // draw temperature
+	        // sign and unit
+	
+	        //signUV.blit(stack, offsetX, offsetY, BasePos.sign);
+	        //unitUV.blit(stack, offsetX, offsetY, BasePos.unit);
+	
+	        // digits
+	        ArrayList<TexturedUV> uv4is = getIntegerDigitUVs((int) Math.round(abs));
+	        int size=uv4is.size();
+	        if(size < 3)
+	        	uv4is.add(HUDElements.hud_decimal_digits[(int) (Math.round(abs*10)%10)]);
+	        uv4is.add(signUV);
+	        uv4is.add(unitUV);
+	        BasePos.digits[size-1].drawUVs(uv4is,tex, stack, offsetX, offsetY);
+    	}
         // mc.getTextureManager().bindTexture(HUD_ELEMENTS);
     }
 
@@ -975,23 +1005,24 @@ public class FrostedHud {
 
     public static void renderThirst(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_thirst");
-        RenderSystem.enableBlend();
+        try(TextureTesselator tex=TesselateHelper.getTextureTesselator(FrostedHud.HUD_ELEMENTS)){
 
-        MobEffectInstance effectInstance = mc.player.getEffect(FHMobEffects.THIRST.get());
-        boolean isThirsty = effectInstance != null;
-        HUDElements.right_half_frame.blitAt(stack, x, y, BasePos.right_half_2);
-        if (isThirsty) {
-            HUDElements.icon_thirst_abnormal_green.blitAt(stack, x, y, IconPos.right_half_2);
-        } else {
-            HUDElements.icon_thirst_normal.blitAt(stack, x, y, IconPos.right_half_2);
+	        MobEffectInstance effectInstance = mc.player.getEffect(FHMobEffects.THIRST.get());
+	        boolean isThirsty = effectInstance != null;
+	        HUDElements.right_half_frame.tesselateAt(tex, stack, x, y, BasePos.right_half_2);
+	        if (isThirsty) {
+	            HUDElements.icon_thirst_abnormal_green.tesselateAt(tex, stack, x, y, IconPos.right_half_2);
+	        } else {
+	            HUDElements.icon_thirst_normal.tesselateAt(tex, stack, x, y, IconPos.right_half_2);
+	        }
+	        
+
         }
         WaterLevelCapability.getCapability(player).ifPresent(data -> {
             int waterLevel = data.getWaterLevel();
             int waterLevelState = Mth.ceil(waterLevel / 20.0F * 100) - 1;
             Atlases.thirst_bar.blitAtlasVH(stack, x, y, BarPos.right_half_2, waterLevelState);
         });
-
-        RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
 

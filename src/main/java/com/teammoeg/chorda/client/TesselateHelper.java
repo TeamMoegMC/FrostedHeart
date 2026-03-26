@@ -189,24 +189,24 @@ public abstract class TesselateHelper implements AutoCloseable {
 		}
 
 		public TextureTesselator blit(Matrix4f matrixStack, int pX1, int pX2, int pY1, int pY2, int pBlitOffset, int pUWidth, int pVHeight, float pUOffset, float pVOffset, int pTextureWidth, int pTextureHeight) {
-			return tesellate(matrixStack, pX1, pX2, pY1, pY2, pBlitOffset, (pUOffset + 0.0F) / (float) pTextureWidth, (pUOffset + (float) pUWidth) / (float) pTextureWidth,
+			return tesselate(matrixStack, pX1, pX2, pY1, pY2, pBlitOffset, (pUOffset + 0.0F) / (float) pTextureWidth, (pUOffset + (float) pUWidth) / (float) pTextureWidth,
 				(pVOffset + 0.0F) / (float) pTextureHeight, (pVOffset + (float) pVHeight) / (float) pTextureHeight, 1);
 		}
 
-		public TextureTesselator tesellate(Matrix4f matrixStack, int x, int y, int width, int height, float uOffset, float vOffset,
+		public TextureTesselator tesselate(Matrix4f matrixStack, int x, int y, int width, int height, float uOffset, float vOffset,
 			int uWidth, int vHeight, int textureWidth, int textureHeight, float opacity) {
-			return tesellate(matrixStack, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth,
+			return tesselate(matrixStack, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth,
 				textureHeight, opacity);
 		}
 
-		public TextureTesselator tesellate(Matrix4f matrixStack, int x1, int x2, int y1, int y2, int blitOffset, int uWidth,
+		public TextureTesselator tesselate(Matrix4f matrixStack, int x1, int x2, int y1, int y2, int blitOffset, int uWidth,
 			int vHeight, float uOffset, float vOffset, int textureWidth, int textureHeight, float opacity) {
-			return tesellate(matrixStack, x1, x2, y1, y2, blitOffset, (uOffset + 0.0F) / textureWidth,
+			return tesselate(matrixStack, x1, x2, y1, y2, blitOffset, (uOffset + 0.0F) / textureWidth,
 				(uOffset + uWidth) / textureWidth, (vOffset + 0.0F) / textureHeight,
 				(vOffset + vHeight) / textureHeight, opacity);
 		}
 
-		public TextureTesselator tesellate(Matrix4f matrix, int x1, int x2, int y1, int y2, int blitOffset, float minU,
+		public TextureTesselator tesselate(Matrix4f matrix, int x1, int x2, int y1, int y2, int blitOffset, float minU,
 			float maxU, float minV, float maxV, float opacity) {
 			bufferbuilder.vertex(matrix, x1, y2, blitOffset).color(1, 1, 1, opacity).uv(minU, maxV).endVertex();
 			bufferbuilder.vertex(matrix, x2, y2, blitOffset).color(1, 1, 1, opacity).uv(maxU, maxV).endVertex();
@@ -217,35 +217,37 @@ public abstract class TesselateHelper implements AutoCloseable {
 
 		@Override
 		public void beginBuffer() {
+			RenderSystem.enableBlend();
+			RenderSystem.defaultBlendFunc();
 			RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
 			bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
 		}
 
-		public TextureTesselator tesellateColored(Matrix4f matrixStack, int x, int y, int width, int height, float uOffset,
+		public TextureTesselator tesselateColored(Matrix4f matrixStack, int x, int y, int width, int height, float uOffset,
 			float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight, int color) {
 
-			return tesellateColored(matrixStack, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth,
+			return tesselateColored(matrixStack, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth,
 				textureHeight, FastColor.ARGB32.red(color) / 255f, FastColor.ARGB32.green(color) / 255f,
 				FastColor.ARGB32.blue(color) / 255f, FastColor.ARGB32.alpha(color) / 255f);
 		}
 
-		public TextureTesselator tesellateColored(Matrix4f matrixStack, int x, int y, int width, int height, float uOffset,
+		public TextureTesselator tesselateColored(Matrix4f matrixStack, int x, int y, int width, int height, float uOffset,
 			float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight, int color, float opacity) {
 
-			return tesellateColored(matrixStack, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth,
+			return tesselateColored(matrixStack, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth,
 				textureHeight, FastColor.ARGB32.red(color) / 255f, FastColor.ARGB32.green(color) / 255f,
 				FastColor.ARGB32.blue(color) / 255f, opacity);
 		}
 
-		public TextureTesselator tesellateColored(Matrix4f matrixStack, int x1, int x2, int y1, int y2, int blitOffset,
+		public TextureTesselator tesselateColored(Matrix4f matrixStack, int x1, int x2, int y1, int y2, int blitOffset,
 			int uWidth, int vHeight, float uOffset, float vOffset, int textureWidth, int textureHeight, float r,
 			float g, float b, float opacity) {
-			return tesellateColored(matrixStack, x1, x2, y1, y2, blitOffset, (uOffset + 0.0F) / textureWidth,
+			return tesselateColored(matrixStack, x1, x2, y1, y2, blitOffset, (uOffset + 0.0F) / textureWidth,
 				(uOffset + uWidth) / textureWidth, (vOffset + 0.0F) / textureHeight,
 				(vOffset + vHeight) / textureHeight, r, g, b, opacity);
 		}
 
-		public TextureTesselator tesellateColored(Matrix4f matrix, int x1, int x2, int y1, int y2, int blitOffset, float minU,
+		public TextureTesselator tesselateColored(Matrix4f matrix, int x1, int x2, int y1, int y2, int blitOffset, float minU,
 			float maxU, float minV, float maxV, float r, float g, float b, float opacity) {
 			bufferbuilder.vertex(matrix, x1, y2, blitOffset).color(r, g, b, opacity).uv(minU, maxV).endVertex();
 			bufferbuilder.vertex(matrix, x2, y2, blitOffset).color(r, g, b, opacity).uv(maxU, maxV).endVertex();
@@ -254,10 +256,10 @@ public abstract class TesselateHelper implements AutoCloseable {
 			return this;
 		}
 
-		public TextureTesselator tesellateNineSliced(Matrix4f graphics, int pTargetX, int pTargetY,
+		public TextureTesselator tesselateNineSliced(Matrix4f graphics, int pTargetX, int pTargetY,
 			int pTargetWidth, int pTargetHeight, int pCorner, int pSourceWidth, int pSourceHeight, int pSourceX,
 			int pSourceY, int textureWidth, int textureHeight) {
-			return tesellateNineSliced(graphics, pTargetX, pTargetY, pTargetWidth, pTargetHeight, pCorner, pCorner,
+			return tesselateNineSliced(graphics, pTargetX, pTargetY, pTargetWidth, pTargetHeight, pCorner, pCorner,
 				pCorner, pCorner, pSourceWidth, pSourceHeight, pSourceX, pSourceY, textureWidth, textureHeight);
 		}
 
@@ -266,7 +268,7 @@ public abstract class TesselateHelper implements AutoCloseable {
 			return new Divisor(pTarget, i);
 		}
 
-		public TextureTesselator tesellateRepeating(Matrix4f graphics, int pX, int pY, int pWidth, int pHeight, int pUOffset, int pVOffset, int pSourceWidth, int pSourceHeight, int textureWidth, int textureHeight) {
+		public TextureTesselator tesselateRepeating(Matrix4f graphics, int pX, int pY, int pWidth, int pHeight, int pUOffset, int pVOffset, int pSourceWidth, int pSourceHeight, int textureWidth, int textureHeight) {
 			int i = pX;
 
 			int j;
@@ -285,7 +287,7 @@ public abstract class TesselateHelper implements AutoCloseable {
 			return this;
 		}
 
-		public TextureTesselator tesellateNineSliced(Matrix4f graphics, int pTargetX, int pTargetY,
+		public TextureTesselator tesselateNineSliced(Matrix4f graphics, int pTargetX, int pTargetY,
 			int pTargetWidth, int pTargetHeight, int pCornerWidth, int pCornerHeight, int pEdgeWidth, int pEdgeHeight,
 			int pSourceWidth, int pSourceHeight, int pSourceX, int pSourceY, int textureWidth, int textureHeight) {
 			pCornerWidth = Math.min(pCornerWidth, pTargetWidth / 2);
@@ -298,7 +300,7 @@ public abstract class TesselateHelper implements AutoCloseable {
 			} else if (pTargetHeight == pSourceHeight) {
 				blit(graphics, pTargetX, pTargetY, pSourceX, pSourceY, pCornerWidth, pTargetHeight,
 					textureWidth, textureHeight);
-				tesellateRepeating(graphics, pTargetX + pCornerWidth, pTargetY,
+				tesselateRepeating(graphics, pTargetX + pCornerWidth, pTargetY,
 					pTargetWidth - pEdgeWidth - pCornerWidth, pTargetHeight, pSourceX + pCornerWidth, pSourceY,
 					pSourceWidth - pEdgeWidth - pCornerWidth, pSourceHeight, textureWidth, textureHeight);
 				blit(graphics, pTargetX + pTargetWidth - pEdgeWidth, pTargetY,
@@ -307,7 +309,7 @@ public abstract class TesselateHelper implements AutoCloseable {
 			} else if (pTargetWidth == pSourceWidth) {
 				blit(graphics, pTargetX, pTargetY, pSourceX, pSourceY, pTargetWidth, pCornerHeight,
 					textureWidth, textureHeight);
-				tesellateRepeating(graphics, pTargetX, pTargetY + pCornerHeight, pTargetWidth,
+				tesselateRepeating(graphics, pTargetX, pTargetY + pCornerHeight, pTargetWidth,
 					pTargetHeight - pEdgeHeight - pCornerHeight, pSourceX, pSourceY + pCornerHeight, pSourceWidth,
 					pSourceHeight - pEdgeHeight - pCornerHeight, textureWidth, textureHeight);
 				blit(graphics, pTargetX, pTargetY + pTargetHeight - pEdgeHeight, pSourceX,
@@ -315,7 +317,7 @@ public abstract class TesselateHelper implements AutoCloseable {
 			} else {
 				blit(graphics, pTargetX, pTargetY, pSourceX, pSourceY, pCornerWidth, pCornerHeight,
 					textureWidth, textureHeight);
-				tesellateRepeating(graphics, pTargetX + pCornerWidth, pTargetY,
+				tesselateRepeating(graphics, pTargetX + pCornerWidth, pTargetY,
 					pTargetWidth - pEdgeWidth - pCornerWidth, pCornerHeight, pSourceX + pCornerWidth, pSourceY,
 					pSourceWidth - pEdgeWidth - pCornerWidth, pCornerHeight, textureWidth, textureHeight);
 				blit(graphics, pTargetX + pTargetWidth - pEdgeWidth, pTargetY,
@@ -323,21 +325,21 @@ public abstract class TesselateHelper implements AutoCloseable {
 					textureHeight);
 				blit(graphics, pTargetX, pTargetY + pTargetHeight - pEdgeHeight, pSourceX,
 					pSourceY + pSourceHeight - pEdgeHeight, pCornerWidth, pEdgeHeight, textureWidth, textureHeight);
-				tesellateRepeating(graphics, pTargetX + pCornerWidth, pTargetY + pTargetHeight - pEdgeHeight,
+				tesselateRepeating(graphics, pTargetX + pCornerWidth, pTargetY + pTargetHeight - pEdgeHeight,
 					pTargetWidth - pEdgeWidth - pCornerWidth, pEdgeHeight, pSourceX + pCornerWidth,
 					pSourceY + pSourceHeight - pEdgeHeight, pSourceWidth - pEdgeWidth - pCornerWidth, pEdgeHeight,
 					textureWidth, textureHeight);
 				blit(graphics, pTargetX + pTargetWidth - pEdgeWidth, pTargetY + pTargetHeight - pEdgeHeight,
 					pSourceX + pSourceWidth - pEdgeWidth, pSourceY + pSourceHeight - pEdgeHeight, pEdgeWidth,
 					pEdgeHeight, textureWidth, textureHeight);
-				tesellateRepeating(graphics, pTargetX, pTargetY + pCornerHeight, pCornerWidth,
+				tesselateRepeating(graphics, pTargetX, pTargetY + pCornerHeight, pCornerWidth,
 					pTargetHeight - pEdgeHeight - pCornerHeight, pSourceX, pSourceY + pCornerHeight, pCornerWidth,
 					pSourceHeight - pEdgeHeight - pCornerHeight, textureWidth, textureHeight);
-				tesellateRepeating(graphics, pTargetX + pCornerWidth, pTargetY + pCornerHeight,
+				tesselateRepeating(graphics, pTargetX + pCornerWidth, pTargetY + pCornerHeight,
 					pTargetWidth - pEdgeWidth - pCornerWidth, pTargetHeight - pEdgeHeight - pCornerHeight,
 					pSourceX + pCornerWidth, pSourceY + pCornerHeight, pSourceWidth - pEdgeWidth - pCornerWidth,
 					pSourceHeight - pEdgeHeight - pCornerHeight, textureWidth, textureHeight);
-				tesellateRepeating(graphics, pTargetX + pTargetWidth - pEdgeWidth, pTargetY + pCornerHeight,
+				tesselateRepeating(graphics, pTargetX + pTargetWidth - pEdgeWidth, pTargetY + pCornerHeight,
 					pCornerWidth, pTargetHeight - pEdgeHeight - pCornerHeight, pSourceX + pSourceWidth - pEdgeWidth,
 					pSourceY + pCornerHeight, pEdgeWidth, pSourceHeight - pEdgeHeight - pCornerHeight, textureWidth,
 					textureHeight);

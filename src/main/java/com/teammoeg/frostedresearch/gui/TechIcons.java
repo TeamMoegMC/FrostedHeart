@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedresearch.gui;
 
+import com.teammoeg.chorda.client.TesselateHelper;
+import com.teammoeg.chorda.client.TesselateHelper.TextureTesselator;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.CIcons.CTextureIcon;
@@ -28,8 +30,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
 public class TechIcons {
+	private static final ResourceLocation TEXTURE=new ResourceLocation(FRMain.MODID, "textures/gui/escritoire.png");
     public static final CTextureIcon ALL =  CIcons
-            .getIcon(new ResourceLocation(FRMain.MODID, "textures/gui/escritoire.png"));
+            .getIcon(TEXTURE);
     public static final CTextureIcon Question = ALL.withUV(303, 203, 16, 16, 512, 512);
     public static final CTextureIcon ADD = ALL.withUV(303, 220, 16, 16, 512, 512);
     public static final CTextureIcon DOTS = ALL.withUV(303, 237, 16, 16, 512, 512);
@@ -72,7 +75,7 @@ public class TechIcons {
 
     public TechIcons() {
     }
-    private static final CIcon[] BTN_VH=new CIcon[32];
+    private static final CTextureIcon[] BTN_VH=new CTextureIcon[32];
     static{
     	for(boolean on:IterateUtils.boolIterable) {
     		for(int i=0;i<4;i++) {
@@ -85,7 +88,7 @@ public class TechIcons {
     	}
     	
     }
-    private static CIcon getOf(int vwr,int vhr, boolean hl) {
+    private static CTextureIcon getOf(int vwr,int vhr, boolean hl) {
     	return BTN_VH[(hl?16:0)+(vwr-1)*4+(vhr-1)];
     }
     public static void drawTexturedRect(GuiGraphics matrixStack, int x, int y, int w, int h, boolean hl) {
@@ -93,34 +96,37 @@ public class TechIcons {
         int vwr = w % 4;
         int vh = h / 4;
         int vhr = h % 4;
-
+        TextureTesselator tex=TesselateHelper.getTextureTesselator(TEXTURE);
         CTextureIcon bg = hl ? BUTTON_BG_ON : BUTTON_BG;
         for (int i = 0; i < vw; i++) {
             for (int j = 0; j < vh; j++) {
-                bg.draw(matrixStack, x + i * 4, y + j * 4, 4, 4);
+                bg.tesselate(tex,matrixStack, x + i * 4, y + j * 4, 4, 4);
             }
         }
 
         if (vhr > 0) {
-            CIcon bghr = getOf(4,vhr,hl);
+        	CTextureIcon bghr = getOf(4,vhr,hl);
             int dy = h - vhr + y;
             for (int i = 0; i < vw; i++) {
-                bghr.draw(matrixStack, x + i * 4, dy, 4, vhr);
+                bghr.tesselate(tex,matrixStack, x + i * 4, dy, 4, vhr);
             }
         }
         if (vwr > 0) {
-            CIcon bgwr = getOf(vwr,4,hl);
+        	CTextureIcon bgwr = getOf(vwr,4,hl);
             int dx = w - vwr + x;
             for (int i = 0; i < vh; i++) {
-                bgwr.draw(matrixStack, dx, y + i * 4, vwr, 4);
+                bgwr.tesselate(tex,matrixStack, dx, y + i * 4, vwr, 4);
             }
         }
         if (vwr > 0 && vhr > 0) {
-        	getOf(vwr,vhr,hl).draw(matrixStack, x + w - vwr, y + h - vhr, vwr, vhr);
+        	getOf(vwr,vhr,hl).tesselate(tex,matrixStack, x + w - vwr, y + h - vhr, vwr, vhr);
         }
-        if(w>1&&h>1)
-        	BUTTON_FRAME.draw(matrixStack, x, y, w, h);
-        else
+        if(w>1&&h>1) {
+        	BUTTON_FRAME.tesselate(tex,matrixStack, x, y, w, h);
+        	tex.close();
+        }else {
+        	tex.close();
         	matrixStack.fill(x, y, w, h, text);
+        }
     }
 }

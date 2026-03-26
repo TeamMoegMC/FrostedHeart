@@ -20,6 +20,8 @@
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
 import com.teammoeg.chorda.client.RenderingHint;
+import com.teammoeg.chorda.client.TesselateHelper;
+import com.teammoeg.chorda.client.TesselateHelper.TextureTesselator;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -168,7 +170,13 @@ class MainGamePanel extends UILayer {
 
 	@Override
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
-
+		try(TextureTesselator tex=TesselateHelper.getTextureTesselator(DrawDeskIcons.LOCATION)){
+			for(int cx=0;cx<9;cx++) {
+				for(int cy=0;cy<9;cy++) {
+					cbs[cx][cy].collectRenderInfo(tex, matrixStack, cx, cy, w, h, hint);
+				}
+			}
+		}
 		super.render(matrixStack, x, y, w, h, hint);
 		if (lstatus != 0) {
 			DrawDeskIcons.DIALOG_FRAME.draw(matrixStack, x + 7, y + 54, 137, 52);
@@ -182,7 +190,7 @@ class MainGamePanel extends UILayer {
 			}
 			return;
 		}
-
+		
 		/*
 		 * if ((reset.isMouseOver() || rg.getLevel() == -1) &&
 		 * EnergyCore.getEnergy(ClientUtils.getPlayer()) <= 0) {

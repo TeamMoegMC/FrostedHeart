@@ -22,6 +22,7 @@ package com.teammoeg.chorda.client.ui;
 import java.util.Arrays;
 import java.util.List;
 
+import com.teammoeg.chorda.client.TesselateHelper.TextureTesselator;
 import com.teammoeg.chorda.math.Point;
 import com.teammoeg.chorda.util.IterateUtils;
 import com.teammoeg.chorda.util.struct.MutablePair;
@@ -76,6 +77,21 @@ public class PointSet {
 	public void drawUVs(List<UV> uvs,GuiGraphics stack,ResourceLocation texture,int x,int y) {
 		for(MutablePair<UV, Point> p:IterateUtils.joinAnd(uvs, points)){
 			p.getFirst().blit(stack,texture, x, y, p.getSecond());
+		}
+	}
+	/**
+	 * 在对应的点位置批量绘制带纹理的UV列表。
+	 * <p>
+	 * Batch-draws a list of textured UVs at corresponding point positions.
+	 *
+	 * @param uvs 带纹理的UV列表 / List of textured UVs
+	 * @param stack 图形上下文 / Graphics context
+	 * @param x 基准X偏移 / Base X offset
+	 * @param y 基准Y偏移 / Base Y offset
+	 */
+	public void drawUVs(List<TexturedUV> uvs,TextureTesselator texture,GuiGraphics stack,int x,int y) {
+		for(MutablePair<TexturedUV, Point> p:IterateUtils.joinAnd(uvs, points)){
+			p.getFirst().tesselate(texture,stack, x, y, p.getSecond());
 		}
 	}
 }
