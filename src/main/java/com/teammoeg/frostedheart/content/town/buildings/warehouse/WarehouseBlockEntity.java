@@ -19,14 +19,12 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
-import com.teammoeg.chorda.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
-import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.MenuProvider;
@@ -76,7 +74,7 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
             	building.volume = scanner.getVolume();
                 //容量与体积相似，但是在随着房间高度增高略有衰减
             	building.capacity = building.area*Math.pow((building.volume*0.02/building.area), 0.9)*37;
-            	building.setOccupiedArea(scanner.getOccupiedArea());
+            	building.setOccupiedVolume(scanner.getOccupiedVolume());
                 return true;
             }
         }

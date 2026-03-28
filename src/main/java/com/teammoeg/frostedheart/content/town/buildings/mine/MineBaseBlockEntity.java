@@ -61,7 +61,7 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
                 //this.rack = scanner.getRack();
                 //this.chest = scanner.getChest();
                 building.linkedMines = scanner.getLinkedMines();
-                building.setOccupiedArea(scanner.getOccupiedArea());
+                building.setOccupiedVolume(scanner.getOccupiedVolume());
                 building.temperature = scanner.getTemperature();
                 building.maxResidents = (int) (TownMathFunctions.calculateSpaceRating(scanner.getVolume(), scanner.getArea()) / 4 * scanner.getArea());
                 return true;

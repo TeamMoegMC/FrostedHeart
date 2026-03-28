@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.town.Town;
-import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
@@ -35,7 +35,7 @@ public class WarehouseBuilding extends AbstractTownBuilding {
 	public static final Codec<WarehouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
 					BlockPos.CODEC.fieldOf("pos").forGetter(o -> o.pos),
 					Codec.BOOL.fieldOf("isStructureValid").forGetter(o -> o.isStructureValid),
-					OccupiedArea.CODEC.fieldOf("occupiedArea").forGetter(o -> o.occupiedArea),
+					OccupiedVolume.CODEC.fieldOf("occupiedVolume").forGetter(o -> o.occupiedVolume),
 					Codec.DOUBLE.fieldOf("capacity").forGetter(o -> o.capacity),
 					Codec.INT.fieldOf("area").forGetter(o -> o.area),
 					Codec.INT.fieldOf("volume").forGetter(o -> o.volume)
@@ -54,15 +54,15 @@ public class WarehouseBuilding extends AbstractTownBuilding {
      * 
      * @param pos the block position
      * @param isStructureValid whether the structure is valid
-     * @param occupiedArea the occupied area
+     * @param occupiedVolume the occupied area
      * @param capacity the warehouse capacity
      * @param area the area
      * @param volume the volume
      */
-    public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedArea occupiedArea, double capacity, int area, int volume) {
+    public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, double capacity, int area, int volume) {
         super(pos);
         this.isStructureValid = isStructureValid;
-        this.occupiedArea = occupiedArea;
+        this.occupiedVolume = occupiedVolume;
         this.capacity = capacity;
         this.area = area;
         this.volume = volume;

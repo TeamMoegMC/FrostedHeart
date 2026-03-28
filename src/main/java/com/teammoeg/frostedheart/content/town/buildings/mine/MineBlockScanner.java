@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.ConfinedSpaceScanner;
 
 import lombok.Getter;
@@ -44,7 +44,7 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
     private double temperature = 0;
     private int volume = 0;//used to calculate temperature
     @Getter
-    private final OccupiedArea occupiedArea = new OccupiedArea();
+    private final OccupiedVolume occupiedVolume = new OccupiedVolume();
     public MineBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
         this.startX = startPos.getX();
@@ -85,7 +85,7 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
         }, (pos)->{
             if(isStoneOrOre(world, pos)){
                 validStone++;
-                occupiedArea.add(toColumnPos(pos));
+                occupiedVolume.add(toColumnPos(pos));
             }
             light += world.getBlockState(pos).getLightEmission(world, pos);
         }, PREDICATE_FALSE);

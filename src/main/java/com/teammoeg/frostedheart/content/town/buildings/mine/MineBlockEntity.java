@@ -40,7 +40,7 @@ public class MineBlockEntity extends AbstractTownBuildingBlockEntity<MineBuildin
         MineBlockScanner scanner = new MineBlockScanner(level, this.getBlockPos().above());
         if(scanner.scan()){
             double validStoneOrOre = scanner.getValidStone();
-            building.setOccupiedArea(scanner.getOccupiedArea());
+            building.setOccupiedVolume(scanner.getOccupiedVolume());
             return validStoneOrOre > 16;
         }
         return false;

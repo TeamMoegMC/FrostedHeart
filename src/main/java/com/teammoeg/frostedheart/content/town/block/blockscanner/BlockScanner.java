@@ -27,6 +27,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -49,7 +51,10 @@ import org.jetbrains.annotations.Nullable;
  * <b>这里的部分方法由于高度限制只适用于主世界！</b>
  */
 public class BlockScanner {
+    @Getter
     protected Set<BlockPos> scannedBlocks;
+    @Getter
+    @Setter
     protected Set<BlockPos> scanningBlocks;
     protected Set<BlockPos> scanningBlocksNew = new HashSet<>();
     protected final BlockPos startPos;
@@ -77,20 +82,8 @@ public class BlockScanner {
         this.scannedBlocks = scannedBlocks;
     }
 
-    public Set<BlockPos> getScannedBlocks(){
-        return this.scannedBlocks;
-    }
-
     public void addScannedBlock(BlockPos pos){
         this.scannedBlocks.add(pos);
-    }
-
-    public Set<BlockPos> getScanningBlocks(){
-        return this.scanningBlocks;
-    }
-
-    public void setScanningBlocks(Set<BlockPos> scanningBlocks){
-        this.scanningBlocks = scanningBlocks;
     }
 
     protected BlockState getBlockState(BlockPos pos) {
@@ -260,15 +253,12 @@ public class BlockScanner {
     /**
      * @return  返回pos对应方块x,z方向相邻的4个方块，以及这4个方块向上一格和向下一格的8个方块
      */
-    public static ArrayList<BlockPos> getPossibleFloor(LevelAccessor world, BlockPos pos){
+    public static ArrayList<BlockPos> getPossibleFloor(BlockPos pos){
         ArrayList<BlockPos> blocks = new ArrayList<>();
         blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos));
         blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.above()));
         blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.below()));
         return blocks;
-    }
-    public ArrayList<BlockPos> getPossibleFloor(BlockPos pos){
-        return getPossibleFloor(world, pos);
     }
 
     public ArrayList<BlockPos> getPossibleFloorNearLadder(BlockPos pos){

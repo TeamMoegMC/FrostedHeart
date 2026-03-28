@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.town.building;
 
 import com.teammoeg.frostedheart.content.town.Town;
-import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.core.BlockPos;
@@ -49,7 +49,7 @@ public abstract class AbstractTownBuilding implements ITownBuilding{
 
     @Getter
     @Setter
-    public OccupiedArea occupiedArea = OccupiedArea.EMPTY;
+    public OccupiedVolume occupiedVolume = OccupiedVolume.EMPTY;
 
     protected AbstractTownBuilding(BlockPos pos) {
         this.pos = pos;

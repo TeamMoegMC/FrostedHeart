@@ -123,7 +123,7 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 						building.area = scanner.getArea();
 						building.decorationRating = calculateDecorationRating(scanner.decorations, scanner.area);
 						building.temperature = scanner.getTemperature();
-						building.setOccupiedArea(scanner.getOccupiedArea());
+						building.setOccupiedVolume(scanner.getOccupiedVolume());
 						building.maxResidents = calculateMaxResidents(building.area, building.volume, scanner.getBeds().size());
 						return true;
 					}

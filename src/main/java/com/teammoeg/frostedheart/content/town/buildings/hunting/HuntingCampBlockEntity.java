@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.town.buildings.hunting;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
-import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.ConfinedSpaceScanner;
 
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
@@ -51,7 +51,7 @@ public class HuntingCampBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
     public boolean scanStructure(HuntingCampBuilding building) {
         ConfinedSpaceScanner confinedSpaceScanner = new ConfinedSpaceScanner(this.level, worldPosition.above());
         if(!confinedSpaceScanner.scan(256)){//不密封，也就是露天
-            building.occupiedArea = new OccupiedArea(Set.of(new ColumnPos(worldPosition.getX(), worldPosition.getZ())));
+            building.occupiedVolume = new OccupiedVolume(Set.of(new ColumnPos(worldPosition.getX(), worldPosition.getZ())));
             return true;
         }
         return false;

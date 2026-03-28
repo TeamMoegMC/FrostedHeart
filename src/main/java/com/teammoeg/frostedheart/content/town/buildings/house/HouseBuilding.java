@@ -29,7 +29,7 @@ import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.content.town.*;
-import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
@@ -50,7 +50,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     public static final Codec<HouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
             BlockPos.CODEC.fieldOf("pos").forGetter(o -> o.pos),
             Codec.BOOL.fieldOf("isStructureValid").forGetter(o -> o.isStructureValid),
-            OccupiedArea.CODEC.fieldOf("occupiedArea").forGetter(o -> o.occupiedArea),
+            OccupiedVolume.CODEC.fieldOf("occupiedVolume").forGetter(o -> o.occupiedVolume),
             Codec.INT.fieldOf("area").forGetter(o -> o.area),
             Codec.INT.fieldOf("volume").forGetter(o -> o.volume),
             Codec.DOUBLE.fieldOf("temperature").forGetter(o -> o.temperature),
@@ -95,10 +95,10 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         super(pos);
     }
 
-    public HouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedArea occupiedArea, int area, int volume, double temperature, double decorationRating, int maxResidents, double temperatureModifier) {
+    public HouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, int area, int volume, double temperature, double decorationRating, int maxResidents, double temperatureModifier) {
         super(pos);
         this.isStructureValid = isStructureValid;
-        this.occupiedArea = occupiedArea;
+        this.occupiedVolume = occupiedVolume;
         this.area = area;
         this.volume = volume;
         this.temperature = temperature;

@@ -23,7 +23,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.*;
-import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import net.minecraft.core.UUIDUtil;
@@ -48,7 +48,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	public static final Codec<HuntingBaseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
 					BlockPos.CODEC.fieldOf("pos").forGetter(o -> o.pos),
 					Codec.BOOL.fieldOf("isStructureValid").forGetter(o -> o.isStructureValid),
-					OccupiedArea.CODEC.fieldOf("occupiedArea").forGetter(o -> o.occupiedArea),
+					OccupiedVolume.CODEC.fieldOf("occupiedVolume").forGetter(o -> o.occupiedVolume),
 					Codec.list(UUIDUtil.CODEC).fieldOf("residentsID").forGetter(o -> new ArrayList<>(o.residentsID)),
 					Codec.INT.fieldOf("area").forGetter(o -> o.area),
 					Codec.INT.fieldOf("volume").forGetter(o -> o.volume),
@@ -84,7 +84,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 * 
 	 * @param pos the block position
 	 * @param isStructureValid whether the structure is valid
-	 * @param occupiedArea the occupied area
+	 * @param occupiedVolume the occupied area
 	 * @param residentsID list of resident UUIDs (will be converted to Set)
 	 * @param area the area
 	 * @param volume the volume
@@ -93,10 +93,10 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 * @param tanningRackNum the number of tanning racks
 	 * @param temperatureModifier the temperature modifier
 	 */
-	public HuntingBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedArea occupiedArea, java.util.List<UUID> residentsID, int area, int volume, double temperature, int maxResidents, int tanningRackNum, double temperatureModifier) {
+	public HuntingBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, java.util.List<UUID> residentsID, int area, int volume, double temperature, int maxResidents, int tanningRackNum, double temperatureModifier) {
 		super(pos);
 		this.isStructureValid = isStructureValid;
-		this.occupiedArea = occupiedArea;
+		this.occupiedVolume = occupiedVolume;
 		this.residentsID = new java.util.HashSet<>(residentsID);
 		this.area = area;
 		this.volume = volume;

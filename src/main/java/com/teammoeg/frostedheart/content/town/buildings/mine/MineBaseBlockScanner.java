@@ -24,7 +24,7 @@ import java.util.Set;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.HeightCheckingInfo;
@@ -57,7 +57,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
     @Getter
     private final Set<BlockPos> linkedMines = new HashSet<>();
     @Getter
-    private final OccupiedArea occupiedArea = new OccupiedArea();
+    private final OccupiedVolume occupiedVolume = new OccupiedVolume();
 
     @Override
     public boolean isValidFloor(BlockPos pos){
@@ -106,7 +106,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
     public boolean scan(){
         this.scan(256, (blockPos) -> {
             area++;
-            occupiedArea.add(toColumnPos(blockPos));
+            occupiedVolume.add(toColumnPos(blockPos));
             }, BlockScanner.PREDICATE_FALSE);
         temperature /= counter_for_temperature;
         if(!this.rails.isEmpty()){

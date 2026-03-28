@@ -32,6 +32,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.io.CodecUtil;
 
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 /**
@@ -85,10 +86,28 @@ public class WorldMarker {
 		public boolean getBit(BlockPos pos) {
 			return getBit(pos.getX(),pos.getY(),pos.getZ());
 		}
+		public void forEach(ChunkPos chunkPos, java.util.function.Consumer<BlockPos> action) {
+			for (int sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
+				BitSet section = sections[sectionIndex];
+				if (section == null) continue;
+				int bitIndex = 0;
+				while ((bitIndex = section.nextSetBit(bitIndex)) != -1) {
+					int relX = (bitIndex >> 8) & 0xF;
+					int relY = ((bitIndex >> 4) & 0xF) + (sectionIndex << 4);
+					int relZ = bitIndex & 0xF;
+					int absX = chunkPos.getMinBlockX() + relX;
+					int absZ = chunkPos.getMinBlockZ() + relZ;
+					BlockPos pos = new BlockPos(absX, relY, absZ);
+					action.accept(pos);
+					bitIndex++;
+				}
+			}
+		}
 	}
 	public static final Codec<WorldMarker> CODEC=RecordCodecBuilder.create(t->t.group(
 			CodecUtil.mapCodec("pos", Codec.LONG.xmap(ChunkPos::new, ChunkPos::toLong), "data", ChunkMarker.CODEC).fieldOf("data").forGetter(o->o.poss)
 			).apply(t, WorldMarker::new));
+	@Getter
 	Map<ChunkPos,ChunkMarker> poss=new HashMap<>();
 	Function<ChunkPos,ChunkMarker> getter=t->poss.computeIfAbsent(t, o->new ChunkMarker());
 	
@@ -103,9 +122,16 @@ public class WorldMarker {
 	 *
 	 * @param pos 方块位置 / the block position
 	 * @param data 标记值 / the mark value
+	 * @return 如果标记状态发生变化，则返回true / return true if the mark state changed
 	 */
-	public void set(BlockPos pos,boolean data) {
-		getter.apply(new ChunkPos(pos)).setBit(pos, data);
+	public boolean set(BlockPos pos,boolean data) {
+		ChunkMarker chunkMarker = getter.apply(new ChunkPos(pos));
+		boolean old=chunkMarker.getBit(pos);
+		if(old!=data) {
+			chunkMarker.setBit(pos, data);
+			return true;
+		}
+		return false;
 	}
 	/**
 	 * 获取指定位置的标记状态。
@@ -121,5 +147,80 @@ public class WorldMarker {
 		if(cm==null)
 			return false;
 		return cm.getBit(pos);
+	}
+	/**
+	 * 将另一个 WorldMarker 的所有标记合并到当前 WorldMarker。
+	 * <p>
+	 * Merge all marks from another WorldMarker into this one.
+	 *
+	 * @param another 要合并的另一个 WorldMarker / another WorldMarker to merge
+	 */
+	public void merge(WorldMarker another) {
+		if (another == null) return;
+		for (Map.Entry<ChunkPos, ChunkMarker> entry : another.poss.entrySet()) {
+			ChunkPos chunkPos = entry.getKey();
+			ChunkMarker otherMarker = entry.getValue();
+			ChunkMarker thisMarker = getter.apply(chunkPos);
+			for (int i = 0; i < 16; i++) {
+				BitSet otherSection = otherMarker.sections[i];
+				if (otherSection == null) continue;
+				BitSet thisSection = thisMarker.getOrCreateSection(i);
+				thisSection.or(otherSection);
+			}
+		}
+	}
+	/**
+	 * 对当前 WorldMarker 中所有标记的 BlockPos 执行指定操作。
+	 * <p>
+	 * Perform the specified action on all marked BlockPositions in this WorldMarker.
+	 *
+	 * @param action 要对每个 BlockPos 执行的操作 / action to perform on each BlockPos
+	 */
+	public void forEach(java.util.function.Consumer<BlockPos> action) {
+		for (Map.Entry<ChunkPos, ChunkMarker> entry : poss.entrySet()) {
+			ChunkPos chunkPos = entry.getKey();
+			ChunkMarker marker = entry.getValue();
+			if (marker == null) continue;
+			marker.forEach(chunkPos, action);
+		}
+	}
+	/**
+	 * 生成包含当前 WorldMarker 中所有标记 BlockPos 的 Stream。
+	 * <p>
+	 * Generate a Stream containing all marked BlockPositions in this WorldMarker.
+	 *
+	 * @return 包含所有标记 BlockPos 的 Stream / Stream containing all marked BlockPositions
+	 */
+	public Stream<BlockPos> streamPos() {
+		Stream.Builder<BlockPos> builder = Stream.builder();
+		forEach(builder::add);
+		return builder.build();
+	}
+	/**
+	 * 判断当前 WorldMarker 与另一个 WorldMarker 是否存在相同的位置标记。
+	 * <p>
+	 * Check whether this WorldMarker has any overlapped marked positions with another WorldMarker.
+	 *
+	 * @param another 另一个 WorldMarker / another WorldMarker to check
+	 * @return 如果存在相同的位置标记则返回 true，否则返回 false / true if there are overlapped positions, false otherwise
+	 */
+	public boolean intersects(WorldMarker another) {
+		if (another == null) return false;
+		for (Map.Entry<ChunkPos, ChunkMarker> entry : another.poss.entrySet()) {
+			ChunkPos chunkPos = entry.getKey();
+			ChunkMarker otherMarker = entry.getValue();
+			ChunkMarker thisMarker = poss.get(chunkPos);
+			if (thisMarker == null) continue;
+			for (int i = 0; i < 16; i++) {
+				BitSet otherSection = otherMarker.sections[i];
+				if (otherSection == null) continue;
+				BitSet thisSection = thisMarker.sections[i];
+				if (thisSection == null) continue;
+				if (thisSection.intersects(otherSection)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }

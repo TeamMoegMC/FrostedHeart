@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.town;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import lombok.Getter;
 
 import com.mojang.serialization.Codec;
@@ -29,7 +30,6 @@ import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.math.CMath;
-import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
 import com.teammoeg.frostedheart.content.town.block.TownBlockEntity;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
@@ -192,18 +192,18 @@ public class TeamTownData implements SpecialData {
 	private void checkOccupiedAreaOverlap() {
 		// removeNonTownBlocks(world);
 		List<AbstractTownBuilding> buildingsWithOccupiedAreas = buildings.values().stream()
-				.filter(building -> building.getOccupiedArea() != null && building.getOccupiedArea() != OccupiedArea.EMPTY)
+				.filter(building -> building.getOccupiedVolume() != null && building.getOccupiedVolume() != OccupiedVolume.EMPTY)
 				.toList();
 
 		Set<AbstractTownBuilding> workersMightOverlap = new HashSet<>();
 		// 两两比对，根据OccupiedArea的外接矩形是否重合初步筛选可能重叠的worker
 		for (int i = 0; i < buildingsWithOccupiedAreas.size() - 1; i++) {
 			AbstractTownBuilding building = buildingsWithOccupiedAreas.get(i);
-			OccupiedArea workerOccupiedArea = building.getOccupiedArea();
+			OccupiedVolume workerOccupiedVolume = building.getOccupiedVolume();
 			for (int j = i + 1; j < buildingsWithOccupiedAreas.size(); j++) {
 				AbstractTownBuilding comparingBuilding = buildingsWithOccupiedAreas.get(j);
-				OccupiedArea comparingWorkerOccupiedArea = comparingBuilding.getOccupiedArea();
-				if (workerOccupiedArea.boundingRectangleIntersect(comparingWorkerOccupiedArea)) {
+				OccupiedVolume comparingWorkerOccupiedVolume = comparingBuilding.getOccupiedVolume();
+				if (workerOccupiedVolume.boundingBoxIntersect(comparingWorkerOccupiedVolume)) {
 					workersMightOverlap.add(building);
 					workersMightOverlap.add(comparingBuilding);
 				}
@@ -217,7 +217,7 @@ public class TeamTownData implements SpecialData {
 		for (AbstractTownBuilding building : workersMightOverlap) {
 			// 遍历该城镇方块所有占用的位置，并与方块本身一起存入occupiedAreaCollectingMap中。
 			// 如果发现这个位置已经有过一个worker占用，则将那个worker与这个worker一起存入overlappedWorkers中。
-			for (ColumnPos columnPos : building.getOccupiedArea().getOccupiedArea()) {
+			for (ColumnPos columnPos : building.getOccupiedVolume().getOccupiedBlocks()) {
 				if (occupiedAreaCollectingMap.containsKey(columnPos)) {
 					overlappedWorkers.add(building);
 					overlappedWorkers.add(occupiedAreaCollectingMap.get(columnPos));

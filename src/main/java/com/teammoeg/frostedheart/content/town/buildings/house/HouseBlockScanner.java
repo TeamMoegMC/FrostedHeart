@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.town.buildings.house;
 
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.ConfinedSpaceScanner;
@@ -57,7 +57,7 @@ public class HouseBlockScanner extends BlockScanner {
     @Getter
     protected double temperature = 0;//average temperature
     @Getter
-    protected final OccupiedArea occupiedArea = new OccupiedArea();
+    protected final OccupiedVolume occupiedVolume = new OccupiedVolume();
 
     public HouseBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
@@ -109,7 +109,7 @@ public class HouseBlockScanner extends BlockScanner {
         FloorBlockScanner floorBlockScanner = new FloorBlockScanner(world, startPos);
         floorBlockScanner.scan(MAX_SCANNING_TIMES_FLOOR, (pos) -> {
             this.area++;
-            this.occupiedArea.add(toColumnPos(pos));
+            this.occupiedVolume.add(toColumnPos(pos));
             //FHMain.LOGGER.debug("HouseScanner: scanning floor pos " + pos);
         }, (pos) -> !this.isValid);
        // FHMain.LOGGER.debug("HouseScanner: first scan area: " + area);
@@ -122,7 +122,7 @@ public class HouseBlockScanner extends BlockScanner {
         airScanner.scan(MAX_SCANNING_TIMES_VOLUME, (pos) -> {//对每一个空气方块执行的操作：统计温度、统计体积、统计温度
                     this.temperature += WorldTemperature.block(world, pos);
                     this.volume++;
-                    this.occupiedArea.add(new ColumnPos(pos.getX(), pos.getZ()));
+                    this.occupiedVolume.add(new ColumnPos(pos.getX(), pos.getZ()));
                     //FHMain.LOGGER.debug("scanning air pos:" + pos);
                 }, this::addDecoration,
                 (useless) -> !this.isValid);

@@ -73,7 +73,7 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 					building.volume = scanner.getVolume();
 					building.area = scanner.getArea();
 					building.temperature = scanner.getTemperature();
-					building.setOccupiedArea(scanner.getOccupiedArea());
+					building.setOccupiedVolume(scanner.getOccupiedVolume());
 					building.tanningRackNum = scanner.getTanningRackNum();
 					building.maxResidents = calculateMaxResidents(building.volume, building.area, scanner.getBeds().size());
 					building.rating = computeRating(building.volume, building.area, scanner.getDecorations(), building.temperature, this.getTemperatureModifier(), building.maxResidents, scanner.getChestNum());

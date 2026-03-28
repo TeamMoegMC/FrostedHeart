@@ -70,7 +70,7 @@ public class HuntingBaseBlockScanner extends HouseBlockScanner {
         FloorBlockScanner floorBlockScanner = new FloorBlockScanner(world, startPos);
         floorBlockScanner.scan(MAX_SCANNING_TIMES_FLOOR, (pos) -> {
             this.area++;
-            this.occupiedArea.add(toColumnPos(pos));
+            this.occupiedVolume.add(toColumnPos(pos));
             //FHMain.LOGGER.debug("HouseScanner: scanning floor pos " + pos);
         }, (pos) -> !this.isValid);
         //FHMain.LOGGER.debug("HouseScanner: first scan area: " + area);
@@ -83,7 +83,7 @@ public class HuntingBaseBlockScanner extends HouseBlockScanner {
         airScanner.scan(MAX_SCANNING_TIMES_VOLUME, (pos) -> {//对每一个空气方块执行的操作：统计温度、统计体积、统计温度
                     this.temperature += WorldTemperature.block(world, pos);
                     this.volume++;
-                    this.occupiedArea.add(new ColumnPos(pos.getX(), pos.getZ()));
+                    this.occupiedVolume.add(new ColumnPos(pos.getX(), pos.getZ()));
                     //FHMain.LOGGER.debug("scanning air pos:" + pos);
                 }, this::addSpecialBlock,
                 (useless) -> !this.isValid);

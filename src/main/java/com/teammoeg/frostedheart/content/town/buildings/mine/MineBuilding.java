@@ -21,11 +21,10 @@ package com.teammoeg.frostedheart.content.town.buildings.mine;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.town.Town;
-import com.teammoeg.frostedheart.content.town.block.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 
 import net.minecraft.core.BlockPos;
@@ -33,7 +32,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,7 +40,7 @@ public class MineBuilding extends AbstractTownBuilding {
 	public static final Codec<MineBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
 					BlockPos.CODEC.fieldOf("pos").forGetter(o -> o.pos),
 					Codec.BOOL.fieldOf("isStructureValid").forGetter(o -> o.isStructureValid),
-					OccupiedArea.CODEC.fieldOf("occupiedArea").forGetter(o -> o.occupiedArea),
+					OccupiedVolume.CODEC.fieldOf("occupiedVolume").forGetter(o -> o.occupiedVolume),
 					Codec.DOUBLE.fieldOf("rating").forGetter(o -> o.rating),
 					Codec.STRING.fieldOf("biomePath").forGetter(o -> o.biomePath.toString())
 					)
@@ -64,14 +62,14 @@ public class MineBuilding extends AbstractTownBuilding {
      * 
      * @param pos the block position
      * @param isStructureValid whether the structure is valid
-     * @param occupiedArea the occupied area
+     * @param occupiedVolume the occupied area
      * @param rating the building rating
      * @param biomePathString the biome path as string
      */
-    public MineBuilding(BlockPos pos, boolean isStructureValid, OccupiedArea occupiedArea, double rating, String biomePathString) {
+    public MineBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, double rating, String biomePathString) {
         super(pos);
         this.isStructureValid = isStructureValid;
-        this.occupiedArea = occupiedArea;
+        this.occupiedVolume = occupiedVolume;
         this.rating = rating;
         this.biomePath = new ResourceLocation(biomePathString);
     }
