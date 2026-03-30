@@ -26,6 +26,7 @@ import com.simibubi.create.foundation.item.ItemDescription;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
+import com.teammoeg.frostedheart.content.utility.*;
 import com.teammoeg.frostedheart.content.utility.seld.SledItem;
 import com.teammoeg.frostedheart.item.snowsack.SnowSackItem;
 import com.teammoeg.frostedheart.item.*;
@@ -38,14 +39,6 @@ import com.teammoeg.frostedheart.content.health.food.FHSoupItem;
 import com.teammoeg.frostedheart.content.world.item.FHSnowballItem;
 import com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
-import com.teammoeg.frostedheart.content.utility.CeramicBucket;
-import com.teammoeg.frostedheart.content.utility.DebugItem;
-import com.teammoeg.frostedheart.content.utility.KnifeItem;
-import com.teammoeg.frostedheart.content.utility.MushroomBed;
-import com.teammoeg.frostedheart.content.utility.SoilThermometer;
-import com.teammoeg.frostedheart.content.utility.SteamBottleItem;
-import com.teammoeg.frostedheart.content.utility.ThermometerItem;
-import com.teammoeg.frostedheart.content.utility.ThermosItem;
 import com.teammoeg.frostedheart.content.utility.handstoves.CoalHandStove;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
 import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
@@ -1266,6 +1259,16 @@ thinner.png
     }
 
     // Equipment and tools
+    public static final ItemEntry<OxygenCandleItem> oxygen_candle = REGISTRATE.item("oxygen_candle", OxygenCandleItem::new)
+            .properties(p -> p.durability(600))
+            .model(FHBlockStateGen.existingItemModel())
+            .lang("Oxygen Candle")
+            .register();
+    public static final ItemEntry<HeatingPadItem> heating_pad = REGISTRATE.item("heating_pad", HeatingPadItem::new)
+            .properties(p -> p.durability(300))
+            .model(FHBlockStateGen.existingItemModel())
+            .lang("Heating Pad")
+            .register();
     public static final ItemEntry<CoalHandStove> hand_stove = REGISTRATE.item("hand_stove", CoalHandStove::new)
             .properties(p -> p.defaultDurability(10))
             .tag(FHTags.Items.CURIOS_HANDS.tag)
