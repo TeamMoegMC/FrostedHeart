@@ -37,6 +37,7 @@ public class HeatingPadItem extends FHBaseItem {
         ItemStack itemstack = pPlayer.getItemInHand(pUsedHand);
         if (itemstack.getDamageValue() == 0) {
             itemstack.setDamageValue(1);
+            itemstack.getTag().putInt("CustomModelData", 1);
             pPlayer.setItemInHand(pUsedHand, itemstack);
             return InteractionResultHolder.success(itemstack);
         }
@@ -51,6 +52,7 @@ public class HeatingPadItem extends FHBaseItem {
                 int damage = stack.getDamageValue();
                 if (damage > 0 && damage < stack.getMaxDamage()) {
                     stack.setDamageValue(damage + 1);
+                    if (damage + 1 == stack.getMaxDamage()) stack.getTag().putInt("CustomModelData", 2);
                     data.addEffectiveTemperature(PlayerTemperatureData.BodyPart.TORSO, 20.0f);
                 }
             }
