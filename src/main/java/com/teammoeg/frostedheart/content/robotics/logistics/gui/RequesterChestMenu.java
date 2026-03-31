@@ -80,5 +80,6 @@ public class RequesterChestMenu extends LogisticChestMenu<RequesterTileEntity> {
 		case CMD_SET_IGNORE_NBT:this.blockEntity.filters[slotId].setIgnoreNbt(state>0);break;
 		case CMD_SET_SIZE:this.blockEntity.filters[slotId].setSize(state);break;
 		}
+		this.blockEntity.setChanged();
 	}
 }
