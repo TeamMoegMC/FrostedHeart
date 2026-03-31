@@ -205,6 +205,12 @@ public class StencilHelper {
 		element.pop();
 		
 	}
+	public static void resetStencilState() {
+		
+		RenderSystem.stencilMask(0x00);
+		RenderSystem.stencilFunc(GL11.GL_ALWAYS, 0, 0xff);
+		RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP);
+	}
 	 /**
      * 清空模板缓冲为0。需在使用本辅助类前后调用，且调用时模板栈必须为空。
      * <p>

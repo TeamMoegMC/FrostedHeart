@@ -166,6 +166,7 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	}
 	@Override
 	public final void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+		StencilHelper.resetStencilState();
 		super.render(graphics, x, y, w, h, hint);
 		StencilHelper.clearStencil();
 		CUIDebugHelper.renderDebug(graphics, x, y, getManager());
