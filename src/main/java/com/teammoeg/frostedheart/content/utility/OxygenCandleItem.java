@@ -1,8 +1,6 @@
 package com.teammoeg.frostedheart.content.utility;
 
-import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
 import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
 import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceSlot;
@@ -13,17 +11,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.registries.ForgeRegistries;
 
-import java.util.Iterator;
 import java.util.List;
 
 public class OxygenCandleItem extends FHBaseItem {

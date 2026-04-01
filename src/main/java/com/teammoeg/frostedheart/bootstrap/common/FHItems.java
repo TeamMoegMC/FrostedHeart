@@ -1261,11 +1261,13 @@ thinner.png
     // Equipment and tools
     public static final ItemEntry<OxygenCandleItem> oxygen_candle = REGISTRATE.item("oxygen_candle", OxygenCandleItem::new)
             .properties(p -> p.durability(600))
+            .tag(FHTags.Items.CURIOS_BACK.tag)
             .model(FHBlockStateGen.existingItemModel())
             .lang("Oxygen Candle")
             .register();
     public static final ItemEntry<HeatingPadItem> heating_pad = REGISTRATE.item("heating_pad", HeatingPadItem::new)
-            .properties(p -> p.durability(300))
+            .properties(p -> p.durability(200))
+            .tag(FHTags.Items.CURIOS_BACK.tag, FHTags.Items.CURIOS_CHARM.tag, FHTags.Items.CURIOS_HANDS.tag)
             .model(FHBlockStateGen.existingItemModel())
             .lang("Heating Pad")
             .register();
