@@ -278,7 +278,6 @@ public class SurroundingTemperatureSimulator {
 
         float heat = 0f, wind = 0f, minTemp = 0f, maxTemp = 0f;
         // 局部变量缓存，JIT 优化更友好
-        final int lox = this.ox, loy = this.oy, loz = this.oz;
         final double[] localPvx = buf.pvx, localPvy = buf.pvy, localPvz = buf.pvz;
         final double[] localQx = buf.qx, localQy = buf.qy, localQz = buf.qz;
         final int[] topYCache = buf.topYCache;
@@ -365,8 +364,8 @@ public class SurroundingTemperatureSimulator {
                 }
 
                 // ---- 风力计算 ----
-                int rx = bx - lox;
-                int rz = bz - loz;
+                int rx = bx - this.ox;
+                int rz = bz - this.oz;
 
                 int topY;
                 if (rx >= -CACHE_OFFSET && rx < CACHE_OFFSET &&
