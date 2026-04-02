@@ -1,10 +1,10 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "frostedheart:item/oxygen_candle_off"
+    "layer0": "frostedheart:item/oxygen_candle"
   },
   "overrides":[
-	{"predicate":{"custom_model_data":1},"model":"frostedheart:item/oxygen_candle_on"},
-	{"predicate":{"custom_model_data":2},"model":"frostedheart:item/oxygen_candle_flamedout"}
+	{"predicate":{"frostedheart:state":1},"model":"frostedheart:item/oxygen_candle_on"},
+	{"predicate":{"frostedheart:state":2},"model":"frostedheart:item/oxygen_candle_flamedout"}
   ]
 }
