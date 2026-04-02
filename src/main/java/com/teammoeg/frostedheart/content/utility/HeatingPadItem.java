@@ -28,7 +28,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 import java.util.List;
 
-@EventBusSubscriber(modid = FHMain.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class HeatingPadItem extends FHBaseItem {
 	public static final int BURN_TIME = 200;
 	public static final int HEAT_ADJUST = 20;
@@ -107,12 +106,16 @@ public class HeatingPadItem extends FHBaseItem {
         });
     }
     
-    @SubscribeEvent
-    public static void propertyOverrideRegistry(FMLClientSetupEvent event){
-        event.enqueueWork(()->{
-            ItemProperties.register(FHItems.heating_pad.get(), new ResourceLocation(FHMain.MODID,"state"),(itemStack,level,livingEntity,num)->{
-                return getState(itemStack);
+
+    @EventBusSubscriber(modid = FHMain.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    public class ClientProperty{
+        @SubscribeEvent
+        public static void propertyOverrideRegistry(FMLClientSetupEvent event){
+            event.enqueueWork(()->{
+                ItemProperties.register(FHItems.heating_pad.get(), new ResourceLocation(FHMain.MODID,"state"),(itemStack,level,livingEntity,num)->{
+                    return getState(itemStack);
+                });
             });
-        });
+        }
     }
 }

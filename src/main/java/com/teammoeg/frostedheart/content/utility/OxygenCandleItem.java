@@ -29,7 +29,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 import java.util.List;
 
-@EventBusSubscriber(modid = FHMain.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class OxygenCandleItem extends FHBaseItem {
 	public static final int BURN_TIME = 600;
 	public static final int HEAT_ADJUST = 5;
@@ -118,12 +117,15 @@ public class OxygenCandleItem extends FHBaseItem {
         });
     }
     
-    @SubscribeEvent
-    public static void propertyOverrideRegistry(FMLClientSetupEvent event){
-        event.enqueueWork(()->{
-            ItemProperties.register(FHItems.oxygen_candle.get(), new ResourceLocation(FHMain.MODID,"state"),(itemStack,level,livingEntity,num)->{
-                return getState(itemStack);
+    @EventBusSubscriber(modid = FHMain.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    public class ClientProperty{
+    	@SubscribeEvent
+        public static void propertyOverrideRegistry(FMLClientSetupEvent event){
+            event.enqueueWork(()->{
+                ItemProperties.register(FHItems.oxygen_candle.get(), new ResourceLocation(FHMain.MODID,"state"),(itemStack,level,livingEntity,num)->{
+                    return getState(itemStack);
+                });
             });
-        });
+        }
     }
 }
