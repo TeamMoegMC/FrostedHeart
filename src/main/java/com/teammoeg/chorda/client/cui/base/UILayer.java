@@ -341,37 +341,21 @@ public abstract class UILayer extends UIElement {
 			drawBackground(graphics, x, y, w, h, hint);
 		    final boolean isScissorEnabled=isScissorEnabled();
 	        beforeDrawElements(graphics,x,y, contentX, contentY, w, h);
-	        StencilStackElement elem=null;
+	       
 			if(isScissorEnabled) {
-				//记录stencil状态
-				Vector3f br=null,tr=null,tl=null,bl=null;
-				Matrix4f pose=graphics.pose().last().pose();
-			    //计算显示区域
-			    br=pose.transformPosition(new Vector3f(x+w,y+h,0));
-			    tr=pose.transformPosition(new Vector3f(x+w,y,0));
-			    tl=pose.transformPosition(new Vector3f(x,y,0));
-			    bl=pose.transformPosition(new Vector3f(x,y+h,0));
-			    //绘制stencil（取现有stencil与显示区域的交集，增加1）
-			    elem=StencilHelper.pushStencil();
-			    BufferBuilder buffer=elem.getBuilder(VertexFormat.Mode.QUADS);
-		        buffer.vertex(br.x(),br.y(),br.z()).endVertex();
-		        buffer.vertex(tr.x(),tr.y(),tr.z()).endVertex();
-		        buffer.vertex(tl.x(),tl.y(),tl.z()).endVertex();
-		        buffer.vertex(bl.x(),bl.y(),bl.z()).endVertex();
-		        elem.drawStencil();
-			}
-			try {
-				graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
-				for(UIElement elm:elements) {
-					if(elm.isVisible()) {
-						drawElement(graphics, elm,x,y, contentX, contentY, w, h,hint);
-					}
+				try(StencilStackElement elem=StencilHelper.pushStencil()){
+					Matrix4f pose=graphics.pose().last().pose();
+				    //绘制stencil
+				    BufferBuilder buffer=elem.getBuilder(VertexFormat.Mode.QUADS);
+			        buffer.vertex(pose,x+w,y+h,0).endVertex();
+			        buffer.vertex(pose,x+w,y,0).endVertex();
+			        buffer.vertex(pose,x,y,0).endVertex();
+			        buffer.vertex(pose,x,y+h,0).endVertex();
+			        elem.drawStencil();
+			        doDrawElements(graphics,x,y, contentX, contentY, w, h,hint);
 				}
-			}finally {
-				if(isScissorEnabled) {
-					StencilHelper.popStencil(elem);
-					
-				}
+			}else {
+				doDrawElements(graphics,x,y, contentX, contentY, w, h,hint);
 			}
 			afterDrawElements(graphics,x,y, contentX, contentY, w, h);
 		}finally {
@@ -385,7 +369,15 @@ public abstract class UILayer extends UIElement {
 	}
 	public void beforeDrawElements(GuiGraphics graphics,int parX,int parY, int x, int y, int w, int h) {}
 	public void afterDrawElements(GuiGraphics graphics,int parX,int parY, int x, int y, int w, int h) {}
-
+	public final void doDrawElements(GuiGraphics graphics,  int x, int y,int contentX,int contentY, int w, int h, RenderingHint hint) {
+		//小数点后变换避免动画不连续
+		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
+		for(UIElement elm:elements) {
+			if(elm.isVisible()) {
+				drawElement(graphics, elm,x,y, contentX, contentY, w, h,hint);
+			}
+		}
+	}
 	@Override
 	public void updateRenderInfo(int x,int y,double mx, double my, float pt) {
 

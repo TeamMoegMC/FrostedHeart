@@ -50,7 +50,7 @@ public class StencilHelper {
      * <p>
      * Stencil stack element class, holds rendering states, color mask, and vertex resources for drawing stencil shapes for a single layer.
      */
-	public static class StencilStackElement{
+	public static class StencilStackElement implements AutoCloseable{
 		private boolean stencilEnabled=false;
 	    //stencil state
 		private int stencilMask=0,stencilFunc=0,stencilRef=0,stencilValueMask=0,stencilFail=0,stencilDepthFail=0,stencilPass=0;
@@ -160,6 +160,10 @@ public class StencilHelper {
 			RenderSystem.stencilFunc(stencilFunc, stencilRef, stencilValueMask);
 			RenderSystem.stencilOp(stencilFail, stencilDepthFail, stencilPass);
 	    }
+		@Override
+		public void close(){
+			StencilHelper.popStencil(this);
+		}
 	}
 	private static List<StencilStackElement> stencilStack=new ArrayList<>(256);
 	private static int currentIndex;
