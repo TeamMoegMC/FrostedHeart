@@ -134,20 +134,15 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
                     skyLights[idx] = 0;
                 }
             }
-
-            // Break early if all possible sky light is gone
-            if (!hasSkyLight)
-            {
-                break; // exit y loop
-            }
-
             // Extend skylight horizontally (zero-allocation, replaces per-block BFS)
-            propagateSkyLights(skyLights);
-
+            if (hasSkyLight)
+            {
+                propagateSkyLights(skyLights);
+            }
             // Place snow and ice where skylight reaches
             for (int idx = 0; idx < 256; idx++)
             {
-                final int skyLight = skyLights[idx];
+                final int skyLight = prevSkyLights[idx];
                 if (skyLight > 0)
                 {
                     cursor.set(originX + (idx & 15), y, originZ + (idx >> 4));
@@ -161,6 +156,21 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
             prevSkyLights = skyLights;
             skyLights = temp;
             Arrays.fill(skyLights, 0);
+
+            // Break early if all possible sky light is gone
+            boolean nextHasSkyLight = false;
+            for (int i = 0; i < 256; i++)
+            {
+                if (prevSkyLights[i] > 0)
+                {
+                    nextHasSkyLight = true;
+                    break; // exit checking loop, continue with y loop
+                }
+            }
+            if (!nextHasSkyLight)
+            {
+                break; // exit y loop
+            }
         }
         return true;
     }
@@ -219,28 +229,23 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
 
         final boolean liquidBlock = block instanceof LiquidBlock;
         final boolean replaceable = state.canBeReplaced();
+        final FluidState fluidState = level.getFluidState(pos);
 
         // Query fluid state only when the current block could plausibly contain or be replaced by fluid
-        if (liquidBlock || replaceable)
+        if (fluidState.getType() == Fluids.WATER)
         {
-            final FluidState fluidState = level.getFluidState(pos);
-
-            // Then, try and place snow layers / ice at the current location
-            if (fluidState.getType() == Fluids.WATER)
+            level.setBlock(pos, ICE, 2);
+            if (!liquidBlock)
             {
-                level.setBlock(pos, ICE, 2);
-                if (!liquidBlock)
-                {
-                    level.scheduleTick(pos, Blocks.ICE, 0);
-                }
-                return;
+                level.scheduleTick(pos, Blocks.ICE, 0);
             }
-            else if (fluidState.getType() == Fluids.LAVA
-                    && liquidBlock)
-            {
-                level.setBlock(pos, OBSIDIAN, 2);
-                return;
-            }
+            return;
+        }
+        else if (fluidState.getType() == Fluids.LAVA
+                && liquidBlock)
+        {
+            level.setBlock(pos, OBSIDIAN, 2);
+            return;
         }
 
         if (replaceable && SNOW.canSurvive(level, pos))

@@ -216,6 +216,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
 
                         if (!handled)
                         {
+                            //@khjxiaogu: omit randomtick from the original block if temperature modification occurred
                             if (blockstate2.isRandomlyTicking())
                             {
                                 blockstate2.randomTick(level, blockpos3, level.random);
@@ -316,11 +317,8 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                     // TODO: should we do Icicles?
                     if (fluidstate.hasProperty(FlowingFluid.LEVEL))
                     {
-                        // range 1-8
                         int flowingLevel = fluidstate.getValue(FlowingFluid.LEVEL);
-                        if (flowingLevel == 8
-                                || (fluidstate.hasProperty(FlowingFluid.FALLING)
-                                && fluidstate.getValue(FlowingFluid.FALLING)))
+                        if (flowingLevel == 8)
                         {
                             targetState = FHBlocks.THIN_ICE_BLOCK.get().defaultBlockState();
                         }
