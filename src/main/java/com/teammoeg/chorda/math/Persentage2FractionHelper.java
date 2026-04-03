@@ -18,6 +18,9 @@
  */
 
 package com.teammoeg.chorda.math;
+
+import net.minecraft.util.Mth;
+
 /**
  * 百分比转分数辅助工具，将百分比值四舍五入为自定义分母的整数分子，同时保持总份数不变。
  * <p>
