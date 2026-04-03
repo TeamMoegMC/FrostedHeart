@@ -641,4 +641,65 @@ public class WorldTemperature {
             return PlantStatus.CAN_SURVIVE;
         }
     }
+
+
+    //热点代码优化
+    public static float blockWithHeatData(LevelReader world, BlockPos pos, @Nullable ChunkHeatData heatData) {
+        return blockWithHeat(world, pos, heat(world, pos, heatData));
+    }
+
+    public static float blockWithHeatQuery(LevelReader world, BlockPos pos, ChunkHeatData.HeatQueryResult heatQuery) {
+        return blockWithHeat(world, pos, heatQuery.additionTemperature());
+    }
+
+    /**
+     * Shared implementation for block temperature calculation when the additional
+     * heat contribution is already known.
+     *
+     * Result = Dimension + Biome + Altitude + Climate + HeatAdjusts.
+     */
+    private static float blockWithHeat(LevelReader world, BlockPos pos, float heat) {
+        int y = pos.getY();
+
+        float climateBlockAffection;
+        // above sea level, climate significantly influences soil
+        if (y > SEA_LEVEL) {
+            climateBlockAffection = 0.5F;
+        }
+        // a thin layer of stone beneath sea level serves as a climate insulation layer
+        else if (y > STONE_INTERFACE_LEVEL) {
+            climateBlockAffection = 0.5F * (y - STONE_INTERFACE_LEVEL) / (SEA_LEVEL - STONE_INTERFACE_LEVEL);
+        }
+        // below that, climate no longer affects block temperature
+        else {
+            climateBlockAffection = 0.0F;
+        }
+
+        float nature = climate(world, pos) * climateBlockAffection
+                + dimension(world)
+                + biome(world, pos)
+                + altitude(world, pos);
+
+        float result;
+        // if nature is greater than heat, use nature: like underground
+        if (nature > heat) {
+            result = nature;
+        }
+        // otherwise, heats up nature by heat * 2 until reaches heat ceiling: a kind of air conditioner
+        else {
+            result = Math.min(nature + heat * 2, heat);
+        }
+
+        return Math.max(ABSOLUTE_ZERO, result);
+    }
+
+    /**
+     * Fast overload for heat contribution when chunk heat data has already been
+     * fetched by the caller.
+     *
+     * Returns 0 when data is null.
+     */
+    public static float heat(LevelReader world, BlockPos pos, @Nullable ChunkHeatData heatData) {
+        return ChunkHeatData.getAdditionTemperatureAtBlock(heatData, world, pos);
+    }
 }

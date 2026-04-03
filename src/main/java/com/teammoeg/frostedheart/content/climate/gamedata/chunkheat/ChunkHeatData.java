@@ -457,6 +457,80 @@ public class ChunkHeatData {
             }
     	}
     }
+
+    //热点代码优化
+    @Nullable
+    public static ChunkHeatData get(LevelAccessor world, int chunkX, int chunkZ) {
+        return get(world, chunkX, chunkZ, false);
+    }
+
+    @Nullable
+    public static ChunkHeatData get(LevelAccessor world, int chunkX, int chunkZ, boolean loadChunk) {
+        return getOptional(world, chunkX, chunkZ, loadChunk).orElse(null);
+    }
+
+
+    public static Optional<ChunkHeatData> getOptional(LevelReader world, int chunkX, int chunkZ) {
+        return getOptional(world, chunkX, chunkZ, false);
+    }
+
+
+    @SuppressWarnings("deprecation")
+    public static Optional<ChunkHeatData> getOptional(LevelReader world, int chunkX, int chunkZ, boolean loadChunk) {
+        if (world instanceof LevelAccessor levelAccessor) {
+            return (loadChunk || levelAccessor.getChunkSource().hasChunk(chunkX, chunkZ))
+                    ? getCapability(world.getChunk(chunkX, chunkZ)).resolve()
+                    : Optional.empty();
+        }
+        return (loadChunk || world.hasChunk(chunkX, chunkZ))
+                ? getCapability(world.getChunk(chunkX, chunkZ)).resolve()
+                : Optional.empty();
+    }
+
+    public static boolean hasActiveAdjust(@Nullable ChunkHeatData data, BlockPos pos) {
+        if (data == null || data.adjusters.isEmpty()) {
+            return false;
+        }
+        for (IHeatArea i : data.adjusters.values()) {
+            if (i.isEffective(pos)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public static boolean hasAdjust(@Nullable ChunkHeatData data) {
+        return data != null && !data.adjusters.isEmpty();
+    }
+
+    public static float getAdditionTemperatureAtBlock(@Nullable ChunkHeatData data, LevelReader world, BlockPos pos) {
+        return data != null ? data.getAdditionTemperatureAtBlock(world, pos) : 0f;
+    }
+
+    public record HeatQueryResult(boolean hasActiveAdjust, float additionTemperature) {}
+
+    public static HeatQueryResult queryAdjust(@Nullable ChunkHeatData data, BlockPos pos) {
+        if (data == null || data.adjusters.isEmpty()) {
+            return new HeatQueryResult(false, 0f);
+        }
+
+        boolean active = false;
+        float max = 0f;
+
+        for (IHeatArea adj : data.adjusters.values()) {
+            if (adj.isEffective(pos)) {
+                active = true;
+                float value = adj.getValueAt(pos);
+                if (value > max) {
+                    max = value;
+                }
+            }
+        }
+
+        return new HeatQueryResult(active, max);
+    }
+
     private void reset() {
         adjusters.clear();
 
