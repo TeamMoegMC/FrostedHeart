@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.town.buildings.mine;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import net.minecraft.tags.BlockTags;
@@ -42,14 +42,14 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
 
     public boolean scanStructure(MineBaseBuilding building){
         BlockPos mineBasePos = this.getBlockPos();
-        BlockPos doorPos = BlockScanner.getDoorAdjacent(level, mineBasePos);
+        BlockPos doorPos = AbstractBlockScanner.getDoorAdjacent(level, mineBasePos);
         if (doorPos == null) return false;
-        BlockPos floorBelowDoor = BlockScanner.getBlockBelow((pos)->!(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
-        for (Direction direction : BlockScanner.PLANE_DIRECTIONS) {
+        BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow((pos)->!(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
+        for (Direction direction : AbstractBlockScanner.PLANE_DIRECTIONS) {
             assert floorBelowDoor != null;
             BlockPos startPos = floorBelowDoor.relative(direction);//找到门下方块旁边的方块
             if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos)) {//如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
-                if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos.below()) || FloorBlockScanner.isHouseBlock(level, startPos.above(2))) {//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
+                if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos.below()) || FloorBlockScanner.isBuildingBlock(level, startPos.above(2))) {//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
                     continue;
                 }
                 startPos = startPos.below();
@@ -60,9 +60,7 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
                 building.volume = scanner.getVolume();
                 //this.rack = scanner.getRack();
                 //this.chest = scanner.getChest();
-                building.linkedMines = scanner.getLinkedMines();
                 building.setOccupiedVolume(scanner.getOccupiedVolume());
-                building.temperature = scanner.getTemperature();
                 building.maxResidents = (int) (TownMathFunctions.calculateSpaceRating(scanner.getVolume(), scanner.getArea()) / 4 * scanner.getArea());
                 return true;
             }

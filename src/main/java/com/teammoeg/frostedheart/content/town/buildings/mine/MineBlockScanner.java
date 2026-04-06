@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.town.buildings.mine;
 
 import java.util.HashSet;
-import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
@@ -45,8 +44,8 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
     private int volume = 0;//used to calculate temperature
     @Getter
     private final OccupiedVolume occupiedVolume = new OccupiedVolume();
-    public MineBlockScanner(Level world, BlockPos startPos) {
-        super(world, startPos);
+    public MineBlockScanner(Level world, BlockPos startPos, int maxScanBlocks) {
+        super(world, startPos, maxScanBlocks);
         this.startX = startPos.getX();
         this.startY = startPos.getY();
         this.startZ = startPos.getZ();
@@ -64,31 +63,33 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
     }
 
     @Override
-    protected HashSet<BlockPos> nextScanningBlocks(BlockPos pos, Consumer<BlockPos> operation){
+    protected HashSet<BlockPos> nextScanningBlocks(BlockPos pos) {
         HashSet<BlockPos> nextScanningBlocks = new HashSet<>();
         nextScanningBlocks.addAll(getBlocksAdjacent(pos, (pos1)->{
-            if(scannedBlocks.contains(pos1) || scanningBlocks.contains(pos1)) return false;
-            if(isValidAir(pos1)) return true;
-            else {
-                operation.accept(pos1);
-                scannedBlocks.add(pos1);
-                return false;
-            }
+            if(scannedBlocks.contains(pos1.asLong()) || scanningBlocks.contains(pos1.asLong())) return false;
+            return isValidAir(pos1);
         }));
         return nextScanningBlocks;
     }
 
+    @Override
+    protected void processAirBlock(BlockPos pos) {
+        this.volume++;
+        this.temperature += WorldTemperature.block(world, pos);
+    }
+
+    @Override
+    protected void processNonAirBlock(BlockPos pos) {
+        if(isStoneOrOre(world, pos)){
+            validStone++;
+            occupiedVolume.add(pos);
+        }
+        light += world.getBlockState(pos).getLightEmission(world, pos);
+    }
+
     public boolean scan(){
-        this.scan(512, (pos)->{
-            this.volume++;
-            this.temperature += WorldTemperature.block(world, pos);
-        }, (pos)->{
-            if(isStoneOrOre(world, pos)){
-                validStone++;
-                occupiedVolume.add(toColumnPos(pos));
-            }
-            light += world.getBlockState(pos).getLightEmission(world, pos);
-        }, PREDICATE_FALSE);
+        super.scan();
+
         if(validStone <= 0){
             this.isValid = false;
             return false;

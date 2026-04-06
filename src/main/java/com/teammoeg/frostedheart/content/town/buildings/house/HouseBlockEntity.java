@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
@@ -100,17 +100,17 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 	 */
 	public boolean scanStructure(HouseBuilding building) {
 		BlockPos housePos = this.getBlockPos();
-		List<BlockPos> doorPosSet = BlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS));
+		List<BlockPos> doorPosSet = AbstractBlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS));
 		if (!doorPosSet.isEmpty()) {
 			for (BlockPos doorPos : doorPosSet) {
-				BlockPos floorBelowDoor = BlockScanner.getBlockBelow((pos) -> !(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);// 找到门下面垫的的那个方块
-				for (Direction direction : BlockScanner.PLANE_DIRECTIONS) {
+				BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow((pos) -> !(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);// 找到门下面垫的的那个方块
+				for (Direction direction : AbstractBlockScanner.PLANE_DIRECTIONS) {
 					//FHMain.LOGGER.debug("HouseScanner: creating new HouseBlockScanner");
 					assert floorBelowDoor != null;
 					BlockPos startPos = floorBelowDoor.relative(direction);// 找到门下方块旁边的方块
 					//FHMain.LOGGER.debug("HouseScanner: start pos 1" + startPos);
-					if (!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos)) {// 如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
-						if (!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos.below()) || FloorBlockScanner.isHouseBlock(level, startPos.above(2))) {// 如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
+					if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos)) {// 如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
+						if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos.below()) || FloorBlockScanner.isBuildingBlock(level, startPos.above(2))) {// 如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
 							continue;
 						}
 						startPos = startPos.below();
@@ -121,7 +121,7 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 						//FHMain.LOGGER.debug("HouseScanner: scan successful");
 						building.volume = scanner.getVolume();
 						building.area = scanner.getArea();
-						building.decorationRating = calculateDecorationRating(scanner.decorations, scanner.area);
+						building.decorationRating = calculateDecorationRating(scanner.decorations, scanner.getArea());
 						building.temperature = scanner.getTemperature();
 						building.setOccupiedVolume(scanner.getOccupiedVolume());
 						building.maxResidents = calculateMaxResidents(building.area, building.volume, scanner.getBeds().size());

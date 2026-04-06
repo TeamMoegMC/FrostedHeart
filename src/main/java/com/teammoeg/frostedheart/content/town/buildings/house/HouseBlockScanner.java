@@ -23,10 +23,7 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.chorda.util.CRegistryHelper;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.ConfinedSpaceScanner;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.HeightCheckingInfo;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.*;
 
 import lombok.Getter;
 import net.minecraft.world.level.block.BedBlock;
@@ -40,51 +37,24 @@ import net.minecraft.world.level.block.state.properties.BedPart;
 
 import java.util.*;
 
+import static blusunrize.immersiveengineering.api.utils.SafeChunkUtils.getBlockState;
+
 //严格来讲这不是一个正常的BlockScanner，而是一个用于将FloorBlockScanner和ConfinedSpaceScanner结合起来的类
-public class HouseBlockScanner extends BlockScanner {
-    public static final int MAX_SCANNING_TIMES_VOLUME = 4096;
-    public static final int MINIMUM_VOLUME = 8;
-    public static final int MINIMUM_AREA = 4;
-    public static final int MAX_SCANNING_TIMES_FLOOR = 512;
-    @Getter
-    protected int area = 0;
-    @Getter
-    protected int volume = 0;
-    @Getter
-    protected final Map<String/*block.getName()*/, Integer> decorations = new HashMap<>();
-    @Getter
-    protected final List<BlockPos> beds = new ArrayList<>();
-    @Getter
-    protected double temperature = 0;//average temperature
-    @Getter
-    protected final OccupiedVolume occupiedVolume = new OccupiedVolume();
+@Getter
+public class HouseBlockScanner extends BuildingBlockScanner {
+    public final Map<String/*block.getName()*/, Integer> decorations = new HashMap<>();
+    public final List<BlockPos> beds = new ArrayList<>();
+    public double temperature = 0;//average temperature
 
     public HouseBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
     }
 
-
-    public static boolean isValidFloorOrLadder(Level world, BlockPos pos) {
-        // Determine whether the block satisfies type requirements
-        if (!FloorBlockScanner.isFloorBlock(world, pos) && !world.getBlockState(pos).is(BlockTags.CLIMBABLE)) return false;
-        HeightCheckingInfo information = countBlocksAbove(world,pos, (pos1)->FloorBlockScanner.isHouseBlock(world, pos1));
-        //FHMain.LOGGER.debug(information);
-        // Determine whether the block has open air above it
-        if (!information.result()) {
-            return false;
-        } else {
-            // Determine whether the block has at least 2 blocks above it
-            return information.height() >= 2;
-        }
-    }
-
-    /**
-     * Given a block scanned, add the block to the decorations map if it is a decoration block.
-     *
-     * @param pos the position of the block to check
-     */
-    protected void addDecoration(BlockPos pos) {
-        BlockState blockState = getBlockState(pos);
+    //扫描装饰方块，并统计装饰数量
+    //统计床的数量
+    @Override
+    protected void processBuildingNonAirBlock(BlockPos pos) {
+        BlockState blockState = getBlockState(world, pos);
         Block block = blockState.getBlock();
         if(block instanceof BedBlock){
             if(blockState.getValue(BedBlock.PART) == BedPart.HEAD){
@@ -98,37 +68,23 @@ public class HouseBlockScanner extends BlockScanner {
         }
     }
 
+    @Override
+    protected void processBuildingAirBlock(BlockPos pos) {
+        temperature += WorldTemperature.block(world, pos);
+    }
 
-    /**
-     * Run the house scanner.
-     * 对本scanner进行一次scan扫描地板，然后新建一个blockScanner扫描空气。
-     * @return whether the house is valid
-     */
-    public boolean scan() {//想了想还是叫scan更合适
-        //第一次扫描，确定地板的位置，并判断是否有露天的地板
-        FloorBlockScanner floorBlockScanner = new FloorBlockScanner(world, startPos);
-        floorBlockScanner.scan(MAX_SCANNING_TIMES_FLOOR, (pos) -> {
-            this.area++;
-            this.occupiedVolume.add(toColumnPos(pos));
-            //FHMain.LOGGER.debug("HouseScanner: scanning floor pos " + pos);
-        }, (pos) -> !this.isValid);
-       // FHMain.LOGGER.debug("HouseScanner: first scan area: " + area);
-        if (this.area < MINIMUM_AREA) this.isValid = false;
-        if (!floorBlockScanner.isValid || !this.isValid) return false;
-        //FHMain.LOGGER.debug("HouseScanner: first scan completed");
 
-        //第二次扫描，判断房间是否密闭
-        ConfinedSpaceScanner airScanner = new ConfinedSpaceScanner(world, startPos.above());
-        airScanner.scan(MAX_SCANNING_TIMES_VOLUME, (pos) -> {//对每一个空气方块执行的操作：统计温度、统计体积、统计温度
-                    this.temperature += WorldTemperature.block(world, pos);
-                    this.volume++;
-                    this.occupiedVolume.add(new ColumnPos(pos.getX(), pos.getZ()));
-                    //FHMain.LOGGER.debug("scanning air pos:" + pos);
-                }, this::addDecoration,
-                (useless) -> !this.isValid);
-        temperature /= volume;
-        if (this.volume < MINIMUM_VOLUME) this.isValid = false;
-        return this.isValid;
+    public boolean scan() {
+        super.scan();
+        if(this.isValid){
+            this.temperature /= this.volume;
+            return true;
+        }else{
+            this.temperature = 0;
+            this.decorations.clear();
+            this.beds.clear();
+            return false;
+        }
     }
     /*
     * 此方法尚存在缺陷，下面（横截面示意图）这种情况

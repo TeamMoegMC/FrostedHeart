@@ -22,11 +22,12 @@ package com.teammoeg.frostedheart.content.town.block.blockscanner;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
+import it.unimi.dsi.fastutil.longs.LongIterator;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.world.level.block.Block;
@@ -36,27 +37,44 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ColumnPos;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * 提供了一些扫描方块用的静态方法
- * 可用于对形状未知，但以一定条件互相关联的方块，进行一些操作。若要如此做，最好写一个子类，并覆写nextScanningBlocks和scan方法，以实现更多功能。
- * 以一定条件互相关联，就是可以通过一个方块的位置，加上一些其它必要条件，获取到其余的应被扫描的方块位置。例如：通过一个水方块，获取相邻的水方块。以此类推可以将一片连续的水域全部扫描。
- * 可以进行的操作包括但不限于统计数量、统计温度
- * 和扫描方块有关的其它方法也可以丢在这里
- * 这里面的方法可能存在问题，发现的话请帮我改了谢谢茄子(
- * <b>这里的部分方法由于高度限制只适用于主世界！</b>
+ * 提供了一些扫描方块用的静态方法和模板方法
+ * 使用模板方法模式实现方块的扫描逻辑。子类通过覆写钩子方法来定制扫描行为。
+ *
+ * <p>模板方法模式设计：</p>
+ * <ul>
+ *   <li>{@code scan()} - 主扫描方法，定义扫描流程，为final方法</li>
+ *   <li>{@code nextScanningBlocks(BlockPos)} - 子类必须实现，定义如何获取下一批扫描方块</li>
+ *   <li>{@code processBlock(BlockPos)} - 子类可覆写，定义如何处理每个扫描到的方块</li>
+ *   <li>{@code shouldStopAt(BlockPos)} - 子类可覆写，定义是否提前停止扫描（不影响isValid）</li>
+ * </ul>
+ *
+ * <p>可用于对形状未知，但以一定条件互相关联的方块，进行一些操作。</p>
+ * <p>以一定条件互相关联，就是可以通过一个方块的位置，加上一些其它必要条件，获取到其余的应被扫描的方块位置。</p>
+ * <p>例如：通过一个水方块，获取相邻的水方块。以此类推可以将一片连续的水域全部扫描。</p>
+ * <p>可以进行的操作包括但不限于统计数量、统计温度</p>
+ * <p>和扫描方块有关的其它方法也可以丢在这里</p>
+ * <p>这里面的方法可能存在问题，发现的话请帮我改了谢谢茄子(</p>
+ * <p><b>这里的部分方法由于高度限制只适用于主世界！</b></p>
  */
-public class BlockScanner {
+public abstract class AbstractBlockScanner {
+    // 常量定义
+    public static final int MAX_HEIGHT = 320;
+    public static final int MIN_HEIGHT = -64;
+    public static final int DEFAULT_MAX_SCAN_BLOCKS = 4096;
+    public static final int MIN_ABOVE_HEIGHT = 2;
+
     @Getter
-    protected Set<BlockPos> scannedBlocks;
+    protected LongSet scannedBlocks = new LongOpenHashSet();
     @Getter
     @Setter
-    protected Set<BlockPos> scanningBlocks;
-    protected Set<BlockPos> scanningBlocksNew = new HashSet<>();
+    protected LongSet scanningBlocks = new LongOpenHashSet();
+    protected LongSet scanningBlocksNew = new LongOpenHashSet();
+    public final int maxScanBlocks;
     protected final BlockPos startPos;
     public final Level world;
     public static final Direction[] PLANE_DIRECTIONS= {Direction.SOUTH, Direction.EAST, Direction.NORTH, Direction.WEST};
@@ -65,25 +83,43 @@ public class BlockScanner {
     public static final Consumer<BlockPos> CONSUMER_NULL = (useless)->{};
     public boolean isValid = true;//it can be changed in methods, scan should stop when this is false
 
-    public BlockScanner (Level world, BlockPos startPos){
+    public AbstractBlockScanner(Level world, BlockPos startPos, int maxScanBlocks){
         this.startPos = startPos;
-        this.scanningBlocks = new HashSet<>();
-        this.scanningBlocks.add(startPos);
+        this.maxScanBlocks = maxScanBlocks;
+        this.scanningBlocks = new LongOpenHashSet();
+        this.scanningBlocks.add(startPos.asLong());
         //FHMain.LOGGER.debug("HouseScanner: scanningBlocks: " + scanningBlocks);
         this.world = world;
-        this.scannedBlocks = new HashSet<>();
+        this.scannedBlocks = new LongOpenHashSet();
     }
 
-    public BlockScanner(Level world, BlockPos startPos, Set<BlockPos> scannedBlocks){
+    /**
+     * 默认构造函数，使用默认的最大扫描次数DEFAULT_MAX_SCAN_TIMES
+     */
+    public AbstractBlockScanner(Level world, BlockPos startPos){
+        this(world, startPos, DEFAULT_MAX_SCAN_BLOCKS);
+    }
+
+    public AbstractBlockScanner(Level world, BlockPos startPos, LongSet scannedBlocks, int maxScanBlocks){
         this.startPos = startPos;
-        this.scanningBlocks = new HashSet<>();
-        this.scanningBlocks.add(startPos);
+        this.maxScanBlocks = maxScanBlocks;
+        this.scanningBlocks = new LongOpenHashSet();
+        this.scanningBlocks.add(startPos.asLong());
         this.world = world;
         this.scannedBlocks = scannedBlocks;
     }
 
     public void addScannedBlock(BlockPos pos){
-        this.scannedBlocks.add(pos);
+        this.scannedBlocks.add(pos.asLong());
+    }
+
+    /**
+     * 添加扫描块（返回是否成功添加）
+     */
+    private boolean addScanningBlock(BlockPos pos) {
+        long key = pos.asLong();
+        if (scannedBlocks.contains(key)) return false;
+        return scanningBlocks.add(key);
     }
 
     protected BlockState getBlockState(BlockPos pos) {
@@ -108,7 +144,7 @@ public class BlockScanner {
         int num = 0;
         for(Direction direction : Direction.values()){
             BlockPos adjacentPos = startPos.relative(direction);
-            if(adjacentPos.getY() >= -64 && adjacentPos.getY() <= 320){
+            if(adjacentPos.getY() >= MIN_HEIGHT && adjacentPos.getY() <= MAX_HEIGHT){
                 if(target.test(adjacentPos)){
                     num++;
                 }
@@ -143,7 +179,7 @@ public class BlockScanner {
         BlockPos scanningBlock;
         int num = 0;
         scanningBlock = startPos.above();
-        while(scanningBlock.getY() < 320){
+        while(scanningBlock.getY() < MAX_HEIGHT){
             if(target.test(scanningBlock)){
                 num++;
             }
@@ -186,7 +222,7 @@ public class BlockScanner {
         BlockPos scanningBlock;
         scanningBlock = startPos.above();
         ArrayList<BlockPos> blocks = new ArrayList<>();
-        while(scanningBlock.getY() <= 320){
+        while(scanningBlock.getY() <= MAX_HEIGHT){
             if(stopAt.test(scanningBlock)){
                 return blocks;
             }
@@ -209,7 +245,7 @@ public class BlockScanner {
         BlockPos scanningBlock;
         scanningBlock = startPos.below();
         ArrayList<BlockPos> blocks = new ArrayList<>();
-        while(scanningBlock.getY() >= -64){
+        while(scanningBlock.getY() >= MIN_HEIGHT){
             if(stopAt.test(scanningBlock)){
                 return blocks;
             }
@@ -278,8 +314,9 @@ public class BlockScanner {
         ArrayList<BlockPos> possibleBlocks = getPossibleFloor(pos);
         ArrayList<BlockPos> floorAdjacent = new ArrayList<>();
         for(BlockPos possibleBlock : possibleBlocks){
-            if(scannedBlocks.contains(possibleBlock) || scanningBlocks.contains(possibleBlock)) continue;
-            if(isValidFloor.test(pos)) floorAdjacent.add(possibleBlock);
+            long key = possibleBlock.asLong();
+            if(scannedBlocks.contains(key) || scanningBlocks.contains(key)) continue;
+            if(isValidFloor.test(possibleBlock)) floorAdjacent.add(possibleBlock);
         }
         return floorAdjacent;
     }
@@ -310,7 +347,7 @@ public class BlockScanner {
     public static BlockPos getBlockBelow(Predicate<BlockPos> target, BlockPos startPos){
         BlockPos scanningBlock;
         scanningBlock = startPos.below();
-        while(scanningBlock.getY() >= -64){
+        while(scanningBlock.getY() >= MIN_HEIGHT){
             if(target.test(scanningBlock)){
                 return scanningBlock;
             }
@@ -346,60 +383,106 @@ public class BlockScanner {
      * 获取接下来要被扫描的方块。这个方法应在子类中重写，而非直接使用。
      * @return 接下来要被扫描的方块。这个Set不应包含scannedBlocks中已记录的内容及scanningBlocks中的内容。
      */
-    protected HashSet<BlockPos> nextScanningBlocks(BlockPos startPos){
-        return new HashSet<>();
+    protected abstract HashSet<BlockPos> nextScanningBlocks(BlockPos startPos);
+
+    /**
+     * 处理每个扫描到的方块。子类可以覆写此方法来实现特定的处理逻辑。
+     * 默认实现为空，子类可以根据需要覆写。
+     * @param pos 当前正在处理的方块位置
+     */
+    protected void processBlock(BlockPos pos) {
+        // 默认实现为空，子类可以覆写
     }
 
     /**
-     * 对每个scanningBlocks的方块执行operation操作，并按照nextScanningBlocks方法的规则获取新的scanningBlocks。
-     * scan方法的工作模式：
+     * 判断是否应该在指定位置停止扫描。
+     * 默认实现检查isValid标志，子类可以覆写以实现更精细的控制。
+     *
+     * <p>设计意图：</p>
+     * <ul>
+     *   <li>{@code isValid}：表示建筑结构整体是否合法，是最终的判断结果</li>
+     *   <li>{@code shouldStopAt}：提供扫描中途的控制能力，可以在不影响结构合法性的前提下提前停止
+     *     <br>例如：扫描到一定数量的方块后就停止，因为已经满足需求
+     *     <br>例如：发现某个特征后不需要继续扫描，但结构本身是合法的</li>
+     * </ul>
+     *
+     * @param pos 当前正在处理的方块位置
+     * @return true表示应该停止扫描，false表示继续扫描
+     */
+    protected boolean shouldStopAt(BlockPos pos) {
+        // 默认实现：检查isValid
+        return !this.isValid;
+    }
+
+    /**
+     * 主扫描方法（模板方法）。定义扫描的完整流程，子类通过覆写钩子方法来定制行为。
+     *
+     * <p>scan方法的工作模式：</p>
      * 初始状态：在类创建完成后，scanningBlocks里会有一个blockPos，即startPos
      * 工作时，将scanningBlocks以long的形式放入scannedBlock，创建scanningBlocksNew集合，遍历scanningBlocks中的所有blockPos，然后对blockPos进行以下操作：
-     * 1 如果满足stopAt，则直接退出扫描并返回false
-     * 2 对blockPos执行operation操作
-     * 3 对blockPos执行nextScanningBlocks方法，获取下一轮扫描的方块（这个方法应自己写，写的时候应注意排除scannedBlocks以及避免重复），然后存入scanningBlocksNew中
+     * 1 检查isValid，如果为false则停止扫描
+     * 2 检查shouldStopAt，如果返回true则停止扫描
+     * 3 对blockPos执行processBlock操作
+     * 4 对blockPos执行nextScanningBlocks方法，获取下一轮扫描的方块，然后存入scanningBlocksNew中
      * 在一轮scanningBlocks扫描结束后，把scanningBlocks换成scanningBlocksNew
-     * @param operation 对于每个扫描的方块，都会执行这里的操作。由于输入了BlockScanner，也可以对BlockScanner类及其子类里面的变量进行操作。
-     * @param nextScanningBlocks 用于获取接下来要被扫描的方块。
-     * @param stopAt 如果扫描的方块满足了stopAt的条件，则会停止扫描并返回false
-     * @return 扫描成功与否。如果scan完成了（scanningBlock为空），就会返回true；如果scan中途中断（触发了stopAt，或是scanTimes达到了上限2048），则会返回false
+     *
+     * @return 扫描成功与否。如果scan完成了（scanningBlock为空），就会返回true；如果scan中途中断（触发了shouldStopAt，或是scanTimes达到了上限maxScanBlocks），则会返回false
      */
-    public boolean scan(int maxScanningTimes,
-                        Consumer<BlockPos> operation,
-                        Function<BlockPos, HashSet<BlockPos>> nextScanningBlocks,
-                        Predicate<BlockPos> stopAt){
-        int scanTimes = 0;
+    public boolean scan() {
+        int scannedBlocksNum = 0;
+
         while(!scanningBlocks.isEmpty() && isValid){
-            if(scanTimes > maxScanningTimes){
+            // 先检查扫描次数限制
+            if(scannedBlocksNum > maxScanBlocks){
                 return false;
             }
-            scannedBlocks.addAll(scanningBlocks);
-            scanningBlocksNew.clear();
-            for(BlockPos scanningBlock : scanningBlocks){
-                if(stopAt.test(scanningBlock) || !this.isValid) return false;
-                operation.accept(scanningBlock);
-                scanTimes++;
-                scanningBlocksNew.addAll(nextScanningBlocks.apply(scanningBlock));
+
+            // 直接将 scanningBlocks 转移到 scannedBlocks
+            for (long pos : scanningBlocks) {
+                scannedBlocks.add(pos);
+                scannedBlocksNum++;
             }
-            scanningBlocks.clear();
-            scanningBlocks.addAll(scanningBlocksNew);
+            scanningBlocksNew.clear();
+
+            LongIterator iterator = scanningBlocks.iterator();
+            while (iterator.hasNext()) {
+                long posLong = iterator.nextLong();
+                BlockPos scanningBlock = BlockPos.of(posLong);
+
+                // 优先检查 isValid
+                if (!this.isValid) {
+                    return false;
+                }
+
+                // shouldStopAt 检查
+                if (shouldStopAt(scanningBlock)) {
+                    return false;
+                }
+
+                // 处理当前方块
+                processBlock(scanningBlock);
+
+                // 获取下一批位置
+                HashSet<BlockPos> next = nextScanningBlocks(scanningBlock);
+                for (BlockPos nextPos : next) {
+                    long nextKey = nextPos.asLong();
+                    if (!scannedBlocks.contains(nextKey) && !scanningBlocksNew.contains(nextKey)) {
+                        scanningBlocksNew.add(nextKey);
+                    }
+                }
+            }
+
+            // 提前检查：如果没有新的扫描目标，提前退出
+            if (scanningBlocksNew.isEmpty()) {
+                break;
+            }
+
+            // 交换集合，避免重复创建
+            LongSet temp = scanningBlocks;
+            scanningBlocks = scanningBlocksNew;
+            scanningBlocksNew = temp;
         }
         return this.isValid;
-    }
-
-    public boolean scan(int maxScanningTimes,
-                        Consumer<BlockPos> operation,
-                        Predicate<BlockPos> stopAt){
-        return scan(maxScanningTimes, operation, this::nextScanningBlocks, stopAt);
-    }
-
-    public boolean scan(int maxScanningTimes,
-                        Consumer<BlockPos> operation){
-        return scan(maxScanningTimes, operation, this::nextScanningBlocks, PREDICATE_FALSE);
-    }
-
-    public boolean scan(int maxScanningTimes){
-        return scan(maxScanningTimes, CONSUMER_NULL, this::nextScanningBlocks, PREDICATE_FALSE);
     }
 
 }

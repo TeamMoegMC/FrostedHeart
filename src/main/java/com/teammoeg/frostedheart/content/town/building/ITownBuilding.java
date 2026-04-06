@@ -5,7 +5,6 @@ import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.frostedheart.content.town.Town;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
-import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingCampBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
@@ -17,7 +16,6 @@ import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuild
 public interface ITownBuilding {
     public static final Codec<ITownBuilding> CODEC = CodecUtil.dispatch(ITownBuilding.class)
             .type("house", HouseBuilding.class, HouseBuilding.CODEC)
-            .type("huntingCamp", HuntingCampBuilding.class, HuntingCampBuilding.CODEC)
             .type("huntingBase", HuntingBaseBuilding.class, HuntingBaseBuilding.CODEC)
             .type("mine", MineBuilding.class, MineBuilding.CODEC)
             .type("mineBase", MineBaseBuilding.class, MineBaseBuilding.CODEC)

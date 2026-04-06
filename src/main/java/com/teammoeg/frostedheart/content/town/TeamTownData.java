@@ -194,39 +194,18 @@ public class TeamTownData implements SpecialData {
 		List<AbstractTownBuilding> buildingsWithOccupiedAreas = buildings.values().stream()
 				.filter(building -> building.getOccupiedVolume() != null && building.getOccupiedVolume() != OccupiedVolume.EMPTY)
 				.toList();
-
-		Set<AbstractTownBuilding> workersMightOverlap = new HashSet<>();
 		// 两两比对，根据OccupiedArea的外接矩形是否重合初步筛选可能重叠的worker
 		for (int i = 0; i < buildingsWithOccupiedAreas.size() - 1; i++) {
 			AbstractTownBuilding building = buildingsWithOccupiedAreas.get(i);
-			OccupiedVolume workerOccupiedVolume = building.getOccupiedVolume();
+			OccupiedVolume occupiedVolume = building.getOccupiedVolume();
 			for (int j = i + 1; j < buildingsWithOccupiedAreas.size(); j++) {
-				AbstractTownBuilding comparingBuilding = buildingsWithOccupiedAreas.get(j);
-				OccupiedVolume comparingWorkerOccupiedVolume = comparingBuilding.getOccupiedVolume();
-				if (workerOccupiedVolume.boundingBoxIntersect(comparingWorkerOccupiedVolume)) {
-					workersMightOverlap.add(building);
-					workersMightOverlap.add(comparingBuilding);
+				AbstractTownBuilding otherBuilding = buildingsWithOccupiedAreas.get(j);
+				OccupiedVolume otherOccupiedVolume = otherBuilding.getOccupiedVolume();
+				if (occupiedVolume.intersects(otherOccupiedVolume)) {
+					building.occupiedAreaOverlapped = true;
+					otherBuilding.occupiedAreaOverlapped = true;
 				}
 			}
-		}
-
-		Map<ColumnPos, AbstractTownBuilding> occupiedAreaCollectingMap = new HashMap<>();
-		Set<AbstractTownBuilding> overlappedWorkers = new HashSet<>();
-		// 利用townTileEntity的OccupiedArea判断是否有重叠
-		// 遍历所有可能重叠的worker
-		for (AbstractTownBuilding building : workersMightOverlap) {
-			// 遍历该城镇方块所有占用的位置，并与方块本身一起存入occupiedAreaCollectingMap中。
-			// 如果发现这个位置已经有过一个worker占用，则将那个worker与这个worker一起存入overlappedWorkers中。
-			for (ColumnPos columnPos : building.getOccupiedVolume().getOccupiedBlocks()) {
-				if (occupiedAreaCollectingMap.containsKey(columnPos)) {
-					overlappedWorkers.add(building);
-					overlappedWorkers.add(occupiedAreaCollectingMap.get(columnPos));
-				}
-				occupiedAreaCollectingMap.put(columnPos, building);
-			}
-		}
-		for (AbstractTownBuilding building : buildingsWithOccupiedAreas) {
-            building.occupiedAreaOverlapped = overlappedWorkers.contains(building);
 		}
 	}
 

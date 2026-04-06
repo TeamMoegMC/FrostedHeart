@@ -105,7 +105,6 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
         public TownResourceActionResults.TownResourceTypeCostActionResult execute(TownResourceActions.TownResourceTypeCostAction action) {
             double availableAmount = resourceHolder.get(action.resourceToCost());
             double toCost = action.amount();
-            System.out.println("duck_egg debug: amount to cost: " + toCost);
             if(action.amount() > availableAmount){
                 if(action.actionMode()==ResourceActionMode.ATTEMPT || availableAmount<= TeamTownResourceHolder.DELTA){
                     return new TownResourceActionResults.TownResourceTypeCostActionResult(action, false, 0, action.amount(), Collections.emptyList());
@@ -133,7 +132,6 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
                 details.add(result);
                 toCost = result.residualAmount();
                 if(toCost<= TeamTownResourceHolder.DELTA) break;
-                System.out.println("duck_egg debug: attribute costed: " + result);
             }
             return new TownResourceActionResults.TownResourceTypeCostActionResult(action, action.amount() <= availableAmount, toCostCopy, action.amount() - toCostCopy, details);
         }

@@ -107,6 +107,20 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         this.temperatureModifier = temperatureModifier;
     }
 
+    /**
+     * 测试用构造方法，不包含OccupiedVolume
+     */
+    public HouseBuilding(BlockPos pos, boolean isStructureValid, int area, int volume, double temperature, double decorationRating, int maxResidents, double temperatureModifier) {
+        super(pos);
+        this.isStructureValid = isStructureValid;
+        this.area = area;
+        this.volume = volume;
+        this.temperature = temperature;
+        this.decorationRating = decorationRating;
+        this.maxResidents = maxResidents;
+        this.temperatureModifier = temperatureModifier;
+    }
+
 
     public boolean addResident(Resident resident) {
         resident.setHousePos(this.getPos());

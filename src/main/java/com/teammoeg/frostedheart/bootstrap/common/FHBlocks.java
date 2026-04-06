@@ -64,7 +64,6 @@ import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlock;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlock;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlock;
-import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingCampBlock;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlock;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlock;
@@ -2203,14 +2202,6 @@ public class FHBlocks {
             .transform(axeOnly())
             .simpleItem()
             .lang("Mining Base")
-            .register();
-
-    public static final BlockEntry<HuntingCampBlock> HUNTING_CAMP = REGISTRATE.block("hunting_camp", HuntingCampBlock::new)
-            .properties(t -> AbstractTownBuildingBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
-            .tag(FHTags.Blocks.TOWN_BLOCKS.tag)
-            .transform(axeOnly())
-            .simpleItem()
-            .lang("Hunting Camp")
             .register();
 
     public static final BlockEntry<HuntingBaseBlock> HUNTING_BASE = REGISTRATE.block("hunting_base", HuntingBaseBlock::new)

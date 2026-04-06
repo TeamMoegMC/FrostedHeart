@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEnt
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockScanner;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import lombok.Getter;
 import net.minecraft.tags.BlockTags;
@@ -55,15 +55,15 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 
 	public boolean scanStructure(HuntingBaseBuilding building) {
 		BlockPos housePos = this.getBlockPos();
-		List<BlockPos> doorPosSet = BlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS));
+		List<BlockPos> doorPosSet = AbstractBlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS));
 		if (doorPosSet.isEmpty()) return false;
 		for (BlockPos doorPos : doorPosSet) {
-			BlockPos floorBelowDoor = BlockScanner.getBlockBelow((pos) -> !(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);// 找到门下面垫的的那个方块
-			for (Direction direction : BlockScanner.PLANE_DIRECTIONS) {
+			BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow((pos) -> !(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);// 找到门下面垫的的那个方块
+			for (Direction direction : AbstractBlockScanner.PLANE_DIRECTIONS) {
 				assert floorBelowDoor != null;
 				BlockPos startPos = floorBelowDoor.relative(direction);// 找到门下方块旁边的方块
-				if (!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos)) {// 如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
-					if (!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos.below()) || FloorBlockScanner.isHouseBlock(level, startPos.above(2))) {// 如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
+				if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos)) {// 如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
+					if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos.below()) || FloorBlockScanner.isBuildingBlock(level, startPos.above(2))) {// 如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
 						continue;
 					}
 					startPos = startPos.below();
@@ -74,9 +74,8 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 					building.area = scanner.getArea();
 					building.temperature = scanner.getTemperature();
 					building.setOccupiedVolume(scanner.getOccupiedVolume());
-					building.tanningRackNum = scanner.getTanningRackNum();
-					building.maxResidents = calculateMaxResidents(building.volume, building.area, scanner.getBeds().size());
-					building.rating = computeRating(building.volume, building.area, scanner.getDecorations(), building.temperature, this.getTemperatureModifier(), building.maxResidents, scanner.getChestNum());
+					building.tanningRackNum = scanner.getTanningRackNum();;
+					building.rating = computeRating(building.volume, building.area, building.temperature, this.getTemperatureModifier(), building.maxResidents);
 					return true;
 				}
 			}
@@ -89,17 +88,16 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 	 * 
 	 * @param volume the volume of the hunting base
 	 * @param area the area of the hunting base
-	 * @param decorations map of decorations
 	 * @param temperature the base temperature
 	 * @param temperatureModifier the temperature modifier
 	 * @param maxResidents maximum number of residents
 	 * @param chestNum number of chests
 	 * @return computed rating value
 	 */
-	public static double computeRating(int volume, int area, Map<String, Integer> decorations, double temperature, double temperatureModifier, int maxResidents, int chestNum) {
-		return (TownMathFunctions.calculateSpaceRating(volume, area) * (2 + TownMathFunctions.calculateDecorationRating(decorations, area))
-				+ 2 * TownMathFunctions.calculateTemperatureRating(temperature + temperatureModifier) +
-				(1 - Math.exp(-maxResidents - chestNum))) / 6;
+	public static double computeRating(int volume, int area,  double temperature, double temperatureModifier, int maxResidents) {
+		return (3 * TownMathFunctions.calculateSpaceRating(volume, area)
+				+ 2 * TownMathFunctions.calculateTemperatureRating(temperature + temperatureModifier))
+				/ 5;
 	}
 
 	private static int calculateMaxResidents(int volume, int area, int bedNum) {

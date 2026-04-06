@@ -21,6 +21,10 @@ package com.teammoeg.frostedheart.content.town.block.blockscanner;
 
 import java.util.HashSet;
 
+import it.unimi.dsi.fastutil.longs.LongIterator;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
+
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 
 import net.minecraft.world.level.block.state.BlockState;
@@ -30,18 +34,26 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.common.Tags;
 
 /**
- * scan valid floor
+ * 扫描有效的地板方块
+ * 使用模板方法模式，子类可以通过覆写processBlock来定制地板方块的处理逻辑。
+ *
+ * <p>核心功能：</p>
+ * <ul>
+ *   <li>扫描相邻的地板方块</li>
+ *   <li>支持通过梯子连接不同高度的地板（canUseLadder为true时）</li>
+ *   <li>验证地板有效性（上方至少有2格空间）</li>
+ * </ul>
  */
-public class FloorBlockScanner extends BlockScanner{
+public class FloorBlockScanner extends AbstractBlockScanner {
     public final boolean canUseLadder;
 
-    public FloorBlockScanner(Level world, BlockPos startPos) {
-        super(world, startPos);
+    public FloorBlockScanner(Level world, BlockPos startPos, int maxScanBlocks) {
+        super(world, startPos, maxScanBlocks);
         this.canUseLadder = true;
     }
 
-    public FloorBlockScanner(Level world, BlockPos startPos, boolean canUseLadder) {
-        super(world, startPos);
+    public FloorBlockScanner(Level world, BlockPos startPos, boolean canUseLadder, int maxScanBlocks) {
+        super(world, startPos, maxScanBlocks);
         this.canUseLadder = canUseLadder;
     }
 
@@ -63,24 +75,27 @@ public class FloorBlockScanner extends BlockScanner{
         return isWallBlock(this.world, pos);
     }
 
-    protected boolean isHouseBlock(BlockPos pos) {
+    protected boolean isBuildingBlock(BlockPos pos) {
         return isFloorBlock(pos) || isWallBlock(pos);
     }
 
-    public static boolean isHouseBlock(Level world, BlockPos pos){
+    /**
+     * 判断方块是否可作为房屋的外壁使用
+     */
+    public static boolean isBuildingBlock(Level world, BlockPos pos){
         return isFloorBlock(world, pos) || isWallBlock(world, pos);
     }
 
     public static boolean isValidFloorOrLadder(Level world, BlockPos pos) {
         // Determine whether the block satisfies type requirements
         if (!FloorBlockScanner.isFloorBlock(world, pos) && !world.getBlockState(pos).is(BlockTags.CLIMBABLE)) return false;
-        HeightCheckingInfo information = countBlocksAbove(world,pos, (pos1)->FloorBlockScanner.isHouseBlock(world, pos1));
+        HeightCheckingInfo information = countBlocksAbove(world,pos, (pos1)->FloorBlockScanner.isBuildingBlock(world, pos1));
         // Determine whether the block has open air above it
         if (!information.result()) {
             return false;
         } else {
-            // Determine whether the block has at least 2 blocks above it
-            return information.height() >= 2;
+            // Determine whether the block has at least MIN_ABOVE_HEIGHT blocks above it
+            return information.height() >= MIN_ABOVE_HEIGHT;
         }
     }
 
@@ -88,7 +103,7 @@ public class FloorBlockScanner extends BlockScanner{
     /**
      * Determine whether a block is a valid floor block.
      * A valid floor block is a block that is a normal cube, a stair, or a slab.
-     * A valid floor block must have at least 2 blocks above it.
+     * A valid floor block must have at least 2 air blocks above it.
      * A valid floor block must not have any open air above it.
      * 【Override it if you need】
      * @param pos the position of the block
@@ -97,15 +112,14 @@ public class FloorBlockScanner extends BlockScanner{
     public boolean isValidFloor(BlockPos pos) {
         // Determine whether the block satisfies type requirements
         if (!isFloorBlock(pos)) return false;
-        HeightCheckingInfo information = countBlocksAbove(world,pos, this::isHouseBlock);
+        HeightCheckingInfo information = countBlocksAbove(world,pos, this::isBuildingBlock);
         // Determine whether the block has open air above it
         if (!information.result()) {
             this.isValid = false;
-            //FHMain.LOGGER.debug("HouseScanner: found block open air!");
             return false;
         } else {
-            // Determine whether the block has at least 2 blocks above it
-            return information.height() >= 2;
+            // Determine whether the block has at least MIN_ABOVE_HEIGHT blocks above it
+            return information.height() >= MIN_ABOVE_HEIGHT;
         }
     }
 
@@ -120,38 +134,62 @@ public class FloorBlockScanner extends BlockScanner{
      * @return a set of possible floor blocks
      */
     protected HashSet<BlockPos> nextScanningBlocks(BlockPos startPos) {
-        HashSet<BlockPos> possibleFloors = new HashSet<>(getPossibleFloor(startPos));
+        // 使用 LongSet 内部处理，最后再转换为 HashSet<BlockPos>
+        LongSet possibleFloorsLong = new LongOpenHashSet();
+        LongSet visitedForAdd = new LongOpenHashSet();
+
+        // 添加基础可能地板
+        for (BlockPos pos : getPossibleFloor(startPos)) {
+            possibleFloorsLong.add(pos.asLong());
+        }
+
+        // 预获取起始位置附近的 BlockState，减少重复查询
+        BlockState stateAbove = getBlockState(startPos.above());
+        BlockState stateAbove2 = getBlockState(startPos.above(2));
+        boolean hasClimbableAbove = stateAbove.is(BlockTags.CLIMBABLE) || stateAbove2.is(BlockTags.CLIMBABLE);
+
         if(canUseLadder) {
-            HashSet<BlockPos> possibleFloorsNearLadder = new HashSet<>();
-            if (getBlockState(startPos.above()).is(BlockTags.CLIMBABLE) || getBlockState(startPos.above(2)).is(BlockTags.CLIMBABLE)) {
+            if (hasClimbableAbove) {
                 for (BlockPos ladder : getBlocksAboveAndBelow(startPos.above(), (pos) -> !(getBlockState(pos).is(BlockTags.CLIMBABLE)))) {
-                    if (isValidLadder(ladder))
-                        possibleFloorsNearLadder.addAll(getPossibleFloor(ladder));
-                }
-            }
-            for (BlockPos blockPos : possibleFloors) {
-                if (getBlockState(blockPos).is(BlockTags.CLIMBABLE) || getBlockState(blockPos.above()).is(BlockTags.CLIMBABLE)) {
-                    for (BlockPos ladder : getBlocksAboveAndBelow(blockPos, (pos) -> !(getBlockState(pos).is(BlockTags.CLIMBABLE)))) {
-                        if (isValidLadder(ladder))
-                            possibleFloorsNearLadder.addAll(getPossibleFloorNearLadder(ladder));
+                    if (isValidLadder(ladder)) {
+                        for (BlockPos pos : getPossibleFloor(ladder)) {
+                            possibleFloorsLong.add(pos.asLong());
+                        }
                     }
                 }
             }
-            possibleFloors.addAll(possibleFloorsNearLadder);
+            // 使用 LongSet 迭代避免重复处理
+            for (long lpos : possibleFloorsLong) {
+                BlockPos blockPos = BlockPos.of(lpos);
+                BlockState state = getBlockState(blockPos);
+                BlockState stateAboveTemp = getBlockState(blockPos.above());
+                if (state.is(BlockTags.CLIMBABLE) || stateAboveTemp.is(BlockTags.CLIMBABLE)) {
+                    for (BlockPos ladder : getBlocksAboveAndBelow(blockPos, (pos) -> !(getBlockState(pos).is(BlockTags.CLIMBABLE)))) {
+                        if (isValidLadder(ladder)) {
+                            for (BlockPos pos : getPossibleFloorNearLadder(ladder)) {
+                                possibleFloorsLong.add(pos.asLong());
+                            }
+                        }
+                    }
+                }
+            }
         }
+        // 内部处理去重和验证
         HashSet<BlockPos> nextScanningBlocks = new HashSet<>();
-        for (BlockPos possibleBlock : possibleFloors) {
-            if (scannedBlocks.contains(possibleBlock) || scanningBlocks.contains(possibleBlock)) {
+        for (long key : possibleFloorsLong) {
+            if (scannedBlocks.contains(key) || scanningBlocks.contains(key)) {
                 continue;
             }
+            BlockPos possibleBlock = BlockPos.of(key);
             if (!isValidFloor(possibleBlock)) {
-                scannedBlocks.add(possibleBlock);
+                scannedBlocks.add(key);
                 continue;
             }
-            nextScanningBlocks.add(possibleBlock);
+            if (!visitedForAdd.contains(key)) {
+                visitedForAdd.add(key);
+                nextScanningBlocks.add(possibleBlock);
+            }
         }
         return nextScanningBlocks;
     }
-
-    //暂时不需要覆写scan，BlockScanner的scan够用了
 }

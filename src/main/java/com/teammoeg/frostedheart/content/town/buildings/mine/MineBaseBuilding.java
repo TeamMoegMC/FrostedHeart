@@ -48,22 +48,15 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 					Codec.list(UUIDUtil.CODEC).fieldOf("residentsID").forGetter(o -> new ArrayList<>(o.residentsID)),
 					Codec.INT.fieldOf("area").forGetter(o -> o.area),
 					Codec.INT.fieldOf("volume").forGetter(o -> o.volume),
-					Codec.list(BlockPos.CODEC).optionalFieldOf("linkedMines", new ArrayList<>())
-							.forGetter(o -> o.linkedMines == null ? new ArrayList<>() : new ArrayList<>(o.linkedMines)),
-					Codec.INT.fieldOf("maxResidents").forGetter(o -> o.maxResidents),
-					Codec.DOUBLE.fieldOf("rating").forGetter(o -> o.rating),
-					Codec.DOUBLE.fieldOf("temperature").forGetter(o -> o.temperature))
+
+					Codec.INT.fieldOf("maxResidents").forGetter(o -> o.maxResidents)
+
+			)
 			.apply(t, MineBaseBuilding::new));
 
 	public int area;
 
 	public int volume;
-
-	public Set<BlockPos> linkedMines;
-
-	public double rating;//似乎暂时无用
-
-	public double temperature;//矿井内部温度
 
 	public MineBaseBuilding(BlockPos pos) {
 		super(pos);
@@ -71,17 +64,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 
 	@Override
 	public boolean isBuildingWorkable() {
-		return super.isBuildingWorkable()
-				&& isTemperatureValid();
-	}
-
-	public static boolean isTemperatureValid(double temperature){
-		if (DEBUG_MODE) return true;
-		return temperature > -10 && temperature < 40;
-	}
-
-	public boolean isTemperatureValid() {
-		return isTemperatureValid(this.temperature);
+		return super.isBuildingWorkable();
 	}
 
 	/**
@@ -98,22 +81,19 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 * @param rating the building rating
 	 * @param temperature the mine internal temperature
 	 */
-	public MineBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, java.util.List<UUID> residentsID, int area, int volume, List<BlockPos> linkedMines, int maxResidents, double rating, double temperature) {
+	public MineBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, java.util.List<UUID> residentsID, int area, int volume, int maxResidents) {
 		super(pos);
 		this.isStructureValid = isStructureValid;
 		this.occupiedVolume = occupiedVolume;
 		this.residentsID = new java.util.HashSet<>(residentsID);
 		this.area = area;
 		this.volume = volume;
-		this.linkedMines = new java.util.HashSet<>(linkedMines);
 		this.maxResidents = maxResidents;
-		this.rating = rating;
-		this.temperature = temperature;
 	}
 
 	@Override
 	public boolean work(Town town) {
-		if(linkedMines == null||linkedMines.isEmpty())return false;
+		/*
 		if (town instanceof TeamTown teamTown) {
 			double toModify=0;
 			for(UUID residentID : residentsID) {
@@ -158,7 +138,8 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 			teamTown.pickTerrainResource(TerrainResourceType.ORE, modified);
 			return true;
 		}
-		throw new IllegalArgumentException("MineBaseBuilding ERROR: Can't work in non-team town :" + town);
+		throw new IllegalArgumentException("MineBaseBuilding ERROR: Can't work in non-team town :" + town);*/
+		return false;
 	}
 
 	@Override

@@ -22,22 +22,30 @@ package com.teammoeg.frostedheart.content.town.block.blockscanner;
 
 import java.util.AbstractMap;
 import java.util.HashSet;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
+
+import it.unimi.dsi.fastutil.longs.LongIterator;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
 /**
- * scan air
+ * 扫描空气和密闭空间
  * 可用于判断一个空间是否密闭。
  * 如果需要用某些特定的方块包围密闭空间，可以在子类中覆写isValidAir方法
+ *
+ * <p>双钩子方法设计：</p>
+ * <ul>
+ *   <li>{@code processAirBlock(BlockPos)} - 子类可覆写，处理空气方块</li>
+ *   <li>{@code processNonAirBlock(BlockPos)} - 子类可覆写，处理非空气方块（围住密闭空间的方块）</li>
+ * </ul>
  */
-public class ConfinedSpaceScanner extends BlockScanner {
+public class ConfinedSpaceScanner extends AbstractBlockScanner {
 
-    public ConfinedSpaceScanner(Level world, BlockPos startPos){
-        super(world, startPos);
+    public ConfinedSpaceScanner(Level world, BlockPos startPos, int maxScanBlocks){
+        super(world, startPos, maxScanBlocks);
     }
 
     /**
@@ -47,60 +55,98 @@ public class ConfinedSpaceScanner extends BlockScanner {
         return isAirOrLadder(world, pos);
     }
 
-    /**
-     * @param pos scanning block
-     * @param operation 对于满足nextScanningBlocks的位置条件（此处是相邻的方块），但是方块种类不满足的，执行此操作。在此处，就是对围住密闭空间的方块执行此操作
-     */
-    protected HashSet<BlockPos> nextScanningBlocks(BlockPos pos, Consumer<BlockPos> operation){//接下来是找到下一批需要扫描的方块的内容
-        HashSet<BlockPos> nextScanningBlocks = new HashSet<>();//这个HashSet暂存下一批的ScanningBlock
-        for(Direction direction : Direction.values()){
-            BlockPos pos1 = pos.relative(direction);// pos1: 用于存储与pos相邻的方块
-            if (this.getScannedBlocks().contains(pos1)) continue;
-            if (!isValidAir(pos1)) {
-                operation.accept(pos1);
-                scannedBlocks.add(pos1);
-                continue;
-            }
-            nextScanningBlocks.add(pos1);
-            AbstractMap.SimpleEntry<HashSet<BlockPos>, Boolean> airsAbove = getAirsAbove(pos1);
-            if(!airsAbove.getValue()){
-                this.isValid = false;
-                return nextScanningBlocks;
-            }
-            else nextScanningBlocks.addAll(airsAbove.getKey());
+    @Override
+    protected void processBlock(BlockPos pos) {
+        // 根据方块类型分别处理
+        if (isValidAir(pos)) {
+            processAirBlock(pos);
+        } else {
+            processNonAirBlock(pos);
         }
-        return nextScanningBlocks;
+    }
+
+    /**
+     * 处理空气方块。子类可以覆写此方法来定义对空气方块的处理逻辑。
+     * 默认实现为空。
+     * @param pos 空气方块的位置
+     */
+    protected void processAirBlock(BlockPos pos) {
+        // 默认实现为空，子类可以覆写
+    }
+
+    /**
+     * 处理非空气方块（围住密闭空间的方块）。子类可以覆写此方法来定义对非空气方块的处理逻辑。
+     * 默认实现为空。
+     * @param pos 非空气方块的位置
+     */
+    protected void processNonAirBlock(BlockPos pos) {
+        // 默认实现为空，子类可以覆写
     }
 
     @Override
-    protected HashSet<BlockPos> nextScanningBlocks(BlockPos pos){
-        return nextScanningBlocks(pos, CONSUMER_NULL);
+    protected HashSet<BlockPos> nextScanningBlocks(BlockPos pos) {
+        // 内部使用 LongSet 处理，最后转换为 HashSet<BlockPos>
+        LongSet nextScanningBlocksLong = new LongOpenHashSet();
+        LongSet visitedForAdd = new LongOpenHashSet();
+
+        for(Direction direction : Direction.values()){
+            BlockPos pos1 = pos.relative(direction);// pos1: 用于存储与pos相邻的方块
+            long key1 = pos1.asLong();
+            if (this.getScannedBlocks().contains(key1)) continue;
+            if (!isValidAir(pos1)) {
+                // 非空气方块：添加到scannedBlocks，但不添加到nextScanningBlocks
+                // 会通过processBlock被处理
+                scannedBlocks.add(key1);
+                continue;
+            }
+            if (!visitedForAdd.contains(key1)) {
+                visitedForAdd.add(key1);
+                nextScanningBlocksLong.add(key1);
+            }
+
+            // 获取上方空气的 LongSet 结果
+            AbstractMap.SimpleEntry<LongSet, Boolean> airsAbove = getAirsAboveLong(pos1);
+            if(!airsAbove.getValue()){
+                this.isValid = false;
+                // 转换为 HashSet<BlockPos> 返回
+                HashSet<BlockPos> result = new HashSet<>();
+                for (Long aLong : nextScanningBlocksLong) {
+                    result.add(BlockPos.of(aLong));
+                }
+                return result;
+            }
+            // 合并airsAbove中的元素
+            LongSet airsAboveSet = airsAbove.getKey();
+            for (long lpos : airsAboveSet) {
+                if (!visitedForAdd.contains(lpos)) {
+                    visitedForAdd.add(lpos);
+                    nextScanningBlocksLong.add(lpos);
+                }
+            }
+        }
+
+        // 转换为 HashSet<BlockPos> 返回
+        HashSet<BlockPos> result = new HashSet<>();
+        for (Long aLong : nextScanningBlocksLong) {
+            result.add(BlockPos.of(aLong));
+        }
+        return result;
     }
 
     //基本上和getBlocksAbove是相同的，为了减少lambda的使用单列一个方法
-    private AbstractMap.SimpleEntry<HashSet<BlockPos>, Boolean> getAirsAbove(BlockPos startPos){
+    // 返回 LongSet 版本的内部方法
+    private AbstractMap.SimpleEntry<LongSet, Boolean> getAirsAboveLong(BlockPos startPos){
         BlockPos scanningBlock;
         scanningBlock = startPos.above();
-        HashSet<BlockPos> blocks = new HashSet<>();
-        while(scanningBlock.getY() <= 320){
-            if( scannedBlocks.contains(scanningBlock) || !isValidAir(scanningBlock) ){
+        LongSet blocks = new LongOpenHashSet();
+        while(scanningBlock.getY() <= MAX_HEIGHT){
+            long key = scanningBlock.asLong();
+            if( scannedBlocks.contains(key) || !isValidAir(scanningBlock) ){
                 return new AbstractMap.SimpleEntry<>(blocks, true);
             }
-            blocks.add(scanningBlock);
+            blocks.add(key);
             scanningBlock = scanningBlock.above();
         }
         return new AbstractMap.SimpleEntry<>(blocks, false);
-    }
-
-    /**
-     * 专用于判断密闭空间的扫描方法。
-     * @param maxScanningTimes 最大扫描次数
-     * @param operation1 对所有空气方块，都会进行operation1
-     * @param operation2 对所有非空气方块，都会进行operation2
-     * @param stopAt 如果扫描的方块满足了stopAt的条件，则会停止扫描并返回false
-     * @return 扫描成功与否
-     */
-    public boolean scan(int maxScanningTimes, Consumer<BlockPos> operation1, Consumer<BlockPos> operation2, Predicate<BlockPos> stopAt){
-        return this.scan(maxScanningTimes, operation1, (pos)-> {return nextScanningBlocks(pos, operation2);}, stopAt);
     }
 }
