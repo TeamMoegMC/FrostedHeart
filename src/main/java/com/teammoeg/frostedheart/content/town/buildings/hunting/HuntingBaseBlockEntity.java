@@ -25,7 +25,6 @@ import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
-import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockScanner;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
@@ -74,8 +73,8 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 					building.area = scanner.getArea();
 					building.temperature = scanner.getTemperature();
 					building.setOccupiedVolume(scanner.getOccupiedVolume());
-					building.tanningRackNum = scanner.getTanningRackNum();;
-					building.rating = computeRating(building.volume, building.area, building.temperature, this.getTemperatureModifier(), building.maxResidents);
+					building.tanningRackNum = scanner.getTanningRackNum();
+					building.rating = computeRating(building.volume, building.area, building.temperature, this.getTemperatureModifier());
 					return true;
 				}
 			}
@@ -90,11 +89,9 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 	 * @param area the area of the hunting base
 	 * @param temperature the base temperature
 	 * @param temperatureModifier the temperature modifier
-	 * @param maxResidents maximum number of residents
-	 * @param chestNum number of chests
 	 * @return computed rating value
 	 */
-	public static double computeRating(int volume, int area,  double temperature, double temperatureModifier, int maxResidents) {
+	public static double computeRating(int volume, int area,  double temperature, double temperatureModifier) {
 		return (3 * TownMathFunctions.calculateSpaceRating(volume, area)
 				+ 2 * TownMathFunctions.calculateTemperatureRating(temperature + temperatureModifier))
 				/ 5;

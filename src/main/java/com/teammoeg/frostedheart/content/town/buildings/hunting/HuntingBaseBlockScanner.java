@@ -22,17 +22,11 @@ package com.teammoeg.frostedheart.content.town.buildings.hunting;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BuildingBlockScanner;
-import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockScanner;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.ConfinedSpaceScanner;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import lombok.Getter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.CommandBlock;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ColumnPos;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.Tags;
 
 import java.util.Objects;
 

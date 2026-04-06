@@ -86,6 +86,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
@@ -340,8 +341,8 @@ public class FHBlocks {
 
     // layered thin ice
     public static final BlockEntry<LayeredThinIceBlock> LAYERED_THIN_ICE = REGISTRATE.block("layered_thin_ice", LayeredThinIceBlock::new)
-            .initialProperties(() -> FHBlocks.THIN_ICE_BLOCK.get())
-            .properties((p) -> p.forceSolidOn())
+            .initialProperties(FHBlocks.THIN_ICE_BLOCK::get)
+            .properties(BlockBehaviour.Properties::forceSolidOn)
             .tag(BlockTags.MINEABLE_WITH_SHOVEL)
             .tag(BlockTags.MINEABLE_WITH_PICKAXE)
             .tag(BlockTags.ICE)
@@ -606,7 +607,7 @@ public class FHBlocks {
             .transform(tagBlockAndItem("ores/pyrite", "ores/iron", "ores_in_ground/stone"))
             .tag(Tags.Items.ORES)
             .build()
-            .register();;
+            .register();
 
     public static final BlockEntry<DropExperienceBlock> HALITE_ORE = REGISTRATE.block("halite_ore", DropExperienceBlock::new)
             .initialProperties(() -> Blocks.COPPER_ORE)
@@ -2214,28 +2215,28 @@ public class FHBlocks {
     // Logistic blocks
     public static final BlockEntry<LogisticChestBlock<RequesterTileEntity>> REQUESTER_CHEST = REGISTRATE.block("requester_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.REQUESTER_CHEST))
             .initialProperties(() -> Blocks.CHEST)
-            .properties(t->t.noOcclusion())
+            .properties(BlockBehaviour.Properties::noOcclusion)
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dock_in")))
             .tag(FHTags.Blocks.METAL_MACHINES.get())
             .simpleItem()
             .register();
     public static final BlockEntry<LogisticChestBlock<StorageTileEntity>> STORAGE_CHEST = REGISTRATE.block("storage_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.STORAGE_CHEST))
             .initialProperties(() -> Blocks.CHEST)
-            .properties(t->t.noOcclusion())
+            .properties(BlockBehaviour.Properties::noOcclusion)
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dock_transfer")))
             .tag(FHTags.Blocks.METAL_MACHINES.get())
             .simpleItem()
             .register();
     public static final BlockEntry<LogisticChestBlock<SupplierTileEntity>> SUPPLIER_CHEST = REGISTRATE.block("supplier_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.SUPPLIER_CHEST))
             .initialProperties(() -> Blocks.CHEST)
-            .properties(t->t.noOcclusion())
+            .properties(BlockBehaviour.Properties::noOcclusion)
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dock_out")))
             .tag(FHTags.Blocks.METAL_MACHINES.get())
             .simpleItem()
             .register();
     public static final BlockEntry<LogisticChestBlock<NetworkCoreTileEntity>> TEST_LOGISTIC_CORE = REGISTRATE.block("test_logistic_core", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.NETWORK_CORE))
             .initialProperties(() -> Blocks.CHEST)
-            .properties(t->t.noOcclusion())
+            .properties(BlockBehaviour.Properties::noOcclusion)
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dispatcher")))
             .tag(FHTags.Blocks.METAL_MACHINES.get())
             .simpleItem()

@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.town.block.blockscanner;
 
 import java.util.HashSet;
 
-import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 

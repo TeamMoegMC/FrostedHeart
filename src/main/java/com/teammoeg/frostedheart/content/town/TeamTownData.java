@@ -45,9 +45,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ColumnPos;
 import net.minecraft.server.level.ServerLevel;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -149,7 +147,7 @@ public class TeamTownData implements SpecialData {
 	 * @param world server world instance
 	 */
 	public void tick(ServerLevel world) {
-		if (!FHConfig.SERVER.TOWN.enableTownTick.get()) return;
+		//if (!FHConfig.SERVER.TOWN.enableTownTick.get()) return;
 	}
 
 	public void tickMorning(ServerLevel world) {
@@ -287,10 +285,7 @@ public class TeamTownData implements SpecialData {
             }
         }
 	}
-	private record ResidentScoreCache(@NotNull Resident resident, @NotNull double score){
-		
-	}
-	//private static final Comparator<ResidentScoreCache> RESIDENT_SCORE_COMPARATOR_DESC=Comparator.<ResidentScoreCache>comparingDouble(t->t.score()).reversed();
+
 	void assignWork() {
 		Map<UUID, Resident> availableResidents = residents.values().stream().filter(resident->resident.getWorkPos() == null && resident.getHousePos() != null)
 		.collect(Collectors.toMap(Resident::getUUID, t->t));

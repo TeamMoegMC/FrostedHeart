@@ -23,21 +23,14 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
-import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import net.minecraft.core.UUIDUtil;
 
-import com.teammoeg.frostedheart.content.town.resource.action.*;
-import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.teammoeg.frostedheart.content.town.Town.DEBUG_MODE;
 import static java.lang.Double.NEGATIVE_INFINITY;
 
 public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
@@ -76,10 +69,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 * @param residentsID list of resident UUIDs (will be converted to Set)
 	 * @param area the area
 	 * @param volume the volume
-	 * @param linkedMines list of linked mine positions
 	 * @param maxResidents the maximum residents
-	 * @param rating the building rating
-	 * @param temperature the mine internal temperature
 	 */
 	public MineBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, java.util.List<UUID> residentsID, int area, int volume, int maxResidents) {
 		super(pos);

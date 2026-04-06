@@ -69,18 +69,15 @@ public abstract class AbstractBlockScanner {
     public static final int MIN_ABOVE_HEIGHT = 2;
 
     @Getter
-    protected LongSet scannedBlocks = new LongOpenHashSet();
+    protected LongSet scannedBlocks;
     @Getter
     @Setter
-    protected LongSet scanningBlocks = new LongOpenHashSet();
+    protected LongSet scanningBlocks;
     protected LongSet scanningBlocksNew = new LongOpenHashSet();
     public final int maxScanBlocks;
     protected final BlockPos startPos;
     public final Level world;
     public static final Direction[] PLANE_DIRECTIONS= {Direction.SOUTH, Direction.EAST, Direction.NORTH, Direction.WEST};
-    public static final Predicate<BlockPos> PREDICATE_TRUE = (useless)->true;
-    public static final Predicate<BlockPos> PREDICATE_FALSE = (useless)->false;
-    public static final Consumer<BlockPos> CONSUMER_NULL = (useless)->{};
     public boolean isValid = true;//it can be changed in methods, scan should stop when this is false
 
     public AbstractBlockScanner(Level world, BlockPos startPos, int maxScanBlocks){
