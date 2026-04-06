@@ -38,7 +38,7 @@ import java.nio.charset.StandardCharsets;
  * File I/O utility class providing file reading, writing, data transfer, and HTTP fetching capabilities.
  */
 public class FileUtil {
-    public static final String ILLEGAL_CHARS_REGEX = "[\\\\\\\\/:*?\\\"<>|§\\\\x00-\\\\x1f]";
+    public static final String ILLEGAL_CHARS_REGEX = "[\\\\/:*?\"<>|§\\x00-\\x1f]";
 
     /**
      * 读取文件的全部内容为字节数组。
