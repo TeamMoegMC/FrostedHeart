@@ -19,6 +19,8 @@
 
 package com.teammoeg.chorda.io;
 
+import com.teammoeg.chorda.Chorda;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,14 +32,14 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-import com.teammoeg.chorda.Chorda;
-
 /**
  * 文件输入输出工具类，提供文件读取、写入、数据传输和HTTP获取等功能。
  * <p>
  * File I/O utility class providing file reading, writing, data transfer, and HTTP fetching capabilities.
  */
 public class FileUtil {
+    public static final String ILLEGAL_CHARS_REGEX = "[\\\\\\\\/:*?\\\"<>|§\\\\x00-\\\\x1f]";
+
     /**
      * 读取文件的全部内容为字节数组。
      * <p>

@@ -26,7 +26,6 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.frostedheart.content.archive.Alignment;
 import com.teammoeg.frostedheart.content.tips.ClickActions;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;

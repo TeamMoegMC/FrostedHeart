@@ -19,19 +19,18 @@
 
 package com.teammoeg.chorda.client.ui;
 
-import java.util.Objects;
-
-import org.joml.AxisAngle4f;
-import org.joml.Matrix4f;
-import org.joml.Quaternionf;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.client.TesselateHelper.TextureTesselator;
 import com.teammoeg.chorda.math.Point;
 import com.teammoeg.chorda.math.Rect;
-
+import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
+import org.joml.AxisAngle4f;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+
+import java.util.Objects;
 
 /**
  * UV纹理坐标类。封装纹理的源区域坐标及纹理尺寸，提供多种方式绘制纹理到GUI上，
@@ -60,8 +59,10 @@ public class UV extends Rect {
 	}
 
 	/** 纹理总宽度 / Total texture width */
+	@Getter
 	final int textureW;
 	/** 纹理总高度 / Total texture height */
+	@Getter
 	final int textureH;
 
     /**
@@ -247,6 +248,11 @@ public class UV extends Rect {
      */
     public void blit(GuiGraphics s,ResourceLocation texture, int targetX, int targetY) {
         s.blit(texture, targetX, targetY, x, y, w, h, textureW, textureH);
+    }
+
+	public void blitColored(GuiGraphics s,ResourceLocation texture, int targetX, int targetY, int color) {
+        CGuiHelper.bindTexture(texture);
+		CGuiHelper.blitColored(s.pose(), targetX, targetY, w, h, x, y, w, h, textureW, textureH, color);
     }
     
     /**
@@ -576,6 +582,18 @@ public class UV extends Rect {
     public void tesselateAtlas(TextureTesselator texture,GuiGraphics graphics, int targetX, int targetY, Point loc, int gridX, int gridY) {
         tesselateAtlas(texture, graphics, targetX + loc.getX(), targetY + loc.getY(), gridX, gridY);
     }
+
+	@Override
+	public String toString() {
+		return "UV{" +
+				"textureW=" + textureW +
+				", textureH=" + textureH +
+				", w=" + w +
+				", h=" + h +
+				", x=" + x +
+				", y=" + y +
+				'}';
+	}
 	@Override
 	public int hashCode() {
 		final int prime = 31;

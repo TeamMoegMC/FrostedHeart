@@ -23,6 +23,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -32,7 +33,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-
 import org.joml.Quaternionf;
 
 import java.util.function.Function;
@@ -78,6 +78,9 @@ public class ClientUtils {
     }
     public static LocalPlayer getLocalPlayer() {
         return getMc().player;
+    }
+    public static Screen getScreen() {
+        return getMc().screen;
     }
     public static void spawnFireParticles2(Level worldIn, BlockPos pos) {
         RandomSource random = worldIn.getRandom();

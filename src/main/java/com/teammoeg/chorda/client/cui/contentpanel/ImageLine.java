@@ -20,13 +20,13 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
 import com.teammoeg.chorda.client.RenderingHint;
+import com.teammoeg.chorda.client.cui.CUIDebugHelper;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.UV;
 import com.teammoeg.chorda.math.Colors;
-import com.teammoeg.frostedheart.content.archive.Alignment;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -51,6 +51,7 @@ public class ImageLine extends Line<ImageLine> {
     protected UV overrideUV;
     @Setter
     protected int blitColor = Colors.WHITE;
+    protected int imgX, imgY;
 
     public ImageLine(UIElement parent, ResourceLocation imageLocation, Alignment alignment) {
         super(parent, alignment);
@@ -66,23 +67,27 @@ public class ImageLine extends Line<ImageLine> {
     @Override
     public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
         super.render(graphics, x, y, w, h, hint);
+        // 图片无效时显示错误图标
         if (!isImgValid()) {
             FlatIcon.FILE_IMG_BROKEN.render(graphics.pose(), x+w/2-5, y+1, hint.theme(this).errorColor());
             return;
         }
-        int imgX = switch (alignment) {
+        // 计算图片位置
+        imgX = switch (alignment) {
             case CENTER -> x + getWidth() / 2 - imgUV.getW() / 2;
             case RIGHT ->  x + getWidth() - imgUV.getW() - 2;
             default -> x+2;
         };
-        int imgY = y + h/2 - imgUV.getH()/2;
-        CGuiHelper.bindTexture(imgLocation);
-        CGuiHelper.blitColored(graphics.pose(),
-                imgX, imgY,
-                imgUV.getW(), imgUV.getH(),
-                0, 0,
-                imgUV.getW(), imgUV.getH(),
-                imgUV.getW(), imgUV.getH(), blitColor);
+        imgY = y + h/2 - imgUV.getH()/2;
+        // 渲染图片
+        imgUV.blitColored(graphics, imgLocation, imgX, imgY, blitColor);
+    }
+
+    @Override
+    public void renderDebug(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint, int depth) {
+        super.renderDebug(graphics, x, y, w, h, hint, depth);
+        graphics.drawString(getFont(), imgUV.toString(), imgX, imgY-8, -1);
+        CGuiHelper.drawBox(graphics, imgX, imgY, imgUV.getW(), imgUV.getH(), CUIDebugHelper.getDepthColor(depth), true);
     }
 
     @Override

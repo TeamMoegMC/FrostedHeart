@@ -92,6 +92,7 @@ public class ClientWaypointManager {
             visible.remove(selected);
             visible.add(selected);
         });
+        // TODO 优化渲染
         visible.forEach(waypoint -> waypoint.render(graphics));
     }
 

@@ -242,9 +242,11 @@ public class TipLayer extends UILayer {
             String text = contents.get(i);
             var line = LineHelper.text(panel, Component.translatable(text));
             if (i == 0) {
-                line.button(closeBtn);
-                if (!tip.display().alwaysVisible() && !alwaysVisibleOverride) {
-                    line.button(pinBtn);
+                if (parent instanceof TipOverlay) {
+                    line.button(closeBtn);
+                    if (!tip.display().alwaysVisible() && !alwaysVisibleOverride) {
+                        line.button(pinBtn);
+                    }
                 }
                 line.button(tip.clickAction());
             }

@@ -26,7 +26,6 @@ import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.TesselateHelper;
 import com.teammoeg.chorda.client.TesselateHelper.ShapeTesslator;
 import com.teammoeg.chorda.client.TesselateHelper.TextureTesselator;
-import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.category.CategoryHelper;
 import com.teammoeg.chorda.client.ui.AtlasUV;
@@ -58,7 +57,6 @@ import com.teammoeg.frostedheart.mixin.client.BossHealthOverlayAccess;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.data.ResearchVariant;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
-
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.AttackIndicatorStatus;
@@ -87,9 +85,7 @@ import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class FrostedHud {
     static final class Atlases {
@@ -1094,7 +1090,7 @@ public class FrostedHud {
         lines.add(Component.literal("Archive Path: ").append(CategoryHelper.translatePath(ArchiveCategory.currentPath)));
         lines.add(Component.literal("Current Screen: " + (screen == null ? "Null" : screen.getClass().getSimpleName())));
         // 原版UI
-        if (screen != null && CInputHelper.isKeyPressed(GLFW.GLFW_KEY_RIGHT_ALT)) {
+        if (screen != null) {
             for (GuiEventListener a : screen.children()) {
                 if (a instanceof ObjectSelectionList<?> l) {
                     boolean focused = l.isFocused() || l.isMouseOver(mouseX, mouseY) || shift;

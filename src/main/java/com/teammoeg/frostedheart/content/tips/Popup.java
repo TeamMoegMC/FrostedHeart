@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.content.tips;
 
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.contentpanel.Alignment;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.FrostedHud;
-import com.teammoeg.frostedheart.content.archive.Alignment;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
