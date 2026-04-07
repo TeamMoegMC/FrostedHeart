@@ -20,6 +20,7 @@
 package com.teammoeg.frostedresearch.gui;
 
 import com.teammoeg.chorda.client.cui.theme.Theme;
+import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskIcons;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
 
@@ -58,7 +59,7 @@ public class DrawDeskTheme implements Theme{
 		TechIcons.SLOT.draw(graphics, x - 4, y - 4, w+8, h+8);
 	}
 	public void drawUIBackground(GuiGraphics graphics,int x,int y,int w,int h) {
-		TechIcons.DIALOG.draw(graphics, x, y, w, h);
+		DrawDeskIcons.DIALOG.draw(graphics, x, y, w, h);
 	}
 	
 	public void horizontalSplit(GuiGraphics graphics,int x,int y,int w) {

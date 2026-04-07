@@ -20,9 +20,7 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 
-import java.util.function.Consumer;
-import java.util.function.Function;
-
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.widgets.TextButton;
@@ -30,8 +28,11 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CFunctionUtils;
-
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 
 /**
@@ -76,7 +77,14 @@ public class OpenEditorButton<T> extends TextButton {
 		this.onset=t->{};
 		refreshValue();
 	}
-    private void refreshValue() {
+
+	@Override
+	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+		super.render(graphics, x, y, w, h, hint);
+		graphics.drawString(getFont(), ">", x+w-10, y-4+h/2, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
+	}
+
+	private void refreshValue() {
     	super.setTitle(getText.apply(val));
     	super.setIcon(getIcon.apply(val));
     }

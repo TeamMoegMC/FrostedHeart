@@ -19,15 +19,14 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import java.util.UUID;
-
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.widgets.TextButton;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.text.Components;
-
 import net.minecraft.network.chat.Component;
+
+import java.util.UUID;
 
 /**
  * ID输入框，扩展带按钮的文本框，提供随机ID生成和重置到原始值功能。
@@ -53,18 +52,20 @@ public class IdBox extends LabeledTextBoxAndBtn {
 		oldVal=txt;
 		if(txt==null||txt.isEmpty())
 			setText(Long.toHexString(UUID.randomUUID().getMostSignificantBits()));
-	}
-	String getOldValue() {
-		return oldVal;
-	}
-	@Override
-	public void addUIElements() {
-		super.addUIElements();
-		add(new TextButton(this, Components.str("Reset"), CIcons.nop()) {
+		addButton(new TextButton(this, Components.str("Random"), CIcons.nop()) {
+			@Override
+			public void onClicked(MouseButton arg0) {
+				obj.setText(Long.toHexString(UUID.randomUUID().getMostSignificantBits()));
+			}
+		});
+		addButton(new TextButton(this, Components.str("Reset"), CIcons.nop()) {
 			@Override
 			public void onClicked(MouseButton button) {
 				setText(oldVal);
 			}
 		});
+	}
+	String getOldValue() {
+		return oldVal;
 	}
 }

@@ -22,13 +22,11 @@ public class SimpleTechTheme implements Theme{
 	/** {@inheritDoc} */
 	@Override
 	public void drawButton(GuiGraphics graphics, int x, int y, int w, int h, boolean isHighlight, boolean enabled) {
-		int color=0xffe4eff0;
-		if(!enabled)
-			color=0xFF002439;
-		drawRect(graphics,x,y,w-1,h-1, color);
-		if(isHighlight) {
-			graphics.fill(x+1, y+1, x+w-1, y+h-1, 0x33FFFFFF);
+		if (isHighlight) {
+			int color = !enabled ? 0xff002439 : 0xffe4eff0;
+			drawRect(graphics,x,y,w-1,h-1, color);
 		}
+		graphics.fill(x+1, y+1, x+w-1, y+h-1, isHighlight&&enabled ? 0x50e4eff0 : 0x50002439);
 	}
 
 	@Override
@@ -38,8 +36,8 @@ public class SimpleTechTheme implements Theme{
 
 	@Override
 	public void drawTextboxBackground(GuiGraphics graphics, int x, int y, int w, int h, boolean focused) {
-		drawRect(graphics,x,y,w,h, 0xffe4eff0);
-		
+		graphics.fill(x, y, x+w, y+h, 0x50002439);
+		drawRect(graphics,x,y,w-2,h-1, focused ? 0xffe4eff0 : 0x50e4eff0);
 	}
 
 	@Override

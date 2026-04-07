@@ -35,7 +35,6 @@ import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardStat;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardType;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.ClientResearchGame;
-
 import net.minecraft.client.gui.GuiGraphics;
 
 class MainGamePanel extends UILayer {
@@ -187,7 +186,7 @@ class MainGamePanel extends UILayer {
 		
 		super.render(matrixStack, x, y, w, h, hint);
 		if (lstatus != 0) {
-			DrawDeskIcons.DIALOG_FRAME.draw(matrixStack, x + 7, y + 54, 137, 52);
+			DrawDeskIcons.DIALOG_FRAME.draw(matrixStack, x + 7, y + 53, 137, 52);
 			status.render(matrixStack, x + status.getX(), y + status.getY(), status.getWidth(), status.getHeight(), hint);
 		}
 		if (ResearchHooks.fetchGameLevel() == -1) {

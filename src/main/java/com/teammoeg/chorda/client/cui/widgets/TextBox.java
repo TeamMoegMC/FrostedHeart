@@ -654,13 +654,13 @@ public class TextBox extends UIElement implements Focusable {
 	public void getTooltip(TooltipBuilder tooltip) {
 		super.getTooltip(tooltip);
 		if(validText.hint()!=null)
-		tooltip.accept(validText.hint());
+			tooltip.accept(validText.hint());
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
-		drawTextBox(graphics, x+1, y+1, w-2, h-2, hint);
+		drawTextBox(graphics, x, y, w, h, hint);
 		var drawGhostText = !isFocused() && text.isEmpty() && !ghostText.isEmpty();
 		var textToDraw = getFormattedText();
 		graphics.enableScissor( x, y, x+w, y+h);

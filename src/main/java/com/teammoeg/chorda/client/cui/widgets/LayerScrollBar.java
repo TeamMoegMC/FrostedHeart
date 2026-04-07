@@ -148,6 +148,7 @@ public class LayerScrollBar extends ScrollBar {
 	public int getScrollBarSize() {
 		var max = getMax();
 		if (max <= 0) {
+			setValue(0);
 			return 0;
 		}
 

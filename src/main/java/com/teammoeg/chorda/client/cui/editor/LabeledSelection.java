@@ -19,24 +19,23 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.widgets.TextButton;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.client.icon.FlatIcon;
-
+import com.teammoeg.chorda.text.Components;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.network.chat.Component;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * 带标签的选择控件，通过左/右键点击在一组选项中循环切换。
@@ -191,6 +190,11 @@ public class LabeledSelection<R> extends LabeledPane<TextButton> {
     public void onChange(R current) {
     }
 
-
-
+    @Override
+    public void alignWidgets() {
+        int w = (int)(this.getWidth()*0.45F);
+        obj.setX(this.getWidth() - (w+obj.getWidth())/2);
+        label.setPos(4, (this.getContentHeight() - 8) / 2);
+        setHeight(getContentHeight());
+    }
 }

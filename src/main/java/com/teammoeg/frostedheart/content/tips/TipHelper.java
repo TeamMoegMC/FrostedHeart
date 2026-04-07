@@ -66,7 +66,7 @@ public class TipHelper {
         if (TipManager.INSTANCE.hasTip(id)) {
             edit(TipManager.INSTANCE.getTip(id), theme);
         } else {
-            edit(Tip.builder(id).build(), theme);
+            edit(Tip.builder(id==null?randomString():id).build(), theme);
         }
     }
 
