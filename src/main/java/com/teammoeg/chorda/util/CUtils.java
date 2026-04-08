@@ -23,6 +23,8 @@ import com.google.common.collect.ImmutableList;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.capability.types.nbt.NBTCapabilityType;
 import com.teammoeg.chorda.io.NBTSerializable;
+
+import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -32,6 +34,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.Bootstrap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
@@ -795,5 +798,11 @@ public class CUtils {
 	@Nullable
 	public static Entity getEntity(ServerLevel level, UUID uuid) {
 		return level.getEntity(uuid);
+	}
+	public static void startTestEnvironment() {
+		SharedConstants.tryDetectVersion();
+	    SharedConstants.enableDataFixerOptimizations();
+		Bootstrap.bootStrap();
+		System.out.println();
 	}
 }

@@ -31,9 +31,12 @@ import java.util.stream.Stream;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.io.CodecUtil;
+import com.teammoeg.chorda.util.CUtils;
 
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.ChunkPos;
 /**
  * 世界标记器，用于标记世界中自定义区域的存储模式。
@@ -44,6 +47,9 @@ import net.minecraft.world.level.ChunkPos;
  * and section for memory efficiency.
  */
 public class WorldMarker {
+	/*static {
+		CUtils.startTestEnvironment();
+	}*/
 	/**
 	 * 区块标记器，管理单个区块内16个分段的方块标记。
 	 * <p>
@@ -51,7 +57,9 @@ public class WorldMarker {
 	 */
 	public static class ChunkMarker{
 		public static final Codec<ChunkMarker> CODEC=RecordCodecBuilder.create(t->t.group(
-				CodecUtil.discreteList(Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of)).fieldOf("data").forGetter(ChunkMarker::getList)
+				CodecUtil.discreteList(RecordCodecBuilder.create(t2->t2.group(
+						Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of).fieldOf("bits").forGetter(n->n)
+						).apply(t2,n->n))).fieldOf("data").forGetter(ChunkMarker::getList)
 		).apply(t, ChunkMarker::new));
 		BitSet[] sections=new BitSet[16];
 		
@@ -224,5 +232,12 @@ public class WorldMarker {
 			}
 		}
 		return false;
+	}
+	
+	public static void main(String[] args) {
+		
+		ChunkMarker cm=new ChunkMarker();
+		cm.setBit(5, 5, 5, true);
+		System.out.println(ChunkMarker.CODEC.encodeStart(NbtOps.INSTANCE, cm).resultOrPartial(System.out::println).get());
 	}
 }
