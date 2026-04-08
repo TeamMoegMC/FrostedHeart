@@ -50,13 +50,15 @@ public class WorldMarker {
 	 * Chunk marker managing block marks across 16 sections within a single chunk.
 	 */
 	public static class ChunkMarker{
-		public static final Codec<ChunkMarker> CODEC=RecordCodecBuilder.create(t->t.group(CodecUtil.discreteList(Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of)).fieldOf("data").forGetter(o->o.getList())).apply(t, ChunkMarker::new));
+		public static final Codec<ChunkMarker> CODEC=RecordCodecBuilder.create(t->t.group(
+				CodecUtil.discreteList(Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of)).fieldOf("data").forGetter(ChunkMarker::getList)
+		).apply(t, ChunkMarker::new));
 		BitSet[] sections=new BitSet[16];
 		
 		public ChunkMarker() {
 		}
 		public ChunkMarker(List<long[]> data) {
-			for(int i=0;i<sections.length;i++) {
+			for(int i=0;i<data.size();i++) {
 				long[] ls=data.get(i);
 				if(ls==null)continue;
 				sections[i]=BitSet.valueOf(ls);

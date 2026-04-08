@@ -38,6 +38,7 @@ import com.mojang.serialization.RecordBuilder;
 
 /**
  * 离散列表编解码器。仅序列化非空元素及其索引位置，反序列化时根据索引恢复完整列表，空位用空元素填充。
+ * <b>并非完整，若之前的列表末尾有空元素，则列表最后一个非空元素之后的空元素会丢失。</b>
  * <p>
  * Discrete list codec. Only serializes non-empty elements with their index positions,
  * and restores the full list by index during deserialization, filling gaps with empty elements.
