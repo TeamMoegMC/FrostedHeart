@@ -413,7 +413,7 @@ public class SelectStackDialog<T> extends EditDialog {
                 if (button.shouldAdd(search, mod)) {
                     widgets.add(button);
                     int j = widgets.size() - 1;
-                    button.setPos(1 + (j % 9) * 19, 1 + (j / 9) * 19);
+                    button.setPos((j % 9) * 19, (j / 9) * 19);
                 }
             }
         }
@@ -427,8 +427,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
     private void updateItemWidgets(List<UIElement> items) {
         panelStacks.getElements().clear();
-        for(UIElement elm:items)
-        	panelStacks.add((UIElement)elm);
+        items.forEach(panelStacks::add);
         scrollBar.setPosAndSize(panelStacks.getX() + panelStacks.getWidth() +3, panelStacks.getY() - 1, 10, panelStacks.getHeight() + 2);
         scrollBar.setValue(0);
         
@@ -550,6 +549,7 @@ public class SelectStackDialog<T> extends EditDialog {
         public ButtonSwitchMode(UIElement panel) {
             super(panel);
             activeMode = modeIterator.next();
+            setIcon(activeMode.getIcon());
         }
 
         @Override
@@ -560,7 +560,7 @@ public class SelectStackDialog<T> extends EditDialog {
 
         @Override
         public void drawIcon(GuiGraphics matrixStack, int x, int y, int w, int h) {
-            activeMode.getIcon().draw(matrixStack, x, y, w, h);
+            super.drawIcon(matrixStack, x, y, w, h);
         }
 
         @Override
@@ -572,6 +572,7 @@ public class SelectStackDialog<T> extends EditDialog {
         public void onClicked(MouseButton button) {
             CInputHelper.playClickSound();
             activeMode = modeIterator.next();
+            setIcon(activeMode.getIcon());
             panelStacks.refresh();
         }
     }

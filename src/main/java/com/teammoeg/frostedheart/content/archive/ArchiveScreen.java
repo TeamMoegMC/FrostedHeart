@@ -26,8 +26,8 @@ import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.client.cui.contentpanel.ArchiveTheme;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIScreen;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.archive.ArchiveCategory.ArchiveEntry;
@@ -92,9 +92,7 @@ public final class ArchiveScreen extends PrimaryLayer {
     }
     public ArchiveScreen(String path) {
         this();
-        if (path != null) {
-            ArchiveCategory.currentPath = path;
-        }
+        category.scrollTo(category.open(path));
     }
     @Override
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
@@ -141,7 +139,6 @@ public final class ArchiveScreen extends PrimaryLayer {
         super.drawBackground(graphics, x, y, w, h, hint);
     }
 
-
 	@Override
     public void addUIElements() {
         add(contentPanel);
@@ -160,9 +157,14 @@ public final class ArchiveScreen extends PrimaryLayer {
     }
 
     public static void open(@Nullable String path) {
+        if (ClientUtils.getScreen() instanceof CUIScreen cui && cui.getPrimaryLayer() instanceof ArchiveScreen screen) {
+            screen.category.scrollTo(screen.category.open(path));
+            return;
+        }
         var layer = new ArchiveScreen(path);
         ClientUtils.getMc().setScreen(new CUIScreenWrapper(layer));
     }
+
 	public void select(ArchiveEntry ae) {
 		buffedEntry=panel->{
 			List<UIElement> contents = new ArrayList<>(ae.getContents(panel));
@@ -170,7 +172,6 @@ public final class ArchiveScreen extends PrimaryLayer {
             ae.read = ae.read();
 	        return contents;
 		};
-		
 	}
 
 	public void setContent(Function<UIElement,List<? extends UIElement>> contents) {

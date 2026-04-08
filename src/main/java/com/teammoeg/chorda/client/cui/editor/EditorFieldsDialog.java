@@ -19,6 +19,21 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import com.mojang.datafixers.util.Pair;
+import com.teammoeg.chorda.client.RenderingHint;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
+import com.teammoeg.chorda.client.cui.contentpanel.LineHelper;
+import com.teammoeg.chorda.client.cui.contentpanel.UIEleWrapperLine;
+import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder.SetterAndGetter;
+import com.teammoeg.chorda.client.cui.widgets.TextField;
+import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuildResult;
+import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuiltParams;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
@@ -26,18 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
-import com.mojang.datafixers.util.Pair;
-import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.client.cui.base.UILayer;
-import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder.SetterAndGetter;
-import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
-import com.teammoeg.chorda.client.cui.widgets.TextField;
-import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuildResult;
-import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuiltParams;
-
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import net.minecraft.network.chat.Component;
 
 /**
  * 多字段编辑器对话框，自动从EditorDialogPrototype生成包含多个编辑项的可滚动表单。
@@ -50,8 +53,7 @@ import net.minecraft.network.chat.Component;
  * @param <O> 被编辑对象的类型 / The type of object being edited
  */
 public class EditorFieldsDialog<O> extends BaseEditDialog {
-	UILayer mainPane;
-	LayerScrollBar scroll;
+	ContentPanel mainPane;
 	public static record EditorPair<O,A>(EditorItemFactory<A> factory,Function<O,A> getter,int index) {
 		public Pair<Integer, EditItem<Object>> create(EditorFieldsDialog<O> dialog,UILayer parent,O o,Object[] params){
 			A val=null;
@@ -106,27 +108,61 @@ public class EditorFieldsDialog<O> extends BaseEditDialog {
 		this.params=new Object[prototype.widgets.size()];
 		this.constructor=constructor;
 		this.consumer=consumer;
-        mainPane=new UILayer(this) {
+        mainPane=new ContentPanel(this) {
+			@Override
+			public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+			}
 
 			@Override
 			public void addUIElements() {
 				widgetNum.clear();
+				add(LineHelper.text(this, title));
 				for(Pair<Integer, EditItem<Object>> i:values) {
 					UIElement widget=i.getSecond().getWidget();
-					if(widget!=null) {
-						this.add(widget);
+					if(widget!=null && !(widget instanceof HiddenBox<?>)) {
+						add(new UIEleWrapperLine(this, widget));
+						add(LineHelper.br(this).height(1));
 						widgetNum.put(widget, i.getFirst());
 					}
 				}
 			}
 
 			@Override
-			public void alignWidgets() {
-				this.align(false);
+			public void refresh() {
+				recalcContentSize();
+
+				clearElement();
+				try {
+					addUIElements();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+
+				//elements.sort(null);
+
+				for (UIElement element : elements) {
+					element.refresh();
+				}
+
+				alignWidgets();
+				resize();
+			}
+
+			@Override
+			public void resize() {
+				int h = 200;
+				if (scrollBar.isVisible()) {
+					setSize(290, h);
+					for (UIElement ele : elements) {
+						ele.refresh();
+					}
+				} else {
+					setSize(300, h);
+				}
+				scrollBar.setPosAndSize(getX() + getWidth()+4, 0, 6, getHeight());
 			}
         	
         };
-        scroll=new LayerScrollBar(this, true, mainPane);
 		for(EditorPair<O, ?> i:prototype.widgets) {
 			//System.out.println(i.index);
 			Pair<Integer, EditItem<Object>> wgt=i.create(this,mainPane,origin,params);
@@ -135,11 +171,7 @@ public class EditorFieldsDialog<O> extends BaseEditDialog {
 				map.put((int)wgt.getFirst(), wgt.getSecond());
 			}
 		}
-	
-     
-
         this.title.setPos(2, 2);
-
 	}
 
 	boolean noSave=false;
@@ -206,19 +238,11 @@ public class EditorFieldsDialog<O> extends BaseEditDialog {
 	}
 	@Override
 	public void addUIElements() {
-
-		add(this.title);
-		add(mainPane);
-    	add(scroll);
+		mainPane.setParent(this);
 		
 	}
+
 	@Override
-    public void alignWidgets() {
-		mainPane.setWidth(mainPane.getContentWidth());
-		int curheight=Math.min(200, mainPane.getContentHeight());
-		mainPane.setHeight(curheight);
-		mainPane.setPos(5, 12);
-		this.setSize(mainPane.getWidth()+21, mainPane.getHeight()+14);
-        scroll.setPosAndSize(width - 16, 12, 16, mainPane.getHeight());
-    }
+	public void alignWidgets() {
+	}
 }

@@ -281,7 +281,7 @@ public class TipManager {
                 } catch (IOException e) {
                     String msg = "Unable to create file: '%s'".formatted(TIP_STATE_FILE);
                     LOGGER.error(msg , e);
-                    TipHelper.display(TipHelper.Error.SAVE.create().build());
+                    TipHelper.Error.SAVE.createAndDisplay(msg);
                 }
                 return;
             }
@@ -293,7 +293,7 @@ public class TipManager {
                     if (TIP_STATE_FILE.exists()) {
                         String message = "'%s' exists but cannot be read correctly, it may corrupted".formatted(TIP_STATE_FILE);
                         LOGGER.warn(message);
-                        TipHelper.Error.OTHER.create(message);
+                        TipHelper.Error.OTHER.createAndDisplay(message);
                     }
                     return;
                 }
@@ -312,7 +312,7 @@ public class TipManager {
             } catch (IOException e) {
                 String message = "Unable to load file: '%s'".formatted(TIP_STATE_FILE);
                 LOGGER.error(message, e);
-                TipHelper.Error.OTHER.create(message);
+                TipHelper.Error.OTHER.createAndDisplay(message);
             }
         }
 
@@ -326,7 +326,7 @@ public class TipManager {
             } catch (IOException e) {
                 String msg = "Unable to save file: '%s'".formatted(TIP_STATE_FILE);
                 LOGGER.error(msg, e);
-                TipHelper.Error.OTHER.create(msg);
+                TipHelper.Error.OTHER.createAndDisplay(msg);
             }
         }
 

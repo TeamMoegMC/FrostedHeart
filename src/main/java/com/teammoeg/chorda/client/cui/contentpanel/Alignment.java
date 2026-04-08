@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.archive;
+package com.teammoeg.chorda.client.cui.contentpanel;
 
 public enum Alignment {
     LEFT, CENTER, RIGHT

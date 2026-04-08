@@ -31,7 +31,6 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.text.Components;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 
 import java.util.Collection;
@@ -156,9 +155,9 @@ public class SelectDialog<T> extends EditDialog {
 		public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 			// CGuis.setupDrawing();
 
-			matrixStack.blitNineSliced(AbstractWidget.WIDGETS_LOCATION, x, y, w, h, 20, 4, 200, 20, 0, this.getTextureY());
+			drawBackground(matrixStack, x, y, w, h, hint);
 			this.drawIcon(matrixStack, x + 1, y + 1, 16, 16);
-			matrixStack.drawString(getFont(), t, x + 18, y + 6, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
+			matrixStack.drawString(getFont(), t, x + 20, y + 6, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
 
 		}
 

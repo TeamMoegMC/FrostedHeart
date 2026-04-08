@@ -33,8 +33,10 @@ import net.minecraft.data.worldgen.BootstapContext;
 import net.minecraft.data.worldgen.features.FeatureUtils;
 import net.minecraft.data.worldgen.placement.PlacementUtils;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.random.SimpleWeightedRandomList;
 import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.util.valueproviders.UniformInt;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.*;
 import net.minecraft.world.level.levelgen.feature.configurations.*;
@@ -42,6 +44,7 @@ import net.minecraft.world.level.levelgen.feature.featuresize.TwoLayersFeatureSi
 import net.minecraft.world.level.levelgen.feature.foliageplacers.FoliagePlacerType;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
 import net.minecraft.world.level.levelgen.feature.stateproviders.RandomizedIntStateProvider;
+import net.minecraft.world.level.levelgen.feature.stateproviders.WeightedStateProvider;
 import net.minecraft.world.level.levelgen.feature.trunkplacers.StraightTrunkPlacer;
 import net.minecraft.world.level.levelgen.placement.BiomeFilter;
 import net.minecraft.world.level.levelgen.placement.InSquarePlacement;
@@ -137,7 +140,12 @@ public class FHFeatures {
                             new HotdogFoliagePlacer(ConstantInt.of(1), ConstantInt.of(0), 2),
                             new TwoLayersFeatureSize(1, 0, 1))
                     .decorators(List.of(new LeavingLogReplacer(BlockStateProvider.simple(grownState))))
-                    .build());
+                    .dirt(new WeightedStateProvider(
+                            SimpleWeightedRandomList.<BlockState>builder()
+                                    .add(FHBlocks.DIRT_PERMAFROST.get().defaultBlockState(), 1)
+                                    .add(Blocks.SNOW_BLOCK.defaultBlockState(), 2)
+                                    .build()
+                    )).ignoreVines().build());
         }
     }
 

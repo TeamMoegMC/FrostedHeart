@@ -50,7 +50,6 @@ public class LabeledPane<T extends UIElement> extends UILayer {
     @Override
     public void addUIElements() {
         add(label);
-        if (obj != null)
         add(obj);
     }
 
@@ -62,9 +61,14 @@ public class LabeledPane<T extends UIElement> extends UILayer {
 
 	@Override
     public void alignWidgets() {
-        setSize(super.align(true), this.getContentHeight());
-        
-        label.setY((this.getContentHeight() - 8) / 2);
+        if (getWidth()==0) setWidth(parent.getWidth());
+        int w = getWidth();
+        int w2 = (int)(w*0.45F);
+        obj.setX(w-w2);
+        obj.setWidth(w2);
+
+        label.setPos(4, (this.getContentHeight() - 8) / 2);
+        setHeight(getContentHeight());
         //System.out.println(this.getX()+","+this.getY()+":"+this.getWidth()+","+this.getHeight());
     }
 }

@@ -124,11 +124,6 @@ public class ArchiveCategory extends UILayer {
 		}
 	}
 
-	public void addCategory() {
-		var tipCategory = TipHelper.getCategory(new Category(this, Component.translatable("gui.frostedheart.archive.category.tips")));
-		root.getElements().add(tipCategory);
-	}
-
 	@Override
 	public boolean onKeyPressed(int keyCode, int scanCode, int modifier) {
 		if (CInputHelper.isNextKey(keyCode, scanCode, modifier) || CInputHelper.isPrevKey(keyCode, scanCode, modifier)) {
@@ -158,7 +153,7 @@ public class ArchiveCategory extends UILayer {
 	public void addUIElements() {
 		clearElement();
 		if (TipClientCommand.editMode) {
-			getElements().add(new Button(this, Component.literal("Add New Tip"), FlatIcon.WRENCH.toCIcon()) {
+			add(new Button(this, Component.literal("Add New Tip"), FlatIcon.WRENCH.toCIcon()) {
 				@Override
 				public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 					graphics.fill(x, y, x + w, y + h, hint.theme(this).UIBGBorderColor());
@@ -179,7 +174,7 @@ public class ArchiveCategory extends UILayer {
 					setSize(parent.getWidth(), Entry.DEF_HEIGHT);
 				}
 			});
-			getElements().add(new Button(this, Component.literal("All Tips"), FlatIcon.CONFIG.toCIcon()) {
+			add(new Button(this, Component.literal("All Tips"), FlatIcon.CONFIG.toCIcon()) {
 				@Override
 				public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 					graphics.fill(x, y, x + w, y + h, hint.theme(this).UIBGBorderColor());
@@ -215,7 +210,11 @@ public class ArchiveCategory extends UILayer {
 				}
 			});
 		}
-		addCategory();
+		addCategory(TipHelper.getCategory(this));
+	}
+
+	public void addCategory(Category category) {
+		root.getElements().add(category);
 	}
 
 	@Override

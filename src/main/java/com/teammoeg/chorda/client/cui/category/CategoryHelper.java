@@ -23,6 +23,7 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.content.archive.ArchiveCategory;
+import com.teammoeg.frostedheart.content.tips.TipHelper;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 
@@ -175,5 +176,24 @@ public class CategoryHelper {
             }
         }
         return c;
+    }
+
+    public static Category toCategory(UILayer parent, UILayer layer) {
+        var main = new Category(parent, layer.getTitle());
+
+        for (UIElement ele : layer.getElements()) {
+            if (ele instanceof UILayer l) {
+                main.add(toCategory(main, l));
+            } else {
+                main.add(new Entry(main, ele.getTitle()) {
+                    @Override
+                    public String getIdentifier() {
+                        return TipHelper.randomString();
+                    }
+                });
+            }
+        }
+
+        return main;
     }
 }

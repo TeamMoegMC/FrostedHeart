@@ -20,10 +20,24 @@
       }
     ],
     "dirt_provider": {
-      "type": "minecraft:simple_state_provider",
-      "state": {
-        "Name": "minecraft:dirt"
-      }
+      "type": "minecraft:weighted_state_provider",
+      "entries": [
+        {
+          "data": {
+            "Name": "frostedheart:dirt_permafrost",
+            "Properties": {
+              "snowy": "false"
+            }
+          },
+          "weight": 1
+        },
+        {
+          "data": {
+            "Name": "minecraft:snow_block"
+          },
+          "weight": 2
+        }
+      ]
     },
     "foliage_placer": {
       "type": "frostedheart:hotdog_foliage_placer",
@@ -43,7 +57,7 @@
       }
     },
     "force_dirt": false,
-    "ignore_vines": false,
+    "ignore_vines": true,
     "minimum_size": {
       "type": "minecraft:two_layers_feature_size",
       "limit": 1,

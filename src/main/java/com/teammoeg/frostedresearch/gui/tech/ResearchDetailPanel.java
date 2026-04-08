@@ -27,6 +27,7 @@ import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.Research;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -134,8 +135,7 @@ public class ResearchDetailPanel extends UILayer {
 
 	@Override
 	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
-		// drawBackground(matrixStack, theme, x, y, w, h);
-		hint.theme(this).drawUIBackground(matrixStack, x, y, w, h);
+		TechIcons.DIALOG.draw(matrixStack, x, y, w, h);
 	}
 
 	@Override

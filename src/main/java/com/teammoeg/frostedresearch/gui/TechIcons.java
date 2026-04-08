@@ -96,36 +96,36 @@ public class TechIcons {
         int vwr = w % 4;
         int vh = h / 4;
         int vhr = h % 4;
-        TextureTesselator tex=TesselateHelper.getTextureTesselator(TEXTURE);
-        CTextureIcon bg = hl ? BUTTON_BG_ON : BUTTON_BG;
-        for (int i = 0; i < vw; i++) {
-            for (int j = 0; j < vh; j++) {
-                bg.tesselate(tex,matrixStack, x + i * 4, y + j * 4, 4, 4);
-            }
+        try(TextureTesselator tex=TesselateHelper.getTextureTesselator(TEXTURE)){
+	        CTextureIcon bg = hl ? BUTTON_BG_ON : BUTTON_BG;
+	        for (int i = 0; i < vw; i++) {
+	            for (int j = 0; j < vh; j++) {
+	                bg.tesselate(tex,matrixStack, x + i * 4, y + j * 4, 4, 4);
+	            }
+	        }
+	
+	        if (vhr > 0) {
+	        	CTextureIcon bghr = getOf(4,vhr,hl);
+	            int dy = h - vhr + y;
+	            for (int i = 0; i < vw; i++) {
+	                bghr.tesselate(tex,matrixStack, x + i * 4, dy, 4, vhr);
+	            }
+	        }
+	        if (vwr > 0) {
+	        	CTextureIcon bgwr = getOf(vwr,4,hl);
+	            int dx = w - vwr + x;
+	            for (int i = 0; i < vh; i++) {
+	                bgwr.tesselate(tex,matrixStack, dx, y + i * 4, vwr, 4);
+	            }
+	        }
+	        if (vwr > 0 && vhr > 0) {
+	        	getOf(vwr,vhr,hl).tesselate(tex,matrixStack, x + w - vwr, y + h - vhr, vwr, vhr);
+	        }
+	        if(w>1&&h>1) {
+	        	BUTTON_FRAME.tesselate(tex,matrixStack, x, y, w, h);
+	        }
         }
-
-        if (vhr > 0) {
-        	CTextureIcon bghr = getOf(4,vhr,hl);
-            int dy = h - vhr + y;
-            for (int i = 0; i < vw; i++) {
-                bghr.tesselate(tex,matrixStack, x + i * 4, dy, 4, vhr);
-            }
-        }
-        if (vwr > 0) {
-        	CTextureIcon bgwr = getOf(vwr,4,hl);
-            int dx = w - vwr + x;
-            for (int i = 0; i < vh; i++) {
-                bgwr.tesselate(tex,matrixStack, dx, y + i * 4, vwr, 4);
-            }
-        }
-        if (vwr > 0 && vhr > 0) {
-        	getOf(vwr,vhr,hl).tesselate(tex,matrixStack, x + w - vwr, y + h - vhr, vwr, vhr);
-        }
-        if(w>1&&h>1) {
-        	BUTTON_FRAME.tesselate(tex,matrixStack, x, y, w, h);
-        	tex.close();
-        }else {
-        	tex.close();
+        if(w<=1||h<=1){
         	matrixStack.fill(x, y, w, h, text);
         }
     }

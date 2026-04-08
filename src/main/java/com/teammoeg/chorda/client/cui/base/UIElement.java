@@ -44,8 +44,7 @@ import net.minecraft.network.chat.Component;
  */
 public class UIElement {
     /**
-     * 获取父元素。
-     * @return 当前元素的父节点，可能为 null（顶层元素）
+     * 获取当前元素的父节点，可能为 null（顶层元素）
      */
     @Getter
     protected UIElement parent;
@@ -324,6 +323,12 @@ public class UIElement {
      */
     public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
     }
+
+    /**
+     * 渲染额外的自定义调试信息
+     * @param depth 元素深度
+     */
+    public void renderDebug(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint, int depth) {}
 
     // ==================== 事件处理 ====================
     /**

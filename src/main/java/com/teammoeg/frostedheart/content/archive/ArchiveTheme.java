@@ -1,4 +1,4 @@
-package com.teammoeg.chorda.client.cui.contentpanel;
+package com.teammoeg.frostedheart.content.archive;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.TesselateHelper;

@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 // 如何添加新参数
@@ -173,7 +174,7 @@ public record Tip(
         private boolean temporary;
 
         public Builder(String id) {
-            this.id = id;
+            this.id = Objects.requireNonNull(id);
         }
 
         public Builder contents(String... contents) {

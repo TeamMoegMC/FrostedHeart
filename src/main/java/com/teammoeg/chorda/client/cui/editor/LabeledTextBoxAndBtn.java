@@ -20,15 +20,16 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 
-import java.util.function.Consumer;
-
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.cui.widgets.TextButton;
 import com.teammoeg.chorda.client.icon.CIcons;
-
 import net.minecraft.network.chat.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * 带标签的文本输入框和按钮组合控件，在LabeledTextBox基础上增加一个操作按钮。
@@ -39,12 +40,12 @@ import net.minecraft.network.chat.Component;
  * external logic to set the text box content.
  */
 public class LabeledTextBoxAndBtn extends LabeledTextBox {
-    Button btn;
+    protected List<Button> buttons =  new ArrayList<>();
+    protected Button btn;
 
     public LabeledTextBoxAndBtn(UIElement panel, Component lab, String txt, Component btn, Consumer<Consumer<String>> onbtn) {
         super(panel, lab, txt);
         this.btn = new TextButton(this, btn, CIcons.nop()) {
-
             @Override
             public void onClicked(MouseButton arg0) {
                 onbtn.accept(s -> obj.setText(s));
@@ -55,6 +56,24 @@ public class LabeledTextBoxAndBtn extends LabeledTextBox {
     @Override
     public void addUIElements() {
         super.addUIElements();
-        add(btn);
+        buttons.forEach(this::add);
+    }
+
+    public void addButton(Button btn) {
+        buttons.add(btn);
+    }
+
+    @Override
+    public void alignWidgets() {
+        super.alignWidgets();
+        int w1 = (int)(this.getWidth()*0.45F);
+        obj.setX(getWidth()-w1);
+        obj.setWidth(w1);
+
+        int w2 = obj.getX();
+        for (Button button : buttons) {
+            button.setX(w2 -= button.getWidth()+2);
+        }
+        setHeight(getContentHeight());
     }
 }

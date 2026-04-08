@@ -7,6 +7,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.serialization.JsonOps;
+import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.category.Category;
 import com.teammoeg.chorda.client.cui.editor.EditListDialog;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;
@@ -65,7 +66,7 @@ public class TipHelper {
         if (TipManager.INSTANCE.hasTip(id)) {
             edit(TipManager.INSTANCE.getTip(id), theme);
         } else {
-            edit(Tip.builder(id).build(), theme);
+            edit(Tip.builder(id==null?randomString():id).build(), theme);
         }
     }
 
@@ -183,15 +184,7 @@ public class TipHelper {
         }
 
         public Tip.Builder create(String... messages) {
-            return Tip.builder("/error/" + randomString())
-                    .contents(desc())
-                    .contents(messages)
-                    .contents("tips.frostedheart.error.desc")
-                    .fontColor(Colors.RED)
-                    .alwaysVisible()
-                    .hide()
-                    .pin()
-                    .temporary();
+            return create(List.of(messages));
         }
 
         public Tip.Builder create(Collection<String> messages) {
@@ -204,6 +197,12 @@ public class TipHelper {
                     .hide()
                     .pin()
                     .temporary();
+        }
+
+        public Tip createAndDisplay(String... messages) {
+            Tip tip = create(messages).build();
+            display(tip);
+            return tip;
         }
     }
 
@@ -234,10 +233,11 @@ public class TipHelper {
     }
 
     public static boolean isTipIdInvalid(String id) {
-        return id.matches(".*[<>:\"/\\\\|?*§].*");
+        return id.matches(FileUtil.ILLEGAL_CHARS_REGEX);
     }
 
-    public static Category getCategory(Category category) {
+    public static Category getCategory(UILayer parent) {
+        Category category = new Category(parent, Component.translatable("gui.frostedheart.archive.category.tips"));
         List<Tip> unlockedTips = TipManager.INSTANCE.getUnlockedTips();
 
         // 1. 收集所有子提示的 ID

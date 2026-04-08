@@ -20,6 +20,7 @@
 package com.teammoeg.chorda.client.cui;
 
 import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -61,7 +62,7 @@ public class CUIDebugHelper {
 			isDebugEnabled=!isDebugEnabled;
 	}
 
-	public static void renderDebug(GuiGraphics graphics, int x, int y, CUIScreen manager) {
+	public static void renderDebug(GuiGraphics graphics, int x, int y, RenderingHint hint, CUIScreen manager) {
 		if (!isDebugEnabled() || Screen.hasAltDown() || !shouldRender(manager)) return;
 		// debug
 		var ele = UILayer.hoveredEle;
@@ -84,15 +85,23 @@ public class CUIDebugHelper {
 			}
 		}
 		// 选中的元素
-		int color = Color.HSBtoRGB((depth+1) / 6F, 1, 1);
+		int color = getDepthColor(depth);
 		var bound = new Rect(ele.getScreenX()+ x, ele.getScreenY()+ y, ele.getWidth(), ele.getHeight());
+		ele.renderDebug(graphics, x, y, ele.getX(), ele.getHeight(), hint, depth+1);
 		CGuiHelper.drawRect(graphics, bound, Colors.setAlpha(color, 0.1F));
 		CGuiHelper.drawBox(graphics, bound, color, false);
 		graphics.pose().popPose();
 	}
 
+	public static int getDepthColor(int depth) {
+		return Color.HSBtoRGB((depth + 1) / 6F, 1, 1);
+	}
+
 	public static void getDebugTooltip(TooltipBuilder list, Font font, CUIScreen manager) {
-		if (Screen.hasControlDown() || !shouldRender(manager)) return;
+		if (!Screen.hasControlDown() || !shouldRender(manager)) {
+			UILayer.hoveredEle = null;
+			return;
+		}
 		// debug
 		list.translateZ(1200);
 		if (!list.isEmpty())

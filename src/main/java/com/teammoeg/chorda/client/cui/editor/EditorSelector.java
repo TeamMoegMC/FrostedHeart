@@ -19,15 +19,14 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.text.Components;
+import net.minecraft.network.chat.Component;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-
-import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.text.Components;
-
-import net.minecraft.network.chat.Component;
 
 /**
  * 编辑器选择器对话框，当一个值有多种可用编辑器时，让用户选择使用哪个编辑器。
@@ -143,7 +142,11 @@ public class EditorSelector<T> extends BaseEditDialog {
 	@Override
 	public void alignWidgets() {
 		super.alignWidgets();
-		setSizeToContentSize() ;
+		setWidth(getContentWidth()+8);
+		setHeight(getContentHeight());
+		for (UIElement ele : elements) {
+			ele.setWidth(getWidth());
+		}
 	}
 
 	@Override
