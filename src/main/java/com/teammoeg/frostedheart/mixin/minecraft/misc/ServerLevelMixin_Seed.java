@@ -120,11 +120,9 @@ public abstract class ServerLevelMixin_Seed extends Level implements SeedSetable
 					DimensionalSeed.CODEC.encodeStart(NbtOps.INSTANCE, fh$seed).result().orElseGet(CompoundTag::new));
 				NbtIo.writeCompressed(tag, seeds);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} catch (Throwable e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
