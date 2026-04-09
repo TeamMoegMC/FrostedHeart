@@ -19,10 +19,7 @@
 
 package com.teammoeg.chorda.util.struct;
 
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -57,14 +54,13 @@ public class WorldMarker {
 	 */
 	public static class ChunkMarker{
 		public static final Codec<ChunkMarker> CODEC=RecordCodecBuilder.create(t->t.group(
-				CodecUtil.discreteList(RecordCodecBuilder.create(t2->t2.group(
-						Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of).fieldOf("bits").forGetter(n->n)
-						).apply(t2,n->n))).fieldOf("data").forGetter(ChunkMarker::getList)
-		).apply(t, ChunkMarker::new));
+				CodecUtil.discreteList(LongListCodecHelper.CODEC).fieldOf("data").forGetter(o -> Arrays.stream(o.sections).map(BitSet::toLongArray).map(LongListCodecHelper::new).toList())
+		).apply(t, data -> new ChunkMarker(data.stream().map(LongListCodecHelper::getList).toList())));
 		BitSet[] sections=new BitSet[16];
 		
 		public ChunkMarker() {
 		}
+
 		public ChunkMarker(List<long[]> data) {
 			for(int i=0;i<data.size();i++) {
 				long[] ls=data.get(i);
@@ -239,5 +235,17 @@ public class WorldMarker {
 		ChunkMarker cm=new ChunkMarker();
 		cm.setBit(5, 5, 5, true);
 		System.out.println(ChunkMarker.CODEC.encodeStart(NbtOps.INSTANCE, cm).resultOrPartial(System.out::println).get());
+	}
+
+	static class LongListCodecHelper{
+		public LongListCodecHelper(long[] list) {
+			this.list = list;
+		}
+
+		public static final Codec<LongListCodecHelper> CODEC = RecordCodecBuilder.create(t2->t2.group(
+				Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of).fieldOf("bits").forGetter(n->n.list)
+		).apply(t2,LongListCodecHelper::new));
+		@Getter
+		long[] list;
 	}
 }
