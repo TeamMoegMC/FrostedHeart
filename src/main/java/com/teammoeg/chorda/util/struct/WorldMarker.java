@@ -28,12 +28,10 @@ import java.util.stream.Stream;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.io.CodecUtil;
-import com.teammoeg.chorda.util.CUtils;
 
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.ChunkPos;
 /**
  * 世界标记器，用于标记世界中自定义区域的存储模式。
@@ -54,8 +52,8 @@ public class WorldMarker {
 	 */
 	public static class ChunkMarker{
 		public static final Codec<ChunkMarker> CODEC=RecordCodecBuilder.create(t->t.group(
-				CodecUtil.discreteList(LongListCodecHelper.CODEC).fieldOf("data").forGetter(o -> Arrays.stream(o.sections).map(BitSet::toLongArray).map(LongListCodecHelper::new).toList())
-		).apply(t, data -> new ChunkMarker(data.stream().map(LongListCodecHelper::getList).toList())));
+				CodecUtil.discreteList(LongArrayCodecHelper.CODEC).fieldOf("data").forGetter(ChunkMarker::toLongArrayHelperList)
+		).apply(t, ChunkMarker::fromLongArrayHelperList));
 		BitSet[] sections=new BitSet[16];
 		
 		public ChunkMarker() {
@@ -75,6 +73,19 @@ public class WorldMarker {
 		}
 		public List<long[]> getList(){
 			return Stream.of(sections).map(o->o==null?null:o.toLongArray()).collect(Collectors.toList());
+		}
+		public List<LongArrayCodecHelper> toLongArrayHelperList(){
+			return Stream.of(sections).map(o->o==null?null:new LongArrayCodecHelper(o.toLongArray())).collect(Collectors.toList());
+		}
+
+		public static ChunkMarker fromLongArrayHelperList(List<LongArrayCodecHelper> longListHelperList){
+			return new ChunkMarker(longListHelperList.stream().map(helper -> {
+				if(helper == null){
+					return null;
+				} else {
+					return helper.getLongArray();
+				}
+			}).collect(Collectors.toList()));
 		}
 		private int getBitIndex(int x,int y,int z) {
 			return ((x&15)<<8)+((y&15)<<4)+(z&15);
@@ -237,15 +248,15 @@ public class WorldMarker {
 		System.out.println(ChunkMarker.CODEC.encodeStart(NbtOps.INSTANCE, cm).resultOrPartial(System.out::println).get());
 	}
 
-	static class LongListCodecHelper{
-		public LongListCodecHelper(long[] list) {
-			this.list = list;
+	@Getter
+    public static class LongArrayCodecHelper {
+		public LongArrayCodecHelper(long[] longArray) {
+			this.longArray = longArray;
 		}
 
-		public static final Codec<LongListCodecHelper> CODEC = RecordCodecBuilder.create(t2->t2.group(
-				Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of).fieldOf("bits").forGetter(n->n.list)
-		).apply(t2,LongListCodecHelper::new));
-		@Getter
-		long[] list;
+		public static final Codec<LongArrayCodecHelper> CODEC = RecordCodecBuilder.create(t2->t2.group(
+				Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of).fieldOf("bits").forGetter(n->n.longArray)
+		).apply(t2, LongArrayCodecHelper::new));
+		long[] longArray;
 	}
 }
