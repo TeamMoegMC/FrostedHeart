@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.utility.seld;
 
-import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
@@ -50,9 +49,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
-
-import java.util.Map;
-import java.util.stream.Stream;
 
 public class SledEntityRenderer extends EntityRenderer<SledEntity> {
 
@@ -118,7 +114,11 @@ public class SledEntityRenderer extends EntityRenderer<SledEntity> {
         DyeColor color = sled.getSeatType();
         if (color != null) {
             vertexconsumer = bufferSource.getBuffer(model.renderType(this.quiltTextures));
+            poseStack.pushPose();
+            poseStack.translate(-0, 1.185, -0);
+            poseStack.rotateAround(Axis.YN.rotationDegrees(90), 0, 0, 0);
             quiltModel.renderToBuffer(poseStack, vertexconsumer, light, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+            poseStack.popPose();
         }
 
         poseStack.popPose();

@@ -27,7 +27,9 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
@@ -164,6 +166,18 @@ public class CRegistryHelper {
 			throw new IllegalStateException("Item: " + rl + " does not exist");
 		}
 		return ForgeRegistries.ITEMS.getValue(rl);
+	}
+	public static Item getColoredItem(DyeColor color, String pathSuffix) {
+		return getColoredItem(color, "minecraft", pathSuffix);
+	}
+	public static Item getColoredItem(DyeColor color, String namespace, String pathSuffix) {
+		var loc = new ResourceLocation(namespace + ":" + color.getName() + "_" + pathSuffix);
+		var item = ForgeRegistries.ITEMS.getValue(loc);
+		if (item == null) {
+			var block = ForgeRegistries.BLOCKS.getValue(loc);
+			item = block == null ? Items.AIR : block.asItem();
+		}
+		return item;
 	}
 	/** 根据资源位置获取药水效果。 / Get a mob effect by resource location. */
 	public static MobEffect getEffect(ResourceLocation rl) {

@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.utility.seld;
 
 import com.google.common.collect.Lists;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
@@ -39,7 +40,6 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
@@ -52,12 +52,17 @@ import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.entity.vehicle.DismountHelper;
-import net.minecraft.world.item.*;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.PowderSnowBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
+import net.minecraft.world.level.block.WoolCarpetBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.WoodType;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -236,8 +241,8 @@ public class SledEntity extends Entity {
                         this.spawnAtLocation(this.getSledItem());
                         DyeColor seat = this.getSeatType();
                         if (seat != null) {
-                            Item carpet = Items.AIR/*BlocksColorAPI.getColoredItem("carpet", seat)*/;
-                            if (carpet != null) this.spawnAtLocation(carpet);
+                            Item carpet = CRegistryHelper.getColoredItem(seat, "carpet");
+                            if (carpet != Items.AIR) this.spawnAtLocation(carpet);
                         }
                         if (this.hasPuller()) {
                             this.spawnAtLocation(Items.LEAD);
@@ -1044,14 +1049,11 @@ public class SledEntity extends Entity {
             ItemStack stack = player.getItemInHand(pHand);
             //carpet
             Level level = player.level();
-            if (stack.is(ItemTags.WOOL_CARPETS) && this.getSeatType() == null) {
-                DyeColor col = DyeColor.WHITE;
-                if (col != null) {
-                    this.playSound(SoundEvents.ARMOR_EQUIP_LEATHER, 0.5F, 1.0F);
-                    this.setSeatType(col);
-                    stack.shrink(1);
-                    return InteractionResult.sidedSuccess(level.isClientSide);
-                }
+            if (stack.getItem() instanceof BlockItem b && b.getBlock() instanceof WoolCarpetBlock carpet && this.getSeatType() == null) {
+                this.playSound(SoundEvents.ARMOR_EQUIP_LEATHER, 0.5F, 1.0F);
+                this.setSeatType(carpet.getColor());
+                stack.shrink(1);
+                return InteractionResult.sidedSuccess(level.isClientSide);
             } else if (this.tryAddingChest(stack) != null) {
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
