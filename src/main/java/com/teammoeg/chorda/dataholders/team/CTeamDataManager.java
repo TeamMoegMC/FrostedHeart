@@ -37,6 +37,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.dataholders.DataLoadException;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataType;
 import com.teammoeg.chorda.events.TeamCreatedEvent;
@@ -270,6 +271,9 @@ public class CTeamDataManager {
 	                dataByOwnId.put(trd.getId(), trd);
                     
 	                Chorda.LOGGER.debug("Data file for team " + trd.getId().toString() + " loaded.");
+	            } catch(DataLoadException dle) {
+	            	dle.printStackTrace();
+	                Chorda.LOGGER.error("data file " + f.getName() + " contains unexpected data, ignoring...");
 	            } catch (IllegalArgumentException ex) {
 	                ex.printStackTrace();
 	                Chorda.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");

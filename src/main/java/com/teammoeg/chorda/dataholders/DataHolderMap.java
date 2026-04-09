@@ -101,6 +101,7 @@ public class DataHolderMap<T extends DataHolderMap<T>> implements SpecialDataHol
 					this.data.put(tc, raw);
 				} catch (Exception e) {
 					Chorda.LOGGER.error(marker, "Failed to load " + tc, e);
+					throw new DataLoadException("Failed to load " + tc,e);
 				}
         	}
         }
