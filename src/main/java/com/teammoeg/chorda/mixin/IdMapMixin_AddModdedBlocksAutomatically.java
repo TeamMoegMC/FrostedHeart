@@ -27,9 +27,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.ChordaConfig;
 import com.teammoeg.chorda.util.ShaderCompatHelper;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -95,18 +95,18 @@ public class IdMapMixin_AddModdedBlocksAutomatically {
 			
 			
 		}*/
-		if(FHConfig.CLIENT.enableShaderPackCompat.get()) {
-			FHMain.LOGGER.info("loading "+ShaderCompatHelper.modBlockState2VanillaBlockMap.size()+" shader compats.");
+		if(ChordaConfig.CLIENT.enableShaderPackCompat.get()) {
+			Chorda.LOGGER.info("loading "+ShaderCompatHelper.modBlockState2VanillaBlockMap.size()+" shader compats.");
 			//IntFunction<List<BlockEntry>> creator=k->new ArrayList<>();
 			ShaderCompatHelper.modBlockState2VanillaBlockMap.forEach((k,v)->{
-				FHMain.LOGGER.debug("trying to remap "+k+" to "+v);
+				Chorda.LOGGER.debug("trying to remap "+k+" to "+v);
 				if(blockStateIds.containsKey(k)) {
-					FHMain.LOGGER.debug("already existed, skipped");
+					Chorda.LOGGER.debug("already existed, skipped");
 					return;
 				}
 				if(blockStateIds.containsKey(v)) {
 					int key=blockStateIds.getInt(v);
-					FHMain.LOGGER.debug("found key id "+key);
+					Chorda.LOGGER.debug("found key id "+key);
 					blockStateIds.put(k, key);
 					
 				}

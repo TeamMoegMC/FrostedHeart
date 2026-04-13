@@ -23,15 +23,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import com.mojang.datafixers.util.Unit;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.editor.BaseEditDialog;
@@ -49,7 +45,6 @@ import com.teammoeg.chorda.client.icon.CIcons.ItemIcon;
 import com.teammoeg.chorda.io.ConfigFileUtil;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CFunctionUtils;
-import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate;
 import com.teammoeg.frostedheart.content.wheelmenu.useractions.CommandInputAction;
 import com.teammoeg.frostedheart.content.wheelmenu.useractions.KeyMappingTriggerAction;
 

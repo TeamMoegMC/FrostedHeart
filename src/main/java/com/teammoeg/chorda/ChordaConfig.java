@@ -39,8 +39,11 @@ public class ChordaConfig {
      */
     public static class Client {
 
+		public final ForgeConfigSpec.BooleanValue enableShaderPackCompat;
         Client(ForgeConfigSpec.Builder builder) {
 
+			enableShaderPackCompat = builder.comment("Enables shaderpack compatibility module, switch this off if your shader does not load correctly")
+				.define("enableShaderCompatibility", true);
         }
 
     }

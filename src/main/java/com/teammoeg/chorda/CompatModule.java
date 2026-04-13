@@ -19,7 +19,6 @@
 
 package com.teammoeg.chorda;
 
-import lombok.Getter;
 import net.minecraftforge.fml.ModList;
 /**
  * 兼容模组注册表。集中管理所有兼容模组的加载状态检测，
@@ -80,6 +79,7 @@ public class CompatModule {
 	private static boolean cauponaLoaded;
 	private static boolean stoneAgeLoaded;
 	private static boolean isModlistLoaded;
+	private static boolean jeiLoaded;
 
 	/**
 	 * 启用兼容模块。在模组初始化时调用，检测所有兼容模组的加载状态。
@@ -115,6 +115,10 @@ public class CompatModule {
 		FTBTLoaded=ModList.get().isLoaded("ftbteams");
 		cauponaLoaded=ModList.get().isLoaded("caupona");
 		stoneAgeLoaded=ModList.get().isLoaded("stone_age");
+		jeiLoaded=ModList.get().isLoaded("jei");
+	}
+	public static boolean isJeiLoaded() {
+		return jeiLoaded;
 	}
 
 }

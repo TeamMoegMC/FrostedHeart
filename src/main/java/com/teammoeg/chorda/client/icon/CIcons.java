@@ -40,7 +40,6 @@ import com.teammoeg.chorda.io.codec.AlternativeCodecBuilder;
 import com.teammoeg.chorda.io.registry.TypedCodecRegistry;
 import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.chorda.text.Components;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -381,7 +380,7 @@ public class CIcons {
 			if (icon != null) {
 				icon.draw(ms, x, y, w, h);
 			} else {
-				FHMain.LOGGER.warn("No icon found for name " + name, ", using default.");
+				Chorda.LOGGER.warn("No icon found for name " + name, ", using default.");
 				TechIcons.Question.draw(ms, x, y, w, h);
 			}
 		}

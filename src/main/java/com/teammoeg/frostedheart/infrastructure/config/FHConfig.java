@@ -72,7 +72,6 @@ public class FHConfig {
 		public final ForgeConfigSpec.IntValue themeColor;
 		public final ForgeConfigSpec.BooleanValue enableWheelMenuCursor;
 		public final ForgeConfigSpec.BooleanValue enableTooltips;
-		public final ForgeConfigSpec.BooleanValue enableShaderPackCompat;
 
 		Client(ForgeConfigSpec.Builder builder) {
 			builder.push("Frosted HUD");
@@ -198,8 +197,6 @@ public class FHConfig {
 			builder.push("other");
 			enableTooltips = builder.comment("Enable item tooltips")
 				.define("enableTooltips", true);
-			enableShaderPackCompat = builder.comment("Enables shaderpack compatibility module, switch this off if your shader does not load correctly")
-				.define("enableShaderCompatibility", true);
 		}
 
 		public int getScenarioScale() {

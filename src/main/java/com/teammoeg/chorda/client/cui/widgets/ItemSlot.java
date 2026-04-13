@@ -25,8 +25,8 @@ import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
+import com.teammoeg.chorda.compat.jei.JEICompat;
 import com.teammoeg.chorda.math.Colors;
-import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -222,9 +222,9 @@ public class ItemSlot extends UIElement {
 	        switch (keyCode) {
 	            case GLFW.GLFW_KEY_R -> {
 	                if (modifier == GLFW.GLFW_MOD_SHIFT) {
-	                    JEICompat.showJEIUsageFor(item[order]);
+	                	JEICompat.showJEIUsageFor(item[order]);
 	                } else {
-	                    JEICompat.showJEIFor(item[order]);
+	                	JEICompat.showJEIFor(item[order]);
 	                }
 	            }
 	            case GLFW.GLFW_KEY_U -> JEICompat.showJEIUsageFor(item[order]);
