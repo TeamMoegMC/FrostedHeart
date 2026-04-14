@@ -21,7 +21,11 @@ package com.teammoeg.chorda.client.cui.contentpanel;
 
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.ItemSlot;
+
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -41,7 +45,8 @@ import java.util.List;
 public class ItemRow extends Line<ItemRow> {
     protected final List<ItemStack> items = new ArrayList<>();
     protected int rowSize = 1;
-
+    @Setter
+    protected Coloring borderColor=UIColors.UI_BORDER;
     public ItemRow(UIElement parent, Collection<ItemStack> items, Alignment alignment) {
         super(parent, alignment);
         this.items.addAll(items);
@@ -60,7 +65,7 @@ public class ItemRow extends Line<ItemRow> {
 
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h,RenderingHint hint) {
-        graphics.fill(x, y, x+w, y+h, hint.theme(this).UIBGBorderColor());
+        graphics.fill(x, y, x+w, y+h, borderColor.getColorARGB(this, x, y, hint));
     }
 
     @Override

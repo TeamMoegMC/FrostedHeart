@@ -3,6 +3,8 @@ package com.teammoeg.chorda.client.cui.contentpanel;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import lombok.Getter;
@@ -25,7 +27,7 @@ public class FlatIconButton extends Button {
     protected Consumer<MouseButton> clickAction;
     protected FlatIcon fIcon;
     protected float scale;
-
+    protected Coloring textColor=UIColors.BUTTON_TEXT;
     public FlatIconButton(UIElement panel, Component t, FlatIcon icon, Consumer<MouseButton> clickAction) {
         super(panel, t, icon.toCIcon());
         this.clickAction = clickAction;
@@ -41,7 +43,7 @@ public class FlatIconButton extends Button {
     @Override
     public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
         hint.theme(this).drawButton(graphics, x, y, w, h, isMouseOver(), isEnabled());
-        fIcon.render(graphics.pose(), x+1, y+1, hint.theme(this).UITextColor());
+        fIcon.render(graphics.pose(), x+1, y+1, textColor.getColorARGB(this, x, y, hint));
 //        icon.draw(graphics, x+1, y+1, fIcon.size.width, fIcon.size.height);
     }
 

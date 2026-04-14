@@ -19,20 +19,25 @@
 
 package com.teammoeg.frostedresearch.gui;
 
+import com.teammoeg.chorda.client.RenderingHint;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
+
 import net.minecraft.client.gui.GuiGraphics;
 
 public class ThickLine {
-    public int color = 0xFF000000;
+    public Coloring color=UIColors.UI_BORDER;
     int x, y, x2, y2;
 
     public ThickLine() {
     }
 
-    public void draw(GuiGraphics matrixStack, int x, int y) {
+    public void draw(GuiGraphics matrixStack,UIElement owner, int x, int y, RenderingHint hint) {
         if (this.x == this.x2)
-            matrixStack.fill(x + this.x - 2, y + this.y - 2, x + this.x + 2, y + this.y2 + 2, color);
+            matrixStack.fill(x + this.x - 2, y + this.y - 2, x + this.x + 2, y + this.y2 + 2, color.getColorARGB(owner, x, y, hint));
         else
-            matrixStack.fill(x + this.x - 2, y + this.y - 2, x + this.x2 + 2, y + this.y + 2, color);
+            matrixStack.fill(x + this.x - 2, y + this.y - 2, x + this.x2 + 2, y + this.y + 2, color.getColorARGB(owner, x, y, hint));
     	
        // CGuiHelper.drawLine(matrixStack, color, x + this.x, y + this.y, x + this.x2, y + this.y2);
 

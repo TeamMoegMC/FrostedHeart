@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.cui.widgets.TextButton;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
@@ -58,7 +59,7 @@ public class ConfirmDialog extends BaseEditDialog {
      */
     public ConfirmDialog(UIElement panel, Component label, boolean exp, Consumer<Boolean> onFinished) {
         super(panel);
-        tf = new TextField(this).setColor(0xFFFF0000).setMaxWidth(200).setText(label);
+        tf = new TextField(this).setColor(UIColors.ERROR_TEXT).setMaxWidth(200).setText(label);
         fin = onFinished;
         selected = !exp;
         cancel = new TextButton(this, Components.translatable("gui.cancel"), CIcons.nop()) {

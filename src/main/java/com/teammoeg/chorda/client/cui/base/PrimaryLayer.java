@@ -25,9 +25,11 @@ import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.StencilHelper;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
-import com.teammoeg.chorda.client.cui.editor.EditDialog;
 import com.teammoeg.chorda.client.cui.editor.EditorManager;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreen;
+import com.teammoeg.chorda.client.cui.theme.Theme;
+import com.teammoeg.chorda.client.cui.theme.VanillaTheme;
+
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
@@ -53,17 +55,23 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	@Getter
 	@Setter
 	private CUIScreen screen;
+	int mouseX;
+	int mouseY;
+	boolean hasBackGradient=true;
+	boolean refreshRequested;
 	public PrimaryLayer() {
 		super(null);
 		width = 176;
 		height = 166;
 		prevScreen = Minecraft.getInstance().screen;
 		this.setScissorEnabled(false);
+		this.theme = VanillaTheme.INSTANCE;
 	}
-	int mouseX;
-	int mouseY;
-	boolean hasBackGradient=true;
-	boolean refreshRequested;
+	@Override
+	public Theme theme() {
+        return theme;
+    }
+
 
 	public final void initGui() {
 		if (onInit()) {
@@ -240,11 +248,14 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	}
 
 	@Override
-	public void addUIElements() {
+	public final void addUIElements() {
 		if(dialog!=null)
 			add(dialog);
+		addChildUIElements();
 	}
-
+	public void addChildUIElements() {
+		
+	};
 	@Override
 	public void alignWidgets() {
 		setSizeToContentSize();
@@ -269,7 +280,7 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 	}
 
 	@Getter
-    EditDialog dialog;
+    UIElement dialog;
     public void closeDialog(boolean quit) {
         this.dialog = null;
         if (quit) {
@@ -278,7 +289,7 @@ public class PrimaryLayer extends UILayer implements LayerHolder,EditorManager {
 
     }
 
-    public void openDialog(EditDialog dialog, boolean refresh) {
+    public void openDialog(UIElement dialog, boolean refresh) {
         this.dialog = dialog;
         if (refresh)
             this.refreshElements();

@@ -57,7 +57,7 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
     }
 
     @Override
-    public void addUIElements() {
+    public void addChildUIElements() {
         this.contentLayer.setSize(176, 222);
         this.add(this.contentLayer);
 

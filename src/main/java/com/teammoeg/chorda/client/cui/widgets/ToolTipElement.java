@@ -25,8 +25,6 @@ import java.util.function.Consumer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 
-import net.minecraft.network.chat.Component;
-
 /**
  * 提示框元素控件。一个不可见的UI元素，仅用于在悬停时提供自定义提示信息。
  * <p>

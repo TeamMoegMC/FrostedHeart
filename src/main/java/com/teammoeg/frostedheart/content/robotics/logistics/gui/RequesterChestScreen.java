@@ -40,9 +40,8 @@ public class RequesterChestScreen extends LogisticChestLayer<RequesterChestMenu>
 	}
 
 	@Override
-	public void addUIElements() {
+	public void addChildUIElements() {
 		if(screen==null) {
-			super.addUIElements();
 			this.add(filters);
 		}else {
 			this.add(screen);

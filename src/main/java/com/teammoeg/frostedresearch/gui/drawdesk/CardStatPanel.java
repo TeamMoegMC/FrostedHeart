@@ -22,6 +22,7 @@ package com.teammoeg.frostedresearch.gui.drawdesk;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardStat;
@@ -43,7 +44,7 @@ public class CardStatPanel extends UILayer {
 	@Override
 	public void addUIElements() {
 		tf = new TextField(this);
-		tf.addFlags(4).setColor(TechIcons.text).setMaxWidth(15).setTrim();
+		tf.addFlags(4).setColor(UIColors.UI_TEXT).setMaxWidth(15).setTrim();
 		tf.setWidth(15);
 		tf.setPosAndSize(1, 16, 14, 8);
 		add(tf);
@@ -56,7 +57,7 @@ public class CardStatPanel extends UILayer {
 	@Override
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		CardStat cs = rg.getStats().get(cardstate);
-		tf.setColor(cs.isGood() ? TechIcons.text : TechIcons.text_red);
+		tf.setColor(cs.isGood() ? UIColors.UI_TEXT:UIColors.ERROR_TEXT);
 		tf.setText("" + cs.num);
 
 		DrawDeskIcons.getIcon(cs.type, cs.card, true).draw(matrixStack, x, y - 1, 16, 16);

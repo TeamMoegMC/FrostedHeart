@@ -177,8 +177,7 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 
 
 	@Override
-	public void addUIElements() {
-		super.addUIElements();
+	public void addChildUIElements() {
 		TextField ptf = new TextField(this).centerV().centerH().shadow().setMaxWidth(56).setMinWidth(56)
 			.setMaxLines(1).setText(Lang.translateGui("trade.me"));
 		ptf.setPos(0, 119);

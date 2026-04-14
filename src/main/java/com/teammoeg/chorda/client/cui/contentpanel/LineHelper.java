@@ -20,6 +20,8 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.tips.Tip;
@@ -79,7 +81,7 @@ public class LineHelper {
         return new BreakLine(parent);
     }
 
-    public static BreakLine br(UIElement parent, int color) {
+    public static BreakLine br(UIElement parent, Coloring color) {
         return br(parent).color(color);
     }
 
@@ -93,15 +95,16 @@ public class LineHelper {
             final Tip tip = tips.get(j);
             if (tip.display().hide()) continue;
             var tipContents = tip.contents();
-            int color = Colors.cyanToTheme(tip.display().fontColor());
-
+            int ocolor = Colors.cyanToTheme(j);
+            Coloring color=UIColors.argb(ocolor);
+            Coloring readable=UIColors.argb(Colors.readableColor(ocolor));
             // title
             if (j == 0) {
-                lines.add(text(parent, Component.translatable(tipContents.get(0))).color(parent.theme().UIAltTextColor()).scale(2).button(tip.clickAction()));
+                lines.add(text(parent, Component.translatable(tipContents.get(0))).color(UIColors.UI_ALT_TEXT).scale(2).button(tip.clickAction()));
             // new tip notification
             } else if (!TipManager.state().isViewed(tip)) {
                 lines.add(br(parent));
-                lines.add(text(parent, Component.translatable("gui.frostedheart.archive.new_tip")).title(color, 1).color(Colors.readableColor(color)));
+                lines.add(text(parent, Component.translatable("gui.frostedheart.archive.new_tip")).title(color, 1).color(readable));
             }
             // if child tip has different title or has click action
             if (j != 0 && (TipHelper.hasClickAction(tip) || !tipContents.get(0).equals(tipInput.contents().get(0)))) {
@@ -127,10 +130,10 @@ public class LineHelper {
             // debug
             if (TipClientCommand.editMode) {
                 lines.add(text(parent, "ID: " + tip.id())
-                        .color(parent.theme().UIBGBorderColor())
+                        .color(UIColors.UI_BORDER)
                         .alignment(Alignment.RIGHT)
                         .button(Component.translatable("controls.reset"), FlatIcon.HISTORY, b -> TipManager.state().reset(tip))
-                        .button(Component.translatable("selectServer.edit"), FlatIcon.WRENCH, b -> TipHelper.edit(tip.id(), parent.theme()))
+                        .button(Component.translatable("selectServer.edit"), FlatIcon.WRENCH, b -> TipHelper.edit(tip.id(), parent.getLayerHolder().theme()))
                 );
                 lines.add(space(parent));
             }

@@ -19,9 +19,6 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
-
 import java.util.function.Consumer;
 
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
@@ -33,6 +30,7 @@ import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.client.gui.GuiGraphics;
 
 /**
  * 三态复选框控件。具有正常、悬停和锁定三种视觉状态的抽象复选框。

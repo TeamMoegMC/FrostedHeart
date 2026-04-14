@@ -39,7 +39,7 @@ import net.minecraft.ChatFormatting;
  * current dialog.
  */
 public abstract class EditDialog extends UILayer {
-    EditDialog previous;
+    UIElement previous;
     EditorManager sc;
 
     /**

@@ -23,6 +23,8 @@ import com.ibm.icu.text.NumberFormat;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedresearch.Lang;
@@ -30,10 +32,15 @@ import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.Research;
+
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class ResearchProgressPanel extends UILayer {
-
+    @Getter
+    @Setter
+    Coloring textColor=UIColors.UI_TEXT,errorColor=UIColors.ERROR_TEXT;
 	public ResearchProgressPanel(UIElement panel) {
 		super(panel);
 	}
@@ -60,7 +67,7 @@ public class ResearchProgressPanel extends UILayer {
 		super.render(matrixStack, x, y, w, h, hint);
 		// title
 
-		matrixStack.drawString(getFont(), Lang.translateGui("research_progress"), x + 3, y, hint.theme(this).UITextColor(), false);
+		matrixStack.drawString(getFont(), Lang.translateGui("research_progress"), x + 3, y, textColor.getColorARGB(this, x, y, hint), false);
 		// progress bar
 		// TODO: this cause crash when root clue is added
 		// float progress =
@@ -72,9 +79,9 @@ public class ResearchProgressPanel extends UILayer {
 			float prog = inprog.getProgressFraction();
 			DrawDeskTheme.INSTANCE.drawProgressBar(matrixStack, x+40, y+32, 70, 8, prog);
 			if (inprog.getData().canComplete(inprog))
-				matrixStack.drawString(getFont(), NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, hint.theme(this).UITextColor(), false);
+				matrixStack.drawString(getFont(), NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, textColor.getColorARGB(this, x + 40, y + 40, hint), false);
 			else
-				matrixStack.drawString(getFont(), Lang.translateGui("research.required_clue"), x + 40, y + 40, hint.theme(this).errorColor(), false);
+				matrixStack.drawString(getFont(), Lang.translateGui("research.required_clue"), x + 40, y + 40, errorColor.getColorARGB(this, x + 40, y + 40, hint), false);
 			// research icon
 
 			TechIcons.SHADOW.draw(matrixStack, x + 1, y + 38, 36, 9);

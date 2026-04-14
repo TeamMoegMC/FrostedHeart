@@ -23,6 +23,8 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.TextButton;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.chorda.client.icon.CIcons;
@@ -35,6 +37,9 @@ import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.data.ResearchData;
 import com.teammoeg.frostedresearch.gui.ResearchEditUtils;
 import com.teammoeg.frostedresearch.gui.TechIcons;
+
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class ResearchDashboardPanel extends UILayer {
@@ -45,7 +50,9 @@ public class ResearchDashboardPanel extends UILayer {
 	TextField techpoint;
 	TextField availableInsightLevel;
 	boolean isClueNotCompleted = false;
-
+    @Setter
+    @Getter
+    Coloring errorColor=UIColors.ERROR_TEXT;
 	public ResearchDashboardPanel(ResearchDetailPanel panel) {
 		super(panel);
 		detailPanel = panel;
@@ -95,8 +102,8 @@ public class ResearchDashboardPanel extends UILayer {
 		ResearchData rd = detailPanel.research.getData();
 		if (rd.canResearch()) {
 			if (!rd.canComplete(detailPanel.research)) {
-				tp.setColor(theme().errorColor());
-				techpoint.setColor(theme().errorColor());
+				tp.setColor(errorColor);
+				techpoint.setColor(errorColor);
 			}
 			techpoint.setText(CFormatHelper.toReadableUnit(rd.getTotalCommitted(detailPanel.research)) + "/" + CFormatHelper.toReadableUnit(detailPanel.research.getRequiredPoints()) + "IOPS");
 		}
@@ -111,13 +118,13 @@ public class ResearchDashboardPanel extends UILayer {
 			int insightAvailable = ClientResearchDataAPI.getData().get().getAvailableInsightLevel();
 			availableInsightLevel.setText(Lang.translateGui("research.insight_required", insightNeeded, insightAvailable));
 			if (insightNeeded > insightAvailable) {
-				availableInsightLevel.setColor(theme().errorColor());
+				availableInsightLevel.setColor(errorColor);
 			}
 			add(availableInsightLevel);
 			availableInsightLevel.setX(140 - availableInsightLevel.getWidth());
 		}
 		if (rd.canResearch() && !rd.canComplete(detailPanel.research)) {
-			TextField rq = new TextField(this).setMaxWidth(140).setMaxLines(1).setColor(theme().errorColor());
+			TextField rq = new TextField(this).setMaxWidth(140).setMaxLines(1).setColor(errorColor);
 			rq.setPos(40, 20 + ClientUtils.font().lineHeight * 3);
 			add(rq);
 			rq.setText(Lang.translateGui("research.required_clue"));

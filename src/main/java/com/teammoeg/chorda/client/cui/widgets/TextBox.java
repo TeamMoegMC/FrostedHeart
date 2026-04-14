@@ -30,6 +30,9 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.base.Verifier;
 import com.teammoeg.chorda.client.cui.base.Verifier.VerifyResult;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
+
 import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
@@ -56,7 +59,9 @@ public class TextBox extends UIElement implements Focusable {
 	/** 字符数量限制 / Character count limit */
 	public int charLimit = 2000;
 	/** 文本颜色 / Text color */
-	public int textColor;
+	public Coloring textColor=UIColors.BUTTON_TEXT;
+	
+	public Coloring errorColor=UIColors.ERROR_TEXT;
 	/** 占位文本（未输入内容时显示） / Ghost/placeholder text shown when empty */
 	public String ghostText = "";
 	/** 当前输入文本 / Current input text */
@@ -673,8 +678,8 @@ public class TextBox extends UIElement implements Focusable {
 				isPressed=false;
 			
 		}
-		int textColor= hint.theme(this).buttonTextColor();
-		int cursorColor =( (!validText.isError() ? textColor: hint.theme(this).errorColor())&textColor)|((drawGhostText ? 0x78000000 : 0xFF000000));
+		Coloring color =validText.isError() ? errorColor : textColor;
+		int cursorColor=color.getColorARGB(this, x, y, hint)|((drawGhostText ? 0x78000000 : 0xFF000000));
 		int j = cursorPos - displayPos;
 		String s = getFont().plainSubstrByWidth(textToDraw.substring(displayPos), w);
 		if(rightAlign)

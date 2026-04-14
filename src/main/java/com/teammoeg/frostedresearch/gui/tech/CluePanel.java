@@ -25,6 +25,8 @@ import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedresearch.Lang;
@@ -32,6 +34,9 @@ import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.clues.Clue;
+
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
@@ -46,7 +51,9 @@ public class CluePanel extends UILayer {
 	TextField desc;
 	TextField contribute;
 	TextField rq;
-
+    @Setter
+    @Getter
+    Coloring textColor=UIColors.BUTTON_TEXT,errorColor=UIColors.ERROR_TEXT;
 	public CluePanel(UIElement panel, Clue c, Research r) {
 		super(panel);
 		this.c = c;
@@ -83,25 +90,25 @@ public class CluePanel extends UILayer {
 	public void initWidgets() {
 		int offset = 1;
 		clueName = new TextField(this);
-		clueName.setMaxWidth(width - 6).setText(c.getName(r)).setPos(10, offset);
+		clueName.setMaxWidth(width - 6).setText(c.getName(r)).setColor(textColor).setPos(10, offset);
 
 		offset += clueName.getHeight() + 2;
 		Component itx = c.getDescription(r);
 		if (itx != null) {
 			desc = new TextField(this);
-			desc.setMaxWidth(width).setText(itx).setPos(0, offset);
+			desc.setMaxWidth(width).setText(itx).setColor(textColor).setPos(0, offset);
 			offset += desc.getHeight() + 2;
 		}
 		if (c.isRequired()) {
 			rq = new TextField(this)
 				.setMaxWidth(width)
 				.setText(Lang.translateGui("research.required"))
-				.setColor(theme().errorColor());
+				.setColor(errorColor);
 			rq.setPos(0, offset);
 			offset += rq.getHeight() + 2;
 		}
 		contribute = new TextField(this)
-			.setMaxWidth(width)
+			.setMaxWidth(width).setColor(textColor)
 			.setText(Components.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())));
 		contribute.setPos(0, offset);
 		offset += contribute.getHeight() + 2;

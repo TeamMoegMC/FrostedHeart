@@ -30,6 +30,8 @@ import com.teammoeg.chorda.client.cui.category.Category;
 import com.teammoeg.chorda.client.cui.category.CategoryHelper;
 import com.teammoeg.chorda.client.cui.category.Entry;
 import com.teammoeg.chorda.client.cui.contentpanel.LineHelper;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.icon.FlatIcon;
@@ -39,6 +41,7 @@ import com.teammoeg.frostedheart.content.tips.TipHelper;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.infrastructure.command.TipClientCommand;
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
@@ -53,7 +56,9 @@ public class ArchiveCategory extends UILayer {
 	private final Category root = new Category(this, Component.literal("root"));
 
 	public static String currentPath = "";
-
+    @Getter
+    @Setter
+    Coloring color=UIColors.UI_ALT_TEXT,borderColor=UIColors.UI_BORDER;
 	protected ArchiveCategory(ArchiveScreen panel) {
 		super(panel);
 		this.panel = panel;
@@ -156,16 +161,16 @@ public class ArchiveCategory extends UILayer {
 			add(new Button(this, Component.literal("Add New Tip"), FlatIcon.WRENCH.toCIcon()) {
 				@Override
 				public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
-					graphics.fill(x, y, x + w, y + h, hint.theme(this).UIBGBorderColor());
+					graphics.fill(x, y, x + w, y + h, borderColor.getColorARGB(this, x, y, hint));
 					if (isMouseOver() && isEnabled()) {
-						graphics.fill(x - 4, y, x - 2, y + h, hint.theme(this).UIAltTextColor());
+						graphics.fill(x - 4, y, x - 2, y + h, color.getColorARGB(this, x, y, hint));
 					}
 				}
 
 				@Override
 				public void onClicked(MouseButton button) {
 					if (button.is(MouseButton.LEFT)) {
-						TipHelper.edit((String) null, theme());
+						TipHelper.edit((String) null, this.getLayerHolder().theme());
 					}
 				}
 
@@ -177,9 +182,9 @@ public class ArchiveCategory extends UILayer {
 			add(new Button(this, Component.literal("All Tips"), FlatIcon.CONFIG.toCIcon()) {
 				@Override
 				public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
-					graphics.fill(x, y, x + w, y + h, hint.theme(this).UIBGBorderColor());
+					graphics.fill(x, y, x + w, y + h, borderColor.getColorARGB(this, x, y, hint));
 					if (isMouseOver() && isEnabled()) {
-						graphics.fill(x - 4, y, x - 2, y + h, hint.theme(this).UIAltTextColor());
+						graphics.fill(x - 4, y, x - 2, y + h, color.getColorARGB(this, x, y, hint));
 					}
 				}
 
@@ -194,9 +199,9 @@ public class ArchiveCategory extends UILayer {
 								list.add(LineHelper.text(panel, (TipManager.state().isUnlocked(tip) ? unlock : lock).copy().append(" ID: " + tip.id()))
 									.button(Component.translatable("controls.reset"), FlatIcon.HISTORY, b -> TipManager.state().reset(tip))
 									.button(Component.translatable("gui.frostedheart.unlock"), FlatIcon.UNLOCK, b -> TipManager.state().unlock(tip))
-									.button(Component.translatable("selectServer.edit"), FlatIcon.CONFIG, b -> TipHelper.edit(tip.id(), theme()))
+									.button(Component.translatable("selectServer.edit"), FlatIcon.CONFIG, b -> TipHelper.edit(tip.id(), this.getLayerHolder().theme()))
 									.button(Component.translatable("gui.open"), FlatIcon.FILE, b -> ArchiveCategory.this.panel.setContent(t -> LineHelper.fromTip(tip, t))));
-								list.add(LineHelper.text(panel, Component.translatable(tip.contents().get(0))).color(theme().UIAltTextColor()));
+								list.add(LineHelper.text(panel, Component.translatable(tip.contents().get(0))).color(color));
 								list.add(LineHelper.br(panel));
 							}
 							return list;

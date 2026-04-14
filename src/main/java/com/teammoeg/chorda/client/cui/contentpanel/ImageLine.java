@@ -23,6 +23,8 @@ import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.UV;
@@ -50,7 +52,9 @@ public class ImageLine extends Line<ImageLine> {
     protected UV imgUV;
     protected UV overrideUV;
     @Setter
-    protected int blitColor = Colors.WHITE;
+    int blitColor=Colors.WHITE;
+    @Setter
+    protected Coloring borderColor=UIColors.UI_BORDER,errorColor=UIColors.ERROR_TEXT;;
     protected int imgX, imgY;
 
     public ImageLine(UIElement parent, ResourceLocation imageLocation, Alignment alignment) {
@@ -69,7 +73,7 @@ public class ImageLine extends Line<ImageLine> {
         super.render(graphics, x, y, w, h, hint);
         // 图片无效时显示错误图标
         if (!isImgValid()) {
-            FlatIcon.FILE_IMG_BROKEN.render(graphics.pose(), x+w/2-5, y+1, hint.theme(this).errorColor());
+            FlatIcon.FILE_IMG_BROKEN.render(graphics.pose(), x+w/2-5, y+1, errorColor.getColorARGB(this, x, y, hint));
             return;
         }
         // 计算图片位置
@@ -93,7 +97,7 @@ public class ImageLine extends Line<ImageLine> {
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
         if (imgSize.width < getWidth()/3) {
-            graphics.fill(x, y, x+w, y+h, hint.theme(this).UIBGBorderColor());
+            graphics.fill(x, y, x+w, y+h, borderColor.getColorARGB(this, x, y, hint));
         }
     }
 

@@ -21,6 +21,8 @@ package com.teammoeg.chorda.client.cui.contentpanel;
 
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.math.Colors;
 import lombok.Getter;
 import net.minecraft.network.chat.Style;
@@ -40,18 +42,17 @@ public abstract class Line<T extends Line<T>> extends UILayer {
     public static final int DEF_LINE_HEIGHT = 12;
     protected static Style hoveredStyle;
     protected Alignment alignment;
-    protected int color;
+    protected Coloring color;
 
     public Line(UIElement parent) {
         this(parent, Alignment.LEFT);
     }
 
     public Line(UIElement parent, Alignment alignment) {
-        this(parent,alignment, Colors.WHITE);
-        this.color= theme().UITextColor();
+        this(parent,alignment, UIColors.UI_TEXT);
     }
 
-    public Line(UIElement parent, Alignment alignment, int color) {
+    public Line(UIElement parent, Alignment alignment, Coloring color) {
         super(parent);
         this.alignment = alignment;
         this.color = color;
@@ -72,7 +73,7 @@ public abstract class Line<T extends Line<T>> extends UILayer {
     }
 
     @SuppressWarnings("unchecked")
-    public T color(int color) {
+    public T color(Coloring color) {
         this.color = color;
         refresh();
         return (T) this;

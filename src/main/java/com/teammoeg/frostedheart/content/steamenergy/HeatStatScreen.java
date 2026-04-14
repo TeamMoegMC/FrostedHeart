@@ -23,9 +23,14 @@ import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class HeatStatScreen extends PrimaryLayer {
@@ -37,7 +42,7 @@ public class HeatStatScreen extends PrimaryLayer {
     }
 
     @Override
-    public void addUIElements() {
+    public void addChildUIElements() {
         EndPointList iepl = new EndPointList(this, true);
         iepl.setPosAndSize(6, 18, 99, 200);
         iepl.scroll.setPosAndSize(108, 18, 10, 200);
@@ -89,7 +94,9 @@ public class HeatStatScreen extends PrimaryLayer {
         CIcon ic;
         String val;
         boolean isIntake;
-
+        @Setter
+        @Getter
+        Coloring textColor=UIColors.BUTTON_TEXT,successColor=UIColors.SUCCESS_TEXT,errorColor=UIColors.ERROR_TEXT;
         public EndPointSlot(UIElement panel, HeatEndpoint epd, boolean isIntake) {
             super(panel);
             this.epd = epd;
@@ -108,9 +115,9 @@ public class HeatStatScreen extends PrimaryLayer {
             //theme.drawContainerSlot(matrixStack, x, y, w, h);
             ic.draw(matrixStack, x + 4, y + 2, 24, 24);
             if (isIntake)
-            	matrixStack.drawString(getFont(), val, x + 32 - getFont().width(val), y + 30, epd.canCostMore ? 0xFFFF5555 : 0x55FF55);
+            	matrixStack.drawString(getFont(), val, x + 32 - getFont().width(val), y + 30, (epd.canCostMore ? errorColor : successColor).getColorARGB(this, x, y, hint));
             else
-            	matrixStack.drawString(getFont(), val, x + 32 - getFont().width(val), y + 30, hint.theme(this).buttonTextColor());
+            	matrixStack.drawString(getFont(), val, x + 32 - getFont().width(val), y + 30, textColor.getColorARGB(this, x, y, hint));
         }
 
     }

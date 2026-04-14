@@ -81,7 +81,7 @@ public class OpenEditorButton<T> extends TextButton {
 	@Override
 	public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 		super.render(graphics, x, y, w, h, hint);
-		graphics.drawString(getFont(), ">", x+w-10, y-4+h/2, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
+		graphics.drawString(getFont(), ">", x+w-10, y-4+h/2,textColor.getColorARGB(this, x, y, hint), hint.theme(this).isButtonTextShadow());
 	}
 
 	private void refreshValue() {

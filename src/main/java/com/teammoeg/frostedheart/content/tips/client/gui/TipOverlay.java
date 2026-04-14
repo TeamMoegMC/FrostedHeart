@@ -96,9 +96,8 @@ public class TipOverlay extends PrimaryLayer {
     }
 
     @Override
-    public void addUIElements() {
+    public void addChildUIElements() {
         clearElement();
-        super.addUIElements();
         add(tipLayer);
     }
 

@@ -22,6 +22,8 @@ package com.teammoeg.chorda.client.cui.widgets;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.text.Components;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.CommonComponents;
@@ -42,7 +44,7 @@ public class LimitedTextField extends UIElement {
     /** 经过截断处理的显示文本 / Display text after truncation processing */
     private Component displayTitle = Components.immutableEmpty();
     /** 文本颜色 / Text color */
-    public int color;
+    public Coloring color=UIColors.UI_TEXT;
     /** 是否启用提示框 / Whether tooltip is enabled */
     public boolean tooltip = true;
 
@@ -56,7 +58,7 @@ public class LimitedTextField extends UIElement {
      * @param w 最大显示宽度 / Maximum display width
      */
     public LimitedTextField(UIElement parent, Component title, int w) {
-        this(parent, title, w, parent.theme().UITextColor());
+        this(parent, title, w, UIColors.UI_TEXT);
     }
 
     /**
@@ -69,7 +71,7 @@ public class LimitedTextField extends UIElement {
      * @param w 最大显示宽度 / Maximum display width
      * @param textColor 文本颜色 / Text color
      */
-    public LimitedTextField(UIElement parent, Component title, int w, int textColor) {
+    public LimitedTextField(UIElement parent, Component title, int w, Coloring textColor) {
         super(parent);
         this.title = title;
         this.color = textColor;
@@ -79,7 +81,7 @@ public class LimitedTextField extends UIElement {
     /** {@inheritDoc} */
     @Override
     public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
-        graphics.drawString(getFont(), displayTitle, x, y, color, hint.theme(this).isButtonTextShadow());
+        graphics.drawString(getFont(), displayTitle, x, y, color.getColorARGB(this, x, y, hint), hint.theme(this).isButtonTextShadow());
     }
 
     /**

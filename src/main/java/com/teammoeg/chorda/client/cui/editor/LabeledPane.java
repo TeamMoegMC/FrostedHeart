@@ -22,6 +22,7 @@ package com.teammoeg.chorda.client.cui.editor;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -43,7 +44,7 @@ public class LabeledPane<T extends UIElement> extends UILayer {
 
     public LabeledPane(UIElement panel, Component lab) {
         super(panel);
-        label = new TextField(this).setMaxWidth(200).setTrim().setText(lab).setColor(theme().UITextColor());
+        label = new TextField(this).setMaxWidth(200).setTrim().setText(lab).setColor(UIColors.UI_TEXT);
 
     }
 

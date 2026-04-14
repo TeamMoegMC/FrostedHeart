@@ -149,12 +149,12 @@ public class VanillaTheme implements Theme {
 	}
 	@Override
 	public int errorColor() {
-		return 0xffa92b0d;
+		return Colors.ChatColors.RED;
 	}
 
 	@Override
 	public int successColor() {
-		return 0;
+		return Colors.ChatColors.GREEN;
 	}
 
 	@Override

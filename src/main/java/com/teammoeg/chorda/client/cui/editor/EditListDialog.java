@@ -27,6 +27,8 @@ import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.widgets.TextButton;
@@ -35,6 +37,7 @@ import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.text.Components;
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -74,6 +77,9 @@ public class EditListDialog<T> extends EditDialog {
     private final Function<T, Component> read;
     private final Function<T, CIcon> toicon;
     boolean modified;
+    @Getter
+    @Setter
+    Coloring textColor=UIColors.UI_TEXT,buttonTextColor=UIColors.BUTTON_TEXT;
     /**
      * 创建一个集合编辑器，从可用选项中选择元素添加到列表中。
      * <p>
@@ -191,7 +197,7 @@ public class EditListDialog<T> extends EditDialog {
     @Override
     public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
     	hint.theme(this).drawUIBackground(matrixStack, x, y, w, h);
-        matrixStack.drawString(getFont(), getTitle(), x+5, y+5, hint.theme(this).UITextColor(), hint.theme(this).isUITextShadow());
+        matrixStack.drawString(getFont(), getTitle(), x+5, y+5, textColor.getColorARGB(this, x, y, hint), hint.theme(this).isUITextShadow());
     }
 
     @Override
@@ -226,7 +232,7 @@ public class EditListDialog<T> extends EditDialog {
         public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
             super.drawBackground(matrixStack, x, y, w, h, hint);
             
-            matrixStack.drawString(getFont(), getTitle(), x+4, y+5, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
+            matrixStack.drawString(getFont(), getTitle(), x+4, y+5, buttonTextColor.getColorARGB(this, x, y, hint), hint.theme(this).isButtonTextShadow());
         }
 
         @Override
@@ -322,13 +328,15 @@ public class EditListDialog<T> extends EditDialog {
                 	matrixStack.fill(x + w - 19, y, x+w, y+h, 0x21FFFFFF);
                 }
             }
-            matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+th, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
+            int cx=x+4+ ioffset;
+            int cy=y+th;
+            matrixStack.drawString(getFont(), read.apply(list.get(index)), x+4+ ioffset, y+th, buttonTextColor.getColorARGB(this, cx, cy, hint), hint.theme(this).isButtonTextShadow());
 
             //if (mouseOver) {
             	FlatIcon.CROSS.toCIcon().draw(matrixStack, x+w-18, y+1,height-2,height-2);
             	//matrixStack.drawString(getFont(), "[-]", x+w-16, y+2, getTheme().getButtonTextColor());
-            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+2, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
-            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+h-getFont().lineHeight, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
+            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+2, buttonTextColor.getColorARGB(this, cx, cy, hint), hint.theme(this).isButtonTextShadow());
+            	matrixStack.drawString(getFont(), "||||||||", x+w-36, y+h-getFont().lineHeight, buttonTextColor.getColorARGB(this, cx, cy, hint), hint.theme(this).isButtonTextShadow());
             //}
             matrixStack.pose().popPose();
         }

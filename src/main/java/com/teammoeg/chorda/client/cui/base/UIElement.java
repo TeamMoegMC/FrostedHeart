@@ -119,21 +119,6 @@ public class UIElement {
     @Getter
     private boolean enabled=true;
 
-    /**
-     * 设置元素的主题（由 Lombok 生成 setter）。
-     * 通过 setTheme(Theme) 方法访问。
-     */
-    @Setter
-    private Theme theme = VanillaTheme.INSTANCE;
-
-    /**
-     * 获取当前主题（自定义 getter 方法，非 Lombok 生成）。
-     * @return 当前主题实例
-     */
-    public Theme theme() {
-        return theme;
-    }
-
     // ==================== 构造函数 ====================
     /**
      * 构造一个 UI 元素，并指定父节点。
@@ -141,8 +126,6 @@ public class UIElement {
      */
     public UIElement(UIElement parent) {
         this.parent = parent;
-        if (parent != null)
-            this.theme = parent.theme();
         //CUIDebugHelper.registerUIObject(this);
     }
 
@@ -154,7 +137,6 @@ public class UIElement {
     protected void setParent(UIElement parent) {
         this.parent = parent;
         if (parent != null) {
-            this.theme = parent.theme();
             layerholderCache = null;
         }
     }

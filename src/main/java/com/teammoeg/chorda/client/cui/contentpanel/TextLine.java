@@ -23,6 +23,8 @@ import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
@@ -50,8 +52,8 @@ public class TextLine extends Line<TextLine> {
     @Getter
     protected Component text;
     protected final List<FormattedCharSequence> splitText = new ArrayList<>();
-    protected int backgroundColor = 0;
-    protected int trimmingColor = 0;
+    protected Coloring backgroundColor = Coloring.TRANSPARENT;
+    protected Coloring trimmingColor;
     protected boolean isTitle = false;
     protected boolean isQuote = false;
     protected boolean hasShadow = false;
@@ -78,7 +80,7 @@ public class TextLine extends Line<TextLine> {
 
         int textW = w;
         if (isTitle) {
-            graphics.fill(x, y, x+w, y+h, trimmingColor);
+            graphics.fill(x, y, x+w, y+h, trimmingColor.getColorARGB(this, x, y, hint));
             int offset = switch (alignment) {
                 case LEFT -> 2;
                 case CENTER -> 0;
@@ -88,7 +90,7 @@ public class TextLine extends Line<TextLine> {
             pose.translate(offset, 0, 0);
 
         } else if (isQuote) {
-            graphics.fill(x, y, x+4, y+h, trimmingColor);
+            graphics.fill(x, y, x+4, y+h, trimmingColor.getColorARGB(this, x, y, hint));
             int offset = switch (alignment) {
                 case LEFT -> 8;
                 case CENTER -> 0;
@@ -100,8 +102,8 @@ public class TextLine extends Line<TextLine> {
 
         pose.translate(0, 2F, 0);
 
-        CGuiHelper.drawStringLinesInBound(graphics, getFont(), splitText, x, y, textW, color, 3,
-                hint.theme(this).isUITextShadow() || hasShadow, backgroundColor, alignment);
+        CGuiHelper.drawStringLinesInBound(graphics, getFont(), splitText, x, y, textW, color.getColorARGB(this, x, y, hint), 3,
+                hint.theme(this).isUITextShadow() || hasShadow, backgroundColor.getColorARGB(this, x, y, hint), alignment);
 
         pose.popPose();
     }
@@ -118,19 +120,19 @@ public class TextLine extends Line<TextLine> {
         return this;
     }
 
-    public TextLine bgColor(int color) {
+    public TextLine bgColor(Coloring color) {
         this.backgroundColor = color;
         return this;
     }
 
-    public TextLine title(int trimmingColor, int scale) {
+    public TextLine title(Coloring trimmingColor, int scale) {
         this.isTitle = true;
         this.trimmingColor = trimmingColor;
         scale(scale);
         return this;
     }
 
-    public TextLine quote(int trimmingColor) {
+    public TextLine quote(Coloring trimmingColor) {
         this.isQuote = true;
         this.color = trimmingColor;
         this.trimmingColor = trimmingColor;

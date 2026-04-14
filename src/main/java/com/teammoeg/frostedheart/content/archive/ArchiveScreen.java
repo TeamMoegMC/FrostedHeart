@@ -140,7 +140,7 @@ public final class ArchiveScreen extends PrimaryLayer {
     }
 
 	@Override
-    public void addUIElements() {
+    public void addChildUIElements() {
         add(contentPanel);
         if (flipAnimationEnabled) {
             add(contentPanelOut);

@@ -19,6 +19,8 @@
 
 package com.teammoeg.chorda.client.cui.base;
 
+import com.teammoeg.chorda.client.cui.theme.Theme;
+
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 /**
@@ -34,6 +36,7 @@ public interface LayerHolder {
 	void focusOn(UIElement elm);
 	Font getFont();
 	void refreshElements();
+	Theme theme();
 	/**
 	 * @return if the GUI should render a blur effect behind it
 	 */

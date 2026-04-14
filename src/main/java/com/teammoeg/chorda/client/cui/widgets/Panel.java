@@ -22,6 +22,11 @@ package com.teammoeg.chorda.client.cui.widgets;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
+
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
@@ -38,7 +43,9 @@ public class Panel extends UILayer {
     Component title;
     /** 添加子控件的回调 / Callback for adding child widgets */
     Consumer<UILayer> addWidgets;
-
+    @Getter
+    @Setter
+    Coloring textColor=UIColors.UI_TEXT;
     /**
      * 创建面板控件。
      * <p>
@@ -77,7 +84,7 @@ public class Panel extends UILayer {
     /** {@inheritDoc} */
     @Override
     public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
-    	matrixStack.drawString(getFont(), title, x, y, hint.theme(this).UITextColor(), hint.theme(this).isUITextShadow());
+    	matrixStack.drawString(getFont(), title, x, y, textColor.getColorARGB(this, x, y, hint), hint.theme(this).isUITextShadow());
     	hint.theme(this).drawPanel(matrixStack, x, y, w, h);
 
         super.render(matrixStack, x, y, w, h, hint);

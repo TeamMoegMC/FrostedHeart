@@ -20,7 +20,7 @@
 package com.teammoeg.frostedresearch.gui.drawdesk;
 
 import com.teammoeg.chorda.client.cui.base.MenuPrimaryLayer;
-import com.teammoeg.chorda.client.cui.editor.EditDialog;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.ResearchGui;
@@ -29,7 +29,6 @@ import com.teammoeg.frostedresearch.gui.tech.ResearchLayer;
 public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implements ResearchGui {
 	DrawDeskLayer p;
 	ResearchLayer r;
-	EditDialog dialog;
 
 	public DrawDeskScreen(DrawDeskContainer cx) {
 		super(cx);
@@ -40,12 +39,10 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	}
 
 	@Override
-	public void addUIElements() {
+	public void addChildUIElements() {
 		add(p);
 		if (r != null)
 			add(r);
-		if (getDialog() != null)
-			add(getDialog());
 	}
 
 	@Override
@@ -71,21 +68,13 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	}
 
 	public void closeDialog(boolean refresh) {
-		this.dialog = null;
 		r.setVisible(true);
-		if (refresh)
-			this.refreshElements();
+		super.closeDialog(refresh);
 	}
 
-	public EditDialog getDialog() {
-		return dialog;
-	}
-
-	public void openDialog(EditDialog dialog, boolean refresh) {
-		this.dialog = dialog;
+	public void openDialog(UIElement dialog, boolean refresh) {
 		r.setVisible(false);
-		if (refresh)
-			this.refreshElements();
+		super.openDialog(dialog, refresh);
 	}
 
 	public void showTechTree() {

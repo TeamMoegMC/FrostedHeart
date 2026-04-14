@@ -22,8 +22,11 @@ package com.teammoeg.frostedresearch.gui.tech;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.cui.widgets.TextButton;
 import com.teammoeg.chorda.client.icon.CIcons;
@@ -37,6 +40,9 @@ import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.gui.ThickLine;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.ResearchEditors;
+
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -50,7 +56,9 @@ public class ResearchHierarchyPanel extends UILayer {
 	private static int[] ButtonPos = new int[] { 76, 44, 108, 12, 140 };
 	public ResearchLayer researchPanel;
 	List<ThickLine> lines = new ArrayList<>();
-
+    @Getter
+    @Setter
+    Coloring textColor=UIColors.UI_TEXT;
 	public ResearchHierarchyPanel(ResearchLayer panel) {
 		super(panel);
 		researchPanel = panel;
@@ -261,7 +269,7 @@ public class ResearchHierarchyPanel extends UILayer {
 	@Override
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		super.render(matrixStack, x, y, w, h, hint);
-		matrixStack.drawString(getFont(), Lang.translateGui("research_hierarchy"), x + 3, y + 3, hint.theme(this).UITextColor(), false);
+		matrixStack.drawString(getFont(), Lang.translateGui("research_hierarchy"), x + 3, y + 3, textColor.getColorARGB(this, x, h, hint), false);
 		TechIcons.HLINE_L.draw(matrixStack, x + 1, y + 13, 80, 3);
 	}
 
@@ -269,7 +277,7 @@ public class ResearchHierarchyPanel extends UILayer {
 	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		CGuiHelper.resetGuiDrawing();
 		for (ThickLine l : lines)
-			l.draw(matrixStack, x, y);
+			l.draw(matrixStack,this, x, y,hint);
 	}
 
 	@Override
@@ -289,12 +297,12 @@ public class ResearchHierarchyPanel extends UILayer {
 		}
 
 		@Override
-		public void draw(GuiGraphics matrixStack, int x, int y) {
+		public void draw(GuiGraphics matrixStack, UIElement owner, int x, int y, RenderingHint hint) {
 			if (doShow())
-				color = DrawDeskTheme.INSTANCE.UITextColor();
+				color = UIColors.UI_TEXT;
 			else
-				color = DrawDeskTheme.INSTANCE.buttonTextDisabledColor();
-			super.draw(matrixStack, x, y);
+				color = UIColors.BUTTON_TEXT_DISABLED;
+			super.draw(matrixStack, owner, x, y, hint);
 		}
 	}
 
@@ -372,13 +380,14 @@ public class ResearchHierarchyPanel extends UILayer {
 			return r.isCompleted();
 		}
 
+
 		@Override
-		public void draw(GuiGraphics matrixStack, int x, int y) {
+		public void draw(GuiGraphics matrixStack, UIElement owner, int x, int y, RenderingHint hint) {
 			if (doShow())
-				color = DrawDeskTheme.INSTANCE.UITextColor();
+				color = UIColors.UI_TEXT;
 			else
-				color = DrawDeskTheme.INSTANCE.buttonTextDisabledColor();
-			super.draw(matrixStack, x, y);
+				color = UIColors.BUTTON_TEXT_DISABLED;
+			super.draw(matrixStack, owner, x, y, hint);
 		}
 	}
 

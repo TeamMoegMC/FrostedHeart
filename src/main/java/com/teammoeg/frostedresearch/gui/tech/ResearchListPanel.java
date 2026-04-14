@@ -22,6 +22,8 @@ package com.teammoeg.frostedresearch.gui.tech;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
@@ -30,6 +32,9 @@ import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
 import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.research.Research;
+
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class ResearchListPanel extends UILayer {
@@ -78,7 +83,9 @@ public class ResearchListPanel extends UILayer {
 		TextField tf;
 
 		long lastupdate;
-
+        @Setter
+        @Getter
+        Coloring unclaimColor=UIColors.of(0xff5555ff),completeColor=UIColors.SUCCESS_TEXT,errorColor=UIColors.ERROR_TEXT;
 		public ResearchButton(ResearchList panel, Research research) {
 			super(panel, research.getName(), research.getIcon());
 			this.research = research;
@@ -86,11 +93,11 @@ public class ResearchListPanel extends UILayer {
 			setSize(101, RESEARCH_HEIGHT);
 			tf = new TextField(panel).setMaxLines(1).setMaxWidth(86).setText(research.getName());
 			if (research.hasUnclaimedReward())
-				tf.setColor(0x5555ff);
+				tf.setColor(unclaimColor);
 			else if (research.isCompleted()) {
-				tf.setColor(0x229000);
+				tf.setColor(completeColor);
 			} else if (!research.isUnlocked()) {
-				tf.setColor(theme().errorColor());
+				tf.setColor(errorColor);
 			}
 			lastupdate = System.currentTimeMillis() / 1000;
 		}
@@ -107,11 +114,11 @@ public class ResearchListPanel extends UILayer {
 						tf.setText(Lang.translateGui("research.unclaimed"));
 					} else
 						tf.setText(research.getName());
-					tf.setColor(0x5555ff);
+					tf.setColor(unclaimColor);
 				} else if (research.isCompleted()) {
-					tf.setColor(0x229000);
+					tf.setColor(completeColor);
 				} else if (!research.isUnlocked()) {
-					tf.setColor(hint.theme(this).errorColor());
+					tf.setColor(errorColor);
 				}
 			}
 			tf.render(matrixStack, x + 18, y + 6, 81, tf.getHeight(), hint);

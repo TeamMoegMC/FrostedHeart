@@ -28,6 +28,9 @@ import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.StencilHelper;
 import com.teammoeg.chorda.client.StencilHelper.StencilStackElement;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
+import com.teammoeg.chorda.client.cui.theme.Theme;
+import com.teammoeg.chorda.client.cui.theme.VanillaTheme;
+
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.Util;
@@ -76,6 +79,20 @@ public abstract class UILayer extends UIElement {
 	@Getter
 	@Setter
 	protected Vector2f transformOrigin = new Vector2f(.5f,.5f);
+
+    /**
+     * 设置元素的主题（由 Lombok 生成 setter）。
+     * 通过 setTheme(Theme) 方法访问。
+     */
+    @Setter
+	protected Theme theme;
+
+    /**
+     * 获取当前主题（自定义 getter 方法，非 Lombok 生成）。
+     * @return 当前主题实例
+     */
+    /**/
+
 	public UILayer(UIElement panel) {
 		super(panel);
 		elements = new ArrayList<>();
@@ -319,6 +336,9 @@ public abstract class UILayer extends UIElement {
 			contentX += offsetX;
 			contentY += offsetY;
 		}
+		Theme lastTheme=hint.currentTheme;
+		if(theme!=null)
+			hint.currentTheme=theme;
 		hint.pushHint();
 		graphics.pose().pushPose();
 		try {
@@ -361,6 +381,7 @@ public abstract class UILayer extends UIElement {
 		}finally {
 			graphics.pose().popPose();
 			hint.popHint();
+			hint.currentTheme=lastTheme;
 		}
 		lastFrameTime = Util.getNanos();
 		//if(isMouseOver)

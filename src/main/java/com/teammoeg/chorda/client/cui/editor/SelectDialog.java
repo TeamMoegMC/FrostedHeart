@@ -24,12 +24,17 @@ import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.widgets.TextBox;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.text.Components;
+
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
@@ -59,7 +64,10 @@ public class SelectDialog<T> extends EditDialog {
 	Function<T, Component> tostr;
 	Function<T, String[]> tosearch;
 	Function<T, CIcon> toicon;
-
+	@Getter
+	@Setter
+	Coloring textColor=UIColors.BUTTON_TEXT;
+	
 	public SelectDialog(UIElement panel, Component lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
 		this(panel, lbl, val, cb, fetcher, e -> Components.str(e.toString()), null, e -> CIcons.nop());
 	}
@@ -121,7 +129,7 @@ public class SelectDialog<T> extends EditDialog {
 	@Override
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		super.render(matrixStack, x, y, w, h, hint);
-		matrixStack.drawString(getFont(), lbl, x, y - 10, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
+		matrixStack.drawString(getFont(), lbl, x, y - 10,textColor.getColorARGB(this, x, y, hint), hint.theme(this).isButtonTextShadow());
 	}
 
 	@Override
@@ -157,7 +165,7 @@ public class SelectDialog<T> extends EditDialog {
 
 			drawBackground(matrixStack, x, y, w, h, hint);
 			this.drawIcon(matrixStack, x + 1, y + 1, 16, 16);
-			matrixStack.drawString(getFont(), t, x + 20, y + 6, hint.theme(this).buttonTextColor(), hint.theme(this).isButtonTextShadow());
+			matrixStack.drawString(getFont(), t, x + 20, y + 6, textColor.getColorARGB(this, x, y, hint), hint.theme(this).isButtonTextShadow());
 
 		}
 

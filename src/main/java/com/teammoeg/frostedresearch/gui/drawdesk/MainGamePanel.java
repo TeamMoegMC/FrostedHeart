@@ -25,6 +25,7 @@ import com.teammoeg.chorda.client.TesselateHelper.TextureTesselator;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.chorda.text.Components;
@@ -72,7 +73,7 @@ class MainGamePanel extends UILayer {
 			}
 		};
 		reset.setPosAndSize(157, 136, 27, 16);
-		status = new TextField(this).centerH().centerV().setMaxWidth(108).setColor(TechIcons.text);
+		status = new TextField(this).centerH().centerV().setMaxWidth(108).setColor(UIColors.UI_TEXT);
 
 		status.setPosAndSize(22, 54, 108, 50);
 	}

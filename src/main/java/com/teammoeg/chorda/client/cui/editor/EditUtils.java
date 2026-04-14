@@ -25,6 +25,7 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
 import com.teammoeg.chorda.client.cui.theme.SimpleTechTheme;
 import com.teammoeg.chorda.client.cui.theme.Theme;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 import net.minecraft.network.chat.Component;
 
@@ -110,7 +111,7 @@ public class EditUtils {
      */
     public static TextField getTitle(UIElement p, String title) {
 
-        return new TextField(p).setMaxWidth(200).setText(title).setColor(p.theme().UITextColor());
+        return new TextField(p).setMaxWidth(200).setText(title).setColor(UIColors.UI_TEXT);
     }
     /**
      * 创建标题文本控件（使用Component）。
@@ -123,7 +124,7 @@ public class EditUtils {
      */
     public static TextField getTitle(UIElement p, Component title) {
 
-        return new TextField(p).setMaxWidth(200).setText(title).setColor(p.theme().UITextColor());
+        return new TextField(p).setMaxWidth(200).setText(title).setColor(UIColors.UI_TEXT);
     }
   
 }

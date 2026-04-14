@@ -22,6 +22,8 @@ package com.teammoeg.chorda.client.cui.widgets;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.text.Components;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.locale.Language;
@@ -56,6 +58,7 @@ public class TextField extends UIElement {
 	private Component component = Components.immutableEmpty();
 	/** 文本样式标志位组合 / Text style flags combination */
 	public int textFlags = 0;
+	public Boolean isShadow;
 	/** 最小宽度 / Minimum width */
 	public int minWidth = 0;
 	/** 最大宽度（用于自动换行） / Maximum width (for auto-wrapping) */
@@ -69,7 +72,7 @@ public class TextField extends UIElement {
 	/** 文本缩放比例 / Text scale factor */
 	public float scale = 1.0F;
 	/** 文本颜色 / Text color */
-	public int textColor;
+	public Coloring textColor=UIColors.BUTTON_TEXT;
 	/** 是否裁剪文本 / Whether to trim text */
 	public boolean trim = false;
 	/** 是否在多行文本时显示完整内容提示框 / Whether to show full content tooltip for multiline text */
@@ -84,9 +87,6 @@ public class TextField extends UIElement {
 	 */
 	public TextField(UIElement parent) {
 		super(parent);
-		textColor= theme().buttonTextColor();
-		if(theme().isUITextShadow())
-			shadow();
 	}
 
 	/**
@@ -145,7 +145,8 @@ public class TextField extends UIElement {
 	 * @return 当前实例（链式调用） / This instance (for chaining)
 	 */
 	public TextField shadow() {
-		return addFlags(SHADOW);
+		this.isShadow=true;
+		return this;
 	}
 
 	/**
@@ -156,7 +157,8 @@ public class TextField extends UIElement {
 	 * @return 当前实例（链式调用） / This instance (for chaining)
 	 */
 	public TextField noShadow() {
-		return deleteFlags(SHADOW);
+		this.isShadow=false;
+		return this;
 	}
 
 	/**
@@ -219,7 +221,7 @@ public class TextField extends UIElement {
 	 * @param color 颜色值 / Color value
 	 * @return 当前实例（链式调用） / This instance (for chaining)
 	 */
-	public TextField setColor(int color) {
+	public TextField setColor(Coloring color) {
 		textColor = color;
 		return this;
 	}
@@ -296,16 +298,6 @@ public class TextField extends UIElement {
 		return (textFlags&V_CENTER)!=0;
 	}
 
-	/**
-	 * 判断是否启用文本阴影。
-	 * <p>
-	 * Checks whether text shadow is enabled.
-	 *
-	 * @return 是否启用阴影 / Whether shadow is enabled
-	 */
-	public boolean isShadow() {
-		return (textFlags&SHADOW)!=0;
-	}
 
 	/**
 	 * 设置显示的文本组件，并自动换行和调整尺寸。
@@ -386,7 +378,7 @@ public class TextField extends UIElement {
 		if (formattedText.size() != 0) {
 			boolean centered = this.isCentered();
 			boolean centeredV = this.isCenteredV();
-			int col = textColor;
+			int col = textColor.getColorARGB(this, x, y, hint);
 
 			;
 			int ty = y + (centeredV ? (h - getFont().lineHeight) / 2 : 0);
@@ -394,7 +386,7 @@ public class TextField extends UIElement {
 			if (scale == 1.0F) {
 				for (FormattedText text:formattedText) {
 					int tx = x + (centered ? (w-(int) ((float) getFont().width(text) )) / 2 : 0);
-					graphics.drawString(getFont(),Language.getInstance().getVisualOrder(text), tx, ty + (++i) * textSpacing, col, isShadow());
+					graphics.drawString(getFont(),Language.getInstance().getVisualOrder(text), tx, ty + (++i) * textSpacing, col, isShadow==null?hint.theme(this).isUITextShadow():isShadow);
 					if(i+1>=maxLines) {
 						break;
 					}
@@ -410,7 +402,7 @@ public class TextField extends UIElement {
 						int tx = x + (centered ? (w-(int) ((float) getFont().width(text) * scale)) / 2 : 0);
 						graphics.pose().translate(tx, 0, 0.0D);
 					}
-					graphics.drawString(getFont(), Language.getInstance().getVisualOrder(text), 0, (++i) * textSpacing, col, isShadow());
+					graphics.drawString(getFont(), Language.getInstance().getVisualOrder(text), 0, (++i) * textSpacing, col, isShadow==null?hint.theme(this).isUITextShadow():isShadow);
 					if(centered) {
 						graphics.pose().popPose();
 					}

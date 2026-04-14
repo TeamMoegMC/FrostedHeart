@@ -9,6 +9,7 @@ public class RenderingHint {
 	public boolean isDebug;
 	public Theme themeOverride;
 	public Theme themeDefault=VanillaTheme.INSTANCE;
+	public Theme currentTheme;
 	public RenderingHint() {
 		super();
 	}
@@ -21,7 +22,7 @@ public class RenderingHint {
 	public Theme theme(UIElement elm) {
 		if(themeOverride!=null)
 			return themeOverride;
-		Theme currentTheme=elm.theme();
+		Theme currentTheme=this.currentTheme;
 		if(currentTheme==null)
 			return themeDefault;
 		return currentTheme;

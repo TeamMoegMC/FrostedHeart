@@ -23,9 +23,14 @@ import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.text.Components;
+
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
@@ -43,7 +48,9 @@ import java.util.function.Consumer;
  * truncated and the full text is shown via tooltip on hover.
  */
 public abstract class TextButton extends Button {
-
+	@Setter
+	@Getter
+	protected Coloring textColor=UIColors.BUTTON_TEXT,textOverColor=UIColors.BUTTON_TEXT_OVER,textDisabledColor=UIColors.BUTTON_TEXT_DISABLED;
 	/**
 	 * 创建文本按钮。
 	 * <p>
@@ -124,9 +131,9 @@ public abstract class TextButton extends Button {
 			textX += off + s;
 		}
 		List<FormattedCharSequence> list=getFont().split(title, mw);
-		int textColor=(isEnabled()?(isMouseOver()? hint.theme(this).buttonTextOverColor(): hint.theme(this).buttonTextColor()): hint.theme(this).buttonTextDisabledColor());
+		int actColor=(isEnabled()?(isMouseOver()? textOverColor: textColor): textDisabledColor).getColorARGB(this, x, y, hint);
 		for(FormattedCharSequence fcs:list) {
-			graphics.drawString(getFont(), fcs, textX, textY, textColor, hint.theme(this).isButtonTextShadow());
+			graphics.drawString(getFont(), fcs, textX, textY, actColor, hint.theme(this).isButtonTextShadow());
 			textY+=7;
 		}
 	}

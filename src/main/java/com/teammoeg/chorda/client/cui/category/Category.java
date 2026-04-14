@@ -25,9 +25,12 @@ import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.LimitedTextField;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
@@ -53,6 +56,10 @@ public class Category extends UILayer {
 
     protected final LimitedTextField title;
     protected FlatIcon icon;
+    @Getter
+    @Setter
+    protected Coloring textColor=UIColors.UI_ALT_TEXT;
+    
     /**
      * 创建一个新的分类。
      * <p>
@@ -85,10 +92,11 @@ public class Category extends UILayer {
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
     	hint.theme(this).drawButton(graphics, x, y, w, Entry.DEF_HEIGHT, false, isEnabled());
+    	int color=textColor.getColorARGB(this, x, y, hint);
         if (isMouseOver()) {
-            graphics.fill(x-4, y, x-2, y+Entry.DEF_HEIGHT, hint.theme(this).UIAltTextColor());
+            graphics.fill(x-4, y, x-2, y+Entry.DEF_HEIGHT, color);
         }
-        icon.render(graphics.pose(), x, y+3, hint.theme(this).UIAltTextColor());
+        icon.render(graphics.pose(), x, y+3, color);
         
     }
 

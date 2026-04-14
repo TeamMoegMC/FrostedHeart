@@ -22,6 +22,7 @@ package com.teammoeg.chorda.client.cui.contentpanel;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.TesselateHelper;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedresearch.gui.LineIcon;
@@ -42,13 +43,13 @@ public class BreakLine extends Line<BreakLine> {
 
     public BreakLine(UIElement parent) {
         this(parent, (int)(DEF_LINE_HEIGHT * 1.5F));
-        color(theme().UIBGBorderColor());
+        color(UIColors.UI_BORDER);
     }
 
     public BreakLine(UIElement parent, int height) {
         super(parent);
         setHeight(height);
-        color(theme().UIBGBorderColor());
+        color(UIColors.UI_BORDER);
     }
 
     public BreakLine icon(LineIcon lineIcon) {
@@ -64,6 +65,7 @@ public class BreakLine extends Line<BreakLine> {
     @Override
     public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
         super.render(graphics, x, y, w, h, hint);
+        int color=this.color.getColorARGB(this, x, y, hint);
         if (lineIcon != null) {
             lineIcon.draw(graphics, x, y, w, h);
         } else if (isSolid()) {

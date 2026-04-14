@@ -19,6 +19,8 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import com.teammoeg.chorda.client.cui.base.UIElement;
+
 /**
  * 编辑器管理器接口，负责编辑对话框的打开、关闭和GUI生命周期管理。
  * 由PrimaryLayer实现，为编辑器框架提供对话框堆栈管理能力。
@@ -33,10 +35,10 @@ public interface EditorManager {
 	 * <p>
 	 * Opens an edit dialog.
 	 *
-	 * @param previous 要打开的对话框 / the dialog to open
+	 * @param dialog 要打开的对话框 / the dialog to open
 	 * @param refresh  是否刷新 / whether to refresh
 	 */
-	public void openDialog(EditDialog previous,boolean refresh);
+	public void openDialog(UIElement dialog,boolean refresh);
 	/**
 	 * 关闭当前对话框。
 	 * <p>
@@ -58,5 +60,5 @@ public interface EditorManager {
 	 *
 	 * @return 当前对话框，无则返回null / the current dialog, or null if none
 	 */
-	public EditDialog getDialog();
+	public UIElement getDialog();
 }

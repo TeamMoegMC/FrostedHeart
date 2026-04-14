@@ -24,6 +24,7 @@ import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
 import com.teammoeg.chorda.client.cui.theme.Theme;
 import com.teammoeg.chorda.client.cui.widgets.LayerScrollBar;
 import com.teammoeg.chorda.client.cui.widgets.ScrollBar;
@@ -228,14 +229,14 @@ public class ContentPanel extends UILayer {
             return br(a->{});
         }
 
-        public  Builder br(int color) {
+        public  Builder br(Coloring color) {
             return br(color,a->{});
         }
         public  Builder br(Consumer<BreakLine> config) {
             return add(new BreakLine(parent),config);
         }
 
-        public  Builder br(int color,Consumer<BreakLine> config) {
+        public  Builder br(Coloring color,Consumer<BreakLine> config) {
             return br(c->{c.color(color);config.accept(c);});
         }
         public ContentPanel build() {

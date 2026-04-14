@@ -32,8 +32,7 @@ public class LogisticChestLayer<T extends LogisticChestMenu<?>> extends MenuPrim
 	public void alignWidgets() {
 	}
 	@Override
-	public void addUIElements() {
-		super.addUIElements();
+	public void addChildUIElements() {
 		this.add(statusLayer);
 		
 		
