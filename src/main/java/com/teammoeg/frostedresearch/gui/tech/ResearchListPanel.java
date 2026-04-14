@@ -85,7 +85,7 @@ public class ResearchListPanel extends UILayer {
 		long lastupdate;
         @Setter
         @Getter
-        Coloring unclaimColor=UIColors.of(0xff5555ff),completeColor=UIColors.SUCCESS_TEXT,errorColor=UIColors.ERROR_TEXT;
+        Coloring unclaimColor=Coloring.of(0xff5555ff),completeColor=UIColors.SUCCESS_TEXT,errorColor=UIColors.ERROR_TEXT;
 		public ResearchButton(ResearchList panel, Research research) {
 			super(panel, research.getName(), research.getIcon());
 			this.research = research;

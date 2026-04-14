@@ -96,8 +96,8 @@ public class LineHelper {
             if (tip.display().hide()) continue;
             var tipContents = tip.contents();
             int ocolor = Colors.cyanToTheme(j);
-            Coloring color=UIColors.argb(ocolor);
-            Coloring readable=UIColors.argb(Colors.readableColor(ocolor));
+            Coloring color=Coloring.argb(ocolor);
+            Coloring readable=Coloring.argb(Colors.readableColor(ocolor));
             // title
             if (j == 0) {
                 lines.add(text(parent, Component.translatable(tipContents.get(0))).color(UIColors.UI_ALT_TEXT).scale(2).button(tip.clickAction()));
