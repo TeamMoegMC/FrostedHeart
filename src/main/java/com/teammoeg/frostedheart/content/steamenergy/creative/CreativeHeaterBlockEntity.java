@@ -25,13 +25,13 @@ import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollVa
 import com.simibubi.create.foundation.utility.VecHelper;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.util.Lang;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
@@ -58,6 +58,7 @@ public class CreativeHeaterBlockEntity extends HeatManagerBlockEntity {
     public void tick() {
         super.tick();
         endpoint.fill();
+        endpoint.setTempLevel(this.getBlockState().getValue(BlockStateProperties.LEVEL_FLOWING));
     }
 
     public void updateHeat() {
