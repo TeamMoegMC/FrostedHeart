@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.infrastructure.command;
 
 import com.mojang.brigadier.Command;
-import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -10,7 +9,6 @@ import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipHelper;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -24,9 +22,7 @@ public class TipClientCommand {
 
     @SubscribeEvent
     public static void register(RegisterClientCommandsEvent event) {
-        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-
-        var client = literal("tipClient")
+        var cmd = literal("tipClient")
                         .then(literal("reload")
                                 .executes(c -> {TipManager.INSTANCE.loadFromFile(); c.getSource().sendSuccess(() -> Component.literal("Loaded " + TipManager.INSTANCE.getAllTips().size() + " tip(s)"), true); return Command.SINGLE_SUCCESS;}))
                         .then(literal("unlockAll")
@@ -43,13 +39,9 @@ public class TipClientCommand {
                                 .then(string("title").then(string("content").then(integer("displayTime")
                                         .executes(TipClientCommand::clientDisplayCustom)))));
 
-        for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
-            dispatcher.register(Commands.literal(string).then(client));
-        }
-        dispatcher.register(client);
+        registerCommand(event.getDispatcher(), cmd);
     }
 
-    
     private static int clientDisplay(CommandContext<CommandSourceStack> ctx) {
         String id = StringArgumentType.getString(ctx, "id");
         TipManager.display().general(id);

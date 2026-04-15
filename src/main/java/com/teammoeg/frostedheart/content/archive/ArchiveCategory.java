@@ -200,7 +200,8 @@ public class ArchiveCategory extends UILayer {
 									.button(Component.translatable("controls.reset"), FlatIcon.HISTORY, b -> TipManager.state().reset(tip))
 									.button(Component.translatable("gui.frostedheart.unlock"), FlatIcon.UNLOCK, b -> TipManager.state().unlock(tip))
 									.button(Component.translatable("selectServer.edit"), FlatIcon.CONFIG, b -> TipHelper.edit(tip.id(), this.getLayerHolder().theme()))
-									.button(Component.translatable("gui.open"), FlatIcon.FILE, b -> ArchiveCategory.this.panel.setContent(t -> LineHelper.fromTip(tip, t))));
+									.button(Component.translatable("gui.open"), FlatIcon.FILE, b -> ArchiveCategory.this.panel.setContent(t -> TipHelper.contentLines(tip, t)))
+									.button(Component.translatable("key.keyboard.delete"), FlatIcon.TRASH_CAN, b -> TipHelper.delete(tip)));
 								list.add(LineHelper.text(panel, Component.translatable(tip.contents().get(0))).color(color));
 								list.add(LineHelper.br(panel));
 							}
@@ -268,7 +269,7 @@ public class ArchiveCategory extends UILayer {
 
 		@Override
 		public Collection<? extends UIElement> getContents(UIElement parent) {
-			return LineHelper.fromTip(tip(), parent);
+			return TipHelper.contentLines(tip(), parent);
 		}
 
 		@Override
@@ -277,6 +278,7 @@ public class ArchiveCategory extends UILayer {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	public abstract static class ArchiveEntry extends Entry {
 		protected boolean read;
 

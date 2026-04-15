@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.infrastructure.command;
 
+import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -7,6 +8,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -17,6 +19,14 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collection;
 
 public class CommandHelper {
+    public static final String[] COMMANDS = new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID};
+    public static void registerCommand(CommandDispatcher<CommandSourceStack> dispatcher, LiteralArgumentBuilder<CommandSourceStack> command) {
+        for (String string : COMMANDS) {
+            dispatcher.register(Commands.literal(string).then(command));
+        }
+        dispatcher.register(command);
+    }
+
     public static LiteralArgumentBuilder<CommandSourceStack> literal(String name) {
         return Commands.literal(name);
     }

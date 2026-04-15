@@ -23,6 +23,7 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
+import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.frostedheart.content.tips.client.gui.TipOverlay;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,8 +32,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -120,22 +119,21 @@ public class TipManager {
         loadedTips.clear();
 
         // 加载所有 tip 文件
-        List<File> files = new ArrayList<>();
-        File[] general = TIP_PATH.listFiles();
-        if (general != null) files.addAll(List.of(general));
-        if (!files.isEmpty()) {
-            int sum = 0;
+        File[] files = TIP_PATH.listFiles();
+        if (files != null) {
+            int success = 0;
             for (File tipFile : files) {
                 Tip tip = TipHelper.load(tipFile);
                 if (loadedTips.containsKey(tip.id())) {
-                    // 重复的 id
-                    LOGGER.warn("Duplicated tip '{}'", tipFile);
+                    LOGGER.warn("Duplicated tip '{}', skipping...", tipFile);
                 } else {
                     loadedTips.put(tip.id(), tip);
-                    sum++;
+                    success++;
                 }
             }
-            LOGGER.info("Loaded {} tip(s)", sum);
+            if (success > 0) {
+                LOGGER.info("Loaded {} tip(s)", success);
+            }
         }
         state.loadFromFile();
     }
@@ -276,8 +274,8 @@ public class TipManager {
             loadedTips.forEach((id, tip) -> tipStates.put(tip, new State(tip)));
 
             if (!TIP_STATE_FILE.exists()) {
-                try (FileWriter writer = new FileWriter(TIP_STATE_FILE)) {
-                    writer.write("[]");
+                try {
+                    FileUtil.transfer("[]", TIP_STATE_FILE);
                 } catch (IOException e) {
                     String msg = "Unable to create file: '%s'".formatted(TIP_STATE_FILE);
                     LOGGER.error(msg , e);
@@ -286,8 +284,8 @@ public class TipManager {
                 return;
             }
 
-            try (FileReader reader = new FileReader(TIP_STATE_FILE)) {
-                Set<State> stateList = GSON.fromJson(reader, STATE_TYPE);
+            try {
+                Set<State> stateList = GSON.fromJson(FileUtil.readString(TIP_STATE_FILE), STATE_TYPE);
                 if (stateList == null) {
                     // 文件存在但是无法正确读取
                     if (TIP_STATE_FILE.exists()) {
@@ -320,9 +318,9 @@ public class TipManager {
          * 保存 {@code tip_states.json} 文件
          */
         public void saveToFile() {
-            try (FileWriter writer = new FileWriter(TIP_STATE_FILE)) {
+            try {
                 String json = GSON.toJson(tipStates.values().stream().filter(s -> s.unlocked || s.viewed).toList());
-                writer.write(json);
+                FileUtil.transfer(json, TIP_STATE_FILE);
             } catch (IOException e) {
                 String msg = "Unable to save file: '%s'".formatted(TIP_STATE_FILE);
                 LOGGER.error(msg, e);

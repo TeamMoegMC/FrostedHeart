@@ -705,17 +705,6 @@ public class CGuiHelper {
 		return new Rect(x, y, widget.getWidth(), widget.getHeight());
 	}
 
-	public static boolean isElementActuallyVisible(UIElement element) {
-		if (!element.isVisible()) {
-			return false;
-		}
-		UIElement parent = element;
-		do {
-			parent = parent.getParent();
-		} while (parent != null && parent.isVisible());
-		return parent == null || parent.isVisible();
-	}
-
 	public static Size2i getImgSize(ResourceLocation location) {
 		if (location != null) {
 			var resource = ClientUtils.getMc().getResourceManager().getResource(location);

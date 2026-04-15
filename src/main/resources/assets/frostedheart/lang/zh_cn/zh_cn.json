@@ -785,7 +785,7 @@
   "tips.frostedheart.click_action.open_archive": "在档案中打开",
   "tips.frostedheart.click_action.edit_tip": "编辑提示 “%s”",
   "tips.frostedheart.empty.title": "哎呀，这里什么都没有",
-  "tips.frostedheart.error.desc": "请检查整合包是否正确安装，或向我们报告这个bug",
+  "tips.frostedheart.error.desc": "请检查整合包是否正确安装。如果你确定这不是你的问题，请向我们报告这个bug",
   "tips.frostedheart.error.other": "错误",
   "tips.frostedheart.error.display": "错误：无法显示提示",
   "tips.frostedheart.error.invalid_id": "提示 ID 中不能包含以下字符: \n\\/:*?\"<>|",

@@ -19,14 +19,12 @@
 
 package com.teammoeg.frostedheart.infrastructure.command;
 
-import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.ServerTipHelper;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipHelper;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -43,8 +41,7 @@ import static com.teammoeg.frostedheart.infrastructure.command.CommandHelper.*;
 public class TipCommand {
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event) {
-        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        var server = literal("tip")
+        var cmd = literal("tip")
                 .then(literal("display").then(players("players").then(string("id")
                         .executes(TipCommand::display))))
                 .then(literal("displayCustom")
@@ -53,10 +50,7 @@ public class TipCommand {
                         .then(string("title").then(string("content").then(integer("displayTime")
                                 .executes(TipCommand::displayCustom))))));
 
-        for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
-            dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(server));
-        }
-        dispatcher.register(server);
+        registerCommand(event.getDispatcher(), cmd);
     }
 
     private static int display(CommandContext<CommandSourceStack> ctx) {

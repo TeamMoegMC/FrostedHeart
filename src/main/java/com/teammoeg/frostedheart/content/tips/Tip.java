@@ -116,10 +116,6 @@ public record Tip(
                 false);
     }
 
-    public String getTitle() {
-        return contents.isEmpty() ? id : contents.get(0);
-    }
-
     public Builder copy() {
         return new Builder(TipHelper.randomString())
                 .contents(contents)

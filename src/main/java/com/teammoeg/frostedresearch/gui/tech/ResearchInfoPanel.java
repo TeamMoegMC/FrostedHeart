@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedresearch.gui.tech;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
@@ -35,17 +32,17 @@ import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.data.ResearchData;
-import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
-import com.teammoeg.frostedresearch.gui.TechIcons;
 import com.teammoeg.frostedresearch.network.FHEffectTriggerPacket;
 import com.teammoeg.frostedresearch.network.FHResearchControlPacket;
 import com.teammoeg.frostedresearch.network.FHResearchControlPacket.Operator;
 import com.teammoeg.frostedresearch.research.clues.Clue;
 import com.teammoeg.frostedresearch.research.effects.Effect;
 import com.teammoeg.frostedresearch.research.effects.EffectBuilding;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.crafting.Ingredient;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ResearchInfoPanel extends UILayer {
 
@@ -144,9 +141,9 @@ public class ResearchInfoPanel extends UILayer {
 						LargeEffectWidget button = new LargeEffectWidget(fp, effect, detailPanel.research);
 						button.setPos(xoffset, offset);
 						fp.add(button);
-						xoffset += 34;
+						xoffset += 33;
 						if (xoffset >= 98) {
-							offset += 32;
+							offset += 33;
 							xoffset = 2;
 						}
 						hasB = true;

@@ -7,17 +7,25 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.serialization.JsonOps;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.category.Category;
+import com.teammoeg.chorda.client.cui.contentpanel.Alignment;
+import com.teammoeg.chorda.client.cui.contentpanel.Line;
+import com.teammoeg.chorda.client.cui.contentpanel.LineHelper;
 import com.teammoeg.chorda.client.cui.editor.EditListDialog;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;
 import com.teammoeg.chorda.client.cui.editor.Editor;
 import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder;
 import com.teammoeg.chorda.client.cui.editor.Editors;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
 import com.teammoeg.chorda.client.cui.theme.Theme;
+import com.teammoeg.chorda.client.cui.theme.UIColors;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.archive.ArchiveCategory;
+import com.teammoeg.frostedheart.infrastructure.command.TipClientCommand;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.nbt.CompoundTag;
@@ -28,7 +36,6 @@ import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileWriter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -77,7 +84,9 @@ public class TipHelper {
     public static void edit(@Nullable Tip edit, @Nullable Theme theme) {
         Tip e = edit == null ? Tip.builder(randomString()).build() : edit;
         EDITOR.open(EditUtils.openEditorScreen(theme), Component.literal("Edit Tip"), e, t -> {
-            save(t);
+            if (!e.equals(t)) {
+                save(t);
+            }
             TipManager.display().removeCurrent();
         });
     }
@@ -113,9 +122,9 @@ public class TipHelper {
         if (!warns.isEmpty())
             display(Tip.builder(randomString()).contents("Warning").contents(warns).fontColor(Colors.ChatColors.GOLD).pin().alwaysVisible().temporary().clickAction("edit_tip", toString(tip)).build());
 
-        File file = new File(TipManager.TIP_PATH, tip.id() + ".json");
-        try (FileWriter writer = new FileWriter(file)) {
-            writer.write(toString(tip));
+        File file = getTipPath(tip);
+        try {
+            FileUtil.transfer(toString(tip), file);
             String message = "Saved tip '%s' to %s".formatted(tip.id(), file);
             LOGGER.info(message);
             Popup.put(message);
@@ -126,6 +135,24 @@ public class TipHelper {
         }
         TipManager.INSTANCE.loadFromFile();
         return true;
+    }
+
+    public static boolean delete(Tip tip) {
+        var path = getTipPath(tip);
+        if (!path.exists()) {
+            TipHelper.Error.OTHER.createAndDisplay("tips.frostedheart.error.load.file_not_exists", path.getPath().replace("\\", "\\\\"));
+            return false;
+        }
+        if (path.delete()) {
+            Popup.put("Deleted tip '" + tip.id() + "'");
+            return true;
+        }
+        TipHelper.Error.OTHER.createAndDisplay("Unable to delete file: " + path);
+        return false;
+    }
+
+    public static File getTipPath(Tip tip) {
+        return new File(TipManager.TIP_PATH, tip.id() + ".json");
     }
 
     public static String toString(Tip tip) {
@@ -139,10 +166,10 @@ public class TipHelper {
                 return parse(FileUtil.readString(filePath));
             } catch (Exception e) {
                 LOGGER.error("Unable to load file '{}'", filePath, e);
-                return Error.LOAD.create(filePath.toString().replace("\\", "\\\\")).build();
+                return Error.LOAD.create(filePath.toString().replace("\\", "\\\\"), e.getMessage()).build();
             }
         } else {
-            LOGGER.error("File does not exists '{}'", filePath);
+            LOGGER.error("File does not exist '{}'", filePath);
             return Error.LOAD.create("tips.frostedheart.error.load.file_not_exists", filePath.toString().replace("\\", "\\\\")).build();
         }
     }
@@ -150,9 +177,9 @@ public class TipHelper {
     public static Tip parse(String jsonString) {
         try {
             return parse(GSON.fromJson(jsonString, JsonElement.class).getAsJsonObject());
-        } catch (JsonSyntaxException e) {
+        } catch (JsonSyntaxException | IllegalStateException e) {
             LOGGER.warn("Unable to parse json: {}", jsonString, e);
-            return Error.LOAD.create("tips.frostedheart.error.load.invalid_json", jsonString).build();
+            return Error.LOAD.create("tips.frostedheart.error.load.invalid_json", jsonString, e.getMessage()).build();
         }
     }
 
@@ -273,9 +300,69 @@ public class TipHelper {
         return category;
     }
 
+    public static String getTitle(Tip tip) {
+        return tip.contents().isEmpty() ? tip.id() : tip.contents().get(0);
+    }
+
+    public static List<Line<?>> contentLines(Tip tipInput,UIElement parent) {
+        List<Line<?>> lines = new ArrayList<>();
+        List<Tip> tips = new ArrayList<>();
+        tips.add(tipInput);
+        tips.addAll(TipManager.state().getChildren(tipInput));
+
+        for (int j = 0; j < tips.size(); j++) {
+            final Tip tip = tips.get(j);
+            if (tip.display().hide()) continue;
+            var tipContents = tip.contents();
+            int ocolor = Colors.cyanToTheme(tip.display().fontColor());
+            Coloring color=Coloring.argb(ocolor);
+            Coloring readable=Coloring.argb(Colors.readableColor(ocolor));
+            // title
+            if (j == 0) {
+                lines.add(LineHelper.text(parent, Component.translatable(tipContents.get(0))).color(UIColors.UI_ALT_TEXT).scale(2).button(tip.clickAction()));
+                // new tip notification
+            } else if (!TipManager.state().isViewed(tip)) {
+                lines.add(LineHelper.br(parent));
+                lines.add(LineHelper.text(parent, Component.translatable("gui.frostedheart.archive.new_tip")).title(color, 1).color(readable));
+            }
+            // if child tip has different title or has click action
+            if (j != 0 && (TipHelper.hasClickAction(tip) || !tipContents.get(0).equals(tipInput.contents().get(0)))) {
+                lines.add(LineHelper.space(parent));
+                lines.add(LineHelper.text(parent, Component.translatable(tipContents.get(0))).quote(color).button(tip.clickAction()));
+            }
+            // lines
+            for (int i = 1; i < tipContents.size(); i++) {
+                String text = tipContents.get(i);
+                if (!text.isBlank()) {
+                    lines.add(LineHelper.text(parent, Component.translatable(text)));
+                }
+            }
+            // items
+            if (!tip.display().displayItems().isEmpty()) {
+                lines.add(LineHelper.items(parent, tip.display().displayItems()));
+            }
+            // image
+            if (TipHelper.hasImage(tip)) {
+                var img = LineHelper.img(parent, tip.image());
+                lines.add(img);
+            }
+            // debug
+            if (TipClientCommand.editMode) {
+                lines.add(LineHelper.text(parent, "ID: " + tip.id())
+                        .color(UIColors.UI_BORDER)
+                        .alignment(Alignment.RIGHT)
+                        .button(Component.translatable("controls.reset"), FlatIcon.HISTORY, b -> TipManager.state().reset(tip))
+                        .button(Component.translatable("selectServer.edit"), FlatIcon.WRENCH, b -> TipHelper.edit(tip.id(), parent.getLayerHolder().theme()))
+                );
+                lines.add(LineHelper.space(parent));
+            }
+        }
+        return lines;
+    }
+
     public static CompletableFuture<Suggestions> suggest(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         TipManager.INSTANCE.getAllTips().forEach(tip ->
-                builder.suggest(tip.id(), Component.translatable(tip.getTitle()))
+                builder.suggest(tip.id(), Component.translatable(getTitle(tip)))
         );
         return builder.buildFuture();
     }
