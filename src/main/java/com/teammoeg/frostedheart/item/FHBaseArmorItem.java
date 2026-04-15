@@ -19,21 +19,17 @@
 
 package com.teammoeg.frostedheart.item;
 
-import java.util.function.Consumer;
-
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
-
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
+
+import java.util.function.Consumer;
 
 public class FHBaseArmorItem extends ArmorItem implements ICreativeModeTabItem{
     public FHBaseArmorItem(ArmorMaterial materialIn, Type slot, Properties builderIn) {
@@ -47,8 +43,8 @@ public class FHBaseArmorItem extends ArmorItem implements ICreativeModeTabItem{
 
 	@Override
 	public void fillItemCategory(CreativeTabItemHelper helper) {
-		if(helper.isType(FHTabs.itemGroup))
-			helper.accept(this);
+//		if(helper.isType(FHTabs.itemGroup))
+//			helper.accept(this);
 	}
 
 	public int getEnchantmentLevel(ItemStack stack, Enchantment enchantment){

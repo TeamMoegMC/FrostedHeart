@@ -19,42 +19,37 @@
 
 package com.teammoeg.frostedheart.content.utility;
 
-import java.util.List;
-
-import com.mojang.datafixers.util.Either;
 import com.teammoeg.chorda.capability.CapabilityDispatchBuilder;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
-import com.teammoeg.frostedheart.item.FHBaseItem;
-import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
+import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceSlot;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
-import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
-import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
-import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
-import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceSlot;
-
+import com.teammoeg.frostedheart.item.FHBaseItem;
+import com.teammoeg.frostedheart.util.Lang;
+import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.CriteriaTriggers;
-import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.UseAnim;
-import net.minecraft.stats.Stats;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.stats.Stats;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import top.theillusivec4.curios.api.type.ISlotType;
+
+import java.util.List;
 
 public class SteamBottleItem extends FHBaseItem implements ITempAdjustFood {
 
@@ -72,7 +67,7 @@ public class SteamBottleItem extends FHBaseItem implements ITempAdjustFood {
 
     @Override
 	public void fillItemCategory(CreativeTabItemHelper helper) {
-        if (helper.isType(FHTabs.itemGroup)) {
+        if (helper.isType(FHTabs.TOOLS)) {
             ItemStack is = new ItemStack(this);
             helper.accept(this);
             FHCapabilities.ITEM_HEAT.getCapability(is).ifPresent(t->t.receiveEnergy(240, false));

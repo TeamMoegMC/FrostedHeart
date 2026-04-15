@@ -19,52 +19,57 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
-import java.util.function.Function;
-
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
 import com.simibubi.create.foundation.item.ItemDescription;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
-import com.teammoeg.frostedheart.content.utility.*;
-import com.teammoeg.frostedheart.content.utility.seld.SledItem;
-import com.teammoeg.frostedheart.item.snowsack.SnowSackItem;
-import com.teammoeg.frostedheart.item.*;
-import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.health.food.CannedFoodItem;
 import com.teammoeg.frostedheart.content.health.food.FHSoupItem;
-import com.teammoeg.frostedheart.content.world.item.FHSnowballItem;
-import com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
+import com.teammoeg.frostedheart.content.utility.*;
 import com.teammoeg.frostedheart.content.utility.handstoves.CoalHandStove;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
 import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
+import com.teammoeg.frostedheart.content.utility.seld.SledItem;
 import com.teammoeg.frostedheart.content.utility.transportation.PowderedSnowWalkable;
 import com.teammoeg.frostedheart.content.water.item.FluidBottleItem;
 import com.teammoeg.frostedheart.content.water.item.IronBottleItem;
 import com.teammoeg.frostedheart.content.water.item.LeatherWaterBagItem;
 import com.teammoeg.frostedheart.content.water.item.WoodenCupItem;
+import com.teammoeg.frostedheart.content.world.item.FHSnowballItem;
+import com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen;
+import com.teammoeg.frostedheart.item.DyedItemList;
+import com.teammoeg.frostedheart.item.FHBaseArmorItem;
+import com.teammoeg.frostedheart.item.FHBaseItem;
+import com.teammoeg.frostedheart.item.FHToolMaterials;
+import com.teammoeg.frostedheart.item.HammerItem;
+import com.teammoeg.frostedheart.item.LiningItem;
+import com.teammoeg.frostedheart.item.SnowBreakerItem;
+import com.teammoeg.frostedheart.item.snowsack.SnowSackItem;
 import com.teammoeg.frostedheart.item.townmanager.TownManagerItem;
 import com.tterrag.registrate.util.entry.ItemEntry;
-
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.food.Foods;
-import net.minecraft.world.item.*;
 import net.minecraft.world.item.ArmorItem.Type;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.Item.Properties;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+
+import java.util.function.Function;
 
 import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
 import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.forgeItemTag;
@@ -120,6 +125,14 @@ public class FHItems {
     // Spawn Eggs
     // Well, you MUST use ForgeSpawnEggItem, to take in the RegistryObject Supplier, instead of the EntityType itself,
     // because ITEMS always register before ENTITY_TYPES. I wasted 2 hours on this.
+    public static final ItemEntry<DebugItem> debug_item = REGISTRATE
+            .item("debug_item", DebugItem::new)
+            .model(FHBlockStateGen.existingItemModel())
+            .register();
+    public static final ItemEntry<HeatDebugItem> heat_debugger = REGISTRATE
+            .item("heat_debugger", p -> new HeatDebugItem())
+            .model(FHBlockStateGen.existingItemModel())
+            .register();
     public static final ItemEntry<ForgeSpawnEggItem> CURIOSITY_SPAWN_EGG =
             REGISTRATE.item("curiosity_spawn_egg", p -> new ForgeSpawnEggItem(FHEntityTypes.CURIOSITY, 0xfffeff, 0xafbdc0, createProps()))
                     .lang("Curiosity of Deep Frostland Spawn Egg")
@@ -130,6 +143,43 @@ public class FHItems {
                     .lang("Wandering Refugee Spawn Egg")
                     .model(FHBlockStateGen.existingItemModel())
                     .register();
+
+    public static final ItemEntry<Fertilizer> BASIC_INCREASING_FERTILIZER = REGISTRATE
+            .item("basic_increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING, Fertilizer.FertilizerGrade.BASIC))
+            .lang("Basic Yield Booster")
+            .register();
+    public static final ItemEntry<Fertilizer> BASIC_ACCELERATED_FERTILIZER = REGISTRATE
+            .item("basic_accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED, Fertilizer.FertilizerGrade.BASIC))
+            .lang("Basic Growth Accelerater")
+            .register();
+    public static final ItemEntry<Fertilizer> BASIC_PRESERVED_FERTILIZER = REGISTRATE
+            .item("basic_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED, Fertilizer.FertilizerGrade.BASIC))
+            .lang("Straw Mulch")
+            .register();
+    public static final ItemEntry<Fertilizer> ADVANCED_INCREASING_FERTILIZER = REGISTRATE
+            .item("advanced_increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING, Fertilizer.FertilizerGrade.ADVANCED))
+            .lang("Advanced Yield Booster")
+            .register();
+    public static final ItemEntry<Fertilizer> ADVANCED_ACCELERATED_FERTILIZER = REGISTRATE
+            .item("advanced_accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED, Fertilizer.FertilizerGrade.ADVANCED))
+            .lang("Advanced Growth Accelerater")
+            .register();
+    public static final ItemEntry<Fertilizer> ADVANCED_PRESERVED_FERTILIZER = REGISTRATE
+            .item("advanced_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED, Fertilizer.FertilizerGrade.ADVANCED))
+            .lang("Rubber Mulch")
+            .register();
+    public static final ItemEntry<Fertilizer> ULTIMATE_INCREASING_FERTILIZER = REGISTRATE
+            .item("ultimate_increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING, Fertilizer.FertilizerGrade.ULTIMATE))
+            .lang("Ultimate Yield Booster")
+            .register();
+    public static final ItemEntry<Fertilizer> ULTIMATE_ACCELERATED_FERTILIZER = REGISTRATE
+            .item("ultimate_accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED, Fertilizer.FertilizerGrade.ULTIMATE))
+            .lang("Ultimate Growth Accelerater")
+            .register();
+    public static final ItemEntry<Fertilizer> ULTIMATE_PRESERVED_FERTILIZER = REGISTRATE
+            .item("ultimate_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED, Fertilizer.FertilizerGrade.ULTIMATE))
+            .lang("Ultimate Mulch")
+            .register();
     /*
     antifreeze.png
 cable.png
@@ -1087,6 +1137,21 @@ thinner.png
             .item("energy_core", Item::new)
             .model(FHBlockStateGen.existingItemModel())
             .register();
+    public static final ItemEntry<Item> temperatureProbe = REGISTRATE
+            .item("temperature_probe", Item::new)
+            .properties(p -> p.stacksTo(1))
+            .model(FHBlockStateGen.existingItemModel())
+            .register();
+    public static final ItemEntry<Item> coal_stick = REGISTRATE
+            .item("coal_stick", Item::new)
+            .tag(CPTags.Items.PORTABLE_BRAZIER_FUEL_TYPE)
+            .model(FHBlockStateGen.existingItemModel())
+            .register();
+    public static final ItemEntry<Item> charcoal_stick = REGISTRATE
+            .item("charcoal_stick", Item::new)
+            .tag(CPTags.Items.PORTABLE_BRAZIER_FUEL_TYPE)
+            .model(FHBlockStateGen.existingItemModel())
+            .register();
 
 
     static {
@@ -1275,20 +1340,6 @@ thinner.png
             .model(FHBlockStateGen.existingItemModel())
             .lang("Copper Hand Stove")
             .register();
-    public static final ItemEntry<DebugItem> debug_item = REGISTRATE
-            .item("debug_item", DebugItem::new)
-            .model(FHBlockStateGen.existingItemModel())
-            .register();
-    public static final ItemEntry<Item> coal_stick = REGISTRATE
-            .item("coal_stick", Item::new)
-            .tag(CPTags.Items.PORTABLE_BRAZIER_FUEL_TYPE)
-            .model(FHBlockStateGen.existingItemModel())
-            .register();
-    public static final ItemEntry<Item> charcoal_stick = REGISTRATE
-            .item("charcoal_stick", Item::new)
-            .tag(CPTags.Items.PORTABLE_BRAZIER_FUEL_TYPE)
-            .model(FHBlockStateGen.existingItemModel())
-            .register();
     public static final ItemEntry<ThermometerItem> mercury_body_thermometer = REGISTRATE
             .item("mercury_body_thermometer", ThermometerItem::new)
             .model(FHBlockStateGen.existingItemModel())
@@ -1351,22 +1402,22 @@ thinner.png
 
 
     public static final ItemEntry<FHBaseItem> buff_coat = REGISTRATE
-            .item("buff_coat", p -> new FHBaseItem(createProps().defaultDurability(72)).setRepairItem(raw_hide.get()))
+            .item("buff_coat", p -> new LiningItem(createProps().defaultDurability(72)).setRepairItem(raw_hide.get()))
             .model(FHBlockStateGen.existingItemModel())
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static final ItemEntry<FHBaseItem> gambeson = REGISTRATE
-            .item("gambeson", p -> new FHBaseItem(createProps().defaultDurability(80)).setRepairItem(Items.WHITE_WOOL))
+            .item("gambeson", p -> new LiningItem(createProps().defaultDurability(80)).setRepairItem(Items.WHITE_WOOL))
             .model(FHBlockStateGen.existingItemModel())
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
     public static final ItemEntry<FHBaseItem> kelp_lining = REGISTRATE
-            .item("kelp_lining", p -> new FHBaseItem(createProps().defaultDurability(52)).setRepairItem(Items.KELP))
+            .item("kelp_lining", p -> new LiningItem(createProps().defaultDurability(52)).setRepairItem(Items.KELP))
             .model(FHBlockStateGen.existingItemModel())
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
-    public static final ItemEntry<Item> straw_lining = REGISTRATE
-            .item("straw_lining", Item::new)
+    public static final ItemEntry<LiningItem> straw_lining = REGISTRATE
+            .item("straw_lining", LiningItem::new)
             .properties(p -> p.defaultDurability(52))
             .model(FHBlockStateGen.existingItemModel())
             .tag(FHTags.Items.INNER_LINNING.tag)
@@ -1393,8 +1444,8 @@ thinner.png
             .model(FHBlockStateGen.existingItemModel())
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
-    public static final ItemEntry<Item> hay_gloves = REGISTRATE
-            .item("hay_gloves", Item::new)
+    public static final ItemEntry<LiningItem> hay_gloves = REGISTRATE
+            .item("hay_gloves", LiningItem::new)
             .properties(p -> p.defaultDurability(256))
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
@@ -1419,8 +1470,8 @@ thinner.png
             .model(FHBlockStateGen.existingItemModel())
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
-    public static final ItemEntry<Item> wool_gloves = REGISTRATE
-            .item("wool_gloves", Item::new)
+    public static final ItemEntry<LiningItem> wool_gloves = REGISTRATE
+            .item("wool_gloves", LiningItem::new)
             .properties(p -> p.defaultDurability(384))
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
@@ -1444,8 +1495,8 @@ thinner.png
             .model(FHBlockStateGen.existingItemModel())
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
-    public static final ItemEntry<Item> hide_gloves = REGISTRATE
-            .item("hide_gloves", Item::new)
+    public static final ItemEntry<LiningItem> hide_gloves = REGISTRATE
+            .item("hide_gloves", LiningItem::new)
             .properties(p -> p.defaultDurability(384))
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
@@ -1466,8 +1517,8 @@ thinner.png
             .item("rabbit_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.RABBIT, Type.LEGGINGS, createProps()))
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
-    public static final ItemEntry<Item> rabbit_gloves = REGISTRATE
-            .item("rabbit_fur_gloves", Item::new)
+    public static final ItemEntry<LiningItem> rabbit_gloves = REGISTRATE
+            .item("rabbit_fur_gloves", LiningItem::new)
             .properties(p -> p.defaultDurability(384))
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
@@ -1488,8 +1539,8 @@ thinner.png
             .item("fox_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.FOX, Type.LEGGINGS, createProps()))
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
-    public static final ItemEntry<Item> fox_gloves = REGISTRATE
-            .item("fox_fur_gloves", Item::new)
+    public static final ItemEntry<LiningItem> fox_gloves = REGISTRATE
+            .item("fox_fur_gloves", LiningItem::new)
             .properties(p -> p.defaultDurability(384))
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
@@ -1510,8 +1561,8 @@ thinner.png
             .item("wolf_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.WOLF, Type.LEGGINGS, createProps()))
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
-    public static final ItemEntry<Item> wolf_gloves = REGISTRATE
-            .item("wolf_fur_gloves", Item::new)
+    public static final ItemEntry<LiningItem> wolf_gloves = REGISTRATE
+            .item("wolf_fur_gloves", LiningItem::new)
             .properties(p -> p.defaultDurability(384))
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
@@ -1528,8 +1579,8 @@ thinner.png
     public static final ItemEntry<FHBaseArmorItem> polar_bear_pants = REGISTRATE
             .item("polar_bear_fur_pants", p -> new FHBaseArmorItem(FHArmorMaterial.POLAR_BEAR, Type.LEGGINGS, createProps()))
             .register();
-    public static final ItemEntry<Item> polar_bear_gloves = REGISTRATE
-            .item("polar_bear_fur_gloves", Item::new)
+    public static final ItemEntry<LiningItem> polar_bear_gloves = REGISTRATE
+            .item("polar_bear_fur_gloves", LiningItem::new)
             .properties(p -> p.defaultDurability(384))
             .tag(FHTags.Items.INNER_LINNING.tag)
             .register();
@@ -1592,10 +1643,6 @@ thinner.png
             .item("soil_thermometer", SoilThermometer::new)
             .model(FHBlockStateGen.existingItemModel())
             .register();
-    public static final ItemEntry<HeatDebugItem> heat_debugger = REGISTRATE
-            .item("heat_debugger", p -> new HeatDebugItem())
-            .model(FHBlockStateGen.existingItemModel())
-            .register();
     public static final ItemEntry<MushroomBed> red_mushroombed = REGISTRATE
             .item("straw_briquette_red_mushroom", p -> new MushroomBed(Items.RED_MUSHROOM, createProps().defaultDurability(4800)))
             .tag(FHTags.Items.CURIOS_CHARM.tag)
@@ -1620,11 +1667,6 @@ thinner.png
             .register();
     public static final ItemEntry<Item> weatherRadar = REGISTRATE
             .item("weather_radar", Item::new)
-            .properties(p -> p.stacksTo(1))
-            .model(FHBlockStateGen.existingItemModel())
-            .register();
-    public static final ItemEntry<Item> temperatureProbe = REGISTRATE
-            .item("temperature_probe", Item::new)
             .properties(p -> p.stacksTo(1))
             .model(FHBlockStateGen.existingItemModel())
             .register();
@@ -1845,41 +1887,4 @@ thinner.png
             .properties(p -> p.stacksTo(1))
             .lang("Sled")
             .register();
-
-    public static final ItemEntry<Fertilizer> BASIC_INCREASING_FERTILIZER = REGISTRATE
-            .item("basic_increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING, Fertilizer.FertilizerGrade.BASIC))
-            .lang("Basic Yield Booster")
-            .register();
-    public static final ItemEntry<Fertilizer> BASIC_ACCELERATED_FERTILIZER = REGISTRATE
-            .item("basic_accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED, Fertilizer.FertilizerGrade.BASIC))
-            .lang("Basic Growth Accelerater")
-            .register();
-    public static final ItemEntry<Fertilizer> BASIC_PRESERVED_FERTILIZER = REGISTRATE
-            .item("basic_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED, Fertilizer.FertilizerGrade.BASIC))
-            .lang("Straw Mulch")
-            .register();
-    public static final ItemEntry<Fertilizer> ADVANCED_INCREASING_FERTILIZER = REGISTRATE
-            .item("advanced_increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING, Fertilizer.FertilizerGrade.ADVANCED))
-            .lang("Advanced Yield Booster")
-            .register();
-    public static final ItemEntry<Fertilizer> ADVANCED_ACCELERATED_FERTILIZER = REGISTRATE
-            .item("advanced_accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED, Fertilizer.FertilizerGrade.ADVANCED))
-            .lang("Advanced Growth Accelerater")
-            .register();
-    public static final ItemEntry<Fertilizer> ADVANCED_PRESERVED_FERTILIZER = REGISTRATE
-            .item("advanced_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED, Fertilizer.FertilizerGrade.ADVANCED))
-            .lang("Rubber Mulch")
-            .register();
-    public static final ItemEntry<Fertilizer> ULTIMATE_INCREASING_FERTILIZER = REGISTRATE
-	        .item("ultimate_increasing_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.INCREASING, Fertilizer.FertilizerGrade.ULTIMATE))
-	        .lang("Ultimate Yield Booster")
-	        .register();
-	public static final ItemEntry<Fertilizer> ULTIMATE_ACCELERATED_FERTILIZER = REGISTRATE
-	        .item("ultimate_accelerated_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.ACCELERATED, Fertilizer.FertilizerGrade.ULTIMATE))
-	        .lang("Ultimate Growth Accelerater")
-	        .register();
-	public static final ItemEntry<Fertilizer> ULTIMATE_PRESERVED_FERTILIZER = REGISTRATE
-	        .item("ultimate_preserved_fertilizer", (p)-> new Fertilizer(new Properties(), Fertilizer.FertilizerType.PRESERVED, Fertilizer.FertilizerGrade.ULTIMATE))
-	        .lang("Ultimate Mulch")
-	        .register();
 }

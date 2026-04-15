@@ -21,8 +21,6 @@ package com.teammoeg.frostedheart.item;
 
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
-import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
-
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -35,7 +33,7 @@ public class FHBaseItem extends Item implements ICreativeModeTabItem{
 
     @Override
     public boolean isValidRepairItem(ItemStack toRepair, ItemStack repair) {
-        if (repair == null) return false;
+        if (repair.isEmpty()) return false;
         return repair.getItem() == this.repair;
     }
 
@@ -46,8 +44,8 @@ public class FHBaseItem extends Item implements ICreativeModeTabItem{
 
 	@Override
 	public void fillItemCategory(CreativeTabItemHelper helper) {
-		if(helper.isType(FHTabs.itemGroup))
-			helper.accept(this);
+//		if(helper.isType(FHTabs.itemGroup))
+//			helper.accept(this);
 		
 	}
 }

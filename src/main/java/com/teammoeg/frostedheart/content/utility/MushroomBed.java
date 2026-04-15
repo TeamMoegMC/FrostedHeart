@@ -19,39 +19,33 @@
 
 package com.teammoeg.frostedheart.content.utility;
 
-import java.util.List;
-
-import javax.annotation.Nullable;
-
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
-import com.teammoeg.frostedheart.item.FHBaseItem;
-import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
-import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
 import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceSlot;
-
-import net.minecraft.world.item.TooltipFlag;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
+import com.teammoeg.frostedheart.item.FHBaseItem;
+import com.teammoeg.frostedheart.util.Lang;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.tags.TagKey;
-import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+
+import javax.annotation.Nullable;
+import java.util.List;
 
 public class MushroomBed extends FHBaseItem {
 
@@ -74,7 +68,7 @@ public class MushroomBed extends FHBaseItem {
 
     @Override
     public void fillItemCategory(CreativeTabItemHelper helper) {
-        if (helper.isType(FHTabs.itemGroup)) {
+        if (helper.isType(FHTabs.TOOLS)) {
             ItemStack is = new ItemStack(this);
             helper.accept(is);
             is.setDamageValue(is.getMaxDamage());

@@ -19,41 +19,29 @@
 
 package com.teammoeg.frostedheart.content.utility;
 
-import java.util.List;
-
-import javax.annotation.Nullable;
-
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.water.item.DurableDrinkContainerItem;
 import com.teammoeg.frostedheart.util.Lang;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.data.DrinkTempData;
-import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
-
-import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.food.FoodProperties;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.tags.FluidTags;
-import net.minecraft.tags.TagKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.tags.ITag;
+
+import javax.annotation.Nullable;
+import java.util.List;
 
 public class ThermosItem extends DurableDrinkContainerItem implements ICreativeModeTabItem {
     final boolean doAddItems;
@@ -71,7 +59,7 @@ public class ThermosItem extends DurableDrinkContainerItem implements ICreativeM
 
     @Override
     public void fillItemCategory(CreativeTabItemHelper helper) {
-        if (helper.isType(FHTabs.itemGroup)) {
+        if (helper.isType(FHTabs.TOOLS)) {
        
             ITag<Fluid> tag = ForgeRegistries.FLUIDS.tags().getTag(FHTags.Fluids.DRINK.tag);
             

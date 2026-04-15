@@ -19,17 +19,19 @@
 
 package com.teammoeg.chorda.creativeTab;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.function.Supplier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTab.Output;
 import net.minecraft.world.item.CreativeModeTab.TabVisibility;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
+import net.minecraftforge.registries.RegistryObject;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * 创造模式物品栏注册事件的包装器。
@@ -87,6 +89,10 @@ public class CreativeTabItemHelper implements Output{
 	public boolean isType(TabType tab) {
 		if(tab==null)return false;
 		return tab.test(this.key);
+	}
+	public boolean isType(RegistryObject<CreativeModeTab> tab) {
+		if(tab==null || tab.getKey()==null)return false;
+		return tab.getKey().equals(this.key);
 	}
 	/**
 	 * 计算排序并输出最终结果到事件。

@@ -19,37 +19,35 @@
 
 package com.teammoeg.frostedheart.content.utility.heatervest;
 
-import java.util.List;
-import java.util.function.Consumer;
-
-import javax.annotation.Nullable;
-
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.capability.CapabilityDispatchBuilder;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
-import com.teammoeg.frostedheart.item.FHBaseItem;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
-import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceContext;
 import com.teammoeg.frostedheart.content.climate.player.HeatingDeviceSlot;
-
-import net.minecraft.world.item.TooltipFlag;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
+import com.teammoeg.frostedheart.item.FHBaseItem;
+import com.teammoeg.frostedheart.util.Lang;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
+
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Heater Vest: wear it to warm yourself from the coldness.
@@ -74,7 +72,7 @@ public class HeaterVestItem extends FHBaseItem {
 
     @Override
 	public void fillItemCategory(CreativeTabItemHelper helper) {
-		if(helper.isType(FHTabs.itemGroup)) {
+		if(helper.isType(FHTabs.TOOLS)) {
         	helper.accept(new ItemStack(this));
             ItemStack is = new ItemStack(this);
             FHCapabilities.ITEM_HEAT.getCapability(is).ifPresent(t->t.receiveEnergy(30000, false));
