@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.RenderingHint;
-
 import net.minecraft.client.gui.GuiGraphics;
 
 public class RequesterChestScreen extends LogisticChestLayer<RequesterChestMenu>{
@@ -42,6 +41,7 @@ public class RequesterChestScreen extends LogisticChestLayer<RequesterChestMenu>
 	@Override
 	public void addChildUIElements() {
 		if(screen==null) {
+			super.addChildUIElements();
 			this.add(filters);
 		}else {
 			this.add(screen);
@@ -85,8 +85,8 @@ public class RequesterChestScreen extends LogisticChestLayer<RequesterChestMenu>
 	@Override
 	public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
 		if(screen==null) {
-			LogisticIcons.INV_CHEST.draw(graphics, x+0, y+25, 176, 59);
-			LogisticIcons.INV_BACK.draw(graphics, x+0, y+115, 176, 84);
+			LogisticIcons.INV_CHEST.draw(graphics, x, y+25, 176, 59);
+			LogisticIcons.INV_BACK.draw(graphics, x, y+115, 176, 84);
 			super.drawBackground(graphics, x, y, w, h, hint);
 		}
 	}
